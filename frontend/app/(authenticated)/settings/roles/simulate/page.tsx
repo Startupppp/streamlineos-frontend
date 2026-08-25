@@ -136,7 +136,7 @@ function SimulateContent() {
                   <span className="flex items-center gap-2 min-w-0">
                     <Avatar className="h-5 w-5 shrink-0">
                       <AvatarImage src={selectedEmployee.image ?? undefined} />
-                      <AvatarFallback className="text-[9px]">
+                      <AvatarFallback className="text-micro">
                         {getInitials(selectedEmployee.name ?? selectedEmployee.email)}
                       </AvatarFallback>
                     </Avatar>
@@ -226,14 +226,14 @@ function EmployeeCommandItem({ employee, onSelect }: EmployeeCommandItemProps) {
     <CommandItem onSelect={handleSelect} className="flex items-center gap-2 cursor-pointer">
       <Avatar className="h-6 w-6 shrink-0">
         <AvatarImage src={employee.image ?? undefined} />
-        <AvatarFallback className="text-[9px]">
+        <AvatarFallback className="text-micro">
           {getInitials(employee.name ?? employee.email)}
         </AvatarFallback>
       </Avatar>
       <div className="min-w-0">
         <p className="text-sm truncate">{employee.name ?? employee.email}</p>
         {employee.designation && (
-          <p className="text-[11px] text-muted-foreground truncate">{employee.designation}</p>
+          <p className="text-dense text-muted-foreground truncate">{employee.designation}</p>
         )}
       </div>
     </CommandItem>
@@ -382,7 +382,7 @@ function ModulePermissionGroup({ mod, items, isExpanded, onToggle }: ModulePermi
             )}
             {label}
           </span>
-          <Badge variant="secondary" className="text-[10px] px-1.5">
+          <Badge variant="secondary" className="text-micro px-1.5">
             {items.length}
           </Badge>
         </CardTitle>
@@ -422,12 +422,12 @@ function PermissionRow({ permKey, scope }: PermissionRowProps) {
 
   return (
     <tr className="border-b border-border/30 last:border-0">
-      <td className="py-1.5 pr-4 font-mono text-[10px] text-foreground">{permKey}</td>
+      <td className="py-1.5 pr-4 font-mono text-micro text-foreground">{permKey}</td>
       <td className="py-1.5 pr-4 text-muted-foreground">{resource}</td>
       <td className="py-1.5">
         <Badge
           variant={SCOPE_BADGE_VARIANT[scope]}
-          className="text-[9px] px-1.5 py-0"
+          className="text-micro px-1.5 py-0"
         >
           {scope}
         </Badge>

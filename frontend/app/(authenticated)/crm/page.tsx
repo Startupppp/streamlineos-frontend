@@ -233,11 +233,11 @@ export default function CrmHubPage() {
 
         {leadStats && (
           <motion.div variants={itemVariants}>
-            <div className="flex items-center gap-4 flex-wrap text-[11px] px-1">
+            <div className="flex items-center gap-4 flex-wrap text-dense px-1">
               <div className="flex items-center gap-1.5">
-                <AlertTriangle className="h-3 w-3 text-red-400" />
+                <AlertTriangle className="h-3 w-3 text-status-danger-ink" />
                 <span className="text-muted-foreground">Unassigned</span>
-                <span className="font-bold text-red-400">{leadStats.unassigned}</span>
+                <span className="font-bold text-status-danger-ink">{leadStats.unassigned}</span>
               </div>
               <div>
                 <span className="text-muted-foreground">New/Mo</span>{" "}
@@ -251,7 +251,7 @@ export default function CrmHubPage() {
               </div>
               <div>
                 <span className="text-muted-foreground">Won</span>{" "}
-                <span className="font-bold text-emerald-400 ml-1">
+                <span className="font-bold text-status-success-ink ml-1">
                   {formatINRCompact(dealStats?.wonValue ?? 0)}
                 </span>
               </div>
@@ -289,7 +289,7 @@ export default function CrmHubPage() {
                       {card.title}
                       <ArrowRight className="h-3 w-3 opacity-0 -translate-x-1 transition-all group-hover:opacity-100 group-hover:translate-x-0 text-primary" />
                     </p>
-                    <CardDescription className="text-[10px] truncate">
+                    <CardDescription className="text-micro truncate">
                       {card.description}
                     </CardDescription>
                   </div>

@@ -51,31 +51,31 @@ interface TypeConfig {
 export const NOTIFICATION_TYPE_CONFIG: Record<NotificationType, TypeConfig> = {
   INFO: {
     icon: Info,
-    iconColor: "text-blue-600",
-    bg: "bg-blue-500/10",
+    iconColor: "text-status-info-ink",
+    bg: "bg-status-info-surface",
     label: "Info",
-    badgeBorder: "border-blue-200 text-blue-600",
+    badgeBorder: "border-status-info-rule text-status-info-ink",
   },
   SUCCESS: {
     icon: CheckCircle2,
-    iconColor: "text-emerald-600",
-    bg: "bg-emerald-500/10",
+    iconColor: "text-status-success-ink",
+    bg: "bg-status-success-surface",
     label: "Success",
-    badgeBorder: "border-emerald-200 text-emerald-600",
+    badgeBorder: "border-status-success-rule text-status-success-ink",
   },
   WARNING: {
     icon: AlertTriangle,
-    iconColor: "text-amber-600",
-    bg: "bg-amber-500/10",
+    iconColor: "text-status-warning-ink",
+    bg: "bg-status-warning-surface",
     label: "Warning",
-    badgeBorder: "border-amber-200 text-amber-600",
+    badgeBorder: "border-status-warning-rule text-status-warning-ink",
   },
   ERROR: {
     icon: XCircle,
-    iconColor: "text-red-600",
-    bg: "bg-red-500/10",
+    iconColor: "text-status-danger-ink",
+    bg: "bg-status-danger-surface",
     label: "Error",
-    badgeBorder: "border-red-200 text-red-600",
+    badgeBorder: "border-status-danger-rule text-status-danger-ink",
   },
 };
 
@@ -86,6 +86,30 @@ interface CategoryConfig {
   bg: string;
 }
 
+/**
+ * Eighteen categories, sixteen hues.
+ *
+ * A category is where a notification came from, not how urgent it is — urgency
+ * is `NOTIFICATION_PRIORITY_CONFIG` below, and the two are shown side by side.
+ * Reading the status scale here made six of the eighteen render as "info" and
+ * four as "success", so the filter chips lied about how many kinds there were.
+ *
+ * Where a category matches a sidebar product it wears that product's accent —
+ * CRM blue, HRMS emerald, Projects violet, Inventory orange, Support lime,
+ * Surveys fuchsia — so the same module is the same colour in the rail and in
+ * the tray.
+ *
+ * Two pairs double up, and only these two. Both are one subject arriving under
+ * two names, not two subjects that ran out of hues:
+ *
+ *   green  — BILLING and PAYROLL. Money moving, in and out.
+ *   amber  — WORKFLOW and SIGN. A routing step waiting on somebody: an
+ *            automation run paused for approval, or an envelope paused for a
+ *            signature.
+ *
+ * SYSTEM stays on the neutral rather than taking `category-slate`: it is the
+ * absence of a source, which is what the muted pair already says.
+ */
 export const NOTIFICATION_CATEGORY_CONFIG: Record<
   NotificationCategory,
   CategoryConfig
@@ -93,110 +117,110 @@ export const NOTIFICATION_CATEGORY_CONFIG: Record<
   SECURITY: {
     label: "Security",
     icon: Shield,
-    color: "text-red-600",
-    bg: "bg-red-500/10",
+    color: "text-category-red-ink",
+    bg: "bg-category-red-surface",
   },
   CRM: {
     label: "CRM",
     icon: Handshake,
-    color: "text-blue-600",
-    bg: "bg-blue-500/10",
+    color: "text-category-blue-ink",
+    bg: "bg-category-blue-surface",
   },
   HRMS: {
     label: "HRMS",
     icon: Users,
-    color: "text-blue-600",
-    bg: "bg-blue-500/10",
+    color: "text-category-emerald-ink",
+    bg: "bg-category-emerald-surface",
   },
   BILLING: {
     label: "Billing",
     icon: CreditCard,
-    color: "text-emerald-600",
-    bg: "bg-emerald-500/10",
+    color: "text-category-green-ink",
+    bg: "bg-category-green-surface",
   },
   AI: {
     label: "AI",
     icon: Brain,
-    color: "text-blue-600",
-    bg: "bg-blue-500/10",
+    color: "text-category-indigo-ink",
+    bg: "bg-category-indigo-surface",
   },
   PROJECTS: {
     label: "Projects",
     icon: FolderOpen,
-    color: "text-blue-600",
-    bg: "bg-blue-500/10",
+    color: "text-category-violet-ink",
+    bg: "bg-category-violet-surface",
   },
   WORKFLOW: {
     label: "Workflow",
     icon: Settings,
-    color: "text-orange-600",
-    bg: "bg-orange-500/10",
+    color: "text-category-amber-ink",
+    bg: "bg-category-amber-surface",
   },
   MARKETING: {
     label: "Marketing",
     icon: Megaphone,
-    color: "text-pink-600",
-    bg: "bg-pink-500/10",
+    color: "text-category-pink-ink",
+    bg: "bg-category-pink-surface",
   },
   SYSTEM: {
     label: "System",
     icon: Bell,
-    color: "text-slate-600",
-    bg: "bg-slate-500/10",
+    color: "text-muted-foreground",
+    bg: "bg-muted",
   },
   CHAT: {
     label: "Chat",
     icon: MessageSquare,
-    color: "text-sky-600",
-    bg: "bg-sky-500/10",
+    color: "text-category-sky-ink",
+    bg: "bg-category-sky-surface",
   },
   PAYROLL: {
     label: "Payroll",
     icon: Banknote,
-    color: "text-green-600",
-    bg: "bg-green-500/10",
+    color: "text-category-green-ink",
+    bg: "bg-category-green-surface",
   },
   RECRUITMENT: {
     label: "Recruitment",
     icon: UserPlus,
-    color: "text-teal-600",
-    bg: "bg-teal-500/10",
+    color: "text-category-teal-ink",
+    bg: "bg-category-teal-surface",
   },
   KNOWLEDGE: {
     label: "Knowledge",
     icon: BookOpen,
-    color: "text-cyan-600",
-    bg: "bg-cyan-500/10",
+    color: "text-category-cyan-ink",
+    bg: "bg-category-cyan-surface",
   },
   SIGN: {
     label: "Sign",
     icon: PenLine,
-    color: "text-amber-600",
-    bg: "bg-amber-500/10",
+    color: "text-category-amber-ink",
+    bg: "bg-category-amber-surface",
   },
   INVENTORY: {
     label: "Inventory",
     icon: Package,
-    color: "text-orange-600",
-    bg: "bg-orange-500/10",
+    color: "text-category-orange-ink",
+    bg: "bg-category-orange-surface",
   },
   SURVEYS: {
     label: "Surveys",
     icon: ClipboardList,
-    color: "text-fuchsia-600",
-    bg: "bg-fuchsia-500/10",
+    color: "text-category-fuchsia-ink",
+    bg: "bg-category-fuchsia-surface",
   },
   CALENDAR: {
     label: "Calendar",
     icon: Calendar,
-    color: "text-rose-600",
-    bg: "bg-rose-500/10",
+    color: "text-category-rose-ink",
+    bg: "bg-category-rose-surface",
   },
   SUPPORT: {
     label: "Support",
     icon: LifeBuoy,
-    color: "text-lime-600",
-    bg: "bg-lime-500/10",
+    color: "text-category-lime-ink",
+    bg: "bg-category-lime-surface",
   },
 };
 
@@ -210,17 +234,19 @@ export const NOTIFICATION_PRIORITY_CONFIG: Record<
   NotificationPriority,
   PriorityConfig
 > = {
-  LOW: { label: "Low", color: "text-slate-500", dotColor: "bg-slate-400" },
-  NORMAL: { label: "Normal", color: "text-blue-500", dotColor: "bg-blue-400" },
+  LOW: { label: "Low", color: "text-muted-foreground", dotColor: "bg-category-slate-fill" },
+  NORMAL: { label: "Normal", color: "text-status-info-ink", dotColor: "bg-category-blue-fill" },
   HIGH: {
     label: "High",
-    color: "text-amber-500",
-    dotColor: "bg-amber-400",
+    color: "text-status-warning-ink",
+    dotColor: "bg-category-amber-fill",
   },
   CRITICAL: {
     label: "Critical",
-    color: "text-red-500",
-    dotColor: "bg-red-500",
+    color: "text-status-danger-ink",
+    // `status-danger` is red; the dot beside it was rose. Now that the
+    // categorical scale has a red, the two halves of the entry agree.
+    dotColor: "bg-category-red-fill",
   },
 };
 

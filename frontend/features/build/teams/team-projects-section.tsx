@@ -42,7 +42,7 @@ import type { TeamProject } from "@/hooks/api/build/teams";
 function ProjectStatusBadge({ status }: { status: string }) {
   const label = status.replace(/_/g, " ");
   return (
-    <Badge variant="secondary" className="shrink-0 px-1.5 py-0.5 text-[10px] capitalize">
+    <Badge variant="secondary" className="shrink-0 px-1.5 py-0.5 text-micro capitalize">
       {label}
     </Badge>
   );
@@ -116,7 +116,7 @@ function AddProjectPicker({
           >
             {selectedProject ? (
               <>
-                <span className="font-mono text-[10px] text-muted-foreground">
+                <span className="font-mono text-micro text-muted-foreground">
                   {selectedProject.key}
                 </span>
                 <span className="truncate">{selectedProject.name}</span>
@@ -146,7 +146,7 @@ function AddProjectPicker({
                     onSelect={handleSelect}
                     className="gap-2"
                   >
-                    <span className="font-mono text-[10px] text-muted-foreground shrink-0">
+                    <span className="font-mono text-micro text-muted-foreground shrink-0">
                       {p.key}
                     </span>
                     <span className="truncate text-xs">{p.name}</span>
@@ -248,7 +248,7 @@ export function TeamProjectsSection({ teamId }: TeamProjectsSectionProps) {
     <>
       <PmSection index={2} className="space-y-3">
         <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <p className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
             Projects{teamProjects.length > 0 ? ` (${teamProjects.length})` : ""}
           </p>
           {canManage ? (
@@ -280,7 +280,7 @@ export function TeamProjectsSection({ teamId }: TeamProjectsSectionProps) {
           <PmPanel>
             {teamProjects.map((project) => (
               <div key={project.id} className={PM_ROW}>
-                <span className="font-mono text-[10px] text-muted-foreground shrink-0">
+                <span className="font-mono text-micro text-muted-foreground shrink-0">
                   {project.key}
                 </span>
                 <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">

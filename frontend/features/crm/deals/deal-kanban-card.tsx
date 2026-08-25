@@ -13,11 +13,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { formatINRCompact, formatDealId } from "@/lib/format-utils";
+import { formatDealId, formatMoneyCompact } from "@/lib/format-utils";
 import { useCrmStages } from "@/hooks/api/crm/metadata";
 import { getCrmTokenClasses } from "@/features/crm/shared/metadata";
 import type { Deal } from "@/types/crm";
 import { AIPredictDealButton } from "./ai-predict-deal-button";
+import { useOrgDisplay } from "@/hooks/api/org-display";
 
 function DealHealthBadge({ expectedCloseDate }: { expectedCloseDate: string | null }) {
   const status = useMemo(() => {
@@ -34,9 +35,9 @@ function DealHealthBadge({ expectedCloseDate }: { expectedCloseDate: string | nu
 
   if (!status) return null;
   if (status === "overdue") {
-    return <Badge variant="destructive" className="text-[10px] px-1.5 py-0 h-4">Overdue</Badge>;
+    return <Badge variant="destructive" className="text-micro px-1.5 py-0 h-4">Overdue</Badge>;
   }
-  return <Badge className="text-[10px] px-1.5 py-0 h-4 bg-amber-500 hover:bg-amber-500 text-white">Due soon</Badge>;
+  return <Badge className="text-micro px-1.5 py-0 h-4 bg-status-warning-fill hover:bg-status-warning-fill-hover text-white">Due soon</Badge>;
 }
 
 interface DealKanbanCardProps {
@@ -62,6 +63,7 @@ function StageMenuItem({
 }
 
 export const DealKanbanCard = memo(function DealKanbanCard({ deal, onStageChange, onDelete, onOpen }: DealKanbanCardProps) {
+  const money = useOrgDisplay();
   const router = useRouter();
   const { data: dealStages = [] } = useCrmStages("deal");
   const handleDelete = useCallback(() => onDelete(deal.id), [deal.id, onDelete]);
@@ -80,7 +82,7 @@ export const DealKanbanCard = memo(function DealKanbanCard({ deal, onStageChange
           <div className="flex-1 min-w-0 mr-1">
             <TruncatedText text={deal.name} className="text-sm font-medium" />
             <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="font-mono text-[10px] text-muted-foreground/70 select-all">{formatDealId(deal.id)}</span>
+              <span className="font-mono text-micro text-muted-foreground/70 select-all">{formatDealId(deal.id)}</span>
               <DealHealthBadge expectedCloseDate={deal.expectedCloseDate} />
             </div>
           </div>
@@ -111,7 +113,7 @@ export const DealKanbanCard = memo(function DealKanbanCard({ deal, onStageChange
         </div>
 
         <p className="text-lg font-bold text-primary mt-1">
-          {formatINRCompact(deal.value || 0)}
+          {formatMoneyCompact(deal.value, money)}
         </p>
 
         {deal.contactPerson && (
@@ -126,7 +128,7 @@ export const DealKanbanCard = memo(function DealKanbanCard({ deal, onStageChange
             <div className="flex items-center gap-1.5 min-w-0">
               <Avatar className="h-5 w-5 shrink-0">
                 <AvatarImage src={resolveImageUrl(deal.assignedTo.image)} />
-                <AvatarFallback className="text-[8px]">
+                <AvatarFallback className="text-micro">
                   {deal.assignedTo.name?.[0]}
                 </AvatarFallback>
               </Avatar>
@@ -135,7 +137,7 @@ export const DealKanbanCard = memo(function DealKanbanCard({ deal, onStageChange
           ) : <span />}
 
           {deal.expectedCloseDate && (
-            <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+            <span className="text-micro text-muted-foreground flex items-center gap-0.5">
               <Calendar className="h-2.5 w-2.5" />
               {new Date(deal.expectedCloseDate).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}
             </span>
@@ -147,7 +149,7 @@ export const DealKanbanCard = memo(function DealKanbanCard({ deal, onStageChange
             <div className="h-1.5 rounded-full bg-muted overflow-hidden">
               <div className="h-full rounded-full bg-primary" style={{ width: `${deal.probability}%` }} />
             </div>
-            <span className="text-[10px] text-muted-foreground">{deal.probability}% probability</span>
+            <span className="text-micro text-muted-foreground">{deal.probability}% probability</span>
           </div>
         )}
 

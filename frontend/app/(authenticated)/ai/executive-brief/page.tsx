@@ -80,22 +80,22 @@ function BriefContent({ data, freshUsage }: { data: LatestBriefResponse; freshUs
   return (
     <div className="space-y-6">
       {isStale && (
-        <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-500/10 dark:border-amber-500/30 p-3 text-amber-700 dark:text-amber-300 text-sm">
+        <div className="flex items-center gap-2 rounded-xl border border-status-warning-rule bg-status-warning-surface p-3 text-status-warning-ink text-sm">
           <AlertTriangle className="h-4 w-4 flex-shrink-0" />
           <span>This brief may be outdated. Generate a new one for current data.</span>
         </div>
       )}
 
       {snapshot.uncertaintyNotes.length > 0 && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-500/10 dark:border-amber-500/30 p-4">
-          <p className="text-xs font-semibold text-amber-700 dark:text-amber-300 mb-2">
+        <div className="rounded-xl border border-status-warning-rule bg-status-warning-surface p-4">
+          <p className="text-xs font-semibold text-status-warning-ink mb-2">
             Data gaps — not all sources were available:
           </p>
           <ul className="space-y-1">
             {snapshot.uncertaintyNotes.map((note, i) => (
               <li
                 key={i}
-                className="text-xs text-amber-600 dark:text-amber-400 flex items-start gap-1.5"
+                className="text-xs text-status-warning-ink flex items-start gap-1.5"
               >
                 <AlertTriangle className="h-3 w-3 mt-0.5 flex-shrink-0" />
                 {note}

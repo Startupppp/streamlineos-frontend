@@ -34,9 +34,9 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 
 const STATUS_COLORS: Record<TicketStatus, string> = {
   TODO: "bg-muted text-muted-foreground",
-  IN_PROGRESS: "bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  IN_REVIEW: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  DONE: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300 dark:border-green-500/30",
+  IN_PROGRESS: "bg-status-info-surface text-status-info-ink",
+  IN_REVIEW: "bg-status-warning-surface text-status-warning-ink",
+  DONE: "bg-status-success-surface text-status-success-ink",
 };
 
 const STATUS_LABELS: Record<TicketStatus, string> = {
@@ -48,9 +48,9 @@ const STATUS_LABELS: Record<TicketStatus, string> = {
 
 const PRIORITY_COLORS: Record<string, string> = {
   LOW: "text-muted-foreground",
-  MEDIUM: "text-blue-600 dark:text-blue-300",
-  HIGH: "text-amber-600 dark:text-amber-300",
-  URGENT: "text-red-600 dark:text-red-300",
+  MEDIUM: "text-status-info-ink",
+  HIGH: "text-status-warning-ink",
+  URGENT: "text-status-danger-ink",
 };
 
 function DeleteRoutingButton({ isPending, onClick }: { isPending: boolean; onClick: () => void }) {
@@ -173,7 +173,7 @@ export function QueueTab() {
           </div>
           {totalPages > 1 && (
             <div className="flex items-center justify-between">
-              <span className="text-[11px] text-muted-foreground">
+              <span className="text-dense text-muted-foreground">
                 Page {page} of {totalPages}
               </span>
               <div className="flex items-center gap-2">
@@ -242,18 +242,18 @@ function AdminTicketRow({ ticket, onClick }: { ticket: HelpdeskTicket; onClick: 
     >
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap mb-0.5">
-          <span className={cn("text-[10px] font-semibold px-1.5 py-0.5 rounded-full", STATUS_COLORS[ticket.status])}>
+          <span className={cn("text-micro font-semibold px-1.5 py-0.5 rounded-full", STATUS_COLORS[ticket.status])}>
             {STATUS_LABELS[ticket.status]}
           </span>
-          <span className="text-[10px] text-muted-foreground capitalize">
+          <span className="text-micro text-muted-foreground capitalize">
             {ticket.category ? (HELPDESK_CATEGORY_LABELS[ticket.category as keyof typeof HELPDESK_CATEGORY_LABELS] ?? ticket.category) : "Other"}
           </span>
           {ticket.isConfidential && (
-            <Badge variant="secondary" className="text-[10px] h-4 px-1">Confidential</Badge>
+            <Badge variant="secondary" className="text-micro h-4 px-1">Confidential</Badge>
           )}
         </div>
         <TruncatedText text={ticket.title} className="text-sm font-medium text-foreground" />
-        <p className="text-[11px] text-muted-foreground mt-0.5">
+        <p className="text-dense text-muted-foreground mt-0.5">
           {ticket.authorName ?? "Employee"} · {format(new Date(ticket.createdAt), "MMM d, yyyy")}
           <span className={cn("ml-2 font-medium", PRIORITY_COLORS[ticket.priority])}>{ticket.priority}</span>
         </p>

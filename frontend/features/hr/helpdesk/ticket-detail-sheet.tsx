@@ -42,9 +42,9 @@ const STATUS_LABELS: Record<TicketStatus, string> = {
 
 const STATUS_COLORS: Record<TicketStatus, string> = {
   TODO: "bg-muted text-muted-foreground",
-  IN_PROGRESS: "bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  IN_REVIEW: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  DONE: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300 dark:border-green-500/30",
+  IN_PROGRESS: "bg-status-info-surface text-status-info-ink",
+  IN_REVIEW: "bg-status-warning-surface text-status-warning-ink",
+  DONE: "bg-status-success-surface text-status-success-ink",
 };
 
 interface Props {
@@ -151,14 +151,14 @@ export function TicketDetailSheet({ ticketId, isAdmin, onClose }: Props) {
                     <div key={c.id} className="flex gap-3">
                       <Avatar className="w-7 shrink-0">
                         {c.authorImage && <AvatarImage src={c.authorImage} />}
-                        <AvatarFallback className="text-[10px]">
+                        <AvatarFallback className="text-micro">
                           {getUserInitials({ name: c.authorName })}
                         </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0">
                         <div className="flex items-baseline gap-2">
                           <span className="text-xs font-semibold text-foreground">{c.authorName ?? "Team"}</span>
-                          <span className="text-[10px] text-muted-foreground">{format(new Date(c.createdAt), "MMM d, h:mm a")}</span>
+                          <span className="text-micro text-muted-foreground">{format(new Date(c.createdAt), "MMM d, h:mm a")}</span>
                         </div>
                         <p className="mt-0.5 whitespace-pre-wrap text-sm text-foreground">{c.body}</p>
                       </div>

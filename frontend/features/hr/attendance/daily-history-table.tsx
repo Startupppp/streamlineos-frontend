@@ -20,14 +20,14 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import type { AttendanceLog } from "@/types/hr";
 
 const statusBadgeClasses: Record<string, string> = {
-  PRESENT: "bg-green-100 text-green-800 border-green-200 dark:bg-green-500/10 dark:text-green-300 dark:border-green-500/30",
-  ABSENT: "bg-red-100 text-red-800 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
-  LATE: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  HALF_DAY: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  WFH: "bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/30",
-  ON_BREAK: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  PRESENT: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  ABSENT: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
+  LATE: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  HALF_DAY: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  WFH: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  ON_BREAK: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   CHECKED_OUT: "bg-muted text-muted-foreground border-border",
-  MISSING_CHECKOUT: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  MISSING_CHECKOUT: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
 };
 
 function getStatusLabel(statusKey: string): string {
@@ -105,7 +105,7 @@ const columns: DataTableColumn<AttendanceLog>[] = [
       return (
         <Badge
           className={cn(
-            "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold",
+            "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-micro font-semibold",
             badgeClass,
           )}
         >

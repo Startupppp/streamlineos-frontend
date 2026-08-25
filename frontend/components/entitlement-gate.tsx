@@ -83,7 +83,7 @@ function QuotaExceededState({
     <div
       className={cn(
         "flex flex-col items-center justify-center text-center rounded-xl border border-dashed",
-        "border-amber-200 bg-amber-50/50 dark:border-amber-500/30 dark:bg-amber-500/5",
+        "border-status-warning-rule bg-status-warning-surface",
         compact ? "py-6 px-4" : "min-h-full w-full flex-1 py-12 px-6",
         className,
       )}
@@ -92,17 +92,17 @@ function QuotaExceededState({
     >
       <div
         className={cn(
-          "rounded-lg bg-amber-100 dark:bg-amber-500/10 flex items-center justify-center mb-4",
+          "rounded-lg bg-status-warning-surface flex items-center justify-center mb-4",
           compact ? "h-9 w-9" : "h-12 w-12",
         )}
       >
-        <Zap className={cn("text-amber-600 dark:text-amber-400", compact ? "h-4 w-4" : "h-6 w-6")} />
+        <Zap className={cn("text-status-warning-ink", compact ? "h-4 w-4" : "h-6 w-6")} />
       </div>
 
       <h3
         className={cn(
           "font-semibold text-foreground",
-          compact ? "text-sm" : "text-[0.9375rem]",
+          compact ? "text-sm" : "text-sm",
         )}
       >
         {label} limit reached
@@ -128,7 +128,7 @@ function QuotaExceededState({
         <Progress
           value={pct}
           aria-label={`${label} usage`}
-          className="h-1.5 [&>div]:bg-amber-500"
+          className="h-1.5 [&>div]:bg-status-warning-fill"
         />
       </div>
 
@@ -170,7 +170,7 @@ function FeatureUnavailableState({
     <div
       className={cn(
         "flex flex-col items-center justify-center text-center rounded-xl border border-dashed",
-        "border-blue-200 bg-blue-50/40 dark:border-blue-500/30 dark:bg-blue-500/5",
+        "border-status-info-rule bg-status-info-surface",
         compact ? "py-6 px-4" : "min-h-full w-full flex-1 py-12 px-6",
         className,
       )}
@@ -179,17 +179,17 @@ function FeatureUnavailableState({
     >
       <div
         className={cn(
-          "rounded-lg bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center mb-4",
+          "rounded-lg bg-status-info-surface flex items-center justify-center mb-4",
           compact ? "h-9 w-9" : "h-12 w-12",
         )}
       >
-        <Lock className={cn("text-blue-600 dark:text-blue-400", compact ? "h-4 w-4" : "h-6 w-6")} />
+        <Lock className={cn("text-status-info-ink", compact ? "h-4 w-4" : "h-6 w-6")} />
       </div>
 
       <h3
         className={cn(
           "font-semibold text-foreground",
-          compact ? "text-sm" : "text-[0.9375rem]",
+          compact ? "text-sm" : "text-sm",
         )}
       >
         Feature not available
@@ -255,7 +255,7 @@ function ModuleNotEnabledState({ moduleKey, compact, className }: ModuleNotEnabl
       <h3
         className={cn(
           "font-semibold text-foreground",
-          compact ? "text-sm" : "text-[0.9375rem]",
+          compact ? "text-sm" : "text-sm",
         )}
       >
         Module not enabled
@@ -311,7 +311,7 @@ function AccessDeniedState({ message, onRetry, compact, className }: AccessDenie
       <h3
         className={cn(
           "font-semibold text-foreground",
-          compact ? "text-sm" : "text-[0.9375rem]",
+          compact ? "text-sm" : "text-sm",
         )}
       >
         Access denied

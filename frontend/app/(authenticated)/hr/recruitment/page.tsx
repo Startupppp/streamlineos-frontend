@@ -66,12 +66,12 @@ function QueueSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
+    <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden">
       <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/50 bg-gradient-to-r from-blue-500/[0.03] to-transparent">
         <div className="flex items-center gap-2">
           <h2 className="text-sm font-semibold text-foreground">{title}</h2>
           {count > 0 && (
-            <Badge variant="secondary" className="text-[10px] h-5 font-semibold">
+            <Badge variant="secondary" className="text-micro h-5 font-semibold">
               {count}
             </Badge>
           )}
@@ -201,13 +201,13 @@ export default function RecruitmentCommandCenterPage() {
                       href="/hr/recruitment/candidates/intake"
                       className="flex items-center gap-3 px-5 py-3 hover:bg-muted/40 transition-colors duration-150 group"
                     >
-                      <div className="w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 text-[11px] font-bold text-primary">
+                      <div className="w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 text-dense font-bold text-primary">
                         {c.firstName?.[0]}
                         {c.lastName?.[0]}
                       </div>
                       <div className="flex-1 min-w-0">
                         <TruncatedText text={`${c.firstName ?? ""} ${c.lastName ?? ""}`.trim()} className="text-sm font-medium text-foreground" />
-                        <p className="text-[11px] text-muted-foreground mt-0.5">{c.source ?? "Unknown source"}</p>
+                        <p className="text-dense text-muted-foreground mt-0.5">{c.source ?? "Unknown source"}</p>
                       </div>
                       <ChevronRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                     </Link>
@@ -224,13 +224,13 @@ export default function RecruitmentCommandCenterPage() {
                 >
                   {interviewsToday.slice(0, 5).map((interview) => (
                     <div key={interview.id} className="flex items-center gap-3 px-5 py-3">
-                      <div className="w-8 rounded-full bg-blue-100 dark:bg-blue-950/30 flex items-center justify-center shrink-0 text-[11px] font-bold text-blue-700 dark:text-blue-300">
+                      <div className="w-8 rounded-full bg-status-info-surface flex items-center justify-center shrink-0 text-dense font-bold text-status-info-ink">
                         {interview.candidate?.firstName?.[0]}
                         {interview.candidate?.lastName?.[0]}
                       </div>
                       <div className="flex-1 min-w-0">
                         <TruncatedText text={`${interview.candidate?.firstName ?? ""} ${interview.candidate?.lastName ?? ""}`.trim()} className="text-sm font-medium text-foreground" />
-                        <p className="text-[11px] text-muted-foreground mt-0.5">{interview.type}</p>
+                        <p className="text-dense text-muted-foreground mt-0.5">{interview.type}</p>
                       </div>
                     </div>
                   ))}
@@ -250,12 +250,12 @@ export default function RecruitmentCommandCenterPage() {
                       href="/hr/recruitment/jobs"
                       className="flex items-center gap-3 px-5 py-3 hover:bg-muted/40 transition-colors duration-150 group"
                     >
-                      <div className="w-8 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
-                        <Briefcase className="h-4 w-4 text-amber-600" />
+                      <div className="w-8 rounded-lg bg-status-warning-surface flex items-center justify-center shrink-0">
+                        <Briefcase className="h-4 w-4 text-status-warning-ink" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <TruncatedText text={job.title} className="text-sm font-medium text-foreground" />
-                        <p className="text-[11px] text-muted-foreground mt-0.5">{job.location ?? "Remote"}</p>
+                        <p className="text-dense text-muted-foreground mt-0.5">{job.location ?? "Remote"}</p>
                       </div>
                       <ChevronRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                     </Link>
@@ -264,10 +264,10 @@ export default function RecruitmentCommandCenterPage() {
               </div>
 
               <div className="space-y-4">
-                <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
+                <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden">
                   <div className="px-5 py-3.5 border-b border-border/60">
                     <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                      <AlertTriangle className="h-4 w-4 text-amber-600" />
+                      <AlertTriangle className="h-4 w-4 text-status-warning-ink" />
                       Needs attention
                     </h2>
                   </div>
@@ -289,7 +289,7 @@ export default function RecruitmentCommandCenterPage() {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
+                <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden">
                   <div className="px-5 py-3.5 border-b border-border/60">
                     <h2 className="text-sm font-semibold text-foreground">Source quality this week</h2>
                   </div>
@@ -303,7 +303,7 @@ export default function RecruitmentCommandCenterPage() {
                           const pct = total > 0 ? Math.round((s.count / total) * 100) : 0;
                           return (
                             <div key={s.source} className="space-y-1">
-                              <div className="flex justify-between text-[11px]">
+                              <div className="flex justify-between text-dense">
                                 <span className="font-medium text-foreground">{s.source}</span>
                                 <span className="text-muted-foreground tabular-nums">
                                   {s.count} · {pct}%

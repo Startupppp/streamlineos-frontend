@@ -296,7 +296,7 @@ export function QuoteCreateSheet({
                             </SelectContent>
                           </Select>
                           {selectedPricebook && (
-                            <p className="text-[10px] text-muted-foreground mt-1">
+                            <p className="text-micro text-muted-foreground mt-1">
                               Prices from: {selectedPricebook.name}
                             </p>
                           )}
@@ -382,8 +382,8 @@ export function QuoteCreateSheet({
                       </FormControl>
                       {exceedsMaxDiscount && (
                         <div className="flex items-center gap-1 mt-1">
-                          <AlertTriangle className="h-3 w-3 text-amber-600 shrink-0" />
-                          <p className="text-[10px] text-amber-700 font-medium">
+                          <AlertTriangle className="h-3 w-3 text-status-warning-ink shrink-0" />
+                          <p className="text-micro text-status-warning-ink font-medium">
                             Requires approval (max {quoteSettings?.maxDiscountPercent}%)
                           </p>
                         </div>

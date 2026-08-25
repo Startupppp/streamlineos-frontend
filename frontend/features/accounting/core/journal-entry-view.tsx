@@ -57,10 +57,10 @@ export function JournalEntryView({
   return (
     <div className="space-y-4">
       {isPendingApproval && canApproveJournal && (
-        <div className="flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-500/30 dark:bg-amber-500/10">
+        <div className="flex items-center justify-between rounded-lg border border-status-warning-rule bg-status-warning-surface px-4 py-3">
           <div className="flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
-            <p className="text-sm text-amber-800 dark:text-amber-300 font-medium">
+            <AlertCircle className="h-4 w-4 text-status-warning-ink shrink-0" />
+            <p className="text-sm text-status-warning-ink font-medium">
               This entry is pending approval
             </p>
           </div>
@@ -91,46 +91,46 @@ export function JournalEntryView({
         <CardContent className="p-5">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             <div className="min-w-0">
-              <p className="text-[11px] font-medium text-muted-foreground leading-none">Date</p>
+              <p className="text-dense font-medium text-muted-foreground leading-none">Date</p>
               <p className="mt-1 text-sm font-medium text-foreground tabular-nums">
                 {formatDate(entry.entryDate)}
               </p>
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] font-medium text-muted-foreground leading-none">Status</p>
+              <p className="text-dense font-medium text-muted-foreground leading-none">Status</p>
               <div className="mt-1">
                 <FinanceStatusBadge status={entry.status} size="chip" />
               </div>
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] font-medium text-muted-foreground leading-none">Source type</p>
+              <p className="text-dense font-medium text-muted-foreground leading-none">Source type</p>
               <p className="mt-1 text-sm text-foreground">{entry.sourceType}</p>
             </div>
             {entry.sourceId && (
               <div className="min-w-0">
-                <p className="text-[11px] font-medium text-muted-foreground leading-none">Source ID</p>
+                <p className="text-dense font-medium text-muted-foreground leading-none">Source ID</p>
                 <p className="mt-1 text-sm font-mono text-foreground truncate">{entry.sourceId}</p>
               </div>
             )}
             {entry.sourceEvent && (
               <div className="min-w-0">
-                <p className="text-[11px] font-medium text-muted-foreground leading-none">Source event</p>
+                <p className="text-dense font-medium text-muted-foreground leading-none">Source event</p>
                 <p className="mt-1 text-sm text-foreground">{entry.sourceEvent}</p>
               </div>
             )}
             <div className="min-w-0">
-              <p className="text-[11px] font-medium text-muted-foreground leading-none">Created by</p>
+              <p className="text-dense font-medium text-muted-foreground leading-none">Created by</p>
               <TruncatedText text={entry.createdByName ?? entry.createdByEmail?.split("@")[0] ?? entry.createdBy} className="mt-1 text-sm text-foreground" />
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] font-medium text-muted-foreground leading-none">Created at</p>
+              <p className="text-dense font-medium text-muted-foreground leading-none">Created at</p>
               <p className="mt-1 text-sm text-foreground tabular-nums">
                 {formatDateTime(entry.createdAt)}
               </p>
             </div>
             {entry.description && (
               <div className="min-w-0 col-span-2 sm:col-span-3 lg:col-span-4">
-                <p className="text-[11px] font-medium text-muted-foreground leading-none">Description</p>
+                <p className="text-dense font-medium text-muted-foreground leading-none">Description</p>
                 <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
                   {entry.description}
                 </p>

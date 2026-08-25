@@ -65,7 +65,7 @@ export const InlineDueDate = memo(function InlineDueDate({
             />
             <span
               className={cn(
-                "text-[10px]",
+                "text-micro",
                 parsedDate ? "text-foreground" : "text-muted-foreground/50",
               )}
             >
@@ -150,7 +150,7 @@ export const InlineStartDate = memo(function InlineStartDate({
             />
             <span
               className={cn(
-                "text-[10px]",
+                "text-micro",
                 parsedDate ? "text-foreground" : "text-muted-foreground/50",
               )}
             >

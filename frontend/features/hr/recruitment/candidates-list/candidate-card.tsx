@@ -40,49 +40,49 @@ export const STAGE_CONFIG: {
     value: "NEW",
     label: "New",
     accent: "border-l-border",
-    pill: "bg-muted text-muted-foreground dark:bg-slate-800 dark:text-slate-200",
+    pill: "bg-muted text-muted-foreground",
     dot: "bg-muted-foreground/50",
-    activePill: "bg-primary text-primary-foreground dark:bg-slate-100 dark:text-slate-800",
+    activePill: "bg-primary text-primary-foreground",
   },
   {
     value: "SCREENING",
     label: "Screening",
     accent: "border-l-blue-500",
-    pill: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
-    dot: "bg-blue-500",
-    activePill: "bg-blue-600 text-white",
+    pill: "bg-status-info-surface text-status-info-ink",
+    dot: "bg-status-info-fill",
+    activePill: "bg-status-info-fill text-white",
   },
   {
     value: "INTERVIEW",
     label: "Interview",
     accent: "border-l-amber-500",
-    pill: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
-    dot: "bg-amber-500",
-    activePill: "bg-amber-600 text-white",
+    pill: "bg-status-warning-surface text-status-warning-ink",
+    dot: "bg-status-warning-fill",
+    activePill: "bg-status-warning-fill text-white",
   },
   {
     value: "OFFER",
     label: "Offer",
     accent: "border-l-blue-500",
-    pill: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-    dot: "bg-blue-500",
-    activePill: "bg-blue-600 text-white",
+    pill: "bg-status-info-surface text-status-info-ink",
+    dot: "bg-status-info-fill",
+    activePill: "bg-status-info-fill text-white",
   },
   {
     value: "HIRED",
     label: "Hired",
     accent: "border-l-emerald-500",
-    pill: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
-    dot: "bg-emerald-500",
-    activePill: "bg-emerald-600 text-white",
+    pill: "bg-status-success-surface text-status-success-ink",
+    dot: "bg-status-success-fill",
+    activePill: "bg-status-success-fill text-white",
   },
   {
     value: "REJECTED",
     label: "Rejected",
     accent: "border-l-rose-400",
-    pill: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
-    dot: "bg-rose-400",
-    activePill: "bg-rose-600 text-white",
+    pill: "bg-status-danger-surface text-status-danger-ink",
+    dot: "bg-status-danger-fill",
+    activePill: "bg-status-danger-fill text-white",
   },
 ];
 
@@ -243,7 +243,7 @@ export function CandidateCard({
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-semibold", cfg.pill)}>
+          <span className={cn("px-2 py-0.5 rounded-full text-micro font-semibold", cfg.pill)}>
             {cfg.label}
           </span>
           {candidate.rating !== null && candidate.rating !== undefined && (
@@ -254,7 +254,7 @@ export function CandidateCard({
                   className={cn(
                     "h-3 w-3",
                     i < candidate.rating!
-                      ? "text-amber-500 fill-amber-500"
+                      ? "text-status-warning-ink fill-amber-500"
                       : "text-border fill-transparent",
                   )}
                 />
@@ -262,7 +262,7 @@ export function CandidateCard({
             </div>
           )}
           {candidate.createdAt && (
-            <div className="flex items-center gap-0.5 ml-auto text-[10px] text-muted-foreground">
+            <div className="flex items-center gap-0.5 ml-auto text-micro text-muted-foreground">
               <Clock className="h-2.5 w-2.5" />
               {formatDistanceToNow(new Date(candidate.createdAt), { addSuffix: true })}
             </div>

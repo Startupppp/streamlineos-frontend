@@ -139,7 +139,7 @@ function SectionHeader({ title, count }: { title: string; count: number }) {
   return (
     <div className="flex items-center gap-2 mb-3">
       <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-      <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-primary/5 text-foreground text-[11px] font-medium border border-primary/20">
+      <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-primary/5 text-foreground text-dense font-medium border border-primary/20">
         {count}
       </span>
     </div>

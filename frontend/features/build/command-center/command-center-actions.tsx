@@ -358,21 +358,21 @@ export function QuickCreateMenu({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>{triggerButton}</DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <DropdownMenuLabel className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">
           Create
         </DropdownMenuLabel>
         {showNewProject ? (
           <DropdownMenuItem onClick={onCreateProject} className="cursor-pointer gap-2">
             <FolderPlus className="h-4 w-4 text-muted-foreground" />
             <span>New project</span>
-            <span className="ml-auto font-mono text-[10px] text-muted-foreground">C P</span>
+            <span className="ml-auto font-mono text-micro text-muted-foreground">C P</span>
           </DropdownMenuItem>
         ) : null}
         {showNewIssue ? (
           <DropdownMenuItem onClick={handleCreateIssue} className="cursor-pointer gap-2">
             <ListPlus className="h-4 w-4 text-muted-foreground" />
             <span>New issue</span>
-            <span className="ml-auto font-mono text-[10px] text-muted-foreground">C T</span>
+            <span className="ml-auto font-mono text-micro text-muted-foreground">C T</span>
           </DropdownMenuItem>
         ) : null}
         {showNewTeam ? (

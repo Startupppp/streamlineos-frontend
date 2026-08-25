@@ -26,14 +26,14 @@ export function LandingCTA() {
           transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] as const }}
           className="relative max-w-4xl mx-auto text-center"
         >
-          <div className="relative bg-slate-900 p-6 sm:p-10 lg:p-16 rounded-2xl overflow-hidden">
+          <div className="relative bg-status-neutral-fill p-6 sm:p-10 lg:p-16 rounded-2xl overflow-hidden">
             <div className="absolute inset-0 pointer-events-none" aria-hidden>
               <div className="absolute -top-20 left-1/2 -translate-x-1/2 h-[300px] w-[min(600px,120vw)] rounded-full bg-brand-core/35 blur-3xl" />
               <div className="absolute bottom-0 right-0 h-[200px] w-[min(400px,80vw)] rounded-full bg-brand-cyan/25 blur-3xl" />
             </div>
 
             <div className="relative">
-              <p className="text-[12px] font-medium text-brand-bright mb-5 sm:mb-6">
+              <p className="text-xs font-medium text-brand-bright mb-5 sm:mb-6">
                 Free for the first {PRICING.freeSeatLimit} seats
               </p>
 
@@ -42,7 +42,7 @@ export function LandingCTA() {
                 <span className="text-brand-cyan">{BRAND_NAME}.</span>
               </h2>
 
-              <p className="text-slate-400 text-sm sm:text-base lg:text-lg leading-relaxed max-w-xl mx-auto mb-8 sm:mb-10 text-pretty">
+              <p className="text-muted-foreground text-sm sm:text-base lg:text-lg leading-relaxed max-w-xl mx-auto mb-8 sm:mb-10 text-pretty">
                 Start free. No credit card. Instant access.
               </p>
 
@@ -51,7 +51,7 @@ export function LandingCTA() {
                   <Link href="/signin" className="block w-full sm:w-auto">
                     <Button
                       size="lg"
-                      className="bg-white text-slate-900 hover:bg-slate-100 font-bold border-0 h-12 w-full sm:w-auto px-8 text-[15px]"
+                      className="bg-white text-foreground hover:bg-muted font-bold border-0 h-12 w-full sm:w-auto px-8 text-sm"
                     >
                       Start free
                       <ArrowRight className="ml-2 h-4 w-4" />
@@ -62,7 +62,7 @@ export function LandingCTA() {
                   <Button
                     size="lg"
                     variant="outline"
-                    className="border-white/20 bg-white/8 text-white hover:bg-white/15 hover:text-white hover:border-white/30 h-12 w-full sm:w-auto px-8 text-[15px]"
+                    className="border-white/20 bg-white/8 text-white hover:bg-white/15 hover:text-white hover:border-white/30 h-12 w-full sm:w-auto px-8 text-sm"
                   >
                     See pricing
                   </Button>

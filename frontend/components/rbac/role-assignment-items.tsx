@@ -36,14 +36,14 @@ export function AssignableUserItem({
     >
       <Avatar className="h-6 w-6">
         <AvatarImage src={member.image ?? undefined} alt={member.name ?? ""} />
-        <AvatarFallback className="text-[9px]">
+        <AvatarFallback className="text-micro">
           {getInitials(member.name ?? member.email)}
         </AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">
-        <TruncatedText text={member.name ?? member.email ?? ""} className="text-[13px]" />
+        <TruncatedText text={member.name ?? member.email ?? ""} className="text-label" />
         {member.name && (
-          <TruncatedText text={member.email ?? ""} className="text-[11px] text-muted-foreground" />
+          <TruncatedText text={member.email ?? ""} className="text-dense text-muted-foreground" />
         )}
       </div>
       {busy ? (
@@ -83,7 +83,7 @@ export function AssignableDepartmentItem({
       aria-label={`Assign department ${department.name}`}
     >
       <Building2 className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-      <TruncatedText text={department.name} className="text-[13px] flex-1" />
+      <TruncatedText text={department.name} className="text-label flex-1" />
       {busy ? (
         <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
       ) : (
@@ -125,14 +125,14 @@ export function MemberRow({
     >
       <Avatar className="w-8">
         <AvatarImage src={image ?? undefined} alt={name ?? ""} />
-        <AvatarFallback className="text-[10px]">
+        <AvatarFallback className="text-micro">
           {getInitials(name ?? subtitle ?? "?")}
         </AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">
-        <TruncatedText text={name ?? subtitle ?? "Unknown"} className="text-[13px] font-medium" />
+        <TruncatedText text={name ?? subtitle ?? "Unknown"} className="text-label font-medium" />
         {subtitle && name && (
-          <TruncatedText text={subtitle} className="text-[11px] text-muted-foreground" />
+          <TruncatedText text={subtitle} className="text-dense text-muted-foreground" />
         )}
       </div>
       <Button
@@ -182,7 +182,7 @@ export function DepartmentRow({
       >
         <Building2 className="h-4 w-4 text-muted-foreground" />
       </span>
-      <TruncatedText text={name ?? "Department"} className="text-[13px] font-medium flex-1" />
+      <TruncatedText text={name ?? "Department"} className="text-label font-medium flex-1" />
       <Button
         variant="ghost"
         size="icon"

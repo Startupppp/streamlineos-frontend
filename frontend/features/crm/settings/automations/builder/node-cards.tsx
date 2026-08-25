@@ -30,7 +30,7 @@ export const TriggerCard = memo(function TriggerCard({ value, events, onChange }
       className="rounded-xl border-2 border-primary/20 bg-primary/5 p-4 shadow-sm"
     >
       <div className="flex items-center gap-2 mb-3">
-        <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-[10px] font-bold">T</div>
+        <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-micro font-bold">T</div>
         <span className="text-sm font-semibold text-primary">Trigger</span>
       </div>
       <div className="space-y-1.5">
@@ -135,7 +135,7 @@ export const ActionNodeCard = memo(function ActionNodeCard({ node, actions, drag
         <div className="flex-1 space-y-2 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <div className="h-5 w-5 rounded bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground">A</div>
+              <div className="h-5 w-5 rounded bg-muted flex items-center justify-center text-micro font-bold text-muted-foreground">A</div>
               <Select value={node.type ?? ""} onValueChange={handleActionChange}>
                 <SelectTrigger className="text-xs w-[180px]">
                   <SelectValue placeholder="Select action" />
@@ -153,7 +153,7 @@ export const ActionNodeCard = memo(function ActionNodeCard({ node, actions, drag
             <div className="grid grid-cols-2 gap-2 pl-7">
               {schemaKeys.map((key) => (
                 <div key={key} className="space-y-0.5">
-                  <Label className="text-[10px] text-muted-foreground capitalize">{key}</Label>
+                  <Label className="text-micro text-muted-foreground capitalize">{key}</Label>
                   <Input
                     className="text-xs"
                     placeholder={key}
@@ -183,11 +183,11 @@ export const WaitCard = memo(function WaitCard({ waitHours, onChangeHours, onRem
   }, [onChangeHours]);
 
   return (
-    <motion.div layout className="rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50/60 dark:bg-amber-500/10 p-3 shadow-sm">
+    <motion.div layout className="rounded-xl border border-status-warning-rule bg-status-warning-surface p-3 shadow-sm">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <div className="h-5 w-5 rounded bg-amber-100 dark:bg-amber-500/10 flex items-center justify-center text-[10px] font-bold text-amber-700 dark:text-amber-300">W</div>
-          <span className="text-xs font-medium text-amber-700 dark:text-amber-300">Wait</span>
+          <div className="h-5 w-5 rounded bg-status-warning-surface flex items-center justify-center text-micro font-bold text-status-warning-ink">W</div>
+          <span className="text-xs font-medium text-status-warning-ink">Wait</span>
           <Input
             type="number"
             min={0}

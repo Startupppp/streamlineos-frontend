@@ -102,7 +102,7 @@ export function StepTeam({ draft, updateDraft }: StepSharedProps) {
                 <div className="flex items-center gap-1.5">
                   <span className="min-w-0 truncate text-sm font-medium">{displayName}</span>
                   {isCreator && (
-                    <span className="shrink-0 text-[10px] font-normal text-muted-foreground bg-muted rounded px-1 py-0.5">
+                    <span className="shrink-0 text-micro font-normal text-muted-foreground bg-muted rounded px-1 py-0.5">
                       You
                     </span>
                   )}

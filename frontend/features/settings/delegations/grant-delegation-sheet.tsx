@@ -313,7 +313,7 @@ export function GrantDelegationSheet({
                     ) : permissionGroups.length > 0 ? (
                       permissionGroups.map((group) => (
                         <section key={group.key} className="pb-2 last:pb-0">
-                          <p className="sticky top-0 z-10 bg-background/95 px-1.5 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground backdrop-blur">
+                          <p className="sticky top-0 z-10 bg-background/95 px-1.5 py-1.5 text-micro font-semibold uppercase tracking-wide text-muted-foreground backdrop-blur">
                             {group.label}
                           </p>
                           {group.permissions.map((permission) => (
@@ -457,7 +457,7 @@ function PermissionItem({ perm, checked, onToggle }: PermissionItemProps) {
       />
       <div className="min-w-0">
         <p className="text-xs font-mono leading-snug truncate">{perm.name}</p>
-        <p className="text-[10px] text-muted-foreground leading-tight">
+        <p className="text-micro text-muted-foreground leading-tight">
           {perm.description}
         </p>
       </div>

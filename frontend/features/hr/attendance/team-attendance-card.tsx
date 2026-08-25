@@ -36,17 +36,17 @@ const STATUS_META: Record<
 > = {
   PRESENT: {
     label: "Present",
-    tone: "bg-emerald-500/10 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+    tone: "bg-status-success-surface text-status-success-ink border-status-success-rule",
     Icon: Wifi,
   },
   ON_BREAK: {
     label: "On Break",
-    tone: "bg-amber-500/10 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+    tone: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
     Icon: Coffee,
   },
   CHECKED_OUT: {
     label: "Checked Out",
-    tone: "bg-blue-500/10 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+    tone: "bg-status-info-surface text-status-info-ink border-status-info-rule",
     Icon: LogOut,
   },
   OFFLINE: {
@@ -57,9 +57,9 @@ const STATUS_META: Record<
 };
 
 const SUMMARY_TONES: Record<TeamAttendanceEntry["status"], string> = {
-  PRESENT: "text-emerald-600",
-  ON_BREAK: "text-amber-600",
-  CHECKED_OUT: "text-blue-600",
+  PRESENT: "text-status-success-ink",
+  ON_BREAK: "text-status-warning-ink",
+  CHECKED_OUT: "text-status-info-ink",
   OFFLINE: "text-muted-foreground",
 };
 
@@ -67,7 +67,7 @@ function StatusBadge({ status }: { status: TeamAttendanceEntry["status"] }) {
   const meta = STATUS_META[status];
   const Icon = meta.Icon;
   return (
-    <Badge className={cn("gap-1 text-[10px] font-medium", meta.tone)}>
+    <Badge className={cn("gap-1 text-micro font-medium", meta.tone)}>
       <Icon className="h-2.5 w-2.5" />
       {meta.label}
     </Badge>
@@ -89,9 +89,9 @@ function MemberRow({ entry }: { entry: TeamAttendanceEntry }) {
           text={entry.name}
           className="text-sm font-medium hover:underline"
         />
-        <div className="flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground">
+        <div className="flex min-w-0 items-center gap-1.5 text-dense text-muted-foreground">
           {entry.department ? (
-            <TruncatedText text={entry.department} className="text-[11px] text-muted-foreground" />
+            <TruncatedText text={entry.department} className="text-dense text-muted-foreground" />
           ) : (
             <span>No department</span>
           )}
@@ -106,7 +106,7 @@ function MemberRow({ entry }: { entry: TeamAttendanceEntry }) {
       <div className="flex shrink-0 flex-col items-end gap-0.5">
         <StatusBadge status={entry.status} />
         {entry.checkIn && (
-          <span className="text-[10px] tabular-nums text-muted-foreground">
+          <span className="text-micro tabular-nums text-muted-foreground">
             In {format(new Date(entry.checkIn), "h:mm a")}
             {entry.checkOut
               ? ` · Out ${format(new Date(entry.checkOut), "h:mm a")}`
@@ -233,7 +233,7 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
                   >
                     {counts[status]}
                   </span>
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <span className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">
                     {STATUS_META[status].label}
                   </span>
                 </button>

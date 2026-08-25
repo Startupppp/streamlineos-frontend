@@ -71,7 +71,7 @@ export const VelocityChart = memo(function VelocityChart({ sprints }: VelocityCh
             <TrendingUp className="h-4 w-4 shrink-0 text-primary" />
             Velocity
           </CardTitle>
-          <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
+          <span className="shrink-0 text-dense tabular-nums text-muted-foreground">
             Avg: <span className="font-semibold text-foreground">{avgVelocity} pts</span>
           </span>
         </div>
@@ -82,18 +82,18 @@ export const VelocityChart = memo(function VelocityChart({ sprints }: VelocityCh
             <div key={item.name} className="flex min-w-0 flex-1 flex-col items-center gap-1">
               <div className="flex w-full items-end gap-0.5" style={{ height: "108px" }}>
                 <div
-                  className="flex-1 rounded-t bg-blue-200 transition-all dark:bg-blue-900/50"
+                  className="flex-1 rounded-t bg-status-info-fill transition-all"
                   style={{ height: `${(item.committed / maxPoints) * 100}%` }}
                   title={`Committed: ${item.committed} pts`}
                 />
                 <div
-                  className="flex-1 rounded-t bg-emerald-500 transition-all"
+                  className="flex-1 rounded-t bg-status-success-fill transition-all"
                   style={{ height: `${(item.completed / maxPoints) * 100}%` }}
                   title={`Completed: ${item.completed} pts`}
                 />
               </div>
               <span
-                className={cn(TEXT_ONE_LINE, "w-full text-center text-[10px] text-muted-foreground")}
+                className={cn(TEXT_ONE_LINE, "w-full text-center text-micro text-muted-foreground")}
                 title={item.name}
               >
                 {item.name}
@@ -103,12 +103,12 @@ export const VelocityChart = memo(function VelocityChart({ sprints }: VelocityCh
         </div>
         <div className="mt-3 flex items-center justify-center gap-4">
           <div className="flex items-center gap-1.5">
-            <div className="h-2.5 w-2.5 rounded bg-blue-200 dark:bg-blue-900/50" />
-            <span className="text-[10px] text-muted-foreground">Committed</span>
+            <div className="h-2.5 w-2.5 rounded bg-status-info-fill" />
+            <span className="text-micro text-muted-foreground">Committed</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="h-2.5 w-2.5 rounded bg-emerald-500" />
-            <span className="text-[10px] text-muted-foreground">Completed</span>
+            <div className="h-2.5 w-2.5 rounded bg-status-success-fill" />
+            <span className="text-micro text-muted-foreground">Completed</span>
           </div>
         </div>
       </CardContent>

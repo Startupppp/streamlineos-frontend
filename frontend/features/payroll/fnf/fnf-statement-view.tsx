@@ -34,21 +34,21 @@ export function FnfStatementView({ settlement, statement }: FnfStatementViewProp
           <span className="text-sm font-semibold">{statement.employee.name}</span>
           <FnfStatusBadge status={statement.status} />
         </div>
-        <span className="text-[11px] text-muted-foreground">{statement.employee.email}</span>
-        <span className="text-[10px] text-muted-foreground">Settlement #{settlement.id}</span>
+        <span className="text-dense text-muted-foreground">{statement.employee.email}</span>
+        <span className="text-micro text-muted-foreground">Settlement #{settlement.id}</span>
       </div>
 
       <div className="rounded-lg border border-border overflow-hidden">
-        <table className="w-full text-[11px]">
+        <table className="w-full text-dense">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              <th className="text-left px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+              <th className="text-left px-3 py-2 text-micro uppercase tracking-wider font-bold text-muted-foreground">
                 Component
               </th>
-              <th className="text-center px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+              <th className="text-center px-3 py-2 text-micro uppercase tracking-wider font-bold text-muted-foreground">
                 Type
               </th>
-              <th className="text-right px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+              <th className="text-right px-3 py-2 text-micro uppercase tracking-wider font-bold text-muted-foreground">
                 Amount
               </th>
             </tr>
@@ -62,10 +62,10 @@ export function FnfStatementView({ settlement, statement }: FnfStatementViewProp
                   <td className="px-3 py-1.5 text-center">
                     <span
                       className={cn(
-                        "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border",
+                        "inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium border",
                         isCredit
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
-                          : "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+                          ? "bg-status-success-surface text-status-success-ink border-status-success-rule"
+                          : "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
                       )}
                     >
                       {isCredit ? "Credit" : "Deduction"}
@@ -74,7 +74,7 @@ export function FnfStatementView({ settlement, statement }: FnfStatementViewProp
                   <td
                     className={cn(
                       "px-3 py-1.5 font-mono tabular-nums text-right",
-                      isCredit ? "text-emerald-700 dark:text-emerald-400" : "text-red-600 dark:text-red-400",
+                      isCredit ? "text-status-success-ink" : "text-status-danger-ink",
                     )}
                   >
                     {isCredit ? "+" : "−"}
@@ -86,13 +86,13 @@ export function FnfStatementView({ settlement, statement }: FnfStatementViewProp
           </tbody>
           <tfoot>
             <tr className="border-t-2 border-border bg-muted/20">
-              <td className="px-3 py-2 font-bold text-[12px]" colSpan={2}>
+              <td className="px-3 py-2 font-bold text-xs" colSpan={2}>
                 Net Payable
               </td>
               <td
                 className={cn(
-                  "px-3 py-2 font-mono tabular-nums text-right font-bold text-[14px]",
-                  isPositive ? "text-emerald-700 dark:text-emerald-400" : "text-red-600 dark:text-red-400",
+                  "px-3 py-2 font-mono tabular-nums text-right font-bold text-sm",
+                  isPositive ? "text-status-success-ink" : "text-status-danger-ink",
                 )}
               >
                 {formatMoney(statement.netPayable)}

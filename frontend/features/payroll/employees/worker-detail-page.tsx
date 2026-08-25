@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 import { EmployeeDetailPage } from "./employee-detail-page";
 
 const STATUS_CONFIG: Record<SalaryProfileStatus, { className: string; label: string }> = {
-  ACTIVE: { className: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30", label: "Active" },
+  ACTIVE: { className: "bg-status-success-surface text-status-success-ink border-status-success-rule", label: "Active" },
   UPCOMING: { className: "bg-primary/10 text-foreground border-primary/20", label: "Upcoming" },
   SUPERSEDED: { className: "bg-muted text-muted-foreground border-border", label: "Superseded" },
 };
@@ -57,12 +57,12 @@ const COMPONENT_COLUMNS: DataTableColumn<ProfileComponent>[] = [
         <div className="flex items-center gap-1.5">
           <span className="font-medium text-foreground">{comp.name}</span>
           {comp.isOverride && (
-            <span className="text-[9px] px-1 rounded bg-amber-100 text-amber-700 border border-amber-200 font-medium dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
+            <span className="text-micro px-1 rounded bg-status-warning-surface text-status-warning-ink border border-status-warning-rule font-medium">
               override
             </span>
           )}
         </div>
-        <span className="text-[10px] text-muted-foreground font-mono">{comp.code}</span>
+        <span className="text-micro text-muted-foreground font-mono">{comp.code}</span>
       </div>
     ),
     className: "w-[40%] py-1 pr-2",
@@ -112,7 +112,7 @@ function ComponentsBreakdown({ components }: { components: ProfileComponent[] })
 
   if (components.length === 0) {
     return (
-      <p className="text-[11px] text-muted-foreground">No components configured for this profile.</p>
+      <p className="text-dense text-muted-foreground">No components configured for this profile.</p>
     );
   }
 
@@ -120,14 +120,14 @@ function ComponentsBreakdown({ components }: { components: ProfileComponent[] })
     <div className="divide-y divide-border">
       {COMPONENT_TYPE_ORDER.filter((type) => grouped[type].length > 0).map((type) => (
         <div key={type} className="pt-3 first:pt-0">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
+          <p className="text-micro font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
             {COMPONENT_TYPE_LABELS[type]}
           </p>
           <DataTable
             data={grouped[type]}
             columns={COMPONENT_COLUMNS}
             getRowKey={(comp) => comp.id}
-            className="border-0 rounded-none text-[11px]"
+            className="border-0 rounded-none text-dense"
           />
         </div>
       ))}
@@ -138,14 +138,14 @@ function ComponentsBreakdown({ components }: { components: ProfileComponent[] })
 function ProfileHistoryRow({ profile }: { profile: EmployeeSalaryProfile }) {
   const cfg = STATUS_CONFIG[profile.status];
   return (
-    <div className="flex items-center gap-3 py-1.5 border-t border-border first:border-0 text-[11px]">
+    <div className="flex items-center gap-3 py-1.5 border-t border-border first:border-0 text-dense">
       <span className="font-mono tabular-nums text-muted-foreground shrink-0">
         {profile.effectiveFrom}
       </span>
       <span className="flex-1 font-medium">{formatMoney(profile.annualCtc)} / year</span>
       <span
         className={cn(
-          "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border",
+          "inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium border",
           cfg.className,
         )}
       >
@@ -221,7 +221,7 @@ export function WorkerDetailPage({ workerId }: WorkerDetailPageProps) {
             <span>{formatMoney(activeProfile.annualCtc)} / year</span>
             <span
               className={cn(
-                "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border",
+                "inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium border",
                 STATUS_CONFIG[activeProfile.status].className,
               )}
             >

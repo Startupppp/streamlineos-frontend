@@ -51,18 +51,18 @@ function isValidOtherLabel(value: string): boolean {
 function getStatusConfig(s: string | null) {
   if (s === "APPROVED" || s === "PAID") {
     return {
-      badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30",
+      badge: "bg-status-success-surface text-status-success-ink border-status-success-rule",
       icon: <CheckCircle2 className="h-2.5 w-2.5" />,
     };
   }
   if (s === "REJECTED") {
     return {
-      badge: "bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300 border-rose-200 dark:border-rose-500/30",
+      badge: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
       icon: <XCircle className="h-2.5 w-2.5" />,
     };
   }
   return {
-    badge: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 border-amber-200 dark:border-amber-500/30",
+    badge: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
     icon: <Receipt className="h-2.5 w-2.5" />,
   };
 }
@@ -89,7 +89,7 @@ function ReimbursementActions({
 
   if (!isAdmin) return null;
   if (reimbursementUserId === currentUserId) {
-    return <span className="text-[10px] text-muted-foreground italic">Cannot approve own</span>;
+    return <span className="text-micro text-muted-foreground italic">Cannot approve own</span>;
   }
   return (
     <div className="flex gap-1 justify-end">
@@ -265,7 +265,7 @@ export function ReimbursementsPage() {
       key: "category",
       header: "Category",
       cell: (r) => (
-        <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
+        <span className="inline-flex items-center text-micro font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
           {r.category}
         </span>
       ),
@@ -293,7 +293,7 @@ export function ReimbursementsPage() {
       cell: (r) => {
         const statusCfg = getStatusConfig(r.status);
         return (
-          <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", statusCfg.badge)}>
+          <span className={cn("inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border", statusCfg.badge)}>
             {statusCfg.icon}
             {r.status ?? "PENDING"}
           </span>
@@ -391,7 +391,7 @@ export function ReimbursementsPage() {
               value={customCategory}
               onChange={handleCustomCategoryChange}
             />
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-dense text-muted-foreground">
               Letters, numbers, spaces, apostrophes, periods, and hyphens only.
             </p>
           </div>
@@ -435,7 +435,7 @@ export function ReimbursementsPage() {
               <span className="text-sm font-medium text-foreground/70">
                 {uploadFile.isPending ? "Uploading…" : "Upload receipt"}
               </span>
-              <span className="mt-0.5 text-[11px] text-muted-foreground">
+              <span className="mt-0.5 text-dense text-muted-foreground">
                 PDF, PNG, JPG up to 10MB
               </span>
             </button>
@@ -446,7 +446,7 @@ export function ReimbursementsPage() {
               </div>
               <div className="min-w-0 flex-1">
                 <TruncatedText text={receiptFileName ?? "Receipt"} className="text-sm font-medium text-foreground" />
-                <p className="text-[11px] text-muted-foreground">Attached</p>
+                <p className="text-dense text-muted-foreground">Attached</p>
               </div>
               <Button
                 type="button"

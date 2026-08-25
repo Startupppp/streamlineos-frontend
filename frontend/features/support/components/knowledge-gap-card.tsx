@@ -61,7 +61,7 @@ export function KnowledgeGapCard({
           {gap.ticketCount} {gap.ticketCount === 1 ? "ticket" : "tickets"}
         </span>
         {gap.deflectionCount > 0 && (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-status-success-surface text-status-success-ink border-status-success-rule">
             {gap.deflectionCount}{" "}
             {gap.deflectionCount === 1 ? "deflection" : "deflections"}
           </span>
@@ -90,7 +90,7 @@ export function KnowledgeGapCard({
       )}
 
       {awaitingReview && (
-        <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+        <p className="text-xs text-status-warning-ink font-medium">
           Awaiting human review — Review &amp; publish in KB
         </p>
       )}
@@ -112,7 +112,7 @@ export function KnowledgeGapCard({
         {gap.proposedArticleId !== null && (
           <Link
             href={pageHref(gap.proposedArticleId)}
-            className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+            className="inline-flex items-center gap-1 text-xs text-status-info-ink hover:underline"
           >
             <ExternalLink className="h-3 w-3" />
             View Draft

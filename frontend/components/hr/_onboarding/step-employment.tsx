@@ -125,8 +125,8 @@ export function StepEmployment({
             </Select>
             <FormDescription className="text-xs">Permission level for system access</FormDescription>
             {onlyAdminAvailable && (
-              <div className="flex flex-col gap-1.5 rounded-lg border border-amber-200/80 bg-amber-50/60 px-3 py-2 dark:border-amber-500/25 dark:bg-amber-500/10">
-                <p className="text-xs text-amber-800 dark:text-amber-200">
+              <div className="flex flex-col gap-1.5 rounded-lg border border-status-warning-rule bg-status-warning-surface px-3 py-2">
+                <p className="text-xs text-status-warning-ink">
                   Only the Administrator role exists — every hire would get full access.
                   {canManageRbac
                     ? " Add the standard department roles first."

@@ -179,22 +179,22 @@ export function TerminationFormSheet({
       isPending={isPending}
       submitDisabled={submitDisabled}
     >
-      <div className="rounded-lg border border-rose-200 bg-rose-50 dark:border-rose-800/50 dark:bg-rose-500/10 px-3 py-2.5">
-        <p className="text-[11px] font-semibold text-rose-700 dark:text-rose-300">
+      <div className="rounded-lg border border-status-danger-rule bg-status-danger-surface px-3 py-2.5">
+        <p className="text-dense font-semibold text-status-danger-ink">
           Sensitive Action
         </p>
-        <p className="text-[11px] text-rose-600/80 dark:text-rose-300/70 mt-0.5">
+        <p className="text-dense text-status-danger-ink mt-0.5">
           Termination records are permanent and will initiate the offboarding process once approved.
         </p>
       </div>
 
       <div className="space-y-3">
-        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+        <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
           Employee
         </p>
         <div className="space-y-1.5">
           <Label className="text-sm font-medium">
-            Select Employee <span className="text-rose-500">*</span>
+            Select Employee <span className="text-status-danger-ink">*</span>
           </Label>
           <Combobox
             options={employeeOptions}
@@ -209,13 +209,13 @@ export function TerminationFormSheet({
       <Separator />
 
       <div className="space-y-3">
-        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+        <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
           Termination Details
         </p>
 
         <div className="space-y-1.5">
           <Label className="text-sm font-medium">
-            Termination Reason <span className="text-rose-500">*</span>
+            Termination Reason <span className="text-status-danger-ink">*</span>
           </Label>
           <Select value={selectedReason} onValueChange={onSelectedReasonChange}>
             <SelectTrigger aria-label="Select termination reason">
@@ -235,13 +235,13 @@ export function TerminationFormSheet({
           <Label className="text-sm font-medium">
             Remarks{" "}
             {isOtherReason ? (
-              <span className="text-rose-500">*</span>
+              <span className="text-status-danger-ink">*</span>
             ) : (
               <span className="text-muted-foreground font-normal">(optional)</span>
             )}
           </Label>
           {isOtherReason && (
-            <p className="text-[11px] text-amber-600 dark:text-amber-300">
+            <p className="text-dense text-status-warning-ink">
               Required: Describe the specific reason for selecting &apos;Other&apos; (min. 10 characters).
             </p>
           )}
@@ -259,7 +259,7 @@ export function TerminationFormSheet({
             aria-label="Remarks"
           />
           {isOtherReason && (
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-dense text-muted-foreground">
               {remarks.length} / 10 min characters
             </p>
           )}
@@ -267,10 +267,10 @@ export function TerminationFormSheet({
 
         <div className="space-y-1.5">
           <Label className="text-sm font-medium">
-            Effective Date <span className="text-rose-500">*</span>
+            Effective Date <span className="text-status-danger-ink">*</span>
           </Label>
           <DatePicker value={effectiveDate ?? ""} onChange={onEffectiveDateChange} placeholder="Pick a date" className="text-sm" fromDate={new Date()} />
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-dense text-muted-foreground">
             Must be today or a future date.
           </p>
         </div>
@@ -279,7 +279,7 @@ export function TerminationFormSheet({
       <Separator />
 
       <div className="space-y-3">
-        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+        <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
           Terms & Compensation
         </p>
 
@@ -340,17 +340,17 @@ export function TerminationFormSheet({
       <Separator />
 
       <div className="space-y-1.5">
-        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+        <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider mb-2">
           Letter Preview
         </p>
         <Textarea
           readOnly
           value={letterPreview}
           rows={12}
-          className="font-mono text-[11px] bg-muted/40 resize-none"
+          className="font-mono text-dense bg-muted/40 resize-none"
           aria-label="Termination letter preview"
         />
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-dense text-muted-foreground">
           Auto-generated preview based on the fields above. The final letter will be
           generated upon email send.
         </p>

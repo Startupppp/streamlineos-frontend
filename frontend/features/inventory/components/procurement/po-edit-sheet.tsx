@@ -190,7 +190,7 @@ export function PoEditSheet({ open, onOpenChange, po }: PoEditSheetProps) {
               />
 
               <div className="space-y-2">
-                <FormLabel className="text-[13px] font-medium">
+                <FormLabel className="text-label font-medium">
                   Lines <span className="text-destructive">*</span>
                 </FormLabel>
                 <OrderLineTable

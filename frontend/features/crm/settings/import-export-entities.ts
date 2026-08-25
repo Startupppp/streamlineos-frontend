@@ -14,7 +14,7 @@ export const CRM_IMPORT_EXPORT_ENTITIES: ImportEntity[] = [
     description:
       "Export leads with stage, source, and assignment. Import via Leads → CSV Import.",
     exportEndpoint: "/leads/export",
-    accent: "text-blue-600 bg-blue-500/10",
+    accent: "text-status-info-ink bg-status-info-surface",
     supported: { import: false, export: true },
   },
   {
@@ -24,7 +24,7 @@ export const CRM_IMPORT_EXPORT_ENTITIES: ImportEntity[] = [
     description:
       "Export contacts with phone, email, and company. Import via Contacts → CSV Import.",
     exportEndpoint: "/contacts/export",
-    accent: "text-emerald-600 bg-emerald-500/10",
+    accent: "text-status-success-ink bg-status-success-surface",
     supported: { import: false, export: true },
   },
   {
@@ -34,7 +34,7 @@ export const CRM_IMPORT_EXPORT_ENTITIES: ImportEntity[] = [
     description:
       "Export deal pipeline with stage, value, probability, close dates. Import via Deals → CSV Import.",
     exportEndpoint: "/deals/export",
-    accent: "text-amber-600 bg-amber-500/10",
+    accent: "text-status-warning-ink bg-status-warning-surface",
     supported: { import: false, export: true },
   },
   {
@@ -44,7 +44,7 @@ export const CRM_IMPORT_EXPORT_ENTITIES: ImportEntity[] = [
     description:
       "Export client accounts with health score and status.",
     exportEndpoint: "/clients/export",
-    accent: "text-rose-600 bg-rose-500/10",
+    accent: "text-status-danger-ink bg-status-danger-surface",
     supported: { import: false, export: true },
   },
 ];

@@ -127,7 +127,7 @@ export function TicketParentControl({
               disabled={updateTicket.isPending}
               className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-muted/60"
             >
-              <span className="shrink-0 font-mono text-[10px] text-muted-foreground/70">
+              <span className="shrink-0 font-mono text-micro text-muted-foreground/70">
                 {r.projectKey}-{r.ticketNumber}
               </span>
               <span className="min-w-0 flex-1 truncate text-xs">{r.title}</span>
@@ -154,7 +154,7 @@ export function TicketParentControl({
     if (!hasParent) {
       return (
         <div className="min-w-0">
-          <span className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          <span className="mb-1 block text-micro font-medium uppercase tracking-wide text-muted-foreground">
             Parent
           </span>
           <p className="text-xs text-muted-foreground">None</p>
@@ -163,7 +163,7 @@ export function TicketParentControl({
     }
     return (
       <div className="min-w-0">
-        <span className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+        <span className="mb-1 block text-micro font-medium uppercase tracking-wide text-muted-foreground">
           Parent
         </span>
         <TicketParentLink
@@ -178,7 +178,7 @@ export function TicketParentControl({
 
   return (
     <div className="min-w-0">
-      <span className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+      <span className="mb-1 block text-micro font-medium uppercase tracking-wide text-muted-foreground">
         Parent
       </span>
       <div className="flex min-w-0 items-center gap-1">

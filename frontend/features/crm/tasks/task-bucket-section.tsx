@@ -13,7 +13,7 @@ const BUCKET_CONFIG: Record<
 > = {
   OVERDUE: {
     label: "Overdue",
-    badgeClass: "bg-red-100 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+    badgeClass: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
     borderClass: "border-l-red-400",
   },
   TODAY: {
@@ -23,7 +23,7 @@ const BUCKET_CONFIG: Record<
   },
   THIS_WEEK: {
     label: "This Week",
-    badgeClass: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+    badgeClass: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
     borderClass: "border-l-amber-400",
   },
   UPCOMING: {
@@ -80,7 +80,7 @@ export function TaskBucketSection({
         <span className="text-xs font-semibold text-foreground">{config.label}</span>
         <span
           className={cn(
-            "text-[10px] font-medium px-1.5 py-0.5 rounded-full border",
+            "text-micro font-medium px-1.5 py-0.5 rounded-full border",
             config.badgeClass,
           )}
         >

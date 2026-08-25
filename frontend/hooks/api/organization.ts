@@ -150,6 +150,9 @@ export const useUpdateOrgSettings = () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.organization.settings(),
       });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.organization.display(),
+      });
     },
   });
 };

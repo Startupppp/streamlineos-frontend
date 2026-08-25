@@ -14,9 +14,9 @@ import { Separator } from "@/components/ui/separator";
 import {
   useDealDetail,
   useUpdateDeal,
-  useDealActivities,
 } from "@/hooks/api/crm";
-import { ActivityTimeline } from "./detail/activity-timeline";
+import { ActivityTimeline as UnifiedTimeline } from "@/features/crm/timeline/activity-timeline";
+import { DealStageHistory } from "./detail/deal-stage-history";
 import { DealEditForm, type EditFormValues } from "./detail/deal-edit-form";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { toast } from "sonner";
@@ -25,7 +25,8 @@ import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useCrmStages } from "@/hooks/api/crm/metadata";
 import { CrmStageBadge } from "@/features/crm/shared/metadata";
-import { formatINRCompact } from "@/lib/format-utils";
+import { formatMoneyCompact } from "@/lib/format-utils";
+import { useOrgDisplay } from "@/hooks/api/org-display";
 
 interface DealSidePanelProps {
   dealId: number | null;
@@ -33,12 +34,10 @@ interface DealSidePanelProps {
 }
 
 export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
+  const money = useOrgDisplay();
   const isOpen = dealId !== null;
 
   const { data: deal, isLoading: dealLoading } = useDealDetail(dealId ?? 0);
-  const { data: activities, isLoading: activitiesLoading } = useDealActivities(
-    dealId ?? 0,
-  );
   const updateDeal = useUpdateDeal();
   const { data: dealStages = [] } = useCrmStages("deal");
 
@@ -59,6 +58,8 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
           expectedCloseDate: values.expectedCloseDate ?? null,
           contactPerson: values.contactPerson,
           notes: values.notes,
+          partyId: values.partyId || null,
+          subjectId: values.subjectId || null,
         },
         {
           onSuccess: () => toast.success("Deal updated"),
@@ -99,7 +100,7 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
                   <div className="flex items-center gap-2">
                     {stage && <CrmStageBadge stage={stage} size="card" />}
                     <span className="text-sm font-semibold text-primary">
-                      {formatINRCompact(Number(deal.value ?? 0))}
+                      {formatMoneyCompact(deal.value, money)}
                     </span>
                   </div>
                 </div>
@@ -136,18 +137,18 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
                   </h3>
                 </div>
                 <ScrollArea className="flex-1">
-                  <div className="p-4">
-                    {activitiesLoading ? (
-                      <div className="space-y-3">
-                        {Array.from({ length: 6 }).map((_, i) => (
-                          <Skeleton key={i} className="h-12 w-full" />
-                        ))}
-                      </div>
-                    ) : (
-                      <ActivityTimeline
-                        activities={activities ?? []}
-                      />
-                    )}
+                  <div className="flex flex-col gap-6 p-4">
+                    <UnifiedTimeline
+                      anchor={{ kind: "deal", dealId: String(deal.id) }}
+                      emptyDescription="Calls, emails, meetings, notes and tasks on this deal will appear here as they happen."
+                    />
+
+                    <div className="flex flex-col gap-2">
+                      <h4 className="text-dense font-medium uppercase tracking-wider text-muted-foreground">
+                        Stage history
+                      </h4>
+                      <DealStageHistory dealId={deal.id} />
+                    </div>
                   </div>
                 </ScrollArea>
               </div>

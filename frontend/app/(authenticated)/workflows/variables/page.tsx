@@ -31,12 +31,14 @@ import {
   type WorkflowVariable,
 } from "@/hooks/api/workflows";
 
+// A value's type is a taxonomy — an array is not a warning. `object` and
+// `array` sit next to each other in the same list and read as one chip.
 const VALUE_TYPE_CLASS: Record<string, string> = {
   string: "bg-primary/10 text-foreground border-primary/30",
-  number: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  boolean: "bg-green-50 text-green-700 border-green-200 dark:bg-green-500/10 dark:text-green-300 dark:border-green-500/30",
-  object: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  array: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30",
+  number: "bg-category-blue-surface text-category-blue-ink border-category-blue-rule",
+  boolean: "bg-category-green-surface text-category-green-ink border-category-green-rule",
+  object: "bg-category-amber-surface text-category-amber-ink border-category-amber-rule",
+  array: "bg-category-orange-surface text-category-orange-ink border-category-orange-rule",
 };
 
 interface VariableCardProps {
@@ -68,24 +70,24 @@ function VariableCard({ variable, index, onDelete }: VariableCardProps) {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <code className="text-sm font-semibold font-mono text-foreground">{variable.key}</code>
-                <Badge variant="outline" className={`text-[10px] border ${badgeClass}`}>
+                <Badge variant="outline" className={`text-micro border ${badgeClass}`}>
                   {variable.valueType}
                 </Badge>
               </div>
               <div className="flex items-center gap-3 mt-1 flex-wrap">
                 <Link
                   href={`/workflows/${variable.workflowId}`}
-                  className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                  className="inline-flex items-center gap-1 text-dense text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <Link2 className="h-3 w-3" />
                   {variable.workflowName}
                 </Link>
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-dense text-muted-foreground">
                   Added {format(new Date(variable.createdAt), "MMM d, yyyy")}
                 </span>
               </div>
               {variable.defaultValue !== null && variable.defaultValue !== undefined && (
-                <p className="text-[11px] text-muted-foreground mt-0.5">
+                <p className="text-dense text-muted-foreground mt-0.5">
                   Default: <code className="font-mono">{JSON.stringify(variable.defaultValue)}</code>
                 </p>
               )}

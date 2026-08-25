@@ -121,7 +121,7 @@ function ProductTile({
       <div className="flex-1 min-w-0">
         <p
           className={cn(
-            "text-[13px] font-medium text-foreground leading-tight truncate",
+            "text-label font-medium text-foreground leading-tight truncate",
             !effectivelyEnabled && "pr-12",
           )}
           title={label}
@@ -129,7 +129,7 @@ function ProductTile({
           {label}
         </p>
         <p
-          className="text-[11px] text-muted-foreground line-clamp-1"
+          className="text-dense text-muted-foreground line-clamp-1"
           title={description}
         >
           {description}
@@ -160,7 +160,7 @@ function ProductTile({
       {!effectivelyEnabled && (
         <span className="absolute top-1.5 right-1.5 inline-flex items-center gap-0.5 h-4 px-1 rounded bg-muted border border-border">
           <Lock className="h-2.5 w-2.5 text-muted-foreground" />
-          <span className="text-[9px] font-medium text-muted-foreground">
+          <span className="text-micro font-medium text-muted-foreground">
             {planLocked ? "Upgrade" : "Locked"}
           </span>
         </span>
@@ -283,7 +283,7 @@ function ProductGrid({
 
   return (
     <>
-      <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-1.5 px-1">
+      <p className="text-micro uppercase tracking-wider font-semibold text-muted-foreground mb-1.5 px-1">
         Modules
       </p>
       <div className="grid grid-cols-2 gap-1">

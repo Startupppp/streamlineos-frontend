@@ -52,7 +52,7 @@ const COLUMNS: DataTableColumn<ApprovalSlaApprover>[] = [
     header: "Pending",
     cell: (row) =>
       row.pendingCount > 0 ? (
-        <Badge className="border px-1.5 py-0 text-[10px] bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30">
+        <Badge className="border px-1.5 py-0 text-micro bg-status-warning-surface text-status-warning-ink border-status-warning-rule">
           {row.pendingCount} pending
         </Badge>
       ) : (

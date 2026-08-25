@@ -40,7 +40,7 @@ export function buildAssetColumns(
       key: "type",
       header: "Type",
       cell: (asset) => (
-        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted border-border text-foreground">
+        <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-muted border-border text-foreground">
           {asset.type}
         </span>
       ),
@@ -60,7 +60,7 @@ export function buildAssetColumns(
       cell: (asset) => {
         const meta = STATUS_META[asset.status ?? "AVAILABLE"] ?? STATUS_META.AVAILABLE;
         return (
-          <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", meta.badge)}>
+          <span className={cn("inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border", meta.badge)}>
             {meta.label}
           </span>
         );
@@ -83,7 +83,7 @@ export function buildAssetColumns(
           <div className="flex items-center gap-2">
             <Avatar className="h-6 w-6">
               {imageUrl && <AvatarImage src={imageUrl} alt={displayName} />}
-              <AvatarFallback className="text-[9px] bg-primary/10 text-primary">
+              <AvatarFallback className="text-micro bg-primary/10 text-primary">
                 {initials}
               </AvatarFallback>
             </Avatar>

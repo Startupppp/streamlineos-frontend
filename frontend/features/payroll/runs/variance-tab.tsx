@@ -70,10 +70,10 @@ export function VarianceTab({ runId }: VarianceTabProps) {
 
       <div className="rounded-md border border-border overflow-hidden">
         <div className="px-3 py-2 border-b bg-muted/30">
-          <span className="text-[11px] font-semibold text-foreground">Top Earners This Run</span>
+          <span className="text-dense font-semibold text-foreground">Top Earners This Run</span>
         </div>
         {topMovers.length === 0 ? (
-          <div className="px-3 py-4 text-[11px] text-muted-foreground text-center">
+          <div className="px-3 py-4 text-dense text-muted-foreground text-center">
             No employee data
           </div>
         ) : (
@@ -81,7 +81,7 @@ export function VarianceTab({ runId }: VarianceTabProps) {
             <div
               key={emp.userId}
               className={cn(
-                "flex items-center justify-between px-3 py-2 text-[11px]",
+                "flex items-center justify-between px-3 py-2 text-dense",
                 idx > 0 && "border-t border-border",
               )}
             >
@@ -95,7 +95,7 @@ export function VarianceTab({ runId }: VarianceTabProps) {
       </div>
 
       {!previousRun && (
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-dense text-muted-foreground">
           No previous run found — variance comparison unavailable.
         </p>
       )}

@@ -5,16 +5,17 @@ import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { formatINRCompact } from "@/lib/format-utils";
+import { formatMoneyCompact } from "@/lib/format-utils";
 import type { Deal, DealStage } from "@/types/crm";
+import { useOrgDisplay } from "@/hooks/api/org-display";
 
 const STAGE_DOT: Partial<Record<DealStage, string>> = {
-  LEAD: "bg-blue-500",
-  CONTACTED: "bg-sky-500",
-  PROPOSAL: "bg-amber-500",
-  NEGOTIATION: "bg-blue-500",
-  WON: "bg-emerald-500",
-  LOST: "bg-red-500",
+  LEAD: "bg-status-info-fill",
+  CONTACTED: "bg-status-info-fill",
+  PROPOSAL: "bg-status-warning-fill",
+  NEGOTIATION: "bg-status-info-fill",
+  WON: "bg-status-success-fill",
+  LOST: "bg-status-danger-fill",
 };
 
 const STAGE_LABEL: Partial<Record<DealStage, string>> = {
@@ -62,6 +63,7 @@ interface DealRowProps {
 }
 
 function DealRow({ deal, delay, onNavigate, shouldReduceMotion }: DealRowProps) {
+  const money = useOrgDisplay();
   const handleClick = useCallback(() => onNavigate(deal.id), [deal.id, onNavigate]);
   const past = isPastDue(deal.expectedCloseDate);
 
@@ -78,22 +80,22 @@ function DealRow({ deal, delay, onNavigate, shouldReduceMotion }: DealRowProps) 
         <TruncatedText text={deal.name} className="text-sm font-medium" />
         <div className="flex items-center gap-1.5 mt-0.5">
           <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${STAGE_DOT[deal.stage] ?? "bg-muted-foreground"}`} />
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-dense text-muted-foreground">
             {STAGE_LABEL[deal.stage] ?? deal.stage}
           </span>
           {deal.assignedTo?.name && (
             <>
-              <span className="text-[11px] text-muted-foreground">·</span>
-              <TruncatedText text={deal.assignedTo.name ?? "—"} className="text-[11px] text-muted-foreground" />
+              <span className="text-dense text-muted-foreground">·</span>
+              <TruncatedText text={deal.assignedTo.name ?? "—"} className="text-dense text-muted-foreground" />
             </>
           )}
         </div>
       </div>
       <div className="text-right shrink-0 space-y-0.5">
         <p className="text-sm font-semibold tabular-nums">
-          {deal.value ? formatINRCompact(Number(deal.value)) : "—"}
+          {Number(deal.value) ? formatMoneyCompact(deal.value, money) : "—"}
         </p>
-        <p className={`text-[11px] tabular-nums ${past ? "text-red-600 dark:text-red-400 font-medium" : "text-muted-foreground"}`}>
+        <p className={`text-dense tabular-nums ${past ? "text-status-danger-ink font-medium" : "text-muted-foreground"}`}>
           {formatCloseDate(deal.expectedCloseDate)}
         </p>
       </div>
@@ -151,7 +153,7 @@ export function DealCloseDateList({ deals }: DealCloseDateListProps) {
             {bucketedDeals.map((bucket) => (
               <div key={bucket.label}>
                 <div className="flex items-center gap-2 mb-2">
-                  <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                  <h3 className="text-micro font-bold text-muted-foreground uppercase tracking-wider">
                     {bucket.label}
                   </h3>
                   <span className="text-xs text-muted-foreground">

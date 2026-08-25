@@ -67,13 +67,13 @@ function AuditEntryRow({ entry }: { entry: AuditLogEntry }) {
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium truncate">{entry.action}</p>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
+          <p className="text-dense text-muted-foreground mt-0.5">
             By {actorName}
             {targetName ? ` · ${targetName}` : ""}
           </p>
         </div>
         <time
-          className="text-[11px] text-muted-foreground shrink-0 tabular-nums"
+          className="text-dense text-muted-foreground shrink-0 tabular-nums"
           dateTime={entry.createdAt}
         >
           {formatRelativeTime(entry.createdAt)}

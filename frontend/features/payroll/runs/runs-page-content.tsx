@@ -78,14 +78,14 @@ export function RunsPageContent() {
       key: "month",
       header: "Month",
       cell: (row) => (
-        <span className="text-[11px] font-medium">{formatMonth(row.month)}</span>
+        <span className="text-dense font-medium">{formatMonth(row.month)}</span>
       ),
     },
     {
       key: "entity",
       header: "Entity",
       cell: (row) => (
-        <span className="text-[11px] text-muted-foreground">
+        <span className="text-dense text-muted-foreground">
           {row.entityId != null
             ? (entityNameById.get(row.entityId) ?? `Entity #${row.entityId}`)
             : "—"}
@@ -101,7 +101,7 @@ export function RunsPageContent() {
       key: "employees",
       header: "Employees",
       cell: (row) => (
-        <span className="tabular-nums text-[11px]">{row.employeeCount ?? "—"}</span>
+        <span className="tabular-nums text-dense">{row.employeeCount ?? "—"}</span>
       ),
     },
     {
@@ -109,7 +109,7 @@ export function RunsPageContent() {
       header: "Gross",
       className: "text-right",
       cell: (row) => (
-        <span className="font-mono text-[11px] tabular-nums">{formatMoney(row.grossTotal)}</span>
+        <span className="font-mono text-dense tabular-nums">{formatMoney(row.grossTotal)}</span>
       ),
     },
     {
@@ -117,7 +117,7 @@ export function RunsPageContent() {
       header: "Net",
       className: "text-right",
       cell: (row) => (
-        <span className="font-mono text-[11px] tabular-nums font-medium">
+        <span className="font-mono text-dense tabular-nums font-medium">
           {formatMoney(row.netTotal)}
         </span>
       ),
@@ -127,11 +127,11 @@ export function RunsPageContent() {
       header: "Exceptions",
       cell: (row) =>
         (row.exceptionCount ?? 0) > 0 ? (
-          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-50 text-red-700 border border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30">
+          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium bg-status-danger-surface text-status-danger-ink border border-status-danger-rule">
             {row.exceptionCount}
           </span>
         ) : (
-          <span className="text-[11px] text-muted-foreground">0</span>
+          <span className="text-dense text-muted-foreground">0</span>
         ),
     },
   ];
@@ -203,7 +203,7 @@ export function RunsPageContent() {
     >
       {(entities?.length ?? 0) > 0 ? (
         <div className="mb-2 flex items-center gap-2">
-          <label className="text-[12px] text-muted-foreground">Entity</label>
+          <label className="text-xs text-muted-foreground">Entity</label>
           <Select
             value={filterEntityId}
             onValueChange={(v) => {
@@ -258,7 +258,7 @@ export function RunsPageContent() {
           </DialogHeader>
           <div className="py-3 space-y-4">
             <div className="space-y-1.5">
-              <label className="text-[13px] font-medium text-foreground block">
+              <label className="text-label font-medium text-foreground block">
                 Run type
               </label>
               <Select value={newRunType} onValueChange={handleNewRunTypeChange}>
@@ -273,13 +273,13 @@ export function RunsPageContent() {
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-dense text-muted-foreground">
                 {RUN_TYPE_OPTIONS.find((o) => o.value === newRunType)?.hint}
               </p>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[13px] font-medium text-foreground block">
+              <label className="text-label font-medium text-foreground block">
                 Payroll month
               </label>
               <MonthPicker
@@ -292,7 +292,7 @@ export function RunsPageContent() {
 
             {(entities?.length ?? 0) > 0 && (
               <div className="space-y-1.5">
-                <label className="text-[13px] font-medium text-foreground block">
+                <label className="text-label font-medium text-foreground block">
                   Legal entity
                 </label>
                 <Select value={newEntityId || undefined} onValueChange={setNewEntityId}>
@@ -307,7 +307,7 @@ export function RunsPageContent() {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-dense text-muted-foreground">
                   Binds the run to the entity&apos;s country pack and opens the matching
                   period. One REGULAR run is allowed per entity per month (org-level runs
                   without an entity remain a separate bucket).
@@ -317,7 +317,7 @@ export function RunsPageContent() {
 
             {needsSource && (
               <div className="space-y-1.5">
-                <label className="text-[13px] font-medium text-foreground block">
+                <label className="text-label font-medium text-foreground block">
                   Source run <span className="text-destructive">*</span>
                 </label>
                 <Select value={sourceRunId} onValueChange={setSourceRunId}>
@@ -326,7 +326,7 @@ export function RunsPageContent() {
                   </SelectTrigger>
                   <SelectContent>
                     {sourceRunOptions.length === 0 ? (
-                      <div className="px-2 py-1.5 text-[12px] text-muted-foreground">
+                      <div className="px-2 py-1.5 text-xs text-muted-foreground">
                         No runs for {formatMonth(newRunMonth)} to link to
                       </div>
                     ) : (
@@ -338,7 +338,7 @@ export function RunsPageContent() {
                     )}
                   </SelectContent>
                 </Select>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-dense text-muted-foreground">
                   Off-cycle, correction, and final-settlement runs link back to the
                   regular run they adjust.
                 </p>

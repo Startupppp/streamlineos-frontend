@@ -11,7 +11,7 @@ interface FieldPaletteProps {
 export function FieldPalette({ onAddField }: FieldPaletteProps) {
   return (
     <div className="space-y-1">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground px-1 pb-1">
+      <p className="text-dense font-semibold uppercase tracking-wide text-muted-foreground px-1 pb-1">
         Field Types
       </p>
       <div className="grid grid-cols-1 gap-1">

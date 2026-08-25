@@ -123,7 +123,7 @@ export function FieldBox({
   return (
     <div
       className={cn(
-        "absolute flex items-center justify-center rounded border-2 cursor-move select-none text-[10px] font-medium",
+        "absolute flex items-center justify-center rounded border-2 cursor-move select-none text-micro font-medium",
         color.bg,
         isSelected ? "border-foreground" : color.border,
         color.text,

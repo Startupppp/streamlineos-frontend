@@ -114,11 +114,11 @@ export function ForwardMessageDialog({ message, open, onOpenChange }: ForwardMes
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
-          <DialogTitle className="text-[15px] font-bold">Forward Message</DialogTitle>
+          <DialogTitle className="text-sm font-bold">Forward Message</DialogTitle>
         </DialogHeader>
 
         {previewText && (
-          <div className="rounded-lg border border-border/50 bg-muted/30 px-3 py-2 text-[12px] text-muted-foreground line-clamp-2">
+          <div className="rounded-lg border border-border/50 bg-muted/30 px-3 py-2 text-xs text-muted-foreground line-clamp-2">
             {previewText}
           </div>
         )}
@@ -129,7 +129,7 @@ export function ForwardMessageDialog({ message, open, onOpenChange }: ForwardMes
             value={query}
             onChange={handleQueryChange}
             placeholder="Search conversations..."
-            className="flex-1 bg-transparent text-[13px] focus:outline-none placeholder:text-muted-foreground"
+            className="flex-1 bg-transparent text-label focus:outline-none placeholder:text-muted-foreground"
           />
         </div>
 
@@ -149,7 +149,7 @@ export function ForwardMessageDialog({ message, open, onOpenChange }: ForwardMes
               )}>
                 {getChannelIcon(c)}
               </div>
-              <TruncatedText text={getChannelLabel(c)} className="text-[13px] font-medium flex-1" />
+              <TruncatedText text={getChannelLabel(c)} className="text-label font-medium flex-1" />
               {selectedChannelId === c.id && (
                 <div className="h-4 w-4 rounded-full bg-primary flex items-center justify-center shrink-0">
                   <div className="h-1.5 w-1.5 rounded-full bg-white" />
@@ -158,7 +158,7 @@ export function ForwardMessageDialog({ message, open, onOpenChange }: ForwardMes
             </button>
           ))}
           {filteredChannels.length === 0 && (
-            <div className="py-6 text-center text-[12px] text-muted-foreground">No conversations found</div>
+            <div className="py-6 text-center text-xs text-muted-foreground">No conversations found</div>
           )}
         </div>
 
@@ -166,7 +166,7 @@ export function ForwardMessageDialog({ message, open, onOpenChange }: ForwardMes
           value={comment}
           onChange={handleCommentChange}
           placeholder="Add a comment (optional)"
-          className="w-full rounded-lg border border-border/50 bg-background px-3 py-2 text-[13px] focus:outline-none focus:border-primary/40 transition-colors placeholder:text-muted-foreground"
+          className="w-full rounded-lg border border-border/50 bg-background px-3 py-2 text-label focus:outline-none focus:border-primary/40 transition-colors placeholder:text-muted-foreground"
         />
 
         <DialogFooter>

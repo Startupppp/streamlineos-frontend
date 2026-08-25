@@ -75,7 +75,7 @@ export const CandidateSheet = memo(function CandidateSheet({
                 {stageConfig && (
                   <span
                     className={cn(
-                      "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full",
+                      "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full",
                       stageConfig.badge
                     )}
                   >
@@ -84,7 +84,7 @@ export const CandidateSheet = memo(function CandidateSheet({
                   </span>
                 )}
                 {candidate.source && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border dark:bg-slate-800/60 dark:text-slate-400 dark:border-slate-700">
+                  <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
                     {candidate.source}
                   </span>
                 )}
@@ -93,7 +93,7 @@ export const CandidateSheet = memo(function CandidateSheet({
             </div>
             <Link
               href={`/hr/recruitment/candidates/${candidate.id}`}
-              className="shrink-0 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors duration-200 mt-0.5"
+              className="shrink-0 flex items-center gap-1.5 text-dense font-semibold text-muted-foreground hover:text-foreground transition-colors duration-200 mt-0.5"
             >
               <ExternalLink className="h-3.5 w-3.5" />
               Full Profile
@@ -135,10 +135,10 @@ export const CandidateSheet = memo(function CandidateSheet({
               </div>
             </div>
 
-            <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden border-l-4 border-l-primary">
+            <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden border-l-4 border-l-primary">
               <div className="px-4 py-3">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-7 rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 flex items-center justify-center shrink-0">
+                  <div className="w-7 rounded-lg bg-status-info-surface text-status-info-ink flex items-center justify-center shrink-0">
                     <Briefcase className="h-3.5 w-3.5" />
                   </div>
                   <span className="text-sm font-semibold text-foreground">Application</span>
@@ -159,10 +159,10 @@ export const CandidateSheet = memo(function CandidateSheet({
             </div>
 
             {candidate.rating !== null && candidate.rating !== undefined && (
-              <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden border-l-4 border-l-amber-400">
+              <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden border-l-4 border-l-amber-400">
                 <div className="px-4 py-3">
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="w-7 rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 flex items-center justify-center shrink-0">
+                    <div className="w-7 rounded-lg bg-status-warning-surface text-status-warning-ink flex items-center justify-center shrink-0">
                       <Star className="h-3.5 w-3.5" />
                     </div>
                     <span className="text-sm font-semibold text-foreground">Rating</span>
@@ -174,12 +174,12 @@ export const CandidateSheet = memo(function CandidateSheet({
                         className={cn(
                           "h-4 w-4",
                           i < (candidate.rating ?? 0)
-                            ? "text-amber-400 fill-amber-400"
+                            ? "text-status-warning-ink fill-amber-400"
                             : "text-muted-foreground/30"
                         )}
                       />
                     ))}
-                    <span className="text-sm font-bold tabular-nums ml-2 text-amber-600 dark:text-amber-400">
+                    <span className="text-sm font-bold tabular-nums ml-2 text-status-warning-ink">
                       {candidate.rating}/5
                     </span>
                   </div>
@@ -188,9 +188,9 @@ export const CandidateSheet = memo(function CandidateSheet({
             )}
 
             {candidate.slaStatus && (
-              <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden border-l-4 border-l-slate-400">
+              <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden border-l-4 border-l-slate-400">
                 <div className="px-4 py-3">
-                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider mb-2">
                     SLA Compliance
                   </p>
                   <div className="flex items-center gap-2">
@@ -213,10 +213,10 @@ export const CandidateSheet = memo(function CandidateSheet({
             )}
 
             {candidate.notes && (
-              <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden border-l-4 border-l-border">
+              <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden border-l-4 border-l-border">
                 <div className="px-4 py-3">
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="w-7 rounded-lg bg-muted text-muted-foreground dark:bg-slate-800/60 dark:text-slate-400 flex items-center justify-center shrink-0">
+                    <div className="w-7 rounded-lg bg-muted text-muted-foreground flex items-center justify-center shrink-0">
                       <StickyNote className="h-3.5 w-3.5" />
                     </div>
                     <span className="text-sm font-semibold text-foreground">Notes</span>
@@ -233,7 +233,7 @@ export const CandidateSheet = memo(function CandidateSheet({
         {activeTab === "resume" && (
           <div className="flex-1 flex flex-col min-h-0">
             <div className="flex items-center justify-between px-5 py-2.5 border-b border-border/60 bg-muted/20 shrink-0">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+              <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                 <FileText className="h-3.5 w-3.5" />
                 Resume
               </p>

@@ -79,14 +79,14 @@ export function RecallCreateDialog({ open, onOpenChange }: Props) {
           <Label className="text-xs">Title *</Label>
           <Input className="text-xs" placeholder="e.g. Batch contamination recall" {...form.register("title")} />
           {form.formState.errors.title && (
-            <p className="text-[10px] text-destructive">{form.formState.errors.title.message}</p>
+            <p className="text-micro text-destructive">{form.formState.errors.title.message}</p>
           )}
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs">Reason *</Label>
           <Textarea className="text-xs min-h-[70px] resize-none" placeholder="Describe the recall reason…" {...form.register("reason")} />
           {form.formState.errors.reason && (
-            <p className="text-[10px] text-destructive">{form.formState.errors.reason.message}</p>
+            <p className="text-micro text-destructive">{form.formState.errors.reason.message}</p>
           )}
         </div>
         <div className="space-y-1.5">

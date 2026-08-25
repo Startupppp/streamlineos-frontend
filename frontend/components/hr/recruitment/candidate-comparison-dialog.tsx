@@ -38,7 +38,7 @@ function StarRating({ rating }: { rating: number | null }) {
   return (
     <div className="flex items-center gap-0.5">
       {Array.from({ length: 5 }).map((_, i) => (
-        <svg key={i} className={`h-3.5 w-3.5 ${i < rating ? "text-yellow-400 fill-yellow-400" : "text-muted-foreground/30"}`} viewBox="0 0 20 20">
+        <svg key={i} className={`h-3.5 w-3.5 ${i < rating ? "text-status-warning-ink fill-yellow-400" : "text-muted-foreground/30"}`} viewBox="0 0 20 20">
           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
         </svg>
       ))}
@@ -80,7 +80,7 @@ function CandidateColumn({
             candidate.status === "HIRED" ? "default" :
             candidate.status === "REJECTED" ? "destructive" : "secondary"
           }
-          className="text-[10px]"
+          className="text-micro"
         >
           {candidate.status ?? "NEW"}
         </Badge>
@@ -101,12 +101,12 @@ function CandidateColumn({
             ))}
           </div>
         ) : (
-          <p className="text-[10px] text-muted-foreground text-center py-1">No AI score</p>
+          <p className="text-micro text-muted-foreground text-center py-1">No AI score</p>
         )}
       </div>
 
       <div className="space-y-2">
-        <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Profile</p>
+        <p className="text-micro text-muted-foreground uppercase tracking-wide font-medium">Profile</p>
         <div className="space-y-1.5 text-xs">
           {candidate.experienceYears && (
             <div className="flex items-center gap-1.5 text-muted-foreground">
@@ -144,7 +144,7 @@ function CandidateColumn({
 
       {interviews.length > 0 && (
         <div className="space-y-2">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Interviews ({interviews.length})</p>
+          <p className="text-micro text-muted-foreground uppercase tracking-wide font-medium">Interviews ({interviews.length})</p>
           <div className="space-y-1">
             {avgInterviewRating != null && (
               <div className="flex items-center justify-between text-xs">
@@ -157,7 +157,7 @@ function CandidateColumn({
                 <span className="text-muted-foreground truncate capitalize">{(iv.type ?? "Interview").toLowerCase()}</span>
                 <Badge
                   variant={iv.result === "PASSED" ? "default" : iv.result === "FAILED" ? "destructive" : "secondary"}
-                  className="text-[9px] px-1 py-0"
+                  className="text-micro px-1 py-0"
                 >
                   {iv.result ?? "Pending"}
                 </Badge>
@@ -169,14 +169,14 @@ function CandidateColumn({
 
       {candidate.rating != null && (
         <div className="space-y-1">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Rating</p>
+          <p className="text-micro text-muted-foreground uppercase tracking-wide font-medium">Rating</p>
           <StarRating rating={candidate.rating} />
         </div>
       )}
 
       {(candidate.skills ?? []).length > 0 && (
         <div className="space-y-1.5">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Skills</p>
+          <p className="text-micro text-muted-foreground uppercase tracking-wide font-medium">Skills</p>
           <div className="flex flex-wrap gap-1">
             {(candidate.skills ?? []).map((s) => {
               const isShared = allSkills.has(s.toLowerCase()) && allSkills.size > 1;
@@ -184,7 +184,7 @@ function CandidateColumn({
                 <Badge
                   key={s}
                   variant={isShared ? "default" : "outline"}
-                  className="text-[10px] px-1.5 py-0"
+                  className="text-micro px-1.5 py-0"
                   title={isShared ? "Shared skill across candidates" : "Unique to this candidate"}
                 >
                   {s}
@@ -192,7 +192,7 @@ function CandidateColumn({
               );
             })}
           </div>
-          <p className="text-[9px] text-muted-foreground">Highlighted = shared skill</p>
+          <p className="text-micro text-muted-foreground">Highlighted = shared skill</p>
         </div>
       )}
     </div>

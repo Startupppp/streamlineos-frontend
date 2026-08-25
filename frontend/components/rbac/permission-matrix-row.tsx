@@ -77,25 +77,25 @@ export function PermissionRow({
           <span className="flex min-w-0 items-center gap-2">
             <TruncatedText
               text={perm.description}
-              className="block text-[13px] leading-tight"
+              className="block text-label leading-tight"
             />
             {included ? (
               <Badge
                 variant="outline"
-                className="h-5 shrink-0 px-2 py-0.5 text-[10px]"
+                className="h-5 shrink-0 px-2 py-0.5 text-micro"
               >
                 Included
               </Badge>
             ) : null}
           </span>
-          <span className="block text-[10px] text-muted-foreground font-mono truncate">
+          <span className="block text-micro text-muted-foreground font-mono truncate">
             {perm.name}
           </span>
         </span>
       </label>
       {scopable && enabled ? (
         readOnly || included ? (
-          <Badge variant="outline" className="text-[10px] shrink-0">
+          <Badge variant="outline" className="text-micro shrink-0">
             {SCOPE_LABELS[scope]}
           </Badge>
         ) : (
@@ -177,13 +177,13 @@ export function ModuleSection({
             <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
           )}
           <TruncatedText text={module.label} className="text-sm font-medium" />
-          <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0">
+          <Badge variant="outline" className="text-micro px-1.5 py-0 shrink-0">
             {enabledCount}/{module.perms.length}
           </Badge>
           {locked && (
             <Badge
               variant="outline"
-              className="text-[10px] px-1.5 py-0 shrink-0 gap-1 text-muted-foreground"
+              className="text-micro px-1.5 py-0 shrink-0 gap-1 text-muted-foreground"
             >
               <Lock className="h-3 w-3" /> Not in plan
             </Badge>
@@ -200,7 +200,7 @@ export function ModuleSection({
         <div className="bg-muted/10 border-t border-border/20 pb-1">
           {module.resources.map((resource) => (
             <div key={resource.resource}>
-              <p className="px-4 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              <p className="px-4 pt-2 pb-1 text-micro font-semibold uppercase tracking-wide text-muted-foreground">
                 {resource.label}
               </p>
               {resource.perms.map((perm) => {

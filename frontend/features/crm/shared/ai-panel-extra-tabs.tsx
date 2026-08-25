@@ -94,18 +94,18 @@ export function NextActionsTab({ chatEnabled }: { chatEnabled: boolean }) {
               <div className="flex items-center gap-1.5">
                 <Badge
                   variant={URGENCY_VARIANT[action.urgency] ?? "secondary"}
-                  className="text-[9px] h-4 px-1 capitalize"
+                  className="text-micro h-4 px-1 capitalize"
                 >
                   {action.urgency}
                 </Badge>
-                <span className="text-[10px] text-muted-foreground">{action.leadName}</span>
+                <span className="text-micro text-muted-foreground">{action.leadName}</span>
               </div>
               <p className="text-xs font-medium text-foreground">{action.action}</p>
-              <p className="text-[11px] text-muted-foreground leading-snug">{action.reasoning}</p>
+              <p className="text-dense text-muted-foreground leading-snug">{action.reasoning}</p>
               {action.evidence && action.evidence.length > 0 && (
                 <ul className="space-y-0.5 pt-0.5">
                   {action.evidence.map((ev, j) => (
-                    <li key={j} className="text-[10px] text-muted-foreground flex gap-1">
+                    <li key={j} className="text-micro text-muted-foreground flex gap-1">
                       <span className="font-medium">{ev.label}:</span>
                       <span>{ev.value}</span>
                     </li>

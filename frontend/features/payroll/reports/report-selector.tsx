@@ -69,7 +69,7 @@ export function ReportSelector({ activeReport, onSelect }: ReportSelectorProps) 
             type="button"
             onClick={() => onSelect(type)}
             className={cn(
-              "flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[12px] font-medium transition-colors text-left w-full",
+              "flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors text-left w-full",
               activeReport === type
                 ? "bg-muted text-foreground"
                 : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",

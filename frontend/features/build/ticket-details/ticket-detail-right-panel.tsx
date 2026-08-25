@@ -111,13 +111,13 @@ function TicketDetailRightPanelBody({
       <div className="shrink-0 border-b border-border bg-card px-4 py-3 md:border md:border-l-0">
         <div className="relative flex items-center justify-center gap-2">
           <div className="flex min-w-0 flex-wrap items-center justify-center gap-1.5">
-            <Badge variant="outline" className="hidden h-5 px-1.5 font-mono text-[11px] md:inline-flex">
+            <Badge variant="outline" className="hidden h-5 px-1.5 font-mono text-dense md:inline-flex">
               {displayKey}
             </Badge>
             <StatusBadge status={ticket.status ?? "TODO"} />
             <PriorityBadge priority={ticket.priority ?? "MEDIUM"} showLabel size="sm" />
             {saving && (
-              <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+              <span className="flex items-center gap-1 text-dense text-muted-foreground">
                 <Loader2 className="h-3 w-3 animate-spin" />
                 Saving
               </span>

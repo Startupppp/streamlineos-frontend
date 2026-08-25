@@ -43,7 +43,7 @@ export function YearOverview({ holidays, yearFilter }: YearOverviewProps) {
               </div>
             )}
             {monthHolidays.length > 0 && (
-              <p className="text-[10px] text-muted-foreground mt-2 font-medium">
+              <p className="text-micro text-muted-foreground mt-2 font-medium">
                 {monthHolidays.length} holiday{monthHolidays.length > 1 ? "s" : ""}
               </p>
             )}

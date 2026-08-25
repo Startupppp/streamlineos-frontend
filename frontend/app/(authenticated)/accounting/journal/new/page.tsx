@@ -375,9 +375,9 @@ export default function NewJournalEntryPage() {
           {totals.debit === 0 && totals.credit === 0 ? (
             <span className="text-muted-foreground">Enter amounts</span>
           ) : totals.balanced ? (
-            <span className="text-emerald-600">Balanced ✓</span>
+            <span className="text-status-success-ink">Balanced ✓</span>
           ) : (
-            <span className="text-rose-600">
+            <span className="text-status-danger-ink">
               Off by {Math.abs(totals.debit - totals.credit).toFixed(2)}
             </span>
           )}

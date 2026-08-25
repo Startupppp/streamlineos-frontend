@@ -43,11 +43,11 @@ const STATUS_OPTIONS: Array<{ value: "draft" | "in_review" | "published" | "arch
   { value: "archived", label: "Archived" },
 ];
 
-const FIELD_CLASS = "h-9 w-full text-[13px] bg-card border-input shadow-xs";
-const ACTION_BTN_BASE = "h-9 w-full text-[13px]";
+const FIELD_CLASS = "h-9 w-full text-label bg-card border-input shadow-xs";
+const ACTION_BTN_BASE = "h-9 w-full text-label";
 const ACTION_BTN_NEUTRAL = `${ACTION_BTN_BASE} bg-card border border-input shadow-xs hover:bg-muted/50`;
 const ACTION_BTN_DANGER = `${ACTION_BTN_BASE} text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive`;
-const ACTION_BTN_WARNING = `${ACTION_BTN_BASE} text-amber-700 border-amber-200 hover:bg-amber-50 hover:text-amber-700 dark:text-amber-300 dark:border-amber-500/30 dark:hover:bg-amber-500/10`;
+const ACTION_BTN_WARNING = `${ACTION_BTN_BASE} text-status-warning-ink border-status-warning-rule hover:bg-status-warning-surface hover:text-status-warning-ink`;
 
 const CONTENT_TYPE_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "note", label: "Note" },
@@ -192,7 +192,7 @@ export default function PageMetadataSheet({
         <ScrollArea className="flex-1 min-h-0">
           <div className="min-h-full px-5 py-4 space-y-5 bg-muted">
             <div className="space-y-2">
-              <p className="text-[13px] font-medium text-foreground">Space</p>
+              <p className="text-label font-medium text-foreground">Space</p>
               <Select
                 value={page.spaceId != null ? String(page.spaceId) : "none"}
                 onValueChange={handleSpaceChange}
@@ -201,9 +201,9 @@ export default function PageMetadataSheet({
                   <SelectValue placeholder="No space" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none" className="text-[13px]">No space</SelectItem>
+                  <SelectItem value="none" className="text-label">No space</SelectItem>
                   {spaces.map((s) => (
-                    <SelectItem key={s.id} value={String(s.id)} className="text-[13px]">
+                    <SelectItem key={s.id} value={String(s.id)} className="text-label">
                       {s.icon ? `${s.icon} ` : ""}{s.name}
                     </SelectItem>
                   ))}
@@ -212,14 +212,14 @@ export default function PageMetadataSheet({
             </div>
 
             <div className="space-y-2">
-              <p className="text-[13px] font-medium text-foreground">Status</p>
+              <p className="text-label font-medium text-foreground">Status</p>
               <Select value={status} onValueChange={handleStatusChange}>
                 <SelectTrigger className={FIELD_CLASS}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {STATUS_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value} className="text-[13px]">
+                    <SelectItem key={opt.value} value={opt.value} className="text-label">
                       {opt.label}
                     </SelectItem>
                   ))}
@@ -265,14 +265,14 @@ export default function PageMetadataSheet({
             </div>
 
             <div className="space-y-2">
-              <p className="text-[13px] font-medium text-foreground">Content type</p>
+              <p className="text-label font-medium text-foreground">Content type</p>
               <Select value={page.contentType ?? ""} onValueChange={handleContentTypeChange}>
                 <SelectTrigger className={FIELD_CLASS}>
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
                   {CONTENT_TYPE_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value} className="text-[13px]">
+                    <SelectItem key={opt.value} value={opt.value} className="text-label">
                       {opt.label}
                     </SelectItem>
                   ))}
@@ -281,7 +281,7 @@ export default function PageMetadataSheet({
             </div>
 
             <div className="space-y-2">
-              <p className="text-[13px] font-medium text-foreground">Owner</p>
+              <p className="text-label font-medium text-foreground">Owner</p>
               <UserCombobox
                 value={page.ownerUserId ?? ""}
                 onChange={handleOwnerChange}
@@ -293,12 +293,12 @@ export default function PageMetadataSheet({
 
             {canManage && (
               <div className="space-y-3">
-                <p className="text-[13px] font-medium text-foreground">Verification</p>
+                <p className="text-label font-medium text-foreground">Verification</p>
                 <div className="flex items-center gap-2">
                   {trustState === "verified" && (
                     <Badge
                       variant="outline"
-                      className="text-[10px] h-4 px-1.5 bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
+                      className="text-micro h-4 px-1.5 bg-status-success-surface text-status-success-ink border-status-success-rule"
                     >
                       Verified
                     </Badge>
@@ -306,7 +306,7 @@ export default function PageMetadataSheet({
                   {trustState === "verification_expired" && (
                     <Badge
                       variant="outline"
-                      className="text-[10px] h-4 px-1.5 bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30"
+                      className="text-micro h-4 px-1.5 bg-status-warning-surface text-status-warning-ink border-status-warning-rule"
                     >
                       Stale
                     </Badge>
@@ -314,14 +314,14 @@ export default function PageMetadataSheet({
                   {trustState === "unverified" && (
                     <Badge
                       variant="outline"
-                      className="text-[10px] h-4 px-1.5 bg-muted text-muted-foreground border-border"
+                      className="text-micro h-4 px-1.5 bg-muted text-muted-foreground border-border"
                     >
                       Unverified
                     </Badge>
                   )}
                 </div>
                 {trustState === "verified" && page.verifiedUntil && (
-                  <p className="text-[12px] text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     Verified until {kbFormatDate(page.verifiedUntil)}
                   </p>
                 )}
@@ -374,7 +374,7 @@ export default function PageMetadataSheet({
             )}
 
             {page.nextReviewAt && (
-              <p className="text-[12px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Next review: {kbFormatDate(page.nextReviewAt)}
               </p>
             )}

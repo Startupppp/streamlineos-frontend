@@ -49,10 +49,10 @@ export function AINextActionButton({
   }, [result, handleSuggest]);
 
   const urgencyColor = (u: string) => {
-    if (u === "critical") return "text-red-500 dark:text-red-400";
-    if (u === "high") return "text-orange-500 dark:text-orange-400";
-    if (u === "medium") return "text-amber-500 dark:text-amber-400";
-    return "text-emerald-500 dark:text-emerald-400";
+    if (u === "critical") return "text-status-danger-ink";
+    if (u === "high") return "text-status-warning-ink";
+    if (u === "medium") return "text-status-warning-ink";
+    return "text-status-success-ink";
   };
 
   if (!canUseCrmAi) return null;
@@ -129,7 +129,7 @@ function ActionDetails({
             <Badge
               variant="secondary"
               className={cn(
-                "text-[9px] h-4 px-1 capitalize",
+                "text-micro h-4 px-1 capitalize",
                 urgencyColor(result.urgency),
               )}
             >
@@ -138,15 +138,15 @@ function ActionDetails({
           </div>
         </div>
       </div>
-      <p className="text-[11px] text-muted-foreground leading-snug">
+      <p className="text-dense text-muted-foreground leading-snug">
         {result.reasoning}
       </p>
       {result.template && (
         <div className="rounded-md border border-border bg-muted/40 p-2">
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
+          <p className="text-micro font-medium text-muted-foreground uppercase tracking-wider mb-1">
             Template
           </p>
-          <p className="text-[11px] leading-snug whitespace-pre-wrap">
+          <p className="text-dense leading-snug whitespace-pre-wrap">
             {result.template}
           </p>
         </div>

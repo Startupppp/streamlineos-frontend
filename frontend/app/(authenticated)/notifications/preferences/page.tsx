@@ -198,7 +198,7 @@ export default function NotificationPreferencesPage() {
                     <Icon className={cn("h-4 w-4 shrink-0", enabled ? "text-primary" : "text-muted-foreground/60")} />
                     <div className="min-w-0">
                       <p className="text-sm font-medium leading-snug">{label}</p>
-                      <p className="text-[11px] text-muted-foreground">{description}</p>
+                      <p className="text-dense text-muted-foreground">{description}</p>
                     </div>
                   </div>
                   <Switch
@@ -337,9 +337,9 @@ export default function NotificationPreferencesPage() {
                       <div className="min-w-0">
                         <p className="text-sm font-medium truncate">{rule.scopeKey}</p>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <Badge variant="outline" className="text-[10px] h-4 px-1.5">{rule.scopeType}</Badge>
+                          <Badge variant="outline" className="text-micro h-4 px-1.5">{rule.scopeType}</Badge>
                           {rule.channel && (
-                            <Badge variant="secondary" className="text-[10px] h-4 px-1.5">{rule.channel}</Badge>
+                            <Badge variant="secondary" className="text-micro h-4 px-1.5">{rule.channel}</Badge>
                           )}
                         </div>
                       </div>

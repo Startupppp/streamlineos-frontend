@@ -25,48 +25,48 @@ export const FILE_ICON_CONFIG: Record<
   }
 > = {
   pdf: {
-    bg: "bg-rose-100 dark:bg-rose-500/10",
-    text: "text-rose-600 dark:text-rose-300",
+    bg: "bg-status-danger-surface",
+    text: "text-status-danger-ink",
     icon: FileText,
   },
   docx: {
-    bg: "bg-blue-100 dark:bg-blue-500/10",
-    text: "text-blue-600 dark:text-blue-300",
+    bg: "bg-status-info-surface",
+    text: "text-status-info-ink",
     icon: FileText,
   },
   doc: {
-    bg: "bg-blue-100 dark:bg-blue-500/10",
-    text: "text-blue-600 dark:text-blue-300",
+    bg: "bg-status-info-surface",
+    text: "text-status-info-ink",
     icon: FileText,
   },
   xlsx: {
-    bg: "bg-emerald-100 dark:bg-emerald-500/10",
-    text: "text-emerald-600 dark:text-emerald-300",
+    bg: "bg-status-success-surface",
+    text: "text-status-success-ink",
     icon: FileSpreadsheet,
   },
   xls: {
-    bg: "bg-emerald-100 dark:bg-emerald-500/10",
-    text: "text-emerald-600 dark:text-emerald-300",
+    bg: "bg-status-success-surface",
+    text: "text-status-success-ink",
     icon: FileSpreadsheet,
   },
   csv: {
-    bg: "bg-emerald-100 dark:bg-emerald-500/10",
-    text: "text-emerald-600 dark:text-emerald-300",
+    bg: "bg-status-success-surface",
+    text: "text-status-success-ink",
     icon: FileSpreadsheet,
   },
   png: {
-    bg: "bg-amber-100 dark:bg-amber-500/10",
-    text: "text-amber-600 dark:text-amber-300",
+    bg: "bg-status-warning-surface",
+    text: "text-status-warning-ink",
     icon: FileImage,
   },
   jpg: {
-    bg: "bg-amber-100 dark:bg-amber-500/10",
-    text: "text-amber-600 dark:text-amber-300",
+    bg: "bg-status-warning-surface",
+    text: "text-status-warning-ink",
     icon: FileImage,
   },
   jpeg: {
-    bg: "bg-amber-100 dark:bg-amber-500/10",
-    text: "text-amber-600 dark:text-amber-300",
+    bg: "bg-status-warning-surface",
+    text: "text-status-warning-ink",
     icon: FileImage,
   },
 };
@@ -79,26 +79,26 @@ export const DEFAULT_FILE_ICON = {
 
 export const TYPE_BADGE_COLORS: Record<string, string> = {
   Contract:
-    "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+    "bg-status-info-surface text-status-info-ink border-status-info-rule",
   Certificate:
-    "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+    "bg-status-info-surface text-status-info-ink border-status-info-rule",
   "ID Proof":
-    "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+    "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   Payslip:
-    "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+    "bg-status-success-surface text-status-success-ink border-status-success-rule",
   Policy:
-    "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+    "bg-status-info-surface text-status-info-ink border-status-info-rule",
   "Offer Letter":
-    "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+    "bg-status-info-surface text-status-info-ink border-status-info-rule",
   Resume: "bg-muted text-foreground border-border",
   General: "bg-muted text-foreground border-border",
 };
 
 export const FOLDER_COLORS = [
-  "bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300",
-  "bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300",
-  "bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300",
-  "bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300",
+  "bg-status-info-surface text-status-info-ink",
+  "bg-status-success-surface text-status-success-ink",
+  "bg-status-warning-surface text-status-warning-ink",
+  "bg-status-info-surface text-status-info-ink",
 ];
 
 export function getFileIconConfig(fileName: string) {

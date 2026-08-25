@@ -34,7 +34,7 @@ import {
 
 function CronBadge({ cron }: { cron: string }) {
   return (
-    <code className="inline-flex items-center px-2 py-0.5 bg-muted text-muted-foreground rounded text-[11px] font-mono border border-border">
+    <code className="inline-flex items-center px-2 py-0.5 bg-muted text-muted-foreground rounded text-dense font-mono border border-border">
       {cron}
     </code>
   );
@@ -78,14 +78,14 @@ function ScheduleRow({ schedule, onToggle, onDelete, isToggling }: ScheduleRowPr
               </Link>
               <CronBadge cron={schedule.cronExpression} />
               <span className={cn(
-                "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium",
-                schedule.isEnabled ? "bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-300" : "bg-muted text-muted-foreground",
+                "inline-flex items-center px-2 py-0.5 rounded-full text-micro font-medium",
+                schedule.isEnabled ? "bg-status-success-surface text-status-success-ink" : "bg-muted text-muted-foreground",
               )}>
                 {schedule.isEnabled ? "Active" : "Paused"}
               </span>
             </div>
 
-            <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
+            <div className="flex items-center gap-4 text-dense text-muted-foreground">
               <span>TZ: {schedule.timezone}</span>
               {schedule.nextRunAt && (
                 <span>Next: {format(new Date(schedule.nextRunAt), "MMM d, HH:mm")}</span>

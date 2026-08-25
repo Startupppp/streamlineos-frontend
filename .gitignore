@@ -1,3 +1,5 @@
 /backend/
 /node_modules
 .cursor/mcp.json
+.DS_Store
+**/.DS_Store

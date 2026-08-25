@@ -73,7 +73,7 @@ export function ProductBasicFields({
               </FormControl>
               <div className="flex min-h-5 items-start justify-between gap-2">
                 <FormMessage />
-                <span className="ml-auto shrink-0 text-[10px] text-muted-foreground tabular-nums">
+                <span className="ml-auto shrink-0 text-micro text-muted-foreground tabular-nums">
                   {(nameValue ?? "").length}/{NAME_MAX}
                 </span>
               </div>
@@ -95,7 +95,7 @@ export function ProductBasicFields({
                   {skuAuto ? (
                     <button
                       type="button"
-                      className="text-[11px] text-muted-foreground hover:text-foreground"
+                      className="text-dense text-muted-foreground hover:text-foreground"
                       onClick={onCustomizeSku}
                     >
                       Customize
@@ -103,7 +103,7 @@ export function ProductBasicFields({
                   ) : (
                     <button
                       type="button"
-                      className="text-[11px] text-muted-foreground hover:text-foreground"
+                      className="text-dense text-muted-foreground hover:text-foreground"
                       onClick={onResetSkuAuto}
                     >
                       Use auto
@@ -125,7 +125,7 @@ export function ProductBasicFields({
                 <div className="flex min-h-5 items-start justify-between gap-2">
                   <FormMessage />
                   {skuAuto ? (
-                    <span className="ml-auto shrink-0 text-[10px] text-muted-foreground">
+                    <span className="ml-auto shrink-0 text-micro text-muted-foreground">
                       Auto-generated
                     </span>
                   ) : null}
@@ -201,7 +201,7 @@ export function ProductBasicFields({
                 </FormControl>
                 <div className="flex justify-between items-start">
                   <FormMessage />
-                  <span className="text-[10px] text-muted-foreground ml-auto shrink-0">
+                  <span className="text-micro text-muted-foreground ml-auto shrink-0">
                     {(descriptionValue ?? "").length}/{DESCRIPTION_MAX}
                   </span>
                 </div>

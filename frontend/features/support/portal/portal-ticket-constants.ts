@@ -33,16 +33,16 @@ export const STATUS_LABELS: Record<SupportTicketStatus, string> = {
 };
 
 export const STATUS_COLORS: Record<SupportTicketStatus, string> = {
-  OPEN: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  OPEN: "bg-status-info-surface text-status-info-ink border-status-info-rule",
   IN_PROGRESS: "bg-primary/10 text-foreground border-primary/20 dark:bg-primary/10 dark:text-foreground dark:border-primary/20",
-  WAITING: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  RESOLVED: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  WAITING: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  RESOLVED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
   CLOSED: "bg-muted text-muted-foreground border-border",
 };
 
 export const PRIORITY_COLORS: Record<SupportTicketPriority, string> = {
   LOW: "bg-muted text-muted-foreground border-border",
-  MEDIUM: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  HIGH: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  URGENT: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  MEDIUM: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  HIGH: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  URGENT: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };

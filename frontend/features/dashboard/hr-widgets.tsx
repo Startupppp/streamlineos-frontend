@@ -44,9 +44,9 @@ interface MyLeaveRequestSummary {
 }
 
 const LEAVE_STATUS_TONE: Record<string, string> = {
-  PENDING: "text-amber-600",
-  APPROVED: "text-emerald-600",
-  REJECTED: "text-red-600",
+  PENDING: "text-status-warning-ink",
+  APPROVED: "text-status-success-ink",
+  REJECTED: "text-status-danger-ink",
   CANCELLED: "text-muted-foreground",
 };
 
@@ -79,7 +79,7 @@ export function LeavesTodayWidget() {
   return (
     <WidgetCard
       icon={CalendarOff}
-      iconClassName="text-orange-500"
+      iconClassName="text-status-warning-ink"
       title="Who's On Leave Today"
       badge={leaves.length || undefined}
       isLoading={isLoading}
@@ -92,13 +92,13 @@ export function LeavesTodayWidget() {
           <li key={l.id} className="flex items-center gap-2.5">
             <Avatar className="w-7">
               <AvatarImage src={resolveImageUrl(l.employeeImage)} />
-              <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+              <AvatarFallback className="text-micro bg-primary/10 text-primary">
                 {l.employeeName?.[0]}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
               <TruncatedText text={l.employeeName ?? ""} className="text-xs font-medium" />
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-micro text-muted-foreground">
                 Leave · back {format(new Date(l.endDate), "MMM d")}
               </p>
             </div>
@@ -116,7 +116,7 @@ export function UpcomingHolidaysWidget() {
   return (
     <WidgetCard
       icon={TreePalm}
-      iconClassName="text-emerald-500"
+      iconClassName="text-status-success-ink"
       title="Upcoming Holidays"
       isLoading={isLoading}
       loadingRows={2}
@@ -126,12 +126,12 @@ export function UpcomingHolidaysWidget() {
       <ul className="space-y-2.5">
         {holidays.map((h: UpcomingHoliday) => (
           <li key={h.id} className="flex items-center gap-2.5">
-            <div className="w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
-              <CalendarHeart className="h-4 w-4 text-emerald-600" />
+            <div className="w-8 rounded-lg bg-status-success-surface flex items-center justify-center shrink-0">
+              <CalendarHeart className="h-4 w-4 text-status-success-ink" />
             </div>
             <div className="flex-1 min-w-0">
               <TruncatedText text={h.name} className="text-xs font-medium" />
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-micro text-muted-foreground">
                 {format(new Date(h.date), "EEEE, MMM d")}
               </p>
             </div>
@@ -185,12 +185,12 @@ export function LeaveBalanceWidget() {
               key={b.id}
               className="rounded-lg border border-border/60 p-2.5"
             >
-              <TruncatedText text={b.leaveTypeName ?? ""} className="text-[10px] text-muted-foreground" />
+              <TruncatedText text={b.leaveTypeName ?? ""} className="text-micro text-muted-foreground" />
               <div className="flex items-baseline gap-1 mt-0.5">
                 <span className="text-lg font-bold tabular-nums">
                   {parseFloat(b.balance)}
                 </span>
-                <span className="text-[10px] text-muted-foreground">
+                <span className="text-micro text-muted-foreground">
                   / {b.daysPerYear}
                 </span>
               </div>
@@ -207,7 +207,7 @@ export function LeaveBalanceWidget() {
       {(upcomingLeave || latestRequest) && (
         <div className="mt-2.5 space-y-1.5 border-t border-border/60 pt-2.5">
           {upcomingLeave && (
-            <div className="flex items-center justify-between text-[11px]">
+            <div className="flex items-center justify-between text-dense">
               <span className="text-muted-foreground">Upcoming leave</span>
               <span className="font-medium">
                 {upcomingLeave.leaveTypeName} ·{" "}
@@ -218,11 +218,11 @@ export function LeaveBalanceWidget() {
             </div>
           )}
           {latestRequest && (
-            <div className="flex items-center justify-between text-[11px]">
+            <div className="flex items-center justify-between text-dense">
               <span className="text-muted-foreground">Latest request</span>
               <Badge
                 variant="outline"
-                className={`text-[10px] px-1.5 py-0 ${LEAVE_STATUS_TONE[latestRequest.status] ?? ""}`}
+                className={`text-micro px-1.5 py-0 ${LEAVE_STATUS_TONE[latestRequest.status] ?? ""}`}
               >
                 {latestRequest.status}
               </Badge>
@@ -241,7 +241,7 @@ export function BirthdaysWidget() {
   return (
     <WidgetCard
       icon={Cake}
-      iconClassName="text-pink-500"
+      iconClassName="text-category-pink-ink"
       title="Birthdays & Anniversaries"
       isLoading={isLoading}
       isEmpty={!entries.length}
@@ -252,7 +252,7 @@ export function BirthdaysWidget() {
           <li key={b.id} className="flex items-center gap-2.5">
             <Avatar className="w-7">
               <AvatarImage src={resolveImageUrl(b.image)} />
-              <AvatarFallback className="text-[10px] bg-pink-500/10 text-pink-600">
+              <AvatarFallback className="text-micro bg-category-pink-surface text-category-pink-ink">
                 {b.name?.[0]}
               </AvatarFallback>
             </Avatar>
@@ -260,13 +260,13 @@ export function BirthdaysWidget() {
               <TruncatedText text={b.name ?? ""} className="text-xs font-medium" />
               <div className="flex items-center gap-1.5">
                 {b.type === "birthday" && (
-                  <span className="text-[10px] text-pink-600 flex items-center gap-0.5">
+                  <span className="text-micro text-category-pink-ink flex items-center gap-0.5">
                     <Cake className="h-3 w-3" /> Birthday{" "}
                     {b.date ? format(new Date(b.date), "MMM d") : ""}
                   </span>
                 )}
                 {b.type === "anniversary" && (
-                  <span className="text-[10px] text-primary flex items-center gap-0.5">
+                  <span className="text-micro text-primary flex items-center gap-0.5">
                     <Award className="h-3 w-3" /> {b.yearsCompleted}yr
                     anniversary
                   </span>
@@ -289,7 +289,7 @@ export function PendingApprovalsWidget() {
   return (
     <WidgetCard
       icon={AlertCircle}
-      iconClassName="text-red-500"
+      iconClassName="text-status-danger-ink"
       title="Pending Approvals"
       badge={data?.total || undefined}
       isLoading={isLoading}
@@ -341,13 +341,13 @@ export function TeamAttendanceWidget({
         </StatCardGrid>
         <div className="h-2 rounded-full bg-muted overflow-hidden">
           <div
-            className="h-full rounded-full bg-emerald-500 transition-all"
+            className="h-full rounded-full bg-category-emerald-fill transition-all"
             style={{
               width: `${data?.total ? (data.present / data.total) * 100 : 0}%`,
             }}
           />
         </div>
-        <p className="text-[10px] text-muted-foreground mt-1 text-center">
+        <p className="text-micro text-muted-foreground mt-1 text-center">
           {data?.total ? Math.round((data.present / data.total) * 100) : 0}%
           attendance rate
         </p>

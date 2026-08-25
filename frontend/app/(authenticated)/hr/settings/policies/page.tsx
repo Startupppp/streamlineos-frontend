@@ -40,8 +40,8 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 
 const STATUS_BADGE: Record<string, string> = {
   draft: "bg-muted text-muted-foreground border-border",
-  active: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  archived: "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  active: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  archived: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
 };
 
 export default function HrPoliciesPage() {
@@ -261,7 +261,7 @@ export default function HrPoliciesPage() {
       }
     >
       {conflictCount > 0 && (
-        <div className="mb-3 flex items-center gap-2 rounded-lg border border-amber-200/80 bg-amber-50/70 px-3 py-2 text-xs text-amber-800 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-200">
+        <div className="mb-3 flex items-center gap-2 rounded-lg border border-status-warning-rule bg-status-warning-surface px-3 py-2 text-xs text-status-warning-ink">
           <span className="font-semibold">{conflictCount} policy conflict{conflictCount === 1 ? "" : "s"} detected.</span>
           <span>Resolve overlapping scopes and dates before activating drafts.</span>
         </div>

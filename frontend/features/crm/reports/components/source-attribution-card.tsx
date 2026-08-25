@@ -17,7 +17,7 @@ const columns: DataTableColumn<SourceRow>[] = [
     key: "source",
     header: "Source",
     cell: (row) => (
-      <span className="text-[11px] font-medium capitalize">
+      <span className="text-dense font-medium capitalize">
         {row.source.replace(/_/g, " ")}
       </span>
     ),
@@ -30,7 +30,7 @@ const columns: DataTableColumn<SourceRow>[] = [
     headerClassName: "text-right",
     className: "text-right",
     cell: (row) => (
-      <span className="text-[11px] font-mono tabular-nums">{row.count}</span>
+      <span className="text-dense font-mono tabular-nums">{row.count}</span>
     ),
   },
   {
@@ -41,7 +41,7 @@ const columns: DataTableColumn<SourceRow>[] = [
     headerClassName: "text-right",
     className: "text-right",
     cell: (row) => (
-      <span className="text-[11px] font-mono tabular-nums text-emerald-600 dark:text-emerald-400">
+      <span className="text-dense font-mono tabular-nums text-status-success-ink">
         {row.converted}
       </span>
     ),
@@ -54,11 +54,11 @@ const columns: DataTableColumn<SourceRow>[] = [
     cell: (row) => (
       <span
         className={cn(
-          "text-[11px] font-mono tabular-nums font-medium",
+          "text-dense font-mono tabular-nums font-medium",
           row.conversionRate >= 50
-            ? "text-emerald-600 dark:text-emerald-400"
+            ? "text-status-success-ink"
             : row.conversionRate >= 25
-              ? "text-amber-600 dark:text-amber-400"
+              ? "text-status-warning-ink"
               : "text-muted-foreground",
         )}
       >
@@ -72,7 +72,7 @@ const columns: DataTableColumn<SourceRow>[] = [
     headerClassName: "text-right",
     className: "text-right",
     cell: (row) => (
-      <span className="text-[11px] font-mono tabular-nums text-muted-foreground">
+      <span className="text-dense font-mono tabular-nums text-muted-foreground">
         {row.count > 0
           ? formatCurrency(Math.round(row.totalValue / row.count))
           : "—"}

@@ -154,7 +154,7 @@ export function AccommodationSheet({ open, onOpenChange }: Props) {
                 name="confidentialMedicalNote"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-1.5 text-amber-700">
+                    <FormLabel className="flex items-center gap-1.5 text-status-warning-ink">
                       Confidential Medical Note
                       <span className="text-xs font-normal text-muted-foreground">(visible only to hr:sensitive:view)</span>
                     </FormLabel>

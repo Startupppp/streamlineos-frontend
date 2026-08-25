@@ -54,15 +54,15 @@ function getCategoryIcon(
   type: NotificationType,
 ): React.ReactNode {
   if (category === "PROJECTS") {
-    if (type === "SUCCESS") return <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />;
-    if (type === "WARNING") return <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />;
+    if (type === "SUCCESS") return <CheckCircle className="h-3.5 w-3.5 text-status-success-ink" />;
+    if (type === "WARNING") return <AlertTriangle className="h-3.5 w-3.5 text-status-warning-ink" />;
     if (type === "ERROR") return <AlertCircle className="h-3.5 w-3.5 text-destructive" />;
     return <GitPullRequest className="h-3.5 w-3.5 text-muted-foreground" />;
   }
   if (category === "HRMS") return <UserCheck className="h-3.5 w-3.5 text-muted-foreground" />;
   if (category === "CHAT") return <AtSign className="h-3.5 w-3.5 text-primary" />;
-  if (type === "SUCCESS") return <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />;
-  if (type === "WARNING") return <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />;
+  if (type === "SUCCESS") return <CheckCircle className="h-3.5 w-3.5 text-status-success-ink" />;
+  if (type === "WARNING") return <AlertTriangle className="h-3.5 w-3.5 text-status-warning-ink" />;
   if (type === "ERROR") return <AlertCircle className="h-3.5 w-3.5 text-destructive" />;
   if (type === "INFO") return <Info className="h-3.5 w-3.5 text-muted-foreground" />;
   return <Bell className="h-3.5 w-3.5 text-muted-foreground" />;
@@ -128,8 +128,8 @@ export function InboxNotificationItem({
         "hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
         isSelected && "bg-primary/5 ring-1 ring-inset ring-primary/20",
         !notification.isRead && !isSelected && "bg-card",
-        !notification.isRead && "border-l-2 border-l-primary pl-[10px]",
-        notification.isRead && "border-l-2 border-l-transparent pl-[10px]",
+        !notification.isRead && "border-l-2 border-l-primary pl-2.5",
+        notification.isRead && "border-l-2 border-l-transparent pl-2.5",
       )}
     >
       {!notification.isRead && (
@@ -148,13 +148,13 @@ export function InboxNotificationItem({
           <TruncatedText
             text={notification.title}
             className={cn(
-              "min-w-0 flex-1 text-[13px] leading-snug",
+              "min-w-0 flex-1 text-label leading-snug",
               notification.isRead
                 ? "font-normal text-muted-foreground"
                 : "font-medium text-foreground",
             )}
           />
-          <span className="shrink-0 pt-0.5 text-[11px] tabular-nums text-muted-foreground">
+          <span className="shrink-0 pt-0.5 text-dense tabular-nums text-muted-foreground">
             {formatTimestamp(notification.createdAt)}
           </span>
         </div>
@@ -168,13 +168,13 @@ export function InboxNotificationItem({
         {hasMeta ? (
           <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
             {ticketKey ? (
-              <span className="inline-flex max-w-[9rem] items-center rounded-md border border-border bg-muted/50 px-1.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground">
+              <span className="inline-flex max-w-[9rem] items-center rounded-md border border-border bg-muted/50 px-1.5 py-0.5 font-mono text-micro font-medium text-muted-foreground">
                 <TruncatedText text={ticketKey} className="min-w-0" />
               </span>
             ) : null}
 
             {ticketType ? (
-              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
+              <span className="inline-flex items-center gap-1 text-micro font-medium text-muted-foreground">
                 <TicketTypeIcon type={ticketType} size="sm" />
                 <span className="capitalize">{ticketType.toLowerCase()}</span>
               </span>
@@ -183,7 +183,7 @@ export function InboxNotificationItem({
             {priority && PriorityIcon && priorityCfg ? (
               <span
                 className={cn(
-                  "inline-flex items-center gap-0.5 text-[10px] font-medium",
+                  "inline-flex items-center gap-0.5 text-micro font-medium",
                   priorityCfg.color,
                 )}
               >
@@ -195,7 +195,7 @@ export function InboxNotificationItem({
             {status ? (
               <span
                 className={cn(
-                  "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium",
+                  "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-micro font-medium",
                   getStatusBadgeClass(status),
                 )}
               >
@@ -208,10 +208,10 @@ export function InboxNotificationItem({
             ) : null}
 
             {assignee ? (
-              <span className="inline-flex min-w-0 max-w-[8.5rem] items-center gap-1 text-[10px] text-muted-foreground">
+              <span className="inline-flex min-w-0 max-w-[8.5rem] items-center gap-1 text-micro text-muted-foreground">
                 <Avatar className="h-3.5 w-3.5 shrink-0">
                   <AvatarImage src={resolveImageUrl(assignee.image)} />
-                  <AvatarFallback className="bg-primary/10 text-[7px] font-medium text-primary">
+                  <AvatarFallback className="bg-primary/10 text-micro font-medium text-primary">
                     {getUserInitials(assignee)}
                   </AvatarFallback>
                 </Avatar>
@@ -223,7 +223,7 @@ export function InboxNotificationItem({
             ) : null}
           </div>
         ) : notification.sourceModule ? (
-          <span className="mt-1 inline-flex items-center text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">
+          <span className="mt-1 inline-flex items-center text-micro font-medium uppercase tracking-wide text-muted-foreground/70">
             {notification.sourceModule}
           </span>
         ) : null}

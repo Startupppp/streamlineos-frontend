@@ -62,25 +62,25 @@ const TYPE_CONFIG: Record<
   OFFER_LETTER: {
     label: "Offer Letter",
     badgeClass:
-      "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-700",
+      "bg-status-info-surface text-status-info-ink border-status-info-rule",
     icon: FileCheck,
   },
   NDA: {
     label: "NDA",
     badgeClass:
-      "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-700",
+      "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
     icon: FileLock,
   },
   POLICY: {
     label: "Policy",
     badgeClass:
-      "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-700",
+      "bg-status-info-surface text-status-info-ink border-status-info-rule",
     icon: FileKey,
   },
   WELCOME: {
     label: "Welcome",
     badgeClass:
-      "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-700",
+      "bg-status-success-surface text-status-success-ink border-status-success-rule",
     icon: Smile,
   },
   OTHER: {
@@ -174,7 +174,7 @@ function buildTemplateColumns(
             <TypeIcon className="h-4 w-4 text-muted-foreground shrink-0" />
             <TruncatedText text={template.title} className="font-medium text-sm" />
             {template.isDefault && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-700 shrink-0">
+              <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-status-warning-surface text-status-warning-ink border-status-warning-rule shrink-0">
                 Default
               </span>
             )}
@@ -191,7 +191,7 @@ function buildTemplateColumns(
       cell: (template) => {
         const cfg = getTypeConfig(template.type);
         return (
-          <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", cfg.badgeClass)}>
+          <span className={cn("inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border", cfg.badgeClass)}>
             {cfg.label}
           </span>
         );
@@ -208,7 +208,7 @@ function buildTemplateColumns(
       headerClassName: "w-[90px] text-center",
       className: "text-center",
       cell: (template) => (
-        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
+        <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
           v{template.version}
         </span>
       ),
@@ -219,9 +219,9 @@ function buildTemplateColumns(
       headerClassName: "w-[90px]",
       cell: (template) => (
         <span className={cn(
-          "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+          "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border",
           template.isActive
-            ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-700"
+            ? "bg-status-success-surface text-status-success-ink border-status-success-rule"
             : "bg-muted text-muted-foreground border-border",
         )}>
           {template.isActive ? "Active" : "Inactive"}

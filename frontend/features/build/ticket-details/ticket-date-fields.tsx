@@ -36,7 +36,7 @@ export function TicketDateFields({
   return (
     <div className="grid grid-cols-1 gap-3 @[18rem]:grid-cols-2">
       <div className="min-w-0">
-        <span className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+        <span className="mb-1 block text-micro font-medium uppercase tracking-wide text-muted-foreground">
           <Calendar className="mr-0.5 inline h-3 w-3" />
           Start date
         </span>
@@ -66,7 +66,7 @@ export function TicketDateFields({
         </div>
       </div>
       <div className="min-w-0">
-        <span className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+        <span className="mb-1 block text-micro font-medium uppercase tracking-wide text-muted-foreground">
           <Calendar className="mr-0.5 inline h-3 w-3" />
           Due date
         </span>

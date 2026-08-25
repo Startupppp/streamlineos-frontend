@@ -108,7 +108,7 @@ export function DocumentFormFields({
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-                Document Name <span className="text-rose-500">*</span>
+                Document Name <span className="text-status-danger-ink">*</span>
               </FormLabel>
               <FormControl>
                 <Input
@@ -133,7 +133,7 @@ export function DocumentFormFields({
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-                Type <span className="text-rose-500">*</span>
+                Type <span className="text-status-danger-ink">*</span>
               </FormLabel>
               <Select onValueChange={field.onChange} value={field.value ?? undefined}>
                 <FormControl>
@@ -211,7 +211,7 @@ export function DocumentFormFields({
                   placeholder="Select employee (optional)"
                 />
               </FormControl>
-              <FormDescription className="text-[11px]">Leave empty for company-wide documents</FormDescription>
+              <FormDescription className="text-dense">Leave empty for company-wide documents</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -264,7 +264,7 @@ export function DocumentFormFields({
                 />
               </PopoverContent>
             </Popover>
-            <FormDescription className="text-[11px]">
+            <FormDescription className="text-dense">
               Set an expiry date for contracts or certificates
             </FormDescription>
             <FormMessage />
@@ -301,7 +301,7 @@ export function DocumentFormFields({
             {tags.map((tag) => (
               <span
                 key={tag}
-                className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-muted text-foreground border border-border"
+                className="inline-flex items-center gap-1 text-dense font-medium px-2 py-0.5 rounded-full bg-muted text-foreground border border-border"
               >
                 {tag}
                 <TagRemoveButton tag={tag} onClick={onRemoveTag} />
@@ -319,17 +319,17 @@ export function DocumentFormFields({
             <div className="space-y-0.5">
               <FormLabel className="flex items-center gap-2 text-sm font-medium cursor-pointer">
                 {field.value ? (
-                  <div className="w-7 rounded-lg bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center">
-                    <Globe className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-300" />
+                  <div className="w-7 rounded-lg bg-status-success-surface flex items-center justify-center">
+                    <Globe className="h-3.5 w-3.5 text-status-success-ink" />
                   </div>
                 ) : (
-                  <div className="w-7 rounded-lg bg-amber-100 dark:bg-amber-500/10 flex items-center justify-center">
-                    <Shield className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" />
+                  <div className="w-7 rounded-lg bg-status-warning-surface flex items-center justify-center">
+                    <Shield className="h-3.5 w-3.5 text-status-warning-ink" />
                   </div>
                 )}
                 {field.value ? "Public Document" : "Private Document"}
               </FormLabel>
-              <FormDescription className="text-[11px] pl-9">
+              <FormDescription className="text-dense pl-9">
                 {field.value
                   ? "All employees can view this document"
                   : "Only admins and the owner can view this"}

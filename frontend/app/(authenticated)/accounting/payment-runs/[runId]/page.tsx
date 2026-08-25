@@ -55,8 +55,8 @@ function formatDate(value: string | null | undefined): string {
 function RunStatusBadge({ status }: { status: PaymentRunStatus }) {
   const classes: Record<PaymentRunStatus, string> = {
     DRAFT: "bg-primary/5 text-foreground border-primary/20",
-    APPROVED: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-    COMPLETED: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+    APPROVED: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+    COMPLETED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
     CANCELLED: "bg-muted text-muted-foreground border-border",
   };
   const labels: Record<PaymentRunStatus, string> = {
@@ -74,12 +74,12 @@ function RunStatusBadge({ status }: { status: PaymentRunStatus }) {
 
 function ItemStatusBadge({ status }: { status: PaymentRunItemStatus }) {
   const classes: Record<PaymentRunItemStatus, string> = {
-    PENDING: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-    PAID: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-    SKIPPED: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+    PENDING: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+    PAID: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+    SKIPPED: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
   };
   return (
-    <Badge variant="outline" className={`text-[9px] px-1.5 py-0 h-4 ${classes[status]}`}>
+    <Badge variant="outline" className={`text-micro px-1.5 py-0 h-4 ${classes[status]}`}>
       {status}
     </Badge>
   );

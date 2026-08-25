@@ -152,17 +152,17 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[11px]">Name <span className="text-destructive">*</span></FormLabel>
+                      <FormLabel className="text-dense">Name <span className="text-destructive">*</span></FormLabel>
                       <FormControl>
-                        <Input {...field} className="text-[11px]" placeholder="e.g. Sprint 12 Regression" />
+                        <Input {...field} className="text-dense" placeholder="e.g. Sprint 12 Regression" />
                       </FormControl>
-                      <FormMessage className="text-[10px]" />
+                      <FormMessage className="text-micro" />
                     </FormItem>
                   )}
                 />
 
                 <div className="space-y-2">
-                  <FormLabel className="text-[11px]">Test Selection</FormLabel>
+                  <FormLabel className="text-dense">Test Selection</FormLabel>
                   <Tabs value={mode} onValueChange={handleModeChange}>
                     <TabsList>
                       <TabsTrigger value="suite">By Suite</TabsTrigger>
@@ -185,7 +185,7 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
                                 ))}
                               </SelectContent>
                             </Select>
-                            <FormMessage className="text-[10px]" />
+                            <FormMessage className="text-micro" />
                           </FormItem>
                         )}
                       />
@@ -193,7 +193,7 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
                     <TabsContent value="cases" className="mt-2">
                       <ScrollArea className="h-40 border rounded-md p-2">
                         {cases.length === 0 && (
-                          <p className="text-[10px] text-muted-foreground">No test cases found.</p>
+                          <p className="text-micro text-muted-foreground">No test cases found.</p>
                         )}
                         {cases.map((tc) => (
                           <div key={tc.id} className="flex items-center gap-2 py-1">
@@ -202,14 +202,14 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
                               checked={selectedCaseIds.has(tc.id)}
                               onCheckedChange={() => toggleCase(tc.id)}
                             />
-                            <label htmlFor={`tc-${tc.id}`} className="text-[11px] cursor-pointer">
+                            <label htmlFor={`tc-${tc.id}`} className="text-dense cursor-pointer">
                               TC-{tc.caseNumber} — {tc.title}
                             </label>
                           </div>
                         ))}
                       </ScrollArea>
                       {selectedCaseIds.size > 0 && (
-                        <p className="text-[10px] text-muted-foreground mt-1">
+                        <p className="text-micro text-muted-foreground mt-1">
                           {selectedCaseIds.size} case(s) selected
                         </p>
                       )}
@@ -223,11 +223,11 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
                     name="environment"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[11px]">Environment</FormLabel>
+                        <FormLabel className="text-dense">Environment</FormLabel>
                         <FormControl>
-                          <Input {...field} className="text-[11px]" placeholder="e.g. Staging" />
+                          <Input {...field} className="text-dense" placeholder="e.g. Staging" />
                         </FormControl>
-                        <FormMessage className="text-[10px]" />
+                        <FormMessage className="text-micro" />
                       </FormItem>
                     )}
                   />
@@ -236,11 +236,11 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
                     name="browserDevice"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[11px]">Browser / Device</FormLabel>
+                        <FormLabel className="text-dense">Browser / Device</FormLabel>
                         <FormControl>
-                          <Input {...field} className="text-[11px]" placeholder="e.g. Chrome 124" />
+                          <Input {...field} className="text-dense" placeholder="e.g. Chrome 124" />
                         </FormControl>
-                        <FormMessage className="text-[10px]" />
+                        <FormMessage className="text-micro" />
                       </FormItem>
                     )}
                   />
@@ -251,7 +251,7 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
                   name="testerId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[11px]">Tester</FormLabel>
+                      <FormLabel className="text-dense">Tester</FormLabel>
                       <FormControl>
                         <ProjectMemberSelect
                           projectId={projectId}
@@ -260,10 +260,10 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
                           onChange={(v) => field.onChange(v ?? "")}
                           allowUnassigned
                           placeholder="Assign tester…"
-                          className="text-[11px]"
+                          className="text-dense"
                         />
                       </FormControl>
-                      <FormMessage className="text-[10px]" />
+                      <FormMessage className="text-micro" />
                     </FormItem>
                   )}
                 />
@@ -273,12 +273,12 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
             <SheetFooter className="px-5 py-3 border-t shrink-0">
               <div className="grid w-full grid-cols-2 gap-2">
                 <SheetClose asChild>
-                  <Button variant="outline" size="sm" className="text-[11px]">Cancel</Button>
+                  <Button variant="outline" size="sm" className="text-dense">Cancel</Button>
                 </SheetClose>
                 <LoadingButton
                   type="submit"
                   size="sm"
-                  className="text-[11px]"
+                  className="text-dense"
                   isPending={create.isPending}
                   loadingText="Creating…"
                 >

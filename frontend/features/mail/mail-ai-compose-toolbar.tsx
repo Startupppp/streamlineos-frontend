@@ -175,7 +175,7 @@ export function MailAiComposeToolbar({
         </PopoverTrigger>
         <PopoverContent align="start" className="w-72 p-3">
           <div className="flex flex-col gap-2">
-            <p className="text-[12px] font-medium text-foreground">
+            <p className="text-xs font-medium text-foreground">
               Describe what to write
             </p>
             <Textarea
@@ -183,7 +183,7 @@ export function MailAiComposeToolbar({
               onChange={handleInstructionChange}
               onKeyDown={handleKeyDown}
               placeholder="e.g. Follow up on yesterday's meeting…"
-              className="h-20 text-[13px] resize-none"
+              className="h-20 text-label resize-none"
               autoFocus
             />
             <LoadingButton
@@ -205,7 +205,7 @@ export function MailAiComposeToolbar({
           type="button"
           variant="outline"
           size="sm"
-          className="h-7 text-[11px] px-2 text-muted-foreground"
+          className="h-7 text-dense px-2 text-muted-foreground"
           disabled={pendingKey !== null}
           onClick={() => handleQuick(action.key)}
         >

@@ -353,7 +353,7 @@ export function CreateTicketDialog({
                 <SelectContent>
                   {projects.map((p) => (
                     <SelectItem key={p.id} value={String(p.id)} className="text-xs">
-                      <span className="mr-1.5 font-mono text-[10px] text-muted-foreground">
+                      <span className="mr-1.5 font-mono text-micro text-muted-foreground">
                         {p.key}
                       </span>
                       {p.name}

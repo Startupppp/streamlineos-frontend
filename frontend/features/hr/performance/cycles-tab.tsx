@@ -238,48 +238,48 @@ export function CyclesTab() {
                 : "border-l-border";
             const badgeClass =
               cycle.status === "ACTIVE"
-                ? "border-emerald-200 bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800"
+                ? "border-status-success-rule bg-status-success-surface text-status-success-ink"
                 : cycle.status === "COMPLETED"
-                ? "border-blue-200 bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-800"
+                ? "border-status-info-rule bg-status-info-surface text-status-info-ink"
                 : cycle.status === "CANCELLED"
-                ? "border-rose-200 bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-800"
+                ? "border-status-danger-rule bg-status-danger-surface text-status-danger-ink"
                 : "border-border bg-muted text-muted-foreground";
             const progressBarClass =
               cycle.status === "ACTIVE"
-                ? "bg-emerald-500"
+                ? "bg-status-success-fill"
                 : cycle.status === "COMPLETED"
-                ? "bg-blue-500"
+                ? "bg-status-info-fill"
                 : cycle.status === "CANCELLED"
-                ? "bg-rose-400"
+                ? "bg-status-danger-fill"
                 : "bg-muted-foreground/30";
 
             return (
               <Card
                 key={cycle.id}
-                className={`rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden border-l-4 transition-shadow duration-200 hover:shadow-md ${accentClass}`}
+                className={`rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden border-l-4 transition-shadow duration-200 hover:shadow-md ${accentClass}`}
               >
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
                     <div className="min-w-0 flex-1 space-y-2.5">
                       <div className="flex items-center gap-2 flex-wrap">
                         <TruncatedText text={cycle.name ?? ""} className="text-sm font-semibold text-foreground" />
-                        <Badge className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${badgeClass}`}>
+                        <Badge className={`inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border ${badgeClass}`}>
                           {cycle.status ?? "DRAFT"}
                         </Badge>
                         {cycle.type && (
-                          <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border border-border bg-muted text-muted-foreground">
+                          <span className="inline-flex items-center text-micro font-semibold px-2 py-0.5 rounded-full border border-border bg-muted text-muted-foreground">
                             {cycle.type.replace("_", " ")}
                           </span>
                         )}
                       </div>
-                      <p className="text-[11px] text-muted-foreground">
+                      <p className="text-dense text-muted-foreground">
                         {cycle.periodStart} → {cycle.periodEnd}
                         {cycle.deadline && <> &middot; Deadline: {cycle.deadline}</>}
                       </p>
                       <div className="space-y-1">
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Completion</span>
-                          <span className="text-[10px] font-semibold text-foreground">{progress}%</span>
+                          <span className="text-micro font-semibold text-muted-foreground uppercase tracking-wider">Completion</span>
+                          <span className="text-micro font-semibold text-foreground">{progress}%</span>
                         </div>
                         <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                           <div
@@ -342,7 +342,7 @@ export function CyclesTab() {
                     </SelectContent>
                   </Select>
                 </FormControl>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-dense text-muted-foreground">
                   {watchedType === "QUARTERLY" && "3-month performance review. Best for fast-paced teams that need frequent check-ins and course corrections."}
                   {watchedType === "HALF_YEARLY" && "6-month review cycle. Provides a balanced mid-year checkpoint for goal progress and development feedback."}
                   {watchedType === "ANNUAL" && "Comprehensive year-end evaluation covering overall performance, growth, and compensation decisions."}

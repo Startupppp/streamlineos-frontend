@@ -65,7 +65,7 @@ function SummaryStat({ label, value, tone = "default" }: SummaryStatProps) {
     tone === "muted" ? "text-muted-foreground" : "text-foreground";
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-[11px] font-medium text-muted-foreground leading-none">
+      <span className="text-dense font-medium text-muted-foreground leading-none">
         {label}
       </span>
       <span
@@ -134,8 +134,8 @@ function SectionTable({
 }: SectionTableProps) {
   const tintClass =
     tint === "b2b"
-      ? "bg-blue-500/10 text-blue-700 border-blue-500/20 dark:text-blue-300 dark:border-blue-500/30 dark:bg-blue-500/10"
-      : "bg-amber-500/10 text-amber-700 border-amber-500/20 dark:text-amber-300 dark:border-amber-500/30 dark:bg-amber-500/10";
+      ? "bg-status-info-surface text-status-info-ink border-status-info-rule"
+      : "bg-status-warning-surface text-status-warning-ink border-status-warning-rule";
 
   return (
     <div className="rounded-lg border border-border overflow-hidden">
@@ -224,7 +224,7 @@ export default function Gstr1Page() {
           <div className="flex flex-col gap-1">
             <label
               htmlFor="gstr1-from"
-              className="text-[11px] font-medium text-muted-foreground leading-none"
+              className="text-dense font-medium text-muted-foreground leading-none"
             >
               From
             </label>
@@ -233,7 +233,7 @@ export default function Gstr1Page() {
           <div className="flex flex-col gap-1">
             <label
               htmlFor="gstr1-to"
-              className="text-[11px] font-medium text-muted-foreground leading-none"
+              className="text-dense font-medium text-muted-foreground leading-none"
             >
               To
             </label>

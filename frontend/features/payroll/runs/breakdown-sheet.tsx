@@ -95,13 +95,13 @@ const LineItemRow = memo(function LineItemRow({ line }: { line: CalculationSnaps
             <ChevronRight className="h-3 w-3" />
           )}
         </span>
-        <span className="flex-1 text-[11px] text-foreground">{line.name}</span>
-        <span className="font-mono text-[11px] tabular-nums text-foreground">
+        <span className="flex-1 text-dense text-foreground">{line.name}</span>
+        <span className="font-mono text-dense tabular-nums text-foreground">
           {formatMoney(line.amount)}
         </span>
       </div>
       {expanded && (
-        <div className="px-8 py-2 bg-muted/10 border-t border-border text-[10px] text-muted-foreground space-y-0.5">
+        <div className="px-8 py-2 bg-muted/10 border-t border-border text-micro text-muted-foreground space-y-0.5">
           <p className="font-medium text-foreground">Method: {line.calcMethod}</p>
           {line.explain.formula && <p>Formula: <code>{line.explain.formula}</code></p>}
           {line.explain.steps.map((step, i) => (
@@ -238,10 +238,10 @@ export function BreakdownSheet({
                   return (
                     <div key={category}>
                       <div className="flex items-center justify-between px-3 py-2 bg-muted/30">
-                        <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                        <span className="text-micro uppercase font-bold tracking-wider text-muted-foreground">
                           {CATEGORY_LABELS[category]}
                         </span>
-                        <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
+                        <span className="font-mono text-dense tabular-nums text-muted-foreground">
                           {formatMoney(categoryTotal.toFixed(2))}
                         </span>
                       </div>
@@ -255,13 +255,13 @@ export function BreakdownSheet({
                 })}
 
                 <div className="px-3 py-3 space-y-1">
-                  <div className="flex items-center justify-between text-[11px]">
+                  <div className="flex items-center justify-between text-dense">
                     <span className="text-muted-foreground">Gross</span>
                     <span className="font-mono tabular-nums">{formatMoney(snapshot.totals.gross)}</span>
                   </div>
-                  <div className="flex items-center justify-between text-[11px]">
+                  <div className="flex items-center justify-between text-dense">
                     <span className="text-muted-foreground">Deductions</span>
-                    <span className="font-mono tabular-nums text-red-600">
+                    <span className="font-mono tabular-nums text-status-danger-ink">
                       −{formatMoney(snapshot.totals.deductions)}
                     </span>
                   </div>
@@ -272,7 +272,7 @@ export function BreakdownSheet({
                 </div>
 
                 {snapshot.variance && snapshot.variance.previousNet !== null && (
-                  <div className="px-3 py-2 bg-muted/20 text-[11px]">
+                  <div className="px-3 py-2 bg-muted/20 text-dense">
                     <span className="text-muted-foreground">vs prev: </span>
                     <span className="font-mono tabular-nums">
                       {formatMoney(snapshot.variance.previousNet)}
@@ -282,8 +282,8 @@ export function BreakdownSheet({
                         className={cn(
                           "ml-2 font-mono",
                           parseFloat(snapshot.variance.netDelta) >= 0
-                            ? "text-emerald-600"
-                            : "text-red-600",
+                            ? "text-status-success-ink"
+                            : "text-status-danger-ink",
                         )}
                       >
                         {parseFloat(snapshot.variance.netDelta) >= 0 ? "+" : ""}
@@ -320,7 +320,7 @@ export function BreakdownSheet({
                   </Button>
                 ))}
               {data?.holdReason && (
-                <TruncatedText text={`On hold: ${data.holdReason}`} className="text-[10px] text-amber-600" />
+                <TruncatedText text={`On hold: ${data.holdReason}`} className="text-micro text-status-warning-ink" />
               )}
             </div>
           )}
@@ -413,7 +413,7 @@ export function BreakdownSheet({
             <DialogTitle>Hold Salary</DialogTitle>
           </DialogHeader>
           <div className="space-y-2 py-2">
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-dense text-muted-foreground">
               This employee will be excluded from payout for this run until the hold is released.
             </p>
             <Input

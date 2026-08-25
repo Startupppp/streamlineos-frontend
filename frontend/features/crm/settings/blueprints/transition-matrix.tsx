@@ -30,14 +30,14 @@ function MatrixCell({ fromStage, toStage, transition, blueprintId }: MatrixCellP
         {transition ? (
           <button
             type="button"
-            className="inline-flex items-center bg-primary text-primary-foreground text-[9px] px-1.5 h-5 rounded cursor-pointer hover:bg-primary/90 transition-colors"
+            className="inline-flex items-center bg-primary text-primary-foreground text-micro px-1.5 h-5 rounded cursor-pointer hover:bg-primary/90 transition-colors"
           >
             {toStage.label.slice(0, 6)}
           </button>
         ) : (
           <button
             type="button"
-            className="inline-flex items-center border border-dashed border-border text-muted-foreground text-[9px] px-1.5 h-5 rounded cursor-pointer hover:border-primary transition-colors"
+            className="inline-flex items-center border border-dashed border-border text-muted-foreground text-micro px-1.5 h-5 rounded cursor-pointer hover:border-primary transition-colors"
           >
             +
           </button>
@@ -84,7 +84,7 @@ export function TransitionMatrix({ blueprint, stages }: TransitionMatrixProps) {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="text-[10px] border-collapse w-full">
+        <table className="text-micro border-collapse w-full">
           <thead>
             <tr>
               <th className="text-left text-muted-foreground font-medium px-2 py-1.5 whitespace-nowrap border-b border-border w-24">
@@ -103,7 +103,7 @@ export function TransitionMatrix({ blueprint, stages }: TransitionMatrixProps) {
           <tbody>
             {stages.map((fromStage) => (
               <tr key={fromStage.key} className="border-b border-border/50 hover:bg-muted/20">
-                <td className="px-2 py-1.5 font-medium text-[10px] whitespace-nowrap text-foreground">
+                <td className="px-2 py-1.5 font-medium text-micro whitespace-nowrap text-foreground">
                   {fromStage.label}
                 </td>
                 {stages.map((toStage) => (

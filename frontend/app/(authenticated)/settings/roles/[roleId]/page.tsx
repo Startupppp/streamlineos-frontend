@@ -103,7 +103,7 @@ function RoleEditorContent() {
               <div className="flex items-center gap-2">
                 <Shield className="h-4 w-4 text-muted-foreground shrink-0" />
                 <div>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">
+                  <p className="text-micro text-muted-foreground uppercase tracking-wide font-medium">
                     Slug
                   </p>
                   <p className="text-sm font-mono font-medium">{role.slug}</p>
@@ -115,7 +115,7 @@ function RoleEditorContent() {
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
                 <div>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">
+                  <p className="text-micro text-muted-foreground uppercase tracking-wide font-medium">
                     Created
                   </p>
                   <p className="text-sm font-medium">
@@ -129,7 +129,7 @@ function RoleEditorContent() {
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4 text-muted-foreground shrink-0" />
                 <div>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">
+                  <p className="text-micro text-muted-foreground uppercase tracking-wide font-medium">
                     Members
                   </p>
                   {membersQuery.isLoading ? (
@@ -143,7 +143,7 @@ function RoleEditorContent() {
               {role.isSystem && (
                 <>
                   <Separator orientation="vertical" className="hidden sm:block" />
-                  <Badge variant="outline" className="text-[11px]">
+                  <Badge variant="outline" className="text-dense">
                     System role
                   </Badge>
                 </>

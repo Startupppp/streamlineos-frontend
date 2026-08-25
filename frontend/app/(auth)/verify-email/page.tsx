@@ -82,13 +82,13 @@ function SuccessIcon() {
   return (
     <div className="relative mx-auto mb-4 flex h-14 w-14 items-center justify-center">
       <div
-        className="absolute inset-0 rounded-full bg-emerald-500/10"
+        className="absolute inset-0 rounded-full bg-status-success-surface"
         aria-hidden="true"
       />
       {shouldReduceMotion ? (
-        <div className="relative flex h-14 w-14 items-center justify-center rounded-full border border-emerald-500/20 bg-card shadow-sm">
+        <div className="relative flex h-14 w-14 items-center justify-center rounded-full border border-status-success-rule bg-card shadow-sm">
           <CheckCircle2
-            className="w-7 text-emerald-600"
+            className="w-7 text-status-success-ink"
             strokeWidth={1.75}
             aria-hidden="true"
           />
@@ -96,10 +96,10 @@ function SuccessIcon() {
       ) : (
         <motion.div
           variants={scaleIn}
-          className="relative flex h-14 w-14 items-center justify-center rounded-full border border-emerald-500/20 bg-card shadow-sm"
+          className="relative flex h-14 w-14 items-center justify-center rounded-full border border-status-success-rule bg-card shadow-sm"
         >
           <CheckCircle2
-            className="w-7 text-emerald-600"
+            className="w-7 text-status-success-ink"
             strokeWidth={1.75}
             aria-hidden="true"
           />
@@ -131,12 +131,12 @@ function SetupProgress() {
     >
       <div className="flex items-center gap-2.5">
         <Loader2
-          className="h-3.5 w-3.5 animate-spin text-blue-600 shrink-0"
+          className="h-3.5 w-3.5 animate-spin text-status-info-ink shrink-0"
           aria-hidden="true"
         />
         <p className="text-sm text-muted-foreground">Setting up your account…</p>
       </div>
-      <Progress value={progress} className="h-1 bg-muted [&>div]:bg-blue-600" />
+      <Progress value={progress} className="h-1 bg-muted [&>div]:bg-status-info-fill" />
     </div>
   );
 }
@@ -276,7 +276,7 @@ function VerifyEmailForm() {
         <AuthStatusSection>
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-border bg-muted/60">
             <Loader2
-              className="h-6 w-6 animate-spin text-blue-600"
+              className="h-6 w-6 animate-spin text-status-info-ink"
               aria-hidden="true"
             />
           </div>
@@ -297,7 +297,7 @@ function VerifyEmailForm() {
             <p className="text-sm text-muted-foreground">
               This will only take a moment…
             </p>
-            <Progress value={45} className="mt-3 h-1 bg-muted [&>div]:bg-blue-600" />
+            <Progress value={45} className="mt-3 h-1 bg-muted [&>div]:bg-status-info-fill" />
           </div>
         </AuthStatusSection>
       </AuthStatusShell>
@@ -382,7 +382,7 @@ function VerifyEmailForm() {
       <AuthStatusSection className="mt-6 space-y-3">
         {email && (
           <div className="rounded-xl border border-border bg-card p-4 text-center shadow-sm">
-            <p className="text-[13px] text-muted-foreground">
+            <p className="text-label text-muted-foreground">
               Verification email sent to
             </p>
             <p className="mt-1 text-sm font-medium text-foreground">{email}</p>
@@ -407,7 +407,7 @@ function VerifyEmailForm() {
             className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0"
             aria-hidden="true"
           />
-          <p className="text-[12px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Didn&apos;t receive an email? Check your spam folder or contact
             support.
           </p>
@@ -452,7 +452,7 @@ function LoadingCard() {
     <div className="w-full max-w-sm text-center">
       <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-border bg-muted/60">
         <Loader2
-          className="h-6 w-6 animate-spin text-blue-600"
+          className="h-6 w-6 animate-spin text-status-info-ink"
           aria-hidden="true"
         />
       </div>

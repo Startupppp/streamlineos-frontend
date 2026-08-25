@@ -8,10 +8,11 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { formatDealId } from "@/lib/format-utils";
+import { formatDealId, formatMoneyCompact } from "@/lib/format-utils";
 import { useCrmStages, resolveStage } from "@/hooks/api/crm/metadata";
 import { CrmStageBadge } from "@/features/crm/shared/metadata";
 import { AIPredictDealButton } from "./ai-predict-deal-button";
+import { useOrgDisplay } from "@/hooks/api/org-display";
 
 interface Deal {
   id: number;
@@ -36,16 +37,6 @@ interface DealTableViewProps {
 }
 
 const stopPropagation = (e: React.MouseEvent) => e.stopPropagation();
-
-function formatINR(val: string | number | null | undefined): string {
-  if (!val) return "—";
-  const num = typeof val === "string" ? parseFloat(val) : val;
-  if (isNaN(num) || num === 0) return "—";
-  if (num >= 10000000) return `₹${(num / 10000000).toFixed(1)}Cr`;
-  if (num >= 100000) return `₹${(num / 100000).toFixed(1)}L`;
-  if (num >= 1000) return `₹${(num / 1000).toFixed(0)}K`;
-  return `₹${num.toLocaleString("en-IN")}`;
-}
 
 function formatDate(date: string | Date | null | undefined): string {
   if (!date) return "—";
@@ -74,7 +65,7 @@ function DealNameButton({ dealId, name, onNavigate }: DealNameButtonProps) {
   const handleClick = useCallback(() => onNavigate(dealId), [dealId, onNavigate]);
   return (
     <button
-      className="font-medium text-[12px] hover:text-primary hover:underline text-left block max-w-[160px]"
+      className="font-medium text-xs hover:text-primary hover:underline text-left block max-w-[160px]"
       onClick={handleClick}
     >
       <TruncatedText text={name} />
@@ -96,9 +87,9 @@ function StageCell({ deal, isEditing, onStageChange, onStartEdit }: StageCellPro
   if (isEditing) {
     return (
       <Select defaultValue={deal.stage} onValueChange={handleValueChange}>
-        <SelectTrigger className="h-6 text-[10px] w-[100px]"><SelectValue /></SelectTrigger>
+        <SelectTrigger className="h-6 text-micro w-[100px]"><SelectValue /></SelectTrigger>
         <SelectContent>
-          {stages.map(s => <SelectItem key={s.key} value={s.key} className="text-[11px]">{s.label}</SelectItem>)}
+          {stages.map(s => <SelectItem key={s.key} value={s.key} className="text-dense">{s.label}</SelectItem>)}
         </SelectContent>
       </Select>
     );
@@ -114,6 +105,7 @@ function StageCell({ deal, isEditing, onStageChange, onStartEdit }: StageCellPro
 export function DealTableView({
   deals, sortColumn, sortDirection, onSort, onStageChange, isLoading,
 }: DealTableViewProps) {
+  const money = useOrgDisplay();
   const router = useRouter();
   const [editingCell, setEditingCell] = useState<{ dealId: number; column: string } | null>(null);
 
@@ -130,7 +122,7 @@ export function DealTableView({
       key: "dealId",
       header: "Deal ID",
       cell: (row) => (
-        <span className="font-mono text-[10px] text-muted-foreground select-all">
+        <span className="font-mono text-micro text-muted-foreground select-all">
           {formatDealId(row.id)}
         </span>
       ),
@@ -151,7 +143,7 @@ export function DealTableView({
       sortValue: (row) => parseFloat(row.value ?? "0") || 0,
       cell: (row) => (
         <span className="font-mono tabular-nums text-primary font-semibold">
-          {formatINR(row.value)}
+          {Number(row.value) ? formatMoneyCompact(row.value, money) : "—"}
         </span>
       ),
     },
@@ -201,7 +193,7 @@ export function DealTableView({
         <div className="flex items-center gap-1">
           <Avatar className="h-4 w-4">
             <AvatarImage src={row.assignedTo.image || ""} />
-            <AvatarFallback className="text-[7px]">{row.assignedTo.name.charAt(0)}</AvatarFallback>
+            <AvatarFallback className="text-micro">{row.assignedTo.name.charAt(0)}</AvatarFallback>
           </Avatar>
           <TruncatedText text={row.assignedTo.name ?? "—"} className="max-w-[70px]" />
         </div>
@@ -237,7 +229,7 @@ export function DealTableView({
   return (
     <div className="flex flex-col flex-1 min-h-0">
       <div className="shrink-0 flex items-center px-1 pb-1.5">
-        <span className="text-[11px] text-muted-foreground tabular-nums">{deals.length} deals</span>
+        <span className="text-dense text-muted-foreground tabular-nums">{deals.length} deals</span>
       </div>
       <DataTable
         data={deals}

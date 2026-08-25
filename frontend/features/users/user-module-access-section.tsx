@@ -65,8 +65,8 @@ function ModuleToggleRow({
           onClick={handleLabelClick}
           className={
             disabled
-              ? "cursor-default text-[13px] font-normal text-foreground"
-              : "cursor-pointer text-[13px] font-normal text-foreground"
+              ? "cursor-default text-label font-normal text-foreground"
+              : "cursor-pointer text-label font-normal text-foreground"
           }
         >
           {label}
@@ -74,7 +74,7 @@ function ModuleToggleRow({
         {core ? (
           <Badge
             variant="outline"
-            className="h-5 px-2 py-0.5 text-[10px]"
+            className="h-5 px-2 py-0.5 text-micro"
           >
             Included
           </Badge>
@@ -131,7 +131,7 @@ export function UserModuleAccessSection({
       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
         Module access
       </p>
-      <p className="text-[11px] text-muted-foreground">
+      <p className="text-dense text-muted-foreground">
         {isMemberActive
           ? "Optional modules can be turned off per person. Included modules are available to every active member."
           : "Module access can only be changed for active members."}

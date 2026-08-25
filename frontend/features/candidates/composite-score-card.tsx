@@ -9,9 +9,9 @@ import { ClipboardCheck } from "lucide-react";
 import type { CompositeScoreResult, CompositeVerdict } from "@/hooks/api/hr/recruitment";
 
 function verdictColor(verdict: CompositeVerdict): string {
-  if (verdict === "STRONG_HIRE") return "text-green-600";
-  if (verdict === "HIRE") return "text-emerald-500";
-  if (verdict === "ON_FENCE") return "text-yellow-600";
+  if (verdict === "STRONG_HIRE") return "text-status-success-ink";
+  if (verdict === "HIRE") return "text-status-success-ink";
+  if (verdict === "ON_FENCE") return "text-status-warning-ink";
   return "text-destructive";
 }
 
@@ -27,8 +27,8 @@ interface StrengthItemProps {
 
 const StrengthItem = memo(function StrengthItem({ text }: StrengthItemProps) {
   return (
-    <li className="text-[10px] text-muted-foreground flex gap-1">
-      <span className="text-green-500 shrink-0">+</span>{text}
+    <li className="text-micro text-muted-foreground flex gap-1">
+      <span className="text-status-success-ink shrink-0">+</span>{text}
     </li>
   );
 });
@@ -39,7 +39,7 @@ interface ConcernItemProps {
 
 const ConcernItem = memo(function ConcernItem({ text }: ConcernItemProps) {
   return (
-    <li className="text-[10px] text-muted-foreground flex gap-1">
+    <li className="text-micro text-muted-foreground flex gap-1">
       <span className="text-destructive shrink-0">−</span>{text}
     </li>
   );
@@ -78,7 +78,7 @@ export const CompositeScoreCard = memo(function CompositeScoreCard({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground">Verdict</span>
-              <Badge variant={verdictBadge(compositeScore.verdict)} className="text-[10px]">
+              <Badge variant={verdictBadge(compositeScore.verdict)} className="text-micro">
                 {compositeScore.verdict.replace("_", " ")}
               </Badge>
             </div>
@@ -97,7 +97,7 @@ export const CompositeScoreCard = memo(function CompositeScoreCard({
             )}
             {compositeScore.strengthsAcrossRounds.length > 0 && (
               <div>
-                <p className="text-[10px] font-medium text-green-700 dark:text-green-400 mb-1">
+                <p className="text-micro font-medium text-status-success-ink mb-1">
                   Strengths
                 </p>
                 <ul className="space-y-0.5">
@@ -109,7 +109,7 @@ export const CompositeScoreCard = memo(function CompositeScoreCard({
             )}
             {compositeScore.concernsAcrossRounds.length > 0 && (
               <div>
-                <p className="text-[10px] font-medium text-destructive mb-1">Concerns</p>
+                <p className="text-micro font-medium text-destructive mb-1">Concerns</p>
                 <ul className="space-y-0.5">
                   {compositeScore.concernsAcrossRounds.map((c, i) => (
                     <ConcernItem key={i} text={c} />

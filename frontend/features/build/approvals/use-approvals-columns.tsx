@@ -38,7 +38,7 @@ export function useApprovalsColumns({
       key: "entityType",
       header: "Type",
       cell: (row) => (
-        <Badge variant="outline" className="px-1.5 py-0.5 text-[10px]">
+        <Badge variant="outline" className="px-1.5 py-0.5 text-micro">
           {entityTypeLabel(row.entityType)}
         </Badge>
       ),

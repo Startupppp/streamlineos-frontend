@@ -156,7 +156,7 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
           </p>
           <TruncatedText text={txn.description ?? ""} lines={2} className="text-sm font-semibold text-foreground" />
           <div className="flex items-center gap-2 mt-1">
-            <Money value={amount} className={amount >= 0 ? "text-emerald-600" : "text-red-600"} />
+            <Money value={amount} className={amount >= 0 ? "text-status-success-ink" : "text-status-danger-ink"} />
             <BankTxnStatusBadge status={txn.status} size="chip" />
           </div>
         </div>
@@ -176,8 +176,8 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
                 className={[
                   "border rounded-lg p-3 cursor-pointer transition-colors",
                   i === selectedSuggestionIndex
-                    ? "border-blue-300 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10"
-                    : "border-border hover:border-blue-200 dark:hover:border-blue-500/30 hover:bg-muted/30",
+                    ? "border-status-info-rule bg-status-info-surface"
+                    : "border-border hover:border-status-info-rule hover:bg-muted/30",
                 ].join(" ")}
                 onClick={() => setSelectedSuggestionIndex(i)}
               >
@@ -191,14 +191,14 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
                 <div className="flex items-center justify-end gap-2">
                   <div className="h-1.5 w-16 rounded-full bg-muted overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-blue-500"
+                      className="h-full rounded-full bg-status-info-fill"
                       style={{ width: `${confidencePct}%`, transition: "width 0.4s ease" }}
                     />
                   </div>
-                  <span className="text-[10px] text-muted-foreground">{confidencePct.toFixed(0)}%</span>
+                  <span className="text-micro text-muted-foreground">{confidencePct.toFixed(0)}%</span>
                   <Button
                     size="sm"
-                    className="h-6 text-[11px] px-2"
+                    className="h-6 text-dense px-2"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleConfirmSuggestion(s.id, s.matchedType);
@@ -274,7 +274,7 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
             <LoadingButton
               variant="outline"
               size="sm"
-              className="text-xs h-8 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/30 hover:bg-amber-50 dark:hover:bg-amber-500/10"
+              className="text-xs h-8 text-status-warning-ink border-status-warning-rule hover:bg-status-warning-surface"
               isPending={unmatch.isPending}
               loadingText="Unmatching…"
               onClick={handleUnmatch}

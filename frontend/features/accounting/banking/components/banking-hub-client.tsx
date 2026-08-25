@@ -56,30 +56,30 @@ function AccountCard({ account, index }: { account: BankAccount; index: number }
               <div className="min-w-0">
                 <TruncatedText text={account.name} className="text-sm font-semibold text-foreground" />
                 {account.bankName && (
-                  <TruncatedText text={account.bankName} className="text-[11px] text-muted-foreground" />
+                  <TruncatedText text={account.bankName} className="text-dense text-muted-foreground" />
                 )}
               </div>
             </div>
-            <Badge variant="outline" className="text-[10px] shrink-0">
+            <Badge variant="outline" className="text-micro shrink-0">
               {TYPE_LABEL[account.accountType]}
             </Badge>
           </div>
 
           {account.accountNumberMasked && (
-            <p className="text-[11px] text-muted-foreground mb-2 font-mono">
+            <p className="text-dense text-muted-foreground mb-2 font-mono">
               {account.accountNumberMasked}
             </p>
           )}
 
           <div className="flex items-end justify-between">
             <div>
-              <p className="text-[10px] text-muted-foreground mb-0.5">Balance</p>
+              <p className="text-micro text-muted-foreground mb-0.5">Balance</p>
               <Money value={balance} currency={account.currency} />
             </div>
             {!account.isActive && (
               <div className="flex items-center gap-1 text-muted-foreground">
                 <AlertCircle className="h-3.5 w-3.5" />
-                <span className="text-[11px] font-medium">Inactive</span>
+                <span className="text-dense font-medium">Inactive</span>
               </div>
             )}
           </div>

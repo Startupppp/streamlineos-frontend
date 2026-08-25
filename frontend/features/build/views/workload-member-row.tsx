@@ -46,9 +46,9 @@ interface WorkloadMemberRowProps {
 
 function getUtilizationClass(count: number): string {
   if (count === 0) return "bg-muted";
-  if (count <= 2) return "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300";
-  if (count <= 4) return "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300";
-  return "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300";
+  if (count <= 2) return "bg-status-success-surface text-status-success-ink";
+  if (count <= 4) return "bg-status-warning-surface text-status-warning-ink";
+  return "bg-status-danger-surface text-status-danger-ink";
 }
 
 export const WorkloadMemberRow = memo(function WorkloadMemberRow({
@@ -94,7 +94,7 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
           )}
           <Avatar className="h-6 w-6 shrink-0">
             <AvatarImage src={resolveImageUrl(member.image)} />
-            <AvatarFallback className="text-[9px]">{getUserInitials(member)}</AvatarFallback>
+            <AvatarFallback className="text-micro">{getUserInitials(member)}</AvatarFallback>
           </Avatar>
           <TooltipProvider>
             <Tooltip>
@@ -110,7 +110,7 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="ml-auto h-4 w-4 rounded-full bg-red-100 text-red-700 text-[9px] flex items-center justify-center font-bold shrink-0 dark:bg-red-500/20 dark:text-red-300">
+                  <span className="ml-auto h-4 w-4 rounded-full bg-status-danger-surface text-status-danger-ink text-micro flex items-center justify-center font-bold shrink-0">
                     {overdue}
                   </span>
                 </TooltipTrigger>
@@ -129,7 +129,7 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
                 <span
                   className={cn(
                     "text-sm font-semibold",
-                    total > 5 ? "text-red-600 dark:text-red-400" : total > 3 ? "text-amber-600 dark:text-amber-400" : "text-foreground",
+                    total > 5 ? "text-status-danger-ink" : total > 3 ? "text-status-warning-ink" : "text-foreground",
                   )}
                 >
                   {total}
@@ -163,7 +163,7 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
             {count > 0 && (
               <span
                 className={cn(
-                  "h-5 w-5 rounded text-[10px] font-semibold flex items-center justify-center",
+                  "h-5 w-5 rounded text-micro font-semibold flex items-center justify-center",
                   getUtilizationClass(count),
                 )}
               >
@@ -193,12 +193,12 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
                 </span>
                 <TruncatedText text={ticket.title} className="min-w-0 flex-1 text-xs text-foreground" />
                 {ticket.points != null && (
-                  <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">
+                  <span className="shrink-0 text-micro tabular-nums text-muted-foreground">
                     {ticket.points}pt
                   </span>
                 )}
                 {ticket.dueDate && (
-                  <span className="text-[10px] text-muted-foreground shrink-0">
+                  <span className="text-micro text-muted-foreground shrink-0">
                     Due {format(parseISO(ticket.dueDate), "MMM d")}
                   </span>
                 )}

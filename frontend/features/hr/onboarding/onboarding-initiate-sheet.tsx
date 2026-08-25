@@ -79,7 +79,7 @@ export function OnboardingInitiateSheet({ open, onOpenChange }: OnboardingInitia
       submitLabel={<StartOnboardingLabel />}
       isPending={initiate.isPending}
     >
-      <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2.5 flex items-start gap-2 text-[12px] text-foreground">
+      <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2.5 flex items-start gap-2 text-xs text-foreground">
         <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
         <span>
           Tasks will be created from the active onboarding template and assigned to the selected employee.
@@ -103,7 +103,7 @@ export function OnboardingInitiateSheet({ open, onOpenChange }: OnboardingInitia
                   excludeUserIds={initiatedUserIds}
                 />
               </FormControl>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-dense text-muted-foreground">
                 Only active employees without an existing onboarding workflow are shown.
               </p>
               <FormMessage />

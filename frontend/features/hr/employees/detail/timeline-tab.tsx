@@ -21,7 +21,7 @@ function entryIcon(type: HrTimelineEntry["type"]) {
 
 function entryColor(type: HrTimelineEntry["type"]) {
   if (type === "status_transition") return "bg-primary/10 text-primary";
-  if (type === "effective_change") return "bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300";
+  if (type === "effective_change") return "bg-status-warning-surface text-status-warning-ink";
   return "bg-muted text-muted-foreground";
 }
 
@@ -99,11 +99,11 @@ export function EmployeeTimelineTab({ userId }: Props) {
             <div className={cn("relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-background", colorClass)}>
               <Icon className="h-4 w-4" />
             </div>
-            <Card className="flex-1 rounded-2xl border border-border/70 bg-card/90 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_10px_28px_-14px_rgba(15,23,42,0.12)]">
+            <Card className="flex-1 rounded-2xl border border-border/70 bg-card/90 shadow-card">
               <CardContent className="p-3">
                 <div className="flex items-start justify-between gap-2 min-w-0">
                   <TruncatedText text={entry.action} className="text-sm font-medium text-foreground leading-snug min-w-0 flex-1" />
-                  <span className="shrink-0 text-[11px] text-muted-foreground whitespace-nowrap">
+                  <span className="shrink-0 text-dense text-muted-foreground whitespace-nowrap">
                     {format(new Date(entry.createdAt), "MMM d, yyyy")}
                   </span>
                 </div>
@@ -113,7 +113,7 @@ export function EmployeeTimelineTab({ userId }: Props) {
                       .filter(([, v]) => v != null && v !== "")
                       .slice(0, 4)
                       .map(([k, v]) => (
-                        <span key={k} className="text-[11px] text-muted-foreground break-words max-w-[18rem]">
+                        <span key={k} className="text-dense text-muted-foreground break-words max-w-[18rem]">
                           <span className="font-medium capitalize">{k.replace(/([A-Z])/g, " $1").trim()}: </span>
                           {String(v)}
                         </span>

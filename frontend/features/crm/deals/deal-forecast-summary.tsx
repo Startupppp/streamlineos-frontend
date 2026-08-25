@@ -5,7 +5,7 @@ import { TrendingUp, Target, Handshake, Pencil } from "lucide-react";
 import { XIcon, CheckIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { formatINRCompact } from "@/lib/format-utils";
+import { formatMoneyCompact } from "@/lib/format-utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -13,6 +13,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import { useForecastSnapshots, useOverrideForecast } from "@/hooks/api/crm/deals";
 import type { Deal } from "@/types/crm";
+import { useOrgDisplay } from "@/hooks/api/org-display";
 
 const STAGE_PROBABILITY: Record<string, number> = {
   LEAD: 10,
@@ -35,6 +36,7 @@ interface SnapshotOverrideRowProps {
 }
 
 function SnapshotOverrideRow({ snapshotId, period, totalWeighted, overrideAmount }: SnapshotOverrideRowProps) {
+  const money = useOrgDisplay();
   const [editing, setEditing] = useState(false);
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
@@ -74,9 +76,9 @@ function SnapshotOverrideRow({ snapshotId, period, totalWeighted, overrideAmount
       <div className="min-w-0">
         <p className="font-medium text-xs">{period}</p>
         <p className="text-xs text-muted-foreground">
-          Weighted: {formatINRCompact(totalWeighted)}
+          Weighted: {formatMoneyCompact(totalWeighted, money)}
           {overrideAmount && (
-            <span className="ml-2 text-primary">Override: {formatINRCompact(Number(overrideAmount))}</span>
+            <span className="ml-2 text-primary">Override: {formatMoneyCompact(overrideAmount, money)}</span>
           )}
         </p>
       </div>
@@ -107,6 +109,7 @@ function SnapshotOverrideRow({ snapshotId, period, totalWeighted, overrideAmount
 }
 
 export function DealForecastSummary({ deals }: DealForecastSummaryProps) {
+  const money = useOrgDisplay();
   const canManage = useCan("crm:deals:manage");
   const { data: snapshots = [] } = useForecastSnapshots({ limit: 5 });
 
@@ -139,19 +142,19 @@ export function DealForecastSummary({ deals }: DealForecastSummaryProps) {
       <StatCardGrid cols={3}>
         <StatCard
           label="Total Pipeline"
-          value={formatINRCompact(totalPipeline)}
+          value={formatMoneyCompact(totalPipeline, money)}
           icon={TrendingUp}
           tone="blue"
         />
         <StatCard
           label="Weighted Forecast"
-          value={formatINRCompact(weightedForecast)}
+          value={formatMoneyCompact(weightedForecast, money)}
           icon={Target}
           tone="blue"
         />
         <StatCard
           label="Commit Forecast"
-          value={formatINRCompact(commitForecast)}
+          value={formatMoneyCompact(commitForecast, money)}
           icon={Handshake}
           tone="emerald"
         />

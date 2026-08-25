@@ -197,18 +197,18 @@ export default function PipelinesPage() {
                         onClick={() => handleSelectPipeline(pipeline.id)}
                         className={cn(
                           "w-full text-left flex items-center gap-2 px-3 py-2.5 border-b border-border/50 transition-colors hover:bg-muted/40",
-                          isSelected && "border-l-2 border-l-primary bg-primary/5 pl-[10px]"
+                          isSelected && "border-l-2 border-l-primary bg-primary/5 pl-2.5"
                         )}
                       >
                         <Badge
                           variant="outline"
-                          className={cn("text-[9px] h-4 px-1.5 py-0 shrink-0", typeMeta?.badgeClass)}
+                          className={cn("text-micro h-4 px-1.5 py-0 shrink-0", typeMeta?.badgeClass)}
                         >
                           {typeMeta?.label}
                         </Badge>
                         <TruncatedText text={pipeline.name} className="text-xs font-medium flex-1" />
                         {pipeline.isDefault && (
-                          <Star className="h-3 w-3 text-amber-500 shrink-0 fill-amber-400" />
+                          <Star className="h-3 w-3 text-status-warning-ink shrink-0 fill-amber-400" />
                         )}
                         <Switch
                           checked={pipeline.isActive}
@@ -238,11 +238,11 @@ export default function PipelinesPage() {
                     <span className="text-sm font-semibold">{selectedPipeline.name}</span>
                     <Badge
                       variant="outline"
-                      className={cn("text-[9px] h-4 px-1.5", getPipelineTypeMeta(selectedPipeline.type)?.badgeClass)}
+                      className={cn("text-micro h-4 px-1.5", getPipelineTypeMeta(selectedPipeline.type)?.badgeClass)}
                     >
                       {getPipelineTypeMeta(selectedPipeline.type)?.label}
                     </Badge>
-                    <span className="text-[11px] text-muted-foreground">
+                    <span className="text-dense text-muted-foreground">
                       {sortedStages.length} stage{sortedStages.length !== 1 ? "s" : ""}
                     </span>
                   </div>

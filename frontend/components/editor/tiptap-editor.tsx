@@ -107,7 +107,7 @@ export function TiptapEditor({
     },
     editorProps: {
       attributes: {
-        class: `tiptap ProseMirror prose prose-sm dark:prose-invert max-w-none cursor-text ${minHeightClassName} ${embedded ? "p-0 text-[13px] text-foreground/90" : "p-4"} focus:outline-none`,
+        class: `tiptap ProseMirror prose prose-sm dark:prose-invert max-w-none cursor-text ${minHeightClassName} ${embedded ? "p-0 text-label text-foreground/90" : "p-4"} focus:outline-none`,
       },
       handlePaste(view, event) {
         const items = event.clipboardData?.items;

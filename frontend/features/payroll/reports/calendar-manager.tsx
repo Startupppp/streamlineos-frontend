@@ -57,9 +57,9 @@ const EVENT_TYPES = [
 ];
 
 const EVENT_STATUS_CLASS: Record<string, string> = {
-  upcoming: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  due: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  overdue: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  upcoming: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  due: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  overdue: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };
 
 const eventSchema = z.object({
@@ -137,7 +137,7 @@ function EventForm({ editing, defaultMonth, onSuccess, onCancel }: EventFormProp
           name="type"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-[11px]">Event Type</FormLabel>
+              <FormLabel className="text-dense">Event Type</FormLabel>
               <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
                   <SelectTrigger>
@@ -161,7 +161,7 @@ function EventForm({ editing, defaultMonth, onSuccess, onCancel }: EventFormProp
           name="date"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-[11px]">Date</FormLabel>
+              <FormLabel className="text-dense">Date</FormLabel>
               <FormControl>
                 <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-xs" />
               </FormControl>
@@ -174,7 +174,7 @@ function EventForm({ editing, defaultMonth, onSuccess, onCancel }: EventFormProp
           name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-[11px]">Title</FormLabel>
+              <FormLabel className="text-dense">Title</FormLabel>
               <FormControl>
                 <Input {...field} className="text-xs" placeholder="Event title" />
               </FormControl>
@@ -187,7 +187,7 @@ function EventForm({ editing, defaultMonth, onSuccess, onCancel }: EventFormProp
           name="month"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-[11px]">Month (YYYY-MM, optional)</FormLabel>
+              <FormLabel className="text-dense">Month (YYYY-MM, optional)</FormLabel>
               <FormControl>
                 <Input {...field} className="text-xs" placeholder="e.g. 2025-04" />
               </FormControl>
@@ -267,7 +267,7 @@ export function CalendarManager({ month }: CalendarManagerProps) {
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <CalendarDays className="h-4 w-4 text-muted-foreground" />
-          <span className="text-[13px] font-medium text-foreground">Payroll Calendar</span>
+          <span className="text-label font-medium text-foreground">Payroll Calendar</span>
         </div>
         <div className="flex gap-2">
           <LoadingButton
@@ -294,7 +294,7 @@ export function CalendarManager({ month }: CalendarManagerProps) {
 
       {showForm && (
         <div className="rounded-md border border-border p-3 bg-muted/30">
-          <p className="text-[11px] font-medium text-foreground mb-3">
+          <p className="text-dense font-medium text-foreground mb-3">
             {editingEvent ? "Edit Event" : "New Event"}
           </p>
           <EventForm
@@ -340,17 +340,17 @@ export function CalendarManager({ month }: CalendarManagerProps) {
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <TruncatedText text={event.title} className="text-[11px] font-medium" />
+                  <TruncatedText text={event.title} className="text-dense font-medium" />
                   <span
                     className={cn(
-                      "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border",
+                      "inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium border",
                       EVENT_STATUS_CLASS[event.status] ?? "bg-muted text-muted-foreground border-border",
                     )}
                   >
                     {event.status}
                   </span>
                 </div>
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-micro text-muted-foreground">
                   {formatShortDate(event.date)} · {event.type.replace(/_/g, " ")}
                 </p>
               </div>

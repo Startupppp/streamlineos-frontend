@@ -38,18 +38,18 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 const LEVEL_LABEL: Record<"low" | "medium" | "high", string> = { low: "Low", medium: "Medium", high: "High" };
 const LEVEL_STYLE: Record<"low" | "medium" | "high", string> = {
   low: "text-muted-foreground border-border",
-  medium: "text-amber-600 border-amber-200 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  high: "text-red-600 border-red-200 bg-red-50 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  medium: "text-status-warning-ink border-status-warning-rule bg-status-warning-surface",
+  high: "text-status-danger-ink border-status-danger-rule bg-status-danger-surface",
 };
 const STATUS_LABEL: Record<RiskStatus, string> = {
   open: "Open", mitigating: "Mitigating", monitoring: "Monitoring", accepted: "Accepted", closed: "Closed",
 };
 const STATUS_STYLE: Record<RiskStatus, string> = {
   open: "text-primary border-border bg-primary/5 dark:bg-primary/10",
-  mitigating: "text-amber-600 border-amber-200 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  mitigating: "text-status-warning-ink border-status-warning-rule bg-status-warning-surface",
   monitoring: "text-primary border-border bg-primary/5 dark:bg-primary/10",
   accepted: "text-muted-foreground border-border",
-  closed: "text-emerald-600 border-emerald-200 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  closed: "text-status-success-ink border-status-success-rule bg-status-success-surface",
 };
 
 function NewRiskButton({ onClick }: { onClick: () => void }) {
@@ -203,7 +203,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
     {
       key: "probability", header: "Probability",
       cell: (row) => (
-        <Badge variant="outline" className={`text-[10px] px-1.5 py-0.5 ${LEVEL_STYLE[row.probability]}`}>
+        <Badge variant="outline" className={`text-micro px-1.5 py-0.5 ${LEVEL_STYLE[row.probability]}`}>
           {LEVEL_LABEL[row.probability]}
         </Badge>
       ),
@@ -211,7 +211,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
     {
       key: "impact", header: "Impact",
       cell: (row) => (
-        <Badge variant="outline" className={`text-[10px] px-1.5 py-0.5 ${LEVEL_STYLE[row.impact]}`}>
+        <Badge variant="outline" className={`text-micro px-1.5 py-0.5 ${LEVEL_STYLE[row.impact]}`}>
           {LEVEL_LABEL[row.impact]}
         </Badge>
       ),
@@ -220,17 +220,17 @@ export function RisksPage({ projectId }: RisksPageProps) {
       key: "severity", header: "Severity",
       cell: (row) => {
         const s = getRiskSeverity(row.probability, row.impact);
-        return <Badge variant="outline" className={`text-[10px] px-1.5 py-0.5 ${s.className}`}>{s.label}</Badge>;
+        return <Badge variant="outline" className={`text-micro px-1.5 py-0.5 ${s.className}`}>{s.label}</Badge>;
       },
     },
     {
       key: "ownerId", header: "Owner",
-      cell: (row) => <span className="text-[11px] text-muted-foreground">{memberName(row.ownerId)}</span>,
+      cell: (row) => <span className="text-dense text-muted-foreground">{memberName(row.ownerId)}</span>,
     },
     {
       key: "status", header: "Status",
       cell: (row) => (
-        <Badge variant="outline" className={`text-[10px] px-1.5 py-0.5 ${STATUS_STYLE[row.status]}`}>
+        <Badge variant="outline" className={`text-micro px-1.5 py-0.5 ${STATUS_STYLE[row.status]}`}>
           {STATUS_LABEL[row.status]}
         </Badge>
       ),

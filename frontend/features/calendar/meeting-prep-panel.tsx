@@ -182,7 +182,7 @@ export function MeetingPrepPanel({ eventId, eventTitle }: MeetingPrepPanelProps)
               </p>
               <div className="flex flex-wrap gap-1">
                 {result.agenda.keyTopics.map((topic) => (
-                  <Badge key={topic} variant="secondary" className="text-[10px] h-5 px-1.5">
+                  <Badge key={topic} variant="secondary" className="text-micro h-5 px-1.5">
                     {topic}
                   </Badge>
                 ))}

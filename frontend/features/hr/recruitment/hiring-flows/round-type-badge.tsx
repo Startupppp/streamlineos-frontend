@@ -1,9 +1,12 @@
+// Round type is a taxonomy: a final round is not an error and a cultural-fit
+// round is not a success. TECHNICAL takes indigo — the hue it also wears in the
+// interview list — rather than the blue it shared with HR_SCREENING.
 const ROUND_TYPE_COLORS: Record<string, string> = {
-  HR_SCREENING: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-  TECHNICAL: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-  MANAGER: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
-  CULTURAL_FIT: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300",
-  FINAL: "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-300",
+  HR_SCREENING: "bg-category-blue-surface text-category-blue-ink",
+  TECHNICAL: "bg-category-indigo-surface text-category-indigo-ink",
+  MANAGER: "bg-category-amber-surface text-category-amber-ink",
+  CULTURAL_FIT: "bg-category-green-surface text-category-green-ink",
+  FINAL: "bg-category-red-surface text-category-red-ink",
   CUSTOM: "bg-muted text-muted-foreground",
 };
 
@@ -25,7 +28,7 @@ const MODE_LABELS: Record<string, string> = {
 export function RoundTypeBadge({ type }: { type: string }) {
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${ROUND_TYPE_COLORS[type] ?? "bg-muted text-muted-foreground"}`}
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-micro font-medium ${ROUND_TYPE_COLORS[type] ?? "bg-muted text-muted-foreground"}`}
     >
       {ROUND_TYPE_LABELS[type] ?? type}
     </span>
@@ -34,7 +37,7 @@ export function RoundTypeBadge({ type }: { type: string }) {
 
 export function ModeBadge({ mode }: { mode: string }) {
   return (
-    <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+    <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-micro font-medium text-muted-foreground">
       {MODE_LABELS[mode] ?? mode}
     </span>
   );

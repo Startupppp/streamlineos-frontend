@@ -26,7 +26,7 @@ export function OuterGroupHeader({ groupKey, rowBy, tickets, count }: OuterGroup
         {assignee ? (
           <Avatar className="h-6 w-6 flex-shrink-0">
             <AvatarImage src={resolveImageUrl(assignee.image)} />
-            <AvatarFallback className="text-[8px]">{getUserInitials(assignee)}</AvatarFallback>
+            <AvatarFallback className="text-micro">{getUserInitials(assignee)}</AvatarFallback>
           </Avatar>
         ) : (
           <div className="h-6 w-6 flex-shrink-0 rounded-full bg-muted flex items-center justify-center">

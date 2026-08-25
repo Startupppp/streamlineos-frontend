@@ -55,12 +55,12 @@ export function ChannelMemberRow({
       <div className="relative shrink-0">
         <Avatar className="w-8">
           <AvatarImage src={resolveImageUrl(member.user?.image)} />
-          <AvatarFallback className="text-[10px] font-medium">
+          <AvatarFallback className="text-micro font-medium">
             {getInitials(member.user?.name)}
           </AvatarFallback>
         </Avatar>
         {isOnline && (
-          <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-background" />
+          <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-status-success-fill border-2 border-background" />
         )}
         {isMutedInCall && (
           <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-muted-foreground/80 border-2 border-background flex items-center justify-center">
@@ -73,20 +73,20 @@ export function ChannelMemberRow({
           <div className={FLEX_TITLE_SLOT}>
             <TruncatedText
               text={member.user?.name ?? ""}
-              className="w-full text-[13px] font-medium"
+              className="w-full text-label font-medium"
             />
           </div>
           {isYou ? (
-            <span className="shrink-0 text-[13px] font-normal text-muted-foreground">(you)</span>
+            <span className="shrink-0 text-label font-normal text-muted-foreground">(you)</span>
           ) : null}
         </div>
         <TruncatedText
           text={member.user?.email ?? ""}
-          className="w-full text-[11px] text-muted-foreground"
+          className="w-full text-dense text-muted-foreground"
         />
       </div>
       {member.role === "ADMIN" && (
-        <Badge variant="outline" className="shrink-0 text-[9px] px-1.5 py-0 h-4 border-primary/30 text-primary">
+        <Badge variant="outline" className="shrink-0 text-micro px-1.5 py-0 h-4 border-primary/30 text-primary">
           Admin
         </Badge>
       )}

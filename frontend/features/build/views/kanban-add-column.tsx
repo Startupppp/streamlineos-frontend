@@ -116,7 +116,7 @@ export function AddColumn({ projectId, existingNames = [] }: AddColumnProps) {
               aria-invalid={!!nameError}
             />
             {nameError && (
-              <p className="text-[11px] text-destructive leading-tight">{nameError}</p>
+              <p className="text-dense text-destructive leading-tight">{nameError}</p>
             )}
           </div>
           <ColumnColorPicker value={color} onChange={handleColorChange} showLabel={false} />

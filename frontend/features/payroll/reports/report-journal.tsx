@@ -27,19 +27,19 @@ const COLUMNS: DataTableColumn<JournalLine>[] = [
   {
     key: "account",
     header: "Account",
-    cell: (row) => <TruncatedText text={row.account ?? ""} className="text-[11px] font-medium" />,
+    cell: (row) => <TruncatedText text={row.account ?? ""} className="text-dense font-medium" />,
   },
   {
     key: "description",
     header: "Description",
-    cell: (row) => <TruncatedText text={row.description ?? ""} className="text-[11px] text-muted-foreground" />,
+    cell: (row) => <TruncatedText text={row.description ?? ""} className="text-dense text-muted-foreground" />,
   },
   {
     key: "debit",
     header: "Debit",
     className: "text-right",
     cell: (row) => (
-      <span className="font-mono text-[11px] tabular-nums">
+      <span className="font-mono text-dense tabular-nums">
         {row.debit ? formatMoney(row.debit) : "—"}
       </span>
     ),
@@ -49,7 +49,7 @@ const COLUMNS: DataTableColumn<JournalLine>[] = [
     header: "Credit",
     className: "text-right",
     cell: (row) => (
-      <span className="font-mono text-[11px] tabular-nums">
+      <span className="font-mono text-dense tabular-nums">
         {row.credit ? formatMoney(row.credit) : "—"}
       </span>
     ),
@@ -58,7 +58,7 @@ const COLUMNS: DataTableColumn<JournalLine>[] = [
     key: "costCenter",
     header: "Cost Center",
     cell: (row) => (
-      <TruncatedText text={row.costCenter ?? "—"} className="text-[11px] text-muted-foreground" />
+      <TruncatedText text={row.costCenter ?? "—"} className="text-dense text-muted-foreground" />
     ),
   },
 ];
@@ -67,22 +67,22 @@ function ReconCheckRow({ check }: { check: PeriodReconCheck }) {
   return (
     <div className="flex items-start gap-2 py-1.5">
       {check.ok ? (
-        <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
+        <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-status-success-ink" />
       ) : check.severity === "blocker" ? (
-        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-rose-500" />
+        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-status-danger-ink" />
       ) : (
         <Circle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
       )}
       <div className="min-w-0 flex-1">
         <p
           className={cn(
-            "text-[11px] font-medium leading-snug",
+            "text-dense font-medium leading-snug",
             check.ok ? "text-muted-foreground" : "text-foreground",
           )}
         >
           {check.label}
         </p>
-        <p className="text-[10px] text-muted-foreground leading-snug mt-0.5">{check.detail}</p>
+        <p className="text-micro text-muted-foreground leading-snug mt-0.5">{check.detail}</p>
       </div>
     </div>
   );
@@ -106,12 +106,12 @@ export function ReportJournal({ month }: ReportJournalProps) {
 
   const footerNode =
     lines.length > 0 ? (
-      <span className="text-[11px] text-muted-foreground">
+      <span className="text-dense text-muted-foreground">
         Total Debit:{" "}
         <span className="font-mono">{formatMoney(totalDebit)}</span> · Total Credit:{" "}
         <span className="font-mono">{formatMoney(totalCredit)}</span>
         {Math.abs(totalDebit - totalCredit) < 0.01 && (
-          <span className="ml-2 text-emerald-600 dark:text-emerald-400 font-medium">✓ Balanced</span>
+          <span className="ml-2 text-status-success-ink font-medium">✓ Balanced</span>
         )}
       </span>
     ) : undefined;
@@ -128,7 +128,7 @@ export function ReportJournal({ month }: ReportJournalProps) {
     <div className="flex flex-1 min-h-0 flex-col gap-3">
       {canViewBatches && (
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-dense text-muted-foreground">
             This is the live journal. Posting it to the ledger creates an immutable, versioned
             batch you can reverse and reconcile.
           </p>
@@ -144,15 +144,15 @@ export function ReportJournal({ month }: ReportJournalProps) {
             <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-[12px] font-semibold text-foreground">
+                <p className="text-xs font-semibold text-foreground">
                   Period reconciliation
                   {recon && (
                     <span
                       className={cn(
-                        "ml-2 text-[10px] font-medium px-1.5 py-0.5 rounded border",
+                        "ml-2 text-micro font-medium px-1.5 py-0.5 rounded border",
                         recon.overallOk
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
-                          : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30",
+                          ? "bg-status-success-surface text-status-success-ink border-status-success-rule"
+                          : "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
                       )}
                     >
                       {recon.overallOk
@@ -163,13 +163,13 @@ export function ReportJournal({ month }: ReportJournalProps) {
                   )}
                 </p>
                 {recon && (
-                  <span className="text-[10px] text-muted-foreground tabular-nums">
+                  <span className="text-micro text-muted-foreground tabular-nums">
                     Paid {formatMoney(recon.payout.totalPaid)}
                     {recon.run ? ` · Run net ${formatMoney(recon.run.netTotal)}` : ""}
                   </span>
                 )}
               </div>
-              <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug">
+              <p className="text-micro text-muted-foreground mt-0.5 leading-snug">
                 {recon?.honestyNote ??
                   "Compares run, payout, and journal outbox — not bank statement or GL auto-post."}
               </p>
@@ -195,17 +195,17 @@ export function ReportJournal({ month }: ReportJournalProps) {
       )}
 
       {unmappedCodes.length > 0 && (
-        <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+        <div className="flex items-start gap-2 rounded-md border border-status-warning-rule bg-status-warning-surface p-3 text-status-warning-ink">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-status-warning-ink" />
           <div>
-            <p className="text-[12px] font-semibold">Unmapped component codes</p>
-            <p className="text-[11px] mt-1">
+            <p className="text-xs font-semibold">Unmapped component codes</p>
+            <p className="text-dense mt-1">
               <span className="font-mono">{unmappedCodes.join(", ")}</span> — these codes have no
               accounting mapping and were excluded from the journal.
               <Button
                 variant="link"
                 size="sm"
-                className="h-auto p-0 ml-2 text-amber-800 underline text-[11px]"
+                className="h-auto p-0 ml-2 text-status-warning-ink underline text-dense"
                 onClick={handleOpenMappingSheet}
               >
                 Map now
@@ -235,7 +235,7 @@ export function ReportJournal({ month }: ReportJournalProps) {
                     : "—"}
               </span>
             </div>
-            <p className="text-[11px] text-muted-foreground line-clamp-2">{row.description}</p>
+            <p className="text-dense text-muted-foreground line-clamp-2">{row.description}</p>
           </div>
         )}
         emptyState={

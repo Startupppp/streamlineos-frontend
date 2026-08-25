@@ -62,9 +62,9 @@ function getTypeIcon(
   if (category === "HRMS")
     return <UserCheck className="h-5 w-5 text-muted-foreground" />;
   if (type === "SUCCESS")
-    return <CheckCircle className="h-5 w-5 text-emerald-500" />;
+    return <CheckCircle className="h-5 w-5 text-status-success-ink" />;
   if (type === "WARNING")
-    return <AlertTriangle className="h-5 w-5 text-amber-500" />;
+    return <AlertTriangle className="h-5 w-5 text-status-warning-ink" />;
   if (type === "ERROR")
     return <AlertCircle className="h-5 w-5 text-destructive" />;
   if (type === "INFO")
@@ -113,7 +113,7 @@ function NotificationFallbackPreview({
             {getTypeIcon(notification.type, notification.category)}
           </div>
           <div className="min-w-0 flex-1 overflow-hidden">
-            <h2 className="break-words text-[15px] font-semibold leading-snug text-foreground [overflow-wrap:anywhere]">
+            <h2 className="break-words text-sm font-semibold leading-snug text-foreground [overflow-wrap:anywhere]">
               {notification.title}
             </h2>
             <div className="mt-1 flex min-w-0 flex-wrap items-center gap-2">

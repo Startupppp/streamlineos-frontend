@@ -40,6 +40,12 @@ export const directoryAndOwnershipQueryKeys = {
     party: (partyId: string) => [...base, "party", "parties", partyId] as const,
     contacts: (partyId: string) =>
       [...base, "party", "parties", partyId, "contacts"] as const,
+    subjectTypes: [...base, "party", "subject-types"] as const,
+    subjects: (params?: Record<string, unknown>) =>
+      [...base, "party", "subjects", params] as const,
+    subject: (subjectId: string) => [...base, "party", "subjects", subjectId] as const,
+    partySubjects: (partyId: string) =>
+      [...base, "party", "parties", partyId, "subjects"] as const,
   },
 
   portalAccess: {

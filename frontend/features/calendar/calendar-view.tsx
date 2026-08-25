@@ -363,14 +363,14 @@ export function CalendarView() {
         />
 
         {eventsIsError && (
-          <div className="flex shrink-0 flex-col gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5 dark:border-amber-500/30 dark:bg-amber-500/10 sm:flex-row sm:items-center">
-            <span className="min-w-0 flex-1 text-[11px] text-amber-700 dark:text-amber-300">
+          <div className="flex shrink-0 flex-col gap-2 rounded-md border border-status-warning-rule bg-status-warning-surface px-3 py-1.5 sm:flex-row sm:items-center">
+            <span className="min-w-0 flex-1 text-dense text-status-warning-ink">
               {getErrorMessage(eventsError)}
             </span>
             <button
               type="button"
               onClick={handleRetryEvents}
-              className="shrink-0 self-start text-[11px] font-medium text-amber-800 underline underline-offset-2 dark:text-amber-300 sm:self-auto"
+              className="shrink-0 self-start text-dense font-medium text-status-warning-ink underline underline-offset-2 sm:self-auto"
             >
               Retry
             </button>
@@ -378,8 +378,8 @@ export function CalendarView() {
         )}
 
         {externalData?.errors && externalData.errors.length > 0 && (
-          <div className="flex shrink-0 flex-col gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5 dark:border-amber-500/30 dark:bg-amber-500/10 sm:flex-row sm:items-center">
-            <span className="min-w-0 flex-1 text-[11px] text-amber-700 dark:text-amber-300">
+          <div className="flex shrink-0 flex-col gap-2 rounded-md border border-status-warning-rule bg-status-warning-surface px-3 py-1.5 sm:flex-row sm:items-center">
+            <span className="min-w-0 flex-1 text-dense text-status-warning-ink">
               {externalData.errors
                 .map((e) => `${e.accountEmail ?? "Account"}: ${e.message}`)
                 .join(" · ")}
@@ -387,7 +387,7 @@ export function CalendarView() {
             <button
               type="button"
               onClick={handleOpenAccounts}
-              className="shrink-0 self-start text-[11px] font-medium text-amber-800 underline underline-offset-2 dark:text-amber-300 sm:self-auto"
+              className="shrink-0 self-start text-dense font-medium text-status-warning-ink underline underline-offset-2 sm:self-auto"
             >
               Manage accounts
             </button>

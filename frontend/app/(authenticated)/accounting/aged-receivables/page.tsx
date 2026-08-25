@@ -66,7 +66,7 @@ const agedReceivablesColumns: DataTableColumn<AgedReceivablesRow>[] = [
   {
     key: "d91_plus",
     header: "90+ days",
-    cell: (row) => <span className="tabular-nums text-rose-600 dark:text-rose-400 font-mono text-sm">{formatAmount(row.d91_plus)}</span>,
+    cell: (row) => <span className="tabular-nums text-status-danger-ink font-mono text-sm">{formatAmount(row.d91_plus)}</span>,
     className: "text-right",
     sortable: true,
     sortValue: (row) => parseFloat(row.d91_plus),
@@ -101,7 +101,7 @@ export default function AgedReceivablesPage() {
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
           <div className="flex flex-col gap-1">
-            <label htmlFor="aged-asof" className="text-[11px] font-medium text-muted-foreground leading-none">As of</label>
+            <label htmlFor="aged-asof" className="text-dense font-medium text-muted-foreground leading-none">As of</label>
             <DatePicker id="aged-asof" value={asOf ?? ""} onChange={handleAsOfChange} placeholder="Pick a date" className="w-[160px]" />
           </div>
         </div>
@@ -131,7 +131,7 @@ export default function AgedReceivablesPage() {
                 <span className="text-right">{formatAmount(report.totals.d1_30)}</span>
                 <span className="text-right">{formatAmount(report.totals.d31_60)}</span>
                 <span className="text-right">{formatAmount(report.totals.d61_90)}</span>
-                <span className="text-right text-rose-600 dark:text-rose-400">{formatAmount(report.totals.d91_plus)}</span>
+                <span className="text-right text-status-danger-ink">{formatAmount(report.totals.d91_plus)}</span>
                 <span className="text-right">{formatAmount(report.totals.total)}</span>
               </div>
             ) : undefined}

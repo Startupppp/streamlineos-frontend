@@ -128,7 +128,7 @@ function ParentPickerPopover({
               className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left hover:bg-accent"
               onClick={() => handlePickResult(r.id)}
             >
-              <span className="shrink-0 font-mono text-[10px] text-muted-foreground">
+              <span className="shrink-0 font-mono text-micro text-muted-foreground">
                 {r.projectKey}-{r.ticketNumber}
               </span>
               <span className={cn("flex-1 text-xs", TEXT_ONE_LINE)}>{r.title}</span>
@@ -165,7 +165,7 @@ export const BulkActionBar = memo(function BulkActionBar({
         "sticky top-0 z-10 mb-2 gap-2 border-b border-border bg-background/95 py-1.5 backdrop-blur supports-[backdrop-filter]:bg-background/80",
       )}
     >
-      <span className="shrink-0 rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-primary">
+      <span className="shrink-0 rounded-md bg-primary/10 px-2 py-0.5 text-dense font-semibold tabular-nums text-primary">
         {selectedCount} selected
       </span>
       <div className="flex min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto scrollbar-hide sm:ml-auto [&>*]:shrink-0">

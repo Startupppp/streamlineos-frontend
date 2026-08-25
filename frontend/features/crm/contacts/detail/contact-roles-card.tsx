@@ -130,7 +130,7 @@ export function ContactRolesCard({ contactId }: ContactRolesCardProps) {
                   </SelectContent>
                 </Select>
                 {form.formState.errors.entityId && (
-                  <p className="text-[10px] text-destructive">{form.formState.errors.entityId.message}</p>
+                  <p className="text-micro text-destructive">{form.formState.errors.entityId.message}</p>
                 )}
               </div>
               <div className="space-y-1">
@@ -149,7 +149,7 @@ export function ContactRolesCard({ contactId }: ContactRolesCardProps) {
                   </SelectContent>
                 </Select>
                 {form.formState.errors.roleKey && (
-                  <p className="text-[10px] text-destructive">{form.formState.errors.roleKey.message}</p>
+                  <p className="text-micro text-destructive">{form.formState.errors.roleKey.message}</p>
                 )}
               </div>
               <div className="flex items-center gap-2">
@@ -184,9 +184,9 @@ export function ContactRolesCard({ contactId }: ContactRolesCardProps) {
           <div className="flex flex-wrap gap-2">
             {roles.map((role) => (
               <div key={role.id} className="flex items-center gap-1">
-                <Badge variant="outline" className="text-[10px] px-2 py-0 h-5 bg-primary/10 text-primary border-primary/20">
+                <Badge variant="outline" className="text-micro px-2 py-0 h-5 bg-primary/10 text-primary border-primary/20">
                   {formatRoleKey(role.roleKey)}
-                  {role.isPrimary && <span className="ml-1 text-[9px] text-primary">★</span>}
+                  {role.isPrimary && <span className="ml-1 text-micro text-primary">★</span>}
                 </Badge>
                 <button
                   type="button"

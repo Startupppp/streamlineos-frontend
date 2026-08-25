@@ -9,12 +9,14 @@ import { formatDistanceToNow } from "date-fns";
 import type { AtsPipelineStage } from "@/types/hr/recruitment";
 
 const STAGE_BADGE: Record<string, string> = {
-  NEW: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
-  SCREENING: "bg-sky-100 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300",
-  INTERVIEW: "bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300",
+  NEW: "bg-muted text-muted-foreground",
+  // Two consecutive stages, sky then blue, that the migration flattened into
+  // one "info". HIRED and REJECTED below are outcomes and keep their statuses.
+  SCREENING: "bg-category-sky-surface text-category-sky-ink",
+  INTERVIEW: "bg-category-blue-surface text-category-blue-ink",
   OFFER: "bg-primary/10 text-foreground dark:bg-primary/10 dark:text-foreground",
-  HIRED: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300",
-  REJECTED: "bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300",
+  HIRED: "bg-status-success-surface text-status-success-ink",
+  REJECTED: "bg-status-danger-surface text-status-danger-ink",
 };
 
 type PipelineRow = {
@@ -47,7 +49,7 @@ const PIPELINE_COLUMNS: DataTableColumn<PipelineRow>[] = [
         >
           {row.name}
         </Link>
-        <p className="text-[11px] text-muted-foreground">{row.jobTitle ?? row.email}</p>
+        <p className="text-dense text-muted-foreground">{row.jobTitle ?? row.email}</p>
       </div>
     ),
   },
@@ -73,7 +75,7 @@ const PIPELINE_COLUMNS: DataTableColumn<PipelineRow>[] = [
     cell: (row) =>
       row.rating ? (
         <span className="flex items-center gap-0.5 text-xs">
-          <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+          <Star className="h-3 w-3 fill-amber-400 text-status-warning-ink" />
           {row.rating}
         </span>
       ) : (
@@ -89,10 +91,10 @@ const PIPELINE_COLUMNS: DataTableColumn<PipelineRow>[] = [
           variant="outline"
           className={
             row.slaStatus === "BREACHED"
-              ? "text-rose-600 border-rose-200 dark:text-rose-400 dark:border-rose-500/30"
+              ? "text-status-danger-ink border-status-danger-rule"
               : row.slaStatus === "AT_RISK"
-                ? "text-amber-600 border-amber-200 dark:text-amber-400 dark:border-amber-500/30"
-                : "text-emerald-600 border-emerald-200 dark:text-emerald-400 dark:border-emerald-500/30"
+                ? "text-status-warning-ink border-status-warning-rule"
+                : "text-status-success-ink border-status-success-rule"
           }
         >
           {row.slaStatus.replace(/_/g, " ")}

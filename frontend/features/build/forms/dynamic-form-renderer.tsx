@@ -58,7 +58,7 @@ function RatingField({ value, onChange }: { value: number; onChange: (v: number)
           key={n}
           type="button"
           onClick={() => onChange(n)}
-          className={`text-2xl leading-none transition-colors ${n <= value ? "text-amber-400" : "text-muted-foreground/30 hover:text-amber-200"}`}
+          className={`text-2xl leading-none transition-colors ${n <= value ? "text-status-warning-ink" : "text-muted-foreground/30 hover:text-status-warning-ink"}`}
           aria-label={`Rate ${n} out of 5`}
         >
           ★

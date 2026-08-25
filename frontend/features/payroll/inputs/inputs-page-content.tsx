@@ -142,7 +142,7 @@ export function InputsPageContent() {
         <Button
           variant="outline"
           size="sm"
-          className="text-xs gap-1 text-amber-700 border-amber-300 hover:bg-amber-50 dark:text-amber-300 dark:border-amber-500/30 dark:hover:bg-amber-500/10"
+          className="text-xs gap-1 text-status-warning-ink border-status-warning-rule hover:bg-status-warning-surface"
           onClick={() => setShowUnlockConfirm(true)}
         >
           <LockOpen className="h-3.5 w-3.5" />
@@ -217,7 +217,7 @@ export function InputsPageContent() {
               )}
 
               {isBuilding && (
-                <div className="border border-amber-200 bg-amber-50 rounded-lg p-3 text-sm text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+                <div className="border border-status-warning-rule bg-status-warning-surface rounded-lg p-3 text-sm text-status-warning-ink">
                   Building snapshots — this may take a moment...
                 </div>
               )}
@@ -311,7 +311,7 @@ export function InputsPageContent() {
                 onClick={handleUnlock}
                 isPending={unlockPeriod.isPending}
                 loadingText="Unlocking…"
-                className="bg-amber-600 text-white hover:bg-amber-700 dark:bg-amber-600/90 dark:hover:bg-amber-600/80"
+                className="bg-status-warning-fill text-white hover:bg-status-warning-fill-hover"
               >
                 Unlock Period
               </LoadingButton>

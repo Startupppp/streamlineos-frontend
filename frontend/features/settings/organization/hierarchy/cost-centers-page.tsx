@@ -257,11 +257,11 @@ export function OrgCostCentersPage() {
         <Badge
           variant={c.status === "ACTIVE" ? "outline" : "secondary"}
           className={cn(
-            "h-4 px-1.5 py-0 text-[9px]",
+            "h-4 px-1.5 py-0 text-micro",
             c.status === "ACTIVE"
-              ? "text-emerald-700 border-emerald-200 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400"
+              ? "text-status-success-ink border-status-success-rule bg-status-success-surface"
               : c.status === "ARCHIVED"
-                ? "text-amber-700 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400"
+                ? "text-status-warning-ink border-status-warning-rule bg-status-warning-surface"
                 : "",
           )}
         >

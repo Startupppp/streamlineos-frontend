@@ -308,7 +308,7 @@ export function NewTicketSheet({ open, onOpenChange }: NewTicketSheetProps) {
                     {pendingFiles.map((f, i) => {
                       const Icon = fileMimeIcon(f.mimeType);
                       return (
-                        <div key={i} className="flex items-center gap-1 text-[11px] bg-muted rounded px-2 py-1 border">
+                        <div key={i} className="flex items-center gap-1 text-dense bg-muted rounded px-2 py-1 border">
                           <Icon className="h-3 w-3 text-muted-foreground shrink-0" />
                           <span className="truncate max-w-[120px]">{f.fileName}</span>
                           <button

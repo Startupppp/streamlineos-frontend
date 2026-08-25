@@ -183,10 +183,10 @@ export function IssueWarningSheet({ open, onOpenChange, caseId }: Props) {
                   />
                 </FormControl>
                 <div className="space-y-0.5">
-                  <FormLabel className="text-[12px] font-medium">
+                  <FormLabel className="text-xs font-medium">
                     Force escalate (skip progressive ladder)
                   </FormLabel>
-                  <p className="text-[10px] text-muted-foreground leading-snug">
+                  <p className="text-micro text-muted-foreground leading-snug">
                     Product policy only — not legal advice. Override is audited when enabled.
                   </p>
                 </div>

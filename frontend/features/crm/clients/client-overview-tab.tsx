@@ -109,14 +109,14 @@ export function ClientOverviewTab({ client }: { client: ClientAccountWithActivit
           />
           {client.conversionNotes && (
             <div className="pt-2 mt-1 border-t border-border/50">
-              <p className="text-[10px] text-muted-foreground mb-1">Conversion Notes</p>
-              <p className="text-[11px] text-foreground">{client.conversionNotes}</p>
+              <p className="text-micro text-muted-foreground mb-1">Conversion Notes</p>
+              <p className="text-dense text-foreground">{client.conversionNotes}</p>
             </div>
           )}
           {client.renewalNotes && (
             <div className="pt-2 mt-1 border-t border-border/50">
-              <p className="text-[10px] text-muted-foreground mb-1">Renewal Notes</p>
-              <p className="text-[11px] text-foreground">{client.renewalNotes}</p>
+              <p className="text-micro text-muted-foreground mb-1">Renewal Notes</p>
+              <p className="text-dense text-foreground">{client.renewalNotes}</p>
             </div>
           )}
         </CardContent>

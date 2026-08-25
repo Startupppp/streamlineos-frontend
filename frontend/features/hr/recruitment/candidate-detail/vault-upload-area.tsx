@@ -179,7 +179,7 @@ export function VaultUploadArea({ candidateId }: VaultUploadAreaProps) {
             className="h-3 w-3 text-muted-foreground"
             aria-hidden="true"
           />
-          <p className="text-[10px] text-muted-foreground font-medium">
+          <p className="text-micro text-muted-foreground font-medium">
             {ACCEPTED_LABEL} · Max 10MB
           </p>
         </div>

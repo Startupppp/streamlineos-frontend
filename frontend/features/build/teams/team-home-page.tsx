@@ -295,11 +295,11 @@ export function TeamHomePage({ teamId }: Props) {
             </span>
             <span className="font-mono text-xs text-muted-foreground">{data.key}</span>
             {data.isPrivate ? (
-              <Badge variant="outline" className="text-[10px]">
+              <Badge variant="outline" className="text-micro">
                 Private
               </Badge>
             ) : (
-              <Badge variant="secondary" className="text-[10px]">
+              <Badge variant="secondary" className="text-micro">
                 Public
               </Badge>
             )}
@@ -311,7 +311,7 @@ export function TeamHomePage({ teamId }: Props) {
 
         <PmSection index={1} className="space-y-3">
           <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
               Members{data.members.length > 0 ? ` (${data.members.length})` : ""}
             </p>
             {canManage ? (
@@ -370,7 +370,7 @@ export function TeamHomePage({ teamId }: Props) {
                   <div key={member.id} className={PM_ROW}>
                     <Avatar className="h-7 w-7 shrink-0">
                       <AvatarImage src={resolveImageUrl(member.image)} />
-                      <AvatarFallback className="text-[10px]">{initials}</AvatarFallback>
+                      <AvatarFallback className="text-micro">{initials}</AvatarFallback>
                     </Avatar>
                     <div className="flex min-w-0 flex-1 flex-col">
                       <span
@@ -381,7 +381,7 @@ export function TeamHomePage({ teamId }: Props) {
                       >
                         {displayName}
                       </span>
-                      <span className="text-[11px] text-muted-foreground">
+                      <span className="text-dense text-muted-foreground">
                         {member.email}
                       </span>
                     </div>
@@ -394,7 +394,7 @@ export function TeamHomePage({ teamId }: Props) {
                     ) : (
                       <Badge
                         variant="outline"
-                        className="shrink-0 px-1.5 py-0.5 text-[10px] capitalize"
+                        className="shrink-0 px-1.5 py-0.5 text-micro capitalize"
                       >
                         {member.role}
                       </Badge>

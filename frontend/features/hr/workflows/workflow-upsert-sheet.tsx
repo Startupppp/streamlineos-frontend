@@ -243,7 +243,7 @@ export function WorkflowUpsertSheet({ open, onOpenChange, editDefinition }: Prop
               <div key={field.id} className="rounded-lg border p-3 space-y-3 bg-muted/30">
                 <div className="flex items-center gap-2">
                   <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <Badge variant="secondary" className="text-[11px] shrink-0">Step {index + 1}</Badge>
+                  <Badge variant="secondary" className="text-dense shrink-0">Step {index + 1}</Badge>
                   <div className="flex-1 min-w-0">
                     <FormField
                       control={form.control}
@@ -276,7 +276,7 @@ export function WorkflowUpsertSheet({ open, onOpenChange, editDefinition }: Prop
                     name={`steps.${index}.approverType`}
                     render={({ field: f }) => (
                       <FormItem>
-                        <FormLabel className="text-[10px] font-medium text-muted-foreground">Approver</FormLabel>
+                        <FormLabel className="text-micro font-medium text-muted-foreground">Approver</FormLabel>
                         <Select onValueChange={f.onChange} value={f.value}>
                           <FormControl>
                             <SelectTrigger><SelectValue /></SelectTrigger>
@@ -296,7 +296,7 @@ export function WorkflowUpsertSheet({ open, onOpenChange, editDefinition }: Prop
                     name={`steps.${index}.mode`}
                     render={({ field: f }) => (
                       <FormItem>
-                        <FormLabel className="text-[10px] font-medium text-muted-foreground">Mode</FormLabel>
+                        <FormLabel className="text-micro font-medium text-muted-foreground">Mode</FormLabel>
                         <Select onValueChange={f.onChange} value={f.value}>
                           <FormControl>
                             <SelectTrigger><SelectValue /></SelectTrigger>
@@ -317,7 +317,7 @@ export function WorkflowUpsertSheet({ open, onOpenChange, editDefinition }: Prop
                   name={`steps.${index}.slaHours`}
                   render={({ field: f }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-medium text-muted-foreground">SLA (hours, optional)</FormLabel>
+                      <FormLabel className="text-micro font-medium text-muted-foreground">SLA (hours, optional)</FormLabel>
                       <FormControl>
                         <Input
                           type="number"

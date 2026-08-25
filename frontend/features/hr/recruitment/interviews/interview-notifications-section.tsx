@@ -19,7 +19,7 @@ export function InterviewNotificationsSection({
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2 mb-1">
-        <div className="w-7 rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 flex items-center justify-center shrink-0">
+        <div className="w-7 rounded-lg bg-status-warning-surface text-status-warning-ink flex items-center justify-center shrink-0">
           <Bell className="h-3.5 w-3.5" />
         </div>
         <span className="text-sm font-semibold text-foreground">
@@ -30,7 +30,7 @@ export function InterviewNotificationsSection({
         <div className="flex items-center justify-between px-4 py-3 border-b border-border/60">
           <div>
             <p className="text-sm font-medium text-foreground">Email</p>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-dense text-muted-foreground">
               Notify via email
             </p>
           </div>
@@ -43,7 +43,7 @@ export function InterviewNotificationsSection({
         <div className="flex items-center justify-between px-4 py-3">
           <div>
             <p className="text-sm font-medium text-foreground">WhatsApp</p>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-dense text-muted-foreground">
               Requires Twilio configuration
             </p>
           </div>

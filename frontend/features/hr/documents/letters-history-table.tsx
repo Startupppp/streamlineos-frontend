@@ -24,7 +24,7 @@ const LETTER_TYPE_LABELS: Record<string, string> = {
 function LetterTypeBadge({ type }: { type: string | null }) {
   if (!type) return null;
   return (
-    <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-primary/10 border-primary/30 text-foreground">
+    <span className="inline-flex items-center text-micro font-semibold px-2 py-0.5 rounded-full border bg-primary/10 border-primary/30 text-foreground">
       {LETTER_TYPE_LABELS[type] ?? type}
     </span>
   );

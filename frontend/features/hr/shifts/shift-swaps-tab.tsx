@@ -85,7 +85,7 @@ export function ShiftSwapsTab({ canManage }: Props) {
         key: "status",
         header: "Status",
         cell: (swap) => (
-          <Badge variant={STATUS_VARIANTS[swap.status] ?? "secondary"} className="text-[11px]">
+          <Badge variant={STATUS_VARIANTS[swap.status] ?? "secondary"} className="text-dense">
             {swap.status}
           </Badge>
         ),

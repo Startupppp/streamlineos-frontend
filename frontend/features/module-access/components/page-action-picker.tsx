@@ -120,7 +120,7 @@ function ResourceRow({ group, draft, onDraftChange, readOnly }: ResourceRowProps
           </span>
         )}
         {grantedCount > 0 && (
-          <Badge variant="secondary" className="text-[10px] shrink-0">
+          <Badge variant="secondary" className="text-micro shrink-0">
             {grantedCount}/{permissions.length}
           </Badge>
         )}
@@ -130,7 +130,7 @@ function ResourceRow({ group, draft, onDraftChange, readOnly }: ResourceRowProps
             variant="ghost"
             size="sm"
             onClick={handleBulkToggle}
-            className="h-6 px-2 text-[10px] text-muted-foreground shrink-0"
+            className="h-6 px-2 text-micro text-muted-foreground shrink-0"
             aria-label={
               allGranted
                 ? `Clear all ${label} permissions`
@@ -221,7 +221,7 @@ export function PageActionPicker({
             variant="ghost"
             size="sm"
             onClick={handleModuleBulkToggle}
-            className="h-6 px-2 text-[10px] text-muted-foreground"
+            className="h-6 px-2 text-micro text-muted-foreground"
             aria-label={
               allGranted ? "Clear all permissions" : "Grant all permissions"
             }

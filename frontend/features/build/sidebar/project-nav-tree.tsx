@@ -79,7 +79,7 @@ function ProjectTreeLink({
         <TruncatedText
           text={item.label}
           className={cn(
-            "flex-1 text-[0.8125rem]",
+            "flex-1 text-label",
             active && "text-sidebar-foreground",
           )}
         />

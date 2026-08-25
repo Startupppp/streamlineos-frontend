@@ -295,7 +295,7 @@ export function OrgCatalogTable<T extends CatalogItem>({
           compact
         />
       ) : (
-        <Card className="rounded-2xl border border-border/70 bg-card/90 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_10px_28px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
+        <Card className="rounded-2xl border border-border/70 bg-card/90 shadow-card overflow-hidden">
           <CardContent className="p-0">
             <div className="divide-y divide-border">
               {filtered.map((item) => (
@@ -306,7 +306,7 @@ export function OrgCatalogTable<T extends CatalogItem>({
                   <div className="flex-1 min-w-0">
                     <TruncatedText text={item.name} className="text-sm font-medium" />
                     {item.code && (
-                      <p className="text-[11px] text-muted-foreground font-mono">
+                      <p className="text-dense text-muted-foreground font-mono">
                         {item.code}
                       </p>
                     )}

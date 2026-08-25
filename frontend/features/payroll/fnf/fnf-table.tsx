@@ -36,8 +36,8 @@ const columns: DataTableColumn<FnfSettlement>[] = [
     header: "Employee",
     cell: (row) => (
       <div className="flex flex-col gap-0.5 min-w-0">
-        <TruncatedText text={row.userName} className="text-[11px] font-medium" />
-        <TruncatedText text={row.userEmail} className="text-[10px] text-muted-foreground" />
+        <TruncatedText text={row.userName} className="text-dense font-medium" />
+        <TruncatedText text={row.userEmail} className="text-micro text-muted-foreground" />
       </div>
     ),
   },
@@ -47,7 +47,7 @@ const columns: DataTableColumn<FnfSettlement>[] = [
     className: "text-right",
     headerClassName: "text-right",
     cell: (row) => (
-      <span className="font-mono tabular-nums text-right text-[11px]">
+      <span className="font-mono tabular-nums text-right text-dense">
         {formatMoney(row.netPayable)}
       </span>
     ),
@@ -62,9 +62,9 @@ const columns: DataTableColumn<FnfSettlement>[] = [
     header: "Date",
     cell: (row) => {
       const dateStr = row.statementPublishedAt ?? null;
-      if (!dateStr) return <span className="text-[11px] text-muted-foreground">—</span>;
+      if (!dateStr) return <span className="text-dense text-muted-foreground">—</span>;
       return (
-        <span className="text-[11px] text-muted-foreground">
+        <span className="text-dense text-muted-foreground">
           {new Date(dateStr).toLocaleDateString("en-IN", {
             day: "2-digit",
             month: "short",
@@ -140,7 +140,7 @@ export function FnfTable() {
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
                 <p className="text-sm font-medium truncate">{row.userName}</p>
-                <p className="text-[11px] text-muted-foreground truncate">{row.userEmail}</p>
+                <p className="text-dense text-muted-foreground truncate">{row.userEmail}</p>
               </div>
               <FnfStatusBadge status={row.status} />
             </div>

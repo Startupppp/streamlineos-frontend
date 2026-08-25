@@ -85,7 +85,7 @@ export default function SupportSettingsAuditLogPage() {
       key: "action",
       header: "Action",
       cell: (row) => (
-        <Badge variant={actionTone(row.action)} className="text-[10px] capitalize">
+        <Badge variant={actionTone(row.action)} className="text-micro capitalize">
           {row.action}
         </Badge>
       ),

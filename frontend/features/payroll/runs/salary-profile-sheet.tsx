@@ -341,7 +341,7 @@ export function SalaryProfileSheet({
                       <FormControl>
                         <Input {...field} placeholder="e.g. USD" maxLength={3} />
                       </FormControl>
-                      <p className="text-[11px] text-muted-foreground mt-1">
+                      <p className="text-dense text-muted-foreground mt-1">
                         Override payout currency for FX conversion (leave blank to use salary currency)
                       </p>
                       <FormMessage />

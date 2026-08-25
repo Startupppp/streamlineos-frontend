@@ -68,21 +68,21 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
         ) : null}
         <div className="flex min-w-0 flex-wrap items-center gap-1.5">
           {item.targetQuarter ? (
-            <Badge variant="outline" className="text-[10px]">
+            <Badge variant="outline" className="text-micro">
               {item.targetQuarter}
             </Badge>
           ) : null}
           {item.category ? (
-            <Badge variant="secondary" className={cn(TEXT_ONE_LINE, "max-w-[8rem] text-[10px]")}>
+            <Badge variant="secondary" className={cn(TEXT_ONE_LINE, "max-w-[8rem] text-micro")}>
               {item.category}
             </Badge>
           ) : null}
           {!item.isPublic ? (
-            <Badge variant="outline" className="text-[10px]">
+            <Badge variant="outline" className="text-micro">
               Private
             </Badge>
           ) : null}
-          <span className="ml-auto inline-flex items-center gap-1 text-[11px] tabular-nums text-muted-foreground">
+          <span className="ml-auto inline-flex items-center gap-1 text-dense tabular-nums text-muted-foreground">
             <ArrowBigUp className="h-3.5 w-3.5" />
             {item.votes}
           </span>

@@ -99,7 +99,7 @@ function GoalCard({ goal }: { goal: GoalListItem }) {
             >
               {goal.title}
             </p>
-            <Badge variant={cfg.variant} className="shrink-0 text-[10px]">
+            <Badge variant={cfg.variant} className="shrink-0 text-micro">
               {cfg.label}
             </Badge>
           </div>
@@ -342,7 +342,7 @@ export default function GoalsPage() {
                         <h2 className="text-sm font-semibold text-foreground">
                           {LEVEL_LABEL[level]}
                         </h2>
-                        <Badge variant="secondary" className="text-[10px]">
+                        <Badge variant="secondary" className="text-micro">
                           {levelGoals.length}
                         </Badge>
                       </div>

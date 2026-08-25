@@ -25,13 +25,13 @@ export function QuoteStatusProgress({ status }: QuoteStatusProgressProps) {
         <div
           className={cn(
             "flex items-center gap-1.5 text-xs font-medium",
-            status === "REJECTED" ? "text-red-600 dark:text-red-400" : "text-amber-600 dark:text-amber-400",
+            status === "REJECTED" ? "text-status-danger-ink" : "text-status-warning-ink",
           )}
         >
           <span
             className={cn(
               "h-2 w-2 rounded-full inline-block",
-              status === "REJECTED" ? "bg-red-500" : "bg-amber-500",
+              status === "REJECTED" ? "bg-status-danger-fill" : "bg-status-warning-fill",
             )}
           />
           {STATUS_LABELS[status]}
@@ -54,7 +54,7 @@ export function QuoteStatusProgress({ status }: QuoteStatusProgressProps) {
                 isCurrent
                   ? "font-semibold text-foreground"
                   : isPast
-                    ? "text-emerald-600 dark:text-emerald-400"
+                    ? "text-status-success-ink"
                     : "text-muted-foreground",
               )}
             >
@@ -64,7 +64,7 @@ export function QuoteStatusProgress({ status }: QuoteStatusProgressProps) {
                   isCurrent
                     ? "bg-primary"
                     : isPast
-                      ? "bg-emerald-500"
+                      ? "bg-status-success-fill"
                       : "bg-muted-foreground/30",
                 )}
               />
@@ -74,7 +74,7 @@ export function QuoteStatusProgress({ status }: QuoteStatusProgressProps) {
               <div
                 className={cn(
                   "w-8 h-px mx-1",
-                  isPast ? "bg-emerald-500" : "bg-border",
+                  isPast ? "bg-status-success-fill" : "bg-border",
                 )}
               />
             )}

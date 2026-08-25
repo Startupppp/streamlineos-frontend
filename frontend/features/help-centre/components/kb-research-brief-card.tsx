@@ -17,8 +17,8 @@ interface StatusConfig {
 const STATUS_MAP: Record<KbResearchBriefStatus, StatusConfig> = {
   queued: { label: "Queued", className: "bg-muted text-muted-foreground border-border" },
   running: { label: "Running", className: "bg-primary/10 text-primary border-primary/20" },
-  completed: { label: "Completed", className: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
-  failed: { label: "Failed", className: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30" },
+  completed: { label: "Completed", className: "bg-status-success-surface text-status-success-ink border-status-success-rule" },
+  failed: { label: "Failed", className: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule" },
 };
 
 interface KbResearchBriefCardProps {
@@ -61,11 +61,11 @@ export function KbResearchBriefCard({ brief }: KbResearchBriefCardProps) {
     >
       <CardContent className="p-3 flex items-start gap-3">
         <div className="flex-1 min-w-0 space-y-1">
-          <p className="text-[13px] font-medium leading-snug truncate">{brief.topic}</p>
+          <p className="text-label font-medium leading-snug truncate">{brief.topic}</p>
           <div className="flex items-center gap-2 flex-wrap">
             <Badge
               variant="outline"
-              className={cn("text-[10px] h-5", statusConfig.className)}
+              className={cn("text-micro h-5", statusConfig.className)}
             >
               {brief.status === "running" && (
                 <Loader2 className="h-2.5 w-2.5 mr-1 animate-spin" />
@@ -73,13 +73,13 @@ export function KbResearchBriefCard({ brief }: KbResearchBriefCardProps) {
               {statusConfig.label}
             </Badge>
             {brief.sourceCount > 0 && (
-              <span className="text-[11px] text-muted-foreground">
+              <span className="text-dense text-muted-foreground">
                 {brief.sourceCount} source{brief.sourceCount !== 1 ? "s" : ""}
               </span>
             )}
           </div>
         </div>
-        <span className="text-[11px] text-muted-foreground shrink-0 pt-0.5">{formattedDate}</span>
+        <span className="text-dense text-muted-foreground shrink-0 pt-0.5">{formattedDate}</span>
       </CardContent>
     </Card>
   );

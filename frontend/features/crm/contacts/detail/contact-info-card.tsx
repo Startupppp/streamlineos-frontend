@@ -91,7 +91,7 @@ export function ContactInfoCard({ contact, onEdit, onSendEmail, onLogCall, entit
               {contact.status && (
                 <Badge
                   variant="secondary"
-                  className="mt-1.5 text-[10px] px-1.5 py-0 h-4 capitalize"
+                  className="mt-1.5 text-micro px-1.5 py-0 h-4 capitalize"
                 >
                   {contact.status.toLowerCase().replace(/_/g, " ")}
                 </Badge>
@@ -209,7 +209,7 @@ export function ContactInfoCard({ contact, onEdit, onSendEmail, onLogCall, entit
                 <Badge
                   key={tag}
                   variant="outline"
-                  className="text-[10px] px-1.5 py-0 h-4 border-primary/30 text-primary"
+                  className="text-micro px-1.5 py-0 h-4 border-primary/30 text-primary"
                 >
                   {tag}
                 </Badge>
@@ -219,7 +219,7 @@ export function ContactInfoCard({ contact, onEdit, onSendEmail, onLogCall, entit
 
           {contact.crmOrganization && (
             <div className="pt-3 mt-2 border-t border-border/50">
-              <p className="text-[10px] text-muted-foreground mb-1">Organization</p>
+              <p className="text-micro text-muted-foreground mb-1">Organization</p>
               <Link
                 href={`/crm/companies/${contact.crmOrganization.id}`}
                 className="text-xs text-primary hover:underline font-medium"

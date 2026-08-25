@@ -40,9 +40,9 @@ function CandidateOptionButton({ candidate: c, isKept, onSelect }: CandidateOpti
           text={`${c.firstName} ${c.lastName}`}
           className="text-sm font-semibold text-foreground min-w-0 flex-1"
         />
-        {isKept && <Badge className="text-[10px] shrink-0">Keep this one</Badge>}
+        {isKept && <Badge className="text-micro shrink-0">Keep this one</Badge>}
         {c.duplicateOfId && (
-          <Badge variant="outline" className="text-[10px] shrink-0">
+          <Badge variant="outline" className="text-micro shrink-0">
             Already linked
           </Badge>
         )}
@@ -58,7 +58,7 @@ function CandidateOptionButton({ candidate: c, isKept, onSelect }: CandidateOpti
         />
       )}
       <p className="text-xs text-muted-foreground mt-1">Status: {c.status}</p>
-      <p className="text-[11px] text-muted-foreground/70 mt-1">
+      <p className="text-dense text-muted-foreground/70 mt-1">
         Added {formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })}
       </p>
     </button>

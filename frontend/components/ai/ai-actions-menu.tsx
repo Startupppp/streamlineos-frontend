@@ -292,9 +292,9 @@ export function AiActionsMenu({
         }}
         className="flex flex-col items-start gap-0.5"
       >
-        <span className="text-[13px]">{action.label}</span>
+        <span className="text-label">{action.label}</span>
         {secondaryText ? (
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-dense text-muted-foreground">
             {secondaryText}
           </span>
         ) : null}
@@ -304,7 +304,7 @@ export function AiActionsMenu({
 
   const menuContent = (
     <>
-      <DropdownMenuLabel className="text-[11px] font-medium text-muted-foreground">
+      <DropdownMenuLabel className="text-dense font-medium text-muted-foreground">
         {menuLabel}
       </DropdownMenuLabel>
       <DropdownMenuSeparator />
@@ -356,7 +356,7 @@ export function AiActionsMenu({
               <SheetTitle className="text-base font-semibold">
                 {active?.label ?? "AI assist"}
               </SheetTitle>
-              <SheetDescription className="text-[13px] text-muted-foreground">
+              <SheetDescription className="text-label text-muted-foreground">
                 AI-generated draft grounded in this record. Review before you
                 use it.
               </SheetDescription>
@@ -376,7 +376,7 @@ export function AiActionsMenu({
               <DialogTitle className="text-base font-semibold">
                 {active?.label ?? "AI assist"}
               </DialogTitle>
-              <DialogDescription className="text-[13px] text-muted-foreground">
+              <DialogDescription className="text-label text-muted-foreground">
                 AI-generated draft grounded in this record. Review before you
                 use it.
               </DialogDescription>
@@ -431,7 +431,7 @@ export function AiActionsMenu({
             <SheetTitle className="text-base font-semibold">
               {active?.label ?? "AI assist"}
             </SheetTitle>
-            <SheetDescription className="text-[13px] text-muted-foreground">
+            <SheetDescription className="text-label text-muted-foreground">
               AI-generated draft grounded in this record. Review before you use
               it.
             </SheetDescription>
@@ -451,7 +451,7 @@ export function AiActionsMenu({
             <DialogTitle className="text-base font-semibold">
               {active?.label ?? "AI assist"}
             </DialogTitle>
-            <DialogDescription className="text-[13px] text-muted-foreground">
+            <DialogDescription className="text-label text-muted-foreground">
               AI-generated draft grounded in this record. Review before you use
               it.
             </DialogDescription>

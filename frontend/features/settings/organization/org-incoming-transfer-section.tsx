@@ -122,7 +122,7 @@ function TransferItemRow({
         <div className="flex flex-wrap items-center gap-2 pt-0.5">
           <Badge
             variant="outline"
-            className="text-xs gap-1 text-amber-700 border-amber-300 bg-amber-50 dark:text-amber-400 dark:border-amber-700/50 dark:bg-amber-500/10"
+            className="text-xs gap-1 text-status-warning-ink border-status-warning-rule bg-status-warning-surface"
           >
             <Clock className="h-3 w-3" />
             Expires {expiresLabel}
@@ -249,8 +249,8 @@ export function OrgIncomingTransferSection({
             <ArrowRightLeft className="h-3.5 w-3.5 shrink-0" />
           ) : undefined
         }
-        className="border-amber-300/60 dark:border-amber-700/50"
-        titleClassName="text-amber-800 dark:text-amber-400"
+        className="border-status-warning-rule"
+        titleClassName="text-status-warning-ink"
         contentClassName="space-y-0 divide-y divide-border"
       >
         {transfers.map((transfer) => (

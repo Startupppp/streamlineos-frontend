@@ -80,7 +80,7 @@ function CompleteTaskButton({
     <Button
       size="sm"
       variant="ghost"
-      className="h-6 w-6 p-0 shrink-0 text-muted-foreground hover:text-emerald-400"
+      className="h-6 w-6 p-0 shrink-0 text-muted-foreground hover:text-status-success-ink"
       onClick={handleClick}
       disabled={isPending}
       title="Mark as done"
@@ -183,7 +183,7 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
 
         <div className="grid grid-cols-2 gap-2">
           <div className="col-span-2 space-y-1">
-            <Label className="text-[11px] text-muted-foreground">Title *</Label>
+            <Label className="text-dense text-muted-foreground">Title *</Label>
             <Input
               placeholder="e.g. Call to discuss SIP plan"
               value={fuTitle}
@@ -193,7 +193,7 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
           </div>
 
           <div className="space-y-1">
-            <Label className="text-[11px] text-muted-foreground">Type</Label>
+            <Label className="text-dense text-muted-foreground">Type</Label>
             <Select value={fuType} onValueChange={handleFuTypeChange}>
               <SelectTrigger>
                 <SelectValue />
@@ -209,7 +209,7 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
           </div>
 
           <div className="space-y-1">
-            <Label className="text-[11px] text-muted-foreground">Time</Label>
+            <Label className="text-dense text-muted-foreground">Time</Label>
             <Input
               type="time"
               value={fuTime}
@@ -219,7 +219,7 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
           </div>
 
           <div className="col-span-2 space-y-1">
-            <Label className="text-[11px] text-muted-foreground">Date *</Label>
+            <Label className="text-dense text-muted-foreground">Date *</Label>
             <DatePicker
               value={fuDate}
               onChange={setFuDate}
@@ -230,7 +230,7 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
           </div>
 
           <div className="col-span-2 space-y-1">
-            <Label className="text-[11px] text-muted-foreground">
+            <Label className="text-dense text-muted-foreground">
               Notes (optional)
             </Label>
             <Textarea
@@ -257,7 +257,7 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
 
       {pendingTasks.length > 0 && (
         <div className="space-y-2">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <p className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
             Pending ({pendingTasks.length})
           </p>
           <div className="space-y-2">
@@ -273,11 +273,11 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
                     className={cn(
                       "h-8 w-7 rounded-md flex items-center justify-center shrink-0 mt-0.5",
                       task.type === "CALL"
-                        ? "bg-blue-500/15 text-blue-400"
+                        ? "bg-status-info-surface text-status-info-ink"
                         : task.type === "EMAIL"
-                          ? "bg-blue-500/15 text-blue-400"
+                          ? "bg-status-info-surface text-status-info-ink"
                           : task.type === "MEETING"
-                            ? "bg-amber-500/15 text-amber-400"
+                            ? "bg-status-warning-surface text-status-warning-ink"
                             : "bg-muted text-muted-foreground",
                     )}
                   >
@@ -297,16 +297,16 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
                     </p>
                     <p
                       className={cn(
-                        "text-[10px] mt-0.5",
+                        "text-micro mt-0.5",
                         isOverdue
-                          ? "text-red-400 font-medium"
+                          ? "text-status-danger-ink font-medium"
                           : "text-muted-foreground",
                       )}
                     >
                       {formatTaskDue(task.dueDate)}
                     </p>
                     {task.notes && (
-                      <p className="text-[10px] text-muted-foreground/70 mt-1 truncate">
+                      <p className="text-micro text-muted-foreground/70 mt-1 truncate">
                         {task.notes}
                       </p>
                     )}
@@ -325,7 +325,7 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
 
       {doneTasks.length > 0 && (
         <div className="space-y-2">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <p className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
             Completed ({doneTasks.length})
           </p>
           <div className="space-y-1.5">
@@ -334,9 +334,9 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
                 key={task.id}
                 className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-muted/10 border border-border/20"
               >
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                <TruncatedText text={task.title} className="text-[11px] text-muted-foreground/70 line-through flex-1" />
-                <span className="text-[10px] text-muted-foreground/50 shrink-0">
+                <CheckCircle2 className="h-3.5 w-3.5 text-status-success-ink shrink-0" />
+                <TruncatedText text={task.title} className="text-dense text-muted-foreground/70 line-through flex-1" />
+                <span className="text-micro text-muted-foreground/50 shrink-0">
                   {task.completedAt
                     ? new Date(task.completedAt).toLocaleDateString("en-IN", {
                         day: "numeric",
@@ -354,7 +354,7 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
         <div className="text-center py-8 text-muted-foreground/50">
           <CalendarClock className="w-8 mx-auto mb-2 opacity-40" />
           <p className="text-xs">No follow-ups yet</p>
-          <p className="text-[11px] mt-0.5">
+          <p className="text-dense mt-0.5">
             Schedule one above to stay on track
           </p>
         </div>

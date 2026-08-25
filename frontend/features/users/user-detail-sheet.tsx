@@ -182,7 +182,7 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
                           )}
                         </div>
                         <div className="flex flex-wrap gap-1.5 mt-2">
-                          <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
+                          <Badge variant="secondary" className="text-micro h-5 px-1.5">
                             {formatRoleLabel(user.role)}
                           </Badge>
                           <UserStatusBadge

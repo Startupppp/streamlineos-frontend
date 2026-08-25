@@ -78,7 +78,7 @@ export function CategoryCreateForm({
               <FormItem>
                 <div className="flex items-center justify-between">
                   <FormLabel>Name</FormLabel>
-                  <span className="text-[10px] text-muted-foreground tabular-nums">
+                  <span className="text-micro text-muted-foreground tabular-nums">
                     {field.value.length}/{CATEGORY_NAME_MAX}
                   </span>
                 </div>
@@ -126,7 +126,7 @@ export function CategoryCreateForm({
                 <FormItem>
                   <div className="flex items-center justify-between">
                     <FormLabel>Description</FormLabel>
-                    <span className="text-[10px] text-muted-foreground tabular-nums">
+                    <span className="text-micro text-muted-foreground tabular-nums">
                       {(field.value ?? "").length}/{CATEGORY_DESC_MAX}
                     </span>
                   </div>

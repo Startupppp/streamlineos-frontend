@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { dealEditSchema, type EditFormValues } from "./deal-edit-form-schema";
@@ -17,6 +17,7 @@ import {
   Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
 } from "@/components/ui/form";
 import { useCrmStages } from "@/hooks/api/crm/metadata";
+import { DealLinkFields } from "../deal-link-fields";
 
 export type { EditFormValues };
 
@@ -31,6 +32,8 @@ export interface DealForEditForm {
   expectedCloseDate?: string | null;
   notes?: string | null;
   lostReason?: string | null;
+  partyId?: string | null;
+  subjectId?: string | null;
 }
 
 interface DealEditFormProps {
@@ -56,8 +59,22 @@ export function DealEditForm({ deal, isPending, onSubmit, onCancel }: DealEditFo
       expectedCloseDate: deal.expectedCloseDate ??"",
       notes: deal.notes ??"",
       lostReason: deal.lostReason ??"",
+      partyId: deal.partyId ??"",
+      subjectId: deal.subjectId ??"",
     },
   });
+
+  const linkedPartyId = useWatch({ control: form.control, name: "partyId" });
+  const linkedSubjectId = useWatch({ control: form.control, name: "subjectId" });
+
+  const handlePartyChange = useCallback(
+    (partyId: string) => form.setValue("partyId", partyId, { shouldDirty: true }),
+    [form],
+  );
+  const handleSubjectChange = useCallback(
+    (subjectId: string) => form.setValue("subjectId", subjectId, { shouldDirty: true }),
+    [form],
+  );
 
   const handleSubmit = useCallback(
     (data: EditFormValues) => onSubmit(data),
@@ -161,6 +178,12 @@ export function DealEditForm({ deal, isPending, onSubmit, onCancel }: DealEditFo
                 )} />
               </div>
             </div>
+            <DealLinkFields
+              partyId={linkedPartyId ?? ""}
+              subjectId={linkedSubjectId ?? ""}
+              onPartyChange={handlePartyChange}
+              onSubjectChange={handleSubjectChange}
+            />
             <div className="flex justify-end gap-3">
               <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
               <LoadingButton type="submit" isPending={isPending} loadingText="Saving...">

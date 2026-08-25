@@ -90,7 +90,7 @@ function OrganizationSwitcherPanel({
     return (
       <>
         <div className="px-2 py-1.5">
-          <p className="text-[10px] uppercase tracking-wider font-semibold text-foreground/70">
+          <p className="text-micro uppercase tracking-wider font-semibold text-foreground/70">
             Organizations
           </p>
         </div>
@@ -153,7 +153,7 @@ function OrganizationSwitcherPanel({
   return (
     <div className="flex flex-col gap-0.5 pb-2">
       <div className="px-1 py-1.5">
-        <p className="text-[10px] uppercase tracking-wider font-semibold text-foreground/70">
+        <p className="text-micro uppercase tracking-wider font-semibold text-foreground/70">
           Organizations
         </p>
       </div>

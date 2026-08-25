@@ -137,7 +137,7 @@ export function ProjectSwitcher({
                           : "text-foreground/80 hover:bg-muted hover:text-foreground",
                       )}
                     >
-                      <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-primary/10 text-[9px] font-bold text-primary">
+                      <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-primary/10 text-micro font-bold text-primary">
                         {p.key.substring(0, 2).toUpperCase()}
                       </div>
                       <TruncatedText

@@ -42,7 +42,7 @@ function OrgSelectButton({ org, selected, onSelect }: OrgSelectButtonProps) {
           : "hover:bg-accent text-foreground",
       )}
     >
-      <span className="h-5 w-5 rounded bg-muted flex items-center justify-center text-[10px] font-semibold shrink-0">
+      <span className="h-5 w-5 rounded bg-muted flex items-center justify-center text-micro font-semibold shrink-0">
         {org.name[0]?.toUpperCase()}
       </span>
       <TruncatedText text={org.name} />

@@ -132,7 +132,7 @@ const glColumns: DataTableColumn<GlRow>[] = [
     key: "credit",
     header: "Credit",
     cell: (row) => (
-      <span className="text-right font-mono text-sm tabular-nums text-emerald-600 dark:text-emerald-400 block">
+      <span className="text-right font-mono text-sm tabular-nums text-status-success-ink block">
         {parseFloat(row.credit) > 0
           ? parseFloat(row.credit).toLocaleString(undefined, {
               minimumFractionDigits: 2,

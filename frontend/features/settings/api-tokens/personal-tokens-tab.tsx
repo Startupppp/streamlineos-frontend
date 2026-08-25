@@ -40,7 +40,7 @@ function RevokeTokenButton({
   }
   return (
     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleClick} aria-label="Revoke token">
-      <ShieldOff className="h-4 w-4 text-amber-600" />
+      <ShieldOff className="h-4 w-4 text-status-warning-ink" />
     </Button>
   );
 }
@@ -161,7 +161,7 @@ export function PersonalTokensTab({
       key: "prefix",
       header: "Prefix",
       cell: (t) => (
-        <code className="text-[11px] bg-muted px-1.5 py-0.5 rounded">
+        <code className="text-dense bg-muted px-1.5 py-0.5 rounded">
           {t.prefix}…
         </code>
       ),
@@ -172,17 +172,17 @@ export function PersonalTokensTab({
       cell: (t) => (
         <div className="flex flex-wrap gap-1 max-w-[200px]">
           {t.scopes.slice(0, 3).map((s) => (
-            <Badge key={s} variant="outline" className="h-4 text-[9px] px-1.5 py-0">
+            <Badge key={s} variant="outline" className="h-4 text-micro px-1.5 py-0">
               {s}
             </Badge>
           ))}
           {t.scopes.length > 3 && (
-            <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0">
+            <Badge variant="outline" className="h-4 text-micro px-1.5 py-0">
               +{t.scopes.length - 3}
             </Badge>
           )}
           {t.scopes.length === 0 && (
-            <span className="text-[11px] text-muted-foreground">No scopes</span>
+            <span className="text-dense text-muted-foreground">No scopes</span>
           )}
         </div>
       ),
@@ -194,7 +194,7 @@ export function PersonalTokensTab({
       cell: (t) => {
         if (!t.expiresAt) {
           return (
-            <Badge variant="secondary" className="h-5 px-2 text-[10px] text-amber-700">
+            <Badge variant="secondary" className="h-5 px-2 text-micro text-status-warning-ink">
               Disabled · rotate
             </Badge>
           );

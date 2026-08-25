@@ -15,14 +15,17 @@ export interface UsePartiesParams {
   page?: number;
   limit?: number;
   partyType?: "CUSTOMER" | "VENDOR" | "PARTNER" | "BOTH";
+  /** One list filtered by role, rather than a screen per role. */
+  role?: string;
   search?: string;
 }
 
 export function useParties(params: UsePartiesParams = {}) {
   const canView = useCan("party:parties:view");
-  const { page = 1, limit = 20, partyType, search } = params;
+  const { page = 1, limit = 20, partyType, role, search } = params;
   const queryParams: Record<string, unknown> = { page, limit };
   if (partyType) queryParams.partyType = partyType;
+  if (role) queryParams.role = role;
   if (search) queryParams.search = search;
 
   return useQuery({
@@ -33,11 +36,23 @@ export function useParties(params: UsePartiesParams = {}) {
         limit: String(limit),
       });
       if (partyType) searchParams.set("partyType", partyType);
+      if (role) searchParams.set("role", role);
       if (search) searchParams.set("search", search);
       return apiClient.get<PartiesPage>(`/party/parties?${searchParams.toString()}`);
     },
     staleTime: 60_000,
     enabled: canView,
+  });
+}
+
+export function useParty(partyId: string | null) {
+  const canView = useCan("party:parties:view");
+
+  return useQuery({
+    queryKey: queryKeys.party.party(partyId ?? ""),
+    queryFn: () => apiClient.get<BusinessParty>(`/party/parties/${partyId}`),
+    staleTime: 60_000,
+    enabled: canView && !!partyId,
   });
 }
 

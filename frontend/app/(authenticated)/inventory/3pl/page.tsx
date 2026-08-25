@@ -110,7 +110,7 @@ function ThreePlContent() {
         key: "providerKey",
         header: "Provider",
         cell: (row) => (
-          <span className="font-mono text-[11px] text-muted-foreground">{row.providerKey}</span>
+          <span className="font-mono text-dense text-muted-foreground">{row.providerKey}</span>
         ),
       },
       {
@@ -120,9 +120,9 @@ function ThreePlContent() {
           <Badge
             variant="outline"
             className={cn(
-              "text-[11px]",
+              "text-dense",
               row.isActive
-                ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
+                ? "bg-status-success-surface text-status-success-ink border-status-success-rule"
                 : "bg-muted text-muted-foreground border-border",
             )}
           >
@@ -141,8 +141,8 @@ function ThreePlContent() {
           if (isNotConnected) {
             return (
               <div className="flex items-center gap-1.5">
-                <Info className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                <span className="text-xs text-amber-600 dark:text-amber-400">Not connected</span>
+                <Info className="h-3.5 w-3.5 text-status-warning-ink shrink-0" />
+                <span className="text-xs text-status-warning-ink">Not connected</span>
               </div>
             );
           }
@@ -154,7 +154,7 @@ function ThreePlContent() {
           return (
             <Badge
               variant="outline"
-              className={cn("text-[11px]", SYNC_STATUS_BADGE[row.lastSyncStatus])}
+              className={cn("text-dense", SYNC_STATUS_BADGE[row.lastSyncStatus])}
             >
               {SYNC_STATUS_LABEL[row.lastSyncStatus]}
             </Badge>
@@ -182,7 +182,7 @@ function ThreePlContent() {
 
           return row.lastSyncError ? (
             <span
-              className="text-xs text-red-600 dark:text-red-400 truncate max-w-[180px] block"
+              className="text-xs text-status-danger-ink truncate max-w-[180px] block"
               title={row.lastSyncError}
             >
               {row.lastSyncError}

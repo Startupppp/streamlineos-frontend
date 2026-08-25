@@ -4,42 +4,42 @@ export const LIFECYCLE_BADGE: Record<string, { label: string; className: string 
   CANDIDATE: {
     label: "Candidate",
     className:
-      "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30",
+      "bg-muted text-foreground border-border",
   },
   PRE_JOINING: {
     label: "Pre-joining",
     className:
-      "bg-sky-100 text-sky-700 border-sky-200 dark:bg-sky-500/10 dark:text-sky-300 dark:border-sky-500/30",
+      "bg-status-info-surface text-status-info-ink border-status-info-rule",
   },
   ONBOARDING: {
     label: "Onboarding",
     className:
-      "bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-500/10 dark:text-violet-300 dark:border-violet-500/30",
+      "bg-category-violet-surface text-category-violet-ink border-category-violet-rule",
   },
   ACTIVE: {
     label: "Active",
     className:
-      "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+      "bg-status-success-surface text-status-success-ink border-status-success-rule",
   },
   PROBATION: {
     label: "Probation",
     className:
-      "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+      "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   },
   CONFIRMED: {
     label: "Confirmed",
     className:
-      "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+      "bg-status-success-surface text-status-success-ink border-status-success-rule",
   },
   NOTICE: {
     label: "Notice",
     className:
-      "bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30",
+      "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   },
   EXITED: {
     label: "Exited",
     className:
-      "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30",
+      "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
   },
   ALUMNI: {
     label: "Alumni",
@@ -48,7 +48,7 @@ export const LIFECYCLE_BADGE: Record<string, { label: string; className: string 
   SUSPENDED: {
     label: "Suspended",
     className:
-      "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30",
+      "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
   },
 };
 

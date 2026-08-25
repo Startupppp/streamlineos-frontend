@@ -12,9 +12,9 @@ import type { SupportTicket } from "@/types/support";
 
 const PRIORITY_COLORS: Record<string, string> = {
   LOW: "bg-muted text-muted-foreground",
-  MEDIUM: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-  HIGH: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
-  URGENT: "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-300",
+  MEDIUM: "bg-status-info-surface text-status-info-ink",
+  HIGH: "bg-status-warning-surface text-status-warning-ink",
+  URGENT: "bg-status-danger-surface text-status-danger-ink",
 };
 
 const STATUS_ICONS: Record<string, typeof Clock> = {
@@ -53,20 +53,20 @@ function TicketListItem({ ticket, isSelected, onSelect }: TicketListItemProps) {
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <TruncatedText text={toTitleCase(ticket.title)} className="text-[13px] font-semibold" />
-          <p className="text-[11px] text-muted-foreground mt-0.5">
+          <TruncatedText text={toTitleCase(ticket.title)} className="text-label font-semibold" />
+          <p className="text-dense text-muted-foreground mt-0.5">
             #{ticket.id} {ticket.client?.name ? `- ${ticket.client.name}` : ""}
           </p>
         </div>
         <div className="flex flex-col items-end gap-1 shrink-0">
           <Badge
             variant="outline"
-            className={cn("text-[9px] px-1.5 py-0", PRIORITY_COLORS[ticket.priority])}
+            className={cn("text-micro px-1.5 py-0", PRIORITY_COLORS[ticket.priority])}
           >
             {ticket.priority}
           </Badge>
           {isBreached && (
-            <Badge variant="destructive" className="text-[9px] px-1 py-0">
+            <Badge variant="destructive" className="text-micro px-1 py-0">
               SLA
             </Badge>
           )}
@@ -74,10 +74,10 @@ function TicketListItem({ ticket, isSelected, onSelect }: TicketListItemProps) {
       </div>
       <div className="flex items-center gap-2 mt-1.5">
         <StatusIcon className="h-3 w-3 text-muted-foreground" />
-        <span className="text-[10px] text-muted-foreground">
+        <span className="text-micro text-muted-foreground">
           {ticket.status.replace("_", " ")}
         </span>
-        <span className="text-[10px] text-muted-foreground ml-auto">
+        <span className="text-micro text-muted-foreground ml-auto">
           {ticket.createdAt
             ? formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true })
             : ""}

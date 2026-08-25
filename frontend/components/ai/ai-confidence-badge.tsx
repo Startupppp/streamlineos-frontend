@@ -16,7 +16,7 @@ const LEVEL_CONFIG: Record<
   low: {
     label: "Low",
     className:
-      "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+      "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   },
   medium: {
     label: "Medium",
@@ -26,7 +26,7 @@ const LEVEL_CONFIG: Record<
   high: {
     label: "High",
     className:
-      "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+      "bg-status-success-surface text-status-success-ink border-status-success-rule",
   },
 };
 
@@ -43,7 +43,7 @@ export function AiConfidenceBadge({ confidence, className }: AiConfidenceBadgePr
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full border px-1.5 py-0.5 text-[10px] font-medium",
+        "inline-flex items-center rounded-full border px-1.5 py-0.5 text-micro font-medium",
         levelClass,
         className,
       )}

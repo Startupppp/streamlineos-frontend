@@ -124,7 +124,7 @@ export default function BlueprintsPage() {
                     >
                       <div className="flex-1 min-w-0">
                         <TruncatedText text={bp.name} className="text-xs font-medium" />
-                        <TruncatedText text={getPipelineName(bp.pipelineId)} className="text-[10px] text-muted-foreground" />
+                        <TruncatedText text={getPipelineName(bp.pipelineId)} className="text-micro text-muted-foreground" />
                       </div>
                       <Switch
                         checked={bp.isActive}
@@ -156,9 +156,9 @@ export default function BlueprintsPage() {
                     <Badge
                       variant="outline"
                       className={cn(
-                        "text-[9px] h-4 px-1.5",
+                        "text-micro h-4 px-1.5",
                         selectedBlueprint.isActive
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
+                          ? "bg-status-success-surface text-status-success-ink border-status-success-rule"
                           : "bg-muted text-muted-foreground border-border"
                       )}
                     >

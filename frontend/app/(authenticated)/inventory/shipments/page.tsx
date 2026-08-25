@@ -111,7 +111,7 @@ function ShipmentsPageInner() {
       cell: (s) => (
         <Badge
           variant="outline"
-          className={cn("h-4 text-[9px] px-1.5 py-0 border", SHIPMENT_STATUS_BADGE[s.status])}
+          className={cn("h-4 text-micro px-1.5 py-0 border", SHIPMENT_STATUS_BADGE[s.status])}
         >
           {SHIPMENT_STATUS_LABEL[s.status]}
         </Badge>

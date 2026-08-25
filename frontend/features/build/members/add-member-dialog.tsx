@@ -78,7 +78,7 @@ export function AddMemberDialog({ open, onOpenChange }: AddMemberDialogProps) {
         <div className="flex flex-col gap-3 py-1">
           <div className="flex flex-col gap-1.5">
             <label
-              className="text-[12px] font-medium text-foreground"
+              className="text-xs font-medium text-foreground"
               htmlFor="add-member-picker"
             >
               Member
@@ -92,7 +92,7 @@ export function AddMemberDialog({ open, onOpenChange }: AddMemberDialogProps) {
           </div>
           <div className="flex flex-col gap-1.5">
             <label
-              className="text-[12px] font-medium text-foreground"
+              className="text-xs font-medium text-foreground"
               htmlFor="add-member-role"
             >
               Role
@@ -106,7 +106,7 @@ export function AddMemberDialog({ open, onOpenChange }: AddMemberDialogProps) {
                 <SelectItem value="admin">Admin</SelectItem>
               </SelectContent>
             </Select>
-            <p className="text-[11px] leading-relaxed text-muted-foreground">
+            <p className="text-dense leading-relaxed text-muted-foreground">
               {selectedRole === "admin"
                 ? "Admins can manage Build settings, projects and who has access."
                 : "Members can work on projects and issues they are given access to."}

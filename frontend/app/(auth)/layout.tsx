@@ -11,10 +11,10 @@ export const metadata: Metadata = {
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="relative flex h-[100dvh] overflow-hidden surface-soft text-slate-900">
+    <div className="relative flex h-[100dvh] overflow-hidden surface-soft text-foreground">
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-slate-900 focus:text-white focus:rounded-md text-sm font-medium"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-status-neutral-fill focus:text-white focus:rounded-md text-sm font-medium"
       >
         Skip to content
       </a>
@@ -27,13 +27,13 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
             aria-label={BRAND_NAME}
           >
             <AnimatedLogo size={34} className="rounded-xl" />
-            <span className="font-display text-base font-bold tracking-tight text-slate-900">
+            <span className="font-display text-base font-bold tracking-tight text-foreground">
               {BRAND_NAME}
             </span>
           </Link>
           <Link
             href="/"
-            className="text-[12px] font-medium text-slate-500 hover:text-slate-900 transition-colors"
+            className="text-xs font-medium text-foreground hover:text-muted-foreground transition-colors"
           >
             ← Back to site
           </Link>
@@ -51,20 +51,20 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           </div>
         </main>
 
-        <footer className="flex shrink-0 items-center justify-between px-5 py-4 text-[12px] font-medium text-slate-400 sm:px-8 sm:py-5 xl:px-10 ">
+        <footer className="flex shrink-0 items-center justify-between px-5 py-4 text-xs font-medium text-muted-foreground sm:px-8 sm:py-5 xl:px-10">
           <p>
             &copy; {new Date().getFullYear()} {BRAND_NAME}
           </p>
           <div className="flex items-center gap-4">
             <Link
               href="/legal/privacy"
-              className="hover:text-slate-700 transition-colors"
+              className="hover:text-foreground transition-colors"
             >
               Privacy
             </Link>
             <Link
               href="/legal/terms"
-              className="hover:text-slate-700 transition-colors"
+              className="hover:text-foreground transition-colors"
             >
               Terms
             </Link>
@@ -72,7 +72,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         </footer>
       </div>
 
-      <div className="hidden lg:flex flex-1 shrink-0 border-l border-slate-200/60">
+      <div className="hidden lg:flex flex-1 shrink-0 border-l border-border">
         <AuthRightPanel />
       </div>
     </div>

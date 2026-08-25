@@ -62,7 +62,7 @@ export function KbDeflectionPanel({ ticketId, ticketTitle }: KbDeflectionPanelPr
       <button
         type="button"
         onClick={handleToggle}
-        className="flex items-center gap-1.5 w-full text-left text-[11px] font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground transition-colors"
+        className="flex items-center gap-1.5 w-full text-left text-dense font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground transition-colors"
       >
         <BookOpen className="h-3.5 w-3.5 shrink-0" />
         KB Deflection
@@ -74,7 +74,7 @@ export function KbDeflectionPanel({ ticketId, ticketTitle }: KbDeflectionPanelPr
       {open && (
         <div className="mt-2 space-y-3 pb-1">
           <div>
-            <p className="text-[11px] font-semibold text-foreground/80 mb-1.5">Related articles</p>
+            <p className="text-dense font-semibold text-foreground/80 mb-1.5">Related articles</p>
             {searchLoading ? (
               <div className="space-y-1.5">
                 {[0, 1, 2].map((i) => (
@@ -89,7 +89,7 @@ export function KbDeflectionPanel({ ticketId, ticketTitle }: KbDeflectionPanelPr
                       href={`/knowledge/spaces/${article.spaceId}/articles/${article.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1 min-w-0 text-[12px] text-primary hover:underline"
+                      className="flex items-center gap-1 min-w-0 text-xs text-primary hover:underline"
                     >
                       <ExternalLink className="h-3 w-3 shrink-0" />
                       <span className="truncate">{article.title}</span>

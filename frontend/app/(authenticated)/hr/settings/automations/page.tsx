@@ -72,13 +72,13 @@ function RuleCard({
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
               <TruncatedText text={rule.name} className="font-medium text-sm" />
-              <Badge variant="secondary" className="text-[10px]">{rule.triggerEvent}</Badge>
-              {!rule.isEnabled && <Badge variant="outline" className="text-[10px]">Disabled</Badge>}
+              <Badge variant="secondary" className="text-micro">{rule.triggerEvent}</Badge>
+              {!rule.isEnabled && <Badge variant="outline" className="text-micro">Disabled</Badge>}
             </div>
             {rule.description && (
               <TruncatedText text={rule.description} className="text-xs text-muted-foreground mt-0.5" />
             )}
-            <div className="flex items-center gap-4 mt-2 text-[11px] text-muted-foreground">
+            <div className="flex items-center gap-4 mt-2 text-dense text-muted-foreground">
               <span>{rule.conditions.length} condition{rule.conditions.length !== 1 ? "s" : ""}</span>
               <span>{rule.actions.length} action{rule.actions.length !== 1 ? "s" : ""}</span>
               <span>{rule.runCount} run{rule.runCount !== 1 ? "s" : ""}</span>

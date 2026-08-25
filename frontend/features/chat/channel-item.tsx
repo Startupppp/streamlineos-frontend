@@ -89,7 +89,7 @@ export function ChannelItem({
                 iconClassName="h-3.5 w-3.5"
               />
               {isOnline && (
-                <span className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-background" />
+                <span className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5 rounded-full bg-status-success-fill border-2 border-background" />
               )}
               {hasUnread && (
                 <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-primary border-2 border-background" />
@@ -130,7 +130,7 @@ export function ChannelItem({
             className="h-10 w-10"
           />
           {isOnline && (
-            <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 border-2 border-background" />
+            <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-status-success-fill border-2 border-background" />
           )}
         </div>
 
@@ -139,7 +139,7 @@ export function ChannelItem({
             <TruncatedText
               text={displayName}
               className={cn(
-                "text-[13px] leading-tight",
+                "text-label leading-tight",
                 hasUnread || isActive
                   ? "font-bold text-foreground"
                   : "font-medium text-muted-foreground",
@@ -149,7 +149,7 @@ export function ChannelItem({
             {lastMessageTime && (
               <span
                 className={cn(
-                  "text-[11px] text-muted-foreground tabular-nums shrink-0 transition-opacity duration-150",
+                  "text-dense text-muted-foreground tabular-nums shrink-0 transition-opacity duration-150",
                   !hasUnread && "group-hover/item:opacity-0",
                 )}
               >
@@ -159,13 +159,13 @@ export function ChannelItem({
           </div>
 
           <div className="flex items-center justify-between gap-1.5 mt-0.5 min-w-0">
-            <p className="min-w-0 flex-1 text-[11px] text-muted-foreground/60 line-clamp-1 break-all break-words leading-tight">
+            <p className="min-w-0 flex-1 text-dense text-muted-foreground/60 line-clamp-1 break-all break-words leading-tight">
               {channel.lastMessage?.content
                 ? `${channel.type === "GROUP" ? `${channel.lastMessage.senderName?.split(" ")[0]}: ` : ""}${channel.lastMessage.content}`
                 : "No messages yet"}
             </p>
             {hasUnread && (
-              <span className="h-[18px] min-w-[18px] flex items-center justify-center bg-primary text-primary-foreground text-[10px] font-bold rounded-full px-1 shrink-0 transition-opacity duration-150 group-hover/item:opacity-0">
+              <span className="h-[18px] min-w-[18px] flex items-center justify-center bg-primary text-primary-foreground text-micro font-bold rounded-full px-1 shrink-0 transition-opacity duration-150 group-hover/item:opacity-0">
                 {channel.unreadCount > 99 ? "99+" : channel.unreadCount}
               </span>
             )}

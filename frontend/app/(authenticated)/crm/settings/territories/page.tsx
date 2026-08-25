@@ -102,17 +102,17 @@ function PreviewPanel() {
         </LoadingButton>
         {preview.data && (
           <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs space-y-1.5">
-            <div className="font-semibold text-[11px] uppercase tracking-wide text-muted-foreground">Result</div>
+            <div className="font-semibold text-dense uppercase tracking-wide text-muted-foreground">Result</div>
             {preview.data.matchedTerritory ? (
               <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-[9px] h-4 px-1.5 bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
+                <Badge variant="outline" className="text-micro h-4 px-1.5 bg-status-success-surface text-status-success-ink border-status-success-rule">
                   Match
                 </Badge>
                 <span className="font-medium">{preview.data.matchedTerritory.name}</span>
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-[9px] h-4 px-1.5 bg-muted text-muted-foreground border-border">
+                <Badge variant="outline" className="text-micro h-4 px-1.5 bg-muted text-muted-foreground border-border">
                   No match
                 </Badge>
                 <span className="text-muted-foreground">No territory matched this lead</span>
@@ -149,7 +149,7 @@ function buildColumns(
       key: "name",
       header: "Name",
       cell: (row): ReactNode => (
-        <div className="flex items-center gap-1.5 text-[11px] font-medium">
+        <div className="flex items-center gap-1.5 text-dense font-medium">
           <MapPin className="h-3 w-3 text-muted-foreground shrink-0" />
           {row.name}
         </div>
@@ -159,7 +159,7 @@ function buildColumns(
       key: "criteria",
       header: "Criteria",
       cell: (row): ReactNode => (
-        <span className="text-[11px] text-muted-foreground max-w-[220px] truncate block">
+        <span className="text-dense text-muted-foreground max-w-[220px] truncate block">
           {summarizeCriteria(row)}
         </span>
       ),
@@ -170,7 +170,7 @@ function buildColumns(
       headerClassName: "text-center",
       className: "text-center",
       cell: (row): ReactNode => (
-        <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-muted text-muted-foreground border-border">
+        <Badge variant="outline" className="text-micro h-4 px-1.5 py-0 bg-muted text-muted-foreground border-border">
           {row.priority}
         </Badge>
       ),

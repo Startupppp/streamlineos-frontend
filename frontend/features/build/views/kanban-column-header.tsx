@@ -252,20 +252,20 @@ export function KanbanColumnHeader({
               onChange={handleRenameChange}
               onKeyDown={handleRenameKeyDown}
               onBlur={handleRenameBlur}
-              className={cn("h-6 text-[13px] px-1.5 min-w-0", renameError && "border-destructive focus-visible:ring-destructive")}
+              className={cn("h-6 text-label px-1.5 min-w-0", renameError && "border-destructive focus-visible:ring-destructive")}
               disabled={updateState.isPending}
               maxLength={MAX_COLUMN_NAME}
               aria-invalid={!!renameError}
               title={renameError ?? undefined}
             />
             {renameError && (
-              <p className="text-[10px] text-destructive leading-tight mt-0.5 truncate">{renameError}</p>
+              <p className="text-micro text-destructive leading-tight mt-0.5 truncate">{renameError}</p>
             )}
           </div>
         ) : (
           <h3
             className={cn(
-              "font-medium text-[13px] text-foreground truncate",
+              "font-medium text-label text-foreground truncate",
               isEditable && "cursor-text hover:text-foreground/80",
             )}
             onClick={handleTitleClick}

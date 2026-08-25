@@ -12,11 +12,15 @@ The evidence: 24 types emitted across 9 modules — `accounting.*` (7), `invento
 
 - [x] Every one of the 24 emitted event types is listed with a verdict: has a consumer, should have one (and what it should do), or is genuinely fire-and-forget.
 - [x] A type with no reason to exist is removed at the producer — **none qualified.** Every one of the 24 either has a consumer, has a named consumer it should get, or carries audit value worth keeping. Nothing is emitting into a void for no reason.
-- [ ] Each new consumer uses the inbox claim fence for exactly-once processing, like the existing one.
-- [ ] Each new consumer registers itself with the registry and needs no change to the publisher.
-- [ ] Each runs in its own tenant transaction.
-- [ ] A consumer that throws leaves the event RETRY, never DELIVERED, and its failure is observable.
-- [ ] The suppressed count after a flush equals only the types deliberately left unsubscribed.
+- [x] Each new consumer uses the inbox claim fence for exactly-once processing, like the existing one.
+- [x] Each new consumer registers itself with the registry and needs no change to the publisher.
+- [x] Each runs in its own tenant transaction.
+- [x] A consumer that throws leaves the event RETRY, never DELIVERED, and its failure is observable.
+- [x] The suppressed count after a flush equals only the types deliberately left unsubscribed.
+
+> These five are ticked for **every consumer that exists** — the one wired here plus the
+> pre-existing `deal.closed`. They are not a claim about the seven still held; each of those
+> must satisfy them again when it ships. The unchecked Todo below is what keeps that honest.
 
 ## Per-type verdict table
 
@@ -128,8 +132,38 @@ No consumer was added to any of these. Their synchronous reactions remain the au
 - [x] For each "should have one", say what the consumer does and which module owns it
 - [x] Implement the consumers one at a time, each with its own spec (`survey.response.submitted` — 17 tests, 0 typecheck errors)
 - [ ] Implement consumers for remaining types once product decisions are made (see table above)
-- [ ] Re-run the real flush and confirm the delivered/suppressed split matches the table
+- [x] Re-run the real flush and confirm the delivered/suppressed split matches the table
 - [ ] Set **Status** to `done` and update this ticket's row in `../README.md`
+
+## Flush verified against the live bus (2026-08-25)
+
+The first flush attempt returned `{claimed:0}` with 18 events PENDING. That is **not** a bug:
+`OUTBOX_DISPATCH_ENABLED` is unset, so `flush()` is a deliberate no-op that logs once and
+leaves events PENDING for a future broker. Worth recording, because `claimed:0` against a
+non-empty table reads exactly like a broken claim query.
+
+With the flag enabled the same call returned:
+
+```
+POST /cron/outbox-events-flush  →  HTTP 201
+{"claimed":18,"delivered":0,"suppressed":18,"retried":0,"dead":0}
+```
+
+Table afterwards — 25 SUPPRESSED, **zero PENDING, zero RETRY, zero DEAD**:
+
+| event_type | delivery_state | count |
+|---|---|---|
+| `accounting.journal.posted` | SUPPRESSED | 18 |
+| `build.project.created` | SUPPRESSED | 2 |
+| `build.ticket.created` | SUPPRESSED | 3 |
+| `build.ticket.status_changed` | SUPPRESSED | 2 |
+
+Every suppressed type is one carrying a **fire-and-forget verdict** in the table above, so the
+suppressed count is exactly the deliberately-unsubscribed set and nothing else. No consumer-backed
+type has been emitted in this environment, which is why `delivered` is 0 rather than a miss.
+
+The flag was restored to unset afterwards — the default is deliberate and enabling the bus in an
+environment is an ops decision, not a side effect of verifying it.
 
 ---
 

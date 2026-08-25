@@ -47,9 +47,9 @@ export function JobPostingPreview({ control, departments }: JobPostingPreviewPro
   const location = [values.officeLocation, values.stateCity, values.country].filter(Boolean).join(", ");
 
   return (
-    <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
+    <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden">
       <div className="px-5 py-4 border-b border-border/60 bg-muted/30">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">
           Careers site preview
         </p>
       </div>
@@ -111,12 +111,12 @@ export function JobPostingPreview({ control, departments }: JobPostingPreviewPro
         {(values.requiredSkills?.length || values.preferredSkills?.length) ? (
           <div className="flex flex-wrap gap-1.5">
             {values.requiredSkills?.map((skill) => (
-              <Badge key={skill} variant="secondary" className="text-[10px]">
+              <Badge key={skill} variant="secondary" className="text-micro">
                 {skill}
               </Badge>
             ))}
             {values.preferredSkills?.map((skill) => (
-              <Badge key={skill} variant="outline" className="text-[10px]">
+              <Badge key={skill} variant="outline" className="text-micro">
                 {skill}
               </Badge>
             ))}

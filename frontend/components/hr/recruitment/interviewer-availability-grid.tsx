@@ -62,7 +62,7 @@ export function InterviewerAvailabilityGrid({
           {hourLabels.map((label) => (
             <div
               key={label}
-              className="text-[10px] text-muted-foreground"
+              className="text-micro text-muted-foreground"
               style={{ width: `${100 / TOTAL_HOURS}%` }}
             >
               {label}
@@ -76,7 +76,7 @@ export function InterviewerAvailabilityGrid({
           <span className="text-xs truncate w-18 shrink-0 text-right text-muted-foreground">
             {interviewerNames.get(iv.interviewerId)?.split(" ")[0] ?? "—"}
           </span>
-          <div className="relative flex-1 h-5 rounded bg-emerald-100 dark:bg-emerald-900/30 overflow-hidden">
+          <div className="relative flex-1 h-5 rounded bg-status-success-surface overflow-hidden">
             {iv.busyBlocks.map((block, idx) => {
               const start = new Date(block.start);
               const end = new Date(block.end);
@@ -109,9 +109,9 @@ export function InterviewerAvailabilityGrid({
         </div>
       ))}
 
-      <div className="flex items-center gap-4 text-[10px] text-muted-foreground ml-20">
+      <div className="flex items-center gap-4 text-micro text-muted-foreground ml-20">
         <div className="flex items-center gap-1">
-          <div className="w-3 h-2 rounded-sm bg-emerald-100 dark:bg-emerald-900/30 border" />
+          <div className="w-3 h-2 rounded-sm bg-status-success-surface border" />
           Free
         </div>
         <div className="flex items-center gap-1">

@@ -78,7 +78,7 @@ export function SidebarSection({
             onClick={onToggleGroup}
             className="w-full flex items-center justify-between px-2 py-1 mb-0.5 group/header rounded-md hover:bg-sidebar-accent transition-colors"
           >
-            <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/35 select-none transition-colors">
+            <span className="text-micro font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/35 select-none transition-colors">
               {group.label}
             </span>
             <ChevronDown
@@ -90,7 +90,7 @@ export function SidebarSection({
           </button>
         ) : (
           <div className="px-2 pt-3 pb-1">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/35 select-none">
+            <span className="text-micro font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/35 select-none">
               {group.label}
             </span>
           </div>
@@ -161,7 +161,7 @@ function CollapsedItem({ route, pathname, pendingLeaves, onNavigate, accent }: I
           {isActive && (
             <span
               aria-hidden
-              className={cn("absolute inset-0 rounded-[6px] pointer-events-none z-0", accent.bg)}
+              className={cn("absolute inset-0 rounded-sm pointer-events-none z-0", accent.bg)}
             />
           )}
           <route.icon
@@ -171,7 +171,7 @@ function CollapsedItem({ route, pathname, pendingLeaves, onNavigate, accent }: I
             )}
           />
           {hasBadge && (
-            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-red-500 ring-1 ring-sidebar z-[2]" />
+            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-status-danger-fill ring-1 ring-sidebar z-[2]" />
           )}
         </Link>
       </TooltipTrigger>
@@ -231,9 +231,9 @@ function ExpandedItem({ route, depth, pathname, pendingLeaves, onNavigate, accen
             isActive && accent.text,
           )}
         />
-        <TruncatedText text={route.label} className={cn("flex-1 text-[0.8125rem]", isActive && "text-sidebar-foreground")} />
+        <TruncatedText text={route.label} className={cn("flex-1 text-label", isActive && "text-sidebar-foreground")} />
         {hasBadge && (
-          <span className="inline-flex items-center justify-center h-[18px] min-w-[18px] px-1 rounded-full text-[10px] font-bold tabular-nums leading-none bg-amber-500 text-white">
+          <span className="inline-flex items-center justify-center h-[18px] min-w-[18px] px-1 rounded-full text-micro font-bold tabular-nums leading-none bg-status-warning-fill text-white">
             {count > 99 ? "99+" : count}
           </span>
         )}

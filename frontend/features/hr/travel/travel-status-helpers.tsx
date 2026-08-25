@@ -17,28 +17,28 @@ export function getStatusConfig(status: TravelRequest["status"]) {
       return {
         label: status === "COMPLETED" ? "Completed" : "Finance Approved",
         className:
-          "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+          "bg-status-success-surface text-status-success-ink border-status-success-rule",
         icon: <CheckCircle2 className="h-3 w-3" />,
       };
     case "MANAGER_APPROVED":
       return {
         label: "Manager Approved",
         className:
-          "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+          "bg-status-info-surface text-status-info-ink border-status-info-rule",
         icon: <CheckCircle2 className="h-3 w-3" />,
       };
     case "REJECTED":
       return {
         label: "Rejected",
         className:
-          "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30",
+          "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
         icon: <XCircle className="h-3 w-3" />,
       };
     default:
       return {
         label: "Pending",
         className:
-          "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+          "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
         icon: <Clock className="h-3 w-3" />,
       };
   }

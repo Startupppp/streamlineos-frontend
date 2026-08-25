@@ -147,7 +147,7 @@ export function StepReview({ draft, goNext, goBack }: StepReviewProps) {
             <ol className="space-y-1.5">
               {approvalChain.map((stage) => (
                 <li key={stage.stage} className="flex items-center gap-2 text-sm">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-micro font-bold">
                     {stage.stage}
                   </span>
                   <span className="text-foreground">{stage.stageName}</span>
@@ -168,7 +168,7 @@ export function StepReview({ draft, goNext, goBack }: StepReviewProps) {
             <ul className="space-y-1">
               {enabledEssOptions.map((opt) => (
                 <li key={opt} className="flex items-center gap-2 text-sm text-foreground">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-status-success-fill shrink-0" />
                   {opt}
                 </li>
               ))}

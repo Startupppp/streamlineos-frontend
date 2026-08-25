@@ -153,7 +153,7 @@ function RowActions({ request, canDecide }: RowActionsProps) {
         <Button
           variant="outline"
           size="sm"
-          className="h-6 text-xs text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:text-emerald-300 dark:border-emerald-500/30 dark:hover:bg-emerald-500/10"
+          className="h-6 text-xs text-status-success-ink border-status-success-rule hover:bg-status-success-surface"
           onClick={handleOpenApprove}
         >
           Approve
@@ -203,7 +203,7 @@ export default function FinanceApprovalsPage() {
       key: "type",
       header: "Type",
       cell: (req) => (
-        <Badge variant="outline" className="text-[10px] font-mono">
+        <Badge variant="outline" className="text-micro font-mono">
           {req.recordType.replace(/_/g, " ")}
         </Badge>
       ),

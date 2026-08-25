@@ -43,7 +43,7 @@ function ChatNavLink({
     "shrink-0 rounded-lg font-medium transition-colors",
     isCollapsed
       ? "flex size-8 items-center justify-center"
-      : "flex h-8 items-center gap-1.5 px-2.5 text-[12px] whitespace-nowrap",
+      : "flex h-8 items-center gap-1.5 px-2.5 text-xs whitespace-nowrap",
     isActive
       ? "bg-muted text-foreground"
       : "text-muted-foreground hover:bg-muted hover:text-foreground",

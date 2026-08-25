@@ -5,7 +5,7 @@ import type { MockGoalChip } from "../lib/preview-mock-content";
 import { chipVariants, previewLayoutTransition } from "../lib/preview-motion";
 
 const CHIP_CLASS =
-  "shrink-0 whitespace-nowrap rounded-md border border-brand-core/20 bg-gradient-to-r from-brand-core/10 to-brand-cyan/8 px-1.5 py-0.5 text-[10px] font-medium text-brand-deep";
+  "shrink-0 whitespace-nowrap rounded-md border border-brand-core/20 bg-gradient-to-r from-brand-core/10 to-brand-cyan/8 px-1.5 py-0.5 text-micro font-medium text-brand-deep";
 
 type GoalChipsMarqueeProps = {
   chips: readonly MockGoalChip[];

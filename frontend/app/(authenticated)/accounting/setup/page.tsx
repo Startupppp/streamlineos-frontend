@@ -71,7 +71,7 @@ function StepRail({ currentStep, doneKeys, onStepClick }: StepRailProps) {
             className={cn(
               "flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors",
               isActive && "bg-primary text-primary-foreground",
-              !isActive && isDone && "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+              !isActive && isDone && "bg-status-success-surface text-status-success-ink border border-status-success-rule",
               !isActive && !isDone && "bg-muted text-muted-foreground hover:bg-muted/80",
             )}
           >
@@ -92,8 +92,8 @@ function FinishedScreen() {
   return (
     <div className="flex flex-col flex-1 min-h-0 items-center justify-center py-16">
       <div className="flex flex-col items-center text-center px-6 max-w-md mx-auto">
-        <div className="rounded-full bg-emerald-50 border border-emerald-200 p-4 mb-5 dark:bg-emerald-500/10 dark:border-emerald-500/30">
-          <CheckCircle2 className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />
+        <div className="rounded-full bg-status-success-surface border border-status-success-rule p-4 mb-5">
+          <CheckCircle2 className="h-10 w-10 text-status-success-ink" />
         </div>
         <h2 className="text-lg font-semibold text-foreground mb-2">Setup complete!</h2>
         <p className="text-sm text-muted-foreground mb-6">

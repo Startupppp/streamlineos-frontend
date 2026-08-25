@@ -64,84 +64,101 @@ export interface ModuleAccent {
   border: string;
 }
 
+/**
+ * A product's colour is its name in the sidebar rail, so no two products may
+ * share one.
+ *
+ * The four roles of an entry all read the same hue. They used to split — a
+ * categorical `text` and `indicator` over a `status-*` `bg` and `border` —
+ * which put crm, timesheets, finance and sign on one blue panel and hrms,
+ * surveys and payroll on one green one, with only the 2px indicator telling
+ * them apart.
+ *
+ * Two hues moved rather than being restored: timesheets keeps indigo but no
+ * longer borrows violet from build, and payroll takes green because it and
+ * surveys were both teal even before the migration.
+ *
+ * home, documents and administration share the neutral on purpose: they are
+ * chrome around the products rather than products themselves.
+ */
 export const MODULE_ACCENTS: Record<ProductKey, ModuleAccent> = {
   home: {
-    text: "!text-slate-600 dark:!text-slate-400",
-    bg: "bg-slate-100 dark:bg-slate-800/40",
-    indicator: "bg-slate-500 dark:bg-slate-400",
-    border: "border-slate-400 dark:border-slate-500",
+    text: "!text-category-slate-ink",
+    bg: "bg-muted",
+    indicator: "bg-category-slate-fill",
+    border: "border-border",
   },
   crm: {
-    text: "!text-blue-600 dark:!text-blue-400",
-    bg: "bg-blue-50 dark:bg-blue-950/40",
-    indicator: "bg-blue-600 dark:bg-blue-500",
-    border: "border-blue-600 dark:border-blue-500",
+    text: "!text-category-blue-ink",
+    bg: "bg-category-blue-surface",
+    indicator: "bg-category-blue-fill",
+    border: "border-category-blue-rule",
   },
   hrms: {
-    text: "!text-emerald-600 dark:!text-emerald-400",
-    bg: "bg-emerald-50 dark:bg-emerald-950/40",
-    indicator: "bg-emerald-600 dark:bg-emerald-500",
-    border: "border-emerald-600 dark:border-emerald-500",
+    text: "!text-category-emerald-ink",
+    bg: "bg-category-emerald-surface",
+    indicator: "bg-category-emerald-fill",
+    border: "border-category-emerald-rule",
   },
   build: {
-    text: "!text-violet-600 dark:!text-violet-400",
-    bg: "bg-violet-50 dark:bg-violet-950/40",
-    indicator: "bg-violet-600 dark:bg-violet-500",
-    border: "border-violet-600 dark:border-violet-500",
+    text: "!text-category-violet-ink",
+    bg: "bg-category-violet-surface",
+    indicator: "bg-category-violet-fill",
+    border: "border-category-violet-rule",
   },
   timesheets: {
-    text: "!text-indigo-600 dark:!text-indigo-400",
-    bg: "bg-indigo-50 dark:bg-indigo-950/40",
-    indicator: "bg-indigo-600 dark:bg-indigo-500",
-    border: "border-indigo-600 dark:border-indigo-500",
+    text: "!text-category-indigo-ink",
+    bg: "bg-category-indigo-surface",
+    indicator: "bg-category-indigo-fill",
+    border: "border-category-indigo-rule",
   },
   inventory: {
-    text: "!text-amber-600 dark:!text-amber-400",
-    bg: "bg-amber-50 dark:bg-amber-950/40",
-    indicator: "bg-amber-600 dark:bg-amber-500",
-    border: "border-amber-600 dark:border-amber-500",
+    text: "!text-category-amber-ink",
+    bg: "bg-category-amber-surface",
+    indicator: "bg-category-amber-fill",
+    border: "border-category-amber-rule",
   },
   finance: {
-    text: "!text-cyan-700 dark:!text-cyan-400",
-    bg: "bg-cyan-50 dark:bg-cyan-950/40",
-    indicator: "bg-cyan-700 dark:bg-cyan-500",
-    border: "border-cyan-700 dark:border-cyan-500",
+    text: "!text-category-cyan-ink",
+    bg: "bg-category-cyan-surface",
+    indicator: "bg-category-cyan-fill",
+    border: "border-category-cyan-rule",
   },
   helpdesk: {
-    text: "!text-rose-600 dark:!text-rose-400",
-    bg: "bg-rose-50 dark:bg-rose-950/40",
-    indicator: "bg-rose-600 dark:bg-rose-500",
-    border: "border-rose-600 dark:border-rose-500",
+    text: "!text-category-rose-ink",
+    bg: "bg-category-rose-surface",
+    indicator: "bg-category-rose-fill",
+    border: "border-category-rose-rule",
   },
   documents: {
-    text: "!text-slate-600 dark:!text-slate-400",
-    bg: "bg-slate-100 dark:bg-slate-800/40",
-    indicator: "bg-slate-500 dark:bg-slate-400",
-    border: "border-slate-400 dark:border-slate-500",
+    text: "!text-category-slate-ink",
+    bg: "bg-muted",
+    indicator: "bg-category-slate-fill",
+    border: "border-border",
   },
   surveys: {
-    text: "!text-teal-600 dark:!text-teal-400",
-    bg: "bg-teal-50 dark:bg-teal-950/40",
-    indicator: "bg-teal-600 dark:bg-teal-500",
-    border: "border-teal-600 dark:border-teal-500",
+    text: "!text-category-teal-ink",
+    bg: "bg-category-teal-surface",
+    indicator: "bg-category-teal-fill",
+    border: "border-category-teal-rule",
   },
   administration: {
-    text: "!text-slate-600 dark:!text-slate-400",
-    bg: "bg-slate-100 dark:bg-slate-800/40",
-    indicator: "bg-slate-500 dark:bg-slate-400",
-    border: "border-slate-400 dark:border-slate-500",
+    text: "!text-category-slate-ink",
+    bg: "bg-muted",
+    indicator: "bg-category-slate-fill",
+    border: "border-border",
   },
   payroll: {
-    text: "!text-teal-600 dark:!text-teal-400",
-    bg: "bg-teal-50 dark:bg-teal-950/40",
-    indicator: "bg-teal-600 dark:bg-teal-500",
-    border: "border-teal-600 dark:border-teal-500",
+    text: "!text-category-green-ink",
+    bg: "bg-category-green-surface",
+    indicator: "bg-category-green-fill",
+    border: "border-category-green-rule",
   },
   sign: {
-    text: "!text-sky-600 dark:!text-sky-400",
-    bg: "bg-sky-50 dark:bg-sky-950/40",
-    indicator: "bg-sky-600 dark:bg-sky-500",
-    border: "border-sky-600 dark:border-sky-500",
+    text: "!text-category-sky-ink",
+    bg: "bg-category-sky-surface",
+    indicator: "bg-category-sky-fill",
+    border: "border-category-sky-rule",
   },
 };
 

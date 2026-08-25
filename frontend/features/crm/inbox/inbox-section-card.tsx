@@ -58,13 +58,13 @@ function DueChip({ dueAt }: { dueAt: string | null }) {
   const overdue = isPast(date);
   if (overdue) {
     return (
-      <span className="text-[11px] text-red-500 dark:text-red-400 shrink-0">
+      <span className="text-dense text-status-danger-ink shrink-0">
         {formatDistanceToNowStrict(date, { addSuffix: true })}
       </span>
     );
   }
   return (
-    <span className="text-[11px] text-muted-foreground shrink-0">
+    <span className="text-dense text-muted-foreground shrink-0">
       {format(date, "MMM d, h:mm a")}
     </span>
   );
@@ -113,7 +113,7 @@ export function InboxSectionCard({
         <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
         <span className="text-xs font-medium text-foreground flex-1">{label}</span>
         {total > 0 && (
-          <Badge className="h-4 min-w-[1.25rem] px-1 text-[10px] bg-primary/10 text-foreground border-0">
+          <Badge className="h-4 min-w-[1.25rem] px-1 text-micro bg-primary/10 text-foreground border-0">
             {total}
           </Badge>
         )}

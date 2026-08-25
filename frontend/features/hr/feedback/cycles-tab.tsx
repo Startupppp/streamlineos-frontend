@@ -46,9 +46,9 @@ import { getTodayString } from "@/lib/date-utils";
 
 const CYCLE_STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground",
-  ACTIVE: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300",
-  CLOSED: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-  ARCHIVED: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
+  ACTIVE: "bg-status-success-surface text-status-success-ink",
+  CLOSED: "bg-status-info-surface text-status-info-ink",
+  ARCHIVED: "bg-status-info-surface text-status-info-ink",
 };
 
 interface QuestionBuilder {
@@ -73,7 +73,7 @@ function RemoveQuestionButton({ onClick }: { onClick: () => void }) {
       type="button"
       aria-label="Remove question"
       onClick={onClick}
-      className="text-muted-foreground hover:text-red-500"
+      className="text-muted-foreground hover:text-status-danger-ink"
       {...hoverHandlers}
     >
       <XIcon ref={iconRef} size={14} />
@@ -367,7 +367,7 @@ export function CyclesTab() {
                   {cycle.status === "DRAFT" && (
                     <Button
                       size="sm"
-                      className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white text-xs"
+                      className="bg-gradient-to-r from-gradient-success-from to-gradient-success-to hover:from-gradient-success-from hover:to-gradient-success-to text-white text-xs"
                       onClick={() => handleActivate(cycle)}
                     >
                       Activate

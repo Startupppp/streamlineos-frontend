@@ -21,7 +21,7 @@ export interface SectionProps {
 
 export function FieldError({ message }: { message?: string }) {
   if (!message) return null;
-  return <p className="text-[11px] text-rose-600 dark:text-rose-400 mt-1 font-medium">{message}</p>;
+  return <p className="text-dense text-status-danger-ink mt-1 font-medium">{message}</p>;
 }
 
 export function SectionTitle({
@@ -69,9 +69,9 @@ export function Field({
     <div className="space-y-1.5">
       <Label className="text-xs font-semibold text-foreground/80">
         {label}
-        {required && <span className="text-rose-500 ml-0.5">*</span>}
+        {required && <span className="text-status-danger-ink ml-0.5">*</span>}
       </Label>
-      {hint && <p className="text-[10px] text-muted-foreground">{hint}</p>}
+      {hint && <p className="text-micro text-muted-foreground">{hint}</p>}
       {children}
       {error && <FieldError message={error} />}
     </div>

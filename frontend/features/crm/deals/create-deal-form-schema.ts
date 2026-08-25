@@ -33,6 +33,8 @@ export const createDealSchema = z.object({
   assignedToId: z.string().optional().or(z.literal("")),
   expectedCloseDate: z.string().optional().or(z.literal("")),
   notes: z.string().optional().or(z.literal("")),
+  partyId: z.string().optional().or(z.literal("")),
+  subjectId: z.string().optional().or(z.literal("")),
 });
 
 export type CreateDealFormValues = z.infer<typeof createDealSchema>;

@@ -114,6 +114,40 @@ export function formatINRCompact(amount: string | number): string {
 }
 
 
+export interface MoneyDisplay {
+  currency: string;
+  locale: string;
+}
+
+export const DEFAULT_MONEY_DISPLAY: MoneyDisplay = { currency: "INR", locale: "en-IN" };
+
+function toAmount(value: number | string | null | undefined): number {
+  const amount = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(amount) ? amount : 0;
+}
+
+export function formatMoney(
+  value: number | string | null | undefined,
+  display: MoneyDisplay,
+): string {
+  return new Intl.NumberFormat(display.locale, {
+    style: "currency",
+    currency: display.currency,
+  }).format(toAmount(value));
+}
+
+export function formatMoneyCompact(
+  value: number | string | null | undefined,
+  display: MoneyDisplay,
+): string {
+  return new Intl.NumberFormat(display.locale, {
+    style: "currency",
+    currency: display.currency,
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(toAmount(value));
+}
+
 export function formatDealId(id: number): string {
   return `DEAL-${id.toString().padStart(4, "0")}`;
 }

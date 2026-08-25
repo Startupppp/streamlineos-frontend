@@ -44,7 +44,7 @@ function formatPrice(value: string | number | null | undefined): string {
 function InfoRow({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <p className="text-[11px] font-medium text-muted-foreground leading-none">
+      <p className="text-dense font-medium text-muted-foreground leading-none">
         {label}
       </p>
       <div className="text-sm text-foreground">{value}</div>
@@ -64,7 +64,7 @@ function ProductStatusBadge({
     return (
       <Badge
         variant="outline"
-        className="h-5 text-[10px] px-2 py-0 border-emerald-200 text-emerald-700 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
+        className="h-5 text-micro px-2 py-0 border-status-success-rule text-status-success-ink bg-status-success-surface"
       >
         Active
       </Badge>
@@ -74,7 +74,7 @@ function ProductStatusBadge({
     return (
       <Badge
         variant="outline"
-        className="h-5 text-[10px] px-2 py-0 border-amber-200 text-amber-700 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30"
+        className="h-5 text-micro px-2 py-0 border-status-warning-rule text-status-warning-ink bg-status-warning-surface"
       >
         Discontinued
       </Badge>
@@ -83,7 +83,7 @@ function ProductStatusBadge({
   return (
     <Badge
       variant="outline"
-      className="h-5 text-[10px] px-2 py-0 border-border text-muted-foreground bg-muted"
+      className="h-5 text-micro px-2 py-0 border-border text-muted-foreground bg-muted"
     >
       Inactive
     </Badge>
@@ -225,7 +225,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
       cell: (v) => (
         <Badge
           variant="outline"
-          className={`h-4 text-[9px] px-1.5 py-0 ${v.isActive ? "border-emerald-200 text-emerald-700 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" : "border-border text-muted-foreground bg-muted"}`}
+          className={`h-4 text-micro px-1.5 py-0 ${v.isActive ? "border-status-success-rule text-status-success-ink bg-status-success-surface" : "border-border text-muted-foreground bg-muted"}`}
         >
           {v.isActive ? "Active" : "Inactive"}
         </Badge>

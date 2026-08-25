@@ -9,6 +9,7 @@ import { SessionProvider } from "../components/providers/session-provider";
 import { getServerAuth } from "../lib/get-server-auth";
 import { MotionProvider } from "../components/providers/motion-provider";
 import { QueryProvider } from "../components/providers/query-provider";
+import { ObservabilityProvider } from "../components/providers/observability-provider";
 import {
   BRAND_NAME,
   BRAND_TAGLINE,
@@ -138,10 +139,11 @@ export default async function RootLayout({
       </head>
       <body
         suppressHydrationWarning
-        className="font-sans min-h-dvh bg-background text-foreground antialiased selection:bg-blue-500/20 selection:text-blue-950 dark:selection:bg-blue-400/30 dark:selection:text-blue-50"
+        className="font-sans min-h-dvh bg-background text-foreground antialiased selection:bg-status-info-surface selection:text-status-info-ink"
       >
         <GoogleTagManagerNoscript />
         <SessionProvider session={session}>
+          <ObservabilityProvider />
           <QueryProvider>
             <MotionProvider>{children}</MotionProvider>
             <Toaster position="top-right" richColors />

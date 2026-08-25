@@ -70,7 +70,7 @@ export function SummaryCard({ projectId, featureEnabled, requiredPlan }: Summary
 
       {mutation.isError ? (
         <div className="space-y-2.5">
-          <p className="text-[13px] leading-snug text-destructive">
+          <p className="text-label leading-snug text-destructive">
             {getErrorMessage(mutation.error)}
           </p>
           <LoadingButton

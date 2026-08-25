@@ -119,11 +119,11 @@ export function CalendarEventsPanel({
                               {event.location ? (
                                 <TruncatedText
                                   text={event.location}
-                                  className="mt-1 text-[11px] text-muted-foreground"
+                                  className="mt-1 text-dense text-muted-foreground"
                                 />
                               ) : null}
                             </div>
-                            <span className="shrink-0 text-[10px] uppercase tracking-wide text-muted-foreground">
+                            <span className="shrink-0 text-micro uppercase tracking-wide text-muted-foreground">
                               {event.category}
                             </span>
                           </div>

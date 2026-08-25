@@ -191,7 +191,7 @@ export function InvoicesClient() {
     {
       key: "invoiceNumber",
       header: "Invoice #",
-      cell: (inv) => <span className="font-mono text-[11px] font-medium">{inv.invoiceNumber}</span>,
+      cell: (inv) => <span className="font-mono text-dense font-medium">{inv.invoiceNumber}</span>,
       sortable: true,
       sortValue: (inv) => inv.invoiceNumber,
     },
@@ -216,7 +216,7 @@ export function InvoicesClient() {
       cell: (inv) => {
         const config = STATUS_CONFIG[inv.status];
         return (
-          <Badge variant={config.variant} className="gap-1 text-[9px] h-4 px-1.5 py-0">
+          <Badge variant={config.variant} className="gap-1 text-micro h-4 px-1.5 py-0">
             <config.icon className="h-3 w-3" />
             {config.label}
           </Badge>

@@ -51,15 +51,15 @@ export function BulkOnboardPreviewTable({ rows }: BulkOnboardPreviewTableProps) 
         header: "Status",
         cell: (row) =>
           row.valid ? (
-            <Badge variant="secondary" className="text-[10px] h-5 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-0">
+            <Badge variant="secondary" className="text-micro h-5 bg-status-success-surface text-status-success-ink border-0">
               Ready
             </Badge>
           ) : (
             <span className="flex flex-col gap-0.5">
-              <Badge variant="destructive" className="text-[10px] h-5 w-fit">
+              <Badge variant="destructive" className="text-micro h-5 w-fit">
                 Error
               </Badge>
-              <span className="text-[10px] text-destructive max-w-[200px]">{row.errors.join("; ")}</span>
+              <span className="text-micro text-destructive max-w-[200px]">{row.errors.join("; ")}</span>
             </span>
           ),
         className: "text-xs",

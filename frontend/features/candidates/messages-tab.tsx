@@ -33,7 +33,7 @@ function MessageBubble({ msg }: { msg: CandidateMessage }) {
           <p className="text-xs font-medium mb-0.5 opacity-75">Re: {msg.subject}</p>
         )}
         <p className="whitespace-pre-wrap leading-relaxed">{msg.body}</p>
-        <p className={cn("text-[10px] mt-1 opacity-60", isOutbound ? "text-right" : "text-left")}>
+        <p className={cn("text-micro mt-1 opacity-60", isOutbound ? "text-right" : "text-left")}>
           {isOutbound ? (msg.senderName ?? "You") : "Candidate"} · {format(new Date(msg.sentAt), "MMM d, h:mm a")}
         </p>
       </div>

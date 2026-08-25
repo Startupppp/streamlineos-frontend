@@ -12,7 +12,7 @@ import { resolveImageUrl } from "@/lib/utils";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+    <p className="mb-2 text-dense font-semibold uppercase tracking-wider text-muted-foreground">
       {children}
     </p>
   );
@@ -74,7 +74,7 @@ export function TeamRosterSection({ projectId }: TeamRosterSectionProps) {
           <div className="flex flex-wrap gap-1.5">
             {teams.map((team) => (
               <Badge key={team.id} variant="secondary" className="gap-1 text-xs font-normal">
-                <span className="font-mono text-[10px] opacity-60">{team.key}</span>
+                <span className="font-mono text-micro opacity-60">{team.key}</span>
                 {team.name}
               </Badge>
             ))}
@@ -99,13 +99,13 @@ export function TeamRosterSection({ projectId }: TeamRosterSectionProps) {
                 <div key={member.id} className="flex items-center gap-2.5 py-2">
                   <Avatar className="h-7 w-7 shrink-0">
                     <AvatarImage src={resolveImageUrl(member.image)} />
-                    <AvatarFallback className="text-[10px]">{initials}</AvatarFallback>
+                    <AvatarFallback className="text-micro">{initials}</AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-foreground">
                       {displayName}
                     </p>
-                    <p className="truncate text-[11px] text-muted-foreground">
+                    <p className="truncate text-dense text-muted-foreground">
                       {member.email}
                     </p>
                   </div>

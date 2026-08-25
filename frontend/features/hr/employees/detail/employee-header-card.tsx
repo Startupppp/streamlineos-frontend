@@ -70,7 +70,7 @@ export function EmployeeHeaderCard({
   return (
     <Card
       className={cn(
-        "shrink-0 overflow-hidden rounded-2xl border border-border/70 border-l-4 bg-card/90 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] backdrop-blur-sm",
+        "shrink-0 overflow-hidden rounded-2xl border border-border/70 border-l-4 bg-card/90 shadow-card backdrop-blur-sm",
         isAlreadyTerminated ? "border-l-rose-500" : "border-l-emerald-500",
       )}
     >
@@ -117,7 +117,7 @@ export function EmployeeHeaderCard({
               {lifecycleBadge && !isAlreadyTerminated && (
                 <span
                   className={cn(
-                    "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold",
+                    "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-micro font-semibold",
                     lifecycleBadge.className,
                   )}
                 >
@@ -126,33 +126,33 @@ export function EmployeeHeaderCard({
                 </span>
               )}
               {employeeNumber && (
-                <span className="inline-flex items-center rounded-full border border-border bg-muted px-2 py-0.5 font-mono text-[10px] font-semibold text-muted-foreground">
+                <span className="inline-flex items-center rounded-full border border-border bg-muted px-2 py-0.5 font-mono text-micro font-semibold text-muted-foreground">
                   {employeeNumber}
                 </span>
               )}
               {workerType && (
-                <span className="inline-flex items-center rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                <span className="inline-flex items-center rounded-full border border-border bg-muted px-2 py-0.5 text-micro font-semibold text-muted-foreground">
                   {workerType.replaceAll("_", " ")}
                 </span>
               )}
               {isAlreadyTerminated ? (
-                <span className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-100 px-2 py-0.5 text-[10px] font-semibold text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
+                <span className="inline-flex items-center gap-1 rounded-full border border-status-danger-rule bg-status-danger-surface px-2 py-0.5 text-micro font-semibold text-status-danger-ink">
                   <XCircle className="h-3 w-3" />
                   Terminated
                 </span>
               ) : showEmploymentActiveBadge ? (
-                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
+                <span className="inline-flex items-center gap-1 rounded-full border border-status-success-rule bg-status-success-surface px-2 py-0.5 text-micro font-semibold text-status-success-ink">
                   <CheckCircle2 className="h-3 w-3" />
                   Active
                 </span>
               ) : null}
               {employee.role && (
-                <span className="inline-flex items-center rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                <span className="inline-flex items-center rounded-full border border-border bg-muted px-2 py-0.5 text-micro font-semibold text-muted-foreground">
                   {employee.role}
                 </span>
               )}
               {showLegacyEmployeeId && (
-                <span className="inline-flex items-center rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                <span className="inline-flex items-center rounded-full border border-border bg-muted px-2 py-0.5 text-micro font-semibold text-muted-foreground">
                   ID: {legacyEmployeeId}
                 </span>
               )}
@@ -193,15 +193,15 @@ export function EmployeeHeaderCard({
             {isSelf && completeness < 100 && (
               <div className="space-y-2 border-t border-border/60 pt-3">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <span className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
                     Profile Completeness
                   </span>
-                  <span className="text-[11px] font-bold tabular-nums text-foreground">
+                  <span className="text-dense font-bold tabular-nums text-foreground">
                     {completeness}%
                   </span>
                 </div>
                 <Progress value={completeness} className="h-1.5" />
-                <p className="text-[11px] leading-relaxed text-muted-foreground">
+                <p className="text-dense leading-relaxed text-muted-foreground">
                   Missing: {missingFields.slice(0, 3).join(", ")}
                   {missingFields.length > 3
                     ? ` +${missingFields.length - 3} more`
@@ -216,7 +216,7 @@ export function EmployeeHeaderCard({
               <StatBlock
                 label="Present"
                 value={stats.attendance?.daysPresent ?? 0}
-                colorClass="text-emerald-700 dark:text-emerald-300"
+                colorClass="text-status-success-ink"
               />
               <StatBlock
                 label="Leaves"
@@ -226,7 +226,7 @@ export function EmployeeHeaderCard({
               <StatBlock
                 label="Pending"
                 value={stats.leaves.pending}
-                colorClass="text-amber-700 dark:text-amber-300"
+                colorClass="text-status-warning-ink"
               />
             </div>
           )}

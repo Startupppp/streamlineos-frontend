@@ -104,24 +104,24 @@ export const priorityConfig: Record<
   string,
   { label: string; color: string; icon: string }
 > = {
-  URGENT: { label: "Urgent", color: "text-red-500", icon: "AlertTriangle" },
-  HIGH: { label: "High", color: "text-orange-500", icon: "ArrowUp" },
-  MEDIUM: { label: "Medium", color: "text-yellow-500", icon: "Minus" },
-  LOW: { label: "Low", color: "text-blue-400", icon: "ArrowDown" },
+  URGENT: { label: "Urgent", color: "text-status-danger-ink", icon: "AlertTriangle" },
+  HIGH: { label: "High", color: "text-status-warning-ink", icon: "ArrowUp" },
+  MEDIUM: { label: "Medium", color: "text-status-warning-ink", icon: "Minus" },
+  LOW: { label: "Low", color: "text-status-info-ink", icon: "ArrowDown" },
 };
 
 export const statusConfig: Record<string, StatusConfigEntry> = {
   TODO: { label: "To Do", dotColor: "bg-muted-foreground" },
-  IN_PROGRESS: { label: "In Progress", dotColor: "bg-blue-500" },
-  IN_REVIEW: { label: "In Review", dotColor: "bg-amber-500" },
-  DONE: { label: "Done", dotColor: "bg-green-500" },
+  IN_PROGRESS: { label: "In Progress", dotColor: "bg-status-info-fill" },
+  IN_REVIEW: { label: "In Review", dotColor: "bg-status-warning-fill" },
+  DONE: { label: "Done", dotColor: "bg-status-success-fill" },
 };
 
 const TYPE_TO_DOT_COLOR: Record<string, string> = {
   unstarted: "bg-muted-foreground",
-  started: "bg-blue-500",
-  completed: "bg-green-500",
-  cancelled: "bg-red-400",
+  started: "bg-status-info-fill",
+  completed: "bg-status-success-fill",
+  cancelled: "bg-status-danger-fill",
 };
 
 export function buildStatusConfig(
@@ -142,9 +142,9 @@ export const typeConfig: Record<
   string,
   { label: string; color: string }
 > = {
-  TASK: { label: "Task", color: "text-blue-500 dark:text-blue-400" },
-  BUG: { label: "Bug", color: "text-red-500 dark:text-red-400" },
-  STORY: { label: "Story", color: "text-green-500 dark:text-green-400" },
-  EPIC: { label: "Epic", color: "text-blue-600 dark:text-blue-400" },
+  TASK: { label: "Task", color: "text-status-info-ink" },
+  BUG: { label: "Bug", color: "text-status-danger-ink" },
+  STORY: { label: "Story", color: "text-status-success-ink" },
+  EPIC: { label: "Epic", color: "text-status-info-ink" },
   SUBTASK: { label: "Subtask", color: "text-muted-foreground" },
 };

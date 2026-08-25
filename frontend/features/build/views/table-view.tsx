@@ -70,7 +70,7 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
       key: "id",
       header: "ID",
       cell: (ticket) => (
-        <span className="font-mono text-[11px] text-muted-foreground">
+        <span className="font-mono text-dense text-muted-foreground">
           {formatTicketKey(projectKey, ticket.ticketNumber, ticket.sequenceId ?? undefined)}
         </span>
       ),
@@ -85,7 +85,7 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
           <button
             type="button"
             onClick={handleClick}
-            className="text-left text-[13px] font-medium hover:underline underline-offset-2 min-w-0 w-full"
+            className="text-left text-label font-medium hover:underline underline-offset-2 min-w-0 w-full"
           >
             <TruncatedText text={ticket.title} />
           </button>
@@ -102,7 +102,7 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
           {hasProjectId ? (
             <InlineType ticketId={ticket.id} projectId={projectId} currentType={ticket.type} />
           ) : (
-            <span className="text-[10px] text-muted-foreground">{ticket.type}</span>
+            <span className="text-micro text-muted-foreground">{ticket.type}</span>
           )}
         </div>
       ),
@@ -121,7 +121,7 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
               projectStatuses={projectStatuses}
             />
           ) : (
-            <span className="text-[10px] text-muted-foreground">{ticket.status}</span>
+            <span className="text-micro text-muted-foreground">{ticket.status}</span>
           )}
         </div>
       ),
@@ -136,7 +136,7 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
           {hasProjectId ? (
             <InlinePriority ticketId={ticket.id} projectId={projectId} currentPriority={ticket.priority} />
           ) : ticket.priority ? (
-            <span className="text-[10px] text-muted-foreground">{ticket.priority}</span>
+            <span className="text-micro text-muted-foreground">{ticket.priority}</span>
           ) : null}
         </div>
       ),
@@ -151,7 +151,7 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
           {hasProjectId ? (
             <InlineEstimate ticketId={ticket.id} projectId={projectId} currentPoints={ticket.points} />
           ) : (
-            <span className="font-mono text-[11px] tabular-nums">{ticket.points ?? "—"}</span>
+            <span className="font-mono text-dense tabular-nums">{ticket.points ?? "—"}</span>
           )}
         </div>
       ),
@@ -228,11 +228,11 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
           {hasProjectId ? (
             <InlineDueDate ticketId={ticket.id} projectId={projectId} currentDueDate={ticket.dueDate} />
           ) : ticket.dueDate ? (
-            <span className={cn("font-mono text-[11px] tabular-nums", isOverdue(ticket) && "text-destructive font-medium")}>
+            <span className={cn("font-mono text-dense tabular-nums", isOverdue(ticket) && "text-destructive font-medium")}>
               {new Date(ticket.dueDate).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}
             </span>
           ) : (
-            <span className="font-mono text-[11px] tabular-nums">—</span>
+            <span className="font-mono text-dense tabular-nums">—</span>
           )}
         </div>
       ),

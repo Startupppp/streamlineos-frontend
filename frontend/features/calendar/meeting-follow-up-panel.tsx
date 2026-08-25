@@ -99,7 +99,7 @@ function DraftedActionItem({ item, index }: DraftedActionItemProps) {
       <div className="flex-1 min-w-0">
         <p className="text-foreground">{item.item}</p>
         {(item.assignee ?? item.dueDate) && (
-          <p className="text-muted-foreground text-[10px] mt-0.5">
+          <p className="text-muted-foreground text-micro mt-0.5">
             {item.assignee && <span>→ {item.assignee}</span>}
             {item.assignee && item.dueDate && <span className="mx-1">·</span>}
             {item.dueDate && <span>{item.dueDate}</span>}

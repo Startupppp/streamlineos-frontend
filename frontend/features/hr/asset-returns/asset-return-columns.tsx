@@ -47,12 +47,12 @@ export function buildAssetReturnColumns(
           <div className="min-w-0">
             <TruncatedText text={ar.assetName} className="text-sm font-semibold text-foreground" />
             {ar.assetType && (
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-micro text-muted-foreground">
                 {ar.assetType}
               </p>
             )}
             {ar.serialNumber && (
-              <p className="text-[10px] font-mono text-muted-foreground">
+              <p className="text-micro font-mono text-muted-foreground">
                 S/N: {ar.serialNumber}
               </p>
             )}
@@ -78,7 +78,7 @@ export function buildAssetReturnColumns(
         return (
           <span
             className={cn(
-              "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+              "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border",
               statusMeta.badge,
             )}
           >
@@ -99,7 +99,7 @@ export function buildAssetReturnColumns(
         return conditionMeta ? (
           <span
             className={cn(
-              "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+              "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border",
               conditionMeta.badge,
             )}
           >

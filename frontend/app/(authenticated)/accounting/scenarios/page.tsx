@@ -43,8 +43,8 @@ import type { Scenario } from "@/types/accounting/planning";
 
 const KIND_CLASSES: Record<string, string> = {
   CONSERVATIVE: "bg-primary/5 text-foreground border-primary/20",
-  EXPECTED: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  AGGRESSIVE: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  EXPECTED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  AGGRESSIVE: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   CUSTOM: "bg-muted text-muted-foreground border-border",
 };
 
@@ -81,7 +81,7 @@ function ScenarioCard({ scenario, canManage, onEdit, onDelete }: ScenarioCardPro
           <div>
             <p className="font-medium text-sm">{scenario.name}</p>
             {scenario.isDefault && (
-              <span className="text-[10px] text-muted-foreground">Default</span>
+              <span className="text-micro text-muted-foreground">Default</span>
             )}
           </div>
           <Badge variant="outline" className={KIND_CLASSES[scenario.kind] ?? ""}>

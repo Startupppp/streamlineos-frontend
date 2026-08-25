@@ -42,7 +42,7 @@ export function LandingFooter() {
       whileInView={{ opacity: 1 }}
       viewport={{ once: true, margin: "-5% 0px" }}
       transition={{ duration: 0.6, ease: EASE_OUT }}
-      className="relative border-t border-slate-200/80 bg-white/70 backdrop-blur-sm"
+      className="relative border-t border-border bg-white/70 backdrop-blur-sm"
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <MotionStagger className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-5 gap-x-6 gap-y-8 py-10 sm:py-12">
@@ -53,11 +53,11 @@ export function LandingFooter() {
               aria-label={BRAND_NAME}
             >
               <AnimatedLogo size={36} className="rounded-xl shrink-0" />
-              <span className="font-display text-base sm:text-lg font-bold tracking-tight text-slate-900 truncate">
+              <span className="font-display text-base sm:text-lg font-bold tracking-tight text-foreground truncate">
                 {BRAND_NAME}
               </span>
             </Link>
-            <p className="text-sm text-slate-500 leading-relaxed mb-5">
+            <p className="text-sm text-muted-foreground leading-relaxed mb-5">
               {BRAND_TAGLINE}.
             </p>
             <div className="flex items-center gap-2">
@@ -71,7 +71,7 @@ export function LandingFooter() {
 
           {footerCols.map((col) => (
             <MotionItem key={col.title} className="min-w-0">
-              <h4 className="text-[11px] font-semibold text-slate-500 mb-3 sm:mb-4">
+              <h4 className="text-dense font-semibold text-muted-foreground mb-3 sm:mb-4">
                 {col.title}
               </h4>
               <ul className="space-y-2.5">
@@ -79,7 +79,7 @@ export function LandingFooter() {
                   <li key={link.label}>
                     <Link
                       href={link.href}
-                      className="text-sm text-slate-600 hover:text-blue-600 transition-colors duration-200"
+                      className="text-sm text-muted-foreground hover:text-status-info-ink transition-colors duration-200"
                     >
                       {link.label}
                     </Link>
@@ -92,12 +92,12 @@ export function LandingFooter() {
 
         <MotionReveal
           variant="fadeIn"
-          className="border-t border-slate-200/80 py-5 sm:py-6 flex flex-col sm:flex-row justify-between items-center gap-2 text-center sm:text-left"
+          className="border-t border-border py-5 sm:py-6 flex flex-col sm:flex-row justify-between items-center gap-2 text-center sm:text-left"
         >
-          <p className="text-xs font-mono text-slate-400">
+          <p className="text-xs font-mono text-muted-foreground">
             &copy; {new Date().getFullYear()} {BRAND_NAME}. All rights reserved.
           </p>
-          <p className="text-[11px] font-medium text-slate-400">
+          <p className="text-dense font-medium text-muted-foreground">
             Made for teams that ship
           </p>
         </MotionReveal>
@@ -124,7 +124,7 @@ function SocialLink({
       whileHover={{ scale: 1.08, y: -2 }}
       whileTap={{ scale: 0.95 }}
       transition={{ type: "spring", stiffness: 400, damping: 20 }}
-      className="h-8 w-8 rounded-lg bg-slate-100 hover:bg-blue-50 inline-flex items-center justify-center text-slate-500 hover:text-blue-600 transition-colors"
+      className="h-8 w-8 rounded-lg bg-muted hover:bg-status-info-surface inline-flex items-center justify-center text-muted-foreground hover:text-status-info-ink transition-colors"
     >
       <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
         <path d={d} />

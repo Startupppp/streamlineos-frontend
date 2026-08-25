@@ -25,9 +25,9 @@ interface RunHistoryDrawerProps {
 const statusConfig: Record<AutomationRunStatus, { label: string; icon: React.ComponentType<{ className?: string }>; color: string }> = {
   queued: { label: "Queued", icon: Clock, color: "text-muted-foreground" },
   running: { label: "Running", icon: Clock, color: "text-primary" },
-  success: { label: "Success", icon: CheckCircle, color: "text-emerald-500 dark:text-emerald-400" },
-  failed: { label: "Failed", icon: XCircle, color: "text-red-500 dark:text-red-400" },
-  skipped: { label: "Skipped", icon: SkipForward, color: "text-amber-500 dark:text-amber-400" },
+  success: { label: "Success", icon: CheckCircle, color: "text-status-success-ink" },
+  failed: { label: "Failed", icon: XCircle, color: "text-status-danger-ink" },
+  skipped: { label: "Skipped", icon: SkipForward, color: "text-status-warning-ink" },
 };
 
 export const RunHistoryDrawer = memo(function RunHistoryDrawer({ ruleId, open, onOpenChange }: RunHistoryDrawerProps) {
@@ -62,31 +62,31 @@ export const RunHistoryDrawer = memo(function RunHistoryDrawer({ ruleId, open, o
                     </div>
                     <Badge
                       variant="outline"
-                      className={cn("text-[10px] h-4 px-1.5", cfg.color)}
+                      className={cn("text-micro h-4 px-1.5", cfg.color)}
                     >
                       {cfg.label}
                     </Badge>
                   </div>
-                  <div className="text-[11px] text-muted-foreground flex gap-3">
+                  <div className="text-dense text-muted-foreground flex gap-3">
                     <span>{new Date(run.startedAt).toLocaleString()}</span>
                     <span className="capitalize">{run.entityType} {run.entityId}</span>
                   </div>
                   {run.error && (
-                    <p className="text-[11px] text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-500/10 rounded px-2 py-1">{run.error}</p>
+                    <p className="text-dense text-status-danger-ink bg-status-danger-surface rounded px-2 py-1">{run.error}</p>
                   )}
                   {run.steps && run.steps.length > 0 && (
                     <div className="space-y-1 pl-2 border-l-2 border-border ml-2">
                       {run.steps.map((step) => (
                         <div key={step.nodeId} className="flex items-center gap-2">
                           <span className={cn("h-2 w-2 rounded-full shrink-0", {
-                            "bg-emerald-500": step.status === "ok",
-                            "bg-red-500": step.status === "error",
-                            "bg-amber-400": step.status === "skipped",
+                            "bg-status-success-fill": step.status === "ok",
+                            "bg-status-danger-fill": step.status === "error",
+                            "bg-status-warning-fill": step.status === "skipped",
                           })} />
-                          <span className="text-[10px] text-muted-foreground">{step.type}</span>
-                          {step.message && <span className="text-[10px] text-muted-foreground">— {step.message}</span>}
+                          <span className="text-micro text-muted-foreground">{step.type}</span>
+                          {step.message && <span className="text-micro text-muted-foreground">— {step.message}</span>}
                           {step.branchTaken && (
-                            <span className="text-[10px] text-primary font-medium">→ {step.branchTaken}</span>
+                            <span className="text-micro text-primary font-medium">→ {step.branchTaken}</span>
                           )}
                         </div>
                       ))}

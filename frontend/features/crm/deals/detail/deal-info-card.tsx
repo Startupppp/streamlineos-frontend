@@ -4,13 +4,8 @@ import { Calendar, User, Phone, Mail, Clock } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TruncatedText } from "@/components/ui/truncated-text";
-
-function formatINR(v: number) {
-  if (v >= 10000000) return `₹${(v / 10000000).toFixed(1)}Cr`;
-  if (v >= 100000) return `₹${(v / 100000).toFixed(1)}L`;
-  if (v >= 1000) return `₹${(v / 1000).toFixed(0)}K`;
-  return `₹${v.toLocaleString("en-IN")}`;
-}
+import { formatMoneyCompact } from "@/lib/format-utils";
+import { useOrgDisplay } from "@/hooks/api/org-display";
 
 interface DealInfo {
   contactPerson?: string | null;
@@ -29,6 +24,7 @@ interface DealInfoCardProps {
 }
 
 export function DealInfoCard({ deal }: DealInfoCardProps) {
+  const money = useOrgDisplay();
   const dealValue = Number(deal.value ?? 0);
 
   const fields: Array<{ icon: LucideIcon; label: string; value: string | null | undefined; href: string | undefined }> = [
@@ -100,7 +96,7 @@ export function DealInfoCard({ deal }: DealInfoCardProps) {
 
         <div className="p-4 rounded-lg bg-muted/40 border border-border">
           <p className="text-xs text-muted-foreground">Deal Value</p>
-          <p className="text-3xl font-bold text-foreground tabular-nums">{formatINR(dealValue)}</p>
+          <p className="text-3xl font-bold text-foreground tabular-nums">{formatMoneyCompact(dealValue, money)}</p>
           {deal.probability !== null && deal.probability !== undefined && deal.probability > 0 && (
             <div className="mt-2">
               <div className="h-2 rounded-full bg-muted overflow-hidden">
@@ -110,7 +106,7 @@ export function DealInfoCard({ deal }: DealInfoCardProps) {
                 />
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Weighted: {formatINR(Math.round(dealValue * (deal.probability / 100)))}
+                Weighted: {formatMoneyCompact(Math.round(dealValue * (deal.probability / 100)), money)}
               </p>
             </div>
           )}
@@ -124,8 +120,8 @@ export function DealInfoCard({ deal }: DealInfoCardProps) {
         )}
 
         {deal.lostReason && (
-          <div className="p-3 rounded-lg bg-red-500/5 border border-red-500/20">
-            <p className="text-xs text-red-400 mb-1">Lost Reason</p>
+          <div className="p-3 rounded-lg bg-status-danger-surface border border-status-danger-rule">
+            <p className="text-xs text-status-danger-ink mb-1">Lost Reason</p>
             <p className="text-sm">{deal.lostReason}</p>
           </div>
         )}

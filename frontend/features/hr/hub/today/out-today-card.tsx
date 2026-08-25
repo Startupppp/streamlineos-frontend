@@ -57,7 +57,7 @@ export function OutTodayCard({
                 <p className="text-xs font-medium text-foreground truncate">
                   {entry.userName}
                 </p>
-                <p className="text-[10px] text-muted-foreground truncate">
+                <p className="text-micro text-muted-foreground truncate">
                   {entry.leaveType} · until {format(new Date(entry.endDate), "MMM d")}
                 </p>
               </div>

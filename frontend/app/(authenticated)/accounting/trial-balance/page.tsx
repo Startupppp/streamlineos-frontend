@@ -89,7 +89,7 @@ export default function TrialBalancePage() {
           <div className="flex flex-col gap-1">
             <label
               htmlFor="tb-as-of"
-              className="text-[11px] font-medium text-muted-foreground leading-none"
+              className="text-dense font-medium text-muted-foreground leading-none"
             >
               As of
             </label>
@@ -103,11 +103,11 @@ export default function TrialBalancePage() {
           </div>
           {tb ? (
             <div className="flex flex-col gap-1">
-              <span className="text-[11px] font-medium text-muted-foreground leading-none">
+              <span className="text-dense font-medium text-muted-foreground leading-none">
                 Status
               </span>
               {tb.balanced ? (
-                <span className="inline-flex items-center px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-700 text-xs font-medium border border-emerald-500/20">
+                <span className="inline-flex items-center px-2 py-1 rounded-md bg-status-success-surface text-status-success-ink text-xs font-medium border border-status-success-rule">
                   Balanced ✓
                 </span>
               ) : (

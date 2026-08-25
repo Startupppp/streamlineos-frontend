@@ -103,7 +103,7 @@ export const CalendarToolbarPrimaryActions = memo(
         >
           <Link2 className="h-3.5 w-3.5" />
           {activeConnectionCount > 0 ? (
-            <span className="absolute -top-1 -right-1 h-3.5 min-w-[14px] rounded-full bg-primary px-0.5 text-center text-[9px] font-semibold leading-[14px] text-primary-foreground">
+            <span className="absolute -top-1 -right-1 h-3.5 min-w-[14px] rounded-full bg-primary px-0.5 text-center text-micro font-semibold leading-[14px] text-primary-foreground">
               {activeConnectionCount}
             </span>
           ) : null}

@@ -77,7 +77,7 @@ function AttachmentRowItem({
       <div className="min-w-0 flex-1">
         <p className="text-xs font-medium truncate">{attachment.fileName}</p>
         {attachment.fileSize !== null && (
-          <p className="text-[10px] text-muted-foreground">
+          <p className="text-micro text-muted-foreground">
             {formatFileSize(attachment.fileSize)}
           </p>
         )}
@@ -197,7 +197,7 @@ export function KbAttachmentsPanel({ article }: { article: KbArticleDetail }) {
           {!uploadAttachment.isPending && <Upload className="h-3.5 w-3.5 mr-1" />}
           Upload file
         </LoadingButton>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-dense text-muted-foreground">
           PDF, images, Word or Excel · up to 10MB.
         </p>
 
@@ -237,7 +237,7 @@ export function KbAttachmentsPanel({ article }: { article: KbArticleDetail }) {
             <Sparkles className="h-3.5 w-3.5 text-primary shrink-0" />
             <div className="min-w-0 flex-1">
               <p className="text-xs font-medium leading-none">AI search index</p>
-              <p className="text-[11px] text-muted-foreground mt-1">
+              <p className="text-dense text-muted-foreground mt-1">
                 {indexStatus.isLoading
                   ? "Checking…"
                   : indexStatus.data && indexStatus.data.chunks > 0

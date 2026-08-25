@@ -32,10 +32,10 @@ interface ScoreConfig {
 }
 
 function getScoreConfig(score: number): ScoreConfig {
-  if (score === 4) return { label: "Fully Qualified", badgeClass: "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30", dotColor: "bg-emerald-500" };
-  if (score === 3) return { label: "Mostly Qualified", badgeClass: "bg-orange-50 text-orange-700 border border-orange-200 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30", dotColor: "bg-orange-500" };
-  if (score === 2) return { label: "Partially Qualified", badgeClass: "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30", dotColor: "bg-amber-500" };
-  if (score === 1) return { label: "Weakly Qualified", badgeClass: "bg-red-50 text-red-700 border border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30", dotColor: "bg-red-500" };
+  if (score === 4) return { label: "Fully Qualified", badgeClass: "bg-status-success-surface text-status-success-ink border border-status-success-rule", dotColor: "bg-status-success-fill" };
+  if (score === 3) return { label: "Mostly Qualified", badgeClass: "bg-status-warning-surface text-status-warning-ink border border-status-warning-rule", dotColor: "bg-status-warning-fill" };
+  if (score === 2) return { label: "Partially Qualified", badgeClass: "bg-status-warning-surface text-status-warning-ink border border-status-warning-rule", dotColor: "bg-status-warning-fill" };
+  if (score === 1) return { label: "Weakly Qualified", badgeClass: "bg-status-danger-surface text-status-danger-ink border border-status-danger-rule", dotColor: "bg-status-danger-fill" };
   return { label: "Unqualified", badgeClass: "bg-muted text-muted-foreground border border-border", dotColor: "bg-muted-foreground/40" };
 }
 
@@ -103,7 +103,7 @@ export function LeadQualificationPanel({ leadId, qualificationJson }: LeadQualif
             <CardTitle className="text-sm text-muted-foreground uppercase tracking-wide font-semibold">
               BANT Qualification
             </CardTitle>
-            <Badge className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${scoreConfig.badgeClass}`}>
+            <Badge className={`text-dense font-medium px-2 py-0.5 rounded-full ${scoreConfig.badgeClass}`}>
               <span className={`mr-1.5 inline-block h-1.5 w-1.5 rounded-full ${scoreConfig.dotColor}`} />
               {score}/4 · {scoreConfig.label}
             </Badge>
@@ -146,7 +146,7 @@ export function LeadQualificationPanel({ leadId, qualificationJson }: LeadQualif
                     <p className={`text-xs font-semibold ${checked ? "text-foreground" : "text-foreground"}`}>
                       {criterion.label}
                     </p>
-                    <p className="text-[10px] text-muted-foreground">{criterion.description}</p>
+                    <p className="text-micro text-muted-foreground">{criterion.description}</p>
                   </div>
                 </motion.button>
               );
@@ -154,7 +154,7 @@ export function LeadQualificationPanel({ leadId, qualificationJson }: LeadQualif
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[10px] text-muted-foreground uppercase tracking-wide font-semibold">
+            <label className="text-micro text-muted-foreground uppercase tracking-wide font-semibold">
               Qualification Notes
             </label>
             <Textarea

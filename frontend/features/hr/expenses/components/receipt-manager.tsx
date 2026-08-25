@@ -75,7 +75,7 @@ export function ReceiptManager({
       <label className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg p-6 cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors">
         <Upload className="w-7 text-muted-foreground/50 mb-1.5" />
         <span className="text-sm font-medium text-foreground/70">Upload receipts</span>
-        <span className="text-[11px] text-muted-foreground mt-0.5">
+        <span className="text-dense text-muted-foreground mt-0.5">
           PDF, PNG, JPG up to 10MB · max {MAX_EXPENSE_RECEIPTS} files
         </span>
         <input
@@ -114,7 +114,7 @@ export function ReceiptManager({
                   <span className="text-lg leading-none" aria-hidden>
                     {receiptKindEmoji(kind)}
                   </span>
-                  <span className="text-[9px] font-semibold uppercase text-primary">
+                  <span className="text-micro font-semibold uppercase text-primary">
                     {receiptKindLabel(kind)}
                   </span>
                 </div>
@@ -122,7 +122,7 @@ export function ReceiptManager({
             </div>
             <div className="flex-1 min-w-0">
               <TruncatedText text={receipt.fileName} className="text-sm font-medium text-foreground" />
-              <p className="text-[11px] text-muted-foreground">Attached</p>
+              <p className="text-dense text-muted-foreground">Attached</p>
             </div>
             <AnimatedIconButton
               type="button"
@@ -159,7 +159,7 @@ export function ReceiptManager({
           )}
           <div className="flex-1 min-w-0">
             <TruncatedText text={receipt.file.name} className="text-sm font-medium text-foreground" />
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-dense text-muted-foreground">
               {(receipt.file.size / 1024).toFixed(1)} KB
             </p>
           </div>

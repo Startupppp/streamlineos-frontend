@@ -23,10 +23,10 @@ const columns: DataTableColumn<RankedEntry>[] = [
     cell: (row) => (
       <span
         className={cn(
-          "inline-flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold",
-          row.rank === 1 && "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
+          "inline-flex h-5 w-5 items-center justify-center rounded-full text-micro font-bold",
+          row.rank === 1 && "bg-status-warning-surface text-status-warning-ink",
           row.rank === 2 && "bg-muted text-muted-foreground",
-          row.rank === 3 && "bg-orange-100 text-orange-700 dark:bg-orange-500/10 dark:text-orange-300",
+          row.rank === 3 && "bg-status-warning-surface text-status-warning-ink",
           row.rank > 3 && "text-muted-foreground",
         )}
       >
@@ -39,7 +39,7 @@ const columns: DataTableColumn<RankedEntry>[] = [
     header: "Name",
     sortable: true,
     sortValue: (row) => row.name,
-    cell: (row) => <TruncatedText text={row.name} className="text-[11px] font-medium max-w-[120px]" />,
+    cell: (row) => <TruncatedText text={row.name} className="text-dense font-medium max-w-[120px]" />,
   },
   {
     key: "leadsAssigned",
@@ -47,7 +47,7 @@ const columns: DataTableColumn<RankedEntry>[] = [
     headerClassName: "text-right",
     className: "text-right",
     cell: (row) => (
-      <span className="text-[11px] font-mono tabular-nums">{row.leadsAssigned}</span>
+      <span className="text-dense font-mono tabular-nums">{row.leadsAssigned}</span>
     ),
   },
   {
@@ -56,7 +56,7 @@ const columns: DataTableColumn<RankedEntry>[] = [
     headerClassName: "text-right",
     className: "text-right",
     cell: (row) => (
-      <span className="text-[11px] font-mono tabular-nums text-emerald-600 dark:text-emerald-400">
+      <span className="text-dense font-mono tabular-nums text-status-success-ink">
         {row.leadsConverted}
       </span>
     ),
@@ -67,7 +67,7 @@ const columns: DataTableColumn<RankedEntry>[] = [
     headerClassName: "text-right",
     className: "text-right",
     cell: (row) => (
-      <span className="text-[11px] font-mono tabular-nums">
+      <span className="text-dense font-mono tabular-nums">
         {formatCurrency(row.totalRevenue)}
       </span>
     ),
@@ -85,11 +85,11 @@ const columns: DataTableColumn<RankedEntry>[] = [
       return (
         <span
           className={cn(
-            "text-[11px] font-medium",
+            "text-dense font-medium",
             Number(convRate) >= 50
-              ? "text-emerald-600 dark:text-emerald-400"
+              ? "text-status-success-ink"
               : Number(convRate) >= 25
-                ? "text-amber-600 dark:text-amber-400"
+                ? "text-status-warning-ink"
                 : "text-muted-foreground",
           )}
         >
@@ -113,7 +113,7 @@ export function TeamLeaderboardCard({
     <Card className="rounded-lg border border-border">
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
-          <Trophy className="h-4 w-4 text-amber-500" />
+          <Trophy className="h-4 w-4 text-status-warning-ink" />
           Team Leaderboard
         </CardTitle>
       </CardHeader>

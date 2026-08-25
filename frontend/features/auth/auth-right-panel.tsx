@@ -27,19 +27,19 @@ export function AuthRightPanel() {
         transition={{ duration: 0.55, ease: EASE_OUT_QUART }}
         className="relative z-10 px-12 pt-14"
       >
-        <div className="inline-flex items-center gap-2 rounded-full bg-blue-600/10 border border-blue-200 px-3 py-1 mb-5">
-          <Sparkles className="h-3 w-3 text-blue-600" />
-          <span className="text-[12px] font-medium text-blue-700">
+        <div className="inline-flex items-center gap-2 rounded-full bg-status-info-surface border border-status-info-rule px-3 py-1 mb-5">
+          <Sparkles className="h-3 w-3 text-status-info-ink" />
+          <span className="text-xs font-medium text-status-info-ink">
             One OS for every team function
           </span>
         </div>
 
-        <h2 className="font-display text-[2.1rem] xl:text-[2.4rem] font-extrabold leading-[1.04] tracking-[-0.025em] text-slate-900 max-w-md">
+        <h2 className="font-display text-[2.1rem] xl:text-[2.4rem] font-extrabold leading-[1.04] tracking-[-0.025em] text-foreground max-w-md">
           Run your company on{" "}
-          <span className="text-blue-600">one platform.</span>
+          <span className="text-status-info-ink">one platform.</span>
         </h2>
 
-        <p className="text-[14px] text-slate-600 leading-relaxed mt-3 max-w-md">
+        <p className="text-sm text-muted-foreground leading-relaxed mt-3 max-w-md">
           HR, projects, CRM, chat — unified. Sub-100ms realtime. AI-assisted everywhere.
         </p>
       </motion.div>
@@ -54,17 +54,17 @@ export function AuthRightPanel() {
         transition={{ duration: 0.6, delay: 0.4, ease: EASE_OUT_QUART }}
         className="relative z-10 px-12 pb-12"
       >
-        <div className="flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white/85 backdrop-blur-sm px-5 py-4 shadow-[0_18px_44px_-22px_rgba(30,64,175,0.15)]">
-          <span className="h-10 w-10 rounded-full inline-flex items-center justify-center text-[12px] font-bold text-white shrink-0 bg-blue-600">
+        <div className="flex items-center gap-4 rounded-2xl border border-border bg-white/85 backdrop-blur-sm px-5 py-4 shadow-[0_18px_44px_-22px_rgba(30,64,175,0.15)]">
+          <span className="h-10 w-10 rounded-full inline-flex items-center justify-center text-xs font-bold text-white shrink-0 bg-status-info-fill">
             AM
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-[13px] text-slate-700 leading-snug mb-1.5">
-              <Quote className="inline h-3 w-3 text-blue-500/60 mr-1 -mt-1" />
+            <p className="text-label text-foreground leading-snug mb-1.5">
+              <Quote className="inline h-3 w-3 text-status-info-ink mr-1 -mt-1" />
               StreamlineOS replaced five separate tools. Our weekly status meeting is gone.
             </p>
-            <p className="text-[11px] font-mono text-slate-500">
-              <span className="font-semibold text-slate-900 not-italic">Arjun Mehta</span>
+            <p className="text-dense font-mono text-muted-foreground">
+              <span className="font-semibold text-foreground not-italic">Arjun Mehta</span>
               {" · "}CTO, FinScale
             </p>
           </div>

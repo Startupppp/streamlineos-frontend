@@ -41,7 +41,7 @@ export function ProjectNavSection({
   return (
     <div className="space-y-0.5">
       {pinned ? (
-        <p className="px-2.5 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/55">
+        <p className="px-2.5 pb-1 pt-1 text-micro font-semibold uppercase tracking-[0.14em] text-muted-foreground/55">
           {group.label}
         </p>
       ) : (
@@ -51,7 +51,7 @@ export function ProjectNavSection({
           aria-expanded={open}
           className={cn(
             "group/section flex w-full items-center gap-1 rounded-md px-2.5 py-1",
-            "text-[10px] font-semibold uppercase tracking-[0.14em]",
+            "text-micro font-semibold uppercase tracking-[0.14em]",
             "text-muted-foreground/55 transition-colors",
             "hover:bg-muted/40 hover:text-muted-foreground",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",

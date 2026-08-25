@@ -229,15 +229,15 @@ export function IncidentSheet({
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[11px]">Title <span className="text-destructive">*</span></FormLabel>
+                    <FormLabel className="text-dense">Title <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <Input
                         {...field}
-                        className="text-[11px]"
+                        className="text-dense"
                         placeholder="Short incident summary"
                       />
                     </FormControl>
-                    <FormMessage className="text-[10px]" />
+                    <FormMessage className="text-micro" />
                   </FormItem>
                 )}
               />
@@ -247,7 +247,7 @@ export function IncidentSheet({
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[11px]">Description</FormLabel>
+                    <FormLabel className="text-dense">Description</FormLabel>
                     <FormControl>
                       <TiptapEditor
                         content={field.value}
@@ -258,7 +258,7 @@ export function IncidentSheet({
                         menuMode="static"
                       />
                     </FormControl>
-                    <FormMessage className="text-[10px]" />
+                    <FormMessage className="text-micro" />
                   </FormItem>
                 )}
               />
@@ -269,7 +269,7 @@ export function IncidentSheet({
                   name="severity"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[11px]">Severity</FormLabel>
+                      <FormLabel className="text-dense">Severity</FormLabel>
                       <Select value={field.value} onValueChange={field.onChange}>
                         <FormControl>
                           <SelectTrigger>
@@ -284,7 +284,7 @@ export function IncidentSheet({
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormMessage className="text-[10px]" />
+                      <FormMessage className="text-micro" />
                     </FormItem>
                   )}
                 />
@@ -293,7 +293,7 @@ export function IncidentSheet({
                   name="status"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[11px]">Status</FormLabel>
+                      <FormLabel className="text-dense">Status</FormLabel>
                       <Select value={field.value} onValueChange={field.onChange}>
                         <FormControl>
                           <SelectTrigger>
@@ -308,7 +308,7 @@ export function IncidentSheet({
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormMessage className="text-[10px]" />
+                      <FormMessage className="text-micro" />
                     </FormItem>
                   )}
                 />
@@ -319,15 +319,15 @@ export function IncidentSheet({
                 name="impact"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[11px]">Impact</FormLabel>
+                    <FormLabel className="text-dense">Impact</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
-                        className="text-[11px]"
+                        className="text-dense"
                         placeholder="Who / what is affected?"
                       />
                     </FormControl>
-                    <FormMessage className="text-[10px]" />
+                    <FormMessage className="text-micro" />
                   </FormItem>
                 )}
               />
@@ -337,7 +337,7 @@ export function IncidentSheet({
                 name="ownerId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[11px]">Owner</FormLabel>
+                    <FormLabel className="text-dense">Owner</FormLabel>
                     <ProjectMemberSelect
                       projectId={projectId}
                       mode="single"
@@ -345,9 +345,9 @@ export function IncidentSheet({
                       onChange={(v) => field.onChange(v ?? "")}
                       allowUnassigned
                       placeholder="Unassigned"
-                      className="text-[11px]"
+                      className="text-dense"
                     />
-                    <FormMessage className="text-[10px]" />
+                    <FormMessage className="text-micro" />
                   </FormItem>
                 )}
               />
@@ -358,15 +358,15 @@ export function IncidentSheet({
                   name="detectedAt"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[11px]">Detected at</FormLabel>
+                      <FormLabel className="text-dense">Detected at</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
                           type="datetime-local"
-                          className="text-[11px]"
+                          className="text-dense"
                         />
                       </FormControl>
-                      <FormMessage className="text-[10px]" />
+                      <FormMessage className="text-micro" />
                     </FormItem>
                   )}
                 />
@@ -375,15 +375,15 @@ export function IncidentSheet({
                   name="responseDueAt"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[11px]">Response due</FormLabel>
+                      <FormLabel className="text-dense">Response due</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
                           type="datetime-local"
-                          className="text-[11px]"
+                          className="text-dense"
                         />
                       </FormControl>
-                      <FormMessage className="text-[10px]" />
+                      <FormMessage className="text-micro" />
                     </FormItem>
                   )}
                 />
@@ -392,15 +392,15 @@ export function IncidentSheet({
                   name="resolutionDueAt"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[11px]">Resolution due</FormLabel>
+                      <FormLabel className="text-dense">Resolution due</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
                           type="datetime-local"
-                          className="text-[11px]"
+                          className="text-dense"
                         />
                       </FormControl>
-                      <FormMessage className="text-[10px]" />
+                      <FormMessage className="text-micro" />
                     </FormItem>
                   )}
                 />
@@ -411,7 +411,7 @@ export function IncidentSheet({
                 name="linkedTicketId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[11px]">Linked Ticket</FormLabel>
+                    <FormLabel className="text-dense">Linked Ticket</FormLabel>
                     <FormControl>
                       <TicketCombobox
                         projectId={projectId}
@@ -420,10 +420,10 @@ export function IncidentSheet({
                         onChange={field.onChange}
                         placeholder="Link a ticket…"
                         allowClear
-                        className="text-[11px]"
+                        className="text-dense"
                       />
                     </FormControl>
-                    <FormMessage className="text-[10px]" />
+                    <FormMessage className="text-micro" />
                   </FormItem>
                 )}
               />
@@ -432,14 +432,14 @@ export function IncidentSheet({
             <SheetFooter className="px-5 py-3 border-t shrink-0">
               <div className="grid w-full grid-cols-2 gap-2">
                 <SheetClose asChild>
-                  <Button variant="outline" size="sm" className="text-[11px]">
+                  <Button variant="outline" size="sm" className="text-dense">
                     Cancel
                   </Button>
                 </SheetClose>
                 <LoadingButton
                   type="submit"
                   size="sm"
-                  className="text-[11px]"
+                  className="text-dense"
                   isPending={isPending}
                   loadingText="Saving…"
                 >

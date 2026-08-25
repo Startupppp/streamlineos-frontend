@@ -83,8 +83,8 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
   return (
     <div className="flex min-h-0 flex-1 flex-col space-y-3">
       <div className="shrink-0">
-        <p className="text-[13px] font-medium">Sign-in history</p>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-label font-medium">Sign-in history</p>
+        <p className="text-dense text-muted-foreground">
           Successful and failed authentication attempts for security review.
         </p>
       </div>
@@ -103,7 +103,7 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
           className="h-7 text-xs"
           onClick={handleFilterSuccess}
         >
-          <CheckCircle className="h-3 w-3 mr-1 text-green-600 dark:text-green-400" />
+          <CheckCircle className="h-3 w-3 mr-1 text-status-success-ink" />
           Successful
         </Button>
         <Button
@@ -112,7 +112,7 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
           className="h-7 text-xs"
           onClick={handleFilterFailed}
         >
-          <XCircle className="h-3 w-3 mr-1 text-red-500 dark:text-red-400" />
+          <XCircle className="h-3 w-3 mr-1 text-status-danger-ink" />
           Failed
         </Button>
       </div>
@@ -134,9 +134,9 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
             >
               <div className="mt-0.5">
                 {entry.success ? (
-                  <CheckCircle className="h-3.5 w-3.5 text-green-500 dark:text-green-400" />
+                  <CheckCircle className="h-3.5 w-3.5 text-status-success-ink" />
                 ) : (
-                  <XCircle className="h-3.5 w-3.5 text-red-400" />
+                  <XCircle className="h-3.5 w-3.5 text-status-danger-ink" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
@@ -145,7 +145,7 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
                   {entry.failureReason && (
                     <Badge
                       variant="destructive"
-                      className="text-[10px] h-4 px-1"
+                      className="text-micro h-4 px-1"
                     >
                       {entry.failureReason}
                     </Badge>

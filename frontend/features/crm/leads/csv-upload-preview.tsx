@@ -95,14 +95,14 @@ export function CsvUploadPreview({
       key: "source",
       header: "Source",
       cell: (row) => row.source ? (
-        <Badge variant="outline" className="text-[10px]">{row.source}</Badge>
+        <Badge variant="outline" className="text-micro">{row.source}</Badge>
       ) : "—",
     },
     {
       key: "priority",
       header: "Priority",
       cell: (row) => row.priority ? (
-        <Badge variant="outline" className="text-[10px]">{row.priority}</Badge>
+        <Badge variant="outline" className="text-micro">{row.priority}</Badge>
       ) : "—",
     },
   ];
@@ -159,8 +159,8 @@ export function CsvUploadPreview({
 
       {importResult ? (
         <div className="space-y-3">
-          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 space-y-1">
-            <p className="text-sm font-medium text-green-700 dark:text-green-400">
+          <div className="bg-status-success-surface border border-status-success-rule rounded-lg p-3 space-y-1">
+            <p className="text-sm font-medium text-status-success-ink">
               Import Complete
             </p>
             <p className="text-xs text-muted-foreground">
@@ -210,7 +210,7 @@ export function CsvUploadPreview({
               <p className="text-sm font-medium leading-none">
                 Auto-distribute to sales team
               </p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
+              <p className="text-dense text-muted-foreground mt-0.5">
                 Evenly split imported leads across active sales reps
               </p>
             </div>

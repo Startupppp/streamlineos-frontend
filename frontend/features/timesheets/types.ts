@@ -374,13 +374,13 @@ export interface InvoiceDraftInput {
 }
 
 export const PERIOD_STATUS_BADGE: Record<PeriodStatus, string> = {
-  OPEN: "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30",
-  DRAFT: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  SUBMITTED: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  APPROVED: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  REJECTED: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
-  LOCKED: "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30",
-  REOPENED: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  OPEN: "bg-muted text-foreground border-border",
+  DRAFT: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  SUBMITTED: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  APPROVED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  REJECTED: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
+  LOCKED: "bg-muted text-foreground border-border",
+  REOPENED: "bg-status-info-surface text-status-info-ink border-status-info-rule",
 };
 
 export const PERIOD_STATUS_LABEL: Record<PeriodStatus, string> = {
@@ -394,9 +394,9 @@ export const PERIOD_STATUS_LABEL: Record<PeriodStatus, string> = {
 };
 
 export const ENTRY_STATUS_BADGE: Record<EntryStatus, string> = {
-  PENDING: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  APPROVED: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  REJECTED: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  PENDING: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  APPROVED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  REJECTED: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };
 
 export const BILLING_TYPE_LABEL: Record<BillingType, string> = {
@@ -475,9 +475,9 @@ export const EXCEPTION_SEVERITY_LABEL: Record<ExceptionSeverity, string> = {
 
 export const EXCEPTION_SEVERITY_BADGE: Record<ExceptionSeverity, string> = {
   ERROR:
-    "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+    "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
   WARNING:
-    "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+    "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
 };
 
 export const EXCEPTION_STATUS_LABEL: Record<ExceptionStatus, string> = {
@@ -487,9 +487,9 @@ export const EXCEPTION_STATUS_LABEL: Record<ExceptionStatus, string> = {
 };
 
 export const EXCEPTION_STATUS_BADGE: Record<ExceptionStatus, string> = {
-  OPEN: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  OPEN: "bg-status-info-surface text-status-info-ink border-status-info-rule",
   RESOLVED:
-    "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+    "bg-status-success-surface text-status-success-ink border-status-success-rule",
   DISMISSED:
-    "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30",
+    "bg-muted text-foreground border-border",
 };

@@ -71,7 +71,7 @@ export function ProductClassificationFields({
                   <SelectItem value="SERIAL">Serial</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-[10px] text-muted-foreground mt-1">
+              <p className="text-micro text-muted-foreground mt-1">
                 Cannot change once stock exists
               </p>
               <FormMessage />

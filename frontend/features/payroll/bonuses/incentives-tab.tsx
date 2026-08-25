@@ -45,9 +45,9 @@ const STATUS_OPTIONS = [
 ];
 
 const INCENTIVE_STATUS_STYLES: Record<string, string> = {
-  PENDING: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  APPROVED: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  REJECTED: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  PENDING: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  APPROVED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  REJECTED: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
   ADDED_TO_PAYROLL: "bg-primary/10 text-foreground border-primary/20",
 };
 
@@ -145,7 +145,7 @@ export function IncentivesTab() {
           <LoadingButton
             size="sm"
             variant="outline"
-            className="h-6 text-[10px] px-2 text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+            className="h-6 text-micro px-2 text-status-success-ink border-status-success-rule hover:bg-status-success-surface"
             isPending={approveIncentive.isPending}
             onClick={makeApproveOpener(row)}
           >
@@ -154,7 +154,7 @@ export function IncentivesTab() {
           <LoadingButton
             size="sm"
             variant="outline"
-            className="h-6 text-[10px] px-2 text-destructive border-destructive/30 hover:bg-destructive/10"
+            className="h-6 text-micro px-2 text-destructive border-destructive/30 hover:bg-destructive/10"
             isPending={rejectIncentive.isPending}
             onClick={makeRejectHandler(row.id)}
           >
@@ -170,7 +170,7 @@ export function IncentivesTab() {
       header: "Sales Rep",
       cell: (row) => (
         <div className="flex flex-col gap-0.5 min-w-0">
-          <TruncatedText text={row.salesRep.name ?? "—"} className="text-[11px] font-medium" />
+          <TruncatedText text={row.salesRep.name ?? "—"} className="text-dense font-medium" />
         </div>
       ),
     },
@@ -179,7 +179,7 @@ export function IncentivesTab() {
       header: "Investment",
       className: "text-right",
       cell: (row) => (
-        <span className="font-mono text-[11px] tabular-nums">
+        <span className="font-mono text-dense tabular-nums">
           {formatMoney(row.investmentAmount)}
         </span>
       ),
@@ -189,7 +189,7 @@ export function IncentivesTab() {
       header: "Rate",
       className: "text-right",
       cell: (row) => (
-        <span className="font-mono text-[11px] tabular-nums">
+        <span className="font-mono text-dense tabular-nums">
           {row.incentiveRate ? `${row.incentiveRate}%` : "—"}
         </span>
       ),
@@ -199,7 +199,7 @@ export function IncentivesTab() {
       header: "Calculated",
       className: "text-right",
       cell: (row) => (
-        <span className="font-mono text-[11px] tabular-nums">
+        <span className="font-mono text-dense tabular-nums">
           {formatMoney(row.calculatedAmount)}
         </span>
       ),
@@ -209,7 +209,7 @@ export function IncentivesTab() {
       header: "Approved",
       className: "text-right",
       cell: (row) => (
-        <span className="font-mono text-[11px] tabular-nums">
+        <span className="font-mono text-dense tabular-nums">
           {row.approvedAmount ? formatMoney(row.approvedAmount) : "—"}
         </span>
       ),
@@ -219,7 +219,7 @@ export function IncentivesTab() {
       header: "Status",
       cell: (row) => (
         <span
-          className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${
+          className={`inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium border ${
             INCENTIVE_STATUS_STYLES[row.status] ?? "bg-muted text-muted-foreground border-border"
           }`}
         >
@@ -231,7 +231,7 @@ export function IncentivesTab() {
       key: "submitted",
       header: "Submitted",
       cell: (row) => (
-        <span className="text-[10px] text-muted-foreground">{formatDate(row.createdAt)}</span>
+        <span className="text-micro text-muted-foreground">{formatDate(row.createdAt)}</span>
       ),
     },
     ...(canApprove ? [actionColumn] : []),

@@ -302,16 +302,16 @@ function FieldRow({ field, onToggle, onEdit, onDelete }: FieldRowProps) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-sm font-medium truncate">{field.label}</h3>
-              <Badge variant="secondary" className="text-[10px]">
+              <Badge variant="secondary" className="text-micro">
                 {fieldTypeLabel(field.fieldType)}
               </Badge>
               {field.required && (
-                <Badge variant="outline" className="text-[10px]">
+                <Badge variant="outline" className="text-micro">
                   Required
                 </Badge>
               )}
               {field.category && (
-                <Badge variant="outline" className="text-[10px]">
+                <Badge variant="outline" className="text-micro">
                   {field.category}
                 </Badge>
               )}

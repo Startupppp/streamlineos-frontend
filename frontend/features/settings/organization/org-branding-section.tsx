@@ -89,7 +89,7 @@ function ColorField({
           maxLength={7}
         />
       </div>
-      {error && <p className="text-[11px] text-destructive">{error}</p>}
+      {error && <p className="text-dense text-destructive">{error}</p>}
     </div>
   );
 }
@@ -350,7 +350,7 @@ function EmailBrandingPreview({
 }) {
   return (
     <div className="rounded-lg border border-border overflow-hidden">
-      <p className="text-[11px] font-medium text-muted-foreground px-3 py-1.5 bg-muted/50 border-b border-border">Email template preview</p>
+      <p className="text-dense font-medium text-muted-foreground px-3 py-1.5 bg-muted/50 border-b border-border">Email template preview</p>
       <div className="p-3 bg-muted/30">
         <div className="max-w-sm mx-auto bg-card rounded-md overflow-hidden shadow-sm border border-border">
           <div className="px-4 py-3" style={{ backgroundColor: primaryColor }}>
@@ -365,13 +365,13 @@ function EmailBrandingPreview({
             <div className="h-2.5 w-full rounded bg-muted/60" />
             <div className="h-2.5 w-5/6 rounded bg-muted/60" />
             <div
-              className="mt-3 inline-block px-3 py-1.5 rounded text-white text-[11px] font-medium"
+              className="mt-3 inline-block px-3 py-1.5 rounded text-white text-dense font-medium"
               style={{ backgroundColor: secondaryColor ?? primaryColor }}
             >
               Action button
             </div>
           </div>
-          <div className="px-4 py-2 border-t border-border text-[10px] text-muted-foreground">
+          <div className="px-4 py-2 border-t border-border text-micro text-muted-foreground">
             © 2026 · StreamlineOS
           </div>
         </div>

@@ -71,7 +71,7 @@ export function PlanCard({
       )}
     >
       {isCurrentPlan && (
-        <span className="absolute -top-px left-4 inline-flex items-center rounded-b-md bg-primary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary-foreground">
+        <span className="absolute -top-px left-4 inline-flex items-center rounded-b-md bg-primary px-2 py-0.5 text-micro font-semibold uppercase tracking-wide text-primary-foreground">
           Current
         </span>
       )}
@@ -95,7 +95,7 @@ export function PlanCard({
       <ul className="flex-1 space-y-2 mb-5">
         {config.features.map((feature) => (
           <li key={feature} className="flex items-start gap-2 text-xs text-muted-foreground">
-            <Check className="h-3.5 w-3.5 text-emerald-500 mt-0.5 shrink-0" />
+            <Check className="h-3.5 w-3.5 text-status-success-ink mt-0.5 shrink-0" />
             {feature}
           </li>
         ))}

@@ -115,7 +115,7 @@ function WelcomeBootStageInner({
                     ) : null}
                     <span className="relative h-1.5 w-1.5 rounded-full bg-brand-core" />
                   </span>
-                  <span className="text-[11px] font-medium tracking-tight text-foreground">
+                  <span className="text-dense font-medium tracking-tight text-foreground">
                     {chip.label}
                   </span>
                 </div>
@@ -143,9 +143,9 @@ function WelcomeBootStageInner({
                   <span className="h-2 w-2 rounded-full bg-brand-bright/70" />
                 </div>
                 <div className="ml-1 min-w-0 flex-1">
-                  <p className="truncate font-display text-[12px] font-bold tracking-tight text-foreground">
+                  <p className="truncate font-display text-xs font-bold tracking-tight text-foreground">
                     {workspaceLabel}
-                    <span className="font-sans text-[11px] font-medium text-muted-foreground">
+                    <span className="font-sans text-dense font-medium text-muted-foreground">
                       {" "}
                       · company OS
                     </span>
@@ -174,7 +174,7 @@ function WelcomeBootStageInner({
                       )}
                     >
                       <mod.Icon className="h-3.5 w-3.5" strokeWidth={2.25} />
-                      <span className="text-[9px] font-medium tracking-tight">
+                      <span className="text-micro font-medium tracking-tight">
                         {mod.label}
                       </span>
                       {!reduceMotion ? (
@@ -206,10 +206,10 @@ function WelcomeBootStageInner({
                 <div className="flex min-h-0 min-w-0 flex-col gap-3 p-3 sm:p-4">
                   <div className="flex items-end justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-[10px] font-medium text-brand-deep">
+                      <p className="text-micro font-medium text-brand-deep">
                         Dashboard · live
                       </p>
-                      <p className="truncate font-display text-[15px] font-extrabold tracking-[-0.02em] text-foreground sm:text-base">
+                      <p className="truncate font-display text-sm font-extrabold tracking-[-0.02em] text-foreground sm:text-base">
                         First day online
                       </p>
                     </div>
@@ -223,7 +223,7 @@ function WelcomeBootStageInner({
                         delay: reduceMotion ? 0 : 0.5,
                         ease: PREVIEW_EASE,
                       }}
-                      className="shrink-0 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
+                      className="shrink-0 rounded-md border border-status-success-rule bg-status-success-surface px-2 py-0.5 text-micro font-semibold text-status-success-ink"
                     >
                       Boot OK
                     </motion.div>
@@ -242,7 +242,7 @@ function WelcomeBootStageInner({
                         }}
                         className="rounded-xl border border-border/70 bg-gradient-to-br from-brand-core/[0.06] via-card to-brand-cyan/[0.04] px-2.5 py-2.5"
                       >
-                        <p className="text-[9px] font-medium text-muted-foreground">
+                        <p className="text-micro font-medium text-muted-foreground">
                           {tile}
                         </p>
                         <p className="mt-1 font-display text-sm font-extrabold tracking-tight text-foreground">
@@ -259,7 +259,7 @@ function WelcomeBootStageInner({
                   <div className="min-h-0 flex-1 space-y-2.5 rounded-xl border border-border/70 bg-muted/30 p-3">
                     {DASH_BARS.map((bar, index) => (
                       <div key={bar.label}>
-                        <div className="mb-1 flex items-center justify-between text-[10px]">
+                        <div className="mb-1 flex items-center justify-between text-micro">
                           <span className="font-medium text-foreground/80">
                             {bar.label}
                           </span>
@@ -293,7 +293,7 @@ function WelcomeBootStageInner({
               </div>
 
               <div className="flex items-center justify-between gap-3 border-t border-border/70 bg-muted/25 px-3.5 py-2">
-                <p className="truncate text-[11px] text-muted-foreground">
+                <p className="truncate text-dense text-muted-foreground">
                   Assembling{" "}
                   <span className="font-medium text-foreground">
                     {workspaceLabel}
@@ -344,7 +344,7 @@ function BootPulse({ reduceMotion }: { reduceMotion: boolean | null }) {
         ) : null}
         <span className="relative h-1.5 w-1.5 rounded-full bg-brand-core" />
       </span>
-      <span className="text-[10px] font-semibold tracking-tight text-brand-deep">
+      <span className="text-micro font-semibold tracking-tight text-brand-deep">
         Igniting
       </span>
     </div>

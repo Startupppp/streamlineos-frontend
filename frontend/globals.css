@@ -59,6 +59,11 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  /* Below `sm`, for controls too small for a 6px corner: a checkbox reads as a
+     circle at 6px, and a heatmap cell loses its grid. Added because both were
+     already being written by hand. */
+  --radius-2xs: calc(var(--radius) - 8px);
+  --radius-xs: calc(var(--radius) - 6px);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -191,12 +196,6 @@
 }
 
 /* â”€â”€â”€ Shadow override for dark mode â€” light glass-highlight instead of dark drop â”€â”€â”€ */
-.dark .shadow-noir {
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.04) inset,
-    0 8px 24px -12px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(255, 255, 255, 0.04);
-}
 
 /* â”€â”€â”€ Hide scrollbar utility (top-level, outside @layer so it always wins) â”€â”€â”€ */
 .scrollbar-hide,
@@ -271,24 +270,8 @@
 }
 
 /* â”€â”€â”€ Shadows â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-.shadow-soft {
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.04),
-    0 4px 16px rgba(0, 0, 0, 0.04);
-}
 
-.shadow-medium {
-  box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.07),
-    0 10px 32px -4px rgba(0, 0, 0, 0.06);
-}
 
-.shadow-noir {
-  box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.04),
-    0 8px 24px -10px rgba(15, 23, 42, 0.12),
-    0 0 0 1px rgba(15, 23, 42, 0.04);
-}
 
 /* â”€â”€â”€ Hover effects â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .press-scale {
@@ -502,26 +485,6 @@
   animation: brand-sweep 8s ease-in-out infinite;
 }
 
-.logo-gradient-sweep {
-  background: linear-gradient(
-    120deg,
-    var(--brand-bright) 0%,
-    var(--brand-core) 25%,
-    var(--brand-cyan) 50%,
-    var(--brand-core) 75%,
-    var(--brand-bright) 100%
-  );
-  background-size: 220% 100%;
-  animation: brand-sweep 8s ease-in-out infinite;
-  -webkit-mask-image: url("/logo.svg");
-  mask-image: url("/logo.svg");
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-position: center;
-}
 
 .logo-gradient-static {
   animation: none;
@@ -529,13 +492,6 @@
   background-size: 100% 100%;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .logo-gradient-sweep {
-    animation: none;
-    background: linear-gradient(135deg, var(--brand-core), var(--brand-cyan));
-    background-size: 100% 100%;
-  }
-}
 
 @keyframes goal-everything-border {
   0% {
@@ -1369,4 +1325,553 @@ button.goal-everything-chip[aria-checked="true"]::before {
 .plate-editor .hljs-deletion,
 .plate-editor .hljs-regexp {
   color: #ef4444;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   DESIGN TOKEN LAYER — expand phase (ticket 02)
+   Additive only. Every name below is new, so nothing above changes meaning.
+   Existing modules keep their literals until they are migrated in ticket 17.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Semantic status ───
+   Status colour is currently written as literals (bg-emerald-50 text-emerald-700
+   …) in roughly 360 files, which is why it drifts: each site picks its own shade
+   and half forget the dark pairing. These name the ROLE instead of the hue.
+
+   Defined against Tailwind's own palette variables rather than copied hexes, so
+   a token can never fall out of step with the utility it replaces. The hex
+   fallbacks only apply if the palette variable is absent. */
+:root {
+  --status-success-surface: var(--color-emerald-50, #ecfdf5);
+  --status-success-ink: var(--color-emerald-600, #059669);
+  --status-success-ink-strong: var(--color-emerald-700, #047857);
+  --status-success-rule: var(--color-emerald-200, #a7f3d0);
+
+  --status-warning-surface: var(--color-amber-50, #fffbeb);
+  --status-warning-ink: var(--color-amber-600, #d97706);
+  --status-warning-ink-strong: var(--color-amber-700, #b45309);
+  --status-warning-rule: var(--color-amber-200, #fde68a);
+
+  --status-danger-surface: var(--color-red-50, #fef2f2);
+  --status-danger-ink: var(--color-red-600, #dc2626);
+  --status-danger-ink-strong: var(--color-red-700, #b91c1c);
+  --status-danger-rule: var(--color-red-200, #fecaca);
+
+  --status-info-surface: var(--color-blue-50, #eff6ff);
+  --status-info-ink: var(--color-blue-600, #2563eb);
+  --status-info-ink-strong: var(--color-blue-700, #1d4ed8);
+  --status-info-rule: var(--color-blue-200, #bfdbfe);
+
+  --status-neutral-surface: var(--color-slate-50, #f8fafc);
+  --status-neutral-ink: var(--color-slate-500, #64748b);
+  --status-neutral-ink-strong: var(--color-slate-700, #334155);
+  --status-neutral-rule: var(--color-slate-200, #e2e8f0);
+}
+
+/* Dark pairings. A tint at 50 is invisible on a dark canvas, so surfaces become a
+   10% wash of the 500 and ink lifts to 400 — the pattern the codebase already
+   applies by hand, made automatic. */
+.dark {
+  --status-success-surface: color-mix(in oklab, var(--color-emerald-500, #10b981) 10%, transparent);
+  --status-success-ink: var(--color-emerald-400, #34d399);
+  --status-success-ink-strong: var(--color-emerald-300, #6ee7b7);
+  --status-success-rule: color-mix(in oklab, var(--color-emerald-500, #10b981) 30%, transparent);
+
+  --status-warning-surface: color-mix(in oklab, var(--color-amber-500, #f59e0b) 10%, transparent);
+  --status-warning-ink: var(--color-amber-400, #fbbf24);
+  --status-warning-ink-strong: var(--color-amber-300, #fcd34d);
+  --status-warning-rule: color-mix(in oklab, var(--color-amber-500, #f59e0b) 30%, transparent);
+
+  --status-danger-surface: color-mix(in oklab, var(--color-red-500, #ef4444) 10%, transparent);
+  --status-danger-ink: var(--color-red-400, #f87171);
+  --status-danger-ink-strong: var(--color-red-300, #fca5a5);
+  --status-danger-rule: color-mix(in oklab, var(--color-red-500, #ef4444) 30%, transparent);
+
+  --status-info-surface: color-mix(in oklab, var(--color-blue-500, #3b82f6) 10%, transparent);
+  --status-info-ink: var(--color-blue-400, #60a5fa);
+  --status-info-ink-strong: var(--color-blue-300, #93c5fd);
+  --status-info-rule: color-mix(in oklab, var(--color-blue-500, #3b82f6) 30%, transparent);
+
+  --status-neutral-surface: color-mix(in oklab, var(--color-slate-500, #64748b) 10%, transparent);
+  --status-neutral-ink: var(--color-slate-400, #94a3b8);
+  --status-neutral-ink-strong: var(--color-slate-300, #cbd5e1);
+  --status-neutral-rule: color-mix(in oklab, var(--color-slate-500, #64748b) 30%, transparent);
+}
+
+/* ─── Density ───
+   Comfortable is the default; compact restores today's tighter chrome.
+
+   The compact block is deliberately NOT scoped to :root. Scoped that way, only
+   the whole document could be compact — a manager wanting forty rows in one
+   pipeline list would have to tighten every other surface at the same time, and
+   `data-density` set on a wrapper would silently do nothing. Any element may
+   now declare it, and the tokens cascade to that subtree; setting it on <html>
+   still switches the whole product. */
+:root {
+  --density-control-h: 2.5rem;
+  --density-row-h: 3rem;
+  --density-card-pad: 1.25rem;
+  --density-stack-gap: 1rem;
+}
+
+[data-density="compact"] {
+  --density-control-h: 2.25rem;
+  --density-row-h: 2.5rem;
+  --density-card-pad: 1rem;
+  --density-stack-gap: 0.75rem;
+}
+
+/* ─── Elevation ───
+   shadow-noir already exists as a hand-written class. These name the two
+   elevations the system actually uses so a component asks for a role. */
+:root {
+  --elevation-panel: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  /* The value 52 call sites across 38 files already hand-write. The token was
+     defined first and consumed nowhere, so the product was the truth and the
+     token was the aspiration; correcting the token means the migration changes
+     nothing visible. */
+  --elevation-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 32px -14px rgba(15, 23, 42, 0.12);
+  --elevation-raised: 0 4px 12px -2px rgb(11 18 32 / 0.1);
+
+  /* A control that lifts off the page — the primary button. Neutral, because it
+     has to sit under text of any colour. */
+  --elevation-control: 0 8px 22px -10px rgba(11, 18, 32, 0.35);
+
+  /* The brand glow an interactive surface takes on hover. Tinted, and therefore
+     a different role from `raised`: one says "above", this says "reachable". */
+  --elevation-accent: 0 8px 30px -12px rgba(37, 99, 235, 0.18);
+  --elevation-accent-strong: 0 10px 28px -10px rgba(59, 130, 246, 0.5);
+
+  /* A card that draws its own hairline, rather than relying on a border. Was a
+     hand-written `.shadow-noir` in 49 places, with its dark twin in a separate
+     `.dark .shadow-noir` rule — which is exactly the split a token removes. */
+  --elevation-noir:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 8px 24px -10px rgba(15, 23, 42, 0.12),
+    0 0 0 1px rgba(15, 23, 42, 0.04);
+}
+
+.dark {
+  --elevation-panel: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+  --elevation-card: inset 0 1px 0 0 rgb(255 255 255 / 0.04), 0 2px 8px -2px rgb(0 0 0 / 0.5);
+  --elevation-raised: inset 0 1px 0 0 rgb(255 255 255 / 0.06), 0 8px 24px -6px rgb(0 0 0 / 0.6);
+
+  /* Deeper on a dark ground, where a light shadow is invisible. */
+  --elevation-control: 0 8px 22px -10px rgb(0 0 0 / 0.6);
+  --elevation-accent: 0 8px 30px -12px rgba(59, 130, 246, 0.28);
+  --elevation-accent-strong: 0 10px 28px -10px rgba(59, 130, 246, 0.55);
+
+  /* The former `.dark .shadow-noir`, verbatim, so nothing shifts. The hairline
+     lifts rather than darkens: a dark ring on a dark ground is invisible. */
+  --elevation-noir:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 8px 24px -12px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+
+/* ─── Solid fills ───
+   A surface is a pale wash behind quiet text; a fill is a solid colour with
+   white text on it. Treating them as one role is what puts white button text on
+   a near-white background, which the token migration did once before this
+   existed.
+
+   `fill-hover` is a separate token rather than an opacity change, because a
+   hover derived by transparency washes out against a dark ground. */
+:root {
+  --status-success-fill: var(--color-emerald-500, #10b981);
+  --status-success-fill-hover: var(--color-emerald-600, #059669);
+  --status-warning-fill: var(--color-amber-500, #f59e0b);
+  --status-warning-fill-hover: var(--color-amber-600, #d97706);
+  --status-danger-fill: var(--color-red-500, #ef4444);
+  --status-danger-fill-hover: var(--color-red-600, #dc2626);
+  --status-info-fill: var(--color-blue-500, #3b82f6);
+  --status-info-fill-hover: var(--color-blue-600, #2563eb);
+  --status-neutral-fill: var(--color-slate-500, #64748b);
+  --status-neutral-fill-hover: var(--color-slate-600, #475569);
+}
+
+.dark {
+  --status-success-fill: var(--color-emerald-500, #10b981);
+  --status-success-fill-hover: var(--color-emerald-400, #34d399);
+  --status-warning-fill: var(--color-amber-500, #f59e0b);
+  --status-warning-fill-hover: var(--color-amber-400, #fbbf24);
+  --status-danger-fill: var(--color-red-500, #ef4444);
+  --status-danger-fill-hover: var(--color-red-400, #f87171);
+  --status-info-fill: var(--color-blue-500, #3b82f6);
+  --status-info-fill-hover: var(--color-blue-400, #60a5fa);
+  --status-neutral-fill: var(--color-slate-500, #64748b);
+  --status-neutral-fill-hover: var(--color-slate-400, #94a3b8);
+}
+
+/* ─── Categorical ───
+   A taxonomy is not a status.
+
+   Twelve places in this codebase colour a *category* — a sidebar product, a
+   notification type, an e-sign recipient, an expense class, a tenant's own
+   pipeline stage. Mapping those onto the status tones makes one category read
+   as a warning and another as a notice, which is worse than leaving them
+   hardcoded; that is why the token migration skipped them and raised this.
+
+   Sixteen hues, chosen to stay distinguishable from one another and from the
+   four status tones. They carry a `fill` role the status tones do not: a
+   category dot is a solid colour, and a pale surface renders an invisible dot.
+
+   Eight was not enough. Three taxonomies need more: notification categories
+   want 18, sidebar products and a tenant's own CRM palette want 10 each. The
+   first eight deliberately skipped every hue that had a status equivalent,
+   which left those taxonomies sharing a status token — a table where the dot
+   is distinct but the badge behind it is byte-identical. The eight added here
+   (sky, teal, green, orange, indigo, fuchsia, lime, red) are exactly those
+   hues, so a category that happens to look like a status can now say so
+   without meaning it. */
+:root {
+  --category-blue-surface: var(--color-blue-50);
+  --category-blue-ink: var(--color-blue-600, #2563eb);
+  --category-blue-rule: var(--color-blue-200, #bfdbfe);
+  --category-blue-fill: var(--color-blue-500, #3b82f6);
+  --category-emerald-surface: var(--color-emerald-50);
+  --category-emerald-ink: var(--color-emerald-600, #059669);
+  --category-emerald-rule: var(--color-emerald-200, #a7f3d0);
+  --category-emerald-fill: var(--color-emerald-500, #10b981);
+  --category-violet-surface: var(--color-violet-50);
+  --category-violet-ink: var(--color-violet-600, #7c3aed);
+  --category-violet-rule: var(--color-violet-200, #ddd6fe);
+  --category-violet-fill: var(--color-violet-500, #8b5cf6);
+  --category-amber-surface: var(--color-amber-50);
+  --category-amber-ink: var(--color-amber-600, #d97706);
+  --category-amber-rule: var(--color-amber-200, #fde68a);
+  --category-amber-fill: var(--color-amber-500, #f59e0b);
+  --category-rose-surface: var(--color-rose-50);
+  --category-rose-ink: var(--color-rose-600, #e11d48);
+  --category-rose-rule: var(--color-rose-200, #fecdd3);
+  --category-rose-fill: var(--color-rose-500, #f43f5e);
+  --category-cyan-surface: var(--color-cyan-50);
+  --category-cyan-ink: var(--color-cyan-600, #0891b2);
+  --category-cyan-rule: var(--color-cyan-200, #a5f3fc);
+  --category-cyan-fill: var(--color-cyan-500, #06b6d4);
+  --category-pink-surface: var(--color-pink-50);
+  --category-pink-ink: var(--color-pink-600, #db2777);
+  --category-pink-rule: var(--color-pink-200, #fbcfe8);
+  --category-pink-fill: var(--color-pink-500, #ec4899);
+  --category-slate-surface: var(--color-slate-50);
+  --category-slate-ink: var(--color-slate-600, #475569);
+  --category-slate-rule: var(--color-slate-200, #e2e8f0);
+  --category-slate-fill: var(--color-slate-500, #64748b);
+  --category-sky-surface: var(--color-sky-50);
+  --category-sky-ink: var(--color-sky-600, #0284c7);
+  --category-sky-rule: var(--color-sky-200, #bae6fd);
+  --category-sky-fill: var(--color-sky-500, #0ea5e9);
+  --category-teal-surface: var(--color-teal-50);
+  --category-teal-ink: var(--color-teal-600, #0d9488);
+  --category-teal-rule: var(--color-teal-200, #99f6e4);
+  --category-teal-fill: var(--color-teal-500, #14b8a6);
+  --category-green-surface: var(--color-green-50);
+  --category-green-ink: var(--color-green-600, #16a34a);
+  --category-green-rule: var(--color-green-200, #bbf7d0);
+  --category-green-fill: var(--color-green-500, #22c55e);
+  --category-orange-surface: var(--color-orange-50);
+  --category-orange-ink: var(--color-orange-600, #ea580c);
+  --category-orange-rule: var(--color-orange-200, #fed7aa);
+  --category-orange-fill: var(--color-orange-500, #f97316);
+  --category-indigo-surface: var(--color-indigo-50);
+  --category-indigo-ink: var(--color-indigo-600, #4f46e5);
+  --category-indigo-rule: var(--color-indigo-200, #c7d2fe);
+  --category-indigo-fill: var(--color-indigo-500, #6366f1);
+  --category-fuchsia-surface: var(--color-fuchsia-50);
+  --category-fuchsia-ink: var(--color-fuchsia-600, #c026d3);
+  --category-fuchsia-rule: var(--color-fuchsia-200, #f5d0fe);
+  --category-fuchsia-fill: var(--color-fuchsia-500, #d946ef);
+  --category-lime-surface: var(--color-lime-50);
+  --category-lime-ink: var(--color-lime-600, #65a30d);
+  --category-lime-rule: var(--color-lime-200, #d9f99d);
+  --category-lime-fill: var(--color-lime-500, #84cc16);
+  --category-red-surface: var(--color-red-50);
+  --category-red-ink: var(--color-red-600, #dc2626);
+  --category-red-rule: var(--color-red-200, #fecaca);
+  --category-red-fill: var(--color-red-500, #ef4444);
+}
+
+.dark {
+  --category-blue-surface: color-mix(in oklab, var(--color-blue-500, #3b82f6) 12%, transparent);
+  --category-blue-ink: var(--color-blue-300, #93c5fd);
+  --category-blue-rule: color-mix(in oklab, var(--color-blue-500, #3b82f6) 30%, transparent);
+  --category-blue-fill: var(--color-blue-400, #60a5fa);
+  --category-emerald-surface: color-mix(in oklab, var(--color-emerald-500, #10b981) 12%, transparent);
+  --category-emerald-ink: var(--color-emerald-300, #6ee7b7);
+  --category-emerald-rule: color-mix(in oklab, var(--color-emerald-500, #10b981) 30%, transparent);
+  --category-emerald-fill: var(--color-emerald-400, #34d399);
+  --category-violet-surface: color-mix(in oklab, var(--color-violet-500, #8b5cf6) 12%, transparent);
+  --category-violet-ink: var(--color-violet-300, #c4b5fd);
+  --category-violet-rule: color-mix(in oklab, var(--color-violet-500, #8b5cf6) 30%, transparent);
+  --category-violet-fill: var(--color-violet-400, #a78bfa);
+  --category-amber-surface: color-mix(in oklab, var(--color-amber-500, #f59e0b) 12%, transparent);
+  --category-amber-ink: var(--color-amber-300, #fcd34d);
+  --category-amber-rule: color-mix(in oklab, var(--color-amber-500, #f59e0b) 30%, transparent);
+  --category-amber-fill: var(--color-amber-400, #fbbf24);
+  --category-rose-surface: color-mix(in oklab, var(--color-rose-500, #f43f5e) 12%, transparent);
+  --category-rose-ink: var(--color-rose-300, #fda4af);
+  --category-rose-rule: color-mix(in oklab, var(--color-rose-500, #f43f5e) 30%, transparent);
+  --category-rose-fill: var(--color-rose-400, #fb7185);
+  --category-cyan-surface: color-mix(in oklab, var(--color-cyan-500, #06b6d4) 12%, transparent);
+  --category-cyan-ink: var(--color-cyan-300, #67e8f9);
+  --category-cyan-rule: color-mix(in oklab, var(--color-cyan-500, #06b6d4) 30%, transparent);
+  --category-cyan-fill: var(--color-cyan-400, #22d3ee);
+  --category-pink-surface: color-mix(in oklab, var(--color-pink-500, #ec4899) 12%, transparent);
+  --category-pink-ink: var(--color-pink-300, #f9a8d4);
+  --category-pink-rule: color-mix(in oklab, var(--color-pink-500, #ec4899) 30%, transparent);
+  --category-pink-fill: var(--color-pink-400, #f472b6);
+  --category-slate-surface: color-mix(in oklab, var(--color-slate-500, #64748b) 12%, transparent);
+  --category-slate-ink: var(--color-slate-300, #cbd5e1);
+  --category-slate-rule: color-mix(in oklab, var(--color-slate-500, #64748b) 30%, transparent);
+  --category-slate-fill: var(--color-slate-400, #94a3b8);
+  --category-sky-surface: color-mix(in oklab, var(--color-sky-500, #0ea5e9) 12%, transparent);
+  --category-sky-ink: var(--color-sky-300, #7dd3fc);
+  --category-sky-rule: color-mix(in oklab, var(--color-sky-500, #0ea5e9) 30%, transparent);
+  --category-sky-fill: var(--color-sky-400, #38bdf8);
+  --category-teal-surface: color-mix(in oklab, var(--color-teal-500, #14b8a6) 12%, transparent);
+  --category-teal-ink: var(--color-teal-300, #5eead4);
+  --category-teal-rule: color-mix(in oklab, var(--color-teal-500, #14b8a6) 30%, transparent);
+  --category-teal-fill: var(--color-teal-400, #2dd4bf);
+  --category-green-surface: color-mix(in oklab, var(--color-green-500, #22c55e) 12%, transparent);
+  --category-green-ink: var(--color-green-300, #86efac);
+  --category-green-rule: color-mix(in oklab, var(--color-green-500, #22c55e) 30%, transparent);
+  --category-green-fill: var(--color-green-400, #4ade80);
+  --category-orange-surface: color-mix(in oklab, var(--color-orange-500, #f97316) 12%, transparent);
+  --category-orange-ink: var(--color-orange-300, #fdba74);
+  --category-orange-rule: color-mix(in oklab, var(--color-orange-500, #f97316) 30%, transparent);
+  --category-orange-fill: var(--color-orange-400, #fb923c);
+  --category-indigo-surface: color-mix(in oklab, var(--color-indigo-500, #6366f1) 12%, transparent);
+  --category-indigo-ink: var(--color-indigo-300, #a5b4fc);
+  --category-indigo-rule: color-mix(in oklab, var(--color-indigo-500, #6366f1) 30%, transparent);
+  --category-indigo-fill: var(--color-indigo-400, #818cf8);
+  --category-fuchsia-surface: color-mix(in oklab, var(--color-fuchsia-500, #d946ef) 12%, transparent);
+  --category-fuchsia-ink: var(--color-fuchsia-300, #f0abfc);
+  --category-fuchsia-rule: color-mix(in oklab, var(--color-fuchsia-500, #d946ef) 30%, transparent);
+  --category-fuchsia-fill: var(--color-fuchsia-400, #e879f9);
+  --category-lime-surface: color-mix(in oklab, var(--color-lime-500, #84cc16) 12%, transparent);
+  --category-lime-ink: var(--color-lime-300, #bef264);
+  --category-lime-rule: color-mix(in oklab, var(--color-lime-500, #84cc16) 30%, transparent);
+  --category-lime-fill: var(--color-lime-400, #a3e635);
+  --category-red-surface: color-mix(in oklab, var(--color-red-500, #ef4444) 12%, transparent);
+  --category-red-ink: var(--color-red-300, #fca5a5);
+  --category-red-rule: color-mix(in oklab, var(--color-red-500, #ef4444) 30%, transparent);
+  --category-red-fill: var(--color-red-400, #f87171);
+}
+
+
+/* ─── Gradient stops ───
+   The stops, not the gradient.
+
+   Direction is a layout decision and varies per use — a funnel runs left to
+   right, a hero wash runs to the bottom right — so baking it into a token would
+   need one token per direction. Naming the *stops* keeps Tailwind's own
+   `bg-gradient-to-*` utilities and tokenises the only part that is a colour
+   decision.
+
+   Two strengths per tone: the solid pair for a brand surface, and a `wash` pair
+   at low alpha for an ambient tint behind content. The dark theme inverts the
+   solid pair, because a 500-to-400 ramp that reads as depth on white reads as
+   glare on black. */
+:root {
+  --gradient-success-from: var(--color-emerald-500, #10b981);
+  --gradient-success-to: var(--color-emerald-400, #34d399);
+  --gradient-success-wash-from: color-mix(in oklab, var(--color-emerald-500, #10b981) 15%, transparent);
+  --gradient-success-wash-to: color-mix(in oklab, var(--color-emerald-500, #10b981) 5%, transparent);
+  --gradient-warning-from: var(--color-amber-500, #f59e0b);
+  --gradient-warning-to: var(--color-amber-400, #fbbf24);
+  --gradient-warning-wash-from: color-mix(in oklab, var(--color-amber-500, #f59e0b) 15%, transparent);
+  --gradient-warning-wash-to: color-mix(in oklab, var(--color-amber-500, #f59e0b) 5%, transparent);
+  --gradient-danger-from: var(--color-red-500, #ef4444);
+  --gradient-danger-to: var(--color-red-400, #f87171);
+  --gradient-danger-wash-from: color-mix(in oklab, var(--color-red-500, #ef4444) 15%, transparent);
+  --gradient-danger-wash-to: color-mix(in oklab, var(--color-red-500, #ef4444) 5%, transparent);
+  --gradient-info-from: var(--color-blue-500, #3b82f6);
+  --gradient-info-to: var(--color-blue-400, #60a5fa);
+  --gradient-info-wash-from: color-mix(in oklab, var(--color-blue-500, #3b82f6) 15%, transparent);
+  --gradient-info-wash-to: color-mix(in oklab, var(--color-blue-500, #3b82f6) 5%, transparent);
+  --gradient-neutral-from: var(--color-slate-500, #64748b);
+  --gradient-neutral-to: var(--color-slate-400, #94a3b8);
+  --gradient-neutral-wash-from: color-mix(in oklab, var(--color-slate-500, #64748b) 15%, transparent);
+  --gradient-neutral-wash-to: color-mix(in oklab, var(--color-slate-500, #64748b) 5%, transparent);
+}
+
+.dark {
+  --gradient-success-from: var(--color-emerald-400, #34d399);
+  --gradient-success-to: var(--color-emerald-500, #10b981);
+  --gradient-success-wash-from: color-mix(in oklab, var(--color-emerald-500, #10b981) 22%, transparent);
+  --gradient-success-wash-to: color-mix(in oklab, var(--color-emerald-500, #10b981) 8%, transparent);
+  --gradient-warning-from: var(--color-amber-400, #fbbf24);
+  --gradient-warning-to: var(--color-amber-500, #f59e0b);
+  --gradient-warning-wash-from: color-mix(in oklab, var(--color-amber-500, #f59e0b) 22%, transparent);
+  --gradient-warning-wash-to: color-mix(in oklab, var(--color-amber-500, #f59e0b) 8%, transparent);
+  --gradient-danger-from: var(--color-red-400, #f87171);
+  --gradient-danger-to: var(--color-red-500, #ef4444);
+  --gradient-danger-wash-from: color-mix(in oklab, var(--color-red-500, #ef4444) 22%, transparent);
+  --gradient-danger-wash-to: color-mix(in oklab, var(--color-red-500, #ef4444) 8%, transparent);
+  --gradient-info-from: var(--color-blue-400, #60a5fa);
+  --gradient-info-to: var(--color-blue-500, #3b82f6);
+  --gradient-info-wash-from: color-mix(in oklab, var(--color-blue-500, #3b82f6) 22%, transparent);
+  --gradient-info-wash-to: color-mix(in oklab, var(--color-blue-500, #3b82f6) 8%, transparent);
+  --gradient-neutral-from: var(--color-slate-400, #94a3b8);
+  --gradient-neutral-to: var(--color-slate-500, #64748b);
+  --gradient-neutral-wash-from: color-mix(in oklab, var(--color-slate-500, #64748b) 22%, transparent);
+  --gradient-neutral-wash-to: color-mix(in oklab, var(--color-slate-500, #64748b) 8%, transparent);
+}
+
+/* ─── Utility exposure ───
+   `inline` matters: it makes each utility emit var(--token) rather than the
+   value resolved at build time, so density and theme switches take effect
+   without a rebuild. */
+@theme inline {
+  --color-status-success-surface: var(--status-success-surface);
+  --color-status-success-ink: var(--status-success-ink);
+  --color-status-success-ink-strong: var(--status-success-ink-strong);
+  --color-status-success-rule: var(--status-success-rule);
+
+  --color-status-warning-surface: var(--status-warning-surface);
+  --color-status-warning-ink: var(--status-warning-ink);
+  --color-status-warning-ink-strong: var(--status-warning-ink-strong);
+  --color-status-warning-rule: var(--status-warning-rule);
+
+  --color-status-danger-surface: var(--status-danger-surface);
+  --color-status-danger-ink: var(--status-danger-ink);
+  --color-status-danger-ink-strong: var(--status-danger-ink-strong);
+  --color-status-danger-rule: var(--status-danger-rule);
+
+  --color-status-info-surface: var(--status-info-surface);
+  --color-status-info-ink: var(--status-info-ink);
+  --color-status-info-ink-strong: var(--status-info-ink-strong);
+  --color-status-info-rule: var(--status-info-rule);
+
+  --color-status-neutral-surface: var(--status-neutral-surface);
+  --color-status-neutral-ink: var(--status-neutral-ink);
+  --color-status-neutral-ink-strong: var(--status-neutral-ink-strong);
+  --color-status-neutral-rule: var(--status-neutral-rule);
+
+  /* Type scale — names the 10/11/13px sizes the codebase writes as arbitrary
+     values, so text-[11px] becomes text-dense. Body stays on Tailwind's text-sm. */
+  --text-micro: 0.625rem;
+  --text-dense: 0.6875rem;
+  --text-label: 0.8125rem;
+
+  /* Semantic spacing — the rhythm CLAUDE.md §7 describes in prose. */
+  --spacing-gap-inline: 0.25rem;
+  --spacing-gap-field: 0.5rem;
+  --spacing-gap-toolbar: 0.75rem;
+  --spacing-gap-grid: 1rem;
+  --spacing-gap-section: 1.5rem;
+  --spacing-card: 1rem;
+  --spacing-card-compact: 0.75rem;
+
+  /* Density — dynamic, follows data-density. */
+  --spacing-control-h: var(--density-control-h);
+  --spacing-row-h: var(--density-row-h);
+  --spacing-card-pad: var(--density-card-pad);
+  --spacing-stack-gap: var(--density-stack-gap);
+
+  --color-category-blue-surface: var(--category-blue-surface);
+  --color-category-blue-ink: var(--category-blue-ink);
+  --color-category-blue-rule: var(--category-blue-rule);
+  --color-category-blue-fill: var(--category-blue-fill);
+  --color-category-emerald-surface: var(--category-emerald-surface);
+  --color-category-emerald-ink: var(--category-emerald-ink);
+  --color-category-emerald-rule: var(--category-emerald-rule);
+  --color-category-emerald-fill: var(--category-emerald-fill);
+  --color-category-violet-surface: var(--category-violet-surface);
+  --color-category-violet-ink: var(--category-violet-ink);
+  --color-category-violet-rule: var(--category-violet-rule);
+  --color-category-violet-fill: var(--category-violet-fill);
+  --color-category-amber-surface: var(--category-amber-surface);
+  --color-category-amber-ink: var(--category-amber-ink);
+  --color-category-amber-rule: var(--category-amber-rule);
+  --color-category-amber-fill: var(--category-amber-fill);
+  --color-category-rose-surface: var(--category-rose-surface);
+  --color-category-rose-ink: var(--category-rose-ink);
+  --color-category-rose-rule: var(--category-rose-rule);
+  --color-category-rose-fill: var(--category-rose-fill);
+  --color-category-cyan-surface: var(--category-cyan-surface);
+  --color-category-cyan-ink: var(--category-cyan-ink);
+  --color-category-cyan-rule: var(--category-cyan-rule);
+  --color-category-cyan-fill: var(--category-cyan-fill);
+  --color-category-pink-surface: var(--category-pink-surface);
+  --color-category-pink-ink: var(--category-pink-ink);
+  --color-category-pink-rule: var(--category-pink-rule);
+  --color-category-pink-fill: var(--category-pink-fill);
+  --color-category-slate-surface: var(--category-slate-surface);
+  --color-category-slate-ink: var(--category-slate-ink);
+  --color-category-slate-rule: var(--category-slate-rule);
+  --color-category-slate-fill: var(--category-slate-fill);
+  --color-category-sky-surface: var(--category-sky-surface);
+  --color-category-sky-ink: var(--category-sky-ink);
+  --color-category-sky-rule: var(--category-sky-rule);
+  --color-category-sky-fill: var(--category-sky-fill);
+  --color-category-teal-surface: var(--category-teal-surface);
+  --color-category-teal-ink: var(--category-teal-ink);
+  --color-category-teal-rule: var(--category-teal-rule);
+  --color-category-teal-fill: var(--category-teal-fill);
+  --color-category-green-surface: var(--category-green-surface);
+  --color-category-green-ink: var(--category-green-ink);
+  --color-category-green-rule: var(--category-green-rule);
+  --color-category-green-fill: var(--category-green-fill);
+  --color-category-orange-surface: var(--category-orange-surface);
+  --color-category-orange-ink: var(--category-orange-ink);
+  --color-category-orange-rule: var(--category-orange-rule);
+  --color-category-orange-fill: var(--category-orange-fill);
+  --color-category-indigo-surface: var(--category-indigo-surface);
+  --color-category-indigo-ink: var(--category-indigo-ink);
+  --color-category-indigo-rule: var(--category-indigo-rule);
+  --color-category-indigo-fill: var(--category-indigo-fill);
+  --color-category-fuchsia-surface: var(--category-fuchsia-surface);
+  --color-category-fuchsia-ink: var(--category-fuchsia-ink);
+  --color-category-fuchsia-rule: var(--category-fuchsia-rule);
+  --color-category-fuchsia-fill: var(--category-fuchsia-fill);
+  --color-category-lime-surface: var(--category-lime-surface);
+  --color-category-lime-ink: var(--category-lime-ink);
+  --color-category-lime-rule: var(--category-lime-rule);
+  --color-category-lime-fill: var(--category-lime-fill);
+  --color-category-red-surface: var(--category-red-surface);
+  --color-category-red-ink: var(--category-red-ink);
+  --color-category-red-rule: var(--category-red-rule);
+  --color-category-red-fill: var(--category-red-fill);
+
+  --color-status-success-fill: var(--status-success-fill);
+  --color-status-success-fill-hover: var(--status-success-fill-hover);
+  --color-status-warning-fill: var(--status-warning-fill);
+  --color-status-warning-fill-hover: var(--status-warning-fill-hover);
+  --color-status-danger-fill: var(--status-danger-fill);
+  --color-status-danger-fill-hover: var(--status-danger-fill-hover);
+  --color-status-info-fill: var(--status-info-fill);
+  --color-status-info-fill-hover: var(--status-info-fill-hover);
+  --color-status-neutral-fill: var(--status-neutral-fill);
+  --color-status-neutral-fill-hover: var(--status-neutral-fill-hover);
+
+  --color-gradient-success-from: var(--gradient-success-from);
+  --color-gradient-success-to: var(--gradient-success-to);
+  --color-gradient-success-wash-from: var(--gradient-success-wash-from);
+  --color-gradient-success-wash-to: var(--gradient-success-wash-to);
+  --color-gradient-warning-from: var(--gradient-warning-from);
+  --color-gradient-warning-to: var(--gradient-warning-to);
+  --color-gradient-warning-wash-from: var(--gradient-warning-wash-from);
+  --color-gradient-warning-wash-to: var(--gradient-warning-wash-to);
+  --color-gradient-danger-from: var(--gradient-danger-from);
+  --color-gradient-danger-to: var(--gradient-danger-to);
+  --color-gradient-danger-wash-from: var(--gradient-danger-wash-from);
+  --color-gradient-danger-wash-to: var(--gradient-danger-wash-to);
+  --color-gradient-info-from: var(--gradient-info-from);
+  --color-gradient-info-to: var(--gradient-info-to);
+  --color-gradient-info-wash-from: var(--gradient-info-wash-from);
+  --color-gradient-info-wash-to: var(--gradient-info-wash-to);
+  --color-gradient-neutral-from: var(--gradient-neutral-from);
+  --color-gradient-neutral-to: var(--gradient-neutral-to);
+  --color-gradient-neutral-wash-from: var(--gradient-neutral-wash-from);
+  --color-gradient-neutral-wash-to: var(--gradient-neutral-wash-to);
+
+  --shadow-noir: var(--elevation-noir);
+  --shadow-panel: var(--elevation-panel);
+  --shadow-control: var(--elevation-control);
+  --shadow-accent: var(--elevation-accent);
+  --shadow-accent-strong: var(--elevation-accent-strong);
+  --shadow-card: var(--elevation-card);
+  --shadow-raised: var(--elevation-raised);
 }

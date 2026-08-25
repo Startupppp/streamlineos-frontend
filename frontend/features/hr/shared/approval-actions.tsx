@@ -57,7 +57,7 @@ export function ApprovalActions({
         <LoadingButton
           size={size}
           variant="outline"
-          className="text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:text-emerald-300 dark:border-emerald-500/30 dark:hover:bg-emerald-500/10"
+          className="text-status-success-ink border-status-success-rule hover:bg-status-success-surface"
           isPending={isApproving}
           loadingText="Approving…"
           disabled={disabled || isRejecting}

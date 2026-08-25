@@ -111,7 +111,7 @@ export function WorkflowSimulateDialog({
                       <span className="font-medium">
                         {step.stepOrder}. {step.name}
                       </span>
-                      <Badge variant="outline" className="text-[10px]">
+                      <Badge variant="outline" className="text-micro">
                         {step.mode}
                       </Badge>
                     </div>
@@ -119,7 +119,7 @@ export function WorkflowSimulateDialog({
                       {step.approverType}
                       {!step.conditionPasses && " · condition skipped"}
                     </p>
-                    <p className="mt-0.5 font-mono text-[11px] text-foreground/80 break-all">
+                    <p className="mt-0.5 font-mono text-dense text-foreground/80 break-all">
                       {step.resolvedApproverUserIds.length > 0
                         ? step.resolvedApproverUserIds.join(", ")
                         : "No approvers resolved"}

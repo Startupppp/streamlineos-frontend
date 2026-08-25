@@ -7,73 +7,83 @@ export interface CrmTokenClasses {
   chartHex: string;
 }
 
+/**
+ * A tenant picked these, so the hue is the whole point: ten choices have to
+ * look like ten choices.
+ *
+ * `sky`, `orange` and `red` used to borrow `blue`, `amber` and `rose` because
+ * the categorical scale had no hue of their own, which made the picker offer
+ * pairs of identical swatches while `chartHex` kept them apart — the same
+ * stage reading as two colours on one screen. Every entry now names its own
+ * hue, and `chartHex` is that hue's 500.
+ */
 const TOKEN_MAP: Record<CrmColorToken, CrmTokenClasses> = {
   blue: {
-    badgeClass: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800",
-    dotClass: "bg-blue-500",
-    textClass: "text-blue-700 dark:text-blue-300",
+    badgeClass: "bg-category-blue-surface text-category-blue-ink border-category-blue-rule",
+    dotClass: "bg-category-blue-fill",
+    textClass: "text-category-blue-ink",
     chartHex: "#3b82f6",
   },
   emerald: {
-    badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800",
-    dotClass: "bg-emerald-500",
-    textClass: "text-emerald-700 dark:text-emerald-300",
+    badgeClass: "bg-category-emerald-surface text-category-emerald-ink border-category-emerald-rule",
+    dotClass: "bg-category-emerald-fill",
+    textClass: "text-category-emerald-ink",
     chartHex: "#10b981",
   },
   amber: {
-    badgeClass: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800",
-    dotClass: "bg-amber-500",
-    textClass: "text-amber-700 dark:text-amber-300",
+    badgeClass: "bg-category-amber-surface text-category-amber-ink border-category-amber-rule",
+    dotClass: "bg-category-amber-fill",
+    textClass: "text-category-amber-ink",
     chartHex: "#f59e0b",
   },
   red: {
-    badgeClass: "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-800",
-    dotClass: "bg-red-500",
-    textClass: "text-red-700 dark:text-red-300",
+    badgeClass: "bg-category-red-surface text-category-red-ink border-category-red-rule",
+    dotClass: "bg-category-red-fill",
+    textClass: "text-category-red-ink",
     chartHex: "#ef4444",
   },
   slate: {
-    badgeClass: "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/60 dark:text-slate-300 dark:border-slate-700",
-    dotClass: "bg-slate-400",
-    textClass: "text-slate-700 dark:text-slate-300",
+    badgeClass: "bg-category-slate-surface text-category-slate-ink border-category-slate-rule",
+    dotClass: "bg-category-slate-fill",
+    textClass: "text-category-slate-ink",
     chartHex: "#64748b",
   },
   cyan: {
-    badgeClass: "bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-950/40 dark:text-cyan-300 dark:border-cyan-800",
-    dotClass: "bg-cyan-500",
-    textClass: "text-cyan-700 dark:text-cyan-300",
+    badgeClass: "bg-category-cyan-surface text-category-cyan-ink border-category-cyan-rule",
+    dotClass: "bg-category-cyan-fill",
+    textClass: "text-category-cyan-ink",
     chartHex: "#06b6d4",
   },
   sky: {
-    badgeClass: "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800",
-    dotClass: "bg-sky-500",
-    textClass: "text-sky-700 dark:text-sky-300",
+    badgeClass: "bg-category-sky-surface text-category-sky-ink border-category-sky-rule",
+    dotClass: "bg-category-sky-fill",
+    textClass: "text-category-sky-ink",
     chartHex: "#0ea5e9",
   },
   orange: {
-    badgeClass: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/40 dark:text-orange-300 dark:border-orange-800",
-    dotClass: "bg-orange-500",
-    textClass: "text-orange-700 dark:text-orange-300",
+    badgeClass: "bg-category-orange-surface text-category-orange-ink border-category-orange-rule",
+    dotClass: "bg-category-orange-fill",
+    textClass: "text-category-orange-ink",
     chartHex: "#f97316",
   },
   pink: {
-    badgeClass: "bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-950/40 dark:text-pink-300 dark:border-pink-800",
-    dotClass: "bg-pink-500",
-    textClass: "text-pink-700 dark:text-pink-300",
+    badgeClass: "bg-category-pink-surface text-category-pink-ink border-category-pink-rule",
+    dotClass: "bg-category-pink-fill",
+    textClass: "text-category-pink-ink",
     chartHex: "#ec4899",
   },
   violet: {
-    badgeClass: "bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950/40 dark:text-violet-300 dark:border-violet-800",
-    dotClass: "bg-violet-500",
-    textClass: "text-violet-700 dark:text-violet-300",
+    badgeClass: "bg-category-violet-surface text-category-violet-ink border-category-violet-rule",
+    dotClass: "bg-category-violet-fill",
+    textClass: "text-category-violet-ink",
     chartHex: "#8b5cf6",
   },
 };
 
 const FALLBACK_TOKEN: CrmTokenClasses = {
-  badgeClass: "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/60 dark:text-slate-300 dark:border-slate-700",
-  dotClass: "bg-slate-400",
-  textClass: "text-slate-700 dark:text-slate-300",
+  badgeClass: "bg-category-slate-surface text-category-slate-ink border-category-slate-rule",
+  dotClass: "bg-category-slate-fill",
+  textClass: "text-category-slate-ink",
   chartHex: "#64748b",
 };
 

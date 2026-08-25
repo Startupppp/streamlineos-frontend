@@ -143,10 +143,10 @@ export function MailListPane({
   if (accounts.length === 0) {
     return (
       <div className="flex flex-col flex-1 min-h-0 items-center justify-center px-4 py-8 text-center">
-        <p className="text-[13px] font-medium text-foreground/80">
+        <p className="text-label font-medium text-foreground/80">
           No accounts yet
         </p>
-        <p className="mt-1 text-[11px] text-muted-foreground">
+        <p className="mt-1 text-dense text-muted-foreground">
           Connect from the reading pane or settings.
         </p>
       </div>
@@ -175,7 +175,7 @@ export function MailListPane({
                 key={folder.key}
                 type="button"
                 className={cn(
-                  "inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                  "inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-dense font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
                   active
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted",
@@ -203,13 +203,13 @@ export function MailListPane({
                 aria-hidden
               />
               <div className="min-w-0">
-                <p className="text-[11px] font-medium text-destructive">
+                <p className="text-dense font-medium text-destructive">
                   {ae.accountEmail ?? `Account ${ae.accountId}`}
                 </p>
-                <p className="text-[10px] text-destructive/80">{ae.message}</p>
+                <p className="text-micro text-destructive/80">{ae.message}</p>
                 <button
                   type="button"
-                  className="text-[10px] underline text-destructive mt-0.5 hover:no-underline focus-visible:outline-none"
+                  className="text-micro underline text-destructive mt-0.5 hover:no-underline focus-visible:outline-none"
                   onClick={onOpenAccountsSheet}
                 >
                   Reconnect
@@ -242,13 +242,13 @@ export function MailListPane({
           </div>
         ) : allMessages.length === 0 ? (
           <div className="flex min-h-full flex-1 flex-col items-center justify-center px-4 py-10 text-center">
-            <p className="text-[13px] font-medium text-foreground/80">
+            <p className="text-label font-medium text-foreground/80">
               {debouncedSearch
                 ? "No messages found"
                 : `No messages in ${activeFolder}`}
             </p>
             {debouncedSearch ? (
-              <p className="mt-1 text-[11px] text-muted-foreground">
+              <p className="mt-1 text-dense text-muted-foreground">
                 Try from:, a name, or fewer words.
               </p>
             ) : null}
@@ -259,10 +259,10 @@ export function MailListPane({
               <div key={group.key}>
                 {group.label ? (
                   <div className="sticky top-0 z-[1] flex items-center justify-between gap-2 px-3 py-1.5 bg-background/90 backdrop-blur-sm border-b border-border/30">
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <span className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">
                       {group.label}
                     </span>
-                    <span className="text-[10px] tabular-nums text-muted-foreground">
+                    <span className="text-micro tabular-nums text-muted-foreground">
                       {group.messages.length}
                     </span>
                   </div>

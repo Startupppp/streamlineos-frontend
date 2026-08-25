@@ -145,7 +145,7 @@ export function LoadDetailPanel({ loadId, onClose }: LoadDetailPanelProps) {
         <div className="flex items-center gap-2">
           <Badge
             variant="outline"
-            className={cn("h-4 text-[9px] px-1.5 py-0 border", LOAD_STATUS_BADGE[load.status])}
+            className={cn("h-4 text-micro px-1.5 py-0 border", LOAD_STATUS_BADGE[load.status])}
           >
             {LOAD_STATUS_LABEL[load.status]}
           </Badge>

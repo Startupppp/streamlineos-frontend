@@ -225,7 +225,7 @@ export function GoalsTab() {
     <div className="flex flex-col flex-1 min-h-0 gap-4">
       <div className="flex items-center justify-between shrink-0">
         <div>
-          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+          <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
             Total Goals
           </p>
           <p className="text-3xl font-bold tabular-nums text-foreground">
@@ -256,20 +256,20 @@ export function GoalsTab() {
                 ? "border-l-blue-500"
                 : "border-l-border";
             const statusBadgeClass = isCompleted
-              ? "border-emerald-200 bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800"
+              ? "border-status-success-rule bg-status-success-surface text-status-success-ink"
               : goal.status === "IN_PROGRESS"
-                ? "border-blue-200 bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-800"
+                ? "border-status-info-rule bg-status-info-surface text-status-info-ink"
                 : "border-border bg-muted text-muted-foreground";
 
             return (
               <Card
                 key={goal.id}
-                className={`rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden border-l-4 transition-shadow duration-200 hover:shadow-md ${accentClass}`}
+                className={`rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden border-l-4 transition-shadow duration-200 hover:shadow-md ${accentClass}`}
               >
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-start justify-between gap-2">
                     <Badge
-                      className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${statusBadgeClass}`}
+                      className={`inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border ${statusBadgeClass}`}
                     >
                       {(goal.status ?? "IN_PROGRESS").replace("_", " ")}
                     </Badge>
@@ -319,20 +319,20 @@ export function GoalsTab() {
                   />
                   {goal.endDate && (
                     <div className="flex items-center gap-1.5">
-                      <div className="h-5 w-5 rounded-md bg-amber-100 dark:bg-amber-500/10 flex items-center justify-center shrink-0">
-                        <Calendar className="h-3 w-3 text-amber-600 dark:text-amber-300" />
+                      <div className="h-5 w-5 rounded-md bg-status-warning-surface flex items-center justify-center shrink-0">
+                        <Calendar className="h-3 w-3 text-status-warning-ink" />
                       </div>
-                      <p className="text-[11px] font-medium text-muted-foreground">
+                      <p className="text-dense font-medium text-muted-foreground">
                         Due {format(new Date(goal.endDate), "MMM d, yyyy")}
                       </p>
                     </div>
                   )}
                   <div className="space-y-1.5">
                     <div className="flex justify-between items-center">
-                      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      <span className="text-micro font-semibold text-muted-foreground uppercase tracking-wider">
                         Progress
                       </span>
-                      <span className="text-[10px] font-bold text-foreground">
+                      <span className="text-micro font-bold text-foreground">
                         {progress}%
                       </span>
                     </div>
@@ -341,8 +341,8 @@ export function GoalsTab() {
                       className={cn(
                         "h-1.5",
                         isCompleted
-                          ? "[&>div]:bg-emerald-500"
-                          : "[&>div]:bg-blue-500",
+                          ? "[&>div]:bg-status-success-fill"
+                          : "[&>div]:bg-status-info-fill",
                       )}
                     />
                   </div>

@@ -178,7 +178,7 @@ export function CreateTicketFromCalendarDialog({
                         <SelectContent>
                           {projects.map((p) => (
                             <SelectItem key={p.id} value={String(p.id)} className="text-xs">
-                              <span className="font-mono text-[10px] text-muted-foreground mr-1.5">
+                              <span className="font-mono text-micro text-muted-foreground mr-1.5">
                                 {p.key}
                               </span>
                               {p.name}

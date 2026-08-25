@@ -69,7 +69,7 @@ function SyncLogsTable({
         cell: (r) => (
           <Badge
             variant={SYNC_STATUS_VARIANT[r.status]}
-            className="capitalize text-[11px]"
+            className="capitalize text-dense"
           >
             {r.status}
           </Badge>

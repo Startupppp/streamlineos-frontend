@@ -53,7 +53,7 @@ function FavoriteRow({ page }: { page: KbPageListItem }) {
         disabled={toggleFavorite.isPending}
         aria-label="Remove from favorites"
       >
-        <KbStarIcon className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+        <KbStarIcon className="h-3.5 w-3.5 fill-amber-400 text-status-warning-ink" />
       </Button>
     </Link>
   );

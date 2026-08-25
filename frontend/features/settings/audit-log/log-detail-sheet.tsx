@@ -19,7 +19,7 @@ import type { AuditLogRow } from "@/hooks/api/audit-log";
 function DetailField({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+      <p className="text-micro font-semibold text-muted-foreground uppercase tracking-wider mb-1">
         {label}
       </p>
       {children}
@@ -47,7 +47,7 @@ export function LogDetailSheet({ log, onClose }: { log: AuditLogRow; onClose: ()
             <div className="flex items-center gap-2.5">
               <Avatar className="w-7">
                 <AvatarImage src={resolveImageUrl(log.userImage)} />
-                <AvatarFallback className="text-[10px]">{getInitials(log.userName)}</AvatarFallback>
+                <AvatarFallback className="text-micro">{getInitials(log.userName)}</AvatarFallback>
               </Avatar>
               <div className="min-w-0">
                 <p className="text-sm font-medium leading-tight truncate">{log.userName ?? "Unknown"}</p>
@@ -70,7 +70,7 @@ export function LogDetailSheet({ log, onClose }: { log: AuditLogRow; onClose: ()
           )}
           {log.metadata && Object.keys(log.metadata).length > 0 && (
             <DetailField label="Metadata">
-              <pre className="text-[11px] bg-muted/60 rounded-md p-3 border text-foreground overflow-y-auto overflow-x-hidden whitespace-pre-wrap wrap-break-word max-h-none h-[calc(100dvh-360px)] min-h-[120px]">
+              <pre className="text-dense bg-muted/60 rounded-md p-3 border text-foreground overflow-y-auto overflow-x-hidden whitespace-pre-wrap wrap-break-word max-h-none h-[calc(100dvh-360px)] min-h-[120px]">
                 {JSON.stringify(log.metadata, null, 2)}
               </pre>
             </DetailField>

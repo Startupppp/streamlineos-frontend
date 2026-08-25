@@ -185,7 +185,7 @@ export default function ExternalReferrerPortalPage({ params }: Props) {
                 </div>
               )}
               {submitError && <p className="text-sm text-destructive">{submitError}</p>}
-              {submitSuccess && <p className="text-sm text-green-600">{submitSuccess}</p>}
+              {submitSuccess && <p className="text-sm text-status-success-ink">{submitSuccess}</p>}
               <Button type="submit" className="w-full" disabled={submitting}>
                 {submitting ? "Submitting…" : "Refer This Candidate"}
               </Button>

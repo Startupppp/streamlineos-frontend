@@ -9,9 +9,9 @@ const IMPACTS: RiskImpact[] = ["high", "medium", "low"];
 
 const LEGEND = [
   { label: "Low", bg: "bg-muted" },
-  { label: "Medium", bg: "bg-amber-100 dark:bg-amber-500/20" },
-  { label: "High", bg: "bg-orange-100 dark:bg-orange-500/20" },
-  { label: "Critical", bg: "bg-red-100 dark:bg-red-500/20" },
+  { label: "Medium", bg: "bg-status-warning-surface" },
+  { label: "High", bg: "bg-status-warning-surface" },
+  { label: "Critical", bg: "bg-status-danger-surface" },
 ] as const;
 
 interface RiskMatrixProps {
@@ -29,13 +29,13 @@ export function RiskMatrix({ risks, onCellClick, selectedCell }: RiskMatrixProps
 
   return (
     <div className="rounded-lg border border-border bg-card p-4 w-full max-w-xs">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-        Risk Matrix <span className="text-[10px] normal-case font-normal">(open risks)</span>
+      <p className="text-dense font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+        Risk Matrix <span className="text-micro normal-case font-normal">(open risks)</span>
       </p>
       <div className="flex gap-2">
         <div className="flex flex-col justify-around gap-1 pb-5">
           {IMPACTS.map((impact) => (
-            <span key={impact} className="text-[10px] text-muted-foreground capitalize w-14 text-right pr-1 leading-none">
+            <span key={impact} className="text-micro text-muted-foreground capitalize w-14 text-right pr-1 leading-none">
               {impact}
             </span>
           ))}
@@ -54,7 +54,7 @@ export function RiskMatrix({ risks, onCellClick, selectedCell }: RiskMatrixProps
                     type="button"
                     onClick={() => onCellClick?.(prob, impact)}
                     className={cn(
-                      "flex-1 h-10 rounded flex items-center justify-center text-[13px] font-semibold transition-all",
+                      "flex-1 h-10 rounded flex items-center justify-center text-label font-semibold transition-all",
                       sev.className,
                       isSelected && "ring-2 ring-offset-1 ring-foreground/30",
                       onCellClick && "cursor-pointer hover:opacity-75",
@@ -68,7 +68,7 @@ export function RiskMatrix({ risks, onCellClick, selectedCell }: RiskMatrixProps
           ))}
           <div className="flex gap-1">
             {PROBABILITIES.map((prob) => (
-              <span key={prob} className="flex-1 text-center text-[10px] text-muted-foreground capitalize">
+              <span key={prob} className="flex-1 text-center text-micro text-muted-foreground capitalize">
                 {prob}
               </span>
             ))}
@@ -77,7 +77,7 @@ export function RiskMatrix({ risks, onCellClick, selectedCell }: RiskMatrixProps
       </div>
       <div className="flex items-center gap-3 mt-2 flex-wrap">
         {LEGEND.map(({ label, bg }) => (
-          <span key={label} className="flex items-center gap-1 text-[10px] text-muted-foreground">
+          <span key={label} className="flex items-center gap-1 text-micro text-muted-foreground">
             <span className={cn("h-2.5 w-2.5 rounded-sm", bg)} />
             {label}
           </span>

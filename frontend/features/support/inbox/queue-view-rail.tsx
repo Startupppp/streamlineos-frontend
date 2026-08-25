@@ -32,14 +32,14 @@ export function QueueViewRail({
     <div className="w-full md:w-[220px] border-r border-border/40 flex flex-col overflow-hidden shrink-0 bg-card/50">
       <ScrollArea className="flex-1">
         <div className="px-3 py-3">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground px-1 mb-1.5">
+          <p className="text-dense font-semibold uppercase tracking-wide text-muted-foreground px-1 mb-1.5">
             Queues
           </p>
           <button
             type="button"
             onClick={handleSelectAll}
             className={cn(
-              "w-full flex items-center gap-2 text-left text-[13px] rounded-md px-2 py-1.5 hover:bg-muted/50 transition-colors",
+              "w-full flex items-center gap-2 text-left text-label rounded-md px-2 py-1.5 hover:bg-muted/50 transition-colors",
               activeQueueId === null && "bg-muted/60 font-medium",
             )}
           >
@@ -50,7 +50,7 @@ export function QueueViewRail({
             type="button"
             onClick={onToggleSnoozed}
             className={cn(
-              "w-full flex items-center gap-2 text-left text-[13px] rounded-md px-2 py-1.5 hover:bg-muted/50 transition-colors",
+              "w-full flex items-center gap-2 text-left text-label rounded-md px-2 py-1.5 hover:bg-muted/50 transition-colors",
               snoozedActive && "bg-muted/60 font-medium",
             )}
           >
@@ -70,14 +70,14 @@ export function QueueViewRail({
                 type="button"
                 onClick={() => onSelectQueue(queue.id)}
                 className={cn(
-                  "w-full flex items-center gap-2 text-left text-[13px] rounded-md px-2 py-1.5 hover:bg-muted/50 transition-colors",
+                  "w-full flex items-center gap-2 text-left text-label rounded-md px-2 py-1.5 hover:bg-muted/50 transition-colors",
                   activeQueueId === queue.id && "bg-muted/60 font-medium",
                 )}
               >
                 <Layers className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                 <TruncatedText text={queue.name} className="flex-1" />
                 {queue.openTicketCount > 0 && (
-                  <span className="text-[10px] text-muted-foreground tabular-nums">
+                  <span className="text-micro text-muted-foreground tabular-nums">
                     {queue.openTicketCount}
                   </span>
                 )}
@@ -85,7 +85,7 @@ export function QueueViewRail({
             ))
           )}
 
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground px-1 mb-1.5 mt-4">
+          <p className="text-dense font-semibold uppercase tracking-wide text-muted-foreground px-1 mb-1.5 mt-4">
             Saved Views
           </p>
           {viewsLoading ? (
@@ -95,14 +95,14 @@ export function QueueViewRail({
               ))}
             </div>
           ) : (views ?? []).length === 0 ? (
-            <p className="text-[11px] text-muted-foreground px-2">No saved views yet</p>
+            <p className="text-dense text-muted-foreground px-2">No saved views yet</p>
           ) : (
             (views ?? []).map((view) => (
               <button
                 key={view.id}
                 type="button"
                 onClick={() => onApplyView(view.filter)}
-                className="w-full flex items-center gap-2 text-left text-[13px] rounded-md px-2 py-1.5 hover:bg-muted/50 transition-colors"
+                className="w-full flex items-center gap-2 text-left text-label rounded-md px-2 py-1.5 hover:bg-muted/50 transition-colors"
               >
                 <Bookmark className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                 <TruncatedText text={view.name} className="flex-1" />

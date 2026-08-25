@@ -52,27 +52,27 @@ function SavedMessageCard({
       <div className="flex items-start gap-3">
         <Avatar className="w-7 shrink-0 mt-0.5 border border-border/30">
           <AvatarImage src={resolveImageUrl(item.message.sender?.image)} />
-          <AvatarFallback className="text-[8px] font-bold bg-muted text-muted-foreground">
+          <AvatarFallback className="text-micro font-bold bg-muted text-muted-foreground">
             {getInitials(senderName)}
           </AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2 mb-0.5">
-            <span className="text-[12px] font-bold text-foreground">{senderName}</span>
+            <span className="text-xs font-bold text-foreground">{senderName}</span>
             {item.message.channel && (
               <button
                 onClick={handleJump}
-                className="flex items-center gap-1 text-[10px] text-primary hover:underline"
+                className="flex items-center gap-1 text-micro text-primary hover:underline"
               >
                 <Hash className="h-2.5 w-2.5" />
                 {item.message.channel.name}
               </button>
             )}
-            <span className="text-[10px] text-muted-foreground ml-auto">{formatMessageTime(item.message.createdAt)}</span>
+            <span className="text-micro text-muted-foreground ml-auto">{formatMessageTime(item.message.createdAt)}</span>
           </div>
-          <p className="text-[12px] text-foreground leading-[1.5] line-clamp-3">{item.message.content}</p>
+          <p className="text-xs text-foreground leading-[1.5] line-clamp-3">{item.message.content}</p>
           {item.message.attachments.length > 0 && (
-            <p className="text-[11px] text-muted-foreground mt-1">
+            <p className="text-dense text-muted-foreground mt-1">
               {item.message.attachments.length} attachment{item.message.attachments.length !== 1 ? "s" : ""}
             </p>
           )}
@@ -140,8 +140,8 @@ export function SavedMessagesPanel({
     <div className="flex flex-col h-full w-80 border-l border-border/40 bg-card/50">
       <div className="h-[56px] px-4 border-b border-border/40 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
-          <Bookmark className="h-4 w-4 text-amber-500 fill-amber-500" />
-          <h3 className="text-[14px] font-bold">Saved Messages</h3>
+          <Bookmark className="h-4 w-4 text-status-warning-ink fill-amber-500" />
+          <h3 className="text-sm font-bold">Saved Messages</h3>
         </div>
         <SavedPanelCloseButton onClick={onClose} className="p-1.5 hover:bg-muted rounded-lg" aria-label="Close" />
       </div>
@@ -153,21 +153,21 @@ export function SavedMessagesPanel({
           </div>
         ) : isError ? (
           <div className="flex flex-col items-center justify-center py-12 px-4">
-            <h4 className="text-[13px] font-semibold mb-1">Could not load saved messages</h4>
+            <h4 className="text-label font-semibold mb-1">Could not load saved messages</h4>
             <button
               onClick={() => void refetch()}
-              className="text-[11px] text-primary hover:underline mt-1"
+              className="text-dense text-primary hover:underline mt-1"
             >
               Try again
             </button>
           </div>
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-4">
-            <div className="h-12 w-12 rounded-xl bg-amber-500/10 flex items-center justify-center mb-3">
-              <Bookmark className="h-5 w-5 text-amber-500" />
+            <div className="h-12 w-12 rounded-xl bg-status-warning-surface flex items-center justify-center mb-3">
+              <Bookmark className="h-5 w-5 text-status-warning-ink" />
             </div>
-            <h4 className="text-[13px] font-semibold mb-1">No saved messages</h4>
-            <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
+            <h4 className="text-label font-semibold mb-1">No saved messages</h4>
+            <p className="text-dense text-muted-foreground text-center leading-relaxed">
               Use <span className="font-medium text-foreground">Save message</span> from a message&apos;s menu.
               Pinning keeps a message in the channel only.
             </p>
@@ -188,7 +188,7 @@ export function SavedMessagesPanel({
                 <button
                   onClick={handleLoadMore}
                   disabled={isFetchingNextPage}
-                  className="text-[11px] text-primary hover:underline disabled:opacity-50"
+                  className="text-dense text-primary hover:underline disabled:opacity-50"
                 >
                   {isFetchingNextPage ? "Loading..." : "Load more"}
                 </button>

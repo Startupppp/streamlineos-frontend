@@ -35,9 +35,9 @@ const VISIBLE_STATUSES = new Set([
 ]);
 
 const STATUS_BADGE: Record<string, string> = {
-  PENDING: "bg-amber-100 text-amber-800 dark:bg-amber-500/10 dark:text-amber-300",
-  APPROVED: "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300",
-  REJECTED: "bg-red-100 text-red-800 dark:bg-red-500/10 dark:text-red-300",
+  PENDING: "bg-status-warning-surface text-status-warning-ink",
+  APPROVED: "bg-status-success-surface text-status-success-ink",
+  REJECTED: "bg-status-danger-surface text-status-danger-ink",
 };
 
 function formatDate(iso: string | null): string {

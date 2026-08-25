@@ -51,7 +51,7 @@ function FilterOption({ label, active, onSelect }: FilterOptionProps) {
       type="button"
       onClick={onSelect}
       className={cn(
-        "flex w-full items-center rounded-md px-2 py-1.5 text-left text-[13px] transition-colors",
+        "flex w-full items-center rounded-md px-2 py-1.5 text-left text-label transition-colors",
         active
           ? "bg-primary/10 text-primary font-medium"
           : "text-foreground hover:bg-muted",
@@ -71,7 +71,7 @@ function FilterSection({
 }) {
   return (
     <div className="mb-2">
-      <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <p className="mb-1 text-micro font-semibold uppercase tracking-wider text-muted-foreground">
         {title}
       </p>
       <div className="space-y-0.5">{children}</div>
@@ -136,7 +136,7 @@ export function CustomerFilterPopover({
           <Filter className="h-3.5 w-3.5" aria-hidden="true" />
           Filters
           {hasAny ? (
-            <Badge className="ml-0.5 h-4 min-w-4 rounded-full px-1 text-[10px]">
+            <Badge className="ml-0.5 h-4 min-w-4 rounded-full px-1 text-micro">
               {activeCount}
             </Badge>
           ) : null}
@@ -148,14 +148,14 @@ export function CustomerFilterPopover({
         className="w-72 p-3"
       >
         <div className="mb-3 flex items-center justify-between">
-          <p className="text-[13px] font-semibold text-foreground">
+          <p className="text-label font-semibold text-foreground">
             Add filter
           </p>
           {hasAny ? (
             <button
               type="button"
               onClick={handleClearAll}
-              className="flex items-center gap-0.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+              className="flex items-center gap-0.5 text-dense text-muted-foreground transition-colors hover:text-foreground"
             >
               <X className="h-3 w-3" />
               Clear all
@@ -171,7 +171,7 @@ export function CustomerFilterPopover({
                 type="button"
                 onClick={() => handleCategorySelect(cat.key)}
                 className={cn(
-                  "flex w-full items-center rounded-md px-2 py-1.5 text-left text-[12px] transition-colors",
+                  "flex w-full items-center rounded-md px-2 py-1.5 text-left text-xs transition-colors",
                   activeCategory === cat.key
                     ? "bg-primary text-primary-foreground font-medium"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -210,7 +210,7 @@ export function CustomerFilterPopover({
                 ))}
               </FilterSection>
             ) : (
-              <p className="py-2 text-[12px] text-muted-foreground">
+              <p className="py-2 text-xs text-muted-foreground">
                 Select a filter category on the left.
               </p>
             )}
@@ -247,7 +247,7 @@ export function ActiveCustomerFilterChips({
         <Badge
           key={chip.key}
           variant="secondary"
-          className="h-6 gap-1 pl-2 pr-1 text-[11px] font-normal"
+          className="h-6 gap-1 pl-2 pr-1 text-dense font-normal"
         >
           {chip.label}
           <button

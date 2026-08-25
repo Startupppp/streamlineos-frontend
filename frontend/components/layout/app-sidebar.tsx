@@ -53,7 +53,7 @@ function SidebarSkeleton({ isCollapsed, isMobile }: SidebarSkeletonProps) {
           <div className="space-y-px">
             {Array.from({ length: effectiveCollapsed ? 5 : 6 }).map((_, i) =>
               effectiveCollapsed ? (
-                <Skeleton key={i} className="h-8 w-8 rounded-[6px] mx-auto" />
+                <Skeleton key={i} className="h-8 w-8 rounded-sm mx-auto" />
               ) : (
                 <div
                   key={i}

@@ -45,7 +45,7 @@ export function ErrorState({
       <h3
         className={cn(
           "font-semibold text-foreground",
-          compact ? "text-sm" : "text-[0.9375rem]"
+          compact ? "text-sm" : "text-sm"
         )}
       >
         {title}

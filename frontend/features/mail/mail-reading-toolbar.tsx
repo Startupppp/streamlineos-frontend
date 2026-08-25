@@ -110,7 +110,7 @@ export const MailReadingToolbar = forwardRef<
         type="button"
         className={cn(
           "flex items-center justify-center h-8 w-8 rounded-md hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-          message.isStarred ? "text-amber-500" : "text-muted-foreground",
+          message.isStarred ? "text-status-warning-ink" : "text-muted-foreground",
         )}
         onClick={handleStarClick}
         aria-label={message.isStarred ? "Unstar" : "Star"}

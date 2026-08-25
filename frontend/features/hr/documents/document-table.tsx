@@ -137,9 +137,9 @@ export function DocumentTable({
                       <span
                         key={tag}
                         className={cn(
-                          "inline-flex items-center text-[10px] font-semibold px-1.5 py-0 rounded-full border",
+                          "inline-flex items-center text-micro font-semibold px-1.5 py-0 rounded-full border",
                           tag.toLowerCase().includes("confidential")
-                            ? "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30"
+                            ? "bg-status-danger-surface text-status-danger-ink border-status-danger-rule"
                             : "bg-muted text-muted-foreground border-border",
                         )}
                       >
@@ -165,7 +165,7 @@ export function DocumentTable({
           return (
             <span
               className={cn(
-                "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+                "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border",
                 badgeColor,
               )}
             >
@@ -251,7 +251,7 @@ export function DocumentTable({
     >
       {showFolders && folders.length > 0 && (
         <div className="px-5 pt-4 pb-3 border-b border-border/50 shrink-0">
-          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+          <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider mb-3">
             Folders
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -274,7 +274,7 @@ export function DocumentTable({
                     text={folder.name}
                     className="text-xs font-medium text-foreground"
                   />
-                  <p className="text-[10px] text-muted-foreground">
+                  <p className="text-micro text-muted-foreground">
                     {folder.count} files
                   </p>
                 </div>

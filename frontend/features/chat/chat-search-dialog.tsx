@@ -59,7 +59,7 @@ export function ChatSearchDialog({ open, onOpenChange, onSelectChannel }: ChatSe
               key={t}
               onClick={() => setTab(t)}
               className={cn(
-                "px-3 py-2 text-[12px] font-semibold capitalize border-b-2 transition-colors -mb-px",
+                "px-3 py-2 text-xs font-semibold capitalize border-b-2 transition-colors -mb-px",
                 tab === t ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
               )}
             >
@@ -72,11 +72,11 @@ export function ChatSearchDialog({ open, onOpenChange, onSelectChannel }: ChatSe
           {debouncedQuery.trim().length < (tab === "messages" ? 2 : 1) ? (
             <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
               <Search className="w-8 mb-2 opacity-30" />
-              <p className="text-[12px]">Type to search</p>
+              <p className="text-xs">Type to search</p>
             </div>
           ) : tab === "messages" ? (
             messageResults?.results.length === 0 ? (
-              <p className="text-center text-[12px] text-muted-foreground py-8">No messages found</p>
+              <p className="text-center text-xs text-muted-foreground py-8">No messages found</p>
             ) : (
               messageResults?.results.map(msg => (
                 <button
@@ -89,18 +89,18 @@ export function ChatSearchDialog({ open, onOpenChange, onSelectChannel }: ChatSe
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5 min-w-0">
-                      <span className="text-[11px] font-bold text-foreground truncate shrink">{msg.sender?.name}</span>
-                      <span className="text-[10px] text-muted-foreground truncate shrink min-w-0">in #{msg.channel?.name}</span>
-                      <span className="text-[10px] text-muted-foreground ml-auto shrink-0 whitespace-nowrap">{formatMessageTime(msg.createdAt)}</span>
+                      <span className="text-dense font-bold text-foreground truncate shrink">{msg.sender?.name}</span>
+                      <span className="text-micro text-muted-foreground truncate shrink min-w-0">in #{msg.channel?.name}</span>
+                      <span className="text-micro text-muted-foreground ml-auto shrink-0 whitespace-nowrap">{formatMessageTime(msg.createdAt)}</span>
                     </div>
-                    <TruncatedText text={msg.content ?? ""} className="text-[12px] text-muted-foreground" />
+                    <TruncatedText text={msg.content ?? ""} className="text-xs text-muted-foreground" />
                   </div>
                 </button>
               ))
             )
           ) : tab === "channels" ? (
             channelResults?.length === 0 ? (
-              <p className="text-center text-[12px] text-muted-foreground py-8">No channels found</p>
+              <p className="text-center text-xs text-muted-foreground py-8">No channels found</p>
             ) : (
               channelResults?.map(ch => (
                 <button
@@ -112,10 +112,10 @@ export function ChatSearchDialog({ open, onOpenChange, onSelectChannel }: ChatSe
                     <Hash className="h-4 w-4 text-muted-foreground" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <TruncatedText text={ch.name ?? "Untitled channel"} className="text-[13px] font-semibold text-foreground" />
-                    {ch.description && <TruncatedText text={ch.description} className="text-[11px] text-muted-foreground" />}
+                    <TruncatedText text={ch.name ?? "Untitled channel"} className="text-label font-semibold text-foreground" />
+                    {ch.description && <TruncatedText text={ch.description} className="text-dense text-muted-foreground" />}
                   </div>
-                  <span className={cn("text-[11px] font-medium px-2 py-0.5 rounded-full", ch.isMember ? "bg-green-500/10 text-green-600 dark:text-green-400" : "bg-muted text-muted-foreground")}>
+                  <span className={cn("text-dense font-medium px-2 py-0.5 rounded-full", ch.isMember ? "bg-status-success-surface text-status-success-ink" : "bg-muted text-muted-foreground")}>
                     {ch.isMember ? "Joined" : "Join"}
                   </span>
                 </button>
@@ -123,18 +123,18 @@ export function ChatSearchDialog({ open, onOpenChange, onSelectChannel }: ChatSe
             )
           ) : (
             userResults?.length === 0 ? (
-              <p className="text-center text-[12px] text-muted-foreground py-8">No people found</p>
+              <p className="text-center text-xs text-muted-foreground py-8">No people found</p>
             ) : (
               userResults?.map(u => (
                 <div key={u.id} className="flex items-center gap-3 px-4 py-3">
                   <Avatar className="w-8 border border-border/30">
-                    <AvatarFallback className="text-[10px] font-bold bg-muted text-muted-foreground">
+                    <AvatarFallback className="text-micro font-bold bg-muted text-muted-foreground">
                       {u.name?.slice(0, 2).toUpperCase() ?? "U"}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <TruncatedText text={u.name ?? ""} className="text-[13px] font-semibold text-foreground" />
-                    <TruncatedText text={u.email ?? ""} className="text-[11px] text-muted-foreground" />
+                    <TruncatedText text={u.name ?? ""} className="text-label font-semibold text-foreground" />
+                    <TruncatedText text={u.email ?? ""} className="text-dense text-muted-foreground" />
                   </div>
                   <User className="h-3.5 w-3.5 text-muted-foreground" />
                 </div>

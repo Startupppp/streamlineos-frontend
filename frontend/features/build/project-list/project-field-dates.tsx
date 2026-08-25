@@ -83,7 +83,7 @@ export const InlineProjectDates = memo(function InlineProjectDates({
           <button
             type="button"
             className={cn(
-              "flex shrink-0 items-center gap-0.5 text-[9px] font-medium transition-colors hover:opacity-80",
+              "flex shrink-0 items-center gap-0.5 text-micro font-medium transition-colors hover:opacity-80",
               dateMeta
                 ? dateToneClasses[dateMeta.tone]
                 : "text-muted-foreground/60",
@@ -97,7 +97,7 @@ export const InlineProjectDates = memo(function InlineProjectDates({
         <PopoverContent className="w-auto p-0" align="end">
           <div className="flex divide-x divide-border">
             <div className="p-2">
-              <p className="mb-1.5 px-1 text-[10px] font-medium text-muted-foreground">
+              <p className="mb-1.5 px-1 text-micro font-medium text-muted-foreground">
                 Start
               </p>
               <CalendarComponent
@@ -120,7 +120,7 @@ export const InlineProjectDates = memo(function InlineProjectDates({
               )}
             </div>
             <div className="p-2">
-              <p className="mb-1.5 px-1 text-[10px] font-medium text-muted-foreground">
+              <p className="mb-1.5 px-1 text-micro font-medium text-muted-foreground">
                 End
               </p>
               <CalendarComponent

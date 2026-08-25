@@ -106,7 +106,7 @@ export function LeaveApprovalsContent({
   return (
     <>
       <div className="space-y-6">
-        <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
+        <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
               <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -114,7 +114,7 @@ export function LeaveApprovalsContent({
               </div>
               Leave Requests
               {allIncomingLeaveRequests.length > 0 && (
-                <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
+                <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-muted text-micro font-semibold text-muted-foreground">
                   {allIncomingLeaveRequests.length}
                 </span>
               )}
@@ -128,7 +128,7 @@ export function LeaveApprovalsContent({
                   className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground pb-3 pt-2 px-4 text-xs duration-200"
                 >
                   All
-                  <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
+                  <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-muted text-micro font-semibold text-muted-foreground">
                     {allIncomingLeaveRequests.length}
                   </span>
                 </TabsTrigger>
@@ -138,7 +138,7 @@ export function LeaveApprovalsContent({
                 >
                   Pending
                   {incomingLeaveRequests.length > 0 && (
-                    <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-amber-500 text-[10px] font-bold text-white">
+                    <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-status-warning-fill text-micro font-bold text-white">
                       {incomingLeaveRequests.length}
                     </span>
                   )}
@@ -149,7 +149,7 @@ export function LeaveApprovalsContent({
                 >
                   Approved
                   {approvedRequests.length > 0 && (
-                    <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
+                    <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-muted text-micro font-semibold text-muted-foreground">
                       {approvedRequests.length}
                     </span>
                   )}
@@ -160,7 +160,7 @@ export function LeaveApprovalsContent({
                 >
                   Rejected
                   {rejectedRequests.length > 0 && (
-                    <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
+                    <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-muted text-micro font-semibold text-muted-foreground">
                       {rejectedRequests.length}
                     </span>
                   )}
@@ -199,7 +199,7 @@ export function LeaveApprovalsContent({
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
+        <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
               <div className="w-7 rounded-lg bg-muted flex items-center justify-center">
@@ -207,7 +207,7 @@ export function LeaveApprovalsContent({
               </div>
               Pending WFH Requests
               {pendingWfhRequests && pendingWfhRequests.length > 0 && (
-                <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-amber-100 dark:bg-amber-500/10 text-[10px] font-semibold text-amber-700 dark:text-amber-300">
+                <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-status-warning-surface text-micro font-semibold text-status-warning-ink">
                   {pendingWfhRequests.length}
                 </span>
               )}

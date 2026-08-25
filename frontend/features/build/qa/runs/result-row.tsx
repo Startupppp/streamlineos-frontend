@@ -16,17 +16,17 @@ import { PM_PANEL } from "@/features/build/shared/pm-chrome";
 import type { TestRunResult, TestResultStatus, TestCasePriority } from "@/types/projects";
 
 const STATUS_OPTIONS: { value: TestResultStatus; label: string; activeClass: string }[] = [
-  { value: "not_run", label: "Not Run", activeClass: "bg-muted text-foreground border-border dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30" },
-  { value: "passed", label: "Pass", activeClass: "bg-green-50 text-green-700 border-green-300 dark:bg-green-500/10 dark:text-green-300 dark:border-green-500/30" },
-  { value: "failed", label: "Fail", activeClass: "bg-red-50 text-red-700 border-red-300 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30" },
-  { value: "blocked", label: "Blocked", activeClass: "bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30" },
-  { value: "skipped", label: "Skip", activeClass: "bg-muted text-muted-foreground border-border dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30" },
+  { value: "not_run", label: "Not Run", activeClass: "bg-muted text-foreground border-border" },
+  { value: "passed", label: "Pass", activeClass: "bg-status-success-surface text-status-success-ink border-status-success-rule" },
+  { value: "failed", label: "Fail", activeClass: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule" },
+  { value: "blocked", label: "Blocked", activeClass: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule" },
+  { value: "skipped", label: "Skip", activeClass: "bg-muted text-muted-foreground border-border" },
 ];
 
 const PRIORITY_STYLES: Record<TestCasePriority, string> = {
   low: "text-muted-foreground border-border",
-  medium: "text-amber-600 border-amber-200 dark:text-amber-400 dark:border-amber-500/30",
-  high: "text-red-600 border-red-200 dark:text-red-400 dark:border-red-500/30",
+  medium: "text-status-warning-ink border-status-warning-rule",
+  high: "text-status-danger-ink border-status-danger-rule",
 };
 
 interface ResultRowProps {
@@ -89,19 +89,19 @@ export const ResultRow = memo(function ResultRow({
   return (
     <div className={cn(PM_PANEL, "space-y-2 px-3 py-2.5")}>
       <div className="flex min-w-0 flex-wrap items-start gap-2">
-        <span className="shrink-0 font-mono text-[11px] text-muted-foreground">
+        <span className="shrink-0 font-mono text-dense text-muted-foreground">
           {caseLabel}
         </span>
-        <TruncatedText text={title} className="min-w-0 flex-1 text-[11px] font-medium" />
+        <TruncatedText text={title} className="min-w-0 flex-1 text-dense font-medium" />
         {tc?.priority ? (
-          <Badge variant="outline" className={cn("shrink-0 text-[10px] capitalize", PRIORITY_STYLES[tc.priority])}>
+          <Badge variant="outline" className={cn("shrink-0 text-micro capitalize", PRIORITY_STYLES[tc.priority])}>
             {tc.priority}
           </Badge>
         ) : null}
         {result.linkedBugId ? (
           <Link
             href={`/build/${projectId}/bugs`}
-            className="shrink-0 text-[10px] font-medium text-primary hover:underline"
+            className="shrink-0 text-micro font-medium text-primary hover:underline"
           >
             Linked bug
           </Link>
@@ -118,7 +118,7 @@ export const ResultRow = memo(function ResultRow({
               disabled={!canExecute || updateResult.isPending}
               onClick={() => handleStatusChange(opt.value)}
               className={cn(
-                "rounded border px-2 py-0.5 text-[10px] transition-colors",
+                "rounded border px-2 py-0.5 text-micro transition-colors",
                 isActive
                   ? opt.activeClass
                   : "border-border text-muted-foreground hover:bg-primary/[0.04] disabled:opacity-50",
@@ -131,7 +131,7 @@ export const ResultRow = memo(function ResultRow({
 
         <button
           type="button"
-          className="ml-1 text-[10px] text-muted-foreground hover:text-foreground"
+          className="ml-1 text-micro text-muted-foreground hover:text-foreground"
           onClick={handleToggleNotes}
         >
           {notesOpen ? "Hide notes" : "Notes"}
@@ -141,7 +141,7 @@ export const ResultRow = memo(function ResultRow({
           <Button
             variant="outline"
             size="sm"
-            className="ml-auto h-6 border-destructive/30 text-[10px] text-destructive hover:bg-destructive/10"
+            className="ml-auto h-6 border-destructive/30 text-micro text-destructive hover:bg-destructive/10"
             onClick={handleCreateBugClick}
           >
             <BugIcon className="mr-1 h-3 w-3" />
@@ -156,7 +156,7 @@ export const ResultRow = memo(function ResultRow({
             value={notes}
             onChange={handleNotesChange}
             placeholder="Add execution notes..."
-            className="min-h-[56px] resize-none text-[11px]"
+            className="min-h-[56px] resize-none text-dense"
             disabled={!canExecute}
           />
           {canExecute ? (
@@ -164,7 +164,7 @@ export const ResultRow = memo(function ResultRow({
               type="button"
               variant="ghost"
               size="sm"
-              className="h-6 text-[10px]"
+              className="h-6 text-micro"
               onClick={handleNotesSave}
               isPending={updateResult.isPending}
               loadingText="Saving…"

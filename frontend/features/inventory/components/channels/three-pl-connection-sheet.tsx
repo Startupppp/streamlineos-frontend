@@ -169,9 +169,9 @@ export function ThreePlConnectionSheet({
       }
     >
       {showNotConnectedBanner && (
-        <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 mb-4 dark:border-amber-500/30 dark:bg-amber-500/10">
-          <Info className="h-4 w-4 text-amber-600 mt-0.5 shrink-0 dark:text-amber-400" />
-          <p className="text-xs text-amber-700 leading-relaxed dark:text-amber-300">
+        <div className="flex items-start gap-2 rounded-md border border-status-warning-rule bg-status-warning-surface p-3 mb-4">
+          <Info className="h-4 w-4 text-status-warning-ink mt-0.5 shrink-0" />
+          <p className="text-xs text-status-warning-ink leading-relaxed">
             This provider is not connected. Update credentials and sync to activate.
           </p>
         </div>

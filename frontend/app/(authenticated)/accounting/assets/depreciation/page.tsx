@@ -55,9 +55,9 @@ type RunFormValues = z.infer<typeof runDepreciationSchema>;
 
 const RUN_STATUS_CLASSES: Record<DepreciationRun["status"], string> = {
   PENDING:
-    "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+    "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   COMPLETED:
-    "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+    "bg-status-success-surface text-status-success-ink border-status-success-rule",
   REVERSED: "bg-muted text-foreground border-border",
 };
 
@@ -71,7 +71,7 @@ function RunStatusBadge({ status }: { status: DepreciationRun["status"] }) {
   return (
     <Badge
       variant="outline"
-      className={`text-[9px] px-1.5 py-0 h-4 ${RUN_STATUS_CLASSES[status]}`}
+      className={`text-micro px-1.5 py-0 h-4 ${RUN_STATUS_CLASSES[status]}`}
     >
       {RUN_STATUS_LABELS[status]}
     </Badge>

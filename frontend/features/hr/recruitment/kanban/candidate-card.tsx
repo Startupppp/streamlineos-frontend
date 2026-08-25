@@ -16,12 +16,14 @@ interface CandidateCardProps {
   onClick: (candidate: AtsPipelineCandidate) => void;
 }
 
+// Where a candidate came from is a taxonomy, not a status. REFERRAL takes
+// indigo rather than the blue it shared with LINKEDIN before the migration.
 const SOURCE_COLORS: Record<string, string> = {
-  LINKEDIN: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
-  REFERRAL: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
-  DIRECT: "bg-muted text-muted-foreground dark:bg-slate-800 dark:text-slate-300",
-  JOB_PORTAL: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
-  CAMPUS: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
+  LINKEDIN: "bg-category-blue-surface text-category-blue-ink",
+  REFERRAL: "bg-category-indigo-surface text-category-indigo-ink",
+  DIRECT: "bg-muted text-muted-foreground",
+  JOB_PORTAL: "bg-category-amber-surface text-category-amber-ink",
+  CAMPUS: "bg-category-emerald-surface text-category-emerald-ink",
 };
 
 function getSourceColor(source: string) {
@@ -65,7 +67,7 @@ export const CandidateCard = memo(function CandidateCard({
 
           <div className="p-3 space-y-2.5">
             <div className="flex items-center gap-2.5 pr-5">
-              <div className="h-9 w-9 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 bg-gradient-to-br from-primary/20 to-primary/10 text-primary border border-primary/20 ring-2 ring-background">
+              <div className="h-9 w-9 rounded-full flex items-center justify-center text-dense font-bold shrink-0 bg-gradient-to-br from-primary/20 to-primary/10 text-primary border border-primary/20 ring-2 ring-background">
                 {initials}
               </div>
               <div className="min-w-0 flex-1">
@@ -74,12 +76,12 @@ export const CandidateCard = memo(function CandidateCard({
                   {candidate.jobTitle ? (
                     <>
                       <Briefcase className="h-2.5 w-2.5 shrink-0 text-muted-foreground" />
-                      <TruncatedText text={candidate.jobTitle} className="text-[10px] text-muted-foreground" />
+                      <TruncatedText text={candidate.jobTitle} className="text-micro text-muted-foreground" />
                     </>
                   ) : (
                     <>
                       <MailIcon className="h-2.5 w-2.5 shrink-0 text-muted-foreground" />
-                      <TruncatedText text={candidate.email} className="text-[10px] text-muted-foreground" />
+                      <TruncatedText text={candidate.email} className="text-micro text-muted-foreground" />
                     </>
                   )}
                 </div>
@@ -89,7 +91,7 @@ export const CandidateCard = memo(function CandidateCard({
             <div className="flex items-center gap-1.5 flex-wrap">
               {candidate.source && (
                 <span className={cn(
-                  "inline-flex items-center text-[9px] font-semibold px-1.5 py-0.5 rounded-full uppercase tracking-wide",
+                  "inline-flex items-center text-micro font-semibold px-1.5 py-0.5 rounded-full uppercase tracking-wide",
                   getSourceColor(candidate.source)
                 )}>
                   {candidate.source.replace(/_/g, " ")}
@@ -108,16 +110,16 @@ export const CandidateCard = memo(function CandidateCard({
                         className={cn(
                           "h-2.5 w-2.5",
                           i < (candidate.rating ?? 0)
-                            ? "text-amber-400 fill-amber-400"
+                            ? "text-status-warning-ink fill-amber-400"
                             : "text-border fill-transparent"
                         )}
                       />
                     ))}
-                    <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 ml-0.5">{candidate.rating}</span>
+                    <span className="text-micro font-semibold text-status-warning-ink ml-0.5">{candidate.rating}</span>
                   </div>
                 ) : <span />}
                 {candidate.appliedAt && (
-                  <div className="flex items-center gap-0.5 text-[9px] text-muted-foreground">
+                  <div className="flex items-center gap-0.5 text-micro text-muted-foreground">
                     <Clock className="h-2.5 w-2.5" />
                     {formatDistanceToNow(new Date(candidate.appliedAt), { addSuffix: true })}
                   </div>

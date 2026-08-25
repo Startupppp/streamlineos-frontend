@@ -137,7 +137,7 @@ export function ContactCardView({
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label="LinkedIn profile"
-                      className="text-muted-foreground hover:text-blue-500 transition-colors"
+                      className="text-muted-foreground hover:text-status-info-ink transition-colors"
                     >
                       <Linkedin className="h-3.5 w-3.5" />
                     </a>
@@ -148,7 +148,7 @@ export function ContactCardView({
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label="Twitter profile"
-                      className="text-muted-foreground hover:text-sky-500 transition-colors"
+                      className="text-muted-foreground hover:text-status-info-ink transition-colors"
                     >
                       <Twitter className="h-3.5 w-3.5" />
                     </a>
@@ -174,7 +174,7 @@ export function ContactCardView({
                   <Badge
                     key={tag}
                     variant="outline"
-                    className="text-[9px] px-1.5 py-0 h-4"
+                    className="text-micro px-1.5 py-0 h-4"
                   >
                     {tag}
                   </Badge>
@@ -186,7 +186,7 @@ export function ContactCardView({
                     <Link href={`/crm/leads/${contact.lead.id}`}>
                       <Badge
                         variant="secondary"
-                        className="text-[10px] text-primary border-primary/30 hover:border-primary/60 gap-1 cursor-pointer"
+                        className="text-micro text-primary border-primary/30 hover:border-primary/60 gap-1 cursor-pointer"
                       >
                         <Link2 className="h-2.5 w-2.5" />
                         Lead: {contact.lead.name}
@@ -197,7 +197,7 @@ export function ContactCardView({
                     <Link href={`/crm/deals/${contact.deal.id}`}>
                       <Badge
                         variant="secondary"
-                        className="text-[10px] text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30 hover:border-amber-400 gap-1 cursor-pointer"
+                        className="text-micro text-status-warning-ink border-status-warning-rule hover:border-status-warning-rule gap-1 cursor-pointer"
                       >
                         <Link2 className="h-2.5 w-2.5" />
                         Deal: {contact.deal.name}

@@ -32,11 +32,11 @@ const MEMBER_COLUMNS: DataTableColumn<ManagerTeamMember>[] = [
     header: "Team member",
     cell: (row) => (
       <div className="min-w-0">
-        <p className="text-[13px] font-medium text-foreground truncate">
+        <p className="text-label font-medium text-foreground truncate">
           {row.name ?? row.email ?? "Unknown user"}
         </p>
         {row.email && (
-          <p className="text-[11px] text-muted-foreground truncate">{row.email}</p>
+          <p className="text-dense text-muted-foreground truncate">{row.email}</p>
         )}
       </div>
     ),
@@ -46,18 +46,18 @@ const MEMBER_COLUMNS: DataTableColumn<ManagerTeamMember>[] = [
     header: "Latest payslip",
     cell: (row) =>
       row.latestPayslip ? (
-        <span className="text-[12px] tabular-nums text-muted-foreground">
+        <span className="text-xs tabular-nums text-muted-foreground">
           {formatMonth(row.latestPayslip.month)} · {formatMoney(row.latestPayslip.net)}
         </span>
       ) : (
-        <span className="text-[12px] text-muted-foreground">—</span>
+        <span className="text-xs text-muted-foreground">—</span>
       ),
   },
   {
     key: "pendingReimbursements",
     header: "Claims",
     cell: (row) => (
-      <span className="text-[12px] tabular-nums font-medium">
+      <span className="text-xs tabular-nums font-medium">
         {row.pendingReimbursements > 0 ? row.pendingReimbursements : "—"}
       </span>
     ),
@@ -66,7 +66,7 @@ const MEMBER_COLUMNS: DataTableColumn<ManagerTeamMember>[] = [
     key: "pendingLoans",
     header: "Loans",
     cell: (row) => (
-      <span className="text-[12px] tabular-nums font-medium">
+      <span className="text-xs tabular-nums font-medium">
         {row.pendingLoans > 0 ? row.pendingLoans : "—"}
       </span>
     ),
@@ -75,7 +75,7 @@ const MEMBER_COLUMNS: DataTableColumn<ManagerTeamMember>[] = [
     key: "tax",
     header: "Tax decl.",
     cell: (row) => (
-      <span className="text-[11px] text-muted-foreground">
+      <span className="text-dense text-muted-foreground">
         {row.taxDeclarationStatus ?? "—"}
       </span>
     ),
@@ -85,7 +85,7 @@ const MEMBER_COLUMNS: DataTableColumn<ManagerTeamMember>[] = [
     header: "",
     cell: (row) =>
       row.actionCount > 0 ? (
-        <span className="inline-flex items-center rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+        <span className="inline-flex items-center rounded-md border border-status-warning-rule bg-status-warning-surface px-1.5 py-0.5 text-micro font-medium text-status-warning-ink">
           {row.actionCount} open
         </span>
       ) : null,
@@ -97,21 +97,21 @@ const REWARDS_COLUMNS: DataTableColumn<TeamRewardsMember>[] = [
     key: "name",
     header: "Member",
     cell: (row) => (
-      <span className="text-[12px] font-medium">{row.name ?? row.email ?? "Unknown user"}</span>
+      <span className="text-xs font-medium">{row.name ?? row.email ?? "Unknown user"}</span>
     ),
   },
   {
     key: "annualCtc",
     header: "Annual CTC",
     cell: (row) => (
-      <span className="text-[12px] tabular-nums">{formatMoney(row.annualCtc)}</span>
+      <span className="text-xs tabular-nums">{formatMoney(row.annualCtc)}</span>
     ),
   },
   {
     key: "benefits",
     header: "Benefits (employer/yr est.)",
     cell: (row) => (
-      <span className="text-[12px] tabular-nums">
+      <span className="text-xs tabular-nums">
         {row.estimatedEmployerBenefitsAnnual
           ? formatMoney(row.estimatedEmployerBenefitsAnnual)
           : row.activeBenefitPlans > 0
@@ -124,7 +124,7 @@ const REWARDS_COLUMNS: DataTableColumn<TeamRewardsMember>[] = [
     key: "equity",
     header: "Equity units",
     cell: (row) => (
-      <span className="text-[12px] tabular-nums">
+      <span className="text-xs tabular-nums">
         {row.equityUnits > 0 ? row.equityUnits.toLocaleString("en-IN") : "—"}
       </span>
     ),
@@ -191,7 +191,7 @@ export function TeamPayrollPageContent() {
           className="flex gap-2.5 rounded-lg border border-border bg-card px-3 py-2.5"
         >
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-          <p className="text-[11px] text-muted-foreground leading-snug">
+          <p className="text-dense text-muted-foreground leading-snug">
             {data?.honestyNote ??
               "Direct reports only. Approving claims requires hr:expenses:approve; loans need hr:expenses:approve or hr:loans:manage."}
           </p>
@@ -242,7 +242,7 @@ export function TeamPayrollPageContent() {
                 {pendingClaims.length > 0 && (
                   <div className="rounded-lg border border-border bg-card overflow-hidden">
                     <div className="px-3 py-2 border-b border-border">
-                      <p className="text-[12px] font-semibold text-foreground">
+                      <p className="text-xs font-semibold text-foreground">
                         Pending reimbursement claims
                       </p>
                     </div>
@@ -253,10 +253,10 @@ export function TeamPayrollPageContent() {
                           className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5"
                         >
                           <div className="min-w-0">
-                            <p className="text-[12px] font-medium text-foreground">
+                            <p className="text-xs font-medium text-foreground">
                               {row.userName ?? "Unknown user"} · {row.category}
                             </p>
-                            <p className="text-[11px] text-muted-foreground tabular-nums">
+                            <p className="text-dense text-muted-foreground tabular-nums">
                               {formatMoney(row.amount)}
                               {row.description ? ` — ${row.description}` : ""}
                             </p>
@@ -282,7 +282,7 @@ export function TeamPayrollPageContent() {
                               </LoadingButton>
                             </div>
                           ) : (
-                            <span className="text-[10px] text-muted-foreground">
+                            <span className="text-micro text-muted-foreground">
                               Need hr:expenses:approve
                             </span>
                           )}
@@ -295,7 +295,7 @@ export function TeamPayrollPageContent() {
                 {pendingLoans.length > 0 && (
                   <div className="rounded-lg border border-border bg-card overflow-hidden">
                     <div className="px-3 py-2 border-b border-border">
-                      <p className="text-[12px] font-semibold text-foreground">
+                      <p className="text-xs font-semibold text-foreground">
                         Pending loan requests
                       </p>
                     </div>
@@ -306,10 +306,10 @@ export function TeamPayrollPageContent() {
                           className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5"
                         >
                           <div className="min-w-0">
-                            <p className="text-[12px] font-medium text-foreground">
+                            <p className="text-xs font-medium text-foreground">
                               {row.userName ?? "Unknown user"}
                             </p>
-                            <p className="text-[11px] text-muted-foreground tabular-nums">
+                            <p className="text-dense text-muted-foreground tabular-nums">
                               {formatMoney(row.amount)}
                               {row.totalEmis ? ` · ${row.totalEmis} EMIs` : ""}
                               {row.reason ? ` — ${row.reason}` : ""}
@@ -336,7 +336,7 @@ export function TeamPayrollPageContent() {
                               </LoadingButton>
                             </div>
                           ) : (
-                            <span className="text-[10px] text-muted-foreground">
+                            <span className="text-micro text-muted-foreground">
                               Need approve permission
                             </span>
                           )}
@@ -358,13 +358,13 @@ export function TeamPayrollPageContent() {
 
             {compression && compression.sampleSize > 0 && (
               <div className="rounded-lg border border-border bg-card p-3 space-y-2">
-                <p className="text-[12px] font-semibold text-foreground">
+                <p className="text-xs font-semibold text-foreground">
                   Team pay compression (CTC only)
                 </p>
-                <p className="text-[10px] text-muted-foreground leading-snug">
+                <p className="text-micro text-muted-foreground leading-snug">
                   {compression.honestyNote}
                 </p>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-dense">
                   <div>
                     <p className="text-muted-foreground">Median</p>
                     <p className="font-semibold tabular-nums">
@@ -396,7 +396,7 @@ export function TeamPayrollPageContent() {
 
             {(teamRewards?.members.length ?? 0) > 0 && (
               <div className="space-y-2">
-                <p className="text-[12px] font-semibold text-foreground">
+                <p className="text-xs font-semibold text-foreground">
                   Team total rewards (illustrative)
                 </p>
                 {rewardsLoading ? (
@@ -413,7 +413,7 @@ export function TeamPayrollPageContent() {
               </div>
             )}
 
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-dense text-muted-foreground">
               Full admin queues:{" "}
               <Link
                 href="/payroll/reimbursements"

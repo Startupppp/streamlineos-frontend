@@ -55,11 +55,11 @@ export function MeetingAttendeePicker({
               <Badge key={userId} variant="secondary" className="gap-1.5 pl-0.5 pr-1.5 py-0.5">
                 <Avatar className="h-4 w-4 shrink-0">
                   <AvatarImage src={resolveImageUrl(member?.image)} />
-                  <AvatarFallback className="text-[7px]">
+                  <AvatarFallback className="text-micro">
                     {getUserInitials(member)}
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-[11px] truncate max-w-[120px]">
+                <span className="text-dense truncate max-w-[120px]">
                   {getUserDisplayName(member)}
                 </span>
                 <button

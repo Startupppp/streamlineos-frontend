@@ -179,20 +179,20 @@ export function Customer360Section({ data, isLoading }: Customer360SectionProps)
                   <Icon className="h-3.5 w-3.5 text-muted-foreground" />
                   {cfg.title}
                 </CardTitle>
-                <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4">
+                <Badge variant="outline" className="text-micro px-1.5 py-0 h-4">
                   {section.total}
                 </Badge>
               </CardHeader>
               <CardContent className="px-4 py-3">
                 {previewItems.length === 0 ? (
-                  <p className="text-[10px] text-muted-foreground">None recorded.</p>
+                  <p className="text-micro text-muted-foreground">None recorded.</p>
                 ) : (
                   <ul className="space-y-1.5">
                     {previewItems.map((item) => (
                       <li key={item.id}>
                         <Link
                           href={cfg.href(item)}
-                          className="text-[11px] text-primary hover:underline block"
+                          className="text-dense text-primary hover:underline block"
                         >
                           <TruncatedText text={cfg.getLabel(item)} />
                         </Link>
@@ -200,7 +200,7 @@ export function Customer360Section({ data, isLoading }: Customer360SectionProps)
                     ))}
                     {section.total > 3 && (
                       <li>
-                        <span className="text-[10px] text-muted-foreground">
+                        <span className="text-micro text-muted-foreground">
                           +{section.total - 3} more
                         </span>
                       </li>

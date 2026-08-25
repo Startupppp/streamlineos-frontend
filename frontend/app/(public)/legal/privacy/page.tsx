@@ -38,7 +38,7 @@ export default function PrivacyPage() {
       <LegalSection id="who-we-are" title="Who we are">
         <p>
           {BRAND_NAME} is a SaaS platform for HR, projects, CRM, chat, and analytics. We operate
-          at <span className="font-mono text-blue-600">{BRAND_DOMAIN}</span>. When you sign up
+          at <span className="font-mono text-status-info-ink">{BRAND_DOMAIN}</span>. When you sign up
           for an account, your organization is the <em>controller</em> of the data you put into
           {" "}{BRAND_NAME} — we&apos;re the <em>processor</em>. When you visit our marketing
           site or talk to us through this site&apos;s forms, we&apos;re the controller.
@@ -161,16 +161,16 @@ export default function PrivacyPage() {
           We use a small, deliberate list of subprocessors. Adding one is a decision, not a
           default.
         </p>
-        <div className="not-prose overflow-x-auto rounded-xl border border-slate-200">
-          <table className="w-full text-[13px]">
-            <thead className="bg-slate-50 text-[11px] font-medium text-slate-500">
+        <div className="not-prose overflow-x-auto rounded-xl border border-border">
+          <table className="w-full text-label">
+            <thead className="bg-muted text-dense font-medium text-muted-foreground">
               <tr>
                 <th className="px-4 py-2.5 text-left font-medium">Vendor</th>
                 <th className="px-4 py-2.5 text-left font-medium">Purpose</th>
                 <th className="px-4 py-2.5 text-left font-medium">Region</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-border">
               {[
                 ["Neon (Postgres)", "Primary database", "AP Southeast 1 / your region"],
                 ["Cloudflare R2", "File storage (avatars, attachments, payslips)", "Global"],
@@ -182,9 +182,9 @@ export default function PrivacyPage() {
                 ["Vercel", "Hosting and edge delivery", "Global"],
               ].map(([vendor, purpose, region]) => (
                 <tr key={vendor}>
-                  <td className="px-4 py-2.5 font-medium text-slate-900">{vendor}</td>
-                  <td className="px-4 py-2.5 text-slate-600">{purpose}</td>
-                  <td className="px-4 py-2.5 text-slate-500 font-mono text-[11px]">{region}</td>
+                  <td className="px-4 py-2.5 font-medium text-foreground">{vendor}</td>
+                  <td className="px-4 py-2.5 text-muted-foreground">{purpose}</td>
+                  <td className="px-4 py-2.5 text-muted-foreground font-mono text-dense">{region}</td>
                 </tr>
               ))}
             </tbody>
@@ -263,7 +263,7 @@ export default function PrivacyPage() {
         </ul>
         <p>
           Email{" "}
-          <a href={`mailto:${BRAND_SUPPORT_EMAIL}`} className="font-mono text-blue-600 hover:underline">
+          <a href={`mailto:${BRAND_SUPPORT_EMAIL}`} className="font-mono text-status-info-ink hover:underline">
             {BRAND_SUPPORT_EMAIL}
           </a>{" "}
           with your request. We respond within 30 days, usually within 5.
@@ -273,7 +273,7 @@ export default function PrivacyPage() {
       <LegalSection id="security" title="How we protect it">
         <p>
           A short summary lives here; the full picture is in our{" "}
-          <Link href="/legal/security" className="text-blue-600 hover:underline">
+          <Link href="/legal/security" className="text-status-info-ink hover:underline">
             Security page
           </Link>
           . In brief: TLS 1.2+ in transit, AES-256 at rest, MFA available on every account,
@@ -306,7 +306,7 @@ export default function PrivacyPage() {
           </li>
           <li>
             AI features can be disabled at the organization level from{" "}
-            <span className="font-mono text-blue-600">Settings &rarr; AI</span>.
+            <span className="font-mono text-status-info-ink">Settings &rarr; AI</span>.
           </li>
           <li>
             Enterprise customers may bring their own API key (BYOK) so the model traffic
@@ -327,7 +327,7 @@ export default function PrivacyPage() {
       <LegalSection id="contact" title="Contact">
         <p>
           Privacy questions, requests, complaints — write to{" "}
-          <a href={`mailto:${BRAND_SUPPORT_EMAIL}`} className="font-mono text-blue-600 hover:underline">
+          <a href={`mailto:${BRAND_SUPPORT_EMAIL}`} className="font-mono text-status-info-ink hover:underline">
             {BRAND_SUPPORT_EMAIL}
           </a>
           . For formal data protection enquiries, address them &ldquo;Attn: Data Protection

@@ -54,22 +54,22 @@ const STATUS_CONFIG: Record<
   },
   SENT: {
     label: "Sent",
-    className: "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20",
+    className: "bg-status-info-surface text-status-info-ink border-status-info-rule",
     icon: Send,
   },
   ACCEPTED: {
     label: "Accepted",
-    className: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20",
+    className: "bg-status-success-surface text-status-success-ink border-status-success-rule",
     icon: CheckCircle,
   },
   REJECTED: {
     label: "Rejected",
-    className: "bg-red-500/10 text-red-700 dark:text-red-300 border-red-500/20",
+    className: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
     icon: XCircle,
   },
   EXPIRED: {
     label: "Expired",
-    className: "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20",
+    className: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
     icon: Clock,
   },
 };
@@ -259,7 +259,7 @@ export function DealQuotesSection({ dealId }: DealQuotesSectionProps) {
             <FileText className="h-4 w-4 text-muted-foreground" />
             <h3 className="text-sm font-semibold">Quotes</h3>
             {quotes.length > 0 && (
-              <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
+              <Badge variant="secondary" className="text-micro h-4 px-1.5">
                 {quotes.length}
               </Badge>
             )}

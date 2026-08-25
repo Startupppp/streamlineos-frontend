@@ -118,7 +118,7 @@ export function BonusesTab() {
           <LoadingButton
             size="sm"
             variant="outline"
-            className="h-6 text-[10px] px-2 text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:text-emerald-300 dark:border-emerald-500/30 dark:hover:bg-emerald-500/10"
+            className="h-6 text-micro px-2 text-status-success-ink border-status-success-rule hover:bg-status-success-surface"
             isPending={updateBonus.isPending}
             onClick={makeApproveHandler(row.id)}
           >
@@ -127,7 +127,7 @@ export function BonusesTab() {
           <LoadingButton
             size="sm"
             variant="outline"
-            className="h-6 text-[10px] px-2 text-destructive border-destructive/30 hover:bg-destructive/10"
+            className="h-6 text-micro px-2 text-destructive border-destructive/30 hover:bg-destructive/10"
             isPending={updateBonus.isPending}
             onClick={makeRejectHandler(row.id)}
           >
@@ -145,12 +145,12 @@ export function BonusesTab() {
         <div className="min-w-0">
           <TruncatedText
             text={row.userName ?? "Unknown user"}
-            className="text-[11px] font-medium text-foreground max-w-[140px]"
+            className="text-dense font-medium text-foreground max-w-[140px]"
           />
           {row.userEmail && (
             <TruncatedText
               text={row.userEmail}
-              className="text-[10px] text-muted-foreground max-w-[140px]"
+              className="text-micro text-muted-foreground max-w-[140px]"
             />
           )}
         </div>
@@ -161,7 +161,7 @@ export function BonusesTab() {
       header: "Type",
       cell: (row) => (
         <span
-          className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${
+          className={`inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium border ${
             TYPE_COLORS[row.type] ?? "bg-muted text-muted-foreground border-border"
           }`}
         >
@@ -174,7 +174,7 @@ export function BonusesTab() {
       header: "Amount",
       className: "text-right",
       cell: (row) => (
-        <span className="font-mono text-[11px] tabular-nums">{formatMoney(row.amount)}</span>
+        <span className="font-mono text-dense tabular-nums">{formatMoney(row.amount)}</span>
       ),
     },
     {
@@ -183,7 +183,7 @@ export function BonusesTab() {
       cell: (row) => (
         <TruncatedText
           text={row.reason ?? "—"}
-          className="text-[10px] text-muted-foreground max-w-[160px]"
+          className="text-micro text-muted-foreground max-w-[160px]"
         />
       ),
     },
@@ -196,7 +196,7 @@ export function BonusesTab() {
       key: "submitted",
       header: "Submitted",
       cell: (row) => (
-        <span className="text-[10px] text-muted-foreground">{formatDate(row.createdAt)}</span>
+        <span className="text-micro text-muted-foreground">{formatDate(row.createdAt)}</span>
       ),
     },
     ...(canManage ? [actionColumn] : []),

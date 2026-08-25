@@ -48,7 +48,7 @@ export function LandingHero() {
               className="inline-flex items-center gap-3 mb-5 sm:mb-6"
             >
               <AnimatedLogo size={52} className="rounded-xl" />
-              <span className="font-display text-[1.65rem] sm:text-[2.15rem] md:text-[2.45rem] font-extrabold tracking-[-0.035em] leading-none text-slate-900 text-balance">
+              <span className="font-display text-[1.65rem] sm:text-[2.15rem] md:text-[2.45rem] font-extrabold tracking-[-0.035em] leading-none text-foreground text-balance">
                 {BRAND_NAME.slice(0, -2)}
                 <span className="brand-sweep">OS</span>
               </span>
@@ -59,7 +59,7 @@ export function LandingHero() {
               initial="hidden"
               animate="visible"
               variants={variants}
-              className="font-display text-[1.85rem] leading-[1.06] sm:text-4xl md:text-[2.75rem] lg:text-[2.9rem] xl:text-[3.25rem] font-extrabold tracking-[-0.03em] text-slate-900 text-balance mb-4 sm:mb-5"
+              className="font-display text-[1.85rem] leading-[1.06] sm:text-4xl md:text-[2.75rem] lg:text-[2.9rem] xl:text-[3.25rem] font-extrabold tracking-[-0.03em] text-foreground text-balance mb-4 sm:mb-5"
             >
               All your business on{" "}
               <span className="brand-sweep">one platform.</span>
@@ -70,10 +70,10 @@ export function LandingHero() {
               initial="hidden"
               animate="visible"
               variants={variants}
-              className="mx-auto lg:mx-0 mb-7 sm:mb-8 max-w-md text-[15px] sm:text-base text-slate-600 leading-relaxed text-pretty"
+              className="mx-auto lg:mx-0 mb-7 sm:mb-8 max-w-md text-sm sm:text-base text-muted-foreground leading-relaxed text-pretty"
             >
               HR, projects, CRM, chat, and accounting — from{" "}
-              <span className="font-semibold text-slate-900">{cheapestAnnualLabel()}</span>
+              <span className="font-semibold text-foreground">{cheapestAnnualLabel()}</span>
               /seat monthly when billed annually.
             </motion.p>
 
@@ -86,7 +86,7 @@ export function LandingHero() {
             >
               <Magnetic strength={reduce ? 0 : 0.32} className="w-full sm:w-auto">
                 <Link href="/signin" className="block w-full sm:w-auto">
-                  <Button size="lg" className="h-12 w-full sm:w-auto px-7 text-[15px]">
+                  <Button size="lg" className="h-12 w-full sm:w-auto px-7 text-sm">
                     Start free
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
@@ -96,7 +96,7 @@ export function LandingHero() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="h-12 w-full sm:w-auto px-7 text-[15px] bg-white/70"
+                  className="h-12 w-full sm:w-auto px-7 text-sm bg-white/70"
                 >
                   Explore apps
                   <ChevronRight className="ml-1.5 h-4 w-4" />
@@ -109,7 +109,7 @@ export function LandingHero() {
               initial="hidden"
               animate="visible"
               variants={variants}
-              className="mt-5 text-[12px] text-slate-500"
+              className="mt-5 text-xs text-muted-foreground"
             >
               Free up to {PRICING.freeSeatLimit} seats · No card required
             </motion.p>

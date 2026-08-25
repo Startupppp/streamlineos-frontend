@@ -20,16 +20,16 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { ErrorState } from "@/components/shared/error-state";
 
 const STATUS_BADGE: Record<HrBookingLink["status"], { label: string; className: string }> = {
-  pending: { label: "Pending", className: "bg-yellow-500/10 text-yellow-700 border-yellow-500/20 dark:text-yellow-300 dark:border-yellow-500/30" },
-  booked: { label: "Booked", className: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30" },
-  expired: { label: "Expired", className: "bg-muted text-muted-foreground border-border dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700" },
+  pending: { label: "Pending", className: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule" },
+  booked: { label: "Booked", className: "bg-status-success-surface text-status-success-ink border-status-success-rule" },
+  expired: { label: "Expired", className: "bg-muted text-muted-foreground border-border" },
   cancelled: { label: "Cancelled", className: "bg-destructive/10 text-destructive border-destructive/20" },
 };
 
 function StatusBadgeCell({ status }: { status: HrBookingLink["status"] }) {
   const cfg = STATUS_BADGE[status] ?? STATUS_BADGE.pending;
   return (
-    <Badge variant="outline" className={`text-[10px] ${cfg.className}`}>
+    <Badge variant="outline" className={`text-micro ${cfg.className}`}>
       {cfg.label}
     </Badge>
   );

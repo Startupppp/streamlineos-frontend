@@ -245,7 +245,7 @@ export function MessageList({
                   size="sm"
                   onClick={handleFetchNextPage}
                   disabled={isFetchingNextPage}
-                  className="text-[12px] rounded-full px-4"
+                  className="text-xs rounded-full px-4"
                 >
                   {isFetchingNextPage ? (
                     <>
@@ -263,7 +263,7 @@ export function MessageList({
             <Fragment key={group.date}>
               <div className="flex items-center gap-3 my-3">
                 <div className="flex-1 h-px bg-border/40" />
-                <span className="text-[10px] font-semibold text-muted-foreground/60 bg-background px-2.5 py-0.5 rounded-full border border-border/30">
+                <span className="text-micro font-semibold text-muted-foreground/60 bg-background px-2.5 py-0.5 rounded-full border border-border/30">
                   {group.date}
                 </span>
                 <div className="flex-1 h-px bg-border/40" />
@@ -286,9 +286,9 @@ export function MessageList({
                   <Fragment key={msg.id}>
                     {showUnreadDivider && (
                       <div className="flex items-center gap-3 my-2 px-2">
-                        <div className="flex-1 h-px bg-red-400/60" />
-                        <span className="text-[10px] font-bold text-red-500 whitespace-nowrap px-2">New Messages</span>
-                        <div className="flex-1 h-px bg-red-400/60" />
+                        <div className="flex-1 h-px bg-status-danger-surface" />
+                        <span className="text-micro font-bold text-status-danger-ink whitespace-nowrap px-2">New Messages</span>
+                        <div className="flex-1 h-px bg-status-danger-surface" />
                       </div>
                     )}
                     <MessageItem
@@ -324,15 +324,15 @@ export function MessageList({
 
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center py-10">
-              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500/15 to-blue-500/5 flex items-center justify-center mb-3">
-                <Send className="h-5 w-5 text-blue-600" />
+              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-gradient-info-wash-from to-gradient-info-wash-to flex items-center justify-center mb-3">
+                <Send className="h-5 w-5 text-status-info-ink" />
               </div>
-              <h4 className="text-[14px] font-semibold mb-0.5">
+              <h4 className="text-sm font-semibold mb-0.5">
                 {channelType === "DIRECT"
                   ? `Start a conversation with ${displayName}`
                   : `Welcome to #${displayName}`}
               </h4>
-              <p className="text-[12px] text-muted-foreground max-w-xs text-center">
+              <p className="text-xs text-muted-foreground max-w-xs text-center">
                 Send a message to get things started.
               </p>
             </div>
@@ -357,7 +357,7 @@ export function MessageList({
               onClick={() => scrollToBottom()}
               className="pointer-events-auto h-8 rounded-full bg-background border border-border/60 shadow-lg flex items-center gap-1.5 px-3 hover:bg-muted transition-colors"
             >
-              <span className="text-[11px] font-medium">New messages</span>
+              <span className="text-dense font-medium">New messages</span>
             </ScrollToBottomButton>
           </motion.div>
         )}

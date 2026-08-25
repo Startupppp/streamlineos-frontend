@@ -57,7 +57,7 @@ function buildTransferColumns(
         <Link
           href={`/inventory/stock/transfers/${row.id}`}
           onClick={(e) => e.stopPropagation()}
-          className="font-mono text-[11px] font-semibold text-primary hover:underline"
+          className="font-mono text-dense font-semibold text-primary hover:underline"
         >
           {row.referenceNumber}
         </Link>
@@ -86,7 +86,7 @@ function buildTransferColumns(
       cell: (row) => (
         <Badge
           variant="outline"
-          className={cn("h-4 text-[9px] px-1.5 py-0 font-medium", TRANSFER_STATUS_BADGE[row.status])}
+          className={cn("h-4 text-micro px-1.5 py-0 font-medium", TRANSFER_STATUS_BADGE[row.status])}
         >
           {TRANSFER_STATUS_LABEL[row.status]}
         </Badge>
@@ -114,7 +114,7 @@ function buildTransferColumns(
           <Button
             variant="ghost"
             size="sm"
-            className="px-2 text-[11px] text-primary hover:text-primary/80"
+            className="px-2 text-dense text-primary hover:text-primary/80"
             onClick={handleViewClick}
             aria-label={`View transfer ${row.referenceNumber}`}
           >

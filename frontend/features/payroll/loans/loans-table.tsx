@@ -117,7 +117,7 @@ export function LoansTable() {
   return (
     <>
       {activeRunId === null && !isLoading && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-amber-50 border border-amber-200 text-amber-700 text-xs mb-3 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-300">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-status-warning-surface border border-status-warning-rule text-status-warning-ink text-xs mb-3">
           <AlertTriangle className="h-4 w-4 shrink-0" />
           No active payroll run for this period. Loan adjustments are unavailable.
         </div>
@@ -149,7 +149,7 @@ export function LoansTable() {
           <div className="space-y-1.5">
             <div className="flex items-center justify-between gap-2">
               <p className="text-sm font-medium truncate">{row.user.name ?? row.user.email}</p>
-              <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground shrink-0">
+              <span className="text-micro font-medium uppercase tracking-wide text-muted-foreground shrink-0">
                 {row.status}
               </span>
             </div>

@@ -79,7 +79,7 @@ export function OnboardingList() {
               <Card
                 key={row.userId}
                 className={cn(
-                  "rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden border-l-4",
+                  "rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden border-l-4",
                   rowStatus === "completed" && "border-l-emerald-500",
                   (rowStatus === "stalled" || rowStatus === "in_progress") && "border-l-amber-500",
                   rowStatus === "not_started" && "border-l-border"
@@ -89,11 +89,11 @@ export function OnboardingList() {
                   <div className="flex items-center gap-3">
                     <div
                       className={cn(
-                        "h-7 w-7 rounded-lg flex items-center justify-center shrink-0 text-[10px] font-bold",
+                        "h-7 w-7 rounded-lg flex items-center justify-center shrink-0 text-micro font-bold",
                         rowStatus === "completed"
-                          ? "bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                          ? "bg-status-success-surface text-status-success-ink"
                           : rowStatus === "stalled" || rowStatus === "in_progress"
-                          ? "bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                          ? "bg-status-warning-surface text-status-warning-ink"
                           : "bg-muted text-muted-foreground"
                       )}
                     >
@@ -106,7 +106,7 @@ export function OnboardingList() {
                         {rowStatus === "completed" && (
                           <Badge
                             variant="outline"
-                            className="text-[10px] font-semibold shrink-0 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800"
+                            className="text-micro font-semibold shrink-0 px-2 py-0.5 rounded-full bg-status-success-surface text-status-success-ink border-status-success-rule"
                           >
                             Completed
                           </Badge>
@@ -114,7 +114,7 @@ export function OnboardingList() {
                         {rowStatus === "stalled" && (
                           <Badge
                             variant="outline"
-                            className="text-[10px] font-semibold shrink-0 px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800"
+                            className="text-micro font-semibold shrink-0 px-2 py-0.5 rounded-full bg-status-warning-surface text-status-warning-ink border-status-warning-rule"
                           >
                             Stalled
                           </Badge>
@@ -122,7 +122,7 @@ export function OnboardingList() {
                         {rowStatus === "in_progress" && (
                           <Badge
                             variant="outline"
-                            className="text-[10px] font-semibold shrink-0 px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800"
+                            className="text-micro font-semibold shrink-0 px-2 py-0.5 rounded-full bg-status-warning-surface text-status-warning-ink border-status-warning-rule"
                           >
                             In Progress
                           </Badge>
@@ -130,7 +130,7 @@ export function OnboardingList() {
                         {rowStatus === "not_started" && (
                           <Badge
                             variant="outline"
-                            className="text-[10px] font-semibold shrink-0 px-2 py-0.5 rounded-full bg-muted text-muted-foreground border-border"
+                            className="text-micro font-semibold shrink-0 px-2 py-0.5 rounded-full bg-muted text-muted-foreground border-border"
                           >
                             Not Started
                           </Badge>
@@ -139,9 +139,9 @@ export function OnboardingList() {
                       <div className="flex items-center gap-2">
                         <Progress
                           value={row.percentComplete}
-                          className="h-1.5 flex-1 [&>div]:bg-emerald-500"
+                          className="h-1.5 flex-1 [&>div]:bg-status-success-fill"
                         />
-                        <span className="text-[11px] font-semibold text-muted-foreground tabular-nums shrink-0">
+                        <span className="text-dense font-semibold text-muted-foreground tabular-nums shrink-0">
                           {row.percentComplete}% · {row.completedTasks}/{row.totalTasks}
                         </span>
                       </div>

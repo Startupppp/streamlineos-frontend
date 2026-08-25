@@ -88,7 +88,7 @@ export const KanbanColumn = memo(function KanbanColumn({
             </span>
           )}
         </div>
-        <p className="text-xs text-muted-foreground mt-0.5 pl-[18px]">
+        <p className="text-xs text-muted-foreground mt-0.5 pl-4.5">
           {deals.length} {deals.length === 1 ? "deal" : "deals"}
         </p>
       </div>

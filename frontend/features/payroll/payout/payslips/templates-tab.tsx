@@ -16,8 +16,8 @@ import { PayslipPreviewSheet } from "./template-preview-sheet";
 import { TemplateDeleteDialog } from "./template-delete-dialog";
 
 const LAYOUT_BADGE: Record<PayslipLayout, string> = {
-  CLASSIC: "bg-blue-50 text-blue-700 border border-blue-200/70 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  MODERN: "bg-blue-50 text-blue-700 border border-blue-200/70 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  CLASSIC: "bg-status-info-surface text-status-info-ink border border-status-info-rule",
+  MODERN: "bg-status-info-surface text-status-info-ink border border-status-info-rule",
   COMPLIANCE: "bg-muted text-muted-foreground border border-border",
 };
 
@@ -39,14 +39,14 @@ function TemplateCard({
       <div className="flex items-center gap-2">
         <span
           className={cn(
-            "inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wider",
+            "inline-flex items-center px-1.5 py-0.5 rounded-md text-micro font-semibold uppercase tracking-wider",
             LAYOUT_BADGE[template.layout],
           )}
         >
           {template.layout}
         </span>
         {template.isDefault && (
-          <span className="inline-flex items-center gap-0.5 text-emerald-600 dark:text-emerald-400 text-[10px] font-medium">
+          <span className="inline-flex items-center gap-0.5 text-status-success-ink text-micro font-medium">
             <Star className="h-3 w-3" />
             Default
           </span>
@@ -58,13 +58,13 @@ function TemplateCard({
           className="h-4 w-4 rounded-full border border-border"
           style={{ backgroundColor: template.config.accent }}
         />
-        <span className="text-[11px] text-muted-foreground">Accent</span>
+        <span className="text-dense text-muted-foreground">Accent</span>
       </div>
       <div className="space-y-0.5">
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-dense text-muted-foreground">
           Employer contributions: {template.config.showEmployerContributions ? "yes" : "no"}
         </p>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-dense text-muted-foreground">
           YTD: {template.config.showYtd ? "yes" : "no"}
         </p>
       </div>

@@ -228,7 +228,7 @@ export function InterviewFormSheet({
           <FieldGroup
             icon={User}
             label="Candidate"
-            colorClass="bg-blue-100 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400"
+            colorClass="bg-status-info-surface text-status-info-ink"
           >
             <CandidateSelect
               candidates={allCandidates}
@@ -244,7 +244,7 @@ export function InterviewFormSheet({
           <FieldGroup
             icon={Briefcase}
             label="Job Position"
-            colorClass="bg-blue-100 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400"
+            colorClass="bg-status-info-surface text-status-info-ink"
           >
             <Select value={jobPostingId} onValueChange={setJobPostingId}>
               <SelectTrigger className="">
@@ -265,7 +265,7 @@ export function InterviewFormSheet({
           <FieldGroup
             icon={Calendar}
             label="Schedule"
-            colorClass="bg-emerald-100 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400"
+            colorClass="bg-status-success-surface text-status-success-ink"
           >
             <div className="space-y-2.5">
               <Input
@@ -277,7 +277,7 @@ export function InterviewFormSheet({
               />
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                  <label className="text-dense font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                     <Clock className="h-3 w-3" />
                     Format
                   </label>
@@ -295,7 +295,7 @@ export function InterviewFormSheet({
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  <label className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
                     Duration (min)
                   </label>
                   <Input
@@ -311,7 +311,7 @@ export function InterviewFormSheet({
               </div>
               {format_ === "VIDEO" && (
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                  <label className="text-dense font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                     <Video className="h-3 w-3" />
                     Meet Link <span className="text-destructive">*</span>
                   </label>
@@ -341,7 +341,7 @@ export function InterviewFormSheet({
           <FieldGroup
             icon={User}
             label="Interviewers"
-            colorClass="bg-muted text-muted-foreground dark:bg-slate-800/60 dark:text-slate-400"
+            colorClass="bg-muted text-muted-foreground"
           >
             <InterviewerSelect
               orgMembers={orgMembers}

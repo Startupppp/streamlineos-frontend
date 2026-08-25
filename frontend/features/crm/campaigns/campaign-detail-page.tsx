@@ -55,14 +55,14 @@ const leadColumns: DataTableColumn<CampaignLeadItem & { _idx: number }>[] = [
     key: "name",
     header: "Name",
     cell: (row) => (
-      <TruncatedText text={getString(row.name ?? row.clientName)} className="text-[11px] font-medium max-w-[140px]" />
+      <TruncatedText text={getString(row.name ?? row.clientName)} className="text-dense font-medium max-w-[140px]" />
     ),
   },
   {
     key: "status",
     header: "Status",
     cell: (row) => (
-      <span className="text-[11px] capitalize text-muted-foreground">
+      <span className="text-dense capitalize text-muted-foreground">
         {getString(row.status).toLowerCase()}
       </span>
     ),
@@ -71,7 +71,7 @@ const leadColumns: DataTableColumn<CampaignLeadItem & { _idx: number }>[] = [
     key: "source",
     header: "Source",
     cell: (row) => (
-      <span className="text-[11px] capitalize text-muted-foreground">
+      <span className="text-dense capitalize text-muted-foreground">
         {getString(row.source).replace(/_/g, " ")}
       </span>
     ),

@@ -69,7 +69,7 @@ function RosterCard({ roster, canManage }: RosterCardProps) {
           <p className="text-xs text-muted-foreground mt-0.5">{roster.weekStart} – {roster.weekEnd}</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <Badge variant={STATUS_VARIANTS[roster.status] ?? "secondary"} className="text-[11px]">
+          <Badge variant={STATUS_VARIANTS[roster.status] ?? "secondary"} className="text-dense">
             {roster.status}
           </Badge>
           {canManage && roster.status === "DRAFT" && (
@@ -108,7 +108,7 @@ function RosterCard({ roster, canManage }: RosterCardProps) {
                       <span className="text-muted-foreground">{getUserDisplayName(memberById.get(entry.userId))} — {entry.date}</span>
                       <span className="font-medium">
                         {entry.isDayOff ? (
-                          <Badge variant="secondary" className="text-[10px]">Day Off</Badge>
+                          <Badge variant="secondary" className="text-micro">Day Off</Badge>
                         ) : (
                           entry.shiftId ? `Shift #${entry.shiftId}` : "—"
                         )}

@@ -31,7 +31,7 @@ function ThreadMessage({ message, currentUserId, isParent, resolveUserName }: Th
   if (message.isDeleted) {
     return (
       <div className="px-3 py-1 rounded-xl bg-muted/20 border border-border/15 mx-4">
-        <p className="text-[11px] text-muted-foreground/40 italic">Message deleted</p>
+        <p className="text-dense text-muted-foreground/40 italic">Message deleted</p>
       </div>
     );
   }
@@ -39,29 +39,29 @@ function ThreadMessage({ message, currentUserId, isParent, resolveUserName }: Th
     <div className={cn("flex gap-2.5 px-4", isParent ? "py-3" : "py-1")}>
       <Avatar className="w-7 shrink-0 mt-0.5 border border-border/30 shadow-sm">
         <AvatarImage src={resolveImageUrl(message.sender?.image)} />
-        <AvatarFallback className="text-[8px] font-bold bg-muted text-muted-foreground">
+        <AvatarFallback className="text-micro font-bold bg-muted text-muted-foreground">
           {getInitials(senderName)}
         </AvatarFallback>
       </Avatar>
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-2 mb-0.5">
-          <span className={cn("text-[12px] font-bold", isOwn ? "text-primary" : "text-foreground")}>
+          <span className={cn("text-xs font-bold", isOwn ? "text-primary" : "text-foreground")}>
             {senderName}
           </span>
-          <span className="text-[10px] text-muted-foreground">
+          <span className="text-micro text-muted-foreground">
             {formatMessageTime(message.createdAt)}
           </span>
           {message.isEdited && (
-            <span className="text-[10px] text-muted-foreground/60">edited</span>
+            <span className="text-micro text-muted-foreground/60">edited</span>
           )}
         </div>
         {message.content && (
-          <div className="text-[13px] leading-[1.55] whitespace-pre-wrap break-words text-foreground">
+          <div className="text-label leading-[1.55] whitespace-pre-wrap break-words text-foreground">
             {renderFormattedContent(message.content, isOwn)}
           </div>
         )}
         {message.attachments.length > 0 && (
-          <p className="text-[12px] text-muted-foreground mt-0.5">
+          <p className="text-xs text-muted-foreground mt-0.5">
             {message.attachments.length} attachment{message.attachments.length !== 1 ? "s" : ""}
           </p>
         )}
@@ -70,7 +70,7 @@ function ThreadMessage({ message, currentUserId, isParent, resolveUserName }: Th
             {Object.entries(message.reactions).map(([emoji, userIds]) => (
               <span
                 key={emoji}
-                className="flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] bg-muted/40 border-border/30"
+                className="flex items-center gap-1 px-2 py-0.5 rounded-full border text-dense bg-muted/40 border-border/30"
               >
                 {emoji}
                 <span className="font-medium">{userIds.length}</span>
@@ -192,7 +192,7 @@ export function ThreadPanel({
       <div className="h-[56px] px-4 border-b border-border/40 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
           <MessageSquare className="h-4 w-4 text-muted-foreground" />
-          <h3 className="text-[14px] font-bold">Thread</h3>
+          <h3 className="text-sm font-bold">Thread</h3>
         </div>
         <ThreadCloseButton
           onClick={onClose}
@@ -218,7 +218,7 @@ export function ThreadPanel({
                 />
                 <div className="mx-4 my-2 flex items-center gap-2">
                   <div className="flex-1 h-px bg-border/40" />
-                  <span className="text-[10px] font-semibold text-muted-foreground/60 whitespace-nowrap">
+                  <span className="text-micro font-semibold text-muted-foreground/60 whitespace-nowrap">
                     {replies.length} {replies.length === 1 ? "reply" : "replies"}
                   </span>
                   <div className="flex-1 h-px bg-border/40" />
@@ -231,7 +231,7 @@ export function ThreadPanel({
                 <button
                   onClick={handleLoadOlder}
                   disabled={isFetchingNextPage}
-                  className="text-[11px] text-primary hover:underline disabled:opacity-50"
+                  className="text-dense text-primary hover:underline disabled:opacity-50"
                 >
                   {isFetchingNextPage ? "Loading..." : "Load older replies"}
                 </button>
@@ -243,7 +243,7 @@ export function ThreadPanel({
                 <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center mb-2">
                   <Send className="h-4 w-4 text-primary" />
                 </div>
-                <p className="text-[12px] text-muted-foreground text-center">
+                <p className="text-xs text-muted-foreground text-center">
                   No replies yet. Start the thread.
                 </p>
               </div>
@@ -264,7 +264,7 @@ export function ThreadPanel({
       </ScrollArea>
 
       <div className="p-3 border-t border-border/40 shrink-0">
-        <div className="flex items-end gap-2 rounded-xl border border-border/50 bg-background px-3 py-2 focus-within:border-blue-500/40 transition-colors">
+        <div className="flex items-end gap-2 rounded-xl border border-border/50 bg-background px-3 py-2 focus-within:border-status-info-rule transition-colors">
           <textarea
             ref={inputRef}
             value={input}
@@ -272,7 +272,7 @@ export function ThreadPanel({
             onKeyDown={handleKeyDown}
             placeholder="Reply in thread..."
             rows={1}
-            className="flex-1 bg-transparent text-[13px] resize-none focus:outline-none min-h-[22px] max-h-[120px] leading-[1.5]"
+            className="flex-1 bg-transparent text-label resize-none focus:outline-none min-h-[22px] max-h-[120px] leading-[1.5]"
           />
           <ThreadSendButton
             onClick={handleSend}

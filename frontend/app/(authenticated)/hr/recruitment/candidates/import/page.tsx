@@ -55,7 +55,7 @@ function FieldMappingRow({ field, value, headers, onChange }: FieldMappingRowPro
     <div className="grid grid-cols-2 gap-4 items-center">
       <div className="flex items-center gap-1.5 text-sm">
         <span>{field.label}</span>
-        {field.required && <Badge variant="outline" className="text-[10px] h-4 px-1">required</Badge>}
+        {field.required && <Badge variant="outline" className="text-micro h-4 px-1">required</Badge>}
       </div>
       <Select value={value} onValueChange={handleChange}>
         <SelectTrigger className="text-xs">
@@ -361,19 +361,19 @@ export default function BulkImportPage() {
       {step === "done" && importResult && (
         <Card>
           <CardContent className="py-10 text-center">
-            <div className="w-14 h-14 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
-              <svg className="w-7 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <div className="w-14 h-14 rounded-full bg-status-success-surface flex items-center justify-center mx-auto mb-4">
+              <svg className="w-7 text-status-success-ink" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
             <p className="font-semibold text-lg">Import Complete</p>
             <div className="flex justify-center gap-6 mt-4 text-sm">
               <div className="text-center">
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400">{importResult.created}</p>
+                <p className="text-2xl font-bold text-status-success-ink">{importResult.created}</p>
                 <p className="text-muted-foreground text-xs">Created</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{importResult.skipped}</p>
+                <p className="text-2xl font-bold text-status-warning-ink">{importResult.skipped}</p>
                 <p className="text-muted-foreground text-xs">Skipped (duplicates)</p>
               </div>
             </div>

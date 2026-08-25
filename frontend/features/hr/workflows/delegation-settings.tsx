@@ -89,9 +89,9 @@ export function DelegationSettings({ open, onOpenChange }: Props) {
                   <p className="font-medium truncate">{d.delegateName ?? d.delegateEmail?.split("@")[0] ?? "Unknown user"}</p>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     {d.objectType ? (
-                      <Badge variant="secondary" className="text-[10px]">{HR_WORKFLOW_OBJECT_TYPE_LABELS[d.objectType]}</Badge>
+                      <Badge variant="secondary" className="text-micro">{HR_WORKFLOW_OBJECT_TYPE_LABELS[d.objectType]}</Badge>
                     ) : (
-                      <Badge variant="outline" className="text-[10px]">All types</Badge>
+                      <Badge variant="outline" className="text-micro">All types</Badge>
                     )}
                     <span className="text-muted-foreground">
                       {new Date(d.startsAt).toLocaleDateString()} – {new Date(d.endsAt).toLocaleDateString()}

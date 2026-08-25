@@ -35,7 +35,7 @@ export function RichTextContent({ content, className, contentKey }: RichTextCont
     return (
       <div
         className={cn(
-          "max-w-full min-w-0 text-[13px] text-foreground/90 break-words [overflow-wrap:anywhere] [word-break:break-word]",
+          "max-w-full min-w-0 text-label text-foreground/90 break-words [overflow-wrap:anywhere] [word-break:break-word]",
           className,
         )}
       >

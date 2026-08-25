@@ -4,8 +4,9 @@ import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { formatINRCompact } from "@/lib/format-utils";
+import { formatMoneyCompact } from "@/lib/format-utils";
 import { TrendingUp, Target } from "lucide-react";
+import { useOrgDisplay } from "@/hooks/api/org-display";
 const STAGE_PROBABILITIES: Record<string, number> = {
   LEAD: 10,
   CONTACTED: 25,
@@ -28,6 +29,7 @@ interface DealForecastWidgetProps {
 }
 
 export function DealForecastWidget({ deals }: DealForecastWidgetProps) {
+  const money = useOrgDisplay();
   const thisMonthStart = useMemo(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); }, []);
   const thisMonthEnd = useMemo(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth() + 1, 0); }, []);
 
@@ -88,11 +90,11 @@ export function DealForecastWidget({ deals }: DealForecastWidgetProps) {
   };
 
   const STAGE_COLORS: Record<string, string> = {
-    LEAD: "bg-blue-500",
-    CONTACTED: "bg-sky-500",
-    PROPOSAL: "bg-amber-500",
-    NEGOTIATION: "bg-blue-500",
-    WON: "bg-emerald-500",
+    LEAD: "bg-status-info-fill",
+    CONTACTED: "bg-status-info-fill",
+    PROPOSAL: "bg-status-warning-fill",
+    NEGOTIATION: "bg-status-info-fill",
+    WON: "bg-status-success-fill",
   };
 
   return (
@@ -104,7 +106,7 @@ export function DealForecastWidget({ deals }: DealForecastWidgetProps) {
             Stage Probability View
           </CardTitle>
           <p className="text-xs text-muted-foreground">
-            Weighted pipeline: <span className="font-semibold text-foreground">{formatINRCompact(weightedTotal)}</span>
+            Weighted pipeline: <span className="font-semibold text-foreground">{formatMoneyCompact(weightedTotal, money)}</span>
           </p>
         </CardHeader>
         <CardContent className="p-4 pt-0 space-y-3">
@@ -117,10 +119,10 @@ export function DealForecastWidget({ deals }: DealForecastWidgetProps) {
                   <div className="flex items-center gap-2">
                     <div className={`w-2 h-2 rounded-full ${STAGE_COLORS[s.stage] ?? "bg-muted"}`} />
                     <span className="font-medium">{STAGE_LABELS[s.stage] ?? s.stage}</span>
-                    <Badge variant="outline" className="text-[9px] h-4 px-1">{s.probability}%</Badge>
+                    <Badge variant="outline" className="text-micro h-4 px-1">{s.probability}%</Badge>
                     <span className="text-muted-foreground">{s.count} deal{s.count !== 1 ? "s" : ""}</span>
                   </div>
-                  <span className="font-medium tabular-nums">{formatINRCompact(s.weighted)}</span>
+                  <span className="font-medium tabular-nums">{formatMoneyCompact(s.weighted, money)}</span>
                 </div>
                 <Progress value={(s.weighted / maxWeighted) * 100} className="h-1.5" />
               </div>
@@ -142,7 +144,7 @@ export function DealForecastWidget({ deals }: DealForecastWidgetProps) {
         <CardContent className="p-4 pt-0">
           <div className="flex items-end gap-2 mb-4">
             <span className="text-3xl font-bold text-foreground">
-              {formatINRCompact(monthlyForecast)}
+              {formatMoneyCompact(monthlyForecast, money)}
             </span>
             <span className="text-xs text-muted-foreground pb-1">weighted expected</span>
           </div>
@@ -160,7 +162,7 @@ export function DealForecastWidget({ deals }: DealForecastWidgetProps) {
             </div>
             <div className="flex justify-between">
               <span>Total weighted pipeline</span>
-              <span className="font-medium text-foreground">{formatINRCompact(weightedTotal)}</span>
+              <span className="font-medium text-foreground">{formatMoneyCompact(weightedTotal, money)}</span>
             </div>
             <div className="flex justify-between">
               <span>Win rate (weighted/raw)</span>
@@ -173,7 +175,7 @@ export function DealForecastWidget({ deals }: DealForecastWidgetProps) {
           </div>
 
           <div className="mt-4 p-3 rounded-lg bg-muted/40 border">
-            <p className="text-[10px] text-muted-foreground">
+            <p className="text-micro text-muted-foreground">
               Weighted values use deal probability if set, otherwise stage defaults:
               Lead 10% · Contacted 25% · Proposal 50% · Negotiation 75% · Won 100%
             </p>

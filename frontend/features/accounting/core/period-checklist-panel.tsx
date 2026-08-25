@@ -45,15 +45,15 @@ export function ChecklistItem({ label, passed, count, href }: ChecklistItemProps
     <div className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
       <div className="flex items-center gap-2">
         {passed ? (
-          <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+          <CheckCircle2 className="h-4 w-4 text-status-success-ink shrink-0" />
         ) : (
-          <XCircle className="h-4 w-4 text-red-500 shrink-0" />
+          <XCircle className="h-4 w-4 text-status-danger-ink shrink-0" />
         )}
         <span className="text-sm text-foreground">{label}</span>
       </div>
       <div className="flex items-center gap-2">
         {!passed && count > 0 && (
-          <span className="text-xs text-red-600 font-medium tabular-nums">{count} pending</span>
+          <span className="text-xs text-status-danger-ink font-medium tabular-nums">{count} pending</span>
         )}
         {href && !passed && (
           <Link href={href} className="text-xs text-primary hover:underline">

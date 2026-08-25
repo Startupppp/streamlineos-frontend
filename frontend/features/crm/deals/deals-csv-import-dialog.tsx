@@ -284,7 +284,7 @@ export function DealsCsvImportDialog({ onSuccess }: { onSuccess?: () => void }) 
           {["upload", "mapping", "preview"].map((s, i) => (
             <div key={s} className="flex items-center gap-1">
               <div
-                className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-colors ${
+                className={`h-6 w-6 rounded-full flex items-center justify-center text-micro font-bold transition-colors ${
                   step === s
                     ? "bg-primary text-primary-foreground"
                     : i < ["upload", "mapping", "preview"].indexOf(step)

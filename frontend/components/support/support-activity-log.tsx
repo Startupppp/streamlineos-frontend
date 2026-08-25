@@ -102,14 +102,14 @@ export function SupportActivityLog({ supportTicketId }: SupportActivityLogProps)
               <div className="flex items-center gap-2 flex-wrap">
                 <Avatar className="h-4 w-4 shrink-0">
                   <AvatarImage src={resolveImageUrl(entry.userImage)} />
-                  <AvatarFallback className="text-[8px]">
+                  <AvatarFallback className="text-micro">
                     {getInitials(entry.userName)}
                   </AvatarFallback>
                 </Avatar>
                 <TruncatedText text={entry.userName ?? "System"} className="text-xs font-medium" />
                 <span className="text-xs text-muted-foreground">{entry.label}</span>
                 {entry.createdAt && (
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="text-micro text-muted-foreground">
                     {formatDistanceToNow(new Date(entry.createdAt), {
                       addSuffix: true,
                     })}
@@ -117,7 +117,7 @@ export function SupportActivityLog({ supportTicketId }: SupportActivityLogProps)
                 )}
               </div>
               {change && (
-                <TruncatedText text={change} className="text-[11px] text-muted-foreground mt-0.5" />
+                <TruncatedText text={change} className="text-dense text-muted-foreground mt-0.5" />
               )}
             </div>
           </li>

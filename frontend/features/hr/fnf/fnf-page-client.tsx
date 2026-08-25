@@ -44,9 +44,9 @@ const fnfKeys = {
 };
 
 function fnfStatusBadgeClass(status: string | null): string {
-  if (status === "PAID") return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800";
-  if (status === "APPROVED") return "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-800";
-  if (status === "PENDING_APPROVAL") return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800";
+  if (status === "PAID") return "bg-status-success-surface text-status-success-ink border-status-success-rule";
+  if (status === "APPROVED") return "bg-status-info-surface text-status-info-ink border-status-info-rule";
+  if (status === "PENDING_APPROVAL") return "bg-status-warning-surface text-status-warning-ink border-status-warning-rule";
   return "bg-muted text-muted-foreground border-border";
 }
 
@@ -76,7 +76,7 @@ function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
   return (
     <Card
       className={cn(
-        "rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden border-l-4 transition-colors duration-200",
+        "rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden border-l-4 transition-colors duration-200",
         fnfBorderClass(item.status)
       )}
     >
@@ -86,11 +86,11 @@ function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
             className={cn(
               "h-7 w-7 rounded-lg flex items-center justify-center shrink-0",
               item.status === "PAID"
-                ? "bg-emerald-100 dark:bg-emerald-500/10"
+                ? "bg-status-success-surface"
                 : item.status === "APPROVED"
-                  ? "bg-blue-100 dark:bg-blue-500/10"
+                  ? "bg-status-info-surface"
                   : item.status === "PENDING_APPROVAL"
-                    ? "bg-amber-100 dark:bg-amber-500/10"
+                    ? "bg-status-warning-surface"
                     : "bg-muted"
             )}
           >
@@ -98,11 +98,11 @@ function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
               className={cn(
                 "h-3.5 w-3.5",
                 item.status === "PAID"
-                  ? "text-emerald-700 dark:text-emerald-300"
+                  ? "text-status-success-ink"
                   : item.status === "APPROVED"
-                    ? "text-blue-700 dark:text-blue-300"
+                    ? "text-status-info-ink"
                     : item.status === "PENDING_APPROVAL"
-                      ? "text-amber-700 dark:text-amber-300"
+                      ? "text-status-warning-ink"
                       : "text-muted-foreground"
               )}
             />
@@ -115,7 +115,7 @@ function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
               )}
               <span
                 className={cn(
-                  "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0",
+                  "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border shrink-0",
                   fnfStatusBadgeClass(item.status)
                 )}
               >
@@ -123,7 +123,7 @@ function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
               </span>
             </div>
 
-            <div className="flex gap-3 text-[10px] text-muted-foreground mt-1 flex-wrap">
+            <div className="flex gap-3 text-micro text-muted-foreground mt-1 flex-wrap">
               {item.netPayable && (
                 <span className="flex items-center gap-0.5 font-semibold text-foreground">
                   <IndianRupee className="h-3 w-3" />
@@ -131,7 +131,7 @@ function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
                 </span>
               )}
               {item.deductions && Number(item.deductions) > 0 && (
-                <span className="text-rose-600 dark:text-rose-300">
+                <span className="text-status-danger-ink">
                   −₹{Number(item.deductions).toLocaleString("en-IN")} deductions
                 </span>
               )}
@@ -338,7 +338,7 @@ export function FnfPageClient() {
         </div>
 
         <div className="space-y-2">
-          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+          <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
             Settlement Components (₹)
           </p>
           <div className="grid grid-cols-2 gap-3">

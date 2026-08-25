@@ -223,12 +223,12 @@ export function PermissionMatrix({
           <div className="flex items-center gap-2">
             <TruncatedText text={role.name} className="text-base font-semibold" />
             {role.isSystem && (
-              <Badge variant="outline" className="text-[10px] shrink-0">
+              <Badge variant="outline" className="text-micro shrink-0">
                 System role
               </Badge>
             )}
             {dirty && (
-              <Badge className="text-[10px] shrink-0 bg-amber-100 dark:bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-500/30">
+              <Badge className="text-micro shrink-0 bg-status-warning-surface text-status-warning-ink border-status-warning-rule">
                 Unsaved
               </Badge>
             )}
@@ -363,17 +363,17 @@ function PermissionChangeSummary({
 
   if (total === 0)
     return (
-      <p className="text-[13px] text-muted-foreground">No changes to apply.</p>
+      <p className="text-label text-muted-foreground">No changes to apply.</p>
     );
 
   return (
-    <div className="max-h-[45dvh] space-y-3 overflow-y-auto text-[13px]">
+    <div className="max-h-[45dvh] space-y-3 overflow-y-auto text-label">
       {added.length > 0 && (
         <div>
-          <p className="font-medium text-emerald-700 dark:text-emerald-300">
+          <p className="font-medium text-status-success-ink">
             Granting {added.length}
           </p>
-          <ul className="mt-1 space-y-0.5 font-mono text-[11px] text-muted-foreground">
+          <ul className="mt-1 space-y-0.5 font-mono text-dense text-muted-foreground">
             {added.map((key) => (
               <li key={key}>{key}</li>
             ))}
@@ -382,10 +382,10 @@ function PermissionChangeSummary({
       )}
       {removed.length > 0 && (
         <div>
-          <p className="font-medium text-red-700 dark:text-red-300">
+          <p className="font-medium text-status-danger-ink">
             Revoking {removed.length}
           </p>
-          <ul className="mt-1 space-y-0.5 font-mono text-[11px] text-muted-foreground">
+          <ul className="mt-1 space-y-0.5 font-mono text-dense text-muted-foreground">
             {removed.map((key) => (
               <li key={key}>{key}</li>
             ))}
@@ -394,10 +394,10 @@ function PermissionChangeSummary({
       )}
       {rescoped.length > 0 && (
         <div>
-          <p className="font-medium text-amber-700 dark:text-amber-300">
+          <p className="font-medium text-status-warning-ink">
             Changing scope on {rescoped.length}
           </p>
-          <ul className="mt-1 space-y-0.5 font-mono text-[11px] text-muted-foreground">
+          <ul className="mt-1 space-y-0.5 font-mono text-dense text-muted-foreground">
             {rescoped.map((change) => (
               <li key={change.key}>
                 {change.key}: {change.from} → {change.to}

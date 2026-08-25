@@ -433,8 +433,8 @@ function HealthDot({ status }: { status: string }) {
     <span
       className={cn(
         "inline-block h-2 w-2 rounded-full shrink-0",
-        status === "healthy" && "bg-emerald-500",
-        status === "unhealthy" && "bg-red-500",
+        status === "healthy" && "bg-status-success-fill",
+        status === "unhealthy" && "bg-status-danger-fill",
         status !== "healthy" && status !== "unhealthy" && "bg-muted-foreground/40",
       )}
       title={status}
@@ -485,20 +485,20 @@ function ProviderRow({
           <span className="text-sm font-medium">{provider.displayName}</span>
           <Badge
             variant="outline"
-            className="text-[10px] h-4 px-1.5 shrink-0"
+            className="text-micro h-4 px-1.5 shrink-0"
           >
             {provider.channel}
           </Badge>
           <Badge
             variant="secondary"
-            className="text-[10px] h-4 px-1.5 shrink-0"
+            className="text-micro h-4 px-1.5 shrink-0"
           >
             {provider.provider}
           </Badge>
           {provider.isDefault && (
             <Badge
               variant="outline"
-              className="text-[10px] h-4 px-1.5 shrink-0 border-primary/30 text-primary"
+              className="text-micro h-4 px-1.5 shrink-0 border-primary/30 text-primary"
             >
               Default
             </Badge>
@@ -506,7 +506,7 @@ function ProviderRow({
           {provider.sandboxMode && (
             <Badge
               variant="outline"
-              className="text-[10px] h-4 px-1.5 shrink-0 border-amber-300 text-amber-600"
+              className="text-micro h-4 px-1.5 shrink-0 border-status-warning-rule text-status-warning-ink"
             >
               Sandbox
             </Badge>
@@ -514,9 +514,9 @@ function ProviderRow({
           <Badge
             variant="outline"
             className={cn(
-              "text-[10px] h-4 px-1.5 shrink-0",
+              "text-micro h-4 px-1.5 shrink-0",
               provider.enabled
-                ? "border-emerald-300 text-emerald-600"
+                ? "border-status-success-rule text-status-success-ink"
                 : "text-muted-foreground",
             )}
           >
@@ -525,7 +525,7 @@ function ProviderRow({
           {!provider.hasCredentials && (
             <Badge
               variant="outline"
-              className="text-[10px] h-4 px-1.5 shrink-0 border-destructive/40 text-destructive"
+              className="text-micro h-4 px-1.5 shrink-0 border-destructive/40 text-destructive"
             >
               No credentials
             </Badge>
@@ -533,17 +533,17 @@ function ProviderRow({
         </div>
         <div className="mt-0.5 flex items-center gap-3 flex-wrap">
           {provider.dailySendLimit != null && (
-            <span className="text-[11px] text-muted-foreground/70">
+            <span className="text-dense text-muted-foreground/70">
               Limit: {provider.dailySendLimit.toLocaleString()}/day
             </span>
           )}
           {provider.monthlyCostLimit != null && (
-            <span className="text-[11px] text-muted-foreground/70">
+            <span className="text-dense text-muted-foreground/70">
               Cost cap: ${provider.monthlyCostLimit}/mo
             </span>
           )}
           {provider.lastTestedAt && (
-            <span className="text-[11px] text-muted-foreground/50">
+            <span className="text-dense text-muted-foreground/50">
               Tested {formatRelativeTime(provider.lastTestedAt)}
             </span>
           )}

@@ -43,7 +43,7 @@ function buildWebhookColumns(retry: RetryMutation): DataTableColumn<PaymentWebho
     {
       key: "eventType",
       header: "Event",
-      className: "text-[12px] font-mono",
+      className: "text-xs font-mono",
       cell: (row) => row.eventType,
     },
     {
@@ -52,8 +52,8 @@ function buildWebhookColumns(retry: RetryMutation): DataTableColumn<PaymentWebho
       cell: (row) => (
         <span
           className={cn(
-            "text-[11px] font-medium",
-            row.processingStatus === "failed" ? "text-rose-600" : "text-emerald-600",
+            "text-dense font-medium",
+            row.processingStatus === "failed" ? "text-status-danger-ink" : "text-status-success-ink",
           )}
         >
           {row.processingStatus}
@@ -63,7 +63,7 @@ function buildWebhookColumns(retry: RetryMutation): DataTableColumn<PaymentWebho
     {
       key: "receivedAt",
       header: "Received",
-      className: "text-[11px] text-muted-foreground",
+      className: "text-dense text-muted-foreground",
       cell: (row) => new Date(row.receivedAt).toLocaleString(),
     },
     {
@@ -108,18 +108,18 @@ export function WebhooksTab({ providerKey, environment }: { providerKey: string;
   return (
     <div className="space-y-4">
       <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
-        <p className="text-[13px] font-medium text-foreground">
+        <p className="text-label font-medium text-foreground">
           {environment === "live" ? "Live" : "Test"} webhook endpoint
         </p>
         {generatedUrl ? (
           <div className="flex items-center gap-2">
-            <code className="flex-1 truncate text-[11px] bg-background border border-border rounded px-2 py-1.5 font-mono">
+            <code className="flex-1 truncate text-dense bg-background border border-border rounded px-2 py-1.5 font-mono">
               {generatedUrl}
             </code>
             <AnimatedIconButton icon={CopyIcon} iconSize={12} size="icon" variant="outline" className="w-7 shrink-0" onClick={handleCopyUrl} />
           </div>
         ) : (
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-dense text-muted-foreground">
             Generate an endpoint URL, add it in your provider&apos;s dashboard, and paste the signing secret in
             Credentials. Verification happens automatically the first time a real event arrives.
           </p>
@@ -128,14 +128,14 @@ export function WebhooksTab({ providerKey, environment }: { providerKey: string;
           {generatedUrl ? "Regenerate" : "Generate endpoint"}
         </AnimatedIconButton>
         {provider && (
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-dense text-muted-foreground">
             Expected events: card/UPI payments authorized, captured, failed; refunds; subscription charges.
           </p>
         )}
       </div>
 
       <div>
-        <p className="text-[13px] font-medium text-foreground mb-2">Recent events</p>
+        <p className="text-label font-medium text-foreground mb-2">Recent events</p>
         {isLoading ? (
           <DataTableSkeleton rows={8} columns={4} />
         ) : environmentEvents.length === 0 ? (

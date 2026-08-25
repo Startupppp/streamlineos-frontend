@@ -32,22 +32,22 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 
 function ContractTypeBadge({ type }: { type: HrContract["contractType"] }) {
   const colors: Record<HrContract["contractType"], string> = {
-    contractor: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-    consultant: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-    intern: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-    temporary: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-    agency: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30",
-    freelancer: "bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-500/10 dark:text-pink-300 dark:border-pink-500/30",
+    contractor: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+    consultant: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+    intern: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+    temporary: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+    agency: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+    freelancer: "bg-category-pink-surface text-category-pink-ink border-category-pink-rule",
   };
   return <Badge className={`capitalize ${colors[type]}`}>{type}</Badge>;
 }
 
 function ContractStatusBadge({ status }: { status: HrContract["status"] }) {
-  if (status === "expiring") return <Badge className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">Expiring</Badge>;
+  if (status === "expiring") return <Badge className="bg-status-warning-surface text-status-warning-ink border-status-warning-rule">Expiring</Badge>;
   if (status === "ended") return <Badge className="bg-muted text-muted-foreground border-border">Ended</Badge>;
-  if (status === "converted") return <Badge className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30">Converted</Badge>;
-  if (status === "renewed") return <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">Renewed</Badge>;
-  return <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">Active</Badge>;
+  if (status === "converted") return <Badge className="bg-status-info-surface text-status-info-ink border-status-info-rule">Converted</Badge>;
+  if (status === "renewed") return <Badge className="bg-status-success-surface text-status-success-ink border-status-success-rule">Renewed</Badge>;
+  return <Badge className="bg-status-success-surface text-status-success-ink border-status-success-rule">Active</Badge>;
 }
 
 function CertificateViewer({ contractId }: { contractId: number }) {

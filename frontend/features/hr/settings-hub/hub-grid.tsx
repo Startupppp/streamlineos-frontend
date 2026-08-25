@@ -187,8 +187,8 @@ function CardItem({ card }: { card: CardDef }) {
       href={card.href}
       className={cn(
         "group relative flex flex-col gap-2 h-full rounded-2xl border border-border/70 bg-card/90 p-4",
-        "shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all duration-300",
-        "hover:-translate-y-0.5 hover:border-blue-500/25 hover:shadow-[0_14px_28px_-16px_rgba(37,99,235,0.25)]",
+        "shadow-panel transition-all duration-300",
+        "hover:-translate-y-0.5 hover:border-status-info-rule hover:shadow-accent",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
       )}
     >
@@ -231,8 +231,8 @@ export function HubGrid({ isAdvanced, onSwitchToAdvanced }: Props) {
   return (
     <div className="space-y-8 pb-6">
       {!isAdvanced && hiddenCount > 0 && (
-        <div className="flex flex-col gap-2 rounded-xl border border-blue-200/70 bg-blue-50/60 px-4 py-3 dark:border-blue-500/25 dark:bg-blue-500/10 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-blue-800 dark:text-blue-200">
+        <div className="flex flex-col gap-2 rounded-xl border border-status-info-rule bg-status-info-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-status-info-ink">
             Simple view shows the guided essentials. {hiddenCount} advanced tools — workflows,
             automations, simulator, versioning, and integrations — are hidden.
           </p>
@@ -240,7 +240,7 @@ export function HubGrid({ isAdvanced, onSwitchToAdvanced }: Props) {
             <button
               type="button"
               onClick={onSwitchToAdvanced}
-              className="inline-flex w-fit shrink-0 items-center gap-1 text-xs font-semibold text-blue-700 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-200"
+              className="inline-flex w-fit shrink-0 items-center gap-1 text-xs font-semibold text-status-info-ink hover:text-status-info-ink"
             >
               Switch to Advanced
               <ArrowRight className="h-3 w-3" />
@@ -254,7 +254,7 @@ export function HubGrid({ isAdvanced, onSwitchToAdvanced }: Props) {
 
         return (
           <section key={group.group}>
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.12em] mb-3">
+            <p className="text-dense font-semibold text-muted-foreground uppercase tracking-[0.12em] mb-3">
               {group.group}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">

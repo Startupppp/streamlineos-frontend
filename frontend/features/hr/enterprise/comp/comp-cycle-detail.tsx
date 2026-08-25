@@ -142,7 +142,7 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
               {
                 key: "status",
                 header: "Status",
-                cell: (r) => <Badge variant="secondary" className="capitalize text-[11px]">{r.status}</Badge>,
+                cell: (r) => <Badge variant="secondary" className="capitalize text-dense">{r.status}</Badge>,
               },
               {
                 key: "calibrateAction",

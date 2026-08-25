@@ -134,9 +134,9 @@ export function DocumentExtractPanel({ onDraftReady, className }: DocumentExtrac
   }
 
   const confidenceColors: Record<"high" | "medium" | "low", string> = {
-    high: "text-emerald-700 dark:text-emerald-400",
-    medium: "text-amber-700 dark:text-amber-400",
-    low: "text-red-700 dark:text-red-400",
+    high: "text-status-success-ink",
+    medium: "text-status-warning-ink",
+    low: "text-status-danger-ink",
   };
 
   return (
@@ -155,7 +155,7 @@ export function DocumentExtractPanel({ onDraftReady, className }: DocumentExtrac
               className="block text-xs text-muted-foreground file:mr-3 file:rounded file:border-0 file:bg-muted file:px-2.5 file:py-1 file:text-xs file:font-medium file:text-foreground hover:file:bg-muted/70 cursor-pointer"
             />
             {selectedFile && (
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-dense text-muted-foreground">
                 Selected: <span className="font-medium text-foreground">{selectedFile.name}</span>
               </p>
             )}
@@ -184,12 +184,12 @@ export function DocumentExtractPanel({ onDraftReady, className }: DocumentExtrac
               <AiGeneratedLabel timestamp={mutation.data.generatedAt} />
               <span
                 className={cn(
-                  "rounded-full px-1.5 py-0.5 text-[10px] font-medium border",
+                  "rounded-full px-1.5 py-0.5 text-micro font-medium border",
                   mutation.data.confidence === "high"
-                    ? "border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10"
+                    ? "border-status-success-rule bg-status-success-surface"
                     : mutation.data.confidence === "medium"
-                      ? "border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10"
-                      : "border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10",
+                      ? "border-status-warning-rule bg-status-warning-surface"
+                      : "border-status-danger-rule bg-status-danger-surface",
                   confidenceColors[mutation.data.confidence],
                 )}
               >
@@ -197,8 +197,8 @@ export function DocumentExtractPanel({ onDraftReady, className }: DocumentExtrac
               </span>
             </div>
 
-            <div className="rounded-md border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-3 py-2.5">
-              <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+            <div className="rounded-md border border-status-warning-rule bg-status-warning-surface px-3 py-2.5">
+              <p className="text-xs text-status-warning-ink leading-relaxed">
                 {mutation.data.warningMessage}
               </p>
             </div>

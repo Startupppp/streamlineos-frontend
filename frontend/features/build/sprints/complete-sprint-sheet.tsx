@@ -48,7 +48,7 @@ export function CompleteSprintSheet({
       <SheetContent className="flex flex-col p-0 overflow-hidden">
         <SheetHeader className="px-6 pt-5 pb-3 border-b shrink-0">
           <SheetTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-amber-500" />
+            <AlertTriangle className="h-5 w-5 text-status-warning-ink" />
             Complete Sprint: {sprint?.name}
           </SheetTitle>
         </SheetHeader>

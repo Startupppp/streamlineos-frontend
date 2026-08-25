@@ -86,7 +86,7 @@ export function PaymentTermsSection({ terms, canManage }: PaymentTermsSectionPro
         header: "Default",
         headerClassName: "w-12",
         cell: (row) =>
-          row.isDefault ? <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" /> : null,
+          row.isDefault ? <Star className="h-3.5 w-3.5 fill-amber-400 text-status-warning-ink" /> : null,
       },
     ];
     const actionsColumn: DataTableColumn<PaymentTerm> = {

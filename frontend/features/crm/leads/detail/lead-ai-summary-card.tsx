@@ -148,7 +148,7 @@ export function LeadAiSummaryCard({ leadId, leadName }: LeadAiSummaryCardProps) 
               </div>
             )}
             <div className="flex items-center justify-between pt-1">
-              <Badge variant="secondary" className="text-[10px]">
+              <Badge variant="secondary" className="text-micro">
                 AI generated
               </Badge>
               <LoadingButton

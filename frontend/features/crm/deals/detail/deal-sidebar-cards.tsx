@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { ActivityTimeline } from "./activity-timeline";
+import { ActivityTimeline } from "@/features/crm/timeline/activity-timeline";
 import { MeetingsCard } from "./meetings-card";
 import { DealAiInsightsCard } from "./deal-ai-insights-card";
 import { DealHealthChip } from "./deal-health-chip";
@@ -13,7 +13,7 @@ import { DealNextStepInline } from "./deal-next-step-inline";
 import { DealApprovalBanner } from "./deal-approval-banner";
 import { DealCompetitorsCard } from "./deal-competitors-card";
 import { DealStakeholdersCard } from "./deal-stakeholders-card";
-import type { DealActivity, DealMeeting } from "@/hooks/api/crm";
+import type { DealMeeting } from "@/hooks/api/crm";
 
 interface AssignedTo {
   name?: string | null;
@@ -41,7 +41,6 @@ interface DealSidebarCardsProps {
   client?: Client | null;
   keyDates: KeyDate[];
   meetings?: DealMeeting[];
-  activities: DealActivity[];
   onQuickActionClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
   onAddMeeting: () => void;
   onDeleteMeeting: (meetingId: number) => void;
@@ -69,7 +68,6 @@ export function DealSidebarCards({
   client,
   keyDates,
   meetings,
-  activities,
   onQuickActionClick,
   onAddMeeting,
   onDeleteMeeting,
@@ -131,7 +129,7 @@ export function DealSidebarCards({
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-3 min-w-0">
-              <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-sm font-semibold text-emerald-400 shrink-0">
+              <div className="h-10 w-10 rounded-full bg-status-success-surface flex items-center justify-center text-sm font-semibold text-status-success-ink shrink-0">
                 {client.name?.[0] ?? "?"}
               </div>
               <TruncatedText text={client.name ?? ""} className="text-sm font-medium min-w-0 flex-1" />
@@ -212,7 +210,10 @@ export function DealSidebarCards({
           <CardTitle className="text-base">Activity Timeline</CardTitle>
         </CardHeader>
         <CardContent>
-          <ActivityTimeline activities={activities} />
+          <ActivityTimeline
+            anchor={{ kind: "deal", dealId: String(dealId) }}
+            emptyDescription="Calls, emails, meetings, notes and tasks on this deal will appear here as they happen."
+          />
         </CardContent>
       </Card>
 

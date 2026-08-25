@@ -135,7 +135,7 @@ function MappingColumnRow({ form, index, columnKey }: MappingColumnRowProps) {
         onCheckedChange={handleEnabledChange}
         aria-label={`Enable ${columnKey}`}
       />
-      <span className="text-[10px] text-muted-foreground w-28 shrink-0 truncate font-mono">
+      <span className="text-micro text-muted-foreground w-28 shrink-0 truncate font-mono">
         {columnKey}
       </span>
       <Input
@@ -224,7 +224,7 @@ export function PayrollMappingSheet({
       </div>
 
       <div className="space-y-2">
-        <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Columns</p>
+        <p className="text-dense font-medium text-muted-foreground uppercase tracking-wider">Columns</p>
         <div className="space-y-1.5">
           {fields.map((field, index) => (
             <MappingColumnRow

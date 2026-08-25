@@ -25,14 +25,14 @@ const columns: DataTableColumn<GrnSummary>[] = [
   {
     key: "grnNumber",
     header: "GRN #",
-    cell: (g) => <span className="font-mono text-[11px]">{g.grnNumber}</span>,
+    cell: (g) => <span className="font-mono text-dense">{g.grnNumber}</span>,
     sortable: true,
     sortValue: (g) => g.grnNumber,
   },
   {
     key: "poNumber",
     header: "PO #",
-    cell: (g) => <span className="font-mono text-[11px] text-muted-foreground">{g.poNumber ?? "—"}</span>,
+    cell: (g) => <span className="font-mono text-dense text-muted-foreground">{g.poNumber ?? "—"}</span>,
   },
   {
     key: "vendorName",

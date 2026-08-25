@@ -67,7 +67,7 @@ export const InlineProjectStatus = memo(function InlineProjectStatus({
             <Badge
               variant="secondary"
               className={cn(
-                "gap-0.5 rounded-full border-0 px-1.5 py-0 text-[8px] font-semibold uppercase tracking-wide",
+                "gap-0.5 rounded-full border-0 px-1.5 py-0 text-micro font-semibold uppercase tracking-wide",
                 "cursor-pointer transition-opacity hover:opacity-80",
                 statusColor,
               )}
@@ -118,10 +118,10 @@ const PRIORITY_OPTIONS: { value: ProjectPriorityValue; label: string }[] = [
 ];
 
 const priorityDotColors: Record<ProjectPriorityValue, string> = {
-  URGENT: "bg-red-500",
-  HIGH: "bg-orange-500",
-  MEDIUM: "bg-yellow-500",
-  LOW: "bg-slate-400",
+  URGENT: "bg-status-danger-fill",
+  HIGH: "bg-status-warning-fill",
+  MEDIUM: "bg-status-warning-fill",
+  LOW: "bg-status-neutral-fill",
 };
 
 interface InlineProjectPriorityProps extends InlineProjectFieldProps {
@@ -163,7 +163,7 @@ export const InlineProjectPriority = memo(function InlineProjectPriority({
         <PopoverTrigger asChild>
           <button
             type="button"
-            className="flex items-center gap-1 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+            className="flex items-center gap-1 text-dense text-muted-foreground transition-colors hover:text-foreground"
             aria-label="Change project priority"
           >
             <span

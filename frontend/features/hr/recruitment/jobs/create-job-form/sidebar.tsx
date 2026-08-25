@@ -34,11 +34,11 @@ function SidebarStepButton({ step, idx, onStepClick }: SidebarStepButtonProps) {
     >
       <div
         className={cn(
-          "flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold transition-colors duration-200",
+          "flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-micro font-bold transition-colors duration-200",
           step.completed && !step.hasError
-            ? "bg-emerald-500 text-white"
+            ? "bg-status-success-fill text-white"
             : step.hasError
-              ? "bg-rose-500 text-white"
+              ? "bg-status-danger-fill text-white"
               : step.active
                 ? "bg-primary text-primary-foreground"
                 : "bg-muted text-muted-foreground border border-border"
@@ -58,10 +58,10 @@ function SidebarStepButton({ step, idx, onStepClick }: SidebarStepButtonProps) {
           className={cn(
             "text-xs font-medium leading-tight",
             step.active ? "text-foreground" : "text-muted-foreground",
-            step.hasError && "text-rose-600 dark:text-rose-400"
+            step.hasError && "text-status-danger-ink"
           )}
         />
-        <TruncatedText text={step.subtitle} className="text-[10px] text-muted-foreground/70 leading-tight mt-0.5" />
+        <TruncatedText text={step.subtitle} className="text-micro text-muted-foreground/70 leading-tight mt-0.5" />
       </div>
     </button>
   );
@@ -79,16 +79,16 @@ export function FormSidebar({ steps, onStepClick }: FormSidebarProps) {
   return (
     <aside className="w-56 shrink-0 border-r bg-muted/20 flex flex-col">
       <div className="px-4 py-4 border-b">
-        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+        <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider mb-1">
           Job Opening
         </p>
         <h2 className="text-sm font-semibold text-foreground">Create Posting</h2>
         <div className="mt-3">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+            <span className="text-micro font-semibold text-muted-foreground uppercase tracking-wider">
               Progress
             </span>
-            <span className="text-[10px] font-semibold text-muted-foreground">
+            <span className="text-micro font-semibold text-muted-foreground">
               {completedCount}/{steps.length}
             </span>
           </div>

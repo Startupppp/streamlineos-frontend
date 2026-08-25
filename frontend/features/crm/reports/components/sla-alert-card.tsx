@@ -11,9 +11,9 @@ interface SlaAlertCardProps {
 
 export function SlaAlertCard({ slaData }: SlaAlertCardProps) {
   return (
-    <Card className="border-red-500/20 bg-red-500/5">
+    <Card className="border-status-danger-rule bg-status-danger-surface">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex items-center gap-2 text-red-500 dark:text-red-400">
+        <CardTitle className="text-sm flex items-center gap-2 text-status-danger-ink">
           <AlertTriangle className="h-4 w-4" />
           SLA Breached — {slaData.total} leads not contacted in 24h+
         </CardTitle>
@@ -23,22 +23,22 @@ export function SlaAlertCard({ slaData }: SlaAlertCardProps) {
           {slaData.leads.slice(0, 8).map((lead) => (
             <div
               key={lead.leadId}
-              className="flex items-center justify-between p-2 rounded-lg bg-background/60 border border-red-500/10"
+              className="flex items-center justify-between p-2 rounded-lg bg-background/60 border border-status-danger-rule"
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <TruncatedText text={lead.leadName} className="text-sm font-medium" />
-                <Badge variant="outline" className="text-[10px] shrink-0">
+                <Badge variant="outline" className="text-micro shrink-0">
                   {lead.status}
                 </Badge>
                 {lead.priority && (
                   <Badge
                     variant="outline"
                     className={cn(
-                      "text-[10px] shrink-0",
+                      "text-micro shrink-0",
                       lead.priority === "HOT" &&
-                        "border-red-500/50 text-red-500 dark:text-red-400",
+                        "border-status-danger-rule text-status-danger-ink",
                       lead.priority === "WARM" &&
-                        "border-amber-500/50 text-amber-500 dark:text-amber-400",
+                        "border-status-warning-rule text-status-warning-ink",
                       lead.priority === "COLD" &&
                         "border-primary/50 text-primary",
                     )}

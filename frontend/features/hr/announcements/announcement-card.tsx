@@ -44,11 +44,11 @@ const STATUS_LABELS: Record<HrAnnouncement["status"], string> = {
 export const STATUS_COLORS: Record<HrAnnouncement["status"], string> = {
   DRAFT: "bg-muted text-muted-foreground border-border",
   SCHEDULED:
-    "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+    "bg-status-info-surface text-status-info-ink border-status-info-rule",
   PUBLISHED:
-    "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+    "bg-status-success-surface text-status-success-ink border-status-success-rule",
   EXPIRED:
-    "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+    "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
 };
 
 const STATUS_ACCENT: Record<HrAnnouncement["status"], string> = {
@@ -106,7 +106,7 @@ export function AnnouncementCard({
     >
       <div className="flex gap-3">
         <div
-          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold text-muted-foreground"
+          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-micro font-semibold text-muted-foreground"
           aria-hidden
         >
           {getInitials(announcement.authorId)}
@@ -117,7 +117,7 @@ export function AnnouncementCard({
             <div className="flex min-w-0 items-center gap-1.5">
               {announcement.isPinned ? (
                 <Pin
-                  className="size-3.5 shrink-0 text-amber-500 dark:text-amber-400"
+                  className="size-3.5 shrink-0 text-status-warning-ink"
                   aria-label="Pinned"
                 />
               ) : null}
@@ -130,7 +130,7 @@ export function AnnouncementCard({
             <div className="flex shrink-0 items-center gap-0.5">
               <span
                 className={cn(
-                  "inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-medium",
+                  "inline-flex items-center rounded-md border px-1.5 py-0.5 text-micro font-medium",
                   STATUS_COLORS[announcement.status],
                 )}
               >
@@ -161,7 +161,7 @@ export function AnnouncementCard({
             </div>
           </div>
 
-          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-dense text-muted-foreground">
             <time dateTime={announcement.createdAt}>
               {formatDate(announcement.createdAt)}
             </time>
@@ -184,7 +184,7 @@ export function AnnouncementCard({
 
           <p
             className={cn(
-              "mt-2 text-[13px] leading-relaxed text-muted-foreground",
+              "mt-2 text-label leading-relaxed text-muted-foreground",
               !expanded && "line-clamp-2",
             )}
           >
@@ -195,7 +195,7 @@ export function AnnouncementCard({
             <button
               type="button"
               onClick={handleToggleExpand}
-              className="mt-1 inline-flex items-center gap-0.5 text-[11px] font-medium text-primary hover:underline"
+              className="mt-1 inline-flex items-center gap-0.5 text-dense font-medium text-primary hover:underline"
             >
               {expanded ? (
                 <>

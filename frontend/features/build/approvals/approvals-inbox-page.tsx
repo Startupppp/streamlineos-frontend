@@ -100,7 +100,7 @@ export function ApprovalsInboxPage() {
       cell: (row) => (
         <Link
           href={`/build/${row.projectId}`}
-          className="max-w-[6rem] text-[11px] font-medium text-primary hover:underline min-w-0"
+          className="max-w-[6rem] text-dense font-medium text-primary hover:underline min-w-0"
           onClick={(e) => e.stopPropagation()}
         >
           <TruncatedText text={row.projectKey} />
@@ -111,7 +111,7 @@ export function ApprovalsInboxPage() {
       key: "entityType",
       header: "Type",
       cell: (row) => (
-        <Badge variant="outline" className="px-1.5 py-0.5 text-[10px]">
+        <Badge variant="outline" className="px-1.5 py-0.5 text-micro">
           {entityTypeLabel(row.entityType)}
         </Badge>
       ),
@@ -147,7 +147,7 @@ export function ApprovalsInboxPage() {
             className={cn(
               "tabular-nums",
               isOverdue
-                ? "font-medium text-red-600 dark:text-red-400"
+                ? "font-medium text-status-danger-ink"
                 : "text-muted-foreground",
             )}
           >
@@ -171,7 +171,7 @@ export function ApprovalsInboxPage() {
           <Button
             variant="outline"
             size="sm"
-            className="h-6 px-2 text-[11px]"
+            className="h-6 px-2 text-dense"
             onClick={(e) => {
               e.stopPropagation();
               handleDecideClick(row);

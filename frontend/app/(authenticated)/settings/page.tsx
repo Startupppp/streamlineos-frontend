@@ -14,7 +14,7 @@ export default function SettingsPage() {
       <div className="flex flex-1 flex-col min-h-0 space-y-4">
         <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
           <div className="mb-4">
-            <h2 className="text-[0.9375rem] font-semibold text-foreground">
+            <h2 className="text-sm font-semibold text-foreground">
               Profile
             </h2>
             <p className="mt-0.5 text-xs text-muted-foreground">
@@ -26,7 +26,7 @@ export default function SettingsPage() {
 
         <section className="space-y-4 rounded-xl border border-border bg-card p-5 shadow-sm">
           <div>
-            <h2 className="text-[0.9375rem] font-semibold text-foreground">
+            <h2 className="text-sm font-semibold text-foreground">
               Security
             </h2>
             <p className="mt-0.5 text-xs text-muted-foreground">

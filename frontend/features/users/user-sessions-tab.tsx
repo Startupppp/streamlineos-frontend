@@ -128,11 +128,11 @@ export function UserSessionsTab({ userId }: UserSessionsTabProps) {
       cell: (row) => {
         const active = isSessionActive(row);
         return active ? (
-          <Badge variant="outline" className="text-[10px] border-green-200 dark:border-green-500/30 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-500/10">
+          <Badge variant="outline" className="text-micro border-status-success-rule text-status-success-ink bg-status-success-surface">
             Active
           </Badge>
         ) : (
-          <Badge variant="outline" className="text-[10px] border-muted text-muted-foreground">
+          <Badge variant="outline" className="text-micro border-muted text-muted-foreground">
             Expired
           </Badge>
         );
@@ -150,7 +150,7 @@ export function UserSessionsTab({ userId }: UserSessionsTabProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 text-[11px] text-destructive hover:text-destructive hover:bg-destructive/10"
+              className="h-6 text-dense text-destructive hover:text-destructive hover:bg-destructive/10"
               onClick={() => handleRevoke(row.id)}
               disabled={isRevoking}
             >
@@ -166,8 +166,8 @@ export function UserSessionsTab({ userId }: UserSessionsTabProps) {
     <div className="flex min-h-0 flex-1 flex-col space-y-2">
       <div className="flex shrink-0 items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[13px] font-medium">Authenticated sessions</p>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-label font-medium">Authenticated sessions</p>
+          <p className="text-dense text-muted-foreground">
             Current browser access that can be revoked immediately.
           </p>
         </div>

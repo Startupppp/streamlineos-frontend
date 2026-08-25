@@ -44,7 +44,7 @@ export function ProgressTimeline({ id }: { id: number }) {
                 className={cn(
                   "h-4 w-4 rounded-full border-2 transition-colors shrink-0",
                   step.status === "completed"
-                    ? "bg-emerald-500 border-emerald-500"
+                    ? "bg-status-success-fill border-status-success-rule"
                     : step.status === "current"
                     ? "bg-background border-primary ring-2 ring-primary/30"
                     : "bg-background border-input"
@@ -55,7 +55,7 @@ export function ProgressTimeline({ id }: { id: number }) {
                   className={cn(
                     "w-0.5 h-5 mt-0.5",
                     step.status === "completed"
-                      ? "bg-emerald-500"
+                      ? "bg-status-success-fill"
                       : "bg-border"
                   )}
                 />
@@ -65,9 +65,9 @@ export function ProgressTimeline({ id }: { id: number }) {
             <div className="flex items-center gap-2 pb-1 min-w-0 -mt-0.5">
               <span
                 className={cn(
-                  "text-[11px] leading-tight",
+                  "text-dense leading-tight",
                   step.status === "completed"
-                    ? "text-emerald-700 dark:text-emerald-300 font-medium"
+                    ? "text-status-success-ink font-medium"
                     : step.status === "current"
                     ? "text-foreground font-semibold"
                     : "text-muted-foreground"
@@ -76,7 +76,7 @@ export function ProgressTimeline({ id }: { id: number }) {
                 {step.label}
               </span>
               {step.status === "completed" && step.timestamp && (
-                <span className="text-[10px] text-muted-foreground tabular-nums shrink-0">
+                <span className="text-micro text-muted-foreground tabular-nums shrink-0">
                   {format(new Date(step.timestamp), "MMM d")}
                 </span>
               )}

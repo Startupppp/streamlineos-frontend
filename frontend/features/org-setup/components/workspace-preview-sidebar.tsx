@@ -59,7 +59,7 @@ export function WorkspacePreviewSidebar({
           className={cn(
             "flex shrink-0 items-center justify-center rounded-lg font-bold text-white shadow-sm",
             PREVIEW_GRADIENT_MARK,
-            compact ? "h-7 w-7 text-[10px]" : "h-8 w-8 text-[11px]",
+            compact ? "h-7 w-7 text-micro" : "h-8 w-8 text-dense",
           )}
         >
           <AnimatePresence mode="wait" initial={false}>
@@ -78,7 +78,7 @@ export function WorkspacePreviewSidebar({
           <motion.span
             layoutId={reduceMotion ? undefined : "preview-company-side"}
             transition={layoutTransition}
-            className="hidden min-w-0 truncate text-[11px] font-semibold text-foreground xl:inline"
+            className="hidden min-w-0 truncate text-dense font-semibold text-foreground xl:inline"
           >
             {companyLabel}
           </motion.span>
@@ -106,7 +106,7 @@ export function WorkspacePreviewSidebar({
           aria-hidden
         />
         {!compact && (
-          <span className="relative z-[1] hidden truncate text-[11px] font-semibold xl:inline">
+          <span className="relative z-[1] hidden truncate text-dense font-semibold xl:inline">
             Home
           </span>
         )}
@@ -154,7 +154,7 @@ export function WorkspacePreviewSidebar({
                   >
                     <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />
                     {!compact && (
-                      <span className="hidden truncate text-[11px] font-medium xl:inline">
+                      <span className="hidden truncate text-dense font-medium xl:inline">
                         {label}
                       </span>
                     )}

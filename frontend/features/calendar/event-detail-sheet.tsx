@@ -250,14 +250,14 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                             >
                               <Badge
                                 variant="outline"
-                                className="font-mono text-[10px] shrink-0 text-muted-foreground border-border"
+                                className="font-mono text-micro shrink-0 text-muted-foreground border-border"
                               >
                                 {event.linkedTicket.key}
                               </Badge>
                               <TruncatedText text={event.linkedTicket.title} className="text-sm flex-1 text-foreground" />
                               <Badge
                                 variant="secondary"
-                                className="text-[10px] h-4 px-1.5 shrink-0 capitalize"
+                                className="text-micro h-4 px-1.5 shrink-0 capitalize"
                               >
                                 {event.linkedTicket.status.toLowerCase().replace(/_/g, " ")}
                               </Badge>
@@ -309,7 +309,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="flex-1 h-8 text-xs gap-1.5 text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700 dark:text-green-400 dark:border-green-900 dark:hover:bg-green-950"
+                            className="flex-1 h-8 text-xs gap-1.5 text-status-success-ink border-status-success-rule hover:bg-status-success-surface hover:text-status-success-ink"
                             disabled={
                               deleteEventIsPending || rsvpMutationIsPending
                             }
@@ -323,7 +323,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="flex-1 h-8 text-xs gap-1.5 text-yellow-600 border-yellow-200 hover:bg-yellow-50 hover:text-yellow-700 dark:text-yellow-400 dark:border-yellow-900 dark:hover:bg-yellow-950"
+                            className="flex-1 h-8 text-xs gap-1.5 text-status-warning-ink border-status-warning-rule hover:bg-status-warning-surface hover:text-status-warning-ink"
                             disabled={rsvpMutationIsPending}
                             onClick={() => handleRsvp("tentative")}
                             aria-label="Mark as tentative"
@@ -366,7 +366,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                                 <AvatarImage
                                   src={resolveImageUrl(a.user?.image ?? null)}
                                 />
-                                <AvatarFallback className="text-[10px]">
+                                <AvatarFallback className="text-micro">
                                   {(a.user?.name ?? a.user?.email ?? "?")
                                     .slice(0, 2)
                                     .toUpperCase()}
@@ -375,13 +375,13 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                               <TruncatedText text={a.user?.name ?? a.user?.email ?? "Unknown"} className="flex-1 text-xs" />
                               <Badge
                                 variant="outline"
-                                className={`text-[10px] h-4 px-1.5 capitalize ${
+                                className={`text-micro h-4 px-1.5 capitalize ${
                                   a.status === "accepted"
-                                    ? "border-green-200 text-green-600 dark:border-green-900 dark:text-green-400"
+                                    ? "border-status-success-rule text-status-success-ink"
                                     : a.status === "declined"
-                                      ? "border-red-200 text-red-600 dark:border-red-900 dark:text-red-400"
+                                      ? "border-status-danger-rule text-status-danger-ink"
                                       : a.status === "tentative"
-                                        ? "border-yellow-200 text-yellow-600 dark:border-yellow-900 dark:text-yellow-400"
+                                        ? "border-status-warning-rule text-status-warning-ink"
                                         : "border-border text-muted-foreground"
                                 }`}
                               >
@@ -402,7 +402,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
               <Link href={`/chat?channel=${event.entityId}`} onClick={onClose}>
                 <Button
                   size="sm"
-                  className="w-full h-8 text-xs gap-1.5 bg-orange-500 hover:bg-orange-600 text-white"
+                  className="w-full h-8 text-xs gap-1.5 bg-status-warning-fill hover:bg-status-warning-fill-hover text-white"
                   {...huddleHoverHandlers}
                 >
                   <MicIcon ref={huddleIconRef} size={14} />

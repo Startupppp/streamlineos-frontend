@@ -25,7 +25,7 @@ type AgingDealRow = NonNullable<ReturnType<typeof useDealAging>["data"]>["deals"
 
 function StageBadge({ stage }: { stage: string }) {
   return (
-    <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-muted text-muted-foreground border-border">
+    <Badge variant="outline" className="text-micro h-4 px-1.5 py-0 bg-muted text-muted-foreground border-border">
       {stage}
     </Badge>
   );
@@ -34,20 +34,20 @@ function StageBadge({ stage }: { stage: string }) {
 function SeverityBadge({ days }: { days: number }) {
   if (days > 30) {
     return (
-      <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30">
+      <Badge variant="outline" className="text-micro h-4 px-1.5 py-0 bg-status-danger-surface text-status-danger-ink border-status-danger-rule">
         Critical
       </Badge>
     );
   }
   if (days >= 15) {
     return (
-      <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
+      <Badge variant="outline" className="text-micro h-4 px-1.5 py-0 bg-status-warning-surface text-status-warning-ink border-status-warning-rule">
         Warning
       </Badge>
     );
   }
   return (
-    <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
+    <Badge variant="outline" className="text-micro h-4 px-1.5 py-0 bg-status-success-surface text-status-success-ink border-status-success-rule">
       Healthy
     </Badge>
   );
@@ -55,7 +55,7 @@ function SeverityBadge({ days }: { days: number }) {
 
 function getDayClassName(days: number) {
   if (days > 30) return "text-destructive font-semibold";
-  if (days >= 15) return "text-amber-600 dark:text-amber-400 font-medium";
+  if (days >= 15) return "text-status-warning-ink font-medium";
   return "text-muted-foreground";
 }
 

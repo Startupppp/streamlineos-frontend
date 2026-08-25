@@ -1,5 +1,6 @@
 import { clearRegisteredQueryCache } from "@/lib/query-cache-control";
 import { ApiError, parseApiResponse } from "@/lib/api-envelope";
+import { newCorrelationId, noteCorrelationId } from "./observability";
 
 if (!process.env.NEXT_PUBLIC_API_URL)
   throw new Error("NEXT_PUBLIC_API_URL is not set");
@@ -137,6 +138,14 @@ export async function authedFetch(
   const headers = new Headers(init.headers);
   const isPublic = isPublicPath(path);
   const combinedSignal = makeRequestSignal(signal);
+
+  // One id per request, sent to the API and remembered here, so a browser error
+  // report and the server-side logs for the same call can be joined up.
+  if (!headers.has("x-correlation-id")) {
+    const correlationId = newCorrelationId();
+    headers.set("x-correlation-id", correlationId);
+    noteCorrelationId(correlationId);
+  }
 
   if (!isPublic && MUTATING_METHODS.has((init.method ?? "GET").toUpperCase())) {
     if (!headers.has("Idempotency-Key"))

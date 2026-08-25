@@ -10,18 +10,18 @@ export default function IntakeLoading() {
         </div>
         <Card className="rounded-t-none border-t-0 px-6 py-6 shadow-noir space-y-5">
           <div className="space-y-1.5">
-            <div className="h-3 bg-slate-200 rounded animate-pulse w-24" />
-            <div className="h-10 bg-slate-200 rounded animate-pulse" />
+            <div className="h-3 bg-muted rounded animate-pulse w-24" />
+            <div className="h-10 bg-muted rounded animate-pulse" />
           </div>
           <div className="space-y-1.5">
-            <div className="h-3 bg-slate-200 rounded animate-pulse w-16" />
-            <div className="h-24 bg-slate-200 rounded animate-pulse" />
+            <div className="h-3 bg-muted rounded animate-pulse w-16" />
+            <div className="h-24 bg-muted rounded animate-pulse" />
           </div>
           <div className="space-y-1.5">
-            <div className="h-3 bg-slate-200 rounded animate-pulse w-20" />
-            <div className="h-10 bg-slate-200 rounded animate-pulse" />
+            <div className="h-3 bg-muted rounded animate-pulse w-20" />
+            <div className="h-10 bg-muted rounded animate-pulse" />
           </div>
-          <div className="h-11 bg-slate-200 rounded animate-pulse" />
+          <div className="h-11 bg-muted rounded animate-pulse" />
         </Card>
       </div>
     </main>

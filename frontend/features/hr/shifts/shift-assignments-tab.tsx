@@ -52,7 +52,7 @@ export function ShiftAssignmentsTab() {
       key: "status",
       header: "Status",
       cell: (a) => (
-        <Badge variant={a.isActive ? "default" : "secondary"} className="text-[11px]">
+        <Badge variant={a.isActive ? "default" : "secondary"} className="text-dense">
           {a.isActive ? "Active" : "Inactive"}
         </Badge>
       ),

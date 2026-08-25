@@ -61,7 +61,7 @@ function ExpenseRow({
           text={expense.description || expense.merchant || expense.category}
           className="text-xs font-medium"
         />
-        <p className="text-[10px] text-muted-foreground truncate">{subtitle}</p>
+        <p className="text-micro text-muted-foreground truncate">{subtitle}</p>
       </div>
       <span className="text-xs font-semibold tabular-nums shrink-0">
         {formatINR(expense.amount)}
@@ -69,7 +69,7 @@ function ExpenseRow({
       <Badge
         variant="outline"
         className={cn(
-          "h-4 px-1.5 py-0 text-[9px] shrink-0",
+          "h-4 px-1.5 py-0 text-micro shrink-0",
           style?.bg,
           style?.text,
           style?.border,
@@ -150,7 +150,7 @@ export function ExpensesWidget() {
         <div className="space-y-2.5">
           {pendingCount > 0 && (
             <div className="flex items-center justify-between rounded-lg border border-border/60 px-2.5 py-2">
-              <span className="text-[11px] text-muted-foreground">
+              <span className="text-dense text-muted-foreground">
                 {isApprover ? "Awaiting your approval" : "Pending reimbursement"}
               </span>
               <span className="text-sm font-semibold tabular-nums">

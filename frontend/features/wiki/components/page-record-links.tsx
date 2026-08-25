@@ -36,9 +36,9 @@ const TARGET_TYPE_LABELS: Record<KbRecordTargetType, string> = {
   hr_employee: "HR Employee",
 };
 
-const FIELD_CLASS = "h-9 w-full text-[13px] bg-card border-input shadow-xs";
+const FIELD_CLASS = "h-9 w-full text-label bg-card border-input shadow-xs";
 const ACTION_BTN_CLASS =
-  "h-9 w-full text-[13px] bg-card border border-input shadow-xs hover:bg-muted/50";
+  "h-9 w-full text-label bg-card border border-input shadow-xs hover:bg-muted/50";
 
 const TARGET_TYPE_OPTIONS = Object.entries(TARGET_TYPE_LABELS).map(([value, label]) => ({
   value: value as KbRecordTargetType,
@@ -66,10 +66,10 @@ const RecordLinkRow = memo(function RecordLinkRow({
 
   return (
     <div className="flex items-center gap-2 py-1">
-      <Badge variant="secondary" className="text-[10px] h-4 px-1.5 shrink-0">
+      <Badge variant="secondary" className="text-micro h-4 px-1.5 shrink-0">
         {TARGET_TYPE_LABELS[link.targetType as KbRecordTargetType] ?? link.targetType}
       </Badge>
-      <TruncatedText text={link.label ?? link.targetId ?? "—"} className="text-[12px] text-foreground flex-1" />
+      <TruncatedText text={link.label ?? link.targetId ?? "—"} className="text-xs text-foreground flex-1" />
       {canUpdate && (
         <Button
           variant="ghost"
@@ -141,7 +141,7 @@ export function PageRecordLinks({ pageId }: PageRecordLinksProps) {
 
   return (
     <div className="space-y-2">
-      <p className="text-[13px] font-medium text-foreground">Linked records</p>
+      <p className="text-label font-medium text-foreground">Linked records</p>
       {links.length > 0 && (
         <div className="space-y-0.5">
           {links.map((link) => (
@@ -164,7 +164,7 @@ export function PageRecordLinks({ pageId }: PageRecordLinksProps) {
             </SelectTrigger>
             <SelectContent>
               {TARGET_TYPE_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value} className="text-[13px]">
+                <SelectItem key={opt.value} value={opt.value} className="text-label">
                   {opt.label}
                 </SelectItem>
               ))}

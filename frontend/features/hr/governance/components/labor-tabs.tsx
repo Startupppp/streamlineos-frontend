@@ -220,7 +220,7 @@ export function LaborTabs() {
   return (
     <div className="flex flex-1 min-h-0 flex-col">
       {(expiring?.data ?? []).length > 0 && (
-        <div className="flex items-start gap-2 p-3 mb-4 shrink-0 border border-amber-200 bg-amber-50 rounded-lg text-sm text-amber-800 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-300">
+        <div className="flex items-start gap-2 p-3 mb-4 shrink-0 border border-status-warning-rule bg-status-warning-surface rounded-lg text-sm text-status-warning-ink">
           <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
           <span>{expiring!.data.length} collective agreement{expiring!.data.length !== 1 ? "s" : ""} expiring within 30 days.</span>
         </div>

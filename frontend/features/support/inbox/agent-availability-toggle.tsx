@@ -38,7 +38,7 @@ export function AgentAvailabilityToggle() {
       <span
         className={
           isAvailable
-            ? "h-2 w-2 rounded-full bg-emerald-500"
+            ? "h-2 w-2 rounded-full bg-status-success-fill"
             : "h-2 w-2 rounded-full bg-muted-foreground/50"
         }
       />

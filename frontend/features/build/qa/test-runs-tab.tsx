@@ -31,9 +31,9 @@ import { TestRunSheet } from "./test-run-sheet";
 
 const RUN_STATUS_STYLES: Record<TestRunStatus, string> = {
   not_started: "text-muted-foreground border-border",
-  in_progress: "text-blue-600 border-blue-200 dark:text-blue-400 dark:border-blue-500/30",
-  completed: "text-green-600 border-green-200 dark:text-green-400 dark:border-green-500/30",
-  aborted: "text-red-600 border-red-200 dark:text-red-400 dark:border-red-500/30",
+  in_progress: "text-status-info-ink border-status-info-rule",
+  completed: "text-status-success-ink border-status-success-rule",
+  aborted: "text-status-danger-ink border-status-danger-rule",
 };
 
 const RUN_STATUS_LABELS: Record<TestRunStatus, string> = {
@@ -45,18 +45,18 @@ const RUN_STATUS_LABELS: Record<TestRunStatus, string> = {
 
 function RunProgress({ counts }: { counts?: TestRunCounts }) {
   if (!counts || counts.total === 0) {
-    return <span className="text-[11px] text-muted-foreground">—</span>;
+    return <span className="text-dense text-muted-foreground">—</span>;
   }
   const pct = Math.round((counts.passed / counts.total) * 100);
   return (
     <div className="flex min-w-[80px] items-center gap-1.5">
       <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
         <div
-          className="h-full rounded-full bg-emerald-500 transition-[width] duration-300"
+          className="h-full rounded-full bg-status-success-fill transition-[width] duration-300"
           style={{ width: `${pct}%` }}
         />
       </div>
-      <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">{pct}%</span>
+      <span className="shrink-0 text-micro tabular-nums text-muted-foreground">{pct}%</span>
     </div>
   );
 }
@@ -64,7 +64,7 @@ function RunProgress({ counts }: { counts?: TestRunCounts }) {
 function NewRunButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <Button size="sm" className="ml-auto h-7 gap-1 text-[11px]" onClick={onClick} {...hoverHandlers}>
+    <Button size="sm" className="ml-auto h-7 gap-1 text-dense" onClick={onClick} {...hoverHandlers}>
       <PlusIcon ref={iconRef} size={14} />
       New Test Run
     </Button>
@@ -134,7 +134,7 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
       cell: (row) => (
         <Link
           href={`/build/${projectId}/qa/runs/${row.id}`}
-          className="font-mono text-[11px] text-primary hover:underline"
+          className="font-mono text-dense text-primary hover:underline"
         >
           Run #{row.runNumber}
         </Link>
@@ -148,7 +148,7 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
       cell: (row) => (
         <Link
           href={`/build/${projectId}/qa/runs/${row.id}`}
-          className="text-[11px] font-medium hover:underline min-w-0 block"
+          className="text-dense font-medium hover:underline min-w-0 block"
         >
           <TruncatedText text={row.name} />
         </Link>
@@ -160,7 +160,7 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
       cell: (row) => (
         <Badge
           variant="outline"
-          className={cn("text-[10px]", RUN_STATUS_STYLES[row.status])}
+          className={cn("text-micro", RUN_STATUS_STYLES[row.status])}
         >
           {RUN_STATUS_LABELS[row.status]}
         </Badge>
@@ -171,7 +171,7 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
       key: "environment",
       header: "Environment",
       cell: (row) => (
-        <TruncatedText text={row.environment ?? "—"} className="max-w-[7rem] text-[11px] text-muted-foreground" />
+        <TruncatedText text={row.environment ?? "—"} className="max-w-[7rem] text-dense text-muted-foreground" />
       ),
       className: "w-[110px]",
     },

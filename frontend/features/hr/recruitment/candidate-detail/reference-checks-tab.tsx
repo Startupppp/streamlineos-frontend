@@ -44,25 +44,25 @@ const STATUS_CONFIG: Record<
   PENDING: {
     label: "Pending",
     icon: Clock,
-    badgeClass: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-800",
+    badgeClass: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
     accentClass: "border-l-amber-500",
   },
   IN_PROGRESS: {
     label: "In Progress",
     icon: AlertCircle,
-    badgeClass: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800",
+    badgeClass: "bg-status-info-surface text-status-info-ink border-status-info-rule",
     accentClass: "border-l-blue-500",
   },
   COMPLETED: {
     label: "Completed",
     icon: CheckCircle2,
-    badgeClass: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800",
+    badgeClass: "bg-status-success-surface text-status-success-ink border-status-success-rule",
     accentClass: "border-l-emerald-500",
   },
   DECLINED: {
     label: "Declined",
     icon: XCircle,
-    badgeClass: "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/40 dark:text-rose-300 dark:border-rose-800",
+    badgeClass: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
     accentClass: "border-l-rose-500",
   },
 };
@@ -135,7 +135,7 @@ export function ReferenceChecksTab({ candidateId }: Props) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+        <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
           {checks?.length ?? 0} reference{checks?.length !== 1 ? "s" : ""}
         </p>
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
@@ -153,7 +153,7 @@ export function ReferenceChecksTab({ candidateId }: Props) {
             <SheetBody className="space-y-4 px-4 py-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-foreground/80">
-                  Reference Name<span className="text-rose-500 ml-0.5">*</span>
+                  Reference Name<span className="text-status-danger-ink ml-0.5">*</span>
                 </label>
                 <Input placeholder="e.g. Rajesh Kumar" value={refName} onChange={handleRefNameChange} />
               </div>
@@ -258,7 +258,7 @@ const ReferenceCheckCard = memo(function ReferenceCheckCard({
 
   return (
     <div className={cn(
-      "rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden border-l-4 transition-colors duration-200",
+      "rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden border-l-4 transition-colors duration-200",
       cfg.accentClass
     )}>
       <div className="p-4">
@@ -266,7 +266,7 @@ const ReferenceCheckCard = memo(function ReferenceCheckCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <p className="text-sm font-semibold text-foreground">{check.referenceName}</p>
-              <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", cfg.badgeClass)}>
+              <span className={cn("inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border", cfg.badgeClass)}>
                 <Icon className="h-2.5 w-2.5" />
                 {cfg.label}
               </span>
@@ -274,13 +274,13 @@ const ReferenceCheckCard = memo(function ReferenceCheckCard({
 
             <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
               {check.referenceDesignation && (
-                <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                <span className="text-dense text-muted-foreground flex items-center gap-1">
                   <User2 className="h-3 w-3 shrink-0" />
                   {check.referenceDesignation}
                 </span>
               )}
               {check.referenceCompany && (
-                <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                <span className="text-dense text-muted-foreground flex items-center gap-1">
                   <Building2 className="h-3 w-3 shrink-0" />
                   {check.referenceCompany}
                 </span>
@@ -288,7 +288,7 @@ const ReferenceCheckCard = memo(function ReferenceCheckCard({
               {check.referenceEmail && (
                 <a
                   href={`mailto:${check.referenceEmail}`}
-                  className="text-[11px] text-primary flex items-center gap-1 hover:underline"
+                  className="text-dense text-primary flex items-center gap-1 hover:underline"
                 >
                   <Mail className="h-3 w-3 shrink-0" />
                   {check.referenceEmail}
@@ -297,7 +297,7 @@ const ReferenceCheckCard = memo(function ReferenceCheckCard({
               {check.referencePhone && (
                 <a
                   href={`tel:${check.referencePhone}`}
-                  className="text-[11px] text-muted-foreground flex items-center gap-1 hover:underline"
+                  className="text-dense text-muted-foreground flex items-center gap-1 hover:underline"
                 >
                   <Phone className="h-3 w-3 shrink-0" />
                   {check.referencePhone}
@@ -306,14 +306,14 @@ const ReferenceCheckCard = memo(function ReferenceCheckCard({
             </div>
 
             {check.relationship && (
-              <p className="text-[11px] text-muted-foreground mt-1.5">
+              <p className="text-dense text-muted-foreground mt-1.5">
                 Relationship:{" "}
                 <span className="text-foreground font-medium">{check.relationship}</span>
               </p>
             )}
 
             {check.notes && (
-              <TruncatedText text={check.notes} lines={2} className="text-[11px] text-muted-foreground mt-2 leading-relaxed" />
+              <TruncatedText text={check.notes} lines={2} className="text-dense text-muted-foreground mt-2 leading-relaxed" />
             )}
           </div>
 

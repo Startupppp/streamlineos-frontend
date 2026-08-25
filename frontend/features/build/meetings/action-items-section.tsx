@@ -68,7 +68,7 @@ const ActionItemRow = memo(function ActionItemRow({
           </span>
           <ActionItemStatusBadge status={item.status} />
           {isConverted ? (
-            <Badge variant="outline" className="border-primary/30 px-1.5 py-0.5 text-[9px] text-primary">
+            <Badge variant="outline" className="border-primary/30 px-1.5 py-0.5 text-micro text-primary">
               Converted to task
             </Badge>
           ) : null}

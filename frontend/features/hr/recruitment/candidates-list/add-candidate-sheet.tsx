@@ -115,7 +115,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
             <SectionHeader
               icon={User}
               label="Personal Information"
-              colorClass="bg-blue-100 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400"
+              colorClass="bg-status-info-surface text-status-info-ink"
             />
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
@@ -124,7 +124,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
                   name="firstName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      <FormLabel className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
                         First Name <span className="text-destructive">*</span>
                       </FormLabel>
                       <FormControl>
@@ -139,7 +139,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
                   name="lastName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      <FormLabel className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
                         Last Name <span className="text-destructive">*</span>
                       </FormLabel>
                       <FormControl>
@@ -155,7 +155,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                    <FormLabel className="text-dense font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                       <Mail className="h-3 w-3" />
                       Email <span className="text-destructive">*</span>
                     </FormLabel>
@@ -172,7 +172,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                      <FormLabel className="text-dense font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                         <Phone className="h-3 w-3" />
                         Phone
                       </FormLabel>
@@ -188,7 +188,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
                   name="source"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      <FormLabel className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
                         Source
                       </FormLabel>
                       <Select value={field.value} onValueChange={field.onChange}>
@@ -221,7 +221,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
             <SectionHeader
               icon={Briefcase}
               label="Professional Background"
-              colorClass="bg-blue-100 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400"
+              colorClass="bg-status-info-surface text-status-info-ink"
             />
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
@@ -230,7 +230,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
                   name="currentRole"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      <FormLabel className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
                         Current Role
                       </FormLabel>
                       <FormControl>
@@ -245,7 +245,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
                   name="currentCompany"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                      <FormLabel className="text-dense font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                         <Building2 className="h-3 w-3" />
                         Company
                       </FormLabel>
@@ -263,7 +263,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
                   name="experienceYears"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      <FormLabel className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
                         Experience (yrs)
                       </FormLabel>
                       <FormControl>
@@ -291,7 +291,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
                   name="skills"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                      <FormLabel className="text-dense font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                         <Zap className="h-3 w-3" />
                         Skills
                       </FormLabel>
@@ -308,7 +308,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
                 name="linkedinUrl"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                    <FormLabel className="text-dense font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                       <Link2 className="h-3 w-3" />
                       LinkedIn URL
                     </FormLabel>
@@ -328,7 +328,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
             <SectionHeader
               icon={FileText}
               label="Notes"
-              colorClass="bg-muted text-muted-foreground dark:bg-slate-800/60 dark:text-slate-400"
+              colorClass="bg-muted text-muted-foreground"
             />
             <FormField
               control={form.control}

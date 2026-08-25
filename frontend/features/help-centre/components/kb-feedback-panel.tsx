@@ -47,12 +47,12 @@ export function KbFeedbackPanel({ article }: { article: KbArticleDetail }) {
                 <div className="flex items-center justify-between">
                   <Badge
                     variant={item.helpful ? "default" : "secondary"}
-                    className="text-[10px]"
+                    className="text-micro"
                   >
                     {item.helpful ? "Helpful" : "Not helpful"}
                   </Badge>
                   {item.createdAt && (
-                    <span className="text-[11px] text-muted-foreground">
+                    <span className="text-dense text-muted-foreground">
                       {format(new Date(item.createdAt), "MMM d, yyyy")}
                     </span>
                   )}

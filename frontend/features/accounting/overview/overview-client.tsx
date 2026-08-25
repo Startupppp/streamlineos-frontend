@@ -96,7 +96,7 @@ export function OverviewClient() {
       filters={
         <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <div className="flex flex-col gap-1">
-            <label htmlFor="ov-from" className="text-[11px] font-medium text-muted-foreground leading-none">
+            <label htmlFor="ov-from" className="text-dense font-medium text-muted-foreground leading-none">
               From
             </label>
             <DatePicker
@@ -108,7 +108,7 @@ export function OverviewClient() {
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label htmlFor="ov-to" className="text-[11px] font-medium text-muted-foreground leading-none">
+            <label htmlFor="ov-to" className="text-dense font-medium text-muted-foreground leading-none">
               To
             </label>
             <DatePicker

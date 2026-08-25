@@ -20,12 +20,12 @@ interface RisksCardProps {
 
 function severityClasses(s: AiSeverity): string {
   if (s === "high")
-    return "bg-red-50 text-red-700 border-red-200/70 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30";
+    return "bg-status-danger-surface text-status-danger-ink border-status-danger-rule";
 
   if (s === "medium")
-    return "bg-amber-50 text-amber-700 border-amber-200/70 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30";
+    return "bg-status-warning-surface text-status-warning-ink border-status-warning-rule";
 
-  return "bg-muted text-muted-foreground border-border/70 dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30";
+  return "bg-muted text-muted-foreground border-border/70";
 }
 
 export function RisksCard({
@@ -78,7 +78,7 @@ export function RisksCard({
 
       {mutation.isError ? (
         <div className="space-y-2.5">
-          <p className="text-[13px] leading-snug text-destructive">
+          <p className="text-label leading-snug text-destructive">
             {getErrorMessage(mutation.error)}
           </p>
           <LoadingButton
@@ -96,7 +96,7 @@ export function RisksCard({
       {result ? (
         <div className="space-y-3">
           {result.risks.length === 0 ? (
-            <p className="text-[13px] text-muted-foreground">
+            <p className="text-label text-muted-foreground">
               No significant risks detected.
             </p>
           ) : (
@@ -105,19 +105,19 @@ export function RisksCard({
                 <li key={i} className="space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <ShieldAlert className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                    <span className="text-[13px] font-medium text-foreground">
+                    <span className="text-label font-medium text-foreground">
                       {risk.title}
                     </span>
                     <span
-                      className={`inline-flex items-center rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${severityClasses(risk.severity)}`}
+                      className={`inline-flex items-center rounded border px-1.5 py-0.5 text-micro font-semibold uppercase tracking-wide ${severityClasses(risk.severity)}`}
                     >
                       {risk.severity}
                     </span>
                   </div>
-                  <p className="pl-5 text-[12px] text-muted-foreground">
+                  <p className="pl-5 text-xs text-muted-foreground">
                     {risk.rationale}
                   </p>
-                  <p className="pl-5 text-[12px] text-foreground/80">
+                  <p className="pl-5 text-xs text-foreground/80">
                     <span className="font-medium">Mitigation: </span>
                     {risk.mitigation}
                   </p>

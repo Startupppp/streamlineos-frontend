@@ -79,12 +79,12 @@ function WebhookRow({
       <div className="flex-1 min-w-0 space-y-1">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm font-medium truncate">{sub.name}</span>
-          <Badge variant="outline" className="text-[11px] font-mono font-normal">
+          <Badge variant="outline" className="text-dense font-mono font-normal">
             {sub.events.length} event{sub.events.length !== 1 ? "s" : ""}
           </Badge>
         </div>
         <p className="text-xs text-muted-foreground font-mono truncate">{sub.url}</p>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-dense text-muted-foreground">
           Created {formatDistanceToNow(new Date(sub.createdAt), { addSuffix: true })}
         </p>
       </div>
@@ -212,10 +212,10 @@ export function WebhooksSection() {
         )}
       </div>
 
-      <div className="rounded-md border border-blue-200 bg-blue-500/5 p-3 text-xs text-blue-700 dark:border-blue-500/30 dark:text-blue-300">
+      <div className="rounded-md border border-status-info-rule bg-status-info-surface p-3 text-xs text-status-info-ink">
         Payloads are signed with{" "}
-        <code className="bg-blue-100 dark:bg-blue-500/10 px-1 rounded">HMAC-SHA256</code> — verify the{" "}
-        <code className="bg-blue-100 dark:bg-blue-500/10 px-1 rounded">X-StreamlineOS-Signature</code> header.
+        <code className="bg-status-info-surface px-1 rounded">HMAC-SHA256</code> — verify the{" "}
+        <code className="bg-status-info-surface px-1 rounded">X-StreamlineOS-Signature</code> header.
         Failed deliveries are retried up to 5 times with exponential backoff.
       </div>
 

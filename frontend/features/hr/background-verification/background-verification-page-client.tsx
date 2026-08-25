@@ -39,21 +39,21 @@ import { EditVerificationSheet } from "@/features/hr/background-verification/edi
 function getStatusConfig(s: string | null) {
   if (s === "PASSED") {
     return {
-      badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30",
+      badge: "bg-status-success-surface text-status-success-ink border-status-success-rule",
       icon: <CheckCircle2 className="h-2.5 w-2.5" />,
       label: "Clear",
     };
   }
   if (s === "FAILED") {
     return {
-      badge: "bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300 border-rose-200 dark:border-rose-500/30",
+      badge: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
       icon: <ShieldAlert className="h-2.5 w-2.5" />,
       label: "Flagged",
     };
   }
   if (s === "IN_PROGRESS") {
     return {
-      badge: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 border-amber-200 dark:border-amber-500/30",
+      badge: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
       icon: <Clock className="h-2.5 w-2.5" />,
       label: "In Progress",
     };
@@ -93,32 +93,32 @@ function ComplianceDashboard() {
       {rows.map((row: BgvComplianceRow) => (
         <Card
           key={row.jobPostingId}
-          className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden"
+          className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden"
         >
           <CardHeader className="pb-2 pt-4 px-4">
             <CardTitle className="text-sm font-semibold text-foreground">{row.jobTitle}</CardTitle>
           </CardHeader>
           <CardContent className="pt-0 px-4 pb-4 space-y-2">
             <div className="flex items-center gap-2">
-              <Progress value={row.clearedPct} className="flex-1 h-2 bg-muted [&>div]:bg-emerald-500" />
-              <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 tabular-nums w-10 text-right">
+              <Progress value={row.clearedPct} className="flex-1 h-2 bg-muted [&>div]:bg-status-success-fill" />
+              <span className="text-xs font-semibold text-status-success-ink tabular-nums w-10 text-right">
                 {row.clearedPct}%
               </span>
             </div>
-            <div className="flex flex-wrap gap-3 text-[11px]">
+            <div className="flex flex-wrap gap-3 text-dense">
               <span className="text-muted-foreground">
                 Total: <span className="font-medium text-foreground">{row.total}</span>
               </span>
-              <span className="text-emerald-600 dark:text-emerald-300">
+              <span className="text-status-success-ink">
                 Cleared: <span className="font-medium">{row.cleared}</span>
               </span>
-              <span className="text-amber-600 dark:text-amber-300">
+              <span className="text-status-warning-ink">
                 Pending: <span className="font-medium">{row.pending}</span>
               </span>
-              <span className="text-blue-600 dark:text-blue-300">
+              <span className="text-status-info-ink">
                 Initiated: <span className="font-medium">{row.initiated}</span>
               </span>
-              <span className="text-rose-600 dark:text-rose-300">
+              <span className="text-status-danger-ink">
                 Failed: <span className="font-medium">{row.failed}</span>
               </span>
               <span className="text-muted-foreground">
@@ -147,7 +147,7 @@ function buildBgvColumns(
         return (
           <div className="flex items-center gap-2">
             <Avatar className="h-6 w-6 shrink-0">
-              <AvatarFallback className="text-[9px] bg-muted text-muted-foreground">
+              <AvatarFallback className="text-micro bg-muted text-muted-foreground">
                 {getInitials(bgv.user?.name)}
               </AvatarFallback>
             </Avatar>
@@ -160,7 +160,7 @@ function buildBgvColumns(
       key: "type",
       header: "Type",
       cell: (bgv) => (
-        <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-foreground border-border">
+        <span className="inline-flex items-center text-micro font-semibold px-2 py-0.5 rounded-full border bg-muted text-foreground border-border">
           {bgv.type}
         </span>
       ),
@@ -170,7 +170,7 @@ function buildBgvColumns(
       header: "Vendor",
       cell: (bgv) =>
         bgv.provider ? (
-          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/20">
+          <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/20">
             <Building2 className="h-2.5 w-2.5" />
             {bgv.provider}
           </span>
@@ -204,7 +204,7 @@ function buildBgvColumns(
         return (
           <span
             className={cn(
-              "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+              "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border",
               statusCfg.badge,
             )}
           >
@@ -343,15 +343,15 @@ export function BackgroundVerificationPageClient() {
             <ShieldCheck className="h-3 w-3" />
             {pendingCount} Pending
           </span>
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full border bg-status-warning-surface text-status-warning-ink border-status-warning-rule">
             <Clock className="h-3 w-3" />
             {inProgressCount} In Progress
           </span>
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full border bg-status-success-surface text-status-success-ink border-status-success-rule">
             <CheckCircle2 className="h-3 w-3" />
             {passedCount} Cleared
           </span>
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full border bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30">
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full border bg-status-danger-surface text-status-danger-ink border-status-danger-rule">
             <ShieldAlert className="h-3 w-3" />
             {failedCount} Flagged
           </span>

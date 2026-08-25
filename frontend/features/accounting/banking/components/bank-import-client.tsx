@@ -179,8 +179,8 @@ export function BankImportClient() {
       >
         <div className="max-w-lg mx-auto mt-6 bg-card border border-border rounded-xl p-6 space-y-4">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center">
-              <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+            <div className="h-10 w-10 rounded-full bg-status-success-surface flex items-center justify-center">
+              <CheckCircle2 className="h-5 w-5 text-status-success-ink" />
             </div>
             <div>
               <p className="text-sm font-semibold">Import successful</p>
@@ -191,33 +191,33 @@ export function BankImportClient() {
           <div className="grid grid-cols-3 gap-3 text-center">
             <div className="bg-muted/30 rounded-lg p-3">
               <p className="text-lg font-semibold text-foreground">{importResult.importedCount}</p>
-              <p className="text-[10px] text-muted-foreground">Imported</p>
+              <p className="text-micro text-muted-foreground">Imported</p>
             </div>
             <div className="bg-muted/30 rounded-lg p-3">
               <p className="text-lg font-semibold text-muted-foreground">
                 {importResult.duplicateCount}
               </p>
-              <p className="text-[10px] text-muted-foreground">Duplicates</p>
+              <p className="text-micro text-muted-foreground">Duplicates</p>
             </div>
             <div className="bg-muted/30 rounded-lg p-3">
-              <p className="text-lg font-semibold text-red-600">
+              <p className="text-lg font-semibold text-status-danger-ink">
                 {importResult.errors.length}
               </p>
-              <p className="text-[10px] text-muted-foreground">Errors</p>
+              <p className="text-micro text-muted-foreground">Errors</p>
             </div>
           </div>
 
           {importResult.errors.length > 0 && (
-            <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-lg p-3 space-y-1">
-              <div className="flex items-center gap-1.5 text-red-700 dark:text-red-300 text-xs font-medium mb-1">
+            <div className="bg-status-danger-surface border border-status-danger-rule rounded-lg p-3 space-y-1">
+              <div className="flex items-center gap-1.5 text-status-danger-ink text-xs font-medium mb-1">
                 <AlertTriangle className="h-3.5 w-3.5" />
                 Import errors
               </div>
               {importResult.errors.slice(0, 5).map((err, i) => (
-                <p key={i} className="text-[11px] text-red-600 dark:text-red-400">{err}</p>
+                <p key={i} className="text-dense text-status-danger-ink">{err}</p>
               ))}
               {importResult.errors.length > 5 && (
-                <p className="text-[11px] text-red-500 dark:text-red-400">
+                <p className="text-dense text-status-danger-ink">
                   +{importResult.errors.length - 5} more errors
                 </p>
               )}
@@ -301,10 +301,10 @@ export function BankImportClient() {
                   </div>
                   {parsedCsv && (
                     <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                      <Badge variant="outline" className="text-[10px]">
+                      <Badge variant="outline" className="text-micro">
                         {parsedCsv.rowCount} rows
                       </Badge>
-                      <Badge variant="outline" className="text-[10px]">
+                      <Badge variant="outline" className="text-micro">
                         {parsedCsv.headers.length} columns
                       </Badge>
                     </div>

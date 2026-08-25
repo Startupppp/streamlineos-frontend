@@ -52,12 +52,12 @@ export function StandardSummaryCard({
       className={cn(className)}
     >
       <div className="space-y-2.5">
-        <p className="text-[13px] leading-relaxed text-foreground">{summary}</p>
+        <p className="text-label leading-relaxed text-foreground">{summary}</p>
 
         {structured.highlights.length > 0 ? (
           <ul className="space-y-1">
             {structured.highlights.map((item) => (
-              <li key={item} className="flex items-start gap-1.5 text-[12px] text-muted-foreground">
+              <li key={item} className="flex items-start gap-1.5 text-xs text-muted-foreground">
                 <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary" />
                 {item}
               </li>
@@ -68,8 +68,8 @@ export function StandardSummaryCard({
         {structured.blockers.length > 0 ? (
           <ul className="space-y-1">
             {structured.blockers.map((item) => (
-              <li key={item} className="flex items-start gap-1.5 text-[12px] text-muted-foreground">
-                <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-amber-500" />
+              <li key={item} className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-status-warning-fill" />
                 {item}
               </li>
             ))}
@@ -79,7 +79,7 @@ export function StandardSummaryCard({
         {structured.nextActions.length > 0 ? (
           <ul className="space-y-1">
             {structured.nextActions.map((item) => (
-              <li key={item} className="flex items-start gap-1.5 text-[12px] text-muted-foreground">
+              <li key={item} className="flex items-start gap-1.5 text-xs text-muted-foreground">
                 <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary/60" />
                 {item}
               </li>

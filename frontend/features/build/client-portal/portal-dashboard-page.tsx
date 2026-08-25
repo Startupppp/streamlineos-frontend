@@ -40,19 +40,19 @@ const CR_STATUS_LABELS: Record<ChangeRequestStatus, string> = {
 const CR_STATUS_STYLES: Record<ChangeRequestStatus, string> = {
   submitted: "text-muted-foreground border-border bg-muted/40",
   under_review:
-    "text-blue-700 border-blue-200 bg-blue-50 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+    "text-status-info-ink border-status-info-rule bg-status-info-surface",
   estimated:
-    "text-amber-700 border-amber-200 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+    "text-status-warning-ink border-status-warning-rule bg-status-warning-surface",
   awaiting_approval:
-    "text-orange-700 border-orange-200 bg-orange-50 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30",
+    "text-status-warning-ink border-status-warning-rule bg-status-warning-surface",
   approved:
-    "text-emerald-700 border-emerald-200 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+    "text-status-success-ink border-status-success-rule bg-status-success-surface",
   rejected:
-    "text-red-700 border-red-200 bg-red-50 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+    "text-status-danger-ink border-status-danger-rule bg-status-danger-surface",
   in_progress:
-    "text-blue-700 border-blue-200 bg-blue-50 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+    "text-status-info-ink border-status-info-rule bg-status-info-surface",
   completed:
-    "text-emerald-700 border-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+    "text-status-success-ink border-status-success-rule bg-status-success-surface",
 };
 
 function SectionTitle({
@@ -82,7 +82,7 @@ function DownloadLink({ href }: { href: string }) {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex shrink-0 items-center gap-1 text-[10px] text-primary hover:underline"
+      className="flex shrink-0 items-center gap-1 text-micro text-primary hover:underline"
       {...hoverHandlers}
     >
       <DownloadIcon ref={iconRef} size={12} />
@@ -166,7 +166,7 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
       title={project.name}
       backHref="/portal"
       badge={
-        <Badge variant="outline" className="text-[10px] capitalize">
+        <Badge variant="outline" className="text-micro capitalize">
           {project.status}
         </Badge>
       }
@@ -188,9 +188,9 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
             <PmPanel>
               {milestones.map((m) => (
                 <div key={m.id} className={cn(PM_ROW, "overflow-hidden")}>
-                  <TruncatedText text={m.name} className="min-w-0 flex-1 text-[11px] font-medium" />
+                  <TruncatedText text={m.name} className="min-w-0 flex-1 text-dense font-medium" />
                   {m.dueDate ? (
-                    <span className="shrink-0 text-[10px] text-muted-foreground">
+                    <span className="shrink-0 text-micro text-muted-foreground">
                       Due{" "}
                       {new Date(m.dueDate).toLocaleDateString("en-IN", {
                         day: "numeric",
@@ -199,7 +199,7 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
                     </span>
                   ) : null}
                   {m.status ? (
-                    <Badge variant="outline" className="shrink-0 text-[10px] capitalize">
+                    <Badge variant="outline" className="shrink-0 text-micro capitalize">
                       {m.status}
                     </Badge>
                   ) : null}
@@ -225,19 +225,19 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
             <PmPanel>
               {tasks.map((t) => (
                 <div key={t.id} className={cn(PM_ROW, "overflow-hidden")}>
-                  <span className="w-16 shrink-0 font-mono text-[10px] text-muted-foreground">
+                  <span className="w-16 shrink-0 font-mono text-micro text-muted-foreground">
                     #{t.ticketNumber}
                   </span>
-                  <TruncatedText text={t.title} className="min-w-0 flex-1 text-[11px]" />
+                  <TruncatedText text={t.title} className="min-w-0 flex-1 text-dense" />
                   {t.dueDate ? (
-                    <span className="hidden shrink-0 text-[10px] text-muted-foreground sm:block">
+                    <span className="hidden shrink-0 text-micro text-muted-foreground sm:block">
                       {new Date(t.dueDate).toLocaleDateString("en-IN", {
                         day: "numeric",
                         month: "short",
                       })}
                     </span>
                   ) : null}
-                  <Badge variant="outline" className="shrink-0 text-[10px] capitalize">
+                  <Badge variant="outline" className="shrink-0 text-micro capitalize">
                     {t.status}
                   </Badge>
                 </div>
@@ -263,7 +263,7 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
               {attachments.map((f) => (
                 <div key={f.id} className={cn(PM_ROW, "overflow-hidden")}>
                   <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  <TruncatedText text={f.filename} className="min-w-0 flex-1 text-[11px]" />
+                  <TruncatedText text={f.filename} className="min-w-0 flex-1 text-dense" />
                   <DownloadLink href={f.url} />
                 </div>
               ))}
@@ -278,7 +278,7 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
             actions={
               <AnimatedIconButton
                 size="sm"
-                className="text-[11px]"
+                className="text-dense"
                 onClick={handleOpenCrSheet}
                 icon={PlusIcon}
                 iconSize={14}
@@ -304,13 +304,13 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
             <PmPanel>
               {changeRequests?.map((cr) => (
                 <div key={cr.id} className={cn(PM_ROW, "overflow-hidden")}>
-                  <span className="w-14 shrink-0 font-mono text-[10px] text-muted-foreground">
+                  <span className="w-14 shrink-0 font-mono text-micro text-muted-foreground">
                     CR-{cr.crNumber}
                   </span>
-                  <TruncatedText text={cr.title} className="min-w-0 flex-1 text-[11px]" />
+                  <TruncatedText text={cr.title} className="min-w-0 flex-1 text-dense" />
                   <Badge
                     variant="outline"
-                    className={cn("shrink-0 text-[10px]", CR_STATUS_STYLES[cr.status])}
+                    className={cn("shrink-0 text-micro", CR_STATUS_STYLES[cr.status])}
                   >
                     {CR_STATUS_LABELS[cr.status]}
                   </Badge>

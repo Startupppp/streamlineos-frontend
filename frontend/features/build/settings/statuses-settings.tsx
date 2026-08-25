@@ -200,7 +200,7 @@ export function StatusesSettings({ projectId }: { projectId: number }) {
                       aria-invalid={!!nameError}
                     />
                     {nameError ? (
-                      <p className="text-[11px] text-destructive">{nameError}</p>
+                      <p className="text-dense text-destructive">{nameError}</p>
                     ) : null}
                   </div>
                   <div className="space-y-1">

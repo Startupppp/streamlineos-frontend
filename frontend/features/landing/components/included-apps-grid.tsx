@@ -20,11 +20,11 @@ export function IncludedAppsGrid({
   return (
     <div className={compact ? "mt-8" : "mt-12"}>
       <MotionReveal className="text-center mb-5 max-w-2xl mx-auto">
-        <h3 className="font-display text-base sm:text-lg font-semibold text-slate-900 tracking-tight">
+        <h3 className="font-display text-base sm:text-lg font-semibold text-foreground tracking-tight">
           {title}
         </h3>
         {subtitle ? (
-          <p className="text-sm text-slate-500 mt-1 leading-relaxed">{subtitle}</p>
+          <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{subtitle}</p>
         ) : null}
       </MotionReveal>
       <MotionStagger
@@ -41,7 +41,7 @@ export function IncludedAppsGrid({
         ))}
       </MotionStagger>
       {subtitle ? (
-        <MotionReveal delay={0.15} className="mt-5 text-center text-xs text-slate-500 max-w-xl mx-auto leading-relaxed">
+        <MotionReveal delay={0.15} className="mt-5 text-center text-xs text-muted-foreground max-w-xl mx-auto leading-relaxed">
           All plans include hosting, maintenance, and support. No hidden costs, no limits on
           features or data.
         </MotionReveal>
@@ -64,20 +64,20 @@ function AppChip({
     <motion.div
       whileHover={{ y: -2, scale: 1.02 }}
       transition={staggerItemDelay(index, 0)}
-      className={`group flex items-center gap-2 rounded-lg border border-slate-200/80 bg-slate-50/50 transition-colors hover:border-slate-300 hover:bg-white ${
+      className={`group flex items-center gap-2 rounded-lg border border-border bg-muted/50 transition-colors hover:border-slate-300 hover:bg-white ${
         compact ? "px-2 py-1.5" : "px-3 py-2.5"
       }`}
     >
       <motion.span
         whileHover={{ rotate: [0, -8, 8, 0] }}
         transition={{ duration: 0.4 }}
-        className="h-7 w-7 rounded-md bg-slate-100 group-hover:bg-blue-100 inline-flex items-center justify-center shrink-0 transition-colors"
+        className="h-7 w-7 rounded-md bg-muted group-hover:bg-status-info-surface inline-flex items-center justify-center shrink-0 transition-colors"
       >
-        <Icon className="h-3.5 w-3.5 text-slate-600 group-hover:text-blue-700" aria-hidden />
+        <Icon className="h-3.5 w-3.5 text-muted-foreground group-hover:text-status-info-ink" aria-hidden />
       </motion.span>
       <span
-        className={`font-medium text-slate-800 truncate ${
-          compact ? "text-[11px]" : "text-[12px]"
+        className={`font-medium text-foreground truncate ${
+          compact ? "text-dense" : "text-xs"
         }`}
       >
         {app.name}

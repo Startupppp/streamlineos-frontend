@@ -79,19 +79,19 @@ export function DeviceSelector({
 
   return (
     <div className="absolute bottom-full mb-2 left-0 right-0 mx-4 bg-background border border-border/60 rounded-xl shadow-xl p-4 z-50">
-      <h4 className="text-[12px] font-bold mb-3">Audio Settings</h4>
+      <h4 className="text-xs font-bold mb-3">Audio Settings</h4>
 
       {audioInputs.length > 0 && (
         <div className="mb-3">
           <div className="flex items-center gap-1.5 mb-1.5">
             <Mic className="h-3 w-3 text-muted-foreground" />
-            <label className="text-[11px] font-medium text-muted-foreground">Microphone</label>
+            <label className="text-dense font-medium text-muted-foreground">Microphone</label>
           </div>
           <select
             value={selectedAudioInput}
             onChange={handleInputChange}
             className={cn(
-              "w-full text-[12px] border border-border/50 rounded-lg px-2 py-1.5 bg-background focus:outline-none focus:border-primary/40",
+              "w-full text-xs border border-border/50 rounded-lg px-2 py-1.5 bg-background focus:outline-none focus:border-primary/40",
             )}
           >
             {audioInputs.map((d) => (
@@ -107,13 +107,13 @@ export function DeviceSelector({
         <div className="mb-3">
           <div className="flex items-center gap-1.5 mb-1.5">
             <Speaker className="h-3 w-3 text-muted-foreground" />
-            <label className="text-[11px] font-medium text-muted-foreground">Speaker</label>
+            <label className="text-dense font-medium text-muted-foreground">Speaker</label>
           </div>
           <select
             value={selectedAudioOutput}
             onChange={handleOutputChange}
             className={cn(
-              "w-full text-[12px] border border-border/50 rounded-lg px-2 py-1.5 bg-background focus:outline-none focus:border-primary/40",
+              "w-full text-xs border border-border/50 rounded-lg px-2 py-1.5 bg-background focus:outline-none focus:border-primary/40",
             )}
           >
             {audioOutputs.map((d) => (
@@ -127,7 +127,7 @@ export function DeviceSelector({
 
       <button
         onClick={onClose}
-        className="w-full mt-1 h-8 rounded-lg bg-primary text-primary-foreground text-[12px] font-semibold hover:bg-primary/90 transition-colors"
+        className="w-full mt-1 h-8 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors"
       >
         Done
       </button>

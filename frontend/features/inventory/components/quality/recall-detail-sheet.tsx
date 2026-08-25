@@ -174,12 +174,12 @@ export function RecallDetailSheet({ open, onOpenChange, recallId }: Props) {
           <div className="flex items-center gap-2 flex-wrap">
             <Badge
               variant="outline"
-              className={cn("h-5 text-[10px] px-2 border", RECALL_STATUS_BADGE[recall.status])}
+              className={cn("h-5 text-micro px-2 border", RECALL_STATUS_BADGE[recall.status])}
             >
               {RECALL_STATUS_LABEL[recall.status]}
             </Badge>
             {recall.severity && (
-              <Badge variant="outline" className="h-5 text-[10px] px-2 border border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+              <Badge variant="outline" className="h-5 text-micro px-2 border border-status-warning-rule bg-status-warning-surface text-status-warning-ink">
                 {recall.severity}
               </Badge>
             )}
@@ -200,7 +200,7 @@ export function RecallDetailSheet({ open, onOpenChange, recallId }: Props) {
                 <button
                   type="button"
                   onClick={handleEditNotes}
-                  className="text-[10px] text-primary hover:underline"
+                  className="text-micro text-primary hover:underline"
                 >
                   Edit
                 </button>
@@ -242,7 +242,7 @@ export function RecallDetailSheet({ open, onOpenChange, recallId }: Props) {
                   <div key={c.shipmentId} className="flex items-start gap-3 rounded-md border border-border/60 px-3 py-2">
                     <div className="min-w-0 flex-1">
                       <TruncatedText text={c.clientName ?? "Unknown"} className="text-xs font-medium" />
-                      <p className="text-[10px] text-muted-foreground">
+                      <p className="text-micro text-muted-foreground">
                         Shipment #{c.shipmentId}
                         {c.salesOrderId ? ` · SO #${c.salesOrderId}` : ""}
                         {c.shippedAt ? ` · ${format(new Date(c.shippedAt), "dd MMM yyyy")}` : ""}

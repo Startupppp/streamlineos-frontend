@@ -199,8 +199,8 @@ export function CustomFieldUpsertSheet({
             </SheetTitle>
             {isEdit && field.isSensitive && (
               <div className="flex items-center gap-1.5 mt-1">
-                <Lock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" />
-                <span className="text-xs text-amber-700 dark:text-amber-300 font-medium">
+                <Lock className="h-3.5 w-3.5 text-status-warning-ink" />
+                <span className="text-xs text-status-warning-ink font-medium">
                   Sensitive field
                 </span>
               </div>
@@ -272,7 +272,7 @@ export function CustomFieldUpsertSheet({
                         {form.formState.errors.key.message}
                       </p>
                     )}
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-dense text-muted-foreground">
                       Lowercase letters, numbers, underscores only. Cannot start with a number or
                       use reserved names.
                     </p>

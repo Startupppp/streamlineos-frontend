@@ -259,7 +259,7 @@ export function SelfEditProfileForm({
                   {errors.image.message}
                 </p>
               )}
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-dense text-muted-foreground">
                 Paste a direct image URL (jpg/png). Use your company photo or a
                 professional headshot.
               </p>
@@ -287,7 +287,7 @@ export function SelfEditProfileForm({
             {errors.bio && (
               <p className="text-xs text-destructive">{errors.bio.message}</p>
             )}
-            <p className="text-[11px] text-muted-foreground ml-auto">
+            <p className="text-dense text-muted-foreground ml-auto">
               {(watch("bio") ?? "").length}/500
             </p>
           </div>
@@ -360,7 +360,7 @@ export function SelfEditProfileForm({
             <SocialField
               id="linkedinUrl"
               aria-label="LinkedIn URL"
-              icon={<Linkedin className="h-3.5 w-3.5 text-blue-600 dark:text-blue-300" />}
+              icon={<Linkedin className="h-3.5 w-3.5 text-status-info-ink" />}
               placeholder="https://linkedin.com/in/yourhandle"
               error={errors.linkedinUrl?.message}
               {...register("linkedinUrl")}
@@ -368,7 +368,7 @@ export function SelfEditProfileForm({
             <SocialField
               id="twitterUrl"
               aria-label="Twitter / X URL"
-              icon={<Twitter className="h-3.5 w-3.5 text-sky-500 dark:text-sky-300" />}
+              icon={<Twitter className="h-3.5 w-3.5 text-status-info-ink" />}
               placeholder="https://twitter.com/yourhandle"
               error={errors.twitterUrl?.message}
               {...register("twitterUrl")}
@@ -384,7 +384,7 @@ export function SelfEditProfileForm({
             <SocialField
               id="websiteUrl"
               aria-label="Website URL"
-              icon={<Globe className="h-3.5 w-3.5 text-green-600 dark:text-green-300" />}
+              icon={<Globe className="h-3.5 w-3.5 text-status-success-ink" />}
               placeholder="https://yourwebsite.com"
               error={errors.websiteUrl?.message}
               {...register("websiteUrl")}

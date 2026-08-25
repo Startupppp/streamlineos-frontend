@@ -258,11 +258,11 @@ export function QuestionFormBody({
         <p
           id="question-char-count"
           className={cn(
-            "text-[10px] text-right tabular-nums",
+            "text-micro text-right tabular-nums",
             questionLength >= QUESTION_MAX_LENGTH
               ? "text-destructive"
               : questionLength >= QUESTION_MAX_LENGTH - 30
-                ? "text-amber-600"
+                ? "text-status-warning-ink"
                 : "text-muted-foreground"
           )}
         >
@@ -335,11 +335,11 @@ export function QuestionFormBody({
         <p
           id="tags-count"
           className={cn(
-            "text-[10px] text-right tabular-nums",
+            "text-micro text-right tabular-nums",
             tagsCount >= TAGS_MAX_COUNT
               ? "text-destructive"
               : tagsCount >= TAGS_MAX_COUNT - 1
-                ? "text-amber-600"
+                ? "text-status-warning-ink"
                 : "text-muted-foreground"
           )}
         >
@@ -362,11 +362,11 @@ export function QuestionFormBody({
         <p
           id="sample-answer-char-count"
           className={cn(
-            "text-[10px] text-right tabular-nums",
+            "text-micro text-right tabular-nums",
             sampleAnswerLength >= SAMPLE_ANSWER_MAX_LENGTH
               ? "text-destructive"
               : sampleAnswerLength >= SAMPLE_ANSWER_MAX_LENGTH - 20
-                ? "text-amber-600"
+                ? "text-status-warning-ink"
                 : "text-muted-foreground"
           )}
         >
@@ -387,11 +387,11 @@ export function QuestionFormBody({
         <p
           id="keywords-count"
           className={cn(
-            "text-[10px] text-right tabular-nums",
+            "text-micro text-right tabular-nums",
             keywordsCount >= KEYWORDS_MAX_COUNT
               ? "text-destructive"
               : keywordsCount >= KEYWORDS_MAX_COUNT - 1
-                ? "text-amber-600"
+                ? "text-status-warning-ink"
                 : "text-muted-foreground"
           )}
         >

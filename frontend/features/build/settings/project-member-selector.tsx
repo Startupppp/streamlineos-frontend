@@ -108,12 +108,12 @@ const MemberItem = memo(function MemberItem({
         className="pointer-events-none"
         aria-hidden
       />
-      <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-medium shrink-0">
+      <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-micro font-medium shrink-0">
         {emp.name?.charAt(0) || <User className="h-3 w-3" />}
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{emp.name}</p>
-        <p className="text-[11px] text-muted-foreground truncate">
+        <p className="text-dense text-muted-foreground truncate">
           {emp.email}
         </p>
       </div>
@@ -250,7 +250,7 @@ export function ReassignDialog({
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <UserX className="h-4 w-4 text-amber-500" />
+            <UserX className="h-4 w-4 text-status-warning-ink" />
             Reassign open tickets
           </DialogTitle>
           <DialogDescription>

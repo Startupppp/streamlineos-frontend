@@ -103,17 +103,17 @@ export function CommentDraftRow({ draft, onOpen, onDelete }: CommentDraftRowProp
       <div className="min-w-0 flex-1 overflow-hidden">
         <div className="flex min-w-0 items-start justify-between gap-2">
           <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="inline-flex w-fit max-w-[9rem] shrink-0 items-center rounded-md border border-border bg-muted/50 px-1.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground">
+            <span className="inline-flex w-fit max-w-[9rem] shrink-0 items-center rounded-md border border-border bg-muted/50 px-1.5 py-0.5 font-mono text-micro font-medium text-muted-foreground">
               <TruncatedText text={ticketKey} className="min-w-0" />
             </span>
             <TruncatedText
               text={ticket.title}
-              className="min-w-0 text-[13px] font-medium leading-snug text-foreground"
+              className="min-w-0 text-label font-medium leading-snug text-foreground"
             />
           </div>
 
           <div className="flex shrink-0 items-center gap-1">
-            <span className="text-[10px] tabular-nums text-muted-foreground/80 sm:text-[11px]">
+            <span className="text-micro tabular-nums text-muted-foreground/80 sm:text-dense">
               {age}
             </span>
             <AnimatedIconButton
@@ -131,7 +131,7 @@ export function CommentDraftRow({ draft, onOpen, onDelete }: CommentDraftRowProp
         {projectName ? (
           <TruncatedText
             text={projectName}
-            className="mt-0.5 min-w-0 text-[11px] text-muted-foreground/80"
+            className="mt-0.5 min-w-0 text-dense text-muted-foreground/80"
           />
         ) : null}
 
@@ -146,7 +146,7 @@ export function CommentDraftRow({ draft, onOpen, onDelete }: CommentDraftRowProp
         {hasMeta ? (
           <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
             {ticketType ? (
-              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
+              <span className="inline-flex items-center gap-1 text-micro font-medium text-muted-foreground">
                 <TicketTypeIcon type={ticketType} size="sm" />
                 <span className="capitalize">{ticketType.toLowerCase()}</span>
               </span>
@@ -155,7 +155,7 @@ export function CommentDraftRow({ draft, onOpen, onDelete }: CommentDraftRowProp
             {priority && PriorityIcon && priorityCfg ? (
               <span
                 className={cn(
-                  "inline-flex items-center gap-0.5 text-[10px] font-medium",
+                  "inline-flex items-center gap-0.5 text-micro font-medium",
                   priorityCfg.color,
                 )}
               >
@@ -167,7 +167,7 @@ export function CommentDraftRow({ draft, onOpen, onDelete }: CommentDraftRowProp
             {status ? (
               <span
                 className={cn(
-                  "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium",
+                  "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-micro font-medium",
                   getStatusBadgeClass(status),
                 )}
               >
@@ -180,10 +180,10 @@ export function CommentDraftRow({ draft, onOpen, onDelete }: CommentDraftRowProp
             ) : null}
 
             {assignee ? (
-              <span className="inline-flex min-w-0 max-w-[8.5rem] items-center gap-1 text-[10px] text-muted-foreground">
+              <span className="inline-flex min-w-0 max-w-[8.5rem] items-center gap-1 text-micro text-muted-foreground">
                 <Avatar className="h-3.5 w-3.5 shrink-0">
                   <AvatarImage src={resolveImageUrl(assignee.image)} />
-                  <AvatarFallback className="bg-primary/10 text-[7px] font-medium text-primary">
+                  <AvatarFallback className="bg-primary/10 text-micro font-medium text-primary">
                     {getUserInitials(assignee)}
                   </AvatarFallback>
                 </Avatar>

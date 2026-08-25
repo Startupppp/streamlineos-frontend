@@ -47,7 +47,7 @@ export function RunStatusStepper({ status, className }: RunStatusStepperProps) {
               <div
                 className={cn(
                   "h-px w-6 shrink-0",
-                  isDone ? "bg-emerald-400" : "bg-border",
+                  isDone ? "bg-status-success-fill" : "bg-border",
                 )}
               />
             )}
@@ -55,15 +55,15 @@ export function RunStatusStepper({ status, className }: RunStatusStepperProps) {
               <div
                 className={cn(
                   "h-2 w-2 rounded-full shrink-0",
-                  isDone && "bg-emerald-500",
+                  isDone && "bg-status-success-fill",
                   isCurrent && "bg-primary ring-2 ring-primary/20",
                   !isDone && !isCurrent && "bg-border",
                 )}
               />
               <span
                 className={cn(
-                  "text-[9px] font-medium whitespace-nowrap",
-                  isDone && "text-emerald-600",
+                  "text-micro font-medium whitespace-nowrap",
+                  isDone && "text-status-success-ink",
                   isCurrent && "text-primary",
                   !isDone && !isCurrent && "text-muted-foreground",
                 )}

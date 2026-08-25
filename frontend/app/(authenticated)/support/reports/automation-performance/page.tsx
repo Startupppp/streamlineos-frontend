@@ -20,14 +20,14 @@ function successRatePct(row: AutomationPerformanceRow): number {
 function SuccessRateBar({ row }: { row: AutomationPerformanceRow }) {
   const pct = successRatePct(row);
   const tone =
-    pct >= 90 ? "bg-emerald-500" : pct >= 60 ? "bg-amber-500" : "bg-red-500";
+    pct >= 90 ? "bg-status-success-fill" : pct >= 60 ? "bg-status-warning-fill" : "bg-status-danger-fill";
 
   return (
     <div className="flex items-center gap-2 min-w-[120px]">
       <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
         <div className={`h-full rounded-full ${tone}`} style={{ width: `${pct}%` }} />
       </div>
-      <span className="text-[11px] tabular-nums text-muted-foreground w-9 text-right">
+      <span className="text-dense tabular-nums text-muted-foreground w-9 text-right">
         {pct.toFixed(0)}%
       </span>
     </div>

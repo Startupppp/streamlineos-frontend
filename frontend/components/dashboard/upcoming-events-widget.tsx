@@ -19,7 +19,7 @@ interface UpcomingEvent {
 
 function SectionLabel({ children }: { children: string }) {
   return (
-    <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+    <p className="text-micro font-medium uppercase tracking-wide text-muted-foreground">
       {children}
     </p>
   );
@@ -29,7 +29,7 @@ function EventRow({ ev }: { ev: UpcomingEvent }) {
   return (
     <li className="flex items-start gap-3 rounded-lg border border-border/60 px-3 py-2 hover:bg-muted/50 transition-colors">
       <div className="flex flex-col items-center text-center rounded-md bg-primary/10 px-2 py-1 min-w-[42px] shrink-0">
-        <span className="text-[10px] font-medium text-primary uppercase">
+        <span className="text-micro font-medium text-primary uppercase">
           {format(new Date(ev.startTime), "MMM")}
         </span>
         <span className="text-lg font-bold leading-none text-primary">
@@ -46,7 +46,7 @@ function EventRow({ ev }: { ev: UpcomingEvent }) {
       </div>
       <Badge
         variant="outline"
-        className="text-[10px] h-4 px-1.5 shrink-0 capitalize"
+        className="text-micro h-4 px-1.5 shrink-0 capitalize"
       >
         {ev.type.toLowerCase()}
       </Badge>

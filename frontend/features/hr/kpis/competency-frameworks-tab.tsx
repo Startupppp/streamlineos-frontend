@@ -40,11 +40,13 @@ import {
 } from "@/hooks/api/hr";
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Sales: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
-  Finance: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-  Operations: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
-  HR: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-  Customer: "bg-pink-100 text-pink-700 dark:bg-pink-500/10 dark:text-pink-300",
+  // Five business functions, not five statuses: Finance and HR both read "info"
+  // and were the same chip. HR takes violet rather than the blue it shared.
+  Sales: "bg-category-emerald-surface text-category-emerald-ink",
+  Finance: "bg-category-blue-surface text-category-blue-ink",
+  Operations: "bg-category-amber-surface text-category-amber-ink",
+  HR: "bg-category-violet-surface text-category-violet-ink",
+  Customer: "bg-category-pink-surface text-category-pink-ink",
 };
 
 function getCategoryColor(category: string) {
@@ -282,13 +284,13 @@ export function CompetencyFrameworksTab() {
                     <div>
                       <h3 className="font-semibold text-foreground">{framework.name}</h3>
                       <div className="flex gap-2 mt-1">
-                        <Badge className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
+                        <Badge className="text-xs bg-status-info-surface text-status-info-ink">
                           {framework.ratingScale}-point scale
                         </Badge>
                         <Badge className="text-xs bg-muted text-muted-foreground">
                           {framework.levels.length} levels
                         </Badge>
-                        <Badge className={`text-xs ${framework.isActive ? "bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-300" : "bg-muted text-muted-foreground"}`}>
+                        <Badge className={`text-xs ${framework.isActive ? "bg-status-success-surface text-status-success-ink" : "bg-muted text-muted-foreground"}`}>
                           {framework.isActive ? "Active" : "Inactive"}
                         </Badge>
                       </div>
@@ -325,7 +327,7 @@ export function CompetencyFrameworksTab() {
                       }}
                     >
                       <DialogTrigger asChild>
-                        <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" size="sm" variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-300 dark:border-blue-500/30 dark:hover:bg-blue-500/10">
+                        <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" size="sm" variant="outline" className="text-status-info-ink border-status-info-rule hover:bg-status-info-surface">
                           Add Competency
                         </AnimatedIconButton>
                       </DialogTrigger>

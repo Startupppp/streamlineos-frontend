@@ -42,10 +42,10 @@ export interface OnboardingDoc {
 }
 
 function docStatusIcon(status: DocStatus) {
-  if (status === "APPROVED") return <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-300" />;
-  if (status === "SUBMITTED") return <Clock className="h-4 w-4 text-amber-500" />;
-  if (status === "REJECTED") return <AlertCircle className="h-4 w-4 text-rose-500" />;
-  if (status === "RE_UPLOAD_REQUESTED") return <RefreshCw className="h-4 w-4 text-amber-500" />;
+  if (status === "APPROVED") return <CheckCircle2 className="h-4 w-4 text-status-success-ink" />;
+  if (status === "SUBMITTED") return <Clock className="h-4 w-4 text-status-warning-ink" />;
+  if (status === "REJECTED") return <AlertCircle className="h-4 w-4 text-status-danger-ink" />;
+  if (status === "RE_UPLOAD_REQUESTED") return <RefreshCw className="h-4 w-4 text-status-warning-ink" />;
   return <Circle className="h-4 w-4 text-muted-foreground/40" />;
 }
 
@@ -127,7 +127,7 @@ export function DocumentChecklistRow({
         "overflow-hidden rounded-xl border border-border/70 border-l-4 transition-colors duration-200",
         isWizard
           ? "bg-card/60"
-          : "rounded-2xl bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)]",
+          : "rounded-2xl bg-card/90 backdrop-blur-sm shadow-card",
         isApproved
           ? "border-l-emerald-500"
           : status === "SUBMITTED"
@@ -154,14 +154,14 @@ export function DocumentChecklistRow({
                     )}
                   />
                   {docType.isMandatory ? (
-                    <span className="inline-flex shrink-0 items-center rounded-full border border-border bg-muted px-1.5 py-px text-[10px] font-semibold text-muted-foreground">
+                    <span className="inline-flex shrink-0 items-center rounded-full border border-border bg-muted px-1.5 py-px text-micro font-semibold text-muted-foreground">
                       Required
                     </span>
                   ) : null}
                   {submission ? (
                     <span
                       className={cn(
-                        "inline-flex shrink-0 items-center rounded-full border px-1.5 py-px text-[10px] font-semibold",
+                        "inline-flex shrink-0 items-center rounded-full border px-1.5 py-px text-micro font-semibold",
                         docStatusBadgeClass(submission.status),
                       )}
                     >
@@ -216,7 +216,7 @@ export function DocumentChecklistRow({
               <TruncatedText
                 text={`Remarks: ${submission.remarks}`}
                 lines={2}
-                className="mt-0.5 text-xs text-amber-600 dark:text-amber-300"
+                className="mt-0.5 text-xs text-status-warning-ink"
               />
             ) : null}
           </div>

@@ -49,20 +49,20 @@ export function CrmRecentActivity({ deals }: CrmRecentActivityProps) {
                 <div key={deal.id} className="flex items-start gap-2">
                   <div className={cn(
                     "h-6 w-6 rounded flex items-center justify-center shrink-0 mt-0.5",
-                    isWon ? "bg-emerald-500/15 text-emerald-400" :
-                    isLost ? "bg-red-500/15 text-red-400" :
+                    isWon ? "bg-status-success-surface text-status-success-ink" :
+                    isLost ? "bg-status-danger-surface text-status-danger-ink" :
                     "bg-primary/10 text-primary",
                   )}>
                     {isWon ? <TrendingUp className="h-3 w-3" /> : <IndianRupee className="h-3 w-3" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <TruncatedText text={deal.name} className="text-[11px] font-medium" />
-                    <p className="text-[10px] text-muted-foreground">
+                    <TruncatedText text={deal.name} className="text-dense font-medium" />
+                    <p className="text-micro text-muted-foreground">
                       {STAGE_LABELS[deal.stage] ?? deal.stage}
                       {deal.assignedTo?.name && ` · ${deal.assignedTo.name}`}
                     </p>
                   </div>
-                  <span className="text-[9px] text-muted-foreground shrink-0 tabular-nums">
+                  <span className="text-micro text-muted-foreground shrink-0 tabular-nums">
                     {updatedDate
                       ? formatDistanceToNow(new Date(updatedDate), { addSuffix: false })
                       : "—"}

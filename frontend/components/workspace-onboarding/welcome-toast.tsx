@@ -22,7 +22,7 @@ export function WelcomeToast() {
       description:
         "Your organization is live. Explore the dashboard or pick up Getting Started tips on the right.",
       duration: 6000,
-      icon: <PartyPopper className="h-4 w-4 text-blue-600" />,
+      icon: <PartyPopper className="h-4 w-4 text-status-info-ink" />,
     });
   }, []);
 

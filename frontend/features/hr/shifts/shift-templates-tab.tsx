@@ -73,9 +73,9 @@ export function ShiftTemplatesTab({ canManage, onEdit }: Props) {
               <div className="min-w-0">
                 <TruncatedText text={shift.name} className="text-sm font-semibold text-foreground" />
                 <div className="flex items-center gap-1.5 mt-1">
-                  <Badge variant="secondary" className="text-[11px]">{shift.type}</Badge>
+                  <Badge variant="secondary" className="text-dense">{shift.type}</Badge>
                   {shift.isNightShift && (
-                    <Badge variant="outline" className="text-[11px] gap-1">
+                    <Badge variant="outline" className="text-dense gap-1">
                       <Moon className="h-3 w-3" />Night
                     </Badge>
                   )}

@@ -61,7 +61,7 @@ const PERIOD_OPTIONS = [
 
 function ratingColor(avg: number, orgAvg: number): string {
   if (avg < orgAvg - 1.5) return "text-destructive";
-  if (avg > orgAvg + 1.5) return "text-green-600";
+  if (avg > orgAvg + 1.5) return "text-status-success-ink";
   return "text-foreground";
 }
 
@@ -166,7 +166,7 @@ export default function ScorecardAnalyticsPage() {
                     </div>
                     <div className="hidden sm:flex gap-1 shrink-0">
                       {Object.entries(s.recommendations).map(([rec, cnt]) => (
-                        <Badge key={rec} variant="secondary" className="text-[9px] px-1.5">
+                        <Badge key={rec} variant="secondary" className="text-micro px-1.5">
                           {rec.replace("_", " ")}: {cnt}
                         </Badge>
                       ))}

@@ -43,7 +43,7 @@ export function FieldTypeSections({ form, watchedFieldType }: FieldTypeSectionsP
             {needsTextValidation && (
               <>
                 <div className="space-y-1">
-                  <Label className="text-[11px] text-muted-foreground">Min Length</Label>
+                  <Label className="text-dense text-muted-foreground">Min Length</Label>
                   <Input
                     type="number"
                     {...form.register("validationMinLength")}
@@ -53,7 +53,7 @@ export function FieldTypeSections({ form, watchedFieldType }: FieldTypeSectionsP
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[11px] text-muted-foreground">Max Length</Label>
+                  <Label className="text-dense text-muted-foreground">Max Length</Label>
                   <Input
                     type="number"
                     {...form.register("validationMaxLength")}
@@ -67,7 +67,7 @@ export function FieldTypeSections({ form, watchedFieldType }: FieldTypeSectionsP
             {needsNumericValidation && (
               <>
                 <div className="space-y-1">
-                  <Label className="text-[11px] text-muted-foreground">Min Value</Label>
+                  <Label className="text-dense text-muted-foreground">Min Value</Label>
                   <Input
                     type="number"
                     {...form.register("validationMinValue")}
@@ -75,7 +75,7 @@ export function FieldTypeSections({ form, watchedFieldType }: FieldTypeSectionsP
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[11px] text-muted-foreground">Max Value</Label>
+                  <Label className="text-dense text-muted-foreground">Max Value</Label>
                   <Input
                     type="number"
                     {...form.register("validationMaxValue")}
@@ -87,7 +87,7 @@ export function FieldTypeSections({ form, watchedFieldType }: FieldTypeSectionsP
             {needsDateValidation && (
               <>
                 <div className="space-y-1">
-                  <Label className="text-[11px] text-muted-foreground">Date From</Label>
+                  <Label className="text-dense text-muted-foreground">Date From</Label>
                   <Input
                     type="date"
                     {...form.register("validationDateMin")}
@@ -95,7 +95,7 @@ export function FieldTypeSections({ form, watchedFieldType }: FieldTypeSectionsP
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[11px] text-muted-foreground">Date To</Label>
+                  <Label className="text-dense text-muted-foreground">Date To</Label>
                   <Input
                     type="date"
                     {...form.register("validationDateMax")}

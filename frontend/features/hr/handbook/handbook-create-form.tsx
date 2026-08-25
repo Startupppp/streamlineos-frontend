@@ -63,7 +63,7 @@ export function HandbookCreateForm({
           maxLength={100}
           className=""
         />
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-dense text-muted-foreground">
           1–100 characters. Spaces and common punctuation are allowed.
         </p>
       </div>
@@ -79,7 +79,7 @@ export function HandbookCreateForm({
           maxLength={20}
           className=""
         />
-        <p className="text-[11px] text-muted-foreground">Format: 1.0, v1.0, 2024-01, 1.0.0-beta</p>
+        <p className="text-dense text-muted-foreground">Format: 1.0, v1.0, 2024-01, 1.0.0-beta</p>
       </div>
 
       <div className="space-y-2">
@@ -123,7 +123,7 @@ export function HandbookCreateForm({
               type="url"
               className=""
             />
-            <p className="text-[11px] text-muted-foreground">Must start with https://</p>
+            <p className="text-dense text-muted-foreground">Must start with https://</p>
           </div>
         ) : (
           <div className="space-y-1.5">
@@ -152,7 +152,7 @@ export function HandbookCreateForm({
               onChange={onFileChange}
               className="sr-only"
             />
-            <p className="text-[11px] text-muted-foreground">PDF or DOCX only — max 10MB</p>
+            <p className="text-dense text-muted-foreground">PDF or DOCX only — max 10MB</p>
           </div>
         )}
       </div>
@@ -167,7 +167,7 @@ export function HandbookCreateForm({
           maxLength={2000}
           className="resize-none"
         />
-        <p className="text-[11px] text-muted-foreground text-right">{values.changelog.length}/2000</p>
+        <p className="text-dense text-muted-foreground text-right">{values.changelog.length}/2000</p>
       </div>
     </div>
   );

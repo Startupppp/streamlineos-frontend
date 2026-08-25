@@ -33,16 +33,16 @@ import {
 import { StateIllustration } from "@/components/illustrations";
 
 const STATUS_COLORS: Record<ProvisioningStatus, string> = {
-  pending: "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-500/10 dark:text-yellow-300 dark:border-yellow-500/30",
-  completed: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  verified: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  failed: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  pending: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  completed: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  verified: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  failed: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };
 
 const TRIGGER_COLORS: Record<ProvisioningTrigger, string> = {
-  joiner: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
-  mover: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-  leaver: "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-300",
+  joiner: "bg-status-success-surface text-status-success-ink",
+  mover: "bg-status-info-surface text-status-info-ink",
+  leaver: "bg-status-danger-surface text-status-danger-ink",
   manual: "bg-muted text-muted-foreground",
 };
 

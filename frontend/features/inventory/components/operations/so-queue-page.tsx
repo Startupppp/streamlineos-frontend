@@ -31,7 +31,7 @@ function formatDate(value: string | null | undefined): string {
 
 function SoStatusBadge({ status }: { status: SalesOrderStatus }) {
   return (
-    <Badge variant="outline" className={cn("h-4 text-[9px] px-1.5 py-0", SO_STATUS_BADGE[status])}>
+    <Badge variant="outline" className={cn("h-4 text-micro px-1.5 py-0", SO_STATUS_BADGE[status])}>
       {SO_STATUS_LABEL[status]}
     </Badge>
   );
@@ -44,7 +44,7 @@ const columns: DataTableColumn<SalesOrderListItem>[] = [
     cell: (so) => (
       <Link
         href={`/inventory/sales-orders/${so.id}`}
-        className="font-mono text-[11px] text-primary hover:underline transition-colors"
+        className="font-mono text-dense text-primary hover:underline transition-colors"
       >
         {so.soNumber}
       </Link>

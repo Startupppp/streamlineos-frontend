@@ -62,7 +62,7 @@ function DiffSummary({ versionTitle, versionContent, currentTitle, currentConten
       {diff.wordCountDelta !== 0 && (
         <p className="text-xs text-muted-foreground">
           Word count:{" "}
-          <span className={diff.wordCountDelta > 0 ? "text-emerald-600 dark:text-emerald-400 font-medium" : "text-red-600 dark:text-red-400 font-medium"}>
+          <span className={diff.wordCountDelta > 0 ? "text-status-success-ink font-medium" : "text-status-danger-ink font-medium"}>
             {diff.wordCountDelta > 0 ? `+${diff.wordCountDelta}` : diff.wordCountDelta} vs current
           </span>{" "}
           ({diff.versionWordCount} in this version, {diff.currentWordCount} now)
@@ -71,7 +71,7 @@ function DiffSummary({ versionTitle, versionContent, currentTitle, currentConten
       {diff.excerpt && (
         <div>
           <p className="text-xs text-muted-foreground mb-1">First difference (from this version):</p>
-          <p className="text-[11px] text-foreground bg-muted rounded px-2 py-1.5 font-mono break-all line-clamp-3">
+          <p className="text-dense text-foreground bg-muted rounded px-2 py-1.5 font-mono break-all line-clamp-3">
             &hellip;{diff.excerpt}&hellip;
           </p>
         </div>

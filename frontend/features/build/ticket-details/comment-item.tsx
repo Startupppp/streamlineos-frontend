@@ -191,7 +191,7 @@ function CommentItemComponent({
     >
       <Avatar className="h-6 w-6 shrink-0 mt-0.5">
         <AvatarImage src={resolveImageUrl(user?.image)} />
-        <AvatarFallback className="text-[9px] bg-primary/10 text-primary">
+        <AvatarFallback className="text-micro bg-primary/10 text-primary">
           {getUserInitials(user)}
         </AvatarFallback>
       </Avatar>
@@ -200,9 +200,9 @@ function CommentItemComponent({
           <span className="min-w-0 truncate text-xs font-semibold">
             {getUserDisplayName(user)}
           </span>
-          <span className="shrink-0 text-[11px] text-muted-foreground">{timeAgo}</span>
+          <span className="shrink-0 text-dense text-muted-foreground">{timeAgo}</span>
           {isEdited && (
-            <span className="text-[10px] text-muted-foreground/60 italic">(edited)</span>
+            <span className="text-micro text-muted-foreground/60 italic">(edited)</span>
           )}
         </div>
 
@@ -261,7 +261,7 @@ function CommentItemComponent({
               <button
                 type="button"
                 onClick={handleReplyClick}
-                className="text-[11px] text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                className="text-dense text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
               >
                 Reply
               </button>
@@ -270,7 +270,7 @@ function CommentItemComponent({
               <button
                 type="button"
                 onClick={handleCopyLink}
-                className="text-[11px] text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100 flex items-center gap-1"
+                className="text-dense text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100 flex items-center gap-1"
                 aria-label="Copy comment link"
               >
                 <LinkIcon size={12} />
@@ -281,7 +281,7 @@ function CommentItemComponent({
               <button
                 type="button"
                 onClick={handleCreateIssue}
-                className="text-[11px] text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100 flex items-center gap-1"
+                className="text-dense text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100 flex items-center gap-1"
                 aria-label="Create new issue from comment"
               >
                 <CirclePlusIcon size={12} />
@@ -292,7 +292,7 @@ function CommentItemComponent({
               <button
                 type="button"
                 onClick={handleStartEdit}
-                className="text-[11px] text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100 flex items-center gap-1"
+                className="text-dense text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100 flex items-center gap-1"
                 aria-label="Edit comment"
               >
                 <Pencil className="h-3 w-3" />
@@ -304,7 +304,7 @@ function CommentItemComponent({
                 trigger={
                   <button
                     type="button"
-                    className="text-[11px] text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100 flex items-center gap-1"
+                    className="text-dense text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100 flex items-center gap-1"
                     aria-label="Delete comment"
                     disabled={isDeletingComment}
                   >

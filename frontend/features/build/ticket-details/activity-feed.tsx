@@ -288,7 +288,7 @@ export function ActivityFeed({
   return (
     <div className="w-full space-y-4">
       <div className="flex w-full flex-1 min-w-0 flex-col gap-2">
-        <h4 className="flex min-w-0 flex-1 items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+        <h4 className="flex min-w-0 flex-1 items-center gap-1.5 text-dense font-medium uppercase tracking-wide text-muted-foreground">
           <MessageSquare className="h-3.5 w-3.5 shrink-0" />
           <span className="truncate">Activity</span>
           {comments.length > 0 && (
@@ -323,8 +323,8 @@ export function ActivityFeed({
       </div>
 
       {commentNotFound && (
-        <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10 px-3 py-2.5 text-xs text-amber-800 dark:text-amber-300">
-          <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-500 dark:text-amber-400" />
+        <div className="flex items-start gap-2 rounded-md border border-status-warning-rule bg-status-warning-surface px-3 py-2.5 text-xs text-status-warning-ink">
+          <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-status-warning-ink" />
           <span className="flex-1">
             Comment not found — it may have been deleted.
           </span>
@@ -332,7 +332,7 @@ export function ActivityFeed({
             type="button"
             onClick={handleDismissNotFound}
             aria-label="Dismiss"
-            className="shrink-0 text-amber-500 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors"
+            className="shrink-0 text-status-warning-ink hover:text-status-warning-ink transition-colors"
           >
             <XIcon size={14} />
           </button>

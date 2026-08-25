@@ -70,7 +70,7 @@ export const SubtaskRow = memo(function SubtaskRow({
         />
       </span>
 
-      <span className="text-[10px] font-mono text-muted-foreground/60 shrink-0 select-none">
+      <span className="text-micro font-mono text-muted-foreground/60 shrink-0 select-none">
         {displayKey}
       </span>
 
@@ -87,7 +87,7 @@ export const SubtaskRow = memo(function SubtaskRow({
       {subtask.points != null && subtask.points > 0 && (
         <Badge
           variant="secondary"
-          className="shrink-0 h-4 px-1 py-0 text-[9px] font-mono"
+          className="shrink-0 h-4 px-1 py-0 text-micro font-mono"
         >
           {subtask.points}
         </Badge>

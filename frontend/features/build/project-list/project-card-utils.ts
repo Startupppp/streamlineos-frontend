@@ -10,19 +10,19 @@ export const statusStripe: Record<string, string> = {
 };
 
 export const statusDotColors: Record<string, string> = {
-  ACTIVE: "bg-emerald-500",
-  PLANNING: "bg-blue-500",
-  COMPLETED: "bg-slate-400",
-  ON_HOLD: "bg-amber-500",
-  ARCHIVED: "bg-slate-400",
+  ACTIVE: "bg-status-success-fill",
+  PLANNING: "bg-status-info-fill",
+  COMPLETED: "bg-status-neutral-fill",
+  ON_HOLD: "bg-status-warning-fill",
+  ARCHIVED: "bg-status-neutral-fill",
 };
 
 export const avatarTints: Record<string, string> = {
-  ACTIVE: "bg-emerald-500/10 text-emerald-700 ring-emerald-500/20 dark:text-emerald-400",
-  PLANNING: "bg-blue-500/10 text-blue-700 ring-blue-500/20 dark:text-blue-400",
-  COMPLETED: "bg-slate-500/10 text-slate-600 ring-slate-500/20 dark:text-slate-400",
-  ON_HOLD: "bg-amber-500/10 text-amber-700 ring-amber-500/20 dark:text-amber-400",
-  ARCHIVED: "bg-slate-500/10 text-slate-500 ring-slate-500/20 dark:text-slate-500",
+  ACTIVE: "bg-status-success-surface text-status-success-ink ring-status-success-rule",
+  PLANNING: "bg-status-info-surface text-status-info-ink ring-status-info-rule",
+  COMPLETED: "bg-muted text-muted-foreground ring-border",
+  ON_HOLD: "bg-status-warning-surface text-status-warning-ink ring-status-warning-rule",
+  ARCHIVED: "bg-muted text-muted-foreground ring-border",
 };
 
 type DateTone = "muted" | "soon" | "overdue";
@@ -34,8 +34,8 @@ export interface DateMeta {
 
 export const dateToneClasses: Record<DateTone, string> = {
   muted: "text-muted-foreground",
-  soon: "text-amber-600 dark:text-amber-400",
-  overdue: "text-red-600 dark:text-red-400",
+  soon: "text-status-warning-ink",
+  overdue: "text-status-danger-ink",
 };
 
 export function resolveDateMeta(

@@ -227,7 +227,7 @@ export function LeaveTypesManager({ canManage }: { canManage: boolean }) {
                 {type.daysPerYear} days/yr
               </span>
               {type.carryForward && (
-                <Badge variant="outline" className="shrink-0 text-[10px]">
+                <Badge variant="outline" className="shrink-0 text-micro">
                   Carry forward
                 </Badge>
               )}

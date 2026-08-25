@@ -78,7 +78,7 @@ function CriterionRow({ criterion, onUpdate, onRemove, canRemove }: CriterionRow
         onChange={handleNameChange}
       />
       <div className="flex items-center gap-1.5 shrink-0">
-        <Label className="text-[10px] text-muted-foreground">Weight</Label>
+        <Label className="text-micro text-muted-foreground">Weight</Label>
         <Input
           type="number"
           className="w-16"
@@ -192,7 +192,7 @@ function TemplateSheet({ open, onClose, editTemplate }: TemplateSheetProps) {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label className="text-xs font-medium">Criteria</Label>
-              <span className="text-[11px] text-muted-foreground">Weight 1–10 (higher = more important)</span>
+              <span className="text-dense text-muted-foreground">Weight 1–10 (higher = more important)</span>
             </div>
             <div className="space-y-2">
               {criteria.map((c) => (
@@ -251,9 +251,9 @@ function TemplateCard({ template, onEdit, onDelete }: TemplateCardProps) {
         </div>
         <div className="flex items-center gap-1">
           {template.isActive ? (
-            <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20">Active</Badge>
+            <Badge variant="outline" className="text-micro bg-status-success-surface text-status-success-ink border-status-success-rule">Active</Badge>
           ) : (
-            <Badge variant="outline" className="text-[10px]">Inactive</Badge>
+            <Badge variant="outline" className="text-micro">Inactive</Badge>
           )}
           <Button
             variant="ghost"
@@ -278,7 +278,7 @@ function TemplateCard({ template, onEdit, onDelete }: TemplateCardProps) {
       <CardContent className="p-4 pt-2">
         <div className="flex flex-wrap gap-1">
           {template.criteria.map((c) => (
-            <Badge key={c.name} variant="secondary" className="text-[10px]">
+            <Badge key={c.name} variant="secondary" className="text-micro">
               {c.name}
               {c.weight > 1 && (
                 <span className="ml-1 text-muted-foreground">×{c.weight}</span>

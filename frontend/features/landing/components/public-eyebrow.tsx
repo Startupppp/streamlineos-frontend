@@ -14,7 +14,7 @@ export function PublicEyebrow({ children }: PublicEyebrowProps) {
       viewport={VIEWPORT_DEFAULT}
       variants={fadeUp}
       transition={transitionBase}
-      className="text-[13px] font-medium text-blue-600 mb-3"
+      className="text-label font-medium text-status-info-ink mb-3"
     >
       {children}
     </motion.p>

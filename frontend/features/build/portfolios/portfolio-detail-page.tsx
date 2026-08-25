@@ -281,7 +281,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
 
             {data.strategicGoal ? (
               <div>
-                <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <p className="mb-1 text-dense font-semibold uppercase tracking-wider text-muted-foreground">
                   Strategic Goal
                 </p>
                 <p className={cn(TEXT_BODY, "text-sm text-foreground")}>{data.strategicGoal}</p>
@@ -290,7 +290,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
 
             {data.description ? (
               <div>
-                <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <p className="mb-1 text-dense font-semibold uppercase tracking-wider text-muted-foreground">
                   Description
                 </p>
                 <p className={cn(TEXT_BODY, "text-sm text-muted-foreground")}>{data.description}</p>
@@ -301,7 +301,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
 
         <PmSection index={1} className="space-y-3">
           <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
               Linked Projects
               {data.projects.length > 0 ? ` (${data.projects.length})` : ""}
             </p>
@@ -354,7 +354,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
                   >
                     {proj.name}
                   </Link>
-                  <Badge variant="outline" className="shrink-0 px-1.5 py-0.5 text-[10px]">
+                  <Badge variant="outline" className="shrink-0 px-1.5 py-0.5 text-micro">
                     {proj.status}
                   </Badge>
                   {canManage ? (

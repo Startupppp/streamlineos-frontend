@@ -27,9 +27,9 @@ import { useOrgMembersByIds } from "@/hooks/api/organization";
 import { getUserDisplayName, type NamedUser } from "@/lib/person-display";
 
 const RELATIONSHIP_COLORS: Record<string, string> = {
-  PEER: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-  MANAGER: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-  DIRECT_REPORT: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
+  PEER: "bg-status-info-surface text-status-info-ink",
+  MANAGER: "bg-status-info-surface text-status-info-ink",
+  DIRECT_REPORT: "bg-status-warning-surface text-status-warning-ink",
   SELF: "bg-muted text-muted-foreground",
 };
 
@@ -135,7 +135,7 @@ export function MyReviewsTab() {
                 <Badge className={`text-xs ${RELATIONSHIP_COLORS[req.relationship] ?? "bg-muted text-muted-foreground"}`}>
                   {req.relationship}
                 </Badge>
-                <Badge className={`text-xs ${req.status === "PENDING" ? "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300" : "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300"}`}>
+                <Badge className={`text-xs ${req.status === "PENDING" ? "bg-status-warning-surface text-status-warning-ink" : "bg-status-success-surface text-status-success-ink"}`}>
                   {req.status}
                 </Badge>
               </div>
@@ -185,7 +185,7 @@ export function MyReviewsTab() {
                           <Star
                             className={`w-6 h-6 ${
                               (answers[q.id]?.rating ?? 0) >= star
-                                ? "fill-amber-400 text-amber-400"
+                                ? "fill-amber-400 text-status-warning-ink"
                                 : "text-muted-foreground"
                             }`}
                           />
@@ -218,7 +218,7 @@ export function MyReviewsTab() {
                     >
                       <Star
                         className={`w-6 h-6 ${
-                          overallRating >= star ? "fill-amber-400 text-amber-400" : "text-muted-foreground"
+                          overallRating >= star ? "fill-amber-400 text-status-warning-ink" : "text-muted-foreground"
                         }`}
                       />
                     </button>

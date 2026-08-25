@@ -350,7 +350,7 @@ export function PIPTab() {
                       <AvatarImage
                         src={resolveImageUrl(pip.user?.image ?? null)}
                       />
-                      <AvatarFallback className="text-[9px] bg-primary/10 text-primary">
+                      <AvatarFallback className="text-micro bg-primary/10 text-primary">
                         {pip.user?.name?.[0] ?? "?"}
                       </AvatarFallback>
                     </Avatar>
@@ -359,11 +359,11 @@ export function PIPTab() {
                         text={pip.user?.name ?? "Employee"}
                         className="text-sm font-medium"
                       />
-                      <p className="text-[10px] text-muted-foreground">
+                      <p className="text-micro text-muted-foreground">
                         {pip.startDate} → {pip.endDate}
                       </p>
                       {pip.hrRep && (
-                        <p className="text-[10px] text-muted-foreground">
+                        <p className="text-micro text-muted-foreground">
                           HR Rep: {pip.hrRep.name}
                         </p>
                       )}
@@ -380,7 +380,7 @@ export function PIPTab() {
                               ? "secondary"
                               : "outline"
                       }
-                      className="text-[10px]"
+                      className="text-micro"
                     >
                       {pip.status ?? "ACTIVE"}
                     </Badge>
@@ -441,7 +441,7 @@ export function PIPTab() {
                   />
                 )}
                 {pip.objectives && pip.objectives.length > 0 && (
-                  <p className="text-[10px] text-muted-foreground mt-1">
+                  <p className="text-micro text-muted-foreground mt-1">
                     {pip.objectives.length} objective
                     {pip.objectives.length !== 1 ? "s" : ""}
                   </p>

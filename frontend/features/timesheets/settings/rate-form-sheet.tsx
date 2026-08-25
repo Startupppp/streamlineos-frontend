@@ -149,7 +149,7 @@ export function RateFormSheet({ open, onOpenChange, rate }: RateFormSheetProps) 
           className="flex flex-col flex-1 min-h-0 overflow-hidden"
         >
           <SheetBody className="px-6 py-5 space-y-4">
-            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+            <p className="text-dense font-medium text-muted-foreground uppercase tracking-wider">
               Scope (optional)
             </p>
 
@@ -196,7 +196,7 @@ export function RateFormSheet({ open, onOpenChange, rate }: RateFormSheetProps) 
             </div>
 
             <div className="border-t pt-4">
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-4">
+              <p className="text-dense font-medium text-muted-foreground uppercase tracking-wider mb-4">
                 Rate details
               </p>
 
@@ -292,7 +292,7 @@ export function RateFormSheet({ open, onOpenChange, rate }: RateFormSheetProps) 
                 {errors.effectiveTo && (
                   <p className="text-xs text-destructive">{errors.effectiveTo.message}</p>
                 )}
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-dense text-muted-foreground">
                   Leave the effective dates blank to apply this rate always.
                 </p>
               </div>

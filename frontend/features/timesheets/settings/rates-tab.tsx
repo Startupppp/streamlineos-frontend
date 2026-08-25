@@ -60,7 +60,7 @@ function ScopeBadges({ rate }: { rate: TimesheetRate }) {
 
   if (!hasScope) {
     return (
-      <Badge variant="secondary" className="text-[10px] h-4 px-1.5 font-normal">
+      <Badge variant="secondary" className="text-micro h-4 px-1.5 font-normal">
         Any
       </Badge>
     );
@@ -69,22 +69,22 @@ function ScopeBadges({ rate }: { rate: TimesheetRate }) {
   return (
     <div className="flex flex-wrap gap-1">
       {rate.projectId != null && (
-        <Badge variant="outline" className="text-[10px] h-4 px-1.5 font-normal">
+        <Badge variant="outline" className="text-micro h-4 px-1.5 font-normal">
           Project
         </Badge>
       )}
       {rate.userId != null && (
-        <Badge variant="outline" className="text-[10px] h-4 px-1.5 font-normal">
+        <Badge variant="outline" className="text-micro h-4 px-1.5 font-normal">
           User
         </Badge>
       )}
       {rate.taskId != null && (
-        <Badge variant="outline" className="text-[10px] h-4 px-1.5 font-normal">
+        <Badge variant="outline" className="text-micro h-4 px-1.5 font-normal">
           Task
         </Badge>
       )}
       {rate.clientId != null && (
-        <Badge variant="outline" className="text-[10px] h-4 px-1.5 font-normal">
+        <Badge variant="outline" className="text-micro h-4 px-1.5 font-normal">
           Client
         </Badge>
       )}

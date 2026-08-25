@@ -30,8 +30,8 @@ import type { BgvStatus as CandidateBgvStatus } from "@/types/hr";
 const BGV_STATUSES: Array<{ value: BgvStatus; label: string; color: string }> = [
   { value: "NOT_INITIATED", label: "Not Initiated", color: "bg-muted text-muted-foreground border-border" },
   { value: "INITIATED", label: "Initiated", color: "bg-primary/10 text-primary border-primary/20" },
-  { value: "PENDING", label: "Pending", color: "bg-amber-500/10 text-amber-600 border-amber-500/20" },
-  { value: "CLEARED", label: "Cleared", color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" },
+  { value: "PENDING", label: "Pending", color: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule" },
+  { value: "CLEARED", label: "Cleared", color: "bg-status-success-surface text-status-success-ink border-status-success-rule" },
   { value: "FAILED", label: "Failed", color: "bg-destructive/10 text-destructive border-destructive/20" },
 ];
 
@@ -91,7 +91,7 @@ export function BgvTracker({
           Background Verification
         </CardTitle>
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className={cn("text-[11px]", style.color)}>
+          <Badge variant="outline" className={cn("text-dense", style.color)}>
             {style.label}
           </Badge>
           <Button

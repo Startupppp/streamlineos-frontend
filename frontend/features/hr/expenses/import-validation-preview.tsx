@@ -114,7 +114,7 @@ export function ImportValidationPreview({
       header: "Status",
       cell: (row) =>
         row.valid ? (
-          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+          <CheckCircle2 className="h-3.5 w-3.5 text-status-success-ink" />
         ) : (
           <span className="text-destructive" title={row.error}>
             <AlertCircle className="h-3.5 w-3.5 inline mr-1" />
@@ -145,7 +145,7 @@ export function ImportValidationPreview({
               <FileSpreadsheet className="h-3 w-3" />
               {parsedRows.length} rows
             </Badge>
-            <Badge className="gap-1 bg-emerald-500/10 text-emerald-600 border-emerald-200 dark:border-emerald-800">
+            <Badge className="gap-1 bg-status-success-surface text-status-success-ink border-status-success-rule">
               <CheckCircle2 className="h-3 w-3" />
               {validCount} valid
             </Badge>

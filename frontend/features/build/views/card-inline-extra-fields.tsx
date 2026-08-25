@@ -150,7 +150,7 @@ export const InlineLabels = memo(function InlineLabels({
               )}
             />
             {selectedIds.length > 0 && (
-              <span className="text-[9px] text-muted-foreground font-mono">{selectedIds.length}</span>
+              <span className="text-micro text-muted-foreground font-mono">{selectedIds.length}</span>
             )}
           </button>
         </ResponsivePopoverTrigger>
@@ -211,7 +211,7 @@ export const InlineCycle = memo(function InlineCycle({
             />
             <span
               className={cn(
-                "max-w-[60px] truncate text-[10px]",
+                "max-w-[60px] truncate text-micro",
                 currentCycle ? "text-foreground" : "text-muted-foreground/50",
               )}
             >
@@ -289,7 +289,7 @@ export const InlineSprint = memo(function InlineSprint({
             <Zap className="h-3 w-3 shrink-0 text-muted-foreground" />
             <span
               className={cn(
-                "max-w-[60px] truncate text-[10px]",
+                "max-w-[60px] truncate text-micro",
                 currentSprint ? "text-foreground" : "text-muted-foreground/50",
               )}
             >

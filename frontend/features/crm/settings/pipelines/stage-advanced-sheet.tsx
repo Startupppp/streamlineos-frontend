@@ -127,7 +127,7 @@ export function StageAdvancedSheet({
       <SheetContent className="flex w-full max-w-md flex-col gap-0 overflow-hidden p-0" side="right">
         <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
           <SheetTitle className="text-sm">Edit Stage</SheetTitle>
-          {stage && <p className="font-mono text-[11px] text-muted-foreground">{stage.key}</p>}
+          {stage && <p className="font-mono text-dense text-muted-foreground">{stage.key}</p>}
         </SheetHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="flex min-h-0 flex-1 flex-col">
@@ -208,7 +208,7 @@ export function StageAdvancedSheet({
                     <Badge
                       key={f}
                       variant="outline"
-                      className="text-[10px] h-5 px-1.5 gap-1 cursor-pointer hover:bg-destructive/10"
+                      className="text-micro h-5 px-1.5 gap-1 cursor-pointer hover:bg-destructive/10"
                       onClick={() => handleRemoveField(f)}
                     >
                       {f} ×

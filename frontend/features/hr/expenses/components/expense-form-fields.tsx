@@ -167,7 +167,7 @@ export function ExpenseFormFields({
                     {...field}
                   />
                 </FormControl>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-dense text-muted-foreground">
                   Letters, numbers, spaces, apostrophes, periods, and hyphens only.
                 </p>
                 <FormMessage />
@@ -241,7 +241,7 @@ export function ExpenseFormFields({
                     {...field}
                   />
                 </FormControl>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-dense text-muted-foreground">
                   Letters, numbers, spaces, apostrophes, periods, and hyphens only.
                 </p>
                 <FormMessage />

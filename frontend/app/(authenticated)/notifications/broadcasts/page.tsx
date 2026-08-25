@@ -73,12 +73,12 @@ const STATUS_TABS: Array<{ value: string; label: string }> = [
 
 const STATUS_CONFIG: Record<BroadcastStatus, { label: string; className: string }> = {
   DRAFT: { label: "Draft", className: "border-border text-muted-foreground" },
-  SCHEDULED: { label: "Scheduled", className: "border-blue-300 text-blue-600" },
-  QUEUED: { label: "Queued", className: "border-blue-300 text-blue-600 dark:border-blue-500/40 dark:text-blue-400" },
-  SENDING: { label: "Sending", className: "border-amber-300 text-amber-600" },
-  SENT: { label: "Sent", className: "border-emerald-300 text-emerald-600" },
+  SCHEDULED: { label: "Scheduled", className: "border-status-info-rule text-status-info-ink" },
+  QUEUED: { label: "Queued", className: "border-status-info-rule text-status-info-ink" },
+  SENDING: { label: "Sending", className: "border-status-warning-rule text-status-warning-ink" },
+  SENT: { label: "Sent", className: "border-status-success-rule text-status-success-ink" },
   CANCELLED: { label: "Cancelled", className: "border-border text-muted-foreground" },
-  FAILED: { label: "Failed", className: "border-red-300 text-red-600" },
+  FAILED: { label: "Failed", className: "border-status-danger-rule text-status-danger-ink" },
 };
 
 function BroadcastSheet({
@@ -268,7 +268,7 @@ function BroadcastSheet({
                         className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       />
                     </FormControl>
-                    <p className="text-[11px] text-muted-foreground">Leave empty to send immediately on publish.</p>
+                    <p className="text-dense text-muted-foreground">Leave empty to send immediately on publish.</p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -343,15 +343,15 @@ function BroadcastRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
           <span className="text-sm font-medium truncate">{broadcast.title}</span>
-          <Badge variant="outline" className={cn("text-[10px] h-4 px-1.5 shrink-0", statusCfg.className)}>
+          <Badge variant="outline" className={cn("text-micro h-4 px-1.5 shrink-0", statusCfg.className)}>
             {statusCfg.label}
           </Badge>
-          <Badge variant="secondary" className="text-[10px] h-4 px-1.5 shrink-0">
+          <Badge variant="secondary" className="text-micro h-4 px-1.5 shrink-0">
             {NOTIFICATION_CATEGORY_CONFIG[broadcast.category]?.label ?? broadcast.category}
           </Badge>
         </div>
         <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{broadcast.message}</p>
-        <div className="flex items-center gap-3 mt-0.5 text-[11px] text-muted-foreground/60">
+        <div className="flex items-center gap-3 mt-0.5 text-dense text-muted-foreground/60">
           {broadcast.status === "SENT" && (
             <span>{broadcast.deliveredCount} / {broadcast.recipientCount} delivered</span>
           )}

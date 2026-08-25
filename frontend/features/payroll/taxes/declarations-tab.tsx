@@ -20,8 +20,8 @@ import { DeclarationReviewSheet } from "./declaration-review-sheet";
 
 const STATUS_BADGE: Record<TaxDeclarationStatus, string> = {
   DRAFT: "bg-muted text-muted-foreground border-border",
-  SUBMITTED: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  VERIFIED: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  SUBMITTED: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  VERIFIED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
 };
 
 const REGIME_BADGE: Record<string, string> = {
@@ -113,22 +113,22 @@ export function DeclarationsTab() {
       header: "Employee",
       cell: (row) => (
         <div className="flex flex-col gap-0.5 min-w-0">
-          <TruncatedText text={row.userName} className="text-[11px] font-medium" />
-          <TruncatedText text={row.userEmail} className="text-[10px] text-muted-foreground" />
+          <TruncatedText text={row.userName} className="text-dense font-medium" />
+          <TruncatedText text={row.userEmail} className="text-micro text-muted-foreground" />
         </div>
       ),
     },
     {
       key: "financialYear",
       header: "FY",
-      cell: (row) => <span className="text-[11px]">{row.financialYear}</span>,
+      cell: (row) => <span className="text-dense">{row.financialYear}</span>,
     },
     {
       key: "regime",
       header: "Regime",
       cell: (row) => (
         <span
-          className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${REGIME_BADGE[row.regime] ?? ""}`}
+          className={`inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium border ${REGIME_BADGE[row.regime] ?? ""}`}
         >
           {row.regime}
         </span>
@@ -139,7 +139,7 @@ export function DeclarationsTab() {
       header: "80C",
       className: "text-right",
       cell: (row) => (
-        <span className="font-mono tabular-nums text-[11px]">{formatMoney(row.section80c)}</span>
+        <span className="font-mono tabular-nums text-dense">{formatMoney(row.section80c)}</span>
       ),
     },
     {
@@ -147,7 +147,7 @@ export function DeclarationsTab() {
       header: "80D",
       className: "text-right",
       cell: (row) => (
-        <span className="font-mono tabular-nums text-[11px]">{formatMoney(row.section80d)}</span>
+        <span className="font-mono tabular-nums text-dense">{formatMoney(row.section80d)}</span>
       ),
     },
     {
@@ -155,7 +155,7 @@ export function DeclarationsTab() {
       header: "Total",
       className: "text-right",
       cell: (row) => (
-        <span className="font-mono tabular-nums text-[11px] font-medium">{formatMoney(calcTotal(row))}</span>
+        <span className="font-mono tabular-nums text-dense font-medium">{formatMoney(calcTotal(row))}</span>
       ),
     },
     {
@@ -163,7 +163,7 @@ export function DeclarationsTab() {
       header: "Status",
       cell: (row) => (
         <span
-          className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${STATUS_BADGE[row.status]}`}
+          className={`inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium border ${STATUS_BADGE[row.status]}`}
         >
           {row.status}
         </span>
@@ -173,7 +173,7 @@ export function DeclarationsTab() {
       key: "submittedAt",
       header: "Submitted",
       cell: (row) => (
-        <span className="text-[11px] text-muted-foreground">{formatShortDate(row.createdAt)}</span>
+        <span className="text-dense text-muted-foreground">{formatShortDate(row.createdAt)}</span>
       ),
     },
   ];

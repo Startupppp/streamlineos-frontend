@@ -68,16 +68,16 @@ export default function TicketFeedbackPage() {
         <Card className="rounded-t-none border-t-0 px-6 py-6 shadow-noir">
           {surveyQuery.isLoading && (
             <div className="space-y-3">
-              <div className="h-4 bg-slate-200 rounded animate-pulse w-2/3" />
-              <div className="h-10 bg-slate-200 rounded animate-pulse" />
-              <div className="h-24 bg-slate-200 rounded animate-pulse" />
+              <div className="h-4 bg-muted rounded animate-pulse w-2/3" />
+              <div className="h-10 bg-muted rounded animate-pulse" />
+              <div className="h-24 bg-muted rounded animate-pulse" />
             </div>
           )}
 
           {surveyQuery.isError && (
             <div className="text-center py-8">
-              <p className="text-lg font-semibold text-slate-700">Survey unavailable</p>
-              <p className="text-sm text-slate-500 mt-2">
+              <p className="text-lg font-semibold text-foreground">Survey unavailable</p>
+              <p className="text-sm text-muted-foreground mt-2">
                 This feedback link is invalid or has expired. Please contact the team for an
                 up-to-date link.
               </p>
@@ -86,7 +86,7 @@ export default function TicketFeedbackPage() {
 
           {surveyQuery.isSuccess && survey && !showThankYou && (
             <div className="space-y-5">
-              <p className="text-sm text-slate-700 font-medium text-center">
+              <p className="text-sm text-foreground font-medium text-center">
                 How satisfied were you with the resolution of your ticket?
               </p>
 
@@ -106,7 +106,7 @@ export default function TicketFeedbackPage() {
                       <Star
                         className={cn(
                           "h-9 w-9 transition-colors",
-                          filled ? "fill-amber-400 text-amber-400" : "text-slate-300",
+                          filled ? "fill-amber-400 text-status-warning-ink" : "text-muted-foreground",
                         )}
                       />
                     </button>
@@ -149,10 +149,10 @@ export default function TicketFeedbackPage() {
 
           {showThankYou && (
             <div className="text-center py-6 space-y-3">
-              <div className="w-16 h-16 rounded-full bg-emerald-100 mx-auto flex items-center justify-center">
-                <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+              <div className="w-16 h-16 rounded-full bg-status-success-surface mx-auto flex items-center justify-center">
+                <CheckCircle2 className="w-8 h-8 text-status-success-ink" />
               </div>
-              <p className="text-lg font-semibold text-slate-900">
+              <p className="text-lg font-semibold text-foreground">
                 {alreadyResponded && !isSuccess ? "You already responded" : "Feedback received"}
               </p>
               {displayScore !== null && (
@@ -162,13 +162,13 @@ export default function TicketFeedbackPage() {
                       key={s}
                       className={cn(
                         "h-5 w-5",
-                        displayScore >= s ? "fill-amber-400 text-amber-400" : "text-slate-300",
+                        displayScore >= s ? "fill-amber-400 text-status-warning-ink" : "text-muted-foreground",
                       )}
                     />
                   ))}
                 </div>
               )}
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-muted-foreground">
                 Thank you for taking the time to share your feedback. We truly appreciate it.
               </p>
             </div>

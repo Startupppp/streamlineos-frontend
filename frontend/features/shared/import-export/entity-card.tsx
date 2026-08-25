@@ -93,7 +93,7 @@ export function EntityCard({
             {entity.supported.import && (
               <Badge
                 variant="secondary"
-                className="text-[9px] px-1.5 h-5 font-medium uppercase tracking-wide"
+                className="text-micro px-1.5 h-5 font-medium uppercase tracking-wide"
               >
                 Import
               </Badge>
@@ -101,7 +101,7 @@ export function EntityCard({
             {entity.supported.export && (
               <Badge
                 variant="outline"
-                className="text-[9px] px-1.5 h-5 font-medium uppercase tracking-wide"
+                className="text-micro px-1.5 h-5 font-medium uppercase tracking-wide"
               >
                 Export
               </Badge>
@@ -109,7 +109,7 @@ export function EntityCard({
           </div>
         </div>
 
-        <TruncatedText text={entity.description} lines={2} className="text-[12px] text-muted-foreground leading-snug" />
+        <TruncatedText text={entity.description} lines={2} className="text-xs text-muted-foreground leading-snug" />
 
         {upload.status !== "idle" && (
           <div className="space-y-1">
@@ -118,11 +118,11 @@ export function EntityCard({
             )}
             <div
               className={cn(
-                "flex items-center gap-1.5 text-[11px]",
+                "flex items-center gap-1.5 text-dense",
                 upload.status === "success"
-                  ? "text-emerald-600"
+                  ? "text-status-success-ink"
                   : upload.status === "error"
-                    ? "text-red-600"
+                    ? "text-status-danger-ink"
                     : "text-muted-foreground",
               )}
             >
@@ -187,7 +187,7 @@ export function EntityCard({
             <a
               href={entity.templateUrl}
               download
-              className="text-[10px] text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
+              className="text-micro text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
             >
               <FileSpreadsheet className="h-3 w-3" />
               Download template

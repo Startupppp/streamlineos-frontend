@@ -35,16 +35,16 @@ export const FloatingComposition = memo(function FloatingComposition({
         animate={{ opacity: 1, x: 0, y: 0 }}
         transition={{ duration: 0.7, delay: 0.15, ease: EASE_OUT_QUART }}
         className={cn(
-          "absolute top-0 left-0 z-20 rounded-2xl border border-slate-200/80 bg-white/92 backdrop-blur-sm shadow-[0_22px_50px_-22px_rgba(30,64,175,0.22)] -rotate-[3deg]",
+          "absolute top-0 left-0 z-20 rounded-2xl border border-border bg-white/92 backdrop-blur-sm shadow-[0_22px_50px_-22px_rgba(30,64,175,0.22)] -rotate-[3deg]",
           isHero ? "w-[min(240px,46%)] p-4" : "w-[230px] p-4",
         )}
       >
         <FloatLayer reduce={reduce} amplitude={3} duration={7}>
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[10px] font-medium text-brand-core">Sprint 24</span>
-            <span className="text-[9px] font-mono text-slate-400">12/24</span>
+            <span className="text-micro font-medium text-brand-core">Sprint 24</span>
+            <span className="text-micro font-mono text-muted-foreground">12/24</span>
           </div>
-          <p className="text-[12px] font-semibold text-slate-900 mb-1.5 leading-tight">
+          <p className="text-xs font-semibold text-foreground mb-1.5 leading-tight">
             Ship onboarding v3
           </p>
           <div className="space-y-1.5">
@@ -59,14 +59,14 @@ export const FloatingComposition = memo(function FloatingComposition({
                     "h-3 w-3 rounded-[3px] border inline-flex items-center justify-center shrink-0",
                     t.done
                       ? "bg-brand-core border-brand-core"
-                      : "border-slate-300 bg-white",
+                      : "border-border bg-white",
                   )}
                 >
                   {t.done && (
                     <CheckCircle2 className="h-2 w-2 text-white" strokeWidth={3} />
                   )}
                 </span>
-                <span className={t.done ? "text-slate-400 line-through" : "text-slate-700"}>
+                <span className={t.done ? "text-foreground line-through" : "text-muted-foreground"}>
                   {t.label}
                 </span>
               </div>
@@ -82,15 +82,15 @@ export const FloatingComposition = memo(function FloatingComposition({
         className="absolute top-[16%] left-[18%] right-0 z-10 sm:left-[22%]"
       >
         <FloatLayer reduce={reduce} amplitude={2} duration={6}>
-          <div className="rounded-2xl border border-slate-200/80 bg-white/95 backdrop-blur-sm p-4 sm:p-5 shadow-[0_28px_60px_-22px_rgba(30,64,175,0.28)]">
+          <div className="rounded-2xl border border-border bg-white/95 backdrop-blur-sm p-4 sm:p-5 shadow-[0_28px_60px_-22px_rgba(30,64,175,0.28)]">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-3.5 w-3.5 text-brand-core" />
-                <span className="text-[11px] font-medium text-slate-600">
+                <span className="text-dense font-medium text-muted-foreground">
                   Pipeline · Q2
                 </span>
               </div>
-              <span className="text-[10px] font-mono text-emerald-700 px-1.5 py-0.5 rounded bg-emerald-50 border border-emerald-100">
+              <span className="text-micro font-mono text-status-success-ink px-1.5 py-0.5 rounded bg-status-success-surface border border-status-success-rule">
                 +12.4%
               </span>
             </div>
@@ -99,8 +99,8 @@ export const FloatingComposition = memo(function FloatingComposition({
               {[
                 { label: "New", count: 142, pct: 100, bar: "from-brand-core to-brand-deep" },
                 { label: "Qualified", count: 86, pct: 72, bar: "from-brand-core to-brand-cyan" },
-                { label: "Proposal", count: 41, pct: 48, bar: "from-brand-cyan to-teal-400" },
-                { label: "Closed Won", count: 18, pct: 28, bar: "from-teal-400 to-emerald-400" },
+                { label: "Proposal", count: 41, pct: 48, bar: "from-brand-cyan to-gradient-success-to" },
+                { label: "Closed Won", count: 18, pct: 28, bar: "from-gradient-success-from to-gradient-success-to" },
               ].map((s, i) => (
                 <motion.div
                   key={s.label}
@@ -108,11 +108,11 @@ export const FloatingComposition = memo(function FloatingComposition({
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.45, delay: 0.35 + i * 0.07 }}
                 >
-                  <div className="flex justify-between text-[11px] mb-1">
-                    <span className="text-slate-700 font-medium">{s.label}</span>
-                    <span className="text-slate-500 font-mono">{s.count}</span>
+                  <div className="flex justify-between text-dense mb-1">
+                    <span className="text-foreground font-medium">{s.label}</span>
+                    <span className="text-muted-foreground font-mono">{s.count}</span>
                   </div>
-                  <div className="h-1.5 rounded-full bg-slate-200/70 overflow-hidden">
+                  <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                     <motion.div
                       initial={reduce ? { width: `${s.pct}%` } : { width: 0 }}
                       animate={{ width: `${s.pct}%` }}
@@ -128,9 +128,9 @@ export const FloatingComposition = memo(function FloatingComposition({
               ))}
             </div>
 
-            <div className="mt-4 pt-3 border-t border-slate-200 flex items-center justify-between text-[10px]">
-              <span className="text-slate-500 font-medium">Forecast</span>
-              <span className="font-mono text-slate-900 font-semibold">$2.4M ARR</span>
+            <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-micro">
+              <span className="text-muted-foreground font-medium">Forecast</span>
+              <span className="font-mono text-foreground font-semibold">$2.4M ARR</span>
             </div>
           </div>
         </FloatLayer>
@@ -141,7 +141,7 @@ export const FloatingComposition = memo(function FloatingComposition({
         animate={{ opacity: 1, x: 0, y: 0 }}
         transition={{ duration: 0.7, delay: 0.35, ease: EASE_OUT_QUART }}
         className={cn(
-          "absolute bottom-0 right-0 z-20 rounded-2xl border border-slate-200/80 bg-white/92 backdrop-blur-sm shadow-[0_22px_50px_-22px_rgba(6,182,212,0.25)] rotate-[3deg]",
+          "absolute bottom-0 right-0 z-20 rounded-2xl border border-border bg-white/92 backdrop-blur-sm shadow-[0_22px_50px_-22px_rgba(6,182,212,0.25)] rotate-[3deg]",
           isHero ? "w-[min(210px,42%)] p-4" : "w-[200px] p-4",
         )}
       >
@@ -149,14 +149,14 @@ export const FloatingComposition = memo(function FloatingComposition({
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-1.5">
               <Users className="h-3 w-3 text-brand-cyan" />
-              <span className="text-[10px] font-medium text-slate-600">Attendance</span>
+              <span className="text-micro font-medium text-muted-foreground">Attendance</span>
             </div>
-            <span className="text-[9px] font-mono text-emerald-700 px-1.5 py-0.5 rounded bg-emerald-50">
+            <span className="text-micro font-mono text-status-success-ink px-1.5 py-0.5 rounded bg-status-success-surface">
               94%
             </span>
           </div>
-          <p className="font-display text-2xl font-extrabold text-slate-900 leading-none mb-2.5">
-            47<span className="text-sm font-bold text-slate-400">/52</span>
+          <p className="font-display text-2xl font-extrabold text-foreground leading-none mb-2.5">
+            47<span className="text-sm font-bold text-muted-foreground">/52</span>
           </p>
           <div className="grid grid-cols-7 gap-1">
             {Array.from({ length: 14 }).map((_, i) => {

@@ -30,9 +30,9 @@ function ReadinessStepButton({ step, idx, onStepClick }: ReadinessStepButtonProp
       className="flex items-center gap-2 w-full rounded-md px-2 py-1.5 text-xs text-left hover:bg-muted/60 transition-colors"
     >
       {step.completed && !step.hasError ? (
-        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+        <CheckCircle2 className="h-3.5 w-3.5 text-status-success-ink shrink-0" />
       ) : step.hasError ? (
-        <AlertCircle className="h-3.5 w-3.5 text-rose-500 shrink-0" />
+        <AlertCircle className="h-3.5 w-3.5 text-status-danger-ink shrink-0" />
       ) : (
         <Circle className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" />
       )}
@@ -61,7 +61,7 @@ export function PublishReadiness({ steps, onStepClick }: PublishReadinessProps) 
           size="sm"
           className={cn(
             "gap-1.5 text-xs font-semibold",
-            allReady ? "text-emerald-600" : hasErrors ? "text-rose-600" : "text-amber-600",
+            allReady ? "text-status-success-ink" : hasErrors ? "text-status-danger-ink" : "text-status-warning-ink",
           )}
         >
           {allReady ? <CheckCircle2 className="h-3.5 w-3.5" /> : <AlertCircle className="h-3.5 w-3.5" />}
@@ -69,7 +69,7 @@ export function PublishReadiness({ steps, onStepClick }: PublishReadinessProps) 
         </Button>
       </ResponsivePopoverTrigger>
       <ResponsivePopoverContent align="end" className="w-64 p-2" title="Publish readiness">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-2 pb-1.5">
+        <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground px-2 pb-1.5">
           Publish readiness
         </p>
         <div className="space-y-0.5">

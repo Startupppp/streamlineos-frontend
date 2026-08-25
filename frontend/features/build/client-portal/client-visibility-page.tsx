@@ -53,11 +53,11 @@ function TicketRow({
 
   return (
     <div className={cn(PM_ROW, "overflow-hidden")}>
-      <span className="w-16 shrink-0 font-mono text-[10px] text-muted-foreground">
+      <span className="w-16 shrink-0 font-mono text-micro text-muted-foreground">
         #{ticket.ticketNumber}
       </span>
-      <TruncatedText text={ticket.title} className="min-w-0 flex-1 text-[11px]" />
-      <Badge variant="outline" className="w-16 shrink-0 justify-center text-[10px] capitalize">
+      <TruncatedText text={ticket.title} className="min-w-0 flex-1 text-dense" />
+      <Badge variant="outline" className="w-16 shrink-0 justify-center text-micro capitalize">
         {ticket.type}
       </Badge>
       <Switch
@@ -88,7 +88,7 @@ function MilestoneRow({
 
   return (
     <div className={cn(PM_ROW, "overflow-hidden")}>
-      <TruncatedText text={milestone.name} className="min-w-0 flex-1 text-[11px]" />
+      <TruncatedText text={milestone.name} className="min-w-0 flex-1 text-dense" />
       <Switch
         checked={milestone.clientVisible}
         onCheckedChange={handleChange}
@@ -126,7 +126,7 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
         <PmSection index={0}>
           <div className="flex items-start gap-2.5 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3">
             <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-            <p className="text-[11px] leading-relaxed text-foreground/80">
+            <p className="text-dense leading-relaxed text-foreground/80">
               Items toggled here appear in the client&apos;s portal. Only enabled tickets and
               milestones are visible to project clients.
             </p>
@@ -179,7 +179,7 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
                   />
                 ) : (
                   <PmPanel className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">
-                    <div className="flex items-center gap-3 border-b border-border/50 bg-muted/30 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground shrink-0">
+                    <div className="flex items-center gap-3 border-b border-border/50 bg-muted/30 px-3 py-1.5 text-micro font-bold uppercase tracking-wider text-muted-foreground shrink-0">
                       <span className="w-16 shrink-0">ID</span>
                       <span className="flex-1">Title</span>
                       <span className="w-16 shrink-0">Type</span>
@@ -205,7 +205,7 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
                   />
                 ) : (
                   <PmPanel className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">
-                    <div className="flex items-center gap-3 border-b border-border/50 bg-muted/30 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground shrink-0">
+                    <div className="flex items-center gap-3 border-b border-border/50 bg-muted/30 px-3 py-1.5 text-micro font-bold uppercase tracking-wider text-muted-foreground shrink-0">
                       <span className="flex-1">Name</span>
                       <span className="w-10 shrink-0 text-right">Visible</span>
                     </div>

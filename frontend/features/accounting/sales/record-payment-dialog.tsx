@@ -217,7 +217,7 @@ export function RecordPaymentDialog({
                 {...form.register("amount", { valueAsNumber: true })}
               />
               {form.formState.errors.amount && (
-                <p className="text-[10px] text-destructive">
+                <p className="text-micro text-destructive">
                   {form.formState.errors.amount.message}
                 </p>
               )}
@@ -231,7 +231,7 @@ export function RecordPaymentDialog({
                 className="text-sm w-full"
               />
               {form.formState.errors.paymentDate && (
-                <p className="text-[10px] text-destructive">{form.formState.errors.paymentDate.message}</p>
+                <p className="text-micro text-destructive">{form.formState.errors.paymentDate.message}</p>
               )}
             </div>
           </div>
@@ -254,7 +254,7 @@ export function RecordPaymentDialog({
               </SelectContent>
             </Select>
             {form.formState.errors.paymentMethod && (
-              <p className="text-[10px] text-destructive">{form.formState.errors.paymentMethod.message}</p>
+              <p className="text-micro text-destructive">{form.formState.errors.paymentMethod.message}</p>
             )}
           </div>
 

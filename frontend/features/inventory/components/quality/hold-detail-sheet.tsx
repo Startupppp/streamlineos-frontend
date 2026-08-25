@@ -33,7 +33,7 @@ interface Props {
 function HoldInfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
+      <p className="text-dense font-medium text-muted-foreground">{label}</p>
       <div className="text-sm text-foreground">{value ?? "—"}</div>
     </div>
   );
@@ -106,7 +106,7 @@ export function HoldDetailSheet({ open, onOpenChange, holdId }: Props) {
             <div className="flex items-center gap-3 flex-wrap">
               <Badge
                 variant="outline"
-                className={cn("h-5 text-[10px] px-2 border", QUALITY_HOLD_STATUS_BADGE[hold.status])}
+                className={cn("h-5 text-micro px-2 border", QUALITY_HOLD_STATUS_BADGE[hold.status])}
               >
                 {QUALITY_HOLD_STATUS_LABEL[hold.status]}
               </Badge>

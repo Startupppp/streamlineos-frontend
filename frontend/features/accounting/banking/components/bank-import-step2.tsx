@@ -264,7 +264,7 @@ export function BankImportStep2({
             data={csvTableData}
             columns={csvTableColumns}
             getRowKey={(row) => row._rowIdx}
-            className="text-[11px]"
+            className="text-dense"
             minWidth={`${parsedCsv.headers.length * 120}px`}
           />
         </div>

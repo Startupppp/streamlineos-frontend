@@ -66,7 +66,7 @@ export function CompanyMergeDialog({ pair, currentOrgId, open, onOpenChange, onM
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-xs text-muted-foreground">
-              Matched by <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4">{pair.matchReason}</Badge>. Select the primary company. The duplicate will be soft-deleted and all contacts/deals re-pointed.
+              Matched by <Badge variant="outline" className="text-micro px-1.5 py-0 h-4">{pair.matchReason}</Badge>. Select the primary company. The duplicate will be soft-deleted and all contacts/deals re-pointed.
             </p>
             <div className="grid grid-cols-2 gap-3">
               {orgs.map((org) => {
@@ -83,15 +83,15 @@ export function CompanyMergeDialog({ pair, currentOrgId, open, onOpenChange, onM
                     }`}
                   >
                     <div className="flex items-start gap-2">
-                      <div className="w-7 rounded-md bg-primary/10 flex items-center justify-center text-[11px] font-semibold text-primary shrink-0">
+                      <div className="w-7 rounded-md bg-primary/10 flex items-center justify-center text-dense font-semibold text-primary shrink-0">
                         {org.name[0]?.toUpperCase() ?? "?"}
                       </div>
                       <div className="min-w-0 flex-1">
                         <TruncatedText text={org.name} className="text-xs font-medium" />
-                        {org.domain && <TruncatedText text={org.domain} className="text-[10px] text-muted-foreground" />}
+                        {org.domain && <TruncatedText text={org.domain} className="text-micro text-muted-foreground" />}
                       </div>
                       {isPrimary && (
-                        <Badge className="text-[9px] px-1.5 py-0 h-4 bg-primary shrink-0">Primary</Badge>
+                        <Badge className="text-micro px-1.5 py-0 h-4 bg-primary shrink-0">Primary</Badge>
                       )}
                     </div>
                   </button>

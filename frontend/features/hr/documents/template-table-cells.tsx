@@ -31,13 +31,13 @@ export function VariableChips({ variables }: { variables: string[] }) {
       {visible.map((v) => (
         <span
           key={v}
-          className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-mono bg-muted text-foreground border border-border"
+          className="inline-flex items-center px-1.5 py-0.5 rounded-md text-micro font-mono bg-muted text-foreground border border-border"
         >
           {`{{${v}}}`}
         </span>
       ))}
       {rest > 0 && (
-        <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] bg-muted text-muted-foreground border border-border/50">
+        <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-micro bg-muted text-muted-foreground border border-border/50">
           +{rest}
         </span>
       )}
@@ -183,8 +183,8 @@ export function DefaultStarButton({
         className={cn(
           "h-7 w-7 shrink-0 transition-colors duration-200",
           isCurrentDefault
-            ? "text-amber-500 hover:text-amber-600"
-            : "text-muted-foreground/40 hover:text-amber-400",
+            ? "text-status-warning-ink hover:text-status-warning-ink"
+            : "text-muted-foreground/40 hover:text-status-warning-ink",
         )}
         onClick={handleClick}
         disabled={isPending}

@@ -16,7 +16,7 @@ export const AUDIT_LOG_COLUMNS: DataTableColumn<AuditLogRow>[] = [
     key: "createdAt",
     header: "Timestamp",
     cell: (log) => (
-      <span className="text-[12px] text-muted-foreground font-mono whitespace-nowrap">
+      <span className="text-xs text-muted-foreground font-mono whitespace-nowrap">
         {format(new Date(log.createdAt), "dd MMM, HH:mm:ss")}
       </span>
     ),
@@ -29,9 +29,9 @@ export const AUDIT_LOG_COLUMNS: DataTableColumn<AuditLogRow>[] = [
       <div className="flex items-center gap-2 min-w-[140px]">
         <Avatar className="h-6 w-6 shrink-0">
           <AvatarImage src={resolveImageUrl(log.userImage)} />
-          <AvatarFallback className="text-[9px]">{getInitials(log.userName)}</AvatarFallback>
+          <AvatarFallback className="text-micro">{getInitials(log.userName)}</AvatarFallback>
         </Avatar>
-        <span className="text-[13px] font-medium truncate max-w-[120px]">
+        <span className="text-label font-medium truncate max-w-[120px]">
           {log.userName ?? log.userEmail ?? "Unknown user"}
         </span>
       </div>
@@ -42,7 +42,7 @@ export const AUDIT_LOG_COLUMNS: DataTableColumn<AuditLogRow>[] = [
     key: "action",
     header: "Action",
     cell: (log) => (
-      <Badge variant="outline" className={`text-[11px] ${actionBadgeClass(log.action)}`}>
+      <Badge variant="outline" className={`text-dense ${actionBadgeClass(log.action)}`}>
         {formatActionLabel(log.action)}
       </Badge>
     ),
@@ -51,7 +51,7 @@ export const AUDIT_LOG_COLUMNS: DataTableColumn<AuditLogRow>[] = [
     key: "entity",
     header: "Entity",
     cell: (log) => (
-      <span className="text-[12px] text-muted-foreground capitalize whitespace-nowrap">
+      <span className="text-xs text-muted-foreground capitalize whitespace-nowrap">
         {log.targetType ?? "—"}
       </span>
     ),
@@ -61,7 +61,7 @@ export const AUDIT_LOG_COLUMNS: DataTableColumn<AuditLogRow>[] = [
     key: "ipAddress",
     header: "IP Address",
     cell: (log) => (
-      <span className="text-[12px] font-mono text-muted-foreground whitespace-nowrap">
+      <span className="text-xs font-mono text-muted-foreground whitespace-nowrap">
         {log.ipAddress ?? "—"}
       </span>
     ),

@@ -58,7 +58,7 @@ function SummaryChip({
   return (
     <Link
       href={href}
-      className="flex items-center gap-1.5 rounded-full border border-border/60 px-2 py-1 text-[11px] hover:bg-muted/50 transition-colors"
+      className="flex items-center gap-1.5 rounded-full border border-border/60 px-2 py-1 text-dense hover:bg-muted/50 transition-colors"
     >
       <Icon className={cn("h-3 w-3", tone)} aria-hidden="true" />
       <span className="font-medium">{value}</span>
@@ -123,10 +123,10 @@ function DocumentItem({ doc }: DocumentItemProps) {
           className="text-sm font-medium text-foreground"
         />
         <div className="flex items-center gap-2 mt-0.5">
-          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+          <Badge variant="outline" className="text-micro px-1.5 py-0">
             {DOC_TYPE_LABELS[doc.type] ?? doc.type}
           </Badge>
-          <span className="text-[10px] text-muted-foreground">
+          <span className="text-micro text-muted-foreground">
             {doc.createdAt
               ? format(new Date(doc.createdAt), "MMM dd, yyyy")
               : ""}
@@ -176,15 +176,15 @@ function MyPendingUploadsSection() {
 
   return (
     <>
-      <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-2.5 dark:border-amber-800 dark:bg-amber-900/20">
+      <div className="mb-3 rounded-lg border border-status-warning-rule bg-status-warning-surface p-2.5">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-[11px] font-medium text-amber-800 dark:text-amber-300">
+          <p className="text-dense font-medium text-status-warning-ink">
             {count} document{count === 1 ? "" : "s"} to upload
           </p>
           <Button
             size="sm"
             variant="outline"
-            className="h-7 px-2 text-[11px]"
+            className="h-7 px-2 text-dense"
             onClick={handleOpenUpload}
           >
             <Upload className="mr-1 h-3 w-3" aria-hidden="true" />
@@ -195,7 +195,7 @@ function MyPendingUploadsSection() {
           {pending.slice(0, MAX_PENDING_SHOWN).map((doc) => (
             <li
               key={`${doc.documentTypeId}-${doc.reason}`}
-              className="flex items-center justify-between gap-2 text-[10px] text-amber-700 dark:text-amber-400"
+              className="flex items-center justify-between gap-2 text-micro text-status-warning-ink"
             >
               <TruncatedText
                 text={doc.documentTypeName}
@@ -207,7 +207,7 @@ function MyPendingUploadsSection() {
             </li>
           ))}
           {count > MAX_PENDING_SHOWN && (
-            <li className="text-[10px] text-amber-700 dark:text-amber-400">
+            <li className="text-micro text-status-warning-ink">
               +{count - MAX_PENDING_SHOWN} more
             </li>
           )}
@@ -270,7 +270,7 @@ export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
                 label="expiring soon"
                 value={docStats?.expiringIn30Days ?? 0}
                 href="/hr/documents"
-                tone="text-amber-600"
+                tone="text-status-warning-ink"
               />
             )}
             {showSignatureChip && <AwaitingSignatureChip />}
@@ -280,7 +280,7 @@ export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
                 label="missing docs"
                 value={missingCount ?? 0}
                 href="/hr/document-review"
-                tone="text-red-600"
+                tone="text-status-danger-ink"
               />
             )}
           </div>
@@ -311,7 +311,7 @@ export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
             />
           ) : (
             <div className="space-y-2">
-              <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground px-2.5">
+              <p className="text-micro font-medium uppercase tracking-wide text-muted-foreground px-2.5">
                 Recently uploaded
               </p>
               {documents.map((doc) => (

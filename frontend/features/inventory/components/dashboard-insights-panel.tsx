@@ -17,9 +17,9 @@ import { useInventoryInsights, useGenerateInsights, useUpdateInsight } from "@/h
 import type { AiInsight } from "@/hooks/api/inventory/reports";
 
 const SEVERITY_CLASS: Record<string, string> = {
-  high: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
-  medium: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  low: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  high: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
+  medium: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  low: "bg-status-info-surface text-status-info-ink border-status-info-rule",
 };
 
 const SEVERITY_LABEL: Record<string, string> = {
@@ -68,28 +68,28 @@ const InsightRow = memo(function InsightRow({
       <div className="flex items-start gap-3 p-3">
         <Badge
           variant="outline"
-          className={`text-[9px] h-4 px-1.5 py-0 shrink-0 mt-0.5 ${getSeverityClass(insight.severity)}`}
+          className={`text-micro h-4 px-1.5 py-0 shrink-0 mt-0.5 ${getSeverityClass(insight.severity)}`}
         >
           {getSeverityLabel(insight.severity)}
         </Badge>
         <div className="flex-1 min-w-0">
-          <p className="text-[11px] font-semibold text-foreground">{insight.title}</p>
-          <TruncatedText text={insight.body} className="text-[11px] text-muted-foreground" lines={2} />
+          <p className="text-dense font-semibold text-foreground">{insight.title}</p>
+          <TruncatedText text={insight.body} className="text-dense text-muted-foreground" lines={2} />
         </div>
         <div className="flex items-center gap-1 shrink-0">
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 text-[9px]"
+            className="h-6 w-6 text-micro"
             title={expanded ? "Collapse" : "Explain"}
             onClick={handleToggleExpand}
           >
-            <Sparkles className="h-3 w-3 text-blue-500" aria-hidden="true" />
+            <Sparkles className="h-3 w-3 text-status-info-ink" aria-hidden="true" />
           </Button>
           <AnimatedIconButton
             icon={CheckCheckIcon}
             iconSize={12}
-            iconClassName="text-emerald-600"
+            iconClassName="text-status-success-ink"
             variant="ghost"
             size="icon"
             className="h-6 w-6"
@@ -162,7 +162,7 @@ export function DashboardInsightsPanel() {
     <Card>
       <CardHeader className="border-b border-border/60 pb-3">
         <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <Sparkles className="h-3.5 w-3.5 text-blue-600" aria-hidden="true" />
+          <Sparkles className="h-3.5 w-3.5 text-status-info-ink" aria-hidden="true" />
           AI Insights
         </CardTitle>
         <CardAction>

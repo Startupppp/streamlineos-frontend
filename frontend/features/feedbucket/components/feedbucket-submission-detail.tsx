@@ -96,10 +96,10 @@ function ConsoleLogsPanel({ logs }: { logs: FeedbucketConsoleEntry[] }) {
 }
 
 function statusColor(entry: FeedbucketNetworkEntry): string {
-  if (!entry.ok || entry.status === 0) return "text-red-500";
-  if (entry.status >= 500) return "text-red-500";
-  if (entry.status >= 400) return "text-amber-500";
-  return "text-green-600";
+  if (!entry.ok || entry.status === 0) return "text-status-danger-ink";
+  if (entry.status >= 500) return "text-status-danger-ink";
+  if (entry.status >= 400) return "text-status-warning-ink";
+  return "text-status-success-ink";
 }
 
 function NetworkLogsPanel({ logs }: { logs: FeedbucketNetworkEntry[] }) {
@@ -136,7 +136,7 @@ function NetworkLogsPanel({ logs }: { logs: FeedbucketNetworkEntry[] }) {
               {logs.map((entry, i) => (
                 <tr key={i} className="font-mono">
                   <td className="py-0.5 pr-2">
-                    <span className="inline-block rounded px-1 bg-muted text-muted-foreground uppercase text-[10px]">
+                    <span className="inline-block rounded px-1 bg-muted text-muted-foreground uppercase text-micro">
                       {entry.method}
                     </span>
                   </td>

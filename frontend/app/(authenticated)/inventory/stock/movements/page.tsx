@@ -35,23 +35,23 @@ import Link from "next/link";
 const LIMIT = 25;
 
 const TXN_TYPE_CONFIG: Record<TransactionType, { label: string; badgeClass: string }> = {
-  PURCHASE: { label: "Purchase", badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
-  SALE: { label: "Sale", badgeClass: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30" },
-  GRN: { label: "GRN", badgeClass: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30" },
-  ADJUSTMENT_IN: { label: "Adj In", badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
-  ADJUSTMENT_OUT: { label: "Adj Out", badgeClass: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30" },
-  TRANSFER_IN: { label: "Transfer In", badgeClass: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30" },
+  PURCHASE: { label: "Purchase", badgeClass: "bg-status-success-surface text-status-success-ink border-status-success-rule" },
+  SALE: { label: "Sale", badgeClass: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule" },
+  GRN: { label: "GRN", badgeClass: "bg-status-info-surface text-status-info-ink border-status-info-rule" },
+  ADJUSTMENT_IN: { label: "Adj In", badgeClass: "bg-status-success-surface text-status-success-ink border-status-success-rule" },
+  ADJUSTMENT_OUT: { label: "Adj Out", badgeClass: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule" },
+  TRANSFER_IN: { label: "Transfer In", badgeClass: "bg-status-info-surface text-status-info-ink border-status-info-rule" },
   TRANSFER_OUT: { label: "Transfer Out", badgeClass: "bg-muted text-muted-foreground border-border" },
-  RETURN_IN: { label: "Return In", badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
-  RETURN_OUT: { label: "Return Out", badgeClass: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30" },
-  OPENING_BALANCE: { label: "Opening Balance", badgeClass: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30" },
-  VENDOR_RETURN: { label: "Vendor Return", badgeClass: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30" },
-  CUSTOMER_RETURN: { label: "Customer Return", badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
-  CYCLE_COUNT_GAIN: { label: "Count Gain", badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
-  CYCLE_COUNT_LOSS: { label: "Count Loss", badgeClass: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30" },
-  SCRAP: { label: "Scrap", badgeClass: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30" },
-  QUARANTINE_IN: { label: "Quarantine In", badgeClass: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30" },
-  QUARANTINE_OUT: { label: "Quarantine Out", badgeClass: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30" },
+  RETURN_IN: { label: "Return In", badgeClass: "bg-status-success-surface text-status-success-ink border-status-success-rule" },
+  RETURN_OUT: { label: "Return Out", badgeClass: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule" },
+  OPENING_BALANCE: { label: "Opening Balance", badgeClass: "bg-status-info-surface text-status-info-ink border-status-info-rule" },
+  VENDOR_RETURN: { label: "Vendor Return", badgeClass: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule" },
+  CUSTOMER_RETURN: { label: "Customer Return", badgeClass: "bg-status-success-surface text-status-success-ink border-status-success-rule" },
+  CYCLE_COUNT_GAIN: { label: "Count Gain", badgeClass: "bg-status-success-surface text-status-success-ink border-status-success-rule" },
+  CYCLE_COUNT_LOSS: { label: "Count Loss", badgeClass: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule" },
+  SCRAP: { label: "Scrap", badgeClass: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule" },
+  QUARANTINE_IN: { label: "Quarantine In", badgeClass: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule" },
+  QUARANTINE_OUT: { label: "Quarantine Out", badgeClass: "bg-status-info-surface text-status-info-ink border-status-info-rule" },
   RESERVATION_CREATE: { label: "Reserved", badgeClass: "bg-muted text-muted-foreground border-border" },
   RESERVATION_RELEASE: { label: "Res. Released", badgeClass: "bg-muted text-muted-foreground border-border" },
   RESERVATION_CONSUME: { label: "Res. Consumed", badgeClass: "bg-muted text-muted-foreground border-border" },
@@ -99,7 +99,7 @@ const SOURCE_ROUTES: Record<string, string> = {
 function renderTypeCell(row: StockTransaction) {
   const cfg = TXN_TYPE_CONFIG[row.transactionType];
   return (
-    <Badge variant="outline" className={cn("h-4 text-[9px] px-1.5 py-0 font-medium whitespace-nowrap", cfg.badgeClass)}>
+    <Badge variant="outline" className={cn("h-4 text-micro px-1.5 py-0 font-medium whitespace-nowrap", cfg.badgeClass)}>
       {cfg.label}
     </Badge>
   );
@@ -108,10 +108,10 @@ function renderTypeCell(row: StockTransaction) {
 function renderProductCell(row: StockTransaction) {
   return (
     <div>
-      <div className="font-medium text-[11px] text-foreground truncate max-w-[160px]">
+      <div className="font-medium text-dense text-foreground truncate max-w-[160px]">
         {row.productVariant?.product?.name ?? row.productVariant?.name ?? "—"}
       </div>
-      <div className="text-[10px] font-mono text-muted-foreground">
+      <div className="text-micro font-mono text-muted-foreground">
         {row.productVariant?.sku ?? "—"}
       </div>
     </div>
@@ -123,8 +123,8 @@ function renderWarehouseCell(row: StockTransaction) {
   const location = row.location?.name ?? null;
   return (
     <div>
-      <div className="text-[11px] text-foreground truncate max-w-[120px]">{warehouse}</div>
-      {location && <div className="text-[10px] text-muted-foreground truncate max-w-[120px]">{location}</div>}
+      <div className="text-dense text-foreground truncate max-w-[120px]">{warehouse}</div>
+      {location && <div className="text-micro text-muted-foreground truncate max-w-[120px]">{location}</div>}
     </div>
   );
 }
@@ -132,7 +132,7 @@ function renderWarehouseCell(row: StockTransaction) {
 function renderQtyChangeCell(row: StockTransaction) {
   const isPositive = row.quantityChange > 0;
   return (
-    <span className={cn("font-mono tabular-nums font-semibold", isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400")}>
+    <span className={cn("font-mono tabular-nums font-semibold", isPositive ? "text-status-success-ink" : "text-status-danger-ink")}>
       {isPositive ? "+" : ""}{row.quantityChange.toLocaleString()}
     </span>
   );
@@ -150,14 +150,14 @@ function renderSourceCell(row: StockTransaction) {
     return (
       <Link
         href={`${basePath}/${row.referenceId}`}
-        className="font-mono text-primary hover:underline text-[11px]"
+        className="font-mono text-primary hover:underline text-dense"
         onClick={(e) => e.stopPropagation()}
       >
         {refLabel}
       </Link>
     );
   }
-  return <span className="text-muted-foreground font-mono text-[11px]">{refLabel}</span>;
+  return <span className="text-muted-foreground font-mono text-dense">{refLabel}</span>;
 }
 
 function renderByCell(row: StockTransaction) {
@@ -222,13 +222,13 @@ const MOVEMENTS_COLUMNS: DataTableColumn<StockTransaction>[] = [
   {
     key: "by",
     header: "By",
-    className: "text-muted-foreground text-[11px]",
+    className: "text-muted-foreground text-dense",
     cell: renderByCell,
   },
   {
     key: "notes",
     header: "Notes",
-    className: "text-[11px]",
+    className: "text-dense",
     cell: renderNotesCell,
   },
 ];
@@ -406,7 +406,7 @@ export default function MovementsPage() {
                 onClick={handleResetFilters}
               >
                 Clear filters
-                <Badge variant="secondary" className="h-4 text-[9px] px-1.5 py-0">
+                <Badge variant="secondary" className="h-4 text-micro px-1.5 py-0">
                   {activeFilterCount}
                 </Badge>
               </Button>

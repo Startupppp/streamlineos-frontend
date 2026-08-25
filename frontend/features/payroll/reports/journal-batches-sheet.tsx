@@ -38,13 +38,13 @@ interface JournalBatchesSheetProps {
 const STATUS_TONE: Record<JournalBatchStatus, string> = {
   DRAFT: "bg-muted text-muted-foreground border-border",
   POSTED:
-    "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+    "bg-status-success-surface text-status-success-ink border-status-success-rule",
   EXPORTED:
-    "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+    "bg-status-info-surface text-status-info-ink border-status-info-rule",
   REVERSED:
-    "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+    "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   FAILED:
-    "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+    "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };
 
 function formatStamp(value: string | null): string {
@@ -187,21 +187,21 @@ export function JournalBatchesSheet({ open, onOpenChange, month }: JournalBatche
                           <span className="text-sm font-semibold text-foreground">
                             Version {batch.version}
                           </span>
-                          <Badge variant="outline" className={`text-[10px] ${STATUS_TONE[batch.status]}`}>
+                          <Badge variant="outline" className={`text-micro ${STATUS_TONE[batch.status]}`}>
                             {batch.status}
                           </Badge>
                           {batch.provisional && (
-                            <Badge variant="outline" className="border-amber-200 bg-amber-50 text-[10px] text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+                            <Badge variant="outline" className="border-status-warning-rule bg-status-warning-surface text-micro text-status-warning-ink">
                               Provisional
                             </Badge>
                           )}
                           {batch.reversalOfBatchId !== null && (
-                            <Badge variant="outline" className="text-[10px]">
+                            <Badge variant="outline" className="text-micro">
                               Reverses v{batch.reversalOfBatchId}
                             </Badge>
                           )}
                         </div>
-                        <p className="mt-1 text-[11px] text-muted-foreground">
+                        <p className="mt-1 text-dense text-muted-foreground">
                           {batch.lineCount} lines · created {formatStamp(batch.createdAt)}
                           {batch.postedAt ? ` · posted ${formatStamp(batch.postedAt)}` : ""}
                         </p>
@@ -217,7 +217,7 @@ export function JournalBatchesSheet({ open, onOpenChange, month }: JournalBatche
                     </div>
 
                     {batch.reversalReason && (
-                      <p className="mt-2 rounded-md bg-muted/50 px-2.5 py-1.5 text-[11px] text-muted-foreground">
+                      <p className="mt-2 rounded-md bg-muted/50 px-2.5 py-1.5 text-dense text-muted-foreground">
                         Reason: {batch.reversalReason}
                       </p>
                     )}
@@ -227,8 +227,8 @@ export function JournalBatchesSheet({ open, onOpenChange, month }: JournalBatche
                         variant="outline"
                         className={
                           batch.reconciliationStatus === "RECONCILED"
-                            ? "border-emerald-200 bg-emerald-50 text-[10px] text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
-                            : "text-[10px]"
+                            ? "border-status-success-rule bg-status-success-surface text-micro text-status-success-ink"
+                            : "text-micro"
                         }
                       >
                         {batch.reconciliationStatus}

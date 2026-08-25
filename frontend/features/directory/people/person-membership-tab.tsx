@@ -125,7 +125,7 @@ export function PersonMembershipTab({
   return (
     <div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
       <div className="flex flex-wrap items-center gap-2">
-        <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
+        <Badge variant="secondary" className="h-5 px-1.5 text-micro">
           {formatRoleLabel(user.role)}
         </Badge>
         <UserStatusBadge

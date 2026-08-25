@@ -44,8 +44,8 @@ const FIELD_TYPE_CONFIG: Record<
 > = {
   text: { label: "Text", className: "bg-muted text-muted-foreground border-border" },
   number: { label: "Number", className: "bg-primary/10 text-primary border-primary/20" },
-  date: { label: "Date", className: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30" },
-  boolean: { label: "Yes/No", className: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
+  date: { label: "Date", className: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule" },
+  boolean: { label: "Yes/No", className: "bg-status-success-surface text-status-success-ink border-status-success-rule" },
   select: { label: "Select", className: "bg-primary/10 text-primary border-primary/20" },
 };
 
@@ -95,17 +95,17 @@ export function FieldRow({ field, onEdit, onDeleteRequest, onToggle }: FieldRowP
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <TruncatedText text={field.label} className="text-sm font-medium" />
-                <span className="text-[10px] text-muted-foreground font-mono">{field.name}</span>
-                <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0.5", typeConfig.className)}>
+                <span className="text-micro text-muted-foreground font-mono">{field.name}</span>
+                <Badge variant="outline" className={cn("text-micro px-1.5 py-0.5", typeConfig.className)}>
                   {typeConfig.label}
                 </Badge>
                 {field.isRequired && (
-                  <Badge variant="outline" className="text-[10px]">
+                  <Badge variant="outline" className="text-micro">
                     Required
                   </Badge>
                 )}
                 {field.fieldType === "select" && field.options && field.options.length > 0 && (
-                  <Badge variant="secondary" className="text-[10px]">
+                  <Badge variant="secondary" className="text-micro">
                     {field.options.length} options
                   </Badge>
                 )}

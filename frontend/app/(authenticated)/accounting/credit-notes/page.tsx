@@ -59,7 +59,7 @@ function isCreditNoteStatus(v: string): v is CreditNoteStatus {
 function CreditNoteStatusBadge({ status }: { status: CreditNoteStatus }) {
   if (status === "APPLIED") {
     return (
-      <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
+      <Badge variant="outline" className="text-micro px-1.5 py-0 h-4 bg-status-success-surface text-status-success-ink border-status-success-rule">
         Applied
       </Badge>
     );

@@ -72,7 +72,7 @@ export function OrgSetupShell({
                   {title}
                 </motion.h1>
               </AnimatePresence>
-              <p className="text-[13px] text-muted-foreground">
+              <p className="text-label text-muted-foreground">
                 {STEP_SUBTITLES[currentStepId]}
               </p>
             </div>

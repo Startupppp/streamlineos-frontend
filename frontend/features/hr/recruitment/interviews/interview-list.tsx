@@ -24,33 +24,42 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 const RESULT_CONFIG: Record<string, { label: string; className: string; icon: React.ElementType }> = {
   PASSED: {
     label: "Passed",
-    className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800",
+    className: "bg-status-success-surface text-status-success-ink border-status-success-rule",
     icon: CheckCircle2,
   },
   FAILED: {
     label: "Failed",
-    className: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 border-rose-200 dark:border-rose-800",
+    className: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
     icon: XCircle,
   },
   NO_SHOW: {
     label: "No Show",
-    className: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300 border-orange-200 dark:border-orange-800",
+    // A no-show is an outcome, not a state still in flight; it read as amber
+    // beside PENDING and the two were indistinguishable.
+    className: "bg-category-orange-surface text-category-orange-ink border-category-orange-rule",
     icon: XCircle,
   },
   PENDING: {
     label: "Pending",
-    className: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200 dark:border-amber-800",
+    className: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
     icon: Clock,
   },
 };
 
+/**
+ * Interview format is a taxonomy — a phone screen is not more "informational"
+ * than an onsite. Three of the six read "info" and were one chip.
+ *
+ * PHONE and TECHNICAL take sky and indigo rather than the blue all three
+ * shared before the migration; VIDEO keeps it.
+ */
 const TYPE_CONFIG: Record<string, { className: string }> = {
-  VIDEO: { className: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
-  PHONE: { className: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
-  ONSITE: { className: "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300" },
-  TECHNICAL: { className: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
-  HR: { className: "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300" },
-  FINAL: { className: "bg-muted text-muted-foreground dark:bg-slate-800 dark:text-slate-300" },
+  VIDEO: { className: "bg-category-blue-surface text-category-blue-ink" },
+  PHONE: { className: "bg-category-sky-surface text-category-sky-ink" },
+  ONSITE: { className: "bg-category-teal-surface text-category-teal-ink" },
+  TECHNICAL: { className: "bg-category-indigo-surface text-category-indigo-ink" },
+  HR: { className: "bg-category-pink-surface text-category-pink-ink" },
+  FINAL: { className: "bg-muted text-muted-foreground" },
 };
 
 function ResultBadge({ result }: { result: string | null }) {
@@ -58,7 +67,7 @@ function ResultBadge({ result }: { result: string | null }) {
   const Icon = config.icon;
   return (
     <span className={cn(
-      "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+      "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border",
       config.className
     )}>
       <Icon className="h-3 w-3" />
@@ -72,13 +81,13 @@ function TypeBadge({ type, panelCount }: { type: string | null; panelCount?: num
   return (
     <div className="flex items-center gap-1">
       <span className={cn(
-        "inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full",
+        "inline-flex items-center text-micro font-semibold px-2 py-0.5 rounded-full",
         config.className
       )}>
         {type ?? "—"}
       </span>
       {panelCount && panelCount > 1 && (
-        <span className="inline-flex items-center gap-0.5 text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+        <span className="inline-flex items-center gap-0.5 text-micro font-medium px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
           <Users className="h-2.5 w-2.5" />
           {panelCount}
         </span>
@@ -107,7 +116,7 @@ function FeedbackButton({ interview, onFeedback }: { interview: Interview; onFee
 function CandidateAvatar({ firstName, lastName }: { firstName?: string; lastName?: string }) {
   const initials = `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.toUpperCase();
   return (
-    <div className="w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-[10px] font-bold text-primary border border-primary/20">
+    <div className="w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-micro font-bold text-primary border border-primary/20">
       {initials}
     </div>
   );
@@ -192,7 +201,7 @@ export function InterviewList() {
       cell: (interview) => (
         <div className="text-sm">
           <p className="font-medium text-foreground">{format(new Date(interview.scheduledAt), "MMM d, yyyy")}</p>
-          <p className="text-[11px] text-muted-foreground">{format(new Date(interview.scheduledAt), "h:mm a")}</p>
+          <p className="text-dense text-muted-foreground">{format(new Date(interview.scheduledAt), "h:mm a")}</p>
         </div>
       ),
     },
@@ -228,7 +237,7 @@ export function InterviewList() {
         <div className="flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 mb-3">
           <div className="flex items-center gap-2">
             <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
-              <span className="text-[10px] font-bold text-primary-foreground">{selectedIds.size}</span>
+              <span className="text-micro font-bold text-primary-foreground">{selectedIds.size}</span>
             </div>
             <span className="text-sm font-semibold text-foreground">
               {selectedIds.size} interview{selectedIds.size !== 1 ? "s" : ""} selected

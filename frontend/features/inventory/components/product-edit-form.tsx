@@ -168,7 +168,7 @@ export function ProductEditForm({ product, productId, onDone }: ProductEditFormP
                   </FormControl>
                   <div className="flex min-h-5 items-start justify-between gap-2">
                     <FormMessage />
-                    <span className="ml-auto shrink-0 text-[10px] text-muted-foreground tabular-nums">
+                    <span className="ml-auto shrink-0 text-micro text-muted-foreground tabular-nums">
                       {(nameValue ?? "").length}/{NAME_MAX}
                     </span>
                   </div>
@@ -260,7 +260,7 @@ export function ProductEditForm({ product, productId, onDone }: ProductEditFormP
                     </FormControl>
                     <div className="flex justify-between items-start">
                       <FormMessage />
-                      <span className="text-[10px] text-muted-foreground ml-auto shrink-0">
+                      <span className="text-micro text-muted-foreground ml-auto shrink-0">
                         {(descriptionValue ?? "").length}/{DESCRIPTION_MAX}
                       </span>
                     </div>
@@ -316,7 +316,7 @@ export function ProductEditForm({ product, productId, onDone }: ProductEditFormP
                       <SelectItem value="SERIAL">Serial</SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className="text-[10px] text-muted-foreground mt-1">
+                  <p className="text-micro text-muted-foreground mt-1">
                     Cannot change once stock exists
                   </p>
                   <FormMessage />

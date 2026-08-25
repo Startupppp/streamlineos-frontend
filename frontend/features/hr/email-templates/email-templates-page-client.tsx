@@ -50,12 +50,12 @@ const etKeys = {
 const CATEGORIES = ["Onboarding", "Offboarding", "Leave", "Performance", "General", "Recruitment"];
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Onboarding: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  Offboarding: "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30",
-  Leave: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  Performance: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  Onboarding: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  Offboarding: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
+  Leave: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  Performance: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   General: "bg-muted text-muted-foreground border-border",
-  Recruitment: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  Recruitment: "bg-status-info-surface text-status-info-ink border-status-info-rule",
 };
 
 interface TemplateCardProps {
@@ -78,7 +78,7 @@ function TemplateCard({ template, onCopy, onEdit, onDelete }: TemplateCardProps)
     <Card className="rounded-2xl border border-border/70 bg-card/90 shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
       <CardContent className="p-3 space-y-2">
         <div className="flex items-center justify-between">
-          <span className={cn("inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border", categoryClass)}>
+          <span className={cn("inline-flex items-center text-micro font-semibold px-2 py-0.5 rounded-full border", categoryClass)}>
             {categoryKey}
           </span>
           <div className="flex gap-1">
@@ -98,7 +98,7 @@ function TemplateCard({ template, onCopy, onEdit, onDelete }: TemplateCardProps)
           <TruncatedText text={template.body} lines={2} className="text-xs text-muted-foreground mt-1" />
         </div>
         <div>
-          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/20">
+          <span className="text-micro font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/20">
             {`{{${varCount}}} variables`}
           </span>
         </div>

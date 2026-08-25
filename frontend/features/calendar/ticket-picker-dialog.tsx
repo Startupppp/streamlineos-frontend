@@ -32,10 +32,10 @@ const TicketRow = memo(function TicketRow({ ticket, onSelect }: TicketRowProps) 
       onClick={handleClick}
       className="w-full flex items-center gap-2 px-3 h-8 rounded-md text-left hover:bg-accent transition-colors focus-visible:outline-none focus-visible:bg-accent"
     >
-      <span className="font-mono text-[11px] text-muted-foreground shrink-0 w-16 truncate">
+      <span className="font-mono text-dense text-muted-foreground shrink-0 w-16 truncate">
         {ticket.projectKey}-{ticket.ticketNumber}
       </span>
-      <TruncatedText text={ticket.title} className="text-[13px] flex-1 min-w-0 text-foreground" />
+      <TruncatedText text={ticket.title} className="text-label flex-1 min-w-0 text-foreground" />
     </button>
   );
 });

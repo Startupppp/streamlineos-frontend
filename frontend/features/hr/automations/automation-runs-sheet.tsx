@@ -19,9 +19,9 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 const STATUS_COLORS: Record<HrAutomationRunStatus, string> = {
-  success: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  partial: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  failed: "bg-red-100 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  success: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  partial: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  failed: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
   skipped: "bg-muted text-muted-foreground border-border",
 };
 
@@ -46,17 +46,17 @@ function RunRow({ run }: { run: HrAutomationRun }) {
         ) : (
           <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
         )}
-        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded border ${STATUS_COLORS[run.status]}`}>
+        <span className={`text-micro font-medium px-1.5 py-0.5 rounded border ${STATUS_COLORS[run.status]}`}>
           {run.status}
         </span>
         <div className="flex items-center gap-1 flex-1 min-w-0">
           <TruncatedText text={run.triggerEvent} className="text-xs text-muted-foreground" />
-          {run.depth > 0 && <span className="shrink-0 ml-1 text-[10px] bg-muted px-1 rounded">depth {run.depth}</span>}
+          {run.depth > 0 && <span className="shrink-0 ml-1 text-micro bg-muted px-1 rounded">depth {run.depth}</span>}
         </div>
-        <span className="text-[10px] text-muted-foreground shrink-0">
+        <span className="text-micro text-muted-foreground shrink-0">
           {run.durationMs != null ? `${run.durationMs}ms` : "—"}
         </span>
-        <span className="text-[10px] text-muted-foreground shrink-0">
+        <span className="text-micro text-muted-foreground shrink-0">
           {format(new Date(run.createdAt), "MMM d, HH:mm:ss")}
         </span>
       </Button>
@@ -64,18 +64,18 @@ function RunRow({ run }: { run: HrAutomationRun }) {
       {expanded && (
         <div className="px-3 pb-3 pt-1 border-t border-border space-y-2">
           {run.error && (
-            <div className="text-xs text-red-600 bg-red-50 dark:bg-red-500/10 dark:text-red-300 rounded p-2 font-mono">{run.error}</div>
+            <div className="text-xs text-status-danger-ink bg-status-danger-surface rounded p-2 font-mono">{run.error}</div>
           )}
           {run.actionResults && run.actionResults.length > 0 && (
             <div className="space-y-1">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Action Results</p>
+              <p className="text-micro font-semibold text-muted-foreground uppercase tracking-wider">Action Results</p>
               {run.actionResults.map((ar, i) => (
                 <div key={i} className="flex items-start gap-2 text-xs">
-                  <span className={`mt-0.5 h-1.5 w-1.5 rounded-full shrink-0 ${ar.ok ? "bg-emerald-500" : "bg-red-500"}`} />
-                  <span className="font-mono text-[10px] text-muted-foreground">{ar.type}</span>
-                  {ar.error && <span className="text-red-600">{ar.error}</span>}
+                  <span className={`mt-0.5 h-1.5 w-1.5 rounded-full shrink-0 ${ar.ok ? "bg-status-success-fill" : "bg-status-danger-fill"}`} />
+                  <span className="font-mono text-micro text-muted-foreground">{ar.type}</span>
+                  {ar.error && <span className="text-status-danger-ink">{ar.error}</span>}
                   {ar.data && (
-                    <pre className="text-[10px] text-muted-foreground overflow-x-auto">{JSON.stringify(ar.data, null, 2)}</pre>
+                    <pre className="text-micro text-muted-foreground overflow-x-auto">{JSON.stringify(ar.data, null, 2)}</pre>
                   )}
                 </div>
               ))}
@@ -83,8 +83,8 @@ function RunRow({ run }: { run: HrAutomationRun }) {
           )}
           {run.eventPayload && (
             <div>
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Event Payload</p>
-              <pre className="text-[10px] font-mono bg-muted rounded p-2 overflow-x-auto">{JSON.stringify(run.eventPayload, null, 2)}</pre>
+              <p className="text-micro font-semibold text-muted-foreground uppercase tracking-wider mb-1">Event Payload</p>
+              <pre className="text-micro font-mono bg-muted rounded p-2 overflow-x-auto">{JSON.stringify(run.eventPayload, null, 2)}</pre>
             </div>
           )}
         </div>

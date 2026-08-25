@@ -22,7 +22,6 @@ import {
   useDealDetail,
   useUpdateDeal,
   useUpdateDealStage,
-  useDealActivities,
   useLogDealActivity,
   useDealMeetings,
   useCreateDealMeeting,
@@ -44,6 +43,8 @@ import {
 } from "@/features/crm/deals/detail/deal-dialogs";
 import { DealInfoCard } from "@/features/crm/deals/detail/deal-info-card";
 import { DealSidebarCards } from "@/features/crm/deals/detail/deal-sidebar-cards";
+import { DealLinkedRecordsCard } from "@/features/crm/deals/detail/deal-linked-records-card";
+import { DealStageHistory } from "@/features/crm/deals/detail/deal-stage-history";
 import { DealQuotesSection } from "@/features/crm/deals/deal-quotes-section";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState } from "@/components/shared";
@@ -78,7 +79,6 @@ export default function DealDetailPage({
   const [isCreatingProject, setIsCreatingProject] = useState(false);
 
   const updateDeal = useUpdateDeal();
-  const { data: activities } = useDealActivities(dealId, 30);
   const { data: meetings } = useDealMeetings(dealId);
   const logActivity = useLogDealActivity();
   const createMeeting = useCreateDealMeeting(dealId);
@@ -138,6 +138,8 @@ export default function DealDetailPage({
           expectedCloseDate: data.expectedCloseDate || undefined,
           notes: data.notes || undefined,
           lostReason: data.lostReason || undefined,
+          partyId: data.partyId || null,
+          subjectId: data.subjectId || null,
         },
         {
           onSuccess: () => {
@@ -366,7 +368,7 @@ export default function DealDetailPage({
                 </Button>
                 <Button
                   size="sm"
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                  className="bg-status-success-fill hover:bg-status-success-fill-hover text-white"
                   onClick={handleMarkWon}
                 >
                   <Trophy className="h-3.5 w-3.5 mr-1" />
@@ -464,7 +466,6 @@ export default function DealDetailPage({
               client={deal.client}
               keyDates={keyDates}
               meetings={meetings}
-              activities={activities ?? []}
               onQuickActionClick={handleQuickActionClick}
               onAddMeeting={handleOpenMeetingDialog}
               onDeleteMeeting={handleDeleteMeeting}
@@ -472,6 +473,8 @@ export default function DealDetailPage({
               nextStep={deal.nextStep}
               pipelineId={deal.pipelineId}
             />
+            <DealLinkedRecordsCard partyId={deal.partyId} subjectId={deal.subjectId} />
+            <DealStageHistory dealId={dealId} card />
             <DealQuotesSection dealId={dealId} />
           </motion.div>
         </div>

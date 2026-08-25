@@ -17,17 +17,17 @@ const SCORES = Array.from({ length: 11 }, (_, i) => i);
 function scoreClasses(score: number, selected: boolean): string {
   const base =
     score >= 9
-      ? "border-emerald-300 hover:border-emerald-500"
+      ? "border-status-success-rule hover:border-status-success-rule"
       : score >= 7
-        ? "border-amber-300 hover:border-amber-500"
-        : "border-red-300 hover:border-red-500";
+        ? "border-status-warning-rule hover:border-status-warning-rule"
+        : "border-status-danger-rule hover:border-status-danger-rule";
   const active =
     score >= 9
-      ? "border-emerald-500 bg-emerald-500 text-white"
+      ? "border-status-success-rule bg-status-success-fill text-white"
       : score >= 7
-        ? "border-amber-500 bg-amber-500 text-white"
-        : "border-red-500 bg-red-500 text-white";
-  return selected ? active : cn(base, "bg-white text-slate-700");
+        ? "border-status-warning-rule bg-status-warning-fill text-white"
+        : "border-status-danger-rule bg-status-danger-fill text-white";
+  return selected ? active : cn(base, "bg-white text-foreground");
 }
 
 export default function PublicNpsPage() {
@@ -68,16 +68,16 @@ export default function PublicNpsPage() {
         <Card className="rounded-t-none border-t-0 px-6 py-6 shadow-noir">
           {surveyQuery.isLoading && (
             <div className="space-y-3">
-              <div className="h-4 bg-slate-200 rounded animate-pulse w-2/3" />
-              <div className="h-10 bg-slate-200 rounded animate-pulse" />
-              <div className="h-24 bg-slate-200 rounded animate-pulse" />
+              <div className="h-4 bg-muted rounded animate-pulse w-2/3" />
+              <div className="h-10 bg-muted rounded animate-pulse" />
+              <div className="h-24 bg-muted rounded animate-pulse" />
             </div>
           )}
 
           {surveyQuery.isError && (
             <div className="text-center py-8">
-              <p className="text-lg font-semibold text-slate-700">Survey unavailable</p>
-              <p className="text-sm text-slate-500 mt-2">
+              <p className="text-lg font-semibold text-foreground">Survey unavailable</p>
+              <p className="text-sm text-muted-foreground mt-2">
                 This survey is not currently active or the link is invalid. Please contact the team for an
                 up-to-date link.
               </p>
@@ -86,7 +86,7 @@ export default function PublicNpsPage() {
 
           {surveyQuery.isSuccess && survey && !isSuccess && (
             <div className="space-y-5">
-              <p className="text-sm text-slate-700 font-medium">{survey.question}</p>
+              <p className="text-sm text-foreground font-medium">{survey.question}</p>
 
               <div>
                 <div className="grid grid-cols-6 gap-1.5 sm:grid-cols-11">
@@ -106,7 +106,7 @@ export default function PublicNpsPage() {
                     </button>
                   ))}
                 </div>
-                <div className="mt-1.5 flex justify-between text-[11px] text-slate-400">
+                <div className="mt-1.5 flex justify-between text-dense text-muted-foreground">
                   <span>Not likely</span>
                   <span>Very likely</span>
                 </div>
@@ -166,20 +166,20 @@ export default function PublicNpsPage() {
 
           {isSuccess && (
             <div className="text-center py-6 space-y-3">
-              <div className="w-16 h-16 rounded-full bg-emerald-100 mx-auto flex items-center justify-center">
-                <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+              <div className="w-16 h-16 rounded-full bg-status-success-surface mx-auto flex items-center justify-center">
+                <CheckCircle2 className="w-8 h-8 text-status-success-ink" />
               </div>
-              <p className="text-lg font-semibold text-slate-900">Feedback received</p>
-              <p className="text-sm text-slate-500">
+              <p className="text-lg font-semibold text-foreground">Feedback received</p>
+              <p className="text-sm text-muted-foreground">
                 Thank you for taking the time to share your thoughts. We truly appreciate it.
               </p>
               {score !== null && score >= 9 && (
-                <p className="text-sm text-slate-500 pt-1">
+                <p className="text-sm text-muted-foreground pt-1">
                   Loving the product? Pass it on — share your experience with a colleague.
                 </p>
               )}
               {score !== null && score < 7 && (
-                <p className="text-sm text-slate-500 pt-1">
+                <p className="text-sm text-muted-foreground pt-1">
                   We&rsquo;d love to make things better. Our team reviews every response and follows up on
                   what we can improve.
                 </p>

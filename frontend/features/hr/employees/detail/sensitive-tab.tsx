@@ -272,12 +272,12 @@ export function EmployeeSensitiveTab({ userId }: Props) {
           <CardContent className="p-4 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-7 rounded-lg bg-rose-100 dark:bg-rose-500/10 flex items-center justify-center">
-                  <Shield className="h-3.5 w-3.5 text-rose-600 dark:text-rose-300" />
+                <div className="w-7 rounded-lg bg-status-danger-surface flex items-center justify-center">
+                  <Shield className="h-3.5 w-3.5 text-status-danger-ink" />
                 </div>
                 <div>
                   <p className="text-sm font-semibold">Sensitive Information</p>
-                  <p className="text-[11px] text-muted-foreground">Encrypted at rest — access is audited</p>
+                  <p className="text-dense text-muted-foreground">Encrypted at rest — access is audited</p>
                 </div>
               </div>
               {canManage && (

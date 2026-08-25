@@ -145,7 +145,7 @@ export const ListViewItem = memo(function ListViewItem({
         ) : showAssignee && ticket.assignee ? (
           <Avatar className="h-6 w-6 flex-shrink-0" title={getUserDisplayName(ticket.assignee)}>
             <AvatarImage src={resolveImageUrl(ticket.assignee.image)} />
-            <AvatarFallback className="text-[8px]">{getUserInitials(ticket.assignee)}</AvatarFallback>
+            <AvatarFallback className="text-micro">{getUserInitials(ticket.assignee)}</AvatarFallback>
           </Avatar>
         ) : null}
         <button

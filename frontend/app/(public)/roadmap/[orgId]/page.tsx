@@ -100,10 +100,10 @@ function RoadmapColumnCard({
             )}
             <div className="flex flex-wrap items-center gap-1.5">
               {item.targetQuarter && (
-                <Badge variant="outline" className="text-[10px]">{item.targetQuarter}</Badge>
+                <Badge variant="outline" className="text-micro">{item.targetQuarter}</Badge>
               )}
               {item.category && (
-                <Badge variant="secondary" className="text-[10px]">{item.category}</Badge>
+                <Badge variant="secondary" className="text-micro">{item.category}</Badge>
               )}
             </div>
           </div>
@@ -145,7 +145,7 @@ function FeedbackCard({
               <p className="text-xs text-muted-foreground line-clamp-3">{post.description}</p>
             )}
             {post.category && (
-              <Badge variant="secondary" className="text-[10px]">{post.category}</Badge>
+              <Badge variant="secondary" className="text-micro">{post.category}</Badge>
             )}
           </div>
         </div>
@@ -160,18 +160,18 @@ function ChangelogCard({ entry }: { entry: PublicChangelogEntry }) {
       <CardContent className="p-3 space-y-1.5">
         <div className="flex items-center gap-2 flex-wrap">
           <p className="text-sm font-medium">{entry.title}</p>
-          <Badge variant={CHANGELOG_TYPE_VARIANT[entry.type]} className="text-[10px]">
+          <Badge variant={CHANGELOG_TYPE_VARIANT[entry.type]} className="text-micro">
             {CHANGELOG_TYPE_LABEL[entry.type]}
           </Badge>
           {entry.version && (
-            <Badge variant="outline" className="text-[10px]">{entry.version}</Badge>
+            <Badge variant="outline" className="text-micro">{entry.version}</Badge>
           )}
         </div>
         {entry.content && (
           <p className="text-xs text-muted-foreground whitespace-pre-wrap">{entry.content}</p>
         )}
         {entry.publishedAt && (
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-dense text-muted-foreground">
             {format(new Date(entry.publishedAt), "MMMM d, yyyy")}
           </p>
         )}

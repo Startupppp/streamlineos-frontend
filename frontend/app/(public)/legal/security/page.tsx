@@ -257,7 +257,7 @@ export default function SecurityPage() {
         <ul className="list-disc pl-5 space-y-2">
           <li>
             Email{" "}
-            <a href={`mailto:${BRAND_SUPPORT_EMAIL}`} className="font-mono text-blue-600 hover:underline">
+            <a href={`mailto:${BRAND_SUPPORT_EMAIL}`} className="font-mono text-status-info-ink hover:underline">
               {BRAND_SUPPORT_EMAIL}
             </a>{" "}
             with a clear description and reproduction steps.
@@ -280,7 +280,7 @@ export default function SecurityPage() {
         <p>
           For security questionnaires, pen-test reports, or due-diligence requests during
           enterprise procurement, write to{" "}
-          <a href={`mailto:${BRAND_SUPPORT_EMAIL}`} className="font-mono text-blue-600 hover:underline">
+          <a href={`mailto:${BRAND_SUPPORT_EMAIL}`} className="font-mono text-status-info-ink hover:underline">
             {BRAND_SUPPORT_EMAIL}
           </a>
           . We respond within two business days.

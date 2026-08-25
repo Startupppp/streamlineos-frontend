@@ -16,8 +16,8 @@ const STATUS_LABEL: Record<string, string> = {
 
 const STATUS_TONE: Record<string, string> = {
   OFFLINE: "text-muted-foreground",
-  PRESENT: "text-emerald-600",
-  ON_BREAK: "text-amber-600",
+  PRESENT: "text-status-success-ink",
+  ON_BREAK: "text-status-warning-ink",
   CHECKED_OUT: "text-primary",
 };
 
@@ -61,20 +61,20 @@ export function MyAttendanceWidget() {
       <div className="space-y-2.5">
         <div className="grid grid-cols-2 gap-2">
           <div className="rounded-lg border border-border/60 p-2.5">
-            <p className="text-[10px] text-muted-foreground">Worked today</p>
+            <p className="text-micro text-muted-foreground">Worked today</p>
             <p className="text-lg font-bold tabular-nums mt-0.5">
               {data?.dailyStats.workHours ?? "0"}h
             </p>
           </div>
           <div className="rounded-lg border border-border/60 p-2.5">
-            <p className="text-[10px] text-muted-foreground">Break time</p>
+            <p className="text-micro text-muted-foreground">Break time</p>
             <p className="text-lg font-bold tabular-nums mt-0.5">
               {data?.dailyStats.breakHours ?? "0"}h
             </p>
           </div>
         </div>
         {missingPunchWarning && (
-          <div className="flex items-start gap-1.5 rounded-lg border border-amber-300/60 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700/50 p-2 text-[11px] text-amber-700 dark:text-amber-300">
+          <div className="flex items-start gap-1.5 rounded-lg border border-status-warning-rule bg-status-warning-surface p-2 text-dense text-status-warning-ink">
             <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" aria-hidden="true" />
             <span>{missingPunchWarning}</span>
           </div>

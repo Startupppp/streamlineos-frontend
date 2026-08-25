@@ -28,11 +28,11 @@ const ACTION_LABELS: Record<string, string> = {
 };
 
 const ACTION_COLORS: Record<string, string> = {
-  CALL_MADE: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-  EMAIL_SENT: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-  CANDIDATE_ADDED: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300",
-  NOTE_ADDED: "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-300",
-  INTERVIEW_SCHEDULED: "bg-orange-100 text-orange-700 dark:bg-orange-500/10 dark:text-orange-300",
+  CALL_MADE: "bg-status-info-surface text-status-info-ink",
+  EMAIL_SENT: "bg-status-info-surface text-status-info-ink",
+  CANDIDATE_ADDED: "bg-status-success-surface text-status-success-ink",
+  NOTE_ADDED: "bg-status-warning-surface text-status-warning-ink",
+  INTERVIEW_SCHEDULED: "bg-status-warning-surface text-status-warning-ink",
 };
 
 function initials(name: string | null, email: string) {
@@ -91,7 +91,7 @@ function ActivityEntry({ entry }: { entry: RecruiterActivityEntry }) {
 
   return (
     <div className="flex items-start gap-3 rounded-lg border px-3 py-2.5 text-sm">
-      <span className={`mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium ${colorClass}`}>
+      <span className={`mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-micro font-medium ${colorClass}`}>
         {label}
       </span>
       <div className="flex-1 min-w-0">
@@ -133,24 +133,24 @@ function RecruiterCard({
             <CardTitle className="text-sm"><TruncatedText text={recruiter.name ?? recruiter.email} /></CardTitle>
             <TruncatedText text={recruiter.email} className="text-xs text-muted-foreground" />
           </div>
-          <Badge variant="secondary" className="text-[10px] shrink-0">{recruiter.role}</Badge>
+          <Badge variant="secondary" className="text-micro shrink-0">{recruiter.role}</Badge>
         </div>
       </CardHeader>
       <CardContent className="pt-0">
         <div className="grid grid-cols-3 gap-2 mb-3 text-center">
           <div className="rounded-md bg-muted/50 px-2 py-1.5">
             <p className="text-base font-semibold">{recruiter.assignedJobsCount}</p>
-            <p className="text-[10px] text-muted-foreground">Jobs</p>
+            <p className="text-micro text-muted-foreground">Jobs</p>
           </div>
           <div className="rounded-md bg-muted/50 px-2 py-1.5">
             <p className="text-base font-semibold">
               {(recruiter.activitySummary.CANDIDATE_ADDED ?? 0) + (recruiter.activitySummary.INTERVIEW_SCHEDULED ?? 0)}
             </p>
-            <p className="text-[10px] text-muted-foreground">Placed</p>
+            <p className="text-micro text-muted-foreground">Placed</p>
           </div>
           <div className="rounded-md bg-muted/50 px-2 py-1.5">
             <p className="text-base font-semibold">{totalActivity(recruiter.activitySummary)}</p>
-            <p className="text-[10px] text-muted-foreground">Actions</p>
+            <p className="text-micro text-muted-foreground">Actions</p>
           </div>
         </div>
         <Button

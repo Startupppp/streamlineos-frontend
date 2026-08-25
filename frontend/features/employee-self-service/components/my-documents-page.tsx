@@ -25,15 +25,15 @@ const STATUS_LABELS: Record<MyOnboardingDocStatus, string> = {
 
 const STATUS_CLASSES: Record<MyOnboardingDocStatus, string> = {
   PENDING:
-    "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300",
+    "border-status-warning-rule bg-status-warning-surface text-status-warning-ink",
   SUBMITTED:
-    "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300",
+    "border-status-info-rule bg-status-info-surface text-status-info-ink",
   APPROVED:
-    "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300",
+    "border-status-success-rule bg-status-success-surface text-status-success-ink",
   REJECTED:
-    "border-red-200 bg-red-50 text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300",
+    "border-status-danger-rule bg-status-danger-surface text-status-danger-ink",
   RE_UPLOAD_REQUESTED:
-    "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300",
+    "border-status-warning-rule bg-status-warning-surface text-status-warning-ink",
 };
 
 function DocumentsSkeleton() {
@@ -102,17 +102,17 @@ export function MyDocumentsPage() {
                   <StatusIcon className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13px] font-medium text-foreground">
+                  <p className="truncate text-label font-medium text-foreground">
                     {document.documentTypeName}
                   </p>
-                  <p className="truncate text-[11px] text-muted-foreground">
+                  <p className="truncate text-dense text-muted-foreground">
                     {document.remarks ??
                       (document.isMandatory ? "Required document" : "Optional document")}
                   </p>
                 </div>
                 <Badge
                   variant="outline"
-                  className={`h-5 shrink-0 px-2 py-0.5 text-[10px] ${STATUS_CLASSES[document.status]}`}
+                  className={`h-5 shrink-0 px-2 py-0.5 text-micro ${STATUS_CLASSES[document.status]}`}
                 >
                   {STATUS_LABELS[document.status]}
                 </Badge>

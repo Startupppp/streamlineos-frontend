@@ -88,7 +88,7 @@ export function GeneratePayoutDialog({
         </DialogHeader>
         <div className="space-y-4 py-2">
           {fileUrl ? (
-            <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
+            <div className="flex items-center gap-2 rounded-lg border border-status-success-rule bg-status-success-surface p-3 text-sm text-status-success-ink">
               <Download className="h-4 w-4 shrink-0" />
               <span>Batch generated successfully.</span>
               <a
@@ -117,14 +117,14 @@ export function GeneratePayoutDialog({
                       <SelectItem key={f} value={f}>
                         {f.replace("_CSV", " CSV").replace("_", " ")}
                         {f === recommendedFormat && (
-                          <span className="ml-1.5 text-[10px] text-muted-foreground">(recommended)</span>
+                          <span className="ml-1.5 text-micro text-muted-foreground">(recommended)</span>
                         )}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              <p className="text-[11px] text-muted-foreground leading-snug">
+              <p className="text-dense text-muted-foreground leading-snug">
                 A signed download link will be available immediately after generation. To
                 re-download, generate a new batch.
               </p>

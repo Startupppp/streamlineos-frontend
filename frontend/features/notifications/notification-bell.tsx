@@ -45,7 +45,7 @@ const HOVER_CLOSE_DELAY_MS = 175;
 function BellBadge({ count }: { count: number }) {
   if (count === 0) return null;
   return (
-    <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-0.5 text-[10px] font-bold leading-none text-primary-foreground">
+    <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-0.5 text-micro font-bold leading-none text-primary-foreground">
       {count > 99 ? "99+" : count}
     </span>
   );
@@ -89,13 +89,13 @@ function PopoverNotificationItem({
           <TruncatedText
             text={notification.title}
             className={cn(
-              "min-w-0 flex-1 text-[13px] leading-snug",
+              "min-w-0 flex-1 text-label leading-snug",
               notification.isRead
                 ? "font-medium text-muted-foreground"
                 : "font-semibold text-foreground",
             )}
           />
-          <span className="shrink-0 text-[11px] text-muted-foreground/50">
+          <span className="shrink-0 text-dense text-muted-foreground/50">
             {formatRelativeTime(notification.createdAt)}
           </span>
         </div>

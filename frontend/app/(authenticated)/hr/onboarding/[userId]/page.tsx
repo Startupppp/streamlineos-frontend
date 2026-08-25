@@ -77,7 +77,7 @@ function TaskCard({
               className="mt-0.5 shrink-0 transition-opacity hover:opacity-75 disabled:opacity-50"
             >
               {done ? (
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
+                <CheckCircle2 className="h-5 w-5 text-status-success-ink" />
               ) : (
                 <Circle className="h-5 w-5 text-muted-foreground" />
               )}
@@ -89,7 +89,7 @@ function TaskCard({
               role="img"
             >
               {done ? (
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
+                <CheckCircle2 className="h-5 w-5 text-status-success-ink" />
               ) : (
                 <Circle className="h-5 w-5" />
               )}
@@ -101,23 +101,23 @@ function TaskCard({
               <p className={`text-sm font-medium ${done ? "line-through text-muted-foreground" : ""}`}>
                 {task.title}
               </p>
-              <Badge variant={ownerRoleVariant(task.ownerRole)} className="text-[9px] py-0 h-4 shrink-0">
+              <Badge variant={ownerRoleVariant(task.ownerRole)} className="text-micro py-0 h-4 shrink-0">
                 {task.ownerRole.replace("_", " ")}
               </Badge>
               {overdue && (
-                <Badge variant="destructive" className="text-[9px] py-0 h-4 shrink-0">
+                <Badge variant="destructive" className="text-micro py-0 h-4 shrink-0">
                   Overdue
                 </Badge>
               )}
             </div>
 
             {task.description && (
-              <p className="text-[12px] text-muted-foreground">{task.description}</p>
+              <p className="text-xs text-muted-foreground">{task.description}</p>
             )}
 
             <div className="flex items-center gap-3 mt-1">
               {task.dueDate && (
-                <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                <span className="flex items-center gap-1 text-dense text-muted-foreground">
                   {overdue ? (
                     <AlertCircle className="h-3 w-3 text-destructive" />
                   ) : (
@@ -127,7 +127,7 @@ function TaskCard({
                 </span>
               )}
               {done && task.completedAt && (
-                <span className="text-[11px] text-green-600 dark:text-green-300">
+                <span className="text-dense text-status-success-ink">
                   Completed {formatDate(task.completedAt)}
                 </span>
               )}

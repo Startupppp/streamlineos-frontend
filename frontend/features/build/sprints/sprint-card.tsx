@@ -62,8 +62,8 @@ interface StatusStyle {
 const STATUS_STYLES: Record<string, StatusStyle> = {
   ACTIVE: {
     label: "Active",
-    dotClassName: "bg-emerald-500",
-    badgeClassName: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400",
+    dotClassName: "bg-status-success-fill",
+    badgeClassName: "bg-status-success-surface text-status-success-ink",
     stripeClassName: "border-l-emerald-500",
   },
   PLANNED: {
@@ -134,7 +134,7 @@ export const SprintCard = memo(function SprintCard({ sprint, projectId, onStart,
             <div className="flex min-w-0 flex-1">
               <Link
                 href={`/build/${projectId}?sprint=${sprint.id}`}
-                className="flex-1 min-w-0 text-[13px] font-semibold leading-tight text-foreground transition-colors hover:text-primary"
+                className="flex-1 min-w-0 text-label font-semibold leading-tight text-foreground transition-colors hover:text-primary"
               >
                 <TruncatedText text={sprint.name} />
               </Link>
@@ -142,7 +142,7 @@ export const SprintCard = memo(function SprintCard({ sprint, projectId, onStart,
             <Badge
               variant="secondary"
               className={cn(
-                "shrink-0 gap-0.5 rounded-full border-0 px-1.5 py-0 text-[8px] font-semibold uppercase tracking-wide",
+                "shrink-0 gap-0.5 rounded-full border-0 px-1.5 py-0 text-micro font-semibold uppercase tracking-wide",
                 statusStyle.badgeClassName,
               )}
             >
@@ -152,13 +152,13 @@ export const SprintCard = memo(function SprintCard({ sprint, projectId, onStart,
           </div>
 
           {sprint.goal ? (
-            <p className="mt-0.5 flex min-w-0 items-center gap-1 text-[10px] text-muted-foreground">
+            <p className="mt-0.5 flex min-w-0 items-center gap-1 text-micro text-muted-foreground">
               <Target className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
               <TruncatedText text={sprint.goal} />
             </p>
           ) : null}
 
-          <p className="mt-1 text-[10px] tabular-nums text-muted-foreground">
+          <p className="mt-1 text-micro tabular-nums text-muted-foreground">
             {format(startDate, "MMM d")} — {format(endDate, "MMM d, yyyy")}
           </p>
         </div>
@@ -226,13 +226,13 @@ export const SprintCard = memo(function SprintCard({ sprint, projectId, onStart,
           <div
             className={cn(
               "h-full rounded-full transition-[width] duration-300 ease-out motion-reduce:transition-none",
-              progress >= 100 ? "bg-emerald-500" : "bg-primary",
+              progress >= 100 ? "bg-status-success-fill" : "bg-primary",
             )}
             style={{ width: `${progress}%` }}
           />
         </div>
 
-        <div className="flex items-center justify-between gap-1.5 text-[9px] font-medium tabular-nums text-muted-foreground">
+        <div className="flex items-center justify-between gap-1.5 text-micro font-medium tabular-nums text-muted-foreground">
           <span className="min-w-0 truncate">
             {completedPoints}/{totalPoints} pts
             <span className="mx-1 text-border" aria-hidden="true">
@@ -240,7 +240,7 @@ export const SprintCard = memo(function SprintCard({ sprint, projectId, onStart,
             </span>
             {doneTickets}/{tickets.length} tickets
           </span>
-          <span className={cn("shrink-0", isOverdue && "text-red-500 dark:text-red-400")}>
+          <span className={cn("shrink-0", isOverdue && "text-status-danger-ink")}>
             {daysLabel}
           </span>
         </div>

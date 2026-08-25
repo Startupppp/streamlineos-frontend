@@ -1,10 +1,18 @@
+/**
+ * Six recipients on one envelope, so the colour is the only thing telling
+ * signer 1's fields from signer 6's on the page.
+ *
+ * All four roles of a row read one hue. They used to split — a categorical
+ * `solid` over a `status-*` bg, border and text — which left recipients 1
+ * and 6 identical everywhere except the swatch.
+ */
 const PALETTE = [
-  { bg: "bg-sky-500/15", border: "border-sky-500", text: "text-sky-700 dark:text-sky-300", solid: "bg-sky-500" },
-  { bg: "bg-emerald-500/15", border: "border-emerald-500", text: "text-emerald-700 dark:text-emerald-300", solid: "bg-emerald-500" },
-  { bg: "bg-amber-500/15", border: "border-amber-500", text: "text-amber-700 dark:text-amber-300", solid: "bg-amber-500" },
-  { bg: "bg-violet-500/15", border: "border-violet-500", text: "text-violet-700 dark:text-violet-300", solid: "bg-violet-500" },
-  { bg: "bg-rose-500/15", border: "border-rose-500", text: "text-rose-700 dark:text-rose-300", solid: "bg-rose-500" },
-  { bg: "bg-cyan-500/15", border: "border-cyan-500", text: "text-cyan-700 dark:text-cyan-300", solid: "bg-cyan-500" },
+  { bg: "bg-category-sky-surface", border: "border-category-sky-rule", text: "text-category-sky-ink", solid: "bg-category-sky-fill" },
+  { bg: "bg-category-emerald-surface", border: "border-category-emerald-rule", text: "text-category-emerald-ink", solid: "bg-category-emerald-fill" },
+  { bg: "bg-category-amber-surface", border: "border-category-amber-rule", text: "text-category-amber-ink", solid: "bg-category-amber-fill" },
+  { bg: "bg-category-violet-surface", border: "border-category-violet-rule", text: "text-category-violet-ink", solid: "bg-category-violet-fill" },
+  { bg: "bg-category-rose-surface", border: "border-category-rose-rule", text: "text-category-rose-ink", solid: "bg-category-rose-fill" },
+  { bg: "bg-category-cyan-surface", border: "border-category-cyan-rule", text: "text-category-cyan-ink", solid: "bg-category-cyan-fill" },
 ];
 
 export function recipientColor(index: number) {

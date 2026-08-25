@@ -52,7 +52,7 @@ export function PlanCard({ projectId, featureEnabled, requiredPlan }: PlanCardPr
         value={prompt}
         onChange={handlePromptChange}
         placeholder="e.g. Build a mobile checkout flow with payment integration by end of Q3"
-        className="min-h-[72px] resize-none text-[13px]"
+        className="min-h-[72px] resize-none text-label"
         disabled={mutation.isPending}
         aria-label="Describe what you want to plan"
       />
@@ -88,7 +88,7 @@ export function PlanCard({ projectId, featureEnabled, requiredPlan }: PlanCardPr
       ) : null}
 
       {mutation.isError ? (
-        <p className="text-[13px] leading-snug text-destructive">
+        <p className="text-label leading-snug text-destructive">
           {getErrorMessage(mutation.error)}
         </p>
       ) : null}
@@ -96,7 +96,7 @@ export function PlanCard({ projectId, featureEnabled, requiredPlan }: PlanCardPr
       {result ? (
         <div className="space-y-3 border-t border-border/60 pt-1">
           {result.summary ? (
-            <p className="text-[13px] leading-relaxed text-muted-foreground">{result.summary}</p>
+            <p className="text-label leading-relaxed text-muted-foreground">{result.summary}</p>
           ) : null}
           <SuggestedTaskList items={flatItems} projectId={projectId} />
         </div>

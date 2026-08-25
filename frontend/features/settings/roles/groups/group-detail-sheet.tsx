@@ -88,7 +88,7 @@ function MemberSearch({ groupId, existingIds }: { groupId: string; existingIds: 
               >
                 <Avatar className="h-6 w-6 shrink-0">
                   {m.image && <AvatarImage src={m.image} alt={m.name ?? ""} />}
-                  <AvatarFallback className="text-[10px]">
+                  <AvatarFallback className="text-micro">
                     {getInitials(m.name ?? m.email)}
                   </AvatarFallback>
                 </Avatar>
@@ -232,7 +232,7 @@ export function GroupDetailSheet({ group, open, onOpenChange }: GroupDetailSheet
                     >
                       <Avatar className="h-7 w-7 shrink-0">
                         {m.image && <AvatarImage src={m.image} alt={m.name ?? ""} />}
-                        <AvatarFallback className="text-[10px]">
+                        <AvatarFallback className="text-micro">
                           {getInitials(m.name ?? m.email ?? "")}
                         </AvatarFallback>
                       </Avatar>
@@ -281,11 +281,11 @@ export function GroupDetailSheet({ group, open, onOpenChange }: GroupDetailSheet
                       key={r.id}
                       className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-muted/50"
                     >
-                      <Shield className="h-4 w-4 shrink-0 text-blue-500 dark:text-blue-400" />
+                      <Shield className="h-4 w-4 shrink-0 text-status-info-ink" />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium">{r.name}</p>
                         {r.moduleKey && (
-                          <Badge variant="outline" className="mt-0.5 px-1.5 py-0 text-[10px]">
+                          <Badge variant="outline" className="mt-0.5 px-1.5 py-0 text-micro">
                             {r.moduleKey}
                           </Badge>
                         )}

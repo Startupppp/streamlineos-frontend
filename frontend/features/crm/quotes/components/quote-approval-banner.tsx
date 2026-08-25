@@ -23,11 +23,11 @@ export function QuoteApprovalBanner({
 }: QuoteApprovalBannerProps) {
   if (quote.approvalStatus === "pending") {
     return (
-      <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-3">
-        <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+      <div className="mb-4 flex items-start gap-3 rounded-lg border border-status-warning-rule bg-status-warning-surface px-4 py-3">
+        <AlertTriangle className="h-4 w-4 text-status-warning-ink shrink-0 mt-0.5" />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-amber-800 dark:text-amber-300">Pending Approval</p>
-          <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
+          <p className="text-sm font-medium text-status-warning-ink">Pending Approval</p>
+          <p className="text-xs text-status-warning-ink mt-0.5">
             This quote requires approval before it can be sent.
           </p>
         </div>
@@ -35,7 +35,7 @@ export function QuoteApprovalBanner({
           <div className="flex items-center gap-2 shrink-0">
             <LoadingButton
               size="sm"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white h-7 text-xs"
+              className="bg-status-success-fill hover:bg-status-success-fill-hover text-white h-7 text-xs"
               onClick={onApprove}
               isPending={approvePending}
               loadingText="Approving..."
@@ -60,18 +60,18 @@ export function QuoteApprovalBanner({
 
   if (quote.approvalStatus === "rejected") {
     return (
-      <div className="mb-4 flex items-start gap-3 rounded-lg border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 px-4 py-3">
-        <XCircle className="h-4 w-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
-        <p className="text-sm text-red-700 dark:text-red-300">Approval was rejected. Edit the quote and resubmit.</p>
+      <div className="mb-4 flex items-start gap-3 rounded-lg border border-status-danger-rule bg-status-danger-surface px-4 py-3">
+        <XCircle className="h-4 w-4 text-status-danger-ink shrink-0 mt-0.5" />
+        <p className="text-sm text-status-danger-ink">Approval was rejected. Edit the quote and resubmit.</p>
       </div>
     );
   }
 
   if (quote.approvalStatus === "approved") {
     return (
-      <div className="mb-4 flex items-start gap-3 rounded-lg border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-4 py-3">
-        <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-        <p className="text-sm text-emerald-700 dark:text-emerald-300">Quote approved — ready to send.</p>
+      <div className="mb-4 flex items-start gap-3 rounded-lg border border-status-success-rule bg-status-success-surface px-4 py-3">
+        <CheckCircle2 className="h-4 w-4 text-status-success-ink shrink-0 mt-0.5" />
+        <p className="text-sm text-status-success-ink">Quote approved — ready to send.</p>
       </div>
     );
   }

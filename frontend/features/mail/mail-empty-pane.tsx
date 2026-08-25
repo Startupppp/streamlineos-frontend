@@ -63,7 +63,7 @@ function TriagePreviewCard({
       <div className="flex items-baseline justify-between gap-2 min-w-0">
         <span
           className={cn(
-            "truncate text-[13px]",
+            "truncate text-label",
             message.isRead
               ? "font-medium text-foreground/90"
               : "font-semibold text-foreground",
@@ -71,13 +71,13 @@ function TriagePreviewCard({
         >
           {senderLabel(message)}
         </span>
-        <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">
+        <span className="shrink-0 text-micro tabular-nums text-muted-foreground">
           {when}
         </span>
       </div>
       <p
         className={cn(
-          "truncate text-[12px]",
+          "truncate text-xs",
           message.isRead
             ? "text-muted-foreground"
             : "font-medium text-foreground",
@@ -86,7 +86,7 @@ function TriagePreviewCard({
         {message.subject || "(no subject)"}
       </p>
       {message.snippet ? (
-        <p className="line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
+        <p className="line-clamp-2 text-dense leading-relaxed text-muted-foreground">
           {message.snippet}
         </p>
       ) : null}
@@ -104,7 +104,7 @@ function CalmPlaceholder({
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-6 py-12 text-center">
       <p className="text-sm font-medium text-foreground/90">{title}</p>
-      <p className="mt-1.5 max-w-xs text-[12px] leading-relaxed text-muted-foreground">
+      <p className="mt-1.5 max-w-xs text-xs leading-relaxed text-muted-foreground">
         {description}
       </p>
     </div>
@@ -207,7 +207,7 @@ function SelectEmptySurface({
         <h2 className="text-sm font-semibold tracking-tight text-foreground">
           Start with what needs you
         </h2>
-        <p className="mt-0.5 text-[12px] text-muted-foreground">
+        <p className="mt-0.5 text-xs text-muted-foreground">
           {unreadCount > 0
             ? `${unreadCount} unread · open a preview or pick from the list`
             : "Open a preview below or choose from the list"}
@@ -219,10 +219,10 @@ function SelectEmptySurface({
           {previewNeeds.length > 0 ? (
             <section className="space-y-2">
               <div className="flex items-center justify-between gap-2">
-                <h3 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <h3 className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">
                   Needs you
                 </h3>
-                <span className="text-[10px] tabular-nums text-muted-foreground">
+                <span className="text-micro tabular-nums text-muted-foreground">
                   {needsYou?.messages.length ?? previewNeeds.length}
                 </span>
               </div>
@@ -243,10 +243,10 @@ function SelectEmptySurface({
           {previewToday.length > 0 ? (
             <section className="space-y-2">
               <div className="flex items-center justify-between gap-2">
-                <h3 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <h3 className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">
                   Today & yesterday
                 </h3>
-                <span className="text-[10px] tabular-nums text-muted-foreground">
+                <span className="text-micro tabular-nums text-muted-foreground">
                   {today?.messages.length ?? previewToday.length}
                 </span>
               </div>

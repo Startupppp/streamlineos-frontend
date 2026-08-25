@@ -145,10 +145,10 @@ export function ApplyTemplateDialog({ template, onClose }: ApplyTemplateDialogPr
               <p className="font-medium">{template.tickets.length} tasks will be created:</p>
               {template.tickets.slice(0, 5).map((t) => (
                 <div key={t.id} className="flex items-center gap-2 text-muted-foreground">
-                  <Badge variant="outline" className="text-[10px]">{t.type}</Badge>
+                  <Badge variant="outline" className="text-micro">{t.type}</Badge>
                   <span className="truncate">{t.title}</span>
                   {t.phase && (
-                    <span className="text-[10px] bg-muted rounded px-1 shrink-0">{t.phase}</span>
+                    <span className="text-micro bg-muted rounded px-1 shrink-0">{t.phase}</span>
                   )}
                 </div>
               ))}

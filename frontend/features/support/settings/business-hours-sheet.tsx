@@ -43,7 +43,7 @@ function HolidayChip({ date, form }: { date: string; form: ReturnType<typeof use
   }, [date, form]);
 
   return (
-    <Badge variant="outline" className="text-[10px] h-6 pl-2 pr-1 gap-1 bg-muted">
+    <Badge variant="outline" className="text-micro h-6 pl-2 pr-1 gap-1 bg-muted">
       {date}
       <button type="button" onClick={handleRemove} aria-label={`Remove ${date}`} className="hover:text-destructive">
         <X className="h-3 w-3" />
@@ -124,7 +124,7 @@ export function BusinessHoursSheet({ open, onOpenChange, mode, form, onSubmit, i
                   <FormItem className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
                     <div>
                       <FormLabel className="mb-0">Open 24/7</FormLabel>
-                      <p className="text-[11px] text-muted-foreground">Skip the weekly schedule below</p>
+                      <p className="text-dense text-muted-foreground">Skip the weekly schedule below</p>
                     </div>
                     <FormControl>
                       <Switch checked={field.value} onCheckedChange={field.onChange} />
@@ -135,7 +135,7 @@ export function BusinessHoursSheet({ open, onOpenChange, mode, form, onSubmit, i
                   <FormItem className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
                     <div>
                       <FormLabel className="mb-0">Default Calendar</FormLabel>
-                      <p className="text-[11px] text-muted-foreground">Used when a policy has no explicit calendar</p>
+                      <p className="text-dense text-muted-foreground">Used when a policy has no explicit calendar</p>
                     </div>
                     <FormControl>
                       <Switch checked={field.value} onCheckedChange={field.onChange} />

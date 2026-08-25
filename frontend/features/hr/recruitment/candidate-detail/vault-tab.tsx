@@ -62,7 +62,7 @@ export function VaultTab(props: VaultTabProps) {
         }
       />
 
-      <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
+      <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden">
         <CardHeader className="p-4 pb-3 flex flex-row items-center justify-between border-b border-border">
           <div className="flex items-center gap-2">
             <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -75,7 +75,7 @@ export function VaultTab(props: VaultTabProps) {
               Verification Documents
             </CardTitle>
             {totalDocuments > 0 && (
-              <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700">
+              <span className="inline-flex items-center text-micro font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
                 {totalDocuments}
               </span>
             )}
@@ -102,7 +102,7 @@ export function VaultTab(props: VaultTabProps) {
             {Object.entries(categoryCounts).map(([type, count]) => (
               <span
                 key={type}
-                className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/20"
+                className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/20"
               >
                 <FileText className="h-2.5 w-2.5" aria-hidden="true" />
                 {DOCUMENT_TYPE_LABELS[type] ?? type} · {count}

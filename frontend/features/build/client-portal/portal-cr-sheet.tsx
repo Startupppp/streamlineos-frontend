@@ -103,11 +103,11 @@ export function PortalCrSheet({ projectId, open, onOpenChange }: PortalCrSheetPr
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[11px]">Title <span className="text-destructive">*</span></FormLabel>
+                      <FormLabel className="text-dense">Title <span className="text-destructive">*</span></FormLabel>
                       <FormControl>
-                        <Input {...field} className="text-[11px]" placeholder="What needs to change?" />
+                        <Input {...field} className="text-dense" placeholder="What needs to change?" />
                       </FormControl>
-                      <FormMessage className="text-[10px]" />
+                      <FormMessage className="text-micro" />
                     </FormItem>
                   )}
                 />
@@ -116,7 +116,7 @@ export function PortalCrSheet({ projectId, open, onOpenChange }: PortalCrSheetPr
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[11px]">Description</FormLabel>
+                      <FormLabel className="text-dense">Description</FormLabel>
                       <FormControl>
                         <TiptapEditor
                           content={field.value}
@@ -127,7 +127,7 @@ export function PortalCrSheet({ projectId, open, onOpenChange }: PortalCrSheetPr
                           menuMode="static"
                         />
                       </FormControl>
-                      <FormMessage className="text-[10px]" />
+                      <FormMessage className="text-micro" />
                     </FormItem>
                   )}
                 />
@@ -136,15 +136,15 @@ export function PortalCrSheet({ projectId, open, onOpenChange }: PortalCrSheetPr
                   name="impact"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[11px]">Business Impact</FormLabel>
+                      <FormLabel className="text-dense">Business Impact</FormLabel>
                       <FormControl>
                         <Textarea
                           {...field}
-                          className="min-h-[72px] resize-none text-[11px]"
+                          className="min-h-[72px] resize-none text-dense"
                           placeholder="How does this affect the project scope, timeline, or budget?"
                         />
                       </FormControl>
-                      <FormMessage className="text-[10px]" />
+                      <FormMessage className="text-micro" />
                     </FormItem>
                   )}
                 />
@@ -152,12 +152,12 @@ export function PortalCrSheet({ projectId, open, onOpenChange }: PortalCrSheetPr
             </SheetBody>
             <SheetFooter className="shrink-0 flex gap-2 border-t px-5 py-3">
               <SheetClose asChild>
-                <Button variant="outline" size="sm" className="text-[11px]">Cancel</Button>
+                <Button variant="outline" size="sm" className="text-dense">Cancel</Button>
               </SheetClose>
               <LoadingButton
                 type="submit"
                 size="sm"
-                className="text-[11px]"
+                className="text-dense"
                 isPending={submit.isPending}
                 loadingText="Submitting…"
               >

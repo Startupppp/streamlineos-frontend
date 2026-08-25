@@ -23,8 +23,8 @@ import type { ToggleKey, StatutoryPackPreview, StatutoryPackItem } from "@/types
 
 const KIND_STYLES: Record<string, string> = {
   EMPLOYEE_DEDUCTION: "bg-muted text-muted-foreground border border-border",
-  EMPLOYER_CONTRIBUTION: "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  WITHHOLDING: "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  EMPLOYER_CONTRIBUTION: "bg-status-info-surface text-status-info-ink border border-status-info-rule",
+  WITHHOLDING: "bg-status-warning-surface text-status-warning-ink border border-status-warning-rule",
 };
 
 const KIND_LABELS: Record<string, string> = {
@@ -40,7 +40,7 @@ const PackItemRow = memo(function PackItemRow({ item }: { item: StatutoryPackIte
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm font-medium text-foreground">{item.label}</span>
           <span
-            className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${KIND_STYLES[item.kind] ?? "bg-muted text-muted-foreground"}`}
+            className={`inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium ${KIND_STYLES[item.kind] ?? "bg-muted text-muted-foreground"}`}
           >
             {KIND_LABELS[item.kind] ?? item.kind}
           </span>
@@ -50,9 +50,9 @@ const PackItemRow = memo(function PackItemRow({ item }: { item: StatutoryPackIte
         )}
       </div>
       <span
-        className={`shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${
+        className={`shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium border ${
           item.enabled
-            ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
+            ? "bg-status-success-surface text-status-success-ink border-status-success-rule"
             : "bg-muted text-muted-foreground border-border"
         }`}
       >

@@ -112,7 +112,7 @@ export function FormSubmissionsTab({ projectId, formId }: FormSubmissionsTabProp
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-xs text-green-700 hover:text-green-800"
+                className="text-xs text-status-success-ink hover:text-status-success-ink"
                 onClick={() => handleStatusUpdate(row, "processed")}
               >
                 Process

@@ -111,7 +111,7 @@ export function QuestionList({
                 <Badge
                   key={kw}
                   variant="outline"
-                  className="text-[10px] px-1 py-0 border-amber-400/60 text-amber-600"
+                  className="text-micro px-1 py-0 border-status-warning-rule text-status-warning-ink"
                 >
                   {kw}
                 </Badge>
@@ -119,7 +119,7 @@ export function QuestionList({
               {q.keywords.length > 3 && (
                 <Badge
                   variant="outline"
-                  className="text-[10px] px-1 py-0 border-amber-400/60 text-amber-600"
+                  className="text-micro px-1 py-0 border-status-warning-rule text-status-warning-ink"
                 >
                   +{q.keywords.length - 3}
                 </Badge>
@@ -164,12 +164,12 @@ export function QuestionList({
       cell: (q) => (
         <div className="flex flex-wrap gap-1">
           {(q.tags ?? []).slice(0, 3).map((tag) => (
-            <Badge key={tag} variant="secondary" className="text-[10px] px-1 py-0">
+            <Badge key={tag} variant="secondary" className="text-micro px-1 py-0">
               {tag}
             </Badge>
           ))}
           {(q.tags ?? []).length > 3 && (
-            <Badge variant="secondary" className="text-[10px] px-1 py-0">
+            <Badge variant="secondary" className="text-micro px-1 py-0">
               +{(q.tags ?? []).length - 3}
             </Badge>
           )}

@@ -39,7 +39,7 @@ export function TemplatePreviewSheet({ template, onOpenChange }: TemplatePreview
           <SheetHeader className="space-y-1 pr-6">
             <div className="flex items-center gap-2">
               <SheetTitle className="text-base">{template.name}</SheetTitle>
-              <span className={cn("inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium", complexity.className)}>
+              <span className={cn("inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium", complexity.className)}>
                 {complexity.label}
               </span>
             </div>
@@ -81,7 +81,7 @@ export function TemplatePreviewSheet({ template, onOpenChange }: TemplatePreview
               {enabledToggles.map((label) => (
                 <span
                   key={label}
-                  className="inline-flex items-center px-2 py-0.5 rounded text-[11px] bg-muted text-muted-foreground"
+                  className="inline-flex items-center px-2 py-0.5 rounded text-dense bg-muted text-muted-foreground"
                 >
                   {label}
                 </span>

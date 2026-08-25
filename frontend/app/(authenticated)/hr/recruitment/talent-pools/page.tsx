@@ -78,7 +78,7 @@ function CreatePoolSheet() {
         <SheetBody className="px-4 py-4 space-y-4">
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-foreground/80">
-              Name<span className="text-rose-500 ml-0.5">*</span>
+              Name<span className="text-status-danger-ink ml-0.5">*</span>
             </label>
             <Input placeholder="e.g. Future Engineers" value={name} onChange={handleNameChange} />
           </div>
@@ -178,7 +178,7 @@ function PoolButton({ pool, isSelected, onSelect }: PoolButtonProps) {
     >
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-semibold text-foreground">{pool.name}</p>
-        <Badge variant="secondary" className="text-[10px] shrink-0">{pool.memberCount}</Badge>
+        <Badge variant="secondary" className="text-micro shrink-0">{pool.memberCount}</Badge>
       </div>
       {pool.description && (
         <TruncatedText text={pool.description} lines={2} className="text-xs text-muted-foreground mt-1" />
@@ -198,7 +198,7 @@ function PoolMemberRow({ member: m, onRemove }: PoolMemberRowProps) {
     <div className="flex items-center justify-between gap-3 rounded-xl border border-border px-3 py-2.5">
       <div className="min-w-0">
         <TruncatedText text={`${m.firstName} ${m.lastName}`} className="text-sm font-medium text-foreground" />
-        <TruncatedText text={m.currentRole ?? m.email ?? ""} className="text-[11px] text-muted-foreground" />
+        <TruncatedText text={m.currentRole ?? m.email ?? ""} className="text-dense text-muted-foreground" />
       </div>
       <TooltipIconButton
         icon={XIcon}

@@ -42,12 +42,12 @@ interface ReviewTableProps {
 function getStatusBadgeClass(status: string | null): string {
   switch (status) {
     case "APPROVED":
-      return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-700";
+      return "bg-status-success-surface text-status-success-ink border-status-success-rule";
     case "SUBMITTED":
     case "IN_PROGRESS":
-      return "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-700";
+      return "bg-status-info-surface text-status-info-ink border-status-info-rule";
     case "PENDING":
-      return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-700";
+      return "bg-status-warning-surface text-status-warning-ink border-status-warning-rule";
     default:
       return "bg-muted text-muted-foreground border-border";
   }
@@ -76,7 +76,7 @@ function ProgressBar({ approved, total }: { approved: number; total: number }) {
       : `${approved} of ${total} required document${total === 1 ? "" : "s"} approved`;
 
   const barColor =
-    pct === 100 ? "bg-emerald-500" : pct > 50 ? "bg-blue-500" : "bg-amber-500";
+    pct === 100 ? "bg-status-success-fill" : pct > 50 ? "bg-status-info-fill" : "bg-status-warning-fill";
 
   return (
     <div className="flex flex-col gap-1 min-w-[160px]">
@@ -88,13 +88,13 @@ function ProgressBar({ approved, total }: { approved: number; total: number }) {
           />
         </div>
         <span
-          className="text-[11px] text-muted-foreground tabular-nums font-semibold shrink-0"
+          className="text-dense text-muted-foreground tabular-nums font-semibold shrink-0"
           aria-label={label}
         >
           {approved}/{total}
         </span>
       </div>
-      <span className="text-[10px] text-muted-foreground leading-tight">{label}</span>
+      <span className="text-micro text-muted-foreground leading-tight">{label}</span>
     </div>
   );
 }
@@ -134,7 +134,7 @@ export function ReviewTable({ list, canReview, onOpenReview, pagination }: Revie
           </Avatar>
           <div className="min-w-0">
             <TruncatedText text={emp.userName ?? "Unknown"} className="text-sm font-semibold text-foreground" />
-            <TruncatedText text={`${emp.designation ?? "—"}${emp.employeeId ? ` · ${emp.employeeId}` : ""}`} className="text-[11px] text-muted-foreground" />
+            <TruncatedText text={`${emp.designation ?? "—"}${emp.employeeId ? ` · ${emp.employeeId}` : ""}`} className="text-dense text-muted-foreground" />
           </div>
         </div>
       ),
@@ -152,7 +152,7 @@ export function ReviewTable({ list, canReview, onOpenReview, pagination }: Revie
       cell: (emp) => (
         <span
           className={cn(
-            "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+            "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border",
             getStatusBadgeClass(emp.onboardingDocStatus),
           )}
         >

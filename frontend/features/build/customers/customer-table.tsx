@@ -30,18 +30,18 @@ function healthScoreToStatus(
     return {
       label: "Healthy",
       className:
-        "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+        "bg-status-success-surface text-status-success-ink border-status-success-rule",
     };
   if (score >= 40)
     return {
       label: "At risk",
       className:
-        "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+        "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
     };
   return {
     label: "Critical",
     className:
-      "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+      "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
   };
 }
 
@@ -71,7 +71,7 @@ export const CustomerTable = React.memo(function CustomerTable({
             )}
           >
             <span
-              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-[10px] font-semibold text-primary"
+              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-micro font-semibold text-primary"
               aria-hidden="true"
             >
               {c.name[0]?.toUpperCase() ?? "?"}
@@ -79,10 +79,10 @@ export const CustomerTable = React.memo(function CustomerTable({
             <div className="min-w-0 flex-1">
               <TruncatedText
                 text={c.name}
-                className="text-[13px] font-medium text-foreground transition-colors group-hover:text-primary"
+                className="text-label font-medium text-foreground transition-colors group-hover:text-primary"
               />
               {c.industry ? (
-                <p className="text-[11px] text-muted-foreground leading-none mt-0.5 truncate">
+                <p className="text-dense text-muted-foreground leading-none mt-0.5 truncate">
                   {c.industry}
                 </p>
               ) : null}
@@ -164,7 +164,7 @@ export const CustomerTable = React.memo(function CustomerTable({
             <Badge
               variant="outline"
               className={cn(
-                "h-5 rounded-full border px-1.5 text-[10px] font-medium",
+                "h-5 rounded-full border px-1.5 text-micro font-medium",
                 className,
               )}
             >

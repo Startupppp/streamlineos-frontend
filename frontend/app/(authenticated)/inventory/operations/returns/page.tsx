@@ -31,9 +31,9 @@ import { getErrorMessage } from "@/lib/get-error-message";
 type ReturnStatus = "DRAFT" | "POSTED" | "CANCELLED";
 
 const RETURN_STATUS_BADGE: Record<ReturnStatus, string> = {
-  DRAFT: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  POSTED: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  CANCELLED: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  DRAFT: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  POSTED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  CANCELLED: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };
 
 function formatDate(value: string | null | undefined): string {
@@ -45,7 +45,7 @@ function formatDate(value: string | null | undefined): string {
 function ReturnStatusBadge({ status }: { status: VendorReturnStatus | CustomerReturnStatus }) {
   const cls = RETURN_STATUS_BADGE[status] ?? "bg-muted text-muted-foreground border-border";
   return (
-    <Badge variant="outline" className={cn("h-4 text-[9px] px-1.5 py-0", cls)}>
+    <Badge variant="outline" className={cn("h-4 text-micro px-1.5 py-0", cls)}>
       {status}
     </Badge>
   );
@@ -125,7 +125,7 @@ export default function ReturnsPage() {
     {
       key: "returnNumber",
       header: "Return #",
-      cell: (r) => <span className="font-mono text-[11px]">{r.returnNumber}</span>,
+      cell: (r) => <span className="font-mono text-dense">{r.returnNumber}</span>,
       sortable: true,
       sortValue: (r) => r.returnNumber,
     },
@@ -133,7 +133,7 @@ export default function ReturnsPage() {
     {
       key: "poId",
       header: "PO ID",
-      cell: (r) => <span className="font-mono text-[11px] text-muted-foreground">{r.poId ?? "—"}</span>,
+      cell: (r) => <span className="font-mono text-dense text-muted-foreground">{r.poId ?? "—"}</span>,
       className: "hidden md:table-cell",
       headerClassName: "hidden md:table-cell",
     },
@@ -145,7 +145,7 @@ export default function ReturnsPage() {
     {
       key: "createdAt",
       header: "Created",
-      cell: (r) => <span className="font-mono tabular-nums text-[11px]">{formatDate(r.createdAt)}</span>,
+      cell: (r) => <span className="font-mono tabular-nums text-dense">{formatDate(r.createdAt)}</span>,
     },
     {
       key: "actions",
@@ -158,7 +158,7 @@ export default function ReturnsPage() {
             <LoadingButton
               variant="outline"
               size="sm"
-              className="h-6 text-[10px] px-2"
+              className="h-6 text-micro px-2"
               onClick={handlePost}
               isPending={postVendorMutation.isPending}
               loadingText="Posting…"
@@ -167,7 +167,7 @@ export default function ReturnsPage() {
             </LoadingButton>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2 text-destructive">
+                <Button variant="ghost" size="sm" className="h-6 text-micro px-2 text-destructive">
                   Cancel
                 </Button>
               </AlertDialogTrigger>
@@ -199,7 +199,7 @@ export default function ReturnsPage() {
     {
       key: "returnNumber",
       header: "Return #",
-      cell: (r) => <span className="font-mono text-[11px]">{r.returnNumber}</span>,
+      cell: (r) => <span className="font-mono text-dense">{r.returnNumber}</span>,
       sortable: true,
       sortValue: (r) => r.returnNumber,
     },
@@ -207,7 +207,7 @@ export default function ReturnsPage() {
     {
       key: "soId",
       header: "SO ID",
-      cell: (r) => <span className="font-mono text-[11px] text-muted-foreground">{r.soId ?? "—"}</span>,
+      cell: (r) => <span className="font-mono text-dense text-muted-foreground">{r.soId ?? "—"}</span>,
       className: "hidden md:table-cell",
       headerClassName: "hidden md:table-cell",
     },
@@ -219,7 +219,7 @@ export default function ReturnsPage() {
     {
       key: "createdAt",
       header: "Created",
-      cell: (r) => <span className="font-mono tabular-nums text-[11px]">{formatDate(r.createdAt)}</span>,
+      cell: (r) => <span className="font-mono tabular-nums text-dense">{formatDate(r.createdAt)}</span>,
     },
     {
       key: "actions",
@@ -232,7 +232,7 @@ export default function ReturnsPage() {
             <LoadingButton
               variant="outline"
               size="sm"
-              className="h-6 text-[10px] px-2"
+              className="h-6 text-micro px-2"
               onClick={handlePost}
               isPending={postCustomerMutation.isPending}
               loadingText="Posting…"
@@ -241,7 +241,7 @@ export default function ReturnsPage() {
             </LoadingButton>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2 text-destructive">
+                <Button variant="ghost" size="sm" className="h-6 text-micro px-2 text-destructive">
                   Cancel
                 </Button>
               </AlertDialogTrigger>

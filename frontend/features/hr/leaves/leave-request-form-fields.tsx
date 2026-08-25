@@ -66,7 +66,7 @@ export function LeaveRequestFormFields({
               Leave Type
             </FormLabel>
             {leaveTypes.length === 0 ? (
-              <div className="space-y-2 rounded-lg border border-dashed border-amber-300/80 bg-amber-50/80 px-3 py-3 dark:border-amber-500/30 dark:bg-amber-500/10">
+              <div className="space-y-2 rounded-lg border border-dashed border-status-warning-rule bg-status-warning-surface px-3 py-3">
                 <p className="text-sm font-medium text-foreground">
                   No leave types configured
                 </p>
@@ -224,19 +224,19 @@ export function LeaveRequestFormFields({
               <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                 <SelectItem value="LOW">
                   <span className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                    <span className="h-2 w-2 rounded-full bg-status-success-fill" />
                     Low
                   </span>
                 </SelectItem>
                 <SelectItem value="MEDIUM">
                   <span className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-amber-500" />
+                    <span className="h-2 w-2 rounded-full bg-status-warning-fill" />
                     Medium
                   </span>
                 </SelectItem>
                 <SelectItem value="HIGH">
                   <span className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-red-500" />
+                    <span className="h-2 w-2 rounded-full bg-status-danger-fill" />
                     High
                   </span>
                 </SelectItem>

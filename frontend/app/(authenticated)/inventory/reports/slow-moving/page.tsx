@@ -35,8 +35,8 @@ function formatDate(value: string | null): string {
 
 function daysInactiveClass(days: number | null): string {
   if (days === null) return "text-muted-foreground";
-  if (days >= 180) return "text-red-700 font-medium";
-  if (days >= 90) return "text-amber-600 font-medium";
+  if (days >= 180) return "text-status-danger-ink font-medium";
+  if (days >= 90) return "text-status-warning-ink font-medium";
   return "";
 }
 
@@ -52,7 +52,7 @@ function buildColumns(): DataTableColumn<SlowMovingRow>[] {
     {
       key: "variantSku",
       header: "SKU",
-      cell: (row) => <span className="font-mono tabular-nums text-[11px]">{row.variantSku}</span>,
+      cell: (row) => <span className="font-mono tabular-nums text-dense">{row.variantSku}</span>,
     },
     {
       key: "onHand",
@@ -78,7 +78,7 @@ function buildColumns(): DataTableColumn<SlowMovingRow>[] {
       key: "lastMovement",
       header: "Last Movement",
       cell: (row) => (
-        <span className="text-muted-foreground text-[11px]">
+        <span className="text-muted-foreground text-dense">
           {formatDate(row.lastMovement)}
         </span>
       ),

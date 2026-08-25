@@ -171,13 +171,13 @@ export function MentionTextarea({
                 )}
               >
                 <Avatar className="h-6 w-6 shrink-0">
-                  <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+                  <AvatarFallback className="text-micro bg-primary/10 text-primary">
                     {getInitials(user.name)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0">
                   <p className="text-xs font-medium truncate">{user.name}</p>
-                  <p className="text-[10px] text-muted-foreground truncate">
+                  <p className="text-micro text-muted-foreground truncate">
                     {user.email}
                   </p>
                 </div>

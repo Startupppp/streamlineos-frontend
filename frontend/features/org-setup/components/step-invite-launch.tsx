@@ -98,7 +98,7 @@ export function StepInviteLaunch({
         />
       }
     >
-      <p className="text-[13px] leading-relaxed text-muted-foreground">
+      <p className="text-label leading-relaxed text-muted-foreground">
         Invite teammates now, or skip and invite them later from People → Invitations.
         {inviteLimit !== null && (
           <>
@@ -153,7 +153,7 @@ export function StepInviteLaunch({
       </div>
 
       {atLimit && (
-        <p className="text-[13px] leading-relaxed text-amber-700 dark:text-amber-300">
+        <p className="text-label leading-relaxed text-status-warning-ink">
           You&apos;ve used all {inviteLimit} invitations available on your plan.
           Remove one to invite someone else, or add more seats later from
           Settings → Billing.
@@ -172,7 +172,7 @@ export function StepInviteLaunch({
             >
               <TruncatedText
                 text={invitee.email}
-                className="min-w-0 text-[13px] font-semibold leading-none text-foreground"
+                className="min-w-0 text-label font-semibold leading-none text-foreground"
               />
               <div className="flex shrink-0 items-center gap-1.5">
                 <span className="text-xs font-medium text-muted-foreground">

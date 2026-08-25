@@ -114,7 +114,7 @@ export function SprintFormFields({
         render={({ field }) => (
           <FormItem>
             <FormLabel className="flex items-center gap-2">
-              <Target className="h-3.5 w-3.5 text-cyan-500" />
+              <Target className="h-3.5 w-3.5 text-status-info-ink" />
               Sprint goal (optional)
             </FormLabel>
             <FormControl>

@@ -73,7 +73,7 @@ const overviewColumns: DataTableColumn<BudgetVsActualRow>[] = [
         variant="secondary"
         className={cn(
           "tabular-nums",
-          row.variance >= 0 ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" : "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-300",
+          row.variance >= 0 ? "bg-status-success-surface text-status-success-ink" : "bg-status-danger-surface text-status-danger-ink",
         )}
       >
         {row.variance >= 0 ? "+" : ""}
@@ -292,7 +292,7 @@ const skillsGapColumns: DataTableColumn<SkillsGapRow>[] = [
     cell: (row) => (
       <Badge
         variant="secondary"
-        className={row.gap > 0 ? "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-300" : "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"}
+        className={row.gap > 0 ? "bg-status-danger-surface text-status-danger-ink" : "bg-status-success-surface text-status-success-ink"}
       >
         {row.gap}
       </Badge>
@@ -347,7 +347,7 @@ function SuccessionTab() {
           </div>
           <Badge
             variant="secondary"
-            className={role.hasSuccessor ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" : "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-300"}
+            className={role.hasSuccessor ? "bg-status-success-surface text-status-success-ink" : "bg-status-danger-surface text-status-danger-ink"}
           >
             {role.hasSuccessor ? "Successor ready" : "No successor"}
           </Badge>

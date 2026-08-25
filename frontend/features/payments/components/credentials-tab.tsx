@@ -90,7 +90,7 @@ export function CredentialsTab({ providerKey, environment, credential }: Credent
           <p className="text-sm font-medium text-foreground">
             {environment === "live" ? "Live credentials" : "Test credentials"}
           </p>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
+          <p className="text-dense text-muted-foreground mt-0.5">
             {credential?.maskedKeyHint
               ? `Saved — key ending in ${credential.maskedKeyHint}`
               : "Not configured yet"}
@@ -118,7 +118,7 @@ export function CredentialsTab({ providerKey, environment, credential }: Credent
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor={`${environment}-key-id`} className="text-[13px]">Key ID</Label>
+        <Label htmlFor={`${environment}-key-id`} className="text-label">Key ID</Label>
         <Input
           id={`${environment}-key-id`}
           value={keyId}
@@ -129,7 +129,7 @@ export function CredentialsTab({ providerKey, environment, credential }: Credent
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor={`${environment}-secret`} className="text-[13px]">Key secret</Label>
+        <Label htmlFor={`${environment}-secret`} className="text-label">Key secret</Label>
         <Input
           id={`${environment}-secret`}
           type="password"
@@ -141,7 +141,7 @@ export function CredentialsTab({ providerKey, environment, credential }: Credent
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor={`${environment}-webhook-secret`} className="text-[13px]">Webhook secret</Label>
+        <Label htmlFor={`${environment}-webhook-secret`} className="text-label">Webhook secret</Label>
         <Input
           id={`${environment}-webhook-secret`}
           type="password"

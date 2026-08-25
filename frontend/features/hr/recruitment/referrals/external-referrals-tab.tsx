@@ -150,10 +150,10 @@ function ReferrerRow({ id, name, email, status, referralCount }: { id: number; n
     <div className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2.5">
       <div className="min-w-0">
         <TruncatedText text={name} className="text-sm font-medium text-foreground" />
-        <TruncatedText text={`${email} · ${referralCount} referral${referralCount === 1 ? "" : "s"}`} className="text-[11px] text-muted-foreground" />
+        <TruncatedText text={`${email} · ${referralCount} referral${referralCount === 1 ? "" : "s"}`} className="text-dense text-muted-foreground" />
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        <Badge variant={status === "ACTIVE" ? "secondary" : "destructive"} className="text-[10px]">{status}</Badge>
+        <Badge variant={status === "ACTIVE" ? "secondary" : "destructive"} className="text-micro">{status}</Badge>
         <LoadingButton variant="outline" size="sm" className="text-xs" onClick={handleToggle} isPending={updateStatus.isPending} loadingText={status === "ACTIVE" ? "Blocking…" : "Unblocking…"}>
           {status === "ACTIVE" ? "Block" : "Unblock"}
         </LoadingButton>
@@ -197,7 +197,7 @@ function ExternalReferralCard({ referral, onStatusChange, onMarkReward, isUpdati
               {referral.referrer && <span>Referred by {referral.referrer.name} ({referral.referrer.email})</span>}
               <span>{format(new Date(referral.createdAt), "MMM d, yyyy")}</span>
               {referral.rewardPaidAt && (
-                <span className="text-green-600">
+                <span className="text-status-success-ink">
                   Reward paid {format(new Date(referral.rewardPaidAt), "MMM d, yyyy")}
                   {referral.rewardAmount && ` · ₹${parseFloat(referral.rewardAmount).toLocaleString()}`}
                 </span>

@@ -127,12 +127,12 @@ export function MemberGrantsSheet({
               <KeyRound className="h-4 w-4 text-muted-foreground" />
               <SheetTitle className="text-base">Custom permissions</SheetTitle>
               {grantedCount > 0 && (
-                <Badge variant="secondary" className="text-[10px]">
+                <Badge variant="secondary" className="text-micro">
                   {grantedCount} granted
                 </Badge>
               )}
             </div>
-            <SheetDescription className="text-[13px]">
+            <SheetDescription className="text-label">
               {canManage
                 ? `Set individual permission grants for ${displayName}. These narrow capability without assigning a role.`
                 : `Viewing custom permission grants for ${displayName}.`}
@@ -161,7 +161,7 @@ export function MemberGrantsSheet({
 
           {canManage && !isLoading ? (
             <div className="space-y-1.5">
-              <Label htmlFor="grants-reason" className="text-[13px] font-medium">
+              <Label htmlFor="grants-reason" className="text-label font-medium">
                 Reason{" "}
                 <span className="font-normal text-muted-foreground">(optional)</span>
               </Label>

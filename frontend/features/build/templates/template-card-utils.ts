@@ -1,44 +1,55 @@
 export const categoryAccentBar: Record<string, string> = {
-  GENERAL: "bg-slate-400",
-  SOFTWARE: "bg-blue-500",
-  ONBOARDING: "bg-cyan-500",
-  MARKETING: "bg-rose-500",
-  SALES: "bg-emerald-500",
-  HR: "bg-amber-500",
+  GENERAL: "bg-category-slate-fill",
+  SOFTWARE: "bg-category-blue-fill",
+  ONBOARDING: "bg-category-cyan-fill",
+  MARKETING: "bg-category-rose-fill",
+  SALES: "bg-category-emerald-fill",
+  HR: "bg-category-amber-fill",
 };
 
+/**
+ * The same six categories as `categoryAccentBar` above, so they read the same
+ * six hues. The bar and the dot were repaired onto the categorical scale and
+ * the badge and the avatar tint were not, which is why SOFTWARE and ONBOARDING
+ * carried distinct bars over identical badges on the same card.
+ */
 export const categoryBadgeColors: Record<string, string> = {
-  GENERAL: "bg-slate-500/10 text-slate-700 dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30",
-  SOFTWARE: "bg-blue-500/10 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  ONBOARDING: "bg-cyan-500/10 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-300 dark:border-cyan-500/30",
-  MARKETING: "bg-rose-500/10 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30",
-  SALES: "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  HR: "bg-amber-500/10 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  GENERAL: "bg-muted text-foreground",
+  SOFTWARE: "bg-category-blue-surface text-category-blue-ink",
+  ONBOARDING: "bg-category-cyan-surface text-category-cyan-ink",
+  MARKETING: "bg-category-rose-surface text-category-rose-ink",
+  SALES: "bg-category-emerald-surface text-category-emerald-ink",
+  HR: "bg-category-amber-surface text-category-amber-ink",
 };
 
 export const categoryDotColors: Record<string, string> = {
-  GENERAL: "bg-slate-400",
-  SOFTWARE: "bg-blue-500",
-  ONBOARDING: "bg-cyan-500",
-  MARKETING: "bg-rose-500",
-  SALES: "bg-emerald-500",
-  HR: "bg-amber-500",
+  GENERAL: "bg-category-slate-fill",
+  SOFTWARE: "bg-category-blue-fill",
+  ONBOARDING: "bg-category-cyan-fill",
+  MARKETING: "bg-category-rose-fill",
+  SALES: "bg-category-emerald-fill",
+  HR: "bg-category-amber-fill",
 };
 
 export const categoryAvatarTints: Record<string, string> = {
-  GENERAL: "bg-slate-500/10 text-slate-700 ring-slate-500/20 dark:text-slate-300",
-  SOFTWARE: "bg-blue-500/10 text-blue-700 ring-blue-500/20 dark:text-blue-300",
-  ONBOARDING: "bg-cyan-500/10 text-cyan-700 ring-cyan-500/20 dark:text-cyan-300",
-  MARKETING: "bg-rose-500/10 text-rose-700 ring-rose-500/20 dark:text-rose-300",
-  SALES: "bg-emerald-500/10 text-emerald-700 ring-emerald-500/20 dark:text-emerald-300",
-  HR: "bg-amber-500/10 text-amber-700 ring-amber-500/20 dark:text-amber-300",
+  GENERAL: "bg-muted text-foreground ring-border",
+  SOFTWARE: "bg-category-blue-surface text-category-blue-ink ring-category-blue-rule",
+  ONBOARDING: "bg-category-cyan-surface text-category-cyan-ink ring-category-cyan-rule",
+  MARKETING: "bg-category-rose-surface text-category-rose-ink ring-category-rose-rule",
+  SALES: "bg-category-emerald-surface text-category-emerald-ink ring-category-emerald-rule",
+  HR: "bg-category-amber-surface text-category-amber-ink ring-category-amber-rule",
 };
 
+/**
+ * Issue type is a taxonomy, not a severity — a bug is not more urgent than an
+ * epic, it is a different shape of work. EPIC takes violet rather than the blue
+ * it shared with TASK before the migration.
+ */
 export const ticketTypeColors: Record<string, string> = {
-  TASK: "bg-blue-500/10 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-  STORY: "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
-  BUG: "bg-red-500/10 text-red-700 dark:bg-red-500/10 dark:text-red-300",
-  EPIC: "bg-blue-500/10 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  TASK: "bg-category-blue-surface text-category-blue-ink",
+  STORY: "bg-category-emerald-surface text-category-emerald-ink",
+  BUG: "bg-category-red-surface text-category-red-ink",
+  EPIC: "bg-category-violet-surface text-category-violet-ink",
 };
 
 const PREVIEW_LIMIT = 4;

@@ -116,12 +116,12 @@ function JobCardItem({ job, onApply }: JobCardItemProps) {
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-2">
           <CardTitle className="text-sm font-semibold leading-tight">{job.title}</CardTitle>
-          <Badge variant="secondary" className="text-[10px] shrink-0">Internal</Badge>
+          <Badge variant="secondary" className="text-micro shrink-0">Internal</Badge>
         </div>
         <div className="flex flex-wrap gap-1.5 mt-1">
-          <Badge variant="outline" className="text-[10px]">{TYPE_LABELS[job.type] ?? job.type}</Badge>
-          {job.department && <Badge variant="outline" className="text-[10px]">{job.department.name}</Badge>}
-          {job.location && <Badge variant="outline" className="text-[10px]">{job.location}</Badge>}
+          <Badge variant="outline" className="text-micro">{TYPE_LABELS[job.type] ?? job.type}</Badge>
+          {job.department && <Badge variant="outline" className="text-micro">{job.department.name}</Badge>}
+          {job.location && <Badge variant="outline" className="text-micro">{job.location}</Badge>}
         </div>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col justify-between pt-0 gap-3">

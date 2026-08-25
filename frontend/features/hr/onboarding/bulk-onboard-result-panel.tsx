@@ -23,12 +23,12 @@ export function BulkOnboardResultPanel({ result, onReset }: BulkOnboardResultPan
             className={cn(
               "w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3",
               result.created > 0
-                ? "bg-emerald-100 dark:bg-emerald-500/10"
+                ? "bg-status-success-surface"
                 : "bg-destructive/10",
             )}
           >
             {result.created > 0 ? (
-              <CheckCircle2 className="h-7 w-7 text-emerald-600 dark:text-emerald-300" />
+              <CheckCircle2 className="h-7 w-7 text-status-success-ink" />
             ) : (
               <AlertCircle className="h-7 w-7 text-destructive" />
             )}
@@ -43,18 +43,18 @@ export function BulkOnboardResultPanel({ result, onReset }: BulkOnboardResultPan
 
         <div className="flex justify-center gap-8 mb-6">
           <div className="text-center">
-            <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-300 tabular-nums">
+            <p className="text-2xl font-bold text-status-success-ink tabular-nums">
               {result.created}
             </p>
-            <p className="text-[11px] text-muted-foreground">Created</p>
+            <p className="text-dense text-muted-foreground">Created</p>
           </div>
           <div className="text-center">
             <p className="text-2xl font-bold text-destructive tabular-nums">{result.failed}</p>
-            <p className="text-[11px] text-muted-foreground">Failed</p>
+            <p className="text-dense text-muted-foreground">Failed</p>
           </div>
           <div className="text-center">
             <p className="text-2xl font-bold text-foreground tabular-nums">{result.total}</p>
-            <p className="text-[11px] text-muted-foreground">Total</p>
+            <p className="text-dense text-muted-foreground">Total</p>
           </div>
         </div>
 
@@ -63,7 +63,7 @@ export function BulkOnboardResultPanel({ result, onReset }: BulkOnboardResultPan
             <p className="text-xs font-medium text-destructive mb-2">Failed rows</p>
             <ul className="space-y-1.5">
               {failedResults.map((r) => (
-                <li key={`${r.row}-${r.email}`} className="text-[11px] text-muted-foreground">
+                <li key={`${r.row}-${r.email}`} className="text-dense text-muted-foreground">
                   <span className="font-medium text-foreground">Row {r.row}</span>
                   {" · "}
                   {r.email}

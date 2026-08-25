@@ -192,7 +192,7 @@ export function LoadCreateSheet({ open, onOpenChange }: LoadCreateSheetProps) {
                   name={`members.${index}.type`}
                   render={({ field: f }) => (
                     <FormItem className="w-[130px] shrink-0">
-                      <FormLabel className="text-[10px] font-semibold text-foreground/80">Type</FormLabel>
+                      <FormLabel className="text-micro font-semibold text-foreground/80">Type</FormLabel>
                       <Select value={f.value} onValueChange={f.onChange}>
                         <FormControl>
                           <SelectTrigger className="text-xs">
@@ -213,7 +213,7 @@ export function LoadCreateSheet({ open, onOpenChange }: LoadCreateSheetProps) {
                   name={`members.${index}.referenceId`}
                   render={({ field: f }) => (
                     <FormItem className="flex-1 min-w-0">
-                      <FormLabel className="text-[10px] font-semibold text-foreground/80">Reference</FormLabel>
+                      <FormLabel className="text-micro font-semibold text-foreground/80">Reference</FormLabel>
                       <FormControl>
                         <InventoryReferenceCombobox
                           type={form.watch(`members.${index}.type`)}

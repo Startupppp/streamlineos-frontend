@@ -20,19 +20,19 @@ const STAGE_LABELS: Record<Stage, string> = {
 };
 
 const STAGE_COLORS: Record<Stage, string> = {
-  NEW: "from-slate-400 to-slate-500",
-  CONTACTED: "from-blue-400 to-blue-500",
-  INTERESTED: "from-blue-400 to-blue-500",
-  QUALIFIED: "from-amber-400 to-amber-500",
-  CONVERTED: "from-emerald-400 to-emerald-500",
+  NEW: "from-gradient-neutral-from to-gradient-neutral-to",
+  CONTACTED: "from-gradient-info-from to-gradient-info-to",
+  INTERESTED: "from-gradient-info-from to-gradient-info-to",
+  QUALIFIED: "from-gradient-warning-from to-gradient-warning-to",
+  CONVERTED: "from-gradient-success-from to-gradient-success-to",
 };
 
 const STAGE_BG: Record<Stage, string> = {
   NEW: "bg-card border-border",
-  CONTACTED: "bg-blue-500/10 border-blue-500/20",
-  INTERESTED: "bg-blue-500/10 border-blue-500/20",
-  QUALIFIED: "bg-amber-500/10 border-amber-500/20",
-  CONVERTED: "bg-emerald-500/10 border-emerald-500/20",
+  CONTACTED: "bg-status-info-surface border-status-info-rule",
+  INTERESTED: "bg-status-info-surface border-status-info-rule",
+  QUALIFIED: "bg-status-warning-surface border-status-warning-rule",
+  CONVERTED: "bg-status-success-surface border-status-success-rule",
 };
 
 interface LeadsFunnelViewProps {
@@ -126,10 +126,10 @@ export function LeadsFunnelView({ board }: LeadsFunnelViewProps) {
                     <span
                       className={`text-xs font-medium ${
                         conversionRate >= 50
-                          ? "text-emerald-600 dark:text-emerald-400"
+                          ? "text-status-success-ink"
                           : conversionRate >= 25
-                          ? "text-amber-600 dark:text-amber-400"
-                          : "text-red-500 dark:text-red-400"
+                          ? "text-status-warning-ink"
+                          : "text-status-danger-ink"
                       }`}
                     >
                       {conversionRate}%
@@ -152,7 +152,7 @@ export function LeadsFunnelView({ board }: LeadsFunnelViewProps) {
             className={`rounded-lg border p-3 text-center ${STAGE_BG[stage]}`}
           >
             <p className="text-lg font-bold text-foreground">{count}</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">{STAGE_LABELS[stage]}</p>
+            <p className="text-micro text-muted-foreground mt-0.5">{STAGE_LABELS[stage]}</p>
           </motion.div>
         ))}
       </div>

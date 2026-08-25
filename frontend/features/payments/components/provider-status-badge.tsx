@@ -7,7 +7,7 @@ export function ProviderStatusBadge({ status, className }: { status: PaymentProv
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium whitespace-nowrap",
+        "inline-flex items-center rounded-full border px-2 py-0.5 text-dense font-medium whitespace-nowrap",
         STATUS_TONE_CLASSNAMES[tone],
         className,
       )}

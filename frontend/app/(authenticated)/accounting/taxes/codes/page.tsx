@@ -45,14 +45,14 @@ const TAX_TYPE_OPTIONS: { value: TaxType; label: string }[] = [
 ];
 
 const TAX_TYPE_BADGE: Record<TaxType, string> = {
-  GST: "border-blue-500/30 text-blue-700 bg-blue-500/5 dark:text-blue-300 dark:border-blue-500/20 dark:bg-blue-500/10",
-  CGST_SGST: "border-blue-500/30 text-blue-700 bg-blue-500/5 dark:text-blue-300 dark:border-blue-500/20 dark:bg-blue-500/10",
-  IGST: "border-cyan-500/30 text-cyan-700 bg-cyan-500/5 dark:text-cyan-300 dark:border-cyan-500/20 dark:bg-cyan-500/10",
-  VAT: "border-amber-500/30 text-amber-700 bg-amber-500/5 dark:text-amber-300 dark:border-amber-500/20 dark:bg-amber-500/10",
-  TDS: "border-orange-500/30 text-orange-700 bg-orange-500/5 dark:text-orange-300 dark:border-orange-500/20 dark:bg-orange-500/10",
-  TCS: "border-rose-500/30 text-rose-700 bg-rose-500/5 dark:text-rose-300 dark:border-rose-500/20 dark:bg-rose-500/10",
+  GST: "border-status-info-rule text-status-info-ink bg-status-info-surface",
+  CGST_SGST: "border-status-info-rule text-status-info-ink bg-status-info-surface",
+  IGST: "border-status-info-rule text-status-info-ink bg-status-info-surface",
+  VAT: "border-status-warning-rule text-status-warning-ink bg-status-warning-surface",
+  TDS: "border-status-warning-rule text-status-warning-ink bg-status-warning-surface",
+  TCS: "border-status-danger-rule text-status-danger-ink bg-status-danger-surface",
   EXEMPT: "border-border text-muted-foreground bg-muted/30",
-  ZERO_RATED: "border-emerald-500/30 text-emerald-700 bg-emerald-500/5 dark:text-emerald-300 dark:border-emerald-500/20 dark:bg-emerald-500/10",
+  ZERO_RATED: "border-status-success-rule text-status-success-ink bg-status-success-surface",
 };
 
 const taxCodeSchema = z.object({
@@ -207,7 +207,7 @@ export default function TaxCodesPage() {
       key: "isReverseCharge",
       header: "Reverse Charge",
       cell: (row) => (
-        <Badge variant="outline" className={row.isReverseCharge ? "border-amber-500/30 text-amber-700 bg-amber-500/5 dark:text-amber-300 dark:border-amber-500/20 dark:bg-amber-500/10" : "text-muted-foreground"}>
+        <Badge variant="outline" className={row.isReverseCharge ? "border-status-warning-rule text-status-warning-ink bg-status-warning-surface" : "text-muted-foreground"}>
           {row.isReverseCharge ? "Yes" : "No"}
         </Badge>
       ),
@@ -218,7 +218,7 @@ export default function TaxCodesPage() {
       cell: (row) => (
         <Badge
           variant="outline"
-          className={row.isActive ? "border-emerald-500/30 text-emerald-700 bg-emerald-500/5 dark:text-emerald-300 dark:border-emerald-500/20 dark:bg-emerald-500/10" : "text-muted-foreground"}
+          className={row.isActive ? "border-status-success-rule text-status-success-ink bg-status-success-surface" : "text-muted-foreground"}
         >
           {row.isActive ? "Active" : "Inactive"}
         </Badge>

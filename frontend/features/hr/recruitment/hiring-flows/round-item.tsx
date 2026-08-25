@@ -57,7 +57,7 @@ export function RoundItem({ round, flowId, onEdit }: RoundItemProps) {
       <div className="flex items-center gap-1.5 shrink-0">
         <RoundTypeBadge type={round.roundType} />
         <ModeBadge mode={round.mode} />
-        <span className="text-[10px] text-muted-foreground">{round.durationMinutes}m</span>
+        <span className="text-micro text-muted-foreground">{round.durationMinutes}m</span>
       </div>
       <div className="opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity shrink-0">
         <DropdownMenu>

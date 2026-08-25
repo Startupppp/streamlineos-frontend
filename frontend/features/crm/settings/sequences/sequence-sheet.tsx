@@ -129,7 +129,7 @@ function StepsTab({ sequenceId }: { sequenceId: string }) {
               <span className="text-xs font-medium text-muted-foreground w-5 shrink-0">
                 {step.sortOrder}.
               </span>
-              <Badge variant="secondary" className="text-[11px] shrink-0">
+              <Badge variant="secondary" className="text-dense shrink-0">
                 {STEP_TYPE_LABELS[step.stepType]}
               </Badge>
               {step.waitHours != null && (
@@ -239,13 +239,13 @@ function EnrollmentsTab({ sequenceId }: { sequenceId: string }) {
             <div className="flex items-center gap-2">
               <Badge
                 variant={ENROLLMENT_STATUS_VARIANTS[e.status] ?? "outline"}
-                className="text-[10px]"
+                className="text-micro"
               >
                 {e.status}
               </Badge>
-              <span className="text-[11px] text-muted-foreground">Step {e.currentStep}</span>
+              <span className="text-dense text-muted-foreground">Step {e.currentStep}</span>
               {e.nextRunAt && (
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-dense text-muted-foreground">
                   Next: {new Date(e.nextRunAt).toLocaleDateString()}
                 </span>
               )}

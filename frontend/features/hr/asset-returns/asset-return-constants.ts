@@ -26,19 +26,19 @@ export const STATUS_META: Record<
   PENDING: {
     label: "Pending",
     badge:
-      "bg-amber-100 border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-300",
+      "bg-status-warning-surface border-status-warning-rule text-status-warning-ink",
     accent: "border-l-amber-500",
   },
   RETURNED: {
     label: "Returned",
     badge:
-      "bg-emerald-100 border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/30 dark:text-emerald-300",
+      "bg-status-success-surface border-status-success-rule text-status-success-ink",
     accent: "border-l-emerald-500",
   },
   MISSING: {
     label: "Missing",
     badge:
-      "bg-rose-100 border-rose-200 text-rose-700 dark:bg-rose-500/10 dark:border-rose-500/30 dark:text-rose-300",
+      "bg-status-danger-surface border-status-danger-rule text-status-danger-ink",
     accent: "border-l-rose-500",
   },
 };
@@ -46,15 +46,15 @@ export const STATUS_META: Record<
 export const CONDITION_META: Record<string, { badge: string }> = {
   Good: {
     badge:
-      "bg-emerald-100 border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/30 dark:text-emerald-300",
+      "bg-status-success-surface border-status-success-rule text-status-success-ink",
   },
   Fair: {
     badge:
-      "bg-amber-100 border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-300",
+      "bg-status-warning-surface border-status-warning-rule text-status-warning-ink",
   },
   Poor: {
     badge:
-      "bg-rose-100 border-rose-200 text-rose-700 dark:bg-rose-500/10 dark:border-rose-500/30 dark:text-rose-300",
+      "bg-status-danger-surface border-status-danger-rule text-status-danger-ink",
   },
 };
 

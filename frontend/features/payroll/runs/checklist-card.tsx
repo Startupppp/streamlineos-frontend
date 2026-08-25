@@ -17,14 +17,14 @@ export function ChecklistCard({ items }: ChecklistCardProps) {
     <div className="rounded-xl border border-border bg-card p-4 space-y-3">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-foreground">Payroll Checklist</h3>
-        <span className="text-[11px] text-muted-foreground tabular-nums">
+        <span className="text-dense text-muted-foreground tabular-nums">
           {doneCount}/{items.length}
         </span>
       </div>
 
       <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
         <div
-          className="h-full bg-emerald-500 rounded-full transition-[width] duration-[400ms] ease-in-out"
+          className="h-full bg-status-success-fill rounded-full transition-[width] duration-[400ms] ease-in-out"
           style={{ width: `${percent}%` }}
         />
       </div>
@@ -34,12 +34,12 @@ export function ChecklistCard({ items }: ChecklistCardProps) {
           const inner = (
             <div
               className={cn(
-                "flex items-start gap-2.5 py-2 text-[11px]",
+                "flex items-start gap-2.5 py-2 text-dense",
                 item.href && "hover:bg-muted/20 -mx-1 px-1 rounded",
               )}
             >
               {item.done ? (
-                <CheckCircle className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                <CheckCircle className="h-3.5 w-3.5 text-status-success-ink shrink-0 mt-0.5" />
               ) : (
                 <Circle className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
               )}
@@ -53,7 +53,7 @@ export function ChecklistCard({ items }: ChecklistCardProps) {
                   {item.label}
                 </p>
                 {!item.done && item.detail && (
-                  <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug">
+                  <p className="text-micro text-muted-foreground mt-0.5 leading-snug">
                     {item.detail}
                   </p>
                 )}

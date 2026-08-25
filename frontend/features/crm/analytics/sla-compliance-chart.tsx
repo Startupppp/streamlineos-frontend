@@ -59,8 +59,8 @@ export function SlaComplianceChart({ slaReport }: SlaComplianceChartProps) {
           </div>
           <div className="flex flex-wrap gap-x-4 gap-y-1 mt-4 text-xs justify-center">
             <span className="text-muted-foreground">Total: {slaReport.total}</span>
-            <span className="text-emerald-500 dark:text-emerald-400">Met: {slaReport.compliant}</span>
-            <span className="text-red-500 dark:text-red-400">Breached: {slaReport.breached}</span>
+            <span className="text-status-success-ink">Met: {slaReport.compliant}</span>
+            <span className="text-status-danger-ink">Breached: {slaReport.breached}</span>
           </div>
         </div>
       )}

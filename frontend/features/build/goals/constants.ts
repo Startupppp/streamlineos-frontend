@@ -22,25 +22,25 @@ export const STATUS_CONFIG: Record<GoalStatus, StatusConfig> = {
     value: "on_track",
     label: "On Track",
     variant: "default",
-    dot: "bg-emerald-500",
+    dot: "bg-status-success-fill",
   },
   at_risk: {
     value: "at_risk",
     label: "At Risk",
     variant: "outline",
-    dot: "bg-amber-500",
+    dot: "bg-status-warning-fill",
   },
   off_track: {
     value: "off_track",
     label: "Off Track",
     variant: "destructive",
-    dot: "bg-red-500",
+    dot: "bg-status-danger-fill",
   },
   completed: {
     value: "completed",
     label: "Completed",
     variant: "default",
-    dot: "bg-blue-500",
+    dot: "bg-status-info-fill",
   },
 };
 

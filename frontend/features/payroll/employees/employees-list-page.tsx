@@ -24,7 +24,7 @@ import { usePayrollWorkforceLabel } from "@/features/payroll/lib/payroll-workfor
 import { useState } from "react";
 
 const STATUS_CONFIG: Record<SalaryProfileStatus, { className: string; label: string }> = {
-  ACTIVE: { className: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30", label: "Active" },
+  ACTIVE: { className: "bg-status-success-surface text-status-success-ink border-status-success-rule", label: "Active" },
   UPCOMING: { className: "bg-primary/10 text-foreground border-primary/20", label: "Upcoming" },
   SUPERSEDED: { className: "bg-muted text-muted-foreground border-border", label: "Superseded" },
 };
@@ -87,8 +87,8 @@ export function EmployeesListPage() {
       header: workforceLabel.singular,
       cell: (row) => (
         <div className="flex flex-col gap-0.5 min-w-0">
-          <TruncatedText text={row.userName ?? "Payee"} className="text-[11px] font-medium" />
-          <TruncatedText text={row.userEmail ?? "—"} className="text-[10px] text-muted-foreground" />
+          <TruncatedText text={row.userName ?? "Payee"} className="text-dense font-medium" />
+          <TruncatedText text={row.userEmail ?? "—"} className="text-micro text-muted-foreground" />
         </div>
       ),
     },
@@ -96,7 +96,7 @@ export function EmployeesListPage() {
       key: "workerType",
       header: "Type",
       cell: (row) => (
-        <span className="text-[10px] text-muted-foreground">{row.workerType}</span>
+        <span className="text-micro text-muted-foreground">{row.workerType}</span>
       ),
     },
     {
@@ -104,7 +104,7 @@ export function EmployeesListPage() {
       header: "Annual CTC",
       className: "text-right",
       cell: (row) => (
-        <span className="font-mono text-[11px] tabular-nums">{formatMoney(row.annualCtc)}</span>
+        <span className="font-mono text-dense tabular-nums">{formatMoney(row.annualCtc)}</span>
       ),
     },
     {
@@ -114,7 +114,7 @@ export function EmployeesListPage() {
         const cfg = STATUS_CONFIG[row.status];
         return (
           <span
-            className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${cfg.className}`}
+            className={`inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium border ${cfg.className}`}
           >
             {cfg.label}
           </span>
@@ -125,7 +125,7 @@ export function EmployeesListPage() {
       key: "effectiveFrom",
       header: "Effective From",
       cell: (row) => (
-        <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
+        <span className="font-mono text-dense tabular-nums text-muted-foreground">
           {row.effectiveFrom}
         </span>
       ),
@@ -134,7 +134,7 @@ export function EmployeesListPage() {
       key: "currency",
       header: "Currency",
       cell: (row) => (
-        <span className="text-[11px] text-muted-foreground">{row.currency}</span>
+        <span className="text-dense text-muted-foreground">{row.currency}</span>
       ),
     },
   ];
@@ -233,10 +233,10 @@ export function EmployeesListPage() {
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="text-sm font-medium truncate">{row.userName}</p>
-                  <p className="text-[11px] text-muted-foreground truncate">{row.userEmail}</p>
+                  <p className="text-dense text-muted-foreground truncate">{row.userEmail}</p>
                 </div>
                 <span
-                  className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border shrink-0 ${cfg.className}`}
+                  className={`inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium border shrink-0 ${cfg.className}`}
                 >
                   {cfg.label}
                 </span>

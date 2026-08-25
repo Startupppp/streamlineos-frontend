@@ -61,15 +61,15 @@ function MentionItem({ user, idx, mentionIndex, onInsert }: MentionItemProps) {
       onClick={handleClick}
       className={cn(
         "w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-muted/40 transition-colors",
-        idx === mentionIndex && "bg-blue-500/10"
+        idx === mentionIndex && "bg-status-info-surface"
       )}
     >
       <Avatar className="h-6 w-6">
         <AvatarImage src={resolveImageUrl(user.image)} />
-        <AvatarFallback className="text-[8px]">{getInitials(user.name)}</AvatarFallback>
+        <AvatarFallback className="text-micro">{getInitials(user.name)}</AvatarFallback>
       </Avatar>
-      <span className="text-[13px] font-medium">{user.name}</span>
-      <span className="text-[11px] text-muted-foreground ml-auto">{user.role}</span>
+      <span className="text-label font-medium">{user.name}</span>
+      <span className="text-dense text-muted-foreground ml-auto">{user.role}</span>
     </button>
   );
 }
@@ -97,19 +97,19 @@ function PendingAttachmentItem({ att, idx, onRemove }: PendingAttachmentItemProp
       ) : (
         <div className={cn("h-11 w-11 rounded-lg flex flex-col items-center justify-center relative", colors.bg)}>
           <FileText className={cn("h-5 w-5", colors.text)} />
-          <span className={cn("text-[7px] font-bold text-white px-1 rounded mt-0.5", colors.badge)}>
+          <span className={cn("text-micro font-bold text-white px-1 rounded mt-0.5", colors.badge)}>
             {getFileExt(att.fileName)}
           </span>
         </div>
       )}
       <div className="min-w-0 max-w-[140px]">
-        <p className="text-[12px] font-medium truncate">{att.fileName}</p>
-        <p className="text-[10px] text-muted-foreground">{formatFileSize(att.fileSize)}</p>
+        <p className="text-xs font-medium truncate">{att.fileName}</p>
+        <p className="text-micro text-muted-foreground">{formatFileSize(att.fileSize)}</p>
       </div>
       <button
         onClick={handleRemove}
         aria-label="Remove attachment"
-        className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+        className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-status-danger-fill text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
       >
         <X className="h-3 w-3" />
       </button>
@@ -260,13 +260,13 @@ export function MessageInput({
             className="border-t border-border/30 overflow-hidden bg-muted/20"
           >
             <div className="flex items-center gap-3 px-4 py-2 max-w-[900px] mx-auto">
-              <div className="w-1 h-9 rounded-full bg-blue-500 shrink-0" />
-              <Reply className="h-4 w-4 text-blue-600 shrink-0" />
+              <div className="w-1 h-9 rounded-full bg-status-info-fill shrink-0" />
+              <Reply className="h-4 w-4 text-status-info-ink shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-[12px] font-bold text-blue-600">
+                <p className="text-xs font-bold text-status-info-ink">
                   Replying to {replyTo.sender?.name}
                 </p>
-                <p className="text-[12px] text-muted-foreground truncate">
+                <p className="text-xs text-muted-foreground truncate">
                   {replyTo.content}
                 </p>
               </div>
@@ -300,7 +300,7 @@ export function MessageInput({
               >
                 <div className="max-w-[800px] mx-auto">
                   <div className="bg-background border border-border/60 rounded-xl shadow-lg overflow-hidden max-h-[200px] overflow-y-auto">
-                    <div className="px-3 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-b border-border/30">
+                    <div className="px-3 py-1.5 text-micro font-semibold text-muted-foreground uppercase tracking-wider border-b border-border/30">
                       Members
                     </div>
                     {filteredMentions.slice(0, 8).map((user, idx) => (
@@ -353,8 +353,8 @@ export function MessageInput({
               ))}
               {uploading && (
                 <div className="flex items-center gap-2 bg-muted/40 border border-border/40 rounded-lg px-3 py-2">
-                  <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-                  <span className="text-[11px] text-muted-foreground">Uploading...</span>
+                  <Loader2 className="h-4 w-4 animate-spin text-status-info-ink" />
+                  <span className="text-dense text-muted-foreground">Uploading...</span>
                 </div>
               )}
             </div>
@@ -368,7 +368,7 @@ export function MessageInput({
             </div>
           )}
 
-          <div className="rounded-2xl border border-border bg-background shadow-md focus-within:border-blue-500/50 focus-within:shadow-lg transition-all">
+          <div className="rounded-2xl border border-border bg-background shadow-md focus-within:border-status-info-rule focus-within:shadow-lg transition-all">
             <input
               ref={fileInputRef}
               type="file"
@@ -386,7 +386,7 @@ export function MessageInput({
               onPaste={handlePaste}
               placeholder={`Message ${channelType === "DIRECT" ? displayName : "#" + displayName}...`}
               rows={1}
-              className="w-full bg-transparent text-[14px] resize-none px-4 pt-3 pb-1 focus:outline-none placeholder:text-muted-foreground/60 min-h-[40px] max-h-[160px]"
+              className="w-full bg-transparent text-sm resize-none px-4 pt-3 pb-1 focus:outline-none placeholder:text-muted-foreground/60 min-h-[40px] max-h-[160px]"
             />
             <div className="flex items-center justify-between px-3 py-1.5">
               <div className="flex items-center gap-0.5">
@@ -396,7 +396,7 @@ export function MessageInput({
                   className={cn(
                     "p-2 rounded-lg hover:bg-muted/60 transition-colors",
                     uploading
-                      ? "text-blue-600 animate-pulse"
+                      ? "text-status-info-ink animate-pulse"
                       : "text-muted-foreground/70 hover:text-foreground"
                   )}
                   title="Attach file (max 10MB)"
@@ -409,7 +409,7 @@ export function MessageInput({
                   className={cn(
                     "p-2 rounded-lg hover:bg-muted/60 transition-colors",
                     showEmojiPicker
-                      ? "text-blue-600 bg-muted/50"
+                      ? "text-status-info-ink bg-muted/50"
                       : "text-muted-foreground/70 hover:text-foreground"
                   )}
                   title="Emoji"
@@ -452,7 +452,7 @@ export function MessageInput({
                 </button>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] text-muted-foreground/50 hidden sm:inline">
+                <span className="text-micro text-muted-foreground/50 hidden sm:inline">
                   Shift+Enter for new line
                 </span>
                 <button
@@ -465,7 +465,7 @@ export function MessageInput({
                   className={cn(
                     "h-9 w-9 rounded-xl flex items-center justify-center transition-all",
                     messageInput.trim() || pendingAttachments.length > 0
-                      ? "bg-gradient-to-r from-blue-500 to-[#d4a544] text-white shadow-md hover:shadow-lg hover:scale-105"
+                      ? "bg-gradient-to-r from-gradient-info-from to-[#d4a544] text-white shadow-md hover:shadow-lg hover:scale-105"
                       : "bg-muted/50 text-muted-foreground/30 cursor-not-allowed"
                   )}
                 >

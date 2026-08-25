@@ -131,7 +131,7 @@ export function ConversionModal({ leadName, open, onClose, onSubmit, canCreateDe
               />
               <div>
                 <p className="text-sm font-medium leading-none">Auto-create Deal</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">Create a new deal pre-filled with lead data</p>
+                <p className="text-dense text-muted-foreground mt-0.5">Create a new deal pre-filled with lead data</p>
               </div>
             </label>
           )}
@@ -150,7 +150,7 @@ export function ConversionModal({ leadName, open, onClose, onSubmit, canCreateDe
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={handleClose}>Cancel</Button>
-          <Button onClick={handleSubmit} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+          <Button onClick={handleSubmit} className="bg-status-success-fill hover:bg-status-success-fill-hover text-white">
             {createDeal ? "Convert & Create Deal" : "Convert Lead"}
           </Button>
         </DialogFooter>

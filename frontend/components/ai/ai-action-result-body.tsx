@@ -86,7 +86,7 @@ export function AiActionResultBody({
       hideFooter={contentOnly}
       className={compact ? "shadow-none" : undefined}
     >
-      <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-foreground">
+      <p className="whitespace-pre-wrap text-label leading-relaxed text-foreground">
         {state.result.text}
       </p>
     </AiDraftCard>

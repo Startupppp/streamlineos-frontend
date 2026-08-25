@@ -83,7 +83,7 @@ export function AdminExpenseList({
           <h3 className="text-sm font-semibold text-foreground">
             Expense Claims
           </h3>
-          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+          <span className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
             {startItem}–{endItem} of {pagination.total}{" "}
             {statusFilter === "PENDING" ? "pending" : "total"}
           </span>
@@ -256,7 +256,7 @@ export function MemberExpenseList({
         return (
           <span
             className={cn(
-              "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+              "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border",
               catConfig.bg,
               catConfig.text,
             )}
@@ -294,7 +294,7 @@ export function MemberExpenseList({
         return (
           <span
             className={cn(
-              "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+              "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border",
               statusStyle.bg,
               statusStyle.text,
               statusStyle.border,

@@ -203,7 +203,7 @@ function MultiSelectField({
             <Badge
               key={opt.email}
               variant="secondary"
-              className="gap-1 pr-1 text-[10px] font-semibold"
+              className="gap-1 pr-1 text-micro font-semibold"
             >
               {opt.name}
               <BadgeRemoveButton name={opt.name} onClick={() => onRemove(opt.email)} />
@@ -342,7 +342,7 @@ function AttendanceEmailDialogContent({ toolbar = false }: { toolbar?: boolean }
             </Label>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label className="text-[10px] font-medium text-muted-foreground">
+                <Label className="text-micro font-medium text-muted-foreground">
                   From
                 </Label>
                 <DatePicker
@@ -353,7 +353,7 @@ function AttendanceEmailDialogContent({ toolbar = false }: { toolbar?: boolean }
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-[10px] font-medium text-muted-foreground">
+                <Label className="text-micro font-medium text-muted-foreground">
                   To
                 </Label>
                 <DatePicker
@@ -365,7 +365,7 @@ function AttendanceEmailDialogContent({ toolbar = false }: { toolbar?: boolean }
               </div>
             </div>
             {dateError && (
-              <p className="text-[11px] text-destructive mt-1.5">{dateError}</p>
+              <p className="text-dense text-destructive mt-1.5">{dateError}</p>
             )}
           </div>
 
@@ -381,7 +381,7 @@ function AttendanceEmailDialogContent({ toolbar = false }: { toolbar?: boolean }
           </div>
 
           {totalCount > 0 && (
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-dense text-muted-foreground">
               <span className="font-semibold text-foreground">{totalCount}</span>
               {" of "}
               {MAX_REPORT_RECIPIENTS} recipients selected. Each person receives a

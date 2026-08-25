@@ -37,8 +37,8 @@ function DeleteLabelButton({ onConfirm }: { onConfirm: () => void }) {
           className={cn(
             "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100",
             "h-7 w-7 flex items-center justify-center rounded-md",
-            "text-muted-foreground hover:text-red-600 hover:bg-red-50",
-            "dark:hover:text-red-400 dark:hover:bg-red-500/10 transition-all",
+            "text-muted-foreground hover:text-status-danger-ink hover:bg-status-danger-surface",
+            "transition-all",
           )}
           aria-label="Delete label"
           {...hoverHandlers}
@@ -149,7 +149,7 @@ function LabelListRow({
           />
           <span className="truncate">{label.name}</span>
         </span>
-        <span className="font-mono text-[10px] uppercase text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+        <span className="font-mono text-micro uppercase text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
           {color}
         </span>
       </button>

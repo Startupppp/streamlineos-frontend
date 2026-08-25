@@ -47,14 +47,14 @@ export function LeadActivityTab({ activities }: LeadActivityTabProps) {
               className={cn(
                 "h-9 w-9 rounded-lg flex items-center justify-center shrink-0",
                 activity.type === "call"
-                  ? "bg-blue-500/15 text-blue-400"
+                  ? "bg-status-info-surface text-status-info-ink"
                   : activity.type === "email"
-                    ? "bg-blue-500/15 text-blue-400"
+                    ? "bg-status-info-surface text-status-info-ink"
                     : activity.type === "whatsapp"
-                      ? "bg-green-500/15 text-green-400"
+                      ? "bg-status-success-surface text-status-success-ink"
                       : activity.type === "meeting"
-                        ? "bg-amber-500/15 text-amber-400"
-                        : "bg-cyan-500/15 text-cyan-400",
+                        ? "bg-status-warning-surface text-status-warning-ink"
+                        : "bg-status-info-surface text-status-info-ink",
               )}
             >
               {activity.type === "call" ? (
@@ -74,7 +74,7 @@ export function LeadActivityTab({ activities }: LeadActivityTabProps) {
                 <p className="text-sm font-medium capitalize">
                   {activity.type.replace("_", "")}
                 </p>
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-dense text-muted-foreground">
                   {timeAgo(activity.date)}
                 </span>
               </div>
@@ -85,12 +85,12 @@ export function LeadActivityTab({ activities }: LeadActivityTabProps) {
                 <p className="text-xs mt-1.5 leading-relaxed line-clamp-3">{activity.notes}</p>
               )}
               {activity.outcome && (
-                <Badge variant="outline" className="text-[10px] mt-2">
+                <Badge variant="outline" className="text-micro mt-2">
                   {activity.outcome}
                 </Badge>
               )}
               {activity.user && (
-                <p className="text-[10px] text-muted-foreground mt-1.5">
+                <p className="text-micro text-muted-foreground mt-1.5">
                   by {activity.user.name}
                 </p>
               )}

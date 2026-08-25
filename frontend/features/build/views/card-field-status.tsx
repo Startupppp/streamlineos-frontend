@@ -71,7 +71,7 @@ export const InlineStatus = memo(function InlineStatus({
               entry={currentEntry}
               className="h-1.5 w-1.5 rounded-full shrink-0"
             />
-            <span className="text-[10px] text-muted-foreground">
+            <span className="text-micro text-muted-foreground">
               {currentEntry.label}
             </span>
           </button>

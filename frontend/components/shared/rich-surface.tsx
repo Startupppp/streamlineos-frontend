@@ -23,10 +23,10 @@ export function RichPanel({
     <div
       className={cn(
         "rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm",
-        "shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)]",
+        "shadow-card",
         padded && "p-4 sm:p-5",
         hover &&
-          "transition-all duration-300 hover:shadow-[0_8px_30px_-12px_rgba(37,99,235,0.18)] hover:border-blue-500/20 hover:-translate-y-0.5",
+          "transition-all duration-300 hover:shadow-accent hover:border-status-info-rule hover:-translate-y-0.5",
         className,
       )}
     >
@@ -57,10 +57,10 @@ export function RichHero({
   return (
     <div
       className={cn(
-        "relative shrink-0 overflow-hidden rounded-2xl border border-blue-200/60 dark:border-blue-500/20",
-        "bg-gradient-to-br from-sky-50 via-blue-50 to-blue-100/80",
-        "dark:from-slate-900/40 dark:via-blue-950/30 dark:to-blue-950/20",
-        "text-foreground shadow-[0_8px_28px_-18px_rgba(59,130,246,0.22)]",
+        "relative shrink-0 overflow-hidden rounded-2xl border border-status-info-rule",
+        "bg-gradient-to-br from-gradient-info-from via-blue-50 to-gradient-info-to",
+        "",
+        "text-foreground shadow-accent",
         className,
       )}
     >
@@ -74,11 +74,11 @@ export function RichHero({
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute -right-6 -top-6 h-36 w-36 rounded-full border border-blue-200/50 dark:border-blue-400/10"
+        className="pointer-events-none absolute -right-6 -top-6 h-36 w-36 rounded-full border border-status-info-rule"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute -bottom-8 right-20 h-24 w-24 rounded-full border border-sky-200/40 dark:border-sky-400/10"
+        className="pointer-events-none absolute -bottom-8 right-20 h-24 w-24 rounded-full border border-status-info-rule"
       />
 
       <div className="relative p-4 sm:p-5">
@@ -87,7 +87,7 @@ export function RichHero({
             {hasCopy ? (
               <div className="min-w-0 max-w-2xl flex-1">
                 {eyebrow ? (
-                  <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-600/80 dark:text-blue-300/80">
+                  <p className="mb-1.5 text-dense font-semibold uppercase tracking-[0.14em] text-status-info-ink">
                     {eyebrow}
                   </p>
                 ) : null}
@@ -143,14 +143,21 @@ export function RichQuickAction({
   description?: string;
   tone?: RichTone;
 }) {
+  /**
+   * `sky` is a sixth tone, not a second name for `blue`, and it is the reason
+   * `bg-gradient-to-br` lives here rather than on the wrapper: the gradient
+   * stops are named per status tone and there is no `sky` status, so the tone
+   * that has no status equivalent carries a flat categorical surface instead
+   * of a wash. Sharing `gradient-info-*` is what made the two identical.
+   */
   const tones: Record<RichTone, string> = {
-    blue: "from-blue-500/15 to-blue-500/5 text-blue-600 dark:text-blue-300 group-hover:border-blue-500/30",
+    blue: "bg-gradient-to-br from-gradient-info-wash-from to-gradient-info-wash-to text-status-info-ink group-hover:border-status-info-rule",
     emerald:
-      "from-emerald-500/15 to-emerald-500/5 text-emerald-600 dark:text-emerald-300 group-hover:border-emerald-500/30",
+      "bg-gradient-to-br from-gradient-success-wash-from to-gradient-success-wash-to text-status-success-ink group-hover:border-status-success-rule",
     amber:
-      "from-amber-500/15 to-amber-500/5 text-amber-600 dark:text-amber-300 group-hover:border-amber-500/30",
-    rose: "from-rose-500/15 to-rose-500/5 text-rose-600 dark:text-rose-300 group-hover:border-rose-500/30",
-    sky: "from-sky-500/15 to-sky-500/5 text-sky-600 dark:text-sky-300 group-hover:border-sky-500/30",
+      "bg-gradient-to-br from-gradient-warning-wash-from to-gradient-warning-wash-to text-status-warning-ink group-hover:border-status-warning-rule",
+    rose: "bg-gradient-to-br from-gradient-danger-wash-from to-gradient-danger-wash-to text-status-danger-ink group-hover:border-status-danger-rule",
+    sky: "bg-category-sky-surface text-category-sky-ink group-hover:border-category-sky-rule",
   };
 
   return (
@@ -159,13 +166,13 @@ export function RichQuickAction({
       className={cn(
         "group relative flex min-w-0 items-start gap-2.5 rounded-2xl border border-border/70 bg-card p-3 sm:gap-3 sm:p-3.5 md:p-4",
         "shadow-sm transition-all duration-300",
-        "hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-16px_rgba(15,23,42,0.25)]",
+        "hover:-translate-y-0.5 hover:shadow-raised",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
       )}
     >
       <div
         className={cn(
-          "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br border border-transparent sm:h-10 sm:w-10",
+          "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-transparent sm:h-10 sm:w-10",
           tones[tone],
         )}
       >
@@ -177,7 +184,7 @@ export function RichQuickAction({
           <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-0 -translate-x-1 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0" />
         </div>
         {description && (
-          <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground line-clamp-2 sm:line-clamp-1 md:line-clamp-2">
+          <p className="mt-0.5 text-dense leading-snug text-muted-foreground line-clamp-2 sm:line-clamp-1 md:line-clamp-2">
             {description}
           </p>
         )}
@@ -223,7 +230,7 @@ export function RichSectionHeader({
         (typeof action === "object" && action !== null && "href" in action ? (
           <Link
             href={action.href}
-            className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-300 transition-colors self-start"
+            className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-status-info-ink hover:text-status-info-ink transition-colors self-start"
           >
             {action.label}
             <ArrowRight className="h-3 w-3" />
@@ -247,12 +254,14 @@ export function RichIconWell({
   size?: "sm" | "md" | "lg";
 }) {
   const tones: Record<RichWellTone, string> = {
-    blue: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300",
-    emerald: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300",
-    amber: "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300",
-    rose: "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-300",
+    blue: "bg-status-info-surface text-status-info-ink",
+    emerald: "bg-status-success-surface text-status-success-ink",
+    amber: "bg-status-warning-surface text-status-warning-ink",
+    rose: "bg-status-danger-surface text-status-danger-ink",
     slate: "bg-muted text-muted-foreground",
-    sky: "bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-300",
+    // No `sky` status, so the sixth tone reads the categorical scale rather
+    // than repeating `info`.
+    sky: "bg-category-sky-surface text-category-sky-ink",
   };
 
   const sizes = {

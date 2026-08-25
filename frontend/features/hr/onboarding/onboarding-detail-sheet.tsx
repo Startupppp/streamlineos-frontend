@@ -250,29 +250,29 @@ export const EmployeeDocumentsTab = forwardRef<
           "mb-3 overflow-hidden rounded-xl border border-border/70",
           isWizard
             ? "bg-card/60"
-            : "rounded-2xl bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)]",
+            : "rounded-2xl bg-card/90 backdrop-blur-sm shadow-card",
         )}
       >
         <div className={cn("p-3.5", !isWizard && "p-4")}>
           <div className="mb-2 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <div className="flex w-7 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-500/10">
-                <FileText className="h-3.5 w-3.5 text-emerald-700 dark:text-emerald-300" />
+              <div className="flex w-7 items-center justify-center rounded-lg bg-status-success-surface">
+                <FileText className="h-3.5 w-3.5 text-status-success-ink" />
               </div>
               <p className="text-sm font-semibold text-foreground">
                 Document checklist
               </p>
             </div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <span className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
               {approvedCount} / {checklist.length} approved
             </span>
           </div>
           <Progress
             value={progressPct}
-            className="h-1.5 [&>div]:bg-emerald-500 [&>div]:transition-all [&>div]:duration-500"
+            className="h-1.5 [&>div]:bg-status-success-fill [&>div]:transition-all [&>div]:duration-500"
           />
           {progressPct === 100 ? (
-            <p className="mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-300">
+            <p className="mt-1.5 flex items-center gap-1 text-dense font-semibold text-status-success-ink">
               <CheckCircle2 className="h-3 w-3" />
               All documents approved
             </p>

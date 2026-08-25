@@ -46,11 +46,11 @@ const STATUS_CONFIG: Record<HrWorkflowInstanceStatus, { label: string; variant: 
 };
 
 const ACTION_ICONS: Record<HrWorkflowAction, ReactNode> = {
-  approved: <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />,
+  approved: <CheckCircle2 className="h-3.5 w-3.5 text-status-success-ink" />,
   rejected: <XCircle className="h-3.5 w-3.5 text-destructive" />,
   commented: <MessageSquare className="h-3.5 w-3.5 text-primary" />,
-  escalated: <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />,
-  reassigned: <User className="h-3.5 w-3.5 text-blue-500" />,
+  escalated: <AlertTriangle className="h-3.5 w-3.5 text-status-warning-ink" />,
+  reassigned: <User className="h-3.5 w-3.5 text-status-info-ink" />,
   cancelled: <XCircle className="h-3.5 w-3.5 text-muted-foreground" />,
   reopened: <CheckCircle2 className="h-3.5 w-3.5 text-primary" />,
 };
@@ -104,7 +104,7 @@ export function InstanceDetailSheet({ instanceId, onClose, showActions = false }
         <SheetHeader className="shrink-0 px-5 pt-5 pb-4 border-b">
           <div className="flex items-center gap-2">
             <SheetTitle className="text-base font-semibold">Approval Request</SheetTitle>
-            {statusCfg && <Badge variant={statusCfg.variant} className="text-[11px]">{statusCfg.label}</Badge>}
+            {statusCfg && <Badge variant={statusCfg.variant} className="text-dense">{statusCfg.label}</Badge>}
           </div>
           {instance && (
             <SheetDescription className="text-xs text-muted-foreground">
@@ -127,17 +127,17 @@ export function InstanceDetailSheet({ instanceId, onClose, showActions = false }
               <>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Requested by</p>
+                    <p className="text-micro font-semibold text-muted-foreground uppercase tracking-wider mb-1">Requested by</p>
                     <p className="font-medium">{instance.requester ? getUserDisplayName(instance.requester) : "Unknown user"}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Subject</p>
+                    <p className="text-micro font-semibold text-muted-foreground uppercase tracking-wider mb-1">Subject</p>
                     <p className="font-medium">{instance.subjectEmployee ? getUserDisplayName(instance.subjectEmployee) : "Unknown user"}</p>
                   </div>
                   {instance.dueAt && (
                     <div className="col-span-2">
-                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Due</p>
-                      <p className="flex items-center gap-1 text-amber-600 font-medium">
+                      <p className="text-micro font-semibold text-muted-foreground uppercase tracking-wider mb-1">Due</p>
+                      <p className="flex items-center gap-1 text-status-warning-ink font-medium">
                         <Clock className="h-3 w-3" />
                         {new Date(instance.dueAt).toLocaleString()}
                       </p>
@@ -169,7 +169,7 @@ export function InstanceDetailSheet({ instanceId, onClose, showActions = false }
                           {action.comment && (
                             <p className="text-xs text-muted-foreground mt-1 bg-muted rounded px-2 py-1">{action.comment}</p>
                           )}
-                          <p className="text-[10px] text-muted-foreground mt-1">
+                          <p className="text-micro text-muted-foreground mt-1">
                             {new Date(action.actedAt).toLocaleString()}
                           </p>
                         </div>
@@ -219,7 +219,7 @@ export function InstanceDetailSheet({ instanceId, onClose, showActions = false }
                           size="sm"
                           isPending={approve.isPending}
                           onClick={handleApprove}
-                          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                          className="flex-1 bg-status-success-fill hover:bg-status-success-fill-hover text-white"
                         >
                           <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
                           Approve

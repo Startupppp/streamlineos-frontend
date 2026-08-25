@@ -32,7 +32,7 @@ const columns: DataTableColumn<LotMovement>[] = [
     className: "text-right font-mono tabular-nums font-semibold",
     headerClassName: "text-right",
     cell: (row) => (
-      <span className={row.qty >= 0 ? "text-emerald-600" : "text-red-600"}>
+      <span className={row.qty >= 0 ? "text-status-success-ink" : "text-status-danger-ink"}>
         {formatQty(row.qty)}
       </span>
     ),

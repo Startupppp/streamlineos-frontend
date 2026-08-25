@@ -30,10 +30,10 @@ const PROFICIENCY_LABELS: Record<number, string> = {
 
 const PROFICIENCY_COLORS: Record<number, string> = {
   1: "bg-muted text-muted-foreground",
-  2: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-  3: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
-  4: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300",
-  5: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
+  2: "bg-status-info-surface text-status-info-ink",
+  3: "bg-status-warning-surface text-status-warning-ink",
+  4: "bg-status-success-surface text-status-success-ink",
+  5: "bg-status-info-surface text-status-info-ink",
 };
 
 const ROLES = [
@@ -208,12 +208,12 @@ export default function FindExpertPage() {
                                   <TruncatedText text={expert.designation} className="text-xs text-muted-foreground" />
                                 )}
                                 {expert.role && (
-                                  <TruncatedText text={expert.role} className="text-[10px] text-muted-foreground/70" />
+                                  <TruncatedText text={expert.role} className="text-micro text-muted-foreground/70" />
                                 )}
                               </div>
                             </Link>
                             <span
-                              className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold ${PROFICIENCY_COLORS[expert.matchedLevel] ?? PROFICIENCY_COLORS[1]}`}
+                              className={`shrink-0 rounded px-1.5 py-0.5 text-micro font-semibold ${PROFICIENCY_COLORS[expert.matchedLevel] ?? PROFICIENCY_COLORS[1]}`}
                               title={`${expert.matchedSkill}: ${PROFICIENCY_LABELS[expert.matchedLevel] ?? `L${expert.matchedLevel}`}`}
                             >
                               {PROFICIENCY_LABELS[expert.matchedLevel] ?? `L${expert.matchedLevel}`}
@@ -229,11 +229,11 @@ export default function FindExpertPage() {
                                 <Badge
                                   key={skill.name}
                                   variant={isMatched ? "default" : "secondary"}
-                                  className="text-[11px] gap-1"
+                                  className="text-dense gap-1"
                                 >
                                   {skill.name}
                                   {isMatched && (
-                                    <span className="opacity-70 text-[9px]">
+                                    <span className="opacity-70 text-micro">
                                       {skill.level}
                                     </span>
                                   )}
@@ -241,7 +241,7 @@ export default function FindExpertPage() {
                               );
                             })}
                             {expert.skills.length > 5 && (
-                              <Badge variant="outline" className="text-[11px]">
+                              <Badge variant="outline" className="text-dense">
                                 +{expert.skills.length - 5}
                               </Badge>
                             )}

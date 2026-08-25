@@ -83,7 +83,7 @@ function NoteThread({ caseId }: { caseId: number }) {
           key={note.id}
           className={cn(
             "rounded-lg border p-3 text-sm",
-            note.isConfidential ? "border-amber-200 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10" : "bg-muted/30",
+            note.isConfidential ? "border-status-warning-rule bg-status-warning-surface" : "bg-muted/30",
           )}
         >
           <div className="flex items-center justify-between mb-1">
@@ -91,7 +91,7 @@ function NoteThread({ caseId }: { caseId: number }) {
               {formatDistanceToNow(new Date(note.createdAt), { addSuffix: true })}
             </span>
             {note.isConfidential && (
-              <Badge variant="outline" className="text-amber-700 border-amber-200 text-xs gap-1 dark:text-amber-300 dark:border-amber-500/30">
+              <Badge variant="outline" className="text-status-warning-ink border-status-warning-rule text-xs gap-1">
                 <Lock className="h-3 w-3" />
                 Confidential
               </Badge>
@@ -144,7 +144,7 @@ function DocumentsList({ caseId }: { caseId: number }) {
           <FileText className="h-4 w-4 text-primary shrink-0" />
           <span className="flex-1 truncate">{doc.name}</span>
           {doc.restricted && (
-            <Lock className="h-3 w-3 text-amber-600 dark:text-amber-300 shrink-0" />
+            <Lock className="h-3 w-3 text-status-warning-ink shrink-0" />
           )}
         </a>
       ))}

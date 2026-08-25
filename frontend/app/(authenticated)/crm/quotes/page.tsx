@@ -204,7 +204,7 @@ export default function QuotesPage() {
         cell: (q) => (
           <Link
             href={`/crm/quotes/${q.id}`}
-            className="font-mono text-[11px] font-medium hover:text-primary hover:underline transition-colors"
+            className="font-mono text-dense font-medium hover:text-primary hover:underline transition-colors"
           >
             {q.quoteNumber}
           </Link>
@@ -216,7 +216,7 @@ export default function QuotesPage() {
         sortable: true,
         sortValue: (q) => q.subject,
         cell: (q) => (
-          <TruncatedText text={q.subject} className="text-[11px] font-medium max-w-[160px] block" />
+          <TruncatedText text={q.subject} className="text-dense font-medium max-w-[160px] block" />
         ),
       },
       {
@@ -226,12 +226,12 @@ export default function QuotesPage() {
           q.deal ? (
             <Link
               href={`/crm/deals/${q.deal.id}`}
-              className="text-[11px] text-primary hover:underline max-w-[100px] block"
+              className="text-dense text-primary hover:underline max-w-[100px] block"
             >
               <TruncatedText text={q.deal.name} />
             </Link>
           ) : (
-            <span className="text-[11px] text-muted-foreground">—</span>
+            <span className="text-dense text-muted-foreground">—</span>
           ),
       },
       {
@@ -240,7 +240,7 @@ export default function QuotesPage() {
         cell: (q) => (
           <Badge
             variant="outline"
-            className={`text-[9px] px-1.5 py-0 h-4 ${STATUS_BADGE_CLASSES[q.status]}`}
+            className={`text-micro px-1.5 py-0 h-4 ${STATUS_BADGE_CLASSES[q.status]}`}
           >
             {STATUS_LABELS[q.status]}
           </Badge>
@@ -257,7 +257,7 @@ export default function QuotesPage() {
         key: "validUntil",
         header: "Valid Until",
         cell: (q) => (
-          <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+          <span className="text-dense text-muted-foreground whitespace-nowrap">
             {q.validUntil ? new Date(q.validUntil).toLocaleDateString() : "—"}
           </span>
         ),
@@ -268,7 +268,7 @@ export default function QuotesPage() {
         sortable: true,
         sortValue: (q) => q.createdAt,
         cell: (q) => (
-          <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+          <span className="text-dense text-muted-foreground whitespace-nowrap">
             {q.createdAt ? new Date(q.createdAt).toLocaleDateString() : "—"}
           </span>
         ),

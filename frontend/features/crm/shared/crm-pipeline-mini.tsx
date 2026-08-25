@@ -19,7 +19,7 @@ export function CrmPipelineMini({ byStatus, total }: CrmPipelineMiniProps) {
   return (
     <Card className="shadow-sm h-full">
       <CardHeader className="pb-2 px-3 pt-3">
-        <CardTitle className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+        <CardTitle className="text-dense font-medium uppercase tracking-wider text-muted-foreground">
           Pipeline Funnel
         </CardTitle>
       </CardHeader>
@@ -31,7 +31,7 @@ export function CrmPipelineMini({ byStatus, total }: CrmPipelineMiniProps) {
           const dotClass = getCrmTokenClasses(option.color).dotClass;
           return (
             <div key={option.key} className="space-y-0.5">
-              <div className="flex items-center justify-between text-[10px]">
+              <div className="flex items-center justify-between text-micro">
                 <div className="flex items-center gap-1.5">
                   <div className={cn("w-1.5 h-1.5 rounded-full", dotClass)} />
                   <span className="font-medium">{option.label}</span>

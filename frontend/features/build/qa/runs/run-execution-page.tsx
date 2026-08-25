@@ -53,9 +53,9 @@ type CreateBugFromResultFormValues = z.infer<typeof createBugFromResultSchema>;
 
 const STATUS_STYLES: Record<TestRunStatus, string> = {
   not_started: "text-muted-foreground border-border",
-  in_progress: "text-blue-600 border-blue-200 dark:text-blue-400 dark:border-blue-500/30",
-  completed: "text-green-600 border-green-200 dark:text-green-400 dark:border-green-500/30",
-  aborted: "text-red-600 border-red-200 dark:text-red-400 dark:border-red-500/30",
+  in_progress: "text-status-info-ink border-status-info-rule",
+  completed: "text-status-success-ink border-status-success-rule",
+  aborted: "text-status-danger-ink border-status-danger-rule",
 };
 
 const STATUS_LABELS: Record<TestRunStatus, string> = {
@@ -73,11 +73,11 @@ function ProgressBar({ counts }: { counts?: TestRunCounts }) {
     <div className="flex items-center gap-3">
       <div className="h-2 w-40 overflow-hidden rounded-full bg-muted">
         <div
-          className="h-full rounded-full bg-emerald-500 transition-[width] duration-300"
+          className="h-full rounded-full bg-status-success-fill transition-[width] duration-300"
           style={{ width: `${passPct}%` }}
         />
       </div>
-      <span className="text-[11px] tabular-nums text-muted-foreground">
+      <span className="text-dense tabular-nums text-muted-foreground">
         {counts.passed}/{counts.total} passed · {pct}% executed
       </span>
     </div>
@@ -89,7 +89,7 @@ function CompleteRunButton({ onClick, isPending }: { onClick: () => void; isPend
   return (
     <LoadingButton
       size="sm"
-      className="gap-1 text-[11px]"
+      className="gap-1 text-dense"
       onClick={onClick}
       isPending={isPending}
       loadingText="Completing…"
@@ -203,11 +203,11 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
       <PmPageShell>
         <PmSection index={0}>
           <PmPanel className="flex flex-wrap items-center gap-3 px-3 py-2.5">
-            <Badge variant="outline" className={cn("text-[10px]", STATUS_STYLES[run.status])}>
+            <Badge variant="outline" className={cn("text-micro", STATUS_STYLES[run.status])}>
               {STATUS_LABELS[run.status]}
             </Badge>
             {run.environment ? (
-              <span className={cn(TEXT_ONE_LINE, "max-w-[12rem] text-[11px] text-muted-foreground")}>
+              <span className={cn(TEXT_ONE_LINE, "max-w-[12rem] text-dense text-muted-foreground")}>
                 {run.environment}
               </span>
             ) : null}
@@ -254,11 +254,11 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
                     name="bugTitle"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[11px]">Title <span className="text-destructive">*</span></FormLabel>
+                        <FormLabel className="text-dense">Title <span className="text-destructive">*</span></FormLabel>
                         <FormControl>
-                          <Input {...field} className="text-[11px]" placeholder="Bug title" />
+                          <Input {...field} className="text-dense" placeholder="Bug title" />
                         </FormControl>
-                        <FormMessage className="text-[10px]" />
+                        <FormMessage className="text-micro" />
                       </FormItem>
                     )}
                   />
@@ -267,7 +267,7 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
                     name="bugSeverity"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[11px]">Severity</FormLabel>
+                        <FormLabel className="text-dense">Severity</FormLabel>
                         <Select value={field.value} onValueChange={field.onChange}>
                           <FormControl>
                             <SelectTrigger><SelectValue /></SelectTrigger>
@@ -280,7 +280,7 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
                             <SelectItem value="trivial">Trivial</SelectItem>
                           </SelectContent>
                         </Select>
-                        <FormMessage className="text-[10px]" />
+                        <FormMessage className="text-micro" />
                       </FormItem>
                     )}
                   />
@@ -288,12 +288,12 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
               </ScrollArea>
               <SheetFooter className="flex shrink-0 gap-2 border-t px-5 py-3">
                 <SheetClose asChild>
-                  <Button type="button" variant="outline" size="sm" className="text-[11px]">Cancel</Button>
+                  <Button type="button" variant="outline" size="sm" className="text-dense">Cancel</Button>
                 </SheetClose>
                 <LoadingButton
                   type="submit"
                   size="sm"
-                  className="text-[11px]"
+                  className="text-dense"
                   isPending={createBugFromResult.isPending}
                   loadingText="Creating…"
                 >

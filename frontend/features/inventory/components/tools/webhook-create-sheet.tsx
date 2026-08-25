@@ -81,7 +81,7 @@ const EventCheckbox = memo(function EventCheckbox({
       <Checkbox id={evt} checked={checked} onCheckedChange={handleCheckedChange} />
       <Label htmlFor={evt} className="text-xs font-normal cursor-pointer">
         {label}
-        <span className="ml-1 text-[10px] text-muted-foreground font-mono">{mono}</span>
+        <span className="ml-1 text-micro text-muted-foreground font-mono">{mono}</span>
       </Label>
     </div>
   );

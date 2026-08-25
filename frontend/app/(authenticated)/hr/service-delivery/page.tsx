@@ -16,13 +16,13 @@ import {
 import { cn } from "@/lib/utils";
 
 const BUCKET_STYLE: Record<AgingBucket, string> = {
-  fresh: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  fresh: "bg-status-success-surface text-status-success-ink border-status-success-rule",
   watch:
-    "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+    "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   overdue:
-    "bg-orange-50 text-orange-800 border-orange-200 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30",
+    "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   critical:
-    "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30",
+    "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };
 
 const KIND_LABEL: Record<ServiceDeliveryItem["kind"], string> = {
@@ -39,13 +39,13 @@ function ItemRow({ item }: { item: ServiceDeliveryItem }) {
     >
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          <span className="text-micro font-medium uppercase tracking-wide text-muted-foreground">
             {KIND_LABEL[item.kind]}
           </span>
-          <span className="text-[11px] font-mono text-muted-foreground">{item.ref}</span>
+          <span className="text-dense font-mono text-muted-foreground">{item.ref}</span>
           <span
             className={cn(
-              "inline-flex items-center rounded border px-1.5 py-0.5 text-[10px] font-medium",
+              "inline-flex items-center rounded border px-1.5 py-0.5 text-micro font-medium",
               BUCKET_STYLE[item.aging.bucket],
             )}
           >
@@ -53,10 +53,10 @@ function ItemRow({ item }: { item: ServiceDeliveryItem }) {
             {item.aging.slaBreached ? " · SLA" : ""}
           </span>
         </div>
-        <p className="text-[13px] font-medium text-foreground mt-0.5 line-clamp-2">
+        <p className="text-label font-medium text-foreground mt-0.5 line-clamp-2">
           {item.title}
         </p>
-        <p className="text-[11px] text-muted-foreground mt-0.5">
+        <p className="text-dense text-muted-foreground mt-0.5">
           {item.status}
           {item.severity ? ` · ${item.severity}` : ""} · {item.aging.ageDays}d old
         </p>
@@ -87,7 +87,7 @@ export default function ServiceDeliveryPage() {
           className="flex gap-2.5 rounded-lg border border-border bg-card px-3 py-2.5"
         >
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-          <p className="text-[11px] text-muted-foreground leading-snug">
+          <p className="text-dense text-muted-foreground leading-snug">
             {data?.honestyNote ??
               "Aggregates cases, safety incidents, and helpdesk tickets within your permissions."}
           </p>
@@ -150,10 +150,10 @@ export default function ServiceDeliveryPage() {
         ) : (
           <div className="rounded-lg border border-border bg-card overflow-hidden">
             <div className="px-3 py-2 border-b border-border flex items-center justify-between">
-              <p className="text-[12px] font-semibold">
+              <p className="text-xs font-semibold">
                 {showOps ? "Prioritized queue" : "My open items"} ({items.length})
               </p>
-              <div className="flex gap-2 text-[10px] text-muted-foreground">
+              <div className="flex gap-2 text-micro text-muted-foreground">
                 <Link href="/hr/cases" className="underline underline-offset-2">
                   Cases
                 </Link>

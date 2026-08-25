@@ -55,7 +55,7 @@ function ApprovalCard({
               </p>
               <Badge
                 variant="secondary"
-                className="text-[10px] bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30"
+                className="text-micro bg-status-warning-surface text-status-warning-ink border-status-warning-rule"
               >
                 Pending
               </Badge>
@@ -63,12 +63,12 @@ function ApprovalCard({
             <p className="text-xs text-muted-foreground mt-0.5">
               Execution: {approval.executionId.slice(0, 8)}...
             </p>
-            <div className="flex items-center gap-3 mt-2 text-[11px] text-muted-foreground">
+            <div className="flex items-center gap-3 mt-2 text-dense text-muted-foreground">
               <span>
                 Created {format(new Date(approval.createdAt), "MMM d, HH:mm")}
               </span>
               {approval.expiresAt && (
-                <span className="text-orange-600">
+                <span className="text-status-warning-ink">
                   Expires{" "}
                   {format(new Date(approval.expiresAt), "MMM d, HH:mm")}
                 </span>
@@ -78,7 +78,7 @@ function ApprovalCard({
           <div className="flex items-center gap-2 shrink-0">
             <Button
               size="sm"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+              className="bg-status-success-fill hover:bg-status-success-fill-hover text-white shadow-sm"
               onClick={handleApprove}
             >
               Approve
@@ -169,7 +169,7 @@ export default function ApprovalsPage() {
       title="Approval Center"
       subtitle="Review and act on pending workflow approvals"
       actions={
-        <span className="inline-flex items-center px-2 py-1 rounded-md bg-amber-50 text-amber-700 text-xs font-medium border border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
+        <span className="inline-flex items-center px-2 py-1 rounded-md bg-status-warning-surface text-status-warning-ink text-xs font-medium border border-status-warning-rule">
           {pendingApprovals.length} pending
         </span>
       }
@@ -233,7 +233,7 @@ export default function ApprovalsPage() {
               variant={dialogAction === "approve" ? undefined : "destructive"}
               className={
                 dialogAction === "approve"
-                  ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                  ? "bg-status-success-fill hover:bg-status-success-fill-hover text-white"
                   : undefined
               }
             >

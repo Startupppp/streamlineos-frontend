@@ -17,8 +17,8 @@ interface ActionCardProps {
 
 const TONE_STYLES: Record<string, { bg: string; text: string; border: string }> = {
   default: { bg: "bg-muted", text: "text-muted-foreground", border: "border-border" },
-  amber: { bg: "bg-amber-50 dark:bg-amber-500/10", text: "text-amber-600 dark:text-amber-400", border: "border-amber-200/60 dark:border-amber-500/30" },
-  red: { bg: "bg-red-50 dark:bg-red-500/10", text: "text-red-600 dark:text-red-400", border: "border-red-200/60 dark:border-red-500/30" },
+  amber: { bg: "bg-status-warning-surface", text: "text-status-warning-ink", border: "border-status-warning-rule" },
+  red: { bg: "bg-status-danger-surface", text: "text-status-danger-ink", border: "border-status-danger-rule" },
 };
 
 export function ActionCard({
@@ -47,7 +47,7 @@ export function ActionCard({
       <div className="min-w-0 flex-1">
         <p className="text-xs font-medium text-muted-foreground">{title}</p>
         <p className="text-lg font-semibold tabular-nums text-foreground leading-tight">{value}</p>
-        <TruncatedText text={description} className="text-[10px] text-muted-foreground mt-0.5" />
+        <TruncatedText text={description} className="text-micro text-muted-foreground mt-0.5" />
       </div>
     </Link>
   );

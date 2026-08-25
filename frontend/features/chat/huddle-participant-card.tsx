@@ -32,12 +32,12 @@ export function HuddleParticipantCard({
   const { iconRef: kickIconRef, hoverHandlers: kickHoverHandlers } = useAnimatedIcon();
   const qualityColor =
     networkQuality === "excellent"
-      ? "bg-emerald-500"
+      ? "bg-status-success-fill"
       : networkQuality === "good"
-        ? "bg-yellow-400"
+        ? "bg-status-warning-fill"
         : networkQuality === "poor"
-          ? "bg-red-500"
-          : "bg-zinc-400";
+          ? "bg-status-danger-fill"
+          : "bg-status-neutral-fill";
 
   return (
     <div className="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-muted/30">
@@ -48,11 +48,11 @@ export function HuddleParticipantCard({
         <Avatar
           className={cn(
             "h-10 w-10 border-2 transition-colors",
-            isSpeaking ? "border-green-500" : "border-transparent",
+            isSpeaking ? "border-status-success-rule" : "border-transparent",
           )}
         >
           <AvatarImage src={resolveImageUrl(participant.user?.image)} />
-          <AvatarFallback className="text-[11px] font-semibold">
+          <AvatarFallback className="text-dense font-semibold">
             {getInitials(participant.user?.name)}
           </AvatarFallback>
         </Avatar>
@@ -62,13 +62,13 @@ export function HuddleParticipantCard({
           </span>
         )}
         {!participant.isMuted && isSpeaking && (
-          <span className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-green-500/10 border border-border flex items-center justify-center">
-            <Mic className="h-2.5 w-2.5 text-green-500" />
+          <span className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-status-success-surface border border-border flex items-center justify-center">
+            <Mic className="h-2.5 w-2.5 text-status-success-ink" />
           </span>
         )}
         {participant.handRaised && (
-          <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-amber-500/10 border border-border flex items-center justify-center text-[9px]">
-            <Hand className="h-2.5 w-2.5 text-amber-500" />
+          <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-status-warning-surface border border-border flex items-center justify-center text-micro">
+            <Hand className="h-2.5 w-2.5 text-status-warning-ink" />
           </span>
         )}
         {participant.isScreenSharing && (
@@ -79,13 +79,13 @@ export function HuddleParticipantCard({
       </div>
       <TruncatedText
         text={isCurrentUser ? "You" : (participant.user?.name ?? "Unknown")}
-        className="text-[11px] text-center w-full leading-tight"
+        className="text-dense text-center w-full leading-tight"
       />
       {isHost && !isCurrentUser && onKick && (
         <button
           onClick={onKick}
           {...kickHoverHandlers}
-          className="text-[10px] text-red-500/60 hover:text-red-500 transition-colors flex items-center gap-0.5"
+          className="text-micro text-status-danger-ink hover:text-status-danger-ink transition-colors flex items-center gap-0.5"
           aria-label="Remove from huddle"
         >
           <UserMinusIcon ref={kickIconRef} size={10} />

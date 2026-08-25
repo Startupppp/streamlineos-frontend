@@ -140,7 +140,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
                     href={pageHref(page.id)}
                     className="flex items-center gap-2 px-2 py-1 text-sm rounded-md hover:bg-muted transition-colors"
                   >
-                    <KbStarIcon className="h-3 w-3 text-amber-500 fill-amber-500 shrink-0" />
+                    <KbStarIcon className="h-3 w-3 text-status-warning-ink fill-amber-500 shrink-0" />
                     <TruncatedText text={`${page.icon ? `${page.icon} ` : ""}${page.title || "Untitled"}`} />
                   </a>
                 ))}

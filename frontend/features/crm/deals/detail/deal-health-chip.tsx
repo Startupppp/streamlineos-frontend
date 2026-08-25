@@ -10,9 +10,9 @@ interface DealHealthChipProps {
 }
 
 const LEVEL_STYLES: Record<DealHealthLevel, string> = {
-  healthy: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  at_risk: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  critical: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  healthy: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  at_risk: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  critical: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
   unknown: "bg-muted text-muted-foreground border-border",
 };
 

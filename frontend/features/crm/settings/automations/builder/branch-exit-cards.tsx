@@ -45,7 +45,7 @@ const BranchRow = memo(function BranchRow({ branch, branchIndex, nodeId, onUpdat
   return (
     <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/10 px-3 py-2">
       <div className="flex flex-1 items-center gap-2 min-w-0">
-        <span className="text-[10px] font-medium text-muted-foreground w-4 shrink-0">{branchIndex + 1}</span>
+        <span className="text-micro font-medium text-muted-foreground w-4 shrink-0">{branchIndex + 1}</span>
         <Input className="text-xs flex-1 min-w-0" placeholder="field" value={branch.condition.field} onChange={handleFieldChange} />
         <Select value={branch.condition.operator} onValueChange={handleOperatorChange}>
           <SelectTrigger className="text-xs w-[100px] shrink-0">
@@ -98,7 +98,7 @@ export const BranchNodeCard = memo(function BranchNodeCard({ node, dragHandlePro
         <div className="flex-1 space-y-2 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <div className="h-5 w-5 rounded bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">
+              <div className="h-5 w-5 rounded bg-primary/10 flex items-center justify-center text-micro font-bold text-primary">
                 <GitBranch className="h-3 w-3" />
               </div>
               <span className="text-xs font-semibold text-primary">Branch</span>
@@ -107,7 +107,7 @@ export const BranchNodeCard = memo(function BranchNodeCard({ node, dragHandlePro
               <X className="h-3 w-3" />
             </Button>
           </div>
-          <Label className="text-[10px] text-muted-foreground">Branch conditions — first match wins</Label>
+          <Label className="text-micro text-muted-foreground">Branch conditions — first match wins</Label>
           <div className="space-y-1.5">
             {(node.branches ?? []).map((branch, i) => (
               <BranchRow
@@ -124,7 +124,7 @@ export const BranchNodeCard = memo(function BranchNodeCard({ node, dragHandlePro
           <Button
             variant="outline"
             size="sm"
-            className="h-6 text-[10px] border-dashed border-primary/30 text-primary hover:bg-primary/5"
+            className="h-6 text-micro border-dashed border-primary/30 text-primary hover:bg-primary/5"
             onClick={handleAddBranch}
             {...addHoverHandlers}
           >
@@ -148,15 +148,15 @@ export const ExitNodeCard = memo(function ExitNodeCard({ nodeId, dragHandleProps
   const { hoverHandlers } = useAnimatedIcon();
 
   return (
-    <motion.div layout className="rounded-xl border-2 border-red-200 dark:border-red-500/30 bg-red-50/40 dark:bg-red-500/10 p-3 shadow-sm">
+    <motion.div layout className="rounded-xl border-2 border-status-danger-rule bg-status-danger-surface p-3 shadow-sm">
       <div className="flex items-center gap-2">
         <div {...(dragHandleProps ?? {})} className="cursor-grab active:cursor-grabbing text-muted-foreground shrink-0">
           <GripVertical className="h-4 w-4" />
         </div>
-        <div className="h-5 w-5 rounded bg-red-100 dark:bg-red-500/10 flex items-center justify-center text-[10px] font-bold text-red-600 dark:text-red-400">
+        <div className="h-5 w-5 rounded bg-status-danger-surface flex items-center justify-center text-micro font-bold text-status-danger-ink">
           <StopCircle className="h-3 w-3" />
         </div>
-        <span className="text-xs font-semibold text-red-600 dark:text-red-400 flex-1">Exit / Stop</span>
+        <span className="text-xs font-semibold text-status-danger-ink flex-1">Exit / Stop</span>
         <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={handleRemove} {...hoverHandlers}>
           <X className="h-3 w-3" />
         </Button>

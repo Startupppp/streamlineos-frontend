@@ -27,9 +27,9 @@ type FormValues = z.infer<typeof schema>;
 const today = new Date().toISOString().slice(0, 10);
 
 const SCORE_COLORS = [
-  "", "bg-red-500", "bg-red-400", "bg-orange-400",
-  "bg-orange-300", "bg-yellow-400", "bg-yellow-300",
-  "bg-lime-400", "bg-green-400", "bg-green-500", "bg-emerald-500",
+  "", "bg-status-danger-fill", "bg-status-danger-fill", "bg-status-warning-fill",
+  "bg-status-warning-fill", "bg-status-warning-fill", "bg-status-warning-fill",
+  "bg-status-success-fill", "bg-status-success-fill", "bg-status-success-fill", "bg-status-success-fill",
 ];
 
 export function WellnessWidget() {
@@ -53,7 +53,7 @@ export function WellnessWidget() {
     const score = todayCheckin?.score ?? form.getValues("score");
     return (
       <Card className="p-4 bg-card border border-border rounded-xl flex items-center gap-3">
-        <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
+        <CheckCircle2 className="h-5 w-5 text-status-success-ink shrink-0" />
         <div>
           <p className="text-sm font-medium">Today&apos;s check-in recorded</p>
           <p className="text-xs text-muted-foreground">Wellness score: {score}/10</p>

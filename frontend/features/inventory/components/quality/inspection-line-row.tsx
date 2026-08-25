@@ -66,7 +66,7 @@ export const InspectionLineRow = memo(function InspectionLineRow({
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div className="col-span-2 space-y-1">
-          <Label className="text-[11px] font-semibold text-foreground/80">Variant *</Label>
+          <Label className="text-dense font-semibold text-foreground/80">Variant *</Label>
           <Controller
             control={form.control}
             name={`lines.${index}.variantId`}
@@ -83,11 +83,11 @@ export const InspectionLineRow = memo(function InspectionLineRow({
             )}
           />
           {lineErrors?.variantId && (
-            <p className="text-[10px] text-destructive">{lineErrors.variantId.message}</p>
+            <p className="text-micro text-destructive">{lineErrors.variantId.message}</p>
           )}
         </div>
         <div className="space-y-1">
-          <Label className="text-[11px] font-semibold text-foreground/80">Qty *</Label>
+          <Label className="text-dense font-semibold text-foreground/80">Qty *</Label>
           <Input
             className="text-xs"
             type="number"
@@ -95,11 +95,11 @@ export const InspectionLineRow = memo(function InspectionLineRow({
             {...form.register(`lines.${index}.qty`)}
           />
           {lineErrors?.qty && (
-            <p className="text-[10px] text-destructive">{lineErrors.qty.message}</p>
+            <p className="text-micro text-destructive">{lineErrors.qty.message}</p>
           )}
         </div>
         <div className="space-y-1">
-          <Label className="text-[11px] font-semibold text-foreground/80">Lot</Label>
+          <Label className="text-dense font-semibold text-foreground/80">Lot</Label>
           <Controller
             control={form.control}
             name={`lines.${index}.lotId`}
@@ -125,7 +125,7 @@ export const InspectionLineRow = memo(function InspectionLineRow({
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-[11px] font-semibold text-foreground/80">Serial</Label>
+          <Label className="text-dense font-semibold text-foreground/80">Serial</Label>
           <Controller
             control={form.control}
             name={`lines.${index}.serialId`}

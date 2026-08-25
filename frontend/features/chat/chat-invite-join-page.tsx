@@ -37,8 +37,8 @@ export function ChatInviteJoinPage({ token }: { token: string }) {
         <>
           <XCircle className="w-8 text-destructive" />
           <div>
-            <p className="text-[15px] font-semibold">This invite link doesn&apos;t work</p>
-            <p className="text-[13px] text-muted-foreground mt-1 max-w-sm">{errorMessage}</p>
+            <p className="text-sm font-semibold">This invite link doesn&apos;t work</p>
+            <p className="text-label text-muted-foreground mt-1 max-w-sm">{errorMessage}</p>
           </div>
           <Button onClick={() => router.replace("/chat")} className="mt-2">
             Go to Discuss
@@ -46,13 +46,13 @@ export function ChatInviteJoinPage({ token }: { token: string }) {
         </>
       ) : joinViaInviteLink.isSuccess ? (
         <>
-          <CheckCircle2 className="w-8 text-emerald-500" />
-          <p className="text-[15px] font-semibold">Joined — taking you there...</p>
+          <CheckCircle2 className="w-8 text-status-success-ink" />
+          <p className="text-sm font-semibold">Joined — taking you there...</p>
         </>
       ) : (
         <>
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          <p className="text-[13px] text-muted-foreground">Joining channel...</p>
+          <p className="text-label text-muted-foreground">Joining channel...</p>
         </>
       )}
     </div>

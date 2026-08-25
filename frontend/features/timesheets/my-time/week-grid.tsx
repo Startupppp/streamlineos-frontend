@@ -236,7 +236,7 @@ export function WeekGrid({ entries, isLoading, days, weekStart, weekEnd }: WeekG
               {days.map((d) => (
                 <th key={d} className="text-center px-1 py-2 font-medium text-muted-foreground w-16">
                   <div>{format(parseISO(d), "EEE")}</div>
-                  <div className="text-[10px] text-muted-foreground/70">{format(parseISO(d), "d")}</div>
+                  <div className="text-micro text-muted-foreground/70">{format(parseISO(d), "d")}</div>
                 </th>
               ))}
               <th className="text-center px-2 py-2 font-medium text-muted-foreground w-14">Total</th>
@@ -253,7 +253,7 @@ export function WeekGrid({ entries, isLoading, days, weekStart, weekEnd }: WeekG
                   <td className="px-3 py-1.5">
                     <TruncatedText text={row.projectName} className="font-medium text-foreground" />
                     {row.ticketLabel && (
-                      <TruncatedText text={row.ticketLabel} className="text-[10px] text-muted-foreground" />
+                      <TruncatedText text={row.ticketLabel} className="text-micro text-muted-foreground" />
                     )}
                   </td>
                   {days.map((d) => {
@@ -320,7 +320,7 @@ export function WeekGrid({ entries, isLoading, days, weekStart, weekEnd }: WeekG
       {addingRow ? (
         <div className="flex items-end gap-2 p-3 rounded-lg border border-dashed border-primary/40 bg-primary/5 dark:bg-primary/10">
           <div className="flex-1 min-w-0">
-            <p className="text-[11px] text-muted-foreground mb-1.5">Select project &amp; ticket for new row</p>
+            <p className="text-dense text-muted-foreground mb-1.5">Select project &amp; ticket for new row</p>
             <ProjectTicketSelect
               projectId={newRowProject}
               ticketId={newRowTicket}

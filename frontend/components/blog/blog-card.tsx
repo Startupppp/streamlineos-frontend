@@ -14,7 +14,7 @@ export function BlogCard({ post }: BlogCardProps) {
   const avatar = resolveImageUrl(post.author?.avatar ?? undefined);
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card transition-all duration-300 hover:-translate-y-0.5 hover:shadow-medium">
+    <article className="group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card transition-all duration-300 hover:-translate-y-0.5 hover:shadow-card">
       <Link href={`/blogs/${post.slug}`} prefetch className="relative block aspect-[16/9] overflow-hidden bg-muted">
         {cover && (
           <Image
@@ -59,7 +59,7 @@ export function BlogCard({ post }: BlogCardProps) {
               className="rounded-full object-cover"
             />
           ) : (
-            <span className="flex size-7 items-center justify-center rounded-full bg-muted text-[11px] font-medium">
+            <span className="flex size-7 items-center justify-center rounded-full bg-muted text-dense font-medium">
               {post.author?.name?.[0]?.toUpperCase() ?? "?"}
             </span>
           )}

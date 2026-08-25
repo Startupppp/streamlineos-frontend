@@ -66,9 +66,9 @@ function MethodEditor({ methodType, label, existing }: { methodType: ManualMetho
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Landmark className="h-3.5 w-3.5 text-muted-foreground" />
-          <p className="text-[13px] font-medium text-foreground">{label}</p>
+          <p className="text-label font-medium text-foreground">{label}</p>
         </div>
-        <span className={cn("text-[11px] font-medium", isEnabled ? "text-emerald-600" : "text-muted-foreground")}>
+        <span className={cn("text-dense font-medium", isEnabled ? "text-status-success-ink" : "text-muted-foreground")}>
           {isEnabled ? "Enabled" : existing?.status === "disabled" ? "Disabled" : "Missing instructions"}
         </span>
       </div>
@@ -126,7 +126,7 @@ function MethodEditor({ methodType, label, existing }: { methodType: ManualMetho
         className="text-xs"
       />
 
-      <label className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+      <label className="flex items-center gap-1.5 text-dense text-muted-foreground">
         <Checkbox
           checked={form.requireManualApproval}
           onCheckedChange={(v) => setForm((p) => ({ ...p, requireManualApproval: v === true }))}
@@ -168,7 +168,7 @@ export function ManualMethodsPanel() {
 
   return (
     <div className="space-y-3">
-      <p className="text-[13px] text-muted-foreground">
+      <p className="text-label text-muted-foreground">
         Configure offline payment instructions shown on invoices. Customers pay outside
         StreamlineOS; you record the payment manually once received.
       </p>

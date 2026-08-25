@@ -78,27 +78,27 @@ const NODE_PALETTE: Array<{
     label: "Trigger",
     description: "Start the workflow",
     icon: <Zap className="h-4 w-4" />,
-    color: "text-amber-600 dark:text-amber-400",
-    border: "border-amber-300 dark:border-amber-500/30",
-    bg: "bg-amber-50 dark:bg-amber-500/10",
+    color: "text-status-warning-ink",
+    border: "border-status-warning-rule",
+    bg: "bg-status-warning-surface",
   },
   {
     nodeType: "condition",
     label: "Condition",
     description: "Branch on a rule",
     icon: <GitBranch className="h-4 w-4" />,
-    color: "text-blue-600 dark:text-blue-400",
-    border: "border-blue-300 dark:border-blue-500/30",
-    bg: "bg-blue-50 dark:bg-blue-500/10",
+    color: "text-status-info-ink",
+    border: "border-status-info-rule",
+    bg: "bg-status-info-surface",
   },
   {
     nodeType: "approval",
     label: "Approval",
     description: "Wait for human sign-off",
     icon: <CheckSquare className="h-4 w-4" />,
-    color: "text-emerald-600 dark:text-emerald-400",
-    border: "border-emerald-300 dark:border-emerald-500/30",
-    bg: "bg-emerald-50 dark:bg-emerald-500/10",
+    color: "text-status-success-ink",
+    border: "border-status-success-rule",
+    bg: "bg-status-success-surface",
   },
   {
     nodeType: "action",
@@ -114,9 +114,9 @@ const NODE_PALETTE: Array<{
     label: "Delay",
     description: "Wait before continuing",
     icon: <Clock className="h-4 w-4" />,
-    color: "text-orange-600 dark:text-orange-400",
-    border: "border-orange-300 dark:border-orange-500/30",
-    bg: "bg-orange-50 dark:bg-orange-500/10",
+    color: "text-status-warning-ink",
+    border: "border-status-warning-rule",
+    bg: "bg-status-warning-surface",
   },
   {
     nodeType: "loop",
@@ -132,18 +132,18 @@ const NODE_PALETTE: Array<{
     label: "AI Action",
     description: "Use AI to process data",
     icon: <Sparkles className="h-4 w-4" />,
-    color: "text-amber-600 dark:text-amber-400",
-    border: "border-amber-300 dark:border-amber-500/30",
-    bg: "bg-amber-50 dark:bg-amber-500/10",
+    color: "text-status-warning-ink",
+    border: "border-status-warning-rule",
+    bg: "bg-status-warning-surface",
   },
   {
     nodeType: "integration",
     label: "Integration",
     description: "Call external service",
     icon: <Share2 className="h-4 w-4" />,
-    color: "text-teal-600 dark:text-teal-400",
-    border: "border-teal-300 dark:border-teal-500/30",
-    bg: "bg-teal-50 dark:bg-teal-500/10",
+    color: "text-status-success-ink",
+    border: "border-status-success-rule",
+    bg: "bg-status-success-surface",
   },
   {
     nodeType: "script",
@@ -159,9 +159,9 @@ const NODE_PALETTE: Array<{
     label: "End",
     description: "Terminate the workflow",
     icon: <XCircle className="h-4 w-4" />,
-    color: "text-red-600 dark:text-red-400",
-    border: "border-red-300 dark:border-red-500/30",
-    bg: "bg-red-50 dark:bg-red-500/10",
+    color: "text-status-danger-ink",
+    border: "border-status-danger-rule",
+    bg: "bg-status-danger-surface",
   },
 ];
 
@@ -172,9 +172,9 @@ const NODE_PALETTE_MAP = Object.fromEntries(NODE_PALETTE.map((n) => [n.nodeType,
 
 const STATUS_BADGE: Record<WorkflowStatus, { label: string; cls: string }> = {
   draft: { label: "Draft", cls: "bg-muted text-muted-foreground border-border" },
-  published: { label: "Published", cls: "bg-green-50 text-green-700 border-green-200 dark:bg-green-500/10 dark:text-green-300 dark:border-green-500/30" },
-  disabled: { label: "Disabled", cls: "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-500/10 dark:text-yellow-300 dark:border-yellow-500/30" },
-  archived: { label: "Archived", cls: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30" },
+  published: { label: "Published", cls: "bg-status-success-surface text-status-success-ink border-status-success-rule" },
+  disabled: { label: "Disabled", cls: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule" },
+  archived: { label: "Archived", cls: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule" },
 };
 
 const DEFAULT_NODES: WorkflowNode[] = [
@@ -213,13 +213,13 @@ function WorkflowNodeComponent({
           : palette.border,
       )}
     >
-      <div className={cn("flex items-center gap-2 px-3 py-2 rounded-t-[10px]", palette.bg)}>
+      <div className={cn("flex items-center gap-2 px-3 py-2 rounded-t-lg", palette.bg)}>
         <span className={palette.color}>{palette.icon}</span>
         <TruncatedText text={data.label} className="text-xs font-semibold text-foreground" />
       </div>
       {data.description && (
         <div className="px-3 py-1.5 border-t border-border/60">
-          <TruncatedText text={data.description ?? ""} className="text-[11px] text-muted-foreground leading-snug" />
+          <TruncatedText text={data.description ?? ""} className="text-dense text-muted-foreground leading-snug" />
         </div>
       )}
     </div>
@@ -311,7 +311,7 @@ function PaletteItem({ item }: { item: (typeof NODE_PALETTE)[0] }) {
       <span className={cn("shrink-0", item.color)}>{item.icon}</span>
       <div className="min-w-0">
         <p className="text-xs font-semibold text-foreground leading-tight">{item.label}</p>
-        <TruncatedText text={item.description} className="text-[10px] text-muted-foreground leading-tight" />
+        <TruncatedText text={item.description} className="text-micro text-muted-foreground leading-tight" />
       </div>
     </div>
   );
@@ -455,10 +455,10 @@ function BuilderCanvas({ workflow, workflowId }: BuilderCanvasProps) {
     <div className="flex h-full w-full overflow-hidden bg-background">
       <div className="w-56 shrink-0 border-r border-border bg-card flex flex-col shadow-sm">
         <div className="px-3 py-3 border-b border-border">
-          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+          <p className="text-micro font-semibold text-muted-foreground uppercase tracking-wider mb-1">
             Node Palette
           </p>
-          <p className="text-[10px] text-muted-foreground">Drag nodes onto canvas</p>
+          <p className="text-micro text-muted-foreground">Drag nodes onto canvas</p>
         </div>
         <ScrollArea hideScrollbar className="min-h-0 flex-1">
           <div className="overscroll-contain space-y-1.5 p-2">
@@ -502,7 +502,7 @@ function BuilderCanvas({ workflow, workflowId }: BuilderCanvasProps) {
           )}
           <span
             className={cn(
-              "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border",
+              "inline-flex items-center px-2 py-0.5 rounded-full text-micro font-medium border",
               statusBadge.cls,
             )}
           >
@@ -556,7 +556,7 @@ function BuilderCanvas({ workflow, workflowId }: BuilderCanvasProps) {
               <Controls className="border border-border shadow-sm rounded-lg overflow-hidden" />
               <MiniMap className="border border-border shadow-sm rounded-lg overflow-hidden" />
               <Panel position="bottom-center">
-                <div className="bg-card/90 backdrop-blur-sm border border-border rounded-full px-4 py-1.5 shadow-sm flex items-center gap-3 text-[11px] text-muted-foreground">
+                <div className="bg-card/90 backdrop-blur-sm border border-border rounded-full px-4 py-1.5 shadow-sm flex items-center gap-3 text-dense text-muted-foreground">
                   <span>{nodes.length} node{nodes.length !== 1 ? "s" : ""}</span>
                   <span className="w-px h-3 bg-border" />
                   <span>{edges.length} connection{edges.length !== 1 ? "s" : ""}</span>

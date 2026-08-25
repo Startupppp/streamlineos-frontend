@@ -165,7 +165,7 @@ export function FilterCategoryRow({
       />
       <span className="min-w-0 flex-1 truncate text-left font-medium tracking-tight">{label}</span>
       {activeCount > 0 && (
-        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
+        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-dense font-semibold text-primary-foreground">
           {activeCount}
         </span>
       )}

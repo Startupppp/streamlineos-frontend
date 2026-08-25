@@ -77,12 +77,12 @@ function SecretCard({ secret, index, onDelete }: SecretCardProps) {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <code className="text-sm font-semibold font-mono text-foreground">{secret.name}</code>
-                <Badge variant="secondary" className="text-[10px] bg-muted text-muted-foreground">encrypted</Badge>
+                <Badge variant="secondary" className="text-micro bg-muted text-muted-foreground">encrypted</Badge>
               </div>
               {secret.description && (
                 <p className="text-xs text-muted-foreground mt-0.5 truncate">{secret.description}</p>
               )}
-              <p className="text-[11px] text-muted-foreground mt-1">
+              <p className="text-dense text-muted-foreground mt-1">
                 Added {format(new Date(secret.createdAt), "MMM d, yyyy")}
               </p>
             </div>

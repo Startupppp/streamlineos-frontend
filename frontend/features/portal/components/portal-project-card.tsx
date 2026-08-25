@@ -4,10 +4,10 @@ import { cn } from "@/lib/utils";
 import type { PortalProject } from "@/features/portal/lib/portal-types";
 
 const STATUS_STYLES: Record<string, string> = {
-  active: "bg-blue-500/10 text-blue-700 dark:text-blue-400",
-  completed: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
-  on_hold: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
-  cancelled: "bg-red-500/10 text-red-600 dark:text-red-400",
+  active: "bg-status-info-surface text-status-info-ink",
+  completed: "bg-status-success-surface text-status-success-ink",
+  on_hold: "bg-status-warning-surface text-status-warning-ink",
+  cancelled: "bg-status-danger-surface text-status-danger-ink",
 };
 
 function formatStatus(status: string): string {
@@ -25,7 +25,7 @@ interface CapabilityChipProps {
 
 function CapabilityChip({ icon, label }: CapabilityChipProps) {
   return (
-    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary/5 text-foreground/70">
+    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-micro font-medium bg-primary/5 text-foreground/70">
       {icon}
       {label}
     </span>
@@ -52,13 +52,13 @@ export function PortalProjectCard({ project }: PortalProjectCardProps) {
           <div className="flex items-center gap-2 mb-1">
             <span
               className={cn(
-                "inline-flex px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide",
+                "inline-flex px-1.5 py-0.5 rounded text-micro font-semibold uppercase tracking-wide",
                 statusStyle(project.status),
               )}
             >
               {formatStatus(project.status)}
             </span>
-            <span className="text-[10px] font-mono text-muted-foreground">
+            <span className="text-micro font-mono text-muted-foreground">
               {project.key}
             </span>
           </div>

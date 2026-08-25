@@ -63,7 +63,7 @@ function categoriesColumns(
           {!cat.isActive && (
             <Badge
               variant="outline"
-              className="h-4 text-[9px] px-1.5 py-0 border-border text-muted-foreground bg-muted"
+              className="h-4 text-micro px-1.5 py-0 border-border text-muted-foreground bg-muted"
             >
               Archived
             </Badge>

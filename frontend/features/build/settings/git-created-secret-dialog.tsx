@@ -40,7 +40,7 @@ export function CreatedSecretDialog({
       <DialogContent className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
         <DialogHeader className="shrink-0 px-4 pb-2 pt-3.5">
           <DialogTitle className="flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-emerald-500" />
+            <ShieldCheck className="h-4 w-4 text-status-success-ink" />
             Connection created
           </DialogTitle>
           <DialogDescription className="text-xs">

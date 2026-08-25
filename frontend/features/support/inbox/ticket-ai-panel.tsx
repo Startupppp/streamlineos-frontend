@@ -152,12 +152,12 @@ export function TicketAiPanel({ ticketId, onInsertReply, replyDraftContent }: Ti
       <button
         type="button"
         onClick={handleToggle}
-        className="flex items-center gap-1.5 w-full text-left text-[11px] font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground transition-colors"
+        className="flex items-center gap-1.5 w-full text-left text-dense font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground transition-colors"
       >
         <Sparkles className="h-3.5 w-3.5 shrink-0" />
         AI Insights
         {pendingSuggestions.length > 0 && (
-          <Badge variant="secondary" className="text-[9px] px-1.5 py-0">
+          <Badge variant="secondary" className="text-micro px-1.5 py-0">
             {pendingSuggestions.length}
           </Badge>
         )}
@@ -195,7 +195,7 @@ export function TicketAiPanel({ ticketId, onInsertReply, replyDraftContent }: Ti
               ))}
             </div>
           ) : allSuggestions.length === 0 ? (
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-dense text-muted-foreground">
               No AI insights yet. Click &quot;Regenerate insights&quot; to analyze this ticket.
             </p>
           ) : (

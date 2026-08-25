@@ -21,7 +21,7 @@ import { downloadCsv } from "@/features/inventory/lib";
 function UrgencyBadge({ available, reorderPoint }: { available: number; reorderPoint: number }) {
   if (available <= 0) {
     return (
-      <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30">
+      <Badge variant="outline" className="h-4 text-micro px-1.5 py-0 bg-status-danger-surface text-status-danger-ink border-status-danger-rule">
         Out of stock
       </Badge>
     );
@@ -29,13 +29,13 @@ function UrgencyBadge({ available, reorderPoint }: { available: number; reorderP
   const pct = reorderPoint > 0 ? available / reorderPoint : 1;
   if (pct <= 0.25) {
     return (
-      <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30">
+      <Badge variant="outline" className="h-4 text-micro px-1.5 py-0 bg-status-danger-surface text-status-danger-ink border-status-danger-rule">
         Critical
       </Badge>
     );
   }
   return (
-    <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
+    <Badge variant="outline" className="h-4 text-micro px-1.5 py-0 bg-status-warning-surface text-status-warning-ink border-status-warning-rule">
       Low
     </Badge>
   );
@@ -45,47 +45,47 @@ const REORDER_COLUMNS: DataTableColumn<ReorderReportRow>[] = [
   {
     key: "productName",
     header: "Product",
-    cell: (row) => <span className="font-medium text-[11px]">{row.productName}</span>,
+    cell: (row) => <span className="font-medium text-dense">{row.productName}</span>,
   },
   {
     key: "sku",
     header: "SKU",
-    cell: (row) => <span className="font-mono tabular-nums text-[11px]">{row.sku}</span>,
+    cell: (row) => <span className="font-mono tabular-nums text-dense">{row.sku}</span>,
   },
   {
     key: "categoryName",
     header: "Category",
-    cell: (row) => <span className="text-[11px]">{row.categoryName ?? "—"}</span>,
+    cell: (row) => <span className="text-dense">{row.categoryName ?? "—"}</span>,
   },
   {
     key: "warehouseName",
     header: "Warehouse",
-    cell: (row) => <span className="text-[11px]">{row.warehouseName ?? "—"}</span>,
+    cell: (row) => <span className="text-dense">{row.warehouseName ?? "—"}</span>,
   },
   {
     key: "vendorName",
     header: "Vendor",
-    cell: (row) => <span className="text-[11px]">{row.vendorName ?? "—"}</span>,
+    cell: (row) => <span className="text-dense">{row.vendorName ?? "—"}</span>,
   },
   {
     key: "availableQty",
     header: "Available",
     headerClassName: "text-right",
-    className: "text-right font-mono tabular-nums text-[11px]",
+    className: "text-right font-mono tabular-nums text-dense",
     cell: (row) => row.availableQty,
   },
   {
     key: "reorderPoint",
     header: "Reorder Pt.",
     headerClassName: "text-right",
-    className: "text-right font-mono tabular-nums text-[11px]",
+    className: "text-right font-mono tabular-nums text-dense",
     cell: (row) => row.reorderPoint,
   },
   {
     key: "reorderQty",
     header: "Suggest Qty",
     headerClassName: "text-right",
-    className: "text-right font-mono tabular-nums text-[11px]",
+    className: "text-right font-mono tabular-nums text-dense",
     cell: (row) => row.reorderQty ?? "—",
   },
   {

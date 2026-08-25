@@ -34,13 +34,13 @@ const REASON_LABELS: Record<AdjustmentReason, string> = {
   EXPIRY: "Expiry", THEFT: "Theft / Loss", RECOUNT: "Recount", OTHER: "Other",
 };
 const REASON_BADGE: Record<AdjustmentReason, string> = {
-  DAMAGE: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
-  EXPIRY: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
-  THEFT: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
-  RETURN: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  RECOUNT: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  PURCHASE: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  SALE: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  DAMAGE: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
+  EXPIRY: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
+  THEFT: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
+  RETURN: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  RECOUNT: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  PURCHASE: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  SALE: "bg-status-success-surface text-status-success-ink border-status-success-rule",
   OTHER: "bg-muted text-muted-foreground border-border",
 };
 const REASONS: AdjustmentReason[] = ["PURCHASE", "SALE", "RETURN", "DAMAGE", "EXPIRY", "THEFT", "RECOUNT", "OTHER"];
@@ -50,14 +50,14 @@ const ADJUSTMENT_COLUMNS: DataTableColumn<AdjustmentListItem>[] = [
   {
     key: "referenceNumber",
     header: "Ref #",
-    className: "font-mono text-[11px] font-semibold text-primary",
+    className: "font-mono text-dense font-semibold text-primary",
     cell: (row) => <span>{row.referenceNumber}</span>,
   },
   {
     key: "reason",
     header: "Reason",
     cell: (row) => (
-      <Badge variant="outline" className={cn("h-4 text-[9px] px-1.5 py-0 font-medium", REASON_BADGE[row.reason])}>
+      <Badge variant="outline" className={cn("h-4 text-micro px-1.5 py-0 font-medium", REASON_BADGE[row.reason])}>
         {REASON_LABELS[row.reason]}
       </Badge>
     ),
@@ -68,7 +68,7 @@ const ADJUSTMENT_COLUMNS: DataTableColumn<AdjustmentListItem>[] = [
     cell: (row) => (
       <Badge
         variant="outline"
-        className={cn("h-4 text-[9px] px-1.5 py-0 font-medium", ADJUSTMENT_STATUS_BADGE[row.status])}
+        className={cn("h-4 text-micro px-1.5 py-0 font-medium", ADJUSTMENT_STATUS_BADGE[row.status])}
       >
         {ADJUSTMENT_STATUS_LABEL[row.status]}
       </Badge>

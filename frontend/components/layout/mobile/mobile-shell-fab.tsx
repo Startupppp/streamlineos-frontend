@@ -44,7 +44,7 @@ function FabMenuRow({
       <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
         {icon}
       </span>
-      <span className="max-w-full truncate px-1 text-[10px] font-medium leading-tight">
+      <span className="max-w-full truncate px-1 text-micro font-medium leading-tight">
         {label}
       </span>
     </button>

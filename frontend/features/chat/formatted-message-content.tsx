@@ -14,7 +14,7 @@ function renderInlinePart(part: string, key: number, isOwn: boolean): React.Reac
       <code
         key={key}
         className={cn(
-          "font-mono text-[12px] px-1.5 py-0.5 rounded break-all",
+          "font-mono text-xs px-1.5 py-0.5 rounded break-all",
           isOwn ? "bg-primary-foreground/15 text-primary-foreground" : "bg-muted",
         )}
       >
@@ -59,7 +59,7 @@ export function renderFormattedContent(content: string, isOwn: boolean): React.R
         <pre
           key={i}
           className={cn(
-            "font-mono text-[12px] rounded-lg p-2.5 mt-1.5 max-w-full overflow-x-auto whitespace-pre scrollbar-hide",
+            "font-mono text-xs rounded-lg p-2.5 mt-1.5 max-w-full overflow-x-auto whitespace-pre scrollbar-hide",
             isOwn ? "bg-primary-foreground/15 text-primary-foreground" : "bg-muted text-foreground",
           )}
         >

@@ -80,7 +80,7 @@ const CONTROL_CLASS =
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+    <span className="mb-1 block text-micro font-medium uppercase tracking-wide text-muted-foreground">
       {children}
     </span>
   );
@@ -125,17 +125,17 @@ export function SidebarSelectFields({
                   </SelectItem>
                   <SelectItem value="IN_PROGRESS">
                     <span className="flex items-center gap-1.5">
-                      <Timer className="h-3 w-3 text-blue-500" /> In Progress
+                      <Timer className="h-3 w-3 text-status-info-ink" /> In Progress
                     </span>
                   </SelectItem>
                   <SelectItem value="IN_REVIEW">
                     <span className="flex items-center gap-1.5">
-                      <AlertCircle className="h-3 w-3 text-amber-500" /> In Review
+                      <AlertCircle className="h-3 w-3 text-status-warning-ink" /> In Review
                     </span>
                   </SelectItem>
                   <SelectItem value="DONE">
                     <span className="flex items-center gap-1.5">
-                      <CheckCircle2 className="h-3 w-3 text-green-500" /> Done
+                      <CheckCircle2 className="h-3 w-3 text-status-success-ink" /> Done
                     </span>
                   </SelectItem>
                 </>

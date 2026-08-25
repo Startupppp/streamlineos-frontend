@@ -147,7 +147,7 @@ function OrgChartBranch({
 
   return (
     <li className="min-w-72 space-y-2">
-      <div className="flex min-w-0 items-center gap-2 rounded-lg border border-border bg-card p-2 shadow-soft">
+      <div className="flex min-w-0 items-center gap-2 rounded-lg border border-border bg-card p-2 shadow-panel">
         {employee.hasDirectReports && !isCycle ? (
           <AnimatedIconButton
             icon={expanded ? ChevronDownIcon : ChevronRightIcon}

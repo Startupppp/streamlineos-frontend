@@ -22,10 +22,10 @@ const PRIORITY_LABELS: Record<string, string> = {
   LOW: "Low",
 };
 const PRIORITY_COLORS: Record<string, string> = {
-  URGENT: "bg-red-500",
-  HIGH: "bg-orange-400",
-  MEDIUM: "bg-amber-400",
-  LOW: "bg-blue-400",
+  URGENT: "bg-status-danger-fill",
+  HIGH: "bg-status-warning-fill",
+  MEDIUM: "bg-status-warning-fill",
+  LOW: "bg-status-info-fill",
 };
 
 interface GroupRow {
@@ -74,7 +74,7 @@ const SidebarRow = memo(function SidebarRow({
       <span className="min-w-0 flex-1 truncate">{row.label}</span>
       <span
         className={cn(
-          "shrink-0 rounded px-1 py-0.5 text-[10px] font-medium tabular-nums",
+          "shrink-0 rounded px-1 py-0.5 text-micro font-medium tabular-nums",
           isActive ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground",
         )}
       >

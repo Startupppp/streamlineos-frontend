@@ -83,9 +83,9 @@ type StatusFilter = WorkflowStatus | "all";
 
 const STATUS_BADGE_CLASS: Record<WorkflowStatus, string> = {
   draft: "bg-muted text-muted-foreground",
-  published: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300",
-  disabled: "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-300",
-  archived: "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-300",
+  published: "bg-status-success-surface text-status-success-ink",
+  disabled: "bg-status-warning-surface text-status-warning-ink",
+  archived: "bg-status-danger-surface text-status-danger-ink",
 };
 
 const STATUS_LEFT_BORDER: Record<WorkflowStatus, string> = {
@@ -120,13 +120,13 @@ const WorkflowCard = memo(function WorkflowCard({
               </p>
               <span
                 className={cn(
-                  "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium capitalize",
+                  "inline-flex items-center px-2 py-0.5 rounded-full text-micro font-medium capitalize",
                   STATUS_BADGE_CLASS[workflow.status]
                 )}
               >
                 {workflow.status}
               </span>
-              <span className="text-[10px] text-muted-foreground bg-muted border border-border px-1.5 py-0.5 rounded">
+              <span className="text-micro text-muted-foreground bg-muted border border-border px-1.5 py-0.5 rounded">
                 v{workflow.version}
               </span>
             </div>
@@ -137,7 +137,7 @@ const WorkflowCard = memo(function WorkflowCard({
               </p>
             )}
 
-            <p className="text-[11px] text-muted-foreground mt-2">
+            <p className="text-dense text-muted-foreground mt-2">
               Updated{" "}
               {formatDistanceToNow(new Date(workflow.updatedAt), {
                 addSuffix: true,

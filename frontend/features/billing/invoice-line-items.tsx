@@ -255,7 +255,7 @@ export function InvoiceLineItems({
           </div>
           {totalPaid > 0 && (
             <>
-              <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
+              <div className="flex justify-between text-status-success-ink">
                 <span>Paid</span>
                 <span>{fmt(totalPaid)}</span>
               </div>

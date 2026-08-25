@@ -230,7 +230,7 @@ export function StepBasics({
   return (
     <StepBody footer={<NavButtons onBack={onBack} onNext={handleNext} />}>
       <section className="min-w-0 space-y-2">
-        <p className="text-[13px] font-semibold text-foreground">
+        <p className="text-label font-semibold text-foreground">
           What do you want to get done? *
         </p>
         <div
@@ -264,7 +264,7 @@ export function StepBasics({
       <section className="min-w-0 space-y-2">
         <Label
           htmlFor="industry-select"
-          className="text-[13px] font-semibold text-foreground"
+          className="text-label font-semibold text-foreground"
         >
           Industry *
         </Label>
@@ -316,7 +316,7 @@ export function StepBasics({
 
       <section className="min-w-0 space-y-2">
         <div className="min-w-0 space-y-0.5">
-          <p className="text-[13px] font-semibold text-foreground">Company</p>
+          <p className="text-label font-semibold text-foreground">Company</p>
           <p className="text-xs text-muted-foreground">
             You can change all of this later in Settings.
           </p>

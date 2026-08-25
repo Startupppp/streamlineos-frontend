@@ -289,10 +289,10 @@ export function CreateLeadSheet({
               </div>
 
               {hasDuplicates && (
-                <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+                <div className="rounded-lg border border-status-warning-rule bg-status-warning-surface p-3">
                   <div className="flex items-center gap-2 mb-2">
-                    <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />
-                    <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
+                    <AlertTriangle className="h-4 w-4 text-status-warning-ink shrink-0" />
+                    <span className="text-xs font-medium text-status-warning-ink">
                       Possible duplicate
                       {dupCheck!.duplicates.length > 1 ? "s" : ""} found
                     </span>
@@ -301,7 +301,7 @@ export function CreateLeadSheet({
                     {dupCheck!.duplicates.map((dup) => (
                       <div
                         key={dup.id}
-                        className="flex items-center justify-between text-[11px]"
+                        className="flex items-center justify-between text-dense"
                       >
                         <TruncatedText text={dup.name} className="font-medium" />
                         <div className="flex items-center gap-2 min-w-0 flex-1 justify-end">
@@ -312,7 +312,7 @@ export function CreateLeadSheet({
                           )}
                           <Badge
                             variant="outline"
-                            className="text-[9px] px-1 py-0"
+                            className="text-micro px-1 py-0"
                           >
                             {dup.status}
                           </Badge>
@@ -320,7 +320,7 @@ export function CreateLeadSheet({
                       </div>
                     ))}
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-2">
+                  <p className="text-micro text-muted-foreground mt-2">
                     You can still create this lead if it&apos;s a different
                     person.
                   </p>

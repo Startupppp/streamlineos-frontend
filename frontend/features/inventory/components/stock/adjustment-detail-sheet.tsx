@@ -80,8 +80,8 @@ const lineColumns: DataTableColumn<AdjustmentLine>[] = [
     className: "text-right font-mono tabular-nums font-semibold",
     cell: (line) => (
       <span className={cn(
-        line.quantityChange > 0 && "text-emerald-600",
-        line.quantityChange < 0 && "text-red-600",
+        line.quantityChange > 0 && "text-status-success-ink",
+        line.quantityChange < 0 && "text-status-danger-ink",
       )}>
         {line.quantityChange > 0 ? `+${line.quantityChange}` : line.quantityChange}
       </span>
@@ -160,7 +160,7 @@ export function AdjustmentDetailSheet({ adjustmentId, open, onOpenChange }: Adju
                   <Badge
                     variant="outline"
                     className={cn(
-                      "h-5 text-[10px] px-2 py-0.5",
+                      "h-5 text-micro px-2 py-0.5",
                       ADJUSTMENT_STATUS_BADGE[status],
                     )}
                   >

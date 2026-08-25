@@ -23,19 +23,19 @@ const ERROR_COLUMNS: DataTableColumn<ErrorRow>[] = [
   {
     key: "row",
     header: "Row",
-    className: "text-xs text-red-700",
+    className: "text-xs text-status-danger-ink",
     cell: (e) => e.row,
   },
   {
     key: "field",
     header: "Field",
-    className: "text-xs text-red-700",
+    className: "text-xs text-status-danger-ink",
     cell: (e) => e.field,
   },
   {
     key: "message",
     header: "Message",
-    className: "text-xs text-red-700",
+    className: "text-xs text-status-danger-ink",
     cell: (e) => e.message,
   },
 ];
@@ -72,9 +72,9 @@ export function ImportResultStep({ jobId, onReset }: ImportResultStepProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
-        {isRunning && <Loader2 className="h-5 w-5 animate-spin text-amber-500" />}
-        {isCompleted && <CheckCircle className="h-5 w-5 text-emerald-500" />}
-        {isFailed && <XCircle className="h-5 w-5 text-red-500" />}
+        {isRunning && <Loader2 className="h-5 w-5 animate-spin text-status-warning-ink" />}
+        {isCompleted && <CheckCircle className="h-5 w-5 text-status-success-ink" />}
+        {isFailed && <XCircle className="h-5 w-5 text-status-danger-ink" />}
         <Badge className={JOB_STATUS_BADGE[job.status]}>
           {JOB_STATUS_LABEL[job.status]}
         </Badge>

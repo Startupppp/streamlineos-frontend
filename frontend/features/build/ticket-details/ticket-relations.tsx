@@ -57,7 +57,7 @@ const RELATION_LABELS: Record<WorkItemRelationType, { label: string; icon: React
   duplicate_of: {
     label: "Duplicate of",
     icon: <Copy className="h-3 w-3" />,
-    color: "text-yellow-600 dark:text-yellow-400",
+    color: "text-status-warning-ink",
   },
   relates_to: {
     label: "Relates to",
@@ -227,7 +227,7 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
             if (!rels?.length) return null;
             return (
               <div key={type}>
-                <p className={cn("text-[10px] font-medium flex items-center gap-1 mb-1", meta.color)}>
+                <p className={cn("text-micro font-medium flex items-center gap-1 mb-1", meta.color)}>
                   {meta.icon}
                   {meta.label}
                 </p>

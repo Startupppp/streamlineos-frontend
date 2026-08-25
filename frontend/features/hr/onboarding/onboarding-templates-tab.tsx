@@ -249,7 +249,7 @@ export function OnboardingTemplatesTab() {
                 <div className="flex items-center justify-between gap-2">
                   <TruncatedText text={template.name} className="text-sm font-semibold text-foreground" />
                   {!template.isActive && (
-                    <span className="text-[10px] font-medium text-muted-foreground border rounded-full px-2 py-0.5 shrink-0">
+                    <span className="text-micro font-medium text-muted-foreground border rounded-full px-2 py-0.5 shrink-0">
                       Inactive
                     </span>
                   )}
@@ -258,7 +258,7 @@ export function OnboardingTemplatesTab() {
                 {template.description && (
                   <p className="text-xs text-muted-foreground mt-1.5">{template.description}</p>
                 )}
-                <p className="text-[11px] text-muted-foreground mt-2">
+                <p className="text-dense text-muted-foreground mt-2">
                   {template.steps.length} step{template.steps.length === 1 ? "" : "s"}
                 </p>
               </CardContent>

@@ -32,16 +32,16 @@ interface UploadDocumentDialogProps {
 
 function getFileTypeConfig(file: File): { icon: React.ComponentType<{ className?: string }>; bg: string; text: string; badge: string } {
   if (file.type === "application/pdf") {
-    return { icon: FileText, bg: "bg-rose-100 dark:bg-rose-500/10", text: "text-rose-600 dark:text-rose-300", badge: "PDF" };
+    return { icon: FileText, bg: "bg-status-danger-surface", text: "text-status-danger-ink", badge: "PDF" };
   }
   if (file.type.includes("word") || file.name.endsWith(".doc") || file.name.endsWith(".docx")) {
-    return { icon: FileText, bg: "bg-blue-100 dark:bg-blue-500/10", text: "text-blue-600 dark:text-blue-300", badge: "DOC" };
+    return { icon: FileText, bg: "bg-status-info-surface", text: "text-status-info-ink", badge: "DOC" };
   }
   if (file.type.includes("excel") || file.type.includes("spreadsheet") || file.name.endsWith(".xls") || file.name.endsWith(".xlsx") || file.name.endsWith(".csv")) {
-    return { icon: FileSpreadsheet, bg: "bg-emerald-100 dark:bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-300", badge: "XLS" };
+    return { icon: FileSpreadsheet, bg: "bg-status-success-surface", text: "text-status-success-ink", badge: "XLS" };
   }
   if (file.type.startsWith("image/")) {
-    return { icon: FileImage, bg: "bg-amber-100 dark:bg-amber-500/10", text: "text-amber-600 dark:text-amber-300", badge: "IMG" };
+    return { icon: FileImage, bg: "bg-status-warning-surface", text: "text-status-warning-ink", badge: "IMG" };
   }
   return { icon: File, bg: "bg-muted", text: "text-muted-foreground", badge: "FILE" };
 }
@@ -344,7 +344,7 @@ export function UploadDocumentDialog({
             <span className="text-sm font-semibold text-foreground">
               {files.length > 0 ? "Add more files" : "Drop files here or click to browse"}
             </span>
-            <span className="text-[11px] text-muted-foreground mt-1">
+            <span className="text-dense text-muted-foreground mt-1">
               PDF, DOC, XLS, PNG, JPG — up to 10MB each
             </span>
             <input
@@ -359,14 +359,14 @@ export function UploadDocumentDialog({
           {files.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                <span className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
                   {files.length} file{files.length > 1 ? "s" : ""} selected
                 </span>
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-6 text-[11px] text-muted-foreground hover:text-foreground"
+                  className="h-6 text-dense text-muted-foreground hover:text-foreground"
                   onClick={handleClearAllFiles}
                 >
                   Clear all
@@ -389,14 +389,14 @@ export function UploadDocumentDialog({
                         <p className="text-xs font-medium text-foreground truncate">{f.name}</p>
                         <div className="flex items-center gap-1.5 mt-0.5">
                           <span className={cn(
-                            "inline-flex items-center text-[10px] font-semibold px-1.5 py-0 rounded-full border",
+                            "inline-flex items-center text-micro font-semibold px-1.5 py-0 rounded-full border",
                             config.bg,
                             config.text,
                             "border-current/20",
                           )}>
                             {config.badge}
                           </span>
-                          <span className="text-[10px] text-muted-foreground">{formatBytes(f.size)}</span>
+                          <span className="text-micro text-muted-foreground">{formatBytes(f.size)}</span>
                         </div>
                       </div>
                       <RemoveFileButton index={i} onClick={handleRemoveFileAtIndex} />

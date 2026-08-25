@@ -98,7 +98,7 @@ export function MyTimeView() {
     : { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.22, ease: "easeOut" as const } };
 
   const periodBadge = period ? (
-    <span className={cn("inline-flex items-center px-1.5 py-0.5 rounded-md text-[11px] font-medium border", PERIOD_STATUS_BADGE[period.status])}>
+    <span className={cn("inline-flex items-center px-1.5 py-0.5 rounded-md text-dense font-medium border", PERIOD_STATUS_BADGE[period.status])}>
       {PERIOD_STATUS_LABEL[period.status]}
     </span>
   ) : null;
@@ -180,13 +180,13 @@ export function MyTimeView() {
         )}
 
         {period?.status === "REJECTED" && !rejectionDismissed && isCurrentWeek && (
-          <div className="flex items-start gap-3 rounded-lg border border-red-200 dark:border-red-500/30 bg-red-50/60 dark:bg-red-500/10 px-4 py-3">
+          <div className="flex items-start gap-3 rounded-lg border border-status-danger-rule bg-status-danger-surface px-4 py-3">
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-red-800 dark:text-red-300">Timesheet rejected</p>
+              <p className="text-sm font-medium text-status-danger-ink">Timesheet rejected</p>
               {period.rejectionReason && (
-                <p className="text-xs text-red-700 dark:text-red-400 mt-0.5">{period.rejectionReason}</p>
+                <p className="text-xs text-status-danger-ink mt-0.5">{period.rejectionReason}</p>
               )}
-              <p className="text-xs text-red-600 dark:text-red-400 mt-1">Update your entries and resubmit.</p>
+              <p className="text-xs text-status-danger-ink mt-1">Update your entries and resubmit.</p>
             </div>
             <AnimatedIconButton
               icon={XIcon}

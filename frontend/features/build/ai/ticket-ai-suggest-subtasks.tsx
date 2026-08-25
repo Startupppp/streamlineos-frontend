@@ -170,7 +170,7 @@ export function TicketAiSuggestSubtasksAction({
                         type="button"
                         onClick={() => handleToggle(index)}
                         className={[
-                          "flex w-full items-center gap-2.5 rounded-md border px-3 py-2 text-left text-[13px] transition-colors",
+                          "flex w-full items-center gap-2.5 rounded-md border px-3 py-2 text-left text-label transition-colors",
                           selected.has(index)
                             ? "border-primary/20 bg-primary/10 text-foreground"
                             : "border-transparent bg-muted/40 text-muted-foreground hover:bg-muted",

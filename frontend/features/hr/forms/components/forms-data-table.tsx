@@ -15,8 +15,8 @@ import type { HrForm } from "../lib/types";
 
 const STATUS_COLORS: Record<string, string> = {
   draft: "bg-muted text-muted-foreground border-border",
-  active: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  archived: "bg-red-50 text-red-600 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  active: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  archived: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };
 
 interface FormsDataTableProps {
@@ -74,7 +74,7 @@ export function FormsDataTable({ forms }: FormsDataTableProps) {
       key: "status",
       header: "Status",
       cell: (row) => (
-        <Badge variant="outline" className={"text-[11px] " + (STATUS_COLORS[row.status] ?? "")}>
+        <Badge variant="outline" className={"text-dense " + (STATUS_COLORS[row.status] ?? "")}>
           {row.status}
         </Badge>
       ),
@@ -83,7 +83,7 @@ export function FormsDataTable({ forms }: FormsDataTableProps) {
       key: "audience",
       header: "Audience",
       cell: (row) => (
-        <Badge variant="outline" className="text-[11px]">
+        <Badge variant="outline" className="text-dense">
           {row.audience}
         </Badge>
       ),
@@ -100,7 +100,7 @@ export function FormsDataTable({ forms }: FormsDataTableProps) {
       header: "Workflow",
       cell: (row) =>
         row.workflowObjectType ? (
-          <Badge variant="secondary" className="text-[11px]">
+          <Badge variant="secondary" className="text-dense">
             {row.workflowObjectType.replace(/_/g, " ")}
           </Badge>
         ) : (

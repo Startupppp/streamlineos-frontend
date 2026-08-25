@@ -62,7 +62,7 @@ export function AiInlinePreview({
 
       {session.status === "error" && (
         <div className="flex flex-col items-start gap-2">
-          <p className="text-[12px] text-muted-foreground">{session.errorMessage}</p>
+          <p className="text-xs text-muted-foreground">{session.errorMessage}</p>
           <Button type="button" variant="outline" size="sm" onClick={session.retry} className="h-7 text-xs">
             Retry
           </Button>
@@ -74,15 +74,15 @@ export function AiInlinePreview({
           {previewMode === "title" ? (
             <TruncatedText
               text={session.result.text}
-              className="text-[13px] font-medium leading-snug text-foreground"
+              className="text-label font-medium leading-snug text-foreground"
             />
           ) : previewMode === "description" ? (
             <div
-              className="max-h-32 overflow-y-auto text-[12px] leading-relaxed text-foreground [&_p]:mb-1 [&_ul]:list-disc [&_ul]:pl-4"
+              className="max-h-32 overflow-y-auto text-xs leading-relaxed text-foreground [&_p]:mb-1 [&_ul]:list-disc [&_ul]:pl-4"
               dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(session.result.text) }}
             />
           ) : (
-            <p className="whitespace-pre-wrap text-[12px] leading-relaxed text-foreground">
+            <p className="whitespace-pre-wrap text-xs leading-relaxed text-foreground">
               {session.result.text}
             </p>
           )}

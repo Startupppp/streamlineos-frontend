@@ -13,7 +13,7 @@ interface Props {
 function ConflictList({ conflicts }: { conflicts: PolicyConflict[] }) {
   if (conflicts.length === 0) {
     return (
-      <p className="text-xs text-emerald-700 dark:text-emerald-300">
+      <p className="text-xs text-status-success-ink">
         No overlapping active policies detected for this draft.
       </p>
     );
@@ -31,7 +31,7 @@ function ConflictList({ conflicts }: { conflicts: PolicyConflict[] }) {
               "font-medium",
               c.severity === "blocking"
                 ? "text-destructive"
-                : "text-amber-700 dark:text-amber-300",
+                : "text-status-warning-ink",
             )}
           >
             {c.severity === "blocking" ? "Blocking" : "Warning"}:
@@ -66,8 +66,8 @@ export function PolicyConflictBanner({ policyId, className }: Props) {
         hasBlocking
           ? "border-destructive/40 bg-destructive/5"
           : hasAny
-            ? "border-amber-300/60 bg-amber-50/80 dark:border-amber-500/30 dark:bg-amber-500/5"
-            : "border-emerald-300/50 bg-emerald-50/70 dark:border-emerald-500/20 dark:bg-emerald-500/5",
+            ? "border-status-warning-rule bg-status-warning-surface"
+            : "border-status-success-rule bg-status-success-surface",
         className,
       )}
     >
@@ -78,8 +78,8 @@ export function PolicyConflictBanner({ policyId, className }: Props) {
             hasBlocking
               ? "text-destructive"
               : hasAny
-                ? "text-amber-600 dark:text-amber-400"
-                : "text-emerald-600 dark:text-emerald-400",
+                ? "text-status-warning-ink"
+                : "text-status-success-ink",
           )}
         />
         <p className="text-xs font-semibold text-foreground">
@@ -92,7 +92,7 @@ export function PolicyConflictBanner({ policyId, className }: Props) {
       </div>
       <ConflictList conflicts={data.conflicts} />
       {!data.canActivate && (
-        <p className="mt-2 text-[11px] text-muted-foreground">
+        <p className="mt-2 text-dense text-muted-foreground">
           Equal-priority overlaps are blocked. Raise priority, narrow scopes, or force-activate only
           if intentional.
         </p>

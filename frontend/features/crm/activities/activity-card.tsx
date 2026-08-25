@@ -42,7 +42,7 @@ type StatusConfig = {
 
 function getStatusConfig(activity: CrmActivity): StatusConfig {
   if (activity.status === "completed") {
-    return { label: "Completed", color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10", icon: CheckCircle2 };
+    return { label: "Completed", color: "text-status-success-ink", bg: "bg-status-success-surface", icon: CheckCircle2 };
   }
   if (activity.status === "cancelled") {
     return { label: "Cancelled", color: "text-muted-foreground", bg: "bg-muted", icon: XCircle };
@@ -52,9 +52,9 @@ function getStatusConfig(activity: CrmActivity): StatusConfig {
     isPast(new Date(activity.dueDate)) &&
     !isToday(new Date(activity.dueDate))
   ) {
-    return { label: "Overdue", color: "text-red-600 dark:text-red-400", bg: "bg-red-500/10", icon: XCircle };
+    return { label: "Overdue", color: "text-status-danger-ink", bg: "bg-status-danger-surface", icon: XCircle };
   }
-  return { label: "Pending", color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-500/10", icon: Clock };
+  return { label: "Pending", color: "text-status-warning-ink", bg: "bg-status-warning-surface", icon: Clock };
 }
 
 interface ActivityCardProps {
@@ -102,7 +102,7 @@ export function ActivityCard({ activity, index }: ActivityCardProps) {
             <TruncatedText text={activity.title} className="text-sm font-semibold text-foreground max-w-sm" />
             <Badge
               className={cn(
-                "text-[10px] border-0 gap-1 font-medium shrink-0",
+                "text-micro border-0 gap-1 font-medium shrink-0",
                 statusCfg.bg,
                 statusCfg.color,
               )}
@@ -122,7 +122,7 @@ export function ActivityCard({ activity, index }: ActivityCardProps) {
             {entityPath && activity.entityType && (
               <Link
                 href={entityPath}
-                className="inline-flex items-center gap-1 text-[10px] text-primary hover:text-primary/80 font-medium transition-colors"
+                className="inline-flex items-center gap-1 text-micro text-primary hover:text-primary/80 font-medium transition-colors"
               >
                 {ENTITY_LABELS[activity.entityType]}
                 <ExternalLink className="h-2.5 w-2.5" />
@@ -130,19 +130,19 @@ export function ActivityCard({ activity, index }: ActivityCardProps) {
             )}
 
             {activity.dueDate && (
-              <span className="text-[10px] text-muted-foreground tabular-nums">
+              <span className="text-micro text-muted-foreground tabular-nums">
                 Due {format(new Date(activity.dueDate), "MMM d, yyyy")}
               </span>
             )}
 
             {activity.completedAt && (
-              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 tabular-nums">
+              <span className="text-micro text-status-success-ink tabular-nums">
                 Completed {format(new Date(activity.completedAt), "MMM d, yyyy")}
               </span>
             )}
 
             {activity.createdAt && (
-              <span className="text-[10px] text-muted-foreground/60 tabular-nums">
+              <span className="text-micro text-muted-foreground/60 tabular-nums">
                 Created {format(new Date(activity.createdAt), "MMM d")}
               </span>
             )}
@@ -159,7 +159,7 @@ export function ActivityCard({ activity, index }: ActivityCardProps) {
               size="sm"
               onClick={handleComplete}
               isPending={complete.isPending}
-              className="px-2 text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-500/10"
+              className="px-2 text-xs text-status-success-ink hover:text-status-success-ink hover:bg-status-success-surface"
             >
               <CheckCheck className="h-3.5 w-3.5 mr-1" />
               Done

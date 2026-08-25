@@ -46,7 +46,7 @@ export function TransfersClient() {
       key: "transferDate",
       header: "Date",
       cell: (row) => (
-        <span className="text-[11px] tabular-nums text-muted-foreground">
+        <span className="text-dense tabular-nums text-muted-foreground">
           {formatDate(row.transferDate)}
         </span>
       ),
@@ -58,7 +58,7 @@ export function TransfersClient() {
       key: "from",
       header: "From",
       cell: (row) => (
-        <span className="text-[11px]">
+        <span className="text-dense">
           {accountMap.get(row.fromBankAccountId) ?? String(row.fromBankAccountId)}
         </span>
       ),
@@ -67,7 +67,7 @@ export function TransfersClient() {
       key: "to",
       header: "To",
       cell: (row) => (
-        <span className="text-[11px]">
+        <span className="text-dense">
           {accountMap.get(row.toBankAccountId) ?? String(row.toBankAccountId)}
         </span>
       ),
@@ -85,7 +85,7 @@ export function TransfersClient() {
       key: "reference",
       header: "Reference",
       cell: (row) => (
-        <span className="text-[11px] text-muted-foreground font-mono">
+        <span className="text-dense text-muted-foreground font-mono">
           {row.reference ?? "—"}
         </span>
       ),

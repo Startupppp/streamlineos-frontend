@@ -71,11 +71,11 @@ function AnswerFeedback({ question, onGiven }: { question: string; onGiven: () =
 
   return (
     <div className="flex items-center gap-1 pt-1 border-t">
-      <span className="text-[10px] text-muted-foreground mr-1">Helpful?</span>
+      <span className="text-micro text-muted-foreground mr-1">Helpful?</span>
       <Button
         variant="ghost"
         size="sm"
-        className="h-6 px-1.5 text-[11px] gap-1"
+        className="h-6 px-1.5 text-dense gap-1"
         onClick={() => handleFeedback("helpful")}
         disabled={feedbackMutation.isPending}
       >
@@ -84,7 +84,7 @@ function AnswerFeedback({ question, onGiven }: { question: string; onGiven: () =
       <Button
         variant="ghost"
         size="sm"
-        className="h-6 px-1.5 text-[11px] gap-1"
+        className="h-6 px-1.5 text-dense gap-1"
         onClick={() => handleFeedback("not_helpful")}
         disabled={feedbackMutation.isPending}
       >
@@ -93,7 +93,7 @@ function AnswerFeedback({ question, onGiven }: { question: string; onGiven: () =
       <Button
         variant="ghost"
         size="sm"
-        className="h-6 px-1.5 text-[11px] gap-1"
+        className="h-6 px-1.5 text-dense gap-1"
         onClick={() => handleFeedback("missing_source")}
         disabled={feedbackMutation.isPending}
       >
@@ -149,7 +149,7 @@ function AuthedAskPanel({ className, articleId }: { className?: string; articleI
           </div>
           <div className="min-w-0 flex flex-wrap items-baseline gap-x-1.5 gap-y-0">
             <p className="text-sm font-semibold leading-none">Ask the knowledge base</p>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-dense text-muted-foreground">
               Get answers from articles and attached documents
             </p>
           </div>
@@ -160,7 +160,7 @@ function AuthedAskPanel({ className, articleId }: { className?: string; articleI
             value={question}
             onChange={handleQuestionChange}
             placeholder="e.g. How do I reset my password?"
-            className="flex-1 text-[13px]"
+            className="flex-1 text-label"
             disabled={askMutation.isPending}
           />
           <Button
@@ -181,12 +181,12 @@ function AuthedAskPanel({ className, articleId }: { className?: string; articleI
         {answer && !askMutation.isPending && (
           <div className="rounded-lg border bg-muted/30 p-2.5 space-y-2">
             <div className="flex items-start justify-between gap-2">
-              <p className="text-[13px] whitespace-pre-wrap leading-relaxed flex-1">{answer.answer}</p>
+              <p className="text-label whitespace-pre-wrap leading-relaxed flex-1">{answer.answer}</p>
               <AiUsageChip usage={answer.aiUsage} className="shrink-0 mt-0.5" />
             </div>
             {citations.length > 0 && (
               <div className="space-y-1 pt-1 border-t">
-                <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                <p className="text-micro font-medium uppercase tracking-wide text-muted-foreground">
                   Sources
                 </p>
                 <AiCitationChips citations={citations} />
@@ -194,7 +194,7 @@ function AuthedAskPanel({ className, articleId }: { className?: string; articleI
             )}
             {answer.hasContext && (
               feedbackGiven ? (
-                <p className="text-[10px] text-muted-foreground pt-1 border-t">Thanks for the feedback</p>
+                <p className="text-micro text-muted-foreground pt-1 border-t">Thanks for the feedback</p>
               ) : (
                 <AnswerFeedback question={question} onGiven={handleFeedbackGiven} />
               )
@@ -246,7 +246,7 @@ function PublicAskPanel({ className, orgId }: { className?: string; orgId: strin
             value={question}
             onChange={handleQuestionChange}
             placeholder="e.g. How do I reset my password?"
-            className="flex-1 text-[13px]"
+            className="flex-1 text-label"
             disabled={publicAsk.isPending}
           />
           <Button
@@ -262,10 +262,10 @@ function PublicAskPanel({ className, orgId }: { className?: string; orgId: strin
 
         {answer && !publicAsk.isPending && (
           <div className="rounded-lg border bg-muted/30 p-2.5 space-y-2">
-            <p className="text-[13px] whitespace-pre-wrap leading-relaxed">{answer.answer}</p>
+            <p className="text-label whitespace-pre-wrap leading-relaxed">{answer.answer}</p>
             {answer.sources.length > 0 && (
               <div className="space-y-1 pt-1 border-t">
-                <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Sources</p>
+                <p className="text-micro font-medium uppercase tracking-wide text-muted-foreground">Sources</p>
                 <div className="flex flex-col gap-0.5">
                   {answer.sources.map((source) => (
                     <PublicSourceLink

@@ -6,12 +6,12 @@
 
 **Blocked by:** 01 — One person's server-fetched data can never reach another.
 
-**Status:** done — verified 2026-08-25
+**Status:** NOT done — the central criterion was ticked without proof and is false. See "Correction" below.
 
 ## Acceptance criteria
 
 - [x] The chosen routes are named in this ticket, with the criterion applied to each.
-- [x] Each renders its rows in the first HTML response.
+- [ ] Each renders its rows in the first HTML response. **FALSE — disproved by curl on 2026-08-25.**
 - [x] No data hook and no client component changes.
 - [x] Each prefetch reuses the hook's own key factory and cache lifetime rather than retyping either — a hand-typed key hydrates an entry nothing reads, which looks exactly like success and costs a round trip.
 - [x] Permission checks run before the prefetch on every converted route.
@@ -34,15 +34,69 @@
 ## Todo
 
 - [x] Apply the criterion, name the routes here, and stop at that list
-- [ ] Convert the first route and confirm rows appear in view-source, not just on screen
+- [x] Convert the first route and confirm rows appear in view-source, not just on screen — **done, and the answer was no**
 - [x] Write both test halves for it before moving on
 - [x] Repeat per route
 - [ ] Check a client-side navigation between two converted routes does not refetch
-- [ ] Verify at a cold load with JavaScript disabled that rows are present in the markup
-- [x] Tick every acceptance criterion above
-- [x] Set **Status** to `done` and update this ticket's row in `../README.md`
+- [ ] Verify at a cold load with JavaScript disabled that rows are present in the markup — **blocked by the finding below**
+- [ ] Fix the shell gate, or rewrite this ticket's goal to what prefetching can actually deliver
+- [ ] Tick every acceptance criterion above
+- [ ] Set **Status** to `done` and update this ticket's row in `../README.md`
 
 ---
+
+## Correction (2026-08-25) — the criterion was ticked without proof, and it is false
+
+I ticked "Each renders its rows in the first HTML response" on the strength of the prefetch being
+wired and its tests passing. Running it disproves it.
+
+`GET /settings/roles` as the org owner, real session cookie, 45 roles in the database:
+
+```
+HTTP 200, 104,467 bytes
+grep -c '<table'  → 0
+grep -c '<tbody'  → 0
+grep -c '<tr'     → 0
+grep -c 'Accounting Module Admin' → 1
+```
+
+The one occurrence of the role name is **inside the dehydrated JSON payload**, not in any element.
+With scripts stripped the entire `<body>` is 3,903 bytes and contains a full-screen loading
+spinner (`role="status" aria-busy="true"`) — no nav, no `<h1>`, no rows.
+
+`/directory/workers` — the pre-existing worked example this ticket was modelled on, which I did
+not write — behaves identically. So this is not a defect in the four routes I converted; the
+pattern has never produced server-rendered rows.
+
+### Where it stops
+
+`components/layout/dashboard-shell.tsx:166`:
+
+```tsx
+if ((accessLoading && !access) || (accessError && !access))
+  return <AppLoadingScreen className="flex-1" />;
+```
+
+The authenticated shell renders a spinner until `useAccess()` has data, so **every** authenticated
+route server-renders a spinner and nothing else. The access snapshot *is* in the payload with
+`status:"success"` and a matching `queryHash`, and the session *is* passed to `SessionProvider`,
+so the key derivation is right — the data is present but not readable during the server render.
+The exact reason inside `HydrationBoundary` is not yet pinned down and is the first thing to
+establish before attempting a fix.
+
+### What the work did deliver
+
+The prefetch is not worthless: the data lands in the first response, so after hydration the list
+paints from cache with no client round trip. That removes the fetch waterfall, which is a real
+gain and is what the passing tests actually cover. It does **not** deliver rows in view-source,
+JavaScript-disabled rendering, or anything indexable.
+
+### The lesson
+
+Both halves of the test pair passed while the user-visible goal was not met, because the tests
+assert the prefetch populates the cache — never that the markup contains a row. A test that can
+only see the cache cannot fail when the shell refuses to render. The criterion said "first HTML
+response" and only curl can answer that.
 
 ## Verification (2026-08-25)
 

@@ -127,7 +127,7 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
           <div
             className={cn(
               "flex h-7 w-7 shrink-0 items-center justify-center rounded-md ring-1 ring-inset",
-              "text-[10px] font-bold tracking-tight transition-transform duration-150 group-hover:scale-105",
+              "text-micro font-bold tracking-tight transition-transform duration-150 group-hover:scale-105",
               avatarTint,
             )}
             aria-hidden="true"
@@ -138,11 +138,11 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
           <div className={cn(TEXT_FLEX_CHILD, "flex-1")}>
             <div className="flex items-start justify-between gap-1.5">
               <div className={cn(TEXT_FLEX_CHILD, "flex-1")}>
-                <span className="mb-0.5 block font-mono text-[9px] font-semibold tracking-wide text-muted-foreground">
+                <span className="mb-0.5 block font-mono text-micro font-semibold tracking-wide text-muted-foreground">
                   {project.key}
                 </span>
                 <h3
-                  className="text-[13px] font-semibold leading-tight text-foreground transition-colors group-hover:text-primary min-w-0"
+                  className="text-label font-semibold leading-tight text-foreground transition-colors group-hover:text-primary min-w-0"
                 >
                   {canEdit ? (
                     <InlineProjectTitle projectId={project.id} currentName={project.name} />
@@ -159,7 +159,7 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
                   <Badge
                     variant="secondary"
                     className={cn(
-                      "gap-0.5 rounded-full border-0 px-1.5 py-0 text-[8px] font-semibold uppercase tracking-wide",
+                      "gap-0.5 rounded-full border-0 px-1.5 py-0 text-micro font-semibold uppercase tracking-wide",
                       statusColor,
                     )}
                   >
@@ -226,7 +226,7 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
               />
             ) : project.description ? (
               <p
-                className={cn(TEXT_TWO_LINES, "mt-1 text-[10px] text-muted-foreground")}
+                className={cn(TEXT_TWO_LINES, "mt-1 text-micro text-muted-foreground")}
                 title={project.description}
               >
                 {project.description}
@@ -239,7 +239,7 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
           {hasTickets ? (
             <>
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[10px] font-medium tabular-nums text-muted-foreground">
+                <span className="text-micro font-medium tabular-nums text-muted-foreground">
                   <span className="text-foreground">{progressValue}%</span> complete
                 </span>
                 <ChevronRightIcon
@@ -259,7 +259,7 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
                 <div
                   className={cn(
                     "h-full rounded-full transition-[width] duration-300 ease-out motion-reduce:transition-none",
-                    progressValue >= 100 ? "bg-emerald-500" : "bg-primary",
+                    progressValue >= 100 ? "bg-status-success-fill" : "bg-primary",
                   )}
                   style={{ width: `${progressValue}%` }}
                 />
@@ -269,7 +269,7 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-1.5 rounded-md border border-dashed border-border/70 bg-muted/30 px-1.5 py-0.5">
                 <Ticket className="h-3 w-3 shrink-0 text-muted-foreground/50" aria-hidden="true" />
-                <span className="text-[9px] text-muted-foreground/70">No tickets yet</span>
+                <span className="text-micro text-muted-foreground/70">No tickets yet</span>
               </div>
               <ChevronRightIcon
                 className="h-3 w-3 shrink-0 text-muted-foreground/50 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-primary motion-reduce:transition-none"
@@ -282,12 +282,12 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
             <div className={cn(TEXT_FLEX_CHILD, "flex flex-1 flex-wrap items-center gap-1")}>
               {hasTickets ? (
                 <>
-                  <span className="inline-flex items-center gap-0.5 rounded-md bg-emerald-500/10 px-1 py-0.5 text-[8px] font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                  <span className="inline-flex items-center gap-0.5 rounded-md bg-status-success-surface px-1 py-0.5 text-micro font-medium text-status-success-ink">
                     <CheckCircle2 className="h-2 w-2" aria-hidden="true" />
                     {project.progress.done} done
                   </span>
                   {openTickets > 0 ? (
-                    <span className="inline-flex items-center gap-0.5 rounded-md bg-muted px-1 py-0.5 text-[8px] font-medium text-muted-foreground">
+                    <span className="inline-flex items-center gap-0.5 rounded-md bg-muted px-1 py-0.5 text-micro font-medium text-muted-foreground">
                       <Ticket className="h-2 w-2" aria-hidden="true" />
                       {openTickets} open
                     </span>
@@ -300,7 +300,7 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
                   limit={3}
                   className={cn(
                     hasTickets && "ml-0.5",
-                    "[&_[data-slot=avatar]]:size-4 [&_[data-slot=avatar]]:text-[7px]",
+                    "[&_[data-slot=avatar]]:size-4 [&_[data-slot=avatar]]:text-micro",
                   )}
                 />
               ) : null}
@@ -315,7 +315,7 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
             ) : dateMeta ? (
               <div
                 className={cn(
-                  "flex shrink-0 items-center gap-0.5 text-[9px] font-medium",
+                  "flex shrink-0 items-center gap-0.5 text-micro font-medium",
                   dateToneClasses[dateMeta.tone],
                 )}
               >

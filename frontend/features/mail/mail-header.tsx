@@ -81,7 +81,7 @@ export function MailHeader({
               Mail
             </h1>
             {hasAccounts && unreadCount > 0 ? (
-              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-md bg-primary/10 px-1.5 text-[10px] font-semibold tabular-nums text-foreground border border-primary/15">
+              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-md bg-primary/10 px-1.5 text-micro font-semibold tabular-nums text-foreground border border-primary/15">
                 {unreadCount}
                 <span className="sr-only"> unread in loaded inbox</span>
               </span>
@@ -106,7 +106,7 @@ export function MailHeader({
               <SelectTrigger
                 className={cn(
                   "h-8 w-auto max-w-[8rem] sm:max-w-[11rem] lg:max-w-[13rem]",
-                  "border-transparent bg-transparent shadow-none text-[11px] gap-1 px-2",
+                  "border-transparent bg-transparent shadow-none text-dense gap-1 px-2",
                   "text-muted-foreground hover:text-foreground hover:bg-muted/50",
                   "focus:ring-0 data-[state=open]:bg-muted/50",
                 )}
@@ -148,7 +148,7 @@ export function MailHeader({
           {canAi && hasAccounts ? (
             <button
               type="button"
-              className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border/60 bg-transparent px-2 sm:px-2.5 text-[11px] font-medium text-foreground/85 transition-colors hover:bg-muted/60 hover:border-border focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border/60 bg-transparent px-2 sm:px-2.5 text-dense font-medium text-foreground/85 transition-colors hover:bg-muted/60 hover:border-border focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               onClick={onSummarize}
               aria-label="What needs me — AI inbox triage"
               {...sparklesHover}
@@ -161,7 +161,7 @@ export function MailHeader({
           <Button
             variant="default"
             size="sm"
-            className="h-8 text-[11px] gap-1.5 px-2.5 sm:px-3"
+            className="h-8 text-dense gap-1.5 px-2.5 sm:px-3"
             onClick={onCompose}
             disabled={!hasAccounts}
             aria-label="Compose"

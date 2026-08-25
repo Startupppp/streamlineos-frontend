@@ -12,10 +12,10 @@ const RISK_LABEL: Partial<Record<TicketRiskLevel, string>> = {
 };
 
 const RISK_CLASS: Partial<Record<TicketRiskLevel, string>> = {
-  first_response_due_soon: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  resolution_due_soon: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  first_response_breached: "bg-red-100 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
-  resolution_breached: "bg-red-100 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  first_response_due_soon: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  resolution_due_soon: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  first_response_breached: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
+  resolution_breached: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
   paused: "bg-muted text-muted-foreground border-border",
 };
 

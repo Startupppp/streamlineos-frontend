@@ -34,7 +34,7 @@ function SharedRow({ node }: { node: KbPageTreeNode }) {
       {node.status && (
         <Badge
           variant="outline"
-          className={`text-[10px] h-4 px-1.5 shrink-0 ${badgeClass}`}
+          className={`text-micro h-4 px-1.5 shrink-0 ${badgeClass}`}
         >
           {KB_STATUS_LABELS[node.status] ?? node.status}
         </Badge>

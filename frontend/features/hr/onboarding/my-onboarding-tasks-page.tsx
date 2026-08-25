@@ -22,20 +22,20 @@ import { getErrorMessage } from "@/lib/get-error-message";
 
 function AllDoneBanner() {
   return (
-    <div className="flex flex-col items-center gap-3 rounded-xl border border-green-200 bg-green-50 px-6 py-8 text-center dark:border-green-900 dark:bg-green-500/10">
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-500/10">
-        <PartyPopper className="h-6 w-6 text-green-600 dark:text-green-300" />
+    <div className="flex flex-col items-center gap-3 rounded-xl border border-status-success-rule bg-status-success-surface px-6 py-8 text-center">
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-status-success-surface">
+        <PartyPopper className="h-6 w-6 text-status-success-ink" />
       </div>
       <div>
-        <p className="text-lg font-semibold text-green-800 dark:text-green-300">
+        <p className="text-lg font-semibold text-status-success-ink">
           You have completed all onboarding tasks!
         </p>
-        <p className="mt-1 text-sm text-green-700/70 dark:text-green-300/70">
+        <p className="mt-1 text-sm text-status-success-ink">
           Welcome aboard - you are all set. Check back here if HR assigns new tasks.
         </p>
       </div>
       <CheckCircle2
-        className="h-5 w-5 animate-bounce text-green-500"
+        className="h-5 w-5 animate-bounce text-status-success-ink"
         aria-hidden="true"
       />
     </div>

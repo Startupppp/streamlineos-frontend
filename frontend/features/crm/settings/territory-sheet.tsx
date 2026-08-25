@@ -73,7 +73,7 @@ function ChipBadge({ chip, onRemove }: ChipBadgeProps) {
     [chip, onRemove]
   );
   return (
-    <Badge variant="secondary" className="h-5 px-1.5 text-[10px] gap-0.5 shrink-0">
+    <Badge variant="secondary" className="h-5 px-1.5 text-micro gap-0.5 shrink-0">
       {chip}
       <button
         type="button"

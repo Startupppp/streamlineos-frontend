@@ -43,23 +43,23 @@ const typeConfig: Record<
 > = {
   deal_won: {
     icon: CheckCircle2,
-    color: "text-emerald-600 dark:text-emerald-400",
-    bg: "bg-emerald-500/10",
+    color: "text-status-success-ink",
+    bg: "bg-status-success-surface",
   },
   meeting: {
     icon: Calendar,
-    color: "text-blue-600 dark:text-blue-400",
-    bg: "bg-blue-500/10",
+    color: "text-status-info-ink",
+    bg: "bg-status-info-surface",
   },
   proposal: {
     icon: FileText,
-    color: "text-blue-600 dark:text-blue-400",
-    bg: "bg-blue-500/10",
+    color: "text-status-info-ink",
+    bg: "bg-status-info-surface",
   },
   call: {
     icon: Phone,
-    color: "text-amber-600 dark:text-amber-400",
-    bg: "bg-amber-500/10",
+    color: "text-status-warning-ink",
+    bg: "bg-status-warning-surface",
   },
   email: {
     icon: Mail,
@@ -68,13 +68,13 @@ const typeConfig: Record<
   },
   ticket: {
     icon: Ticket,
-    color: "text-blue-600 dark:text-blue-400",
-    bg: "bg-blue-500/10",
+    color: "text-status-info-ink",
+    bg: "bg-status-info-surface",
   },
   escalation: {
     icon: AlertTriangle,
-    color: "text-red-600 dark:text-red-400",
-    bg: "bg-red-500/10",
+    color: "text-status-danger-ink",
+    bg: "bg-status-danger-surface",
   },
 };
 

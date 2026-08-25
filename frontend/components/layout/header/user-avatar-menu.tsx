@@ -188,7 +188,7 @@ const AccountTrigger = forwardRef<
     >
       <Avatar className="size-8 ring-2 ring-sidebar-border">
         <AvatarImage src={image} alt={name} />
-        <AvatarFallback className="text-[11px] font-bold bg-primary/10 text-primary">
+        <AvatarFallback className="text-dense font-bold bg-primary/10 text-primary">
           {initials}
         </AvatarFallback>
       </Avatar>
@@ -213,7 +213,7 @@ function UserIdentity({
       />
       <TruncatedText
         text={email}
-        className="mt-0.5 block w-full min-w-0 text-[11px] text-muted-foreground"
+        className="mt-0.5 block w-full min-w-0 text-dense text-muted-foreground"
       />
     </div>
   );

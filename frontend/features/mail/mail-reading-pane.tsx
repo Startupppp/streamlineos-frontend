@@ -255,7 +255,7 @@ export function MailReadingPane({
             <h2 className="text-sm font-semibold text-foreground leading-tight line-clamp-2">
               {selectedMessage.subject || "(no subject)"}
             </h2>
-            <p className="mt-1 text-[11px] text-muted-foreground">
+            <p className="mt-1 text-dense text-muted-foreground">
               {messages.length > 1
                 ? `${messages.length} messages in thread`
                 : "Single message"}

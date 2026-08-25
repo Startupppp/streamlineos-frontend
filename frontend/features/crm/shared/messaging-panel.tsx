@@ -70,7 +70,7 @@ export function MessagingPanel({ phone, entityType, entityId }: MessagingPanelPr
           onClick={handleWhatsApp}
           className="gap-1.5 text-xs"
         >
-          <MessageCircle className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400" />
+          <MessageCircle className="h-3.5 w-3.5 text-status-success-ink" />
           WhatsApp
         </Button>
       </motion.div>

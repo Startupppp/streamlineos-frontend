@@ -34,7 +34,7 @@ const columns: DataTableColumn<BiometricLog>[] = [
     cell: (log) => (
       <Badge
         variant={log.punchType === "IN" ? "default" : "secondary"}
-        className="text-[11px]"
+        className="text-dense"
       >
         {log.punchType}
       </Badge>
@@ -45,7 +45,7 @@ const columns: DataTableColumn<BiometricLog>[] = [
     header: "Processed",
     cell: (log) => (
       <span
-        className={`text-xs font-medium ${log.processed ? "text-emerald-600" : "text-amber-600"}`}
+        className={`text-xs font-medium ${log.processed ? "text-status-success-ink" : "text-status-warning-ink"}`}
       >
         {log.processed ? "Yes" : "Pending"}
       </span>

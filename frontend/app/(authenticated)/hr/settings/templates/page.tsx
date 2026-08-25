@@ -49,9 +49,9 @@ function buildTemplateColumns(
       header: "Name",
       cell: (t) => (
         <div>
-          <p className="font-medium text-[13px] text-foreground">{t.name}</p>
+          <p className="font-medium text-label text-foreground">{t.name}</p>
           {t.description && (
-            <TruncatedText text={t.description} className="text-[11px] text-muted-foreground max-w-xs mt-0.5" />
+            <TruncatedText text={t.description} className="text-dense text-muted-foreground max-w-xs mt-0.5" />
           )}
         </div>
       ),
@@ -71,13 +71,13 @@ function buildTemplateColumns(
     {
       key: "version",
       header: "Version",
-      cell: (t) => <span className="text-[11px] font-mono text-muted-foreground">v{t.version}</span>,
+      cell: (t) => <span className="text-dense font-mono text-muted-foreground">v{t.version}</span>,
     },
     {
       key: "updatedAt",
       header: "Updated",
       cell: (t) => (
-        <span className="text-[11px] text-muted-foreground">
+        <span className="text-dense text-muted-foreground">
           {t.updatedAt ? new Date(t.updatedAt).toLocaleDateString() : "—"}
         </span>
       ),
@@ -230,7 +230,7 @@ export default function HrTemplatesPage() {
               </SelectContent>
             </Select>
             {total > 0 && (
-              <span className="text-[11px] text-muted-foreground ml-auto">{total} template{total !== 1 ? "s" : ""}</span>
+              <span className="text-dense text-muted-foreground ml-auto">{total} template{total !== 1 ? "s" : ""}</span>
             )}
           </div>
         }

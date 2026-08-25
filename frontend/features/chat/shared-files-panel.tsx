@@ -32,7 +32,7 @@ export function SharedFilesPanel({ channelId, onClose }: { channelId: number; on
       <div className="h-[56px] px-4 border-b border-border/40 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
           <Paperclip className="h-4 w-4 text-muted-foreground" />
-          <h3 className="text-[14px] font-bold">Shared Files</h3>
+          <h3 className="text-sm font-bold">Shared Files</h3>
         </div>
         <FilesPanelCloseButton onClick={onClose} className="p-1.5 hover:bg-muted rounded-lg" aria-label="Close" />
       </div>
@@ -47,8 +47,8 @@ export function SharedFilesPanel({ channelId, onClose }: { channelId: number; on
             <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center mb-3">
               <Paperclip className="h-5 w-5 text-muted-foreground/50" />
             </div>
-            <h4 className="text-[13px] font-semibold mb-1">No files yet</h4>
-            <p className="text-[11px] text-muted-foreground text-center">Files shared in this channel appear here.</p>
+            <h4 className="text-label font-semibold mb-1">No files yet</h4>
+            <p className="text-dense text-muted-foreground text-center">Files shared in this channel appear here.</p>
           </div>
         ) : (
           <div className="py-2">
@@ -64,7 +64,7 @@ export function SharedFilesPanel({ channelId, onClose }: { channelId: number; on
                   className="block px-4 py-2 hover:bg-muted/30 transition-colors"
                 >
                   <Image src={url} alt={file.fileName} width={400} height={120} className="w-full rounded-lg object-cover max-h-[120px]" />
-                  <p className="text-[11px] text-muted-foreground mt-1 truncate">{file.fileName}</p>
+                  <p className="text-dense text-muted-foreground mt-1 truncate">{file.fileName}</p>
                 </a>
               ) : (
                 <a
@@ -76,13 +76,13 @@ export function SharedFilesPanel({ channelId, onClose }: { channelId: number; on
                 >
                   <div className={cn("h-9 w-9 rounded-lg flex flex-col items-center justify-center shrink-0", colors.bg)}>
                     <FileText className={cn("h-4 w-4", colors.text)} />
-                    <span className={cn("text-[6px] font-bold text-white px-1 rounded mt-0.5", colors.badge)}>
+                    <span className={cn("text-micro font-bold text-white px-1 rounded mt-0.5", colors.badge)}>
                       {getFileExt(file.fileName)}
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[12px] font-semibold truncate">{file.fileName}</p>
-                    <p className="text-[10px] text-muted-foreground">{formatFileSize(file.fileSize)}</p>
+                    <p className="text-xs font-semibold truncate">{file.fileName}</p>
+                    <p className="text-micro text-muted-foreground">{formatFileSize(file.fileSize)}</p>
                   </div>
                 </a>
               );
@@ -92,7 +92,7 @@ export function SharedFilesPanel({ channelId, onClose }: { channelId: number; on
                 <button
                   onClick={() => fetchNextPage()}
                   disabled={isFetchingNextPage}
-                  className="text-[11px] text-primary hover:underline disabled:opacity-50"
+                  className="text-dense text-primary hover:underline disabled:opacity-50"
                 >
                   {isFetchingNextPage ? "Loading..." : "Load more"}
                 </button>

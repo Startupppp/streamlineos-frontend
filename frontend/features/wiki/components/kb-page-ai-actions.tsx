@@ -178,7 +178,7 @@ export function KbPageAiActions({ pageId, onApplyImprovement }: KbPageAiActionsP
           </AnimatedIconButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuLabel className="text-[11px] font-medium text-muted-foreground">
+          <DropdownMenuLabel className="text-dense font-medium text-muted-foreground">
             AI assist
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
@@ -188,8 +188,8 @@ export function KbPageAiActions({ pageId, onApplyImprovement }: KbPageAiActionsP
               onSelect={(e) => { e.preventDefault(); void runAction(key); }}
               className="flex flex-col items-start gap-0.5"
             >
-              <span className="text-[13px]">{ACTION_LABELS[key]}</span>
-              <span className="text-[11px] text-muted-foreground">{ACTION_DESCRIPTIONS[key]}</span>
+              <span className="text-label">{ACTION_LABELS[key]}</span>
+              <span className="text-dense text-muted-foreground">{ACTION_DESCRIPTIONS[key]}</span>
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
@@ -199,7 +199,7 @@ export function KbPageAiActions({ pageId, onApplyImprovement }: KbPageAiActionsP
         <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
           <SheetHeader className="shrink-0 border-b border-border px-6 py-4">
             <SheetTitle className="text-base font-semibold">{sheetTitle}</SheetTitle>
-            <SheetDescription className="text-[13px] text-muted-foreground">
+            <SheetDescription className="text-label text-muted-foreground">
               AI-generated content grounded in this page. Review before you use it.
             </SheetDescription>
           </SheetHeader>
@@ -207,7 +207,7 @@ export function KbPageAiActions({ pageId, onApplyImprovement }: KbPageAiActionsP
           <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4 space-y-4">
             {panelState.status === "ask-input" && (
               <form onSubmit={handleAskSubmit} className="flex flex-col gap-3">
-                <p className="text-[13px] text-muted-foreground">
+                <p className="text-label text-muted-foreground">
                   Ask a question — the answer is scoped to this page only.
                 </p>
                 <Input
@@ -215,7 +215,7 @@ export function KbPageAiActions({ pageId, onApplyImprovement }: KbPageAiActionsP
                   value={question}
                   onChange={handleQuestionChange}
                   placeholder="e.g. What are the prerequisites?"
-                  className="text-[13px]"
+                  className="text-label"
                 />
                 <Button
                   type="submit"
@@ -255,7 +255,7 @@ export function KbPageAiActions({ pageId, onApplyImprovement }: KbPageAiActionsP
                 {active === "ask" && lastQuestion && (
                   <div className="mb-1">
                     <p className="text-xs font-medium text-muted-foreground">Your question</p>
-                    <p className="text-[13px] text-foreground mt-0.5">{lastQuestion}</p>
+                    <p className="text-label text-foreground mt-0.5">{lastQuestion}</p>
                   </div>
                 )}
                 <AiDraftCard
@@ -263,7 +263,7 @@ export function KbPageAiActions({ pageId, onApplyImprovement }: KbPageAiActionsP
                   acceptLabel="Copy & apply draft"
                   usage={panelState.aiUsage}
                 >
-                  <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-foreground">
+                  <p className="whitespace-pre-wrap text-label leading-relaxed text-foreground">
                     {panelState.text}
                   </p>
                 </AiDraftCard>

@@ -324,7 +324,7 @@ export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
                         <span className="ml-1 text-xs text-destructive">*</span>
                       )}
                       {field.sensitive && (
-                        <span className="ml-1 text-xs text-amber-600">sensitive</span>
+                        <span className="ml-1 text-xs text-status-warning-ink">sensitive</span>
                       )}
                     </div>
                     <div className="flex items-center gap-1">
@@ -394,7 +394,7 @@ export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
                         <span className="ml-1 text-xs text-destructive">*</span>
                       )}
                       {field.sensitive && (
-                        <span className="ml-1 text-xs text-amber-600">sensitive</span>
+                        <span className="ml-1 text-xs text-status-warning-ink">sensitive</span>
                       )}
                     </div>
                     <div className="flex items-center gap-1">

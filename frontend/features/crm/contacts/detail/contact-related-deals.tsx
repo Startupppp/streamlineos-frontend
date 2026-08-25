@@ -15,11 +15,11 @@ import { cn } from "@/lib/utils";
 import type { Contact } from "@/types/crm";
 
 const STAGE_CONFIG: Record<string, { label: string; className: string }> = {
-  LEAD: { label: "Lead", className: "bg-blue-500/10 text-blue-600 dark:text-blue-400" },
-  CONTACTED: { label: "Contacted", className: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400" },
-  PROPOSAL: { label: "Proposal", className: "bg-blue-500/10 text-blue-600 dark:text-blue-400" },
-  NEGOTIATION: { label: "Negotiation", className: "bg-amber-500/10 text-amber-600 dark:text-amber-400" },
-  WON: { label: "Won", className: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" },
+  LEAD: { label: "Lead", className: "bg-status-info-surface text-status-info-ink" },
+  CONTACTED: { label: "Contacted", className: "bg-status-info-surface text-status-info-ink" },
+  PROPOSAL: { label: "Proposal", className: "bg-status-info-surface text-status-info-ink" },
+  NEGOTIATION: { label: "Negotiation", className: "bg-status-warning-surface text-status-warning-ink" },
+  WON: { label: "Won", className: "bg-status-success-surface text-status-success-ink" },
   LOST: { label: "Lost", className: "bg-muted text-muted-foreground" },
 };
 
@@ -61,7 +61,7 @@ function DealRow({ dealId }: { dealId: number }) {
       </td>
       <td className="px-4 py-2.5">
         <Badge
-          className={cn("text-[10px] border-0 capitalize", stageConfig.className)}
+          className={cn("text-micro border-0 capitalize", stageConfig.className)}
         >
           {stageConfig.label}
         </Badge>

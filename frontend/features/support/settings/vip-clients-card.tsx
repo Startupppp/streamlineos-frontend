@@ -39,7 +39,7 @@ function VipClientRow({ clientId, name, onRemove }: VipClientRowProps) {
   return (
     <div className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2">
       <div className="flex items-center gap-2 text-sm">
-        <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
+        <Star className="h-3.5 w-3.5 text-status-warning-ink fill-amber-500" />
         {name}
       </div>
       <AnimatedIconButton

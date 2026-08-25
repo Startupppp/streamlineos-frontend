@@ -61,16 +61,24 @@ const FIELD_TYPES: Array<{ value: CustomFieldType; label: string }> = [
   { value: "user", label: "User" },
 ];
 
+/**
+ * Field type is a taxonomy — a date field is not a warning. Nine types read as
+ * four looks, so select, multi-select and currency were one chip and number,
+ * user and url were another.
+ *
+ * user takes indigo and url sky, rather than the blue all three shared before
+ * the migration; number keeps it.
+ */
 const fieldTypeColors: Record<CustomFieldType, string> = {
   text: "bg-muted text-muted-foreground",
-  number: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-  date: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
-  user: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-  select: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
-  multi_select: "bg-teal-100 text-teal-700 dark:bg-teal-500/10 dark:text-teal-300",
-  checkbox: "bg-pink-100 text-pink-700 dark:bg-pink-500/10 dark:text-pink-300",
-  url: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300",
-  currency: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300",
+  number: "bg-category-blue-surface text-category-blue-ink",
+  date: "bg-category-amber-surface text-category-amber-ink",
+  user: "bg-category-indigo-surface text-category-indigo-ink",
+  select: "bg-category-emerald-surface text-category-emerald-ink",
+  multi_select: "bg-category-teal-surface text-category-teal-ink",
+  checkbox: "bg-category-pink-surface text-category-pink-ink",
+  url: "bg-category-sky-surface text-category-sky-ink",
+  currency: "bg-category-green-surface text-category-green-ink",
 };
 
 interface CustomFieldItem {
@@ -108,21 +116,21 @@ const CustomFieldRow = memo(function CustomFieldRow({
           {field.name}
         </p>
         {field.options && field.options.length > 0 && (
-          <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+          <p className="text-dense text-muted-foreground truncate mt-0.5">
             Options: {field.options.join(", ")}
           </p>
         )}
       </div>
       <Badge
         variant="secondary"
-        className={`text-[10px] shrink-0 ${fieldTypeColors[field.type]}`}
+        className={`text-micro shrink-0 ${fieldTypeColors[field.type]}`}
       >
         {field.type.replace("_", " ")}
       </Badge>
       {field.required && (
         <Badge
           variant="outline"
-          className="text-[10px] shrink-0 border-red-200 text-red-600 dark:border-red-500/30 dark:text-red-400"
+          className="text-micro shrink-0 border-status-danger-rule text-status-danger-ink"
         >
           required
         </Badge>
@@ -131,7 +139,7 @@ const CustomFieldRow = memo(function CustomFieldRow({
         trigger={
           <button
             type="button"
-            className="w-7 flex items-center justify-center rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors shrink-0"
+            className="w-7 flex items-center justify-center rounded-lg text-status-danger-ink hover:text-status-danger-ink hover:bg-status-danger-surface transition-colors shrink-0"
             aria-label="Delete field"
             {...deleteHoverHandlers}
           >
@@ -284,7 +292,7 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
                             <FormControl>
                               <Input {...field} placeholder="e.g. Story Points" className="text-sm" autoFocus />
                             </FormControl>
-                            <FormMessage className="text-[10px]" />
+                            <FormMessage className="text-micro" />
                           </FormItem>
                         )}
                       />
@@ -304,7 +312,7 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
                                 ))}
                               </SelectContent>
                             </Select>
-                            <FormMessage className="text-[10px]" />
+                            <FormMessage className="text-micro" />
                           </FormItem>
                         )}
                       />
@@ -319,7 +327,7 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
                             <FormControl>
                               <Input {...field} placeholder="Option 1, Option 2, Option 3" className="text-sm" />
                             </FormControl>
-                            <FormMessage className="text-[10px]" />
+                            <FormMessage className="text-micro" />
                           </FormItem>
                         )}
                       />

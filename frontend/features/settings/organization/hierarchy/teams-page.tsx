@@ -241,11 +241,11 @@ export function OrgTeamsPage() {
         <Badge
           variant={team.status === "ACTIVE" ? "outline" : "secondary"}
           className={cn(
-            "h-4 px-1.5 py-0 text-[9px]",
+            "h-4 px-1.5 py-0 text-micro",
             team.status === "ACTIVE"
-              ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
+              ? "border-status-success-rule bg-status-success-surface text-status-success-ink"
               : team.status === "ARCHIVED"
-                ? "border-amber-200 bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400"
+                ? "border-status-warning-rule bg-status-warning-surface text-status-warning-ink"
                 : "",
           )}
         >

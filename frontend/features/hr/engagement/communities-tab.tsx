@@ -84,7 +84,7 @@ function CommunityCard({ community, currentUserId }: CommunityCardProps) {
           <TruncatedText text={community.description} lines={2} className="text-xs text-muted-foreground leading-relaxed" />
         )}
       </div>
-      <p className="text-[11px] text-muted-foreground">
+      <p className="text-dense text-muted-foreground">
         {memberCount} {memberCount === 1 ? "member" : "members"}
       </p>
     </div>

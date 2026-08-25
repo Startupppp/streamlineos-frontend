@@ -42,13 +42,13 @@ export function LinkPreviewCard({ content, isOwn }: { content: string; isOwn: bo
       )}
       <div className="flex-1 min-w-0 p-2.5">
         {data.siteName && (
-          <TruncatedText text={data.siteName} className={cn("text-[10px] font-medium mb-0.5", isOwn ? "text-white/60" : "text-muted-foreground")} />
+          <TruncatedText text={data.siteName} className={cn("text-micro font-medium mb-0.5", isOwn ? "text-white/60" : "text-muted-foreground")} />
         )}
         {data.title && (
-          <TruncatedText text={data.title} className={cn("text-[12px] font-semibold", isOwn ? "text-white" : "text-foreground")} />
+          <TruncatedText text={data.title} className={cn("text-xs font-semibold", isOwn ? "text-white" : "text-foreground")} />
         )}
         {data.description && (
-          <p className={cn("text-[11px] line-clamp-2 mt-0.5", isOwn ? "text-white/70" : "text-muted-foreground")}>
+          <p className={cn("text-dense line-clamp-2 mt-0.5", isOwn ? "text-white/70" : "text-muted-foreground")}>
             {data.description}
           </p>
         )}

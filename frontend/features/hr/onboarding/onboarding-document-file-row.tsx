@@ -65,7 +65,7 @@ export function DocumentFileRow({
         tooltip={fileName}
       />
       {pending ? (
-        <span className="shrink-0 rounded border border-border bg-muted px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+        <span className="shrink-0 rounded border border-border bg-muted px-1.5 py-px text-micro font-semibold uppercase tracking-wide text-muted-foreground">
           Pending
         </span>
       ) : null}

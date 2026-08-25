@@ -82,8 +82,8 @@ const QUIET_HOURS_OPTIONS = [
 ] as const;
 
 const priorityBadgeClass: Record<NotificationPriority, string> = {
-  CRITICAL: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
-  HIGH: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  CRITICAL: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
+  HIGH: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   NORMAL: "bg-muted text-muted-foreground border-border",
   LOW: "bg-muted text-muted-foreground border-border",
 };
@@ -181,7 +181,7 @@ function PolicySheet({
                     <div className="space-y-0.5">
                       <FormLabel className="text-sm font-medium">Enabled</FormLabel>
                       {isMandatory && (
-                        <p className="text-[11px] text-muted-foreground">Mandatory events cannot be disabled</p>
+                        <p className="text-dense text-muted-foreground">Mandatory events cannot be disabled</p>
                       )}
                     </div>
                     <FormControl>
@@ -253,7 +253,7 @@ function PolicySheet({
                         );
                       })}
                     </div>
-                    <p className="text-[11px] text-muted-foreground mt-1">
+                    <p className="text-dense text-muted-foreground mt-1">
                       Only channels allowed for this event are shown.
                     </p>
                     <FormMessage />
@@ -390,22 +390,22 @@ function EventRow({
       <div className="flex-1 min-w-0 space-y-1">
         <div className="flex items-center gap-1.5 flex-wrap">
           <span className="text-sm font-medium">{event.displayName}</span>
-          <Badge variant="secondary" className="text-[10px] h-4 px-1.5 shrink-0">
+          <Badge variant="secondary" className="text-micro h-4 px-1.5 shrink-0">
             {event.category}
           </Badge>
           <Badge
             variant="outline"
-            className={cn("text-[10px] h-4 px-1.5 shrink-0 border", priorityBadgeClass[event.defaultPriority])}
+            className={cn("text-micro h-4 px-1.5 shrink-0 border", priorityBadgeClass[event.defaultPriority])}
           >
             {event.defaultPriority}
           </Badge>
           {event.mandatory && (
-            <Badge variant="outline" className="text-[10px] h-4 px-1.5 shrink-0 border-orange-200 text-orange-700 bg-orange-50 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30">
+            <Badge variant="outline" className="text-micro h-4 px-1.5 shrink-0 border-status-warning-rule text-status-warning-ink bg-status-warning-surface">
               Mandatory
             </Badge>
           )}
           {event.overridden && (
-            <Badge variant="outline" className="text-[10px] h-4 px-1.5 shrink-0 border-primary/20 text-foreground bg-primary/10">
+            <Badge variant="outline" className="text-micro h-4 px-1.5 shrink-0 border-primary/20 text-foreground bg-primary/10">
               Overridden
             </Badge>
           )}
@@ -413,14 +413,14 @@ function EventRow({
             {event.defaultChannels.map((ch) => (
               <span
                 key={ch}
-                className="inline-flex items-center text-[10px] px-1 py-0.5 rounded bg-muted text-muted-foreground font-medium"
+                className="inline-flex items-center text-micro px-1 py-0.5 rounded bg-muted text-muted-foreground font-medium"
               >
                 {ch}
               </span>
             ))}
           </div>
         </div>
-        <p className="text-[11px] font-mono text-muted-foreground/60">{event.eventKey}</p>
+        <p className="text-dense font-mono text-muted-foreground/60">{event.eventKey}</p>
       </div>
       <div className="flex items-center gap-2 shrink-0">
         <Switch
@@ -621,7 +621,7 @@ export default function NotificationEventsPage() {
                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   {module}
                 </span>
-                <span className="text-[10px] text-muted-foreground/50 tabular-nums">
+                <span className="text-micro text-muted-foreground/50 tabular-nums">
                   {moduleEvents.length}
                 </span>
               </div>

@@ -38,8 +38,8 @@ export const PROVIDER_STATUS_TONE: Record<PaymentProviderStatus, StatusTone> = {
 
 export const STATUS_TONE_CLASSNAMES: Record<StatusTone, string> = {
   neutral: "text-muted-foreground border-border bg-muted/40",
-  info: "text-blue-700 border-blue-200 bg-blue-50 dark:text-blue-300 dark:border-blue-500/30 dark:bg-blue-500/10",
-  warning: "text-amber-700 border-amber-200 bg-amber-50 dark:text-amber-300 dark:border-amber-500/30 dark:bg-amber-500/10",
-  danger: "text-rose-700 border-rose-200 bg-rose-50 dark:text-rose-300 dark:border-rose-500/30 dark:bg-rose-500/10",
-  success: "text-emerald-700 border-emerald-200 bg-emerald-50 dark:text-emerald-300 dark:border-emerald-500/30 dark:bg-emerald-500/10",
+  info: "text-status-info-ink border-status-info-rule bg-status-info-surface",
+  warning: "text-status-warning-ink border-status-warning-rule bg-status-warning-surface",
+  danger: "text-status-danger-ink border-status-danger-rule bg-status-danger-surface",
+  success: "text-status-success-ink border-status-success-rule bg-status-success-surface",
 };

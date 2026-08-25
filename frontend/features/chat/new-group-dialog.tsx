@@ -198,7 +198,7 @@ export function NewGroupDialog({
       )}
       <DialogContent className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
         <DialogHeader className="shrink-0 border-b border-border px-4 py-3">
-          <DialogTitle className="text-[16px]">
+          <DialogTitle className="text-base">
             {step === "info" ? "Create Channel" : "Add Members"}
           </DialogTitle>
         </DialogHeader>
@@ -219,8 +219,8 @@ export function NewGroupDialog({
                   )}
                 >
                   {kind.icon}
-                  <span className="text-[12px] font-semibold">{kind.label}</span>
-                  <span className="text-[10px] leading-tight opacity-70">
+                  <span className="text-xs font-semibold">{kind.label}</span>
+                  <span className="text-micro leading-tight opacity-70">
                     {kind.description}
                   </span>
                 </button>
@@ -267,7 +267,7 @@ export function NewGroupDialog({
             </div>
 
             <div>
-              <Label className="mb-1.5 block text-[12px] font-medium text-muted-foreground">
+              <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">
                 Channel name <span className="text-destructive">*</span>
               </Label>
               <div className="relative">
@@ -286,7 +286,7 @@ export function NewGroupDialog({
             </div>
 
             <div>
-              <Label className="mb-1.5 block text-[12px] font-medium text-muted-foreground">
+              <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">
                 Description{" "}
                 <span className="text-muted-foreground/50">(optional)</span>
               </Label>
@@ -312,7 +312,7 @@ export function NewGroupDialog({
         ) : (
           <>
             <DialogBody className="space-y-3 px-4 py-4">
-              <Label className="text-[12px] font-medium text-muted-foreground">Members</Label>
+              <Label className="text-xs font-medium text-muted-foreground">Members</Label>
               <MemberPicker
                 mode="multi"
                 values={selectedIds}

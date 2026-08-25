@@ -43,7 +43,7 @@ export function AttachmentPreview({
       ) : (
         <div className="h-10 w-10 rounded border border-border bg-muted flex items-center justify-center shrink-0">
           {file.type === "application/pdf" ? (
-            <FileText className="h-5 w-5 text-red-500" />
+            <FileText className="h-5 w-5 text-status-danger-ink" />
           ) : (
             <File className="h-5 w-5 text-muted-foreground" />
           )}
@@ -51,7 +51,7 @@ export function AttachmentPreview({
       )}
       <div className="flex-1 min-w-0">
         <p className="truncate text-xs font-medium" title={file.name}>{file.name}</p>
-        <p className="text-[10px] text-muted-foreground">
+        <p className="text-micro text-muted-foreground">
           {formatBytes(file.size)}
         </p>
       </div>

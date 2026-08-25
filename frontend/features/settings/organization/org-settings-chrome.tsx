@@ -106,7 +106,7 @@ export function SettingsField({
 
   return (
     <div className={cn("min-w-0 space-y-0.5", className)}>
-      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+      <p className="text-dense font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </p>
       {children ?? (

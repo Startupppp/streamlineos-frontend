@@ -22,19 +22,19 @@ import type { PayoutBatchItem, BankBatchStatus, BankItemStatus } from "@/types/p
 
 const ITEM_STATUS_STYLES: Record<BankItemStatus, string> = {
   PENDING: "bg-muted text-muted-foreground",
-  SENT: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
-  PAID: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
-  FAILED: "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-300",
-  HELD: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
+  SENT: "bg-status-warning-surface text-status-warning-ink",
+  PAID: "bg-status-success-surface text-status-success-ink",
+  FAILED: "bg-status-danger-surface text-status-danger-ink",
+  HELD: "bg-status-info-surface text-status-info-ink",
 };
 
 const BATCH_STATUS_STYLES: Record<BankBatchStatus, string> = {
   DRAFT: "bg-muted text-muted-foreground",
-  GENERATED: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-  SENT: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
-  PARTIALLY_PAID: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
-  PAID: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
-  FAILED: "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-300",
+  GENERATED: "bg-status-info-surface text-status-info-ink",
+  SENT: "bg-status-warning-surface text-status-warning-ink",
+  PARTIALLY_PAID: "bg-status-warning-surface text-status-warning-ink",
+  PAID: "bg-status-success-surface text-status-success-ink",
+  FAILED: "bg-status-danger-surface text-status-danger-ink",
 };
 
 interface BatchDetailSheetProps {
@@ -86,7 +86,7 @@ function buildColumns(
       cell: (row) => (
         <span
           className={cn(
-            "inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+            "inline-flex items-center rounded px-1.5 py-0.5 text-micro font-semibold uppercase tracking-wide",
             ITEM_STATUS_STYLES[row.status],
           )}
         >
@@ -112,7 +112,7 @@ function buildColumns(
             <Button
               size="sm"
               variant="outline"
-              className="h-6 text-[10px] px-2"
+              className="h-6 text-micro px-2"
               onClick={() => onAction("paid", row)}
             >
               Mark Paid
@@ -120,7 +120,7 @@ function buildColumns(
             <Button
               size="sm"
               variant="outline"
-              className="h-6 text-[10px] px-2 text-destructive border-destructive/30 hover:bg-destructive/10"
+              className="h-6 text-micro px-2 text-destructive border-destructive/30 hover:bg-destructive/10"
               onClick={() => onAction("failed", row)}
             >
               Mark Failed
@@ -230,7 +230,7 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
                     <span>{batch.batchNumber}</span>
                     <span
                       className={cn(
-                        "inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                        "inline-flex items-center rounded px-1.5 py-0.5 text-micro font-semibold uppercase tracking-wide",
                         BATCH_STATUS_STYLES[batch.status],
                       )}
                     >
@@ -244,7 +244,7 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
             </SheetHeader>
             {canImportReturn && (
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-[10px] text-muted-foreground leading-snug max-w-md">
+                <p className="text-micro text-muted-foreground leading-snug max-w-md">
                   Import bank return CSV (itemId or userId, status, utr). Manual workflow — no bank
                   network connection.
                 </p>

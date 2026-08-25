@@ -140,7 +140,7 @@ export function KbArticleAiActions({ articleId, onApplyImprovement }: KbArticleA
         <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
           <SheetHeader className="shrink-0 border-b border-border px-6 py-4">
             <SheetTitle className="text-base font-semibold">Ask about this article</SheetTitle>
-            <SheetDescription className="text-[13px] text-muted-foreground">
+            <SheetDescription className="text-label text-muted-foreground">
               Ask a question — the answer is grounded in this article only.
             </SheetDescription>
           </SheetHeader>
@@ -153,7 +153,7 @@ export function KbArticleAiActions({ articleId, onApplyImprovement }: KbArticleA
                   value={question}
                   onChange={handleQuestionChange}
                   placeholder="e.g. What are the prerequisites?"
-                  className="text-[13px]"
+                  className="text-label"
                 />
                 <Button
                   type="submit"
@@ -191,10 +191,10 @@ export function KbArticleAiActions({ articleId, onApplyImprovement }: KbArticleA
               <>
                 <div className="mb-3">
                   <p className="text-xs font-medium text-muted-foreground">Your question</p>
-                  <p className="text-[13px] text-foreground mt-0.5">{lastQuestion}</p>
+                  <p className="text-label text-foreground mt-0.5">{lastQuestion}</p>
                 </div>
                 <AiDraftCard usage={askState.aiUsage}>
-                  <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-foreground">
+                  <p className="whitespace-pre-wrap text-label leading-relaxed text-foreground">
                     {askState.text}
                   </p>
                 </AiDraftCard>

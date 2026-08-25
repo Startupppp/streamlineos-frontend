@@ -18,9 +18,9 @@ import type { PayrollRunStatus } from "@/types/payroll/runs";
 const ELIGIBLE_STATUSES: PayrollRunStatus[] = ["APPROVED", "LOCKED", "PAID"];
 
 const RUN_STATUS_STYLES: Record<string, string> = {
-  APPROVED: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-  LOCKED: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
-  PAID: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
+  APPROVED: "bg-status-info-surface text-status-info-ink",
+  LOCKED: "bg-status-warning-surface text-status-warning-ink",
+  PAID: "bg-status-success-surface text-status-success-ink",
 };
 
 export function BankTransfersContent() {
@@ -70,7 +70,7 @@ export function BankTransfersContent() {
               </span>
               <span
                 className={cn(
-                  "inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                  "inline-flex items-center rounded px-1.5 py-0.5 text-micro font-semibold uppercase tracking-wide",
                   RUN_STATUS_STYLES[run.status] ?? "bg-muted text-muted-foreground",
                 )}
               >

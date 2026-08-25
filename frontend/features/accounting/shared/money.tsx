@@ -44,7 +44,7 @@ export function Money({
     <span
       className={cn(
         "tabular-nums font-mono",
-        isNegative && "text-red-600",
+        isNegative && "text-status-danger-ink",
         className,
       )}
     >

@@ -7,9 +7,9 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import type { CommandCenterData, PayrollExceptionSeverity, VarianceSummary } from "@/types/payroll/runs";
 
 const SEVERITY_COLORS: Record<PayrollExceptionSeverity, string> = {
-  BLOCKER: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
-  WARNING: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  INFO: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  BLOCKER: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
+  WARNING: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  INFO: "bg-status-info-surface text-status-info-ink border-status-info-rule",
 };
 
 function PanelCard({
@@ -31,7 +31,7 @@ function PanelCard({
 
 function VariancePanel({ summary, runId }: { summary: VarianceSummary | null; runId?: number }) {
   if (!summary) {
-    return <p className="text-[11px] text-muted-foreground">No previous run to compare</p>;
+    return <p className="text-dense text-muted-foreground">No previous run to compare</p>;
   }
 
   const delta = parseFloat(summary.netDelta);
@@ -43,8 +43,8 @@ function VariancePanel({ summary, runId }: { summary: VarianceSummary | null; ru
       <div className="flex items-center gap-2">
         <span
           className={cn(
-            "text-[13px] font-semibold font-mono tabular-nums",
-            isPositive ? "text-emerald-600" : isNegative ? "text-red-600" : "text-foreground",
+            "text-label font-semibold font-mono tabular-nums",
+            isPositive ? "text-status-success-ink" : isNegative ? "text-status-danger-ink" : "text-foreground",
           )}
         >
           {isPositive ? "+" : ""}{formatMoney(summary.netDelta)}
@@ -52,11 +52,11 @@ function VariancePanel({ summary, runId }: { summary: VarianceSummary | null; ru
         {summary.netDeltaPercent !== 0 && (
           <span
             className={cn(
-              "text-[10px] font-medium px-1.5 py-0.5 rounded border",
+              "text-micro font-medium px-1.5 py-0.5 rounded border",
               isPositive
-                ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
+                ? "bg-status-success-surface text-status-success-ink border-status-success-rule"
                 : isNegative
-                ? "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30"
+                ? "bg-status-danger-surface text-status-danger-ink border-status-danger-rule"
                 : "bg-muted text-muted-foreground border-border",
             )}
           >
@@ -65,20 +65,20 @@ function VariancePanel({ summary, runId }: { summary: VarianceSummary | null; ru
         )}
       </div>
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
+        <span className="inline-flex items-center gap-1 text-micro px-1.5 py-0.5 rounded-full bg-status-success-surface text-status-success-ink border border-status-success-rule font-medium">
           +{summary.newJoiners} joiners
         </span>
-        <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200 font-medium dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30">
+        <span className="inline-flex items-center gap-1 text-micro px-1.5 py-0.5 rounded-full bg-status-danger-surface text-status-danger-ink border border-status-danger-rule font-medium">
           -{summary.exited} exits
         </span>
-        <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-medium dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
+        <span className="inline-flex items-center gap-1 text-micro px-1.5 py-0.5 rounded-full bg-status-warning-surface text-status-warning-ink border border-status-warning-rule font-medium">
           {summary.changedEmployees} changed
         </span>
       </div>
       {runId && (
         <Link
           href={`/payroll/runs/${runId}?tab=variance`}
-          className="text-[11px] text-primary hover:underline"
+          className="text-dense text-primary hover:underline"
         >
           View variance details →
         </Link>
@@ -99,7 +99,7 @@ export function CommandCenterPanels({ data, runId }: CommandCenterPanelsProps) {
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <PanelCard title="Exceptions Requiring Action">
         {panels.topExceptions.length === 0 ? (
-          <p className="text-[11px] text-emerald-600">No open exceptions</p>
+          <p className="text-dense text-status-success-ink">No open exceptions</p>
         ) : (
           <div className="space-y-1">
             {panels.topExceptions.map((ex) => {
@@ -113,13 +113,13 @@ export function CommandCenterPanels({ data, runId }: CommandCenterPanelsProps) {
                   className="flex items-center gap-2 py-1 hover:bg-muted/20 -mx-1 px-1 rounded"
                 >
                   <span
-                    className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border shrink-0 ${
+                    className={`inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium border shrink-0 ${
                       SEVERITY_COLORS[ex.severity]
                     }`}
                   >
                     {ex.severity}
                   </span>
-                  <TruncatedText text={ex.message ?? ""} className="text-[11px] text-foreground flex-1" />
+                  <TruncatedText text={ex.message ?? ""} className="text-dense text-foreground flex-1" />
                 </Link>
               );
             })}
@@ -128,13 +128,13 @@ export function CommandCenterPanels({ data, runId }: CommandCenterPanelsProps) {
       </PanelCard>
 
       <PanelCard title="Payout Readiness">
-        <div className="space-y-1 text-[11px]">
+        <div className="space-y-1 text-dense">
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground">Payout ready</span>
             <span
               className={cn(
                 "font-medium",
-                panels.payoutReadiness ? "text-emerald-600" : "text-amber-600",
+                panels.payoutReadiness ? "text-status-success-ink" : "text-status-warning-ink",
               )}
             >
               {panels.payoutReadiness ? "Ready" : "Not ready"}
@@ -145,7 +145,7 @@ export function CommandCenterPanels({ data, runId }: CommandCenterPanelsProps) {
             <span
               className={cn(
                 "font-medium",
-                panels.statutoryReadiness.taxDeclarationsLocked ? "text-emerald-600" : "text-amber-600",
+                panels.statutoryReadiness.taxDeclarationsLocked ? "text-status-success-ink" : "text-status-warning-ink",
               )}
             >
               {panels.statutoryReadiness.taxDeclarationsLocked ? "Locked" : "Open"}
@@ -170,7 +170,7 @@ export function CommandCenterPanels({ data, runId }: CommandCenterPanelsProps) {
           {!panels.payoutReadiness && runId && (
             <Link
               href={`/payroll/runs/${runId}`}
-              className="block text-[11px] text-primary hover:underline pt-1"
+              className="block text-dense text-primary hover:underline pt-1"
             >
               Complete run to unlock payout →
             </Link>
@@ -184,17 +184,17 @@ export function CommandCenterPanels({ data, runId }: CommandCenterPanelsProps) {
 
       <PanelCard title="Pending Approvals">
         {panels.pendingApprovals.length === 0 ? (
-          <p className="text-[11px] text-muted-foreground">No pending approvals</p>
+          <p className="text-dense text-muted-foreground">No pending approvals</p>
         ) : (
           <div className="space-y-1">
             {panels.pendingApprovals.map((approval) => (
               <Link
                 key={approval.id}
                 href={runId ? `/payroll/runs/${runId}?tab=approvals` : "#"}
-                className="flex items-center justify-between text-[11px] py-1 hover:bg-muted/20 -mx-1 px-1 rounded"
+                className="flex items-center justify-between text-dense py-1 hover:bg-muted/20 -mx-1 px-1 rounded"
               >
                 <span className="text-foreground">Stage {approval.stage}</span>
-                <span className="text-amber-600 font-medium">{approval.status}</span>
+                <span className="text-status-warning-ink font-medium">{approval.status}</span>
               </Link>
             ))}
           </div>
@@ -203,7 +203,7 @@ export function CommandCenterPanels({ data, runId }: CommandCenterPanelsProps) {
 
       <PanelCard title="Upcoming Calendar" className="lg:col-span-2">
         {upcomingCalendarEvents.length === 0 ? (
-          <p className="text-[11px] text-muted-foreground">No upcoming events</p>
+          <p className="text-dense text-muted-foreground">No upcoming events</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-0.5">
             {upcomingCalendarEvents.map((event) => {
@@ -211,11 +211,11 @@ export function CommandCenterPanels({ data, runId }: CommandCenterPanelsProps) {
               const isToday = event.date === new Date().toISOString().slice(0, 10);
               const isPast = eventDate < new Date();
               return (
-                <div key={event.id} className="flex items-center gap-2 text-[11px] py-0.5">
+                <div key={event.id} className="flex items-center gap-2 text-dense py-0.5">
                   <span
                     className={cn(
                       "font-mono tabular-nums shrink-0",
-                      isPast ? "text-red-600" : isToday ? "text-amber-600" : "text-muted-foreground",
+                      isPast ? "text-status-danger-ink" : isToday ? "text-status-warning-ink" : "text-muted-foreground",
                     )}
                   >
                     {event.date}

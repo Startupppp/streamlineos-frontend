@@ -97,7 +97,7 @@ function WarehouseLocationPicker({
   return (
     <>
       <div className="space-y-1.5">
-        <Label className="text-[13px] font-medium">
+        <Label className="text-label font-medium">
           {labels[0]} <span className="text-destructive">*</span>
         </Label>
         <Controller
@@ -120,7 +120,7 @@ function WarehouseLocationPicker({
         {warehouseError && <p className="text-xs text-destructive">{warehouseError}</p>}
       </div>
       <div className="space-y-1.5">
-        <Label className="text-[13px] font-medium">
+        <Label className="text-label font-medium">
           {labels[1]} <span className="text-destructive">*</span>
         </Label>
         <Controller
@@ -404,7 +404,7 @@ export function NewTransferSheet({ open, onOpenChange }: { open: boolean; onOpen
                 <FormItem>
                   <div className="flex items-center justify-between">
                     <FormLabel>Notes</FormLabel>
-                    <span className={`text-[11px] tabular-nums ${notesValue.length > NOTES_MAX ? "text-destructive" : "text-muted-foreground"}`}>
+                    <span className={`text-dense tabular-nums ${notesValue.length > NOTES_MAX ? "text-destructive" : "text-muted-foreground"}`}>
                       {notesValue.length}/{NOTES_MAX}
                     </span>
                   </div>
@@ -422,7 +422,7 @@ export function NewTransferSheet({ open, onOpenChange }: { open: boolean; onOpen
             />
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label className="text-[13px] font-medium">
+                <Label className="text-label font-medium">
                   Lines <span className="text-destructive">*</span>
                 </Label>
                 <AnimatedIconButton type="button" icon={PlusIcon} iconSize={14} iconClassName="mr-1" variant="outline" size="sm" className="text-xs" onClick={handleAddLine}>

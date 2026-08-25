@@ -43,13 +43,13 @@ function formatDate(value: string): string {
 
 function DaysUntilExpiryCell({ days }: { days: number }) {
   if (days <= 0) {
-    return <span className="font-mono tabular-nums text-red-700 font-medium">Expired</span>;
+    return <span className="font-mono tabular-nums text-status-danger-ink font-medium">Expired</span>;
   }
   if (days <= 7) {
-    return <span className="font-mono tabular-nums text-red-600 font-medium">{days}</span>;
+    return <span className="font-mono tabular-nums text-status-danger-ink font-medium">{days}</span>;
   }
   if (days <= 30) {
-    return <span className="font-mono tabular-nums text-amber-600 font-medium">{days}</span>;
+    return <span className="font-mono tabular-nums text-status-warning-ink font-medium">{days}</span>;
   }
   return <span className="font-mono tabular-nums">{days}</span>;
 }
@@ -59,7 +59,7 @@ function LotStatusBadge({ status }: { status: string }) {
   const badgeClass = LOT_STATUS_BADGE[key] ?? "bg-muted text-muted-foreground border-border";
   const label = LOT_STATUS_LABEL[key] ?? status;
   return (
-    <Badge variant="outline" className={`h-4 text-[9px] px-1.5 py-0 ${badgeClass}`}>
+    <Badge variant="outline" className={`h-4 text-micro px-1.5 py-0 ${badgeClass}`}>
       {label}
     </Badge>
   );
@@ -70,7 +70,7 @@ function buildColumns(): DataTableColumn<ExpiryReportRow>[] {
     {
       key: "lotNumber",
       header: "Lot #",
-      cell: (row) => <span className="font-mono tabular-nums text-[11px]">{row.lotNumber}</span>,
+      cell: (row) => <span className="font-mono tabular-nums text-dense">{row.lotNumber}</span>,
     },
     {
       key: "productName",
@@ -82,7 +82,7 @@ function buildColumns(): DataTableColumn<ExpiryReportRow>[] {
     {
       key: "variantSku",
       header: "SKU",
-      cell: (row) => <span className="font-mono text-[11px]">{row.variantSku}</span>,
+      cell: (row) => <span className="font-mono text-dense">{row.variantSku}</span>,
     },
     {
       key: "totalOnHand",
@@ -98,7 +98,7 @@ function buildColumns(): DataTableColumn<ExpiryReportRow>[] {
     {
       key: "expiryDate",
       header: "Expiry Date",
-      cell: (row) => <span className="text-[11px]">{formatDate(row.expiryDate)}</span>,
+      cell: (row) => <span className="text-dense">{formatDate(row.expiryDate)}</span>,
       sortable: true,
       sortValue: (row) => row.expiryDate,
     },

@@ -43,25 +43,25 @@ const STATUS_CONFIG: Record<
   SENT: {
     label: "Sent",
     icon: Send,
-    badgeClass: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800",
+    badgeClass: "bg-status-info-surface text-status-info-ink border-status-info-rule",
     accentClass: "border-l-blue-500",
   },
   VIEWED: {
     label: "Viewed",
     icon: Eye,
-    badgeClass: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-800",
+    badgeClass: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
     accentClass: "border-l-amber-500",
   },
   SIGNED: {
     label: "Signed",
     icon: CheckCircle2,
-    badgeClass: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800",
+    badgeClass: "bg-status-success-surface text-status-success-ink border-status-success-rule",
     accentClass: "border-l-emerald-500",
   },
   DECLINED: {
     label: "Declined",
     icon: XCircle,
-    badgeClass: "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/40 dark:text-rose-300 dark:border-rose-800",
+    badgeClass: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
     accentClass: "border-l-rose-500",
   },
 };
@@ -83,7 +83,7 @@ function EsignTimeline({ doc }: { doc: RolloutDocumentRecord }) {
 
   if (doc.declinedAt) {
     return (
-      <div className="flex items-center gap-1.5 text-[11px] text-rose-600 dark:text-rose-400 mt-2">
+      <div className="flex items-center gap-1.5 text-dense text-status-danger-ink mt-2">
         <XCircle className="h-3 w-3" />
         <span>Declined {format(new Date(doc.declinedAt), "PPp")}</span>
       </div>
@@ -102,9 +102,9 @@ function EsignTimeline({ doc }: { doc: RolloutDocumentRecord }) {
           <div key={step.key} className="flex items-center gap-1">
             <div
               className={cn(
-                "flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full border transition-colors duration-200",
+                "flex items-center gap-1 text-micro font-semibold px-1.5 py-0.5 rounded-full border transition-colors duration-200",
                 done
-                  ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800"
+                  ? "bg-status-success-surface text-status-success-ink border-status-success-rule"
                   : "bg-muted text-muted-foreground border-border"
               )}
               title={ts ? format(new Date(ts), "PPp") : step.label}
@@ -116,7 +116,7 @@ function EsignTimeline({ doc }: { doc: RolloutDocumentRecord }) {
               <ChevronRight
                 className={cn(
                   "h-3 w-3",
-                  doneCount > idx ? "text-emerald-500" : "text-muted-foreground/30"
+                  doneCount > idx ? "text-status-success-ink" : "text-muted-foreground/30"
                 )}
               />
             )}
@@ -170,7 +170,7 @@ export function DocumentsTab({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+        <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
           {list.length} document{list.length !== 1 ? "s" : ""}
         </p>
         <Button
@@ -185,7 +185,7 @@ export function DocumentsTab({
       </div>
 
       {!isSelected && (
-        <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50/80 dark:bg-amber-950/20 dark:border-amber-800 p-3 text-xs text-amber-700 dark:text-amber-400">
+        <div className="flex items-start gap-2.5 rounded-xl border border-status-warning-rule bg-status-warning-surface p-3 text-xs text-status-warning-ink">
           <Clock className="h-3.5 w-3.5 shrink-0 mt-0.5" />
           <span>
             Move this candidate to the <strong>Offer</strong> stage to trigger the automatic offer generation prompt.
@@ -210,7 +210,7 @@ export function DocumentsTab({
               <div
                 key={doc.id}
                 className={cn(
-                  "rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden border-l-4 transition-colors duration-200 hover:border-border/80",
+                  "rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden border-l-4 transition-colors duration-200 hover:border-border/80",
                   cfg.accentClass
                 )}
               >
@@ -224,7 +224,7 @@ export function DocumentsTab({
                         <TruncatedText text={doc.title} className="text-sm font-semibold text-foreground" />
                       </div>
                       {doc.createdAt && (
-                        <p className="text-[11px] text-muted-foreground mt-1 ml-9">
+                        <p className="text-dense text-muted-foreground mt-1 ml-9">
                           Created {format(new Date(doc.createdAt), "PPP")}
                         </p>
                       )}
@@ -232,7 +232,7 @@ export function DocumentsTab({
                         <EsignTimeline doc={doc} />
                       </div>
                     </div>
-                    <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0", cfg.badgeClass)}>
+                    <span className={cn("inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border shrink-0", cfg.badgeClass)}>
                       <StatusIcon className="h-3 w-3" />
                       {cfg.label}
                     </span>

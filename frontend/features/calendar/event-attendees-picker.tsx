@@ -60,7 +60,7 @@ export function EventAttendeesPicker({
       <div className="flex items-center justify-between">
         <Label className="text-xs font-medium">Attendees</Label>
         {selectedIds.length > 0 && (
-          <Badge variant="secondary" className="text-[11px]">
+          <Badge variant="secondary" className="text-dense">
             {selectedIds.length} selected
           </Badge>
         )}

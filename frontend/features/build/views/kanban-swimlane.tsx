@@ -44,7 +44,7 @@ export const SwimlaneRowHeader = memo(function SwimlaneRowHeader({
         {assignee ? (
           <Avatar className="h-6 w-6 flex-shrink-0">
             <AvatarImage src={resolveImageUrl(assignee.image)} />
-            <AvatarFallback className="text-[8px]">
+            <AvatarFallback className="text-micro">
               {getUserInitials(assignee)}
             </AvatarFallback>
           </Avatar>

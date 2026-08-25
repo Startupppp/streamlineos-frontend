@@ -30,25 +30,25 @@ export function StatusTimeline({ status }: { status: TransferStatus }) {
                   "h-7 w-7 rounded-full border-2 flex items-center justify-center shrink-0",
                   done && "bg-primary border-primary text-primary-foreground",
                   active && !cancelled && "border-primary bg-primary/10 text-foreground",
-                  cancelled && "border-red-400 bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400",
+                  cancelled && "border-status-danger-rule bg-status-danger-surface text-status-danger-ink",
                   !done && !active && "border-border bg-background text-muted-foreground",
                 )}
               >
                 {done ? (
                   <Check className="h-3.5 w-3.5" aria-hidden="true" />
                 ) : (
-                  <span className="text-[11px] font-semibold">{i + 1}</span>
+                  <span className="text-dense font-semibold">{i + 1}</span>
                 )}
               </div>
               <span
                 className={cn(
-                  "text-[10px] font-medium",
+                  "text-micro font-medium",
                   done
                     ? "text-foreground"
                     : active && !cancelled
                     ? "text-primary"
                     : cancelled
-                    ? "text-red-600 dark:text-red-400"
+                    ? "text-status-danger-ink"
                     : "text-muted-foreground",
                 )}
               >
@@ -72,7 +72,7 @@ export function LocationCell({
   if (!location) {
     return (
       <div>
-        <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-1">
+        <p className="text-dense font-medium text-muted-foreground uppercase tracking-wide mb-1">
           {label}
         </p>
         <p className="text-sm text-muted-foreground">—</p>
@@ -81,7 +81,7 @@ export function LocationCell({
   }
   return (
     <div>
-      <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-1">
+      <p className="text-dense font-medium text-muted-foreground uppercase tracking-wide mb-1">
         {label}
       </p>
       {location.warehouse && (

@@ -42,7 +42,7 @@ function ModuleNavLink({
       <Icon className="size-5 shrink-0" />
       <TruncatedText
         text={route.label}
-        className="max-w-full truncate text-center text-[10px] leading-none"
+        className="max-w-full truncate text-center text-micro leading-none"
       />
     </Link>
   );
@@ -76,7 +76,7 @@ function MoreTab({
       <EllipsisIcon ref={iconRef} className="size-5 shrink-0" />
       <TruncatedText
         text="More"
-        className="max-w-full truncate text-center text-[10px] leading-none"
+        className="max-w-full truncate text-center text-micro leading-none"
       />
     </button>
   );

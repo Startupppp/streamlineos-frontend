@@ -27,7 +27,7 @@ interface ColumnToggleItemProps {
 function ColumnToggleItem({ col, checked, onToggle }: ColumnToggleItemProps) {
   const handleChange = useCallback(() => onToggle(col.key), [col.key, onToggle]);
   return (
-    <DropdownMenuCheckboxItem checked={checked} onCheckedChange={handleChange} className="text-[11px]">
+    <DropdownMenuCheckboxItem checked={checked} onCheckedChange={handleChange} className="text-dense">
       {col.label}
     </DropdownMenuCheckboxItem>
   );
@@ -132,21 +132,21 @@ export function LeadTableView({
 
   const toolbar = (
     <div className="flex items-center justify-between w-full">
-      <span className="text-[11px] text-muted-foreground tabular-nums">
+      <span className="text-dense text-muted-foreground tabular-nums">
         {totalCount > 0 ? `${fromRow}–${toRow} of ${totalCount}` : "0 leads"}
       </span>
       <div className="flex items-center gap-1.5">
         <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
-          <SelectTrigger className="h-6 w-[70px] text-[10px]"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-6 w-[70px] text-micro"><SelectValue /></SelectTrigger>
           <SelectContent>
             {PAGE_SIZES.map((s) => (
-              <SelectItem key={s} value={String(s)} className="text-[11px]">{s}/pg</SelectItem>
+              <SelectItem key={s} value={String(s)} className="text-dense">{s}/pg</SelectItem>
             ))}
           </SelectContent>
         </Select>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2">
+            <Button variant="ghost" size="sm" className="h-6 text-micro px-2">
               <Columns3 className="h-3 w-3 mr-1" />Cols
             </Button>
           </DropdownMenuTrigger>
@@ -176,7 +176,7 @@ export function LeadTableView({
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <p className="sm:hidden shrink-0 text-[10px] text-muted-foreground/70 px-1 pb-0.5">
+      <p className="sm:hidden shrink-0 text-micro text-muted-foreground/70 px-1 pb-0.5">
         Swipe horizontally to see more columns
       </p>
       <DataTable

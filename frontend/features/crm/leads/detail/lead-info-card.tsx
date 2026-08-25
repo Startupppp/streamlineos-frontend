@@ -106,7 +106,7 @@ function CopyChip({
       <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/20 border border-border/30 opacity-40 select-none">
         <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
         <div className="min-w-0">
-          <p className="text-[10px] text-muted-foreground leading-none mb-0.5">
+          <p className="text-micro text-muted-foreground leading-none mb-0.5">
             {label}
           </p>
           <p className="text-xs text-muted-foreground">—</p>
@@ -119,7 +119,7 @@ function CopyChip({
     <>
       <Icon className="h-3.5 w-3.5 text-primary shrink-0" />
       <div className="min-w-0 flex-1">
-        <p className="text-[10px] text-muted-foreground leading-none mb-0.5">
+        <p className="text-micro text-muted-foreground leading-none mb-0.5">
           {label}
         </p>
         <p className="text-xs font-medium truncate">{value}</p>
@@ -130,7 +130,7 @@ function CopyChip({
         title={`Copy ${label}`}
       >
         {copied ? (
-          <CheckCheck className="h-3 w-3 text-emerald-400" />
+          <CheckCheck className="h-3 w-3 text-status-success-ink" />
         ) : (
           <Copy className="h-3 w-3" />
         )}
@@ -380,7 +380,7 @@ export function LeadInfoCard({
 
         {(lead.phone ?? lead.whatsappNumber) && (
           <div className="pt-1">
-            <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium mb-2">
+            <p className="text-micro uppercase tracking-wide text-muted-foreground font-medium mb-2">
               Quick Actions
             </p>
             <MessagingPanel
@@ -398,22 +398,22 @@ export function LeadInfoCard({
               lead.potentialValue && lead.investmentInterest
                 ?"grid-cols-2"
                 :"grid-cols-1",
-"bg-gradient-to-r from-emerald-500/5 via-transparent to-blue-500/5"
+"bg-gradient-to-r from-gradient-success-wash-from via-transparent to-gradient-info-wash-to"
             )}
           >
             {lead.potentialValue && (
               <div className="space-y-0.5">
-                <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">
+                <p className="text-dense uppercase tracking-wide text-muted-foreground font-medium">
                   Potential Value
                 </p>
-                <p className="text-2xl font-bold text-emerald-400 tabular-nums">
+                <p className="text-2xl font-bold text-status-success-ink tabular-nums">
                   ₹{Number(lead.potentialValue).toLocaleString("en-IN")}
                 </p>
               </div>
             )}
             {lead.investmentInterest && (
               <div className="space-y-0.5">
-                <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">
+                <p className="text-dense uppercase tracking-wide text-muted-foreground font-medium">
                   Investment Interest
                 </p>
                 <p className="text-2xl font-bold text-primary tabular-nums">
@@ -427,7 +427,7 @@ export function LeadInfoCard({
         {lead.notes && (
           <div className="rounded-lg bg-muted/20 border border-border/30 overflow-hidden">
             <div className="px-3 py-1.5 bg-muted/30 border-b border-border/20">
-              <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">
+              <p className="text-micro uppercase tracking-wide text-muted-foreground font-semibold">
                 Notes
               </p>
             </div>

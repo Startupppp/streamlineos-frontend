@@ -11,12 +11,12 @@ const APPROVAL_STATUS_MAP: Record<ApprovalStatus, StatusEntry> = {
   escalated: {
     label: "Escalated",
     tone: "warning",
-    className: "bg-amber-100 text-amber-800 border-amber-400",
+    className: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   },
   cancelled: {
     label: "Cancelled",
     tone: "neutral",
-    className: "dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30",
+    className: "",
   },
 };
 

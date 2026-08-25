@@ -230,7 +230,7 @@ export default function PaymentsReceivedPage() {
       key: "paymentMethod",
       header: "Method",
       cell: (row) => (
-        <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4">
+        <Badge variant="outline" className="text-micro px-1.5 py-0 h-4">
           {METHOD_LABELS[row.paymentMethod]}
         </Badge>
       ),

@@ -132,7 +132,7 @@ function buildColumns(
       key: "status",
       header: "Status",
       cell: (rule) => (
-        <Badge variant={rule.isActive ? "default" : "secondary"} className="text-[11px]">
+        <Badge variant={rule.isActive ? "default" : "secondary"} className="text-dense">
           {rule.isActive ? "Active" : "Inactive"}
         </Badge>
       ),

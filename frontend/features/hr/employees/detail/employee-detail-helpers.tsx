@@ -23,7 +23,7 @@ export function AvailabilityBadge({ userId }: { userId: string }) {
   if (entry.status === "ON_LEAVE") {
     const label = `On Leave${entry.leaveType ? ` (${entry.leaveType})` : ""}`;
     return (
-      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30">
+      <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-status-danger-surface text-status-danger-ink border-status-danger-rule">
         <XCircle className="h-3 w-3" />
         {label}
       </span>
@@ -31,14 +31,14 @@ export function AvailabilityBadge({ userId }: { userId: string }) {
   }
   if (entry.status === "HALF_DAY") {
     return (
-      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
+      <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-status-warning-surface text-status-warning-ink border-status-warning-rule">
         <AlertCircle className="h-3 w-3" />
         Half Day
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
+    <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-status-success-surface text-status-success-ink border-status-success-rule">
       <CheckCircle2 className="h-3 w-3" />
       Available
     </span>
@@ -64,7 +64,7 @@ export function StatBlock({
       >
         {value}
       </p>
-      <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground sm:text-[11px]">
+      <p className="mt-0.5 text-micro font-semibold uppercase tracking-wider text-muted-foreground sm:text-dense">
         {label}
       </p>
     </div>
@@ -87,7 +87,7 @@ export function InfoField({
         <Icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
       )}
       <div className="min-w-0 space-y-0.5">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">
           {label}
         </p>
         <TruncatedText text={value} className="text-sm font-medium leading-snug" />
@@ -101,7 +101,7 @@ export function DirectReportsSection({ employeeId }: { employeeId: string }) {
 
   if (isLoading) {
     return (
-      <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
+      <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden">
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -123,7 +123,7 @@ export function DirectReportsSection({ employeeId }: { employeeId: string }) {
   if (!reports || reports.length === 0) return null;
 
   return (
-    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
+    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden">
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-3">
           <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -132,7 +132,7 @@ export function DirectReportsSection({ employeeId }: { employeeId: string }) {
           <h3 className="text-sm font-semibold text-foreground">
             Direct Reports
           </h3>
-          <span className="ml-auto inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
+          <span className="ml-auto inline-flex items-center text-micro font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
             {reports.length}
           </span>
         </div>
@@ -157,7 +157,7 @@ export function DirectReportsSection({ employeeId }: { employeeId: string }) {
                 {r.designation && (
                   <TruncatedText
                     text={r.designation}
-                    className="text-[11px] text-muted-foreground"
+                    className="text-dense text-muted-foreground"
                   />
                 )}
               </div>
@@ -176,7 +176,7 @@ export function ManagerScorecardSection({ employeeId }: { employeeId: string }) 
   if (!scorecard || scorecard.teamSize === 0) return null;
 
   return (
-    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
+    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden">
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-4">
           <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -208,13 +208,13 @@ export function ManagerScorecardSection({ employeeId }: { employeeId: string }) 
                 ? `${scorecard.teamAttendanceRate}%`
                 : "N/A"
             }
-            colorClass="text-emerald-700 dark:text-emerald-300"
+            colorClass="text-status-success-ink"
           />
         </div>
         {scorecard.pendingLeaveRequests > 0 && (
-          <div className="mt-3 flex items-center gap-1.5 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 px-3 py-2">
-            <AlertCircle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300 shrink-0" />
-            <p className="text-xs text-amber-700 dark:text-amber-300 font-medium">
+          <div className="mt-3 flex items-center gap-1.5 rounded-lg bg-status-warning-surface border border-status-warning-rule px-3 py-2">
+            <AlertCircle className="h-3.5 w-3.5 text-status-warning-ink shrink-0" />
+            <p className="text-xs text-status-warning-ink font-medium">
               {scorecard.pendingLeaveRequests} pending leave request
               {scorecard.pendingLeaveRequests !== 1 ? "s" : ""} awaiting
               approval

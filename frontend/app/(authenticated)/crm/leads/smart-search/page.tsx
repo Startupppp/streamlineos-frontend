@@ -22,18 +22,18 @@ const EXAMPLE_QUERIES = [
 ];
 
 const STATUS_BADGE: Record<string, string> = {
-  NEW: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  CONTACTED: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  INTERESTED: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  QUALIFIED: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  CONVERTED: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  LOST: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  NEW: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  CONTACTED: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  INTERESTED: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  QUALIFIED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  CONVERTED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  LOST: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };
 
 const PRIORITY_BADGE: Record<string, string> = {
-  HOT: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
-  WARM: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  COLD: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  HOT: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
+  WARM: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  COLD: "bg-status-info-surface text-status-info-ink border-status-info-rule",
 };
 
 function formatValue(val: number | null) {
@@ -77,9 +77,9 @@ function FilterBadges({ filters }: { filters: Record<string, unknown> }) {
 
   return (
     <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-      <span className="text-[11px] text-muted-foreground font-medium">Interpreted as:</span>
+      <span className="text-dense text-muted-foreground font-medium">Interpreted as:</span>
       {entries.map(([key, val]) => (
-        <Badge key={key} variant="outline" className="text-[10px] gap-1 h-5 px-2">
+        <Badge key={key} variant="outline" className="text-micro gap-1 h-5 px-2">
           <span className="text-muted-foreground">{labelMap[key] ?? key}:</span>
           <span className="font-medium">{format(key, val)}</span>
         </Badge>
@@ -101,7 +101,7 @@ const COLUMNS: DataTableColumn<NLSearchLead>[] = [
           {lead.name}
         </Link>
         {lead.email && (
-          <p className="text-[10px] text-muted-foreground mt-0.5 break-all">{lead.email}</p>
+          <p className="text-micro text-muted-foreground mt-0.5 break-all">{lead.email}</p>
         )}
       </div>
     ),
@@ -121,7 +121,7 @@ const COLUMNS: DataTableColumn<NLSearchLead>[] = [
     cell: (lead) => (
       <Badge
         variant="outline"
-        className={cn("text-[9px] px-1.5 py-0 h-4", STATUS_BADGE[lead.status] ?? "")}
+        className={cn("text-micro px-1.5 py-0 h-4", STATUS_BADGE[lead.status] ?? "")}
       >
         {capitalize(lead.status)}
       </Badge>
@@ -134,7 +134,7 @@ const COLUMNS: DataTableColumn<NLSearchLead>[] = [
       lead.priority ? (
         <Badge
           variant="outline"
-          className={cn("text-[9px] px-1.5 py-0 h-4", PRIORITY_BADGE[lead.priority] ?? "")}
+          className={cn("text-micro px-1.5 py-0 h-4", PRIORITY_BADGE[lead.priority] ?? "")}
         >
           {capitalize(lead.priority)}
         </Badge>
@@ -301,7 +301,7 @@ export default function SmartLeadSearchPage() {
         ) : hasResult ? (
           <div className="flex flex-1 min-h-0 flex-col space-y-4">
             <FilterBadges filters={data.parsedFilters} />
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-dense text-muted-foreground">
               <span className="font-semibold text-foreground tabular-nums">{data.total}</span>{" "}
               {data.total === 1 ? "result" : "results"} found
             </p>

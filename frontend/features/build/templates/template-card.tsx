@@ -80,22 +80,22 @@ const TaskPreviewRow = memo(function TaskPreviewRow({
   return (
     <div className="flex min-w-0 items-center gap-2 rounded-md bg-muted/40 px-2 py-1.5">
       <span
-        className="w-3 shrink-0 text-center text-[10px] tabular-nums text-muted-foreground/50"
+        className="w-3 shrink-0 text-center text-micro tabular-nums text-muted-foreground/50"
         aria-hidden="true"
       >
         {index + 1}
       </span>
       <span
         className={cn(
-          "shrink-0 rounded px-1 py-px text-[9px] font-semibold uppercase tracking-wide",
+          "shrink-0 rounded px-1 py-px text-micro font-semibold uppercase tracking-wide",
           typeColor,
         )}
       >
         {type}
       </span>
-      <TruncatedText text={title} className="flex-1 text-[11px] text-foreground/90" />
+      <TruncatedText text={title} className="flex-1 text-dense text-foreground/90" />
       {phase ? (
-        <span className="shrink-0 rounded bg-muted px-1 py-px text-[9px] text-muted-foreground">
+        <span className="shrink-0 rounded bg-muted px-1 py-px text-micro text-muted-foreground">
           {phase}
         </span>
       ) : null}
@@ -144,7 +144,7 @@ export const TemplateCard = memo(function TemplateCard({
           <div
             className={cn(
               "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset",
-              "text-[11px] font-bold tracking-tight",
+              "text-dense font-bold tracking-tight",
               avatarTint,
             )}
             aria-hidden="true"
@@ -158,7 +158,7 @@ export const TemplateCard = memo(function TemplateCard({
                 text={template.name}
                 className="text-sm font-semibold text-foreground transition-colors group-hover:text-primary"
               />
-              <span className="inline-flex shrink-0 items-center gap-0.5 rounded-md bg-muted px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground">
+              <span className="inline-flex shrink-0 items-center gap-0.5 rounded-md bg-muted px-1.5 py-0.5 text-micro font-medium text-muted-foreground">
                 <ListChecks className="h-2.5 w-2.5" aria-hidden="true" />
                 {taskCount} {taskCount === 1 ? "task" : "tasks"}
               </span>
@@ -167,7 +167,7 @@ export const TemplateCard = memo(function TemplateCard({
             <Badge
               variant="secondary"
               className={cn(
-                "mt-1.5 gap-1 rounded-full border-0 px-2 py-0 text-[9px] font-semibold uppercase tracking-wide",
+                "mt-1.5 gap-1 rounded-full border-0 px-2 py-0 text-micro font-semibold uppercase tracking-wide",
                 badgeColor,
               )}
             >
@@ -179,7 +179,7 @@ export const TemplateCard = memo(function TemplateCard({
 
         {template.description ? (
           <p
-            className={cn(TEXT_TWO_LINES, "mb-2.5 flex-1 text-[11px] leading-relaxed text-muted-foreground")}
+            className={cn(TEXT_TWO_LINES, "mb-2.5 flex-1 text-dense leading-relaxed text-muted-foreground")}
             title={template.description}
           >
             {template.description}
@@ -201,7 +201,7 @@ export const TemplateCard = memo(function TemplateCard({
                 />
               ))}
               {overflow > 0 ? (
-                <p className="pl-1 text-[10px] text-muted-foreground">
+                <p className="pl-1 text-micro text-muted-foreground">
                   +{overflow} more {overflow === 1 ? "task" : "tasks"}
                 </p>
               ) : null}
@@ -212,7 +212,7 @@ export const TemplateCard = memo(function TemplateCard({
                 className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50"
                 aria-hidden="true"
               />
-              <span className="text-[10px] text-muted-foreground/70">No tasks defined</span>
+              <span className="text-micro text-muted-foreground/70">No tasks defined</span>
             </div>
           )}
 

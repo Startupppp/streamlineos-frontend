@@ -70,7 +70,7 @@ export function CompCycleList({ onSelect }: Props) {
           <div className="min-w-0">
             <div className="flex items-center gap-2 min-w-0">
               <TruncatedText text={cycle.name} className="font-semibold text-sm min-w-0 flex-1" />
-              <Badge variant={STATUS_VARIANT[cycle.status]} className="capitalize text-[11px] shrink-0">{cycle.status}</Badge>
+              <Badge variant={STATUS_VARIANT[cycle.status]} className="capitalize text-dense shrink-0">{cycle.status}</Badge>
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">FY {cycle.fiscalYear} · Budget {formatCents(cycle.budgetPoolCents)}</p>
           </div>

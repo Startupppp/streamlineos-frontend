@@ -21,8 +21,8 @@ import { statusDotColors } from "./project-card-utils";
 
 export const dateToneClasses = {
   muted: "text-muted-foreground",
-  soon: "text-amber-600 dark:text-amber-400",
-  overdue: "text-red-600 dark:text-red-400",
+  soon: "text-status-warning-ink",
+  overdue: "text-status-danger-ink",
 } as const;
 
 export function StatusDot({ status }: { status: string }) {

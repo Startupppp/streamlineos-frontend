@@ -41,18 +41,18 @@ export const balanceCardConfig: Record<
 > = {
   "Casual Leave": {
     label: "CASUAL",
-    barColor: "bg-blue-500",
-    valueColor: "text-blue-700 dark:text-blue-300",
-    iconBg: "bg-blue-100 dark:bg-blue-500/10",
-    iconColor: "text-blue-600 dark:text-blue-300",
+    barColor: "bg-status-info-fill",
+    valueColor: "text-status-info-ink",
+    iconBg: "bg-status-info-surface",
+    iconColor: "text-status-info-ink",
     icon: CalendarDays,
   },
   "Sick Leave": {
     label: "SICK",
-    barColor: "bg-rose-500",
-    valueColor: "text-rose-700 dark:text-rose-300",
-    iconBg: "bg-rose-100 dark:bg-rose-500/10",
-    iconColor: "text-rose-600 dark:text-rose-300",
+    barColor: "bg-status-danger-fill",
+    valueColor: "text-status-danger-ink",
+    iconBg: "bg-status-danger-surface",
+    iconColor: "text-status-danger-ink",
     icon: Heart,
   },
   "Unpaid Leave": {
@@ -89,18 +89,18 @@ export const priorityConfig: Record<
 > = {
   HIGH: {
     label: "High",
-    dotColor: "bg-rose-500",
-    textColor: "text-rose-600 dark:text-rose-300",
+    dotColor: "bg-status-danger-fill",
+    textColor: "text-status-danger-ink",
   },
   MEDIUM: {
     label: "Medium",
-    dotColor: "bg-amber-500",
-    textColor: "text-amber-600 dark:text-amber-300",
+    dotColor: "bg-status-warning-fill",
+    textColor: "text-status-warning-ink",
   },
   LOW: {
     label: "Low",
-    dotColor: "bg-emerald-500",
-    textColor: "text-emerald-600 dark:text-emerald-300",
+    dotColor: "bg-status-success-fill",
+    textColor: "text-status-success-ink",
   },
 };
 
@@ -123,7 +123,7 @@ export const BalanceCard = React.memo(function BalanceCard({
 
   return (
     <Card
-      className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden"
+      className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden"
       role="listitem"
     >
       <CardContent className="p-3">
@@ -139,7 +139,7 @@ export const BalanceCard = React.memo(function BalanceCard({
               aria-hidden="true"
             />
           </div>
-          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+          <span className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
             {config.label}
           </span>
         </div>
@@ -159,7 +159,7 @@ export const BalanceCard = React.memo(function BalanceCard({
             </span>
           )}
         </div>
-        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-3 mt-1">
+        <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider mb-3 mt-1">
           {isUnpaid ? "Days Taken" : "Days Available"}
         </p>
 
@@ -216,7 +216,7 @@ export const WfhRequestItem = React.memo(function WfhRequestItem({
         {showUser && request.user && (
           <Avatar className="w-8 shrink-0">
             <AvatarImage src={resolveImageUrl(request.user.image)} />
-            <AvatarFallback className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
+            <AvatarFallback className="text-xs bg-status-info-surface text-status-info-ink">
               {request.user.firstName?.[0]}
               {request.user.lastName?.[0]}
             </AvatarFallback>
@@ -233,7 +233,7 @@ export const WfhRequestItem = React.memo(function WfhRequestItem({
             <TruncatedText text={request.reason} className="text-xs text-muted-foreground mt-0.5" />
           )}
           {status === "REJECTED" && request.rejectionReason && (
-            <p className="text-xs text-rose-600 dark:text-rose-300 mt-0.5 truncate">
+            <p className="text-xs text-status-danger-ink mt-0.5 truncate">
               {request.rejectionReason}
             </p>
           )}
@@ -242,7 +242,7 @@ export const WfhRequestItem = React.memo(function WfhRequestItem({
       <div className="flex items-center gap-2 shrink-0 ml-3">
         <span
           className={cn(
-            "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+            "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border",
             getColorSafe(wfhStatusColors, status),
           )}
         >

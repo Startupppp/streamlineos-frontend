@@ -42,7 +42,7 @@ type FieldRowProps = {
 function FieldRow({ label, value, placeholder, filled }: FieldRowProps) {
   return (
     <div className="flex min-w-0 items-start justify-between gap-3">
-      <p className="shrink-0 text-[11px] font-medium text-muted-foreground">
+      <p className="shrink-0 text-dense font-medium text-muted-foreground">
         {label}
       </p>
       <AnimatePresence mode="wait" initial={false}>
@@ -53,7 +53,7 @@ function FieldRow({ label, value, placeholder, filled }: FieldRowProps) {
           exit={{ opacity: 0, y: -3 }}
           transition={{ duration: 0.18, ease: WIZARD_EASE }}
           className={cn(
-            "min-w-0 flex-1 text-right text-[12px] leading-snug",
+            "min-w-0 flex-1 text-right text-xs leading-snug",
             filled ? "font-medium text-foreground" : "text-muted-foreground/55",
           )}
         >
@@ -124,15 +124,15 @@ function ProfilePreviewInner({
               <Building2 className="h-3.5 w-3.5" aria-hidden />
             </span>
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold tracking-tight text-foreground">
+              <p className="text-dense font-semibold tracking-tight text-foreground">
                 People
               </p>
-              <p className="truncate text-[10px] text-muted-foreground">
+              <p className="truncate text-micro text-muted-foreground">
                 Directory · Employee profile
               </p>
             </div>
           </div>
-          <span className="shrink-0 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
+          <span className="shrink-0 rounded-full border border-status-success-rule bg-status-success-surface px-2 py-0.5 text-micro font-semibold text-status-success-ink">
             Active
           </span>
         </div>
@@ -153,7 +153,7 @@ function ProfilePreviewInner({
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.18, ease: WIZARD_EASE }}
                   className={cn(
-                    "truncate font-display text-[1.15rem] font-extrabold tracking-[-0.03em]",
+                    "truncate font-display text-lg font-extrabold tracking-[-0.03em]",
                     nameFilled ? "text-foreground" : "text-muted-foreground/60",
                   )}
                 >
@@ -162,19 +162,19 @@ function ProfilePreviewInner({
               </AnimatePresence>
               <div className="flex flex-wrap items-center gap-1.5">
                 {role ? (
-                  <span className="inline-flex max-w-full items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                  <span className="inline-flex max-w-full items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-micro font-semibold text-muted-foreground">
                     <Briefcase className="h-3 w-3 shrink-0" aria-hidden />
                     <span className="truncate">{role}</span>
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 rounded-full border border-dashed border-border/80 px-2 py-0.5 text-[10px] text-muted-foreground/55">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-dashed border-border/80 px-2 py-0.5 text-micro text-muted-foreground/55">
                     <Briefcase className="h-3 w-3 shrink-0" aria-hidden />
                     Role
                   </span>
                 )}
               </div>
               {email ? (
-                <p className="flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground">
+                <p className="flex min-w-0 items-center gap-1.5 text-dense text-muted-foreground">
                   <Mail className="h-3 w-3 shrink-0" aria-hidden />
                   <span className="truncate">{email}</span>
                 </p>
@@ -183,7 +183,7 @@ function ProfilePreviewInner({
           </div>
 
           <section className="space-y-2.5 rounded-xl border border-border/70 bg-background/60 p-3">
-            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground">
+            <div className="flex items-center gap-1.5 text-dense font-semibold text-foreground">
               <UserRound className="h-3.5 w-3.5 text-brand-core" aria-hidden />
               Contact
             </div>
@@ -210,7 +210,7 @@ function ProfilePreviewInner({
           </section>
 
           <section className="space-y-2.5 rounded-xl border border-border/70 bg-background/60 p-3">
-            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground">
+            <div className="flex items-center gap-1.5 text-dense font-semibold text-foreground">
               <MapPin className="h-3.5 w-3.5 text-brand-core" aria-hidden />
               Home address
             </div>
@@ -222,7 +222,7 @@ function ProfilePreviewInner({
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.16, ease: WIZARD_EASE }}
                 className={cn(
-                  "whitespace-pre-line text-[12px] leading-relaxed",
+                  "whitespace-pre-line text-xs leading-relaxed",
                   address
                     ? "font-medium text-foreground"
                     : "text-muted-foreground/55",
@@ -234,7 +234,7 @@ function ProfilePreviewInner({
           </section>
 
           <section className="space-y-2.5 rounded-xl border border-border/70 bg-background/60 p-3">
-            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground">
+            <div className="flex items-center gap-1.5 text-dense font-semibold text-foreground">
               <Shield className="h-3.5 w-3.5 text-brand-core" aria-hidden />
               Emergency contact
             </div>
@@ -266,7 +266,7 @@ function ProfilePreviewInner({
                 transition={{ duration: 0.22, ease: WIZARD_EASE }}
                 className="space-y-2.5 rounded-xl border border-border/70 bg-background/60 p-3"
               >
-                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground">
+                <div className="flex items-center gap-1.5 text-dense font-semibold text-foreground">
                   <Landmark
                     className="h-3.5 w-3.5 text-brand-core"
                     aria-hidden
@@ -300,7 +300,7 @@ function ProfilePreviewInner({
 
         <div className="flex items-center gap-2 border-t border-border/60 px-4 py-2.5">
           <Phone className="h-3 w-3 text-muted-foreground" aria-hidden />
-          <p className="text-[10px] text-muted-foreground">
+          <p className="text-micro text-muted-foreground">
             Live preview · updates as you type
           </p>
         </div>

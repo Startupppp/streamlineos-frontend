@@ -153,8 +153,8 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
     return (
       <div className="space-y-4">
         <div className="space-y-1.5">
-          <Label className="text-[13px] font-medium">Verification code</Label>
-          <p className="text-[12px] text-muted-foreground">
+          <Label className="text-label font-medium">Verification code</Label>
+          <p className="text-xs text-muted-foreground">
             Sent to{" "}
             <span className="font-medium text-foreground">{submittedEmail}</span>
           </p>
@@ -193,7 +193,7 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
           </LoadingButton>
         )}
 
-        <div className="flex items-center justify-between text-[12px] text-muted-foreground">
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
           <button
             type="button"
             onClick={handleBack}
@@ -213,7 +213,7 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
 
         <div className="text-center pt-1">
           {magicLinkSent ? (
-            <p className="text-[12px] text-emerald-600">
+            <p className="text-xs text-status-success-ink">
               Check your inbox — a sign-in link is on its way.
             </p>
           ) : (
@@ -221,7 +221,7 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
               type="button"
               onClick={handleSendMagicLink}
               disabled={magicLinkMutation.isPending}
-              className="text-[12px] text-muted-foreground hover:text-foreground transition-colors underline-offset-2 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors underline-offset-2 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {magicLinkMutation.isPending
                 ? "Sending sign-in link..."
@@ -240,7 +240,7 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
       className="space-y-3"
     >
       <div className="space-y-1.5">
-        <Label htmlFor="email" className="text-[13px] font-medium">
+        <Label htmlFor="email" className="text-label font-medium">
           Email
         </Label>
         <Input
@@ -260,7 +260,7 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
           aria-describedby={emailForm.formState.errors.email ? "email-error" : undefined}
         />
         {emailForm.formState.errors.email && (
-          <p id="email-error" role="alert" className="text-[12px] text-destructive">
+          <p id="email-error" role="alert" className="text-xs text-destructive">
             {emailForm.formState.errors.email.message}
           </p>
         )}

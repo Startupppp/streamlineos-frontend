@@ -9,7 +9,7 @@ export const HR_IMPORT_EXPORT_ENTITIES: ImportEntity[] = [
     description:
       "Export expense claims with status, category, and amounts.",
     exportEndpoint: "/hr/expenses/export",
-    accent: "text-cyan-600 bg-cyan-500/10",
+    accent: "text-status-info-ink bg-status-info-surface",
     supported: { import: false, export: true },
   },
   {
@@ -19,7 +19,7 @@ export const HR_IMPORT_EXPORT_ENTITIES: ImportEntity[] = [
     description:
       "Export asset inventory with assigned employees and status.",
     exportEndpoint: "/hr/export/assets",
-    accent: "text-slate-600 bg-slate-500/10",
+    accent: "text-muted-foreground bg-muted",
     supported: { import: false, export: true },
   },
 ];

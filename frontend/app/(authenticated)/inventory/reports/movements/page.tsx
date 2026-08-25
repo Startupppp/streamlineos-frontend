@@ -32,15 +32,15 @@ const TYPE_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
 ];
 
 const TYPE_CLASS: Record<MovementType, string> = {
-  PURCHASE: "bg-green-100 text-green-800 border-green-200 dark:bg-green-500/10 dark:text-green-300 dark:border-green-500/30",
-  SALE: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  GRN: "bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  ADJUSTMENT_IN: "bg-green-100 text-green-800 border-green-200 dark:bg-green-500/10 dark:text-green-300 dark:border-green-500/30",
-  ADJUSTMENT_OUT: "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-500/10 dark:text-yellow-300 dark:border-yellow-500/30",
-  TRANSFER_IN: "bg-cyan-100 text-cyan-800 border-cyan-200 dark:bg-cyan-500/10 dark:text-cyan-300 dark:border-cyan-500/30",
-  TRANSFER_OUT: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30",
-  RETURN_IN: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  RETURN_OUT: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  PURCHASE: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  SALE: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  GRN: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  ADJUSTMENT_IN: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  ADJUSTMENT_OUT: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  TRANSFER_IN: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  TRANSFER_OUT: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  RETURN_IN: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  RETURN_OUT: "bg-status-info-surface text-status-info-ink border-status-info-rule",
 };
 
 function formatDate(value: string): string {
@@ -70,7 +70,7 @@ function buildMovementsColumns(): DataTableColumn<MovementRow>[] {
       key: "createdAt",
       header: "Date",
       cell: (row) => (
-        <span className="text-[11px] whitespace-nowrap text-muted-foreground">
+        <span className="text-dense whitespace-nowrap text-muted-foreground">
           {formatDate(row.createdAt)}
         </span>
       ),
@@ -79,7 +79,7 @@ function buildMovementsColumns(): DataTableColumn<MovementRow>[] {
       key: "type",
       header: "Type",
       cell: (row) => (
-        <Badge variant="outline" className={`text-[9px] h-4 px-1.5 py-0 ${TYPE_CLASS[row.type]}`}>
+        <Badge variant="outline" className={`text-micro h-4 px-1.5 py-0 ${TYPE_CLASS[row.type]}`}>
           {row.type.replace(/_/g, " ")}
         </Badge>
       ),
@@ -87,22 +87,22 @@ function buildMovementsColumns(): DataTableColumn<MovementRow>[] {
     {
       key: "productName",
       header: "Product",
-      cell: (row) => <span className="text-[11px] font-medium">{row.productName}</span>,
+      cell: (row) => <span className="text-dense font-medium">{row.productName}</span>,
     },
     {
       key: "sku",
       header: "SKU",
-      cell: (row) => <span className="text-[11px] font-mono">{row.sku}</span>,
+      cell: (row) => <span className="text-dense font-mono">{row.sku}</span>,
     },
     {
       key: "warehouseName",
       header: "Warehouse",
-      cell: (row) => <span className="text-[11px]">{row.warehouseName ?? "—"}</span>,
+      cell: (row) => <span className="text-dense">{row.warehouseName ?? "—"}</span>,
     },
     {
       key: "locationName",
       header: "Location",
-      cell: (row) => <span className="text-[11px]">{row.locationName ?? "—"}</span>,
+      cell: (row) => <span className="text-dense">{row.locationName ?? "—"}</span>,
     },
     {
       key: "quantity",
@@ -111,7 +111,7 @@ function buildMovementsColumns(): DataTableColumn<MovementRow>[] {
       className: "text-right",
       cell: (row) => (
         <span
-          className={`text-[11px] font-mono tabular-nums font-semibold ${row.quantity >= 0 ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}`}
+          className={`text-dense font-mono tabular-nums font-semibold ${row.quantity >= 0 ? "text-status-success-ink" : "text-status-danger-ink"}`}
         >
           {row.quantity >= 0 ? `+${row.quantity}` : row.quantity}
         </span>
@@ -121,14 +121,14 @@ function buildMovementsColumns(): DataTableColumn<MovementRow>[] {
       key: "balanceAfter",
       header: "Balance After",
       headerClassName: "text-right",
-      className: "text-right font-mono tabular-nums text-[11px]",
+      className: "text-right font-mono tabular-nums text-dense",
       cell: (row) => row.balanceAfter !== null ? row.balanceAfter : "—",
     },
     {
       key: "referenceType",
       header: "Reference",
       cell: (row) => (
-        <span className="text-[11px]">
+        <span className="text-dense">
           {row.referenceType && row.referenceNumber
             ? `${row.referenceType} ${row.referenceNumber}`
             : (row.notes ?? "—")}
@@ -139,7 +139,7 @@ function buildMovementsColumns(): DataTableColumn<MovementRow>[] {
       key: "performedBy",
       header: "Performed By",
       cell: (row) => (
-        <span className="text-[11px] text-muted-foreground">{row.performedBy ?? "—"}</span>
+        <span className="text-dense text-muted-foreground">{row.performedBy ?? "—"}</span>
       ),
     },
   ];

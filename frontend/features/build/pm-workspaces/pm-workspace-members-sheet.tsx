@@ -163,13 +163,13 @@ export function PmWorkspaceMembersSheet({ workspace, open, onOpenChange }: Props
               <ul className="flex flex-col divide-y divide-border">
                 {rows.map((m) => (
                   <li key={m.pmWorkspaceMembershipId} className="flex items-center gap-2 py-2">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-medium text-primary">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-micro font-medium text-primary">
                       {initials(m.userId)}
                     </span>
                     <span className="min-w-0 flex-1 truncate text-sm text-foreground">
                       {displayName(m.userId)}
                     </span>
-                    <Badge variant="outline" className="px-1.5 py-0.5 text-[10px] capitalize">
+                    <Badge variant="outline" className="px-1.5 py-0.5 text-micro capitalize">
                       {m.role}
                     </Badge>
                     {canManage ? (

@@ -83,14 +83,14 @@ function RoleListItem({ role, isSelected, onSelect, onDelete, onRename }: RoleLi
     >
       <div className="min-w-0">
         <p className="text-sm font-medium truncate">{role.name}</p>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-dense text-muted-foreground">
           {role.permissionCount} permission
           {role.permissionCount === 1 ? "" : "s"}
         </p>
       </div>
       <div className="flex items-center gap-1 shrink-0">
         {role.isSystem && (
-          <Badge variant="outline" className="text-[9px] px-1.5">System</Badge>
+          <Badge variant="outline" className="text-micro px-1.5">System</Badge>
         )}
         {!role.isSystem && (
           <>

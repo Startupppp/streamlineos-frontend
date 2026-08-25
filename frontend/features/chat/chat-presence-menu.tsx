@@ -20,8 +20,8 @@ const STATUS_OPTIONS: {
   label: string;
   color: string;
 }[] = [
-  { value: "ONLINE", label: "Online", color: "bg-emerald-500" },
-  { value: "AWAY", label: "Away", color: "bg-amber-400" },
+  { value: "ONLINE", label: "Online", color: "bg-status-success-fill" },
+  { value: "AWAY", label: "Away", color: "bg-status-warning-fill" },
   { value: "BUSY", label: "Busy", color: "bg-destructive" },
   { value: "INVISIBLE", label: "Invisible", color: "bg-muted-foreground" },
 ];
@@ -67,7 +67,7 @@ export function ChatPresenceMenu({
           <div className="relative shrink-0">
             <Avatar className={cn("border border-border/30", compact ? "size-5" : "size-7")}>
               <AvatarImage src={resolveImageUrl(session?.user?.image)} />
-              <AvatarFallback className="bg-primary/10 text-[9px] font-semibold text-primary">
+              <AvatarFallback className="bg-primary/10 text-micro font-semibold text-primary">
                 {session?.user?.name?.charAt(0)?.toUpperCase() ?? "U"}
               </AvatarFallback>
             </Avatar>
@@ -80,14 +80,14 @@ export function ChatPresenceMenu({
             />
           </div>
           {compact ? (
-            <span className="text-[10px] leading-none text-muted-foreground">Me</span>
+            <span className="text-micro leading-none text-muted-foreground">Me</span>
           ) : (
             <div className="min-w-0 flex-1">
               <TruncatedText
                 text={session?.user?.name ?? "You"}
-                className="text-[12px] font-medium"
+                className="text-xs font-medium"
               />
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-micro text-muted-foreground">
                 {currentOption.label}
               </p>
             </div>

@@ -23,13 +23,13 @@ export type InvitationStatusFilter = "all" | InvitationStatus;
 
 const STATUS_CLASSES: Record<InvitationStatus, string> = {
   pending:
-    "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+    "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   accepted:
-    "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+    "bg-status-success-surface text-status-success-ink border-status-success-rule",
   expired:
-    "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+    "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
   revoked:
-    "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30",
+    "bg-muted text-foreground border-border",
 };
 
 function getInvitationStatus(invitation: Invitation): InvitationStatus {
@@ -73,7 +73,7 @@ function InvitationRoleSelect({
 
   return (
     <Select value={role} onValueChange={handleValueChange} disabled={disabled}>
-      <SelectTrigger className="h-6 w-fit min-w-[7rem] border-input bg-card text-[11px]">
+      <SelectTrigger className="h-6 w-fit min-w-[7rem] border-input bg-card text-dense">
         <SelectValue />
       </SelectTrigger>
       <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
@@ -213,7 +213,7 @@ export function getInvitationColumns({
       (invitationStatus === "pending" || invitationStatus === "expired") && canInvite;
     if (!editable)
       return (
-        <Badge variant="outline" className="h-4 px-1.5 py-0 text-[9px]">
+        <Badge variant="outline" className="h-4 px-1.5 py-0 text-micro">
           {formatRoleLabel(invitation.role)}
         </Badge>
       );
@@ -248,14 +248,14 @@ export function getInvitationColumns({
       <div className="flex items-center gap-1">
         <Badge
           variant="outline"
-          className={`h-4 px-1.5 py-0 text-[9px] capitalize ${STATUS_CLASSES[invitationStatus]}`}
+          className={`h-4 px-1.5 py-0 text-micro capitalize ${STATUS_CLASSES[invitationStatus]}`}
         >
           {invitationStatus}
         </Badge>
         {showDeliveryFailed ? (
           <Badge
             variant="outline"
-            className="h-4 border-red-200 bg-red-50 px-1.5 py-0 text-[9px] text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300"
+            className="h-4 border-status-danger-rule bg-status-danger-surface px-1.5 py-0 text-micro text-status-danger-ink"
             title="The invitation email could not be delivered. Resend to try again."
           >
             Email failed

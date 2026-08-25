@@ -1,10 +1,10 @@
 export type DocStatus = "PENDING" | "SUBMITTED" | "APPROVED" | "REJECTED" | "RE_UPLOAD_REQUESTED";
 
 export function docStatusBadgeClass(status: DocStatus): string {
-  if (status === "APPROVED") return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800";
-  if (status === "SUBMITTED") return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800";
-  if (status === "REJECTED") return "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-800";
-  if (status === "RE_UPLOAD_REQUESTED") return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800";
+  if (status === "APPROVED") return "bg-status-success-surface text-status-success-ink border-status-success-rule";
+  if (status === "SUBMITTED") return "bg-status-warning-surface text-status-warning-ink border-status-warning-rule";
+  if (status === "REJECTED") return "bg-status-danger-surface text-status-danger-ink border-status-danger-rule";
+  if (status === "RE_UPLOAD_REQUESTED") return "bg-status-warning-surface text-status-warning-ink border-status-warning-rule";
   return "bg-muted text-muted-foreground border-border";
 }
 

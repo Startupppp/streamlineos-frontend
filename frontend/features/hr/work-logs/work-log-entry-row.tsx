@@ -32,11 +32,11 @@ const MAX_LINKS = 5;
 
 const statusPillClass: Record<string, string> = {
   APPROVED:
-    "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800",
+    "bg-status-success-surface text-status-success-ink border-status-success-rule",
   PENDING:
-    "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800",
+    "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   REJECTED:
-    "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-800",
+    "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };
 
 function parseLinks(raw: string | undefined): string[] {
@@ -154,7 +154,7 @@ export function WorkLogEntryRow({
     if (parts.length === 1) return null;
     return parts.map((part, i) =>
       testRegex.test(part) ? (
-        <mark key={i} className="rounded bg-yellow-200 px-0.5 dark:bg-yellow-800">
+        <mark key={i} className="rounded bg-status-warning-fill px-0.5">
           {part}
         </mark>
       ) : (
@@ -201,16 +201,16 @@ export function WorkLogEntryRow({
           >
             {format(date, "dd")}
           </span>
-          <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <span className="text-micro font-semibold uppercase tracking-wide text-muted-foreground">
             {format(date, "EEE")}
           </span>
           {today && (
-            <span className="mt-0.5 rounded bg-primary/10 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-primary">
+            <span className="mt-0.5 rounded bg-primary/10 px-1.5 py-px text-micro font-bold uppercase tracking-wide text-primary">
               Today
             </span>
           )}
           {isWeekendDay && !today && (
-            <span className="mt-0.5 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground/80">
+            <span className="mt-0.5 text-micro font-semibold uppercase tracking-wide text-muted-foreground/80">
               Wknd
             </span>
           )}
@@ -219,12 +219,12 @@ export function WorkLogEntryRow({
         <div className="min-w-0 flex-1 px-3 py-2 sm:px-3.5 sm:py-2.5">
           {ticket && (
             <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
-              <span className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-primary">
+              <span className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/10 px-1.5 py-0.5 font-mono text-micro font-semibold text-primary">
                 <Ticket className="h-3 w-3" />
                 #{ticket.ticketNumber}
               </span>
               {ticket.project && (
-                <span className="rounded-md border border-border bg-muted/50 px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                <span className="rounded-md border border-border bg-muted/50 px-1.5 py-0.5 text-micro font-semibold text-muted-foreground">
                   {ticket.project.key}
                 </span>
               )}
@@ -262,7 +262,7 @@ export function WorkLogEntryRow({
                 {status && (
                   <span
                     className={cn(
-                      "rounded-full border px-1.5 py-px text-[9px] font-semibold uppercase",
+                      "rounded-full border px-1.5 py-px text-micro font-semibold uppercase",
                       statusPillClass[status] ??
                         "border-border bg-muted text-muted-foreground",
                     )}
@@ -271,7 +271,7 @@ export function WorkLogEntryRow({
                   </span>
                 )}
                 {!readOnly && (
-                  <span className="text-[10px] font-semibold uppercase tracking-wide text-primary/70 opacity-0 transition-opacity group-hover:opacity-100">
+                  <span className="text-micro font-semibold uppercase tracking-wide text-primary/70 opacity-0 transition-opacity group-hover:opacity-100">
                     Write
                   </span>
                 )}
@@ -280,7 +280,7 @@ export function WorkLogEntryRow({
           ) : (
             <div className="space-y-2">
               {lockedSaved && (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+                <div className="rounded-lg border border-status-warning-rule bg-status-warning-surface px-3 py-2 text-xs text-status-warning-ink">
                   This log is saved and locked. Ask HR or a manager with attendance access to edit it.
                 </div>
               )}
@@ -309,7 +309,7 @@ export function WorkLogEntryRow({
                   )}
                 />
                 {!hasUnsavedChanges && content && (
-                  <span className="mt-1.5 shrink-0 font-mono text-[11px] font-semibold tabular-nums text-muted-foreground">
+                  <span className="mt-1.5 shrink-0 font-mono text-dense font-semibold tabular-nums text-muted-foreground">
                     8h
                   </span>
                 )}
@@ -426,7 +426,7 @@ export function WorkLogEntryRow({
                 {status && !hasUnsavedChanges && (
                   <span
                     className={cn(
-                      "ml-auto rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase",
+                      "ml-auto rounded-full border px-2 py-0.5 text-micro font-semibold uppercase",
                       statusPillClass[status] ??
                         "border-border bg-muted text-muted-foreground",
                     )}

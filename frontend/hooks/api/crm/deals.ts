@@ -26,6 +26,7 @@ import type {
   CreateStakeholderInput,
   OverrideForecastInput,
 } from "@/types/crm";
+import type { DealStageTransition } from "@/types/crm/stage-transitions";
 
 export type {
   DealActivity,
@@ -183,19 +184,6 @@ export function useCloneDeal() {
   });
 }
 
-export function useDealActivities(dealId: number, limit?: number) {
-  const canRead = useCan("crm:deals:read");
-  return useQuery({
-    queryKey: queryKeys.dealActivities.list(dealId, limit ? { limit } : undefined),
-    queryFn: () =>
-      apiClient.get<DealActivity[]>(
-        `/deals/${dealId}/activities`,
-        limit ? { limit } : undefined
-      ),
-    staleTime: 2 * 60_000,
-    enabled: canRead && dealId > 0,
-  });
-}
 
 export function useLogDealActivity() {
   const qc = useQueryClient();
@@ -425,5 +413,24 @@ export function useOverrideForecast() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.deals.forecastSnapshots() });
     },
+  });
+}
+
+/**
+ * The pipeline history ticket 08 records, read where a person can see it.
+ *
+ * Separate from the activity timeline on purpose: a transition is a change of
+ * state with an accountable actor, not something someone did, and the two are
+ * modelled apart so neither can be mistaken for the other.
+ */
+export function useDealStageTransitions(dealId: number | null) {
+  const canRead = useCan("crm:deals:read");
+
+  return useQuery({
+    queryKey: queryKeys.crm.dealStageTransitions(dealId ?? 0),
+    queryFn: () =>
+      apiClient.get<{ data: DealStageTransition[] }>(`/deals/${dealId}/transitions`),
+    staleTime: 60_000,
+    enabled: canRead && !!dealId,
   });
 }

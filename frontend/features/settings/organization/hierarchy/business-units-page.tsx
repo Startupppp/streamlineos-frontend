@@ -185,7 +185,7 @@ export function BusinessUnitsPage() {
           variant={
             businessUnit.status === "ACTIVE" ? "default" : "secondary"
           }
-          className="h-5 px-1.5 py-0 text-[10px]"
+          className="h-5 px-1.5 py-0 text-micro"
         >
           {businessUnit.status}
         </Badge>

@@ -26,7 +26,7 @@ export function AiActionsSection({ actions }: AiActionsSectionProps) {
       >
         <ZapIcon ref={iconRef} size={14} />
         <span className="text-xs font-medium flex-1">AI Recommendations</span>
-        <Badge className="h-4 min-w-[1.25rem] px-1 text-[10px] bg-primary/10 text-foreground border-0">
+        <Badge className="h-4 min-w-[1.25rem] px-1 text-micro bg-primary/10 text-foreground border-0">
           {actions.length}
         </Badge>
       </div>
@@ -43,7 +43,7 @@ export function AiActionsSection({ actions }: AiActionsSectionProps) {
             >
               <TruncatedText text={action.title} />
             </Link>
-            <span className="text-[11px] text-muted-foreground shrink-0 max-w-[140px] truncate">
+            <span className="text-dense text-muted-foreground shrink-0 max-w-[140px] truncate">
               {action.reason}
             </span>
             <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />

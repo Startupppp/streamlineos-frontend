@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 export function CompletionScreen({ envelopeTitle, everyoneDone }: { envelopeTitle: string; everyoneDone: boolean }) {
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center gap-4 p-6 text-center bg-background">
-      <div className="rounded-full bg-emerald-500/10 p-4">
-        <CheckCircle2 className="size-10 text-emerald-600 dark:text-emerald-400" />
+      <div className="rounded-full bg-status-success-surface p-4">
+        <CheckCircle2 className="size-10 text-status-success-ink" />
       </div>
       <div className="max-w-sm space-y-1.5">
         <h1 className="text-lg font-semibold text-foreground">You&apos;re all signed!</h1>

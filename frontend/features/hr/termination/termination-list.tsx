@@ -72,11 +72,11 @@ function TerminationCard({
   const extraCount = reasonsList.length - 2;
 
   return (
-    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden border-l-4 border-l-rose-500">
+    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden border-l-4 border-l-rose-500">
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
           <Avatar className="h-9 w-9 shrink-0 mt-0.5">
-            <AvatarFallback className="text-xs font-semibold bg-rose-100 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300">
+            <AvatarFallback className="text-xs font-semibold bg-status-danger-surface text-status-danger-ink">
               {getInitials(employee?.name ?? null)}
             </AvatarFallback>
           </Avatar>
@@ -84,18 +84,18 @@ function TerminationCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <TruncatedText text={employee?.name ?? "Employee"} className="text-sm font-semibold" />
-              <StatusBadge status={status} label={statusLabel(status)} className="text-[10px] shrink-0" />
+              <StatusBadge status={status} label={statusLabel(status)} className="text-micro shrink-0" />
               {emailStatus === "failed" && (
                 <Badge
                   variant="outline"
-                  className="text-[10px] font-semibold shrink-0 px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-800"
+                  className="text-micro font-semibold shrink-0 px-2 py-0.5 rounded-full bg-status-danger-surface text-status-danger-ink border-status-danger-rule"
                 >
                   Email Failed
                 </Badge>
               )}
             </div>
 
-            <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-0.5 flex-wrap">
+            <div className="flex items-center gap-3 text-dense text-muted-foreground mt-0.5 flex-wrap">
               {employee?.designation && (
                 <span className="flex items-center gap-1">
                   <User className="h-3 w-3" />
@@ -116,12 +116,12 @@ function TerminationCard({
                 </span>
               )}
               {noticePeriodWaived && (
-                <span className="text-amber-600 dark:text-amber-300 font-medium">Notice waived</span>
+                <span className="text-status-warning-ink font-medium">Notice waived</span>
               )}
             </div>
 
             {status === "REJECTED" && record.finalRemarks && (
-              <p className="text-[11px] text-rose-600 dark:text-rose-300 mt-1 line-clamp-2">
+              <p className="text-dense text-status-danger-ink mt-1 line-clamp-2">
                 FINAL: {record.finalRemarks}
               </p>
             )}
@@ -129,12 +129,12 @@ function TerminationCard({
             {reasonsList.length > 0 && (
               <div className="flex items-center gap-1 mt-1.5 flex-wrap">
                 {visibleReasons.map((terminationReason) => (
-                  <Badge key={terminationReason} variant="outline" className="text-[9px] py-0 h-4 font-semibold">
+                  <Badge key={terminationReason} variant="outline" className="text-micro py-0 h-4 font-semibold">
                     {terminationReason}
                   </Badge>
                 ))}
                 {extraCount > 0 && (
-                  <Badge variant="outline" className="text-[9px] py-0 h-4 font-semibold">
+                  <Badge variant="outline" className="text-micro py-0 h-4 font-semibold">
                     +{extraCount} more
                   </Badge>
                 )}
@@ -235,7 +235,7 @@ function TerminationCard({
             )}
 
             {status === "COMPLETED" && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800">
+              <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-status-success-surface text-status-success-ink border-status-success-rule">
                 Completed
               </span>
             )}
@@ -310,7 +310,7 @@ export function TerminationList({
             {(counts[value] ?? 0) > 0 && (
               <Badge
                 variant={statusFilter === value ? "secondary" : "outline"}
-                className="ml-1 text-[9px] px-1.5 py-0 h-4 font-semibold"
+                className="ml-1 text-micro px-1.5 py-0 h-4 font-semibold"
               >
                 {counts[value]}
               </Badge>

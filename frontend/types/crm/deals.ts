@@ -33,6 +33,8 @@ export interface Deal {
   lostReason: string | null;
   notes: string | null;
   pipelineId: string | null;
+  partyId: string | null;
+  subjectId: string | null;
   forecastCategory: string | null;
   nextStep: string | null;
   healthScore: number | null;
@@ -72,6 +74,8 @@ export interface CreateDealInput {
   notes?: string;
   leadId?: number;
   clientId?: number;
+  partyId?: string;
+  subjectId?: string;
 }
 
 export interface UpdateDealInput {
@@ -93,6 +97,8 @@ export interface UpdateDealInput {
   nextStep?: string;
   healthScore?: number;
   followUpNotes?: string;
+  partyId?: string | null;
+  subjectId?: string | null;
 }
 
 export interface UpdateDealStageInput {

@@ -189,7 +189,7 @@ export function TypingDots({ reduce }: { reduce: boolean }) {
 export function DaySeparator({ label }: { label: string }) {
   return (
     <div className="flex items-center justify-center py-0.5">
-      <span className="rounded-full bg-muted px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+      <span className="rounded-full bg-muted px-2.5 py-0.5 text-micro font-medium text-muted-foreground">
         {label}
       </span>
     </div>

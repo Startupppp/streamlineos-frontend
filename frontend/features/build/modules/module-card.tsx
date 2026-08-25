@@ -24,50 +24,50 @@ const MODULE_STATUS_STYLES: Record<ModuleStatus, ModuleStatusStyle> = {
   backlog: {
     label: "Backlog",
     stripe: "border-l-slate-400",
-    accentBar: "from-slate-400/50 to-transparent",
-    badge: "bg-slate-500/10 text-slate-700 border-slate-200 dark:text-slate-300 dark:border-slate-700",
-    progressBar: "from-slate-500 to-slate-400",
-    avatar: "bg-slate-500/10 text-slate-600 ring-slate-500/20",
+    accentBar: "from-gradient-neutral-from to-transparent",
+    badge: "bg-muted text-foreground border-border",
+    progressBar: "from-gradient-neutral-from to-gradient-neutral-to",
+    avatar: "bg-muted text-muted-foreground ring-border",
   },
   planned: {
     label: "Planned",
     stripe: "border-l-blue-400 dark:border-l-blue-500",
-    accentBar: "from-blue-400/60 to-transparent dark:from-blue-500/40",
-    badge: "bg-blue-500/10 text-blue-700 border-blue-200 dark:text-blue-300 dark:border-blue-800",
-    progressBar: "from-blue-600 to-blue-400",
-    avatar: "bg-blue-500/10 text-blue-600 ring-blue-500/20 dark:text-blue-400 dark:bg-blue-500/10",
+    accentBar: "from-gradient-info-from to-transparent",
+    badge: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+    progressBar: "from-gradient-info-from to-gradient-info-to",
+    avatar: "bg-status-info-surface text-status-info-ink ring-status-info-rule",
   },
   "in-progress": {
     label: "In Progress",
     stripe: "border-l-blue-600 dark:border-l-blue-500",
-    accentBar: "from-blue-600/70 via-blue-500/30 to-transparent dark:from-blue-500/50",
-    badge: "bg-blue-500/15 text-blue-700 border-blue-300 dark:text-blue-300 dark:border-blue-700",
-    progressBar: "from-blue-700 via-blue-500 to-cyan-400",
-    avatar: "bg-blue-500/15 text-blue-600 ring-blue-500/25 dark:text-blue-400 dark:bg-blue-500/15",
+    accentBar: "from-gradient-info-from via-blue-500/30 to-transparent",
+    badge: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+    progressBar: "from-gradient-info-from via-blue-500 to-gradient-info-to",
+    avatar: "bg-status-info-surface text-status-info-ink ring-status-info-rule",
   },
   paused: {
     label: "Paused",
     stripe: "border-l-amber-500",
-    accentBar: "from-amber-500/60 to-transparent",
-    badge: "bg-amber-500/10 text-amber-700 border-amber-200 dark:text-amber-300 dark:border-amber-800",
-    progressBar: "from-amber-500 to-amber-400",
-    avatar: "bg-amber-500/10 text-amber-600 ring-amber-500/20",
+    accentBar: "from-gradient-warning-from to-transparent",
+    badge: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+    progressBar: "from-gradient-warning-from to-gradient-warning-to",
+    avatar: "bg-status-warning-surface text-status-warning-ink ring-status-warning-rule",
   },
   completed: {
     label: "Completed",
     stripe: "border-l-emerald-500",
-    accentBar: "from-emerald-500/60 to-transparent",
-    badge: "bg-emerald-500/10 text-emerald-700 border-emerald-200 dark:text-emerald-300 dark:border-emerald-800",
-    progressBar: "from-emerald-600 to-emerald-400",
-    avatar: "bg-emerald-500/10 text-emerald-600 ring-emerald-500/20",
+    accentBar: "from-gradient-success-from to-transparent",
+    badge: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+    progressBar: "from-gradient-success-from to-gradient-success-to",
+    avatar: "bg-status-success-surface text-status-success-ink ring-status-success-rule",
   },
   cancelled: {
     label: "Cancelled",
     stripe: "border-l-red-500",
-    accentBar: "from-red-500/50 to-transparent",
-    badge: "bg-red-500/10 text-red-700 border-red-200 dark:text-red-300 dark:border-red-800",
-    progressBar: "from-red-500 to-red-400",
-    avatar: "bg-red-500/10 text-red-600 ring-red-500/20",
+    accentBar: "from-gradient-danger-from to-transparent",
+    badge: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
+    progressBar: "from-gradient-danger-from to-gradient-danger-to",
+    avatar: "bg-status-danger-surface text-status-danger-ink ring-status-danger-rule",
   },
 };
 
@@ -142,7 +142,7 @@ export const ModuleCard = memo(function ModuleCard({
               <div
                 className={cn(
                   "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset",
-                  isEmojiAvatar ? "text-xl leading-none" : "text-[11px] font-bold tracking-tight",
+                  isEmojiAvatar ? "text-xl leading-none" : "text-dense font-bold tracking-tight",
                   style.avatar,
                 )}
                 aria-hidden="true"
@@ -157,7 +157,7 @@ export const ModuleCard = memo(function ModuleCard({
                   </h3>
                   <span
                     className={cn(
-                      "inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold",
+                      "inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-micro font-semibold",
                       style.badge,
                     )}
                   >
@@ -166,7 +166,7 @@ export const ModuleCard = memo(function ModuleCard({
                 </div>
 
                 {mod.description ? (
-                  <p className={cn(TEXT_ONE_LINE, "mt-1 text-[11px] text-muted-foreground")}>
+                  <p className={cn(TEXT_ONE_LINE, "mt-1 text-dense text-muted-foreground")}>
                     {mod.description}
                   </p>
                 ) : null}
@@ -175,7 +175,7 @@ export const ModuleCard = memo(function ModuleCard({
 
             <div className="mt-auto space-y-2">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[11px] font-medium tabular-nums text-muted-foreground">
+                <span className="text-dense font-medium tabular-nums text-muted-foreground">
                   <span className="text-foreground">{progress}%</span> complete
                 </span>
                 <ArrowRight
@@ -206,7 +206,7 @@ export const ModuleCard = memo(function ModuleCard({
               </div>
 
               {(mod.startDate || mod.endDate) ? (
-                <p className="flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground">
+                <p className="flex min-w-0 items-center gap-1.5 text-dense text-muted-foreground">
                   <Calendar className="h-3 w-3 shrink-0 opacity-70" aria-hidden="true" />
                   <span className="min-w-0 truncate">
                     {formatModuleDate(mod.startDate)} — {formatModuleDate(mod.endDate)}
@@ -215,7 +215,7 @@ export const ModuleCard = memo(function ModuleCard({
               ) : null}
 
               {mod.leadId ? (
-                <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                <p className="flex items-center gap-1.5 text-dense text-muted-foreground">
                   <User className="h-3 w-3 shrink-0 opacity-70" aria-hidden="true" />
                   <span className="truncate">Lead assigned</span>
                 </p>

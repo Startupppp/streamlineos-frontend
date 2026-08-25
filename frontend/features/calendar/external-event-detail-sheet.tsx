@@ -20,7 +20,7 @@ export function ExternalEventDetailSheet({ event, onClose }: ExternalEventDetail
         <SheetHeader className="px-5 py-4 border-b shrink-0">
           <TruncatedText text={event?.title ?? ""} className="text-base font-semibold leading-snug" />
           {event?.resource?.accountEmail && (
-            <Badge variant="secondary" className="w-fit text-[10px] truncate max-w-full">
+            <Badge variant="secondary" className="w-fit text-micro truncate max-w-full">
               {event.resource.accountEmail}
             </Badge>
           )}
@@ -41,7 +41,7 @@ export function ExternalEventDetailSheet({ event, onClose }: ExternalEventDetail
                 <span className="break-all">{event.resource.location}</span>
               </div>
             )}
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-dense text-muted-foreground">
               Read-only event from a connected account. Edit it in its own calendar.
             </p>
           </SheetBody>

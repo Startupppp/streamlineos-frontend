@@ -50,19 +50,19 @@ function CandidateIntakeRow({ candidate: c, isSelected, duplicate, onToggle, onS
   return (
     <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors">
       <Checkbox checked={isSelected} onCheckedChange={handleCheckedChange} />
-      <div className="w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 text-[11px] font-bold text-primary">
+      <div className="w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 text-dense font-bold text-primary">
         {c.firstName?.[0]}{c.lastName?.[0]}
       </div>
       <Link href={`/hr/recruitment/candidates/${c.id}`} className="flex-1 min-w-0 group">
         <TruncatedText text={`${c.firstName ?? ""} ${c.lastName ?? ""}`.trim()} className="text-sm font-medium text-foreground group-hover:text-primary transition-colors" />
-        <p className="text-[11px] text-muted-foreground mt-0.5">{c.email}</p>
+        <p className="text-dense text-muted-foreground mt-0.5">{c.email}</p>
       </Link>
       <div className="flex items-center gap-2 shrink-0">
         {c.source && (
-          <Badge variant="outline" className="text-[10px]">{c.source.replace(/_/g, " ")}</Badge>
+          <Badge variant="outline" className="text-micro">{c.source.replace(/_/g, " ")}</Badge>
         )}
         {typeof c.aiScore === "number" && (
-          <Badge variant="secondary" className="text-[10px] gap-1">
+          <Badge variant="secondary" className="text-micro gap-1">
             <Sparkles className="h-2.5 w-2.5" />
             {c.aiScore}
           </Badge>
@@ -71,14 +71,14 @@ function CandidateIntakeRow({ candidate: c, isSelected, duplicate, onToggle, onS
           <button
             type="button"
             onClick={handleDuplicateClick}
-            className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 hover:bg-amber-200 transition-colors"
+            className="inline-flex items-center gap-1 text-micro font-medium px-2 py-0.5 rounded-full bg-status-warning-surface text-status-warning-ink hover:bg-status-warning-fill-hover transition-colors"
           >
             <AlertTriangle className="h-2.5 w-2.5" />
             Possible duplicate
           </button>
         )}
         {c.createdAt && (
-          <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+          <span className="text-dense text-muted-foreground whitespace-nowrap">
             {formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })}
           </span>
         )}
@@ -204,7 +204,7 @@ export default function IntakeInboxPage() {
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground">{selectedIds.size} selected</span>
               <LoadingButton size="sm" variant="outline" className="gap-1.5" onClick={handleBulkShortlist} isPending={bulkShortlist.isPending} loadingText="Shortlisting…">
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                <CheckCircle2 className="h-3.5 w-3.5 text-status-success-ink" />
                 Shortlist
               </LoadingButton>
               <Button size="sm" variant="outline" className="gap-1.5 text-destructive" onClick={handleOpenReject}>
@@ -235,7 +235,7 @@ export default function IntakeInboxPage() {
           <div className="rounded-2xl border border-border bg-card overflow-hidden">
             <div className="flex items-center gap-3 px-4 py-2.5 border-b border-border/60 bg-muted/30">
               <Checkbox checked={selectedIds.size === candidates?.length && candidates.length > 0} onCheckedChange={handleToggleAll} />
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <span className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
                 Candidate
               </span>
             </div>

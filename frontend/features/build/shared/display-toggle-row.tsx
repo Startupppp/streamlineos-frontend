@@ -27,7 +27,7 @@ export function DisplayToggleRow({
       <Label
         htmlFor={id}
         onClick={handleLabelClick}
-        className="cursor-pointer text-[13px] font-normal text-foreground"
+        className="cursor-pointer text-label font-normal text-foreground"
       >
         {label}
       </Label>

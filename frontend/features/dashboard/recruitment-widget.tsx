@@ -52,13 +52,13 @@ function InterviewRow({ task }: { task: InterviewTask }) {
         className="flex items-center gap-2.5 rounded-lg border border-border/60 px-2.5 py-2 hover:bg-muted/50 transition-colors"
       >
         <Avatar className="w-7">
-          <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+          <AvatarFallback className="text-micro bg-primary/10 text-primary">
             {task.candidateName[0]}
           </AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
           <TruncatedText text={task.candidateName} className="text-xs font-medium" />
-          <p className="text-[10px] text-muted-foreground capitalize">
+          <p className="text-micro text-muted-foreground capitalize">
             {format(task.scheduledAt, isToday(task.scheduledAt) ? "h:mm a" : "MMM d, h:mm a")}
             {" · "}
             {task.type.replace(/_/g, " ").toLowerCase()}
@@ -67,13 +67,13 @@ function InterviewRow({ task }: { task: InterviewTask }) {
         {task.needsFeedback ? (
           <Badge
             variant="outline"
-            className="h-4 shrink-0 px-1.5 py-0 text-[9px] border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-400"
+            className="h-4 shrink-0 px-1.5 py-0 text-micro border-status-warning-rule bg-status-warning-surface text-status-warning-ink"
           >
             <AlertTriangle className="mr-0.5 h-2.5 w-2.5" aria-hidden="true" />
             Feedback
           </Badge>
         ) : (
-          <Badge variant="outline" className="h-4 shrink-0 px-1.5 py-0 text-[9px]">
+          <Badge variant="outline" className="h-4 shrink-0 px-1.5 py-0 text-micro">
             Today
           </Badge>
         )}
@@ -128,7 +128,7 @@ export function RecruitmentWidget() {
       <div className="space-y-2.5">
         {pendingFeedbackCount > 0 && (
           <div className="flex items-center justify-between rounded-lg border border-border/60 px-2.5 py-2">
-            <span className="text-[11px] text-muted-foreground">
+            <span className="text-dense text-muted-foreground">
               Scorecards awaiting feedback
             </span>
             <span className="text-sm font-semibold tabular-nums">

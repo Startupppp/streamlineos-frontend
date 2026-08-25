@@ -181,7 +181,7 @@ export function TransitionsTable({ projectId, statuses }: TransitionsTableProps)
       className: "w-24",
       cell: (row) =>
         row.requiresApproval ? (
-          <Badge variant="secondary" className="text-[10px]">Required</Badge>
+          <Badge variant="secondary" className="text-micro">Required</Badge>
         ) : null,
     },
     {
@@ -191,7 +191,7 @@ export function TransitionsTable({ projectId, statuses }: TransitionsTableProps)
         row.requiredFields.length > 0 ? (
           <div className="flex flex-wrap gap-1">
             {row.requiredFields.map((f) => (
-              <Badge key={f} variant="outline" className="text-[10px] font-mono">{f}</Badge>
+              <Badge key={f} variant="outline" className="text-micro font-mono">{f}</Badge>
             ))}
           </div>
         ) : null,
@@ -203,7 +203,7 @@ export function TransitionsTable({ projectId, statuses }: TransitionsTableProps)
         row.allowedRoles.length > 0 ? (
           <div className="flex flex-wrap gap-1">
             {row.allowedRoles.map((r) => (
-              <Badge key={r} variant="outline" className="text-[10px]">{r}</Badge>
+              <Badge key={r} variant="outline" className="text-micro">{r}</Badge>
             ))}
           </div>
         ) : (

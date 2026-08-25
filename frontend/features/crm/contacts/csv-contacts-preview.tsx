@@ -82,7 +82,7 @@ const contactColumns: DataTableColumn<ParsedContactWithIdx>[] = [
     header: "Source",
     cell: (row) =>
       row.source ? (
-        <Badge variant="outline" className="text-[10px]">
+        <Badge variant="outline" className="text-micro">
           {row.source}
         </Badge>
       ) : (
@@ -159,8 +159,8 @@ export function CsvContactsPreview({
 
       {importResult ? (
         <div className="space-y-3">
-          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 space-y-1">
-            <p className="text-sm font-medium text-green-700 dark:text-green-400">
+          <div className="bg-status-success-surface border border-status-success-rule rounded-lg p-3 space-y-1">
+            <p className="text-sm font-medium text-status-success-ink">
               Import Complete
             </p>
             <p className="text-xs text-muted-foreground">

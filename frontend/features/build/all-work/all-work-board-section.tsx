@@ -37,10 +37,10 @@ function BoardProjectSection({ group }: BoardProjectSectionProps) {
           projectKey={group.projectKey}
           projectName={group.projectName}
         />
-        <TruncatedText text={group.projectName} className="text-[13px] font-semibold text-foreground" />
+        <TruncatedText text={group.projectName} className="text-label font-semibold text-foreground" />
         <Badge
           variant="secondary"
-          className="h-5 shrink-0 rounded-md bg-primary/10 px-1.5 text-[10px] font-medium tabular-nums text-primary"
+          className="h-5 shrink-0 rounded-md bg-primary/10 px-1.5 text-micro font-medium tabular-nums text-primary"
         >
           {group.tickets.length}
         </Badge>

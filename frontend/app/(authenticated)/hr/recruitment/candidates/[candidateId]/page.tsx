@@ -234,11 +234,11 @@ export default function CandidateDetailPage() {
       }
     >
       {candidate.duplicateOfId != null && (
-        <div className="flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800 px-4 py-3 mb-4 text-sm">
-          <span className="text-amber-600 dark:text-amber-400 mt-0.5" aria-hidden="true">⚠</span>
+        <div className="flex items-start gap-3 rounded-lg border border-status-warning-rule bg-status-warning-surface px-4 py-3 mb-4 text-sm">
+          <span className="text-status-warning-ink mt-0.5" aria-hidden="true">⚠</span>
           <div className="flex-1">
-            <span className="font-medium text-amber-800 dark:text-amber-300">Duplicate candidate — </span>
-            <span className="text-amber-700 dark:text-amber-400">
+            <span className="font-medium text-status-warning-ink">Duplicate candidate — </span>
+            <span className="text-status-warning-ink">
               This profile was identified as a duplicate of{" "}
               <Link
                 href={`/hr/recruitment/candidates/${candidate.duplicateOfId}`}

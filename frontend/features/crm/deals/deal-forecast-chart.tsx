@@ -4,11 +4,12 @@ import { useMemo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { formatINRCompact } from "@/lib/format-utils";
+import { formatMoneyCompact } from "@/lib/format-utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import type { Deal, DealStage } from "@/types/crm";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
+import { useOrgDisplay } from "@/hooks/api/org-display";
 
 const STAGE_PROBABILITY: Record<string, number> = {
   LEAD: 10,
@@ -20,11 +21,11 @@ const STAGE_PROBABILITY: Record<string, number> = {
 };
 
 const STAGE_DOT: Partial<Record<DealStage, string>> = {
-  LEAD: "bg-blue-500",
-  CONTACTED: "bg-sky-500",
-  PROPOSAL: "bg-amber-500",
-  NEGOTIATION: "bg-blue-500",
-  WON: "bg-emerald-500",
+  LEAD: "bg-status-info-fill",
+  CONTACTED: "bg-status-info-fill",
+  PROPOSAL: "bg-status-warning-fill",
+  NEGOTIATION: "bg-status-info-fill",
+  WON: "bg-status-success-fill",
 };
 
 const STAGE_LABEL: Partial<Record<DealStage, string>> = {
@@ -50,6 +51,7 @@ interface DealForecastChartProps {
 }
 
 export function DealForecastChart({ deals }: DealForecastChartProps) {
+  const money = useOrgDisplay();
   const shouldReduceMotion = useReducedMotion();
 
   const { rows, maxWeighted } = useMemo(() => {
@@ -111,7 +113,7 @@ export function DealForecastChart({ deals }: DealForecastChartProps) {
                   <div className="flex items-center gap-2 min-w-0">
                     <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${STAGE_DOT[row.stage] ?? "bg-muted-foreground"}`} />
                     <TruncatedText text={STAGE_LABEL[row.stage] ?? row.stage} className="text-sm font-medium" />
-                    <Badge variant="outline" className="text-[10px] h-4 px-1.5 shrink-0">
+                    <Badge variant="outline" className="text-micro h-4 px-1.5 shrink-0">
                       {row.probability}%
                     </Badge>
                     <span className="text-xs text-muted-foreground shrink-0">
@@ -120,10 +122,10 @@ export function DealForecastChart({ deals }: DealForecastChartProps) {
                   </div>
                   <div className="text-right shrink-0">
                     <p className="text-sm font-semibold tabular-nums">
-                      {formatINRCompact(row.weightedValue)}
+                      {formatMoneyCompact(row.weightedValue, money)}
                     </p>
-                    <p className="text-[10px] text-muted-foreground tabular-nums">
-                      of {formatINRCompact(row.totalValue)}
+                    <p className="text-micro text-muted-foreground tabular-nums">
+                      of {formatMoneyCompact(row.totalValue, money)}
                     </p>
                   </div>
                 </div>

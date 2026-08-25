@@ -94,7 +94,7 @@ export function AttendeesSection({
           Attendees
         </span>
         {attendees.length > 0 && (
-          <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
+          <Badge variant="secondary" className="text-micro h-4 px-1.5">
             {attendees.length}
           </Badge>
         )}
@@ -113,13 +113,13 @@ export function AttendeesSection({
               >
                 <Avatar className="h-5 w-5 shrink-0">
                   <AvatarImage src={resolveImageUrl(member?.image)} />
-                  <AvatarFallback className="text-[7px]">
+                  <AvatarFallback className="text-micro">
                     {getUserInitials(member)}
                   </AvatarFallback>
                 </Avatar>
-                <TruncatedText text={displayName} className="max-w-[140px] text-[11px]" />
+                <TruncatedText text={displayName} className="max-w-[140px] text-dense" />
                 {attendee.attended ? (
-                  <Check className="h-3 w-3 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden />
+                  <Check className="h-3 w-3 shrink-0 text-status-success-ink" aria-hidden />
                 ) : null}
                 {canManage && (
                   <button
@@ -156,7 +156,7 @@ export function AttendeesSection({
       )}
 
       {canManage && availableMembers.length === 0 && attendees.length > 0 && (
-        <p className="text-[11px] text-muted-foreground">All project members are attending.</p>
+        <p className="text-dense text-muted-foreground">All project members are attending.</p>
       )}
     </div>
   );

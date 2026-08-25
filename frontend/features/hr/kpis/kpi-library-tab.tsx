@@ -29,11 +29,13 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Sales: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
-  Finance: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-  Operations: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
-  HR: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-  Customer: "bg-pink-100 text-pink-700 dark:bg-pink-500/10 dark:text-pink-300",
+  // Five business functions, not five statuses: Finance and HR both read "info"
+  // and were the same chip. HR takes violet rather than the blue it shared.
+  Sales: "bg-category-emerald-surface text-category-emerald-ink",
+  Finance: "bg-category-blue-surface text-category-blue-ink",
+  Operations: "bg-category-amber-surface text-category-amber-ink",
+  HR: "bg-category-violet-surface text-category-violet-ink",
+  Customer: "bg-category-pink-surface text-category-pink-ink",
 };
 
 function getCategoryColor(category: string) {
@@ -248,7 +250,7 @@ export function KpiLibraryTab() {
               </div>
               <div className="flex flex-wrap gap-1.5">
                 <Badge className={`text-xs ${getCategoryColor(kpi.category)}`}>{kpi.category}</Badge>
-                <Badge className={`text-xs ${kpi.isActive ? "bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-300" : "bg-muted text-muted-foreground"}`}>
+                <Badge className={`text-xs ${kpi.isActive ? "bg-status-success-surface text-status-success-ink" : "bg-muted text-muted-foreground"}`}>
                   {kpi.isActive ? "Active" : "Inactive"}
                 </Badge>
               </div>
@@ -260,7 +262,7 @@ export function KpiLibraryTab() {
               <Button
                 size="sm"
                 variant="outline"
-                className={`w-full text-xs ${kpi.isActive ? "text-destructive border-destructive/30 hover:bg-destructive/10" : "text-green-600 border-green-200 hover:bg-green-50 dark:text-green-300 dark:border-green-500/30 dark:hover:bg-green-500/10"}`}
+                className={`w-full text-xs ${kpi.isActive ? "text-destructive border-destructive/30 hover:bg-destructive/10" : "text-status-success-ink border-status-success-rule hover:bg-status-success-surface"}`}
                 onClick={() => handleToggleActive(kpi.id, kpi.isActive)}
               >
                 {kpi.isActive ? "Deactivate" : "Activate"}

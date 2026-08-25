@@ -60,27 +60,27 @@ function DMUserItem({
       <div className="relative shrink-0">
         <Avatar className="h-9 w-9">
           <AvatarImage src={resolveImageUrl(user.image)} />
-          <AvatarFallback className="text-[10px] font-medium">
+          <AvatarFallback className="text-micro font-medium">
             {getInitials(user.name)}
           </AvatarFallback>
         </Avatar>
         {isOnline && (
-          <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-background" />
+          <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-status-success-fill border-2 border-background" />
         )}
       </div>
       <div className="flex-1 text-left min-w-0">
         <TruncatedText
           text={isSelf ? `${user.name ?? "You"} (you)` : (user.name ?? "")}
-          className="text-[13px] font-medium"
+          className="text-label font-medium"
         />
         <TruncatedText
           text={isSelf ? "Note to self" : (user.email ?? "")}
-          className="text-[11px] text-muted-foreground"
+          className="text-dense text-muted-foreground"
         />
       </div>
       <Badge
         variant="outline"
-        className="text-[10px] shrink-0 border-border/40"
+        className="text-micro shrink-0 border-border/40"
       >
         {user.role}
       </Badge>
@@ -162,7 +162,7 @@ export function NewDMDialog({
       )}
       <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-4 pt-4 pb-3">
-          <DialogTitle className="text-[16px]">New Direct Message</DialogTitle>
+          <DialogTitle className="text-base">New Direct Message</DialogTitle>
         </DialogHeader>
         <div className="px-4 pb-3">
           <div className="min-w-0 bg-muted/30 border-border/30">
@@ -184,7 +184,7 @@ export function NewDMDialog({
             {filteredUsers.length === 0 && !isLoading && (
               <div className="text-center py-10">
                 <Users className="w-8 text-muted-foreground/30 mx-auto mb-2" />
-                <p className="text-[13px] text-muted-foreground">
+                <p className="text-label text-muted-foreground">
                   No users found
                 </p>
               </div>

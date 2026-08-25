@@ -221,7 +221,7 @@ export function SettingsProfile() {
         </div>
 
         <div className="min-w-0 flex-1">
-          <TruncatedText text={name || "—"} className="text-[13px] font-semibold text-foreground" />
+          <TruncatedText text={name || "—"} className="text-label font-semibold text-foreground" />
           <TruncatedText text={email ?? ""} className="text-xs text-muted-foreground" />
           <div className="flex items-center gap-2 mt-2">
             <LoadingButton
@@ -256,7 +256,7 @@ export function SettingsProfile() {
       <div className="grid gap-4 sm:grid-cols-2">
 
         <div className="space-y-1.5">
-          <Label htmlFor="display-name" className="text-[13px] font-medium">Display name</Label>
+          <Label htmlFor="display-name" className="text-label font-medium">Display name</Label>
           {isEditingName ? (
             <div className="space-y-1">
               <div className="flex gap-1.5">
@@ -292,7 +292,7 @@ export function SettingsProfile() {
                 />
               </div>
               {nameError ? (
-                <p id="display-name-error" className="text-[11px] font-medium text-destructive">
+                <p id="display-name-error" className="text-dense font-medium text-destructive">
                   {nameError}
                 </p>
               ) : null}
@@ -314,7 +314,7 @@ export function SettingsProfile() {
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="email-display" className="text-[13px] font-medium">Email address</Label>
+          <Label htmlFor="email-display" className="text-label font-medium">Email address</Label>
           <Input
             id="email-display"
             type="email"
@@ -322,7 +322,7 @@ export function SettingsProfile() {
             disabled
             className="bg-muted/40"
           />
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-dense text-muted-foreground">
             Contact your admin to change email.
           </p>
         </div>

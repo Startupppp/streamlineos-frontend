@@ -99,7 +99,7 @@ export function AIEnrichLeadButton({
             {result && (
               <div className="space-y-4">
                 <div>
-                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                  <p className="text-micro font-medium text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center gap-1">
                     <Building2 className="h-3 w-3" />
                     Company Insight
                   </p>
@@ -107,10 +107,10 @@ export function AIEnrichLeadButton({
                     {result.companyInsight}
                   </p>
                   <div className="flex items-center gap-2 mt-2">
-                    <Badge variant="secondary" className="text-[10px]">
+                    <Badge variant="secondary" className="text-micro">
                       {result.industry}
                     </Badge>
-                    <Badge variant="outline" className="text-[10px]">
+                    <Badge variant="outline" className="text-micro">
                       {result.estimatedCompanySize}
                     </Badge>
                   </div>
@@ -118,7 +118,7 @@ export function AIEnrichLeadButton({
 
                 {result.talkingPoints.length > 0 && (
                   <div>
-                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">
+                    <p className="text-micro font-medium text-muted-foreground uppercase tracking-wider mb-1.5">
                       Talking Points
                     </p>
                     <ul className="space-y-1.5">
@@ -137,7 +137,7 @@ export function AIEnrichLeadButton({
 
                 {result.potentialNeeds.length > 0 && (
                   <div>
-                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                    <p className="text-micro font-medium text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center gap-1">
                       <Target className="h-3 w-3" />
                       Potential Needs
                     </p>
@@ -156,7 +156,7 @@ export function AIEnrichLeadButton({
                 )}
 
                 <div className="rounded-md border border-border bg-muted/40 p-3">
-                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-1">
+                  <p className="text-micro font-medium text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-1">
                     <Lightbulb className="h-3 w-3" />
                     Recommended Approach
                   </p>

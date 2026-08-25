@@ -216,18 +216,18 @@ export function InboxTicketPreview({
           ) : null}
           <div className="min-w-0 flex-1 overflow-hidden">
             <div className="flex min-w-0 items-center gap-1.5">
-              <span className="shrink-0 font-mono text-[11px] font-medium tabular-nums text-muted-foreground">
+              <span className="shrink-0 font-mono text-dense font-medium tabular-nums text-muted-foreground">
                 {displayKey}
               </span>
               <span
-                className="shrink-0 text-[10px] text-muted-foreground/35"
+                className="shrink-0 text-micro text-muted-foreground/35"
                 aria-hidden
               >
                 ·
               </span>
               <TruncatedText
                 text={ticket.title}
-                className="min-w-0 flex-1 text-[13px] font-medium leading-snug text-foreground"
+                className="min-w-0 flex-1 text-label font-medium leading-snug text-foreground"
               />
             </div>
             {ticket.parentTicketId != null ? (

@@ -26,7 +26,7 @@ function DeleteItemButton({ onClick }: { onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="opacity-0 group-hover:opacity-100 h-5 w-5 flex items-center justify-center rounded text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
+      className="opacity-0 group-hover:opacity-100 h-5 w-5 flex items-center justify-center rounded text-status-danger-ink hover:text-status-danger-ink hover:bg-status-danger-surface transition-all"
       aria-label="Delete item"
       {...hoverHandlers}
     >
@@ -41,7 +41,7 @@ function DeleteChecklistButton({ onClick }: { onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="opacity-0 group-hover:opacity-100 h-5 w-5 flex items-center justify-center rounded text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
+      className="opacity-0 group-hover:opacity-100 h-5 w-5 flex items-center justify-center rounded text-status-danger-ink hover:text-status-danger-ink hover:bg-status-danger-surface transition-all"
       aria-label="Delete checklist"
       {...hoverHandlers}
     >
@@ -133,7 +133,7 @@ const ChecklistItemRow = memo(function ChecklistItemRow({
         className={cn(
           "h-4 w-4 shrink-0 rounded border-2 flex items-center justify-center transition-all duration-150",
           item.isCompleted
-            ? "bg-emerald-500 border-emerald-500"
+            ? "bg-status-success-fill border-status-success-rule"
             : "border-input hover:border-primary/40",
         )}
         aria-label={item.isCompleted ? "Mark incomplete" : "Mark complete"}
@@ -305,7 +305,7 @@ function ChecklistSection({
             {checklist.title}
           </span>
         )}
-        <span className="text-[10px] text-muted-foreground font-mono">
+        <span className="text-micro text-muted-foreground font-mono">
           {completed}/{total}
         </span>
         <DeleteChecklistButton onClick={handleDeleteChecklist} />
@@ -314,7 +314,7 @@ function ChecklistSection({
       {total > 0 && (
         <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden ml-6">
           <motion.div
-            className="h-full bg-emerald-500 rounded-full"
+            className="h-full bg-status-success-fill rounded-full"
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.4, ease: "easeOut" }}

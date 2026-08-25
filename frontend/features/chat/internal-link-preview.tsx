@@ -61,7 +61,7 @@ function MutedCard({ isOwn, children }: { isOwn: boolean; children: React.ReactN
         isOwn ? "bg-white/5 border-white/10" : "bg-muted/30 border-border/30",
       )}
     >
-      <p className={cn("text-[11px]", isOwn ? "text-white/40" : "text-muted-foreground/60")}>
+      <p className={cn("text-dense", isOwn ? "text-white/40" : "text-muted-foreground/60")}>
         {children}
       </p>
     </div>
@@ -156,7 +156,7 @@ function CommentPreviewCard({
         <Ticket className={cn("h-3 w-3 shrink-0", isOwn ? "text-white/60" : "text-primary")} />
         <span
           className={cn(
-            "text-[11px] font-mono font-semibold",
+            "text-dense font-mono font-semibold",
             isOwn ? "text-white/80" : "text-primary",
           )}
         >
@@ -165,7 +165,7 @@ function CommentPreviewCard({
         <TruncatedText
           text={data.ticket.title}
           className={cn(
-            "text-[11px] max-w-[180px]",
+            "text-dense max-w-[180px]",
             isOwn ? "text-white/70" : "text-foreground",
           )}
         />
@@ -180,7 +180,7 @@ function CommentPreviewCard({
         <div className="min-w-0 flex-1">
           <p
             className={cn(
-              "text-[11px] line-clamp-2",
+              "text-dense line-clamp-2",
               isOwn ? "text-white/70" : "text-muted-foreground",
             )}
           >
@@ -188,7 +188,7 @@ function CommentPreviewCard({
           </p>
           <p
             className={cn(
-              "text-[10px] mt-0.5",
+              "text-micro mt-0.5",
               isOwn ? "text-white/40" : "text-muted-foreground/60",
             )}
           >
@@ -256,7 +256,7 @@ function TicketPreviewCard({
         <div className="min-w-0 flex-1">
           <p
             className={cn(
-              "text-[11px] font-mono font-semibold",
+              "text-dense font-mono font-semibold",
               isOwn ? "text-white/80" : "text-primary",
             )}
           >
@@ -265,13 +265,13 @@ function TicketPreviewCard({
           <TruncatedText
             text={data.title}
             className={cn(
-              "text-[12px] font-medium mt-0.5",
+              "text-xs font-medium mt-0.5",
               isOwn ? "text-white/90" : "text-foreground",
             )}
           />
           <span
             className={cn(
-              "mt-1 inline-flex items-center rounded px-1.5 py-px text-[10px] font-medium",
+              "mt-1 inline-flex items-center rounded px-1.5 py-px text-micro font-medium",
               getStatusBadgeClass(data.status),
             )}
           >

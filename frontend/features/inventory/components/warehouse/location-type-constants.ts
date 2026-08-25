@@ -26,17 +26,26 @@ export const LOCATION_TYPE_LABELS: Record<LocationType, string> = {
   RETURNS: "Returns",
 };
 
+/**
+ * Ten kinds of place in a warehouse, listed together in the location tree, so
+ * the chip is how you tell a receiving dock from a scrap bin. On the status
+ * scale the ten rendered as four looks — four of them a single blue.
+ *
+ * SCRAP and RETURNS are red and rose: adjacent on purpose, because both are
+ * stock leaving the good pool, but no longer the same chip. AISLE takes indigo
+ * rather than the blue it shared with ZONE before the migration.
+ */
 export const LOCATION_TYPE_COLORS: Record<LocationType, string> = {
-  ZONE: "bg-blue-50 text-blue-700 border-blue-200/70",
-  AISLE: "bg-blue-50 text-blue-700 border-blue-200/70",
-  RACK: "bg-amber-50 text-amber-700 border-amber-200/70",
-  BIN: "bg-emerald-50 text-emerald-700 border-emerald-200/70",
-  RECEIVING: "bg-cyan-50 text-cyan-700 border-cyan-200/70",
-  SHIPPING: "bg-sky-50 text-sky-700 border-sky-200/70",
-  QUARANTINE: "bg-orange-50 text-orange-700 border-orange-200/70",
-  SCRAP: "bg-red-50 text-red-700 border-red-200/70",
-  TRANSIT: "bg-slate-100 text-slate-700 border-slate-200",
-  RETURNS: "bg-rose-50 text-rose-700 border-rose-200/70",
+  ZONE: "bg-category-blue-surface text-category-blue-ink border-category-blue-rule",
+  AISLE: "bg-category-indigo-surface text-category-indigo-ink border-category-indigo-rule",
+  RACK: "bg-category-amber-surface text-category-amber-ink border-category-amber-rule",
+  BIN: "bg-category-emerald-surface text-category-emerald-ink border-category-emerald-rule",
+  RECEIVING: "bg-category-cyan-surface text-category-cyan-ink border-category-cyan-rule",
+  SHIPPING: "bg-category-sky-surface text-category-sky-ink border-category-sky-rule",
+  QUARANTINE: "bg-category-orange-surface text-category-orange-ink border-category-orange-rule",
+  SCRAP: "bg-category-red-surface text-category-red-ink border-category-red-rule",
+  TRANSIT: "bg-muted text-foreground border-border",
+  RETURNS: "bg-category-rose-surface text-category-rose-ink border-category-rose-rule",
 };
 
 export const SPECIAL_LOCATION_TYPES: LocationType[] = [

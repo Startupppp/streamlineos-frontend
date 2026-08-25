@@ -198,7 +198,7 @@ export function CreateTicketDialog({ open, onOpenChange }: CreateTicketDialogPro
                       maxLength={150}
                     />
                   </FormControl>
-                  <p className="text-[10px] text-muted-foreground">
+                  <p className="text-micro text-muted-foreground">
                     {(field.value ?? "").trim().length}/150 characters
                   </p>
                   <FormMessage />
@@ -294,7 +294,7 @@ export function CreateTicketDialog({ open, onOpenChange }: CreateTicketDialogPro
                     return (
                       <div
                         key={i}
-                        className="flex items-center gap-1 text-[11px] bg-muted rounded px-2 py-1 border"
+                        className="flex items-center gap-1 text-dense bg-muted rounded px-2 py-1 border"
                       >
                         <Icon className="h-3 w-3 text-muted-foreground shrink-0" />
                         <span className="truncate max-w-[120px]">{f.fileName}</span>

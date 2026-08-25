@@ -171,7 +171,7 @@ export function OrderLineTable({
                 </SelectContent>
               </Select>
               {fieldState.error && (
-                <p className="text-[10px] text-destructive mt-0.5">{fieldState.error.message}</p>
+                <p className="text-micro text-destructive mt-0.5">{fieldState.error.message}</p>
               )}
             </div>
           )}
@@ -197,7 +197,7 @@ export function OrderLineTable({
                 {...f}
               />
               {fieldState.error && (
-                <p className="text-[10px] text-destructive mt-0.5">{fieldState.error.message}</p>
+                <p className="text-micro text-destructive mt-0.5">{fieldState.error.message}</p>
               )}
             </div>
           )}
@@ -223,7 +223,7 @@ export function OrderLineTable({
                 {...f}
               />
               {fieldState.error && (
-                <p className="text-[10px] text-destructive mt-0.5">{fieldState.error.message}</p>
+                <p className="text-micro text-destructive mt-0.5">{fieldState.error.message}</p>
               )}
             </div>
           )}
@@ -250,7 +250,7 @@ export function OrderLineTable({
                 {...f}
               />
               {fieldState.error && (
-                <p className="text-[10px] text-destructive mt-0.5">{fieldState.error.message}</p>
+                <p className="text-micro text-destructive mt-0.5">{fieldState.error.message}</p>
               )}
             </div>
           )}

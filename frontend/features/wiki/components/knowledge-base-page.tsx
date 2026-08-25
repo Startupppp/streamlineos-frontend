@@ -321,14 +321,14 @@ export default function KnowledgeBasePage() {
                         {isFetchingNextPage ? (
                           <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                         ) : (
-                          <button type="button" onClick={loadOlder} className="flex items-center gap-1 rounded-full border border-border bg-background px-3 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted">
+                          <button type="button" onClick={loadOlder} className="flex items-center gap-1 rounded-full border border-border bg-background px-3 py-1 text-dense font-medium text-muted-foreground transition-colors hover:bg-muted">
                             <ChevronUp className="h-3 w-3" />Load older messages
                           </button>
                         )}
                       </div>
                     ) : (
                       persisted.length > 0 && (
-                        <p className="pb-1 text-center text-[10px] text-muted-foreground/60">Beginning of your conversation</p>
+                        <p className="pb-1 text-center text-micro text-muted-foreground/60">Beginning of your conversation</p>
                       )
                     )}
                     {rows.map((row) =>

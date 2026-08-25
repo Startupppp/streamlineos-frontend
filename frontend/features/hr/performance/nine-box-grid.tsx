@@ -14,15 +14,15 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyLeaderboardIllustration } from "@/components/illustrations";
 
 const GRID_LABELS: Record<string, { label: string; bg: string }> = {
-  "3-3": { label: "Star", bg: "bg-blue-50 border-blue-200 dark:bg-blue-500/10 dark:border-blue-500/30" },
-  "3-2": { label: "High Performer", bg: "bg-blue-50 border-blue-100 dark:bg-blue-500/10 dark:border-blue-500/30" },
-  "3-1": { label: "Consistent Star", bg: "bg-sky-50 border-sky-200 dark:bg-sky-500/10 dark:border-sky-500/30" },
-  "2-3": { label: "High Potential", bg: "bg-emerald-50 border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/30" },
+  "3-3": { label: "Star", bg: "bg-status-info-surface border-status-info-rule" },
+  "3-2": { label: "High Performer", bg: "bg-status-info-surface border-status-info-rule" },
+  "3-1": { label: "Consistent Star", bg: "bg-status-info-surface border-status-info-rule" },
+  "2-3": { label: "High Potential", bg: "bg-status-success-surface border-status-success-rule" },
   "2-2": { label: "Core Player", bg: "bg-muted border-border" },
   "2-1": { label: "Solid Contributor", bg: "bg-muted border-border" },
-  "1-3": { label: "Enigma", bg: "bg-amber-50 border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/30" },
-  "1-2": { label: "Growth Employee", bg: "bg-orange-50 border-orange-100 dark:bg-orange-500/10 dark:border-orange-500/30" },
-  "1-1": { label: "Under Performer", bg: "bg-red-50 border-red-200 dark:bg-red-500/10 dark:border-red-500/30" },
+  "1-3": { label: "Enigma", bg: "bg-status-warning-surface border-status-warning-rule" },
+  "1-2": { label: "Growth Employee", bg: "bg-status-warning-surface border-status-warning-rule" },
+  "1-1": { label: "Under Performer", bg: "bg-status-danger-surface border-status-danger-rule" },
 };
 
 const BOX_ORDER = [

@@ -105,7 +105,7 @@ function ReceiveTransferForm({
     <Form {...form}>
       <SheetBody className="space-y-4 px-6 py-4">
         <div className="flex items-center justify-between">
-          <span className="text-[13px] font-medium">Line Items</span>
+          <span className="text-label font-medium">Line Items</span>
           <Button variant="outline" size="sm" className="text-xs" onClick={handleReceiveAll}>
             Receive All
           </Button>
@@ -139,7 +139,7 @@ function ReceiveTransferForm({
                         text={line.productName}
                         className="font-medium leading-tight"
                       />
-                      <p className="text-[10px] text-muted-foreground font-mono">{line.sku}</p>
+                      <p className="text-micro text-muted-foreground font-mono">{line.sku}</p>
                     </td>
                     <td className="px-3 py-2 text-right font-mono tabular-nums">
                       {line.quantity.toLocaleString()}

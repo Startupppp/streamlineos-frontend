@@ -208,12 +208,12 @@ export function ReconciliationRulesSheet({ bankAccountId, open, onOpenChange }: 
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold">{rule.name}</span>
-                    <Badge variant="outline" className="text-[10px]">
+                    <Badge variant="outline" className="text-micro">
                       P{rule.priority}
                     </Badge>
                     <Badge
                       variant={rule.isActive ? "default" : "secondary"}
-                      className="text-[10px]"
+                      className="text-micro"
                     >
                       {rule.isActive ? "Active" : "Inactive"}
                     </Badge>
@@ -247,7 +247,7 @@ export function ReconciliationRulesSheet({ bankAccountId, open, onOpenChange }: 
                     </AlertDialogContent>
                   </AlertDialog>
                 </div>
-                <div className="text-[11px] text-muted-foreground">
+                <div className="text-dense text-muted-foreground">
                   {rule.conditions.map((c, i) => (
                     <span key={i}>
                       {i > 0 && " AND "}
@@ -257,7 +257,7 @@ export function ReconciliationRulesSheet({ bankAccountId, open, onOpenChange }: 
                     </span>
                   ))}
                 </div>
-                <div className="text-[11px] text-muted-foreground">
+                <div className="text-dense text-muted-foreground">
                   Action:{" "}
                   <span className="font-medium text-foreground capitalize">
                     {rule.action.type}

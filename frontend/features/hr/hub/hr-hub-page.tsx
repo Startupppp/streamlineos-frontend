@@ -130,7 +130,7 @@ export function HrHubPage() {
               <button
                 type="button"
                 onClick={handleRetry}
-                className="flex shrink-0 items-center gap-1 text-blue-600 hover:underline dark:text-blue-400"
+                className="flex shrink-0 items-center gap-1 text-status-info-ink hover:underline"
               >
                 <RefreshCcw className="h-3.5 w-3.5" />
                 Retry

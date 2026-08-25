@@ -23,12 +23,12 @@ const PAGE_SIZE = 20;
 
 const STATUS_BADGE_CLASS: Record<ExecutionStatus, string> = {
   pending: "bg-muted text-muted-foreground",
-  running: "bg-blue-100 text-blue-700 animate-pulse dark:bg-blue-500/10 dark:text-blue-300",
-  waiting: "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-300",
-  completed: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300",
-  failed: "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-300",
+  running: "bg-status-info-surface text-status-info-ink animate-pulse",
+  waiting: "bg-status-warning-surface text-status-warning-ink",
+  completed: "bg-status-success-surface text-status-success-ink",
+  failed: "bg-status-danger-surface text-status-danger-ink",
   cancelled: "bg-muted text-muted-foreground",
-  timed_out: "bg-orange-100 text-orange-700 dark:bg-orange-500/10 dark:text-orange-300",
+  timed_out: "bg-status-warning-surface text-status-warning-ink",
 };
 
 const STATUS_TABS: Array<{ label: string; value: ExecutionStatus | "all" }> = [

@@ -106,7 +106,7 @@ export default function VendorPaymentsPage() {
       header: "Paid",
       className: "text-right",
       headerClassName: "text-right",
-      cell: (row) => <Money value={Number(row.amountPaid)} className="text-emerald-700" />,
+      cell: (row) => <Money value={Number(row.amountPaid)} className="text-status-success-ink" />,
     },
     {
       key: "outstanding",
@@ -118,7 +118,7 @@ export default function VendorPaymentsPage() {
         return (
           <Money
             value={outstanding}
-            className={outstanding > 0.005 ? "text-amber-600" : undefined}
+            className={outstanding > 0.005 ? "text-status-warning-ink" : undefined}
           />
         );
       },

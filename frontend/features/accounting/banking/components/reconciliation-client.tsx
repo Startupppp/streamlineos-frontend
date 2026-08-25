@@ -139,10 +139,10 @@ export function ReconciliationClient() {
         </div>
 
         {hasMismatch && workspace && (
-          <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-lg px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
+          <div className="flex items-center gap-2 bg-status-warning-surface border border-status-warning-rule rounded-lg px-3 py-2 text-xs text-status-warning-ink">
             <AlertTriangle className="h-4 w-4 shrink-0" />
             <span>
-              Balance mismatch of <Money value={balanceDiff} className="text-amber-900 font-medium" />.
+              Balance mismatch of <Money value={balanceDiff} className="text-status-warning-ink font-medium" />.
               Reconcile remaining transactions to close the gap.
             </span>
           </div>
@@ -216,7 +216,7 @@ export function ReconciliationClient() {
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <p className="text-[11px] text-muted-foreground tabular-nums">
+                            <p className="text-dense text-muted-foreground tabular-nums">
                               {txn.txnDate}
                             </p>
                             <TruncatedText text={txn.description} className="text-xs font-medium text-foreground mt-0.5" />
@@ -225,13 +225,13 @@ export function ReconciliationClient() {
                             <Money
                               value={amount}
                               compact
-                              className={amount >= 0 ? "text-emerald-600" : "text-red-600"}
+                              className={amount >= 0 ? "text-status-success-ink" : "text-status-danger-ink"}
                             />
                             <BankTxnStatusBadge status={txn.status} />
                           </div>
                         </div>
                         {txn.suggestedMatches && txn.suggestedMatches.length > 0 && (
-                          <p className="text-[10px] text-primary mt-1">
+                          <p className="text-micro text-primary mt-1">
                             {txn.suggestedMatches.length} suggestion
                             {txn.suggestedMatches.length > 1 ? "s" : ""}
                           </p>

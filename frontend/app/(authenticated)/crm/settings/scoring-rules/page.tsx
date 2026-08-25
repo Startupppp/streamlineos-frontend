@@ -134,23 +134,23 @@ function ScoringRuleRow({ rule, isEditing, editForm, onEditSubmit, onEdit, onDel
         </>
       ) : (
         <>
-          <TableCell className="text-[11px] px-2 py-1 capitalize">{FIELDS.find(f => f.value === rule.field)?.label ?? rule.field}</TableCell>
-          <TableCell className="text-[11px] px-2 py-1">{OPERATORS.find(o => o.value === rule.operator)?.label ?? rule.operator}</TableCell>
-          <TableCell className="text-[11px] px-2 py-1">{rule.value}</TableCell>
-          <TableCell className="text-[11px] px-2 py-1 text-right">
+          <TableCell className="text-dense px-2 py-1 capitalize">{FIELDS.find(f => f.value === rule.field)?.label ?? rule.field}</TableCell>
+          <TableCell className="text-dense px-2 py-1">{OPERATORS.find(o => o.value === rule.operator)?.label ?? rule.operator}</TableCell>
+          <TableCell className="text-dense px-2 py-1">{rule.value}</TableCell>
+          <TableCell className="text-dense px-2 py-1 text-right">
             <Badge
               variant="outline"
               className={cn(
-                "text-[9px] h-4 px-1.5 py-0 font-mono tabular-nums",
+                "text-micro h-4 px-1.5 py-0 font-mono tabular-nums",
                 rule.points >= 0
-                  ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
-                  : "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30"
+                  ? "bg-status-success-surface text-status-success-ink border-status-success-rule"
+                  : "bg-status-danger-surface text-status-danger-ink border-status-danger-rule"
               )}
             >
               {rule.points > 0 ? "+" : ""}{rule.points}
             </Badge>
           </TableCell>
-          <TableCell className="text-[11px] px-2 py-1 text-right">
+          <TableCell className="text-dense px-2 py-1 text-right">
             <div className="flex items-center justify-end gap-1">
               <Button variant="ghost" size="icon" className="w-7" onClick={handleEdit} aria-label="Edit">
                 <Pencil className="h-3.5 w-3.5" />
@@ -362,11 +362,11 @@ export default function ScoringRulesPage() {
                   <Table>
                     <TableHeader className="sticky top-0 z-10 bg-muted/80">
                       <TableRow className="border-b-2 border-border hover:bg-transparent">
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Field</TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Operator</TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Value</TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Points</TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Actions</TableHead>
+                        <TableHead className="text-micro uppercase tracking-wider font-bold px-2 py-1.5">Field</TableHead>
+                        <TableHead className="text-micro uppercase tracking-wider font-bold px-2 py-1.5">Operator</TableHead>
+                        <TableHead className="text-micro uppercase tracking-wider font-bold px-2 py-1.5">Value</TableHead>
+                        <TableHead className="text-micro uppercase tracking-wider font-bold px-2 py-1.5 text-right">Points</TableHead>
+                        <TableHead className="text-micro uppercase tracking-wider font-bold px-2 py-1.5 text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -421,9 +421,9 @@ export default function ScoringRulesPage() {
                     variant="outline"
                     className={cn(
                       "text-base px-4 py-1 font-bold tabular-nums font-mono",
-                      sampleScore <= 30 ? "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30" :
-                      sampleScore <= 60 ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30" :
-                      "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
+                      sampleScore <= 30 ? "bg-status-danger-surface text-status-danger-ink border-status-danger-rule" :
+                      sampleScore <= 60 ? "bg-status-warning-surface text-status-warning-ink border-status-warning-rule" :
+                      "bg-status-success-surface text-status-success-ink border-status-success-rule"
                     )}
                   >
                     {sampleScore} pts

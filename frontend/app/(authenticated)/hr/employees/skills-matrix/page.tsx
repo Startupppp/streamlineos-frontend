@@ -19,9 +19,9 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 const LEVEL_COLORS: Record<number, string> = {
   1: "bg-muted text-muted-foreground",
   2: "bg-primary/10 text-primary",
-  3: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
-  4: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300",
-  5: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
+  3: "bg-status-warning-surface text-status-warning-ink",
+  4: "bg-status-success-surface text-status-success-ink",
+  5: "bg-status-info-surface text-status-info-ink",
 };
 
 const LEVEL_SHORT: Record<number, string> = { 1: "B", 2: "E", 3: "I", 4: "A", 5: "X" };
@@ -147,7 +147,7 @@ export default function SkillsMatrixPage() {
                       title={skill}
                     >
                       {compact ? (
-                        <span className="block truncate text-[10px] leading-tight">{skill.substring(0, 6)}{skill.length > 6 ? "…" : ""}</span>
+                        <span className="block truncate text-micro leading-tight">{skill.substring(0, 6)}{skill.length > 6 ? "…" : ""}</span>
                       ) : (
                         <div className="[writing-mode:vertical-rl] rotate-180 max-h-24 py-1">{skill}</div>
                       )}
@@ -165,7 +165,7 @@ export default function SkillsMatrixPage() {
                         <div className="flex items-center gap-2">
                           <Avatar className="h-6 w-6 shrink-0">
                             <AvatarImage src={employeeRecord.image ?? undefined} />
-                            <AvatarFallback className="text-[9px]">{getInitials(employeeRecord.name)}</AvatarFallback>
+                            <AvatarFallback className="text-micro">{getInitials(employeeRecord.name)}</AvatarFallback>
                           </Avatar>
                           <TruncatedText text={employeeRecord.name ?? ""} className="font-medium max-w-[110px]" />
                         </div>
@@ -177,7 +177,7 @@ export default function SkillsMatrixPage() {
                             {level ? (
                               <span
                                 title={`${skill}: ${LEVEL_LABELS[level] ?? `L${level}`}`}
-                                className={`inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold cursor-default ${LEVEL_COLORS[level] ?? LEVEL_COLORS[1]}`}
+                                className={`inline-block rounded px-1.5 py-0.5 text-micro font-semibold cursor-default ${LEVEL_COLORS[level] ?? LEVEL_COLORS[1]}`}
                               >
                                 {compact ? (LEVEL_SHORT[level] ?? `${level}`) : `${level} – ${LEVEL_LABELS[level] ?? `L${level}`}`}
                               </span>
@@ -197,7 +197,7 @@ export default function SkillsMatrixPage() {
             <div className="flex items-center gap-4 mt-4 px-1 flex-wrap">
               {Object.entries(LEVEL_LABELS).map(([levelNumber, levelLabel]) => (
                 <div key={levelNumber} className="flex items-center gap-1.5">
-                  <span className={`inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold ${LEVEL_COLORS[Number(levelNumber)]}`}>
+                  <span className={`inline-block rounded px-1.5 py-0.5 text-micro font-semibold ${LEVEL_COLORS[Number(levelNumber)]}`}>
                     {levelNumber}
                   </span>
                   <span className="text-xs text-muted-foreground">{levelNumber} - {levelLabel}</span>

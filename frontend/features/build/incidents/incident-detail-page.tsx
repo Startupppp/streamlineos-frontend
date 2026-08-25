@@ -20,18 +20,23 @@ import { IncidentTimeline } from "./incident-timeline";
 import { IncidentSheet } from "./incident-sheet";
 import type { IncidentSeverity, IncidentStatus } from "@/types/projects";
 
+/**
+ * Two ladders, and both lost their orange rung: `high` and `investigating` were
+ * orange before the migration, and with no orange status they collapsed onto
+ * the amber below them. Everything else here means its status and keeps it.
+ */
 const SEVERITY_STYLES: Record<IncidentSeverity, string> = {
-  critical: "text-red-700 border-red-300 bg-red-50 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
-  high: "text-orange-600 border-orange-200 dark:text-orange-400 dark:border-orange-500/30",
-  medium: "text-amber-600 border-amber-200 dark:text-amber-400 dark:border-amber-500/30",
+  critical: "text-status-danger-ink border-status-danger-rule bg-status-danger-surface",
+  high: "text-category-orange-ink border-category-orange-rule",
+  medium: "text-status-warning-ink border-status-warning-rule",
   low: "text-muted-foreground border-border",
 };
 const STATUS_STYLES: Record<IncidentStatus, string> = {
-  detected: "text-red-600 border-red-200 dark:text-red-400 dark:border-red-500/30",
-  investigating: "text-orange-600 border-orange-200 dark:text-orange-400 dark:border-orange-500/30",
-  mitigating: "text-amber-600 border-amber-200 dark:text-amber-400 dark:border-amber-500/30",
-  resolved: "text-emerald-600 border-emerald-200 dark:text-emerald-400 dark:border-emerald-500/30",
-  postmortem: "text-blue-600 border-blue-200 dark:text-blue-400 dark:border-blue-500/30",
+  detected: "text-status-danger-ink border-status-danger-rule",
+  investigating: "text-category-orange-ink border-category-orange-rule",
+  mitigating: "text-status-warning-ink border-status-warning-rule",
+  resolved: "text-status-success-ink border-status-success-rule",
+  postmortem: "text-status-info-ink border-status-info-rule",
   closed: "text-muted-foreground border-border",
 };
 const STATUS_LABELS: Record<IncidentStatus, string> = {
@@ -54,14 +59,14 @@ function IncidentActions({
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
     <div className="flex items-center gap-2">
-      <Button size="sm" variant="outline" className="text-[11px]" onClick={onEdit}>
+      <Button size="sm" variant="outline" className="text-dense" onClick={onEdit}>
         <Pencil className="h-3.5 w-3.5 mr-1" />
         Edit
       </Button>
       <Button
         size="sm"
         variant="outline"
-        className="text-[11px] text-destructive border-destructive/30 hover:bg-destructive/5"
+        className="text-dense text-destructive border-destructive/30 hover:bg-destructive/5"
         onClick={onDelete}
         {...hoverHandlers}
       >
@@ -134,10 +139,10 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
       backHref={`/build/${projectId}/incidents`}
       badge={
         <div className="flex items-center gap-1.5">
-          <Badge variant="outline" className={`text-[10px] capitalize ${SEVERITY_STYLES[incident.severity]}`}>
+          <Badge variant="outline" className={`text-micro capitalize ${SEVERITY_STYLES[incident.severity]}`}>
             {incident.severity}
           </Badge>
-          <Badge variant="outline" className={`text-[10px] ${STATUS_STYLES[incident.status]}`}>
+          <Badge variant="outline" className={`text-micro ${STATUS_STYLES[incident.status]}`}>
             {STATUS_LABELS[incident.status]}
           </Badge>
         </div>
@@ -156,13 +161,13 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
           <InfoSection label="Root Cause" value={incident.rootCause} />
           <InfoSection label="Customer Comms" value={incident.customerComms} />
           <div className="space-y-1">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Owner</p>
-            <p className="text-[12px]">{owner ? (owner.name ?? owner.email) : "—"}</p>
+            <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Owner</p>
+            <p className="text-xs">{owner ? (owner.name ?? owner.email) : "—"}</p>
           </div>
           {incident.linkedTicketId ? (
             <div className="space-y-1">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Linked Ticket</p>
-              <Badge variant="outline" className="text-[10px] font-mono">#{incident.linkedTicketId}</Badge>
+              <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Linked Ticket</p>
+              <Badge variant="outline" className="text-micro font-mono">#{incident.linkedTicketId}</Badge>
             </div>
           ) : null}
         </div>
@@ -198,8 +203,8 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
 function InfoSection({ label, value }: { label: string; value: string | null }) {
   return (
     <div className="space-y-1">
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className="whitespace-pre-wrap text-[12px] text-foreground">
+      <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="whitespace-pre-wrap text-xs text-foreground">
         {value ?? <span className="italic text-muted-foreground">Not set</span>}
       </p>
     </div>

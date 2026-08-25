@@ -54,7 +54,7 @@ const KanbanColumn = memo(function KanbanColumn({
           <span className={cn("text-xs font-semibold tracking-wide", col.headerText)}>{col.label}</span>
         </div>
         <span className={cn(
-          "inline-flex items-center justify-center rounded-full min-w-[22px] h-5 px-1.5 text-[11px] font-bold bg-white/25",
+          "inline-flex items-center justify-center rounded-full min-w-[22px] h-5 px-1.5 text-dense font-bold bg-white/25",
           col.headerText
         )}>
           {total}
@@ -85,7 +85,7 @@ const KanbanColumn = memo(function KanbanColumn({
               {provided.placeholder}
               {items.length === 0 && !snapshot.isDraggingOver && (
                 <div className="flex flex-col items-center justify-center h-16 rounded-lg border border-dashed border-border/40 gap-1">
-                  <p className="text-[10px] text-muted-foreground/60 font-medium">Drop here</p>
+                  <p className="text-micro text-muted-foreground/60 font-medium">Drop here</p>
                 </div>
               )}
             </div>
@@ -152,11 +152,11 @@ export function PipelineKanban({
   }, []);
 
   const FLOW_STAGES = [
-    { label: "New", color: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300", count: stageTotals["NEW"] ?? 0 },
-    { label: "Screening", color: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300", count: stageTotals["SCREENING"] ?? 0 },
-    { label: "Interview", color: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300", count: stageTotals["INTERVIEW"] ?? 0 },
-    { label: "Offer", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300", count: stageTotals["OFFER"] ?? 0 },
-    { label: "Hired", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300", count: stageTotals["HIRED"] ?? 0 },
+    { label: "New", color: "bg-muted text-muted-foreground", count: stageTotals["NEW"] ?? 0 },
+    { label: "Screening", color: "bg-status-info-surface text-status-info-ink", count: stageTotals["SCREENING"] ?? 0 },
+    { label: "Interview", color: "bg-status-warning-surface text-status-warning-ink", count: stageTotals["INTERVIEW"] ?? 0 },
+    { label: "Offer", color: "bg-status-info-surface text-status-info-ink", count: stageTotals["OFFER"] ?? 0 },
+    { label: "Hired", color: "bg-status-success-surface text-status-success-ink", count: stageTotals["HIRED"] ?? 0 },
   ];
   const rejectedCount = stageTotals["REJECTED"] ?? 0;
 
@@ -197,7 +197,7 @@ export function PipelineKanban({
           </div>
         ))}
         {rejectedCount > 0 && (
-          <span className="ml-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-rose-100 text-rose-700 dark:bg-rose-900 dark:text-rose-300">
+          <span className="ml-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-status-danger-surface text-status-danger-ink">
             <XCircle className="h-3 w-3" />
             Rejected
             <span className="font-bold">{rejectedCount}</span>

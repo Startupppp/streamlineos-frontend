@@ -33,12 +33,12 @@ function formatDate(iso: string): string {
 
 function AckStatusBadge({ row }: { row: TimesheetExportDto }) {
   if (!row.ackStatus || !isAckStatus(row.ackStatus)) {
-    return <span className="text-[11px] text-muted-foreground">—</span>;
+    return <span className="text-dense text-muted-foreground">—</span>;
   }
   return (
     <Badge
       variant="outline"
-      className={`text-[10px] ${ACK_STATUS_BADGE[row.ackStatus]}`}
+      className={`text-micro ${ACK_STATUS_BADGE[row.ackStatus]}`}
       title={row.ackAt ? `Acknowledged ${formatDate(row.ackAt)}` : undefined}
     >
       {ACK_STATUS_LABEL[row.ackStatus]}
@@ -87,7 +87,7 @@ export function PayrollExportsHistory({ fallbackMapping }: PayrollExportsHistory
         key: "period",
         header: "Period",
         cell: (row) => (
-          <span className="text-[11px] font-mono">
+          <span className="text-dense font-mono">
             {formatDate(row.dateRangeStart)} – {formatDate(row.dateRangeEnd)}
           </span>
         ),
@@ -96,7 +96,7 @@ export function PayrollExportsHistory({ fallbackMapping }: PayrollExportsHistory
         key: "format",
         header: "Format",
         cell: (row) => (
-          <Badge variant="outline" className="text-[10px]">
+          <Badge variant="outline" className="text-micro">
             {row.format}
           </Badge>
         ),
@@ -105,7 +105,7 @@ export function PayrollExportsHistory({ fallbackMapping }: PayrollExportsHistory
         key: "entryCount",
         header: "Entries",
         cell: (row) => (
-          <span className="font-mono tabular-nums text-right block text-[11px]">{row.entryCount}</span>
+          <span className="font-mono tabular-nums text-right block text-dense">{row.entryCount}</span>
         ),
         className: "text-right",
         headerClassName: "text-right",
@@ -114,7 +114,7 @@ export function PayrollExportsHistory({ fallbackMapping }: PayrollExportsHistory
         key: "totalHours",
         header: "Hours",
         cell: (row) => (
-          <span className="font-mono tabular-nums text-right block text-[11px]">{row.totalHours.toFixed(1)}</span>
+          <span className="font-mono tabular-nums text-right block text-dense">{row.totalHours.toFixed(1)}</span>
         ),
         className: "text-right",
         headerClassName: "text-right",
@@ -123,7 +123,7 @@ export function PayrollExportsHistory({ fallbackMapping }: PayrollExportsHistory
         key: "note",
         header: "Note",
         cell: (row) => (
-          <TruncatedText text={row.note ?? "—"} className="text-[11px] text-muted-foreground max-w-[120px]" />
+          <TruncatedText text={row.note ?? "—"} className="text-dense text-muted-foreground max-w-[120px]" />
         ),
       },
       {
@@ -135,14 +135,14 @@ export function PayrollExportsHistory({ fallbackMapping }: PayrollExportsHistory
         key: "createdByName",
         header: "By",
         cell: (row) => (
-          <TruncatedText text={row.createdByName ?? "—"} className="text-[11px]" />
+          <TruncatedText text={row.createdByName ?? "—"} className="text-dense" />
         ),
       },
       {
         key: "createdAt",
         header: "When",
         cell: (row) => (
-          <span className="text-[11px] text-muted-foreground">{formatDate(row.createdAt)}</span>
+          <span className="text-dense text-muted-foreground">{formatDate(row.createdAt)}</span>
         ),
         sortable: true,
         sortValue: (r) => r.createdAt,

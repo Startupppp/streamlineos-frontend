@@ -230,10 +230,10 @@ export function ReviewsTab() {
       <div className="flex items-center justify-between gap-2 flex-wrap shrink-0">
         <Tabs value={statusFilter} onValueChange={setStatusFilter}>
           <TabsList className="bg-muted/50">
-            <TabsTrigger value="all" className="text-[11px]">All ({reviewsList.length})</TabsTrigger>
-            <TabsTrigger value="DRAFT" className="text-[11px]">Draft</TabsTrigger>
-            <TabsTrigger value="IN_PROGRESS" className="text-[11px]">In Progress</TabsTrigger>
-            <TabsTrigger value="COMPLETED" className="text-[11px]">Completed</TabsTrigger>
+            <TabsTrigger value="all" className="text-dense">All ({reviewsList.length})</TabsTrigger>
+            <TabsTrigger value="DRAFT" className="text-dense">Draft</TabsTrigger>
+            <TabsTrigger value="IN_PROGRESS" className="text-dense">In Progress</TabsTrigger>
+            <TabsTrigger value="COMPLETED" className="text-dense">Completed</TabsTrigger>
           </TabsList>
         </Tabs>
         <AnimatedIconButton icon={PlusIcon} size="sm" className="gap-1.5" iconSize={14} onClick={handleOpenSheet}>
@@ -261,28 +261,28 @@ export function ReviewsTab() {
                 : "border-l-amber-400";
             const statusBadgeClass =
               review.status === "COMPLETED"
-                ? "border-emerald-200 bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800"
+                ? "border-status-success-rule bg-status-success-surface text-status-success-ink"
                 : review.status === "IN_PROGRESS"
-                ? "border-blue-200 bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-800"
+                ? "border-status-info-rule bg-status-info-surface text-status-info-ink"
                 : review.status === "ARCHIVED"
                 ? "border-border bg-muted text-muted-foreground"
-                : "border-amber-200 bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800";
+                : "border-status-warning-rule bg-status-warning-surface text-status-warning-ink";
 
             return (
               <Card
                 key={review.id}
-                className={`rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden border-l-4 transition-shadow duration-200 hover:shadow-md ${accentClass}`}
+                className={`rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden border-l-4 transition-shadow duration-200 hover:shadow-md ${accentClass}`}
               >
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-start justify-between gap-2">
-                    <Badge className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${statusBadgeClass}`}>
+                    <Badge className={`inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border ${statusBadgeClass}`}>
                       {review.status ?? "DRAFT"}
                     </Badge>
                     <div className="flex items-center gap-1 shrink-0">
                       {review.overallRating && (
-                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-800">
-                          <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
-                          <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300">
+                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-status-warning-surface border border-status-warning-rule">
+                          <Star className="h-3 w-3 fill-amber-500 text-status-warning-ink" />
+                          <span className="text-micro font-bold text-status-warning-ink">
                             {Number(review.overallRating).toFixed(1)}
                           </span>
                         </div>
@@ -300,7 +300,7 @@ export function ReviewsTab() {
                   <div className="flex items-center gap-2">
                     <Avatar className="w-7 shrink-0">
                       <AvatarImage src={resolveImageUrl(review.user?.image ?? null)} />
-                      <AvatarFallback className="text-[10px] font-semibold bg-primary/10 text-primary">
+                      <AvatarFallback className="text-micro font-semibold bg-primary/10 text-primary">
                         {review.user?.name?.[0] ?? "?"}
                       </AvatarFallback>
                     </Avatar>
@@ -312,19 +312,19 @@ export function ReviewsTab() {
                       {review.reviewer?.name && (
                         <TruncatedText
                           text={`by ${review.reviewer.name}`}
-                          className="text-[10px] text-muted-foreground"
+                          className="text-micro text-muted-foreground"
                         />
                       )}
                     </div>
                   </div>
-                  <p className="text-[10px] text-muted-foreground font-medium">
+                  <p className="text-micro text-muted-foreground font-medium">
                     {review.periodStart} → {review.periodEnd}
                   </p>
                   {review.status !== "COMPLETED" && (
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-xs w-full border border-border/60 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 dark:hover:bg-emerald-950/20 dark:hover:text-emerald-400 transition-colors duration-200"
+                      className="text-xs w-full border border-border/60 hover:bg-status-success-surface hover:text-status-success-ink hover:border-status-success-rule transition-colors duration-200"
                       onClick={() => handleComplete(review.id)}
                     >
                       <CheckCircle2 className="h-3 w-3 mr-1.5" />Mark Complete
@@ -447,7 +447,7 @@ export function ReviewsTab() {
         </div>
         {employeeId && periodStart && periodEnd && (
           <div className="pt-2 border-t border-border">
-            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">AI Assist</p>
+            <p className="text-micro font-medium text-muted-foreground uppercase tracking-wider mb-2">AI Assist</p>
             <AIGenerateReviewButton
               userId={employeeId}
               userName={employees.find((e) => e.id === employeeId)?.name ?? "Employee"}

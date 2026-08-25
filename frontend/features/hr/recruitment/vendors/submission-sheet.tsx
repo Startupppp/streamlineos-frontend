@@ -36,22 +36,22 @@ interface SubmissionSheetProps {
 
 function StatusBadge({ status }: { status: VendorSubmission["placementStatus"] }) {
   const map: Record<string, string> = {
-    SUBMITTED: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-    INTERVIEWING: "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-300",
-    PLACED: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300",
-    REJECTED: "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-300",
+    SUBMITTED: "bg-status-info-surface text-status-info-ink",
+    INTERVIEWING: "bg-status-warning-surface text-status-warning-ink",
+    PLACED: "bg-status-success-surface text-status-success-ink",
+    REJECTED: "bg-status-danger-surface text-status-danger-ink",
   };
-  return <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${map[status] ?? ""}`}>{status}</span>;
+  return <span className={`text-micro font-medium px-1.5 py-0.5 rounded-full ${map[status] ?? ""}`}>{status}</span>;
 }
 
 function InvoiceBadge({ status }: { status: VendorSubmission["invoiceStatus"] }) {
   const map: Record<string, string> = {
     NOT_INVOICED: "bg-muted text-muted-foreground",
-    INVOICED: "bg-orange-100 text-orange-700 dark:bg-orange-500/10 dark:text-orange-300",
-    PAID: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300",
+    INVOICED: "bg-status-warning-surface text-status-warning-ink",
+    PAID: "bg-status-success-surface text-status-success-ink",
   };
   const label: Record<string, string> = { NOT_INVOICED: "Not Invoiced", INVOICED: "Invoiced", PAID: "Paid" };
-  return <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${map[status] ?? ""}`}>{label[status]}</span>;
+  return <span className={`text-micro font-medium px-1.5 py-0.5 rounded-full ${map[status] ?? ""}`}>{label[status]}</span>;
 }
 
 function AddSubmissionForm({ vendorId, onDone }: { vendorId: number; onDone: () => void }) {
@@ -214,7 +214,7 @@ export function SubmissionSheet({ vendor, onClose }: SubmissionSheetProps) {
                     {sub.invoiceAmount && <span className="font-medium">${parseFloat(sub.invoiceAmount).toLocaleString()}</span>}
                   </div>
                   {canViewFinancials && (sub.billRate || sub.payRate) && (
-                    <div className="flex items-center gap-3 text-[11px] text-muted-foreground pt-1 border-t">
+                    <div className="flex items-center gap-3 text-dense text-muted-foreground pt-1 border-t">
                       {sub.billRate && <span>Bill: ${parseFloat(sub.billRate).toLocaleString()}/hr</span>}
                       {sub.payRate && <span>Pay: ${parseFloat(sub.payRate).toLocaleString()}/hr</span>}
                       {sub.margin && <span className="font-medium text-foreground">Margin: ${parseFloat(sub.margin).toLocaleString()}/hr</span>}

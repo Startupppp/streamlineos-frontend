@@ -59,17 +59,17 @@ function AlertRow({
         <div className="min-w-0 flex-1">
           <TruncatedText text={notification.title} className="text-xs font-medium" />
           {notification.message && (
-            <p className="truncate text-[10px] text-muted-foreground">
+            <p className="truncate text-micro text-muted-foreground">
               {notification.message}
             </p>
           )}
-          <p className="mt-0.5 text-[10px] text-muted-foreground">
+          <p className="mt-0.5 text-micro text-muted-foreground">
             {formatRelativeTime(notification.createdAt)}
           </p>
         </div>
         <Badge
           variant="outline"
-          className={cn("h-4 shrink-0 px-1.5 py-0 text-[9px]", priority.color)}
+          className={cn("h-4 shrink-0 px-1.5 py-0 text-micro", priority.color)}
         >
           {priority.label}
         </Badge>

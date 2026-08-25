@@ -14,9 +14,9 @@ import type { StockTransaction } from "@/hooks/api/inventory/stock";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const TYPE_BADGE: Record<string, string> = {
-  SALE: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  ADJUSTMENT_OUT: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  TRANSFER_OUT: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  SALE: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  ADJUSTMENT_OUT: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  TRANSFER_OUT: "bg-status-info-surface text-status-info-ink border-status-info-rule",
   RETURN_OUT: "bg-muted text-muted-foreground border-border",
 };
 
@@ -29,7 +29,7 @@ function formatDate(value: string | null | undefined): string {
 function TypeBadge({ type }: { type: string }) {
   const cls = TYPE_BADGE[type] ?? "bg-muted text-muted-foreground border-border";
   return (
-    <Badge variant="outline" className={cn("h-4 text-[9px] px-1.5 py-0", cls)}>
+    <Badge variant="outline" className={cn("h-4 text-micro px-1.5 py-0", cls)}>
       {type.replace(/_/g, " ")}
     </Badge>
   );
@@ -40,7 +40,7 @@ const columns: DataTableColumn<StockTransaction>[] = [
     key: "createdAt",
     header: "Date",
     cell: (tx) => (
-      <span className="font-mono tabular-nums text-[11px]">{formatDate(tx.createdAt)}</span>
+      <span className="font-mono tabular-nums text-dense">{formatDate(tx.createdAt)}</span>
     ),
     sortable: true,
     sortValue: (tx) => tx.createdAt,
@@ -55,7 +55,7 @@ const columns: DataTableColumn<StockTransaction>[] = [
     key: "sku",
     header: "SKU",
     cell: (tx) => (
-      <span className="font-mono text-[11px] text-muted-foreground">
+      <span className="font-mono text-dense text-muted-foreground">
         {tx.productVariant?.sku ?? tx.productVariant?.product?.sku ?? "—"}
       </span>
     ),
@@ -73,7 +73,7 @@ const columns: DataTableColumn<StockTransaction>[] = [
     key: "quantityChange",
     header: "Qty",
     cell: (tx) => (
-      <span className={cn("font-mono tabular-nums", tx.quantityChange < 0 ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400")}>
+      <span className={cn("font-mono tabular-nums", tx.quantityChange < 0 ? "text-status-danger-ink" : "text-status-success-ink")}>
         {tx.quantityChange > 0 ? "+" : ""}{tx.quantityChange}
       </span>
     ),
@@ -84,7 +84,7 @@ const columns: DataTableColumn<StockTransaction>[] = [
     key: "referenceId",
     header: "Reference",
     cell: (tx) => (
-      <span className="font-mono text-[11px] text-muted-foreground">
+      <span className="font-mono text-dense text-muted-foreground">
         {tx.referenceId ? `${tx.referenceType ?? ""} ${tx.referenceId}`.trim() : "—"}
       </span>
     ),

@@ -25,15 +25,15 @@ import { SecurityIllustration } from "@/components/illustrations";
 const STATUS_META: Record<string, { label: string; badge: string }> = {
   requested: {
     label: "Requested",
-    badge: "bg-amber-100 border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-300",
+    badge: "bg-status-warning-surface border-status-warning-rule text-status-warning-ink",
   },
   granted: {
     label: "Granted",
-    badge: "bg-emerald-100 border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/30 dark:text-emerald-300",
+    badge: "bg-status-success-surface border-status-success-rule text-status-success-ink",
   },
   revoked: {
     label: "Revoked",
-    badge: "bg-rose-100 border-rose-200 text-rose-700 dark:bg-rose-500/10 dark:border-rose-500/30 dark:text-rose-300",
+    badge: "bg-status-danger-surface border-status-danger-rule text-status-danger-ink",
   },
 };
 
@@ -135,7 +135,7 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
             <SecurityIllustration />
           </div>
           <div>
-            <p className="text-[0.875rem] font-semibold text-foreground">No access requests</p>
+            <p className="text-sm font-semibold text-foreground">No access requests</p>
             <p className="mt-0.5 text-xs text-muted-foreground max-w-[200px]">
               Software and app access requests will appear here.
             </p>
@@ -161,20 +161,20 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
                   </div>
                   <div className="min-w-0">
                     <TruncatedText text={req.systemName} className="text-sm font-medium text-foreground" />
-                    <p className="text-[10px] text-muted-foreground">
+                    <p className="text-micro text-muted-foreground">
                       {getEmployeeName(employees, req.employeeId)} · {req.accessLevel} · {format(new Date(req.createdAt), "MMM d, yyyy")}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className={cn("inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border", meta.badge)}>
+                  <span className={cn("inline-flex items-center text-micro font-semibold px-2 py-0.5 rounded-full border", meta.badge)}>
                     {meta.label}
                   </span>
                   {canManage && req.status === "requested" && (
                     <LoadingButton
                       size="sm"
                       variant="outline"
-                      className="h-6 text-[10px] px-2"
+                      className="h-6 text-micro px-2"
                       onClick={() => handleGrant(req.id)}
                       isPending={updateMutation.isPending}
                     >
@@ -185,7 +185,7 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
                     <LoadingButton
                       size="sm"
                       variant="outline"
-                      className="h-6 text-[10px] px-2 text-destructive border-destructive/30 hover:bg-destructive/10"
+                      className="h-6 text-micro px-2 text-destructive border-destructive/30 hover:bg-destructive/10"
                       onClick={() => handleRevoke(req.id)}
                       isPending={updateMutation.isPending}
                     >

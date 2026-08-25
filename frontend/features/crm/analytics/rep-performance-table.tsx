@@ -25,7 +25,7 @@ const columns: DataTableColumn<RankedRepEntry>[] = [
     key: "rep",
     header: "Rep",
     cell: (row) => (
-      <span className="text-[11px] font-medium flex items-center min-w-0">
+      <span className="text-dense font-medium flex items-center min-w-0">
         <span className="mr-1.5 text-muted-foreground shrink-0">{row.rank}.</span>
         <TruncatedText text={row.name} className="max-w-[120px]" />
       </span>
@@ -37,7 +37,7 @@ const columns: DataTableColumn<RankedRepEntry>[] = [
     headerClassName: "text-right",
     className: "text-right",
     cell: (row) => (
-      <span className="text-[11px] font-mono tabular-nums">{row.leadsAssigned}</span>
+      <span className="text-dense font-mono tabular-nums">{row.leadsAssigned}</span>
     ),
   },
   {
@@ -46,7 +46,7 @@ const columns: DataTableColumn<RankedRepEntry>[] = [
     headerClassName: "text-right",
     className: "text-right",
     cell: (row) => (
-      <span className="text-[11px] font-mono tabular-nums text-emerald-600 dark:text-emerald-400">
+      <span className="text-dense font-mono tabular-nums text-status-success-ink">
         {row.leadsConverted}
       </span>
     ),
@@ -57,7 +57,7 @@ const columns: DataTableColumn<RankedRepEntry>[] = [
     headerClassName: "text-right",
     className: "text-right",
     cell: (row) => (
-      <span className="text-[11px] font-mono tabular-nums">{row.totalCalls}</span>
+      <span className="text-dense font-mono tabular-nums">{row.totalCalls}</span>
     ),
   },
   {
@@ -66,7 +66,7 @@ const columns: DataTableColumn<RankedRepEntry>[] = [
     headerClassName: "text-right",
     className: "text-right",
     cell: (row) => (
-      <span className="text-[11px] font-mono tabular-nums font-semibold">{row.score}</span>
+      <span className="text-dense font-mono tabular-nums font-semibold">{row.score}</span>
     ),
   },
 ];

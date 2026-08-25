@@ -50,10 +50,10 @@ export function LiveActivationPanel({ providerKey }: { providerKey: string }) {
   return (
     <div className="rounded-lg border border-border bg-card p-4 space-y-3">
       <div className="flex items-center gap-2">
-        <ShieldAlert className="h-4 w-4 text-amber-600" />
+        <ShieldAlert className="h-4 w-4 text-status-warning-ink" />
         <p className="text-sm font-semibold text-foreground">Activate live payments</p>
       </div>
-      <p className="text-[12px] text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         Live payments can charge real customers. Confirm that business details, webhook, tax
         settings, and refund policy are correct.
       </p>
@@ -95,7 +95,7 @@ export function LiveActivationPanel({ providerKey }: { providerKey: string }) {
       </AlertDialog>
 
       {!readiness.readyForLive && (
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-dense text-muted-foreground">
           Resolve the blockers listed in the readiness panel before activating.
         </p>
       )}

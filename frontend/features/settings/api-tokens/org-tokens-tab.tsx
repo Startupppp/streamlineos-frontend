@@ -40,7 +40,7 @@ function RevokeTokenButton({
       onClick={handleClick}
       aria-label="Revoke token"
     >
-      <ShieldOff className="h-4 w-4 text-amber-600" />
+      <ShieldOff className="h-4 w-4 text-status-warning-ink" />
     </Button>
   );
 }
@@ -99,7 +99,7 @@ export function OrgTokensTab({ showCreate, onShowCreateChange }: OrgTokensTabPro
         <div className="flex flex-col">
           <span className="font-medium">{t.name}</span>
           {t.description && (
-            <TruncatedText text={t.description} className="text-[10px] text-muted-foreground max-w-[180px]" />
+            <TruncatedText text={t.description} className="text-micro text-muted-foreground max-w-[180px]" />
           )}
         </div>
       ),
@@ -108,7 +108,7 @@ export function OrgTokensTab({ showCreate, onShowCreateChange }: OrgTokensTabPro
       key: "prefix",
       header: "Prefix",
       cell: (t) => (
-        <code className="text-[11px] bg-muted px-1.5 py-0.5 rounded">
+        <code className="text-dense bg-muted px-1.5 py-0.5 rounded">
           {t.keyPrefix}…
         </code>
       ),
@@ -117,7 +117,7 @@ export function OrgTokensTab({ showCreate, onShowCreateChange }: OrgTokensTabPro
       key: "scopes",
       header: "Capability",
       cell: (t) => (
-        <Badge variant="outline" className="h-5 px-2 text-[10px]">
+        <Badge variant="outline" className="h-5 px-2 text-micro">
           {t.scopes.includes("leads:write") ? "Lead ingestion" : "Legacy CRM access"}
         </Badge>
       ),
@@ -151,27 +151,27 @@ export function OrgTokensTab({ showCreate, onShowCreateChange }: OrgTokensTabPro
         const requiresRotation = !t.expiresAt || !hasCurrentCapability;
         if (t.isRevoked) {
           return (
-            <Badge variant="secondary" className="h-4 text-[9px] px-1.5 py-0 text-destructive border-destructive/20 bg-destructive/10">
+            <Badge variant="secondary" className="h-4 text-micro px-1.5 py-0 text-destructive border-destructive/20 bg-destructive/10">
               Revoked
             </Badge>
           );
         }
         if (expired) {
           return (
-            <Badge variant="secondary" className="h-4 text-[9px] px-1.5 py-0 text-amber-700 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400">
+            <Badge variant="secondary" className="h-4 text-micro px-1.5 py-0 text-status-warning-ink border-status-warning-rule bg-status-warning-surface">
               Expired
             </Badge>
           );
         }
         if (requiresRotation) {
           return (
-            <Badge variant="secondary" className="h-4 border-amber-200 bg-amber-50 px-1.5 py-0 text-[9px] text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
+            <Badge variant="secondary" className="h-4 border-status-warning-rule bg-status-warning-surface px-1.5 py-0 text-micro text-status-warning-ink">
               Rotate required
             </Badge>
           );
         }
         return (
-          <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 text-emerald-700 border-emerald-200 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400">
+          <Badge variant="outline" className="h-4 text-micro px-1.5 py-0 text-status-success-ink border-status-success-rule bg-status-success-surface">
             <Shield className="h-2.5 w-2.5 mr-0.5" />
             Active
           </Badge>

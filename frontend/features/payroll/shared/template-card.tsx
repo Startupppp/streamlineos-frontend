@@ -85,14 +85,14 @@ export function TemplateCard({ template, selected, onSelect, actions }: Template
     >
       <div className="absolute -top-2.5 left-3 flex flex-wrap gap-1">
         {template.isRecommended && (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[var(--payroll-ledger)] text-white">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-micro font-semibold bg-[var(--payroll-ledger)] text-white">
             Recommended
           </span>
         )}
         {["INDIAN_STANDARD", "INDIAN_STARTUP", "CONTRACTOR", "SALES_INCENTIVE", "GLOBAL_REMOTE"].includes(
           template.category,
         ) && (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border border-[var(--payroll-rule)] bg-[var(--payroll-paper)] text-[var(--payroll-ink)] dark:bg-card dark:text-foreground">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-micro font-semibold border border-[var(--payroll-rule)] bg-[var(--payroll-paper)] text-[var(--payroll-ink)] dark:bg-card dark:text-foreground">
             Core template
           </span>
         )}
@@ -103,16 +103,16 @@ export function TemplateCard({ template, selected, onSelect, actions }: Template
           <div className="min-w-0">
             <TruncatedText text={template.name} className="text-sm font-semibold text-foreground" />
             {template.badge && (
-              <span className="inline-block mt-0.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+              <span className="inline-block mt-0.5 text-micro font-medium text-muted-foreground uppercase tracking-wide">
                 {template.badge}
               </span>
             )}
-            <p className="text-[10px] text-muted-foreground mt-0.5">
+            <p className="text-micro text-muted-foreground mt-0.5">
               {template.category.replace(/_/g, " ")}
               {template.isSystem ? " · System" : ""}
             </p>
           </div>
-          <span className={cn("shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium", complexity.className)}>
+          <span className={cn("shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium", complexity.className)}>
             {complexity.label}
           </span>
         </div>
@@ -123,13 +123,13 @@ export function TemplateCard({ template, selected, onSelect, actions }: Template
           {shownComponents.map((c) => (
             <span
               key={c.code}
-              className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-muted text-muted-foreground"
+              className="inline-flex items-center px-1.5 py-0.5 rounded text-micro bg-muted text-muted-foreground"
             >
               {c.name}
             </span>
           ))}
           {extraCount > 0 && (
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-muted text-muted-foreground">
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-micro bg-muted text-muted-foreground">
               +{extraCount} more
             </span>
           )}
@@ -140,13 +140,13 @@ export function TemplateCard({ template, selected, onSelect, actions }: Template
             {shownToggles.map((key) => (
               <span
                 key={key}
-                className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-blue-50 text-blue-700 border border-blue-100 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30"
+                className="inline-flex items-center px-1.5 py-0.5 rounded text-micro bg-status-info-surface text-status-info-ink border border-status-info-rule"
               >
                 {TOGGLE_CHIP_LABELS[key] ?? key}
               </span>
             ))}
             {extraToggleCount > 0 && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-muted text-muted-foreground">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-micro bg-muted text-muted-foreground">
                 +{extraToggleCount}
               </span>
             )}

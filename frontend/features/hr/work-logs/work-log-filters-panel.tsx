@@ -102,13 +102,13 @@ export function WorkLogFiltersPanel({
 
       {activeFilterCount > 0 && (
         <div className={cn(FILTER_TOOLBAR_ROW, "w-auto gap-1.5")}>
-          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+          <span className="text-micro font-semibold text-muted-foreground uppercase tracking-wider">
             Filters:
           </span>
           {filters.departmentId && departments && (
             <Badge
               variant="secondary"
-              className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/30 pr-1"
+              className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/30 pr-1"
             >
               {departments.find((d) => d.id.toString() === filters.departmentId)
                 ?.name ?? "Dept"}
@@ -118,7 +118,7 @@ export function WorkLogFiltersPanel({
           {filters.selectedUserId && employees && (
             <Badge
               variant="secondary"
-              className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-blue-200 bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30 pr-1"
+              className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border border-status-info-rule bg-status-info-surface text-status-info-ink pr-1"
             >
               {(() => {
                 const e = employees.find(
@@ -135,7 +135,7 @@ export function WorkLogFiltersPanel({
           {filters.month !== undefined && (
             <Badge
               variant="secondary"
-              className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-amber-200 bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30 pr-1"
+              className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border border-status-warning-rule bg-status-warning-surface text-status-warning-ink pr-1"
             >
               {format(new Date(filters.year, filters.month, 1), "MMMM")}
               <FilterClearButton onClick={handleClearMonth} ariaLabel="Remove month filter" />
@@ -144,7 +144,7 @@ export function WorkLogFiltersPanel({
           {(filters.dateFrom || filters.dateTo) && (
             <Badge
               variant="secondary"
-              className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-border bg-muted text-muted-foreground pr-1"
+              className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border border-border bg-muted text-muted-foreground pr-1"
             >
               {filters.dateFrom && filters.dateTo
                 ? `${filters.dateFrom} – ${filters.dateTo}`
@@ -157,7 +157,7 @@ export function WorkLogFiltersPanel({
           <button
             type="button"
             onClick={handleClearAll}
-            className="text-[10px] font-semibold text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors duration-200"
+            className="text-micro font-semibold text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors duration-200"
             aria-label="Clear all filters"
           >
             Clear all
@@ -165,14 +165,14 @@ export function WorkLogFiltersPanel({
         </div>
       )}
 
-      <div className="flex items-center gap-3 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider ml-auto">
+      <div className="flex items-center gap-3 text-micro font-semibold text-muted-foreground uppercase tracking-wider ml-auto">
         <span className="text-foreground/60">Status:</span>
         <span className={cn("flex items-center gap-1.5")}>
-          <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500 shrink-0" />
+          <span className="w-2.5 h-2.5 rounded-sm bg-status-success-fill shrink-0" />
           Logged
         </span>
         <span className={cn("flex items-center gap-1.5")}>
-          <span className="w-2.5 h-2.5 rounded-sm bg-amber-500 shrink-0" />
+          <span className="w-2.5 h-2.5 rounded-sm bg-status-warning-fill shrink-0" />
           Unsaved
         </span>
         <span className={cn("flex items-center gap-1.5")}>

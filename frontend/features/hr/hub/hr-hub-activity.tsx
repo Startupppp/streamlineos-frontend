@@ -79,7 +79,7 @@ export function HrHubActivity({
             <button
               type="button"
               onClick={onRetry}
-              className="shrink-0 flex items-center gap-0.5 text-blue-600 dark:text-blue-400 hover:underline"
+              className="shrink-0 flex items-center gap-0.5 text-status-info-ink hover:underline"
             >
               <RefreshCcw className="h-3 w-3" />
               Retry
@@ -100,7 +100,7 @@ export function HrHubActivity({
           {access.canCases && (
             <Link
               href="/hr/service-delivery"
-              className="text-[10px] font-medium text-blue-600 hover:underline dark:text-blue-400"
+              className="text-micro font-medium text-status-info-ink hover:underline"
             >
               Service delivery
             </Link>
@@ -108,7 +108,7 @@ export function HrHubActivity({
           {access.canProbation && (
             <Link
               href="/hr/onboarding/probation"
-              className="text-[10px] font-medium text-blue-600 hover:underline dark:text-blue-400"
+              className="text-micro font-medium text-status-info-ink hover:underline"
             >
               Probation
             </Link>
@@ -116,7 +116,7 @@ export function HrHubActivity({
           {access.canExit && (
             <Link
               href="/hr/exit"
-              className="text-[10px] font-medium text-blue-600 hover:underline dark:text-blue-400"
+              className="text-micro font-medium text-status-info-ink hover:underline"
             >
               Exits
             </Link>

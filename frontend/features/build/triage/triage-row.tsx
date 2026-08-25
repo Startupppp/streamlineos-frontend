@@ -57,7 +57,7 @@ export const TriageRow = memo(function TriageRow({
           onClick={handleOpen}
           aria-label={`Open ticket ${formatTicketKey(projectKey, ticket.ticketNumber)}`}
         >
-          <span className="flex shrink-0 items-center gap-1.5 font-mono text-[11px] text-muted-foreground">
+          <span className="flex shrink-0 items-center gap-1.5 font-mono text-dense text-muted-foreground">
             <TicketTypeIcon type={ticket.type} />
             <span>{formatTicketKey(projectKey, ticket.ticketNumber)}</span>
           </span>
@@ -80,7 +80,7 @@ export const TriageRow = memo(function TriageRow({
               <span className="flex items-center gap-1.5">
                 <Avatar className="h-5 w-5">
                   <AvatarImage src={resolveImageUrl(ticket.assignee.image)} />
-                  <AvatarFallback className="text-[8px]">
+                  <AvatarFallback className="text-micro">
                     {getUserInitials(ticket.assignee)}
                   </AvatarFallback>
                 </Avatar>

@@ -110,11 +110,11 @@ function AutomationCard({
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <TruncatedText text={rule.name} className="font-medium text-sm" />
-              <Badge variant="secondary" className="text-[10px]">
+              <Badge variant="secondary" className="text-micro">
                 {triggerLabel(rule.triggerEvent)}
               </Badge>
               {!rule.isEnabled && (
-                <Badge variant="outline" className="text-[10px]">
+                <Badge variant="outline" className="text-micro">
                   Disabled
                 </Badge>
               )}
@@ -126,7 +126,7 @@ function AutomationCard({
               <span className="font-medium text-foreground/70">Actions:</span>{" "}
               {actionSummary(rule.actions)}
             </p>
-            <div className="flex items-center gap-3 mt-2 text-[11px] text-muted-foreground">
+            <div className="flex items-center gap-3 mt-2 text-dense text-muted-foreground">
               <span>{rule.runCount} runs</span>
               <span>
                 {rule.lastRunAt

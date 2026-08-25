@@ -300,7 +300,7 @@ function TemplateSheet({
                         {...field}
                       />
                     </FormControl>
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-dense text-muted-foreground">
                       Use {"{{variable}}"} syntax for dynamic values.
                     </p>
                     <FormMessage />
@@ -319,7 +319,7 @@ function TemplateSheet({
                         {...field}
                       />
                     </FormControl>
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-dense text-muted-foreground">
                       Comma-separated variable names.
                     </p>
                     <FormMessage />
@@ -503,13 +503,13 @@ function TemplateRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
           <span className="text-sm font-medium">{template.name}</span>
-          <Badge variant="outline" className="text-[10px] h-4 px-1.5 shrink-0">
+          <Badge variant="outline" className="text-micro h-4 px-1.5 shrink-0">
             {template.channel}
           </Badge>
           {catConfig && (
             <Badge
               variant="secondary"
-              className="text-[10px] h-4 px-1.5 shrink-0"
+              className="text-micro h-4 px-1.5 shrink-0"
             >
               {catConfig.label}
             </Badge>
@@ -517,9 +517,9 @@ function TemplateRow({
           <Badge
             variant="outline"
             className={cn(
-              "text-[10px] h-4 px-1.5 shrink-0",
+              "text-micro h-4 px-1.5 shrink-0",
               template.isActive
-                ? "border-emerald-300 text-emerald-600"
+                ? "border-status-success-rule text-status-success-ink"
                 : "text-muted-foreground",
             )}
           >
@@ -531,7 +531,7 @@ function TemplateRow({
             template.approvalStatus !== "APPROVED" && (
               <Badge
                 variant="outline"
-                className="text-[10px] h-4 px-1.5 shrink-0 border-amber-300 text-amber-600 dark:border-amber-500/30 dark:text-amber-300"
+                className="text-micro h-4 px-1.5 shrink-0 border-status-warning-rule text-status-warning-ink"
               >
                 {template.approvalStatus === "REJECTED"
                   ? "Rejected"
@@ -539,7 +539,7 @@ function TemplateRow({
               </Badge>
             )}
         </div>
-        <p className="mt-0.5 text-[11px] font-mono text-muted-foreground/70">
+        <p className="mt-0.5 text-dense font-mono text-muted-foreground/70">
           {template.templateKey}
         </p>
         {template.subject && (
@@ -547,7 +547,7 @@ function TemplateRow({
             Subject: {template.subject}
           </p>
         )}
-        <p className="text-[11px] text-muted-foreground/50 mt-0.5">
+        <p className="text-dense text-muted-foreground/50 mt-0.5">
           v{template.version} · {template.locale}
         </p>
       </div>

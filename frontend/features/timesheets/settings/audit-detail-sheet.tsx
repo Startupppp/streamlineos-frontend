@@ -53,7 +53,7 @@ function DiffTable({ before, after }: DiffTableProps) {
         key: "key",
         header: "Field",
         cell: (row) => (
-          <span className="font-mono text-[10px] text-muted-foreground truncate block">
+          <span className="font-mono text-micro text-muted-foreground truncate block">
             {row.key}
           </span>
         ),
@@ -95,7 +95,7 @@ function DiffTable({ before, after }: DiffTableProps) {
       data={rows}
       columns={columns}
       getRowKey={(row) => row.key}
-      rowClassName={(row) => row.changed ? "bg-amber-50 dark:bg-amber-950/20" : ""}
+      rowClassName={(row) => row.changed ? "bg-status-warning-surface" : ""}
       className="border-0 rounded-none text-xs"
     />
   );
@@ -132,7 +132,7 @@ export function AuditDetailSheet({ event, onOpenChange }: AuditDetailSheetProps)
               </div>
               <div>
                 <p className="text-muted-foreground mb-0.5">Action</p>
-                <Badge variant="outline" className="text-[10px] h-4 px-1.5 font-normal">
+                <Badge variant="outline" className="text-micro h-4 px-1.5 font-normal">
                   {event.action}
                 </Badge>
               </div>
@@ -146,7 +146,7 @@ export function AuditDetailSheet({ event, onOpenChange }: AuditDetailSheetProps)
 
             {(event.before != null || event.after != null) && (
               <div>
-                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-3">
+                <p className="text-dense font-medium text-muted-foreground uppercase tracking-wider mb-3">
                   Changes
                 </p>
                 <DiffTable before={event.before} after={event.after} />

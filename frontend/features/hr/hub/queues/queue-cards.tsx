@@ -26,8 +26,8 @@ export function resolveQueueTone(count: number, critical = false): QueueTone {
 }
 
 export const TONE_BADGE: Record<QueueTone, string> = {
-  red: "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300",
-  amber: "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300",
+  red: "bg-status-danger-surface text-status-danger-ink",
+  amber: "bg-status-warning-surface text-status-warning-ink",
   neutral: "bg-muted text-muted-foreground",
 };
 
@@ -79,7 +79,7 @@ export function HrQueueCard({
         <button
           type="button"
           onClick={onRetry}
-          className="shrink-0 text-[10px] text-blue-600 hover:underline dark:text-blue-400 flex items-center gap-0.5"
+          className="shrink-0 text-micro text-status-info-ink hover:underline flex items-center gap-0.5"
         >
           <RefreshCcw className="h-3 w-3" />
           Retry
@@ -101,7 +101,7 @@ export function HrQueueCard({
       </HrIconWell>
       <div className="flex-1 min-w-0">
         <p className="text-xs font-semibold text-foreground truncate">{label}</p>
-        <p className="text-[10px] text-muted-foreground truncate">{context}</p>
+        <p className="text-micro text-muted-foreground truncate">{context}</p>
       </div>
       <div className="flex shrink-0 items-center gap-1.5">
         <span
@@ -185,32 +185,32 @@ export function OpsInboxCard({
       </div>
       <div className="flex flex-wrap gap-1.5">
         {(totals.cases ?? 0) > 0 && (
-          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+          <span className="text-micro font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
             {totals.cases} cases
           </span>
         )}
         {(totals.safety ?? 0) > 0 && (
-          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300">
+          <span className="text-micro font-medium px-2 py-0.5 rounded-full bg-status-danger-surface text-status-danger-ink">
             {totals.safety} safety
           </span>
         )}
         {(totals.helpdesk ?? 0) > 0 && (
-          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+          <span className="text-micro font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
             {totals.helpdesk} helpdesk
           </span>
         )}
         {(totals.criticalAging ?? 0) > 0 && (
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300">
+          <span className="text-micro font-bold px-2 py-0.5 rounded-full bg-status-danger-surface text-status-danger-ink">
             {totals.criticalAging} critical
           </span>
         )}
         {(totals.slaBreached ?? 0) > 0 && (
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
+          <span className="text-micro font-bold px-2 py-0.5 rounded-full bg-status-warning-surface text-status-warning-ink">
             {totals.slaBreached} SLA breached
           </span>
         )}
         {total === 0 && (
-          <span className="text-[10px] text-muted-foreground">Nothing needs attention</span>
+          <span className="text-micro text-muted-foreground">Nothing needs attention</span>
         )}
       </div>
     </Link>

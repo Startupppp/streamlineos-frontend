@@ -31,8 +31,8 @@ const STATUS_LABELS: Record<KbResearchBriefStatus, string> = {
 const STATUS_CLASSES: Record<KbResearchBriefStatus, string> = {
   queued: "bg-muted text-muted-foreground border-border",
   running: "bg-primary/10 text-primary border-primary/20",
-  completed: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  failed: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  completed: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  failed: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };
 
 function buildBriefCitations(citations: KbResearchBriefCitation[]): Citation[] {
@@ -63,7 +63,7 @@ function BriefFeedback({ briefId, currentRating }: { briefId: number; currentRat
 
   if (currentRating) {
     return (
-      <p className="text-[12px] text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         You rated this brief as{" "}
         <span className="font-medium">{currentRating === "helpful" ? "helpful" : "not helpful"}</span>.
       </p>
@@ -72,13 +72,13 @@ function BriefFeedback({ briefId, currentRating }: { briefId: number; currentRat
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-[12px] text-muted-foreground">Was this brief helpful?</span>
+      <span className="text-xs text-muted-foreground">Was this brief helpful?</span>
       <AnimatedIconButton
         icon={ThumbsUpIcon}
         iconSize={12}
         variant="outline"
         size="sm"
-        className="h-7 gap-1.5 text-[12px]"
+        className="h-7 gap-1.5 text-xs"
         onClick={handleRateHelpful}
         disabled={rateMutation.isPending}
       >
@@ -89,7 +89,7 @@ function BriefFeedback({ briefId, currentRating }: { briefId: number; currentRat
         iconSize={12}
         variant="outline"
         size="sm"
-        className="h-7 gap-1.5 text-[12px]"
+        className="h-7 gap-1.5 text-xs"
         onClick={handleRateNotHelpful}
         disabled={rateMutation.isPending}
       >
@@ -146,11 +146,11 @@ export function KbResearchBriefDetail({ briefId }: KbResearchBriefDetailProps) {
           <div className="flex items-start gap-3">
             <div className="flex-1 min-w-0">
               <h2 className="text-base font-semibold leading-snug">{brief.topic}</h2>
-              <p className="text-[12px] text-muted-foreground mt-0.5">{formattedDate}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{formattedDate}</p>
             </div>
             <Badge
               variant="outline"
-              className={cn("text-[10px] h-5 shrink-0", STATUS_CLASSES[brief.status])}
+              className={cn("text-micro h-5 shrink-0", STATUS_CLASSES[brief.status])}
             >
               {isInProgress && <Loader2 className="h-2.5 w-2.5 mr-1 animate-spin" />}
               {STATUS_LABELS[brief.status]}
@@ -161,7 +161,7 @@ export function KbResearchBriefDetail({ briefId }: KbResearchBriefDetailProps) {
           {isInProgress && (
             <div className="flex items-center gap-2 rounded-lg bg-primary/5 border border-primary/10 px-3 py-2.5">
               <Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />
-              <p className="text-[13px] text-muted-foreground">
+              <p className="text-label text-muted-foreground">
                 {brief.status === "queued" ? "Your brief is queued and will start shortly…" : "Generating your research brief…"}
               </p>
             </div>
@@ -169,19 +169,19 @@ export function KbResearchBriefDetail({ briefId }: KbResearchBriefDetailProps) {
 
           {brief.status === "failed" && brief.errorMessage && (
             <div className="rounded-lg bg-destructive/5 border border-destructive/20 px-3 py-2.5">
-              <p className="text-[13px] text-destructive">{brief.errorMessage}</p>
+              <p className="text-label text-destructive">{brief.errorMessage}</p>
             </div>
           )}
 
           {brief.sourceCount > 0 && (
-            <p className="text-[12px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               {brief.sourceCount} source{brief.sourceCount !== 1 ? "s" : ""} consulted
             </p>
           )}
 
           {citations.length > 0 && (
             <div className="space-y-1.5">
-              <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Sources</p>
+              <p className="text-dense font-medium uppercase tracking-wide text-muted-foreground">Sources</p>
               <AiCitationChips citations={citations} />
             </div>
           )}
@@ -191,10 +191,10 @@ export function KbResearchBriefDetail({ briefId }: KbResearchBriefDetailProps) {
       {reportPreview && (
         <Card>
           <CardContent className="p-4 space-y-2">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Report</p>
-            <p className="text-[13px] leading-relaxed whitespace-pre-wrap">{reportPreview}</p>
+            <p className="text-dense font-medium uppercase tracking-wide text-muted-foreground">Report</p>
+            <p className="text-label leading-relaxed whitespace-pre-wrap">{reportPreview}</p>
             {brief.report && brief.report.length > 600 && (
-              <Button variant="ghost" size="sm" className="h-7 text-[12px] px-2" onClick={handleToggleReport}>
+              <Button variant="ghost" size="sm" className="h-7 text-xs px-2" onClick={handleToggleReport}>
                 {showFullReport ? "Show less" : "Show full report"}
               </Button>
             )}

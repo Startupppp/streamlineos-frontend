@@ -28,19 +28,19 @@ export function getHealthLabel(score: number): {
   if (score >= 70)
     return {
       label: "Healthy",
-      badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-      dotClass: "bg-emerald-500",
+      badgeClass: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+      dotClass: "bg-status-success-fill",
     };
   if (score >= 40)
     return {
       label: "At Risk",
-      badgeClass: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-      dotClass: "bg-amber-500",
+      badgeClass: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+      dotClass: "bg-status-warning-fill",
     };
   return {
     label: "Critical",
-    badgeClass: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
-    dotClass: "bg-red-500",
+    badgeClass: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
+    dotClass: "bg-status-danger-fill",
   };
 }
 
@@ -61,7 +61,7 @@ export function AccountHealthBadge({
     return (
       <Badge
         variant="outline"
-        className={cn("text-[10px] bg-muted text-muted-foreground border-border", className)}
+        className={cn("text-micro bg-muted text-muted-foreground border-border", className)}
       >
         N/A
       </Badge>
@@ -74,7 +74,7 @@ export function AccountHealthBadge({
     <Badge
       variant="outline"
       className={cn(
-        "text-[10px] flex items-center gap-1.5 px-2 py-0.5",
+        "text-micro flex items-center gap-1.5 px-2 py-0.5",
         badgeClass,
         className,
       )}

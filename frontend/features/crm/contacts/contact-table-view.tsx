@@ -58,7 +58,7 @@ export function ContactTableView({
         sortValue: (c) => c.name,
         cell: (c) => (
           <div className="flex items-center gap-2">
-            <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-semibold text-primary shrink-0">
+            <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-micro font-semibold text-primary shrink-0">
               {c.name[0]?.toUpperCase() ?? "?"}
             </div>
             <Link

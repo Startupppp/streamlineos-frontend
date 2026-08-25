@@ -45,14 +45,14 @@ const MemberBreakdownCell = memo(function MemberBreakdownCell({
     <div className="flex items-center gap-2">
       <Avatar className="h-6 w-6 shrink-0">
         <AvatarImage src={resolveImageUrl(image)} />
-        <AvatarFallback className="text-[9px] bg-primary/10 text-primary font-medium">
+        <AvatarFallback className="text-micro bg-primary/10 text-primary font-medium">
           {initials}
         </AvatarFallback>
       </Avatar>
       <div className="min-w-0">
         <TruncatedText text={displayName} className="text-sm font-medium" />
         {email ? (
-          <TruncatedText text={email} className="text-[11px] text-muted-foreground" />
+          <TruncatedText text={email} className="text-dense text-muted-foreground" />
         ) : null}
       </div>
     </div>
@@ -247,7 +247,7 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
               </div>
               <Progress
                 value={Math.min(budget?.utilizationPct ?? 0, 100)}
-                className={overBudget ? "h-2 [&>div]:bg-red-500" : "h-2 [&>div]:bg-primary"}
+                className={overBudget ? "h-2 [&>div]:bg-status-danger-fill" : "h-2 [&>div]:bg-primary"}
               />
             </PmPanel>
           </PmSection>

@@ -1,4 +1,5 @@
 import { render } from "@testing-library/react";
+import { Users } from "lucide-react";
 import { StatCard, StatCardGrid } from "./stat-card";
 
 describe("StatCardGrid", () => {
@@ -89,3 +90,39 @@ describe("StatCardGrid", () => {
     });
   });
 });
+
+describe("StatCard tones", () => {
+  // The surface lands on the icon well and the ink on the icon inside it, so
+  // the whole subtree is the unit under test.
+  function toneClasses(node: HTMLElement): string {
+    return node.innerHTML;
+  }
+
+  it("paints a status tone from tokens, so the dark pairing cannot be forgotten", () => {
+    const { container } = render(<StatCard label="Active" value={7} icon={Users} tone="emerald" />);
+    const classes = toneClasses(container);
+
+    expect(classes).toContain("bg-status-success-surface");
+    expect(classes).toContain("text-status-success-ink");
+  });
+
+  it("maps warning and danger tones onto their own roles", () => {
+    const { container: warn } = render(<StatCard label="Due" value={1} icon={Users} tone="amber" />);
+    expect(toneClasses(warn)).toContain("bg-status-warning-surface");
+
+    const { container: bad } = render(<StatCard label="Failed" value={2} icon={Users} tone="red" />);
+    expect(toneClasses(bad)).toContain("bg-status-danger-surface");
+  });
+
+  it("carries no hardcoded palette literal, which would need a hand-written dark twin", () => {
+    const { container } = render(<StatCard label="Active" value={7} icon={Users} tone="emerald" />);
+    expect(container.innerHTML).not.toMatch(/emerald-\d{2,3}/);
+    expect(container.innerHTML).not.toContain("dark:bg-");
+  });
+
+  it("keeps neutral tones on the existing surface tokens", () => {
+    const { container } = render(<StatCard label="Total" value={9} icon={Users} tone="default" />);
+    expect(container.innerHTML).toContain("bg-muted");
+  });
+});
+

@@ -74,9 +74,9 @@ function CarriersPageInner() {
         <Badge
           variant="outline"
           className={cn(
-            "h-4 text-[9px] px-1.5 py-0 border",
+            "h-4 text-micro px-1.5 py-0 border",
             c.isActive
-              ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
+              ? "bg-status-success-surface text-status-success-ink border-status-success-rule"
               : "bg-muted text-muted-foreground border-border",
           )}
         >

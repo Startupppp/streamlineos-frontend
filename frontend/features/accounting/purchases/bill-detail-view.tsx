@@ -9,11 +9,11 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import type { PurchaseBill, PurchaseBillStatus } from "@/types/accounting";
 
 const STATUS_CLASS: Record<PurchaseBillStatus, string> = {
-  DRAFT: "bg-amber-50 text-amber-700 border-amber-200/70 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  PENDING_APPROVAL: "bg-amber-50 text-amber-700 border-amber-200/70 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  POSTED: "bg-blue-50 text-blue-700 border-blue-200/70 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  PARTIALLY_PAID: "bg-sky-50 text-sky-700 border-sky-200/70 dark:bg-sky-500/10 dark:text-sky-300 dark:border-sky-500/30",
-  PAID: "bg-emerald-50 text-emerald-700 border-emerald-200/70 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  DRAFT: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  PENDING_APPROVAL: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  POSTED: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  PARTIALLY_PAID: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  PAID: "bg-status-success-surface text-status-success-ink border-status-success-rule",
   CANCELLED: "bg-muted text-muted-foreground border-border",
 };
 
@@ -177,10 +177,10 @@ export function BillDetailView({
   return (
     <div className="space-y-4">
       {isPendingApproval && (
-        <div className="rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-500/30 dark:bg-blue-500/10 p-4 flex items-start justify-between gap-4">
+        <div className="rounded-lg border border-status-info-rule bg-status-info-surface p-4 flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold text-blue-800 dark:text-blue-300">Pending approval</p>
-            <p className="text-xs text-blue-700 dark:text-blue-300 mt-0.5">
+            <p className="text-sm font-semibold text-status-info-ink">Pending approval</p>
+            <p className="text-xs text-status-info-ink mt-0.5">
               This bill is awaiting approval before it can be posted.
             </p>
           </div>
@@ -213,7 +213,7 @@ export function BillDetailView({
         <CardContent className="p-5">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-4 text-sm">
             <div>
-              <p className="text-[11px] font-medium text-muted-foreground mb-1">Status</p>
+              <p className="text-dense font-medium text-muted-foreground mb-1">Status</p>
               <span
                 className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium border ${STATUS_CLASS[bill.status]}`}
               >
@@ -221,44 +221,44 @@ export function BillDetailView({
               </span>
             </div>
             <div>
-              <p className="text-[11px] font-medium text-muted-foreground mb-1">Vendor</p>
+              <p className="text-dense font-medium text-muted-foreground mb-1">Vendor</p>
               <TruncatedText text={bill.vendorName ?? "—"} className="text-sm text-foreground" />
             </div>
             <div>
-              <p className="text-[11px] font-medium text-muted-foreground mb-1">Vendor bill #</p>
+              <p className="text-dense font-medium text-muted-foreground mb-1">Vendor bill #</p>
               <p className="text-sm text-foreground">{bill.vendorBillNumber ?? "—"}</p>
             </div>
             <div>
-              <p className="text-[11px] font-medium text-muted-foreground mb-1">Bill date</p>
+              <p className="text-dense font-medium text-muted-foreground mb-1">Bill date</p>
               <p className="text-sm tabular-nums text-foreground">{formatDate(bill.billDate)}</p>
             </div>
             <div>
-              <p className="text-[11px] font-medium text-muted-foreground mb-1">Due date</p>
+              <p className="text-dense font-medium text-muted-foreground mb-1">Due date</p>
               <p className="text-sm tabular-nums text-foreground">{formatDate(bill.dueDate)}</p>
             </div>
             <div>
-              <p className="text-[11px] font-medium text-muted-foreground mb-1">Place of supply</p>
+              <p className="text-dense font-medium text-muted-foreground mb-1">Place of supply</p>
               <p className="text-sm text-foreground">{bill.placeOfSupply ?? "—"}</p>
             </div>
             <div>
-              <p className="text-[11px] font-medium text-muted-foreground mb-1">Vendor GSTIN</p>
+              <p className="text-dense font-medium text-muted-foreground mb-1">Vendor GSTIN</p>
               <p className="text-sm font-mono text-foreground">{bill.vendorGstin ?? "—"}</p>
             </div>
             <div>
-              <p className="text-[11px] font-medium text-muted-foreground mb-1">Supplier GSTIN</p>
+              <p className="text-dense font-medium text-muted-foreground mb-1">Supplier GSTIN</p>
               <p className="text-sm font-mono text-foreground">{bill.supplierGstin ?? "—"}</p>
             </div>
             <div>
-              <p className="text-[11px] font-medium text-muted-foreground mb-1">Reverse charge</p>
+              <p className="text-dense font-medium text-muted-foreground mb-1">Reverse charge</p>
               <p className="text-sm text-foreground">{bill.reverseCharge ? "Yes" : "No"}</p>
             </div>
             <div>
-              <p className="text-[11px] font-medium text-muted-foreground mb-1">Expense account</p>
+              <p className="text-dense font-medium text-muted-foreground mb-1">Expense account</p>
               <p className="text-sm font-mono text-foreground">{bill.expenseAccountCode ?? "—"}</p>
             </div>
             {bill.notes && (
               <div className="col-span-2 sm:col-span-4">
-                <p className="text-[11px] font-medium text-muted-foreground mb-1">Notes</p>
+                <p className="text-dense font-medium text-muted-foreground mb-1">Notes</p>
                 <p className="text-sm text-foreground leading-relaxed">{bill.notes}</p>
               </div>
             )}
@@ -317,7 +317,7 @@ export function BillDetailView({
             </div>
             <div className="flex justify-between font-medium">
               <span>Outstanding</span>
-              <span className={outstanding > 0.005 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400"}>
+              <span className={outstanding > 0.005 ? "text-status-warning-ink" : "text-status-success-ink"}>
                 {formatNum(outstanding)}
               </span>
             </div>

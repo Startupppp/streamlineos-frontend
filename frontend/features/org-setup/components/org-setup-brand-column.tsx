@@ -107,8 +107,8 @@ function OrgSetupBrandColumnInner({
             transition={{ duration: 0.18, ease: WIZARD_EASE }}
             className={
               isWelcome
-                ? "max-w-md text-[13px] leading-relaxed text-muted-foreground lg:text-sm"
-                : "max-w-sm text-[13px] leading-relaxed text-muted-foreground"
+                ? "max-w-md text-label leading-relaxed text-muted-foreground lg:text-sm"
+                : "max-w-sm text-label leading-relaxed text-muted-foreground"
             }
           >
             {isWelcome

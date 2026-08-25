@@ -98,7 +98,7 @@ function PollCard({
 
   const STATUS_COLORS: Record<HrPoll["status"], string> = {
     draft: "bg-muted text-muted-foreground border-border",
-    active: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+    active: "bg-status-success-surface text-status-success-ink border-status-success-rule",
     closed: "bg-muted text-muted-foreground border-border",
   };
 
@@ -111,20 +111,20 @@ function PollCard({
           <div className="flex items-center gap-2 flex-wrap">
             <p className="text-sm font-semibold text-foreground leading-snug">{poll.question}</p>
             <span
-              className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border ${
+              className={`inline-flex items-center px-2 py-0.5 rounded-full text-micro font-medium border ${
                 STATUS_COLORS[poll.status]
               }`}
             >
               {poll.status}
             </span>
             {poll.anonymous && (
-              <Badge variant="outline" className="text-[10px] h-4 px-1.5 font-normal">
+              <Badge variant="outline" className="text-micro h-4 px-1.5 font-normal">
                 Anonymous
               </Badge>
             )}
           </div>
           {poll.closesAt && (
-            <p className="text-[11px] text-muted-foreground mt-0.5">
+            <p className="text-dense text-muted-foreground mt-0.5">
               Closes {new Date(poll.closesAt).toLocaleDateString()}
             </p>
           )}
@@ -133,7 +133,7 @@ function PollCard({
           <Button
             size="sm"
             variant="ghost"
-            className="text-[11px] gap-1 px-2"
+            className="text-dense gap-1 px-2"
             onClick={() => setShowResults((p) => !p)}
           >
             <BarChart3 className="h-3.5 w-3.5" />
@@ -143,7 +143,7 @@ function PollCard({
             <LoadingButton
               size="sm"
               variant="ghost"
-              className="text-[11px] px-2"
+              className="text-dense px-2"
               onClick={handleToggleStatus}
               isPending={updatePoll.isPending}
             >
@@ -159,7 +159,7 @@ function PollCard({
             <div key={c.optionIndex} className="space-y-0.5">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-foreground">{c.option}</span>
-                <span className="text-[11px] text-muted-foreground tabular-nums">
+                <span className="text-dense text-muted-foreground tabular-nums">
                   {c.count} ({results.totalVotes > 0 ? Math.round((c.count / results.totalVotes) * 100) : 0}%)
                 </span>
               </div>
@@ -171,7 +171,7 @@ function PollCard({
               </div>
             </div>
           ))}
-          <p className="text-[11px] text-muted-foreground">{results.totalVotes} total votes</p>
+          <p className="text-dense text-muted-foreground">{results.totalVotes} total votes</p>
         </div>
       ) : (
         poll.status === "active" && !voted && (
@@ -377,7 +377,7 @@ export function PollsTab() {
                   <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-4 py-3">
                     <div>
                       <FormLabel className="text-xs font-medium">Anonymous voting</FormLabel>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">Voters remain hidden</p>
+                      <p className="text-dense text-muted-foreground mt-0.5">Voters remain hidden</p>
                     </div>
                     <FormControl>
                       <Switch checked={field.value} onCheckedChange={field.onChange} />

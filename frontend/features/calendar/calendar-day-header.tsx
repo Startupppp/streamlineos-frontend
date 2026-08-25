@@ -11,7 +11,7 @@ export function CalendarDayHeader({ date }: HeaderProps) {
     <span
       role="columnheader"
       aria-sort="none"
-      className="calendar-day-header text-[13px] font-semibold leading-none whitespace-nowrap"
+      className="calendar-day-header text-label font-semibold leading-none whitespace-nowrap"
     >
       {label}
     </span>

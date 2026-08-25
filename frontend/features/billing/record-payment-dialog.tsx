@@ -203,7 +203,7 @@ export function RecordPaymentDialog({
               )}
             />
             {selectedMethodConfig && (
-              <p className="text-[11px] text-muted-foreground bg-muted/40 rounded px-2 py-1.5 mt-1">
+              <p className="text-dense text-muted-foreground bg-muted/40 rounded px-2 py-1.5 mt-1">
                 {selectedMethodConfig.instructions ||
                   (selectedMethodConfig.upiId && `UPI: ${selectedMethodConfig.upiId}`) ||
                   (selectedMethodConfig.bankName &&

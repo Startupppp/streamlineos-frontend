@@ -37,7 +37,7 @@ export function TravelCard({ request }: { request: TravelRequest }) {
             </div>
             <span
               className={cn(
-                "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0",
+                "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border shrink-0",
                 cfg.className,
               )}
             >
@@ -60,14 +60,14 @@ export function TravelCard({ request }: { request: TravelRequest }) {
               </div>
             )}
             {request.advanceRequired && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted border border-border text-muted-foreground">
+              <span className="inline-flex items-center gap-1 text-micro font-medium px-1.5 py-0.5 rounded bg-muted border border-border text-muted-foreground">
                 <Building className="h-2.5 w-2.5" />
                 Advance
               </span>
             )}
           </div>
           {request.status === "REJECTED" && request.rejectionReason && (
-            <p className="mt-2 text-xs text-rose-600 bg-rose-50 rounded-lg px-2 py-1 border border-rose-100 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30">
+            <p className="mt-2 text-xs text-status-danger-ink bg-status-danger-surface rounded-lg px-2 py-1 border border-status-danger-rule">
               {request.rejectionReason}
             </p>
           )}

@@ -41,22 +41,25 @@ const BUG_STATUSES: readonly BugStatus[] = [
 const BUG_SEVERITIES: readonly BugSeverity[] = ["blocker", "critical", "major", "minor", "trivial"];
 
 const SEVERITY_STYLES: Record<BugSeverity, string> = {
-  blocker: "text-red-700 border-red-300 bg-red-50 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
-  critical: "text-red-600 border-red-200 dark:text-red-400 dark:border-red-500/30",
-  major: "text-amber-600 border-amber-200 dark:text-amber-400 dark:border-amber-500/30",
+  blocker: "text-status-danger-ink border-status-danger-rule bg-status-danger-surface",
+  critical: "text-status-danger-ink border-status-danger-rule",
+  major: "text-status-warning-ink border-status-warning-rule",
   minor: "text-muted-foreground border-border",
   trivial: "text-muted-foreground border-border",
 };
 
 const STATUS_STYLES: Record<BugStatus, string> = {
   new: "text-muted-foreground border-border",
-  triaged: "text-blue-600 border-blue-200 dark:text-blue-400 dark:border-blue-500/30",
-  assigned: "text-blue-600 border-blue-200 dark:text-blue-400 dark:border-blue-500/30",
-  in_progress: "text-amber-600 border-amber-200 dark:text-amber-400 dark:border-amber-500/30",
-  fixed: "text-green-600 border-green-200 dark:text-green-400 dark:border-green-500/30",
-  ready_for_qa: "text-blue-600 border-blue-200 dark:text-blue-400 dark:border-blue-500/30",
-  verified: "text-green-700 border-green-300 dark:text-green-400 dark:border-green-500/30",
-  reopened: "text-orange-600 border-orange-200 dark:text-orange-400 dark:border-orange-500/30",
+  triaged: "text-status-info-ink border-status-info-rule",
+  assigned: "text-status-info-ink border-status-info-rule",
+  in_progress: "text-status-warning-ink border-status-warning-rule",
+  fixed: "text-status-success-ink border-status-success-rule",
+  ready_for_qa: "text-status-info-ink border-status-info-rule",
+  verified: "text-status-success-ink border-status-success-rule",
+  // Orange before the migration, and the only thing separating a bug that is
+  // being worked from one that came back. The rest of this table means its
+  // status and keeps it.
+  reopened: "text-category-orange-ink border-category-orange-rule",
   closed: "text-muted-foreground border-border",
 };
 
@@ -68,15 +71,15 @@ const STATUS_LABELS: Record<BugStatus, string> = {
 
 const PRIORITY_STYLES: Record<BugPriority, string> = {
   low: "text-muted-foreground border-border",
-  medium: "text-amber-600 border-amber-200 dark:text-amber-400 dark:border-amber-500/30",
-  high: "text-red-600 border-red-200 dark:text-red-400 dark:border-red-500/30",
-  urgent: "text-red-700 border-red-300 bg-red-50 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  medium: "text-status-warning-ink border-status-warning-rule",
+  high: "text-status-danger-ink border-status-danger-rule",
+  urgent: "text-status-danger-ink border-status-danger-rule bg-status-danger-surface",
 };
 
 function ReportBugButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <Button size="sm" className="gap-1 text-[11px]" onClick={onClick} {...hoverHandlers}>
+    <Button size="sm" className="gap-1 text-dense" onClick={onClick} {...hoverHandlers}>
       <PlusIcon ref={iconRef} size={14} />
       Report Bug
     </Button>
@@ -172,7 +175,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
     {
       key: "bugNumber",
       header: "ID",
-      cell: (row) => <span className="font-mono text-[11px] text-muted-foreground">BUG-{row.bugNumber}</span>,
+      cell: (row) => <span className="font-mono text-dense text-muted-foreground">BUG-{row.bugNumber}</span>,
       className: "w-[72px]",
     },
     {
@@ -181,9 +184,9 @@ export function BugsPage({ projectId }: BugsPageProps) {
       className: TABLE_TITLE_CELL,
       cell: (row) => (
         <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
-          <TruncatedText text={row.title} className="text-[11px] font-medium" />
+          <TruncatedText text={row.title} className="text-dense font-medium" />
           {row.reopenCount > 0 ? (
-            <Badge variant="outline" className="shrink-0 text-[9px] text-orange-600 border-orange-200 dark:text-orange-400 dark:border-orange-500/30">
+            <Badge variant="outline" className="shrink-0 text-micro text-status-warning-ink border-status-warning-rule">
               ×{row.reopenCount}
             </Badge>
           ) : null}
@@ -194,7 +197,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
       key: "severity",
       header: "Severity",
       cell: (row) => (
-        <Badge variant="outline" className={cn("text-[10px] capitalize", SEVERITY_STYLES[row.severity])}>
+        <Badge variant="outline" className={cn("text-micro capitalize", SEVERITY_STYLES[row.severity])}>
           {row.severity}
         </Badge>
       ),
@@ -204,7 +207,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
       key: "status",
       header: "Status",
       cell: (row) => (
-        <Badge variant="outline" className={cn("text-[10px]", STATUS_STYLES[row.status])}>
+        <Badge variant="outline" className={cn("text-micro", STATUS_STYLES[row.status])}>
           {STATUS_LABELS[row.status]}
         </Badge>
       ),
@@ -214,7 +217,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
       key: "priority",
       header: "Priority",
       cell: (row) => (
-        <Badge variant="outline" className={cn("text-[10px] capitalize", PRIORITY_STYLES[row.priority])}>
+        <Badge variant="outline" className={cn("text-micro capitalize", PRIORITY_STYLES[row.priority])}>
           {row.priority}
         </Badge>
       ),
@@ -227,7 +230,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
         const member = members.find((m) => m.id === row.assigneeId);
         const label = member ? getUserDisplayName(member) : "—";
         return (
-          <TruncatedText text={label} className="max-w-[7rem] text-[11px] text-muted-foreground" />
+          <TruncatedText text={label} className="max-w-[7rem] text-dense text-muted-foreground" />
         );
       },
       className: "w-[120px]",

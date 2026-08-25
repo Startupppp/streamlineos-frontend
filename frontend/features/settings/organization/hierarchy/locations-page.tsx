@@ -144,14 +144,14 @@ function LocationForm({
 
 function TypeBadge({ type }: { type: LocationType }) {
   const colors: Record<LocationType, string> = {
-    OFFICE: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400",
-    WAREHOUSE: "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400",
-    STORE: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-    FACTORY: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400",
-    REMOTE: "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400",
+    OFFICE: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+    WAREHOUSE: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+    STORE: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+    FACTORY: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+    REMOTE: "bg-status-success-surface text-status-success-ink border-status-success-rule",
   };
   return (
-    <Badge variant="outline" className={cn("h-4 px-1.5 py-0 text-[9px]", colors[type])}>
+    <Badge variant="outline" className={cn("h-4 px-1.5 py-0 text-micro", colors[type])}>
       {type.charAt(0) + type.slice(1).toLowerCase()}
     </Badge>
   );
@@ -287,11 +287,11 @@ export function OrgLocationsPage() {
         <Badge
           variant={l.status === "ACTIVE" ? "outline" : "secondary"}
           className={cn(
-            "h-4 px-1.5 py-0 text-[9px]",
+            "h-4 px-1.5 py-0 text-micro",
             l.status === "ACTIVE"
-              ? "text-emerald-700 border-emerald-200 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400"
+              ? "text-status-success-ink border-status-success-rule bg-status-success-surface"
               : l.status === "ARCHIVED"
-                ? "text-amber-700 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400"
+                ? "text-status-warning-ink border-status-warning-rule bg-status-warning-surface"
                 : "",
           )}
         >

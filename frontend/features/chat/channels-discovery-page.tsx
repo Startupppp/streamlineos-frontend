@@ -99,8 +99,8 @@ export function ChannelsDiscoveryPage() {
       <div className="border-b border-border/30 px-4 pb-3 pt-5 sm:px-6">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h1 className="text-[16px] font-bold">Channels</h1>
-            <p className="text-[12px] text-muted-foreground">
+            <h1 className="text-base font-bold">Channels</h1>
+            <p className="text-xs text-muted-foreground">
               Public channels for your org. DMs and private chats are in Discuss.
             </p>
           </div>
@@ -166,7 +166,7 @@ export function ChannelsDiscoveryPage() {
               ))}
             </div>
 
-            <div className="flex items-center justify-end gap-3 mt-4 text-[12px] text-muted-foreground">
+            <div className="flex items-center justify-end gap-3 mt-4 text-xs text-muted-foreground">
               <span>
                 {rangeStart}-{rangeEnd} / {filtered.length}
               </span>

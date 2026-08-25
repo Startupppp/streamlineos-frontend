@@ -42,11 +42,11 @@ export function JoiningSoonCard({
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <div className="flex-1 h-1 rounded-full bg-muted overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-blue-500"
+                      className="h-full rounded-full bg-status-info-fill"
                       style={{ width: `${hire.pct}%` }}
                     />
                   </div>
-                  <span className="text-[10px] text-muted-foreground shrink-0">
+                  <span className="text-micro text-muted-foreground shrink-0">
                     {hire.pct}%
                   </span>
                 </div>

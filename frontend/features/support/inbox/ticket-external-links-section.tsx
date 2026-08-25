@@ -46,8 +46,8 @@ interface ExternalLinkRowProps {
 const ExternalLinkRow = memo(function ExternalLinkRow({ link, onRemove }: ExternalLinkRowProps) {
   const handleRemove = useCallback(() => onRemove(link.id), [link.id, onRemove]);
   return (
-    <li className="flex items-center gap-1.5 text-[12px]">
-      <Badge variant="outline" className="text-[9px] px-1 py-0">
+    <li className="flex items-center gap-1.5 text-xs">
+      <Badge variant="outline" className="text-micro px-1 py-0">
         {entityTypeLabel(link.entityType)}
       </Badge>
       <TruncatedText text={link.label} className="flex-1" />
@@ -170,7 +170,7 @@ export function TicketExternalLinksSection({ ticketId }: TicketExternalLinksSect
       <button
         type="button"
         onClick={handleToggle}
-        className="flex items-center gap-1.5 w-full text-left text-[11px] font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground transition-colors"
+        className="flex items-center gap-1.5 w-full text-left text-dense font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground transition-colors"
       >
         <Boxes className="h-3.5 w-3.5 shrink-0" />
         Linked Items

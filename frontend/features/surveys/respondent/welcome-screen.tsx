@@ -49,7 +49,7 @@ export function WelcomeScreen({
         Start survey
       </LoadingButton>
 
-      <p className="text-[11px] leading-relaxed text-muted-foreground">
+      <p className="text-dense leading-relaxed text-muted-foreground">
         Your responses are used only for this survey&apos;s purpose.
       </p>
     </div>

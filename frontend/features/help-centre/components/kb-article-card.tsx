@@ -57,20 +57,20 @@ export function KbArticleCard({ article, categoryName, onNavigate, onDelete }: K
               <TruncatedText text={article.excerpt} className="text-xs text-muted-foreground mt-0.5" />
             )}
             <div className="flex flex-wrap items-center gap-2 mt-2">
-              <Badge variant={STATUS_VARIANT[article.status]} className="text-[10px]">
+              <Badge variant={STATUS_VARIANT[article.status]} className="text-micro">
                 {STATUS_LABEL[article.status]}
               </Badge>
-              <Badge variant="outline" className="text-[10px]">
+              <Badge variant="outline" className="text-micro">
                 {VISIBILITY_LABEL[article.visibility]}
               </Badge>
               {categoryName && (
-                <span className="text-[11px] text-muted-foreground">{categoryName}</span>
+                <span className="text-dense text-muted-foreground">{categoryName}</span>
               )}
-              <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+              <span className="flex items-center gap-1 text-dense text-muted-foreground">
                 <Eye className="h-3 w-3" /> {article.views}
               </span>
               {article.updatedAt && (
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-dense text-muted-foreground">
                   {format(new Date(article.updatedAt), "MMM d, yyyy")}
                 </span>
               )}

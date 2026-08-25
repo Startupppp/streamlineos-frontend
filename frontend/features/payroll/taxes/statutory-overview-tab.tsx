@@ -29,8 +29,8 @@ function EnabledBadge({ enabled }: { enabled: boolean }) {
     <span
       className={
         enabled
-          ? "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
-          : "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border bg-muted text-muted-foreground border-border"
+          ? "inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium border bg-status-success-surface text-status-success-ink border-status-success-rule"
+          : "inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium border bg-muted text-muted-foreground border-border"
       }
     >
       {enabled ? "Enabled" : "Disabled"}
@@ -83,7 +83,7 @@ export function StatutoryOverviewTab() {
     <div className="space-y-2">
       {filingCapability && (
         <div className="rounded-lg border border-border bg-card px-4 py-3 space-y-1">
-          <p className="text-[12px] font-medium text-foreground">
+          <p className="text-xs font-medium text-foreground">
             India rule pack{" "}
             <span className="tabular-nums text-muted-foreground">
               {filingCapability.ruleBundleVersion ?? "IN-2025.04"}
@@ -95,7 +95,7 @@ export function StatutoryOverviewTab() {
               </span>
             ) : null}
           </p>
-          <p className="text-[11px] text-muted-foreground leading-snug">
+          <p className="text-dense text-muted-foreground leading-snug">
             Production calc baseline (code registry). Not a legal-reviewed compliance pack.
             Filing exports are{" "}
             <span className="font-medium text-foreground">
@@ -117,7 +117,7 @@ export function StatutoryOverviewTab() {
                 className={`flex items-center justify-between px-4 py-3 gap-4 ${idx !== 0 ? "border-t border-border" : ""}`}
               >
                 <div className="flex-1 min-w-0">
-                  <TruncatedText text={item.label ?? item.key} className="text-[13px] font-medium leading-snug" />
+                  <TruncatedText text={item.label ?? item.key} className="text-label font-medium leading-snug" />
                 </div>
                 <EnabledBadge enabled={item.enabled} />
               </div>
@@ -135,10 +135,10 @@ export function StatutoryOverviewTab() {
                   className={`flex items-center justify-between px-4 py-3 gap-4 ${idx !== 0 ? "border-t border-border" : ""}`}
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-medium leading-snug">{row.label}</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">{row.description}</p>
+                    <p className="text-label font-medium leading-snug">{row.label}</p>
+                    <p className="text-dense text-muted-foreground mt-0.5">{row.description}</p>
                     {row.key === "pf" && enabled && (pfEmployerRate || pfEmployeeRate) && (
-                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                      <p className="text-dense text-muted-foreground mt-0.5">
                         {pfEmployerRate && `Employer: ${pfEmployerRate}`}
                         {pfEmployerRate && pfEmployeeRate && " · "}
                         {pfEmployeeRate && `Employee: ${pfEmployeeRate}`}
@@ -153,7 +153,7 @@ export function StatutoryOverviewTab() {
         </Card>
       )}
 
-      <p className="text-[11px] text-muted-foreground">
+      <p className="text-dense text-muted-foreground">
         Edit statutory settings in{" "}
         <Link href="/payroll/setup" className="text-primary underline underline-offset-2 hover:opacity-80">
           Payroll Setup

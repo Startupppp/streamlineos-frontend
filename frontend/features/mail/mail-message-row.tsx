@@ -58,7 +58,7 @@ const StarButton = forwardRef<HTMLButtonElement, StarButtonProps>(
         className={cn(
           "flex items-center justify-center h-6 w-6 rounded transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
           isStarred
-            ? "text-amber-500"
+            ? "text-status-warning-ink"
             : "text-muted-foreground hover:text-foreground",
         )}
         onClick={handleClick}
@@ -215,14 +215,14 @@ export function MailMessageRow({
           <TruncatedText
             text={senderLabel}
             className={cn(
-              "text-[13px] min-w-0",
+              "text-label min-w-0",
               !message.isRead
                 ? "font-semibold text-foreground"
                 : "font-medium text-foreground/80",
             )}
           />
           {priority && (
-            <span className="shrink-0 rounded px-1 py-px text-[9px] font-semibold uppercase tracking-wide bg-amber-500/15 text-amber-700 border border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
+            <span className="shrink-0 rounded px-1 py-px text-micro font-semibold uppercase tracking-wide bg-status-warning-surface text-status-warning-ink border border-status-warning-rule">
               Act
             </span>
           )}
@@ -241,7 +241,7 @@ export function MailMessageRow({
           ) : (
             <span
               className={cn(
-                "text-[11px] text-muted-foreground tabular-nums",
+                "text-dense text-muted-foreground tabular-nums",
                 !message.isRead && "font-medium text-foreground/70",
               )}
             >
@@ -254,7 +254,7 @@ export function MailMessageRow({
         <TruncatedText
           text={message.subject || "(no subject)"}
           className={cn(
-            "text-[12px] flex-1 min-w-0",
+            "text-xs flex-1 min-w-0",
             !message.isRead
               ? "font-semibold text-foreground"
               : "text-foreground/70",
@@ -270,7 +270,7 @@ export function MailMessageRow({
       <div className="flex items-center justify-between gap-1 mt-0.5 pl-3">
         <TruncatedText
           text={message.snippet}
-          className="text-[11px] text-muted-foreground flex-1 min-w-0"
+          className="text-dense text-muted-foreground flex-1 min-w-0"
         />
         <StarButton
           messageId={message.id}

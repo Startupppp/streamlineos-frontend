@@ -51,10 +51,10 @@ function isTypeFilter(value: string): value is TypeFilter {
 
 const TYPE_BADGE_CLASSES: Record<string, string> = {
   ASSET: "border-primary/30 text-foreground bg-primary/5",
-  LIABILITY: "border-orange-500/30 text-orange-700 bg-orange-500/5 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30",
+  LIABILITY: "border-status-warning-rule text-status-warning-ink bg-status-warning-surface",
   EQUITY: "border-primary/30 text-foreground bg-primary/5",
-  INCOME: "border-emerald-500/30 text-emerald-700 bg-emerald-500/5 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  EXPENSE: "border-amber-500/30 text-amber-700 bg-amber-500/5 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  INCOME: "border-status-success-rule text-status-success-ink bg-status-success-surface",
+  EXPENSE: "border-status-warning-rule text-status-warning-ink bg-status-warning-surface",
 };
 
 interface FlatNode {
@@ -228,7 +228,7 @@ function buildColumns(
       cell: ({ node }: FlatNode): ReactNode => {
         const typeClass = TYPE_BADGE_CLASSES[node.accountType] ?? "border-border text-muted-foreground bg-muted";
         return (
-          <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", typeClass)}>
+          <Badge variant="outline" className={cn("text-micro px-1.5 py-0", typeClass)}>
             {node.accountType}
           </Badge>
         );
@@ -239,7 +239,7 @@ function buildColumns(
       header: "Status",
       className: "w-[100px]",
       cell: ({ node }: FlatNode): ReactNode => (
-        <Badge variant={node.isActive ? "default" : "secondary"} className="text-[10px] px-1.5 py-0">
+        <Badge variant={node.isActive ? "default" : "secondary"} className="text-micro px-1.5 py-0">
           {node.isActive ? "Active" : "Inactive"}
         </Badge>
       ),

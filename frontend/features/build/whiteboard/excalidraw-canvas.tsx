@@ -65,7 +65,7 @@ export function ExcalidrawCanvas({
             {detail.name}
           </span>
           {saveStatus === "dirty" && (
-            <span className="text-xs text-amber-600 font-medium">Unsaved</span>
+            <span className="text-xs text-status-warning-ink font-medium">Unsaved</span>
           )}
           {saveStatus === "saving" && (
             <span className="text-xs text-muted-foreground">Saving…</span>

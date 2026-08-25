@@ -22,8 +22,8 @@ import { TraceabilityTimeline } from "./traceability-timeline";
 function getExpiryClass(dateStr: string | null): string {
   if (!dateStr) return "text-muted-foreground";
   const diff = (new Date(dateStr).getTime() - Date.now()) / 86400000;
-  if (diff < 0) return "text-red-600 font-semibold";
-  if (diff <= 30) return "text-amber-600 font-semibold";
+  if (diff < 0) return "text-status-danger-ink font-semibold";
+  if (diff <= 30) return "text-status-warning-ink font-semibold";
   return "text-foreground";
 }
 

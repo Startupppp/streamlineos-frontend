@@ -83,7 +83,7 @@ export function AutomationCard({ automation, onToggle, onDelete, onEdit }: Autom
           <span
             className={cn(
               "absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background",
-              automation.isActive ? "bg-emerald-500" : "bg-muted-foreground/40",
+              automation.isActive ? "bg-status-success-fill" : "bg-muted-foreground/40",
             )}
           />
         </div>
@@ -95,7 +95,7 @@ export function AutomationCard({ automation, onToggle, onDelete, onEdit }: Autom
             />
             <Badge
               variant="secondary"
-              className="text-[10px] bg-muted text-muted-foreground border-border shrink-0"
+              className="text-micro bg-muted text-muted-foreground border-border shrink-0"
             >
               {getTriggerLabel(automation.triggerEvent)}
             </Badge>
@@ -113,7 +113,7 @@ export function AutomationCard({ automation, onToggle, onDelete, onEdit }: Autom
           </div>
           <div className="flex flex-wrap gap-1 mt-2">
             {automation.actions.map((a, i) => (
-              <Badge key={i} variant="outline" className="text-[10px] px-1.5 py-0">
+              <Badge key={i} variant="outline" className="text-micro px-1.5 py-0">
                 {getActionLabel(a.type)}
               </Badge>
             ))}

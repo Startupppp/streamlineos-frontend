@@ -40,9 +40,9 @@ import type { DepreciationScheduleRow } from "@/types/accounting/assets";
 
 const ASSET_STATUS_CLASSES: Record<string, string> = {
   DRAFT: "bg-primary/5 text-foreground border-primary/20",
-  ACTIVE: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  ACTIVE: "bg-status-success-surface text-status-success-ink border-status-success-rule",
   FULLY_DEPRECIATED: "bg-muted text-foreground border-border",
-  DISPOSED: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  DISPOSED: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };
 
 const ASSET_STATUS_LABELS: Record<string, string> = {
@@ -67,10 +67,10 @@ function formatDate(value: string | null | undefined): string {
 
 function ScheduleStatusBadge({ status }: { status: DepreciationScheduleRow["status"] }) {
   const cls = status === "POSTED"
-    ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
+    ? "bg-status-success-surface text-status-success-ink border-status-success-rule"
     : "bg-primary/5 text-foreground border-primary/20";
   return (
-    <Badge variant="outline" className={`text-[9px] px-1.5 py-0 h-4 ${cls}`}>
+    <Badge variant="outline" className={`text-micro px-1.5 py-0 h-4 ${cls}`}>
       {status === "POSTED" ? "Posted" : "Scheduled"}
     </Badge>
   );
@@ -198,7 +198,7 @@ export default function AssetDetailPage() {
         subtitle={`${asset.assetNumber} · ${categoryName}`}
         backHref="/accounting/assets"
         badge={
-          <Badge variant="outline" className={`text-[10px] px-1.5 py-0.5 ${ASSET_STATUS_CLASSES[asset.status] ?? ""}`}>
+          <Badge variant="outline" className={`text-micro px-1.5 py-0.5 ${ASSET_STATUS_CLASSES[asset.status] ?? ""}`}>
             {ASSET_STATUS_LABELS[asset.status] ?? asset.status}
           </Badge>
         }
@@ -250,42 +250,42 @@ export default function AssetDetailPage() {
             <h2 className="text-sm font-semibold text-foreground mb-3">Asset Details</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 rounded-lg border border-border p-4 bg-card">
               <div>
-                <p className="text-[11px] text-muted-foreground">Acquisition Date</p>
+                <p className="text-dense text-muted-foreground">Acquisition Date</p>
                 <p className="text-sm font-medium mt-0.5">{formatDate(asset.acquisitionDate)}</p>
               </div>
               <div>
-                <p className="text-[11px] text-muted-foreground">Salvage Value</p>
+                <p className="text-dense text-muted-foreground">Salvage Value</p>
                 <p className="text-sm font-medium mt-0.5"><Money value={salvageValue} /></p>
               </div>
               <div>
-                <p className="text-[11px] text-muted-foreground">Useful Life</p>
+                <p className="text-dense text-muted-foreground">Useful Life</p>
                 <p className="text-sm font-medium mt-0.5">{asset.usefulLifeMonths} months</p>
               </div>
               <div>
-                <p className="text-[11px] text-muted-foreground">Depr. Method</p>
+                <p className="text-dense text-muted-foreground">Depr. Method</p>
                 <p className="text-sm font-medium mt-0.5">{asset.depreciationMethod.replace(/_/g, " ")}</p>
               </div>
               {asset.activatedAt && (
                 <div>
-                  <p className="text-[11px] text-muted-foreground">Activated</p>
+                  <p className="text-dense text-muted-foreground">Activated</p>
                   <p className="text-sm font-medium mt-0.5">{formatDate(asset.activatedAt)}</p>
                 </div>
               )}
               {asset.disposedAt && (
                 <div>
-                  <p className="text-[11px] text-muted-foreground">Disposed</p>
+                  <p className="text-dense text-muted-foreground">Disposed</p>
                   <p className="text-sm font-medium mt-0.5">{formatDate(asset.disposedAt)}</p>
                 </div>
               )}
               {asset.disposalProceeds && (
                 <div>
-                  <p className="text-[11px] text-muted-foreground">Disposal Proceeds</p>
+                  <p className="text-dense text-muted-foreground">Disposal Proceeds</p>
                   <p className="text-sm font-medium mt-0.5"><Money value={parseFloat(asset.disposalProceeds)} /></p>
                 </div>
               )}
               {asset.disposalGainLoss && (
                 <div>
-                  <p className="text-[11px] text-muted-foreground">Gain / Loss</p>
+                  <p className="text-dense text-muted-foreground">Gain / Loss</p>
                   <p className="text-sm font-medium mt-0.5"><Money value={parseFloat(asset.disposalGainLoss)} /></p>
                 </div>
               )}

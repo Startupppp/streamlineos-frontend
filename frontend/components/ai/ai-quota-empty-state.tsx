@@ -41,7 +41,7 @@ export function AiQuotaEmptyState({
       <p
         className={cn(
           "font-semibold text-foreground",
-          variant === "fill" ? "text-sm" : "text-[12px]",
+          variant === "fill" ? "text-sm" : "text-xs",
         )}
       >
         AI credits exhausted
@@ -49,7 +49,7 @@ export function AiQuotaEmptyState({
       <p
         className={cn(
           "text-muted-foreground",
-          variant === "fill" ? "text-sm" : "text-[11px]",
+          variant === "fill" ? "text-sm" : "text-dense",
         )}
       >
         Top up to continue using AI features.

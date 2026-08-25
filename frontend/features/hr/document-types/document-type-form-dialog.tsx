@@ -163,12 +163,12 @@ export function DocumentTypeFormDialog({
           aria-label="Document type name"
         />
         {form.formState.errors.name && (
-          <p className="text-[11px] text-destructive">{form.formState.errors.name.message}</p>
+          <p className="text-dense text-destructive">{form.formState.errors.name.message}</p>
         )}
         {nameValue && !form.formState.errors.name && (
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-dense text-muted-foreground">
             Slug:{" "}
-            <code className="font-mono bg-muted px-1 rounded text-[10px]">
+            <code className="font-mono bg-muted px-1 rounded text-micro">
               {slugify(nameValue)}
             </code>
           </p>
@@ -188,7 +188,7 @@ export function DocumentTypeFormDialog({
           aria-label="Description"
         />
         {form.formState.errors.description && (
-          <p className="text-[11px] text-destructive">{form.formState.errors.description.message}</p>
+          <p className="text-dense text-destructive">{form.formState.errors.description.message}</p>
         )}
       </div>
 
@@ -202,7 +202,7 @@ export function DocumentTypeFormDialog({
         <div className="flex items-center justify-between rounded-xl border border-border bg-muted/30 px-4 py-3">
           <div className="min-w-0">
             <p className="text-sm font-medium text-foreground">Mandatory Document</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
+            <p className="text-dense text-muted-foreground mt-0.5">
               Employees must submit this before onboarding is complete.
             </p>
           </div>
@@ -223,7 +223,7 @@ export function DocumentTypeFormDialog({
           <div className="flex items-center justify-between rounded-xl border border-border bg-muted/30 px-4 py-3">
             <div className="min-w-0">
               <p className="text-sm font-medium text-foreground">Active</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
+              <p className="text-dense text-muted-foreground mt-0.5">
                 Inactive types won&apos;t appear in new onboarding checklists.
               </p>
             </div>
@@ -257,9 +257,9 @@ export function DocumentTypeFormDialog({
           aria-label="Sort order"
         />
         {form.formState.errors.sortOrder && (
-          <p className="text-[11px] text-destructive">{form.formState.errors.sortOrder.message}</p>
+          <p className="text-dense text-destructive">{form.formState.errors.sortOrder.message}</p>
         )}
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-dense text-muted-foreground">
           Lower numbers appear first. Leave empty to auto-assign.
         </p>
       </div>
@@ -271,7 +271,7 @@ export function DocumentTypeFormDialog({
           <p className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
             Applicable Roles
           </p>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
+          <p className="text-dense text-muted-foreground mt-0.5">
             Leave empty to apply to all roles.
           </p>
         </div>

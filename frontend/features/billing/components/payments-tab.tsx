@@ -53,7 +53,7 @@ const PAYMENT_COLUMNS: DataTableColumn<Payment>[] = [
     key: "status",
     header: "Status",
     cell: (row): ReactNode => (
-      <Badge variant="secondary" className="text-[10px]">
+      <Badge variant="secondary" className="text-micro">
         {row.status}
       </Badge>
     ),

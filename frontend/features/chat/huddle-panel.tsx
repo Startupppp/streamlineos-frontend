@@ -204,10 +204,10 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
         aria-label={expanded ? "Collapse huddle panel" : "Expand huddle panel"}
       >
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <div className="h-5 w-5 rounded-full bg-green-500/20 flex items-center justify-center shrink-0">
-            <Mic className="h-3 w-3 text-green-500" />
+          <div className="h-5 w-5 rounded-full bg-status-success-surface flex items-center justify-center shrink-0">
+            <Mic className="h-3 w-3 text-status-success-ink" />
           </div>
-          <TruncatedText text={`Huddle · ${elapsed}`} className="text-sm font-medium text-green-500" />
+          <TruncatedText text={`Huddle · ${elapsed}`} className="text-sm font-medium text-status-success-ink" />
           <span className="text-xs text-muted-foreground">
             {participantCount} {participantCount === 1 ? "participant" : "participants"}
           </span>
@@ -224,14 +224,14 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
       {expanded && (
         <div className="px-4 pb-3">
           {micError && (
-            <div className="px-3 py-2 text-[11px] text-red-500 bg-red-500/10 rounded-lg mb-2 flex items-center gap-2">
+            <div className="px-3 py-2 text-dense text-status-danger-ink bg-status-danger-surface rounded-lg mb-2 flex items-center gap-2">
               <MicOff className="h-3.5 w-3.5 shrink-0" />
               <span className="flex-1">{micError}</span>
             </div>
           )}
 
           {realtimeError && (
-            <div className="px-3 py-2 text-[11px] text-amber-600 bg-amber-500/10 rounded-lg mb-2">
+            <div className="px-3 py-2 text-dense text-status-warning-ink bg-status-warning-surface rounded-lg mb-2">
               {realtimeError}
             </div>
           )}
@@ -265,7 +265,7 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
               size="sm"
               className={cn(
                 "h-9 w-9 rounded-full p-0",
-                isMuted && "bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:text-red-500",
+                isMuted && "bg-status-danger-surface text-status-danger-ink hover:bg-status-danger-surface hover:text-status-danger-ink",
               )}
               onClick={handleToggleMute}
               aria-label={isMuted ? "Unmute" : "Mute"}
@@ -276,7 +276,7 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
               size="sm"
               className={cn(
                 "h-9 w-9 rounded-full p-0",
-                isHandRaised && "bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 hover:text-amber-500",
+                isHandRaised && "bg-status-warning-surface text-status-warning-ink hover:bg-status-warning-surface hover:text-status-warning-ink",
               )}
               onClick={handleToggleHand}
               aria-label={isHandRaised ? "Lower hand" : "Raise hand"}
@@ -413,8 +413,8 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
 
           {showInviteDialog && inviteBlockedByPlan && (
             <div className="mt-3 border border-border/40 rounded-xl p-3 bg-muted/20">
-              <p className="text-[11px] font-semibold mb-1">Invite to huddle</p>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-dense font-semibold mb-1">Invite to huddle</p>
+              <p className="text-dense text-muted-foreground">
                 Huddles are one-to-one on the Free plan. Upgrade to start group huddles.
               </p>
             </div>
@@ -422,17 +422,17 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
 
           {showInviteDialog && !inviteBlockedByPlan && (
             <div className="mt-3 border border-border/40 rounded-xl p-3 bg-muted/20">
-              <p className="text-[11px] font-semibold mb-2">Invite to huddle</p>
+              <p className="text-dense font-semibold mb-2">Invite to huddle</p>
               <UserCombobox
                 value={inviteUserId}
                 onChange={setInviteUserId}
                 placeholder="Select member to invite…"
                 excludeUserId={currentUserId}
-                className="text-[12px] mb-2"
+                className="text-xs mb-2"
               />
               <LoadingButton
                 size="sm"
-                className="text-[11px]"
+                className="text-dense"
                 disabled={!inviteUserId}
                 isPending={inviteToHuddle.isPending}
                 onClick={() => {
@@ -476,7 +476,7 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
             {huddle.participants.slice(0, 4).map((p) => (
               <Avatar key={p.userId} className="h-5 w-5 border border-background">
                 <AvatarImage src={resolveImageUrl(p.user?.image)} />
-                <AvatarFallback className="text-[8px]">
+                <AvatarFallback className="text-micro">
                   {getInitials(p.user?.name)}
                 </AvatarFallback>
               </Avatar>
@@ -490,7 +490,7 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
               size="sm"
               className={cn(
                 "h-6 w-6 rounded-full p-0",
-                isMuted && "text-red-500",
+                isMuted && "text-status-danger-ink",
               )}
               onClick={handleToggleMute}
               aria-label={isMuted ? "Unmute" : "Mute"}

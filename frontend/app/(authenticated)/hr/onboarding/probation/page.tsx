@@ -29,23 +29,23 @@ type StatusConfig = {
 const STATUS_CONFIG: Record<string, StatusConfig> = {
   in_probation: {
     label: "In Probation",
-    className: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-800",
+    className: "bg-status-info-surface text-status-info-ink border-status-info-rule",
   },
   review_due: {
     label: "Review Due",
-    className: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800",
+    className: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   },
   extended: {
     label: "Extended",
-    className: "bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-800",
+    className: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   },
   confirmed: {
     label: "Confirmed",
-    className: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800",
+    className: "bg-status-success-surface text-status-success-ink border-status-success-rule",
   },
   terminated: {
     label: "Terminated",
-    className: "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-800",
+    className: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
   },
 };
 
@@ -91,10 +91,10 @@ function ProbationRow({ review, canManage, onExtend, onConfirm }: ProbationRowPr
   const handleConfirm = useCallback(() => onConfirm(review), [review, onConfirm]);
 
   return (
-    <Card className="rounded-2xl border border-border/70 bg-card/90 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_10px_28px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
+    <Card className="rounded-2xl border border-border/70 bg-card/90 shadow-card overflow-hidden">
       <CardContent className="p-4 flex items-center gap-4">
         <div className="w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-          <span className="text-[10px] font-bold text-primary">
+          <span className="text-micro font-bold text-primary">
             {review.firstName[0]}{review.lastName[0]}
           </span>
         </div>
@@ -104,20 +104,20 @@ function ProbationRow({ review, canManage, onExtend, onConfirm }: ProbationRowPr
             <TruncatedText text={`${review.firstName} ${review.lastName}`} className="text-sm font-semibold" />
             <Badge
               variant="outline"
-              className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full", config.className)}
+              className={cn("text-micro font-semibold px-2 py-0.5 rounded-full", config.className)}
             >
               {config.label}
             </Badge>
             {review.extensionCount > 0 && (
               <Badge
                 variant="outline"
-                className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground border-border"
+                className="text-micro font-semibold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground border-border"
               >
                 {review.extensionCount}x extended
               </Badge>
             )}
           </div>
-          <div className="flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
+          <div className="flex items-center gap-3 text-dense text-muted-foreground flex-wrap">
             <span>ID: {review.employmentId}</span>
             <span>Ends: {formatDate(effectiveEndDate)}</span>
             {review.workEmail && <span className="hidden sm:inline">{review.workEmail}</span>}

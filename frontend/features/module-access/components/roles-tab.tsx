@@ -108,13 +108,13 @@ function GroupListItem({
     >
       <div className="min-w-0">
         <p className="text-sm font-medium truncate">{group.name}</p>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-dense text-muted-foreground">
           {group.memberCount} members
         </p>
       </div>
       <div className="flex items-center gap-0.5 shrink-0">
         {group.isSystem ? (
-          <Badge variant="outline" className="text-[9px] px-1.5">
+          <Badge variant="outline" className="text-micro px-1.5">
             System
           </Badge>
         ) : canManage ? (

@@ -176,17 +176,17 @@ export function WfhRequestSheet({
           />
 
           {approvers.length === 0 && (
-            <div className="flex flex-col gap-2 rounded-lg border border-amber-200/80 bg-amber-50/60 px-3 py-2.5 dark:border-amber-500/25 dark:bg-amber-500/10">
-              <div className="flex items-center gap-2 text-xs font-semibold text-amber-800 dark:text-amber-300">
+            <div className="flex flex-col gap-2 rounded-lg border border-status-warning-rule bg-status-warning-surface px-3 py-2.5">
+              <div className="flex items-center gap-2 text-xs font-semibold text-status-warning-ink">
                 <UserX className="h-3.5 w-3.5 shrink-0" />
                 Approver not configured
               </div>
-              <p className="text-xs text-amber-800/80 dark:text-amber-200/80">
+              <p className="text-xs text-status-warning-ink">
                 WFH requests need an approver. Grant a teammate leave-approval access first.
               </p>
               <Link
                 href="/settings/roles"
-                className="inline-flex w-fit items-center gap-1 text-xs font-semibold text-amber-800 hover:underline dark:text-amber-300"
+                className="inline-flex w-fit items-center gap-1 text-xs font-semibold text-status-warning-ink hover:underline"
               >
                 Configure roles
                 <ArrowRight className="h-3 w-3" />

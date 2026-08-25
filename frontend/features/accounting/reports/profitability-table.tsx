@@ -68,7 +68,7 @@ export function ProfitabilityTable({ data, nameKey }: ProfitabilityTableProps) {
             <span
               className={cn(
                 "text-sm font-mono tabular-nums font-medium",
-                isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400",
+                isPositive ? "text-status-success-ink" : "text-status-danger-ink",
               )}
             >
               {formatCurrencyFull(Number(row.margin))}
@@ -89,7 +89,7 @@ export function ProfitabilityTable({ data, nameKey }: ProfitabilityTableProps) {
                 <div
                   className={cn(
                     "h-full rounded-full transition-all duration-500",
-                    isPositive ? "bg-emerald-500" : "bg-red-500",
+                    isPositive ? "bg-status-success-fill" : "bg-status-danger-fill",
                   )}
                   style={{ width: `${Math.min(Math.abs(pct), 100)}%` }}
                 />
@@ -97,7 +97,7 @@ export function ProfitabilityTable({ data, nameKey }: ProfitabilityTableProps) {
               <span
                 className={cn(
                   "text-xs font-mono tabular-nums w-12 text-right shrink-0",
-                  isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400",
+                  isPositive ? "text-status-success-ink" : "text-status-danger-ink",
                 )}
               >
                 {pct.toFixed(1)}%

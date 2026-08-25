@@ -290,7 +290,7 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
                             <span className="flex items-center gap-2 min-w-0">
                               <Avatar className="h-5 w-5 shrink-0">
                                 <AvatarImage src={resolveImageUrl(selectedManager.image)} />
-                                <AvatarFallback className="text-[7px]">
+                                <AvatarFallback className="text-micro">
                                   {getUserInitials({ name: selectedManager.name, email: selectedManager.email })}
                                 </AvatarFallback>
                               </Avatar>
@@ -336,7 +336,7 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
                                 >
                                   <Avatar className="mr-2 h-5 w-5 shrink-0">
                                     <AvatarImage src={resolveImageUrl(m.image)} />
-                                    <AvatarFallback className="text-[7px]">
+                                    <AvatarFallback className="text-micro">
                                       {getUserInitials({ name: m.name, email: m.email })}
                                     </AvatarFallback>
                                   </Avatar>
@@ -345,7 +345,7 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
                                       {getUserDisplayName({ name: m.name, email: m.email })}
                                     </span>
                                     {m.name && (
-                                      <span className="truncate text-[10px] text-muted-foreground block">
+                                      <span className="truncate text-micro text-muted-foreground block">
                                         {m.email}
                                       </span>
                                     )}

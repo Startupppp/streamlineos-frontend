@@ -53,8 +53,8 @@ function getDueDateClass(dueDate: string | null, status: string): string {
   if (!dueDate) return "text-muted-foreground";
   if (status === "completed") return "text-muted-foreground";
   const date = new Date(dueDate);
-  if (isPast(date) && !isToday(date)) return "text-red-500 dark:text-red-400";
-  if (isToday(date)) return "text-amber-600 dark:text-amber-400";
+  if (isPast(date) && !isToday(date)) return "text-status-danger-ink";
+  if (isToday(date)) return "text-status-warning-ink";
   return "text-muted-foreground";
 }
 
@@ -118,7 +118,7 @@ export function TaskRow({
         {task.entityType && task.entityId != null && (
           <Link
             href={`${ENTITY_PATHS[task.entityType]}/${task.entityId}`}
-            className="text-[11px] text-primary hover:underline truncate"
+            className="text-dense text-primary hover:underline truncate"
           >
             {ENTITY_LABELS[task.entityType]} #{task.entityId}
           </Link>
@@ -128,7 +128,7 @@ export function TaskRow({
       {task.dueDate && (
         <span
           className={cn(
-            "text-[11px] shrink-0 tabular-nums",
+            "text-dense shrink-0 tabular-nums",
             getDueDateClass(task.dueDate, task.status),
           )}
         >
@@ -139,7 +139,7 @@ export function TaskRow({
       {assigneeInitials && (
         <Avatar className="h-5 w-5 shrink-0">
           <AvatarImage src={undefined} />
-          <AvatarFallback className="text-[9px]">{assigneeInitials}</AvatarFallback>
+          <AvatarFallback className="text-micro">{assigneeInitials}</AvatarFallback>
         </Avatar>
       )}
 

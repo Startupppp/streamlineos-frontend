@@ -20,7 +20,7 @@ export default function GlobalNotFound() {
 
         <motion.div variants={fadeUp} className="mb-10">
           <Link href="/" className="flex items-center gap-3">
-            <div className="relative w-9 h-9 bg-card rounded-lg border border-blue-500/20 flex items-center justify-center overflow-hidden shadow-sm">
+            <div className="relative w-9 h-9 bg-card rounded-lg border border-status-info-rule flex items-center justify-center overflow-hidden shadow-sm">
               <Image
                 src="/logo.svg"
                 alt="StreamlineOS Logo"

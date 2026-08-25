@@ -153,7 +153,7 @@ export function WorkLogAdvancedFiltersSheet({
         <AnimatedIconButton icon={SlidersHorizontalIcon} iconSize={12} iconClassName="mr-0" variant="outline" size="sm" className="relative gap-1.5 text-xs">
           <span className="hidden sm:inline">Filters</span>
           {activeFilterCount > 0 && (
-            <Badge className="absolute -top-1.5 -right-1.5 h-4 w-4 p-0 flex items-center justify-center text-[9px] bg-primary text-primary-foreground border-0 font-bold">
+            <Badge className="absolute -top-1.5 -right-1.5 h-4 w-4 p-0 flex items-center justify-center text-micro bg-primary text-primary-foreground border-0 font-bold">
               {activeFilterCount}
             </Badge>
           )}
@@ -167,7 +167,7 @@ export function WorkLogAdvancedFiltersSheet({
 
         <div className="p-5 space-y-4">
           <div className="space-y-1.5">
-            <Label className="text-[11px] font-semibold text-foreground/80 uppercase tracking-wider">Year</Label>
+            <Label className="text-dense font-semibold text-foreground/80 uppercase tracking-wider">Year</Label>
             <Select value={draftFilters.year.toString()} onValueChange={handleDraftYearChange}>
               <SelectTrigger className="w-full text-sm"><SelectValue placeholder="Select year" /></SelectTrigger>
               <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
@@ -179,7 +179,7 @@ export function WorkLogAdvancedFiltersSheet({
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-[11px] font-semibold text-foreground/80 uppercase tracking-wider">Quarter</Label>
+            <Label className="text-dense font-semibold text-foreground/80 uppercase tracking-wider">Quarter</Label>
             <Select value={draftFilters.quarter.toString()} onValueChange={handleDraftQuarterChange}>
               <SelectTrigger className="w-full text-sm"><SelectValue placeholder="Select quarter" /></SelectTrigger>
               <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
@@ -192,7 +192,7 @@ export function WorkLogAdvancedFiltersSheet({
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-[11px] font-semibold text-foreground/80 uppercase tracking-wider">Month</Label>
+            <Label className="text-dense font-semibold text-foreground/80 uppercase tracking-wider">Month</Label>
             <Select
               value={draftFilters.month !== undefined ? draftFilters.month.toString() : "all"}
               onValueChange={handleDraftMonthChange}
@@ -211,10 +211,10 @@ export function WorkLogAdvancedFiltersSheet({
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-[11px] font-semibold text-foreground/80 uppercase tracking-wider">Date Range</Label>
+            <Label className="text-dense font-semibold text-foreground/80 uppercase tracking-wider">Date Range</Label>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <Label className="text-[10px] text-muted-foreground font-medium">From</Label>
+                <Label className="text-micro text-muted-foreground font-medium">From</Label>
                 <DatePicker
                   value={draftFilters.dateFrom || ""}
                   onChange={handleDraftDateFromChange}
@@ -223,7 +223,7 @@ export function WorkLogAdvancedFiltersSheet({
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-[10px] text-muted-foreground font-medium">To</Label>
+                <Label className="text-micro text-muted-foreground font-medium">To</Label>
                 <DatePicker
                   value={draftFilters.dateTo || ""}
                   onChange={handleDraftDateToChange}
@@ -236,7 +236,7 @@ export function WorkLogAdvancedFiltersSheet({
 
           {canManageEmployees && departments && departments.length > 0 && (
             <div className="space-y-1.5">
-              <Label className="text-[11px] font-semibold text-foreground/80 uppercase tracking-wider">Department</Label>
+              <Label className="text-dense font-semibold text-foreground/80 uppercase tracking-wider">Department</Label>
               <Select value={draftFilters.departmentId || "all"} onValueChange={handleDraftDepartmentChange}>
                 <SelectTrigger className="w-full text-sm"><SelectValue placeholder="All departments" /></SelectTrigger>
                 <SelectContent className="max-h-[200px] overflow-y-auto">
@@ -251,7 +251,7 @@ export function WorkLogAdvancedFiltersSheet({
 
           {canManageEmployees && employees && employees.length > 0 && (
             <div className="space-y-1.5">
-              <Label className="text-[11px] font-semibold text-foreground/80 uppercase tracking-wider">Employee</Label>
+              <Label className="text-dense font-semibold text-foreground/80 uppercase tracking-wider">Employee</Label>
               <Popover open={sheetPickerOpen} onOpenChange={setSheetPickerOpen}>
                 <PopoverTrigger asChild>
                   <Button

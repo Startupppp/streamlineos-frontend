@@ -209,13 +209,13 @@ export function AIEmailDialog({
             <div className="space-y-3 border rounded-lg p-3 bg-muted/30">
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                  <Label className="text-micro text-muted-foreground uppercase tracking-wider">
                     Subject
                   </Label>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-6 px-2 text-[10px]"
+                    className="h-6 px-2 text-micro"
                     onClick={handleCopySubject}
                   >
                     {copied === "subject" ? (
@@ -229,13 +229,13 @@ export function AIEmailDialog({
               </div>
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                  <Label className="text-micro text-muted-foreground uppercase tracking-wider">
                     Body
                   </Label>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-6 px-2 text-[10px]"
+                    className="h-6 px-2 text-micro"
                     onClick={handleCopyBody}
                   >
                     {copied === "body" ? (

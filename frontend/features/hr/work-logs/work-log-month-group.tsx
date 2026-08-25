@@ -79,7 +79,7 @@ export function WorkLogMonthGroup({
   };
 
   return (
-    <Card className="overflow-hidden rounded-2xl border border-border/70 bg-card/90 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)]">
+    <Card className="overflow-hidden rounded-2xl border border-border/70 bg-card/90 shadow-card">
       <CardHeader
         className={cn(
           "sticky top-0 z-10 cursor-pointer select-none border-b border-border/60 bg-card/95 px-4 py-3 backdrop-blur-sm",
@@ -112,12 +112,12 @@ export function WorkLogMonthGroup({
                     <div
                       className={cn(
                         "h-full rounded-full transition-[width] duration-300",
-                        progress === 100 ? "bg-emerald-500" : progress > 0 ? "bg-primary" : "bg-muted-foreground/30",
+                        progress === 100 ? "bg-status-success-fill" : progress > 0 ? "bg-primary" : "bg-muted-foreground/30",
                       )}
                       style={{ width: `${progress}%` }}
                     />
                   </div>
-                  <span className="text-[10px] font-medium tabular-nums text-muted-foreground">
+                  <span className="text-micro font-medium tabular-nums text-muted-foreground">
                     {progress}%
                   </span>
                 </div>
@@ -126,11 +126,11 @@ export function WorkLogMonthGroup({
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {!searchTerm.trim() && filled > 0 && (
-              <span className="rounded-md border border-border bg-muted/50 px-2 py-0.5 font-mono text-[10px] font-semibold tabular-nums text-muted-foreground">
+              <span className="rounded-md border border-border bg-muted/50 px-2 py-0.5 font-mono text-micro font-semibold tabular-nums text-muted-foreground">
                 {totalHours}h
               </span>
             )}
-            <span className="rounded-md bg-muted/60 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <span className="rounded-md bg-muted/60 px-2 py-1 text-dense font-semibold uppercase tracking-wide text-muted-foreground">
               {searchTerm.trim()
                 ? `${displayDays.length} match${displayDays.length !== 1 ? "es" : ""}`
                 : `${filled}/${weekdays} logged`}

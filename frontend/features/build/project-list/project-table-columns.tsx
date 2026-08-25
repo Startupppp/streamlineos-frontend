@@ -67,16 +67,16 @@ export function useProjectTableColumns({
             )}
           >
             <span
-              className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-[9px] font-bold tracking-tight bg-primary/10 text-primary ring-1 ring-primary/10"
+              className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-micro font-bold tracking-tight bg-primary/10 text-primary ring-1 ring-primary/10"
               aria-hidden="true"
             >
               {p.key.slice(0, 2).toUpperCase()}
             </span>
             <TruncatedText
               text={p.name}
-              className="text-[13px] font-medium text-foreground transition-colors group-hover:text-primary"
+              className="text-label font-medium text-foreground transition-colors group-hover:text-primary"
             />
-            <span className="hidden shrink-0 font-mono text-[10px] text-muted-foreground/60 sm:inline-block">
+            <span className="hidden shrink-0 font-mono text-micro text-muted-foreground/60 sm:inline-block">
               {p.key}
             </span>
           </div>
@@ -93,7 +93,7 @@ export function useProjectTableColumns({
           p.description ? (
             <TruncatedText
               text={p.description}
-              className="text-[11px] text-muted-foreground"
+              className="text-dense text-muted-foreground"
             />
           ) : (
             <span className="text-xs text-muted-foreground/40">—</span>
@@ -116,7 +116,7 @@ export function useProjectTableColumns({
             <Badge
               variant="secondary"
               className={cn(
-                "gap-1 rounded-full border-0 px-1.5 py-0 text-[10px] font-medium",
+                "gap-1 rounded-full border-0 px-1.5 py-0 text-micro font-medium",
                 statusColor,
               )}
             >
@@ -178,7 +178,7 @@ export function useProjectTableColumns({
             <Badge
               variant="secondary"
               className={cn(
-                "gap-1 rounded-full border-0 px-1.5 py-0 text-[10px] font-medium",
+                "gap-1 rounded-full border-0 px-1.5 py-0 text-micro font-medium",
                 badgeColor,
               )}
             >
@@ -215,7 +215,7 @@ export function useProjectTableColumns({
                     alt={getUserDisplayName(p.manager)}
                   />
                 ) : null}
-                <AvatarFallback className="text-[9px]">
+                <AvatarFallback className="text-micro">
                   {getUserInitials(p.manager)}
                 </AvatarFallback>
               </Avatar>
@@ -245,7 +245,7 @@ export function useProjectTableColumns({
             <AvatarStack
               users={p.members}
               limit={3}
-              className="[&_[data-slot=avatar]]:size-5 [&_[data-slot=avatar]]:text-[8px]"
+              className="[&_[data-slot=avatar]]:size-5 [&_[data-slot=avatar]]:text-micro"
             />
           ) : (
             <span className="text-xs text-muted-foreground/40">—</span>
@@ -268,7 +268,7 @@ export function useProjectTableColumns({
                 <Badge
                   key={t}
                   variant="outline"
-                  className="h-[18px] px-1.5 text-[10px] font-normal"
+                  className="h-[18px] px-1.5 text-micro font-normal"
                 >
                   {t}
                 </Badge>
@@ -276,7 +276,7 @@ export function useProjectTableColumns({
               {p.teams.length > 3 ? (
                 <Badge
                   variant="outline"
-                  className="h-[18px] px-1.5 text-[10px] font-normal text-muted-foreground"
+                  className="h-[18px] px-1.5 text-micro font-normal text-muted-foreground"
                 >
                   +{p.teams.length - 3}
                 </Badge>
@@ -363,7 +363,7 @@ export function useProjectTableColumns({
           return p.progress.total > 0 ? (
             <div className="flex items-center gap-2">
               <Progress value={progressValue} className="h-1 min-w-0 flex-1" />
-              <span className="w-7 shrink-0 text-right text-[10px] tabular-nums text-muted-foreground">
+              <span className="w-7 shrink-0 text-right text-micro tabular-nums text-muted-foreground">
                 {Math.round(progressValue)}%
               </span>
             </div>

@@ -44,9 +44,9 @@ export function ReceiptCard({ item }: ReceiptCardProps) {
       </div>
 
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 rounded-md bg-amber-50 border border-amber-200 px-2 py-1 dark:bg-amber-500/10 dark:border-amber-500/30">
-          <AlertTriangle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-          <span className="text-[11px] text-amber-700 dark:text-amber-300">
+        <div className="flex items-center gap-1.5 rounded-md bg-status-warning-surface border border-status-warning-rule px-2 py-1">
+          <AlertTriangle className="h-3.5 w-3.5 text-status-warning-ink shrink-0" />
+          <span className="text-dense text-status-warning-ink">
             {FLAG_LABELS[item.policyFlag] ?? item.policyFlag}
           </span>
         </div>

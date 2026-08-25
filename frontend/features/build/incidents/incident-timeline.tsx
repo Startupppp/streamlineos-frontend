@@ -27,11 +27,11 @@ const STATUS_LABELS: Record<IncidentStatus, string> = {
 };
 
 const STATUS_STYLES: Record<IncidentStatus, string> = {
-  detected: "text-red-600 border-red-200",
-  investigating: "text-orange-600 border-orange-200",
-  mitigating: "text-amber-600 border-amber-200",
-  resolved: "text-emerald-600 border-emerald-200",
-  postmortem: "text-blue-600 border-blue-200",
+  detected: "text-status-danger-ink border-status-danger-rule",
+  investigating: "text-status-warning-ink border-status-warning-rule",
+  mitigating: "text-status-warning-ink border-status-warning-rule",
+  resolved: "text-status-success-ink border-status-success-rule",
+  postmortem: "text-status-info-ink border-status-info-rule",
   closed: "text-muted-foreground border-border",
 };
 
@@ -80,11 +80,11 @@ function AddUpdateForm({ projectId, incidentId }: AddUpdateFormProps) {
           name="message"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-[11px]">Post update <span className="text-destructive">*</span></FormLabel>
+              <FormLabel className="text-dense">Post update <span className="text-destructive">*</span></FormLabel>
               <FormControl>
-                <Textarea {...field} placeholder="What's the latest status?" className="text-[11px] min-h-[64px] resize-none" />
+                <Textarea {...field} placeholder="What's the latest status?" className="text-dense min-h-[64px] resize-none" />
               </FormControl>
-              <FormMessage className="text-[10px]" />
+              <FormMessage className="text-micro" />
             </FormItem>
           )}
         />
@@ -104,12 +104,12 @@ function AddUpdateForm({ projectId, incidentId }: AddUpdateFormProps) {
                       {STATUSES.map((s) => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}
                     </SelectContent>
                   </Select>
-                  <FormMessage className="text-[10px]" />
+                  <FormMessage className="text-micro" />
                 </FormItem>
               )}
             />
           </div>
-          <LoadingButton type="submit" size="sm" className="text-[11px]" isPending={addUpdate.isPending} loadingText="Posting…">
+          <LoadingButton type="submit" size="sm" className="text-dense" isPending={addUpdate.isPending} loadingText="Posting…">
             Post Update
           </LoadingButton>
         </div>
@@ -123,15 +123,15 @@ const TimelineEntry = memo(function TimelineEntry({ update }: { update: Incident
     <div className="border-l-2 border-border pl-3 py-0.5 space-y-0.5">
       <div className="flex items-center gap-2 flex-wrap">
         {update.newStatus && (
-          <Badge variant="outline" className={`text-[10px] ${STATUS_STYLES[update.newStatus]}`}>
+          <Badge variant="outline" className={`text-micro ${STATUS_STYLES[update.newStatus]}`}>
             → {STATUS_LABELS[update.newStatus]}
           </Badge>
         )}
-        <span className="text-[10px] text-muted-foreground">
+        <span className="text-micro text-muted-foreground">
           {update.createdByName ?? update.createdByEmail?.split("@")[0] ?? "System"} · {new Date(update.createdAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
         </span>
       </div>
-      <p className="text-[12px] text-foreground whitespace-pre-wrap">{update.message}</p>
+      <p className="text-xs text-foreground whitespace-pre-wrap">{update.message}</p>
     </div>
   );
 });
@@ -151,12 +151,12 @@ export function IncidentTimeline({ projectId, incidentId, updates, canManage }: 
 
   return (
     <div className="space-y-3">
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">
         Timeline
       </p>
 
       {sorted.length === 0 && (
-        <p className="text-[12px] text-muted-foreground italic">No updates yet.</p>
+        <p className="text-xs text-muted-foreground italic">No updates yet.</p>
       )}
 
       {sorted.map((u) => (

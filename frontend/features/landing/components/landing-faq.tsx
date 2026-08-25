@@ -18,8 +18,8 @@ export function LandingFAQ() {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] as const }}
           className="max-w-2xl text-center mx-auto mb-8 sm:mb-10"
         >
-          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-[-0.03em] leading-[1.05] text-slate-900">
-            Frequently asked <span className="text-blue-600">questions.</span>
+          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-[-0.03em] leading-[1.05] text-foreground">
+            Frequently asked <span className="text-status-info-ink">questions.</span>
           </h2>
         </motion.div>
 
@@ -35,8 +35,8 @@ export function LandingFAQ() {
                 transition={{ duration: 0.45, delay: i * 0.04 }}
                 className={`rounded-xl sm:rounded-2xl border overflow-hidden transition-all duration-300 ${
                   isOpen
-                    ? "border-blue-300/60 bg-white shadow-[0_18px_44px_-18px_rgba(30,64,175,0.15)]"
-                    : "border-slate-200 bg-white/70 hover:border-blue-200"
+                    ? "border-status-info-rule bg-white shadow-[0_18px_44px_-18px_rgba(30,64,175,0.15)]"
+                    : "border-border bg-white/70 hover:border-status-info-rule"
                 }`}
               >
                 <button
@@ -44,7 +44,7 @@ export function LandingFAQ() {
                   onClick={() => setOpen(isOpen ? null : i)}
                   className="w-full flex items-start sm:items-center justify-between gap-3 sm:gap-6 px-4 sm:px-5 py-3.5 sm:py-4 text-left"
                 >
-                  <span className="font-display text-sm sm:text-base font-semibold text-slate-900 min-w-0 pr-1">
+                  <span className="font-display text-sm sm:text-base font-semibold text-foreground min-w-0 pr-1">
                     {f.question}
                   </span>
                   <motion.span
@@ -52,8 +52,8 @@ export function LandingFAQ() {
                     transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] as const }}
                     className={`mt-0.5 h-7 w-7 rounded-full inline-flex items-center justify-center shrink-0 ${
                       isOpen
-                        ? "bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-[0_4px_14px_-4px_rgba(59,130,246,0.5)]"
-                        : "bg-slate-100 text-slate-600"
+                        ? "bg-gradient-to-br from-gradient-info-from to-gradient-info-to text-white shadow-[0_4px_14px_-4px_rgba(59,130,246,0.5)]"
+                        : "bg-muted text-muted-foreground"
                     }`}
                   >
                     <Plus className="h-3.5 w-3.5" />
@@ -68,7 +68,7 @@ export function LandingFAQ() {
                       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] as const }}
                       className="overflow-hidden"
                     >
-                      <p className="px-4 sm:px-5 pb-4 sm:pb-5 text-sm text-slate-600 leading-relaxed">
+                      <p className="px-4 sm:px-5 pb-4 sm:pb-5 text-sm text-muted-foreground leading-relaxed">
                         {f.answer}
                       </p>
                     </motion.div>

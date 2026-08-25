@@ -32,7 +32,7 @@ export function ErrorRetry({
       <button
         type="button"
         onClick={onRetry}
-        className="shrink-0 flex items-center gap-0.5 text-blue-600 dark:text-blue-400 hover:underline"
+        className="shrink-0 flex items-center gap-0.5 text-status-info-ink hover:underline"
       >
         <RefreshCcw className="h-3 w-3" />
         Retry
@@ -51,7 +51,7 @@ export function AvatarInitials({
   return (
     <Avatar className="h-6 w-6 shrink-0">
       <AvatarImage src={image ?? undefined} />
-      <AvatarFallback className="text-[9px]">
+      <AvatarFallback className="text-micro">
         {getUserInitials({ name })}
       </AvatarFallback>
     </Avatar>

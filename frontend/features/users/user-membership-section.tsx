@@ -202,7 +202,7 @@ export function UserMembershipSection({ userId }: UserMembershipSectionProps) {
       <div className="flex items-center justify-between">
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Organization</p>
         {canManage && (
-          <Button variant="ghost" size="sm" className="h-6 text-[11px]" onClick={handleEdit}>
+          <Button variant="ghost" size="sm" className="h-6 text-dense" onClick={handleEdit}>
             <Pencil className="h-3 w-3 mr-1" />
             Edit
           </Button>

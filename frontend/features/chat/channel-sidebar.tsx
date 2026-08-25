@@ -255,7 +255,7 @@ export function ChannelSidebar({
               </div>
               <div>
                 <h2 className="text-base font-bold leading-tight">Messages</h2>
-                <p className="text-[11px] text-muted-foreground leading-tight">
+                <p className="text-dense text-muted-foreground leading-tight">
                   {onlineUsers?.length ?? 0} online
                 </p>
               </div>
@@ -331,7 +331,7 @@ export function ChannelSidebar({
                 className="w-full flex items-center gap-2 px-2 py-2 mb-1 rounded-xl text-left hover:bg-muted/40 transition-colors"
               >
                 <ArrowLeft className="h-4 w-4 text-muted-foreground shrink-0" />
-                <span className="text-[13px] font-semibold text-foreground">Archived</span>
+                <span className="text-label font-semibold text-foreground">Archived</span>
               </button>
 
               {isArchivedLoading ? (
@@ -364,7 +364,7 @@ export function ChannelSidebar({
                   <div className="h-12 w-12 rounded-xl bg-muted/50 flex items-center justify-center mx-auto mb-3">
                     <Archive className="h-5 w-5 text-muted-foreground" />
                   </div>
-                  <p className="text-[13px] text-muted-foreground font-medium">
+                  <p className="text-label text-muted-foreground font-medium">
                     {search ? "No archived chats found" : "No archived chats"}
                   </p>
                 </div>
@@ -405,7 +405,7 @@ export function ChannelSidebar({
                     count={favorites.reduce((a, c) => a + c.unreadCount, 0)}
                     collapsed={favoritesCollapsed}
                     onToggle={handleToggleFavorites}
-                    icon={<Star className="h-3 w-3 fill-amber-400 text-amber-400" />}
+                    icon={<Star className="h-3 w-3 fill-amber-400 text-status-warning-ink" />}
                   >
                     {favorites.map((ch) => (
                       <ChannelListEntry
@@ -433,9 +433,9 @@ export function ChannelSidebar({
                     <div className="h-10 w-10 rounded-full bg-muted/60 flex items-center justify-center shrink-0">
                       <Archive className="h-4 w-4 text-muted-foreground" />
                     </div>
-                    <span className="flex-1 text-[13px] font-medium text-foreground">Archived</span>
+                    <span className="flex-1 text-label font-medium text-foreground">Archived</span>
                     {archivedUnreadCount > 0 && (
-                      <span className="h-[18px] min-w-[18px] flex items-center justify-center bg-primary text-primary-foreground text-[10px] font-bold rounded-full px-1 shrink-0">
+                      <span className="h-[18px] min-w-[18px] flex items-center justify-center bg-primary text-primary-foreground text-micro font-bold rounded-full px-1 shrink-0">
                         {archivedUnreadCount > 99 ? "99+" : archivedUnreadCount}
                       </span>
                     )}
@@ -511,10 +511,10 @@ export function ChannelSidebar({
                 {filteredChannels.length === 0 && (
                   <div className="text-center py-10 px-4">
                     <EmptyMailIllustration className="mx-auto mb-4 w-32 h-32" />
-                    <p className="text-[13px] text-muted-foreground font-medium">
+                    <p className="text-label text-muted-foreground font-medium">
                       {search ? "No results found" : "No conversations yet"}
                     </p>
-                    <p className="text-[11px] text-muted-foreground/50 mt-1">
+                    <p className="text-dense text-muted-foreground/50 mt-1">
                       {search ? "Try a different search" : "Start a new conversation"}
                     </p>
                   </div>

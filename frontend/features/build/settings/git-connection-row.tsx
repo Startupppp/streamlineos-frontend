@@ -105,7 +105,7 @@ export const ConnectionRow = memo(function ConnectionRow({
           <div className="flex items-center gap-2">
             <Badge
               variant={connection.isActive ? "default" : "secondary"}
-              className="text-[10px]"
+              className="text-micro"
             >
               {connection.isActive ? "Active" : "Paused"}
             </Badge>
@@ -156,7 +156,7 @@ export const ConnectionRow = memo(function ConnectionRow({
               iconSize={14}
             />
           </div>
-          <p className="text-[11px] text-muted-foreground/80">
+          <p className="text-dense text-muted-foreground/80">
             The full secret is shown only once at creation. Recreate the connection if it is lost.
           </p>
         </div>

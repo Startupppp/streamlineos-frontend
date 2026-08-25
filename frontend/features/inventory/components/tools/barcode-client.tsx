@@ -266,7 +266,7 @@ export function BarcodeClient() {
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
         {!isOnline && (
-          <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-amber-800 text-sm dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+          <div className="flex items-center gap-2 rounded-lg border border-status-warning-rule bg-status-warning-surface px-4 py-2.5 text-status-warning-ink text-sm">
             <WifiOff className="h-4 w-4 shrink-0" />
             <span>You are offline. Barcode lookup is unavailable.</span>
           </div>

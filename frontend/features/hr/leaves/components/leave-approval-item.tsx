@@ -73,7 +73,7 @@ export function LeaveApprovalItem({
               </p>
               <span
                 className={cn(
-                  "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-current/20",
+                  "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border border-current/20",
                   pConfig?.textColor,
                 )}
               >
@@ -81,7 +81,7 @@ export function LeaveApprovalItem({
                 {pConfig?.label}
               </span>
               {lopDays > 0 && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-orange-200 dark:border-orange-500/30 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-300">
+                <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border border-status-warning-rule bg-status-warning-surface text-status-warning-ink">
                   <AlertTriangle className="h-2.5 w-2.5" />
                   LOP: {lopDays}d
                 </span>
@@ -120,7 +120,7 @@ export function LeaveApprovalItem({
               <>
                 <LoadingButton
                   size="sm"
-                  className="h-7 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-semibold px-3 gap-1 border-0 transition-colors duration-200"
+                  className="h-7 rounded-full bg-status-success-fill hover:bg-status-success-fill-hover text-white text-dense font-semibold px-3 gap-1 border-0 transition-colors duration-200"
                   isPending={processingId === req.id}
                   onClick={handleApprove}
                 >
@@ -129,7 +129,7 @@ export function LeaveApprovalItem({
                 </LoadingButton>
                 <Button
                   size="sm"
-                  className="h-7 rounded-full bg-transparent border border-destructive/30 text-destructive hover:bg-destructive/10 text-[11px] font-semibold px-3 gap-1 transition-colors duration-200"
+                  className="h-7 rounded-full bg-transparent border border-destructive/30 text-destructive hover:bg-destructive/10 text-dense font-semibold px-3 gap-1 transition-colors duration-200"
                   disabled={processingId === req.id}
                   onClick={handleReject}
                 >

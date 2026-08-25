@@ -35,10 +35,10 @@ const STATUS_LABELS: Record<ClientAccountStatus, string> = {
 };
 
 const STATUS_BADGE_CLASSES: Record<ClientAccountStatus, string> = {
-  ACCOUNT_OPENING: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  QUERIES: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  ACCOUNT_OPENING: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  QUERIES: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   PLAN_SELECTED: "bg-muted text-muted-foreground border-border",
-  INVESTED: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  INVESTED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
 };
 
 export default function ClientDetailPage({
@@ -125,12 +125,12 @@ export default function ClientDetailPage({
         <div className="flex items-center gap-2 flex-wrap">
           <Badge
             variant="outline"
-            className={cn("h-5 px-2 py-0.5 text-[10px]", STATUS_BADGE_CLASSES[client.status])}
+            className={cn("h-5 px-2 py-0.5 text-micro", STATUS_BADGE_CLASSES[client.status])}
           >
             {STATUS_LABELS[client.status]}
           </Badge>
           {client.planName && (
-            <span className="text-[13px] text-muted-foreground">{client.planName}</span>
+            <span className="text-label text-muted-foreground">{client.planName}</span>
           )}
         </div>
       }

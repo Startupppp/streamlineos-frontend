@@ -13,15 +13,15 @@ import { useSeatInfo, useSubscription } from "@/hooks/api/subscription";
 import type { StatTone } from "@/components/ui/stat-card";
 
 function utilizationColor(percent: number): string {
-  if (percent >= 90) return "text-red-600 dark:text-red-400";
-  if (percent >= 70) return "text-amber-600 dark:text-amber-400";
-  return "text-green-600 dark:text-green-400";
+  if (percent >= 90) return "text-status-danger-ink";
+  if (percent >= 70) return "text-status-warning-ink";
+  return "text-status-success-ink";
 }
 
 function progressBarColor(percent: number): string {
-  if (percent >= 90) return "bg-red-500";
-  if (percent >= 70) return "bg-amber-500";
-  return "bg-green-500";
+  if (percent >= 90) return "bg-status-danger-fill";
+  if (percent >= 70) return "bg-status-warning-fill";
+  return "bg-status-success-fill";
 }
 
 function utilizationStatTone(percent: number): StatTone {
@@ -159,9 +159,9 @@ export function SeatsBlock() {
       )}
 
       {isNearCapacity && (
-        <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50/60 dark:border-amber-500/30 dark:bg-amber-500/5 px-3 py-2.5">
-          <AlertTriangle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
-          <p className="text-xs text-amber-800 dark:text-amber-300 leading-snug">
+        <div className="flex items-start gap-2 rounded-lg border border-status-warning-rule bg-status-warning-surface px-3 py-2.5">
+          <AlertTriangle className="h-3.5 w-3.5 text-status-warning-ink mt-0.5 shrink-0" />
+          <p className="text-xs text-status-warning-ink leading-snug">
             <span className="font-semibold">Running low on seats</span> — only {available} seat{available !== 1 ? "s" : ""}{" "}
             remaining. Consider adding seats before you reach the limit.
           </p>

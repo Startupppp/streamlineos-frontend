@@ -18,30 +18,30 @@ interface ReportBankPayoutProps {
 }
 
 const BATCH_STATUS_CLASS: Record<string, string> = {
-  PENDING: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  PROCESSING: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  PROCESSED: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  FAILED: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  PENDING: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  PROCESSING: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  PROCESSED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  FAILED: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };
 
 const ITEM_COLUMNS: DataTableColumn<BankPayoutItem>[] = [
   {
     key: "userName",
     header: "Employee",
-    cell: (row) => <TruncatedText text={row.userName ?? ""} className="text-[11px] font-medium" />,
+    cell: (row) => <TruncatedText text={row.userName ?? ""} className="text-dense font-medium" />,
   },
   {
     key: "accountMasked",
     header: "Account",
     cell: (row) => (
-      <span className="font-mono text-[11px] text-muted-foreground">{row.accountMasked}</span>
+      <span className="font-mono text-dense text-muted-foreground">{row.accountMasked}</span>
     ),
   },
   {
     key: "ifsc",
     header: "IFSC",
     cell: (row) => (
-      <span className="font-mono text-[11px] text-muted-foreground">{row.ifsc}</span>
+      <span className="font-mono text-dense text-muted-foreground">{row.ifsc}</span>
     ),
   },
   {
@@ -49,7 +49,7 @@ const ITEM_COLUMNS: DataTableColumn<BankPayoutItem>[] = [
     header: "Amount",
     className: "text-right",
     cell: (row) => (
-      <span className="font-mono text-[11px] tabular-nums">{formatMoney(row.amount)}</span>
+      <span className="font-mono text-dense tabular-nums">{formatMoney(row.amount)}</span>
     ),
   },
   {
@@ -58,7 +58,7 @@ const ITEM_COLUMNS: DataTableColumn<BankPayoutItem>[] = [
     cell: (row) => (
       <span
         className={cn(
-          "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border",
+          "inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium border",
           BATCH_STATUS_CLASS[row.status] ?? "bg-muted text-muted-foreground border-border",
         )}
       >
@@ -73,13 +73,13 @@ function BatchCard({ batch }: { batch: BankPayoutBatch }) {
     <Card className="overflow-hidden">
       <CardHeader className="px-4 py-3 flex-row items-center gap-3 border-b bg-muted/30">
         <div className="flex-1 min-w-0 flex items-center gap-3">
-          <span className="text-[12px] font-semibold text-foreground">
+          <span className="text-xs font-semibold text-foreground">
             Batch #{batch.batchNumber}
           </span>
-          <span className="text-[11px] text-muted-foreground">{batch.format}</span>
+          <span className="text-dense text-muted-foreground">{batch.format}</span>
           <span
             className={cn(
-              "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border",
+              "inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium border",
               BATCH_STATUS_CLASS[batch.status] ?? "bg-muted text-muted-foreground border-border",
             )}
           >
@@ -88,13 +88,13 @@ function BatchCard({ batch }: { batch: BankPayoutBatch }) {
         </div>
         <div className="flex items-center gap-4 shrink-0">
           <div className="text-right">
-            <p className="text-[10px] text-muted-foreground">{batch.itemCount} employees</p>
-            <p className="text-[12px] font-mono font-semibold tabular-nums">
+            <p className="text-micro text-muted-foreground">{batch.itemCount} employees</p>
+            <p className="text-xs font-mono font-semibold tabular-nums">
               {formatMoney(batch.totalAmount)}
             </p>
           </div>
           {batch.generatedAt && (
-            <p className="text-[10px] text-muted-foreground">
+            <p className="text-micro text-muted-foreground">
               {formatShortDate(batch.generatedAt)}
             </p>
           )}

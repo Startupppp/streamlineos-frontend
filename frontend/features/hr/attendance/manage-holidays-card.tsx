@@ -302,7 +302,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
                   ) : (
                     <>
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <span className="h-2 w-2 rounded-full bg-green-500 shrink-0" aria-hidden />
+                        <span className="h-2 w-2 rounded-full bg-status-success-fill shrink-0" aria-hidden />
                         <div className="min-w-0">
                           <span className="font-medium text-foreground text-sm">{h.name}</span>
                           <span className="text-muted-foreground text-xs ml-2">{h.date}</span>

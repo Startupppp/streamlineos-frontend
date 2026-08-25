@@ -29,7 +29,7 @@ const IMPORT_ENTITIES: ImportEntityConfig[] = [
     label: "Employees",
     description: "Import employee records with departments and roles",
     columns: ["email", "firstName", "lastName", "joiningDate", "departmentName", "designation", "employeeNumber"],
-    accent: "bg-blue-500/10 text-blue-600 dark:text-blue-300",
+    accent: "bg-status-info-surface text-status-info-ink",
     Icon: Users,
   },
   {
@@ -45,7 +45,7 @@ const IMPORT_ENTITIES: ImportEntityConfig[] = [
     label: "Attendance",
     description: "Import historical attendance records",
     columns: ["employeeEmail", "date", "checkIn", "checkOut", "status"],
-    accent: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-300",
+    accent: "bg-status-success-surface text-status-success-ink",
     Icon: Briefcase,
   },
   {
@@ -61,7 +61,7 @@ const IMPORT_ENTITIES: ImportEntityConfig[] = [
     label: "Documents",
     description: "Import document metadata with file URLs",
     columns: ["employeeEmail", "name", "type", "fileUrl", "category"],
-    accent: "bg-amber-500/10 text-amber-600 dark:text-amber-300",
+    accent: "bg-status-warning-surface text-status-warning-ink",
     Icon: FileText,
   },
 ];
@@ -77,7 +77,7 @@ function ImportCard({ config, onImport }: ImportCardProps) {
   }, [config.id, onImport]);
 
   return (
-    <div className="rounded-2xl border border-border/70 bg-card/90 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_10px_28px_-14px_rgba(15,23,42,0.12)] p-4 flex flex-col gap-3 hover:shadow-md transition-shadow">
+    <div className="rounded-2xl border border-border/70 bg-card/90 shadow-card p-4 flex flex-col gap-3 hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <span
@@ -92,12 +92,12 @@ function ImportCard({ config, onImport }: ImportCardProps) {
         </div>
         <Badge
           variant="secondary"
-          className="text-[9px] px-1.5 h-5 font-medium uppercase tracking-wide shrink-0"
+          className="text-micro px-1.5 h-5 font-medium uppercase tracking-wide shrink-0"
         >
           Import
         </Badge>
       </div>
-      <TruncatedText text={config.description} lines={2} className="text-[12px] text-muted-foreground leading-snug" />
+      <TruncatedText text={config.description} lines={2} className="text-xs text-muted-foreground leading-snug" />
       <div className="mt-auto">
         <AnimatedIconButton
           icon={UploadIcon}

@@ -177,7 +177,7 @@ export function NotificationCard({
         className={cn(
           "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg mt-0.5",
           iconBg,
-          isCritical && "ring-1 ring-red-500",
+          isCritical && "ring-1 ring-status-danger-rule",
         )}
       >
         <Icon className={cn("h-4 w-4", iconColor)} />
@@ -192,15 +192,15 @@ export function NotificationCard({
               isUnread && !isArchived ? "font-semibold text-foreground" : "font-medium text-muted-foreground",
             )}
           />
-          {pinned && <Pin className="h-3 w-3 shrink-0 text-amber-500" />}
+          {pinned && <Pin className="h-3 w-3 shrink-0 text-status-warning-ink" />}
           <Badge
             variant="outline"
-            className="hidden h-4 shrink-0 px-1.5 text-[10px] border-border/60 text-muted-foreground sm:inline-flex"
+            className="hidden h-4 shrink-0 px-1.5 text-micro border-border/60 text-muted-foreground sm:inline-flex"
           >
             {categoryConfig.label}
           </Badge>
           {sourceModule && (
-            <Badge variant="secondary" className="hidden h-4 shrink-0 px-1.5 text-[10px] md:inline-flex">
+            <Badge variant="secondary" className="hidden h-4 shrink-0 px-1.5 text-micro md:inline-flex">
               {sourceModule}
             </Badge>
           )}
@@ -220,7 +220,7 @@ export function NotificationCard({
               <LoadingButton
                 size="sm"
                 variant="outline"
-                className="h-6 text-xs px-2.5 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300 dark:border-emerald-500/30 dark:text-emerald-300 dark:hover:bg-emerald-500/10"
+                className="h-6 text-xs px-2.5 border-status-success-rule text-status-success-ink hover:bg-status-success-surface hover:border-status-success-rule"
                 onClick={handleApprove}
                 isPending={isApproving}
               >
@@ -270,7 +270,7 @@ export function NotificationCard({
                 title={pinned ? "Unpin" : "Pin"}
               >
                 {pinned ? (
-                  <PinOff className="h-3 w-3 text-amber-500" />
+                  <PinOff className="h-3 w-3 text-status-warning-ink" />
                 ) : (
                   <Pin className="h-3 w-3 text-muted-foreground" />
                 )}
@@ -281,7 +281,7 @@ export function NotificationCard({
             )}
           </div>
         )}
-        <span className="text-[11px] text-muted-foreground/60 whitespace-nowrap tabular-nums">
+        <span className="text-dense text-muted-foreground/60 whitespace-nowrap tabular-nums">
           {formatRelativeTime(createdAt)}
         </span>
         {isUnread && !isArchived && (

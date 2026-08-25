@@ -55,17 +55,17 @@ function buildColumns(report: ComponentPivotReport): DataTableColumn<ComponentPi
     {
       key: "name",
       header: "Name",
-      cell: (row) => <TruncatedText text={row.name ?? ""} className="text-[11px] font-medium" />,
+      cell: (row) => <TruncatedText text={row.name ?? ""} className="text-dense font-medium" />,
     },
     {
       key: "department",
       header: "Department",
-      cell: (row) => <TruncatedText text={row.department ?? ""} className="text-[11px] text-muted-foreground" />,
+      cell: (row) => <TruncatedText text={row.department ?? ""} className="text-dense text-muted-foreground" />,
     },
     {
       key: "workerType",
       header: "Type",
-      cell: (row) => <TruncatedText text={row.workerType ?? ""} className="text-[11px] text-muted-foreground" />,
+      cell: (row) => <TruncatedText text={row.workerType ?? ""} className="text-dense text-muted-foreground" />,
     },
   ];
 
@@ -74,7 +74,7 @@ function buildColumns(report: ComponentPivotReport): DataTableColumn<ComponentPi
     header: code,
     className: "text-right",
     cell: (row) => (
-      <span className="font-mono text-[11px] tabular-nums">
+      <span className="font-mono text-dense tabular-nums">
         {row.components[code] ? formatMoney(row.components[code]) : "—"}
       </span>
     ),
@@ -110,9 +110,9 @@ export function ReportPivot({
   return (
     <div className="flex flex-1 min-h-0 flex-col gap-3">
       {data?.provisional && (
-        <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-          <p className="text-[12px]">Figures are provisional until the run is locked.</p>
+        <div className="flex items-start gap-2 rounded-md border border-status-warning-rule bg-status-warning-surface p-3 text-status-warning-ink">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-status-warning-ink" />
+          <p className="text-xs">Figures are provisional until the run is locked.</p>
         </div>
       )}
 
@@ -129,10 +129,10 @@ export function ReportPivot({
           return (
             <div className="space-y-1">
               <p className="text-sm font-medium truncate">{row.name || "Unknown"}</p>
-              <p className="text-[11px] text-muted-foreground truncate">
+              <p className="text-dense text-muted-foreground truncate">
                 {row.department || "—"} · {row.workerType || "—"}
               </p>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-dense text-muted-foreground">
                 {amounts.length} component{amounts.length === 1 ? "" : "s"}
               </p>
             </div>

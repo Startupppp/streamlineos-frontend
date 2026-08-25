@@ -140,15 +140,15 @@ export function ReadinessRail({
               </h2>
               <span
                 className={cn(
-                  "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                  "inline-flex items-center rounded-full border px-2 py-0.5 text-micro font-semibold uppercase tracking-wide",
                   canPay
-                    ? "border-emerald-400/50 text-emerald-800 dark:text-emerald-200"
-                    : "border-red-400/40 text-red-800 dark:text-red-200",
+                    ? "border-status-success-rule text-status-success-ink"
+                    : "border-status-danger-rule text-status-danger-ink",
                 )}
               >
                 {canPay ? "Can pay" : "Cannot pay"}
               </span>
-              <span className="text-[10px] text-muted-foreground font-medium">
+              <span className="text-micro text-muted-foreground font-medium">
                 {tone.badge}
               </span>
             </div>
@@ -163,7 +163,7 @@ export function ReadinessRail({
                     style={{ width: `${Math.max(4, Math.min(100, progressPercent))}%` }}
                   />
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-1 payroll-money">
+                <p className="text-micro text-muted-foreground mt-1 payroll-money">
                   {progressPercent}% complete
                 </p>
               </div>
@@ -174,17 +174,17 @@ export function ReadinessRail({
         {totals ? (
           <div className="grid grid-cols-3 gap-2 rounded-lg border border-border/70 bg-background/60 p-2.5">
             <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Gross</p>
+              <p className="text-micro uppercase tracking-wide text-muted-foreground">Gross</p>
               <p className="payroll-money text-xs font-semibold truncate">{totals.gross ?? "—"}</p>
             </div>
             <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Ded.</p>
+              <p className="text-micro uppercase tracking-wide text-muted-foreground">Ded.</p>
               <p className="payroll-money text-xs font-semibold truncate text-[var(--payroll-control)]">
                 {totals.deductions ?? "—"}
               </p>
             </div>
             <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1">
+              <p className="text-micro uppercase tracking-wide text-muted-foreground flex items-center gap-1">
                 <Banknote className="h-3 w-3" /> Net
               </p>
               <p className="payroll-money text-xs font-semibold truncate payroll-ledger-text">
@@ -196,7 +196,7 @@ export function ReadinessRail({
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="space-y-1.5 min-w-0">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">
               Blockers{blockers.length ? ` · ${blockers.length}` : ""}
             </p>
             {blockers.length === 0 ? (
@@ -224,14 +224,14 @@ export function ReadinessRail({
               </ul>
             )}
             {warnings.length > 0 ? (
-              <p className="text-[11px] text-muted-foreground pt-1">
+              <p className="text-dense text-muted-foreground pt-1">
                 +{warnings.length} warning{warnings.length === 1 ? "" : "s"}
               </p>
             ) : null}
           </div>
 
           <div className="space-y-1.5 min-w-0">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+            <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
               <TrendingUp className="h-3 w-3" /> Changes
             </p>
             {changes.length === 0 ? (
@@ -248,7 +248,7 @@ export function ReadinessRail({
           </div>
 
           <div className="space-y-1.5 min-w-0">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">
               Next action
             </p>
             {nextAction ? (
@@ -276,7 +276,7 @@ export function ReadinessRail({
               <p className="text-xs text-muted-foreground">No action required</p>
             )}
             {(payDate || cutoffLabel || ruleVersion) && (
-              <div className="pt-1 space-y-0.5 text-[10px] text-muted-foreground">
+              <div className="pt-1 space-y-0.5 text-micro text-muted-foreground">
                 {payDate ? <p className="payroll-money">Pay date · {payDate}</p> : null}
                 {cutoffLabel ? <p>{cutoffLabel}</p> : null}
                 {ruleVersion ? (

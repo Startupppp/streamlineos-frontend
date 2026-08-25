@@ -266,7 +266,7 @@ export function ClientAccessPage() {
               </span>
             )}
             <span
-              className={cn("font-mono text-[10px] text-muted-foreground", TEXT_ONE_LINE)}
+              className={cn("font-mono text-micro text-muted-foreground", TEXT_ONE_LINE)}
               title={row.partyContactId}
             >
               {truncateId(row.partyContactId)}

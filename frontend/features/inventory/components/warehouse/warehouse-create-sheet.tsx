@@ -205,10 +205,10 @@ export function WarehouseCreateSheet({ open, onOpenChange }: WarehouseCreateShee
                   <FormItem>
                     <div className="flex items-center justify-between rounded-md border p-3">
                       <div>
-                        <FormLabel className="text-[13px] font-medium">
+                        <FormLabel className="text-label font-medium">
                           Active
                         </FormLabel>
-                        <p className="text-[11px] text-muted-foreground">
+                        <p className="text-dense text-muted-foreground">
                           Allow stock operations in this warehouse
                         </p>
                       </div>

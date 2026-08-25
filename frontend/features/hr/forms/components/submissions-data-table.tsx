@@ -77,7 +77,7 @@ export function SubmissionsDataTable({ formId, submissions, canManage }: Submiss
             </SelectContent>
           </Select>
         ) : (
-          <Badge variant="outline" className={"text-[11px] " + (SUBMISSION_STATUS_COLORS[row.status] ?? "")}>
+          <Badge variant="outline" className={"text-dense " + (SUBMISSION_STATUS_COLORS[row.status] ?? "")}>
             {SUBMISSION_STATUS_LABELS[row.status] ?? row.status}
           </Badge>
         ),
