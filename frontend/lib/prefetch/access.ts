@@ -16,10 +16,17 @@ export async function prefetchAccess() {
   if (!orgId || !userId) return dehydrate(new QueryClient());
 
   const queryClient = await createServerQueryClient();
-  await queryClient.prefetchQuery({
-    queryKey: queryKeys.access.me(orgId, userId),
-    queryFn: () => serverGet<AccessResponse>("/me/access"),
-    staleTime: ACCESS_STALE_TIME,
-  });
+  try {
+    await queryClient.fetchQuery({
+      queryKey: queryKeys.access.me(orgId, userId),
+      queryFn: () => serverGet<AccessResponse>("/me/access"),
+      staleTime: ACCESS_STALE_TIME,
+    });
+  } catch {
+    // A failed server prefetch must not make the authenticated shell fail. The
+    // client starts with an empty, correctly scoped cache and its normal query
+    // function can recover on the browser.
+    return dehydrate(new QueryClient());
+  }
   return dehydrate(queryClient);
 }

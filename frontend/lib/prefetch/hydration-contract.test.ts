@@ -127,6 +127,17 @@ describe("the shipped prefetch factories honour that contract", () => {
 
     expect(app.getQueryData(queryKeys.roles.list({ page: 1, limit: 20 }))).toEqual(page);
   });
+
+  it("returns an empty scoped snapshot when the server access read fails", async () => {
+    (serverGet as jest.Mock).mockRejectedValue(new Error("backend unavailable"));
+
+    const state = await prefetchAccess();
+    const app = createAppQueryClient(authenticatedScope(ORG, USER));
+    hydrate(app, state);
+
+    expect(app.getQueryData(queryKeys.access.me(ORG, USER))).toBeUndefined();
+    expect(state.queries).toHaveLength(0);
+  });
 });
 
 describe("scope construction", () => {

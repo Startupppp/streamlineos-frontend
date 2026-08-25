@@ -5,7 +5,7 @@ import {
 } from "@/features/hr/employees/detail/employee-data";
 import { notFound } from "next/navigation";
 import { requirePermission } from "@/lib/rbac/require-permission";
-import { serverApiClient } from "@/lib/api/server-client";
+import { serverGet } from "@/lib/server-fetch";
 
 export default async function EditEmployeePage({
   params,
@@ -19,7 +19,7 @@ export default async function EditEmployeePage({
 
   let employee: EmployeeData | null = null;
   try {
-    const response = await serverApiClient.get<unknown>(
+    const response = await serverGet<unknown>(
       `/hr/employees/${employeeId}`,
     );
     employee = employeeDataSchema.parse(response);

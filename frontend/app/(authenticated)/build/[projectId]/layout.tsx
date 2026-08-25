@@ -1,7 +1,7 @@
 ﻿import { notFound, redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { isApiError } from "@/lib/api-client";
-import { serverApiClient } from "@/lib/api/server-client";
+import { serverGet } from "@/lib/server-fetch";
 import { withPmWorkspacePath } from "@/lib/build/pm-workspace-path";
 import type { ProjectWithDetails } from "@/types/projects";
 import { AccessDeniedView } from "@/features/build/project-detail/access-denied-view";
@@ -29,7 +29,7 @@ export default async function ProjectLayout({
 
   let project: ProjectWithDetails | null = null;
   try {
-    project = await serverApiClient.get<ProjectWithDetails>(`/build/${numId}`);
+    project = await serverGet<ProjectWithDetails>(`/build/${numId}`);
   } catch (err: unknown) {
     if (isApiError(err)) {
       if (err.code === "BACKEND_UNREACHABLE") {
