@@ -7,8 +7,9 @@ Verified 2026-08-26 against the current backend implementation.
 The generic `outbox_events` ledger is the canonical path for cross-module domain
 events. Producers use `OutboxWriter.emit(tx, event)` inside the aggregate
 transaction; consumers register with `OutboxConsumerRegistry`; the relay runs
-per organisation and applies the `InboxConsumer` exactly-once and monotonic
-aggregate-version fence.
+per organisation and applies the `InboxConsumer` duplicate-suppression and
+monotonic aggregate-version fence. Delivery remains at-least-once; external
+side effects must provide their own idempotency key where replay matters.
 
 `notification_outbox` is retained as an internal notification-intent ledger,
 not as a second generic domain-event bus. Its only public entry point is
@@ -27,11 +28,14 @@ intent goes through `NotificationDispatchService`.
 
 - `OUTBOX_DISPATCH_ENABLED` is enabled unless explicitly set to `false`.
 - Unregistered event types fail and enter bounded retry/dead-letter handling.
-- `InboxConsumer` rejects duplicate and out-of-order aggregate versions.
+- `InboxConsumer` suppresses duplicate and out-of-order aggregate versions;
+  this is not a universal exactly-once guarantee for external side effects.
 - Relay work runs inside a fresh tenant transaction; it never borrows a request
   transaction.
 - `GET /cron/outbox-events-metrics` reports pending, in-flight, dead, and oldest
   pending age; the flush endpoint remains secret-gated.
+- `pnpm report:outbox-events` captures those measures per organisation together
+  with distinct event-type counts before a ledger migration decision.
 - Notification relay rows have their own lease, retry, dead-letter, and dedupe
   guarantees.
 

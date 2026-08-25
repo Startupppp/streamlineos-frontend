@@ -12,7 +12,7 @@
 | [c6](c6-split-kb-help-centre-and-wiki.md) | Split the two products inside `kb/` | Partial: `report:kb-article-migration` now produces tenant-safe closure evidence; retirement still requires a zero backlog and intake decision |
 | [c7](c7-chat-message-fanout.md) | Chat send path as a fan-out module | Implemented: transactional outbox fan-out with durable retry tests; broker/queue integration remains environment-dependent |
 | [c8](c8-frontend-server-data-seam.md) | Frontend server-data seam | Implemented: duplicate adapter removed and failed-prefetch proof added |
-| [c9](c9-transactional-outbox-decision.md) | Decide what the outbox is for | Decision recorded: generic domain events use `outbox_events`; notification intents use the dedicated notification ledger with explicit guarantees |
+| [c9](c9-transactional-outbox-decision.md) | Decide what the outbox is for | Decision and relay implemented: generic domain events use `outbox_events`; notification intents use the dedicated ledger; report/production evidence remains |
 
 ## The successor program
 
