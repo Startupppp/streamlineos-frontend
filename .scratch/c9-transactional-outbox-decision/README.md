@@ -8,14 +8,18 @@ Two durable write paths with different guarantees, and nothing at the call site 
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 02 | [Events that matter get a consumer](issues/02-consumers-for-the-event-types-that-need-them.md) | — | **open** — 1 of 8 wired; 7 held on one named product decision each |
-| 04 | [Notifications becomes a consumer, not a peer](issues/04-notifications-becomes-a-consumer-not-a-peer.md) | 02 | **held by design** — waits until the bus has run in production |
+| 02 | Events that matter get a consumer | — | **done and retired** — 6 consumers; 1 held on a business decision |
+| 04 | [Notifications becomes a consumer, not a peer](issues/04-notifications-becomes-a-consumer-not-a-peer.md) | 02 | **gate answered** — may proceed; held on its timing condition |
 
 **On completing a ticket:** tick its todo list, set its `Status` to `done` in the ticket file, and update its row above.
 
 **The bus was proven live on 2026-08-25.** A real flush returned `{"claimed":18,"delivered":0,"suppressed":18}` and left the table at 25 SUPPRESSED, **zero PENDING, zero RETRY, zero DEAD** — every suppressed type one carrying a fire-and-forget verdict. That closes the suppressed-count criterion on evidence rather than on the table's own say-so.
 
 **Read `claimed:0` carefully.** The first flush returned all zeros against 18 PENDING rows, which looks exactly like a broken claim query. It is not: `OUTBOX_DISPATCH_ENABLED` is unset by default, so `flush()` is a deliberate no-op. The flag was enabled only for the verification and restored afterwards.
+
+**Ticket 02 closed 2026-08-25 with six consumers on the bus:** `deal.closed`, `survey.response.submitted`, `inventory.stock.low`, `build.sprint.completed`, `build.release.published`, `accounting.bill.approved`. Fourteen types stay deliberately fire-and-forget — ten of them because a synchronous reaction already covers the same ground, so a consumer would double it. One is held: `accounting.invoice.issued`, where "send the invoice to the customer" is an outbound business action, not a notification.
+
+**The near-miss worth remembering.** `accounting.bill.approved` looked trivially wireable, because its payload carries `actor_user_id`. That is the **approver**, not the submitter. Wiring it would have told the person who just clicked approve that their own action succeeded — and read as correct in review. The submitter is `finApprovalRequests.requestedBy`; where no approval request exists, the consumer marks SKIPPED rather than substituting an audience.
 
 **Inventory left scope on 2026-08-25.** Four `inventory.*` types were removed from ticket 02 as work items; their analysis rows stay as a record. That retires the ticket's largest blocker — `inventory.sales_order.fulfilled` was the one money-moving item, creating an AR invoice on consumer execution and needing finance sign-off regardless of catalog state. `inventory.stock.low` shipped before the change and stays: removing an analysis item from a ticket is not a reason to delete live, tested code.
 

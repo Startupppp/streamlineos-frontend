@@ -12,14 +12,13 @@ Nine candidates, nine specs in [`docs/specs/`](../docs/specs/README.md), 29 tick
 | [c6 — Split help centre and wiki](c6-split-kb-help-centre-and-wiki/README.md) | 3 | **3** | 0 | — complete |
 | [c3 — One representation of capability](c3-one-representation-of-capability/README.md) | 6 | **6** | 0 | — complete |
 | [c8 — Frontend server-data seam](c8-frontend-server-data-seam/README.md) | 3 | **3** | 0 | — complete |
-| [c9 — Transactional outbox](c9-transactional-outbox-decision/README.md) | 1 → 4 | 2 | 2 | consumers where recipients are derivable · unify notifications (held on timing) |
+| [c9 — Transactional outbox](c9-transactional-outbox-decision/README.md) | 1 → 4 | 3 | 1 | unify notifications — held on its timing condition |
 
-**29 tickets → 28 retired, 2 open. Eight candidates complete: c1, c2, c3, c4, c5, c6, c7, c8.**
+**29 tickets → 29 retired, 1 open. Eight candidates complete: c1, c2, c3, c4, c5, c6, c7, c8.**
 
-Both remaining tickets are in c9, and both are now decision-complete rather than blocked:
+The single open ticket, **c9-04**, is decision-complete rather than blocked. Its gate is answered: nothing the notification path guarantees is architecturally impossible on the bus, so the migration *may* proceed. It waits on the timing condition it always had — the bus has not yet run in production.
 
-- **02** — inventory left scope on 2026-08-25, retiring the ticket's only money-moving item. What remains is wiring consumers wherever the recipients are derivable from the data.
-- **04** — the gate is answered: nothing the notification path guarantees is impossible on the bus, so the migration *may* proceed. It is held on its original timing condition (the bus has not run in production), not on an open question. Its audit surfaced a defect that outlives the ticket: `dispatch.emit()` is **not durable** — it runs after commit and swallows the error into a log — and 49 call sites across 34 files use it.
+Its audit surfaced a defect that outlives the ticket entirely: **`dispatch.emit()` is not durable.** It runs after commit via `registerAfterCommit` and **swallows the error into a log**, so a crash between commit and drain loses the notification silently. 49 call sites across 34 files use it; only 3 use the durable `emitDurable`.
 
 ## The one defect worth remembering from this program
 
