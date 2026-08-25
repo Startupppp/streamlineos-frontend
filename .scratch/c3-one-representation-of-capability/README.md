@@ -8,7 +8,9 @@ Tickets 01→02→03 are an expand→migrate→contract sequence on the server; 
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 04 | [Gated controls are there in the first paint](issues/04-access-is-prefetched-on-the-server.md) | — | **done** |
+| 04 | [Gated controls are there in the first paint](issues/04-access-is-prefetched-on-the-server.md) | — | **REOPENED** — true after hydration, false in the server HTML |
+
+**Ticket 04 reopened 2026-08-25.** An earlier pass marked its first-paint criterion PASS because the dehydrated access snapshot, with real scope keys, was found in the first HTML response. Finding data in the payload is not the control being rendered. Curl shows the served `<body>` is a full-screen spinner — same root cause as c8 ticket 02. Two other criteria that had never been verified *were* closed in the same pass, including the cross-tenant one: an org-A snapshot is unreadable under an org-B session because `orgId` is in the query key.
 
 **On completing a ticket:** tick its todo list, set its `Status` to `done` in the ticket file, and update its row above.
 

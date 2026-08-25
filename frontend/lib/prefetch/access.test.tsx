@@ -80,7 +80,10 @@ describe("access prefetch — acceptance criteria", () => {
     mockedGet.mockReturnValue(new Promise(() => {}));
   });
 
-  it("1. no flash — hydrated snapshot renders the granted control on the first paint", () => {
+  // Scope: this asserts the first CLIENT render reads the hydrated cache, i.e. no
+  // post-hydration flash. It says nothing about the server-rendered HTML — the
+  // authenticated shell renders a loading screen there regardless (see c8-02).
+  it("1. no post-hydration flash — hydrated snapshot renders the granted control on the first client render", () => {
     stubSession(ORG_A, USER_1);
 
     // Mirror what prefetchAccess() does on the server

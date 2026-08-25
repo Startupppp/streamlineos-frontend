@@ -6,9 +6,11 @@ Spec: [`docs/specs/c6-split-kb-help-centre-and-wiki.md`](../../docs/specs/c6-spl
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 01 | [The frontend folder name says which product it holds](issues/01-rename-the-frontend-features.md) | — | **done** |
+| — | ticket 01 complete and retired | — | **candidate complete** |
 
-**On completing a ticket:** tick its todo list, set its `Status` to `done` in the ticket file, and update its row above.
+**Candidate closed 2026-08-25.** Ticket 01 is done and its file deleted.
+
+**Runtime check, which was the only thing outstanding:** with the API and web app both booted, `/knowledge/wiki` returned `200` (96,529 bytes) and the public help centre `200` (33,372 bytes), with zero `Module not found` / `Cannot find module` in either response and zero import errors in the dev log. That is what the 72-file import-path rename needed — a typecheck and a build cannot catch a bare side-effect import, but loading the two surfaces can.
 
 **Ticket 01 is the cheapest work in the whole review with the highest legibility payoff** — two renames, and telling the two products apart stops being a coin flip.
 

@@ -6,16 +6,16 @@ The access snapshot is prefetched on the server and hydrated into the client cac
 
 **Blocked by:** None — can start immediately.
 
-**Status:** done — verified 2026-08-25
+**Status:** NOT done — the headline criterion is false in the server HTML. See "Correction" below.
 
 ## Acceptance criteria
 
-- [ ] On a full page load of an authenticated route, gated controls the person is entitled to are present in the first paint — no flash.
+- [ ] On a full page load of an authenticated route, gated controls the person is entitled to are present in the first paint — no flash. **FALSE for the server HTML; true only after hydration.**
 - [x] Not one of the gating call sites changes; the hooks keep their exact signatures.
 - [x] The module-enabled hook answers enabled while access is unresolved, matching its documented contract.
 - [x] A person who lacks a permission still sees nothing they should not — hydration must not widen anything.
-- [ ] Switching organisations resolves gating for the new organisation; a prefetched snapshot never outlives the switch.
-- [ ] A newly granted permission still appears without a hard reload — prefetching must not pin a stale snapshot.
+- [x] Switching organisations resolves gating for the new organisation; a prefetched snapshot never outlives the switch.
+- [x] A newly granted permission still appears without a hard reload — prefetching must not pin a stale snapshot.
 - [x] **A failed server read is not hydrated.** The server helper collapses every error into a fully-denied snapshot, so hydrating it would turn a transient blip into a permanently stripped page. Distinguish failure from denial and hydrate nothing on failure.
 - [x] Hydration happens once at the authenticated layout, not per page.
 - [x] With no hydrated state, behaviour is exactly as today.
@@ -28,10 +28,11 @@ The access snapshot is prefetched on the server and hydrated into the client cac
 - [x] Handle the failure case explicitly so a denied snapshot from an error is never hydrated
 - [x] Correct the module-enabled loading default
 - [x] Write both halves of the test pair: renders from hydration without calling the API, and falls back to fetching when hydration is absent
-- [ ] Verify in a browser at a cold load, a client-side navigation, and an organisation switch — **not exercised: the API boots now, but this specific flow was not run (verification agent hit a billing limit)**
+- [x] Verify at a cold load, a client-side navigation, and an organisation switch — **done; cold load DISPROVED the first-paint claim**
 - [x] Run the frontend tests — a clean typecheck does not prove they compile
-- [x] Tick every acceptance criterion above
-- [x] Set **Status** to `done` and update this ticket's row in `../README.md`
+- [ ] Fix or retire the first-paint criterion (shared root cause with c8-02)
+- [ ] Tick every acceptance criterion above
+- [ ] Set **Status** to `done` and update this ticket's row in `../README.md`
 
 ---
 
@@ -45,4 +46,37 @@ The access snapshot is prefetched on the server and hydrated into the client cac
 
 Zero of the ~1,066 gating call sites changed.
 
-**Not verified here:** first-paint behaviour, organisation switch and client-side navigation were not confirmed in a browser. The API cannot boot — `APP_DATABASE_URL` fails 28P01 (app role password rotated).
+---
+
+## Correction (2026-08-25) — "first paint" was ticked on the wrong evidence
+
+An earlier verification pass reported this criterion PASS because the dehydrated `/me/access`
+snapshot, with 20+ real scope keys, was found verbatim in the first HTML response. **Finding the
+data in the payload is not the same as the control being rendered**, and that distinction is the
+whole criterion.
+
+Curling `/settings/roles` as the org owner with a real session: the access query is hydrated with
+`status:"success"` and a matching `queryHash`, and the session is passed to `SessionProvider` — yet
+the served `<body>`, with scripts stripped, is 3,903 bytes containing a full-screen loading spinner.
+No nav, no `<h1>`, no gated control. Root cause is shared with c8-02: `dashboard-shell.tsx:166`
+returns `<AppLoadingScreen>` while `useAccess()` has no data, and the hydrated snapshot is not
+readable during the server render.
+
+So the honest split:
+
+- **After hydration — true.** The first *client* render reads the snapshot and shows the granted
+  control with no flash. Proven by `lib/prefetch/access.test.tsx` test 1, which asserts the first
+  committed render with no `waitFor` and no `act`.
+- **In the server HTML — false.** Every authenticated route serves a spinner.
+
+The two criteria this pass did close are genuinely closed, and both were previously unproven:
+
+- **Organisation switch** — `queryKeys.access.me` includes `orgId`, so a snapshot prefetched for
+  org A is unreadable under org B. Test 2 renders org A's dehydrated snapshot under an org B
+  session and asserts the control reads *denied* — the cross-tenant bleed this criterion exists to
+  prevent.
+- **No stale pin** — test 3 fetches a denying snapshot, invalidates as a mutation would, and
+  asserts the control appears without a reload.
+
+`lib/prefetch/access.test.tsx` → **3 tests, all pass.** Test 1 was renamed from "first paint" to
+"first client render", because its old name asserted something curl disproves.

@@ -8,13 +8,15 @@ Nine candidates, nine specs in [`docs/specs/`](../docs/specs/README.md), 29 tick
 | [c2 — Calendar source registry](c2-calendar-source-registry/README.md) | 2 | **2** | 0 | — complete |
 | [c4 — Module availability interface](c4-module-availability-interface/README.md) | 4 | **4** | 0 | — complete |
 | [c7 — Chat message fan-out](c7-chat-message-fanout/README.md) | 3 | **3** | 0 | — complete |
-| [c3 — One representation of capability](c3-one-representation-of-capability/README.md) | 6 | 5 | 1 | first-paint gating in server HTML |
-| [c5 — Payment provider adapter](c5-payment-provider-adapter/README.md) | 4 | 2 | 2 | order round trip — blocker fixed, re-run pending |
-| [c6 — Split help centre and wiki](c6-split-kb-help-centre-and-wiki/README.md) | 3 | 2 | 1 | load both surfaces against a running app |
-| [c8 — Frontend server-data seam](c8-frontend-server-data-seam/README.md) | 3 | 1 | 2 | curl the HTML and grep for rows / article body |
-| [c9 — Transactional outbox](c9-transactional-outbox-decision/README.md) | 1 → 4 | 2 | 2 | 7 consumers (product decisions) · unify notifications (held) |
+| [c5 — Payment provider adapter](c5-payment-provider-adapter/README.md) | 4 | **4** | 0 | — complete |
+| [c6 — Split help centre and wiki](c6-split-kb-help-centre-and-wiki/README.md) | 3 | **3** | 0 | — complete |
+| [c3 — One representation of capability](c3-one-representation-of-capability/README.md) | 6 | 5 | 1 | ticket 04 **reopened** — first paint is false in server HTML |
+| [c8 — Frontend server-data seam](c8-frontend-server-data-seam/README.md) | 3 | 2 | 1 | ticket 02 **reopened** — rows are not in the server HTML |
+| [c9 — Transactional outbox](c9-transactional-outbox-decision/README.md) | 1 → 4 | 2 | 2 | 7 consumers (one product decision each) · unify notifications (held) |
 
-**29 tickets → 24 retired, 8 open (5 original + 3 c9 follow-ups). Four candidates complete: c1, c2, c4, c7.**
+**29 tickets → 26 retired, 4 open. Six candidates complete: c1, c2, c4, c5, c6, c7.**
+
+The open count fell by four and rose by two: c5, c6 and c8-03 closed on live evidence, and **c3-04 and c8-02 were reopened because criteria had been ticked without proof and are false.** Reopening them is the result, not a setback — see the correction sections in both tickets.
 
 ## Verification state (2026-08-25)
 
@@ -24,7 +26,21 @@ Nine candidates, nine specs in [`docs/specs/`](../docs/specs/README.md), 29 tick
 
 - **Running it found a bug nothing else did.** Enabling outbox dispatch made every flush die `42501` — a cross-org sweep on the ALS-proxied connection with no tenant context. Two more methods had the same defect. Typecheck, 5,000 unit tests and a clean build had all passed over it.
 - **Responsive and navigation criteria became tests rather than glances.** There is no browser automation here (no Playwright/Puppeteer/Cypress), so "check at 375/768/1280" was never literally possible. The behaviour behind each is now asserted: Drawer-below-breakpoint both directions, the toolbar's non-wrapping row, the scope badge never hidden on mobile, and nav-surface parity across all three surfaces.
-- **Still unverified:** the payment webhook and order round trip, the chat side-effect failure trace, KB reviews as owner vs non-owner, and grepping server-rendered HTML for rows and article body. Two attempts were made; the first agents hit the org's monthly spend limit and the credential rotated before a direct retry could finish. **Nothing about these is claimed.**
+## Second runtime window (2026-08-25, later)
+
+The credential was reset again and a second window used to run every outstanding check. What it settled:
+
+- **Closed on live evidence:** the payment order round trip and forged-signature rejection (c5); help centre and wiki both loading after the 72-file rename (c6); the public article body server-rendered with the sanitiser stripping a real attack payload (c8-03); the outbox flush suppressing exactly the deliberately-unsubscribed types (c9-02).
+- **Disproved:** server-rendered rows (c8-02) and server-HTML first paint (c3-04). Both tickets reopened. The prefetch work is not wasted — it removes the client fetch waterfall — but the shell serves `AppLoadingScreen` on every authenticated route, so nothing gated reaches the markup.
+
+**Two ways this program produced false green, both now recorded in the tickets:**
+
+1. **Tests that can only see the cache.** c8-02's test pair asserts the prefetch populates the query cache. No test could observe markup, so no test could fail when the shell refused to render. Passing tests plus a passing build read as done.
+2. **Payload found ≠ control rendered.** c3-04 was marked PASS because the dehydrated snapshot was present in the HTML. It was present, with `status:"success"` and a matching hash — and the page still served a spinner.
+
+**A third, milder one:** a flush returning `{"claimed":0}` against 18 PENDING rows looks like a broken query and is actually a config flag doing its job.
+
+- **Fixed this pass:** the survey consumer's self-opened transaction, adopted because an agent believed `DealClosedConsumerService` had an exactly-once defect. Checking the relay showed it wraps `handle()` in `runInNewTenantTransaction` (`outbox-publisher.service.ts:155`), so the premise was false and the divergence is gone.
 
 ## Working the frontier
 

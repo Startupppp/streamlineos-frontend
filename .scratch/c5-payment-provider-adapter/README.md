@@ -6,10 +6,17 @@ Spec: [`docs/specs/c5-payment-provider-adapter.md`](../../docs/specs/c5-payment-
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 03 | [Orders and payment signatures go through the seam](issues/03-order-creation-and-signature-verification-go-through-the-registry.md) | 02 | **done** |
-| 04 | [Adding a second payment provider costs one adapter](issues/04-billing-names-no-provider.md) | 03 | **done** — one leak named |
+| — | all four tickets complete and retired | — | **candidate complete** |
 
-**On completing a ticket:** tick its todo list, set its `Status` to `done` in the ticket file, and update its row above.
+**Candidate closed 2026-08-25.** All tickets are done and their files deleted; this README is the record.
+
+**The round trip, run against a booted API and a live database:**
+
+- `POST /billing/checkout` → `200` with a real provider order: `{"orderId":"order_TTySQXAx8rPp91","amount":249900,"currency":"INR","keyId":"rzp_test_…","plan":"PROFESSIONAL"}`. The order is created through the registry and the browser-facing public key is read through the seam, not from the concrete provider.
+- `PATCH /billing/razorpay` with a forged signature → `400 "Payment verification failed: invalid signature"`. No credential in the message.
+- The subscription was `STARTER`/`TRIAL` before the forged call and `STARTER`/`TRIAL` after it. **The proof is the absence of the write** — a rejected signature that still activated a plan would be the actual bug, and only reading the row afterwards can show it did not.
+
+One thing the run taught: the verify route is `PATCH /billing/razorpay` and it is `@Idempotent`, so it rejects with `400 "An Idempotency-Key header is required"` before any signature check. A test that omits the header proves nothing about signatures.
 
 **Webhook verification is deliberately first among the migrations.** It is the highest-risk operation and the one with no coverage today, and it is where the raw-body handling can go wrong in a way that accepts forged payments. It also ships the fake adapter that 03 and 04 depend on. Write its test before its change.
 
