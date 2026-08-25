@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { access } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
+import ts from "typescript";
 
 const frontendRoot = path.resolve(import.meta.dirname, "..");
 const sourceRoot = path.join(frontendRoot, "app");
@@ -13,26 +14,31 @@ const authenticatedRoutes = [
     name: "directory workers",
     source: path.join(sourceRoot, "(authenticated)", "directory", "workers", "page.tsx"),
     prefetch: path.join(prefetchRoot, "directory.ts"),
+    hydrationTest: path.join(frontendRoot, "features", "directory", "workers", "workers-page.test.tsx"),
   },
   {
     name: "settings roles",
     source: path.join(sourceRoot, "(authenticated)", "settings", "roles", "page.tsx"),
     prefetch: path.join(prefetchRoot, "roles.ts"),
+    hydrationTest: path.join(frontendRoot, "features", "settings", "roles", "roles-page.test.tsx"),
   },
   {
     name: "payroll runs",
     source: path.join(sourceRoot, "(authenticated)", "payroll", "runs", "page.tsx"),
     prefetch: path.join(prefetchRoot, "payroll.ts"),
+    hydrationTest: path.join(frontendRoot, "features", "payroll", "runs", "runs-page-content.test.tsx"),
   },
   {
     name: "HR assets",
     source: path.join(sourceRoot, "(authenticated)", "hr", "assets", "page.tsx"),
     prefetch: path.join(prefetchRoot, "hr.ts"),
+    hydrationTest: path.join(frontendRoot, "features", "hr", "assets", "assets-page.test.tsx"),
   },
   {
     name: "HR documents",
     source: path.join(sourceRoot, "(authenticated)", "hr", "documents", "page.tsx"),
     prefetch: path.join(prefetchRoot, "hr.ts"),
+    hydrationTest: path.join(frontendRoot, "features", "hr", "documents", "documents-page.test.tsx"),
   },
 ];
 
@@ -47,6 +53,19 @@ const assert = (condition, message) => {
 };
 const sourceHas = (source, needle, file) =>
   assert(source.includes(needle), `${path.relative(frontendRoot, file)} must contain ${needle}`);
+
+function callPositions(source, file, names) {
+  const parsed = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const positions = new Map(names.map((name) => [name, []]));
+  const visit = (node) => {
+    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression)) {
+      positions.get(node.expression.text)?.push(node.getStart(parsed));
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(parsed);
+  return positions;
+}
 
 const serverFetch = await read(path.join(frontendRoot, "lib", "server-fetch.ts"));
 sourceHas(serverFetch, 'import "server-only"', path.join(frontendRoot, "lib", "server-fetch.ts"));
@@ -75,10 +94,14 @@ const prefetchSources = new Map();
 for (const route of authenticatedRoutes) {
   const source = await read(route.source);
   const prefetch = prefetchSources.get(route.prefetch) ?? await read(route.prefetch);
+  const hydrationTest = await read(route.hydrationTest);
   prefetchSources.set(route.prefetch, prefetch);
 
-  const permissionIndex = source.lastIndexOf("await requirePermission");
-  const prefetchIndex = source.lastIndexOf("await prefetch");
+  const prefetchName = source.match(/await (prefetch[A-Za-z0-9_]*)\(/)?.[1];
+  assert(prefetchName, `${route.name} must await a named prefetch factory`);
+  const positions = callPositions(source, route.source, ["requirePermission", prefetchName]);
+  const permissionIndex = positions.get("requirePermission")?.[0] ?? -1;
+  const prefetchIndex = positions.get(prefetchName)?.[0] ?? -1;
   const boundaryIndex = source.lastIndexOf("<HydrationBoundary");
   assert(permissionIndex >= 0, `${route.name} must gate with requirePermission`);
   assert(prefetchIndex > permissionIndex, `${route.name} must prefetch after its permission gate`);
@@ -88,6 +111,9 @@ for (const route of authenticatedRoutes) {
   sourceHas(prefetch, "createServerQueryClient", route.prefetch);
   sourceHas(prefetch, "serverGet", route.prefetch);
   sourceHas(prefetch, "dehydrate", route.prefetch);
+  sourceHas(hydrationTest, "renders rows from the hydrated cache", route.hydrationTest);
+  sourceHas(hydrationTest, "not.toHaveBeenCalled", route.hydrationTest);
+  sourceHas(hydrationTest, "fetches from the API when HydrationBoundary carries no cache", route.hydrationTest);
 }
 
 for (const file of publicRoutes) {
@@ -102,6 +128,11 @@ const publicFetch = await read(path.join(frontendRoot, "lib", "public-fetch.ts")
 sourceHas(publicFetch, "export async function publicGet", path.join(frontendRoot, "lib", "public-fetch.ts"));
 sourceHas(publicFetch, "PUBLIC_REVALIDATE_SECS", path.join(frontendRoot, "lib", "public-fetch.ts"));
 assert(!publicFetch.includes("Authorization"), "publicGet must not send an authenticated Authorization header");
+
+const publicHtmlTestPath = path.join(frontendRoot, "lib", "prefetch", "public-help-first-html.test.tsx");
+const publicHtmlTest = await read(publicHtmlTestPath);
+sourceHas(publicHtmlTest, "renders landing data into the first server HTML", publicHtmlTestPath);
+sourceHas(publicHtmlTest, "renders article data into the first server HTML", publicHtmlTestPath);
 
 const buildIdPath = path.join(buildRoot, "BUILD_ID");
 const appManifestPath = path.join(buildRoot, "server", "app-paths-manifest.json");
