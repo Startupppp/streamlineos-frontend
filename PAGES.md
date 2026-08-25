@@ -253,7 +253,7 @@ Full text of any pre-2026-08-03 entry is in git history.
 
 **2026-07-18**
 - `PermissionGuard` denies guarded handlers with no permission metadata; explicit permissions evaluated before privileged bypasses; controller-wide metadata audit.
-- Public pricing/legal copy matched to the Free-plan 5-member limit; `POST /public/contact` validated + rate-limited.
+- Public pricing/legal copy matched to the Free-plan 5-member limit; `POST /public/contact` and `POST /public/waitlist` validated + rate-limited (5/hour, Turnstile-verified).
 - Production passwordless redirect loop fixed (`__Secure-authjs.session-token` checked first).
 - Feedbucket snapDOM R2 CSP + CORS fixes.
 
@@ -482,12 +482,13 @@ an accountant-label toggle on every report.
 ### Onboarding & Auth
 - [x] `/org-setup` — Welcome → Basics (goals + modules merged) → Launch; draft + step resume; ceremonial generation with dedicated failure recovery
 - [x] `/employee-onboarding` — Shell-free wizard; never shown to owners/platform admins; HR-prefilled personal/bank data with employee-overridable drafts; value-level review/edit; country-driven documents/bank/payroll
-- [x] `/signin` — The only account entry (`/signup` retired) · `/magic-link` · `/verify-email` · `/accept-invitation` · `/invitation/[token]`
+- [x] `/signin` — The only account entry (`/signup` retired), reachable by URL only — marketing surfaces send new visitors to `/waitlist` · `/magic-link` · `/verify-email` · `/accept-invitation` · `/invitation/[token]`
 - [x] `/access-suspended` — Recovery screen for an organization-only suspension (`resolveWizardGate`); recheck access, switch to another ACTIVE membership, or sign out; org creation intentionally unavailable
 - [x] `/access-denied` · `/build/client-access`
 
 ### Public (no auth)
 - [x] `/` · `/about` · `/pricing` · `/contact` · `/legal/privacy` · `/legal/terms` · `/legal/security`
+- [x] `/waitlist` — The landing page's only entry point; `/signin` is no longer linked from any marketing surface. Collects name, work email, organization, role and team size into `platform_waitlist` via `POST /public/waitlist`, then emails `WAITLIST_NOTIFICATION_EMAILS` and confirms to the signup
 - [x] `/blogs` · `/blogs/[slug]` · `/blogs/category/[slug]` · `/blogs/tag/[tag]`
 - [x] `/careers/[orgSlug]` · `/careers/[orgSlug]/jobs/[jobId]/apply` · `/application-status/[token]` · `/interview-booking/[token]` · `/offer/[token]`
 - [x] `/help/[orgId]` · `/help/[orgId]/[slug]` · `/wiki/[shareToken]` · `/board/[shareToken]` · `/roadmap/[orgId]`
