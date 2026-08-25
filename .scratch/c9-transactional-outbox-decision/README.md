@@ -26,6 +26,22 @@ travel in `payload` by convention, and TTL would need re-implementing. Both are 
 a real column and TTL is already applied downstream. The domain bus keeps carrying domain facts; its
 consumers translate them into intents through the same one `emit()`.
 
+## The reading of "one way to emit", stated plainly
+
+Two APIs still exist, and that is deliberate: `OutboxWriter.emit(tx, …)` for a **domain fact**
+("the sprint completed"), `dispatch.emit(…)` for a **notification intent** ("tell these people").
+What was eliminated is the genuine duplication — two ways to durably emit a *notification*, one of
+which silently lost them.
+
+A stricter reading of the ticket wants a single API for both. That was rejected: most notification
+call sites already know their recipients, so they would be emitting a "domain event" whose payload
+is `{targetUserIds, title, message}`. That is not a domain event; it fakes one to reuse a bus, and
+it is how the recipients-in-payload convention would have got in.
+
+**So the honest scorecard is:** one way to emit a domain fact, one way to emit a notification, and
+the consumers that bridge them use the same `emit()` as everyone else. If the intent was one API
+across both levels, this ticket does not deliver that, and should not be read as having done so.
+
 ## What was actually wrong
 
 **`dispatch.emit()` was not durable, and it was the dominant path — 49 call sites across 34 files.**
@@ -54,6 +70,25 @@ the gap where hooks run outside the context, then **deliberately discarded the d
 simulate a crash**: the intent survived as PENDING, `relay flush -> {"claimed":1,"processed":1}`
 recovered it, and a real notification row appeared. Under the old code that emission left no row at
 all. **465 DELIVERED rows unchanged.**
+
+## What code review caught that the work had missed
+
+Two axes were run against the diff. Both landed real hits.
+
+- **The drain swallowed its own failure**, catching and logging at `warn` — the exact thing
+  `backend/CLAUDE.md` §4 forbids, and a downgrade from the `error` the old code used. Fixed by not
+  catching at all: the intent is committed, so a throw leaves the row PENDING for the relay *and*
+  reaches the interceptor's `reportError`. Better observability and less code.
+- **A replay could double-deliver.** The relay's comment claimed the unique delivery idempotency key
+  made replays safe. False for the **9 events that set `dedupeWindowSeconds: 0`** — mentions, DMs,
+  invites, where repeats are legitimate — because the key falls back to a fresh uuid and never
+  collides. Routing all traffic through the outbox made this reachable. The row's `dedupeKey` is now
+  the idempotency discriminator, proven live on a zero-window event: a replayed row delivered
+  nothing the second time.
+
+The review also flagged the missing **relay test** — there was no spec for it at all. There is one
+now: crash recovery, dedupe key, retry, dead-lettering. Both new guards were checked by reverting
+them and watching the tests fail.
 
 ## Earlier findings worth keeping
 
