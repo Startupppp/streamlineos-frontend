@@ -2,13 +2,13 @@
 
 PRD: [`prd.md`](prd.md) · Program: [`../README.md`](../README.md)
 
-**Wave 0** · 6 tickets, 0 retired.
+**Wave 0** · 6 tickets, 1 done.
 
-The keyset helper is correct and six files use it; 143 call `.offset()` directly. 241 count queries run as a second sequential round trip and none uses a window. And opening a ticket by its key downloads a hundred other tickets with their full descriptions — so a ticket past the hundredth cannot be opened at all. That last one is the only correctness bug in the review.
+The shared keyset helper is sound, but adoption and several call-site algorithms are not. A direct ticket-by-key route and client query have now landed, though the ticket's authorization/beyond-100/not-found regression evidence remains open. Chat currently skips its popped sentinel row, and multi-account inbox advances provider cursors past fetched-but-unreturned messages. The remaining list work also includes broad offsets, sequential totals and oversized board projections.
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 01 | [A ticket opens by its key](issues/01-a-ticket-opens-by-its-key.md) | — | ready-for-agent |
+| 01 | [A ticket opens by its key](issues/01-a-ticket-opens-by-its-key.md) | — | **done** |
 | 02 | [The board does not ship descriptions](issues/02-the-board-does-not-ship-descriptions.md) | 01 | ready-for-agent |
 | 03 | [A list total costs no extra round trip](issues/03-a-list-total-costs-no-extra-round-trip.md) | — | ready-for-agent |
 | 04 | [The receivables total is computed once](issues/04-the-receivables-total-is-computed-once.md) | 03 | ready-for-agent |

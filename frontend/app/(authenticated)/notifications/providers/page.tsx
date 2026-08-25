@@ -555,9 +555,9 @@ function ProviderRow({
             variant="ghost"
             size="icon"
             className="h-6 w-6"
+            aria-label="Test provider"
             onClick={handleTestClick}
             disabled={isTesting}
-            title="Test"
           >
             <FlaskConical className="h-3 w-3 text-muted-foreground" />
           </Button>
@@ -565,8 +565,8 @@ function ProviderRow({
             variant="ghost"
             size="icon"
             className="h-6 w-6"
+            aria-label="Edit provider"
             onClick={handleEditClick}
-            title="Edit"
             {...editAnim.hoverHandlers}
           >
             <UserPenIcon ref={editAnim.iconRef} size={12} className="text-muted-foreground" />
@@ -575,8 +575,8 @@ function ProviderRow({
             variant="ghost"
             size="icon"
             className="h-6 w-6 hover:text-destructive"
+            aria-label="Delete provider"
             onClick={handleDeleteClick}
-            title="Delete"
             {...deleteAnim.hoverHandlers}
           >
             <Trash2Icon ref={deleteAnim.iconRef} size={12} className="text-muted-foreground" />

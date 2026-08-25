@@ -1,6 +1,6 @@
-# Architecture refactor — 2026-08-25
+# Architecture refactor — final review, 2026-08-26
 
-The complete program from the final architecture review: **18 PRDs and 87 tickets**, self-contained in this folder so it does not mix with the other work in `docs/`.
+The complete program from the final architecture review: **18 PRDs and 90 tickets**, self-contained in this folder so it does not mix with the other work in `docs/`.
 
 Each candidate folder holds its PRD and its tickets together:
 
@@ -18,7 +18,7 @@ The nine candidates from the 2026-08-23 review (c1–c9) are **all closed**; the
 
 **The architecture does not need replacing.** Zero import cycles in both repos. Zero unused frontend files across 4,429. Zero arbitrary colour classes across 591k lines. Zero `useEffect` firing an API call. CI rebuilds the database from empty. The RBAC model as originally envisioned is substantially already built.
 
-What four passes found was not systemic decay. It was concentrated problems and two structural gaps: **the instrument that proves a query is fast is pointed at two queries, and nothing reports a failure in production.**
+What the passes found was not systemic decay. It was concentrated correctness and scale failures around omission-proof authorization, list cursors, commercial billing truth, calendar expansion, durable knowledge ingestion and production signal delivery. Existing deep modules are explicitly preserved.
 
 ## Wave 0 — stops a loss, fixes a live bug, or makes the rest observable
 
@@ -42,20 +42,20 @@ Start with **c20-01**. It is an afternoon, and it surfaces every other Wave 0 it
 | [c14 — Background sweeps operate on sets, not on rows](c14-set-based-sweeps/README.md) | 3 | 0 | **3** |
 | [c21 — Right models, right throughput — fan-out, retention and polling](c21-fanout-retention-and-polling/README.md) | 7 | 0 | **7** |
 | [c22 — Scheduled work runs once, and a deploy sheds no requests](c22-scheduled-work-and-deploy-safety/README.md) | 4 | 2 | **2** |
-| [c25 — Authorization cannot be omitted](c25-authorization-cannot-be-omitted/README.md) | 3 | 0 | **3** |
-| [c26 — Commercial billing is a versioned ledger](c26-commercial-billing-ledger/README.md) | 5 | 0 | **5** |
+| [c25 — Authorization cannot be omitted](c25-authorization-cannot-be-omitted/README.md) | 4 | 0 | **4** |
+| [c26 — Commercial billing is a versioned ledger](c26-commercial-billing-ledger/README.md) | 6 | 0 | **6** |
 | [c27 — Indexed knowledge obeys the same visibility as direct reads](c27-permissioned-knowledge-index/README.md) | 5 | 0 | **5** |
-| | **30** | **2** | **28** |
+| | **32** | **2** | **30** |
 
 ## Wave 2 — mechanical, parallelisable
 
 | Candidate | Tickets | Done | Open |
 |---|---|---|---|
-| [c16 — The schema says what it means](c16-schema-says-what-it-means/README.md) | 7 | 0 | **7** |
+| [c16 — The schema says what it means](c16-schema-says-what-it-means/README.md) | 8 | 0 | **8** |
 | [c18 — Removals are proved, not grepped](c18-removals-are-proved/README.md) | 4 | 0 | **4** |
 | [c23 — A tenant extends the product without a deploy](c23-tenant-extensibility-without-migrations/README.md) | 5 | 0 | **5** |
 | [c24 — The design system is the only way to build a screen](c24-frontend-consistency-and-access/README.md) | 5 | 0 | **5** |
-| | **21** | **0** | **21** |
+| | **22** | **0** | **22** |
 
 ## Wave 3 — the read side
 
@@ -64,18 +64,20 @@ Start with **c20-01**. It is an afternoon, and it surfaces every other Wave 0 it
 | [c10 — Make module-level standing answerable](c10-module-role-standing/README.md) | 5 | 0 | **5** |
 | | **5** | **0** | **5** |
 
-**87 tickets → 3 done, 84 open.**
+**90 tickets → 3 done, 87 open.**
 
-## The six that matter most
+## The eight that matter most now
 
 | Ticket | Why it is first |
 |---|---|
-| [c20-01](c20-failures-are-visible/issues/01-errors-reach-a-person.md) | Zero error tracking exists. This is why every finding in the review had to be found by a person reading source. |
+| [c20-01](c20-failures-are-visible/issues/01-errors-reach-a-person.md) | The structured/redacted reporter seam exists, but both production adapters are no-op; failures still do not reach a person. |
 | [c17-02](c17-billing-writes-are-provable/issues/02-a-webhook-acknowledges-only-durable-work.md) | A customer can pay and not be credited, and nothing knows to retry. |
-| [c19-01](c19-cache-keys-cannot-be-unsafe/issues/01-the-books-are-correct-when-an-entry-posts.md) | Post a journal entry and the books are wrong for five minutes. One line. |
-| [c13-01](c13-one-list-contract/issues/01-a-ticket-opens-by-its-key.md) | The only correctness bug in the review — a ticket past #100 cannot be opened at all. |
-| [c15-02](c15-outbound-io-leaves-the-request/issues/02-the-three-providers-adopt-the-deadline.md) | Three providers with no deadline, inside a transaction that spans the whole request. |
-| [c12-02](c12-text-search-id-probe/issues/02-global-search-uses-the-probes.md) | The highest-traffic query in the product is five parallel sequential scans. |
+| [c25-01](c25-authorization-cannot-be-omitted/issues/01-every-route-declares-exposure.md) | A new authenticated route can omit permission metadata and still ship; runtime classification must deny absence. |
+| [c25-04](c25-authorization-cannot-be-omitted/issues/04-rls-coverage-is-a-release-invariant.md) | The RLS verifier prints missing coverage but never fails, and CI does not run it. |
+| [c13-05](c13-one-list-contract/issues/05-scrolled-lists-page-by-cursor.md) | Chat skips one row per full page and multi-account inbox advances past rows it never returned. |
+| [c26-06](c26-commercial-billing-ledger/issues/06-one-subscription-truth.md) | Platform administration reads an unwritten shadow subscription table and an unbounded customer query. |
+| [c16-03](c16-schema-says-what-it-means/issues/03-a-recurring-event-recurs.md) | Recurrence columns are persisted but never expanded; calendar correctness is not implemented. |
+| [c27-02](c27-permissioned-knowledge-index/issues/02-one-ingestion-state-machine.md) | Article embedding holds request/transaction resources while page indexing is detached but not durable. |
 
 ## Rules that apply to every ticket here
 

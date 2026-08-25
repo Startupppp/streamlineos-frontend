@@ -116,7 +116,7 @@ export function LogicRulesSection({ surveyId, question, sections, rules }: Logic
       {questionRules.map((rule) => (
         <div key={rule.id} className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm">
           <TruncatedText text={summarizeRule(rule)} className="flex-1" />
-          <AnimatedIconButton icon={Trash2Icon} iconSize={14} iconClassName="text-destructive" variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => handleDelete(rule.id)} />
+          <AnimatedIconButton icon={Trash2Icon} iconSize={14} iconClassName="text-destructive" variant="ghost" size="icon" className="h-7 w-7 shrink-0" aria-label="Delete logic rule" onClick={() => handleDelete(rule.id)} />
         </div>
       ))}
 

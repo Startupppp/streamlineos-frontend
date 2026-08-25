@@ -289,6 +289,7 @@ export function KanbanColumnHeader({
                   variant="ghost"
                   size="icon"
                   className="h-6 w-6 text-muted-foreground"
+                  aria-label="Column actions"
                   {...hoverHandlers}
                 >
                   <EllipsisIcon ref={iconRef} size={14} />

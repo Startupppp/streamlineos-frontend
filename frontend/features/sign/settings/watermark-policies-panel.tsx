@@ -57,7 +57,7 @@ export function WatermarkPoliciesPanel() {
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <Switch checked={policy.enabled} onCheckedChange={(v) => handleToggle(policy.id, v)} />
-                <AnimatedIconButton variant="ghost" size="icon" icon={Trash2Icon} className="size-8" onClick={() => handleDelete(policy.id)} />
+                <AnimatedIconButton variant="ghost" size="icon" icon={Trash2Icon} className="size-8" aria-label="Delete watermark policy" onClick={() => handleDelete(policy.id)} />
               </div>
             </div>
           ))

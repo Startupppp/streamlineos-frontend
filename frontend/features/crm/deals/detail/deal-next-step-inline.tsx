@@ -50,7 +50,7 @@ export function DealNextStepInline({ dealId, nextStep }: DealNextStepInlineProps
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-base">Next Step</CardTitle>
         {!editing && (
-          <Button variant="ghost" size="icon" className="w-7" onClick={handleEdit}>
+          <Button variant="ghost" size="icon" className="w-7" aria-label="Edit next step" onClick={handleEdit}>
             <Pencil className="h-3.5 w-3.5" />
           </Button>
         )}

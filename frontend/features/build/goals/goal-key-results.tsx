@@ -88,6 +88,7 @@ const KeyResultRow = memo(function KeyResultRow({ kr, index, onUpdate, onRemove 
           icon={Trash2Icon}
           iconSize={14}
           className="w-8 text-destructive hover:text-destructive shrink-0"
+          aria-label="Remove key result"
           onClick={handleRemove}
         />
       </div>

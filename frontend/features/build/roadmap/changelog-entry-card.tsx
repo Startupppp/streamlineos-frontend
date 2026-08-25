@@ -94,13 +94,14 @@ export const ChangelogEntryCard = memo(function ChangelogEntryCard({
           >
             {entry.isPublished ? "Unpublish" : "Publish"}
           </Button>
-          <Button size="icon" variant="ghost" className="w-7" onClick={handleEdit}>
+          <Button size="icon" variant="ghost" className="w-7" aria-label="Edit changelog entry" onClick={handleEdit}>
             <Pencil className="h-3 w-3" />
           </Button>
           <AnimatedIconButton
             size="icon"
             variant="ghost"
             className="w-7 text-destructive hover:text-destructive"
+            aria-label="Delete changelog entry"
             onClick={handleDelete}
             icon={Trash2Icon}
             iconSize={12}

@@ -6,6 +6,8 @@
 
 Changing a price constant rewrites the meaning of every existing subscription. An enterprise exception has nowhere durable to live. “Seat” is not a first-class billable item, so membership and billing can drift. Mid-cycle changes cannot be reconstructed from immutable proration lines. An invoice denominated only by today’s plan constants cannot prove what was sold, in which currency, under which tax rule.
 
+There are also two competing subscription tables. Runtime billing, setup and cron flows write `subscriptions`; platform administration reads `platform_subscriptions`, for which no source writer exists. A paid tenant can therefore appear free, and the platform customer read is unbounded with correlated counts and sums per organisation.
+
 ## Solution
 
 Keep provider adapters and the cached entitlement resolver. Put a versioned commercial ledger behind them:
@@ -33,6 +35,7 @@ Provider state is evidence, not authority. Webhooks update the local ledger idem
 - Plan/price/limit constants as the historical record.
 - Seat counts derived independently in billing and membership.
 - Recomputed proration or tax after issue.
+- `platform_subscriptions` as a shadow read model with no writer, and the unbounded platform customer query built on it.
 
 The organisation billing currency becomes immutable after the first paid invoice; changing it creates a new subscription/price context. Each invoice stores seller/buyer tax identity, place of supply, tax rates, inclusive/exclusive behavior, rounding policy and provider references as issued facts. FX conversions store the rate source, rate and timestamp used.
 

@@ -124,6 +124,7 @@ export function KnowledgeGapCard({
             iconSize={12}
             size="sm"
             variant="ghost"
+            aria-label="Dismiss knowledge gap"
             onClick={handleDismiss}
             disabled={isDismissing}
             className="h-7 w-7 p-0 ml-auto text-muted-foreground hover:text-destructive"

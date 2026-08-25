@@ -83,7 +83,7 @@ function TemplateRow({ template }: { template: SignTemplate }) {
         )}
         {canManageTemplates && <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="size-8" {...ellipsisHover}>
+            <Button variant="ghost" size="icon" className="size-8" aria-label="Template actions" {...ellipsisHover}>
               <EllipsisIcon ref={ellipsisRef} className="size-4" />
             </Button>
           </DropdownMenuTrigger>

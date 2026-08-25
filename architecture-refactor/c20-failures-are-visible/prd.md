@@ -1,6 +1,6 @@
 # c20 · A failure in production is visible
 
-**Status: nothing exists.** Verified at source 2026-08-25. Both `package.json` files were grepped for Sentry, OpenTelemetry, Datadog, New Relic, Bugsnag, `prom-client`, `pino` and `winston` — **zero hits**. Logging is `console` through a hand-rolled logger restricted to `warn`, `error` and `fatal` in production. Health endpoints exist and nothing scrapes them. This is the connective tissue behind a large share of the whole review: at least ten known places swallow a failure, and there is no mechanism that would tell anyone.
+**Status: the observability seam exists; production delivery does not.** Re-verified at source 2026-08-26. Structured JSON logging, redaction, async correlation context and backend/frontend error-reporter ports have landed. Both ports default to no-op, `setErrorReporter` has no production caller, and no alert destination is wired. Keep this implementation and finish the adapter and operational delivery; do not rebuild it.
 
 ## Problem Statement
 
@@ -20,7 +20,7 @@
 
 Three steps, deliberately small and in this order.
 
-**Error tracking first.** Sentry in both repos. This is an afternoon of work and it surfaces every swallowed failure listed above immediately, plus the tenant-context class that has caused real incidents here.
+**Production error-reporting adapters first.** Wire the existing backend and frontend ports to the chosen provider, with release markers and scrubbing. This surfaces swallowed failures without replacing the structured/redacted module that has already landed.
 
 **Structured logs on the correlation id that already exists.** Emit JSON and ship it, so a request can be followed across the guard, the service and the outbox.
 
@@ -63,7 +63,7 @@ Explicitly **not** full APM, distributed tracing, a metrics time-series database
 
 **To build**
 
-- **Sentry in both repos**, with release markers, the correlation id as a tag, and organisation and user as context. First, because it is the step that makes everything else discoverable.
+- **A production reporter adapter in both repos**, with release markers, the correlation id as a tag, and organisation and user as context. The provider is an adapter decision, not embedded in callers.
 - **Scrubbing before send.** Deny-list request bodies, authorization headers, tokens and known personal-data fields. This is a precondition of enabling error tracking, not a follow-up — an error report is an outbound channel and story 19 is the constraint.
 - **Structured JSON logging** replacing the hand-rolled console logger, carrying the correlation id, and shipped. Keep production levels as they are; the change is format and destination, not verbosity.
 - **The ten swallowed failures are converted to reported failures.** Not every one becomes a thrown error — the realtime publishes are legitimately non-fatal — but every one becomes *visible*. The rule is that a caught error is either handled or reported, never discarded.

@@ -133,7 +133,7 @@ function PreviewPanel() {
 function DeleteTerritoryButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <Button variant="ghost" size="icon" className="w-7 text-destructive" onClick={onClick} {...hoverHandlers}>
+    <Button variant="ghost" size="icon" className="w-7 text-destructive" aria-label="Delete territory" onClick={onClick} {...hoverHandlers}>
       <Trash2Icon ref={iconRef} size={14} />
     </Button>
   );

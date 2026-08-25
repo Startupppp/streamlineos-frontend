@@ -378,8 +378,8 @@ function BroadcastRow({
             variant="ghost"
             size="icon"
             className="h-6 w-6"
+            aria-label="Cancel broadcast"
             onClick={handleCancelClick}
-            title="Cancel"
           >
             <X className="h-3 w-3 text-muted-foreground" />
           </Button>
@@ -389,8 +389,8 @@ function BroadcastRow({
             variant="ghost"
             size="icon"
             className="h-6 w-6"
+            aria-label="Edit broadcast"
             onClick={handleEditClick}
-            title="Edit"
             {...editAnim.hoverHandlers}
           >
             <UserPenIcon ref={editAnim.iconRef} size={12} className="text-muted-foreground" />
@@ -401,8 +401,8 @@ function BroadcastRow({
             variant="ghost"
             size="icon"
             className="h-6 w-6 hover:text-destructive"
+            aria-label="Delete broadcast"
             onClick={handleDeleteClick}
-            title="Delete"
             {...deleteAnim.hoverHandlers}
           >
             <Trash2Icon ref={deleteAnim.iconRef} size={12} className="text-muted-foreground" />

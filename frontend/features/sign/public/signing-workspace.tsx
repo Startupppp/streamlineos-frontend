@@ -74,13 +74,13 @@ export function SigningWorkspace({
       </div>
 
       <div className="shrink-0 flex items-center justify-center gap-3 border-b border-border py-2 bg-background">
-        <Button variant="ghost" size="icon" className="size-7" disabled={currentPage <= 1} onClick={() => setCurrentPage(currentPage - 1)}>
+        <Button variant="ghost" size="icon" className="size-7" aria-label="Previous page" disabled={currentPage <= 1} onClick={() => setCurrentPage(currentPage - 1)}>
           <ChevronLeft className="size-4" />
         </Button>
         <span className="text-xs text-muted-foreground">
           Page {currentPage} of {pageCount}
         </span>
-        <Button variant="ghost" size="icon" className="size-7" disabled={currentPage >= pageCount} onClick={() => setCurrentPage(currentPage + 1)}>
+        <Button variant="ghost" size="icon" className="size-7" aria-label="Next page" disabled={currentPage >= pageCount} onClick={() => setCurrentPage(currentPage + 1)}>
           <ChevronRight className="size-4" />
         </Button>
       </div>

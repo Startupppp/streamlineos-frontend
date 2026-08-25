@@ -67,7 +67,7 @@ export function DealCompetitorsCard({ dealId }: DealCompetitorsCardProps) {
     <Card className="shadow-noir">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-base">Competitors</CardTitle>
-        <Button variant="ghost" size="icon" className="w-7" onClick={handleStartAdding}>
+        <Button variant="ghost" size="icon" className="w-7" aria-label="Add competitor" onClick={handleStartAdding}>
           <Plus className="h-3.5 w-3.5" />
         </Button>
       </CardHeader>

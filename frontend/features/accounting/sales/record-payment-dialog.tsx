@@ -82,6 +82,7 @@ function AllocationRow({ index, register, onRemove }: AllocationRowProps) {
         variant="ghost"
         size="icon"
         className="w-7 shrink-0"
+        aria-label="Remove allocation"
         onClick={handleRemove}
         {...hoverHandlers}
       >

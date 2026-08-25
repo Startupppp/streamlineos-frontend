@@ -175,6 +175,7 @@ export default function LiveChatWidgetPage() {
                 <LoadingButton
                   type="button"
                   size="icon"
+                  aria-label="Send message"
                   disabled={!draft.trim()}
                   isPending={sendMessage.isPending}
                   onClick={handleSend}

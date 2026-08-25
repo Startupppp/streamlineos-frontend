@@ -2,9 +2,9 @@
 
 PRD: [`prd.md`](prd.md) · Program: [`../README.md`](../README.md)
 
-**Wave 2** · 7 tickets, 0 done.
+**Wave 2** · 8 tickets, 0 done.
 
-809+ tables, 1,210 tenant-led indexes, 654 composite tenant foreign keys, 79 org triggers, RLS everywhere. **The schema is in good shape and this is not a redesign.** Six tickets fix the places where the schema states something other than the truth. Two of them share a shape: a column that records an intention nobody implemented.
+809+ tables, 1,210 tenant-led indexes, 654 composite tenant foreign keys, 79 org triggers and broad RLS coverage. **The schema is in good shape and this is not a redesign.** Eight tickets fix places where the schema or read/write implementation states something other than the truth. RLS enforcement itself is tracked by c25-04 because the current verifier reports coverage without gating it.
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
@@ -15,6 +15,8 @@ PRD: [`prd.md`](prd.md) · Program: [`../README.md`](../README.md)
 | 05 | [Every audit row names its tenant](issues/05-every-audit-row-names-its-tenant.md) | — | ready-for-agent |
 | 06 | [Candidate résumé text leaves the row](issues/06-candidate-resume-text-leaves-the-row.md) | — | ready-for-agent |
 | 07 | [Free/busy and conflict checks expand the same calendar series](issues/07-free-busy-and-conflicts-share-expansion.md) | 02, 03 | ready-for-agent |
+| 08 | [Calendar sources obey one bounded overlap contract](issues/08-calendar-sources-obey-one-bounded-overlap-contract.md) | 02, 03, 07 | ready-for-agent |
+| 09 | [A leave policy that says it restricts, does](issues/09-a-leave-policy-that-says-it-restricts-does.md) | — | ready-for-agent |
 
 ## Working these
 

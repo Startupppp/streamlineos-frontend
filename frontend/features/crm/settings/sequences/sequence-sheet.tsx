@@ -143,6 +143,7 @@ function StepsTab({ sequenceId }: { sequenceId: string }) {
               variant="ghost"
               size="icon"
               className="w-7 shrink-0 text-muted-foreground hover:text-destructive"
+              aria-label="Delete step"
               onClick={() => handleDeleteStep(step.id)}
               disabled={deleteStep.isPending}
             >

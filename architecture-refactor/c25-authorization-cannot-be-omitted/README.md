@@ -2,7 +2,7 @@
 
 PRD: [`prd.md`](prd.md) · Program: [`../README.md`](../README.md)
 
-**Wave 1** · 3 tickets, 0 done.
+**Wave 1** · 4 tickets, 0 done.
 
 The permission resolver is deep and the SQL scope predicates are sound. The external seam is not: `PermissionGuard` is opt-in, so a new authenticated route can ship without declaring whether it is public, universal self-service or permissioned. These tickets make absence deny at runtime and in CI.
 
@@ -11,6 +11,7 @@ The permission resolver is deep and the SQL scope predicates are sound. The exte
 | 01 | [Every route declares its exposure](issues/01-every-route-declares-exposure.md) | — | ready-for-agent |
 | 02 | [Object access and DataScope share one query seam](issues/02-object-access-and-scope-share-one-query-seam.md) | 01 | ready-for-agent |
 | 03 | [The authorization matrix fails closed in CI](issues/03-authorization-matrix-fails-closed.md) | 01, 02 | ready-for-agent |
+| 04 | [RLS coverage is a release invariant](issues/04-rls-coverage-is-a-release-invariant.md) | — | ready-for-agent |
 
 ## Working these
 

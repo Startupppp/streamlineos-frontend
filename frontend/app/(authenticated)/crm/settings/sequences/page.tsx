@@ -140,6 +140,7 @@ export default function SequencesPage() {
             variant="ghost"
             size="icon"
             className="w-7 text-muted-foreground hover:text-foreground"
+            aria-label="Edit sequence"
             onClick={() => handleOpenEdit(seq)}
           >
             <Pencil className="h-3.5 w-3.5" />
@@ -148,6 +149,7 @@ export default function SequencesPage() {
             variant="ghost"
             size="icon"
             className="w-7 text-muted-foreground hover:text-destructive"
+            aria-label="Delete sequence"
             onClick={() => handleDeleteRequest(seq.id)}
           >
             <Trash2 className="h-3.5 w-3.5" />

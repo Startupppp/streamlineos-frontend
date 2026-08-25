@@ -1,6 +1,6 @@
 # c16 · The schema says what it means
 
-**Status: not started; four defects, no rewrite.** Verified at source 2026-08-25. 809–843 tables, 1,872 declared indexes of which 1,210 lead with the tenant column, 654 composite tenant foreign keys, 79 self-maintaining `org_id` triggers, RLS live on every tenant table. **The schema is in good shape** and this spec proposes no redesign. It names four places where the schema states something other than the truth, and one convention that should stop spreading.
+**Status: not started; targeted defects, no rewrite.** Re-verified at source 2026-08-26. The large schema has strong composite tenant foreign keys, tenant-led indexes, self-maintaining `org_id` triggers and broad RLS coverage. **The schema is in good shape** and this spec proposes no redesign. It names places where schema or read/write behavior states something other than the truth, plus conventions that should stop spreading. c25-04 separately turns RLS coverage and policy shape into a release invariant.
 
 ## Problem Statement
 
@@ -23,6 +23,8 @@ Four targeted changes. No rewrite, no key-type migration, no partitioning.
 **Name a winner for person identity.** One table owns identity; the other holds only what is specific to it, and the link becomes a real foreign key. Which one wins is the whole decision and it must be made explicitly rather than by writing a sync.
 
 **Give calendar events a timezone.** Store the instant and the originating zone, so a recurring event can expand correctly across a DST boundary. Then either implement recurrence expansion or drop the columns that pretend it exists.
+
+**Give every calendar source one bounded overlap contract.** Native reads currently fetch all rows whose start lies in the range, the aggregate sorts everything in memory, and Outlook update/delete can silently do nothing. Each adapter must query interval overlap, apply a stable cursor and hard cap before materialization, and expose mutation capabilities explicitly. The relational attendee table becomes canonical; the JSONB id copy is reconciled and removed.
 
 **Normalise invoice line items** to match quotes, which already does it correctly.
 

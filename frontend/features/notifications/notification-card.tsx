@@ -61,9 +61,9 @@ function TrashButton({
       variant="ghost"
       size="icon"
       className="h-6 w-6 shrink-0 hover:text-destructive"
+      aria-label="Delete notification"
       onClick={onClick}
       disabled={isDeleting}
-      title="Delete"
       {...hoverHandlers}
     >
       <Trash2Icon ref={iconRef} size={12} />
@@ -253,9 +253,9 @@ export function NotificationCard({
                 variant="ghost"
                 size="icon"
                 className="h-6 w-6 shrink-0"
+                aria-label="Archive notification"
                 onClick={handleArchive}
                 disabled={isArchiving}
-                title="Archive"
               >
                 <Archive className="h-3 w-3 text-muted-foreground" />
               </Button>
@@ -265,9 +265,9 @@ export function NotificationCard({
                 variant="ghost"
                 size="icon"
                 className="h-6 w-6 shrink-0"
+                aria-label={pinned ? "Unpin notification" : "Pin notification"}
                 onClick={handlePin}
                 disabled={isPinning}
-                title={pinned ? "Unpin" : "Pin"}
               >
                 {pinned ? (
                   <PinOff className="h-3 w-3 text-status-warning-ink" />

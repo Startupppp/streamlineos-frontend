@@ -10,11 +10,11 @@
 
 **As a user, "mark all read" on 50,000 notifications is 50,000 updates.** Chat uses a watermark and is correct. Notifications use a per-row boolean, so a bulk action is a bulk write.
 
-**As a user, my notification list pages incorrectly.** It pages by id below a cursor while ordering by creation time descending. The two orderings disagree, so rows are skipped or repeated at page boundaries.
+**Notification ordering drift is fixed; boundary proof remains.** The current notification read now orders and cursors by id. Keep the tied-timestamp/no-gap regression test so the former mismatch cannot return. Chat and multi-account inbox still have active cursor defects covered by c13-05.
 
 **As an operator, polling is the dominant cost.** At 50k concurrent sessions the fixed intervals total about 22,000 requests per second — and the support chat widget at a four-second interval alone accounts for 12,500 of them, more than every other poll combined. **None of it is suppressed when the realtime connection is live** — though see the correction at the foot of this document: only one hook is actually *eligible* for suppression.
 
-**As a user, my inbox re-fetches from the provider on every render.** Mail is a pure bridge with nothing persisted, so each render round-trips to the provider: 100–500 ms, a billable call per view, exposure to per-project quotas, and **no search or threading without re-querying**.
+**As a user, my inbox re-fetches from the provider on every render.** Mail is a pure bridge with nothing persisted, so each render round-trips to the provider: 100–500 ms, a billable call per view, exposure to per-project quotas, and **no search or threading without re-querying**. Its multi-account merge also fetches a full page per provider, returns only the global slice, then advances every provider cursor; unreturned messages are lost from subsequent pages.
 
 ## Solution
 
@@ -69,12 +69,14 @@
 - **Broadcasts: one row plus read receipts.** Unread state for a broadcast is the absence of a receipt. Delivery through the existing dispatch pipeline so preferences, quiet hours and email are applied.
 - **Per-user notifications stay fan-out-on-write.** Stated explicitly so the change is not over-applied.
 - **Partition notifications, chat messages and the notification outbox**, then retain by detaching. Partitioning is the prerequisite; a bulk delete on a table of this size is an outage.
+- **Widen chat message identity before partitioning.** `chat_messages` remains int4 and stops accepting inserts at 2,147,483,647, below this PRD's own volume projection. Use an online expand/backfill/cutover/contract migration for every dependent key.
 - **A stated retention window per table**, recorded rather than implied.
 - **Notification unread becomes a watermark.** The monotonic id is the cursor.
-- **Fix the notification cursor**: page and order on the same column. Ordering by creation time and paging by id is the defect.
+- **Preserve notification cursor parity** with a boundary regression test; current source now pages and orders on id.
 - **Add the tenant column to the chat unread index.** Under row-level security an index omitting it is skipped by the planner, so the index exists and does nothing.
 - **Suppress polling while realtime is connected**, with polling as the fallback when it is not. Raise the support widget's interval and drive it from realtime.
 - **Mail metadata cache, populated by provider push webhooks. Bodies are never persisted.** This bounds the change and keeps the product out of mail hosting.
+- **Mail paging carries per-account consumption state.** A composite server-authenticated cursor cannot advance a provider past rows fetched but not returned in the global merge.
 - **Mail metadata is keyed and authorized per user**, not per organisation.
 - **One delivery policy classifies every event.** Security, ownership, payment and legal events are mandatory transactional delivery; operational events respect user channel preferences and quiet hours; marketing requires separate consent. Every producer emits an event key and never selects a provider directly.
 

@@ -81,7 +81,7 @@ const InsightRow = memo(function InsightRow({
             variant="ghost"
             size="icon"
             className="h-6 w-6 text-micro"
-            title={expanded ? "Collapse" : "Explain"}
+            aria-label={expanded ? "Collapse insight" : "Explain insight"}
             onClick={handleToggleExpand}
           >
             <Sparkles className="h-3 w-3 text-status-info-ink" aria-hidden="true" />
@@ -93,7 +93,7 @@ const InsightRow = memo(function InsightRow({
             variant="ghost"
             size="icon"
             className="h-6 w-6"
-            title="Acknowledge"
+            aria-label="Acknowledge insight"
             onClick={handleAcknowledge}
             disabled={isPending}
           />
@@ -104,7 +104,7 @@ const InsightRow = memo(function InsightRow({
             variant="ghost"
             size="icon"
             className="h-6 w-6"
-            title="Dismiss"
+            aria-label="Dismiss insight"
             onClick={handleDismiss}
             disabled={isPending}
           />

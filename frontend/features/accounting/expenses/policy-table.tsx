@@ -11,7 +11,7 @@ import type { FinExpensePolicy } from "@/types/accounting/expenses";
 
 function EditPolicyButton({ onClick }: { onClick: () => void }) {
   return (
-    <Button variant="ghost" size="icon" className="w-7" onClick={onClick}>
+    <Button variant="ghost" size="icon" className="w-7" aria-label="Edit policy" onClick={onClick}>
       <Pencil className="h-3.5 w-3.5" />
     </Button>
   );
@@ -20,7 +20,7 @@ function EditPolicyButton({ onClick }: { onClick: () => void }) {
 function DeletePolicyButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <Button variant="ghost" size="icon" className="w-7 text-destructive hover:text-destructive" onClick={onClick} {...hoverHandlers}>
+    <Button variant="ghost" size="icon" className="w-7 text-destructive hover:text-destructive" aria-label="Delete policy" onClick={onClick} {...hoverHandlers}>
       <Trash2Icon ref={iconRef} size={14} />
     </Button>
   );

@@ -66,6 +66,7 @@ export function SetupProgressBanner({ steps }: SetupProgressBannerProps) {
         variant="ghost"
         size="icon"
         className="h-6 w-6 shrink-0 text-status-warning-ink hover:bg-status-warning-surface"
+        aria-label="Dismiss setup banner"
         onClick={handleDismiss}
       >
         <X className="h-3.5 w-3.5" />

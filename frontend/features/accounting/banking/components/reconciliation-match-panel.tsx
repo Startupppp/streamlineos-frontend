@@ -160,7 +160,7 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
             <BankTxnStatusBadge status={txn.status} size="chip" />
           </div>
         </div>
-        <AnimatedIconButton icon={XIcon} iconSize={16} variant="ghost" size="icon" className="w-7 shrink-0" onClick={onClose} />
+        <AnimatedIconButton icon={XIcon} iconSize={16} variant="ghost" size="icon" className="w-7 shrink-0" aria-label="Close panel" onClick={onClose} />
       </div>
 
       {suggestions.length > 0 && (

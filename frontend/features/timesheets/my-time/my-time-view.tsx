@@ -119,6 +119,7 @@ export function MyTimeView() {
           variant="ghost"
           size="icon"
           className="rounded-none border-r border-border"
+          aria-label="Previous week"
           onClick={goToPrev}
         />
         <Button
@@ -134,6 +135,7 @@ export function MyTimeView() {
           variant="ghost"
           size="icon"
           className="rounded-none border-l border-border"
+          aria-label="Next week"
           onClick={goToNext}
         />
       </div>
@@ -194,6 +196,7 @@ export function MyTimeView() {
               variant="ghost"
               size="icon"
               className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
+              aria-label="Dismiss rejection notice"
               onClick={handleDismissRejection}
             />
           </div>

@@ -224,6 +224,7 @@ export function ReconciliationRulesSheet({ bankAccountId, open, onOpenChange }: 
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                        aria-label="Delete rule"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
@@ -353,6 +354,7 @@ export function ReconciliationRulesSheet({ bankAccountId, open, onOpenChange }: 
                       variant="ghost"
                       size="icon"
                       className="w-8 shrink-0"
+                      aria-label="Remove condition"
                       onClick={() => handleRemoveCondition(i)}
                     >
                       <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />

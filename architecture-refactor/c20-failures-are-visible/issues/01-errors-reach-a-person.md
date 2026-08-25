@@ -14,6 +14,8 @@
 - [ ] An error carrying an authorization header, a token or a known personal-data field emits none of them.
 - [ ] Scrubbing is asserted by test, not assumed.
 - [ ] The tenant-context permission error class is reported distinctly, since it has caused real incidents here.
+- [ ] The existing reporter port has a production adapter and remains replaceable; no caller imports a provider SDK directly.
+- [ ] The duplicate reporter import in `all-exceptions.filter.spec.ts` is removed and type checking covers the regression.
 
 ## Todo
 

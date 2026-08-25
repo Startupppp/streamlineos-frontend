@@ -109,6 +109,7 @@ export const ViewCard = memo(function ViewCard({
             size="sm"
             className="h-7 w-7 p-0 text-destructive hover:text-destructive"
             onClick={handleDelete}
+            aria-label="Delete saved view"
             icon={Trash2Icon}
             iconSize={14}
           />

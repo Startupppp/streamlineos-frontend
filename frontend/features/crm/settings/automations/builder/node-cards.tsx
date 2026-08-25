@@ -101,7 +101,7 @@ export const ConditionRowCard = memo(function ConditionRowCard({ condition, inde
           onChange={handleValueChange}
         />
       </div>
-      <AnimatedIconButton icon={XIcon} iconSize={12} variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive" onClick={handleRemove} />
+      <AnimatedIconButton icon={XIcon} iconSize={12} variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive" aria-label="Remove condition" onClick={handleRemove} />
     </motion.div>
   );
 });
@@ -147,7 +147,7 @@ export const ActionNodeCard = memo(function ActionNodeCard({ node, actions, drag
                 </SelectContent>
               </Select>
             </div>
-            <AnimatedIconButton icon={XIcon} iconSize={12} variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive shrink-0" onClick={handleRemove} />
+            <AnimatedIconButton icon={XIcon} iconSize={12} variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive shrink-0" aria-label="Remove action" onClick={handleRemove} />
           </div>
           {schemaKeys.length > 0 && (
             <div className="grid grid-cols-2 gap-2 pl-7">
@@ -197,7 +197,7 @@ export const WaitCard = memo(function WaitCard({ waitHours, onChangeHours, onRem
           />
           <span className="text-xs text-muted-foreground">hours</span>
         </div>
-        <AnimatedIconButton icon={XIcon} iconSize={12} variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={onRemove} />
+        <AnimatedIconButton icon={XIcon} iconSize={12} variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" aria-label="Remove wait step" onClick={onRemove} />
       </div>
     </motion.div>
   );

@@ -151,7 +151,7 @@ const WorkflowCard = memo(function WorkflowCard({
               size="icon"
               variant="ghost"
               className="w-7"
-              title="Edit in Builder"
+              aria-label="Edit workflow in builder"
             >
               <Link href={`/workflows/${workflow.id}/builder`}>
                 <Pencil className="h-3.5 w-3.5" />
@@ -163,7 +163,7 @@ const WorkflowCard = memo(function WorkflowCard({
               size="icon"
               variant="ghost"
               className="w-7"
-              title="Duplicate"
+              aria-label="Duplicate workflow"
               onClick={onDuplicate}
             />
             <AnimatedIconButton
@@ -172,7 +172,7 @@ const WorkflowCard = memo(function WorkflowCard({
               size="icon"
               variant="ghost"
               className="w-7 text-destructive hover:text-destructive"
-              title="Delete"
+              aria-label="Delete workflow"
               onClick={onDelete}
             />
           </div>

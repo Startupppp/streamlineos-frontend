@@ -450,8 +450,8 @@ function EventRow({
               variant="ghost"
               size="icon"
               className="w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+              aria-label="Configure event"
               onClick={handleConfigureClick}
-              title="Configure"
             >
               <Settings2 className="h-3.5 w-3.5 text-muted-foreground" />
             </Button>

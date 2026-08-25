@@ -90,6 +90,7 @@ function CreditNoteItemRow({
             variant="ghost"
             size="icon"
             className="h-5 w-5 text-muted-foreground hover:text-destructive"
+            aria-label="Remove item"
             onClick={handleRemove}
           >
             <Trash2 className="size-3" />

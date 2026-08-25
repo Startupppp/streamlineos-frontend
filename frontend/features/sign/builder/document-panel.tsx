@@ -76,7 +76,7 @@ export function DocumentPanel({ envelopeId, documents, editable }: DocumentPanel
               <p className="text-xs text-muted-foreground">{doc.pageCount ?? "?"} page(s)</p>
             </div>
             {editable && (
-              <AnimatedIconButton variant="ghost" size="icon" icon={Trash2Icon} iconSize={14} className="size-7 shrink-0" onClick={(e) => handleDelete(doc.id, e)} />
+              <AnimatedIconButton variant="ghost" size="icon" icon={Trash2Icon} iconSize={14} className="size-7 shrink-0" aria-label="Remove document" onClick={(e) => handleDelete(doc.id, e)} />
             )}
           </div>
         ))

@@ -64,6 +64,7 @@ const BranchRow = memo(function BranchRow({ branch, branchIndex, nodeId, onUpdat
           variant="ghost"
           size="icon"
           className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
+          aria-label="Remove branch condition"
           onClick={handleRemove}
           {...hoverHandlers}
         >
@@ -103,7 +104,7 @@ export const BranchNodeCard = memo(function BranchNodeCard({ node, dragHandlePro
               </div>
               <span className="text-xs font-semibold text-primary">Branch</span>
             </div>
-            <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive shrink-0" onClick={handleRemoveNode} {...removeHoverHandlers}>
+            <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive shrink-0" aria-label="Remove branch node" onClick={handleRemoveNode} {...removeHoverHandlers}>
               <X className="h-3 w-3" />
             </Button>
           </div>
@@ -157,7 +158,7 @@ export const ExitNodeCard = memo(function ExitNodeCard({ nodeId, dragHandleProps
           <StopCircle className="h-3 w-3" />
         </div>
         <span className="text-xs font-semibold text-status-danger-ink flex-1">Exit / Stop</span>
-        <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={handleRemove} {...hoverHandlers}>
+        <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" aria-label="Remove exit node" onClick={handleRemove} {...hoverHandlers}>
           <X className="h-3 w-3" />
         </Button>
       </div>

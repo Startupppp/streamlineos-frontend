@@ -9,6 +9,7 @@
 ## Acceptance criteria
 
 - [ ] All three tables are partitioned on a time key.
+- [ ] `chat_messages` and every referencing foreign key are widened from int4 before volume can reach the 2,147,483,647 identity ceiling.
 - [ ] Existing data is preserved and readable across the boundary.
 - [ ] Reads and writes are unchanged in behaviour.
 - [ ] The migration is online-safe with a lock timeout set.
@@ -18,6 +19,7 @@
 ## Todo
 
 - [ ] Partition before attempting any retention — a bulk delete at this size is an outage
+- [ ] Widen the chat identity and dependent keys with an expand/backfill/dual-read-or-write/cutover/contract migration; do not combine a blocking rewrite with the partition cutover
 - [ ] VACUUM ANALYZE after; a rewrite invalidates statistics and the visibility map
 - [ ] Re-measure the budgets
 - [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)

@@ -8,6 +8,8 @@ A forgotten guard is a silent widening. Type checking passes, Nest boots, the ro
 
 The existing report proposed a CI coverage scan. That is useful but not sufficient: a route deployed outside that CI path or dynamically registered remains open. The runtime must refuse an unclassified route.
 
+Database defense has the same omission defect at its verification edge. The tenant transaction module is sound, but `db-verify-rls.mjs` only prints the ratio of tenant-column tables to RLS-enabled tables and CI does not execute it. A new tenant table can therefore ship without database isolation while the build remains green.
+
 Object access is separately correct in most sampled modules, but the predicate is repeated. A permission key alone does not prove the caller may read the identified record. Tenant, soft-delete, DataScope and record visibility must enter the SQL predicate together so fetch-then-check cannot appear.
 
 ## Solution
@@ -25,11 +27,13 @@ This contradicts the current `backend/CLAUDE.md` §2 placement of `PermissionGua
 - `AccessService`, versioned permission caching, scope ceilings and per-person grants.
 - Org owner/admin semantics, module standing and universal employee grants.
 - SQL-level `applyScope` behavior and cross-tenant 404 semantics.
+- The ambient tenant transaction module and its refusal to execute without an explicit tenant or to nest across organisations.
 
 **REPLACE**
 
 - Opt-in route authorization with a global classifier that denies missing metadata.
 - Ad hoc record lookup followed by a check with a single scoped query seam per domain.
+- Advisory RLS reporting with an application-role CI invariant for coverage, forced policy state and tenant predicate shape.
 
 Public, universal and permissioned are mutually exclusive. A universal route still derives the subject from the authenticated actor and applies tenant/record ACLs. The global classifier performs no per-row filtering; the data module does.
 

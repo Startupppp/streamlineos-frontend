@@ -67,10 +67,10 @@ export function RankingInput({ question, value, onChange }: QuestionInputProps) 
           <div key={choiceId} className="flex items-center gap-2 rounded-md border border-border px-3 py-2">
             <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground/50" />
             <span className={cn("flex-1 text-sm")}>{index + 1}. {choice.label}</span>
-            <Button variant="ghost" size="icon" className="h-7 w-7" disabled={index === 0} onClick={() => move(index, -1)}>
+            <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Move choice up" disabled={index === 0} onClick={() => move(index, -1)}>
               <ArrowUp className="h-3.5 w-3.5" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7" disabled={index === order.length - 1} onClick={() => move(index, 1)}>
+            <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Move choice down" disabled={index === order.length - 1} onClick={() => move(index, 1)}>
               <ArrowDown className="h-3.5 w-3.5" />
             </Button>
           </div>

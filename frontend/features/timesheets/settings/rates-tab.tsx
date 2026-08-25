@@ -192,6 +192,7 @@ export function RatesTab() {
                     variant="ghost"
                     size="icon"
                     className="h-6 w-6"
+                    aria-label="Edit rate"
                     onClick={() => handleEdit(row)}
                   >
                     <Pencil className="h-3 w-3" />
@@ -202,6 +203,7 @@ export function RatesTab() {
                     variant="ghost"
                     size="icon"
                     className="h-6 w-6 text-destructive hover:text-destructive"
+                    aria-label="Delete rate"
                     onClick={() => handleDeleteRequest(row.id)}
                   />
                 </div>

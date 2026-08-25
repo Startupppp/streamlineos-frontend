@@ -98,14 +98,14 @@ export function StageCard({
             {stage.key}
           </span>
           <div className="flex items-center gap-0.5 shrink-0">
-            <Button variant="ghost" size="icon" className="h-5 w-5" onClick={handleDecrease} disabled={stage.probability <= 0} type="button">
-              <span className="text-xs leading-none">−</span>
+            <Button variant="ghost" size="icon" className="h-5 w-5" aria-label="Decrease probability" onClick={handleDecrease} disabled={stage.probability <= 0} type="button">
+              <span className="text-xs leading-none" aria-hidden="true">−</span>
             </Button>
             <span className="bg-primary/10 text-primary text-xs px-1.5 rounded min-w-[3rem] text-center">
               {stage.probability}%
             </span>
-            <Button variant="ghost" size="icon" className="h-5 w-5" onClick={handleIncrease} disabled={stage.probability >= 100} type="button">
-              <span className="text-xs leading-none">+</span>
+            <Button variant="ghost" size="icon" className="h-5 w-5" aria-label="Increase probability" onClick={handleIncrease} disabled={stage.probability >= 100} type="button">
+              <span className="text-xs leading-none" aria-hidden="true">+</span>
             </Button>
           </div>
           <Select value={stage.stageType} onValueChange={handleStageTypeChange}>

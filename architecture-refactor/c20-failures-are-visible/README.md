@@ -2,9 +2,9 @@
 
 PRD: [`prd.md`](prd.md) · Program: [`../README.md`](../README.md)
 
-**Wave 0** · 5 tickets, 0 retired.
+**Wave 0** · 5 tickets, 0 retired; implementation is partial.
 
-Zero hits for Sentry, OpenTelemetry, Datadog, prom-client, pino or winston in either repo. Logging is console through a hand-rolled logger. At least ten places swallow a failure and nothing would tell anyone. **This is why every other finding in the review had to be found by a person reading source** — which is why it goes first.
+Structured JSON logging, redaction, correlation context and backend/frontend error-reporter ports now exist. The production adapter is still a no-op, `setErrorReporter` is called only by tests, and no operator alert destination is wired. Keep the new seam; finish delivery so a signal reaches a human.
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
