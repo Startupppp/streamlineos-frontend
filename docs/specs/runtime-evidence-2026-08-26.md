@@ -21,10 +21,9 @@ empty. The conversion/intake PRD and code must therefore remain.
 Command: `pnpm report:outbox-events`
 
 ```json
-{"organizations":38,"succeeded":38,"failed":0,"totalRows":31,"pending":6,"inFlight":0,"dead":0,"oldestEventAt":"2026-08-18 11:09:33.990946","distinctEventTypesAcrossTenants":21}
+{"organizations":38,"succeeded":38,"failed":0,"totalRows":31,"pending":6,"inFlight":0,"dead":0,"oldestPendingAt":"2026-08-25 12:59:23.680386","oldestEventAt":"2026-08-18 11:09:33.990946","distinctEventTypesAcrossTenants":21}
 ```
 
 The report covers every active organization with no sweep failures. There are
 six pending rows and no dead rows; partitioning remains threshold-deferred and
 external provider deduplication remains an operational requirement.
-
