@@ -99,7 +99,7 @@ function PipelineStep({
                   isLost && "border-status-danger-rule bg-status-danger-surface"
                 )
               : isPast
-                ? cn("h-3 w-3", isLost ? "bg-red-400" : "bg-primary")
+                ? cn("h-3 w-3", isLost ? "bg-status-danger-fill" : "bg-primary")
                 : "h-3 w-3 rounded-full border border-border bg-background group-hover:border-muted-foreground"
           )}
         >
@@ -107,7 +107,7 @@ function PipelineStep({
             <div
               className={cn(
                 "h-2 w-2 rounded-full",
-                isLost ? "bg-red-400" : "bg-primary"
+                isLost ? "bg-status-danger-fill" : "bg-primary"
               )}
             />
           )}
@@ -277,7 +277,7 @@ export function LeadDetailHeader({
               {lead.status !== "CONVERTED" && lead.status !== "LOST" && (
                 <LoadingButton
                   size="sm"
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                  className="bg-status-success-fill hover:bg-status-success-fill-hover text-white"
                   onClick={handleConvert}
                   isPending={isStatusPending}
                   loadingText="Updating..."

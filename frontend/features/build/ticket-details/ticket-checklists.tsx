@@ -133,7 +133,7 @@ const ChecklistItemRow = memo(function ChecklistItemRow({
         className={cn(
           "h-4 w-4 shrink-0 rounded border-2 flex items-center justify-center transition-all duration-150",
           item.isCompleted
-            ? "bg-emerald-500 border-status-success-rule"
+            ? "bg-status-success-fill border-status-success-rule"
             : "border-input hover:border-primary/40",
         )}
         aria-label={item.isCompleted ? "Mark incomplete" : "Mark complete"}
@@ -314,7 +314,7 @@ function ChecklistSection({
       {total > 0 && (
         <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden ml-6">
           <motion.div
-            className="h-full bg-emerald-500 rounded-full"
+            className="h-full bg-status-success-fill rounded-full"
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.4, ease: "easeOut" }}

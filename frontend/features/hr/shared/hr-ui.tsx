@@ -18,7 +18,7 @@ const STATUS_STYLES: Record<
   active: {
     bg: "bg-status-success-surface",
     text: "text-status-success-ink",
-    dot: "bg-emerald-500",
+    dot: "bg-status-success-fill",
     border: "border-status-success-rule",
   },
   inactive: {
@@ -30,25 +30,25 @@ const STATUS_STYLES: Record<
   pending: {
     bg: "bg-status-warning-surface",
     text: "text-status-warning-ink",
-    dot: "bg-amber-500",
+    dot: "bg-status-warning-fill",
     border: "border-status-warning-rule",
   },
   approved: {
     bg: "bg-status-success-surface",
     text: "text-status-success-ink",
-    dot: "bg-emerald-500",
+    dot: "bg-status-success-fill",
     border: "border-status-success-rule",
   },
   rejected: {
     bg: "bg-status-danger-surface",
     text: "text-status-danger-ink",
-    dot: "bg-rose-500",
+    dot: "bg-status-danger-fill",
     border: "border-status-danger-rule",
   },
   default: {
     bg: "bg-status-info-surface",
     text: "text-status-info-ink",
-    dot: "bg-blue-500",
+    dot: "bg-status-info-fill",
     border: "border-status-info-rule",
   },
 };

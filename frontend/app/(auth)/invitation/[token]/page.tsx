@@ -71,9 +71,9 @@ function InvitationHero({
   const HeroIcon = verified ? MailCheck : Mail;
   return (
     <div className="relative border-b border-border bg-muted px-5 py-5 sm:px-6">
-      <span className="absolute inset-x-0 top-0 h-1 bg-blue-600" />
+      <span className="absolute inset-x-0 top-0 h-1 bg-status-info-fill" />
       <div className="flex items-start gap-3.5 pt-1">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white shadow-[0_8px_20px_-10px_rgba(37,99,235,0.8)]">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-status-info-fill text-white shadow-[0_8px_20px_-10px_rgba(37,99,235,0.8)]">
           <HeroIcon className="h-5 w-5" strokeWidth={2} />
         </div>
         <div className="min-w-0 flex-1 pt-0.5">

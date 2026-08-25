@@ -134,7 +134,22 @@ describe("design token contract", () => {
       ink: "text-status-success-ink",
       inkStrong: "text-status-success-ink-strong",
       rule: "border-status-success-rule",
+      // A surface is a pale wash behind quiet text; a fill is solid, with white
+      // text on it. Conflating them is what puts white button text on a
+      // near-white background.
+      fill: "bg-status-success-fill",
+      // A separate token rather than an opacity change: a hover derived by
+      // transparency washes out against a dark ground.
+      fillHover: "hover:bg-status-success-fill-hover",
     });
+  });
+
+  it("declares the fill role for every tone, in both themes", () => {
+    for (const tone of STATUS_TONES) {
+      expect(css).toContain(`--status-${tone}-fill:`);
+      expect(css).toContain(`--status-${tone}-fill-hover:`);
+      expect(css).toContain(`--color-status-${tone}-fill: var(--status-${tone}-fill)`);
+    }
   });
 
   it("writes every class as a literal, or Tailwind never generates the utility", () => {

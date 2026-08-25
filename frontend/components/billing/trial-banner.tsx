@@ -74,7 +74,7 @@ export function TrialBanner() {
         <Button
           asChild
           size="sm"
-          className="h-7 border-0 bg-amber-600 px-2.5 text-dense text-white hover:bg-amber-700 sm:h-6 sm:px-3"
+          className="h-7 border-0 bg-status-warning-fill px-2.5 text-dense text-white hover:bg-status-warning-fill-hover sm:h-6 sm:px-3"
         >
           <Link href="/settings/billing?tab=plan">
             <span className="sm:hidden">Upgrade</span>

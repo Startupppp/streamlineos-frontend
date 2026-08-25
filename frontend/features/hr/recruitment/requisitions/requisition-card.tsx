@@ -37,11 +37,11 @@ export const PRIORITY_STYLES: Record<string, string> = {
 
 export const STATUS_STYLES: Record<string, { badge: string; label: string; dot: string }> = {
   DRAFT: { badge: "bg-muted text-muted-foreground border-border", label: "Draft", dot: "bg-muted-foreground/50" },
-  PENDING_APPROVAL: { badge: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule", label: "Pending Approval", dot: "bg-amber-500" },
-  APPROVED: { badge: "bg-status-success-surface text-status-success-ink border-status-success-rule", label: "Approved", dot: "bg-emerald-500" },
-  PUBLISHED: { badge: "bg-status-info-surface text-status-info-ink border-status-info-rule", label: "Published", dot: "bg-blue-500" },
-  CLOSED: { badge: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule", label: "Closed", dot: "bg-rose-400" },
-  REJECTED: { badge: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule", label: "Rejected", dot: "bg-red-500" },
+  PENDING_APPROVAL: { badge: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule", label: "Pending Approval", dot: "bg-status-warning-fill" },
+  APPROVED: { badge: "bg-status-success-surface text-status-success-ink border-status-success-rule", label: "Approved", dot: "bg-status-success-fill" },
+  PUBLISHED: { badge: "bg-status-info-surface text-status-info-ink border-status-info-rule", label: "Published", dot: "bg-status-info-fill" },
+  CLOSED: { badge: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule", label: "Closed", dot: "bg-status-danger-fill" },
+  REJECTED: { badge: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule", label: "Rejected", dot: "bg-status-danger-fill" },
 };
 
 export const STATUS_TABS = [

@@ -96,9 +96,9 @@ export function Section10({ form }: SectionProps) {
 
   const priorityOptions = [
     { value: "LOW", label: "Low", activeClass: "bg-primary hover:bg-primary/90 text-primary-foreground border-primary" },
-    { value: "MEDIUM", label: "Medium", activeClass: "bg-blue-600 hover:bg-blue-700 text-white border-status-info-rule" },
-    { value: "HIGH", label: "High", activeClass: "bg-amber-500 hover:bg-amber-600 text-white border-status-warning-rule" },
-    { value: "URGENT", label: "Urgent", activeClass: "bg-rose-600 hover:bg-rose-700 text-white border-status-danger-rule" },
+    { value: "MEDIUM", label: "Medium", activeClass: "bg-status-info-fill hover:bg-status-info-fill-hover text-white border-status-info-rule" },
+    { value: "HIGH", label: "High", activeClass: "bg-status-warning-fill hover:bg-status-warning-fill-hover text-white border-status-warning-rule" },
+    { value: "URGENT", label: "Urgent", activeClass: "bg-status-danger-fill hover:bg-status-danger-fill-hover text-white border-status-danger-rule" },
   ] as const;
 
   return (

@@ -42,7 +42,7 @@ const STATUS_OPTIONS: JobBoardPostingStatus[] = [
 ];
 
 const STATUS_BADGE: Record<JobBoardPostingStatus, string> = {
-  DRAFT: "bg-muted text-muted-foreground dark:bg-slate-800",
+  DRAFT: "bg-muted text-muted-foreground",
   POSTED:
     "bg-status-success-surface text-status-success-ink",
   EXPIRED:

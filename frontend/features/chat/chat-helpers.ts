@@ -82,12 +82,12 @@ export function getFileExt(name: string) {
 export function getFileColor(name: string) {
   const ext = name.split(".").pop()?.toLowerCase();
   switch (ext) {
-    case "pdf": return { bg: "bg-status-danger-surface", text: "text-status-danger-ink", badge: "bg-red-500" };
-    case "doc": case "docx": return { bg: "bg-status-info-surface", text: "text-status-info-ink", badge: "bg-blue-500" };
-    case "xls": case "xlsx": return { bg: "bg-status-success-surface", text: "text-status-success-ink", badge: "bg-emerald-500" };
-    case "ppt": case "pptx": return { bg: "bg-status-warning-surface", text: "text-status-warning-ink", badge: "bg-orange-500" };
-    case "zip": case "rar": return { bg: "bg-status-warning-surface", text: "text-status-warning-ink", badge: "bg-amber-500" };
-    default: return { bg: "bg-muted", text: "text-muted-foreground", badge: "bg-slate-500" };
+    case "pdf": return { bg: "bg-status-danger-surface", text: "text-status-danger-ink", badge: "bg-status-danger-fill" };
+    case "doc": case "docx": return { bg: "bg-status-info-surface", text: "text-status-info-ink", badge: "bg-status-info-fill" };
+    case "xls": case "xlsx": return { bg: "bg-status-success-surface", text: "text-status-success-ink", badge: "bg-status-success-fill" };
+    case "ppt": case "pptx": return { bg: "bg-status-warning-surface", text: "text-status-warning-ink", badge: "bg-status-warning-fill" };
+    case "zip": case "rar": return { bg: "bg-status-warning-surface", text: "text-status-warning-ink", badge: "bg-status-warning-fill" };
+    default: return { bg: "bg-muted", text: "text-muted-foreground", badge: "bg-status-neutral-fill" };
   }
 }
 

@@ -23,10 +23,10 @@ function scoreClasses(score: number, selected: boolean): string {
         : "border-status-danger-rule hover:border-status-danger-rule";
   const active =
     score >= 9
-      ? "border-status-success-rule bg-emerald-500 text-white"
+      ? "border-status-success-rule bg-status-success-fill text-white"
       : score >= 7
-        ? "border-status-warning-rule bg-amber-500 text-white"
-        : "border-status-danger-rule bg-red-500 text-white";
+        ? "border-status-warning-rule bg-status-warning-fill text-white"
+        : "border-status-danger-rule bg-status-danger-fill text-white";
   return selected ? active : cn(base, "bg-white text-muted-foreground");
 }
 

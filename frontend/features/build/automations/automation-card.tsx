@@ -83,7 +83,7 @@ export function AutomationCard({ automation, onToggle, onDelete, onEdit }: Autom
           <span
             className={cn(
               "absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background",
-              automation.isActive ? "bg-emerald-500" : "bg-muted-foreground/40",
+              automation.isActive ? "bg-status-success-fill" : "bg-muted-foreground/40",
             )}
           />
         </div>

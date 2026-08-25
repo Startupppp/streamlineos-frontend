@@ -42,7 +42,7 @@ function UsageMeter({ label, entry }: { label: string; entry: EntitlementLimit }
         <Progress
           value={pct}
           aria-label={`${label} usage: ${entry.used} of ${entry.limit ?? "unlimited"}`}
-          className={`h-1.5 ${pct >= 100 ? "[&>div]:bg-destructive" : pct >= 80 ? "[&>div]:bg-amber-500" : ""}`}
+          className={`h-1.5 ${pct >= 100 ? "[&>div]:bg-destructive" : pct >= 80 ? "[&>div]:bg-status-warning-fill" : ""}`}
         />
       )}
     </div>

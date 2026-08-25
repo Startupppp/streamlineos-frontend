@@ -309,7 +309,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="flex-1 h-8 text-xs gap-1.5 text-status-success-ink border-status-success-rule hover:bg-status-success-surface hover:text-status-success-ink dark:hover:bg-green-950"
+                            className="flex-1 h-8 text-xs gap-1.5 text-status-success-ink border-status-success-rule hover:bg-status-success-surface hover:text-status-success-ink"
                             disabled={
                               deleteEventIsPending || rsvpMutationIsPending
                             }
@@ -323,7 +323,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="flex-1 h-8 text-xs gap-1.5 text-status-warning-ink border-status-warning-rule hover:bg-status-warning-surface hover:text-status-warning-ink dark:hover:bg-yellow-950"
+                            className="flex-1 h-8 text-xs gap-1.5 text-status-warning-ink border-status-warning-rule hover:bg-status-warning-surface hover:text-status-warning-ink"
                             disabled={rsvpMutationIsPending}
                             onClick={() => handleRsvp("tentative")}
                             aria-label="Mark as tentative"
@@ -402,7 +402,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
               <Link href={`/chat?channel=${event.entityId}`} onClick={onClose}>
                 <Button
                   size="sm"
-                  className="w-full h-8 text-xs gap-1.5 bg-orange-500 hover:bg-orange-600 text-white"
+                  className="w-full h-8 text-xs gap-1.5 bg-status-warning-fill hover:bg-status-warning-fill-hover text-white"
                   {...huddleHoverHandlers}
                 >
                   <MicIcon ref={huddleIconRef} size={14} />

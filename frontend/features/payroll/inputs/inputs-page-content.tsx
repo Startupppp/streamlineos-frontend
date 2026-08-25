@@ -311,7 +311,7 @@ export function InputsPageContent() {
                 onClick={handleUnlock}
                 isPending={unlockPeriod.isPending}
                 loadingText="Unlocking…"
-                className="bg-amber-600 text-white hover:bg-amber-700"
+                className="bg-status-warning-fill text-white hover:bg-status-warning-fill-hover"
               >
                 Unlock Period
               </LoadingButton>

@@ -131,7 +131,7 @@ function buildSlaColumns(
       header: "Status",
       cell: (row) =>
         row.existing ? (
-          <Badge variant="default" className="text-xs bg-green-600">Configured</Badge>
+          <Badge variant="default" className="text-xs bg-status-success-fill">Configured</Badge>
         ) : (
           <Badge variant="outline" className="text-xs text-muted-foreground">Default</Badge>
         ),

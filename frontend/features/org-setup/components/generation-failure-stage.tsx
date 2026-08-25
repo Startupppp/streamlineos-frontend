@@ -92,7 +92,7 @@ export function GenerationFailureStage({
           <span
             className={cn(
               "h-1.5 w-1.5 rounded-full",
-              orgExists ? "bg-amber-500 dark:bg-amber-400" : "bg-destructive",
+              orgExists ? "bg-status-warning-fill" : "bg-destructive",
             )}
             aria-hidden
           />

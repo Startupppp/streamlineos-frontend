@@ -168,7 +168,7 @@ export function StepReview({ draft, goNext, goBack }: StepReviewProps) {
             <ul className="space-y-1">
               {enabledEssOptions.map((opt) => (
                 <li key={opt} className="flex items-center gap-2 text-sm text-foreground">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-status-success-fill shrink-0" />
                   {opt}
                 </li>
               ))}

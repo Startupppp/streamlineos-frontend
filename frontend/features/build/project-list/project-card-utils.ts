@@ -10,11 +10,11 @@ export const statusStripe: Record<string, string> = {
 };
 
 export const statusDotColors: Record<string, string> = {
-  ACTIVE: "bg-emerald-500",
-  PLANNING: "bg-blue-500",
-  COMPLETED: "bg-slate-400",
-  ON_HOLD: "bg-amber-500",
-  ARCHIVED: "bg-slate-400",
+  ACTIVE: "bg-status-success-fill",
+  PLANNING: "bg-status-info-fill",
+  COMPLETED: "bg-status-neutral-fill",
+  ON_HOLD: "bg-status-warning-fill",
+  ARCHIVED: "bg-status-neutral-fill",
 };
 
 export const avatarTints: Record<string, string> = {

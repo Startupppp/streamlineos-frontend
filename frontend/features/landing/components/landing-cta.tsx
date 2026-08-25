@@ -26,7 +26,7 @@ export function LandingCTA() {
           transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] as const }}
           className="relative max-w-4xl mx-auto text-center"
         >
-          <div className="relative bg-slate-900 p-6 sm:p-10 lg:p-16 rounded-2xl overflow-hidden">
+          <div className="relative bg-status-neutral-fill p-6 sm:p-10 lg:p-16 rounded-2xl overflow-hidden">
             <div className="absolute inset-0 pointer-events-none" aria-hidden>
               <div className="absolute -top-20 left-1/2 -translate-x-1/2 h-[300px] w-[min(600px,120vw)] rounded-full bg-brand-core/35 blur-3xl" />
               <div className="absolute bottom-0 right-0 h-[200px] w-[min(400px,80vw)] rounded-full bg-brand-cyan/25 blur-3xl" />

@@ -247,7 +247,7 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
               </div>
               <Progress
                 value={Math.min(budget?.utilizationPct ?? 0, 100)}
-                className={overBudget ? "h-2 [&>div]:bg-red-500" : "h-2 [&>div]:bg-primary"}
+                className={overBudget ? "h-2 [&>div]:bg-status-danger-fill" : "h-2 [&>div]:bg-primary"}
               />
             </PmPanel>
           </PmSection>

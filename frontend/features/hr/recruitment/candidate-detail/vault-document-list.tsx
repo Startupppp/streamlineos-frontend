@@ -71,7 +71,7 @@ function getDocTypeBadgeClass(documentType: string | null | undefined): string {
     case "OFFER_LETTER":
       return "bg-status-success-surface text-status-success-ink border-status-success-rule";
     default:
-      return "bg-muted text-muted-foreground border-border dark:bg-slate-800";
+      return "bg-muted text-muted-foreground border-border";
   }
 }
 
@@ -97,7 +97,7 @@ function AvScanBadge({
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border dark:bg-slate-800">
+    <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
       <Clock
         className="h-2.5 w-2.5"
         style={{ animation: "spin 2s linear infinite" }}

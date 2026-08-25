@@ -139,7 +139,7 @@ export function OnboardingList() {
                       <div className="flex items-center gap-2">
                         <Progress
                           value={row.percentComplete}
-                          className="h-1.5 flex-1 [&>div]:bg-emerald-500"
+                          className="h-1.5 flex-1 [&>div]:bg-status-success-fill"
                         />
                         <span className="text-dense font-semibold text-muted-foreground tabular-nums shrink-0">
                           {row.percentComplete}% · {row.completedTasks}/{row.totalTasks}

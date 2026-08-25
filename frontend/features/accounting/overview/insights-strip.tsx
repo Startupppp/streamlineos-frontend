@@ -33,8 +33,8 @@ function severityTextClass(severity: AnomalySeverity): string {
 }
 
 function severityDotClass(severity: AnomalySeverity): string {
-  if (severity === "critical") return "bg-red-500";
-  if (severity === "warning") return "bg-amber-500";
+  if (severity === "critical") return "bg-status-danger-fill";
+  if (severity === "warning") return "bg-status-warning-fill";
   return "bg-muted-foreground";
 }
 

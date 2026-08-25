@@ -69,7 +69,7 @@ export function StandardSummaryCard({
           <ul className="space-y-1">
             {structured.blockers.map((item) => (
               <li key={item} className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-amber-500" />
+                <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-status-warning-fill" />
                 {item}
               </li>
             ))}

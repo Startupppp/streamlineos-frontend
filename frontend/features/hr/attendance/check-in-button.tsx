@@ -326,7 +326,7 @@ export const TimerCard = memo(function TimerCard({
         >
           {isOnBreak ? <Coffee className="h-3 w-3 text-current" /> : null}
           {isCheckedIn && !isOnBreak ? (
-            <span className="size-1.5 rounded-full bg-emerald-500" aria-hidden />
+            <span className="size-1.5 rounded-full bg-status-success-fill" aria-hidden />
           ) : null}
           {statusLabel}
         </span>
@@ -370,7 +370,7 @@ export const TimerCard = memo(function TimerCard({
                 onClick={handleCheckOut}
                 disabled={isBlockedDay || checkInMutation.isPending}
                 isPending={checkOutMutation.isPending}
-                className="h-10 w-full gap-1.5 bg-rose-600 font-semibold text-white hover:bg-rose-700"
+                className="h-10 w-full gap-1.5 bg-status-danger-fill font-semibold text-white hover:bg-status-danger-fill-hover"
               >
                 <LogOut className="h-4 w-4 text-current" />
                 Check Out
@@ -394,7 +394,7 @@ export const TimerCard = memo(function TimerCard({
                 onClick={handleBreakToggle}
                 disabled={isBlockedDay}
                 isPending={breakMutation.isPending}
-                className="h-10 w-full gap-1.5 bg-amber-600 font-semibold text-white hover:bg-amber-700"
+                className="h-10 w-full gap-1.5 bg-status-warning-fill font-semibold text-white hover:bg-status-warning-fill-hover"
               >
                 <Play className="h-4 w-4 text-current" />
                 Resume Work

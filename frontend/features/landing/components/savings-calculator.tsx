@@ -58,7 +58,7 @@ export function SavingsCalculator() {
           step={1}
           value={seats}
           onChange={(e) => setSeats(Number(e.target.value))}
-          className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-muted accent-blue-600 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-600 [&::-webkit-slider-thumb]:shadow-sm"
+          className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-muted accent-blue-600 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-status-info-fill [&::-webkit-slider-thumb]:shadow-sm"
           aria-label="Number of users"
           aria-valuemin={MIN_SEATS}
           aria-valuemax={MAX_SEATS}
@@ -103,7 +103,7 @@ export function SavingsCalculator() {
         />
       </div>
 
-      <div className="mt-4 rounded-xl bg-blue-600 px-5 py-4 text-white">
+      <div className="mt-4 rounded-xl bg-status-info-fill px-5 py-4 text-white">
         <p className="text-xs font-medium text-status-info-ink">Annual savings</p>
         <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
           <p className="font-display text-3xl font-extrabold tabular-nums">

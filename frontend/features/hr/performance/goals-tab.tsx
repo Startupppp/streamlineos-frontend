@@ -341,8 +341,8 @@ export function GoalsTab() {
                       className={cn(
                         "h-1.5",
                         isCompleted
-                          ? "[&>div]:bg-emerald-500"
-                          : "[&>div]:bg-blue-500",
+                          ? "[&>div]:bg-status-success-fill"
+                          : "[&>div]:bg-status-info-fill",
                       )}
                     />
                   </div>

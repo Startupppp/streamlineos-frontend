@@ -20,7 +20,7 @@ function ChipTag({ chip, disabled, onRemove }: ChipTagProps) {
         <button
           type="button"
           onClick={handleClick}
-          className="rounded-full hover:bg-blue-200 dark:hover:bg-blue-800 p-0.5 transition-colors duration-200 cursor-pointer"
+          className="rounded-full hover:bg-status-info-fill-hover p-0.5 transition-colors duration-200 cursor-pointer"
           aria-label={`Remove ${chip}`}
         >
           <X className="h-2.5 w-2.5" />

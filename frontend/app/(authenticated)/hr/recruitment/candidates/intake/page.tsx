@@ -71,7 +71,7 @@ function CandidateIntakeRow({ candidate: c, isSelected, duplicate, onToggle, onS
           <button
             type="button"
             onClick={handleDuplicateClick}
-            className="inline-flex items-center gap-1 text-micro font-medium px-2 py-0.5 rounded-full bg-status-warning-surface text-status-warning-ink hover:bg-amber-200 transition-colors"
+            className="inline-flex items-center gap-1 text-micro font-medium px-2 py-0.5 rounded-full bg-status-warning-surface text-status-warning-ink hover:bg-status-warning-fill-hover transition-colors"
           >
             <AlertTriangle className="h-2.5 w-2.5" />
             Possible duplicate

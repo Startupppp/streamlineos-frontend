@@ -20,8 +20,8 @@ const STATUS_OPTIONS: {
   label: string;
   color: string;
 }[] = [
-  { value: "ONLINE", label: "Online", color: "bg-emerald-500" },
-  { value: "AWAY", label: "Away", color: "bg-amber-400" },
+  { value: "ONLINE", label: "Online", color: "bg-status-success-fill" },
+  { value: "AWAY", label: "Away", color: "bg-status-warning-fill" },
   { value: "BUSY", label: "Busy", color: "bg-destructive" },
   { value: "INVISIBLE", label: "Invisible", color: "bg-muted-foreground" },
 ];

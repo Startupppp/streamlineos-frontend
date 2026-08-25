@@ -37,7 +37,7 @@ function getSpeedLabel(hours: number | null): { label: string; color: string } {
 function SpeedBar({ hours }: { hours: number | null }) {
   if (hours === null) return <span className="text-xs text-muted-foreground">—</span>;
   const pct = Math.min((hours / 72) * 100, 100);
-  const color = hours <= 24 ? "bg-emerald-500" : hours <= 48 ? "bg-amber-500" : "bg-destructive";
+  const color = hours <= 24 ? "bg-status-success-fill" : hours <= 48 ? "bg-status-warning-fill" : "bg-destructive";
   return (
     <div className="flex items-center gap-2">
       <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">

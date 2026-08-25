@@ -24,7 +24,7 @@ export function ChecklistCard({ items }: ChecklistCardProps) {
 
       <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
         <div
-          className="h-full bg-emerald-500 rounded-full transition-[width] duration-[400ms] ease-in-out"
+          className="h-full bg-status-success-fill rounded-full transition-[width] duration-[400ms] ease-in-out"
           style={{ width: `${percent}%` }}
         />
       </div>

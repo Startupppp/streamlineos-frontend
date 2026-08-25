@@ -112,7 +112,7 @@ export function WorkLogMonthGroup({
                     <div
                       className={cn(
                         "h-full rounded-full transition-[width] duration-300",
-                        progress === 100 ? "bg-emerald-500" : progress > 0 ? "bg-primary" : "bg-muted-foreground/30",
+                        progress === 100 ? "bg-status-success-fill" : progress > 0 ? "bg-primary" : "bg-muted-foreground/30",
                       )}
                       style={{ width: `${progress}%` }}
                     />

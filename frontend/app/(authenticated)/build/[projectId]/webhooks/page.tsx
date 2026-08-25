@@ -88,10 +88,10 @@ type FormValues = z.infer<typeof schema>;
 function DeliveryRow({ delivery }: { delivery: WebhookDelivery }) {
   const statusColor =
     delivery.status === "success"
-      ? "bg-emerald-500"
+      ? "bg-status-success-fill"
       : delivery.status === "failed"
-        ? "bg-red-500"
-        : "bg-amber-400";
+        ? "bg-status-danger-fill"
+        : "bg-status-warning-fill";
   return (
     <div className="py-2 px-3 border-b last:border-0">
       <div className="flex items-center gap-3 text-sm">

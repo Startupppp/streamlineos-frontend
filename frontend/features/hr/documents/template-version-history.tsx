@@ -41,7 +41,7 @@ function VersionItem({ version: v, isLatest, isLast, onRestore }: VersionItemPro
       <div
         className={cn(
           "absolute left-1 top-3.5 h-3.5 w-3.5 rounded-full border-2 border-background",
-          isLatest ? "bg-emerald-500" : "bg-muted-foreground/30",
+          isLatest ? "bg-status-success-fill" : "bg-muted-foreground/30",
         )}
       />
       <div className="flex items-center justify-between rounded-lg px-3 py-2.5 text-xs hover:bg-muted/40 transition-colors duration-200 group">

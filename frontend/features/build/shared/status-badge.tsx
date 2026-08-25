@@ -6,11 +6,11 @@ import { resolveColumnColor } from "@/lib/column-colors";
 import type { StatusConfigEntry } from "@/lib/status-config";
 
 const STATUS_DOT: Record<string, string> = {
-  TODO: "bg-slate-400",
-  IN_PROGRESS: "bg-blue-500",
-  IN_REVIEW: "bg-amber-500",
-  DONE: "bg-emerald-500",
-  CANCELLED: "bg-red-400",
+  TODO: "bg-status-neutral-fill",
+  IN_PROGRESS: "bg-status-info-fill",
+  IN_REVIEW: "bg-status-warning-fill",
+  DONE: "bg-status-success-fill",
+  CANCELLED: "bg-status-danger-fill",
 };
 
 const STATUS_BADGE: Record<string, string> = {

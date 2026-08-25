@@ -224,19 +224,19 @@ export function LeaveRequestFormFields({
               <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                 <SelectItem value="LOW">
                   <span className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                    <span className="h-2 w-2 rounded-full bg-status-success-fill" />
                     Low
                   </span>
                 </SelectItem>
                 <SelectItem value="MEDIUM">
                   <span className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-amber-500" />
+                    <span className="h-2 w-2 rounded-full bg-status-warning-fill" />
                     Medium
                   </span>
                 </SelectItem>
                 <SelectItem value="HIGH">
                   <span className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-red-500" />
+                    <span className="h-2 w-2 rounded-full bg-status-danger-fill" />
                     High
                   </span>
                 </SelectItem>

@@ -195,7 +195,7 @@ export function AnnouncementsWidget() {
                 </Button>
                 <Button
                   size="sm"
-                  className="px-3 text-xs bg-amber-600 hover:bg-amber-700 text-white"
+                  className="px-3 text-xs bg-status-warning-fill hover:bg-status-warning-fill-hover text-white"
                   onClick={handleSubmit}
                   disabled={
                     createMutation.isPending || !title.trim() || !content.trim()

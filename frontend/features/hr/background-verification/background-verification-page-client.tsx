@@ -100,7 +100,7 @@ function ComplianceDashboard() {
           </CardHeader>
           <CardContent className="pt-0 px-4 pb-4 space-y-2">
             <div className="flex items-center gap-2">
-              <Progress value={row.clearedPct} className="flex-1 h-2 bg-muted [&>div]:bg-emerald-500" />
+              <Progress value={row.clearedPct} className="flex-1 h-2 bg-muted [&>div]:bg-status-success-fill" />
               <span className="text-xs font-semibold text-status-success-ink tabular-nums w-10 text-right">
                 {row.clearedPct}%
               </span>

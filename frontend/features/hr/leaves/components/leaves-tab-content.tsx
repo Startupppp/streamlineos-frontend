@@ -196,7 +196,7 @@ export function LeavesTabContent({
             priorityConfig[priority] ??
             priorityConfig["MEDIUM"] ?? {
               label: "Medium",
-              dotColor: "bg-amber-500",
+              dotColor: "bg-status-warning-fill",
               textColor: "text-status-warning-ink",
             };
           return (

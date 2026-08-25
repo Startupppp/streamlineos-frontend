@@ -167,11 +167,11 @@ export default function WinLossAnalysisPage() {
                 </div>
                 <div className="h-4 w-full rounded-full bg-muted overflow-hidden flex">
                   <div
-                    className="h-full bg-emerald-500 rounded-l-full"
+                    className="h-full bg-status-success-fill rounded-l-full"
                     style={{ width: `${wonPct}%` }}
                   />
                   <div
-                    className="h-full bg-red-500 rounded-r-full"
+                    className="h-full bg-status-danger-fill rounded-r-full"
                     style={{ width: `${lostPct}%` }}
                   />
                 </div>
@@ -227,7 +227,7 @@ export default function WinLossAnalysisPage() {
                           </div>
                           <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
                             <div
-                              className="h-full w-full rounded-full bg-red-600 origin-left"
+                              className="h-full w-full rounded-full bg-status-danger-fill origin-left"
                               style={{
                                 transform: `scaleX(${barPct / 100})`,
                                 transition: shouldReduceMotion

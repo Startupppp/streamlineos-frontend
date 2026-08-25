@@ -72,7 +72,7 @@ export function EmployeeCard({ employee: emp, department }: EmployeeCardProps) {
                   <span
                     className={cn(
                       "h-1.5 w-1.5 rounded-full",
-                      isActive ? "bg-emerald-500" : "bg-muted-foreground/60",
+                      isActive ? "bg-status-success-fill" : "bg-muted-foreground/60",
                     )}
                   />
                   {isActive ? "Active" : "Inactive"}

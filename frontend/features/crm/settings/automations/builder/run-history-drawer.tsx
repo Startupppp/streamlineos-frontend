@@ -79,9 +79,9 @@ export const RunHistoryDrawer = memo(function RunHistoryDrawer({ ruleId, open, o
                       {run.steps.map((step) => (
                         <div key={step.nodeId} className="flex items-center gap-2">
                           <span className={cn("h-2 w-2 rounded-full shrink-0", {
-                            "bg-emerald-500": step.status === "ok",
-                            "bg-red-500": step.status === "error",
-                            "bg-amber-400": step.status === "skipped",
+                            "bg-status-success-fill": step.status === "ok",
+                            "bg-status-danger-fill": step.status === "error",
+                            "bg-status-warning-fill": step.status === "skipped",
                           })} />
                           <span className="text-micro text-muted-foreground">{step.type}</span>
                           {step.message && <span className="text-micro text-muted-foreground">— {step.message}</span>}

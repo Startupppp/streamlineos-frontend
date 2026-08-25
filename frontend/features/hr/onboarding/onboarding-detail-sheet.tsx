@@ -269,7 +269,7 @@ export const EmployeeDocumentsTab = forwardRef<
           </div>
           <Progress
             value={progressPct}
-            className="h-1.5 [&>div]:bg-emerald-500 [&>div]:transition-all [&>div]:duration-500"
+            className="h-1.5 [&>div]:bg-status-success-fill [&>div]:transition-all [&>div]:duration-500"
           />
           {progressPct === 100 ? (
             <p className="mt-1.5 flex items-center gap-1 text-dense font-semibold text-status-success-ink">

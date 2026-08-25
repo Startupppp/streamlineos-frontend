@@ -109,7 +109,7 @@ function PendingAttachmentItem({ att, idx, onRemove }: PendingAttachmentItemProp
       <button
         onClick={handleRemove}
         aria-label="Remove attachment"
-        className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+        className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-status-danger-fill text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
       >
         <X className="h-3 w-3" />
       </button>
@@ -260,7 +260,7 @@ export function MessageInput({
             className="border-t border-border/30 overflow-hidden bg-muted/20"
           >
             <div className="flex items-center gap-3 px-4 py-2 max-w-[900px] mx-auto">
-              <div className="w-1 h-9 rounded-full bg-blue-500 shrink-0" />
+              <div className="w-1 h-9 rounded-full bg-status-info-fill shrink-0" />
               <Reply className="h-4 w-4 text-status-info-ink shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-bold text-status-info-ink">

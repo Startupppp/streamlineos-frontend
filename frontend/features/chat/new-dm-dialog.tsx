@@ -65,7 +65,7 @@ function DMUserItem({
           </AvatarFallback>
         </Avatar>
         {isOnline && (
-          <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-background" />
+          <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-status-success-fill border-2 border-background" />
         )}
       </div>
       <div className="flex-1 text-left min-w-0">

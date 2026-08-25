@@ -111,8 +111,8 @@ export function DocumentTypeList({
                   "h-2.5 w-2.5 rounded-full shrink-0",
                   isActive
                     ? documentType.isMandatory
-                      ? "bg-amber-500"
-                      : "bg-emerald-500"
+                      ? "bg-status-warning-fill"
+                      : "bg-status-success-fill"
                     : "bg-muted-foreground/30",
                 )}
               />

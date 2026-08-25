@@ -19,7 +19,7 @@ interface CandidateCardProps {
 const SOURCE_COLORS: Record<string, string> = {
   LINKEDIN: "bg-status-info-surface text-status-info-ink",
   REFERRAL: "bg-status-info-surface text-status-info-ink",
-  DIRECT: "bg-muted text-muted-foreground dark:bg-slate-800",
+  DIRECT: "bg-muted text-muted-foreground",
   JOB_PORTAL: "bg-status-warning-surface text-status-warning-ink",
   CAMPUS: "bg-status-success-surface text-status-success-ink",
 };

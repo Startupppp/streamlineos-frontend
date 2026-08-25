@@ -41,7 +41,7 @@ export const balanceCardConfig: Record<
 > = {
   "Casual Leave": {
     label: "CASUAL",
-    barColor: "bg-blue-500",
+    barColor: "bg-status-info-fill",
     valueColor: "text-status-info-ink",
     iconBg: "bg-status-info-surface",
     iconColor: "text-status-info-ink",
@@ -49,7 +49,7 @@ export const balanceCardConfig: Record<
   },
   "Sick Leave": {
     label: "SICK",
-    barColor: "bg-rose-500",
+    barColor: "bg-status-danger-fill",
     valueColor: "text-status-danger-ink",
     iconBg: "bg-status-danger-surface",
     iconColor: "text-status-danger-ink",
@@ -89,17 +89,17 @@ export const priorityConfig: Record<
 > = {
   HIGH: {
     label: "High",
-    dotColor: "bg-rose-500",
+    dotColor: "bg-status-danger-fill",
     textColor: "text-status-danger-ink",
   },
   MEDIUM: {
     label: "Medium",
-    dotColor: "bg-amber-500",
+    dotColor: "bg-status-warning-fill",
     textColor: "text-status-warning-ink",
   },
   LOW: {
     label: "Low",
-    dotColor: "bg-emerald-500",
+    dotColor: "bg-status-success-fill",
     textColor: "text-status-success-ink",
   },
 };

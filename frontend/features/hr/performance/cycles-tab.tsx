@@ -246,11 +246,11 @@ export function CyclesTab() {
                 : "border-border bg-muted text-muted-foreground";
             const progressBarClass =
               cycle.status === "ACTIVE"
-                ? "bg-emerald-500"
+                ? "bg-status-success-fill"
                 : cycle.status === "COMPLETED"
-                ? "bg-blue-500"
+                ? "bg-status-info-fill"
                 : cycle.status === "CANCELLED"
-                ? "bg-rose-400"
+                ? "bg-status-danger-fill"
                 : "bg-muted-foreground/30";
 
             return (

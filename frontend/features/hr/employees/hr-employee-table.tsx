@@ -46,7 +46,7 @@ function EmployeeStatusChip({ isActive }: { isActive: boolean }) {
       <span
         className={cn(
           "h-1.5 w-1.5 rounded-full",
-          isActive ? "bg-emerald-500" : "bg-muted-foreground/50",
+          isActive ? "bg-status-success-fill" : "bg-muted-foreground/50",
         )}
       />
       {isActive ? "Active" : "Inactive"}

@@ -132,7 +132,7 @@ export default function AboutPage() {
       </section>
 
       <section className="container mx-auto px-4 lg:px-8 max-w-5xl mt-20 lg:mt-28">
-        <div className="relative rounded-2xl overflow-hidden bg-slate-900 p-10 lg:p-14 text-center">
+        <div className="relative rounded-2xl overflow-hidden bg-status-neutral-fill p-10 lg:p-14 text-center">
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute -top-16 left-1/2 -translate-x-1/2 h-[280px] w-[560px] rounded-full bg-status-info-surface blur-3xl" />
           </div>

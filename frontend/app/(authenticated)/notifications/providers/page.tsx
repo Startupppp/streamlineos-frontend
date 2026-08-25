@@ -433,8 +433,8 @@ function HealthDot({ status }: { status: string }) {
     <span
       className={cn(
         "inline-block h-2 w-2 rounded-full shrink-0",
-        status === "healthy" && "bg-emerald-500",
-        status === "unhealthy" && "bg-red-500",
+        status === "healthy" && "bg-status-success-fill",
+        status === "unhealthy" && "bg-status-danger-fill",
         status !== "healthy" && status !== "unhealthy" && "bg-muted-foreground/40",
       )}
       title={status}

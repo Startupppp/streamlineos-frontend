@@ -50,9 +50,9 @@ const URGENCY_CONFIG: Record<
   ReorderReportRow["urgency"],
   { label: string; className: string; dotClass: string }
 > = {
-  critical: { label: "Critical", className: "bg-status-danger-surface border-status-danger-rule", dotClass: "bg-red-500" },
-  high: { label: "High", className: "bg-status-warning-surface border-status-warning-rule", dotClass: "bg-amber-500" },
-  medium: { label: "Medium", className: "bg-status-info-surface border-status-info-rule", dotClass: "bg-blue-400" },
+  critical: { label: "Critical", className: "bg-status-danger-surface border-status-danger-rule", dotClass: "bg-status-danger-fill" },
+  high: { label: "High", className: "bg-status-warning-surface border-status-warning-rule", dotClass: "bg-status-warning-fill" },
+  medium: { label: "Medium", className: "bg-status-info-surface border-status-info-rule", dotClass: "bg-status-info-fill" },
 };
 
 function KpiSkeletons() {
@@ -172,7 +172,7 @@ function ExpiryAlertsCard({ count }: { count: number }) {
         ) : (
           <div className="space-y-2">
             <div className="flex items-center gap-3 rounded-lg border border-status-warning-rule bg-status-warning-surface p-3">
-              <div className="h-2 w-2 rounded-full bg-amber-500 shrink-0" />
+              <div className="h-2 w-2 rounded-full bg-status-warning-fill shrink-0" />
               <div className="flex-1">
                 <p className="text-dense font-semibold text-foreground">
                   {count} lot{count !== 1 ? "s" : ""} expiring soon

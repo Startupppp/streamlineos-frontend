@@ -29,7 +29,7 @@ function AgentSkillsRow({ userId, label, skills, isAvailable, onEdit }: AgentSki
           <span
             className={
               isAvailable
-                ? "h-2 w-2 shrink-0 rounded-full bg-emerald-500"
+                ? "h-2 w-2 shrink-0 rounded-full bg-status-success-fill"
                 : "h-2 w-2 shrink-0 rounded-full bg-muted-foreground/50"
             }
           />

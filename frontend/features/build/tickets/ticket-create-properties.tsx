@@ -373,7 +373,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
                 <span
                   className={cn(
                     "h-2 w-2 rounded-full shrink-0",
-                    c.status === "active" ? "bg-green-500" : c.status === "completed" ? "bg-muted-foreground" : "bg-blue-400",
+                    c.status === "active" ? "bg-status-success-fill" : c.status === "completed" ? "bg-muted-foreground" : "bg-status-info-fill",
                   )}
                 />
                 <span className="min-w-0 flex-1 truncate text-left">{c.name}</span>

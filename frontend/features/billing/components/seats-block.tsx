@@ -19,9 +19,9 @@ function utilizationColor(percent: number): string {
 }
 
 function progressBarColor(percent: number): string {
-  if (percent >= 90) return "bg-red-500";
-  if (percent >= 70) return "bg-amber-500";
-  return "bg-green-500";
+  if (percent >= 90) return "bg-status-danger-fill";
+  if (percent >= 70) return "bg-status-warning-fill";
+  return "bg-status-success-fill";
 }
 
 function utilizationStatTone(percent: number): StatTone {

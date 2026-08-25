@@ -18,9 +18,9 @@ const STATUS_BADGE_VARIANT: Record<string, "default" | "secondary" | "destructiv
 };
 
 const STATUS_LEFT_COLOR: Record<string, string> = {
-  pending: "bg-amber-400",
-  accepted: "bg-emerald-500",
-  declined: "bg-red-500",
+  pending: "bg-status-warning-fill",
+  accepted: "bg-status-success-fill",
+  declined: "bg-status-danger-fill",
   duplicate: "bg-border",
 };
 

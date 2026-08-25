@@ -131,7 +131,7 @@ export function TestPaymentTab({ providerKey }: { providerKey: string }) {
                 <span
                   className={cn(
                     "h-4 w-4 rounded-full flex items-center justify-center shrink-0",
-                    done ? "bg-emerald-500" : active ? "bg-primary/10" : "bg-muted",
+                    done ? "bg-status-success-fill" : active ? "bg-primary/10" : "bg-muted",
                   )}
                 >
                   {done ? (

@@ -89,7 +89,7 @@ export function ChannelItem({
                 iconClassName="h-3.5 w-3.5"
               />
               {isOnline && (
-                <span className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-background" />
+                <span className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5 rounded-full bg-status-success-fill border-2 border-background" />
               )}
               {hasUnread && (
                 <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-primary border-2 border-background" />
@@ -130,7 +130,7 @@ export function ChannelItem({
             className="h-10 w-10"
           />
           {isOnline && (
-            <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 border-2 border-background" />
+            <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-status-success-fill border-2 border-background" />
           )}
         </div>
 

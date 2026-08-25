@@ -78,7 +78,7 @@ function ApprovalCard({
           <div className="flex items-center gap-2 shrink-0">
             <Button
               size="sm"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+              className="bg-status-success-fill hover:bg-status-success-fill-hover text-white shadow-sm"
               onClick={handleApprove}
             >
               Approve
@@ -233,7 +233,7 @@ export default function ApprovalsPage() {
               variant={dialogAction === "approve" ? undefined : "destructive"}
               className={
                 dialogAction === "approve"
-                  ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                  ? "bg-status-success-fill hover:bg-status-success-fill-hover text-white"
                   : undefined
               }
             >

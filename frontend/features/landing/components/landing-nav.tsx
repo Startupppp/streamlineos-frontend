@@ -140,7 +140,7 @@ export function LandingNav() {
               <Link
                 href="/signin"
                 onClick={() => setOpen(false)}
-                className="mt-1 flex items-center justify-center gap-1.5 rounded-lg bg-slate-900 px-3 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+                className="mt-1 flex items-center justify-center gap-1.5 rounded-lg bg-status-neutral-fill px-3 py-3 text-sm font-semibold text-white hover:bg-status-neutral-fill-hover"
               >
                 Get started
                 <ArrowRight className="h-3.5 w-3.5" />

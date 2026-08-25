@@ -21,11 +21,11 @@ const STAGE_PROBABILITY: Record<string, number> = {
 };
 
 const STAGE_DOT: Partial<Record<DealStage, string>> = {
-  LEAD: "bg-blue-500",
-  CONTACTED: "bg-sky-500",
-  PROPOSAL: "bg-amber-500",
-  NEGOTIATION: "bg-blue-500",
-  WON: "bg-emerald-500",
+  LEAD: "bg-status-info-fill",
+  CONTACTED: "bg-status-info-fill",
+  PROPOSAL: "bg-status-warning-fill",
+  NEGOTIATION: "bg-status-info-fill",
+  WON: "bg-status-success-fill",
 };
 
 const STAGE_LABEL: Partial<Record<DealStage, string>> = {

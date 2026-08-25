@@ -262,7 +262,7 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
               {totalItems > 0 ? (
                 <>
                   <div
-                    className="h-full bg-emerald-500 transition-[width] duration-300"
+                    className="h-full bg-status-success-fill transition-[width] duration-300"
                     style={{ width: `${(completedItems / totalItems) * 100}%` }}
                   />
                   <div
@@ -279,7 +279,7 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
             {totalItems > 0 ? (
               <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-micro text-muted-foreground">
                 <span className="flex items-center gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Done ({completedItems})
+                  <span className="h-1.5 w-1.5 rounded-full bg-status-success-fill" /> Done ({completedItems})
                 </span>
                 <span className="flex items-center gap-1">
                   <span className="h-1.5 w-1.5 rounded-full bg-primary/70" /> In Progress ({inProgressItems})

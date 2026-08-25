@@ -150,7 +150,7 @@ export function ConversionModal({ leadName, open, onClose, onSubmit, canCreateDe
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={handleClose}>Cancel</Button>
-          <Button onClick={handleSubmit} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+          <Button onClick={handleSubmit} className="bg-status-success-fill hover:bg-status-success-fill-hover text-white">
             {createDeal ? "Convert & Create Deal" : "Convert Lead"}
           </Button>
         </DialogFooter>

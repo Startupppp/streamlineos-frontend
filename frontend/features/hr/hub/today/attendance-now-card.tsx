@@ -45,7 +45,7 @@ export function AttendanceNowCard({
           <div className="flex flex-wrap gap-2">
             {onBreak > 0 && (
               <span className="inline-flex items-center gap-1 text-micro px-2 py-0.5 rounded-full bg-status-warning-surface text-status-warning-ink">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
+                <span className="h-1.5 w-1.5 rounded-full bg-status-warning-fill shrink-0" />
                 {onBreak} on break
               </span>
             )}
@@ -60,7 +60,7 @@ export function AttendanceNowCard({
               <span
                 className={cn(
                   "h-1.5 w-1.5 rounded-full shrink-0",
-                  present > 0 ? "bg-emerald-500" : "bg-muted-foreground/40",
+                  present > 0 ? "bg-status-success-fill" : "bg-muted-foreground/40",
                 )}
               />
               {present} present

@@ -315,7 +315,7 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
                           aria-label={`Cycle progress: ${cycle.progress}%`}
                         >
                           <div
-                            className="bg-emerald-500 h-1.5 rounded-full transition-all duration-300"
+                            className="bg-status-success-fill h-1.5 rounded-full transition-all duration-300"
                             style={{ width: `${cycle.progress}%` }}
                           />
                         </div>

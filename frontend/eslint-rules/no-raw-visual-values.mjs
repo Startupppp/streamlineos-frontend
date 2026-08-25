@@ -19,20 +19,22 @@ const HUES = "slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|e
 /**
  * Flags only what a token can express.
  *
- * A rule that demands the impossible gets disabled. The token set has
- * `surface`, `ink` and `rule` — so a light tint, an alpha wash, a text colour
- * and a border are all flaggable. It has **no solid fill and no gradient**, so
- * `bg-emerald-600` on a button and `from-blue-400` on a chart are left alone
- * until those roles exist. Both are recorded in docs/TOKEN-MIGRATION.md as the
- * additions that would let this widen.
+ * A rule that demands the impossible gets disabled. The set now has `surface`,
+ * `ink`, `rule` and `fill`, so tints, washes, text, borders and solid fills are
+ * all flaggable.
+ *
+ * Two things are still left alone. **Gradients** (`from-`/`to-`/`via-`) have no
+ * role and it is not obvious one should exist — a gradient is closer to an
+ * illustration than to a decision. And an **arbitrary alpha** (`bg-sky-300/[0.12]`)
+ * is a decorative wash at a hand-tuned opacity, not a semantic surface. Both are
+ * recorded in docs/TOKEN-MIGRATION.md.
  */
 const PALETTE = new RegExp(
-  "\\b(?:[a-z-]+:)*" +
-    // Surfaces: a light tint, or any shade carrying an alpha.
-    `(?:bg-(?:${HUES})-(?:50|100)\\b` +
-    `|bg-(?:${HUES})-\\d{2,3}\\/\\d{1,3}\\b` +
+  "\\b(?:(?:\\[[^\\]]+\\]|[a-z-]+):)*!?" +
+    // Surfaces and fills: any shade, with or without a fractional alpha.
+    `(?:bg-(?:${HUES})-\\d{2,3}(?:\\/\\d{1,3})?\\b(?!\\/\\[)` +
     // Ink and rules at any shade.
-    `|(?:text|border|ring|divide|decoration|placeholder)-(?:${HUES})-\\d{2,3}(?:\\/\\d{1,3})?\\b)`,
+    `|(?:text|border|ring|divide|decoration|placeholder)-(?:${HUES})-\\d{2,3}(?:\\/\\d{1,3})?\\b(?!\\/\\[))`,
 );
 
 /** Arbitrary type sizes: `text-[11px]`. */
@@ -42,7 +44,7 @@ const ARBITRARY_TYPE = /\btext-\[\d+(?:\.\d+)?(?:px|rem)\]/;
 const ARBITRARY_COLOUR = /\b(?:bg|text|border|ring|fill|stroke)-\[(?:#|rgb|hsl|oklch)/i;
 
 const CHECKS = [
-  [PALETTE, "palette", "reads a token instead — `text-status-success-ink`, `text-muted-foreground`. A literal colour needs a hand-written `dark:` twin, and roughly half the call sites in this codebase forgot theirs."],
+  [PALETTE, "palette", "reads a token instead — `bg-status-success-fill` for a solid, `bg-status-success-surface` for a wash, `text-muted-foreground` for quiet text, or `categoryClasses()` when the colour names a category rather than a status. A literal needs a hand-written `dark:` twin, and roughly half the call sites in this codebase forgot theirs."],
   [ARBITRARY_TYPE, "type", "reads a step instead — `text-micro`, `text-dense`, `text-label`, or Tailwind's own `text-xs`/`text-sm`."],
   [ARBITRARY_COLOUR, "colour", "reads a token instead. A raw colour cannot follow the theme."],
 ];

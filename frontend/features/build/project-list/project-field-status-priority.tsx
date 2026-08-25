@@ -118,10 +118,10 @@ const PRIORITY_OPTIONS: { value: ProjectPriorityValue; label: string }[] = [
 ];
 
 const priorityDotColors: Record<ProjectPriorityValue, string> = {
-  URGENT: "bg-red-500",
-  HIGH: "bg-orange-500",
-  MEDIUM: "bg-yellow-500",
-  LOW: "bg-slate-400",
+  URGENT: "bg-status-danger-fill",
+  HIGH: "bg-status-warning-fill",
+  MEDIUM: "bg-status-warning-fill",
+  LOW: "bg-status-neutral-fill",
 };
 
 interface InlineProjectPriorityProps extends InlineProjectFieldProps {

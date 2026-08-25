@@ -48,9 +48,9 @@ function StepIndicatorButton({ idx, isActive, isCompleted, hasError, title, onSt
         isActive
           ? "w-6 bg-primary"
           : isCompleted && !hasError
-            ? "w-1.5 bg-emerald-500"
+            ? "w-1.5 bg-status-success-fill"
             : hasError
-              ? "w-1.5 bg-rose-500"
+              ? "w-1.5 bg-status-danger-fill"
               : "w-1.5 bg-muted-foreground/20 hover:bg-muted-foreground/40"
       )}
       aria-label={`Go to step ${idx + 1}: ${title}`}

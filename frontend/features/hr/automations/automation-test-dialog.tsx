@@ -103,7 +103,7 @@ export function AutomationTestDialog({ rule, onClose }: Props) {
                   <p className="text-micro font-semibold text-muted-foreground uppercase tracking-wider">Condition Checks</p>
                   {result.matchedConditions.map((mc, i) => (
                     <div key={i} className="flex items-center gap-2 text-xs">
-                      <span className={`h-1.5 w-1.5 rounded-full ${mc.matched ? "bg-emerald-500" : "bg-red-500"}`} />
+                      <span className={`h-1.5 w-1.5 rounded-full ${mc.matched ? "bg-status-success-fill" : "bg-status-danger-fill"}`} />
                       <span className="font-mono text-muted-foreground">{mc.condition.field} {mc.condition.operator} {String(mc.condition.value)}</span>
                     </div>
                   ))}

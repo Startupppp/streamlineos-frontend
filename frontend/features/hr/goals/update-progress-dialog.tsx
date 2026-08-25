@@ -62,7 +62,7 @@ export function UpdateProgressDialog({
             </div>
             <div className="h-2 bg-muted rounded-full overflow-hidden">
               <div
-                className="h-full bg-blue-600 rounded-full transition-all duration-300"
+                className="h-full bg-status-info-fill rounded-full transition-all duration-300"
                 style={{ width: `${progressValue}%` }}
               />
             </div>

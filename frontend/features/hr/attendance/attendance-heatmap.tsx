@@ -35,10 +35,10 @@ const CELL = "h-3 w-3 rounded-[2px]";
 
 const intensityClasses: Record<number, string> = {
   0: "bg-muted/40 dark:bg-muted/20",
-  1: "bg-blue-200",
-  2: "bg-blue-400 dark:bg-blue-700",
-  3: "bg-blue-600 dark:bg-blue-500",
-  4: "bg-blue-800 dark:bg-blue-300",
+  1: "bg-status-info-fill",
+  2: "bg-status-info-fill",
+  3: "bg-status-info-fill",
+  4: "bg-status-info-fill",
 };
 
 function HeatmapSkeleton() {

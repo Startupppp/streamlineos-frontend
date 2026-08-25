@@ -76,7 +76,7 @@ function ProgressBar({ approved, total }: { approved: number; total: number }) {
       : `${approved} of ${total} required document${total === 1 ? "" : "s"} approved`;
 
   const barColor =
-    pct === 100 ? "bg-emerald-500" : pct > 50 ? "bg-blue-500" : "bg-amber-500";
+    pct === 100 ? "bg-status-success-fill" : pct > 50 ? "bg-status-info-fill" : "bg-status-warning-fill";
 
   return (
     <div className="flex flex-col gap-1 min-w-[160px]">

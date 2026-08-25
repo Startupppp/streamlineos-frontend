@@ -76,7 +76,7 @@ export function QuoteActionBar({
         <>
           <LoadingButton
             size="sm"
-            className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            className="bg-status-success-fill hover:bg-status-success-fill-hover text-white"
             onClick={onApprove}
             isPending={approvePending}
             loadingText="Approving..."

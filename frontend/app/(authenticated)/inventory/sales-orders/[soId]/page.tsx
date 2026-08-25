@@ -89,7 +89,7 @@ function AtpIndicator({ available, requested }: { available: number; requested: 
   if (available >= requested) {
     return (
       <span className="inline-flex items-center gap-1 text-xs font-medium text-status-success-ink bg-status-success-surface border border-status-success-rule rounded px-1.5 py-0.5">
-        <span className="size-1.5 rounded-full bg-green-500 inline-block" />
+        <span className="size-1.5 rounded-full bg-status-success-fill inline-block" />
         In stock
       </span>
     );
@@ -97,14 +97,14 @@ function AtpIndicator({ available, requested }: { available: number; requested: 
   if (available > 0) {
     return (
       <span className="inline-flex items-center gap-1 text-xs font-medium text-status-warning-ink bg-status-warning-surface border border-status-warning-rule rounded px-1.5 py-0.5">
-        <span className="size-1.5 rounded-full bg-amber-500 inline-block" />
+        <span className="size-1.5 rounded-full bg-status-warning-fill inline-block" />
         Partial ({available})
       </span>
     );
   }
   return (
     <span className="inline-flex items-center gap-1 text-xs font-medium text-status-danger-ink bg-status-danger-surface border border-status-danger-rule rounded px-1.5 py-0.5">
-      <span className="size-1.5 rounded-full bg-red-500 inline-block" />
+      <span className="size-1.5 rounded-full bg-status-danger-fill inline-block" />
       Insufficient
     </span>
   );

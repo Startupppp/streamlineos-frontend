@@ -285,10 +285,10 @@ export function CollectionsTab() {
               className={cn(
                 "h-2 rounded-full transition-all",
                 row.riskScore > 70
-                  ? "bg-red-500"
+                  ? "bg-status-danger-fill"
                   : row.riskScore > 40
-                    ? "bg-amber-500"
-                    : "bg-emerald-500",
+                    ? "bg-status-warning-fill"
+                    : "bg-status-success-fill",
               )}
               style={{ width: `${row.riskScore}%` }}
             />

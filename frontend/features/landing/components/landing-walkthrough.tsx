@@ -65,7 +65,7 @@ function WalkthroughRow({
         }`}
       >
         <div className="flex items-center gap-3 mb-4">
-          <span className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-blue-600 text-white text-dense font-bold font-mono shrink-0">
+          <span className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-status-info-fill text-white text-dense font-bold font-mono shrink-0">
             {String(index + 1).padStart(2, "0")}
           </span>
           <span className="text-xs font-medium text-status-info-ink">
@@ -225,7 +225,7 @@ function OnboardVisual() {
             <span
               className={`h-4 w-4 rounded-full border inline-flex items-center justify-center text-micro ${
                 s.done
-                  ? "bg-blue-600 border-status-info-rule text-white"
+                  ? "bg-status-info-fill border-status-info-rule text-white"
                   : s.current
                     ? "border-status-info-rule text-status-info-ink"
                     : "border-border"

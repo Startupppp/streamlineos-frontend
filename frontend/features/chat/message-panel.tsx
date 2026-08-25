@@ -1002,7 +1002,7 @@ export function MessagePanel({
                 iconClassName="h-4 w-4"
               />
               {channel?.type === "DIRECT" && isOtherOnline && (
-                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-background" />
+                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-status-success-fill border-2 border-background" />
               )}
             </div>
 
@@ -1113,7 +1113,7 @@ export function MessagePanel({
 
         {!isOnline && (
           <div className="shrink-0 px-4 py-1.5 bg-status-warning-surface border-b border-status-warning-rule flex items-center gap-2 text-xs text-status-warning-ink font-medium">
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+            <span className="h-1.5 w-1.5 rounded-full bg-status-warning-fill animate-pulse shrink-0" />
             You&apos;re offline — messages will be sent when you reconnect
           </div>
         )}

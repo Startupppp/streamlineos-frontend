@@ -31,7 +31,7 @@ function TrendBar({ count, max, successCount }: { count: number; max: number; su
       </div>
       <div className="h-2 w-16 bg-muted rounded-full overflow-hidden">
         <div
-          className="h-full bg-green-400 rounded-full transition-all duration-500"
+          className="h-full bg-status-success-fill rounded-full transition-all duration-500"
           style={{ "--success-pct": `${successPct}%`, width: "var(--success-pct)" } as React.CSSProperties}
         />
       </div>
@@ -106,7 +106,7 @@ export default function WorkflowAnalyticsPage() {
                       Total
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <span className="w-3 h-1.5 rounded-full bg-green-400 inline-block" />
+                      <span className="w-3 h-1.5 rounded-full bg-status-success-fill inline-block" />
                       Successful
                     </span>
                   </div>

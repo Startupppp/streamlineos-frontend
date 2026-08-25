@@ -57,7 +57,7 @@ export function SetupProgressBanner({ steps }: SetupProgressBannerProps) {
         </div>
         <Link
           href="/accounting/setup"
-          className="inline-flex items-center rounded-md bg-amber-700 px-2.5 py-1 text-dense font-semibold text-white hover:bg-amber-800 transition-colors"
+          className="inline-flex items-center rounded-md bg-status-warning-fill px-2.5 py-1 text-dense font-semibold text-white hover:bg-status-warning-fill-hover transition-colors"
         >
           Complete setup →
         </Link>

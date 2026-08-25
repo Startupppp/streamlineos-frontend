@@ -191,7 +191,7 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
                 <div className="flex items-center justify-end gap-2">
                   <div className="h-1.5 w-16 rounded-full bg-muted overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-blue-500"
+                      className="h-full rounded-full bg-status-info-fill"
                       style={{ width: `${confidencePct}%`, transition: "width 0.4s ease" }}
                     />
                   </div>

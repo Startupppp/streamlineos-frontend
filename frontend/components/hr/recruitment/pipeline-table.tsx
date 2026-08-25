@@ -9,7 +9,7 @@ import { formatDistanceToNow } from "date-fns";
 import type { AtsPipelineStage } from "@/types/hr/recruitment";
 
 const STAGE_BADGE: Record<string, string> = {
-  NEW: "bg-muted text-muted-foreground dark:bg-slate-800",
+  NEW: "bg-muted text-muted-foreground",
   SCREENING: "bg-status-info-surface text-status-info-ink",
   INTERVIEW: "bg-status-info-surface text-status-info-ink",
   OFFER: "bg-primary/10 text-foreground dark:bg-primary/10 dark:text-foreground",

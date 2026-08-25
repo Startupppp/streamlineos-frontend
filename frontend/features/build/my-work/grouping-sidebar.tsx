@@ -22,10 +22,10 @@ const PRIORITY_LABELS: Record<string, string> = {
   LOW: "Low",
 };
 const PRIORITY_COLORS: Record<string, string> = {
-  URGENT: "bg-red-500",
-  HIGH: "bg-orange-400",
-  MEDIUM: "bg-amber-400",
-  LOW: "bg-blue-400",
+  URGENT: "bg-status-danger-fill",
+  HIGH: "bg-status-warning-fill",
+  MEDIUM: "bg-status-warning-fill",
+  LOW: "bg-status-info-fill",
 };
 
 interface GroupRow {

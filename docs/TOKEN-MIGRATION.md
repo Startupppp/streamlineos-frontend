@@ -96,26 +96,47 @@ the status tones have, plus a solid `fill` role alongside `surface`/`ink`/`rule`
 Until then this file is the one place raw palette values are correct rather than
 a lapse.
 
-## The two roles still missing
+## `fill` — added
 
-This is what the 471 remaining values are, and why the rule does not flag them:
-a rule that demands the impossible is a rule somebody disables.
+The gap the migration itself proved. 306 values were solid fills — a button, a
+status dot, a progress bar — and a surface is a pale wash, so treating them as
+one role is what puts white button text on a near-white background. The status
+tones now carry `fill` and `fill-hover`, matching the categorical scale.
 
-### `fill` — a solid colour
+`fill-hover` is a separate token rather than an opacity change, because a hover
+derived by transparency washes out against a dark ground.
 
-306 of them. `bg-emerald-600` on a button, `bg-blue-500` on a status dot. A
-surface is a pale wash; putting white button text on one makes it invisible. The
-categorical scale added here **does** have a `fill` role, which is how the
-taxonomy dots were migrated — the status tones still need one.
+All 306 are migrated. `no-raw-visual-values` now flags fills too.
 
-### `gradient` — a from/to pair
+## What is deliberately left, and why
 
-79 of them, almost all decorative: funnel charts, hero washes, brand panels. No
-token role exists and it is not obvious one should; a gradient is closer to an
-illustration than to a decision.
+**111 values, and the rule is silent on all of them by design.** A rule that
+demands the impossible is a rule somebody disables.
 
-Adding both would let the rule widen to cover everything, at which point ticket
-18 can delete the legacy path outright.
+### Gradients — 102
+
+`from-`/`to-`/`via-` pairs: funnel charts, hero washes, brand panels, chat
+bubbles. There is no role and it is not obvious there should be one — a gradient
+is closer to an illustration than to a decision, and inventing
+`--gradient-1-from` would put a decorative choice into the system every product
+screen reads from.
+
+### Arbitrary-alpha washes — 9
+
+`bg-sky-300/[0.12]` on a blurred, `pointer-events-none`, `-z-10` ambient blob.
+A hand-tuned opacity on a decorative shape is not a semantic surface, and the
+rule excludes the arbitrary-alpha form specifically rather than the file.
+
+### Display type — 32
+
+Marketing and brand headings between the product steps: a hero at 2.75rem, a
+pricing headline at 1.35rem. Sizes meant to be looked at rather than read in a
+table. Colour is still enforced on those surfaces; only the type check is
+relaxed, which is why they are listed by path rather than the rule being
+weakened.
+
+**Ticket 18 can now delete the legacy path for colour and type.** What it cannot
+delete is whatever a gradient needs, because nothing has replaced it.
 
 ### Solid fills are not surfaces
 

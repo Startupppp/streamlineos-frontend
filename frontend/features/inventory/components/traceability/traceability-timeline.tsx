@@ -137,7 +137,7 @@ export function TraceabilityTimeline({
       </TimelineSection>
 
       {result.receipts.length > 0 && (
-        <TimelineSection dotClass="bg-emerald-500" label="Receipts">
+        <TimelineSection dotClass="bg-status-success-fill" label="Receipts">
           <div className="space-y-0.5">
             {result.receipts.map((e) => (
               <EventRow key={e.id} event={e} />
@@ -159,7 +159,7 @@ export function TraceabilityTimeline({
       </TimelineSection>
 
       {result.shipments.length > 0 && (
-        <TimelineSection dotClass="bg-amber-500" label="Shipments">
+        <TimelineSection dotClass="bg-status-warning-fill" label="Shipments">
           <div className="space-y-0.5">
             {result.shipments.map((e) => (
               <EventRow key={e.id} event={e} />
@@ -170,7 +170,7 @@ export function TraceabilityTimeline({
 
       {(result.vendorReturns.length > 0 ||
         result.customerReturns.length > 0) && (
-        <TimelineSection dotClass="bg-orange-400" label="Returns">
+        <TimelineSection dotClass="bg-status-warning-fill" label="Returns">
           <div className="space-y-0.5">
             {[...result.vendorReturns, ...result.customerReturns].map((e) => (
               <EventRow key={e.id} event={e} />

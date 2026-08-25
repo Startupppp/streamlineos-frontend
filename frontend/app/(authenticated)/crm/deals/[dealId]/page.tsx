@@ -368,7 +368,7 @@ export default function DealDetailPage({
                 </Button>
                 <Button
                   size="sm"
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                  className="bg-status-success-fill hover:bg-status-success-fill-hover text-white"
                   onClick={handleMarkWon}
                 >
                   <Trophy className="h-3.5 w-3.5 mr-1" />

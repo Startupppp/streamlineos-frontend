@@ -32,12 +32,12 @@ export function HuddleParticipantCard({
   const { iconRef: kickIconRef, hoverHandlers: kickHoverHandlers } = useAnimatedIcon();
   const qualityColor =
     networkQuality === "excellent"
-      ? "bg-emerald-500"
+      ? "bg-status-success-fill"
       : networkQuality === "good"
-        ? "bg-yellow-400"
+        ? "bg-status-warning-fill"
         : networkQuality === "poor"
-          ? "bg-red-500"
-          : "bg-zinc-400";
+          ? "bg-status-danger-fill"
+          : "bg-status-neutral-fill";
 
   return (
     <div className="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-muted/30">

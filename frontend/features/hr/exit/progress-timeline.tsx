@@ -44,7 +44,7 @@ export function ProgressTimeline({ id }: { id: number }) {
                 className={cn(
                   "h-4 w-4 rounded-full border-2 transition-colors shrink-0",
                   step.status === "completed"
-                    ? "bg-emerald-500 border-status-success-rule"
+                    ? "bg-status-success-fill border-status-success-rule"
                     : step.status === "current"
                     ? "bg-background border-primary ring-2 ring-primary/30"
                     : "bg-background border-input"
@@ -55,7 +55,7 @@ export function ProgressTimeline({ id }: { id: number }) {
                   className={cn(
                     "w-0.5 h-5 mt-0.5",
                     step.status === "completed"
-                      ? "bg-emerald-500"
+                      ? "bg-status-success-fill"
                       : "bg-border"
                   )}
                 />

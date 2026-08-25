@@ -1481,6 +1481,40 @@ button.goal-everything-chip[aria-checked="true"]::before {
 }
 
 
+/* ─── Solid fills ───
+   A surface is a pale wash behind quiet text; a fill is a solid colour with
+   white text on it. Treating them as one role is what puts white button text on
+   a near-white background, which the token migration did once before this
+   existed.
+
+   `fill-hover` is a separate token rather than an opacity change, because a
+   hover derived by transparency washes out against a dark ground. */
+:root {
+  --status-success-fill: var(--color-emerald-500, #10b981);
+  --status-success-fill-hover: var(--color-emerald-600, #059669);
+  --status-warning-fill: var(--color-amber-500, #f59e0b);
+  --status-warning-fill-hover: var(--color-amber-600, #d97706);
+  --status-danger-fill: var(--color-red-500, #ef4444);
+  --status-danger-fill-hover: var(--color-red-600, #dc2626);
+  --status-info-fill: var(--color-blue-500, #3b82f6);
+  --status-info-fill-hover: var(--color-blue-600, #2563eb);
+  --status-neutral-fill: var(--color-slate-500, #64748b);
+  --status-neutral-fill-hover: var(--color-slate-600, #475569);
+}
+
+.dark {
+  --status-success-fill: var(--color-emerald-500, #10b981);
+  --status-success-fill-hover: var(--color-emerald-400, #34d399);
+  --status-warning-fill: var(--color-amber-500, #f59e0b);
+  --status-warning-fill-hover: var(--color-amber-400, #fbbf24);
+  --status-danger-fill: var(--color-red-500, #ef4444);
+  --status-danger-fill-hover: var(--color-red-400, #f87171);
+  --status-info-fill: var(--color-blue-500, #3b82f6);
+  --status-info-fill-hover: var(--color-blue-400, #60a5fa);
+  --status-neutral-fill: var(--color-slate-500, #64748b);
+  --status-neutral-fill-hover: var(--color-slate-400, #94a3b8);
+}
+
 /* ─── Categorical ───
    A taxonomy is not a status.
 
@@ -1646,6 +1680,17 @@ button.goal-everything-chip[aria-checked="true"]::before {
   --color-category-slate-ink: var(--category-slate-ink);
   --color-category-slate-rule: var(--category-slate-rule);
   --color-category-slate-fill: var(--category-slate-fill);
+
+  --color-status-success-fill: var(--status-success-fill);
+  --color-status-success-fill-hover: var(--status-success-fill-hover);
+  --color-status-warning-fill: var(--status-warning-fill);
+  --color-status-warning-fill-hover: var(--status-warning-fill-hover);
+  --color-status-danger-fill: var(--status-danger-fill);
+  --color-status-danger-fill-hover: var(--status-danger-fill-hover);
+  --color-status-info-fill: var(--status-info-fill);
+  --color-status-info-fill-hover: var(--status-info-fill-hover);
+  --color-status-neutral-fill: var(--status-neutral-fill);
+  --color-status-neutral-fill-hover: var(--status-neutral-fill-hover);
 
   --shadow-panel: var(--elevation-panel);
   --shadow-card: var(--elevation-card);

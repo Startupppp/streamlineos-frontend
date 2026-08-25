@@ -37,7 +37,7 @@ function DealHealthBadge({ expectedCloseDate }: { expectedCloseDate: string | nu
   if (status === "overdue") {
     return <Badge variant="destructive" className="text-micro px-1.5 py-0 h-4">Overdue</Badge>;
   }
-  return <Badge className="text-micro px-1.5 py-0 h-4 bg-amber-500 hover:bg-amber-500 text-white">Due soon</Badge>;
+  return <Badge className="text-micro px-1.5 py-0 h-4 bg-status-warning-fill hover:bg-status-warning-fill-hover text-white">Due soon</Badge>;
 }
 
 interface DealKanbanCardProps {

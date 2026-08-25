@@ -84,12 +84,12 @@ export function JournalLinesTable({ lines, debitTotal, creditTotal, isBalanced }
       <span>
         {isBalanced ? (
           <span className="inline-flex items-center gap-1 text-xs font-medium text-status-success-ink">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            <span className="h-1.5 w-1.5 rounded-full bg-status-success-fill" />
             Balanced
           </span>
         ) : (
           <span className="inline-flex items-center gap-1 text-xs font-medium text-status-danger-ink">
-            <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+            <span className="h-1.5 w-1.5 rounded-full bg-status-danger-fill" />
             Unbalanced
           </span>
         )}

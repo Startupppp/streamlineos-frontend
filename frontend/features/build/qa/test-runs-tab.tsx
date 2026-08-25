@@ -52,7 +52,7 @@ function RunProgress({ counts }: { counts?: TestRunCounts }) {
     <div className="flex min-w-[80px] items-center gap-1.5">
       <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
         <div
-          className="h-full rounded-full bg-emerald-500 transition-[width] duration-300"
+          className="h-full rounded-full bg-status-success-fill transition-[width] duration-300"
           style={{ width: `${pct}%` }}
         />
       </div>

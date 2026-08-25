@@ -190,7 +190,7 @@ export function ContactForm() {
                       className={cn(
                         "text-xs font-medium rounded-lg border px-2.5 py-2 transition-all",
                         selected
-                          ? "bg-slate-900 text-white border-border shadow-sm"
+                          ? "bg-status-neutral-fill text-white border-border shadow-sm"
                           : "bg-white text-muted-foreground border-border hover:border-status-info-rule hover:text-muted-foreground",
                       )}
                     >

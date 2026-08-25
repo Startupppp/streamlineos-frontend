@@ -21,7 +21,7 @@ const TYPE_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 const TYPE_COLOR: Record<string, string> = {
-  AUDIT: "bg-muted text-muted-foreground dark:bg-slate-800",
+  AUDIT: "bg-muted text-muted-foreground",
   INTERVIEW:
     "bg-status-info-surface text-status-info-ink",
   MESSAGE: "bg-status-info-surface text-status-info-ink",

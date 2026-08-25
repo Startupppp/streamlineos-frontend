@@ -128,7 +128,7 @@ function QuotaExceededState({
         <Progress
           value={pct}
           aria-label={`${label} usage`}
-          className="h-1.5 [&>div]:bg-amber-500"
+          className="h-1.5 [&>div]:bg-status-warning-fill"
         />
       </div>
 

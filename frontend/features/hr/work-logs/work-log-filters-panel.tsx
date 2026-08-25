@@ -168,11 +168,11 @@ export function WorkLogFiltersPanel({
       <div className="flex items-center gap-3 text-micro font-semibold text-muted-foreground uppercase tracking-wider ml-auto">
         <span className="text-foreground/60">Status:</span>
         <span className={cn("flex items-center gap-1.5")}>
-          <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500 shrink-0" />
+          <span className="w-2.5 h-2.5 rounded-sm bg-status-success-fill shrink-0" />
           Logged
         </span>
         <span className={cn("flex items-center gap-1.5")}>
-          <span className="w-2.5 h-2.5 rounded-sm bg-amber-500 shrink-0" />
+          <span className="w-2.5 h-2.5 rounded-sm bg-status-warning-fill shrink-0" />
           Unsaved
         </span>
         <span className={cn("flex items-center gap-1.5")}>

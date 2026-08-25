@@ -136,7 +136,7 @@ function SetupProgress() {
         />
         <p className="text-sm text-muted-foreground">Setting up your account…</p>
       </div>
-      <Progress value={progress} className="h-1 bg-muted [&>div]:bg-blue-600" />
+      <Progress value={progress} className="h-1 bg-muted [&>div]:bg-status-info-fill" />
     </div>
   );
 }
@@ -297,7 +297,7 @@ function VerifyEmailForm() {
             <p className="text-sm text-muted-foreground">
               This will only take a moment…
             </p>
-            <Progress value={45} className="mt-3 h-1 bg-muted [&>div]:bg-blue-600" />
+            <Progress value={45} className="mt-3 h-1 bg-muted [&>div]:bg-status-info-fill" />
           </div>
         </AuthStatusSection>
       </AuthStatusShell>

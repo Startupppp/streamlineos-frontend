@@ -38,10 +38,10 @@ export function LegalShell({ eyebrow, title, intro, effectiveDate, sections, chi
             <Calendar className="h-3 w-3 text-status-info-ink" />
             Effective {effectiveDate}
           </span>
-          <span className="hidden sm:inline h-1 w-1 rounded-full bg-slate-300" />
+          <span className="hidden sm:inline h-1 w-1 rounded-full bg-status-neutral-fill" />
           {legalNav.map((l, i) => (
             <span key={l.href} className="inline-flex items-center gap-3">
-              {i > 0 && <span className="hidden sm:inline h-1 w-1 rounded-full bg-slate-300" />}
+              {i > 0 && <span className="hidden sm:inline h-1 w-1 rounded-full bg-status-neutral-fill" />}
               <Link
                 href={l.href}
                 className="hover:text-status-info-ink transition-colors inline-flex items-center gap-1"

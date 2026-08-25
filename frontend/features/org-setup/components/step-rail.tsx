@@ -97,7 +97,7 @@ function StepRailInner({ sequence, currentIndex, saveState, onStepSelect }: Step
         >
           {saveState === "saved" ? (
             <>
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              <span className="h-1.5 w-1.5 rounded-full bg-status-success-fill" />
               Saved
             </>
           ) : null}

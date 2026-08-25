@@ -20,7 +20,7 @@ function successRatePct(row: AutomationPerformanceRow): number {
 function SuccessRateBar({ row }: { row: AutomationPerformanceRow }) {
   const pct = successRatePct(row);
   const tone =
-    pct >= 90 ? "bg-emerald-500" : pct >= 60 ? "bg-amber-500" : "bg-red-500";
+    pct >= 90 ? "bg-status-success-fill" : pct >= 60 ? "bg-status-warning-fill" : "bg-status-danger-fill";
 
   return (
     <div className="flex items-center gap-2 min-w-[120px]">

@@ -154,7 +154,7 @@ export function WorkLogEntryRow({
     if (parts.length === 1) return null;
     return parts.map((part, i) =>
       testRegex.test(part) ? (
-        <mark key={i} className="rounded bg-yellow-200 px-0.5 dark:bg-yellow-800">
+        <mark key={i} className="rounded bg-status-warning-fill px-0.5">
           {part}
         </mark>
       ) : (

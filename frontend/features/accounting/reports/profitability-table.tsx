@@ -89,7 +89,7 @@ export function ProfitabilityTable({ data, nameKey }: ProfitabilityTableProps) {
                 <div
                   className={cn(
                     "h-full rounded-full transition-all duration-500",
-                    isPositive ? "bg-emerald-500" : "bg-red-500",
+                    isPositive ? "bg-status-success-fill" : "bg-status-danger-fill",
                   )}
                   style={{ width: `${Math.min(Math.abs(pct), 100)}%` }}
                 />

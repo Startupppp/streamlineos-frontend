@@ -38,9 +38,9 @@ function formatValue(budget: TimesheetBudget, value: number): string {
 }
 
 function barColor(b: TimesheetBudget): string {
-  if (b.burn.over) return "bg-red-500";
-  if (b.burn.alertLevel >= 80) return "bg-amber-500";
-  return "bg-emerald-500";
+  if (b.burn.over) return "bg-status-danger-fill";
+  if (b.burn.alertLevel >= 80) return "bg-status-warning-fill";
+  return "bg-status-success-fill";
 }
 
 interface BudgetCardProps {

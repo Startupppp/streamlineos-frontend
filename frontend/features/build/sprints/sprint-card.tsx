@@ -62,7 +62,7 @@ interface StatusStyle {
 const STATUS_STYLES: Record<string, StatusStyle> = {
   ACTIVE: {
     label: "Active",
-    dotClassName: "bg-emerald-500",
+    dotClassName: "bg-status-success-fill",
     badgeClassName: "bg-status-success-surface text-status-success-ink",
     stripeClassName: "border-l-emerald-500",
   },
@@ -226,7 +226,7 @@ export const SprintCard = memo(function SprintCard({ sprint, projectId, onStart,
           <div
             className={cn(
               "h-full rounded-full transition-[width] duration-300 ease-out motion-reduce:transition-none",
-              progress >= 100 ? "bg-emerald-500" : "bg-primary",
+              progress >= 100 ? "bg-status-success-fill" : "bg-primary",
             )}
             style={{ width: `${progress}%` }}
           />

@@ -19,15 +19,15 @@ export const projectStatusColors: Record<ProjectStatus, string> = {
 };
 
 export const onlineStatusColors: Record<OnlineStatus, string> = {
-  online: "bg-emerald-500",
-  away: "bg-amber-500",
-  offline: "bg-slate-400 dark:bg-slate-600",
+  online: "bg-status-success-fill",
+  away: "bg-status-warning-fill",
+  offline: "bg-status-neutral-fill",
 };
 
 export const sprintStatusColors = {
-  done: "bg-emerald-500",
-  inProgress: "bg-blue-500",
-  todo: "bg-slate-400",
+  done: "bg-status-success-fill",
+  inProgress: "bg-status-info-fill",
+  todo: "bg-status-neutral-fill",
 } as const;
 
 export const sparkColors = {
@@ -54,9 +54,9 @@ export const healthStatusColors: Record<HealthStatus, string> = {
 };
 
 export const healthDotColors: Record<HealthStatus, string> = {
-  healthy: "bg-emerald-500",
-  at_risk: "bg-amber-500",
-  critical: "bg-red-500",
+  healthy: "bg-status-success-fill",
+  at_risk: "bg-status-warning-fill",
+  critical: "bg-status-danger-fill",
 };
 
 export const projectStatusDisplayLabels: Record<string, string> = {

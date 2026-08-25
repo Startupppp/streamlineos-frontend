@@ -14,7 +14,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
     <div className="relative flex h-[100dvh] overflow-hidden surface-soft text-muted-foreground">
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-slate-900 focus:text-white focus:rounded-md text-sm font-medium"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-status-neutral-fill focus:text-white focus:rounded-md text-sm font-medium"
       >
         Skip to content
       </a>

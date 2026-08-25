@@ -71,7 +71,7 @@ function RunRow({ run }: { run: HrAutomationRun }) {
               <p className="text-micro font-semibold text-muted-foreground uppercase tracking-wider">Action Results</p>
               {run.actionResults.map((ar, i) => (
                 <div key={i} className="flex items-start gap-2 text-xs">
-                  <span className={`mt-0.5 h-1.5 w-1.5 rounded-full shrink-0 ${ar.ok ? "bg-emerald-500" : "bg-red-500"}`} />
+                  <span className={`mt-0.5 h-1.5 w-1.5 rounded-full shrink-0 ${ar.ok ? "bg-status-success-fill" : "bg-status-danger-fill"}`} />
                   <span className="font-mono text-micro text-muted-foreground">{ar.type}</span>
                   {ar.error && <span className="text-status-danger-ink">{ar.error}</span>}
                   {ar.data && (

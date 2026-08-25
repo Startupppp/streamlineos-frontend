@@ -35,7 +35,7 @@ export function QuoteApprovalBanner({
           <div className="flex items-center gap-2 shrink-0">
             <LoadingButton
               size="sm"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white h-7 text-xs"
+              className="bg-status-success-fill hover:bg-status-success-fill-hover text-white h-7 text-xs"
               onClick={onApprove}
               isPending={approvePending}
               loadingText="Approving..."

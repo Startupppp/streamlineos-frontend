@@ -111,7 +111,7 @@ export function EmergencyEventDetail({ eventId, onBack }: Props) {
                 <Button
                   onClick={() => handleRespond("safe")}
                   disabled={respond.isPending}
-                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                  className="flex-1 bg-status-success-fill hover:bg-status-success-fill-hover text-white"
                   variant={respondStatus === "safe" ? "default" : "outline"}
                 >
                   <CheckCircle className="h-4 w-4 mr-1.5" />

@@ -190,7 +190,7 @@ export function ImportWizardSheet({
                     step === s
                       ? "bg-primary text-primary-foreground"
                       : step > s
-                        ? "bg-emerald-500 text-white"
+                        ? "bg-status-success-fill text-white"
                         : "bg-muted text-muted-foreground",
                   )}
                 >

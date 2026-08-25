@@ -32,10 +32,10 @@ interface ScoreConfig {
 }
 
 function getScoreConfig(score: number): ScoreConfig {
-  if (score === 4) return { label: "Fully Qualified", badgeClass: "bg-status-success-surface text-status-success-ink border border-status-success-rule", dotColor: "bg-emerald-500" };
-  if (score === 3) return { label: "Mostly Qualified", badgeClass: "bg-status-warning-surface text-status-warning-ink border border-status-warning-rule", dotColor: "bg-orange-500" };
-  if (score === 2) return { label: "Partially Qualified", badgeClass: "bg-status-warning-surface text-status-warning-ink border border-status-warning-rule", dotColor: "bg-amber-500" };
-  if (score === 1) return { label: "Weakly Qualified", badgeClass: "bg-status-danger-surface text-status-danger-ink border border-status-danger-rule", dotColor: "bg-red-500" };
+  if (score === 4) return { label: "Fully Qualified", badgeClass: "bg-status-success-surface text-status-success-ink border border-status-success-rule", dotColor: "bg-status-success-fill" };
+  if (score === 3) return { label: "Mostly Qualified", badgeClass: "bg-status-warning-surface text-status-warning-ink border border-status-warning-rule", dotColor: "bg-status-warning-fill" };
+  if (score === 2) return { label: "Partially Qualified", badgeClass: "bg-status-warning-surface text-status-warning-ink border border-status-warning-rule", dotColor: "bg-status-warning-fill" };
+  if (score === 1) return { label: "Weakly Qualified", badgeClass: "bg-status-danger-surface text-status-danger-ink border border-status-danger-rule", dotColor: "bg-status-danger-fill" };
   return { label: "Unqualified", badgeClass: "bg-muted text-muted-foreground border border-border", dotColor: "bg-muted-foreground/40" };
 }
 

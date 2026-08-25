@@ -135,7 +135,7 @@ export function GoalCard({ goal, index, onEditProgress }: GoalCardProps) {
         </div>
         <div className="h-1.5 bg-muted rounded-full overflow-hidden">
           <div
-            className="h-full bg-blue-600 rounded-full transition-all duration-500"
+            className="h-full bg-status-info-fill rounded-full transition-all duration-500"
             style={{ width: `${Math.min(goal.progress, 100)}%` }}
           />
         </div>

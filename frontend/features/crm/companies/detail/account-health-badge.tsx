@@ -29,18 +29,18 @@ export function getHealthLabel(score: number): {
     return {
       label: "Healthy",
       badgeClass: "bg-status-success-surface text-status-success-ink border-status-success-rule",
-      dotClass: "bg-emerald-500",
+      dotClass: "bg-status-success-fill",
     };
   if (score >= 40)
     return {
       label: "At Risk",
       badgeClass: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
-      dotClass: "bg-amber-500",
+      dotClass: "bg-status-warning-fill",
     };
   return {
     label: "Critical",
     badgeClass: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
-    dotClass: "bg-red-500",
+    dotClass: "bg-status-danger-fill",
   };
 }
 

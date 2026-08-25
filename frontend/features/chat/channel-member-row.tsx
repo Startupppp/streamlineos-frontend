@@ -60,7 +60,7 @@ export function ChannelMemberRow({
           </AvatarFallback>
         </Avatar>
         {isOnline && (
-          <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-background" />
+          <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-status-success-fill border-2 border-background" />
         )}
         {isMutedInCall && (
           <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-muted-foreground/80 border-2 border-background flex items-center justify-center">

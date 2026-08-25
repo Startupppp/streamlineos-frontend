@@ -112,16 +112,16 @@ export const priorityConfig: Record<
 
 export const statusConfig: Record<string, StatusConfigEntry> = {
   TODO: { label: "To Do", dotColor: "bg-muted-foreground" },
-  IN_PROGRESS: { label: "In Progress", dotColor: "bg-blue-500" },
-  IN_REVIEW: { label: "In Review", dotColor: "bg-amber-500" },
-  DONE: { label: "Done", dotColor: "bg-green-500" },
+  IN_PROGRESS: { label: "In Progress", dotColor: "bg-status-info-fill" },
+  IN_REVIEW: { label: "In Review", dotColor: "bg-status-warning-fill" },
+  DONE: { label: "Done", dotColor: "bg-status-success-fill" },
 };
 
 const TYPE_TO_DOT_COLOR: Record<string, string> = {
   unstarted: "bg-muted-foreground",
-  started: "bg-blue-500",
-  completed: "bg-green-500",
-  cancelled: "bg-red-400",
+  started: "bg-status-info-fill",
+  completed: "bg-status-success-fill",
+  cancelled: "bg-status-danger-fill",
 };
 
 export function buildStatusConfig(

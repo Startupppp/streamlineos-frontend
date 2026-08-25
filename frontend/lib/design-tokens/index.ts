@@ -69,7 +69,7 @@ export function categoryBadgeClass(hue: CategoryHue): string {
 export const STATUS_TONES = ["success", "warning", "danger", "info", "neutral"] as const;
 export type StatusTone = (typeof STATUS_TONES)[number];
 
-export const STATUS_ROLES = ["surface", "ink", "ink-strong", "rule"] as const;
+export const STATUS_ROLES = ["surface", "ink", "ink-strong", "rule", "fill", "fill-hover"] as const;
 export type StatusRole = (typeof STATUS_ROLES)[number];
 
 export const DENSITY_MODES = ["comfortable", "compact"] as const;
@@ -105,6 +105,10 @@ export interface StatusToneClasses {
   ink: string;
   inkStrong: string;
   rule: string;
+  /** Solid, with white text on it — a primary button, a filled dot. */
+  fill: string;
+  /** A separate token, not an opacity change: transparency washes out on dark. */
+  fillHover: string;
 }
 
 /**
@@ -126,30 +130,40 @@ const STATUS_TONE_CLASSES: Readonly<Record<StatusTone, StatusToneClasses>> = {
     ink: "text-status-success-ink",
     inkStrong: "text-status-success-ink-strong",
     rule: "border-status-success-rule",
+    fill: "bg-status-success-fill",
+    fillHover: "hover:bg-status-success-fill-hover",
   },
   warning: {
     surface: "bg-status-warning-surface",
     ink: "text-status-warning-ink",
     inkStrong: "text-status-warning-ink-strong",
     rule: "border-status-warning-rule",
+    fill: "bg-status-warning-fill",
+    fillHover: "hover:bg-status-warning-fill-hover",
   },
   danger: {
     surface: "bg-status-danger-surface",
     ink: "text-status-danger-ink",
     inkStrong: "text-status-danger-ink-strong",
     rule: "border-status-danger-rule",
+    fill: "bg-status-danger-fill",
+    fillHover: "hover:bg-status-danger-fill-hover",
   },
   info: {
     surface: "bg-status-info-surface",
     ink: "text-status-info-ink",
     inkStrong: "text-status-info-ink-strong",
     rule: "border-status-info-rule",
+    fill: "bg-status-info-fill",
+    fillHover: "hover:bg-status-info-fill-hover",
   },
   neutral: {
     surface: "bg-status-neutral-surface",
     ink: "text-status-neutral-ink",
     inkStrong: "text-status-neutral-ink-strong",
     rule: "border-status-neutral-rule",
+    fill: "bg-status-neutral-fill",
+    fillHover: "hover:bg-status-neutral-fill-hover",
   },
 };
 

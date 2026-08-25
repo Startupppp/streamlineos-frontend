@@ -36,9 +36,9 @@ function SidebarStepButton({ step, idx, onStepClick }: SidebarStepButtonProps) {
         className={cn(
           "flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-micro font-bold transition-colors duration-200",
           step.completed && !step.hasError
-            ? "bg-emerald-500 text-white"
+            ? "bg-status-success-fill text-white"
             : step.hasError
-              ? "bg-rose-500 text-white"
+              ? "bg-status-danger-fill text-white"
               : step.active
                 ? "bg-primary text-primary-foreground"
                 : "bg-muted text-muted-foreground border border-border"

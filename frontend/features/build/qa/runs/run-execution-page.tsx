@@ -73,7 +73,7 @@ function ProgressBar({ counts }: { counts?: TestRunCounts }) {
     <div className="flex items-center gap-3">
       <div className="h-2 w-40 overflow-hidden rounded-full bg-muted">
         <div
-          className="h-full rounded-full bg-emerald-500 transition-[width] duration-300"
+          className="h-full rounded-full bg-status-success-fill transition-[width] duration-300"
           style={{ width: `${passPct}%` }}
         />
       </div>

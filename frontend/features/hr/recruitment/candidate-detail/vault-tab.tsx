@@ -75,7 +75,7 @@ export function VaultTab(props: VaultTabProps) {
               Verification Documents
             </CardTitle>
             {totalDocuments > 0 && (
-              <span className="inline-flex items-center text-micro font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border dark:bg-slate-800">
+              <span className="inline-flex items-center text-micro font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
                 {totalDocuments}
               </span>
             )}
