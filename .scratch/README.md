@@ -11,10 +11,15 @@ Nine candidates, nine specs in [`docs/specs/`](../docs/specs/README.md), 29 tick
 | [c5 — Payment provider adapter](c5-payment-provider-adapter/README.md) | 4 | **4** | 0 | — complete |
 | [c6 — Split help centre and wiki](c6-split-kb-help-centre-and-wiki/README.md) | 3 | **3** | 0 | — complete |
 | [c3 — One representation of capability](c3-one-representation-of-capability/README.md) | 6 | **6** | 0 | — complete |
-| [c8 — Frontend server-data seam](c8-frontend-server-data-seam/README.md) | 3 | 2 | 1 | ticket 02 done bar one browser-only check |
-| [c9 — Transactional outbox](c9-transactional-outbox-decision/README.md) | 1 → 4 | 2 | 2 | 6 consumers (one product decision each) · unify notifications (held) |
+| [c8 — Frontend server-data seam](c8-frontend-server-data-seam/README.md) | 3 | **3** | 0 | — complete |
+| [c9 — Transactional outbox](c9-transactional-outbox-decision/README.md) | 1 → 4 | 2 | 2 | consumers where recipients are derivable · unify notifications (held on timing) |
 
-**29 tickets → 27 retired, 3 open. Seven candidates complete: c1, c2, c3, c4, c5, c6, c7.**
+**29 tickets → 28 retired, 2 open. Eight candidates complete: c1, c2, c3, c4, c5, c6, c7, c8.**
+
+Both remaining tickets are in c9, and both are now decision-complete rather than blocked:
+
+- **02** — inventory left scope on 2026-08-25, retiring the ticket's only money-moving item. What remains is wiring consumers wherever the recipients are derivable from the data.
+- **04** — the gate is answered: nothing the notification path guarantees is impossible on the bus, so the migration *may* proceed. It is held on its original timing condition (the bus has not run in production), not on an open question. Its audit surfaced a defect that outlives the ticket: `dispatch.emit()` is **not durable** — it runs after commit and swallows the error into a log — and 49 call sites across 34 files use it.
 
 ## The one defect worth remembering from this program
 

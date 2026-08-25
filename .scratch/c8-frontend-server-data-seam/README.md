@@ -8,8 +8,7 @@ The review's finding was "the seam does not exist yet". It exists now, so the qu
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 02 | [The lists people wait on arrive with their rows](issues/02-high-traffic-lists-render-rows-server-side.md) | 01 | **done** — falsified, root-caused, fixed, re-measured; one browser-only todo left |
-| 03 | public help-centre pages render server-side | 01 | **done and retired** |
+| — | all three tickets complete and retired | — | **candidate complete** |
 
 **On completing a ticket:** tick its todo list, set its `Status` to `done` in the ticket file, and update its row above.
 
@@ -22,6 +21,8 @@ The review's finding was "the seam does not exist yet". It exists now, so the qu
 **The generalisable lesson from 02:** both halves of its test pair passed the whole time. They assert the prefetch populates the cache; nothing asserted a row reached the markup. A criterion that says "first HTML response" can only be closed by reading the HTML. The replacement test hydrates a server-dehydrated state into the app's own client and was checked by reverting a factory to confirm it actually fails.
 
 **And a lesson about the falsification itself:** the original check grepped `<table>`/`<tbody>`/`<tr>` and found zero — correct conclusion, wrong instrument. `/settings/roles` renders `RolesListPanel`, a div-based list, so that grep would read zero even when working. The signal that actually mattered was the 3,903-byte spinner body. Likewise, skeletons on a page are not evidence the prefetch failed: the workers page still has 138 skeleton cells belonging to sections nobody prefetched.
+
+**Candidate closed 2026-08-25.** The last item — "a client-side navigation does not refetch" — was parked as browser-only and became a test instead: one persistent `createAppQueryClient(scope)`, mount → navigate away → navigate back, asserting the fetch ran exactly once. It waits for `status === "success"` first, because both hooks are `useCan`-gated and a disabled query would otherwise sit at zero calls and pass for the wrong reason. It carries two negatives so a refetch is detectable at all. Then the mechanism was deliberately broken (`staleTime: 0`) and the test was confirmed to fail before being restored.
 
 **The highest-leverage prefetch in the product is not in this candidate.** Hydrating the access snapshot at the authenticated layout is one edit that ends the gated-control flash on every authenticated page. It is tracked as **c3 ticket 04**, because the flash is c3's problem — but it uses this candidate's mechanism, and it is the single most valuable thing to do first.
 
