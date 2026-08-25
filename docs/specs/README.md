@@ -9,10 +9,10 @@
 | [c3](c3-one-representation-of-capability.md) | One representation of capability | Partial: server/client representations and full proof remain |
 | [c4](c4-module-availability-interface.md) | One interface for module availability | Partial: production callers still assemble inputs differently |
 | [c5](c5-payment-provider-adapter.md) | Route the money through the adapter | Partial: billing still handles provider secrets and hard-codes provider resolution |
-| [c6](c6-split-kb-help-centre-and-wiki.md) | Split the two products inside `kb/` | Partial: migration/data decision and namespace evidence remain |
+| [c6](c6-split-kb-help-centre-and-wiki.md) | Split the two products inside `kb/` | Partial: `report:kb-article-migration` now produces tenant-safe closure evidence; retirement still requires a zero backlog and intake decision |
 | [c7](c7-chat-message-fanout.md) | Chat send path as a fan-out module | Partial: durable retry, queue swap, and sender-query removal remain |
 | [c8](c8-frontend-server-data-seam.md) | Frontend server-data seam | Partial: duplicate server adapter and failed-prefetch proof remain |
-| [c9](c9-transactional-outbox-decision.md) | Decide what the outbox is for | Open: no Option A/B decision; dispatch and exactly-once path remain unresolved |
+| [c9](c9-transactional-outbox-decision.md) | Decide what the outbox is for | Decision recorded: generic domain events use `outbox_events`; notification intents use the dedicated notification ledger with explicit guarantees |
 
 ## The successor program
 
