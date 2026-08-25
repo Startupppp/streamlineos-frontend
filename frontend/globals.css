@@ -1694,6 +1694,8 @@ button.goal-everything-chip[aria-checked="true"]::before {
   --gradient-neutral-to: var(--color-slate-400, #94a3b8);
   --gradient-neutral-wash-from: color-mix(in oklab, var(--color-slate-500, #64748b) 15%, transparent);
   --gradient-neutral-wash-to: color-mix(in oklab, var(--color-slate-500, #64748b) 5%, transparent);
+  --gradient-gold-to: #d4a544;
+  --color-surface-soft-base: #f4f7fc;
 }
 
 .dark {
