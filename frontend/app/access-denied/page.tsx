@@ -15,7 +15,7 @@ export default async function AccessDeniedPage({ searchParams }: AccessDeniedPag
 
   return (
     <div className="min-h-dvh w-full flex items-center justify-center p-6 bg-gradient-to-br from-slate-50 via-white to-blue-50">
-      <Card className="max-w-md w-full border-border shadow-[0_18px_44px_-18px_rgba(30,64,175,0.18)]">
+      <Card className="max-w-md w-full border-border shadow-accent">
         <CardContent className="p-8 sm:p-10 text-center space-y-6">
           <div className="mx-auto h-14 w-14 rounded-2xl bg-status-danger-surface ring-1 ring-status-danger-rule flex items-center justify-center">
             <ShieldAlert className="w-7 text-status-danger-ink" aria-hidden="true" />

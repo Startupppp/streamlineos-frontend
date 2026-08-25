@@ -31,7 +31,7 @@ const MONTH_LABELS = [
 ];
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const WEEK_COUNT = 53;
-const CELL = "h-3 w-3 rounded-[2px]";
+const CELL = "h-3 w-3 rounded-2xs";
 
 const intensityClasses: Record<number, string> = {
   0: "bg-muted/40 dark:bg-muted/20",

@@ -70,7 +70,7 @@ export function EmployeeHeaderCard({
   return (
     <Card
       className={cn(
-        "shrink-0 overflow-hidden rounded-2xl border border-border/70 border-l-4 bg-card/90 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] backdrop-blur-sm",
+        "shrink-0 overflow-hidden rounded-2xl border border-border/70 border-l-4 bg-card/90 shadow-card backdrop-blur-sm",
         isAlreadyTerminated ? "border-l-rose-500" : "border-l-emerald-500",
       )}
     >

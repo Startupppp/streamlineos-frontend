@@ -91,7 +91,7 @@ function ProbationRow({ review, canManage, onExtend, onConfirm }: ProbationRowPr
   const handleConfirm = useCallback(() => onConfirm(review), [review, onConfirm]);
 
   return (
-    <Card className="rounded-2xl border border-border/70 bg-card/90 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_10px_28px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
+    <Card className="rounded-2xl border border-border/70 bg-card/90 shadow-card overflow-hidden">
       <CardContent className="p-4 flex items-center gap-4">
         <div className="w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
           <span className="text-micro font-bold text-primary">

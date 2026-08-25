@@ -161,7 +161,7 @@ function CollapsedItem({ route, pathname, pendingLeaves, onNavigate, accent }: I
           {isActive && (
             <span
               aria-hidden
-              className={cn("absolute inset-0 rounded-[6px] pointer-events-none z-0", accent.bg)}
+              className={cn("absolute inset-0 rounded-sm pointer-events-none z-0", accent.bg)}
             />
           )}
           <route.icon

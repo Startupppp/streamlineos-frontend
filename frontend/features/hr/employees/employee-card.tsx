@@ -42,7 +42,7 @@ export function EmployeeCard({ employee: emp, department }: EmployeeCardProps) {
           "relative flex h-full flex-col overflow-hidden rounded-xl border border-border/80 bg-card",
           "shadow-sm transition-[border-color,box-shadow,transform] duration-200 ease-out",
           "group-hover:-translate-y-0.5 group-hover:border-primary/25",
-          "group-hover:shadow-[0_10px_24px_-14px_rgba(15,23,42,0.45)]",
+          "group-hover:shadow-raised",
         )}
       >
         <div className="flex flex-1 flex-col gap-2 p-3 sm:gap-3 sm:p-3.5">

@@ -213,7 +213,7 @@ function WorkflowNodeComponent({
           : palette.border,
       )}
     >
-      <div className={cn("flex items-center gap-2 px-3 py-2 rounded-t-[10px]", palette.bg)}>
+      <div className={cn("flex items-center gap-2 px-3 py-2 rounded-t-lg", palette.bg)}>
         <span className={palette.color}>{palette.icon}</span>
         <TruncatedText text={data.label} className="text-xs font-semibold text-foreground" />
       </div>

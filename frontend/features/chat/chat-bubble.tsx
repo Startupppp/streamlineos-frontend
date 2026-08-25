@@ -414,7 +414,7 @@ export function ChatBubble({
 
   if (message.isDeleted) {
     return (
-      <div className={cn("flex mb-[2px] w-full min-w-0", isOwn ? "justify-end" : "justify-start", !isOwn && "ml-9")}>
+      <div className={cn("flex mb-0.5 w-full min-w-0", isOwn ? "justify-end" : "justify-start", !isOwn && "ml-9")}>
         <div className="px-3 py-1 rounded-xl bg-muted/20 border border-border/15">
           <p className="text-dense text-muted-foreground/40 italic flex items-center gap-1.5">
             <Trash2 className="h-2.5 w-2.5" />
@@ -430,7 +430,7 @@ export function ChatBubble({
       className={cn(
         "group flex gap-2 w-full min-w-0",
         isOwn ? "justify-end" : "justify-start",
-        showSender ? "mt-3 mb-0.5" : "mb-[2px]"
+        showSender ? "mt-3 mb-0.5" : "mb-0.5"
       )}
     >
 

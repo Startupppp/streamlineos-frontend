@@ -131,7 +131,7 @@ export function EditEmployeeForm({
         onSubmit={form.handleSubmit(onSubmit)}
         className="flex flex-col"
       >
-        <div className="overflow-hidden rounded-2xl border border-border/70 bg-card/90 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] backdrop-blur-sm">
+        <div className="overflow-hidden rounded-2xl border border-border/70 bg-card/90 shadow-card backdrop-blur-sm">
           <div className="p-5">
             <PersonalInfoSection />
           </div>

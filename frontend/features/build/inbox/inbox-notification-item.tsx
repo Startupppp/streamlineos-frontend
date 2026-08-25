@@ -128,8 +128,8 @@ export function InboxNotificationItem({
         "hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
         isSelected && "bg-primary/5 ring-1 ring-inset ring-primary/20",
         !notification.isRead && !isSelected && "bg-card",
-        !notification.isRead && "border-l-2 border-l-primary pl-[10px]",
-        notification.isRead && "border-l-2 border-l-transparent pl-[10px]",
+        !notification.isRead && "border-l-2 border-l-primary pl-2.5",
+        notification.isRead && "border-l-2 border-l-transparent pl-2.5",
       )}
     >
       {!notification.isRead && (

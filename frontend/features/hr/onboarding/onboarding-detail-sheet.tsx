@@ -250,7 +250,7 @@ export const EmployeeDocumentsTab = forwardRef<
           "mb-3 overflow-hidden rounded-xl border border-border/70",
           isWizard
             ? "bg-card/60"
-            : "rounded-2xl bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)]",
+            : "rounded-2xl bg-card/90 backdrop-blur-sm shadow-card",
         )}
       >
         <div className={cn("p-3.5", !isWizard && "p-4")}>

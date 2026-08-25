@@ -23,10 +23,10 @@ export function RichPanel({
     <div
       className={cn(
         "rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm",
-        "shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)]",
+        "shadow-card",
         padded && "p-4 sm:p-5",
         hover &&
-          "transition-all duration-300 hover:shadow-[0_8px_30px_-12px_rgba(37,99,235,0.18)] hover:border-status-info-rule hover:-translate-y-0.5",
+          "transition-all duration-300 hover:shadow-accent hover:border-status-info-rule hover:-translate-y-0.5",
         className,
       )}
     >
@@ -60,7 +60,7 @@ export function RichHero({
         "relative shrink-0 overflow-hidden rounded-2xl border border-status-info-rule",
         "bg-gradient-to-br from-sky-50 via-blue-50 to-blue-100/80",
         "dark:from-slate-900/40 dark:via-blue-950/30 dark:to-blue-950/20",
-        "text-foreground shadow-[0_8px_28px_-18px_rgba(59,130,246,0.22)]",
+        "text-foreground shadow-accent",
         className,
       )}
     >
@@ -159,7 +159,7 @@ export function RichQuickAction({
       className={cn(
         "group relative flex min-w-0 items-start gap-2.5 rounded-2xl border border-border/70 bg-card p-3 sm:gap-3 sm:p-3.5 md:p-4",
         "shadow-sm transition-all duration-300",
-        "hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-16px_rgba(15,23,42,0.25)]",
+        "hover:-translate-y-0.5 hover:shadow-raised",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
       )}
     >

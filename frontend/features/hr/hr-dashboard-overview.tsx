@@ -44,7 +44,7 @@ function LeaveCalendarWidget() {
   );
 
   return (
-    <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden flex flex-col">
+    <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden flex flex-col">
       <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/50 shrink-0 bg-gradient-to-r from-amber-500/[0.04] to-transparent">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-status-warning-surface flex items-center justify-center shrink-0">
@@ -132,7 +132,7 @@ function OnboardingStatusWidget() {
   const { data, isLoading } = useHrOnboardingStatus();
 
   return (
-    <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden flex flex-col">
+    <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden flex flex-col">
       <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/50 shrink-0 bg-gradient-to-r from-emerald-500/[0.04] to-transparent">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-status-success-surface flex items-center justify-center shrink-0">

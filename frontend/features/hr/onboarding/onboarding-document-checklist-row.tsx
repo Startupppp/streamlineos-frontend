@@ -127,7 +127,7 @@ export function DocumentChecklistRow({
         "overflow-hidden rounded-xl border border-border/70 border-l-4 transition-colors duration-200",
         isWizard
           ? "bg-card/60"
-          : "rounded-2xl bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)]",
+          : "rounded-2xl bg-card/90 backdrop-blur-sm shadow-card",
         isApproved
           ? "border-l-emerald-500"
           : status === "SUBMITTED"

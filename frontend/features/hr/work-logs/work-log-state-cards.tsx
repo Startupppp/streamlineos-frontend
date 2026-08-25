@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 import { EmptyTimeIllustration } from "@/components/illustrations";
 
 const CARD_CLASS =
-  "rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden";
+  "rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden";
 
 export function WorkLogDeptPromptCard() {
   return (
@@ -95,7 +95,7 @@ export function WorkLogTotalHoursCard({
   year: number;
 }) {
   return (
-    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden border-l-4 border-l-emerald-500">
+    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden border-l-4 border-l-emerald-500">
       <CardContent className="py-3 px-4">
         <div className="flex items-center gap-6">
           <div>

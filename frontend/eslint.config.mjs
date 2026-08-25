@@ -59,6 +59,7 @@ const eslintConfig = defineConfig([
       "components/ui/page-wrapper.tsx",
       "features/auth/**",
       "features/employee-onboarding/components/brand-column.tsx",
+      "features/employee-onboarding/components/profile-preview.tsx",
     ],
     plugins: { streamline: { rules: { "no-raw-visual-values": noRawVisualValues } } },
     rules: { "streamline/no-raw-visual-values": "error" },

@@ -143,7 +143,7 @@ export function AppLoadingScreen({
           </motion.svg>
 
           <motion.div
-            className="relative z-10 overflow-hidden rounded-2xl border border-border bg-card shadow-[0_16px_36px_-26px_rgba(11,18,32,0.5)]"
+            className="relative z-10 overflow-hidden rounded-2xl border border-border bg-card shadow-raised"
             initial={{ opacity: 0, scale: 0.9, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.55, ease: EASE_OUT }}

@@ -17,7 +17,7 @@ export function OverviewTab({ employeeId, skillsList, projects, tickets }: Overv
   return (
     <div className="space-y-4 pb-4">
       {skillsList.length > 0 && (
-        <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
+        <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden">
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-7 rounded-lg bg-status-warning-surface flex items-center justify-center">
@@ -46,7 +46,7 @@ export function OverviewTab({ employeeId, skillsList, projects, tickets }: Overv
       <DirectReportsSection employeeId={employeeId} />
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
+        <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden">
           <CardContent className="p-4 sm:p-5">
             <div className="mb-3 flex items-center gap-2">
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
@@ -73,7 +73,7 @@ export function OverviewTab({ employeeId, skillsList, projects, tickets }: Overv
             />
           </CardContent>
         </Card>
-        <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
+        <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden">
           <CardContent className="p-4 sm:p-5">
             <div className="mb-3 flex items-center gap-2">
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">

@@ -59,6 +59,11 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  /* Below `sm`, for controls too small for a 6px corner: a checkbox reads as a
+     circle at 6px, and a heatmap cell loses its grid. Added because both were
+     already being written by hand. */
+  --radius-2xs: calc(var(--radius) - 8px);
+  --radius-xs: calc(var(--radius) - 6px);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -1470,14 +1475,32 @@ button.goal-everything-chip[aria-checked="true"]::before {
    elevations the system actually uses so a component asks for a role. */
 :root {
   --elevation-panel: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --elevation-card: 0 1px 2px 0 rgb(11 18 32 / 0.04), 0 2px 8px -2px rgb(11 18 32 / 0.06);
+  /* The value 52 call sites across 38 files already hand-write. The token was
+     defined first and consumed nowhere, so the product was the truth and the
+     token was the aspiration; correcting the token means the migration changes
+     nothing visible. */
+  --elevation-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 32px -14px rgba(15, 23, 42, 0.12);
   --elevation-raised: 0 4px 12px -2px rgb(11 18 32 / 0.1);
+
+  /* A control that lifts off the page — the primary button. Neutral, because it
+     has to sit under text of any colour. */
+  --elevation-control: 0 8px 22px -10px rgba(11, 18, 32, 0.35);
+
+  /* The brand glow an interactive surface takes on hover. Tinted, and therefore
+     a different role from `raised`: one says "above", this says "reachable". */
+  --elevation-accent: 0 8px 30px -12px rgba(37, 99, 235, 0.18);
+  --elevation-accent-strong: 0 10px 28px -10px rgba(59, 130, 246, 0.5);
 }
 
 .dark {
   --elevation-panel: 0 1px 2px 0 rgb(0 0 0 / 0.4);
   --elevation-card: inset 0 1px 0 0 rgb(255 255 255 / 0.04), 0 2px 8px -2px rgb(0 0 0 / 0.5);
   --elevation-raised: inset 0 1px 0 0 rgb(255 255 255 / 0.06), 0 8px 24px -6px rgb(0 0 0 / 0.6);
+
+  /* Deeper on a dark ground, where a light shadow is invisible. */
+  --elevation-control: 0 8px 22px -10px rgb(0 0 0 / 0.6);
+  --elevation-accent: 0 8px 30px -12px rgba(59, 130, 246, 0.28);
+  --elevation-accent-strong: 0 10px 28px -10px rgba(59, 130, 246, 0.55);
 }
 
 
@@ -1693,6 +1716,9 @@ button.goal-everything-chip[aria-checked="true"]::before {
   --color-status-neutral-fill-hover: var(--status-neutral-fill-hover);
 
   --shadow-panel: var(--elevation-panel);
+  --shadow-control: var(--elevation-control);
+  --shadow-accent: var(--elevation-accent);
+  --shadow-accent-strong: var(--elevation-accent-strong);
   --shadow-card: var(--elevation-card);
   --shadow-raised: var(--elevation-raised);
 }

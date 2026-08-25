@@ -75,7 +75,15 @@ export type StatusRole = (typeof STATUS_ROLES)[number];
 export const DENSITY_MODES = ["comfortable", "compact"] as const;
 export type DensityMode = (typeof DENSITY_MODES)[number];
 
-export const ELEVATIONS = ["panel", "card", "raised"] as const;
+/**
+ * `control` and `accent` are separate roles, not sizes of `raised`.
+ *
+ * `raised` says "above the page". `control` is the lift a primary button takes
+ * and is neutral, because it sits under text of any colour. `accent` is the
+ * brand glow an interactive surface takes on hover, and says "reachable"
+ * rather than "above".
+ */
+export const ELEVATIONS = ["panel", "card", "raised", "control", "accent", "accent-strong"] as const;
 export type Elevation = (typeof ELEVATIONS)[number];
 
 export const TYPE_SCALE = ["micro", "dense", "label"] as const;

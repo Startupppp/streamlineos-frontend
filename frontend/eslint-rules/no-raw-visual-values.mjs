@@ -43,10 +43,25 @@ const ARBITRARY_TYPE = /\btext-\[\d+(?:\.\d+)?(?:px|rem)\]/;
 /** Raw colour literals inside a class string: `bg-[#0f172a]`, `text-[rgb(...)]`. */
 const ARBITRARY_COLOUR = /\b(?:bg|text|border|ring|fill|stroke)-\[(?:#|rgb|hsl|oklch)/i;
 
+/**
+ * A hand-written shadow. `shadow-card`, `shadow-panel` and `shadow-raised` name
+ * the three elevations the product actually uses, and unlike a literal they are
+ * redefined under `.dark` — a hand-written shadow shows its light-mode self on
+ * a dark ground.
+ */
+const ARBITRARY_SHADOW = /\bshadow-\[[^\]]*(?:rgba?\(|#|_[0-9]+px)/;
+
+/** A hand-written radius or spacing, where the scale already has a step. */
+const ARBITRARY_RADIUS = /\brounded(?:-[a-z]+)?-\[(?!inherit\])[^\]]+\]/;
+const ARBITRARY_SPACING = /\b(?:p|px|py|pt|pb|pl|pr|m|mx|my|mt|mb|ml|mr|gap|gap-x|gap-y|space-x|space-y)-\[[0-9.]+(?:px|rem|em)\]/;
+
 const CHECKS = [
   [PALETTE, "palette", "reads a token instead — `bg-status-success-fill` for a solid, `bg-status-success-surface` for a wash, `text-muted-foreground` for quiet text, or `categoryClasses()` when the colour names a category rather than a status. A literal needs a hand-written `dark:` twin, and roughly half the call sites in this codebase forgot theirs."],
   [ARBITRARY_TYPE, "type", "reads a step instead — `text-micro`, `text-dense`, `text-label`, or Tailwind's own `text-xs`/`text-sm`."],
   [ARBITRARY_COLOUR, "colour", "reads a token instead. A raw colour cannot follow the theme."],
+  [ARBITRARY_SHADOW, "shadow", "reads an elevation instead — `shadow-card`, `shadow-panel`, `shadow-raised`. A hand-written shadow shows its light-mode self on a dark ground."],
+  [ARBITRARY_RADIUS, "radius", "reads a step instead — `rounded-md`, `rounded-lg`, `rounded-full`. (`rounded-[inherit]` is allowed; it defers rather than decides.)"],
+  [ARBITRARY_SPACING, "spacing", "reads a step instead — the scale has one, and an off-scale value is what makes rhythm drift."],
 ];
 
 export default {

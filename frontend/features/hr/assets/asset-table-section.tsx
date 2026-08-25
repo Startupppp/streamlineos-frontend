@@ -33,7 +33,7 @@ export function AssetTableSection({
 }) {
   if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] py-16 gap-4">
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card py-16 gap-4">
         <p className="text-sm font-semibold text-foreground">Failed to load assets</p>
         <p className="text-xs text-muted-foreground">Something went wrong.</p>
         <Button variant="outline" size="sm" onClick={onRetry}>Try Again</Button>

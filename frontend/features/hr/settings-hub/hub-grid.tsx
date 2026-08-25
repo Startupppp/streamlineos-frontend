@@ -187,8 +187,8 @@ function CardItem({ card }: { card: CardDef }) {
       href={card.href}
       className={cn(
         "group relative flex flex-col gap-2 h-full rounded-2xl border border-border/70 bg-card/90 p-4",
-        "shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all duration-300",
-        "hover:-translate-y-0.5 hover:border-status-info-rule hover:shadow-[0_14px_28px_-16px_rgba(37,99,235,0.25)]",
+        "shadow-panel transition-all duration-300",
+        "hover:-translate-y-0.5 hover:border-status-info-rule hover:shadow-accent",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
       )}
     >

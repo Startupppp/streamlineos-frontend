@@ -297,7 +297,7 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
           }`}
         >
           <div className="space-y-5">
-            <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
+            <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden">
               <CardHeader className="pb-3 border-b px-5 pt-4">
                 <div className="flex items-center gap-2.5">
                   <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
@@ -371,7 +371,7 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
               onInsertToken={insertToken}
             />
 
-            <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
+            <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden">
               <CardHeader className="pb-3 border-b px-5 pt-4">
                 <div className="flex items-center gap-2.5">
                   <div className="w-7 rounded-lg bg-muted flex items-center justify-center shrink-0">

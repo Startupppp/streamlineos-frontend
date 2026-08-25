@@ -101,7 +101,7 @@ export function DirectReportsSection({ employeeId }: { employeeId: string }) {
 
   if (isLoading) {
     return (
-      <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
+      <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden">
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -123,7 +123,7 @@ export function DirectReportsSection({ employeeId }: { employeeId: string }) {
   if (!reports || reports.length === 0) return null;
 
   return (
-    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
+    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden">
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-3">
           <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -176,7 +176,7 @@ export function ManagerScorecardSection({ employeeId }: { employeeId: string }) 
   if (!scorecard || scorecard.teamSize === 0) return null;
 
   return (
-    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
+    <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden">
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-4">
           <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
