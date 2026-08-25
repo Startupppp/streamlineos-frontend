@@ -94,3 +94,26 @@ describe("AutonomyScoreboard", () => {
     expect(screen.getByText(/\$1\.23/)).toBeInTheDocument();
   });
 });
+
+describe("when the numbers cannot be read", () => {
+  /**
+   * A card with a heading and nothing under it reads as "there is no data",
+   * which is the opposite of what a failed request means — and on a scoreboard,
+   * "nothing to correct" is exactly the reassuring lie worth avoiding.
+   */
+  it("says so, rather than rendering an empty card", () => {
+    mockUseScoreboard.mockReturnValue({ data: undefined, isLoading: false, isError: true });
+    render(<AutonomyScoreboard />);
+
+    const alert = screen.getByRole("alert");
+    expect(alert).toHaveTextContent(/could not be loaded/i);
+    // And it does not imply the measurement itself is missing.
+    expect(alert).toHaveTextContent(/still being recorded/i);
+  });
+
+  it("does not show a rate of any kind while it cannot read one", () => {
+    mockUseScoreboard.mockReturnValue({ data: undefined, isLoading: false, isError: true });
+    render(<AutonomyScoreboard />);
+    expect(screen.queryByText("0%")).not.toBeInTheDocument();
+  });
+});

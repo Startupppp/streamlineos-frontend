@@ -23,7 +23,7 @@ function vetoedByPlatform(effective: EffectiveSwitch): boolean {
  */
 export function AutonomySwitchesPanel() {
   const canManage = useCan("crm:autonomy:manage");
-  const { data, isLoading } = useAutonomySwitches();
+  const { data, isLoading, isError } = useAutonomySwitches();
   const setSwitch = useSetAutonomySwitch();
 
   if (isLoading)
@@ -51,6 +51,19 @@ export function AutonomySwitchesPanel() {
       </CardHeader>
 
       <CardContent className="flex flex-col gap-gap-field">
+        {isError || !data ? (
+          /*
+            An empty switches panel reads as "nothing is switched on", which
+            would be a dangerous thing to believe about a product that acts on
+            its own. Failing to read the switches is not the same as there
+            being none.
+          */
+          <p role="alert" className="text-label text-muted-foreground">
+            These controls could not be loaded, so what the system is currently
+            allowed to do is unknown here. Reload to try again.
+          </p>
+        ) : null}
+
         {data?.effective.map((effective) => {
           const platformVeto = vetoedByPlatform(effective);
           const busy = setSwitch.isPending && setSwitch.variables?.kind === effective.kind;

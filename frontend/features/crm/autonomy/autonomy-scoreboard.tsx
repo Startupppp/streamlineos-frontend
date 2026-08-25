@@ -86,7 +86,7 @@ function KindRow({ row }: { row: ScoreboardKindRow }) {
  */
 export function AutonomyScoreboard() {
   const [days, setDays] = useState(30);
-  const { data, isLoading } = useAutonomyScoreboard(days);
+  const { data, isLoading, isError } = useAutonomyScoreboard(days);
 
   return (
     <Card>
@@ -117,6 +117,17 @@ export function AutonomyScoreboard() {
               <Skeleton key={i} className="h-12 w-full" />
             ))}
           </div>
+        ) : isError || !data ? (
+          /*
+            A card with a heading and nothing under it reads as "there is no
+            data", which is the opposite of what a failed request means — and on
+            a scoreboard, "nothing to correct" is exactly the reassuring lie
+            worth avoiding. Say the numbers could not be loaded.
+          */
+          <p role="alert" className="text-label text-muted-foreground">
+            These numbers could not be loaded. They are still being recorded —
+            this is a problem reading them, not a gap in what was measured.
+          </p>
         ) : (
           <>
             <div>
