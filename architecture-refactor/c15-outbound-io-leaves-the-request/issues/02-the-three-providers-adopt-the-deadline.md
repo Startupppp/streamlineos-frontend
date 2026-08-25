@@ -4,21 +4,21 @@
 
 **Blocked by:** 01 — An outbound call cannot be untimed
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Acceptance criteria
 
-- [ ] All three call sites go through the shared helper with a per-provider timeout.
-- [ ] A timeout leaves the caller in a known state — a payment timeout does not leave a charge unrecorded.
-- [ ] The storage client is constructed once rather than per call, so connection reuse is not discarded.
-- [ ] A timeout is reported, not swallowed.
+- [x] All three call sites go through the shared helper with a per-provider timeout.
+- [x] A timeout leaves the caller in a known state — a payment timeout does not leave a charge unrecorded.
+- [x] The storage client is constructed once rather than per call, so connection reuse is not discarded.
+- [x] A timeout is reported, not swallowed.
 
 ## Todo
 
-- [ ] Set per-provider timeouts — a slow-by-nature call should not be held to an interactive deadline
-- [ ] Hoist the storage client construction
-- [ ] Check what a timeout leaves behind on the payment path
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+- [x] Set per-provider timeouts — a slow-by-nature call should not be held to an interactive deadline
+- [x] Hoist the storage client construction
+- [x] Check what a timeout leaves behind on the payment path
+- [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
 ---
 

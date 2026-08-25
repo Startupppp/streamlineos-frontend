@@ -2,7 +2,7 @@
 
 PRD: [`prd.md`](prd.md) · Program: [`../README.md`](../README.md)
 
-**Wave 2** · 6 tickets, 0 retired.
+**Wave 2** · 7 tickets, 0 done.
 
 809+ tables, 1,210 tenant-led indexes, 654 composite tenant foreign keys, 79 org triggers, RLS everywhere. **The schema is in good shape and this is not a redesign.** Six tickets fix the places where the schema states something other than the truth. Two of them share a shape: a column that records an intention nobody implemented.
 
@@ -14,6 +14,7 @@ PRD: [`prd.md`](prd.md) · Program: [`../README.md`](../README.md)
 | 04 | [Invoice line items are queryable](issues/04-invoice-line-items-are-queryable.md) | — | ready-for-agent |
 | 05 | [Every audit row names its tenant](issues/05-every-audit-row-names-its-tenant.md) | — | ready-for-agent |
 | 06 | [Candidate résumé text leaves the row](issues/06-candidate-resume-text-leaves-the-row.md) | — | ready-for-agent |
+| 07 | [Free/busy and conflict checks expand the same calendar series](issues/07-free-busy-and-conflicts-share-expansion.md) | 02, 03 | ready-for-agent |
 
 ## Working these
 

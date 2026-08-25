@@ -1,6 +1,8 @@
 # c13 · One contract for every list
 
-**Status: three helpers exist, none is the default.** Verified at source 2026-08-25. `common/pagination/cursor.ts` implements keyset pagination correctly — opaque cursor, id tie-break, `limit + 1` sentinel so `hasMore` costs nothing. Six files use it. `paginateOffset` caps a page at 100 and is used by 34. **143 files call `.offset()` directly.** Counting is split too: 166 `count()` calls run inside a `Promise.all`, 241 do not, and **zero** use a `count(*) OVER ()` window — the technique the project's own read-cost baseline uses.
+**Status: three helpers exist, none is the default.** Verified at source 2026-08-25. `common/pagination/cursor.ts` implements keyset pagination correctly — opaque cursor, id tie-break, `limit + 1` sentinel so `hasMore` costs nothing. Six files use it. `paginateOffset` caps a page at 100 and is used by 34. **143 files call `.offset()` directly.** Counting is split too: 166 `count()` calls run inside a `Promise.all` and 241 do not.
+
+> **Correction, verified 2026-08-25 during implementation.** This spec originally claimed **zero** TypeScript files use a `count(*) OVER ()` window. That is wrong — **three do**: the ticket list read, the work-scope union, and HR interviews. The technique is already proven in this codebase, so the remaining work is propagation with in-repo prior art to copy, not introduction of a new pattern.
 
 ## Problem Statement
 
@@ -55,7 +57,7 @@ Make the list contract a decision taken once. Three parts:
 
 - **`cursor.ts` is correct and its reasoning is in the file.** Opaque base64url cursor, sort value plus id so ties still totally order, `limit + 1` over-fetch so `hasMore` needs no count, and a malformed cursor returns the first page rather than throwing. Do not re-derive any of these.
 - **`paginateOffset` caps at 100.** Keep the cap for offset endpoints that stay offset.
-- **The read-cost baseline already uses `count(*) OVER ()`.** The technique is proven in this codebase; no TypeScript file uses it yet.
+- **`count(*) OVER ()` is already in use in three places** — the ticket list read, the work-scope union and HR interviews — as well as in the read-cost baseline. Copy one of those rather than inventing a shape.
 
 **To build**
 

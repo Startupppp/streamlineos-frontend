@@ -8,19 +8,19 @@
 
 ## Acceptance criteria
 
-- [ ] On the shutdown signal, readiness reports unhealthy *before* the drain begins — the ordering is the assertion.
-- [ ] A settling delay allows the load balancer to observe the change.
-- [ ] In-flight requests complete during the drain.
-- [ ] A request arriving after the readiness flip is not accepted.
-- [ ] Liveness does not fail during shutdown, or the orchestrator kills the process mid-drain.
-- [ ] The existing drain timeout is preserved.
+- [x] On the shutdown signal, readiness reports unhealthy *before* the drain begins — the ordering is the assertion.
+- [x] A settling delay allows the load balancer to observe the change.
+- [x] In-flight requests complete during the drain.
+- [x] A request arriving after the readiness flip is not accepted.
+- [x] Liveness does not fail during shutdown, or the orchestrator kills the process mid-drain.
+- [x] The existing drain timeout is preserved.
 
 ## Todo
 
-- [ ] Flip readiness on the pre-shutdown hook, then drain
-- [ ] Keep liveness and readiness distinct
-- [ ] Assert the ordering, not merely that both states exist
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+- [x] Flip readiness on the pre-shutdown hook, then drain
+- [x] Keep liveness and readiness distinct
+- [x] Assert the ordering, not merely that both states exist
+- [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
 ---
 

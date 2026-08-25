@@ -64,6 +64,7 @@ Plus one convention: **stop adding naive timestamps.** Do not migrate 1,592 colu
 
 - **Person identity: pick the winner explicitly.** Deduplication fails when the canonical side is left implicit — that has happened here before, and a rewritten fixture hid a 20-namespace regression. Decide, write it down, then migrate the loser's columns and add the foreign key.
 - **Calendar: store instant plus zone.** A recurring event needs the originating zone, not just an offset, because the offset changes across DST. Adopt a standard recurrence representation and expand server-side; do not hand-roll a rule parser.
+- **Calendar expansion is one deep module.** List views, reminders, free/busy and conflict checks cross the same seam and consume the same occurrence expansion. A second recurrence implementation would disagree at DST transitions and on exceptions.
 - **Then resolve `recurring_rule`.** Either it drives expansion or it is deleted. A written-never-read column is worse than a missing feature because it looks implemented.
 - **Invoice line items become a table**, matching quotes. Migrate existing arrays, then remove the column. Keep the invoice total reconcilable with its lines.
 - **`audit_logs.org_id` non-nullable**, with an explicit platform representation. Backfill first, then constrain.
@@ -81,6 +82,7 @@ Plus one convention: **stop adding naive timestamps.** Do not migrate 1,592 colu
 - **No divided identity** — after migration, no query can produce two different values for one person's identity field. A catalog-level assertion, not a unit test.
 - **Timezone correctness** — an event created in one zone and read in another shows the correct local time, including across a DST boundary in both directions, and in a zone with a non-hour offset. This is where hand-rolled logic fails.
 - **Recurrence expansion** — a series expands to the expected occurrences; a modified occurrence does not alter its siblings; an ended series retains its past. If recurrence is dropped instead, assert the columns are gone.
+- **Free/busy parity** — the same expanded occurrence that renders busy also blocks a conflicting write; cancelled and declined occurrences do neither. Test spring-forward, fall-back, all-day and moved-instance cases.
 - **Line-item reconciliation** — invoice total equals the sum of its lines, before and after migration. Run against migrated production-shaped data, not just fixtures.
 - **Audit tenancy** — every audit row has a tenant or an explicit platform marker; the constraint rejects a row with neither.
 - **Migration integrity** — the existing spec asserting SQL-managed objects stay outside the ORM schema and journal must keep passing. It is the guard on the deliberate arrangement above.

@@ -9,7 +9,7 @@ Only two of 363 explicit transaction blocks contain a network call — the code 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
 | 01 | [An outbound call cannot be untimed](issues/01-an-outbound-call-cannot-be-untimed.md) | — | done |
-| 02 | [The three providers adopt the deadline](issues/02-the-three-providers-adopt-the-deadline.md) | 01 | ready-for-agent |
+| 02 | [The three providers adopt the deadline](issues/02-the-three-providers-adopt-the-deadline.md) | 01 | done |
 | 03 | [A blob upload does not hold a database connection](issues/03-a-blob-upload-does-not-hold-a-connection.md) | 02 | ready-for-agent |
 | 04 | [Post-commit work carries tenant context](issues/04-post-commit-work-carries-tenant-context.md) | — | ready-for-agent |
 | 05 | [The API surface is not published in production](issues/05-the-api-surface-is-not-published.md) | — | ready-for-agent |

@@ -1,6 +1,6 @@
 # Architecture refactor — 2026-08-25
 
-The complete program from the four-pass architecture review: **15 PRDs and 72 tickets**, self-contained in this folder so it does not mix with the other work in `docs/`.
+The complete program from the final architecture review: **18 PRDs and 87 tickets**, self-contained in this folder so it does not mix with the other work in `docs/`.
 
 Each candidate folder holds its PRD and its tickets together:
 
@@ -22,46 +22,49 @@ What four passes found was not systemic decay. It was concentrated problems and 
 
 ## Wave 0 — stops a loss, fixes a live bug, or makes the rest observable
 
-| Candidate | Tickets | Retired | Open |
+| Candidate | Tickets | Done | Open |
 |---|---|---|---|
 | [c12 — Route text search through the id probe that already exists](c12-text-search-id-probe/README.md) | 3 | 0 | **3** |
 | [c13 — One contract for every list](c13-one-list-contract/README.md) | 6 | 0 | **6** |
-| [c15 — Outbound I/O leaves the request transaction](c15-outbound-io-leaves-the-request/README.md) | 5 | 0 | **5** |
+| [c15 — Outbound I/O leaves the request transaction](c15-outbound-io-leaves-the-request/README.md) | 5 | 1 | **4** |
 | [c17 — Every billing write is provable](c17-billing-writes-are-provable/README.md) | 7 | 0 | **7** |
 | [c19 — A cache key cannot be unsafe, and a write invalidates what it changed](c19-cache-keys-cannot-be-unsafe/README.md) | 5 | 0 | **5** |
 | [c20 — A failure in production is visible](c20-failures-are-visible/README.md) | 5 | 0 | **5** |
-| | **31** | **0** | **31** |
+| | **31** | **1** | **30** |
 
 Start with **c20-01**. It is an afternoon, and it surfaces every other Wave 0 item as it happens — without it, each fix below is verified by hope.
 
 ## Wave 1 — stops recurrence, or removes the largest costs
 
-| Candidate | Tickets | Retired | Open |
+| Candidate | Tickets | Done | Open |
 |---|---|---|---|
 | [c11 — Make "this query is fast" a thing CI proves](c11-read-cost-budgets/README.md) | 3 | 0 | **3** |
 | [c14 — Background sweeps operate on sets, not on rows](c14-set-based-sweeps/README.md) | 3 | 0 | **3** |
-| [c21 — Right models, right throughput — fan-out, retention and polling](c21-fanout-retention-and-polling/README.md) | 6 | 0 | **6** |
-| [c22 — Scheduled work runs once, and a deploy sheds no requests](c22-scheduled-work-and-deploy-safety/README.md) | 4 | 0 | **4** |
-| | **16** | **0** | **16** |
+| [c21 — Right models, right throughput — fan-out, retention and polling](c21-fanout-retention-and-polling/README.md) | 7 | 0 | **7** |
+| [c22 — Scheduled work runs once, and a deploy sheds no requests](c22-scheduled-work-and-deploy-safety/README.md) | 4 | 2 | **2** |
+| [c25 — Authorization cannot be omitted](c25-authorization-cannot-be-omitted/README.md) | 3 | 0 | **3** |
+| [c26 — Commercial billing is a versioned ledger](c26-commercial-billing-ledger/README.md) | 5 | 0 | **5** |
+| [c27 — Indexed knowledge obeys the same visibility as direct reads](c27-permissioned-knowledge-index/README.md) | 5 | 0 | **5** |
+| | **30** | **2** | **28** |
 
 ## Wave 2 — mechanical, parallelisable
 
-| Candidate | Tickets | Retired | Open |
+| Candidate | Tickets | Done | Open |
 |---|---|---|---|
-| [c16 — The schema says what it means](c16-schema-says-what-it-means/README.md) | 6 | 0 | **6** |
+| [c16 — The schema says what it means](c16-schema-says-what-it-means/README.md) | 7 | 0 | **7** |
 | [c18 — Removals are proved, not grepped](c18-removals-are-proved/README.md) | 4 | 0 | **4** |
 | [c23 — A tenant extends the product without a deploy](c23-tenant-extensibility-without-migrations/README.md) | 5 | 0 | **5** |
 | [c24 — The design system is the only way to build a screen](c24-frontend-consistency-and-access/README.md) | 5 | 0 | **5** |
-| | **20** | **0** | **20** |
+| | **21** | **0** | **21** |
 
 ## Wave 3 — the read side
 
-| Candidate | Tickets | Retired | Open |
+| Candidate | Tickets | Done | Open |
 |---|---|---|---|
 | [c10 — Make module-level standing answerable](c10-module-role-standing/README.md) | 5 | 0 | **5** |
 | | **5** | **0** | **5** |
 
-**72 tickets → 0 retired, 72 open.**
+**87 tickets → 3 done, 84 open.**
 
 ## The six that matter most
 

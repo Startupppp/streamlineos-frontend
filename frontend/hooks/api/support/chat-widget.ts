@@ -40,7 +40,7 @@ export function useChatSession(orgId: string, sessionToken: string | null) {
     queryKey: queryKeys.supportChatWidget.session(orgId, sessionToken ?? ""),
     queryFn: () => apiClient.get<ChatSession>(`/support/chat/${orgId}/${sessionToken}/messages`),
     enabled: Boolean(orgId) && Boolean(sessionToken),
-    refetchInterval: 4000,
+    refetchInterval: 30_000,
     staleTime: 0,
   });
 }

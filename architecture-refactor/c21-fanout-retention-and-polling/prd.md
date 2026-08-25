@@ -12,7 +12,7 @@
 
 **As a user, my notification list pages incorrectly.** It pages by id below a cursor while ordering by creation time descending. The two orderings disagree, so rows are skipped or repeated at page boundaries.
 
-**As an operator, polling is the dominant cost.** At 50k concurrent sessions the fixed intervals total about 22,000 requests per second — and the support chat widget at a four-second interval alone accounts for 12,500 of them, more than every other poll combined. **None of it is suppressed when the realtime connection is live.**
+**As an operator, polling is the dominant cost.** At 50k concurrent sessions the fixed intervals total about 22,000 requests per second — and the support chat widget at a four-second interval alone accounts for 12,500 of them, more than every other poll combined. **None of it is suppressed when the realtime connection is live** — though see the correction at the foot of this document: only one hook is actually *eligible* for suppression.
 
 **As a user, my inbox re-fetches from the provider on every render.** Mail is a pure bridge with nothing persisted, so each render round-trips to the provider: 100–500 ms, a billable call per view, exposure to per-project quotas, and **no search or threading without re-querying**.
 
@@ -76,6 +76,7 @@
 - **Suppress polling while realtime is connected**, with polling as the fallback when it is not. Raise the support widget's interval and drive it from realtime.
 - **Mail metadata cache, populated by provider push webhooks. Bodies are never persisted.** This bounds the change and keeps the product out of mail hosting.
 - **Mail metadata is keyed and authorized per user**, not per organisation.
+- **One delivery policy classifies every event.** Security, ownership, payment and legal events are mandatory transactional delivery; operational events respect user channel preferences and quiet hours; marketing requires separate consent. Every producer emits an event key and never selects a provider directly.
 
 ## Testing Decisions
 
@@ -90,6 +91,7 @@
 - **Polling suppression** — with realtime connected, assert the poll does not fire; on disconnect, assert it resumes. Both halves matter; only testing the first leaves the fallback unproven.
 - **Realtime authorization** — a token for one channel cannot subscribe to another, and cannot subscribe across organisations. This is the regression test for the fixed wildcard defect.
 - **Mail metadata isolation** — two users in one organisation do not share cached metadata.
+- **Delivery-policy parity** — the same event key resolves to the same required channels, preference behavior, quiet-hours behavior and escalation rule no matter which module emitted it.
 - **Prior art**: the existing chat, notification and outbox publisher specs, and the realtime capability tests.
 
 ## Out of Scope
@@ -103,6 +105,10 @@
 
 ## Further Notes
 
-The polling table is the single clearest answer to the cost-efficiency requirement in the whole review: **about 22,000 requests per second at 50k sessions, from clients that are mostly idle**, with one four-second widget accounting for more than half. Suppressing polling while realtime is connected is a small change with a larger effect than any query optimisation in this set.
+The polling table is the single clearest answer to the cost-efficiency requirement in the whole review: **about 22,000 requests per second at 50k sessions, from clients that are mostly idle**, with one four-second widget accounting for more than half.
+
+> **Correction, verified 2026-08-26 during implementation.** This spec implied most polls could be suppressed by realtime. They cannot. All 27 polling hooks were classified and **only one — the chat message poll — has a realtime channel actually delivering its data**. The rest are legitimate fallback polls with no realtime path; suppressing them would make their screens permanently stale, which is worse than the polling cost.
+>
+> The real win was never suppression, it was **the widget's interval**. Raising the public support widget from 4s to 30s removed 10,833 rps; suppressing the one eligible chat poll removed 1,667. Measured total: **22,666 → 10,166 rps, a 55% reduction**, of which the interval change is 87%. The remaining ~10,200 rps are structural and need a realtime delivery path per data type before they can drop further.
 
 The inbox item is a genuine fork rather than a defect, and it is recorded here as a decision rather than a task. Persisting nothing is a defensible choice with real benefits — no mail content in the database, no synchronisation to maintain. It also makes search and threading impossible. Caching metadata only is the middle path, and it is the one worth taking, but the alternative is legitimate and should be rejected deliberately rather than by default.

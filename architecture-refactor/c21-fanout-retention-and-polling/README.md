@@ -2,7 +2,7 @@
 
 PRD: [`prd.md`](prd.md) · Program: [`../README.md`](../README.md)
 
-**Wave 1** · 6 tickets, 0 retired.
+**Wave 1** · 7 tickets, 0 done.
 
 The models are correct: the realtime capability is per-channel with active revocation, the outbox relay claims rows safely, and chat unread uses a watermark. **What is wrong is what happens at volume** — a 50k announcement is a sequential insert loop that outlives the HTTP timeout, three tables grow forever, and polling alone is ~22,000 requests per second at 50k sessions with over half from one four-second widget.
 
@@ -14,6 +14,7 @@ The models are correct: the realtime capability is per-channel with active revoc
 | 04 | [Three growing tables are partitioned](issues/04-three-growing-tables-are-partitioned.md) | — | ready-for-agent |
 | 05 | [Retention detaches rather than deletes](issues/05-retention-detaches-rather-than-deletes.md) | 04 | ready-for-agent |
 | 06 | [The inbox renders from cached metadata](issues/06-the-inbox-renders-from-cached-metadata.md) | — | ready-for-agent |
+| 07 | [One delivery policy governs email, in-app, push and alerts](issues/07-one-delivery-policy.md) | — | ready-for-agent |
 
 ## Working these
 
