@@ -25,7 +25,7 @@ function CopyTokenButton({ copied, onCopy }: { copied: boolean; onCopy: () => vo
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
     <Button size="sm" variant="outline" onClick={onCopy} className="shrink-0" {...hoverHandlers}>
-      {copied ? <Check className="h-4 w-4 text-green-600" /> : <CopyIcon ref={iconRef} size={16} />}
+      {copied ? <Check className="h-4 w-4 text-status-success-ink" /> : <CopyIcon ref={iconRef} size={16} />}
     </Button>
   );
 }
@@ -60,7 +60,7 @@ export function TokenCreatedDialog({
           <DialogTitle>Token Created</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
-          <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
+          <div className="rounded-md border border-status-warning-rule bg-status-warning-surface p-3 text-xs text-status-warning-ink">
             Copy this token now. You won&apos;t be able to see it again.
           </div>
           <div className="flex items-center gap-2">

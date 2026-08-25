@@ -50,7 +50,7 @@ function SessionRow({ session: s, onRevoke, revokePending }: SessionRowProps) {
         <div className="flex items-center gap-2">
           <TruncatedText text={formatClientDeviceLabel(s)} className="text-label font-medium" />
           {s.isCurrent && (
-            <Badge variant="outline" className="text-micro h-4 px-1.5 border-emerald-300 text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
+            <Badge variant="outline" className="text-micro h-4 px-1.5 border-status-success-rule text-status-success-ink bg-status-success-surface">
               Current
             </Badge>
           )}
@@ -184,7 +184,7 @@ function SignInRow({ entry }: { entry: LoginEntry }) {
           <Badge
             variant="outline"
             className={entry.success
-              ? "h-5 shrink-0 border-emerald-500/30 bg-emerald-500/10 px-2 text-micro text-emerald-700 dark:text-emerald-300"
+              ? "h-5 shrink-0 border-status-success-rule bg-status-success-surface px-2 text-micro text-status-success-ink"
               : "h-5 shrink-0 border-destructive/30 bg-destructive/10 px-2 text-micro text-destructive"}
           >
             {entry.success ? "Successful" : "Failed"}

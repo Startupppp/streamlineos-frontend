@@ -74,7 +74,7 @@ function LogRow({ log, endpointId, canManage }: LogRowProps) {
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
           <span
-            className={`h-2 w-2 rounded-full shrink-0 mt-1 ${log.success ? "bg-emerald-500" : "bg-destructive"}`}
+            className={`h-2 w-2 rounded-full shrink-0 mt-1 ${log.success ? "bg-status-success-surface" : "bg-destructive"}`}
           />
           <span className="text-sm font-mono font-medium truncate">
             {log.event}
@@ -82,7 +82,7 @@ function LogRow({ log, endpointId, canManage }: LogRowProps) {
           {isBlocked && (
             <Badge
               variant="outline"
-              className="text-micro shrink-0 border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10"
+              className="text-micro shrink-0 border-status-warning-rule text-status-warning-ink bg-status-warning-surface"
             >
               Blocked
             </Badge>

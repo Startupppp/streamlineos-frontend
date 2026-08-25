@@ -281,7 +281,7 @@ export function GroupDetailSheet({ group, open, onOpenChange }: GroupDetailSheet
                       key={r.id}
                       className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-muted/50"
                     >
-                      <Shield className="h-4 w-4 shrink-0 text-blue-500 dark:text-blue-400" />
+                      <Shield className="h-4 w-4 shrink-0 text-status-info-ink" />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium">{r.name}</p>
                         {r.moduleKey && (

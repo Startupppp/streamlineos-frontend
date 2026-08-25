@@ -90,7 +90,7 @@ function RoleListItem({ role, isSelected, onSelect, onDelete, onRename }: RoleLi
       </div>
       <div className="flex items-center gap-1 shrink-0">
         {role.isSystem && (
-          <Badge variant="outline" className="text-[9px] px-1.5">System</Badge>
+          <Badge variant="outline" className="text-micro px-1.5">System</Badge>
         )}
         {!role.isSystem && (
           <>

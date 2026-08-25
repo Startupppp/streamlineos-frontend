@@ -1,0 +1,118 @@
+# Token migration — running list
+
+The migrate half of the wide refactor (ticket 17). Legacy values still exist, so
+the build stays green between batches; ticket 18 deletes them once nothing
+references them.
+
+**Do not attempt this as one change.** Each batch below is its own unit of work
+with its own commit, and the build is green after every one.
+
+## Method
+
+Two kinds of value, and they are not equally safe to move.
+
+**Type is mechanical.** The tokens are defined as exactly 10, 11 and 13px and
+Tailwind's own scale is exactly 12, 14 and 16px, so those replacements render
+byte-identically and were done platform-wide in one batch.
+
+**Colour is not.** Each legacy usage is a light class plus a hand-written `dark:`
+twin — six classes where three tokens do the job, and roughly half the call
+sites in this codebase forgot the twin, so migrating also fixes dark mode where
+it was silently broken. But which *role* a colour plays is a judgement: a hue
+maps to a status tone only when it means that status. The codemod handles the
+unambiguous mapping and everything else is raised below rather than guessed.
+
+```
+emerald · green · teal · lime     -> status-success
+amber · yellow · orange           -> status-warning
+red · rose                        -> status-danger
+blue · sky · indigo · cyan        -> status-info
+slate · gray · zinc · neutral     -> muted-foreground / muted / border
+```
+
+Greys map to the shadcn semantics rather than to `status-neutral`: they already
+exist, they already handle both themes, and most grey in this codebase means
+"secondary text" rather than "neutral status".
+
+## Batches
+
+| # | Batch | Values | Status |
+|---|---|---|---|
+| 1 | Type scale, platform-wide | 4,074 | **done** — 2026-08-25 |
+| 2 | Settings | 291 → 0 | **done** — 2026-08-25 |
+| 3 | CRM | 953 | not started |
+| 4 | HR | 3,164 | not started |
+| 5 | Build | 1,033 | not started |
+| 6 | Payroll | 856 | not started |
+| 7 | Route shells `app/(authenticated)` | 2,001 | not started |
+| 8 | Inventory · Accounting · Timesheets | 1,133 | not started |
+| 9 | Everything else (58 modules) | ~2,300 | not started |
+
+Ordered by how much users touch them, after Settings — which goes first because
+it is the most-complained-about surface and is mostly forms, so it exercises the
+control tokens hardest with the least layout risk.
+
+**Remaining: 11,492 values across 66 modules.**
+
+## The rule that stops it coming back
+
+`eslint-rules/no-raw-visual-values.mjs` fails the build on a palette class, an
+arbitrary type size or a raw colour literal. Migrating every module is worth
+little if the next feature adds `text-emerald-600 dark:text-emerald-300` back —
+and it will, because that is what every example on the internet shows.
+
+**Scoped to what has actually been migrated**, and widened as batches land. A
+rule that fires eleven thousand times is a rule somebody disables. Currently
+held: `features/settings`, `features/renderer`, `features/crm/autonomy`,
+`features/crm/import`, `lib/design-tokens`.
+
+Verified to fail: reintroducing `text-emerald-600 dark:text-emerald-300
+text-[11px]` into a held file is an error, not a warning.
+
+## Raised, not fixed inline
+
+Criterion 7: where a module needs a value the token set lacks, it is an addition
+to decide on rather than something to paper over.
+
+### Resolved while migrating Settings
+
+Two things looked like missing tokens and were not.
+
+**A stray hue, not a category.** `audit-log-constants.ts` had one entry in
+fuchsia where its siblings — `org.branch`, `org.department` — were `info`. It
+read as a category needing its own scale; it was an inconsistency. `org.team`
+now matches the structural changes it sits beside. There is no categorical
+palette and, on this evidence, no need for one yet.
+
+**Type below the floor.** 9px is below every legibility guideline, and adding a
+`--text-tiny: 9px` would launder an accessibility problem into something that
+looks sanctioned. The 14 occurrences in migrated modules were **raised to
+`text-micro`** (10px) instead, which is exactly the "type becoming consistent"
+the batch is allowed to change.
+
+**One real defect found.** The renderer rendered email, phone and URL values as
+`text-blue-600` with no `dark:` twin at all — dark blue links on a dark
+background. They now use `text-primary`, which is redefined under `.dark`.
+
+### Still raised, across the unmigrated modules
+
+| Size | Count | Verdict |
+|---|---|---|
+| 9px | 284 | **Too small.** Raise to `text-micro` as each batch reaches it. |
+| 8px, 7px, 6px | 57 | Too small. Same treatment. |
+| 15px, 17px, 28px | 26 | One-offs between existing steps; decide per case. |
+
+## What is not verified
+
+Criteria 5 and 6 ask for responsive behaviour at three widths and both themes,
+verified **per batch**. That has not been done for batches 1 and 2. Both are
+argued rather than observed:
+
+- Batch 1 changes no rendered size, so it cannot change layout or reflow.
+- Batch 2 replaces literal colours with custom properties that resolve per
+  theme, and removes `dark:` twins that are now redundant — which strictly
+  improves dark mode, because the twins that were missing are now covered.
+
+Neither argument substitutes for looking. A batch that changes spacing or
+density will need real verification at 375, 768 and 1280px in light, dark and
+system default before it can be called done.

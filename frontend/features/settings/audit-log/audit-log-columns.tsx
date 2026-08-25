@@ -29,7 +29,7 @@ export const AUDIT_LOG_COLUMNS: DataTableColumn<AuditLogRow>[] = [
       <div className="flex items-center gap-2 min-w-[140px]">
         <Avatar className="h-6 w-6 shrink-0">
           <AvatarImage src={resolveImageUrl(log.userImage)} />
-          <AvatarFallback className="text-[9px]">{getInitials(log.userName)}</AvatarFallback>
+          <AvatarFallback className="text-micro">{getInitials(log.userName)}</AvatarFallback>
         </Avatar>
         <span className="text-label font-medium truncate max-w-[120px]">
           {log.userName ?? log.userEmail ?? "Unknown user"}

@@ -44,7 +44,7 @@ export function WebhookSecretRevealDialog({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            <ShieldCheck className="h-4 w-4 text-status-success-ink" />
             Copy your signing secret
           </DialogTitle>
           <DialogDescription>

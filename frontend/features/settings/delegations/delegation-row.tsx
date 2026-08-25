@@ -91,7 +91,7 @@ export function DelegationRow({
             </Badge>
           )}
           {isScheduled ? (
-            <Badge variant="outline" className="shrink-0 text-xs text-blue-600">
+            <Badge variant="outline" className="shrink-0 text-xs text-status-info-ink">
               Scheduled
             </Badge>
           ) : null}

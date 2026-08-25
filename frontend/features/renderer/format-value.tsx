@@ -59,14 +59,14 @@ export function renderFieldValue(field: FieldSpec, value: unknown): ReactNode {
 
   if (field.kind === "email")
     return (
-      <a className="text-blue-600 hover:underline" href={`mailto:${text}`}>
+      <a className="text-primary hover:underline" href={`mailto:${text}`}>
         {text}
       </a>
     );
 
   if (field.kind === "phone")
     return (
-      <a className="text-blue-600 hover:underline" href={`tel:${text}`}>
+      <a className="text-primary hover:underline" href={`tel:${text}`}>
         {text}
       </a>
     );
@@ -74,7 +74,7 @@ export function renderFieldValue(field: FieldSpec, value: unknown): ReactNode {
   if (field.kind === "url")
     return (
       <a
-        className="text-blue-600 hover:underline"
+        className="text-primary hover:underline"
         href={text.startsWith("http") ? text : `https://${text}`}
         target="_blank"
         rel="noreferrer noopener"

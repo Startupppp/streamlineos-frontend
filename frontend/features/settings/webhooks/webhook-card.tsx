@@ -70,7 +70,7 @@ export function WebhookCard({
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3 min-w-0">
               <div
-                className={`h-2.5 w-2.5 rounded-full shrink-0 ${wh.isActive ? "bg-emerald-500" : "bg-muted-foreground/40"}`}
+                className={`h-2.5 w-2.5 rounded-full shrink-0 ${wh.isActive ? "bg-status-success-surface" : "bg-muted-foreground/40"}`}
               />
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
@@ -110,7 +110,7 @@ export function WebhookCard({
                     aria-label={wh.isActive ? "Disable webhook" : "Enable webhook"}
                   >
                     {wh.isActive ? (
-                      <ToggleRight className="h-4 w-4 text-emerald-500" />
+                      <ToggleRight className="h-4 w-4 text-status-success-ink" />
                     ) : (
                       <ToggleLeft className="h-4 w-4 text-muted-foreground" />
                     )}

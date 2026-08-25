@@ -92,7 +92,7 @@ export function HierarchyArchiveDialog({
         <span
           className={
             isChecking || isDependencyBlocked || isPreflightFailure
-              ? "flex size-9 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300"
+              ? "flex size-9 items-center justify-center rounded-full bg-status-warning-surface text-status-warning-ink"
               : "flex size-9 items-center justify-center rounded-full bg-muted text-muted-foreground"
           }
         >
@@ -112,15 +112,15 @@ export function HierarchyArchiveDialog({
             Reviewing active assignments and linked records…
           </div>
         ) : isDependencyBlocked ? (
-          <div className="rounded-lg border border-amber-200 bg-amber-50/70 p-3 dark:border-amber-500/30 dark:bg-amber-500/10">
-            <p className="text-xs font-semibold uppercase tracking-wide text-amber-900 dark:text-amber-200">
+          <div className="rounded-lg border border-status-warning-rule bg-status-warning-surface p-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-status-warning-ink">
               Update these dependencies first
             </p>
             <ul className="mt-2 space-y-1.5">
               {dependencies.map((dependency) => (
                 <li
                   key={dependency.key}
-                  className="flex items-center justify-between gap-3 text-sm text-amber-950 dark:text-amber-100"
+                  className="flex items-center justify-between gap-3 text-sm text-status-warning-ink"
                 >
                   <span>{dependency.label}</span>
                   <span className="rounded-full bg-white/80 px-2 py-0.5 text-xs font-semibold tabular-nums dark:bg-black/20">
@@ -129,7 +129,7 @@ export function HierarchyArchiveDialog({
                 </li>
               ))}
             </ul>
-            <p className="mt-3 text-xs leading-5 text-amber-800 dark:text-amber-200/80">
+            <p className="mt-3 text-xs leading-5 text-status-warning-ink">
               Move, close, or reassign these records and then try again. Nothing
               has been changed.
             </p>
