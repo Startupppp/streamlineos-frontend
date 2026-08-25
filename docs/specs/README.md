@@ -4,10 +4,10 @@
 
 | # | Candidate | Closed by |
 |---|---|---|
-| [c1](c1-kb-visibility-seam.md) | KB visibility predicate as a seam | Implemented: bounded resumable backfill and parity tests; live end-to-end backfill proof remains |
-| [c2](c2-calendar-source-registry.md) | Calendar source seam | Implemented: registry preferences and granular HR source adapters; production source rollout proof remains |
+| [c1](c1-kb-visibility-seam.md) | KB visibility predicate as a seam | Implemented: bounded resumable backfill, seeded direct/keyword/vector parity coverage, and denial-of-wallet tests; live seeded artifact remains unavailable |
+| [c2](c2-calendar-source-registry.md) | Calendar source seam | Implemented: granular source adapters, production registration coverage, and preference-isolation coverage; live database persistence proof remains |
 | [c3](c3-one-representation-of-capability.md) | One representation of capability | Implemented: scope-map seam, hydration contract, and non-excluded capability callers migrated; full production proof remains |
-| [c4](c4-module-availability-interface.md) | One interface for module availability | Implemented: canonical entitlement resolver and parity tests; full production proof remains |
+| [c4](c4-module-availability-interface.md) | One interface for module availability | Implemented: canonical entitlement resolver, parity tests, and production wiring regression coverage; live database proof remains |
 | [c5](c5-payment-provider-adapter.md) | Route the money through the adapter | Implemented: configured-provider resolver, billing isolation, provider-neutral webhook normalization, and neutral headers; concrete adapters still own credentials and legacy Razorpay path remains |
 | [c6](c6-split-kb-help-centre-and-wiki.md) | Split the two products inside `kb/` | Implemented: split, namespace, permanent conversion-tool policy, and failure-safe report; runtime tenant report remains |
 | [c7](c7-chat-message-fanout.md) | Chat send path as a fan-out module | Implemented: transactional outbox fan-out, injectable provider seam, durable retry, and deterministic effect idempotency; configurable broker-backed implementation remains |
