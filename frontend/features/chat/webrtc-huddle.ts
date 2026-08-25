@@ -10,7 +10,8 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
 import { useAblyConnection } from "./use-ably-connection";
 import {
-  getIceServers,
+  FALLBACK_ICE_SERVERS,
+  fetchIceServers,
   getMicErrorMessage,
   handleIncomingSignal,
   updatedStreamMap,
@@ -46,12 +47,27 @@ export function useWebRTCHuddle(
   const streamsByUser = useRef<Map<string, Map<string, MediaStream>>>(new Map());
   const localStreamRef = useRef<MediaStream | null>(null);
   const screenStreamRef = useRef<MediaStream | null>(null);
+  const iceServersRef = useRef<RTCIceServer[]>(FALLBACK_ICE_SERVERS);
   const knownParticipants = useRef<Set<string>>(new Set());
   const sendSignalRef = useRef<typeof sendSignalMutation.mutate>(sendSignalMutation.mutate);
 
   useEffect(() => {
     sendSignalRef.current = sendSignalMutation.mutate;
   });
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchIceServers()
+      .then((servers) => {
+        if (!cancelled) iceServersRef.current = servers;
+      })
+      .catch(() => {
+        if (!cancelled) iceServersRef.current = FALLBACK_ICE_SERVERS;
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const classifyStreams = useCallback((userId: string) => {
     const streams = streamsByUser.current.get(userId);
@@ -98,7 +114,7 @@ export function useWebRTCHuddle(
   const createPeerConnection = useCallback(
     (targetUserId: string): RTCPeerConnection => {
       const pc = new RTCPeerConnection({
-        iceServers: getIceServers(),
+        iceServers: iceServersRef.current,
         iceTransportPolicy: "all",
       });
 

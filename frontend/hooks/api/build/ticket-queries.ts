@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
@@ -87,6 +87,30 @@ export function useTicket(
       apiClient.get<Ticket | null>(`/build/${projectId}/tickets/${ticketId}`),
     enabled: canView && !!ticketId && !!projectId,
     staleTime: 30_000,
+    ...options,
+  });
+}
+
+export function useTicketByKey(
+  projectId: number,
+  ticketNumber: number | null,
+  options?: Omit<UseQueryOptions<Ticket | null>, "queryKey" | "queryFn" | "enabled">
+) {
+  const canView = useCan("build:tickets:view");
+  const queryClient = useQueryClient();
+  return useQuery<Ticket | null>({
+    queryKey: queryKeys.projects.ticketByKey(projectId, ticketNumber ?? 0),
+    queryFn: async () => {
+      const ticket = await apiClient.get<Ticket | null>(
+        `/build/${projectId}/tickets/key/${ticketNumber}`,
+      );
+      if (ticket) {
+        queryClient.setQueryData(queryKeys.projects.ticket(ticket.id), ticket);
+      }
+      return ticket;
+    },
+    enabled: canView && !!ticketNumber && !!projectId,
+    staleTime: 60_000,
     ...options,
   });
 }

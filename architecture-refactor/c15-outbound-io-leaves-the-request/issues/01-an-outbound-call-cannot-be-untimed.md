@@ -8,17 +8,17 @@
 
 ## Acceptance criteria
 
-- [ ] The timeout is a required argument — an untimed call does not typecheck.
-- [ ] The destination is validated through the existing SSRF guard; no second guard is written.
-- [ ] Internal addresses, loopback in every encoding including the packed IPv6 form, link-local, and redirect-to-internal are all rejected.
-- [ ] Provider, duration and outcome are recorded for each call.
-- [ ] A server that accepts a connection and never responds is abandoned at the deadline.
+- [x] The timeout is a required argument — an untimed call does not typecheck.
+- [x] The destination is validated through the existing SSRF guard; no second guard is written.
+- [x] Internal addresses, loopback in every encoding including the packed IPv6 form, link-local, and redirect-to-internal are all rejected.
+- [x] Provider, duration and outcome are recorded for each call.
+- [x] A server that accepts a connection and never responds is abandoned at the deadline.
 
 ## Todo
 
-- [ ] List the shared security utilities before writing anything — the existing guard handles forms a fresh one will miss
-- [ ] Test against a genuinely hanging server, not a mock that returns instantly
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+- [x] List the shared security utilities before writing anything — the existing guard handles forms a fresh one will miss
+- [x] Test against a genuinely hanging server, not a mock that returns instantly
+- [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
 ---
 

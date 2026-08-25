@@ -1,18 +1,18 @@
 # Architecture review 2026-08-23 — nine candidate PRDs
 
-**All nine are closed.** Re-verified at source on 2026-08-25; eight had moved further than their own status line claimed. These files are kept as history — each PRD's status line predates the work that closed it.
+**None of the nine is proven 100% complete.** Re-audited at source on 2026-08-25 against every acceptance criterion and focused tests. The PRDs are retained because each still has at least one unverified or unmet criterion; no file is safe to delete yet.
 
 | # | Candidate | Closed by |
 |---|---|---|
-| [c1](c1-kb-visibility-seam.md) | KB visibility predicate as a seam | `isPageIndexable` is lifecycle-only now — no visibility rule at index time |
-| [c2](c2-calendar-source-registry.md) | Calendar source seam | `calendar_source_preferences` table + service; per-person toggles persist |
-| [c3](c3-one-representation-of-capability.md) | One representation of capability | Flat array gone, `usePermissions` removed, `useScope` has a production consumer |
-| [c4](c4-module-availability-interface.md) | One interface for module availability | One `isCoreModuleKey`; the four remaining stubs are all test fixtures |
-| [c5](c5-payment-provider-adapter.md) | Route the money through the adapter | Adapter + `adapters/`, zero provider calls in `BillingService`, import-boundary spec |
-| [c6](c6-split-kb-help-centre-and-wiki.md) | Split the two products inside `kb/` | `help-centre/` and `wiki/` split; no dual frontend directories |
-| [c7](c7-chat-message-fanout.md) | Chat send path as a fan-out module | `ChatMessageFanoutService` behind `MessageFanout` |
-| [c8](c8-frontend-server-data-seam.md) | Frontend server-data seam | 28 of 29 retired; 11 hydration boundaries, 5 prefetch modules |
-| [c9](c9-transactional-outbox-decision.md) | Decide what the outbox is for | Wired — 6 consumers register via `InboxConsumer`, flush is cron-guarded |
+| [c1](c1-kb-visibility-seam.md) | KB visibility predicate as a seam | Partial: indexing/backfill and end-to-end parity proof remain |
+| [c2](c2-calendar-source-registry.md) | Calendar source seam | Partial: runtime sources are bundled, so individual source toggles are not complete |
+| [c3](c3-one-representation-of-capability.md) | One representation of capability | Partial: server/client representations and full proof remain |
+| [c4](c4-module-availability-interface.md) | One interface for module availability | Partial: production callers still assemble inputs differently |
+| [c5](c5-payment-provider-adapter.md) | Route the money through the adapter | Partial: billing still handles provider secrets and hard-codes provider resolution |
+| [c6](c6-split-kb-help-centre-and-wiki.md) | Split the two products inside `kb/` | Partial: migration/data decision and namespace evidence remain |
+| [c7](c7-chat-message-fanout.md) | Chat send path as a fan-out module | Partial: durable retry, queue swap, and sender-query removal remain |
+| [c8](c8-frontend-server-data-seam.md) | Frontend server-data seam | Partial: duplicate server adapter and failed-prefetch proof remain |
+| [c9](c9-transactional-outbox-decision.md) | Decide what the outbox is for | Open: no Option A/B decision; dispatch and exactly-once path remain unresolved |
 
 ## The successor program
 
