@@ -27,12 +27,71 @@ export function usePreviewImport() {
   });
 }
 
+/**
+ * How many times a single import may be asked to continue.
+ *
+ * Each call commits for about twenty seconds, so this is roughly ten minutes of
+ * work — far beyond the 5,000-row ceiling the upload accepts. It exists so that
+ * a server that somehow stops making progress cannot spin here forever.
+ */
+const MAX_COMMIT_CALLS = 30;
+
 export function useCommitImport() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (crmImportId: string) =>
-      apiClient.post<CommitResult>(`/crm/imports/${crmImportId}/commit`, {}),
+    /**
+     * Commits until the server says it is done.
+     *
+     * The server works under a time budget and returns `complete: false` with
+     * the rows it did not reach, rather than holding one request open until a
+     * statement timeout kills it and rolls the whole thing back. So finishing
+     * is the client's job. Each iteration is a separate request, which matters:
+     * `authedFetch` mints a fresh `Idempotency-Key` per request, and reusing one
+     * would make the server replay the first response and the import would never
+     * advance.
+     */
+    mutationFn: async ({
+      crmImportId,
+      onProgress,
+    }: {
+      crmImportId: string;
+      onProgress?: (soFar: CommitResult) => void;
+    }): Promise<CommitResult> => {
+      const total: CommitResult = {
+        created: 0,
+        updated: 0,
+        failed: 0,
+        remaining: 0,
+        complete: false,
+      };
+
+      for (let call = 0; call < MAX_COMMIT_CALLS; call++) {
+        const batch = await apiClient.post<CommitResult>(
+          `/crm/imports/${crmImportId}/commit`,
+          {},
+        );
+        total.created += batch.created;
+        total.updated += batch.updated;
+        total.failed += batch.failed;
+        // Not summed: it is what is left right now, not a running tally.
+        total.remaining = batch.remaining;
+        total.complete = batch.complete;
+
+        if (batch.complete) return total;
+        onProgress?.({ ...total });
+
+        // No progress and not complete means asking again will not help.
+        if (batch.created + batch.updated + batch.failed === 0)
+          throw new Error(
+            `The import stopped with ${batch.remaining} rows left and made no progress. Nothing was undone — you can try again.`,
+          );
+      }
+
+      throw new Error(
+        `The import is taking more calls than expected and has been stopped with ${total.remaining} rows left. Nothing was undone.`,
+      );
+    },
     onSuccess: () => {
       // An import touches parties, contacts and subjects at once; anything on
       // screen reading any of them is now stale.

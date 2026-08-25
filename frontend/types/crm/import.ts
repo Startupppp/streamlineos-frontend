@@ -38,12 +38,26 @@ export interface ImportPreview {
   summary: ImportSummary;
   /** A sample. A preview that ships ten thousand rows is one nobody waits for. */
   rows: PlannedRow[];
+  /**
+   * Things the plan is honest about but cannot fix by itself — today only that
+   * the candidate set for duplicate matching was truncated. Shown rather than
+   * logged: the tenant is about to approve this.
+   */
+  warnings: string[];
 }
 
 export interface CommitResult {
   created: number;
   updated: number;
   failed: number;
+  /** Rows the server did not reach before its time budget ran out. */
+  remaining: number;
+  /**
+   * Whether the import finished. The server commits under a 20-second budget
+   * and leaves the import open when it runs out, so a large file takes several
+   * calls — `false` means call again, it does not mean anything failed.
+   */
+  complete: boolean;
 }
 
 export interface RevertResult {

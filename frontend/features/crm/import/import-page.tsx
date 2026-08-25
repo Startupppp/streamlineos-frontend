@@ -42,6 +42,14 @@ export function CrmImportPage() {
    */
   const [previewOverrides, setPreviewOverrides] = useState<Record<string, string>>({});
   const [committed, setCommitted] = useState<{ crmImportId: string; created: number; updated: number } | null>(null);
+  /**
+   * How far a multi-call commit has got.
+   *
+   * A large file is committed across several requests under a server-side time
+   * budget, and a progress bar that sits at "importing…" for four minutes looks
+   * indistinguishable from one that has hung.
+   */
+  const [progress, setProgress] = useState<{ done: number; remaining: number } | null>(null);
 
   const previewImport = usePreviewImport();
   const commitImport = useCommitImport();
@@ -116,13 +124,32 @@ export function CrmImportPage() {
 
   function runCommit() {
     if (!preview || choicesChanged) return;
-    commitImport.mutate(preview.crmImportId, {
-      onSuccess: (result) => {
-        setCommitted({ crmImportId: preview.crmImportId, ...result });
-        toast.success(`${result.created} created, ${result.updated} updated`);
+    setProgress(null);
+    commitImport.mutate(
+      {
+        crmImportId: preview.crmImportId,
+        onProgress: (soFar) =>
+          setProgress({
+            done: soFar.created + soFar.updated + soFar.failed,
+            remaining: soFar.remaining,
+          }),
       },
-      onError: (error) => toast.error(getErrorMessage(error)),
-    });
+      {
+        onSuccess: (result) => {
+          setProgress(null);
+          setCommitted({ crmImportId: preview.crmImportId, ...result });
+          toast.success(
+            result.failed > 0
+              ? `${result.created} created, ${result.updated} updated, ${result.failed} could not be read`
+              : `${result.created} created, ${result.updated} updated`,
+          );
+        },
+        onError: (error) => {
+          setProgress(null);
+          toast.error(getErrorMessage(error));
+        },
+      },
+    );
   }
 
   function runRevert() {
@@ -244,6 +271,18 @@ export function CrmImportPage() {
             </CardHeader>
 
             <CardContent className="flex flex-col gap-gap-toolbar">
+              {/* The plan's own reservations, shown because the tenant is about
+                  to approve it. */}
+              {preview.warnings.length > 0 ? (
+                <ul className="flex flex-col gap-1">
+                  {preview.warnings.map((warning) => (
+                    <li key={warning} role="alert" className="text-label text-status-warning-ink">
+                      {warning}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+
               <div className="flex flex-wrap gap-gap-grid">
                 <Summary label="Created" value={preview.summary.create} tone="success" />
                 <Summary label="Updated" value={preview.summary.update} tone="info" />
@@ -274,6 +313,13 @@ export function CrmImportPage() {
                 <p role="alert" className="text-label text-status-warning-ink">
                   Answer {unanswered.length} {unanswered.length === 1 ? "column" : "columns"} above,
                   then check again.
+                </p>
+              ) : null}
+
+              {progress ? (
+                <p aria-live="polite" className="text-label text-muted-foreground">
+                  {progress.done} done, {progress.remaining} to go — this file needs
+                  more than one pass. Leave the page open.
                 </p>
               ) : null}
 
