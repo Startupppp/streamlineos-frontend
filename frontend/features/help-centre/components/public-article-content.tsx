@@ -44,6 +44,10 @@ const SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
   },
 };
 
+export function sanitizeArticleHtml(html: string): string {
+  return sanitizeHtml(html, SANITIZE_OPTIONS);
+}
+
 interface ArticleTocProps {
   items: TocItem[];
 }
@@ -135,7 +139,7 @@ export function PublicArticleContent({ article, orgId }: PublicArticleContentPro
 
               <div
                 className={cn("mt-6", PROSE_CLASS)}
-                dangerouslySetInnerHTML={{ __html: sanitizeHtml(withIds, SANITIZE_OPTIONS) }}
+                dangerouslySetInnerHTML={{ __html: sanitizeArticleHtml(withIds) }}
               />
 
               {article.tags && article.tags.length > 0 && (

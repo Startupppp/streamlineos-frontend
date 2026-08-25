@@ -23,7 +23,7 @@ module.exports = async () => {
   jestConfig.transformIgnorePatterns = (jestConfig.transformIgnorePatterns ?? []).map(
     (pattern) => pattern.replace(
       /\(geist/g,
-      "(geist|next-auth|@auth|@auth\\+core|htmlparser2|domhandler|domelementtype|dom-serializer|entities",
+      "(geist|next-auth|@auth|@auth\\+core|htmlparser2|domhandler|domelementtype|dom-serializer|domutils|entities|nanoid",
     ),
   );
   return jestConfig;
