@@ -15,7 +15,7 @@ const FIELD_NAMES = new Set(Object.keys(waitlistSchema.shape));
  * Zod path, which is the only place per-field server errors come from.
  */
 type SuccessEnvelope = {
-  data?: { reference?: string; position?: number; alreadyJoined?: boolean };
+  data?: { reference?: string; alreadyJoined?: boolean };
 };
 
 type ErrorEnvelope = {
@@ -74,7 +74,6 @@ export async function joinWaitlist(
     ok: true,
     entry: {
       reference: body.data?.reference ?? "",
-      position: body.data?.position ?? 0,
       alreadyJoined: body.data?.alreadyJoined ?? false,
     },
   };

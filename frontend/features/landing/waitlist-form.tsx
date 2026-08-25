@@ -95,17 +95,10 @@ export function WaitlistForm() {
               email <span className="font-mono text-status-info-ink">{watchedEmail}</span> the
               moment your invite is ready.
             </p>
-            {entry.position > 0 && (
-              <p className="mt-6 text-label font-medium text-foreground">
-                You&apos;re number{" "}
-                <span className="font-mono text-status-info-ink">#{entry.position}</span> in the
-                queue
-                {entry.reference && (
-                  <>
-                    {" · "}
-                    <span className="font-mono text-muted-foreground">{entry.reference}</span>
-                  </>
-                )}
+            {entry.reference && (
+              <p className="mt-6 text-label font-medium text-muted-foreground">
+                Reference{" "}
+                <span className="font-mono text-status-info-ink">{entry.reference}</span>
               </p>
             )}
           </motion.div>
