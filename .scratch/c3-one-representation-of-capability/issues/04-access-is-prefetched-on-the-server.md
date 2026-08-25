@@ -28,7 +28,7 @@ The access snapshot is prefetched on the server and hydrated into the client cac
 - [x] Handle the failure case explicitly so a denied snapshot from an error is never hydrated
 - [x] Correct the module-enabled loading default
 - [x] Write both halves of the test pair: renders from hydration without calling the API, and falls back to fetching when hydration is absent
-- [ ] Verify in a browser at a cold load, a client-side navigation, and an organisation switch — **blocked: API cannot boot (APP_DATABASE_URL 28P01)**
+- [ ] Verify in a browser at a cold load, a client-side navigation, and an organisation switch — **not exercised: the API boots now, but this specific flow was not run (verification agent hit a billing limit)**
 - [x] Run the frontend tests — a clean typecheck does not prove they compile
 - [x] Tick every acceptance criterion above
 - [x] Set **Status** to `done` and update this ticket's row in `../README.md`

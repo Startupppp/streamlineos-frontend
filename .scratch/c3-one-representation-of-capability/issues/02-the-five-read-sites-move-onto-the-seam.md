@@ -25,7 +25,7 @@ Behaviour must not change for anyone. This is the *migrate* step: the old array 
 - [x] Grep for any other reader of the flat array before declaring the set complete — the five are what a source read found, not a guarantee
 - [x] Rewrite the affected specs against the seam rather than adjusting fixtures to keep old assertions alive
 - [x] Confirm no behaviour change for a non-owner by running the existing suites before and after
-- [ ] Boot the API and open a KB review list as a non-owner and as an owner — **not done: the API cannot boot (APP_DATABASE_URL 28P01)**
+- [ ] Boot the API and open a KB review list as a non-owner and as an owner — **not exercised: the API boots now, but this specific flow was not run (verification agent hit a billing limit)**
 - [x] Tick every acceptance criterion above
 - [x] Set **Status** to `done` and update this ticket's row in `../README.md`
 

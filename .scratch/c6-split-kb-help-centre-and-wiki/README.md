@@ -7,8 +7,6 @@ Spec: [`docs/specs/c6-split-kb-help-centre-and-wiki.md`](../../docs/specs/c6-spl
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
 | 01 | [The frontend folder name says which product it holds](issues/01-rename-the-frontend-features.md) | — | **done** |
-| 02 | [The article migration acquires an end date](issues/02-measure-the-article-migration-backlog.md) | — | **done** — route rename excluded |
-| 03 | [Whether the two products share one permission namespace is a decision](issues/03-record-the-kb-namespace-decision.md) | — | **done** — keep one namespace |
 
 **On completing a ticket:** tick its todo list, set its `Status` to `done` in the ticket file, and update its row above.
 

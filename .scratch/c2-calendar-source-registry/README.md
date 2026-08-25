@@ -6,7 +6,6 @@ Spec: [`docs/specs/c2-calendar-source-registry.md`](../../docs/specs/c2-calendar
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 01 | [Turning a calendar source off keeps it off](issues/01-source-toggles-persist-and-are-honoured.md) | — | **done** |
 | 02 | [The calendar shows me which sources are on and lets me change them](issues/02-calendar-ui-turns-a-source-off.md) | 01 | **done** — partial-failure data not plumbed |
 
 **On completing a ticket:** tick its todo list, set its `Status` to `done` in the ticket file, and update its row above.

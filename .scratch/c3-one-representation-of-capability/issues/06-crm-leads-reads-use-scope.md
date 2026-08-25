@@ -28,7 +28,7 @@ Today a narrowed person sees a short unexplained list and a filter that cannot w
 - [x] Gate the filter's presence on the scope, and drop its URL parameter when absent
 - [x] Add the label copy for the narrowed case
 - [x] Test through the rendered surface at each scope — not by asserting the hook was called
-- [ ] Check 375, 768 and 1280 — **not done: responsive classes reviewed statically, but no rendered check; the app cannot boot (APP_DATABASE_URL 28P01)**
+- [ ] Check 375, 768 and 1280 — **not exercised: the API boots now, but this specific flow was not run (verification agent hit a billing limit)**
 - [x] Tick every acceptance criterion above
 - [x] Set **Status** to `done` and update this ticket's row in `../README.md`
 

@@ -23,7 +23,7 @@ Nothing user-visible changes. Navigation must show exactly the same destinations
 - [x] Prefer the per-key gating hook; read the scope record directly only where the whole set is genuinely needed
 - [x] Delete the helper and confirm nothing imports it — check with the module-graph tool, not grep, since a side-effect import is invisible to a from-based scan
 - [x] Run the sidebar permission-coverage test and the deep-link-to-sidebar test
-- [ ] Verify the three surfaces in a browser as an owner and as a narrowly-scoped member — **blocked: API cannot boot (APP_DATABASE_URL 28P01)**
+- [ ] Verify the three surfaces in a browser as an owner and as a narrowly-scoped member — **not exercised: the API boots now, but this specific flow was not run (verification agent hit a billing limit)**
 - [x] Tick every acceptance criterion above
 - [x] Set **Status** to `done` and update this ticket's row in `../README.md`
 

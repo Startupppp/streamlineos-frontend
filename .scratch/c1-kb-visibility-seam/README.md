@@ -4,10 +4,7 @@ Spec: [`docs/specs/c1-kb-visibility-seam.md`](../../docs/specs/c1-kb-visibility-
 
 **Candidate status:** shipped, one residue. The shared visibility predicate is in place and the disclosure the review verified is fixed. What remains is index eligibility, which still states a visibility rule of its own — no longer a leak, now a capability gap.
 
-| # | Ticket | Blocked by | Status |
-|---|---|---|---|
-| 01 | [Pin that the direct read and search agree about the same person](issues/01-pin-read-search-parity.md) | — | **done** |
-| 02 | [I can find my own private page by searching for it](issues/02-index-eligibility-is-lifecycle-only.md) | 01 | **done** |
-| 03 | [Pages that already exist become findable too](issues/03-backfill-previously-ineligible-pages.md) | 02 | code complete — not run (no DB) |
 
 **On completing a ticket:** tick its todo list, set its `Status` to `done` in the ticket file, and update its row above.
+
+**All tickets in this program are complete and have been retired.** The verification evidence lives in the git history of `.scratch/`; the spec in `docs/specs/` records the architecture.

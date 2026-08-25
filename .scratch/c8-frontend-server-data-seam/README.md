@@ -8,7 +8,6 @@ The review's finding was "the seam does not exist yet". It exists now, so the qu
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 01 | [One person's server-fetched data can never reach another](issues/01-pin-server-fetch-isolation-and-ordering.md) | — | **done** |
 | 02 | [The lists people wait on arrive with their rows](issues/02-high-traffic-lists-render-rows-server-side.md) | 01 | **done** |
 | 03 | [Public help-centre pages can be found by a search engine](issues/03-public-help-centre-renders-server-side.md) | 01 | **done** — body deferred |
 

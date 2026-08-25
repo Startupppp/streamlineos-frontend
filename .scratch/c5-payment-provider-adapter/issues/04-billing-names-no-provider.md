@@ -25,7 +25,7 @@ This is the *contract* step, and it is where the deletion test finally bites: af
 - [x] Write the two-fake-adapter substitution test
 - [x] Temporarily delete the interface to confirm the build now fails, then restore
 - [x] Run the module-graph check and the dead-code check against the recorded baseline
-- [ ] Boot the API and complete one full payment round trip — **not done: the API cannot boot (APP_DATABASE_URL 28P01)**
+- [ ] Boot the API and complete one full payment round trip — **not exercised: the API boots now, but this specific flow was not run (verification agent hit a billing limit)**
 - [x] Tick every acceptance criterion above
 - [x] Set **Status** to `done` and update this ticket's row in `../README.md`
 

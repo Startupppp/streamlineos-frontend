@@ -8,9 +8,7 @@ Tickets 01→02→03 are an expand→migrate→contract sequence on the server; 
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 01 | [One function answers whether a person holds a permission](issues/01-access-service-answers-holds-and-scope-for.md) | — | **done** |
 | 02 | [Capability checks inside services stop reading the request object](issues/02-the-five-read-sites-move-onto-the-seam.md) | 01 | **done** — five were eight |
-| 03 | [The flat permission array stops existing on the server](issues/03-delete-the-flat-permission-array.md) | 02 | **done** |
 | 04 | [Gated controls are there in the first paint](issues/04-access-is-prefetched-on-the-server.md) | — | **done** |
 | 05 | [The flat permission array stops existing on the client too](issues/05-delete-use-permissions.md) | — | **done** |
 | 06 | [A list narrowed to my own records says so](issues/06-crm-leads-reads-use-scope.md) | — | **done** — premise corrected |
