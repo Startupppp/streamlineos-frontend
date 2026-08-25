@@ -23,6 +23,10 @@ organisation before a conversion run. No static count is recorded here because
 the tenant database is runtime state and committing a copied number would become
 false as soon as an article is created.
 
+The migration corpus is explicitly **published articles only**. Draft and
+in-review articles remain in the Help Centre workflow and are not silently
+converted by this tool; the preview's `byStatus` field makes that scope visible.
+
 The safe retirement condition is all of the following:
 
 1. every organisation's preview reports `willMigrate = 0`;
@@ -30,8 +34,10 @@ The safe retirement condition is all of the following:
    documented conversion-tool workflow; and
 3. a final preview is captured with the deployment/change record.
 
-Until those conditions hold, `article-conversion/` is retained and must not be
-deleted.
+Because article creation is a permanent supported intake, a zero backlog alone
+does not justify deleting `article-conversion/`. The tool is retired only if a
+future product decision ends article creation and the final preview is zero;
+otherwise it remains as an intentionally monitored conversion/import tool.
 
 ## Permission namespace
 

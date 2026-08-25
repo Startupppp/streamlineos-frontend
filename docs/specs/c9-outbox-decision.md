@@ -24,6 +24,11 @@ semantic class, rather than an accidental choice between two generic event
 paths. A new cross-module event goes through `outbox_events`; a notification
 intent goes through `NotificationDispatchService`.
 
+The original single-ledger wording is amended by this decision: the two
+ledgers are accepted only because they carry different envelopes and delivery
+semantics. No third durable event ledger is permitted, and notification
+intents must not be emitted directly to `outbox_events`.
+
 ## Runtime guarantees
 
 - `OUTBOX_DISPATCH_ENABLED` is enabled unless explicitly set to `false`.
@@ -36,6 +41,9 @@ intent goes through `NotificationDispatchService`.
   pending age; the flush endpoint remains secret-gated.
 - `pnpm report:outbox-events` captures those measures per organisation together
   with distinct event-type counts before a ledger migration decision.
+- Partitioning is deferred until the report shows 100,000 `outbox_events` rows
+  in any organisation or an oldest pending age above 24 hours; the report and
+  metrics endpoint are the operational trigger, not an implicit omission.
 - Notification relay rows have their own lease, retry, dead-letter, and dedupe
   guarantees.
 

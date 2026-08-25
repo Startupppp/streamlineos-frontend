@@ -2,6 +2,8 @@
 
 **Status: not started.** Verified at source 2026-08-25. `PaymentProviderAdapter` and `PaymentProviderAdapterRegistry` exist and are correct (`billing/payments/payment-provider-adapter.interface.ts`). `RazorpayAdapter` registers itself. Three services use the registry: `payment-provider-setup.service.ts:154`, `payment-readiness.service.ts:68`, `payment-test-transaction.service.ts`. And `BillingService` — the only service that moves real money — injects `RazorpayService` directly (`core/billing.service.ts:57`) and calls it at eleven sites, including every operation the adapter interface was written for.
 
+**Current audit (2026-08-26):** Billing now resolves an organisation-configured provider through `PaymentProviderResolver.resolveConfigured()`, keeps provider credentials out of `BillingService`, and has provider substitution/webhook failure coverage. The remaining strict boundary work is provider-neutral webhook normalization and moving credential-bearing adapter arguments fully inside provider-specific implementations.
+
 ## Problem Statement
 
 **As a developer, the seam is decorative on the only path that matters.** The interface declares exactly three money operations — `createOrder`, `verifyPaymentSignature`, `verifyWebhookSignature` — and all three are called on the concrete `RazorpayService` from `BillingService`:

@@ -1,6 +1,6 @@
 # c9 · Decide what the transactional outbox is for
 
-**Status: decision and relay mechanics implemented; notification-intent ledger intentionally retained as a distinct semantic ledger.** Verified at source 2026-08-26. The generic `outbox_events` relay is enabled by default, tenant-scoped, retrying, dead-lettering, observable, and fenced by `InboxConsumer`. The decision and role split are recorded in [`c9-outbox-decision.md`](c9-outbox-decision.md).
+**Status: decision and relay mechanics implemented; notification-intent ledger intentionally retained as a distinct semantic ledger.** Verified at source 2026-08-26. The generic `outbox_events` relay is enabled by default, tenant-scoped, retrying, dead-lettering, observable, fenced by `InboxConsumer`, and callable through the leased platform worker endpoint. The decision and role split are recorded in [`c9-outbox-decision.md`](c9-outbox-decision.md); partitioning is an explicit threshold-triggered follow-up.
 
 The review marked this "worth exploring" rather than "strong", and that grading is right. This PRD exists to force the choice, not to pre-empt it.
 
