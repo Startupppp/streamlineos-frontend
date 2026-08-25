@@ -193,7 +193,7 @@ export function DealTableView({
         <div className="flex items-center gap-1">
           <Avatar className="h-4 w-4">
             <AvatarImage src={row.assignedTo.image || ""} />
-            <AvatarFallback className="text-[7px]">{row.assignedTo.name.charAt(0)}</AvatarFallback>
+            <AvatarFallback className="text-micro">{row.assignedTo.name.charAt(0)}</AvatarFallback>
           </Avatar>
           <TruncatedText text={row.assignedTo.name ?? "—"} className="max-w-[70px]" />
         </div>

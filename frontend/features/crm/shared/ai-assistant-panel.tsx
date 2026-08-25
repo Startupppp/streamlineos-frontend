@@ -47,9 +47,9 @@ interface AiAssistantPanelProps {
 }
 
 const SENTIMENT_COLOR: Record<string, string> = {
-  positive: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  positive: "bg-status-success-surface text-status-success-ink border-status-success-rule",
   neutral: "bg-muted text-muted-foreground border-border",
-  negative: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  negative: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };
 
 function CopyButton({ text }: { text: string }) {
@@ -77,7 +77,7 @@ function CopyButton({ text }: { text: string }) {
       className="inline-flex items-center gap-1 text-micro text-muted-foreground hover:text-foreground transition-colors"
     >
       {copied ? (
-        <CheckCheck className="h-3 w-3 text-emerald-500 dark:text-emerald-400" />
+        <CheckCheck className="h-3 w-3 text-status-success-ink" />
       ) : (
         <Copy className="h-3 w-3" />
       )}
@@ -264,7 +264,7 @@ function NotesSummaryTab({ aiEnabled }: { aiEnabled: boolean }) {
               <ul className="space-y-0.5">
                 {result.objections.map((obj, i) => (
                   <li key={i} className="text-xs text-foreground flex gap-1.5">
-                    <span className="text-amber-500 dark:text-amber-400 shrink-0">•</span>
+                    <span className="text-status-warning-ink shrink-0">•</span>
                     {obj}
                   </li>
                 ))}
@@ -359,7 +359,7 @@ function ObjectionHelpTab({ aiEnabled }: { aiEnabled: boolean }) {
               <ul className="space-y-0.5">
                 {result.talkingPoints.map((pt, i) => (
                   <li key={i} className="text-xs text-foreground flex gap-1.5">
-                    <span className="text-emerald-500 dark:text-emerald-400 shrink-0">•</span>
+                    <span className="text-status-success-ink shrink-0">•</span>
                     {pt}
                   </li>
                 ))}

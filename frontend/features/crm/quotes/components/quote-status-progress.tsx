@@ -25,7 +25,7 @@ export function QuoteStatusProgress({ status }: QuoteStatusProgressProps) {
         <div
           className={cn(
             "flex items-center gap-1.5 text-xs font-medium",
-            status === "REJECTED" ? "text-red-600 dark:text-red-400" : "text-amber-600 dark:text-amber-400",
+            status === "REJECTED" ? "text-status-danger-ink" : "text-status-warning-ink",
           )}
         >
           <span
@@ -54,7 +54,7 @@ export function QuoteStatusProgress({ status }: QuoteStatusProgressProps) {
                 isCurrent
                   ? "font-semibold text-foreground"
                   : isPast
-                    ? "text-emerald-600 dark:text-emerald-400"
+                    ? "text-status-success-ink"
                     : "text-muted-foreground",
               )}
             >

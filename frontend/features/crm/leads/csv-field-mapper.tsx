@@ -162,9 +162,9 @@ export function CsvFieldMapper({
       />
 
       {!hasNameMapped && (
-        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
-          <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
-          <p className="text-xs text-amber-700 dark:text-amber-400">
+        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-status-warning-surface border border-status-warning-rule">
+          <AlertCircle className="h-4 w-4 text-status-warning-ink shrink-0" />
+          <p className="text-xs text-status-warning-ink">
             Map at least one column to <strong>{requiredFieldLabel}</strong> to continue.
           </p>
         </div>

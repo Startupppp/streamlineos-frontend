@@ -129,7 +129,7 @@ export function DealSidebarCards({
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-3 min-w-0">
-              <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-sm font-semibold text-emerald-400 shrink-0">
+              <div className="h-10 w-10 rounded-full bg-status-success-surface flex items-center justify-center text-sm font-semibold text-status-success-ink shrink-0">
                 {client.name?.[0] ?? "?"}
               </div>
               <TruncatedText text={client.name ?? ""} className="text-sm font-medium min-w-0 flex-1" />

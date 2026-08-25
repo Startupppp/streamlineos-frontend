@@ -80,7 +80,7 @@ function CompleteTaskButton({
     <Button
       size="sm"
       variant="ghost"
-      className="h-6 w-6 p-0 shrink-0 text-muted-foreground hover:text-emerald-400"
+      className="h-6 w-6 p-0 shrink-0 text-muted-foreground hover:text-status-success-ink"
       onClick={handleClick}
       disabled={isPending}
       title="Mark as done"
@@ -273,11 +273,11 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
                     className={cn(
                       "h-8 w-7 rounded-md flex items-center justify-center shrink-0 mt-0.5",
                       task.type === "CALL"
-                        ? "bg-blue-500/15 text-blue-400"
+                        ? "bg-status-info-surface text-status-info-ink"
                         : task.type === "EMAIL"
-                          ? "bg-blue-500/15 text-blue-400"
+                          ? "bg-status-info-surface text-status-info-ink"
                           : task.type === "MEETING"
-                            ? "bg-amber-500/15 text-amber-400"
+                            ? "bg-status-warning-surface text-status-warning-ink"
                             : "bg-muted text-muted-foreground",
                     )}
                   >
@@ -299,7 +299,7 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
                       className={cn(
                         "text-micro mt-0.5",
                         isOverdue
-                          ? "text-red-400 font-medium"
+                          ? "text-status-danger-ink font-medium"
                           : "text-muted-foreground",
                       )}
                     >
@@ -334,7 +334,7 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
                 key={task.id}
                 className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-muted/10 border border-border/20"
               >
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                <CheckCircle2 className="h-3.5 w-3.5 text-status-success-ink shrink-0" />
                 <TruncatedText text={task.title} className="text-dense text-muted-foreground/70 line-through flex-1" />
                 <span className="text-micro text-muted-foreground/50 shrink-0">
                   {task.completedAt

@@ -30,14 +30,14 @@ function MatrixCell({ fromStage, toStage, transition, blueprintId }: MatrixCellP
         {transition ? (
           <button
             type="button"
-            className="inline-flex items-center bg-primary text-primary-foreground text-[9px] px-1.5 h-5 rounded cursor-pointer hover:bg-primary/90 transition-colors"
+            className="inline-flex items-center bg-primary text-primary-foreground text-micro px-1.5 h-5 rounded cursor-pointer hover:bg-primary/90 transition-colors"
           >
             {toStage.label.slice(0, 6)}
           </button>
         ) : (
           <button
             type="button"
-            className="inline-flex items-center border border-dashed border-border text-muted-foreground text-[9px] px-1.5 h-5 rounded cursor-pointer hover:border-primary transition-colors"
+            className="inline-flex items-center border border-dashed border-border text-muted-foreground text-micro px-1.5 h-5 rounded cursor-pointer hover:border-primary transition-colors"
           >
             +
           </button>

@@ -58,7 +58,7 @@ function DueChip({ dueAt }: { dueAt: string | null }) {
   const overdue = isPast(date);
   if (overdue) {
     return (
-      <span className="text-dense text-red-500 dark:text-red-400 shrink-0">
+      <span className="text-dense text-status-danger-ink shrink-0">
         {formatDistanceToNowStrict(date, { addSuffix: true })}
       </span>
     );

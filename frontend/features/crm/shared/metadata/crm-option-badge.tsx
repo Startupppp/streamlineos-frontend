@@ -19,7 +19,7 @@ export function CrmOptionBadge({ option, size = "table", className }: CrmOptionB
       variant="outline"
       className={cn(
         badgeClass,
-        size === "table" ? "h-4 text-[9px] px-1.5 py-0" : "h-5 text-micro px-2 py-0.5",
+        size === "table" ? "h-4 text-micro px-1.5 py-0" : "h-5 text-micro px-2 py-0.5",
         className
       )}
     >

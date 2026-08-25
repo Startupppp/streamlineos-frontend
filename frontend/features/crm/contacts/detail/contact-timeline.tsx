@@ -16,8 +16,8 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 
 const STATUS_CONFIG = {
-  completed: { icon: CheckCircle2, color: "text-emerald-500 dark:text-emerald-400", bg: "bg-emerald-500/10" },
-  pending: { icon: Clock, color: "text-amber-500 dark:text-amber-400", bg: "bg-amber-500/10" },
+  completed: { icon: CheckCircle2, color: "text-status-success-ink", bg: "bg-status-success-surface" },
+  pending: { icon: Clock, color: "text-status-warning-ink", bg: "bg-status-warning-surface" },
   cancelled: { icon: XCircle, color: "text-muted-foreground", bg: "bg-muted" },
 } as const;
 
@@ -117,7 +117,7 @@ export function ContactTimeline({ contactId, onLogActivity }: ContactTimelinePro
                       <div className="flex items-center gap-1 shrink-0">
                         <Badge
                           variant="secondary"
-                          className={cn("text-[9px] px-1.5 py-0 h-4 capitalize border-0", config.bg, config.color)}
+                          className={cn("text-micro px-1.5 py-0 h-4 capitalize border-0", config.bg, config.color)}
                         >
                           <StatusIcon className="h-2.5 w-2.5 mr-0.5" />
                           {task.status}

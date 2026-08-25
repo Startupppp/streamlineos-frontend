@@ -47,14 +47,14 @@ export function LeadActivityTab({ activities }: LeadActivityTabProps) {
               className={cn(
                 "h-9 w-9 rounded-lg flex items-center justify-center shrink-0",
                 activity.type === "call"
-                  ? "bg-blue-500/15 text-blue-400"
+                  ? "bg-status-info-surface text-status-info-ink"
                   : activity.type === "email"
-                    ? "bg-blue-500/15 text-blue-400"
+                    ? "bg-status-info-surface text-status-info-ink"
                     : activity.type === "whatsapp"
-                      ? "bg-green-500/15 text-green-400"
+                      ? "bg-status-success-surface text-status-success-ink"
                       : activity.type === "meeting"
-                        ? "bg-amber-500/15 text-amber-400"
-                        : "bg-cyan-500/15 text-cyan-400",
+                        ? "bg-status-warning-surface text-status-warning-ink"
+                        : "bg-status-info-surface text-status-info-ink",
               )}
             >
               {activity.type === "call" ? (

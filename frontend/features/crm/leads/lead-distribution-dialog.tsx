@@ -106,9 +106,9 @@ export function LeadDistributionDialog({
               </div>
 
               {!skipAbsent && (
-                <div className="flex items-start gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                  <AlertTriangle className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
-                  <p className="text-xs text-amber-400">
+                <div className="flex items-start gap-2 p-3 bg-status-warning-surface border border-status-warning-rule rounded-lg">
+                  <AlertTriangle className="h-4 w-4 text-status-warning-ink mt-0.5 shrink-0" />
+                  <p className="text-xs text-status-warning-ink">
                     Leads assigned to absent members will be queued until they
                     return.
                   </p>
@@ -132,10 +132,10 @@ export function LeadDistributionDialog({
         ) : (
           <>
             <div className="space-y-4 py-2">
-              <div className="flex items-center gap-2 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
-                <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+              <div className="flex items-center gap-2 p-3 bg-status-success-surface border border-status-success-rule rounded-lg">
+                <CheckCircle2 className="h-5 w-5 text-status-success-ink" />
                 <div>
-                  <p className="text-sm font-medium text-emerald-400">
+                  <p className="text-sm font-medium text-status-success-ink">
                     Distribution Complete
                   </p>
                   <p className="text-xs text-muted-foreground">
@@ -146,10 +146,10 @@ export function LeadDistributionDialog({
               </div>
 
               {result.absentCount > 0 && (
-                <div className="flex items-start gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                  <AlertTriangle className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
+                <div className="flex items-start gap-2 p-3 bg-status-warning-surface border border-status-warning-rule rounded-lg">
+                  <AlertTriangle className="h-4 w-4 text-status-warning-ink mt-0.5 shrink-0" />
                   <div>
-                    <p className="text-xs text-amber-400 font-medium">
+                    <p className="text-xs text-status-warning-ink font-medium">
                       {result.absentCount} member
                       {result.absentCount > 1 ? "s" : ""} on leave today
                     </p>

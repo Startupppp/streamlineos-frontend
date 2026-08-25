@@ -112,7 +112,7 @@ export function ClientOnboardingTab({ clientId }: { clientId: number }) {
                 </div>
               </div>
               {isCompleted ? (
-                <CheckSquare className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400 shrink-0 mt-0.5" />
+                <CheckSquare className="h-3.5 w-3.5 text-status-success-ink shrink-0 mt-0.5" />
               ) : (
                 <Square className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
               )}

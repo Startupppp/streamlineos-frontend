@@ -36,15 +36,15 @@ const STATUS_OPTIONS = [
 ];
 
 function roiColorClass(roi: number): string {
-  if (roi > 0) return "text-emerald-600 dark:text-emerald-400 font-semibold";
-  if (roi < 0) return "text-red-600 dark:text-red-400 font-semibold";
+  if (roi > 0) return "text-status-success-ink font-semibold";
+  if (roi < 0) return "text-status-danger-ink font-semibold";
   return "text-muted-foreground";
 }
 
 function statusBadgeClass(status: string): string {
   switch (status.toLowerCase()) {
-    case "active": return "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30";
-    case "paused": return "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30";
+    case "active": return "bg-status-success-surface text-status-success-ink border-status-success-rule";
+    case "paused": return "bg-status-warning-surface text-status-warning-ink border-status-warning-rule";
     case "completed": return "bg-muted text-muted-foreground border-border";
     default: return "bg-primary/10 text-foreground border-primary/20";
   }

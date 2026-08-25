@@ -59,10 +59,10 @@ export function AIScoreButton({
   );
 
   const scoreColor = (score: number) => {
-    if (score >= 80) return "text-emerald-500 dark:text-emerald-400";
-    if (score >= 60) return "text-amber-500 dark:text-amber-400";
-    if (score >= 40) return "text-orange-500 dark:text-orange-400";
-    return "text-red-500 dark:text-red-400";
+    if (score >= 80) return "text-status-success-ink";
+    if (score >= 60) return "text-status-warning-ink";
+    if (score >= 40) return "text-status-warning-ink";
+    return "text-status-danger-ink";
   };
 
   if (!canUseCrmAi) return null;
@@ -149,20 +149,20 @@ function AIScoreDetails({
 }) {
   const scoreColor =
     result.score >= 80
-      ? "text-emerald-500 dark:text-emerald-400"
+      ? "text-status-success-ink"
       : result.score >= 60
-        ? "text-amber-500 dark:text-amber-400"
+        ? "text-status-warning-ink"
         : result.score >= 40
-          ? "text-orange-500 dark:text-orange-400"
-          : "text-red-500 dark:text-red-400";
+          ? "text-status-warning-ink"
+          : "text-status-danger-ink";
   const scoreBg =
     result.score >= 80
-      ? "bg-emerald-500/10"
+      ? "bg-status-success-surface"
       : result.score >= 60
-        ? "bg-amber-500/10"
+        ? "bg-status-warning-surface"
         : result.score >= 40
-          ? "bg-orange-500/10"
-          : "bg-red-500/10";
+          ? "bg-status-warning-surface"
+          : "bg-status-danger-surface";
 
   return (
     <div className="space-y-2.5">
@@ -182,8 +182,8 @@ function AIScoreDetails({
             {result.confidence && (
               <span className={cn(
                 "text-micro px-1.5 py-0.5 rounded font-medium capitalize",
-                result.confidence === "high" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" :
-                result.confidence === "medium" ? "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300" :
+                result.confidence === "high" ? "bg-status-success-surface text-status-success-ink" :
+                result.confidence === "medium" ? "bg-status-warning-surface text-status-warning-ink" :
                 "bg-muted text-muted-foreground",
               )}>
                 {result.confidence} confidence
@@ -203,7 +203,7 @@ function AIScoreDetails({
           </p>
           {result.strengths.map((s, i) => (
             <div key={i} className="flex items-start gap-1.5 text-dense">
-              <TrendingUp className="h-3 w-3 text-emerald-500 dark:text-emerald-400 mt-0.5 shrink-0" />
+              <TrendingUp className="h-3 w-3 text-status-success-ink mt-0.5 shrink-0" />
               <span>{s}</span>
             </div>
           ))}
@@ -217,7 +217,7 @@ function AIScoreDetails({
           </p>
           {result.weaknesses.map((w, i) => (
             <div key={i} className="flex items-start gap-1.5 text-dense">
-              <TrendingDown className="h-3 w-3 text-red-400 mt-0.5 shrink-0" />
+              <TrendingDown className="h-3 w-3 text-status-danger-ink mt-0.5 shrink-0" />
               <span>{w}</span>
             </div>
           ))}

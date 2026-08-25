@@ -49,10 +49,10 @@ export function AINextActionButton({
   }, [result, handleSuggest]);
 
   const urgencyColor = (u: string) => {
-    if (u === "critical") return "text-red-500 dark:text-red-400";
-    if (u === "high") return "text-orange-500 dark:text-orange-400";
-    if (u === "medium") return "text-amber-500 dark:text-amber-400";
-    return "text-emerald-500 dark:text-emerald-400";
+    if (u === "critical") return "text-status-danger-ink";
+    if (u === "high") return "text-status-warning-ink";
+    if (u === "medium") return "text-status-warning-ink";
+    return "text-status-success-ink";
   };
 
   if (!canUseCrmAi) return null;
@@ -129,7 +129,7 @@ function ActionDetails({
             <Badge
               variant="secondary"
               className={cn(
-                "text-[9px] h-4 px-1 capitalize",
+                "text-micro h-4 px-1 capitalize",
                 urgencyColor(result.urgency),
               )}
             >

@@ -95,7 +95,7 @@ function DealRow({ deal, delay, onNavigate, shouldReduceMotion }: DealRowProps) 
         <p className="text-sm font-semibold tabular-nums">
           {Number(deal.value) ? formatMoneyCompact(deal.value, money) : "—"}
         </p>
-        <p className={`text-dense tabular-nums ${past ? "text-red-600 dark:text-red-400 font-medium" : "text-muted-foreground"}`}>
+        <p className={`text-dense tabular-nums ${past ? "text-status-danger-ink font-medium" : "text-muted-foreground"}`}>
           {formatCloseDate(deal.expectedCloseDate)}
         </p>
       </div>

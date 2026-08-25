@@ -108,7 +108,7 @@ export function useLeadCellRenderer({
             href={`https://wa.me/${lead.whatsappNumber.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Hi ${lead.name}, this is from StreamlineOS.`)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-dense text-emerald-400 hover:text-emerald-300"
+            className="inline-flex items-center gap-1 text-dense text-status-success-ink hover:text-emerald-300"
           >
             <MessageCircle className="h-3 w-3" />
             <span className="font-mono">{lead.whatsappNumber}</span>
@@ -226,7 +226,7 @@ export function useLeadCellRenderer({
         return (
           <span className={cn(
             "text-dense tabular-nums whitespace-nowrap font-medium",
-            isOverdue ? "text-red-400" : "text-emerald-400",
+            isOverdue ? "text-status-danger-ink" : "text-status-success-ink",
           )}>
             {formatDate(lead.followUpDate)}
           </span>
@@ -266,7 +266,7 @@ export function useLeadCellRenderer({
           >
             <Avatar className="h-4 w-4">
               <AvatarImage src={lead.assignedTo.image || ""} />
-              <AvatarFallback className="text-[7px]">
+              <AvatarFallback className="text-micro">
                 {lead.assignedTo.name?.charAt(0) || "?"}
               </AvatarFallback>
             </Avatar>
@@ -299,10 +299,10 @@ export function useLeadCellRenderer({
         return lead.tags?.length ? (
           <div className="flex gap-0.5 flex-wrap">
             {lead.tags.slice(0, 2).map((t) => (
-              <Badge key={t} variant="secondary" className="text-[8px] px-1 py-0 h-4">{t}</Badge>
+              <Badge key={t} variant="secondary" className="text-micro px-1 py-0 h-4">{t}</Badge>
             ))}
             {lead.tags.length > 2 && (
-              <span className="text-[8px] text-muted-foreground">+{lead.tags.length - 2}</span>
+              <span className="text-micro text-muted-foreground">+{lead.tags.length - 2}</span>
             )}
           </div>
         ) : <span className="text-dense text-muted-foreground/50">—</span>;
@@ -315,10 +315,10 @@ export function useLeadCellRenderer({
           <Badge
             variant="outline"
             className={cn(
-              "text-[9px] px-1.5 py-0 h-5",
+              "text-micro px-1.5 py-0 h-5",
               overdue
-                ? "bg-red-500/10 text-red-400 border-red-500/20"
-                : "bg-green-500/10 text-green-400 border-green-500/20",
+                ? "bg-status-danger-surface text-status-danger-ink border-status-danger-rule"
+                : "bg-status-success-surface text-status-success-ink border-status-success-rule",
             )}
           >
             {overdue ? "Overdue" : timeAgo(lead.slaDeadline)}

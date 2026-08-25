@@ -53,8 +53,8 @@ function getDueDateClass(dueDate: string | null, status: string): string {
   if (!dueDate) return "text-muted-foreground";
   if (status === "completed") return "text-muted-foreground";
   const date = new Date(dueDate);
-  if (isPast(date) && !isToday(date)) return "text-red-500 dark:text-red-400";
-  if (isToday(date)) return "text-amber-600 dark:text-amber-400";
+  if (isPast(date) && !isToday(date)) return "text-status-danger-ink";
+  if (isToday(date)) return "text-status-warning-ink";
   return "text-muted-foreground";
 }
 
@@ -139,7 +139,7 @@ export function TaskRow({
       {assigneeInitials && (
         <Avatar className="h-5 w-5 shrink-0">
           <AvatarImage src={undefined} />
-          <AvatarFallback className="text-[9px]">{assigneeInitials}</AvatarFallback>
+          <AvatarFallback className="text-micro">{assigneeInitials}</AvatarFallback>
         </Avatar>
       )}
 

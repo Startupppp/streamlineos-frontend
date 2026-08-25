@@ -13,31 +13,31 @@ export const STATUS_PIPELINE = [
 export type PipelineStatus = (typeof STATUS_PIPELINE)[number];
 
 export const STATUS_STYLES: Record<string, { color: string; bg: string }> = {
-  NEW:        { color: "text-white", bg: "bg-blue-600    border border-blue-500"    },
-  CONTACTED:  { color: "text-white", bg: "bg-cyan-600    border border-cyan-500"    },
-  INTERESTED: { color: "text-white", bg: "bg-amber-600   border border-amber-500"   },
-  QUALIFIED:  { color: "text-white", bg: "bg-blue-600  border border-blue-500"  },
-  CONVERTED:  { color: "text-white", bg: "bg-emerald-600 border border-emerald-500" },
-  LOST:       { color: "text-white", bg: "bg-rose-600    border border-rose-500"    },
+  NEW:        { color: "text-white", bg: "bg-blue-600 border border-status-info-rule"    },
+  CONTACTED:  { color: "text-white", bg: "bg-cyan-600 border border-status-info-rule"    },
+  INTERESTED: { color: "text-white", bg: "bg-amber-600 border border-status-warning-rule"   },
+  QUALIFIED:  { color: "text-white", bg: "bg-blue-600 border border-status-info-rule"  },
+  CONVERTED:  { color: "text-white", bg: "bg-emerald-600 border border-status-success-rule" },
+  LOST:       { color: "text-white", bg: "bg-rose-600 border border-status-danger-rule"    },
 };
 
 export const PRIORITY_STYLES: Record<
   string,
   { label: string; color: string; bg: string }
 > = {
-  HOT:  { label: "Hot",  color: "text-white", bg: "bg-red-600    border border-red-500"    },
-  WARM: { label: "Warm", color: "text-white", bg: "bg-orange-600 border border-orange-500" },
-  COLD: { label: "Cold", color: "text-white", bg: "bg-sky-600    border border-sky-500"    },
+  HOT:  { label: "Hot",  color: "text-white", bg: "bg-red-600 border border-status-danger-rule"    },
+  WARM: { label: "Warm", color: "text-white", bg: "bg-orange-600 border border-status-warning-rule" },
+  COLD: { label: "Cold", color: "text-white", bg: "bg-sky-600 border border-status-info-rule"    },
 };
 
 export const TIMELINE_ICONS: Record<
   string,
   { icon: React.ComponentType<{ className?: string }>; color: string }
 > = {
-  note: { icon: StickyNote, color: "bg-amber-500/15 text-amber-400" },
-  task: { icon: ListTodo, color: "bg-blue-500/15 text-blue-400" },
-  email: { icon: Mail, color: "bg-blue-500/15 text-blue-400" },
-  activity: { icon: Phone, color: "bg-green-500/15 text-green-400" },
+  note: { icon: StickyNote, color: "bg-status-warning-surface text-status-warning-ink" },
+  task: { icon: ListTodo, color: "bg-status-info-surface text-status-info-ink" },
+  email: { icon: Mail, color: "bg-status-info-surface text-status-info-ink" },
+  activity: { icon: Phone, color: "bg-status-success-surface text-status-success-ink" },
 };
 
 export type QuickAction = "call" | "email" | "note" | "task" | "draft" | null;
@@ -83,9 +83,9 @@ export type EditForm = z.infer<typeof editSchema>;
 
 export function getScoreBadge(score: number | null | undefined) {
   const s = score ?? 0;
-  if (s <= 30) return { label: "Low",    color: "text-white", bg: "bg-rose-600    border border-rose-500"    };
-  if (s <= 60) return { label: "Medium", color: "text-white", bg: "bg-amber-600   border border-amber-500"   };
-  return              { label: "Hot",    color: "text-white", bg: "bg-emerald-600 border border-emerald-500" };
+  if (s <= 30) return { label: "Low",    color: "text-white", bg: "bg-rose-600 border border-status-danger-rule"    };
+  if (s <= 60) return { label: "Medium", color: "text-white", bg: "bg-amber-600 border border-status-warning-rule"   };
+  return              { label: "Hot",    color: "text-white", bg: "bg-emerald-600 border border-status-success-rule" };
 }
 
 export function getSlaCountdown(deadline: Date | string | null | undefined) {
@@ -94,10 +94,10 @@ export function getSlaCountdown(deadline: Date | string | null | undefined) {
   const dl = new Date(deadline);
   const diff = dl.getTime() - now.getTime();
   if (diff <= 0)
-    return { label: "Breached", color: "text-white bg-rose-600 border border-rose-500" };
+    return { label: "Breached", color: "text-white bg-rose-600 border border-status-danger-rule" };
   const hours = Math.floor(diff / (1000 * 60 * 60));
   const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
   if (hours < 4)
-    return { label: `${hours}h ${mins}m left`, color: "text-white bg-amber-600 border border-amber-500" };
-  return   { label: `${hours}h ${mins}m left`, color: "text-white bg-emerald-600 border border-emerald-500" };
+    return { label: `${hours}h ${mins}m left`, color: "text-white bg-amber-600 border border-status-warning-rule" };
+  return   { label: `${hours}h ${mins}m left`, color: "text-white bg-emerald-600 border border-status-success-rule" };
 }

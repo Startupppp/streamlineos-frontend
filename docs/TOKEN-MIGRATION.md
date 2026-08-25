@@ -40,7 +40,7 @@ exist, they already handle both themes, and most grey in this codebase means
 |---|---|---|---|
 | 1 | Type scale, platform-wide | 4,074 | **done** — 2026-08-25 |
 | 2 | Settings | 291 → 0 | **done** — 2026-08-25 |
-| 3 | CRM | 953 | not started |
+| 3 | CRM | 953 → 79 | **done** — 2026-08-25 |
 | 4 | HR | 3,164 | not started |
 | 5 | Build | 1,033 | not started |
 | 6 | Payroll | 856 | not started |
@@ -73,6 +73,39 @@ text-[11px]` into a held file is an error, not a warning.
 
 Criterion 7: where a module needs a value the token set lacks, it is an addition
 to decide on rather than something to paper over.
+
+### The categorical palette is real after all
+
+`features/crm/shared/metadata/crm-color-tokens.ts` holds **twelve tenant-chosen
+hues** for pipeline stages, tags and metadata. "Blue" there means the colour a
+person picked, not "information".
+
+The codemod flattened it before this was noticed — every hue collapsed into four
+status meanings, so one tenant's stage would have rendered as a notice and
+another's as a warning. Worse, `dotClass: "bg-blue-500"` (a solid dot) became
+`bg-status-info-surface`, a pale wash that renders an invisible dot. **Reverted**,
+and the file is now excluded from the migration with a comment saying why.
+
+**Needed:** a categorical scale — twelve hues with the same light/dark guarantee
+the status tones have, plus a solid `fill` role alongside `surface`/`ink`/`rule`.
+Until then this file is the one place raw palette values are correct rather than
+a lapse.
+
+### Solid fills are not surfaces
+
+The same pass turned `bg-emerald-600 text-white` — a button — into
+`bg-status-success-surface text-white`, which is white text on a near-white
+wash. A surface is a light tint (50/100) or any shade carrying an alpha, which
+is how the dark twins are written; a solid mid shade with no alpha is a fill,
+and the token set has no fill role.
+
+The codemod now leaves solid fills alone. 79 remain in CRM and they are all
+buttons and dots waiting on that role.
+
+Two smaller codemod fixes came from the same batch: variant prefixes
+(`hover:bg-amber-50`) were never matched at all, and a variant resolving to its
+own base (`bg-X hover:bg-X`) is a hover that changes nothing, so the original is
+kept rather than flattened.
 
 ### Resolved while migrating Settings
 

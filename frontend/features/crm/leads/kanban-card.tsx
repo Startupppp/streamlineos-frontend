@@ -31,19 +31,19 @@ import type { BoardLead } from "./leads-types";
 const FALLBACK_STATUSES = ["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"] as const;
 
 const SOURCE_COLORS: Record<string, string> = {
-  referral: "bg-green-500/15 text-green-400 border-green-500/20",
-  campaign: "bg-blue-500/15 text-blue-400 border-blue-500/20",
-  cold_call: "bg-orange-500/15 text-orange-400 border-orange-500/20",
-  website: "bg-blue-500/15 text-blue-400 border-blue-500/20",
+  referral: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  campaign: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  cold_call: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  website: "bg-status-info-surface text-status-info-ink border-status-info-rule",
   social_media: "bg-pink-500/15 text-pink-400 border-pink-500/20",
-  walk_in: "bg-cyan-500/15 text-cyan-400 border-cyan-500/20",
+  walk_in: "bg-status-info-surface text-status-info-ink border-status-info-rule",
   other: "bg-muted text-muted-foreground border-border",
 };
 
 const PRIORITY_CONFIG: Record<string, string> = {
-  HOT: "bg-red-500/15 text-red-400 border-red-500/30",
-  WARM: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-  COLD: "bg-blue-400/15 text-blue-400 border-blue-400/30",
+  HOT: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
+  WARM: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  COLD: "bg-status-info-surface text-status-info-ink border-status-info-rule",
 };
 
 function timeAgo(date: string | Date) {
@@ -112,9 +112,9 @@ function SlaCountdown({ deadline }: { deadline: string | Date }) {
             className={cn(
               "inline-flex items-center gap-0.5 text-micro px-1.5 py-0.5 rounded-full border font-medium",
               overdue
-                ? "bg-red-500/10 text-red-500 border-red-500/30"
+                ? "bg-status-danger-surface text-status-danger-ink border-status-danger-rule"
                 : urgent
-                  ? "bg-amber-500/10 text-amber-500 border-amber-500/30"
+                  ? "bg-status-warning-surface text-status-warning-ink border-status-warning-rule"
                   : "bg-muted text-muted-foreground border-border",
             )}
           >
@@ -154,12 +154,12 @@ function ScoreExplainerBadge({
 
   const color =
     score >= 80
-      ? "text-emerald-500 border-emerald-500/30 bg-emerald-500/10"
+      ? "text-status-success-ink border-status-success-rule bg-status-success-surface"
       : score >= 60
-        ? "text-amber-500 border-amber-500/30 bg-amber-500/10"
+        ? "text-status-warning-ink border-status-warning-rule bg-status-warning-surface"
         : score >= 40
-          ? "text-orange-500 border-orange-500/30 bg-orange-500/10"
-          : "text-red-400 border-red-400/30 bg-red-400/10";
+          ? "text-status-warning-ink border-status-warning-rule bg-status-warning-surface"
+          : "text-status-danger-ink border-status-danger-rule bg-status-danger-surface";
 
   return (
     <TooltipProvider>
@@ -195,7 +195,7 @@ function ScoreExplainerBadge({
                     className="flex items-center justify-between gap-2 text-dense"
                   >
                     <span className="truncate">{r.name}</span>
-                    <span className="font-semibold text-emerald-500 dark:text-emerald-400 shrink-0">
+                    <span className="font-semibold text-status-success-ink shrink-0">
                       +{r.points}
                     </span>
                   </div>

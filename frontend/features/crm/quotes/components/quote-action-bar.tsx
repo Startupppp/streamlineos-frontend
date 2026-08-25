@@ -119,7 +119,7 @@ export function QuoteActionBar({
           <LoadingButton
             size="sm"
             variant="outline"
-            className="text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-50 dark:hover:bg-emerald-500/10"
+            className="text-status-success-ink border-status-success-rule hover:bg-status-success-surface"
             onClick={onAccept}
             isPending={updateStatusPending}
           >

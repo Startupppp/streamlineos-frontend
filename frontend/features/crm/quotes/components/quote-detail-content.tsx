@@ -51,7 +51,7 @@ export function QuoteDetailContent({ quote, subtotal }: QuoteDetailContentProps)
                 </div>
               )}
               {parseFloat(quote.discountAmount) > 0 && (
-                <div className="flex justify-between text-xs text-emerald-600 dark:text-emerald-400">
+                <div className="flex justify-between text-xs text-status-success-ink">
                   <span>Discount</span>
                   <span className="tabular-nums">
                     −{formatCurrency(quote.discountAmount, quote.currency)}
@@ -175,7 +175,7 @@ export function QuoteDetailContent({ quote, subtotal }: QuoteDetailContentProps)
               )}
               {quote.acceptedAt && (
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-3 w-3 text-emerald-500 shrink-0" />
+                  <CheckCircle2 className="h-3 w-3 text-status-success-ink shrink-0" />
                   <div>
                     <p className="text-micro text-muted-foreground">Accepted</p>
                     <p className="text-xs">{formatDate(quote.acceptedAt)}</p>
@@ -184,7 +184,7 @@ export function QuoteDetailContent({ quote, subtotal }: QuoteDetailContentProps)
               )}
               {quote.rejectedAt && (
                 <div className="flex items-center gap-2">
-                  <XCircle className="h-3 w-3 text-red-500 shrink-0" />
+                  <XCircle className="h-3 w-3 text-status-danger-ink shrink-0" />
                   <div>
                     <p className="text-micro text-muted-foreground">Rejected</p>
                     <p className="text-xs">{formatDate(quote.rejectedAt)}</p>

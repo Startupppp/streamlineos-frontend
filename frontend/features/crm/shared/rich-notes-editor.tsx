@@ -107,7 +107,7 @@ export function RichNotesEditor({
             <span className="text-xs text-muted-foreground">Saving...</span>
           )}
           {!isSaving && value && (
-            <span className="text-xs text-emerald-500 dark:text-emerald-400">Saved</span>
+            <span className="text-xs text-status-success-ink">Saved</span>
           )}
           <button
             type="button"

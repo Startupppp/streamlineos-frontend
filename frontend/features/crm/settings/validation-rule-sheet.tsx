@@ -191,7 +191,7 @@ export function RuleSheet({ open, onOpenChange, editing, entityType, rulesCount,
                       <SelectContent>
                         {RULE_TYPE_GROUPS.map((group) => (
                           <div key={group.label}>
-                            <div className="px-2 py-1 text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">{group.label}</div>
+                            <div className="px-2 py-1 text-micro uppercase tracking-wider text-muted-foreground font-semibold">{group.label}</div>
                             {group.types.map((rt) => (
                               <SelectItem key={rt} value={rt} className="text-xs pl-4">{rt}</SelectItem>
                             ))}

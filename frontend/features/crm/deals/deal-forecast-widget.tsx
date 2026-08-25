@@ -119,7 +119,7 @@ export function DealForecastWidget({ deals }: DealForecastWidgetProps) {
                   <div className="flex items-center gap-2">
                     <div className={`w-2 h-2 rounded-full ${STAGE_COLORS[s.stage] ?? "bg-muted"}`} />
                     <span className="font-medium">{STAGE_LABELS[s.stage] ?? s.stage}</span>
-                    <Badge variant="outline" className="text-[9px] h-4 px-1">{s.probability}%</Badge>
+                    <Badge variant="outline" className="text-micro h-4 px-1">{s.probability}%</Badge>
                     <span className="text-muted-foreground">{s.count} deal{s.count !== 1 ? "s" : ""}</span>
                   </div>
                   <span className="font-medium tabular-nums">{formatMoneyCompact(s.weighted, money)}</span>

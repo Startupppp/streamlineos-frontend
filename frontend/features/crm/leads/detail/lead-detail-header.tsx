@@ -96,7 +96,7 @@ function PipelineStep({
             isActive
               ? cn(
                   "h-5 w-5 border-2 border-primary bg-primary/20",
-                  isLost && "border-red-400 bg-red-500/20"
+                  isLost && "border-status-danger-rule bg-status-danger-surface"
                 )
               : isPast
                 ? cn("h-3 w-3", isLost ? "bg-red-400" : "bg-primary")
@@ -117,7 +117,7 @@ function PipelineStep({
             "text-micro font-medium whitespace-nowrap leading-none",
             isActive
               ? isLost
-                ? "text-red-400"
+                ? "text-status-danger-ink"
                 : "text-primary"
               : isPast
                 ? "text-muted-foreground"

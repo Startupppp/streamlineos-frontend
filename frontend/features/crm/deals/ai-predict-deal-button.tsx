@@ -52,17 +52,17 @@ export function AIPredictDealButton({
   }, [result, handlePredict]);
 
   const probColor = (prob: number) => {
-    if (prob >= 75) return "text-emerald-500 dark:text-emerald-400";
-    if (prob >= 50) return "text-amber-500 dark:text-amber-400";
-    if (prob >= 25) return "text-orange-500 dark:text-orange-400";
-    return "text-red-500 dark:text-red-400";
+    if (prob >= 75) return "text-status-success-ink";
+    if (prob >= 50) return "text-status-warning-ink";
+    if (prob >= 25) return "text-status-warning-ink";
+    return "text-status-danger-ink";
   };
 
   const probBg = (prob: number) => {
-    if (prob >= 75) return "bg-emerald-500/10";
-    if (prob >= 50) return "bg-amber-500/10";
-    if (prob >= 25) return "bg-orange-500/10";
-    return "bg-red-500/10";
+    if (prob >= 75) return "bg-status-success-surface";
+    if (prob >= 50) return "bg-status-warning-surface";
+    if (prob >= 25) return "bg-status-warning-surface";
+    return "bg-status-danger-surface";
   };
 
   const confidenceVariant = (
@@ -91,7 +91,7 @@ export function AIPredictDealButton({
                 className={cn("font-bold", probColor(result.winProbability))}
               >
                 ~{result.winProbability}%
-                <span className="text-[9px] font-normal ml-0.5 opacity-70">est.</span>
+                <span className="text-micro font-normal ml-0.5 opacity-70">est.</span>
               </span>
             ) : (
               "Predict"
@@ -171,7 +171,7 @@ function PredictDetails({
           <span className="text-base leading-none">
             ~{result.winProbability}%
           </span>
-          <span className="text-[8px] uppercase tracking-wider mt-0.5">
+          <span className="text-micro uppercase tracking-wider mt-0.5">
             AI est.
           </span>
         </div>
@@ -180,7 +180,7 @@ function PredictDetails({
             <p className="text-xs font-medium">AI Prediction</p>
             <Badge
               variant={confidenceVariant(result.confidence)}
-              className="text-[9px] h-4 px-1"
+              className="text-micro h-4 px-1"
             >
               {result.confidence}
             </Badge>
@@ -198,7 +198,7 @@ function PredictDetails({
           </p>
           {result.positiveSignals.map((s, i) => (
             <div key={i} className="flex items-start gap-1.5 text-dense">
-              <TrendingUp className="h-3 w-3 text-emerald-500 dark:text-emerald-400 mt-0.5 shrink-0" />
+              <TrendingUp className="h-3 w-3 text-status-success-ink mt-0.5 shrink-0" />
               <span>{s}</span>
             </div>
           ))}
@@ -212,7 +212,7 @@ function PredictDetails({
           </p>
           {result.riskFactors.map((r, i) => (
             <div key={i} className="flex items-start gap-1.5 text-dense">
-              <AlertTriangle className="h-3 w-3 text-red-400 mt-0.5 shrink-0" />
+              <AlertTriangle className="h-3 w-3 text-status-danger-ink mt-0.5 shrink-0" />
               <span>{r}</span>
             </div>
           ))}

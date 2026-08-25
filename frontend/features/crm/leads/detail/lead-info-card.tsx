@@ -130,7 +130,7 @@ function CopyChip({
         title={`Copy ${label}`}
       >
         {copied ? (
-          <CheckCheck className="h-3 w-3 text-emerald-400" />
+          <CheckCheck className="h-3 w-3 text-status-success-ink" />
         ) : (
           <Copy className="h-3 w-3" />
         )}
@@ -406,7 +406,7 @@ export function LeadInfoCard({
                 <p className="text-dense uppercase tracking-wide text-muted-foreground font-medium">
                   Potential Value
                 </p>
-                <p className="text-2xl font-bold text-emerald-400 tabular-nums">
+                <p className="text-2xl font-bold text-status-success-ink tabular-nums">
                   ₹{Number(lead.potentialValue).toLocaleString("en-IN")}
                 </p>
               </div>

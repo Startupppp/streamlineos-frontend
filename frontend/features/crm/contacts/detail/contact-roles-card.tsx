@@ -186,7 +186,7 @@ export function ContactRolesCard({ contactId }: ContactRolesCardProps) {
               <div key={role.id} className="flex items-center gap-1">
                 <Badge variant="outline" className="text-micro px-2 py-0 h-5 bg-primary/10 text-primary border-primary/20">
                   {formatRoleKey(role.roleKey)}
-                  {role.isPrimary && <span className="ml-1 text-[9px] text-primary">★</span>}
+                  {role.isPrimary && <span className="ml-1 text-micro text-primary">★</span>}
                 </Badge>
                 <button
                   type="button"

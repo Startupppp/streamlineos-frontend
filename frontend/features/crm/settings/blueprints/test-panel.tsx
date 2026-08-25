@@ -157,8 +157,8 @@ export function TestPanel({ blueprintId, stages }: TestPanelProps) {
             className={cn(
               "rounded-lg border p-3 text-xs space-y-1",
               testTransition.data.allowed
-                ? "border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-300"
-                : "border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 text-red-800 dark:text-red-300"
+                ? "border-status-success-rule bg-status-success-surface text-status-success-ink"
+                : "border-status-danger-rule bg-status-danger-surface text-status-danger-ink"
             )}
           >
             <div className="font-semibold">

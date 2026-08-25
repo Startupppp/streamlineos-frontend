@@ -45,19 +45,19 @@ export interface AuditFilters {
 export { useAuditLogs };
 
 const ACTION_BADGE_COLORS: Record<string, string> = {
-  created: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  updated: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  deleted: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  created: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  updated: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  deleted: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
   archived: "bg-muted text-muted-foreground border-border",
-  restored: "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  assigned: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  unassigned: "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  status_changed: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  stage_changed: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  converted: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  merged: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  exported: "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  imported: "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  restored: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  assigned: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  unassigned: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  status_changed: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  stage_changed: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  converted: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  merged: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  exported: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  imported: "bg-status-info-surface text-status-info-ink border-status-info-rule",
 };
 
 const ENTITY_TYPE_LABELS: Record<string, string> = {
@@ -124,9 +124,9 @@ function ChangesDisplay({ metadata }: ChangesDisplayProps) {
         return (
           <p key={field} className="text-xs text-muted-foreground">
             <span className="font-medium">{field}</span>:{" "}
-            <span className="text-red-500 dark:text-red-400 line-through">{from}</span>
+            <span className="text-status-danger-ink line-through">{from}</span>
             {" → "}
-            <span className="text-emerald-600 dark:text-emerald-400">{to}</span>
+            <span className="text-status-success-ink">{to}</span>
           </p>
         );
       })}
@@ -197,14 +197,14 @@ export function AuditEntryRow({ entry, isLast }: AuditEntryRowProps) {
                 <Badge
                   variant="outline"
                   className={cn(
-                    "text-[9px] px-1.5 py-0 h-4 font-medium",
+                    "text-micro px-1.5 py-0 h-4 font-medium",
                     badgeColor,
                   )}
                 >
                   {entry.action.replace(/_/g, " ")}
                 </Badge>
                 {entityLabel && (
-                  <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4">
+                  <Badge variant="outline" className="text-micro px-1.5 py-0 h-4">
                     {entityLabel}
                   </Badge>
                 )}

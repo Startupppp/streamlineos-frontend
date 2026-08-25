@@ -179,7 +179,7 @@ export function Customer360Section({ data, isLoading }: Customer360SectionProps)
                   <Icon className="h-3.5 w-3.5 text-muted-foreground" />
                   {cfg.title}
                 </CardTitle>
-                <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4">
+                <Badge variant="outline" className="text-micro px-1.5 py-0 h-4">
                   {section.total}
                 </Badge>
               </CardHeader>

@@ -120,8 +120,8 @@ export function DealInfoCard({ deal }: DealInfoCardProps) {
         )}
 
         {deal.lostReason && (
-          <div className="p-3 rounded-lg bg-red-500/5 border border-red-500/20">
-            <p className="text-xs text-red-400 mb-1">Lost Reason</p>
+          <div className="p-3 rounded-lg bg-status-danger-surface border border-status-danger-rule">
+            <p className="text-xs text-status-danger-ink mb-1">Lost Reason</p>
             <p className="text-sm">{deal.lostReason}</p>
           </div>
         )}

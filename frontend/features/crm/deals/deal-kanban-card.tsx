@@ -128,7 +128,7 @@ export const DealKanbanCard = memo(function DealKanbanCard({ deal, onStageChange
             <div className="flex items-center gap-1.5 min-w-0">
               <Avatar className="h-5 w-5 shrink-0">
                 <AvatarImage src={resolveImageUrl(deal.assignedTo.image)} />
-                <AvatarFallback className="text-[8px]">
+                <AvatarFallback className="text-micro">
                   {deal.assignedTo.name?.[0]}
                 </AvatarFallback>
               </Avatar>

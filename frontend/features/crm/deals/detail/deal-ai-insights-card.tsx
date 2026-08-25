@@ -144,7 +144,7 @@ export function DealAiInsightsCard({ dealId, dealName }: DealAiInsightsCardProps
                 <ul className="space-y-1.5">
                   {result.risks.map((risk, i) => (
                     <li key={i} className="flex items-start gap-2">
-                      <AlertTriangle className="h-3.5 w-3.5 text-red-400 mt-0.5 shrink-0" />
+                      <AlertTriangle className="h-3.5 w-3.5 text-status-danger-ink mt-0.5 shrink-0" />
                       <span className="text-xs text-foreground">{risk}</span>
                     </li>
                   ))}

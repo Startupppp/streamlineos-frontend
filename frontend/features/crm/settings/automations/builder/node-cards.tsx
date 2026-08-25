@@ -183,11 +183,11 @@ export const WaitCard = memo(function WaitCard({ waitHours, onChangeHours, onRem
   }, [onChangeHours]);
 
   return (
-    <motion.div layout className="rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50/60 dark:bg-amber-500/10 p-3 shadow-sm">
+    <motion.div layout className="rounded-xl border border-status-warning-rule bg-status-warning-surface p-3 shadow-sm">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <div className="h-5 w-5 rounded bg-amber-100 dark:bg-amber-500/10 flex items-center justify-center text-micro font-bold text-amber-700 dark:text-amber-300">W</div>
-          <span className="text-xs font-medium text-amber-700 dark:text-amber-300">Wait</span>
+          <div className="h-5 w-5 rounded bg-status-warning-surface flex items-center justify-center text-micro font-bold text-status-warning-ink">W</div>
+          <span className="text-xs font-medium text-status-warning-ink">Wait</span>
           <Input
             type="number"
             min={0}

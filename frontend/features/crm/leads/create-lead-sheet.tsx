@@ -289,10 +289,10 @@ export function CreateLeadSheet({
               </div>
 
               {hasDuplicates && (
-                <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+                <div className="rounded-lg border border-status-warning-rule bg-status-warning-surface p-3">
                   <div className="flex items-center gap-2 mb-2">
-                    <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />
-                    <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
+                    <AlertTriangle className="h-4 w-4 text-status-warning-ink shrink-0" />
+                    <span className="text-xs font-medium text-status-warning-ink">
                       Possible duplicate
                       {dupCheck!.duplicates.length > 1 ? "s" : ""} found
                     </span>
@@ -312,7 +312,7 @@ export function CreateLeadSheet({
                           )}
                           <Badge
                             variant="outline"
-                            className="text-[9px] px-1 py-0"
+                            className="text-micro px-1 py-0"
                           >
                             {dup.status}
                           </Badge>

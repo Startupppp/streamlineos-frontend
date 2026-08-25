@@ -44,8 +44,8 @@ const FIELD_TYPE_CONFIG: Record<
 > = {
   text: { label: "Text", className: "bg-muted text-muted-foreground border-border" },
   number: { label: "Number", className: "bg-primary/10 text-primary border-primary/20" },
-  date: { label: "Date", className: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30" },
-  boolean: { label: "Yes/No", className: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
+  date: { label: "Date", className: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule" },
+  boolean: { label: "Yes/No", className: "bg-status-success-surface text-status-success-ink border-status-success-rule" },
   select: { label: "Select", className: "bg-primary/10 text-primary border-primary/20" },
 };
 

@@ -94,7 +94,7 @@ export function NextActionsTab({ chatEnabled }: { chatEnabled: boolean }) {
               <div className="flex items-center gap-1.5">
                 <Badge
                   variant={URGENCY_VARIANT[action.urgency] ?? "secondary"}
-                  className="text-[9px] h-4 px-1 capitalize"
+                  className="text-micro h-4 px-1 capitalize"
                 >
                   {action.urgency}
                 </Badge>
