@@ -32,12 +32,14 @@ import { KanbanColumn } from "@/features/crm/deals/kanban-column";
 import { WinLossDialog } from "@/features/crm/deals/win-loss-dialog";
 import { StageSkipDialog } from "@/features/crm/deals/stage-skip-dialog";
 import { useDealsExport } from "@/features/crm/deals/use-deals-export";
-import { DealsCsvImportDialog } from "@/features/crm/deals/deals-csv-import-dialog";
+import { ImportLinkButton } from "@/features/crm/import/import-link-button";
 import { ErrorState } from "@/components/shared/error-state";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
+import { useCan } from "@/hooks/api/access";
 
 export default function DealsPage() {
+  const canCreateDeal = useCan("crm:deals:create");
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -288,6 +290,26 @@ export default function DealsPage() {
     };
   }, [allDeals]);
 
+  const activeFilterLabels = useMemo(() => {
+    const labels: string[] = [];
+    const q = debouncedSearchInput.trim();
+    if (q) labels.push(`search "${q}"`);
+    if (stageFilter) {
+      const stage = dealStages.find((s) => s.key === stageFilter);
+      labels.push(`stage ${stage?.label ?? stageFilter}`);
+    }
+    if (assigneeFilter && assigneeFilter !== "all") {
+      const owner = assigneeOptions.find((o) => o.id === assigneeFilter);
+      labels.push(`owner ${owner?.name ?? assigneeFilter}`);
+    }
+    return labels;
+  }, [debouncedSearchInput, stageFilter, assigneeFilter, dealStages, assigneeOptions]);
+
+  const handleClearDealFilters = useCallback(() => {
+    setSearchInput("");
+    updateParams({ q: null, stage: null, assignee: null });
+  }, [updateParams]);
+
   const containerVariants = shouldReduceMotion
     ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
     : staggerContainer;
@@ -382,7 +404,7 @@ export default function DealsPage() {
         filters={filterBar}
         actions={
           <>
-            <DealsCsvImportDialog />
+            {canCreateDeal ? <ImportLinkButton entity="deals" /> : null}
             <Button size="sm" onClick={handleOpenCreate}>
               <Plus className="h-3.5 w-3.5 mr-1.5" />
               New Deal
@@ -418,7 +440,11 @@ export default function DealsPage() {
                 sortDirection={dealSortDir}
                 onSort={handleDealSort}
                 onStageChange={handleStageChange}
-                isLoading={false}
+                isLoading={isLoading}
+                canCreate={canCreateDeal}
+                activeFilterLabels={activeFilterLabels}
+                onClearFilters={handleClearDealFilters}
+                onCreateDeal={handleOpenCreate}
               />
             </motion.div>
           )}
