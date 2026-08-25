@@ -7,7 +7,7 @@ Live c6/c9 report summaries are recorded in [`runtime-evidence-2026-08-26.md`](r
 | # | Candidate | Closed by |
 |---|---|---|
 | [c1](c1-kb-visibility-seam.md) | KB visibility predicate as a seam | Implemented: bounded resumable backfill, seeded direct/keyword/vector parity coverage, and denial-of-wallet tests; live seeded artifact remains unavailable |
-| [c2](c2-calendar-source-registry.md) | Calendar source seam | Implemented: granular source adapters, production registration coverage, and preference-isolation coverage; live database persistence proof remains |
+| [c2](c2-calendar-source-registry.md) | Calendar source seam | Implemented: granular source adapters, production registration coverage, preference-isolation coverage, and a tenant-scoped read-only 38-organization integrity sweep; live HTTP/controller proof remains |
 | [c3](c3-one-representation-of-capability.md) | One representation of capability | Implemented: scope-map seam, hydration contract, and non-excluded capability callers migrated; full production proof remains |
 | [c4](c4-module-availability-interface.md) | One interface for module availability | Implemented: canonical entitlement resolver, parity tests, and production wiring regression coverage; live database proof remains |
 | [c5](c5-payment-provider-adapter.md) | Route the money through the adapter | Implemented: configured-provider resolver, billing isolation, provider-neutral webhook normalization, and neutral headers; concrete adapters still own credentials and legacy Razorpay path remains |
