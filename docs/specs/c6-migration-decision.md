@@ -23,6 +23,19 @@ organisation before a conversion run. No static count is recorded here because
 the tenant database is runtime state and committing a copied number would become
 false as soon as an article is created.
 
+The operator CLI is `src/scripts/convert-kb-articles.ts`. With no `--apply`
+flag it performs only a preview (all active organisations by default, or one
+tenant with `--org-id`). A write requires one tenant, an attributable user,
+and the exact confirmation phrase:
+
+`node --env-file=.env -r ts-node/register src/scripts/convert-kb-articles.ts --apply --org-id=<org> --user-id=<user> --confirmation=CONVERT_PUBLISHED_ARTICLES`
+
+The HTTP interface follows the same fail-closed contract: callers must send
+`dryRun: true`, or send `dryRun: false` together with the exact confirmation.
+After a write, the tool re-reads durable `sourceArticleId` mappings. Any
+candidate still absent is returned in `failedArticleIds` and persisted in the
+import job's error report; caught row errors are therefore not silent.
+
 The migration corpus is explicitly **published articles only**. Draft and
 in-review articles remain in the Help Centre workflow and are not silently
 converted by this tool; the preview's `byStatus` field makes that scope visible.

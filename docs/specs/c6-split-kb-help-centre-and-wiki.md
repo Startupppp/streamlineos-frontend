@@ -1,6 +1,6 @@
 # c6 · Split the two products living inside `kb/`
 
-**Status: split and decision recorded; retirement remains data-gated.** Verified at source 2026-08-26. The frontend uses `features/help-centre/` and `features/wiki/`, the backend uses `help-centre/` and `wiki/`, and `GET /kb/article-migration/preview` plus `pnpm report:kb-article-migration` now provide tenant-safe migration evidence. The conversion tool remains intentionally retained until every active organisation reports zero unmigrated articles and the legacy intake decision is recorded.
+**Status: split, namespace decision recorded, and conversion tooling fail-closed; retirement remains data-gated.** Verified at source 2026-08-26. The frontend uses `features/help-centre/` and `features/wiki/`, the backend uses `help-centre/` and `wiki/`, and `GET /kb/article-migration/preview` plus `pnpm report:kb-article-migration` provide tenant-safe migration evidence. Conversion requires an explicit dry-run choice or exact apply confirmation, and unresolved rows are durably reported. The conversion tool remains intentionally retained while Help Centre article creation is supported.
 
 ## Problem Statement
 
@@ -47,7 +47,7 @@ Finish the split where it is still visible to a developer, and give the migratio
 - `kb/retrieval/` — indexing, search, `pageVisibleTo` / `chunkVisibleTo` / `visibleTo`, page access util.
 - `kb/migration/` — `kb-article-migration.*`, its own `kb-migration.module.ts`, standing alone and therefore obviously deletable.
 
-**Remaining**
+**Historical implementation checklist (completed; retained as rationale)**
 
 - **Rename the frontend features.** `features/kb/` → `features/help-centre/`, `features/knowledge-base/` → `features/wiki/`. Both are kebab-case already; only the words change. Update every importer and both barrels. Root §7 requires kebab-case files and folders for CI case-safety, so this is a pure rename with no casing trap — but on Windows a two-step rename may be needed for git to record it.
 - **Do not touch routes.** `/help/:orgId` is the public help centre and `/knowledge/*` is wiki reading, guaranteed to every active member by root §8. Folder names are internal; URLs are a product contract. This rename must not reach `app/`.

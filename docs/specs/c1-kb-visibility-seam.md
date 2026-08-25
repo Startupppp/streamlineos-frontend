@@ -1,6 +1,6 @@
 # c1 · Make the knowledge-base visibility predicate a seam both paths cross
 
-**Status: shipped with seeded parity coverage.** Re-audited at source 2026-08-26. `visibleTo`, `pageVisibleTo`, and `chunkVisibleTo` govern direct, keyword, and vector retrieval; lifecycle-only indexing, resumable backfill, denial-of-wallet guards, and a seeded production-path parity test are present. The live seeded E2E harness still requires its full application test environment.
+**Status: shipped with seeded parity coverage and fail-closed backfill tooling.** Re-audited at source 2026-08-26. `visibleTo`, `pageVisibleTo`, and `chunkVisibleTo` govern direct, keyword, and vector retrieval; lifecycle-only indexing, resumable backfill, denial-of-wallet guards, and a seeded production-path parity test are present. `backfill-kb-pages.ts` refuses to write without `--apply`, treats a zero-chunk result as a retryable failure, reports failed page IDs, and never advances its resume cursor past that failure. The read-only evidence report distinguishes lifecycle-eligible contentless pages from actual index candidates. The live seeded E2E harness still requires its full application test environment.
 
 ## Problem Statement
 
@@ -41,6 +41,8 @@ The chunk row already carries `pageVisibility`, `pageProjectId` and `pageCreated
 - **A backfill re-indexes previously ineligible pages.** Run per organisation, batched, resumable, and short-circuiting when an org has no such pages. Re-embedding hashes the **source text**, so unchanged content is not re-embedded; the newly eligible pages have no prior hash and will embed once.
 - **Retrieval query shape is unchanged.** `pageKeywordCandidates` takes `pageVisibility`; `pageVectorCandidates` takes `chunkVisibleTo(...)`. The predicate stays indexed; widening the index does not change the plan shape.
 - **Index sizing is a stated consequence.** The vector index grows by the number of private and project-scoped pages. Record the before/after row count in the backfill so the growth is measured, not assumed.
+- **Operator mutation is explicit.** Run `pnpm report:kb-calendar-runtime` first. `pnpm backfill:kb-pages -- --apply --org-id=<id> --max-pages=<n> --batch-size=<n> --delay-ms=<n>` is the mutating step; omitting `--apply` exits before application bootstrap or database writes.
+- **A zero-chunk result is not success.** Backfill discovery selects a live page with non-empty text and no body chunk, so `indexPage(...) === 0` means the candidate was not indexed. It is recorded as failed and remains behind the returned resume cursor.
 
 ## Testing Decisions
 
