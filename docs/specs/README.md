@@ -8,11 +8,11 @@
 | [c2](c2-calendar-source-registry.md) | Calendar source seam | Implemented: registry preferences and granular HR source adapters; production source rollout proof remains |
 | [c3](c3-one-representation-of-capability.md) | One representation of capability | Implemented: scope-map seam and hydration contract; full production proof remains |
 | [c4](c4-module-availability-interface.md) | One interface for module availability | Implemented: canonical entitlement resolver and parity tests; full production proof remains |
-| [c5](c5-payment-provider-adapter.md) | Route the money through the adapter | Implemented: resolver/adapter boundary and secret isolation; one legacy webhook expectation still needs closure |
-| [c6](c6-split-kb-help-centre-and-wiki.md) | Split the two products inside `kb/` | Partial: `report:kb-article-migration` now produces tenant-safe closure evidence; retirement still requires a zero backlog and intake decision |
+| [c5](c5-payment-provider-adapter.md) | Route the money through the adapter | Implemented: configured-provider resolver and billing isolation; strict secret-bearing adapter and provider-neutral webhook boundary remain |
+| [c6](c6-split-kb-help-centre-and-wiki.md) | Split the two products inside `kb/` | Implemented: split, namespace, permanent conversion-tool policy, and failure-safe report; runtime tenant report remains |
 | [c7](c7-chat-message-fanout.md) | Chat send path as a fan-out module | Implemented: transactional outbox fan-out with durable retry tests; broker/queue integration remains environment-dependent |
 | [c8](c8-frontend-server-data-seam.md) | Frontend server-data seam | Implemented: duplicate adapter removed and failed-prefetch proof added |
-| [c9](c9-transactional-outbox-decision.md) | Decide what the outbox is for | Decision and relay implemented: generic domain events use `outbox_events`; notification intents use the dedicated ledger; report/production evidence remains |
+| [c9](c9-transactional-outbox-decision.md) | Decide what the outbox is for | Decision, leased worker, retry/fencing, and report implemented; runtime counts and external-effect idempotency evidence remain |
 
 ## The successor program
 
