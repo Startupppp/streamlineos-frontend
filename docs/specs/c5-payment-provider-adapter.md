@@ -1,6 +1,6 @@
 # c5 · Route the money through the adapter that already exists
 
-**Status: not started.** Verified at source 2026-08-25. `PaymentProviderAdapter` and `PaymentProviderAdapterRegistry` exist and are correct (`billing/payments/payment-provider-adapter.interface.ts`). `RazorpayAdapter` registers itself. Three services use the registry: `payment-provider-setup.service.ts:154`, `payment-readiness.service.ts:68`, `payment-test-transaction.service.ts`. And `BillingService` — the only service that moves real money — injects `RazorpayService` directly (`core/billing.service.ts:57`) and calls it at eleven sites, including every operation the adapter interface was written for.
+**Status: implemented with strict boundary follow-up.** Re-audited at source 2026-08-26. Billing resolves an organisation-configured provider through `PaymentProviderResolver`; provider-neutral webhook normalization and neutral signature headers are now present. Concrete adapters still own credential handling, and the legacy Razorpay-specific billing path remains for compatibility.
 
 **Current audit (2026-08-26):** Billing now resolves an organisation-configured provider through `PaymentProviderResolver.resolveConfigured()`, keeps provider credentials out of `BillingService`, and has provider substitution/webhook failure coverage. The remaining strict boundary work is provider-neutral webhook normalization and moving credential-bearing adapter arguments fully inside provider-specific implementations.
 

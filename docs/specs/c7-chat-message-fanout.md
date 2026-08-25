@@ -1,6 +1,6 @@
 # c7 · Turn the chat send path into a fan-out module
 
-**Status: shipped.** Verified at source 2026-08-25. `ChatMessageFanoutService.dispatch(input)` is the seam the review asked for. Push, DM notification and mention notification run concurrently via `Promise.all` over a task array, each with its own error handler, after one realtime publish. The bidirectional substring mention scan is gone: `resolveMentionedUserIds` (`chat-mentions.ts:22`) takes the ids the composer resolved and intersects them with actual channel members, excluding the sender. The `UPDATE` inside the channel-list read at `chat-channels.service.ts:59` is gone; that code path now resolves a display name and returns a new object without writing. This PRD records what shipped and specifies the two things the seam was built to enable but which have not been done.
+**Status: implemented with queue-provider follow-up.** Re-audited at source 2026-08-26. The fan-out now has an injectable provider seam, deterministic idempotency context for realtime/push/notifications, transactional outbox retry, and crash/replay tests. A configurable broker-backed implementation and durable per-channel failure ledger remain open.
 
 ## Problem Statement
 
