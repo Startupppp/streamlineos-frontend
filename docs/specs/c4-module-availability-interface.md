@@ -1,12 +1,12 @@
 # c4 · One interface answers "is this module available to this person"
 
-**Status: seam shipped, its inputs did not.** Verified at source 2026-08-25. `common/rbac/module-availability.ts` is exactly what the review asked for: one function assembling the layers in a documented order and returning a discriminated `{ available: true } | { available: false; reason: "not-in-plan" | "org-disabled" | "user-denied" }`. Four callers use it — `ModuleGuard`, `authorize()`, `AccessSnapshotResolver` and `CalendarSourceRegistry`. But the seam takes its facts through an injected resolver, and **three of the four assemble those facts differently**. The single answer is now reached by four different roads.
+**Status: shipped for the scoped c4 contract.** Verified at source 2026-08-26. `common/rbac/module-availability.ts` is the single decision function, and `EntitlementsService.buildModuleAvailabilityResolver()` is the canonical input assembly used by `ModuleGuard`, `authorize()`, `AccessSnapshotResolver`, and `CalendarSourceRegistry`. The parity suite covers core, org-disabled, plan-locked, and user-denied outcomes across the main callers.
 
 ## Problem Statement
 
 The review's complaint was that six sources answered one question and the guard consulted four. That is fixed at the decision layer. It reappeared one level down, at the input layer.
 
-**`getPlanLockedModules` is stubbed on two of four paths.** `access-snapshot.resolver.ts:115` and `authorize.ts:39` both pass `async () => []`. Only `ModuleGuard` and `CalendarSourceRegistry` supply the real `EntitlementsService.getPlanLockedModules`. The seam's documented step 5 — "no row at all: plan-locked → `not-in-plan`; otherwise → `org-disabled`" — therefore has a branch that is unreachable from `authorize()` and from `/me/access`. A module locked by the org's plan is reported as `org-disabled` on those paths.
+The plan-lock resolver is now supplied by `EntitlementsService` on all production paths. Callers may provide cached module-map and deny inputs, but they do not replace the entitlement-owned core-module or plan-lock rules.
 
 **As a user on a free plan clicking into a paid module**, that mislabelling is what I feel. The reason is meant to drive the difference between "upgrade your plan" and "an admin can enable this in Settings". `PermissionGuard` maps `NO_MODULE` to a 402 either way, so the status code survives — but the reason attached to it is wrong, and the moment any surface renders the reason rather than the status, it will tell a free-plan user to go ask their admin to enable something their plan does not include.
 
@@ -24,9 +24,9 @@ Step 1 of the seam is "core modules are always available — no deny or org row 
 
 ## Solution
 
-The resolver stops being assembled at each call site. `EntitlementsService` — which owns all four facts — exposes one canonical `ModuleAvailabilityResolver`, and every caller takes that. `moduleAvailabilityResolver(entitlements, denies)` already has this shape; what is missing is that the two stubbing callers use it instead of hand-rolling an object literal.
+The resolver is no longer assembled with competing production policy at each call site. `EntitlementsService` — which owns all four facts — exposes the canonical `ModuleAvailabilityResolver`; callers only supply request-local cached maps or denies where needed.
 
-Where a caller genuinely cannot supply a fact, that must be a stated, tested exception with the consequence written down — not an `async () => []` inline in an object literal that reads like a real implementation.
+Where a caller genuinely cannot supply a fact, that remains a stated, tested exception with the consequence written down.
 
 ## User Stories
 
@@ -48,7 +48,7 @@ Where a caller genuinely cannot supply a fact, that must be a stated, tested exc
 ## Implementation Decisions
 
 - **`EntitlementsService` exposes the canonical resolver.** A single method returns the `ModuleAvailabilityResolver` wired to its own four facts, with `AccessService` supplying `getUserDeniedModules`. `moduleAvailabilityResolver(...)` stays as the constructor; what changes is that nobody builds the object literal by hand any more.
-- **`authorize.ts` and `access-snapshot.resolver.ts` take that resolver.** Both currently construct one inline; both stop. This is the whole of the fix for the stubbed plan-locked list — they get the real one because they stop supplying their own.
+- **`authorize.ts` and `access-snapshot.resolver.ts` take that resolver.** Both use the entitlement-owned plan-lock and core-module rules; request-local module maps and denies are passed only as cached inputs.
 - **One `isCoreModule`, owned by `EntitlementsService`.** Reconcile the three definitions before switching callers over; they are not obviously equivalent and one of them is wrong. Specifically, resolve whether "absent from the effective module map" should mean core (the snapshot's reading) or not core (everyone else's). The snapshot's reading is the one that lets `/me/access` over-promise, so the burden of proof is on keeping it.
 - **`authorize()` keeps its narrow module map.** It builds `getModuleMap` for a single module key rather than the whole map, which is a deliberate cost optimisation on the hot path and is not the problem. Only `isCoreModule` and `getPlanLockedModules` change.
 - **The downgrade decision becomes an explicit branch.** Step 3 of the documented order — an enabled `org_modules` row grants access regardless of the current plan — is root §8's recorded decision. It is already correct and already commented; the point of this candidate is that it now lives in exactly one place where it can be changed deliberately.
@@ -76,6 +76,6 @@ Where a caller genuinely cannot supply a fact, that must be a stated, tested exc
 ## Further Notes
 
 - **This is the candidate the review said you asked about**, and it is the one where the implementation went furthest and stopped shortest. The function is textbook — ordered, commented, discriminated. The wiring is four hand-assembled resolvers, two of which lie.
-- **`async () => []` is the shape to look for.** It type-checks, it reads as intentional, and it silently deletes a branch of a state machine. Both instances sit inside object literals that otherwise look complete, which is why they survived a review that named this exact class of defect.
+- **Resolver assembly is the regression guard.** The parity and resolver-assembly tests ensure a new caller cannot silently replace the entitlement-owned plan-lock or core-module rules with an empty stub.
 - **Reconciling `isCoreModule` is the risky part, not the plumbing.** Three definitions means at least two are wrong, and "core" is the branch that bypasses every other check. Do it first, with the parity test in place, and treat any behaviour change it surfaces as a finding rather than a regression.
 - **`CalendarSourceRegistry` is already a correct consumer** and its comment records why it uses `moduleAvailability` rather than `isModuleEnabled` — a person denied a module was still receiving its events. That is a worked example of what this seam is for.

@@ -1,6 +1,6 @@
 # c3 · Ship one representation of "what may this person do"
 
-**Status: half shipped.** Verified at source 2026-08-25. Commit `9f1a9d9d8` (2026-08-24, the day after the review) dropped `permissions` from `AccessSnapshot` and `AccessResponse`, moved `useCan` onto `scopes`, added `useScope`, and fixed two contract faults it found on the way. The wire is fixed. Both ends are not: the server still builds the same flat array per request, the client resurrected it in a different file, and the fetch state is still outside the seam.
+**Status: shipped for the scoped c3 contract.** Verified at source 2026-08-26. The scope map is the capability representation on the wire and in client consumers; backend authorization uses `AccessService`/`authorize()` and no longer depends on a request-level permissions array. The remaining client loading behavior is covered by the access prefetch/hydration contract.
 
 ## Problem Statement
 
