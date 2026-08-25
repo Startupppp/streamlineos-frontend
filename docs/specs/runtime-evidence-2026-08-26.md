@@ -5,6 +5,20 @@ non-bypass `streamline_app` role. The report commands use the minimal
 `ArchitectureEvidenceModule`, so unrelated product integrations do not affect
 the evidence run.
 
+## c1/c2 tenant-safe read-only report
+
+Command: `node --env-file=.env -r ts-node/register src/scripts/report-kb-calendar-runtime-evidence.ts`
+
+```json
+{"organizations":38,"succeeded":38,"failed":0,"readOnly":true,"c1":{"totalPages":1,"eligiblePages":1,"indexedEligiblePages":0,"eligibleWithoutChunk":1,"chunkAclMismatches":0,"orphanChunks":0},"c2":{"preferenceRows":0,"preferenceScopes":0,"disabledRows":0,"enabledRows":0,"unknownSourceKeys":0,"invalidOwnerRows":0}}
+```
+
+The sweep is tenant-scoped, read-only, and failure-free. c1 still has one
+eligible live page without an indexed chunk, so the backfill and seeded
+end-to-end parity proof remain open. c2 has no persisted preference rows and
+no integrity violations; this verifies database safety, not live HTTP
+controller behavior.
+
 ## c6 article migration report
 
 Command: `pnpm report:kb-article-migration`
