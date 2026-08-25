@@ -8,6 +8,7 @@
     "dev": "next dev -p 1000",
     "start": "next start",
     "build": "next build",
+    "verify:server-data-seam": "node scripts/verify-server-data-seam.mjs",
     "type-check": "tsc --noEmit",
     "test": "jest",
     "build:widget": "node feedbucket-widget/build.mjs",
