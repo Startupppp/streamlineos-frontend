@@ -23,8 +23,8 @@ function formatDelta(value: number): string {
 }
 
 function getDeltaClass(value: number): string {
-  if (value > 0) return "text-emerald-600";
-  if (value < 0) return "text-red-600";
+  if (value > 0) return "text-status-success-ink";
+  if (value < 0) return "text-status-danger-ink";
   return "text-muted-foreground";
 }
 

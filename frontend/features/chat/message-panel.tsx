@@ -92,7 +92,7 @@ const BookmarkButton = React.forwardRef<
       <BookmarkIcon
         ref={iconRef}
         size={16}
-        className={cn(active && "fill-amber-500 text-amber-500")}
+        className={cn(active && "fill-amber-500 text-status-warning-ink")}
       />
     </button>
   );
@@ -935,7 +935,7 @@ export function MessagePanel({
               size="icon"
               className={cn(
                 "size-8 shrink-0",
-                activeHuddle && "text-emerald-600 hover:text-emerald-600",
+                activeHuddle && "text-status-success-ink hover:text-status-success-ink",
               )}
               onClick={handleHuddle}
               disabled={startHuddle.isPending || joinHuddle.isPending}
@@ -1007,11 +1007,11 @@ export function MessagePanel({
             </div>
 
             <div className="min-w-0">
-              <TruncatedText text={displayName} className="text-[15px] font-bold leading-tight" />
+              <TruncatedText text={displayName} className="text-sm font-bold leading-tight" />
               <p className="text-dense text-muted-foreground leading-tight">
                 {channel?.type === "DIRECT" ? (
                   isOtherOnline ? (
-                    <span className="text-emerald-500 font-medium">Online</span>
+                    <span className="text-status-success-ink font-medium">Online</span>
                   ) : (
                     "Offline"
                   )
@@ -1031,13 +1031,13 @@ export function MessagePanel({
                     className="h-6 w-6 border-2 border-background"
                   >
                     <AvatarImage src={resolveImageUrl(m.user?.image)} />
-                    <AvatarFallback className="text-[8px]">
+                    <AvatarFallback className="text-micro">
                       {getInitials(m.user?.name)}
                     </AvatarFallback>
                   </Avatar>
                 ))}
                 {memberCount > 3 && (
-                  <div className="h-6 w-6 rounded-full bg-muted border-2 border-background flex items-center justify-center text-[9px] font-semibold text-muted-foreground">
+                  <div className="h-6 w-6 rounded-full bg-muted border-2 border-background flex items-center justify-center text-micro font-semibold text-muted-foreground">
                     +{memberCount - 3}
                   </div>
                 )}
@@ -1053,7 +1053,7 @@ export function MessagePanel({
                 className={cn(
                   "h-8 gap-1.5 rounded-lg px-2 text-xs font-medium",
                   activeHuddle
-                    ? "text-green-500 hover:text-green-500 hover:bg-green-500/10"
+                    ? "text-status-success-ink hover:text-status-success-ink hover:bg-status-success-surface"
                     : "text-muted-foreground hover:text-foreground",
                 )}
                 onClick={handleHuddle}
@@ -1079,7 +1079,7 @@ export function MessagePanel({
               className={cn(
                 "h-8 w-8 rounded-lg flex items-center justify-center hover:bg-muted/60 transition-colors",
                 showFilesPanel
-                  ? "bg-muted text-blue-500"
+                  ? "bg-muted text-status-info-ink"
                   : "text-muted-foreground hover:text-foreground",
               )}
               title="Shared files"
@@ -1091,7 +1091,7 @@ export function MessagePanel({
               className={cn(
                 "h-8 w-8 rounded-lg flex items-center justify-center hover:bg-muted/60 transition-colors",
                 showSavedPanel
-                  ? "bg-muted text-amber-500"
+                  ? "bg-muted text-status-warning-ink"
                   : "text-muted-foreground hover:text-foreground",
               )}
               title="Saved messages"
@@ -1112,7 +1112,7 @@ export function MessagePanel({
         </div>
 
         {!isOnline && (
-          <div className="shrink-0 px-4 py-1.5 bg-amber-500/10 border-b border-amber-500/20 flex items-center gap-2 text-xs text-amber-600 font-medium">
+          <div className="shrink-0 px-4 py-1.5 bg-status-warning-surface border-b border-status-warning-rule flex items-center gap-2 text-xs text-status-warning-ink font-medium">
             <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
             You&apos;re offline — messages will be sent when you reconnect
           </div>

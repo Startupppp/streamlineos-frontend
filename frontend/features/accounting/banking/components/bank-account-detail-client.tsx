@@ -106,7 +106,7 @@ const TXN_COLUMNS: DataTableColumn<BankTransaction>[] = [
       return (
         <Money
           value={val}
-          className={val >= 0 ? "text-emerald-600" : "text-red-600"}
+          className={val >= 0 ? "text-status-success-ink" : "text-status-danger-ink"}
         />
       );
     },

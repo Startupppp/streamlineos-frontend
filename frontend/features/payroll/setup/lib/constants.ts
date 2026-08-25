@@ -116,7 +116,7 @@ export const PAY_FREQUENCIES = [
 ] as const;
 
 export const COMPLEXITY_CONFIG = {
-  SIMPLE: { label: "Simple", className: "bg-emerald-50 text-emerald-700 border border-emerald-200" },
-  MODERATE: { label: "Moderate", className: "bg-amber-50 text-amber-700 border border-amber-200" },
-  ADVANCED: { label: "Advanced", className: "bg-red-50 text-red-700 border border-red-200" },
+  SIMPLE: { label: "Simple", className: "bg-status-success-surface text-status-success-ink border border-status-success-rule" },
+  MODERATE: { label: "Moderate", className: "bg-status-warning-surface text-status-warning-ink border border-status-warning-rule" },
+  ADVANCED: { label: "Advanced", className: "bg-status-danger-surface text-status-danger-ink border border-status-danger-rule" },
 } as const;

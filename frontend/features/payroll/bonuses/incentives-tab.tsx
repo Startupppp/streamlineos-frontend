@@ -45,9 +45,9 @@ const STATUS_OPTIONS = [
 ];
 
 const INCENTIVE_STATUS_STYLES: Record<string, string> = {
-  PENDING: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  APPROVED: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  REJECTED: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  PENDING: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  APPROVED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  REJECTED: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
   ADDED_TO_PAYROLL: "bg-primary/10 text-foreground border-primary/20",
 };
 
@@ -145,7 +145,7 @@ export function IncentivesTab() {
           <LoadingButton
             size="sm"
             variant="outline"
-            className="h-6 text-micro px-2 text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+            className="h-6 text-micro px-2 text-status-success-ink border-status-success-rule hover:bg-status-success-surface"
             isPending={approveIncentive.isPending}
             onClick={makeApproveOpener(row)}
           >

@@ -30,10 +30,10 @@ export const SUBMISSION_STATUS_LABELS: Record<string, string> = {
 };
 
 export const SUBMISSION_STATUS_COLORS: Record<string, string> = {
-  submitted: "bg-blue-50 text-blue-700 border-blue-200",
-  in_review: "bg-amber-50 text-amber-700 border-amber-200",
-  approved: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  rejected: "bg-red-50 text-red-700 border-red-200",
+  submitted: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  in_review: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  approved: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  rejected: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };
 
 export function slugify(name: string): string {

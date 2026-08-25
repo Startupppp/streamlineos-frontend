@@ -191,9 +191,9 @@ export function CreateTokenDialog({ open, onOpenChange }: CreateTokenDialogProps
                   />
                 </div>
               </div>
-              <div className="flex items-start gap-2 rounded-md border border-amber-400/40 bg-amber-50 dark:bg-amber-950/20 px-3 py-2.5">
-                <span className="text-amber-600 shrink-0 mt-px text-sm">⚠</span>
-                <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
+              <div className="flex items-start gap-2 rounded-md border border-status-warning-rule bg-status-warning-surface px-3 py-2.5">
+                <span className="text-status-warning-ink shrink-0 mt-px text-sm">⚠</span>
+                <p className="text-xs text-status-warning-ink leading-relaxed">
                   This token will not be shown again. Store it securely before closing this dialog.
                 </p>
               </div>

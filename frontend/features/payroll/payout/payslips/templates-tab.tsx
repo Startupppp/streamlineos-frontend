@@ -16,8 +16,8 @@ import { PayslipPreviewSheet } from "./template-preview-sheet";
 import { TemplateDeleteDialog } from "./template-delete-dialog";
 
 const LAYOUT_BADGE: Record<PayslipLayout, string> = {
-  CLASSIC: "bg-blue-50 text-blue-700 border border-blue-200/70 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  MODERN: "bg-blue-50 text-blue-700 border border-blue-200/70 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  CLASSIC: "bg-status-info-surface text-status-info-ink border border-status-info-rule",
+  MODERN: "bg-status-info-surface text-status-info-ink border border-status-info-rule",
   COMPLIANCE: "bg-muted text-muted-foreground border border-border",
 };
 
@@ -46,7 +46,7 @@ function TemplateCard({
           {template.layout}
         </span>
         {template.isDefault && (
-          <span className="inline-flex items-center gap-0.5 text-emerald-600 dark:text-emerald-400 text-micro font-medium">
+          <span className="inline-flex items-center gap-0.5 text-status-success-ink text-micro font-medium">
             <Star className="h-3 w-3" />
             Default
           </span>

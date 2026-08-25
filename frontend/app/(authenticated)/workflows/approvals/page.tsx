@@ -55,7 +55,7 @@ function ApprovalCard({
               </p>
               <Badge
                 variant="secondary"
-                className="text-micro bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30"
+                className="text-micro bg-status-warning-surface text-status-warning-ink border-status-warning-rule"
               >
                 Pending
               </Badge>
@@ -68,7 +68,7 @@ function ApprovalCard({
                 Created {format(new Date(approval.createdAt), "MMM d, HH:mm")}
               </span>
               {approval.expiresAt && (
-                <span className="text-orange-600">
+                <span className="text-status-warning-ink">
                   Expires{" "}
                   {format(new Date(approval.expiresAt), "MMM d, HH:mm")}
                 </span>
@@ -169,7 +169,7 @@ export default function ApprovalsPage() {
       title="Approval Center"
       subtitle="Review and act on pending workflow approvals"
       actions={
-        <span className="inline-flex items-center px-2 py-1 rounded-md bg-amber-50 text-amber-700 text-xs font-medium border border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
+        <span className="inline-flex items-center px-2 py-1 rounded-md bg-status-warning-surface text-status-warning-ink text-xs font-medium border border-status-warning-rule">
           {pendingApprovals.length} pending
         </span>
       }

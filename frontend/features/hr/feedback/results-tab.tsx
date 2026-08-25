@@ -59,7 +59,7 @@ export function ResultsTab() {
       )}
 
       {searched && isError && (
-        <div className="bg-card rounded-2xl border border-red-200 p-6 text-center text-red-500">
+        <div className="bg-card rounded-2xl border border-status-danger-rule p-6 text-center text-status-danger-ink">
           No results found for this employee
         </div>
       )}

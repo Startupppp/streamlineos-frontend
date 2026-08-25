@@ -67,9 +67,9 @@ function ReconCheckRow({ check }: { check: PeriodReconCheck }) {
   return (
     <div className="flex items-start gap-2 py-1.5">
       {check.ok ? (
-        <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
+        <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-status-success-ink" />
       ) : check.severity === "blocker" ? (
-        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-rose-500" />
+        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-status-danger-ink" />
       ) : (
         <Circle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
       )}
@@ -111,7 +111,7 @@ export function ReportJournal({ month }: ReportJournalProps) {
         <span className="font-mono">{formatMoney(totalDebit)}</span> · Total Credit:{" "}
         <span className="font-mono">{formatMoney(totalCredit)}</span>
         {Math.abs(totalDebit - totalCredit) < 0.01 && (
-          <span className="ml-2 text-emerald-600 dark:text-emerald-400 font-medium">✓ Balanced</span>
+          <span className="ml-2 text-status-success-ink font-medium">✓ Balanced</span>
         )}
       </span>
     ) : undefined;
@@ -151,8 +151,8 @@ export function ReportJournal({ month }: ReportJournalProps) {
                       className={cn(
                         "ml-2 text-micro font-medium px-1.5 py-0.5 rounded border",
                         recon.overallOk
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
-                          : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30",
+                          ? "bg-status-success-surface text-status-success-ink border-status-success-rule"
+                          : "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
                       )}
                     >
                       {recon.overallOk
@@ -195,8 +195,8 @@ export function ReportJournal({ month }: ReportJournalProps) {
       )}
 
       {unmappedCodes.length > 0 && (
-        <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+        <div className="flex items-start gap-2 rounded-md border border-status-warning-rule bg-status-warning-surface p-3 text-status-warning-ink">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-status-warning-ink" />
           <div>
             <p className="text-xs font-semibold">Unmapped component codes</p>
             <p className="text-dense mt-1">
@@ -205,7 +205,7 @@ export function ReportJournal({ month }: ReportJournalProps) {
               <Button
                 variant="link"
                 size="sm"
-                className="h-auto p-0 ml-2 text-amber-800 underline text-dense"
+                className="h-auto p-0 ml-2 text-status-warning-ink underline text-dense"
                 onClick={handleOpenMappingSheet}
               >
                 Map now

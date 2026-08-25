@@ -31,7 +31,7 @@ export function TimesheetWidget() {
               <p
                 className={cn(
                   "text-dense font-semibold uppercase tracking-wide",
-                  ts.submitted ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400",
+                  ts.submitted ? "text-status-success-ink" : "text-status-danger-ink",
                 )}
               >
                 {ts.submitted ? "Submitted" : "Hours Missing"}
@@ -46,17 +46,17 @@ export function TimesheetWidget() {
             <div
               className={cn(
                 "h-9 w-9 rounded-lg flex items-center justify-center shrink-0",
-                ts.submitted ? "bg-emerald-500/10" : "bg-red-500/10",
+                ts.submitted ? "bg-status-success-surface" : "bg-status-danger-surface",
               )}
             >
               {ts.submitted ? (
                 <CheckCircle2
-                  className="h-4 w-4 text-emerald-600 dark:text-emerald-400"
+                  className="h-4 w-4 text-status-success-ink"
                   aria-hidden="true"
                 />
               ) : (
                 <AlertTriangle
-                  className="h-4 w-4 text-red-600"
+                  className="h-4 w-4 text-status-danger-ink"
                   aria-hidden="true"
                 />
               )}

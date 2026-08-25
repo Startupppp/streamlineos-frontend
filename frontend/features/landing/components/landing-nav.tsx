@@ -80,7 +80,7 @@ export function LandingNav() {
               />
               <div className="absolute inset-0 rounded-lg bg-brand-core/0 group-hover:bg-brand-core/10 transition-colors duration-300 pointer-events-none" />
             </div>
-            <span className="font-display text-sm sm:text-base font-bold tracking-tight text-slate-900 truncate">
+            <span className="font-display text-sm sm:text-base font-bold tracking-tight text-muted-foreground truncate">
               {BRAND_NAME}
             </span>
           </Link>
@@ -90,7 +90,7 @@ export function LandingNav() {
               <a
                 key={l.label}
                 href={l.href}
-                className="text-label font-medium text-slate-600 hover:text-slate-900 transition-colors duration-200"
+                className="text-label font-medium text-muted-foreground hover:text-muted-foreground transition-colors duration-200"
               >
                 {l.label}
               </a>
@@ -109,7 +109,7 @@ export function LandingNav() {
             <button
               type="button"
               onClick={() => setOpen((v) => !v)}
-              className="md:hidden h-9 w-9 inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white/90 text-slate-900"
+              className="md:hidden h-9 w-9 inline-flex items-center justify-center rounded-lg border border-border bg-white/90 text-muted-foreground"
               aria-label={open ? "Close menu" : "Open menu"}
               aria-expanded={open}
             >
@@ -132,7 +132,7 @@ export function LandingNav() {
                   key={l.label}
                   href={l.href}
                   onClick={() => setOpen(false)}
-                  className="block px-3 py-3 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg"
+                  className="block px-3 py-3 text-sm font-medium text-muted-foreground hover:text-muted-foreground hover:bg-muted rounded-lg"
                 >
                   {l.label}
                 </a>

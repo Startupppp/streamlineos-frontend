@@ -46,18 +46,18 @@ export default function InterviewBookingPage() {
         <Card className="rounded-t-none border-t-0 px-6 py-6 shadow-noir">
           {bookingQuery.isLoading && (
             <div className="space-y-3">
-              <div className="h-4 bg-slate-200 rounded animate-pulse w-2/3" />
-              <div className="h-4 bg-slate-200 rounded animate-pulse w-1/2" />
-              <div className="h-32 bg-slate-200 rounded animate-pulse" />
+              <div className="h-4 bg-muted rounded animate-pulse w-2/3" />
+              <div className="h-4 bg-muted rounded animate-pulse w-1/2" />
+              <div className="h-32 bg-muted rounded animate-pulse" />
             </div>
           )}
 
           {isExpired && (
             <div className="text-center py-8">
-              <p className="text-lg font-semibold text-slate-700">
+              <p className="text-lg font-semibold text-muted-foreground">
                 Link Expired
               </p>
-              <p className="text-sm text-slate-500 mt-2">
+              <p className="text-sm text-muted-foreground mt-2">
                 This booking link has expired or has already been used. Please
                 contact the recruiter for a new link.
               </p>
@@ -67,7 +67,7 @@ export default function InterviewBookingPage() {
           {bookingQuery.isError && !isExpired && (
             <div className="text-center py-8">
               <p className="text-lg font-semibold text-destructive">Error</p>
-              <p className="text-sm text-slate-500 mt-2">
+              <p className="text-sm text-muted-foreground mt-2">
                 {getErrorMessage(bookingQuery.error) || "Failed to load booking details."}
               </p>
             </div>
@@ -82,7 +82,7 @@ export default function InterviewBookingPage() {
           {bookingQuery.isSuccess && data && !isSuccess && (
             <>
               <div className="mb-4 space-y-1">
-                <p className="text-sm text-slate-600">
+                <p className="text-sm text-muted-foreground">
                   Hi <strong>{data.candidateName}</strong>, please select a time
                   for your{" "}
                   <strong>
@@ -91,7 +91,7 @@ export default function InterviewBookingPage() {
                   interview ({data.durationMinutes} min):
                 </p>
                 {data.notes && (
-                  <p className="text-xs text-slate-500 italic">{data.notes}</p>
+                  <p className="text-xs text-muted-foreground italic">{data.notes}</p>
                 )}
               </div>
 
@@ -107,14 +107,14 @@ export default function InterviewBookingPage() {
                       className={cn(
                         "w-full text-left px-4 py-3 rounded-lg border-2 transition-all text-sm press-scale",
                         isSelected
-                          ? "border-primary bg-blue-50 font-semibold text-slate-900"
-                          : "border-slate-200 hover:border-slate-300 bg-white text-slate-700",
+                          ? "border-primary bg-status-info-surface font-semibold text-muted-foreground"
+                          : "border-border hover:border-border bg-white text-muted-foreground",
                       )}
                     >
                       <span className="block font-medium">
                         {format(start, "EEEE, MMMM d, yyyy")}
                       </span>
-                      <span className="text-slate-500">
+                      <span className="text-muted-foreground">
                         {format(start, "h:mm a")} –{" "}
                         {format(new Date(slot.end), "h:mm a")}
                       </span>
@@ -142,21 +142,21 @@ export default function InterviewBookingPage() {
 
           {isSuccess && (
             <div className="text-center py-6 space-y-3">
-              <div className="w-16 h-16 rounded-full bg-emerald-100 mx-auto flex items-center justify-center">
-                <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+              <div className="w-16 h-16 rounded-full bg-status-success-surface mx-auto flex items-center justify-center">
+                <CheckCircle2 className="w-8 h-8 text-status-success-ink" />
               </div>
-              <p className="text-lg font-semibold text-slate-900">
+              <p className="text-lg font-semibold text-muted-foreground">
                 Interview Scheduled!
               </p>
               {selectedSlot && (
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-muted-foreground">
                   {format(
                     new Date(selectedSlot),
                     "EEEE, MMMM d, yyyy 'at' h:mm a",
                   )}
                 </p>
               )}
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-muted-foreground">
                 You will receive a confirmation email with further details.
                 Thank you!
               </p>

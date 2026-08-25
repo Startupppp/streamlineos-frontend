@@ -42,7 +42,7 @@ export function PushPermissionCard() {
   if (permission === "granted") {
     return (
       <div className="flex items-start gap-3 rounded-xl border border-border bg-card p-4 shadow-sm">
-        <BellIcon ref={iconRef} size={16} className="mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+        <BellIcon ref={iconRef} size={16} className="mt-0.5 shrink-0 text-status-success-ink" />
         <div className="min-w-0">
           <p className="text-sm font-medium">Push notifications are on</p>
           <p className="text-sm text-muted-foreground">

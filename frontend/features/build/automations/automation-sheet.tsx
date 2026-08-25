@@ -225,7 +225,7 @@ export function AutomationSheet({
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-medium text-foreground">
-                    Actions <span className="text-red-500 dark:text-red-400">*</span>
+                    Actions <span className="text-status-danger-ink">*</span>
                   </label>
                   <AnimatedIconButton
                     type="button"
@@ -273,7 +273,7 @@ export function AutomationSheet({
                   </div>
                 ))}
                 {form.formState.errors.actions?.root && (
-                  <p className="text-xs text-red-500 dark:text-red-400">
+                  <p className="text-xs text-status-danger-ink">
                     {form.formState.errors.actions.root.message}
                   </p>
                 )}

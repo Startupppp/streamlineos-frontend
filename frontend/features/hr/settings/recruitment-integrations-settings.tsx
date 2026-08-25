@@ -106,7 +106,7 @@ function PortalCard({
             variant="outline"
             className={
               connected
-                ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-dense dark:text-emerald-300"
+                ? "bg-status-success-surface text-status-success-ink border-status-success-rule text-dense"
                 : "bg-muted text-muted-foreground border-border text-dense"
             }
           >
@@ -191,7 +191,7 @@ export function HrRecruitmentIntegrationsSettings({ embedded = false }: HrRecrui
         </div>
       ) : (
         <div className="space-y-6">
-          <div className="rounded-lg border border-blue-200 bg-blue-500/5 p-4 text-sm text-blue-700 dark:border-blue-500/30 dark:text-blue-300">
+          <div className="rounded-lg border border-status-info-rule bg-status-info-surface p-4 text-sm text-status-info-ink">
             <strong>How it works:</strong> Each platform sends a webhook to the URL shown below
             whenever a candidate applies. The ATS automatically creates a candidate record and
             deduplicates by email/phone.

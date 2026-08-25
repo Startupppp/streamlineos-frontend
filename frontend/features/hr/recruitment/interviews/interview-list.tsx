@@ -24,33 +24,33 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 const RESULT_CONFIG: Record<string, { label: string; className: string; icon: React.ElementType }> = {
   PASSED: {
     label: "Passed",
-    className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800",
+    className: "bg-status-success-surface text-status-success-ink border-status-success-rule",
     icon: CheckCircle2,
   },
   FAILED: {
     label: "Failed",
-    className: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 border-rose-200 dark:border-rose-800",
+    className: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
     icon: XCircle,
   },
   NO_SHOW: {
     label: "No Show",
-    className: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300 border-orange-200 dark:border-orange-800",
+    className: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
     icon: XCircle,
   },
   PENDING: {
     label: "Pending",
-    className: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200 dark:border-amber-800",
+    className: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
     icon: Clock,
   },
 };
 
 const TYPE_CONFIG: Record<string, { className: string }> = {
-  VIDEO: { className: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
-  PHONE: { className: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
-  ONSITE: { className: "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300" },
-  TECHNICAL: { className: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
-  HR: { className: "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300" },
-  FINAL: { className: "bg-muted text-muted-foreground dark:bg-slate-800 dark:text-slate-300" },
+  VIDEO: { className: "bg-status-info-surface text-status-info-ink" },
+  PHONE: { className: "bg-status-info-surface text-status-info-ink" },
+  ONSITE: { className: "bg-status-success-surface text-status-success-ink" },
+  TECHNICAL: { className: "bg-status-info-surface text-status-info-ink" },
+  HR: { className: "bg-category-pink-surface text-category-pink-ink" },
+  FINAL: { className: "bg-muted text-muted-foreground" },
 };
 
 function ResultBadge({ result }: { result: string | null }) {
@@ -78,7 +78,7 @@ function TypeBadge({ type, panelCount }: { type: string | null; panelCount?: num
         {type ?? "—"}
       </span>
       {panelCount && panelCount > 1 && (
-        <span className="inline-flex items-center gap-0.5 text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+        <span className="inline-flex items-center gap-0.5 text-micro font-medium px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
           <Users className="h-2.5 w-2.5" />
           {panelCount}
         </span>

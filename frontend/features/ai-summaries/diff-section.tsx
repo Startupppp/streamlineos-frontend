@@ -29,7 +29,7 @@ function FieldDiffRows({ fd, label }: FieldDiffRowsProps) {
         {label}
       </p>
       {fd.added.map((item) => (
-        <p key={item} className="flex items-start gap-1 text-emerald-700 dark:text-emerald-400">
+        <p key={item} className="flex items-start gap-1 text-status-success-ink">
           <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
           {item}
         </p>

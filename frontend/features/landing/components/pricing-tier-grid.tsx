@@ -96,8 +96,8 @@ function PricingCard({
       transition={{ duration: 0.4, delay: index * 0.04, ease: EASE_OUT }}
       className={`relative flex flex-col rounded-2xl border bg-white transition-shadow hover:shadow-md min-w-0 ${
         tier.highlight
-          ? "border-blue-300 shadow-sm ring-1 ring-blue-200/60"
-          : "border-slate-200/90 shadow-sm"
+          ? "border-status-info-rule shadow-sm ring-1 ring-status-info-rule"
+          : "border-border shadow-sm"
       }`}
     >
       {tier.badge ? (
@@ -106,13 +106,13 @@ function PricingCard({
         </div>
       ) : null}
 
-      <div className="border-b border-slate-100 px-4 sm:px-5 pt-6 pb-5">
-        <h3 className="font-display text-lg font-bold text-slate-900">{tier.name}</h3>
-        <p className="mt-0.5 text-xs text-slate-500">{tier.tagline}</p>
+      <div className="border-b border-border px-4 sm:px-5 pt-6 pb-5">
+        <h3 className="font-display text-lg font-bold text-muted-foreground">{tier.name}</h3>
+        <p className="mt-0.5 text-xs text-muted-foreground">{tier.tagline}</p>
 
         <div className="mt-5 flex items-baseline gap-2 flex-wrap">
           {comparePrice ? (
-            <span className="text-base font-medium text-slate-400 line-through tabular-nums">
+            <span className="text-base font-medium text-muted-foreground line-through tabular-nums">
               {comparePrice}
             </span>
           ) : null}
@@ -123,18 +123,18 @@ function PricingCard({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2, ease: EASE_OUT }}
-              className="font-display text-2xl sm:text-3xl font-extrabold text-slate-900 tabular-nums leading-none"
+              className="font-display text-2xl sm:text-3xl font-extrabold text-muted-foreground tabular-nums leading-none"
             >
               {displayPrice}
             </motion.span>
           </AnimatePresence>
-          <span className="text-sm text-slate-500">
+          <span className="text-sm text-muted-foreground">
             {isFree ? tier.period : "/ user / mo"}
           </span>
         </div>
 
         {period === "annual" && !isFree && tier.monthly && tier.annual ? (
-          <p className="mt-2 text-xs font-medium text-emerald-600">
+          <p className="mt-2 text-xs font-medium text-status-success-ink">
             Save {PRICING.annualDiscountPct}% vs monthly
           </p>
         ) : null}
@@ -144,10 +144,10 @@ function PricingCard({
         {bullets.map((item) => (
           <li
             key={item}
-            className="flex items-start gap-2.5 text-sm text-slate-600 leading-snug"
+            className="flex items-start gap-2.5 text-sm text-muted-foreground leading-snug"
           >
             <Check
-              className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600"
+              className="mt-0.5 h-4 w-4 shrink-0 text-status-success-ink"
               strokeWidth={2.5}
               aria-hidden
             />
@@ -168,7 +168,7 @@ function PricingCard({
         </Link>
         {!isFree && tier.id !== "enterprise" ? (
           <Link href={`${tier.ctaHref}&trial=1`} className="block">
-            <Button variant="ghost" className="h-9 w-full text-xs text-slate-500">
+            <Button variant="ghost" className="h-9 w-full text-xs text-muted-foreground">
               Try free for 14 days
             </Button>
           </Link>

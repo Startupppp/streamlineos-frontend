@@ -324,7 +324,7 @@ export function InspectionDetailSheet({ open, onOpenChange, inspectionId }: Prop
                       <div key={idx} className="flex items-center gap-2 text-xs">
                         <Badge
                           variant="outline"
-                          className={cn("h-4 text-[9px] px-1.5 py-0 border shrink-0", INSPECTION_STATUS_BADGE[entry.status])}
+                          className={cn("h-4 text-micro px-1.5 py-0 border shrink-0", INSPECTION_STATUS_BADGE[entry.status])}
                         >
                           {INSPECTION_STATUS_LABEL[entry.status]}
                         </Badge>

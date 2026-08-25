@@ -82,8 +82,8 @@ const QUIET_HOURS_OPTIONS = [
 ] as const;
 
 const priorityBadgeClass: Record<NotificationPriority, string> = {
-  CRITICAL: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
-  HIGH: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  CRITICAL: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
+  HIGH: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   NORMAL: "bg-muted text-muted-foreground border-border",
   LOW: "bg-muted text-muted-foreground border-border",
 };
@@ -400,7 +400,7 @@ function EventRow({
             {event.defaultPriority}
           </Badge>
           {event.mandatory && (
-            <Badge variant="outline" className="text-micro h-4 px-1.5 shrink-0 border-orange-200 text-orange-700 bg-orange-50 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30">
+            <Badge variant="outline" className="text-micro h-4 px-1.5 shrink-0 border-status-warning-rule text-status-warning-ink bg-status-warning-surface">
               Mandatory
             </Badge>
           )}

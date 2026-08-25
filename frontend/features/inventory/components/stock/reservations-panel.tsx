@@ -145,7 +145,7 @@ export function ReservationsPanel() {
         return (
           <Badge
             variant="outline"
-            className={cn("h-4 text-[9px] px-1.5 py-0 border", RESERVATION_STATUS_BADGE[status])}
+            className={cn("h-4 text-micro px-1.5 py-0 border", RESERVATION_STATUS_BADGE[status])}
           >
             {RESERVATION_STATUS_LABEL[status]}
           </Badge>

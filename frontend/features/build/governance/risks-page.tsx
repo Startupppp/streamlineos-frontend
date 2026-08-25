@@ -38,18 +38,18 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 const LEVEL_LABEL: Record<"low" | "medium" | "high", string> = { low: "Low", medium: "Medium", high: "High" };
 const LEVEL_STYLE: Record<"low" | "medium" | "high", string> = {
   low: "text-muted-foreground border-border",
-  medium: "text-amber-600 border-amber-200 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  high: "text-red-600 border-red-200 bg-red-50 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  medium: "text-status-warning-ink border-status-warning-rule bg-status-warning-surface",
+  high: "text-status-danger-ink border-status-danger-rule bg-status-danger-surface",
 };
 const STATUS_LABEL: Record<RiskStatus, string> = {
   open: "Open", mitigating: "Mitigating", monitoring: "Monitoring", accepted: "Accepted", closed: "Closed",
 };
 const STATUS_STYLE: Record<RiskStatus, string> = {
   open: "text-primary border-border bg-primary/5 dark:bg-primary/10",
-  mitigating: "text-amber-600 border-amber-200 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  mitigating: "text-status-warning-ink border-status-warning-rule bg-status-warning-surface",
   monitoring: "text-primary border-border bg-primary/5 dark:bg-primary/10",
   accepted: "text-muted-foreground border-border",
-  closed: "text-emerald-600 border-emerald-200 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  closed: "text-status-success-ink border-status-success-rule bg-status-success-surface",
 };
 
 function NewRiskButton({ onClick }: { onClick: () => void }) {

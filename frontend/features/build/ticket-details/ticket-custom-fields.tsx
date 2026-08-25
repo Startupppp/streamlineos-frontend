@@ -175,7 +175,7 @@ export function TicketCustomFields({
             className={cn(
               "text-xs text-muted-foreground w-28 shrink-0 truncate",
               field.required &&
-                "after:content-['*'] after:text-red-400 after:ml-0.5",
+                "after:content-['*'] after:text-status-danger-ink after:ml-0.5",
             )}
             title={field.name}
           >

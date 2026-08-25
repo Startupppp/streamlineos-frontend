@@ -94,7 +94,7 @@ const vendorLedgerColumns: DataTableColumn<VendorLedgerLine>[] = [
     key: "credit",
     header: "Credit",
     headerClassName: "w-[120px] text-right",
-    className: "text-right font-mono text-sm tabular-nums text-emerald-600",
+    className: "text-right font-mono text-sm tabular-nums text-status-success-ink",
     cell: (row) => (
       <>{Number(row.credit) > 0 ? formatCurrency(row.credit) : "—"}</>
     ),

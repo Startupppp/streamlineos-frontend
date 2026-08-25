@@ -39,13 +39,13 @@ const CR_STATUS_LABELS: Record<ChangeRequestStatus, string> = {
 
 const CR_STATUS_STYLES: Record<ChangeRequestStatus, string> = {
   submitted: "text-muted-foreground border-border",
-  under_review: "text-blue-600 border-blue-200 dark:text-blue-400 dark:border-blue-500/30",
-  estimated: "text-amber-600 border-amber-200 dark:text-amber-400 dark:border-amber-500/30",
-  awaiting_approval: "text-orange-600 border-orange-200 dark:text-orange-400 dark:border-orange-500/30",
-  approved: "text-green-600 border-green-200 dark:text-green-400 dark:border-green-500/30",
-  rejected: "text-red-600 border-red-200 dark:text-red-400 dark:border-red-500/30",
-  in_progress: "text-blue-600 border-blue-200 dark:text-blue-400 dark:border-blue-500/30",
-  completed: "text-emerald-700 border-emerald-300 dark:text-emerald-400 dark:border-emerald-500/30",
+  under_review: "text-status-info-ink border-status-info-rule",
+  estimated: "text-status-warning-ink border-status-warning-rule",
+  awaiting_approval: "text-status-warning-ink border-status-warning-rule",
+  approved: "text-status-success-ink border-status-success-rule",
+  rejected: "text-status-danger-ink border-status-danger-rule",
+  in_progress: "text-status-info-ink border-status-info-rule",
+  completed: "text-status-success-ink border-status-success-rule",
 };
 
 const CR_STATUSES: ChangeRequestStatus[] = [

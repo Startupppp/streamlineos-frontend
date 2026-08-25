@@ -120,7 +120,7 @@ export function SystemAccountsSection({ systemAccounts, canManage }: SystemAccou
   }
 
   function getMappingRowClassName(m: SystemAccountMapping): string {
-    return !m.accountId ? "bg-amber-50/60 dark:bg-amber-500/10" : "";
+    return !m.accountId ? "bg-status-warning-surface" : "";
   }
 
   const columns = useMemo<DataTableColumn<SystemAccountMapping>[]>(() => {
@@ -139,7 +139,7 @@ export function SystemAccountsSection({ systemAccounts, canManage }: SystemAccou
               {row.account.code} – {row.account.name}
             </span>
           ) : (
-            <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">Not mapped</span>
+            <span className="text-xs text-status-warning-ink font-medium">Not mapped</span>
           ),
       },
     ];

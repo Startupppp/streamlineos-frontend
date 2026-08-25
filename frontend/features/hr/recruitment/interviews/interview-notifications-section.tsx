@@ -19,7 +19,7 @@ export function InterviewNotificationsSection({
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2 mb-1">
-        <div className="w-7 rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 flex items-center justify-center shrink-0">
+        <div className="w-7 rounded-lg bg-status-warning-surface text-status-warning-ink flex items-center justify-center shrink-0">
           <Bell className="h-3.5 w-3.5" />
         </div>
         <span className="text-sm font-semibold text-foreground">

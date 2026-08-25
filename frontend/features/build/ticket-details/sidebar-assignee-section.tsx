@@ -47,7 +47,7 @@ export function SidebarAssigneeSection({
               >
                 <Avatar className="h-7 w-7 shrink-0">
                   <AvatarImage src={resolveImageUrl(person.image)} />
-                  <AvatarFallback className="bg-primary/10 text-[8px] text-primary">
+                  <AvatarFallback className="bg-primary/10 text-micro text-primary">
                     {getUserInitials(person)}
                   </AvatarFallback>
                 </Avatar>

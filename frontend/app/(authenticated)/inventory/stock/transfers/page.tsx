@@ -86,7 +86,7 @@ function buildTransferColumns(
       cell: (row) => (
         <Badge
           variant="outline"
-          className={cn("h-4 text-[9px] px-1.5 py-0 font-medium", TRANSFER_STATUS_BADGE[row.status])}
+          className={cn("h-4 text-micro px-1.5 py-0 font-medium", TRANSFER_STATUS_BADGE[row.status])}
         >
           {TRANSFER_STATUS_LABEL[row.status]}
         </Badge>

@@ -11,19 +11,19 @@ const leaveStatusConfig: Record<
   PENDING: {
     label: "Pending",
     className:
-      "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 border-amber-200 dark:border-amber-500/30",
+      "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
     icon: Clock,
   },
   APPROVED: {
     label: "Approved",
     className:
-      "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30",
+      "bg-status-success-surface text-status-success-ink border-status-success-rule",
     icon: CheckCircle2,
   },
   REJECTED: {
     label: "Rejected",
     className:
-      "bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300 border-rose-200 dark:border-rose-500/30",
+      "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
     icon: XCircle,
   },
 };

@@ -251,7 +251,7 @@ export function KbArticleEditor({
       }
     >
       {pendingDraft && (
-        <div className="mb-4 flex flex-col gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-amber-900 dark:border-amber-800/50 dark:bg-amber-950/20 dark:text-amber-200 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-4 flex flex-col gap-3 rounded-lg border border-status-warning-rule bg-status-warning-surface px-4 py-3 text-status-warning-ink sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-2 min-w-0">
             <History className="h-4 w-4 mt-0.5 shrink-0" />
             <p className="text-sm">

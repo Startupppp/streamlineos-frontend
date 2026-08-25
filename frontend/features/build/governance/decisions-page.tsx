@@ -34,10 +34,10 @@ const DEC_STATUS_LABEL: Record<DecisionStatus, string> = {
   proposed: "Proposed", accepted: "Accepted", superseded: "Superseded", revisit: "Revisit",
 };
 const DEC_STATUS_STYLE: Record<DecisionStatus, string> = {
-  proposed: "text-blue-600 border-blue-200 bg-blue-50 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  accepted: "text-emerald-600 border-emerald-200 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  proposed: "text-status-info-ink border-status-info-rule bg-status-info-surface",
+  accepted: "text-status-success-ink border-status-success-rule bg-status-success-surface",
   superseded: "text-muted-foreground border-border",
-  revisit: "text-amber-600 border-amber-200 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  revisit: "text-status-warning-ink border-status-warning-rule bg-status-warning-surface",
 };
 
 function NewDecisionButton({ onClick }: { onClick: () => void }) {

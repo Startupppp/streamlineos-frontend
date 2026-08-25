@@ -63,7 +63,7 @@ function formatAmount(value: string): string {
 
 function StatusBadge({ status }: { status: PurchaseOrderStatus }) {
   return (
-    <Badge variant="outline" className={cn("h-4 text-[9px] px-1.5 py-0", PO_STATUS_BADGE[status])}>
+    <Badge variant="outline" className={cn("h-4 text-micro px-1.5 py-0", PO_STATUS_BADGE[status])}>
       {PO_STATUS_LABEL[status]}
     </Badge>
   );
@@ -106,9 +106,9 @@ const PO_LINE_COLUMNS: DataTableColumn<PurchaseOrderLine>[] = [
       <span
         className={
           Number(row.quantityReceived) >= Number(row.quantity)
-            ? "text-emerald-600 font-medium"
+            ? "text-status-success-ink font-medium"
             : Number(row.quantityReceived) > 0
-              ? "text-amber-600 font-medium"
+              ? "text-status-warning-ink font-medium"
               : "text-muted-foreground"
         }
       >

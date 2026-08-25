@@ -519,7 +519,7 @@ function TemplateRow({
             className={cn(
               "text-micro h-4 px-1.5 shrink-0",
               template.isActive
-                ? "border-emerald-300 text-emerald-600"
+                ? "border-status-success-rule text-status-success-ink"
                 : "text-muted-foreground",
             )}
           >
@@ -531,7 +531,7 @@ function TemplateRow({
             template.approvalStatus !== "APPROVED" && (
               <Badge
                 variant="outline"
-                className="text-micro h-4 px-1.5 shrink-0 border-amber-300 text-amber-600 dark:border-amber-500/30 dark:text-amber-300"
+                className="text-micro h-4 px-1.5 shrink-0 border-status-warning-rule text-status-warning-ink"
               >
                 {template.approvalStatus === "REJECTED"
                   ? "Rejected"

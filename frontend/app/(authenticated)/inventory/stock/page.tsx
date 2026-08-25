@@ -266,15 +266,15 @@ export default function StockLevelsPage() {
       </div>
       <div className="ml-auto hidden lg:flex items-center gap-3 text-dense text-muted-foreground">
         <span className="flex items-center gap-1">
-          <AlertTriangle className="h-3 w-3 text-red-500" aria-hidden="true" />
+          <AlertTriangle className="h-3 w-3 text-status-danger-ink" aria-hidden="true" />
           Below reorder point
         </span>
         <span className="flex items-center gap-1">
-          <TrendingDown className="h-3 w-3 text-amber-500" aria-hidden="true" />
+          <TrendingDown className="h-3 w-3 text-status-warning-ink" aria-hidden="true" />
           Below minimum
         </span>
         <span className="flex items-center gap-1">
-          <CheckCircle2 className="h-3 w-3 text-emerald-500" aria-hidden="true" />
+          <CheckCircle2 className="h-3 w-3 text-status-success-ink" aria-hidden="true" />
           OK
         </span>
       </div>

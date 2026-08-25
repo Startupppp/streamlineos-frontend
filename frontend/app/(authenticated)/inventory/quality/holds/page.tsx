@@ -194,7 +194,7 @@ function HoldsPageInner() {
       cell: (r) => (
         <Badge
           variant="outline"
-          className={cn("h-4 text-[9px] px-1.5 py-0 border", QUALITY_HOLD_STATUS_BADGE[r.status])}
+          className={cn("h-4 text-micro px-1.5 py-0 border", QUALITY_HOLD_STATUS_BADGE[r.status])}
         >
           {QUALITY_HOLD_STATUS_LABEL[r.status]}
         </Badge>

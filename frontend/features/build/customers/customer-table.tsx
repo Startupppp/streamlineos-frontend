@@ -30,18 +30,18 @@ function healthScoreToStatus(
     return {
       label: "Healthy",
       className:
-        "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+        "bg-status-success-surface text-status-success-ink border-status-success-rule",
     };
   if (score >= 40)
     return {
       label: "At risk",
       className:
-        "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+        "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
     };
   return {
     label: "Critical",
     className:
-      "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+      "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
   };
 }
 

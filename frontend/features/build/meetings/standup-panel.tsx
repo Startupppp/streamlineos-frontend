@@ -152,7 +152,7 @@ export function StandupPanel({
                 {entry.blockers ? (
                   <div>
                     <p className="mb-0.5 text-micro uppercase tracking-wide text-muted-foreground">Blockers</p>
-                    <p className={cn(TEXT_BODY, "whitespace-pre-wrap text-sm text-amber-700 dark:text-amber-400")}>
+                    <p className={cn(TEXT_BODY, "whitespace-pre-wrap text-sm text-status-warning-ink")}>
                       {entry.blockers}
                     </p>
                   </div>

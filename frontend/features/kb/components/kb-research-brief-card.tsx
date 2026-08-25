@@ -17,8 +17,8 @@ interface StatusConfig {
 const STATUS_MAP: Record<KbResearchBriefStatus, StatusConfig> = {
   queued: { label: "Queued", className: "bg-muted text-muted-foreground border-border" },
   running: { label: "Running", className: "bg-primary/10 text-primary border-primary/20" },
-  completed: { label: "Completed", className: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
-  failed: { label: "Failed", className: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30" },
+  completed: { label: "Completed", className: "bg-status-success-surface text-status-success-ink border-status-success-rule" },
+  failed: { label: "Failed", className: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule" },
 };
 
 interface KbResearchBriefCardProps {

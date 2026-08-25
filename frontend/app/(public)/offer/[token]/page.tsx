@@ -141,13 +141,13 @@ export default function OfferAcceptancePage({ params }: Props) {
       <main className="min-h-dvh bg-background flex items-center justify-center px-4">
         <Card className="w-full max-w-md text-center">
           <CardContent className="py-10">
-            <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 ${accepted ? "bg-green-100 dark:bg-green-900/30" : declined ? "bg-red-100 dark:bg-red-900/30" : countered ? "bg-blue-100 dark:bg-blue-900/30" : "bg-muted"}`}>
+            <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 ${accepted ? "bg-status-success-surface" : declined ? "bg-status-danger-surface" : countered ? "bg-status-info-surface" : "bg-muted"}`}>
               {accepted ? (
-                <svg className="w-7 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12" /></svg>
+                <svg className="w-7 text-status-success-ink" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12" /></svg>
               ) : declined ? (
-                <svg className="w-7 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                <svg className="w-7 text-status-danger-ink" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
               ) : countered ? (
-                <svg className="w-7 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 1l4 4-4 4" /><path d="M3 11V9a4 4 0 0 1 4-4h14" /><path d="M7 23l-4-4 4-4" /><path d="M21 13v2a4 4 0 0 1-4 4H3" /></svg>
+                <svg className="w-7 text-status-info-ink" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 1l4 4-4 4" /><path d="M3 11V9a4 4 0 0 1 4-4h14" /><path d="M7 23l-4-4 4-4" /><path d="M21 13v2a4 4 0 0 1-4 4H3" /></svg>
               ) : (
                 <svg className="w-7 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /></svg>
               )}

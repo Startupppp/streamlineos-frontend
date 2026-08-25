@@ -75,7 +75,7 @@ const TemplateCard = memo(function TemplateCard({ template, index, onEdit, onDel
           variant={template.isActive ? "default" : "secondary"}
           className={
             template.isActive
-              ? "bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100 text-dense dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30 dark:hover:bg-emerald-500/10"
+              ? "bg-status-success-surface text-status-success-ink border-status-success-rule hover:bg-status-success-surface text-dense"
               : "text-dense"
           }
         >
@@ -234,7 +234,7 @@ export function SalaryStructuresPageContent() {
         </AnimatedIconButton>
       }
     >
-      <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+      <div className="flex items-start gap-2 rounded-lg border border-status-warning-rule bg-status-warning-surface px-3 py-2.5 text-xs text-status-warning-ink">
         <ArrowRight className="mt-0.5 h-3.5 w-3.5 shrink-0" />
         <span>
           These are <span className="font-medium">reference templates</span> for

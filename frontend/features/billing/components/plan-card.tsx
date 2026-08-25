@@ -95,7 +95,7 @@ export function PlanCard({
       <ul className="flex-1 space-y-2 mb-5">
         {config.features.map((feature) => (
           <li key={feature} className="flex items-start gap-2 text-xs text-muted-foreground">
-            <Check className="h-3.5 w-3.5 text-emerald-500 mt-0.5 shrink-0" />
+            <Check className="h-3.5 w-3.5 text-status-success-ink mt-0.5 shrink-0" />
             {feature}
           </li>
         ))}

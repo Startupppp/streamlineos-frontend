@@ -223,13 +223,13 @@ export function UserImportDialog({ open, onOpenChange }: UserImportDialogProps) 
 
               {importResult.results.some((r) => !r.success) && (
                 <div className="border rounded-md overflow-hidden max-h-40 overflow-y-auto">
-                  <div className="bg-red-50 dark:bg-red-500/10 border-b px-2 py-1 flex items-center gap-1.5 text-xs font-medium text-red-600 dark:text-red-400">
+                  <div className="bg-status-danger-surface border-b px-2 py-1 flex items-center gap-1.5 text-xs font-medium text-status-danger-ink">
                     <AlertTriangle className="h-3.5 w-3.5" />
                     Failed rows
                   </div>
                   {importResult.results.filter((r) => !r.success).map((r, i) => (
                     <div key={i} className="flex items-center gap-2 px-2 py-1.5 text-xs border-b last:border-b-0">
-                      <XCircle className="h-3.5 w-3.5 text-red-400 shrink-0" />
+                      <XCircle className="h-3.5 w-3.5 text-status-danger-ink shrink-0" />
                       <span className="truncate">{r.email}</span>
                       <span className="text-muted-foreground ml-auto shrink-0">{r.error}</span>
                     </div>
@@ -239,7 +239,7 @@ export function UserImportDialog({ open, onOpenChange }: UserImportDialogProps) 
 
               {importResult.succeeded > 0 && (
                 <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                  <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+                  <CheckCircle className="h-3.5 w-3.5 text-status-success-ink" />
                   Invitation emails sent to {importResult.succeeded} user(s).
                 </p>
               )}

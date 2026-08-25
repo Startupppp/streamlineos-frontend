@@ -439,7 +439,7 @@ export function ChannelInfoPanel({
                   )}
                 </button>
               )}
-              <TruncatedText text={displayName} className="text-[17px] font-bold max-w-[200px]" />
+              <TruncatedText text={displayName} className="text-base font-bold max-w-[200px]" />
               {channel?.type === "DIRECT" ? (
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {otherMember
@@ -474,7 +474,7 @@ export function ChannelInfoPanel({
                       <AvatarImage
                         src={resolveImageUrl(pin.message.sender?.image)}
                       />
-                      <AvatarFallback className="text-[8px] font-bold">
+                      <AvatarFallback className="text-micro font-bold">
                         {getInitials(pin.message.sender?.name)}
                       </AvatarFallback>
                     </Avatar>
@@ -519,7 +519,7 @@ export function ChannelInfoPanel({
 
             {onlineMembers.length > 0 && (
               <div className="mb-3">
-                <p className="text-micro font-bold text-emerald-600/80 uppercase tracking-wider px-2 mb-1">
+                <p className="text-micro font-bold text-status-success-ink uppercase tracking-wider px-2 mb-1">
                   Online — {onlineMembers.length}
                 </p>
                 <div className="space-y-0.5">

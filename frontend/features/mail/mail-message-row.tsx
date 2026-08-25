@@ -58,7 +58,7 @@ const StarButton = forwardRef<HTMLButtonElement, StarButtonProps>(
         className={cn(
           "flex items-center justify-center h-6 w-6 rounded transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
           isStarred
-            ? "text-amber-500"
+            ? "text-status-warning-ink"
             : "text-muted-foreground hover:text-foreground",
         )}
         onClick={handleClick}
@@ -222,7 +222,7 @@ export function MailMessageRow({
             )}
           />
           {priority && (
-            <span className="shrink-0 rounded px-1 py-px text-[9px] font-semibold uppercase tracking-wide bg-amber-500/15 text-amber-700 border border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
+            <span className="shrink-0 rounded px-1 py-px text-micro font-semibold uppercase tracking-wide bg-status-warning-surface text-status-warning-ink border border-status-warning-rule">
               Act
             </span>
           )}

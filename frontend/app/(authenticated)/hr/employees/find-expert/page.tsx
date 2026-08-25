@@ -30,10 +30,10 @@ const PROFICIENCY_LABELS: Record<number, string> = {
 
 const PROFICIENCY_COLORS: Record<number, string> = {
   1: "bg-muted text-muted-foreground",
-  2: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-  3: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
-  4: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300",
-  5: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
+  2: "bg-status-info-surface text-status-info-ink",
+  3: "bg-status-warning-surface text-status-warning-ink",
+  4: "bg-status-success-surface text-status-success-ink",
+  5: "bg-status-info-surface text-status-info-ink",
 };
 
 const ROLES = [
@@ -233,7 +233,7 @@ export default function FindExpertPage() {
                                 >
                                   {skill.name}
                                   {isMatched && (
-                                    <span className="opacity-70 text-[9px]">
+                                    <span className="opacity-70 text-micro">
                                       {skill.level}
                                     </span>
                                   )}

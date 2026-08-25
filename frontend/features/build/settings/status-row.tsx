@@ -46,16 +46,16 @@ export const TYPE_CONFIG: Record<StateType, { label: string; color: string }> = 
   },
   started: {
     label: "Started",
-    color: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
+    color: "bg-status-info-surface text-status-info-ink",
   },
   completed: {
     label: "Completed",
     color:
-      "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
+      "bg-status-success-surface text-status-success-ink",
   },
   cancelled: {
     label: "Cancelled",
-    color: "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-300",
+    color: "bg-status-danger-surface text-status-danger-ink",
   },
 };
 
@@ -327,8 +327,8 @@ export const StatusRow = memo(function StatusRow({
               className={cn(
                 "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100",
                 "h-6 w-6 flex items-center justify-center rounded",
-                "text-muted-foreground hover:text-red-600 hover:bg-red-50",
-                "dark:hover:text-red-400 dark:hover:bg-red-500/10 transition-all",
+                "text-muted-foreground hover:text-status-danger-ink hover:bg-status-danger-surface",
+                "transition-all",
               )}
               aria-label={`Delete status ${state.name}`}
               {...deleteHoverHandlers}

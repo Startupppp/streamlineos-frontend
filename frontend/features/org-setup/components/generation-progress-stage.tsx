@@ -263,12 +263,12 @@ export function GenerationProgressStage({
             initial={reduceMotion ? false : { opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25, ease: PREVIEW_EASE }}
-            className="mt-2 rounded-xl border border-amber-200/60 bg-amber-50 px-3.5 py-3 dark:border-amber-500/30 dark:bg-amber-500/10"
+            className="mt-2 rounded-xl border border-status-warning-rule bg-status-warning-surface px-3.5 py-3"
           >
-            <p className="text-xs font-semibold text-amber-800 dark:text-amber-300">
+            <p className="text-xs font-semibold text-status-warning-ink">
               Starter content wasn&apos;t generated
             </p>
-            <p className="mt-0.5 break-words text-xs text-amber-700 dark:text-amber-400">
+            <p className="mt-0.5 break-words text-xs text-status-warning-ink">
               {generationPending.failureMessage}
             </p>
             <div className="mt-2.5 flex gap-2">
@@ -277,7 +277,7 @@ export function GenerationProgressStage({
                 variant="outline"
                 onClick={onRetryGeneration}
                 isPending={isRetryingGeneration}
-                className="h-7 gap-1.5 border-amber-300/60 bg-amber-50 text-amber-800 hover:bg-amber-100 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-300 dark:hover:bg-amber-500/20"
+                className="h-7 gap-1.5 border-status-warning-rule bg-status-warning-surface text-status-warning-ink hover:bg-status-warning-surface"
               >
                 <RefreshCw className="h-3 w-3" aria-hidden />
                 Retry
@@ -287,7 +287,7 @@ export function GenerationProgressStage({
                 variant="ghost"
                 onClick={onContinueWithoutGeneration}
                 disabled={isRetryingGeneration}
-                className="h-7 text-amber-700 hover:bg-amber-100 dark:text-amber-300 dark:hover:bg-amber-500/20"
+                className="h-7 text-status-warning-ink hover:bg-status-warning-surface"
               >
                 Continue to dashboard
               </Button>

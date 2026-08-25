@@ -60,7 +60,7 @@ const PAGE_LIMIT = 20;
 
 function StatusBadge({ status }: { status: CycleCountStatus }) {
   return (
-    <Badge variant="outline" className={`text-[9px] h-4 px-1.5 py-0 ${CYCLE_COUNT_STATUS_BADGE[status]}`}>
+    <Badge variant="outline" className={`text-micro h-4 px-1.5 py-0 ${CYCLE_COUNT_STATUS_BADGE[status]}`}>
       {CYCLE_COUNT_STATUS_LABEL[status]}
     </Badge>
   );

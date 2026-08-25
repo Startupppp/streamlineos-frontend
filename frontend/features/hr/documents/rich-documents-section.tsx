@@ -45,7 +45,7 @@ function RichDocumentRow({ doc, onDelete, isDeletePending, canManage }: RichDocu
               </span>
             )}
             {doc.isPublished && (
-              <span className="inline-flex items-center gap-0.5 text-micro font-semibold px-1.5 py-0 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
+              <span className="inline-flex items-center gap-0.5 text-micro font-semibold px-1.5 py-0 rounded-full border bg-status-success-surface text-status-success-ink border-status-success-rule">
                 <Globe className="h-2.5 w-2.5" />
                 Published
               </span>

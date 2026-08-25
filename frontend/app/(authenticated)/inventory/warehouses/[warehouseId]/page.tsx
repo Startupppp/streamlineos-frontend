@@ -45,7 +45,7 @@ function LocationRow({ location }: { location: WarehouseLocation }) {
         <Badge
           variant="outline"
           className={cn(
-            "text-[9px] px-1.5 py-0 h-4 shrink-0",
+            "text-micro px-1.5 py-0 h-4 shrink-0",
             LOCATION_TYPE_COLORS[location.locationType],
           )}
         >
@@ -60,7 +60,7 @@ function LocationRow({ location }: { location: WarehouseLocation }) {
         {SPECIAL_LOCATION_TYPES.includes(location.locationType) && (
           <Badge
             variant="outline"
-            className="h-4 text-[9px] px-1.5 py-0 bg-muted text-muted-foreground border-border shrink-0"
+            className="h-4 text-micro px-1.5 py-0 bg-muted text-muted-foreground border-border shrink-0"
           >
             Special
           </Badge>
@@ -68,7 +68,7 @@ function LocationRow({ location }: { location: WarehouseLocation }) {
         {!location.isActive && (
           <Badge
             variant="outline"
-            className="h-4 text-[9px] px-1.5 py-0 bg-muted text-muted-foreground border-border shrink-0"
+            className="h-4 text-micro px-1.5 py-0 bg-muted text-muted-foreground border-border shrink-0"
           >
             Inactive
           </Badge>
@@ -185,7 +185,7 @@ export default function WarehouseDetailPage({
           {warehouse.isDefault && (
             <Badge
               variant="outline"
-              className="h-4 text-[9px] px-1.5 py-0 bg-primary/10 text-foreground border-primary/20"
+              className="h-4 text-micro px-1.5 py-0 bg-primary/10 text-foreground border-primary/20"
             >
               Default
             </Badge>
@@ -193,7 +193,7 @@ export default function WarehouseDetailPage({
           {!warehouse.isActive && (
             <Badge
               variant="outline"
-              className="h-4 text-[9px] px-1.5 py-0 bg-muted text-muted-foreground border-border"
+              className="h-4 text-micro px-1.5 py-0 bg-muted text-muted-foreground border-border"
             >
               Inactive
             </Badge>
@@ -238,7 +238,7 @@ export default function WarehouseDetailPage({
                         <div className="flex items-center gap-2">
                           <Badge
                             variant="outline"
-                            className={cn("text-[9px] h-4 px-1.5 py-0", LOCATION_TYPE_COLORS[lt])}
+                            className={cn("text-micro h-4 px-1.5 py-0", LOCATION_TYPE_COLORS[lt])}
                           >
                             {LOCATION_TYPE_LABELS[lt]}
                           </Badge>

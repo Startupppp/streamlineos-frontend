@@ -15,10 +15,10 @@ import {
 } from "@/lib/person-display";
 
 const TYPE_COLORS: Record<SimulationType, string> = {
-  policy: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-  leave: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
-  attendance: "bg-yellow-50 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-300",
-  approval: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
+  policy: "bg-status-info-surface text-status-info-ink",
+  leave: "bg-status-success-surface text-status-success-ink",
+  attendance: "bg-status-warning-surface text-status-warning-ink",
+  approval: "bg-status-info-surface text-status-info-ink",
   payroll: "bg-muted text-muted-foreground",
 };
 
@@ -72,7 +72,7 @@ export function SimulationHistory() {
       key: "simulation",
       header: "Label",
       cell: (r) => (
-        <span className="text-xs text-amber-700 dark:text-amber-300">
+        <span className="text-xs text-status-warning-ink">
           {String((r.result as Record<string, unknown>)?.simulation ?? "")}
         </span>
       ),

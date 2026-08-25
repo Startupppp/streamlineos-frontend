@@ -65,7 +65,7 @@ export function WorkspacePreviewMain({
             transition={layoutTransition}
             className={cn(
               "truncate font-display font-bold tracking-tight text-foreground",
-              compact ? "text-xs" : "text-sm lg:text-[15px]",
+              compact ? "text-xs" : "text-sm lg:text-sm",
             )}
           >
             {companyLabel}

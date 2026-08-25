@@ -80,8 +80,8 @@ const lineColumns: DataTableColumn<AdjustmentLine>[] = [
     className: "text-right font-mono tabular-nums font-semibold",
     cell: (line) => (
       <span className={cn(
-        line.quantityChange > 0 && "text-emerald-600",
-        line.quantityChange < 0 && "text-red-600",
+        line.quantityChange > 0 && "text-status-success-ink",
+        line.quantityChange < 0 && "text-status-danger-ink",
       )}>
         {line.quantityChange > 0 ? `+${line.quantityChange}` : line.quantityChange}
       </span>

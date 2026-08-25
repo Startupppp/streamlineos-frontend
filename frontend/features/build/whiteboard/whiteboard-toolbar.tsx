@@ -51,7 +51,7 @@ export function WhiteboardToolbar({
     <TooltipProvider delayDuration={400}>
       <div className="flex h-8 items-center gap-1 shrink-0">
         {saveStatus === "dirty" && (
-          <span className="text-xs text-amber-600 font-medium whitespace-nowrap">Unsaved</span>
+          <span className="text-xs text-status-warning-ink font-medium whitespace-nowrap">Unsaved</span>
         )}
         {saveStatus === "saving" && (
           <span className="text-xs text-muted-foreground whitespace-nowrap">Saving…</span>

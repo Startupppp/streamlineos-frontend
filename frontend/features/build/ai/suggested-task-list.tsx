@@ -28,9 +28,9 @@ const PRIORITY_MAP: Record<AiSeverity, TicketPriority> = {
 };
 
 function severityClasses(s: AiSeverity): string {
-  if (s === "high") return "bg-red-50 text-red-700 border-red-200/70 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30";
-  if (s === "medium") return "bg-amber-50 text-amber-700 border-amber-200/70 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30";
-  return "bg-muted text-muted-foreground border-border/70 dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30";
+  if (s === "high") return "bg-status-danger-surface text-status-danger-ink border-status-danger-rule";
+  if (s === "medium") return "bg-status-warning-surface text-status-warning-ink border-status-warning-rule";
+  return "bg-muted text-muted-foreground border-border/70";
 }
 
 type TaskGroup = { label: string; indices: number[] };

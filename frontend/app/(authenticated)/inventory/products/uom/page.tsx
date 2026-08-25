@@ -68,7 +68,7 @@ const uomColumns: DataTableColumn<InventoryUom>[] = [
       uom.isBase ? (
         <Badge
           variant="outline"
-          className="h-4 text-[9px] px-1.5 py-0 border-emerald-200 text-emerald-700 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
+          className="h-4 text-micro px-1.5 py-0 border-status-success-rule text-status-success-ink bg-status-success-surface"
         >
           Yes
         </Badge>

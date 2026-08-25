@@ -53,7 +53,7 @@ export function WellnessWidget() {
     const score = todayCheckin?.score ?? form.getValues("score");
     return (
       <Card className="p-4 bg-card border border-border rounded-xl flex items-center gap-3">
-        <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
+        <CheckCircle2 className="h-5 w-5 text-status-success-ink shrink-0" />
         <div>
           <p className="text-sm font-medium">Today&apos;s check-in recorded</p>
           <p className="text-xs text-muted-foreground">Wellness score: {score}/10</p>

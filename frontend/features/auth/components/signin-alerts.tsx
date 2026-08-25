@@ -43,16 +43,16 @@ export function SignInAlerts({
       )}
 
       {showVerificationHint && (
-        <div className="mb-4 flex items-start gap-2.5 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-500/30 dark:bg-blue-500/10 px-4 py-3">
-          <Mail className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+        <div className="mb-4 flex items-start gap-2.5 rounded-lg border border-status-info-rule bg-status-info-surface px-4 py-3">
+          <Mail className="h-4 w-4 text-status-info-ink mt-0.5 shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-sm text-blue-800 dark:text-blue-300">
+            <p className="text-sm text-status-info-ink">
               Haven&apos;t verified your email yet?
             </p>
             <Button
               type="button"
               variant="link"
-              className="h-auto p-0 text-sm text-blue-700 dark:text-blue-300 font-semibold"
+              className="h-auto p-0 text-sm text-status-info-ink font-semibold"
               onClick={onResendVerification}
               disabled={isResendingVerification || resendCooldown > 0}
               aria-label={

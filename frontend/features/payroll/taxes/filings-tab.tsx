@@ -56,15 +56,15 @@ const FILING_TYPE_OPTIONS: FilingType[] = ["PF_ECR", "ESI", "PT", "TDS_24Q", "FO
 const STATUS_BADGE: Record<FilingStatus, string> = {
   DRAFT: "bg-muted text-muted-foreground border-border",
   EXPORT_PREPARED:
-    "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+    "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   SUBMITTED:
-    "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-500/10 dark:text-sky-300 dark:border-sky-500/30",
+    "bg-status-info-surface text-status-info-ink border-status-info-rule",
   ACKNOWLEDGED:
-    "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+    "bg-status-success-surface text-status-success-ink border-status-success-rule",
   RECONCILED:
-    "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+    "bg-status-success-surface text-status-success-ink border-status-success-rule",
   FAILED:
-    "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30",
+    "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };
 
 const STATUS_LABEL: Record<FilingStatus, string> = {
@@ -264,19 +264,19 @@ export function FilingsTab() {
     <div className="flex flex-1 min-h-0 flex-col gap-3">
       <div
         role="status"
-        className="flex gap-2.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 dark:border-amber-500/30 dark:bg-amber-500/10"
+        className="flex gap-2.5 rounded-lg border border-status-warning-rule bg-status-warning-surface px-3 py-2.5"
       >
-        <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-700 dark:text-amber-300" />
+        <Info className="mt-0.5 h-4 w-4 shrink-0 text-status-warning-ink" />
         <div className="min-w-0 space-y-0.5">
-          <p className="text-xs font-medium text-amber-900 dark:text-amber-100">
+          <p className="text-xs font-medium text-status-warning-ink">
             {honestyLabel}
             {ruleBundle ? (
-              <span className="ml-1.5 font-normal text-amber-800/80 dark:text-amber-200/70">
+              <span className="ml-1.5 font-normal text-status-warning-ink">
                 · rule {ruleBundle}
               </span>
             ) : null}
           </p>
-          <p className="text-dense leading-snug text-amber-800/90 dark:text-amber-200/80">
+          <p className="text-dense leading-snug text-status-warning-ink">
             {capabilityNote}
             {capability && !capability.automaticFiling && !capability.automaticRemittance
               ? " Automatic filing and remittance are not available."

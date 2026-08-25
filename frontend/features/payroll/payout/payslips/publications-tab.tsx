@@ -39,8 +39,8 @@ const PUBLISHABLE_STATUSES: PayrollRunStatus[] = ["LOCKED", "PAID", "PAYSLIPS_PU
 
 const STATUS_CLASSES: Record<PublicationStatus, string> = {
   PENDING: "bg-muted text-muted-foreground border border-border",
-  PUBLISHED: "bg-emerald-50 text-emerald-700 border border-emerald-200/70 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  FAILED: "bg-red-50 text-red-700 border border-red-200/70 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  PUBLISHED: "bg-status-success-surface text-status-success-ink border border-status-success-rule",
+  FAILED: "bg-status-danger-surface text-status-danger-ink border border-status-danger-rule",
 };
 
 function PublishDialog({

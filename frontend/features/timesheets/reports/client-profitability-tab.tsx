@@ -36,7 +36,7 @@ function AmountLines({
           key={l.currency}
           className={cn(
             "tabular-nums",
-            l.value.negative ? "text-red-600 dark:text-red-400" : undefined,
+            l.value.negative ? "text-status-danger-ink" : undefined,
           )}
         >
           {l.value.text}
@@ -105,7 +105,7 @@ const COLUMNS: DataTableColumn<ClientProfitabilityClient>[] = [
     header: "Missing Rate",
     cell: (row) =>
       row.missingRateHours > 0 ? (
-        <span className="tabular-nums text-amber-600 dark:text-amber-400">
+        <span className="tabular-nums text-status-warning-ink">
           {formatReportHours(row.missingRateHours)}
         </span>
       ) : (
@@ -136,7 +136,7 @@ function renderClientMobileCard(row: ClientProfitabilityClient) {
         </p>
       ))}
       {row.missingRateHours > 0 ? (
-        <p className="text-xs tabular-nums text-amber-600 dark:text-amber-400">
+        <p className="text-xs tabular-nums text-status-warning-ink">
           {formatReportHours(row.missingRateHours)} missing a bill rate
         </p>
       ) : null}

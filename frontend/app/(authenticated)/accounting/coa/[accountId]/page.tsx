@@ -43,10 +43,10 @@ interface AccountDetailPageProps {
 
 const TYPE_BADGE_CLASSES: Record<AccountType, string> = {
   ASSET: "border-primary/30 text-foreground bg-primary/5",
-  LIABILITY: "border-amber-500/30 text-amber-700 bg-amber-500/5 dark:text-amber-300 dark:border-amber-500/30 dark:bg-amber-500/10",
-  EQUITY: "border-blue-500/30 text-blue-700 bg-blue-500/5 dark:text-blue-300 dark:border-blue-500/20 dark:bg-blue-500/10",
-  INCOME: "border-emerald-500/30 text-emerald-700 bg-emerald-500/5 dark:text-emerald-300 dark:border-emerald-500/30 dark:bg-emerald-500/10",
-  EXPENSE: "border-red-500/30 text-red-700 bg-red-500/5 dark:text-red-300 dark:border-red-500/30 dark:bg-red-500/10",
+  LIABILITY: "border-status-warning-rule text-status-warning-ink bg-status-warning-surface",
+  EQUITY: "border-status-info-rule text-status-info-ink bg-status-info-surface",
+  INCOME: "border-status-success-rule text-status-success-ink bg-status-success-surface",
+  EXPENSE: "border-status-danger-rule text-status-danger-ink bg-status-danger-surface",
 };
 
 const STATUS_VARIANT: Record<

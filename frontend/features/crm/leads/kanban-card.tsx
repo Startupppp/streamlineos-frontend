@@ -35,7 +35,7 @@ const SOURCE_COLORS: Record<string, string> = {
   campaign: "bg-status-info-surface text-status-info-ink border-status-info-rule",
   cold_call: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   website: "bg-status-info-surface text-status-info-ink border-status-info-rule",
-  social_media: "bg-pink-500/15 text-pink-400 border-pink-500/20",
+  social_media: "bg-category-pink-surface text-category-pink-ink border-category-pink-rule",
   walk_in: "bg-status-info-surface text-status-info-ink border-status-info-rule",
   other: "bg-muted text-muted-foreground border-border",
 };

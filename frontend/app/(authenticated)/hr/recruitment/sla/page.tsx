@@ -106,7 +106,7 @@ function buildSlaColumns(
       header: "Warning After",
       cell: (row) =>
         row.existing ? (
-          <span className="text-yellow-600 dark:text-yellow-400 font-medium">{row.existing.warningHours}h</span>
+          <span className="text-status-warning-ink font-medium">{row.existing.warningHours}h</span>
         ) : (
           <span className="text-muted-foreground text-xs">Not set</span>
         ),
@@ -242,13 +242,13 @@ export default function SlaConfigPage() {
         </Card>
         <Card>
           <CardContent className="pt-5 flex items-start gap-3">
-            <div className="rounded-full bg-yellow-500/10 p-2">
-              <Clock className="h-4 w-4 text-yellow-600" />
+            <div className="rounded-full bg-status-warning-surface p-2">
+              <Clock className="h-4 w-4 text-status-warning-ink" />
             </div>
             <div>
               <p className="text-sm font-medium">At Risk</p>
               <p className="text-xs text-muted-foreground mt-1">
-                A candidate is marked <span className="font-medium text-yellow-600">At Risk</span> when
+                A candidate is marked <span className="font-medium text-status-warning-ink">At Risk</span> when
                 they exceed the warning threshold (e.g., 36 of 48 hours elapsed).
               </p>
             </div>

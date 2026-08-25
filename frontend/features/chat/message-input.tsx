@@ -61,12 +61,12 @@ function MentionItem({ user, idx, mentionIndex, onInsert }: MentionItemProps) {
       onClick={handleClick}
       className={cn(
         "w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-muted/40 transition-colors",
-        idx === mentionIndex && "bg-blue-500/10"
+        idx === mentionIndex && "bg-status-info-surface"
       )}
     >
       <Avatar className="h-6 w-6">
         <AvatarImage src={resolveImageUrl(user.image)} />
-        <AvatarFallback className="text-[8px]">{getInitials(user.name)}</AvatarFallback>
+        <AvatarFallback className="text-micro">{getInitials(user.name)}</AvatarFallback>
       </Avatar>
       <span className="text-label font-medium">{user.name}</span>
       <span className="text-dense text-muted-foreground ml-auto">{user.role}</span>
@@ -97,7 +97,7 @@ function PendingAttachmentItem({ att, idx, onRemove }: PendingAttachmentItemProp
       ) : (
         <div className={cn("h-11 w-11 rounded-lg flex flex-col items-center justify-center relative", colors.bg)}>
           <FileText className={cn("h-5 w-5", colors.text)} />
-          <span className={cn("text-[7px] font-bold text-white px-1 rounded mt-0.5", colors.badge)}>
+          <span className={cn("text-micro font-bold text-white px-1 rounded mt-0.5", colors.badge)}>
             {getFileExt(att.fileName)}
           </span>
         </div>
@@ -261,9 +261,9 @@ export function MessageInput({
           >
             <div className="flex items-center gap-3 px-4 py-2 max-w-[900px] mx-auto">
               <div className="w-1 h-9 rounded-full bg-blue-500 shrink-0" />
-              <Reply className="h-4 w-4 text-blue-600 shrink-0" />
+              <Reply className="h-4 w-4 text-status-info-ink shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-blue-600">
+                <p className="text-xs font-bold text-status-info-ink">
                   Replying to {replyTo.sender?.name}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
@@ -353,7 +353,7 @@ export function MessageInput({
               ))}
               {uploading && (
                 <div className="flex items-center gap-2 bg-muted/40 border border-border/40 rounded-lg px-3 py-2">
-                  <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                  <Loader2 className="h-4 w-4 animate-spin text-status-info-ink" />
                   <span className="text-dense text-muted-foreground">Uploading...</span>
                 </div>
               )}
@@ -368,7 +368,7 @@ export function MessageInput({
             </div>
           )}
 
-          <div className="rounded-2xl border border-border bg-background shadow-md focus-within:border-blue-500/50 focus-within:shadow-lg transition-all">
+          <div className="rounded-2xl border border-border bg-background shadow-md focus-within:border-status-info-rule focus-within:shadow-lg transition-all">
             <input
               ref={fileInputRef}
               type="file"
@@ -396,7 +396,7 @@ export function MessageInput({
                   className={cn(
                     "p-2 rounded-lg hover:bg-muted/60 transition-colors",
                     uploading
-                      ? "text-blue-600 animate-pulse"
+                      ? "text-status-info-ink animate-pulse"
                       : "text-muted-foreground/70 hover:text-foreground"
                   )}
                   title="Attach file (max 10MB)"
@@ -409,7 +409,7 @@ export function MessageInput({
                   className={cn(
                     "p-2 rounded-lg hover:bg-muted/60 transition-colors",
                     showEmojiPicker
-                      ? "text-blue-600 bg-muted/50"
+                      ? "text-status-info-ink bg-muted/50"
                       : "text-muted-foreground/70 hover:text-foreground"
                   )}
                   title="Emoji"

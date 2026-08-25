@@ -23,17 +23,17 @@ export function LandingApps() {
   return (
     <section
       id="apps"
-      className="relative py-14 sm:py-16 lg:py-20 border-y border-slate-200/70 bg-white/55 overflow-x-clip"
+      className="relative py-14 sm:py-16 lg:py-20 border-y border-border bg-white/55 overflow-x-clip"
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <MotionReveal className="max-w-2xl mx-auto text-center mb-8">
-          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-[2.75rem] font-extrabold tracking-[-0.03em] leading-[1.08] text-slate-900 mb-4 text-balance">
+          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-[2.75rem] font-extrabold tracking-[-0.03em] leading-[1.08] text-muted-foreground mb-4 text-balance">
             {LANDING_APPS.length}+ apps. One seat.{" "}
             <span className="text-brand-core">Zero stack tax.</span>
           </h2>
-          <p className="text-slate-600 text-sm sm:text-base leading-relaxed text-pretty">
+          <p className="text-muted-foreground text-sm sm:text-base leading-relaxed text-pretty">
             Enable what you need in one click — from{" "}
-            <span className="font-semibold text-slate-900">{cheapestAnnualLabel()}</span>{" "}
+            <span className="font-semibold text-muted-foreground">{cheapestAnnualLabel()}</span>{" "}
             per seat / month (annual) for everything.
           </p>
         </MotionReveal>
@@ -60,7 +60,7 @@ export function LandingApps() {
             onClick={() => setExpanded((v) => !v)}
             whileHover={reduce ? undefined : { scale: 1.03 }}
             whileTap={reduce ? undefined : { scale: 0.97 }}
-            className="inline-flex items-center gap-2 h-10 px-5 rounded-full border border-slate-200 bg-white text-label font-semibold text-slate-800 hover:border-brand-core/40 hover:bg-brand-core/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-core focus-visible:ring-offset-2"
+            className="inline-flex items-center gap-2 h-10 px-5 rounded-full border border-border bg-white text-label font-semibold text-muted-foreground hover:border-brand-core/40 hover:bg-brand-core/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-core focus-visible:ring-offset-2"
             aria-expanded={expanded}
           >
             {expanded ? "Show less" : "View all apps"}
@@ -94,7 +94,7 @@ export function LandingApps() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: ci * 0.08, duration: 0.45, ease: EASE_OUT }}
                     >
-                      <h3 className="text-xs font-semibold text-slate-500 mb-3">
+                      <h3 className="text-xs font-semibold text-muted-foreground mb-3">
                         {APP_CATEGORIES[cat]}
                       </h3>
                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
@@ -111,7 +111,7 @@ export function LandingApps() {
         </AnimatePresence>
 
         <MotionReveal delay={0.1} className="mt-12 max-w-2xl mx-auto text-center">
-          <p className="text-[15px] text-slate-600 leading-relaxed">
+          <p className="text-sm text-muted-foreground leading-relaxed">
             Each app streamlines a process and empowers more people — tailored with
             native AI.
           </p>
@@ -140,10 +140,10 @@ function MarqueeChip({ app, index }: { app: LandingApp; index: number }) {
     <motion.span
       whileHover={reduce ? undefined : { scale: 1.05, y: -2 }}
       transition={staggerItemDelay(index, 0)}
-      className="inline-flex items-center gap-2 shrink-0 rounded-full border border-slate-200 bg-white px-3.5 py-2 shadow-sm"
+      className="inline-flex items-center gap-2 shrink-0 rounded-full border border-border bg-white px-3.5 py-2 shadow-sm"
     >
       <Icon className="h-3.5 w-3.5 text-brand-core" aria-hidden />
-      <span className="text-xs font-semibold text-slate-800 whitespace-nowrap">
+      <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap">
         {app.name}
       </span>
     </motion.span>
@@ -159,12 +159,12 @@ function AppCard({ app, index }: { app: LandingApp; index: number }) {
       animate={{ opacity: 1, scale: 1 }}
       transition={staggerItemDelay(index, 0.04)}
       whileHover={reduce ? undefined : { y: -2 }}
-      className="flex items-center gap-2 sm:gap-2.5 rounded-xl border border-slate-200 bg-white p-2.5 sm:p-3 hover:border-brand-core/40 hover:shadow-sm transition-colors duration-200 min-w-0"
+      className="flex items-center gap-2 sm:gap-2.5 rounded-xl border border-border bg-white p-2.5 sm:p-3 hover:border-brand-core/40 hover:shadow-sm transition-colors duration-200 min-w-0"
     >
       <span className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-gradient-to-br from-brand-core to-brand-cyan inline-flex items-center justify-center shrink-0">
         <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" aria-hidden />
       </span>
-      <span className="text-xs sm:text-label font-semibold text-slate-900 leading-tight truncate min-w-0">
+      <span className="text-xs sm:text-label font-semibold text-muted-foreground leading-tight truncate min-w-0">
         {app.name}
       </span>
     </motion.div>

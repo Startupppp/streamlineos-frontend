@@ -39,7 +39,7 @@ function EmployeeStatusChip({ isActive }: { isActive: boolean }) {
       className={cn(
         "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border",
         isActive
-          ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800"
+          ? "bg-status-success-surface text-status-success-ink border-status-success-rule"
           : "bg-muted text-muted-foreground border-border",
       )}
     >

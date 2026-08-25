@@ -81,7 +81,7 @@ function AppCard({
             {config.category}
           </Badge>
           {isConnected ? (
-            <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-dense gap-1">
+            <Badge className="bg-status-success-surface text-status-success-ink border-status-success-rule text-dense gap-1">
               <CheckCircle2 className="h-3 w-3" />
               {connection.status === "needs_reauth" ? "Needs Reauth" : "Connected"}
             </Badge>

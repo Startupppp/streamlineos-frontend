@@ -42,17 +42,17 @@ export const balanceCardConfig: Record<
   "Casual Leave": {
     label: "CASUAL",
     barColor: "bg-blue-500",
-    valueColor: "text-blue-700 dark:text-blue-300",
-    iconBg: "bg-blue-100 dark:bg-blue-500/10",
-    iconColor: "text-blue-600 dark:text-blue-300",
+    valueColor: "text-status-info-ink",
+    iconBg: "bg-status-info-surface",
+    iconColor: "text-status-info-ink",
     icon: CalendarDays,
   },
   "Sick Leave": {
     label: "SICK",
     barColor: "bg-rose-500",
-    valueColor: "text-rose-700 dark:text-rose-300",
-    iconBg: "bg-rose-100 dark:bg-rose-500/10",
-    iconColor: "text-rose-600 dark:text-rose-300",
+    valueColor: "text-status-danger-ink",
+    iconBg: "bg-status-danger-surface",
+    iconColor: "text-status-danger-ink",
     icon: Heart,
   },
   "Unpaid Leave": {
@@ -90,17 +90,17 @@ export const priorityConfig: Record<
   HIGH: {
     label: "High",
     dotColor: "bg-rose-500",
-    textColor: "text-rose-600 dark:text-rose-300",
+    textColor: "text-status-danger-ink",
   },
   MEDIUM: {
     label: "Medium",
     dotColor: "bg-amber-500",
-    textColor: "text-amber-600 dark:text-amber-300",
+    textColor: "text-status-warning-ink",
   },
   LOW: {
     label: "Low",
     dotColor: "bg-emerald-500",
-    textColor: "text-emerald-600 dark:text-emerald-300",
+    textColor: "text-status-success-ink",
   },
 };
 
@@ -216,7 +216,7 @@ export const WfhRequestItem = React.memo(function WfhRequestItem({
         {showUser && request.user && (
           <Avatar className="w-8 shrink-0">
             <AvatarImage src={resolveImageUrl(request.user.image)} />
-            <AvatarFallback className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
+            <AvatarFallback className="text-xs bg-status-info-surface text-status-info-ink">
               {request.user.firstName?.[0]}
               {request.user.lastName?.[0]}
             </AvatarFallback>
@@ -233,7 +233,7 @@ export const WfhRequestItem = React.memo(function WfhRequestItem({
             <TruncatedText text={request.reason} className="text-xs text-muted-foreground mt-0.5" />
           )}
           {status === "REJECTED" && request.rejectionReason && (
-            <p className="text-xs text-rose-600 dark:text-rose-300 mt-0.5 truncate">
+            <p className="text-xs text-status-danger-ink mt-0.5 truncate">
               {request.rejectionReason}
             </p>
           )}

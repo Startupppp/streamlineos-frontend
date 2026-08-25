@@ -55,7 +55,7 @@ export function CompletionCelebration({
         animate={{ opacity: 1 }}
         className="fixed inset-0 z-[80] flex items-center justify-center p-4"
       >
-        <div className="absolute inset-0 bg-slate-950/40" />
+        <div className="absolute inset-0 bg-muted" />
 
         <motion.div
           initial={{ opacity: 0, y: reduceMotion ? 0 : 24, scale: reduceMotion ? 1 : 0.94 }}

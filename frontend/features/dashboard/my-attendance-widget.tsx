@@ -16,8 +16,8 @@ const STATUS_LABEL: Record<string, string> = {
 
 const STATUS_TONE: Record<string, string> = {
   OFFLINE: "text-muted-foreground",
-  PRESENT: "text-emerald-600",
-  ON_BREAK: "text-amber-600",
+  PRESENT: "text-status-success-ink",
+  ON_BREAK: "text-status-warning-ink",
   CHECKED_OUT: "text-primary",
 };
 
@@ -74,7 +74,7 @@ export function MyAttendanceWidget() {
           </div>
         </div>
         {missingPunchWarning && (
-          <div className="flex items-start gap-1.5 rounded-lg border border-amber-300/60 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700/50 p-2 text-dense text-amber-700 dark:text-amber-300">
+          <div className="flex items-start gap-1.5 rounded-lg border border-status-warning-rule bg-status-warning-surface p-2 text-dense text-status-warning-ink">
             <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" aria-hidden="true" />
             <span>{missingPunchWarning}</span>
           </div>

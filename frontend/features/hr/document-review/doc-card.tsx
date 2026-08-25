@@ -30,13 +30,13 @@ export interface OnboardingDoc {
 export function getDocStatusBadgeClass(status: OnboardingDoc["status"]): string {
   switch (status) {
     case "APPROVED":
-      return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-700";
+      return "bg-status-success-surface text-status-success-ink border-status-success-rule";
     case "SUBMITTED":
-      return "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-700";
+      return "bg-status-info-surface text-status-info-ink border-status-info-rule";
     case "REJECTED":
-      return "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-700";
+      return "bg-status-danger-surface text-status-danger-ink border-status-danger-rule";
     case "RE_UPLOAD_REQUESTED":
-      return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-700";
+      return "bg-status-warning-surface text-status-warning-ink border-status-warning-rule";
     default:
       return "bg-muted text-muted-foreground border-border";
   }
@@ -122,7 +122,7 @@ export function DocCard({ doc, canReview, onApprove, onRequestReupload }: DocCar
             <div className="flex items-center gap-1.5 flex-wrap">
               <p className="text-sm font-semibold text-foreground">{doc.documentTypeName}</p>
               {doc.isMandatory && (
-                <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-700 shrink-0">
+                <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-status-warning-surface text-status-warning-ink border-status-warning-rule shrink-0">
                   Required
                 </span>
               )}
@@ -168,7 +168,7 @@ export function DocCard({ doc, canReview, onApprove, onRequestReupload }: DocCar
               <Button
                 size="sm"
                 variant="outline"
-                className="gap-1.5 text-xs flex-1 border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-500/30 dark:text-emerald-300 dark:hover:bg-emerald-950/40 transition-colors duration-200"
+                className="gap-1.5 text-xs flex-1 border-status-success-rule text-status-success-ink hover:bg-status-success-surface transition-colors duration-200"
                 onClick={handleApproveClick}
                 aria-label={`Approve ${doc.documentTypeName}`}
               >

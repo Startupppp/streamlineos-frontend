@@ -32,16 +32,16 @@ interface UploadDocumentDialogProps {
 
 function getFileTypeConfig(file: File): { icon: React.ComponentType<{ className?: string }>; bg: string; text: string; badge: string } {
   if (file.type === "application/pdf") {
-    return { icon: FileText, bg: "bg-rose-100 dark:bg-rose-500/10", text: "text-rose-600 dark:text-rose-300", badge: "PDF" };
+    return { icon: FileText, bg: "bg-status-danger-surface", text: "text-status-danger-ink", badge: "PDF" };
   }
   if (file.type.includes("word") || file.name.endsWith(".doc") || file.name.endsWith(".docx")) {
-    return { icon: FileText, bg: "bg-blue-100 dark:bg-blue-500/10", text: "text-blue-600 dark:text-blue-300", badge: "DOC" };
+    return { icon: FileText, bg: "bg-status-info-surface", text: "text-status-info-ink", badge: "DOC" };
   }
   if (file.type.includes("excel") || file.type.includes("spreadsheet") || file.name.endsWith(".xls") || file.name.endsWith(".xlsx") || file.name.endsWith(".csv")) {
-    return { icon: FileSpreadsheet, bg: "bg-emerald-100 dark:bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-300", badge: "XLS" };
+    return { icon: FileSpreadsheet, bg: "bg-status-success-surface", text: "text-status-success-ink", badge: "XLS" };
   }
   if (file.type.startsWith("image/")) {
-    return { icon: FileImage, bg: "bg-amber-100 dark:bg-amber-500/10", text: "text-amber-600 dark:text-amber-300", badge: "IMG" };
+    return { icon: FileImage, bg: "bg-status-warning-surface", text: "text-status-warning-ink", badge: "IMG" };
   }
   return { icon: File, bg: "bg-muted", text: "text-muted-foreground", badge: "FILE" };
 }

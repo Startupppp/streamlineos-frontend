@@ -253,7 +253,7 @@ export function ReimbursementsPageContent() {
       filters={filterBar}
     >
       <div className="flex flex-1 min-h-0 flex-col gap-3">
-        <div className="shrink-0 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300">
+        <div className="shrink-0 rounded-lg border border-status-info-rule bg-status-info-surface px-3 py-2 text-xs text-status-info-ink">
           Approved claims flow into the{" "}
           <span className="font-medium">{formatMonth(month)}</span> payroll run automatically.
           Approved reimbursements are included as payroll inputs.

@@ -96,9 +96,9 @@ export function Section10({ form }: SectionProps) {
 
   const priorityOptions = [
     { value: "LOW", label: "Low", activeClass: "bg-primary hover:bg-primary/90 text-primary-foreground border-primary" },
-    { value: "MEDIUM", label: "Medium", activeClass: "bg-blue-600 hover:bg-blue-700 text-white border-blue-600" },
-    { value: "HIGH", label: "High", activeClass: "bg-amber-500 hover:bg-amber-600 text-white border-amber-500" },
-    { value: "URGENT", label: "Urgent", activeClass: "bg-rose-600 hover:bg-rose-700 text-white border-rose-600" },
+    { value: "MEDIUM", label: "Medium", activeClass: "bg-blue-600 hover:bg-blue-700 text-white border-status-info-rule" },
+    { value: "HIGH", label: "High", activeClass: "bg-amber-500 hover:bg-amber-600 text-white border-status-warning-rule" },
+    { value: "URGENT", label: "Urgent", activeClass: "bg-rose-600 hover:bg-rose-700 text-white border-status-danger-rule" },
   ] as const;
 
   return (
@@ -107,7 +107,7 @@ export function Section10({ form }: SectionProps) {
       <div className="grid gap-5">
         <div className="space-y-2">
           <Label className="text-xs font-semibold text-foreground/80">
-            Priority<span className="text-rose-500 ml-0.5">*</span>
+            Priority<span className="text-status-danger-ink ml-0.5">*</span>
           </Label>
           <Controller
             name="priority"

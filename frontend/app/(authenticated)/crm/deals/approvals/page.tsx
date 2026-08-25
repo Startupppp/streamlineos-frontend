@@ -44,9 +44,9 @@ function fmt(amount: string | number) {
 }
 
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
-  pending: { label: "Pending", className: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30" },
-  approved: { label: "Approved", className: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
-  rejected: { label: "Rejected", className: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30" },
+  pending: { label: "Pending", className: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule" },
+  approved: { label: "Approved", className: "bg-status-success-surface text-status-success-ink border-status-success-rule" },
+  rejected: { label: "Rejected", className: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule" },
 };
 
 interface ApprovalRowActionsProps {
@@ -68,7 +68,7 @@ function ApprovalRowActions({ item, onApprove, onReject }: ApprovalRowActionsPro
             <Button
               size="sm"
               variant="ghost"
-              className="text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300"
+              className="text-xs text-status-success-ink hover:text-status-success-ink"
               onClick={handleApproveClick}
             >
               <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
@@ -225,7 +225,7 @@ export default function DealApprovalsPage() {
         cell: (r) => (
           <Badge
             variant="outline"
-            className="text-[9px] h-4 px-1.5 py-0 bg-muted text-muted-foreground border-border"
+            className="text-micro h-4 px-1.5 py-0 bg-muted text-muted-foreground border-border"
           >
             {r.requestedStage}
           </Badge>
@@ -239,7 +239,7 @@ export default function DealApprovalsPage() {
           return (
             <Badge
               variant="outline"
-              className={cn("text-[9px] h-4 px-1.5 py-0", badge?.className)}
+              className={cn("text-micro h-4 px-1.5 py-0", badge?.className)}
             >
               {badge?.label ?? r.status}
             </Badge>
@@ -320,7 +320,7 @@ export default function DealApprovalsPage() {
             <AlertDialogTitle>
               {confirmAction?.action === "approve" ? (
                 <span className="flex items-center gap-2">
-                  <ClipboardCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                  <ClipboardCheck className="h-4 w-4 text-status-success-ink" />
                   Approve Deal?
                 </span>
               ) : (

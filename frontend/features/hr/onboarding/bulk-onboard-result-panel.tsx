@@ -23,12 +23,12 @@ export function BulkOnboardResultPanel({ result, onReset }: BulkOnboardResultPan
             className={cn(
               "w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3",
               result.created > 0
-                ? "bg-emerald-100 dark:bg-emerald-500/10"
+                ? "bg-status-success-surface"
                 : "bg-destructive/10",
             )}
           >
             {result.created > 0 ? (
-              <CheckCircle2 className="h-7 w-7 text-emerald-600 dark:text-emerald-300" />
+              <CheckCircle2 className="h-7 w-7 text-status-success-ink" />
             ) : (
               <AlertCircle className="h-7 w-7 text-destructive" />
             )}
@@ -43,7 +43,7 @@ export function BulkOnboardResultPanel({ result, onReset }: BulkOnboardResultPan
 
         <div className="flex justify-center gap-8 mb-6">
           <div className="text-center">
-            <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-300 tabular-nums">
+            <p className="text-2xl font-bold text-status-success-ink tabular-nums">
               {result.created}
             </p>
             <p className="text-dense text-muted-foreground">Created</p>

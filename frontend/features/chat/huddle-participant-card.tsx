@@ -48,7 +48,7 @@ export function HuddleParticipantCard({
         <Avatar
           className={cn(
             "h-10 w-10 border-2 transition-colors",
-            isSpeaking ? "border-green-500" : "border-transparent",
+            isSpeaking ? "border-status-success-rule" : "border-transparent",
           )}
         >
           <AvatarImage src={resolveImageUrl(participant.user?.image)} />
@@ -62,13 +62,13 @@ export function HuddleParticipantCard({
           </span>
         )}
         {!participant.isMuted && isSpeaking && (
-          <span className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-green-500/10 border border-border flex items-center justify-center">
-            <Mic className="h-2.5 w-2.5 text-green-500" />
+          <span className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-status-success-surface border border-border flex items-center justify-center">
+            <Mic className="h-2.5 w-2.5 text-status-success-ink" />
           </span>
         )}
         {participant.handRaised && (
-          <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-amber-500/10 border border-border flex items-center justify-center text-[9px]">
-            <Hand className="h-2.5 w-2.5 text-amber-500" />
+          <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-status-warning-surface border border-border flex items-center justify-center text-micro">
+            <Hand className="h-2.5 w-2.5 text-status-warning-ink" />
           </span>
         )}
         {participant.isScreenSharing && (
@@ -85,7 +85,7 @@ export function HuddleParticipantCard({
         <button
           onClick={onKick}
           {...kickHoverHandlers}
-          className="text-micro text-red-500/60 hover:text-red-500 transition-colors flex items-center gap-0.5"
+          className="text-micro text-status-danger-ink hover:text-status-danger-ink transition-colors flex items-center gap-0.5"
           aria-label="Remove from huddle"
         >
           <UserMinusIcon ref={kickIconRef} size={10} />

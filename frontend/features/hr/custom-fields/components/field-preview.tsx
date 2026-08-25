@@ -33,7 +33,7 @@ export function FieldPreview({
           </Badge>
         )}
         {isSensitive && (
-          <Badge variant="outline" className="text-micro h-4 px-1 text-amber-700 border-amber-200 gap-0.5">
+          <Badge variant="outline" className="text-micro h-4 px-1 text-status-warning-ink border-status-warning-rule gap-0.5">
             <Lock className="h-2.5 w-2.5" /> sensitive
           </Badge>
         )}

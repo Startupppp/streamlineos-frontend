@@ -14,8 +14,26 @@
  * about endlessly.
  */
 
-/** Palette classes: `bg-emerald-500`, `dark:text-slate-300/70`. */
-const PALETTE = /\b(?:dark:)?(?:bg|text|border|ring|from|to|via|fill|stroke|divide|outline|shadow|decoration|accent|caret|placeholder)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\d{2,3}(?:\/\d{1,3})?\b/;
+const HUES = "slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose";
+
+/**
+ * Flags only what a token can express.
+ *
+ * A rule that demands the impossible gets disabled. The token set has
+ * `surface`, `ink` and `rule` — so a light tint, an alpha wash, a text colour
+ * and a border are all flaggable. It has **no solid fill and no gradient**, so
+ * `bg-emerald-600` on a button and `from-blue-400` on a chart are left alone
+ * until those roles exist. Both are recorded in docs/TOKEN-MIGRATION.md as the
+ * additions that would let this widen.
+ */
+const PALETTE = new RegExp(
+  "\\b(?:[a-z-]+:)*" +
+    // Surfaces: a light tint, or any shade carrying an alpha.
+    `(?:bg-(?:${HUES})-(?:50|100)\\b` +
+    `|bg-(?:${HUES})-\\d{2,3}\\/\\d{1,3}\\b` +
+    // Ink and rules at any shade.
+    `|(?:text|border|ring|divide|decoration|placeholder)-(?:${HUES})-\\d{2,3}(?:\\/\\d{1,3})?\\b)`,
+);
 
 /** Arbitrary type sizes: `text-[11px]`. */
 const ARBITRARY_TYPE = /\btext-\[\d+(?:\.\d+)?(?:px|rem)\]/;

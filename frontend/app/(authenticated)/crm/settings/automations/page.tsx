@@ -57,7 +57,7 @@ function buildColumns(
           <div className="flex items-center gap-2">
             <span className="font-medium text-foreground">{row.name}</span>
             {row.isDraft && (
-              <Badge variant="outline" className="text-micro h-4 px-1.5 text-amber-600 border-amber-300 dark:text-amber-400 dark:border-amber-500/30">
+              <Badge variant="outline" className="text-micro h-4 px-1.5 text-status-warning-ink border-status-warning-rule">
                 Draft
               </Badge>
             )}

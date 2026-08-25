@@ -66,7 +66,7 @@ const agedReceivablesColumns: DataTableColumn<AgedReceivablesRow>[] = [
   {
     key: "d91_plus",
     header: "90+ days",
-    cell: (row) => <span className="tabular-nums text-rose-600 dark:text-rose-400 font-mono text-sm">{formatAmount(row.d91_plus)}</span>,
+    cell: (row) => <span className="tabular-nums text-status-danger-ink font-mono text-sm">{formatAmount(row.d91_plus)}</span>,
     className: "text-right",
     sortable: true,
     sortValue: (row) => parseFloat(row.d91_plus),
@@ -131,7 +131,7 @@ export default function AgedReceivablesPage() {
                 <span className="text-right">{formatAmount(report.totals.d1_30)}</span>
                 <span className="text-right">{formatAmount(report.totals.d31_60)}</span>
                 <span className="text-right">{formatAmount(report.totals.d61_90)}</span>
-                <span className="text-right text-rose-600 dark:text-rose-400">{formatAmount(report.totals.d91_plus)}</span>
+                <span className="text-right text-status-danger-ink">{formatAmount(report.totals.d91_plus)}</span>
                 <span className="text-right">{formatAmount(report.totals.total)}</span>
               </div>
             ) : undefined}

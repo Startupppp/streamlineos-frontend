@@ -283,18 +283,18 @@ export default function PublicFormPage() {
             <div className="space-y-4">
               {Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className="space-y-1.5">
-                  <div className="h-3 bg-slate-200 rounded animate-pulse w-24" />
-                  <div className="h-10 bg-slate-200 rounded animate-pulse" />
+                  <div className="h-3 bg-muted rounded animate-pulse w-24" />
+                  <div className="h-10 bg-muted rounded animate-pulse" />
                 </div>
               ))}
-              <div className="h-11 bg-slate-200 rounded animate-pulse" />
+              <div className="h-11 bg-muted rounded animate-pulse" />
             </div>
           )}
 
           {formQuery.isError && (
             <div className="text-center py-8">
-              <p className="text-lg font-semibold text-slate-700">Form unavailable</p>
-              <p className="text-sm text-slate-500 mt-2">
+              <p className="text-lg font-semibold text-muted-foreground">Form unavailable</p>
+              <p className="text-sm text-muted-foreground mt-2">
                 This form is not currently active or the link is invalid. Please contact the team for an
                 up-to-date link.
               </p>
@@ -303,11 +303,11 @@ export default function PublicFormPage() {
 
           {mutation.isSuccess && (
             <div className="text-center py-6 space-y-3">
-              <div className="w-16 h-16 rounded-full bg-emerald-100 mx-auto flex items-center justify-center">
-                <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+              <div className="w-16 h-16 rounded-full bg-status-success-surface mx-auto flex items-center justify-center">
+                <CheckCircle2 className="w-8 h-8 text-status-success-ink" />
               </div>
-              <p className="text-lg font-semibold text-slate-900">Submission received</p>
-              <p className="text-sm text-slate-500">
+              <p className="text-lg font-semibold text-muted-foreground">Submission received</p>
+              <p className="text-sm text-muted-foreground">
                 Your response has been recorded. Thank you for taking the time to fill this out.
               </p>
             </div>
@@ -316,7 +316,7 @@ export default function PublicFormPage() {
           {formQuery.isSuccess && form && !mutation.isSuccess && (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
               {form.fields.length === 0 && (
-                <p className="text-sm text-slate-500 text-center py-4">
+                <p className="text-sm text-muted-foreground text-center py-4">
                   This form has no fields configured.
                 </p>
               )}

@@ -147,7 +147,7 @@ export function ApprovalsInboxPage() {
             className={cn(
               "tabular-nums",
               isOverdue
-                ? "font-medium text-red-600 dark:text-red-400"
+                ? "font-medium text-status-danger-ink"
                 : "text-muted-foreground",
             )}
           >

@@ -28,11 +28,11 @@ const ACTION_LABELS: Record<string, string> = {
 };
 
 const ACTION_COLORS: Record<string, string> = {
-  CALL_MADE: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-  EMAIL_SENT: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-  CANDIDATE_ADDED: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300",
-  NOTE_ADDED: "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-300",
-  INTERVIEW_SCHEDULED: "bg-orange-100 text-orange-700 dark:bg-orange-500/10 dark:text-orange-300",
+  CALL_MADE: "bg-status-info-surface text-status-info-ink",
+  EMAIL_SENT: "bg-status-info-surface text-status-info-ink",
+  CANDIDATE_ADDED: "bg-status-success-surface text-status-success-ink",
+  NOTE_ADDED: "bg-status-warning-surface text-status-warning-ink",
+  INTERVIEW_SCHEDULED: "bg-status-warning-surface text-status-warning-ink",
 };
 
 function initials(name: string | null, email: string) {

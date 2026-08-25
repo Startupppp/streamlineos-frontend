@@ -40,12 +40,12 @@ interface MergedItem {
 function urgencyBadge(expiryDate: string) {
   const days = differenceInDays(parseISO(expiryDate), new Date());
   if (days <= 7) {
-    return "bg-rose-100 border-rose-200 text-rose-700 dark:bg-rose-500/10 dark:border-rose-500/30 dark:text-rose-300";
+    return "bg-status-danger-surface border-status-danger-rule text-status-danger-ink";
   }
   if (days <= 14) {
-    return "bg-orange-100 border-orange-200 text-orange-700 dark:bg-orange-500/10 dark:border-orange-500/30 dark:text-orange-300";
+    return "bg-status-warning-surface border-status-warning-rule text-status-warning-ink";
   }
-  return "bg-amber-100 border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-300";
+  return "bg-status-warning-surface border-status-warning-rule text-status-warning-ink";
 }
 
 function urgencyLabel(expiryDate: string) {
@@ -120,7 +120,7 @@ export function ExpiringDocumentsTable({
 
   const emptyState = (
     <EmptyState
-      illustration={<AlertTriangle className="w-8 text-emerald-500" />}
+      illustration={<AlertTriangle className="w-8 text-status-success-ink" />}
       title="No expiring items"
       description="All documents and certifications are up to date within the selected window."
       compact

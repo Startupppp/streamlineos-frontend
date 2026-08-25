@@ -20,8 +20,8 @@ import { EmergencyEventDetail } from "./emergency-event-detail";
 import { format } from "date-fns";
 
 const STATUS_COLORS: Record<EmergencyEventStatus, string> = {
-  active: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
-  resolved: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  active: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
+  resolved: "bg-status-success-surface text-status-success-ink border-status-success-rule",
 };
 
 export function EmergencyPageContent() {
@@ -38,7 +38,7 @@ export function EmergencyPageContent() {
       header: "Event",
       cell: (r) => (
         <div className="flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />
+          <AlertTriangle className="h-4 w-4 text-status-warning-ink shrink-0" />
           <span className="text-sm font-medium text-foreground">{r.name}</span>
         </div>
       ),

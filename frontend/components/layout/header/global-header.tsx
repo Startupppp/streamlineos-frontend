@@ -48,7 +48,7 @@ function SearchButton() {
     >
       <Search className="h-4 w-4 shrink-0" />
       <span className="min-w-0 flex-1 truncate text-left text-xs">Search…</span>
-      <kbd className="hidden shrink-0 lg:inline-flex h-4 items-center rounded border border-sidebar-border bg-sidebar px-1 font-mono text-[9px] text-sidebar-foreground/50">
+      <kbd className="hidden shrink-0 lg:inline-flex h-4 items-center rounded border border-sidebar-border bg-sidebar px-1 font-mono text-micro text-sidebar-foreground/50">
         ⌘K
       </kbd>
     </button>

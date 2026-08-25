@@ -36,7 +36,7 @@ interface VendorMetricProps {
 const VendorMetric = memo(function VendorMetric({ label, value, highlight }: VendorMetricProps) {
   return (
     <div className="flex flex-col gap-0.5 rounded-md border border-border bg-muted/40 px-2 py-1.5">
-      <span className="text-[9px] text-muted-foreground">{label}</span>
+      <span className="text-micro text-muted-foreground">{label}</span>
       <span
         className={`text-xs font-semibold ${highlight ? "text-destructive" : "text-foreground"}`}
       >
@@ -65,7 +65,7 @@ const VendorDelayCard = memo(function VendorDelayCard({ vendor }: VendorDelayCar
         </div>
         <Badge
           variant="outline"
-          className="text-[9px] h-4 px-1 shrink-0 border-destructive/30 bg-destructive/5 text-destructive"
+          className="text-micro h-4 px-1 shrink-0 border-destructive/30 bg-destructive/5 text-destructive"
         >
           {vendor.insightCount} delay insight{vendor.insightCount !== 1 ? "s" : ""}
         </Badge>

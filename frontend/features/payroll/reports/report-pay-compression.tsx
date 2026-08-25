@@ -24,10 +24,10 @@ export function ReportPayCompression() {
     <div className="space-y-3">
       <div
         role="status"
-        className="flex gap-2.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 dark:border-amber-500/30 dark:bg-amber-500/10"
+        className="flex gap-2.5 rounded-lg border border-status-warning-rule bg-status-warning-surface px-3 py-2.5"
       >
-        <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-700 dark:text-amber-300" />
-        <p className="text-dense text-amber-900/90 dark:text-amber-100/90 leading-snug">
+        <Info className="mt-0.5 h-4 w-4 shrink-0 text-status-warning-ink" />
+        <p className="text-dense text-status-warning-ink leading-snug">
           {data.honestyNote}
         </p>
       </div>

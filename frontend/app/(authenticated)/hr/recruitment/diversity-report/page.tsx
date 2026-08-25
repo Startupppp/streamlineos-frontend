@@ -23,11 +23,11 @@ import { cn } from "@/lib/utils";
 import type { Department } from "@/types/hr";
 
 const GENDER_COLORS: Record<string, string> = {
-  MALE: "bg-blue-500",
-  FEMALE: "bg-pink-500",
-  OTHER: "bg-blue-500",
-  PREFER_NOT_TO_SAY: "bg-slate-400",
-  Unknown: "bg-slate-300",
+  MALE: "bg-category-blue-fill",
+  FEMALE: "bg-category-pink-fill",
+  OTHER: "bg-category-blue-fill",
+  PREFER_NOT_TO_SAY: "bg-category-slate-fill",
+  Unknown: "bg-category-slate-fill",
 };
 
 function HorizontalBar({
@@ -283,7 +283,7 @@ export default function DiversityReportPage() {
                         count: l.count,
                       }))}
                       total={data.total}
-                      colorFn={() => "bg-emerald-500"}
+                      colorFn={() => "bg-category-emerald-fill"}
                     />
                   )}
                 </CardContent>
@@ -318,7 +318,7 @@ export default function DiversityReportPage() {
                       count: s.count,
                     }))}
                     total={data.total}
-                    colorFn={() => "bg-amber-500"}
+                    colorFn={() => "bg-category-amber-fill"}
                   />
                 </CardContent>
               </Card>

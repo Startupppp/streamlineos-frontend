@@ -79,7 +79,7 @@ function ScheduleRow({ schedule, onToggle, onDelete, isToggling }: ScheduleRowPr
               <CronBadge cron={schedule.cronExpression} />
               <span className={cn(
                 "inline-flex items-center px-2 py-0.5 rounded-full text-micro font-medium",
-                schedule.isEnabled ? "bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-300" : "bg-muted text-muted-foreground",
+                schedule.isEnabled ? "bg-status-success-surface text-status-success-ink" : "bg-muted text-muted-foreground",
               )}>
                 {schedule.isEnabled ? "Active" : "Paused"}
               </span>

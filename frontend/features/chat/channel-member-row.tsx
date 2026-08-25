@@ -86,7 +86,7 @@ export function ChannelMemberRow({
         />
       </div>
       {member.role === "ADMIN" && (
-        <Badge variant="outline" className="shrink-0 text-[9px] px-1.5 py-0 h-4 border-primary/30 text-primary">
+        <Badge variant="outline" className="shrink-0 text-micro px-1.5 py-0 h-4 border-primary/30 text-primary">
           Admin
         </Badge>
       )}

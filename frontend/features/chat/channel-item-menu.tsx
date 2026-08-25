@@ -205,7 +205,7 @@ export function ChannelItemMenu({
             Invite People
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={handleToggleFavorite}>
-            <Star className={isFavorite ? "h-4 w-4 fill-amber-400 text-amber-400" : "h-4 w-4"} />
+            <Star className={isFavorite ? "h-4 w-4 fill-amber-400 text-status-warning-ink" : "h-4 w-4"} />
             {isFavorite ? "Remove from Favorites" : "Add to Favorites"}
           </DropdownMenuItem>
           <DropdownMenuSub>

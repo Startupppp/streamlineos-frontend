@@ -51,8 +51,8 @@ export const BUCKET_CONFIG: Record<
   DueBucket,
   { label: string; icon: ComponentType<{ className?: string }>; iconClass: string }
 > = {
-  overdue: { label: "Overdue", icon: AlertCircle, iconClass: "text-red-600 dark:text-red-400" },
-  today: { label: "Due Today", icon: CalendarClock, iconClass: "text-amber-600 dark:text-amber-400" },
+  overdue: { label: "Overdue", icon: AlertCircle, iconClass: "text-status-danger-ink" },
+  today: { label: "Due Today", icon: CalendarClock, iconClass: "text-status-warning-ink" },
   upcoming: { label: "Upcoming", icon: Clock, iconClass: "text-primary" },
   none: { label: "No Due Date", icon: CheckCircle2, iconClass: "text-muted-foreground" },
 };

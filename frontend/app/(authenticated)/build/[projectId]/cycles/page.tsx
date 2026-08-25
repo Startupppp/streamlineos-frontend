@@ -219,7 +219,7 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
                     <p className="text-xs text-destructive mt-1">{form.formState.errors.name.message}</p>
                   )}
                   {!form.formState.errors.name && showDuplicateWarning && (
-                    <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-1">
+                    <p className="text-xs text-status-warning-ink flex items-center gap-1 mt-1">
                       <AlertTriangle className="h-3 w-3 shrink-0" />
                       A cycle with this name already exists in this project.
                     </p>
@@ -291,7 +291,7 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
                     <div className="bg-card border border-border rounded-lg p-4 hover:border-primary/50 transition-colors cursor-pointer">
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="min-w-0 font-semibold text-sm truncate" title={cycle.name}>{cycle.name}</span>
-                        <Badge className="shrink-0 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                        <Badge className="shrink-0 bg-status-success-surface text-status-success-ink">
                           Active
                         </Badge>
                       </div>

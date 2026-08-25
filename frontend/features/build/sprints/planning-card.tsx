@@ -112,7 +112,7 @@ export const PlanningCard = function PlanningCard({
                     <TooltipTrigger asChild>
                       <Avatar className="h-4 w-4">
                         <AvatarImage src={resolveImageUrl(ticket.assignee.image)} />
-                        <AvatarFallback className="text-[8px]">{assigneeInitials}</AvatarFallback>
+                        <AvatarFallback className="text-micro">{assigneeInitials}</AvatarFallback>
                       </Avatar>
                     </TooltipTrigger>
                     <TooltipContent side="top" className="text-xs">{assigneeName}</TooltipContent>
@@ -125,7 +125,7 @@ export const PlanningCard = function PlanningCard({
                 <TooltipProvider delayDuration={200}>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <AlertTriangle className="h-3 w-3 text-amber-500 shrink-0" aria-label="Closed ticket" />
+                      <AlertTriangle className="h-3 w-3 text-status-warning-ink shrink-0" aria-label="Closed ticket" />
                     </TooltipTrigger>
                     <TooltipContent side="top" className="text-xs">
                       Ticket is already {ticket.status?.toLowerCase()}

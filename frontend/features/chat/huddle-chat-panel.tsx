@@ -123,7 +123,7 @@ export function HuddleChatPanel({
   );
 
   return (
-    <div className="flex flex-col h-full w-72 border-l border-white/10 bg-zinc-900/80">
+    <div className="flex flex-col h-full w-72 border-l border-white/10 bg-muted">
       <div className="h-12 px-4 border-b border-white/10 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
           <MessageSquare className="h-4 w-4 text-white/60" />

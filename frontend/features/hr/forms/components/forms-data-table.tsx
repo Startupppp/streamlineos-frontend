@@ -15,8 +15,8 @@ import type { HrForm } from "../lib/types";
 
 const STATUS_COLORS: Record<string, string> = {
   draft: "bg-muted text-muted-foreground border-border",
-  active: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  archived: "bg-red-50 text-red-600 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  active: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  archived: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };
 
 interface FormsDataTableProps {

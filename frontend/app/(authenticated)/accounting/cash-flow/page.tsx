@@ -162,7 +162,7 @@ export default function CashFlowPage() {
             <DatePicker id="cash-flow-to" value={to ?? ""} onChange={handleToChange} placeholder="Pick a date" className="w-[160px]" />
           </div>
           {report && !report.reconciled && (
-            <div className="ml-auto self-end text-xs text-amber-600 dark:text-amber-400">
+            <div className="ml-auto self-end text-xs text-status-warning-ink">
               Section totals differ from the net change in cash — review
               unbalanced entries.
             </div>

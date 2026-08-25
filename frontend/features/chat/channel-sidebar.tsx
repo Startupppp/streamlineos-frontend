@@ -405,7 +405,7 @@ export function ChannelSidebar({
                     count={favorites.reduce((a, c) => a + c.unreadCount, 0)}
                     collapsed={favoritesCollapsed}
                     onToggle={handleToggleFavorites}
-                    icon={<Star className="h-3 w-3 fill-amber-400 text-amber-400" />}
+                    icon={<Star className="h-3 w-3 fill-amber-400 text-status-warning-ink" />}
                   >
                     {favorites.map((ch) => (
                       <ChannelListEntry

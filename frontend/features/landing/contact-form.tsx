@@ -130,7 +130,7 @@ export function ContactForm() {
   }
 
   return (
-    <div className="relative rounded-2xl border border-slate-200/80 bg-white/85 backdrop-blur-sm p-3 lg:p-6 shadow-[0_18px_44px_-18px_rgba(30,64,175,0.18)]">
+    <div className="relative rounded-2xl border border-border bg-white/85 backdrop-blur-sm p-3 lg:p-6 shadow-[0_18px_44px_-18px_rgba(30,64,175,0.18)]">
       <AnimatePresence mode="wait">
         {submitted ? (
           <motion.div
@@ -144,21 +144,21 @@ export function ContactForm() {
             <div className="mx-auto mb-5 h-14 w-14 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 inline-flex items-center justify-center shadow-[0_18px_40px_-12px_rgba(59,130,246,0.45)]">
               <CheckCircle2 className="w-7 text-white" strokeWidth={2.5} />
             </div>
-            <h3 className="font-display text-2xl font-bold text-slate-900 mb-2">
+            <h3 className="font-display text-2xl font-bold text-muted-foreground mb-2">
               Message received.
             </h3>
-            <p className="text-slate-600 text-[15px] leading-relaxed max-w-md mx-auto">
+            <p className="text-muted-foreground text-sm leading-relaxed max-w-md mx-auto">
               Thanks,{" "}
-              <span className="font-semibold text-slate-900">
+              <span className="font-semibold text-muted-foreground">
                 {watchedName}
               </span>
               . A human on our team will get back to you within one business day
-              at <span className="font-mono text-blue-600">{watchedEmail}</span>
+              at <span className="font-mono text-status-info-ink">{watchedEmail}</span>
               .
             </p>
             <button
               onClick={handleReset}
-              className="mt-7 text-xs font-medium text-slate-500 hover:text-slate-900 transition-colors"
+              className="mt-7 text-xs font-medium text-muted-foreground hover:text-muted-foreground transition-colors"
             >
               ← Send another message
             </button>
@@ -176,7 +176,7 @@ export function ContactForm() {
             className="space-y-5"
           >
             <div>
-              <Label className="text-label font-medium text-slate-700 mb-2 block">
+              <Label className="text-label font-medium text-muted-foreground mb-2 block">
                 What can we help with?
               </Label>
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
@@ -190,8 +190,8 @@ export function ContactForm() {
                       className={cn(
                         "text-xs font-medium rounded-lg border px-2.5 py-2 transition-all",
                         selected
-                          ? "bg-slate-900 text-white border-slate-900 shadow-sm"
-                          : "bg-white text-slate-600 border-slate-200 hover:border-blue-300 hover:text-slate-900",
+                          ? "bg-slate-900 text-white border-border shadow-sm"
+                          : "bg-white text-muted-foreground border-border hover:border-status-info-rule hover:text-muted-foreground",
                       )}
                     >
                       {t.label}
@@ -255,7 +255,7 @@ export function ContactForm() {
               <textarea
                 rows={5}
                 placeholder="Team size, what you're trying to solve, when you'd like to start…"
-                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2.5 text-sm placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200 focus-visible:border-blue-400 resize-y min-h-[120px]"
+                className="w-full rounded-md border border-border bg-white px-3 py-2.5 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-info-rule focus-visible:border-status-info-rule resize-y min-h-[120px]"
                 {...form.register("message")}
               />
             </Field>
@@ -265,7 +265,7 @@ export function ContactForm() {
             )}
 
             {serverError && (
-              <p role="alert" className="text-sm text-red-600">
+              <p role="alert" className="text-sm text-status-danger-ink">
                 {serverError}
               </p>
             )}
@@ -281,7 +281,7 @@ export function ContactForm() {
               <ArrowRight className="ml-2 h-4 w-4" />
             </LoadingButton>
 
-            <p className="text-xs font-medium text-slate-400 text-center">
+            <p className="text-xs font-medium text-muted-foreground text-center">
               Your message is encrypted in transit. We&apos;ll never share your
               email.
             </p>
@@ -307,22 +307,22 @@ function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <Label className="text-label font-medium text-slate-700 flex items-center gap-1.5">
+      <Label className="text-label font-medium text-muted-foreground flex items-center gap-1.5">
         {label}
         {required && (
-          <span className="text-red-500" aria-hidden>
+          <span className="text-status-danger-ink" aria-hidden>
             *
           </span>
         )}
         {hint && (
-          <span className="text-dense font-normal text-slate-400">
+          <span className="text-dense font-normal text-muted-foreground">
             ({hint})
           </span>
         )}
       </Label>
       {children}
       {error && (
-        <p role="alert" className="text-xs text-red-600">
+        <p role="alert" className="text-xs text-status-danger-ink">
           {error}
         </p>
       )}

@@ -191,7 +191,7 @@ function CommentItemComponent({
     >
       <Avatar className="h-6 w-6 shrink-0 mt-0.5">
         <AvatarImage src={resolveImageUrl(user?.image)} />
-        <AvatarFallback className="text-[9px] bg-primary/10 text-primary">
+        <AvatarFallback className="text-micro bg-primary/10 text-primary">
           {getUserInitials(user)}
         </AvatarFallback>
       </Avatar>

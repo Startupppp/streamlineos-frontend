@@ -79,10 +79,10 @@ function RuleRow({ rule, dragHandleProps, onToggle, onEdit, onDeleteRequest }: R
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <TruncatedText text={rule.name} className="text-sm font-medium" />
-              <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-primary/10 text-foreground border-primary/30">
+              <Badge variant="outline" className="text-micro h-4 px-1.5 py-0 bg-primary/10 text-foreground border-primary/30">
                 {ASSIGNMENT_TYPE_LABELS[rule.assignmentType] ?? rule.assignmentType}
               </Badge>
-              <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-muted text-muted-foreground border-border">
+              <Badge variant="outline" className="text-micro h-4 px-1.5 py-0 bg-muted text-muted-foreground border-border">
                 Priority {rule.priority}
               </Badge>
             </div>
@@ -207,7 +207,7 @@ function PreviewPanel() {
             {previewRule.data.trace.map((step) => (
               <div key={step.ruleId} className="flex items-start gap-2">
                 {step.matched
-                  ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                  ? <CheckCircle2 className="h-3.5 w-3.5 text-status-success-ink shrink-0 mt-0.5" />
                   : <XCircle className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />}
                 <div>
                   <span className="font-medium">{step.ruleName}</span>
@@ -217,7 +217,7 @@ function PreviewPanel() {
             ))}
             <div className="pt-1 border-t border-border">
               {previewRule.data.wouldAssignTo ? (
-                <span className="text-emerald-700 dark:text-emerald-400 font-medium">Assign to: {previewRule.data.wouldAssignTo}</span>
+                <span className="text-status-success-ink font-medium">Assign to: {previewRule.data.wouldAssignTo}</span>
               ) : (
                 <span className="text-muted-foreground">No rule matched</span>
               )}

@@ -268,7 +268,7 @@ function MemberAvatar({ member, className }: { member: MemberOption; className?:
   return (
     <Avatar className={cn("h-5 w-5 shrink-0", className)}>
       <AvatarImage src={resolveImageUrl(member.image)} />
-      <AvatarFallback className="text-[7px]">{getUserInitials(member)}</AvatarFallback>
+      <AvatarFallback className="text-micro">{getUserInitials(member)}</AvatarFallback>
     </Avatar>
   );
 }

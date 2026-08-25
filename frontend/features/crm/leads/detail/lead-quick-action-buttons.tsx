@@ -10,8 +10,8 @@ import type { QuickAction } from "./lead-types";
 export const ACTION_BUTTONS = [
   { key: "call"  as const, label: "Log Call",    icon: Phone,      color: "bg-primary/10 text-primary hover:bg-primary/20"        },
   { key: "email" as const, label: "Send Email",  icon: Mail,       color: "bg-primary/10 text-primary hover:bg-primary/20"        },
-  { key: "note"  as const, label: "Add Note",    icon: StickyNote, color: "bg-status-warning-surface text-status-warning-ink hover:bg-amber-500/20"     },
-  { key: "task"  as const, label: "New Task",    icon: ListTodo,   color: "bg-status-success-surface text-status-success-ink hover:bg-emerald-500/20"},
+  { key: "note"  as const, label: "Add Note",    icon: StickyNote, color: "bg-status-warning-surface text-status-warning-ink hover:bg-status-warning-surface"     },
+  { key: "task"  as const, label: "New Task",    icon: ListTodo,   color: "bg-status-success-surface text-status-success-ink hover:bg-status-success-surface"},
   { key: "draft" as const, label: "Draft Email", icon: Wand2,      color: "bg-primary/10 text-primary hover:bg-primary/20"        },
 ] as const;
 

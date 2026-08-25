@@ -59,7 +59,7 @@ export const WarehouseCard = memo(function WarehouseCard({ warehouse }: { wareho
           <CardContent className="p-3">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3 min-w-0">
-                <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400">
+                <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-status-warning-surface text-status-warning-ink">
                   <Warehouse className="h-4 w-4" aria-hidden="true" />
                 </div>
                 <div className="min-w-0">
@@ -68,7 +68,7 @@ export const WarehouseCard = memo(function WarehouseCard({ warehouse }: { wareho
                     {warehouse.isDefault && (
                       <Badge
                         variant="outline"
-                        className="h-4 text-[9px] px-1.5 py-0 bg-primary/10 text-foreground border-primary/20"
+                        className="h-4 text-micro px-1.5 py-0 bg-primary/10 text-foreground border-primary/20"
                       >
                         Default
                       </Badge>
@@ -76,7 +76,7 @@ export const WarehouseCard = memo(function WarehouseCard({ warehouse }: { wareho
                     {!warehouse.isActive && (
                       <Badge
                         variant="outline"
-                        className="h-4 text-[9px] px-1.5 py-0 bg-muted text-muted-foreground border-border"
+                        className="h-4 text-micro px-1.5 py-0 bg-muted text-muted-foreground border-border"
                       >
                         Inactive
                       </Badge>

@@ -255,7 +255,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
                 <>
                   <Avatar className="h-4 w-4 shrink-0">
                     <AvatarImage src={resolveImageUrl(selectedAssignee.image)} />
-                    <AvatarFallback className="text-[7px]">{getUserInitials(selectedAssignee)}</AvatarFallback>
+                    <AvatarFallback className="text-micro">{getUserInitials(selectedAssignee)}</AvatarFallback>
                   </Avatar>
                   {getUserDisplayName(selectedAssignee)}
                 </>
@@ -286,7 +286,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
                     >
                       <Avatar className="mr-2 h-5 w-5 shrink-0">
                         <AvatarImage src={resolveImageUrl(m.image)} />
-                        <AvatarFallback className="text-[7px]">{getUserInitials(m)}</AvatarFallback>
+                        <AvatarFallback className="text-micro">{getUserInitials(m)}</AvatarFallback>
                       </Avatar>
                       <span className="min-w-0 flex-1 truncate text-left text-xs">{getUserDisplayName(m)}</span>
                       {m.id === value.assigneeId && <Check className="ml-auto h-3 w-3 shrink-0" />}
@@ -378,7 +378,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
                 />
                 <span className="min-w-0 flex-1 truncate text-left">{c.name}</span>
                 {c.status === "active" && (
-                  <Badge variant="outline" className="h-4 px-1 text-[9px] text-green-600 border-green-500/40">Active</Badge>
+                  <Badge variant="outline" className="h-4 px-1 text-micro text-status-success-ink border-status-success-rule">Active</Badge>
                 )}
                 {value.cycleId === c.id && <Check className="ml-auto h-3 w-3" />}
               </button>

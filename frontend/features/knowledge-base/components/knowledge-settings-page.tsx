@@ -86,8 +86,8 @@ function ModuleStatusSection() {
         description="The Knowledge module is always active and cannot be disabled."
       />
       <div className="px-4 py-3 flex items-center gap-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-emerald-50 dark:bg-emerald-500/10 shrink-0">
-          <KbCheckCircleIcon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-status-success-surface shrink-0">
+          <KbCheckCircleIcon className="h-4 w-4 text-status-success-ink" />
         </div>
         <div className="min-w-0">
           <p className="text-sm font-medium text-foreground">Knowledge (KB)</p>
@@ -95,7 +95,7 @@ function ModuleStatusSection() {
             Core module · Always on
           </p>
         </div>
-        <span className="ml-auto inline-flex items-center px-2 py-0.5 rounded text-dense font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/70 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30 shrink-0">
+        <span className="ml-auto inline-flex items-center px-2 py-0.5 rounded text-dense font-medium bg-status-success-surface text-status-success-ink border border-status-success-rule shrink-0">
           Active
         </span>
       </div>

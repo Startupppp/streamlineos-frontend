@@ -77,15 +77,15 @@ export function MemberDetailSheet({
 
         <SheetBody className="px-6 py-4">
         {isMissingOrDraft && (
-          <div className="flex items-center justify-between p-3 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 mb-4">
-            <p className="text-xs text-amber-700 dark:text-amber-300">No timesheet submitted yet</p>
+          <div className="flex items-center justify-between p-3 rounded-lg bg-status-warning-surface border border-status-warning-rule mb-4">
+            <p className="text-xs text-status-warning-ink">No timesheet submitted yet</p>
             <AnimatedIconButton
               icon={BellIcon}
               iconSize={14}
               iconClassName="mr-1.5"
               size="sm"
               variant="outline"
-              className="h-7 text-xs border-amber-300"
+              className="h-7 text-xs border-status-warning-rule"
               onClick={handleRemind}
             >
               Remind

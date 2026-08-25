@@ -124,8 +124,8 @@ export function BillAiSection({ bill }: BillAiSectionProps) {
         <>
           <Separator />
           <CardContent className="px-4 pb-4 pt-3">
-            <div className="mb-2 rounded-md border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-3 py-2">
-              <p className="text-xs text-amber-800 dark:text-amber-300">
+            <div className="mb-2 rounded-md border border-status-warning-rule bg-status-warning-surface px-3 py-2">
+              <p className="text-xs text-status-warning-ink">
                 AI extracts fields as a human-reviewed draft. Always verify before saving.
                 AI never posts or approves entries automatically.
               </p>

@@ -52,7 +52,7 @@ function SavedMessageCard({
       <div className="flex items-start gap-3">
         <Avatar className="w-7 shrink-0 mt-0.5 border border-border/30">
           <AvatarImage src={resolveImageUrl(item.message.sender?.image)} />
-          <AvatarFallback className="text-[8px] font-bold bg-muted text-muted-foreground">
+          <AvatarFallback className="text-micro font-bold bg-muted text-muted-foreground">
             {getInitials(senderName)}
           </AvatarFallback>
         </Avatar>
@@ -140,7 +140,7 @@ export function SavedMessagesPanel({
     <div className="flex flex-col h-full w-80 border-l border-border/40 bg-card/50">
       <div className="h-[56px] px-4 border-b border-border/40 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
-          <Bookmark className="h-4 w-4 text-amber-500 fill-amber-500" />
+          <Bookmark className="h-4 w-4 text-status-warning-ink fill-amber-500" />
           <h3 className="text-sm font-bold">Saved Messages</h3>
         </div>
         <SavedPanelCloseButton onClick={onClose} className="p-1.5 hover:bg-muted rounded-lg" aria-label="Close" />
@@ -163,8 +163,8 @@ export function SavedMessagesPanel({
           </div>
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-4">
-            <div className="h-12 w-12 rounded-xl bg-amber-500/10 flex items-center justify-center mb-3">
-              <Bookmark className="h-5 w-5 text-amber-500" />
+            <div className="h-12 w-12 rounded-xl bg-status-warning-surface flex items-center justify-center mb-3">
+              <Bookmark className="h-5 w-5 text-status-warning-ink" />
             </div>
             <h4 className="text-label font-semibold mb-1">No saved messages</h4>
             <p className="text-dense text-muted-foreground text-center leading-relaxed">

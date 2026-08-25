@@ -194,7 +194,7 @@ export default function RecurringBillsPage() {
       cell: (row) => (
         <Badge
           variant="outline"
-          className="text-[9px] px-1.5 py-0 h-4 bg-primary/5 text-foreground border-primary/20"
+          className="text-micro px-1.5 py-0 h-4 bg-primary/5 text-foreground border-primary/20"
         >
           {FREQUENCY_LABELS[row.frequency]}
         </Badge>
@@ -225,14 +225,14 @@ export default function RecurringBillsPage() {
         row.isActive ? (
           <Badge
             variant="outline"
-            className="text-[9px] px-1.5 py-0 h-4 bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
+            className="text-micro px-1.5 py-0 h-4 bg-status-success-surface text-status-success-ink border-status-success-rule"
           >
             Active
           </Badge>
         ) : (
           <Badge
             variant="outline"
-            className="text-[9px] px-1.5 py-0 h-4 bg-muted text-muted-foreground border-border"
+            className="text-micro px-1.5 py-0 h-4 bg-muted text-muted-foreground border-border"
           >
             Inactive
           </Badge>

@@ -36,7 +36,7 @@ export function LinkRow({ link, onRemove }: LinkRowProps) {
         )}
         <TruncatedText text={label} className="text-sm" />
         {link.ticketId && link.projectKey ? (
-          <Badge variant="outline" className="shrink-0 text-[9px]">
+          <Badge variant="outline" className="shrink-0 text-micro">
             {link.projectKey}
           </Badge>
         ) : null}

@@ -91,9 +91,9 @@ export function OnboardingList() {
                       className={cn(
                         "h-7 w-7 rounded-lg flex items-center justify-center shrink-0 text-micro font-bold",
                         rowStatus === "completed"
-                          ? "bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                          ? "bg-status-success-surface text-status-success-ink"
                           : rowStatus === "stalled" || rowStatus === "in_progress"
-                          ? "bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                          ? "bg-status-warning-surface text-status-warning-ink"
                           : "bg-muted text-muted-foreground"
                       )}
                     >
@@ -106,7 +106,7 @@ export function OnboardingList() {
                         {rowStatus === "completed" && (
                           <Badge
                             variant="outline"
-                            className="text-micro font-semibold shrink-0 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800"
+                            className="text-micro font-semibold shrink-0 px-2 py-0.5 rounded-full bg-status-success-surface text-status-success-ink border-status-success-rule"
                           >
                             Completed
                           </Badge>
@@ -114,7 +114,7 @@ export function OnboardingList() {
                         {rowStatus === "stalled" && (
                           <Badge
                             variant="outline"
-                            className="text-micro font-semibold shrink-0 px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800"
+                            className="text-micro font-semibold shrink-0 px-2 py-0.5 rounded-full bg-status-warning-surface text-status-warning-ink border-status-warning-rule"
                           >
                             Stalled
                           </Badge>
@@ -122,7 +122,7 @@ export function OnboardingList() {
                         {rowStatus === "in_progress" && (
                           <Badge
                             variant="outline"
-                            className="text-micro font-semibold shrink-0 px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800"
+                            className="text-micro font-semibold shrink-0 px-2 py-0.5 rounded-full bg-status-warning-surface text-status-warning-ink border-status-warning-rule"
                           >
                             In Progress
                           </Badge>

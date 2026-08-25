@@ -51,7 +51,7 @@ export function CriticalPathSection({ projectId }: { projectId: number }) {
             </span>
           </div>
           {data?.hasCycle ? (
-            <div className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
+            <div className="flex items-start gap-2 rounded-lg border border-status-warning-rule bg-status-warning-surface px-3 py-2 text-xs text-status-warning-ink">
               <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               <span>
                 A dependency cycle was detected. Cycle edges were ignored, so

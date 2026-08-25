@@ -120,7 +120,7 @@ export function DocumentEditorPage() {
         actions={
           <div className="flex items-center gap-2">
             {isDirty && (
-              <Badge variant="outline" className="text-amber-600">
+              <Badge variant="outline" className="text-status-warning-ink">
                 Unsaved
               </Badge>
             )}

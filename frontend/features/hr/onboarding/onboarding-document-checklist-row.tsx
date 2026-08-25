@@ -42,10 +42,10 @@ export interface OnboardingDoc {
 }
 
 function docStatusIcon(status: DocStatus) {
-  if (status === "APPROVED") return <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-300" />;
-  if (status === "SUBMITTED") return <Clock className="h-4 w-4 text-amber-500" />;
-  if (status === "REJECTED") return <AlertCircle className="h-4 w-4 text-rose-500" />;
-  if (status === "RE_UPLOAD_REQUESTED") return <RefreshCw className="h-4 w-4 text-amber-500" />;
+  if (status === "APPROVED") return <CheckCircle2 className="h-4 w-4 text-status-success-ink" />;
+  if (status === "SUBMITTED") return <Clock className="h-4 w-4 text-status-warning-ink" />;
+  if (status === "REJECTED") return <AlertCircle className="h-4 w-4 text-status-danger-ink" />;
+  if (status === "RE_UPLOAD_REQUESTED") return <RefreshCw className="h-4 w-4 text-status-warning-ink" />;
   return <Circle className="h-4 w-4 text-muted-foreground/40" />;
 }
 
@@ -216,7 +216,7 @@ export function DocumentChecklistRow({
               <TruncatedText
                 text={`Remarks: ${submission.remarks}`}
                 lines={2}
-                className="mt-0.5 text-xs text-amber-600 dark:text-amber-300"
+                className="mt-0.5 text-xs text-status-warning-ink"
               />
             ) : null}
           </div>

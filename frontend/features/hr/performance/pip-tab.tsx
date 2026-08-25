@@ -350,7 +350,7 @@ export function PIPTab() {
                       <AvatarImage
                         src={resolveImageUrl(pip.user?.image ?? null)}
                       />
-                      <AvatarFallback className="text-[9px] bg-primary/10 text-primary">
+                      <AvatarFallback className="text-micro bg-primary/10 text-primary">
                         {pip.user?.name?.[0] ?? "?"}
                       </AvatarFallback>
                     </Avatar>

@@ -87,7 +87,7 @@ export const SubtaskRow = memo(function SubtaskRow({
       {subtask.points != null && subtask.points > 0 && (
         <Badge
           variant="secondary"
-          className="shrink-0 h-4 px-1 py-0 text-[9px] font-mono"
+          className="shrink-0 h-4 px-1 py-0 text-micro font-mono"
         >
           {subtask.points}
         </Badge>

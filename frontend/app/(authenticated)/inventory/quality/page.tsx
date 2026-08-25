@@ -47,7 +47,7 @@ function QualityHubInner() {
       cell: (r) => (
         <Badge
           variant="outline"
-          className={cn("h-4 text-[9px] px-1.5 py-0 border", INSPECTION_STATUS_BADGE[r.status])}
+          className={cn("h-4 text-micro px-1.5 py-0 border", INSPECTION_STATUS_BADGE[r.status])}
         >
           {INSPECTION_STATUS_LABEL[r.status]}
         </Badge>

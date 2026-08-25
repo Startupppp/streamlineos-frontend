@@ -159,7 +159,7 @@ export function ActivityCard({ activity, index }: ActivityCardProps) {
               size="sm"
               onClick={handleComplete}
               isPending={complete.isPending}
-              className="px-2 text-xs text-status-success-ink hover:text-emerald-700 hover:bg-status-success-surface"
+              className="px-2 text-xs text-status-success-ink hover:text-status-success-ink hover:bg-status-success-surface"
             >
               <CheckCheck className="h-3.5 w-3.5 mr-1" />
               Done

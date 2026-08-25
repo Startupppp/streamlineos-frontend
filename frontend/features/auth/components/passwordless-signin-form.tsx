@@ -213,7 +213,7 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
 
         <div className="text-center pt-1">
           {magicLinkSent ? (
-            <p className="text-xs text-emerald-600">
+            <p className="text-xs text-status-success-ink">
               Check your inbox — a sign-in link is on its way.
             </p>
           ) : (

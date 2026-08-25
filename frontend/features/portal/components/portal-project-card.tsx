@@ -4,10 +4,10 @@ import { cn } from "@/lib/utils";
 import type { PortalProject } from "@/features/portal/lib/portal-types";
 
 const STATUS_STYLES: Record<string, string> = {
-  active: "bg-blue-500/10 text-blue-700 dark:text-blue-400",
-  completed: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
-  on_hold: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
-  cancelled: "bg-red-500/10 text-red-600 dark:text-red-400",
+  active: "bg-status-info-surface text-status-info-ink",
+  completed: "bg-status-success-surface text-status-success-ink",
+  on_hold: "bg-status-warning-surface text-status-warning-ink",
+  cancelled: "bg-status-danger-surface text-status-danger-ink",
 };
 
 function formatStatus(status: string): string {

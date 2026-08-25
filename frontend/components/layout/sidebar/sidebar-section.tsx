@@ -231,7 +231,7 @@ function ExpandedItem({ route, depth, pathname, pendingLeaves, onNavigate, accen
             isActive && accent.text,
           )}
         />
-        <TruncatedText text={route.label} className={cn("flex-1 text-[0.8125rem]", isActive && "text-sidebar-foreground")} />
+        <TruncatedText text={route.label} className={cn("flex-1 text-label", isActive && "text-sidebar-foreground")} />
         {hasBadge && (
           <span className="inline-flex items-center justify-center h-[18px] min-w-[18px] px-1 rounded-full text-micro font-bold tabular-nums leading-none bg-amber-500 text-white">
             {count > 99 ? "99+" : count}

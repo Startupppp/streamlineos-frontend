@@ -21,14 +21,14 @@ interface PayrollQueueTableProps {
 function RowStatus({ row }: { row: PayrollSummaryRow }) {
   if (row.hasPendingEntries) {
     return (
-      <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700 text-micro dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
+      <Badge variant="outline" className="border-status-warning-rule bg-status-warning-surface text-status-warning-ink text-micro">
         Pending entries
       </Badge>
     );
   }
   if (row.totalPayableHours > 0) {
     return (
-      <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 text-micro dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
+      <Badge variant="outline" className="border-status-success-rule bg-status-success-surface text-status-success-ink text-micro">
         Ready
       </Badge>
     );
@@ -83,7 +83,7 @@ export function PayrollQueueTable({
         key: "overtimeHours",
         header: "Overtime",
         cell: (row) => (
-          <span className={`font-mono tabular-nums text-right block ${row.overtimeHours > 0 ? "text-amber-600 dark:text-amber-400 font-medium" : ""}`}>
+          <span className={`font-mono tabular-nums text-right block ${row.overtimeHours > 0 ? "text-status-warning-ink font-medium" : ""}`}>
             {row.overtimeHours.toFixed(1)}
           </span>
         ),

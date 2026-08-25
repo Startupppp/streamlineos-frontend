@@ -113,13 +113,13 @@ export function AttendeesSection({
               >
                 <Avatar className="h-5 w-5 shrink-0">
                   <AvatarImage src={resolveImageUrl(member?.image)} />
-                  <AvatarFallback className="text-[7px]">
+                  <AvatarFallback className="text-micro">
                     {getUserInitials(member)}
                   </AvatarFallback>
                 </Avatar>
                 <TruncatedText text={displayName} className="max-w-[140px] text-dense" />
                 {attendee.attended ? (
-                  <Check className="h-3 w-3 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden />
+                  <Check className="h-3 w-3 shrink-0 text-status-success-ink" aria-hidden />
                 ) : null}
                 {canManage && (
                   <button

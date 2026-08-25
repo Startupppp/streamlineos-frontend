@@ -158,7 +158,7 @@ export function TestPaymentTab({ providerKey }: { providerKey: string }) {
                 <span>
                   {t.currency} {t.amount}
                 </span>
-                <span className={t.status === "succeeded" ? "text-emerald-600 dark:text-emerald-400" : t.status === "failed" ? "text-rose-600 dark:text-rose-400" : ""}>
+                <span className={t.status === "succeeded" ? "text-status-success-ink" : t.status === "failed" ? "text-status-danger-ink" : ""}>
                   {t.status}
                 </span>
               </li>

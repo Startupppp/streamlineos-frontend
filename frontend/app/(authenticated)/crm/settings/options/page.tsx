@@ -362,7 +362,7 @@ export default function CrmOptionsPage() {
                       <Badge
                         variant="outline"
                         className={cn(
-                          "text-[9px] h-4 px-1.5 py-0 shrink-0",
+                          "text-micro h-4 px-1.5 py-0 shrink-0",
                           isActive
                             ? "bg-primary/10 text-foreground border-primary/30"
                             : "bg-muted text-muted-foreground border-border"
@@ -395,7 +395,7 @@ export default function CrmOptionsPage() {
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold">{selectedLabel}</span>
-                  <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0">
+                  <Badge variant="outline" className="text-micro h-4 px-1.5 py-0">
                     {sortedOptions.length}
                   </Badge>
                 </div>

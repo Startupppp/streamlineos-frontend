@@ -57,11 +57,11 @@ export function BiometricDevicesList({ canManage, onEdit }: Props) {
                 <Badge variant="secondary" className="text-dense">{device.vendor}</Badge>
                 <span className="flex items-center gap-1 text-dense">
                   {device.isOnline ? (
-                    <Wifi className="h-3 w-3 text-emerald-500" />
+                    <Wifi className="h-3 w-3 text-status-success-ink" />
                   ) : (
                     <WifiOff className="h-3 w-3 text-muted-foreground" />
                   )}
-                  <span className={device.isOnline ? "text-emerald-600 font-medium" : "text-muted-foreground"}>
+                  <span className={device.isOnline ? "text-status-success-ink font-medium" : "text-muted-foreground"}>
                     {device.isOnline ? "Online" : "Offline"}
                   </span>
                 </span>

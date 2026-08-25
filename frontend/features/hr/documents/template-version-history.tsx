@@ -49,7 +49,7 @@ function VersionItem({ version: v, isLatest, isLast, onRestore }: VersionItemPro
           <div className="flex items-center gap-2 flex-wrap">
             <TruncatedText text={`v${v.version} — ${v.title}`} className="font-semibold text-foreground" />
             {isLatest && (
-              <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30 shrink-0">
+              <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-status-success-surface text-status-success-ink border-status-success-rule shrink-0">
                 Latest
               </span>
             )}
@@ -87,8 +87,8 @@ export function TemplateVersionHistory({ versions, onRestore }: TemplateVersionH
     <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
       <CardHeader className="pb-3 border-b px-5 pt-4">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 rounded-lg bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center shrink-0">
-            <History className="h-3.5 w-3.5 text-blue-600 dark:text-blue-300" />
+          <div className="w-7 rounded-lg bg-status-info-surface flex items-center justify-center shrink-0">
+            <History className="h-3.5 w-3.5 text-status-info-ink" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold text-foreground">Version History</CardTitle>

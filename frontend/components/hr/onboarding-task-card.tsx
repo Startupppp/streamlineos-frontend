@@ -19,13 +19,13 @@ export interface OnboardingTaskCardProps {
 function ownerBadgeClass(ownerRole: string): string {
   switch (ownerRole.toUpperCase()) {
     case "NEW_HIRE":
-      return "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300";
+      return "bg-status-info-surface text-status-info-ink";
     case "IT":
-      return "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300";
+      return "bg-status-info-surface text-status-info-ink";
     case "HR":
-      return "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300";
+      return "bg-status-warning-surface text-status-warning-ink";
     case "MANAGER":
-      return "bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-300";
+      return "bg-status-success-surface text-status-success-ink";
     default:
       return "bg-muted text-muted-foreground";
   }
@@ -105,7 +105,7 @@ export function OnboardingTaskCard({ task, onToggle, isToggling }: OnboardingTas
               role="img"
             >
               {isCompleted ? (
-                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                <CheckCircle2 className="h-4 w-4 text-status-success-ink" />
               ) : (
                 <Circle className="h-4 w-4" />
               )}
@@ -179,7 +179,7 @@ export function OnboardingTaskCard({ task, onToggle, isToggling }: OnboardingTas
           </div>
 
           {isCompleted && (
-            <Badge variant="secondary" className="text-micro shrink-0 bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-300">
+            <Badge variant="secondary" className="text-micro shrink-0 bg-status-success-surface text-status-success-ink">
               Done
             </Badge>
           )}

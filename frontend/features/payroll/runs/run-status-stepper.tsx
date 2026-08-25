@@ -62,8 +62,8 @@ export function RunStatusStepper({ status, className }: RunStatusStepperProps) {
               />
               <span
                 className={cn(
-                  "text-[9px] font-medium whitespace-nowrap",
-                  isDone && "text-emerald-600",
+                  "text-micro font-medium whitespace-nowrap",
+                  isDone && "text-status-success-ink",
                   isCurrent && "text-primary",
                   !isDone && !isCurrent && "text-muted-foreground",
                 )}

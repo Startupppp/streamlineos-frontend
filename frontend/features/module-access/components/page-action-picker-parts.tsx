@@ -98,7 +98,7 @@ export function PageIndicator({
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
     state === "unchecked" && "border-input bg-background",
     state === "view-only" &&
-      "border-blue-500 bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400",
+      "border-status-info-rule bg-status-info-surface text-status-info-ink",
     state === "partial" && "border-primary bg-primary/10 text-primary",
     state === "full" && "border-primary bg-primary text-primary-foreground",
   );

@@ -36,20 +36,20 @@ export const STATUS_OPTIONS = [
 
 export const TYPE_COLORS: Record<string, string> = {
   PERFORMANCE:
-    "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+    "bg-status-info-surface text-status-info-ink border-status-info-rule",
   FESTIVAL:
-    "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+    "bg-status-info-surface text-status-info-ink border-status-info-rule",
   REFERRAL:
-    "bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-500/10 dark:text-cyan-300 dark:border-cyan-500/30",
-  SPOT: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+    "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  SPOT: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   ANNUAL:
-    "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+    "bg-status-success-surface text-status-success-ink border-status-success-rule",
   JOINING:
-    "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-500/10 dark:text-teal-300 dark:border-teal-500/30",
+    "bg-status-success-surface text-status-success-ink border-status-success-rule",
   RETENTION:
-    "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+    "bg-status-info-surface text-status-info-ink border-status-info-rule",
   COMMISSION:
-    "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30",
+    "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   ADJUSTMENT: "bg-muted text-muted-foreground border-border",
 };
 

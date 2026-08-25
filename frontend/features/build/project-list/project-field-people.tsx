@@ -59,7 +59,7 @@ export const InlineProjectLead = memo(function InlineProjectLead({
                 alt={leadName}
               />
             ) : null}
-            <AvatarFallback className="text-[9px]">
+            <AvatarFallback className="text-micro">
               {getUserInitials(manager)}
             </AvatarFallback>
           </Avatar>
@@ -123,7 +123,7 @@ export const InlineProjectMembers = memo(function InlineProjectMembers({
         <AvatarStack
           users={members}
           limit={3}
-          className="[&_[data-slot=avatar]]:size-5 [&_[data-slot=avatar]]:text-[8px]"
+          className="[&_[data-slot=avatar]]:size-5 [&_[data-slot=avatar]]:text-micro"
         />
       ) : (
         <span className="text-xs text-muted-foreground/40">Add members</span>

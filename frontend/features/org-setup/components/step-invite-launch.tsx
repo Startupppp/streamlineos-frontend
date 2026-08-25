@@ -153,7 +153,7 @@ export function StepInviteLaunch({
       </div>
 
       {atLimit && (
-        <p className="text-label leading-relaxed text-amber-700 dark:text-amber-300">
+        <p className="text-label leading-relaxed text-status-warning-ink">
           You&apos;ve used all {inviteLimit} invitations available on your plan.
           Remove one to invite someone else, or add more seats later from
           Settings → Billing.

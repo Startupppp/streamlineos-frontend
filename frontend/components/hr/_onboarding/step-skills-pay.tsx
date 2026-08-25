@@ -92,7 +92,7 @@ export function StepSkillsPay({ form }: StepSkillsPayProps) {
           name="monthlySalary"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Monthly Salary (CTC) <span className="text-red-500">*</span></FormLabel>
+              <FormLabel>Monthly Salary (CTC) <span className="text-status-danger-ink">*</span></FormLabel>
               <FormControl>
                 <div className="relative">
                   <span className="absolute left-3 top-2.5 text-muted-foreground">&#8377;</span>
@@ -168,13 +168,13 @@ export function StepSkillsPay({ form }: StepSkillsPayProps) {
               <span className="text-muted-foreground">Other allowances:</span>
               <span className="font-medium tabular-nums">{formatRoundedInr(breakdown.balance)}</span>
               <span className="text-muted-foreground">Professional Tax:</span>
-              <span className="font-medium text-red-600 tabular-nums">
+              <span className="font-medium text-status-danger-ink tabular-nums">
                 -{formatRoundedInr(breakdown.professionalTax)}
               </span>
               <span className="text-muted-foreground font-semibold border-t pt-2">
                 Net Salary:
               </span>
-              <span className="font-bold text-green-600 border-t pt-2 tabular-nums">
+              <span className="font-bold text-status-success-ink border-t pt-2 tabular-nums">
                 {formatRoundedInr(breakdown.net)}
               </span>
             </div>

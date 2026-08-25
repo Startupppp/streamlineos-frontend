@@ -64,8 +64,8 @@ export function FnfStatementView({ settlement, statement }: FnfStatementViewProp
                       className={cn(
                         "inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium border",
                         isCredit
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
-                          : "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+                          ? "bg-status-success-surface text-status-success-ink border-status-success-rule"
+                          : "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
                       )}
                     >
                       {isCredit ? "Credit" : "Deduction"}
@@ -74,7 +74,7 @@ export function FnfStatementView({ settlement, statement }: FnfStatementViewProp
                   <td
                     className={cn(
                       "px-3 py-1.5 font-mono tabular-nums text-right",
-                      isCredit ? "text-emerald-700 dark:text-emerald-400" : "text-red-600 dark:text-red-400",
+                      isCredit ? "text-status-success-ink" : "text-status-danger-ink",
                     )}
                   >
                     {isCredit ? "+" : "−"}
@@ -92,7 +92,7 @@ export function FnfStatementView({ settlement, statement }: FnfStatementViewProp
               <td
                 className={cn(
                   "px-3 py-2 font-mono tabular-nums text-right font-bold text-sm",
-                  isPositive ? "text-emerald-700 dark:text-emerald-400" : "text-red-600 dark:text-red-400",
+                  isPositive ? "text-status-success-ink" : "text-status-danger-ink",
                 )}
               >
                 {formatMoney(statement.netPayable)}

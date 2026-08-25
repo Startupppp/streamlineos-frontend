@@ -73,12 +73,12 @@ const STATUS_TABS: Array<{ value: string; label: string }> = [
 
 const STATUS_CONFIG: Record<BroadcastStatus, { label: string; className: string }> = {
   DRAFT: { label: "Draft", className: "border-border text-muted-foreground" },
-  SCHEDULED: { label: "Scheduled", className: "border-blue-300 text-blue-600" },
-  QUEUED: { label: "Queued", className: "border-blue-300 text-blue-600 dark:border-blue-500/40 dark:text-blue-400" },
-  SENDING: { label: "Sending", className: "border-amber-300 text-amber-600" },
-  SENT: { label: "Sent", className: "border-emerald-300 text-emerald-600" },
+  SCHEDULED: { label: "Scheduled", className: "border-status-info-rule text-status-info-ink" },
+  QUEUED: { label: "Queued", className: "border-status-info-rule text-status-info-ink" },
+  SENDING: { label: "Sending", className: "border-status-warning-rule text-status-warning-ink" },
+  SENT: { label: "Sent", className: "border-status-success-rule text-status-success-ink" },
   CANCELLED: { label: "Cancelled", className: "border-border text-muted-foreground" },
-  FAILED: { label: "Failed", className: "border-red-300 text-red-600" },
+  FAILED: { label: "Failed", className: "border-status-danger-rule text-status-danger-ink" },
 };
 
 function BroadcastSheet({

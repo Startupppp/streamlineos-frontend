@@ -36,11 +36,11 @@ export function LandingTestimonials() {
           transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] as const }}
           className="max-w-2xl text-center mx-auto mb-8 sm:mb-12"
         >
-          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-[-0.03em] leading-[1.05] text-slate-900 text-balance">
+          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-[-0.03em] leading-[1.05] text-muted-foreground text-balance">
             Don&apos;t take our word for it.{" "}
             <span className="text-brand-core">Take theirs.</span>
           </h2>
-          <p className="mt-3 text-slate-500 text-sm sm:text-base">
+          <p className="mt-3 text-muted-foreground text-sm sm:text-base">
             Teams that ship faster with StreamlineOS.
           </p>
         </motion.div>
@@ -57,7 +57,7 @@ export function LandingTestimonials() {
             </div>
           ))}
         </div>
-        <p className="mt-3 text-center text-dense text-slate-400 px-4">
+        <p className="mt-3 text-center text-dense text-muted-foreground px-4">
           Swipe to see more
         </p>
       </div>
@@ -94,25 +94,25 @@ function TestimonialCard({
     <motion.div
       whileHover={reduce ? undefined : { y: -4, scale: 1.01 }}
       transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] as const }}
-      className="group relative shrink-0 w-[min(300px,calc(100vw-2.5rem))] sm:w-[360px] lg:w-[400px] rounded-xl border border-slate-200/80 bg-white/90 backdrop-blur-sm p-5 sm:p-6 hover:border-brand-core/35 hover:shadow-[0_20px_48px_-20px_rgba(30,64,175,0.20)] transition-all duration-300"
+      className="group relative shrink-0 w-[min(300px,calc(100vw-2.5rem))] sm:w-[360px] lg:w-[400px] rounded-xl border border-border bg-white/90 backdrop-blur-sm p-5 sm:p-6 hover:border-brand-core/35 hover:shadow-[0_20px_48px_-20px_rgba(30,64,175,0.20)] transition-all duration-300"
     >
       <div className="flex gap-0.5 mb-3.5">
         {Array.from({ length: 5 }).map((_, idx) => (
-          <Star key={idx} className="h-3 w-3 fill-amber-400 text-amber-400" />
+          <Star key={idx} className="h-3 w-3 fill-amber-400 text-status-warning-ink" />
         ))}
       </div>
-      <p className="text-label sm:text-sm text-slate-700 leading-relaxed mb-5 line-clamp-5">
+      <p className="text-label sm:text-sm text-muted-foreground leading-relaxed mb-5 line-clamp-5">
         &ldquo;{testimonial.quote}&rdquo;
       </p>
-      <div className="flex items-center gap-3 pt-4 border-t border-slate-100">
+      <div className="flex items-center gap-3 pt-4 border-t border-border">
         <span className="h-9 w-9 rounded-full inline-flex items-center justify-center text-dense font-bold text-white shrink-0 bg-brand-core">
           {testimonial.initials}
         </span>
         <div className="min-w-0">
-          <p className="text-label font-semibold text-slate-900 truncate">
+          <p className="text-label font-semibold text-muted-foreground truncate">
             {testimonial.name}
           </p>
-          <p className="text-dense text-slate-500 truncate">{testimonial.role}</p>
+          <p className="text-dense text-muted-foreground truncate">{testimonial.role}</p>
         </div>
       </div>
     </motion.div>

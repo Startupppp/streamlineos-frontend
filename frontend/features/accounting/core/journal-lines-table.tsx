@@ -55,7 +55,7 @@ function buildColumns(lines: JournalLine[]): DataTableColumn<JournalLine>[] {
       key: "credit",
       header: "Credit",
       headerClassName: "w-[160px] text-right",
-      className: "w-[160px] text-right font-mono text-sm tabular-nums text-emerald-600",
+      className: "w-[160px] text-right font-mono text-sm tabular-nums text-status-success-ink",
       cell: (row) => {
         const v = parseAmount(row.credit);
         return v > 0 ? formatAmount(v) : "";
@@ -83,12 +83,12 @@ export function JournalLinesTable({ lines, debitTotal, creditTotal, isBalanced }
       </span>
       <span>
         {isBalanced ? (
-          <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
+          <span className="inline-flex items-center gap-1 text-xs font-medium text-status-success-ink">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
             Balanced
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1 text-xs font-medium text-red-600">
+          <span className="inline-flex items-center gap-1 text-xs font-medium text-status-danger-ink">
             <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
             Unbalanced
           </span>

@@ -136,12 +136,12 @@ export function EmployeeHeaderCard({
                 </span>
               )}
               {isAlreadyTerminated ? (
-                <span className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-100 px-2 py-0.5 text-micro font-semibold text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
+                <span className="inline-flex items-center gap-1 rounded-full border border-status-danger-rule bg-status-danger-surface px-2 py-0.5 text-micro font-semibold text-status-danger-ink">
                   <XCircle className="h-3 w-3" />
                   Terminated
                 </span>
               ) : showEmploymentActiveBadge ? (
-                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-100 px-2 py-0.5 text-micro font-semibold text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
+                <span className="inline-flex items-center gap-1 rounded-full border border-status-success-rule bg-status-success-surface px-2 py-0.5 text-micro font-semibold text-status-success-ink">
                   <CheckCircle2 className="h-3 w-3" />
                   Active
                 </span>
@@ -216,7 +216,7 @@ export function EmployeeHeaderCard({
               <StatBlock
                 label="Present"
                 value={stats.attendance?.daysPresent ?? 0}
-                colorClass="text-emerald-700 dark:text-emerald-300"
+                colorClass="text-status-success-ink"
               />
               <StatBlock
                 label="Leaves"
@@ -226,7 +226,7 @@ export function EmployeeHeaderCard({
               <StatBlock
                 label="Pending"
                 value={stats.leaves.pending}
-                colorClass="text-amber-700 dark:text-amber-300"
+                colorClass="text-status-warning-ink"
               />
             </div>
           )}

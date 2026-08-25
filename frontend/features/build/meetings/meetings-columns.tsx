@@ -140,7 +140,7 @@ export function buildMeetingsColumns(
               {(row.unresolvedActionItemCount ?? 0) > 0 ? (
                 <Badge
                   variant="outline"
-                  className="ml-0.5 px-1 py-0 text-micro text-amber-600 border-amber-200 dark:text-amber-400 dark:border-amber-500/30"
+                  className="ml-0.5 px-1 py-0 text-micro text-status-warning-ink border-status-warning-rule"
                 >
                   {row.unresolvedActionItemCount} open
                 </Badge>

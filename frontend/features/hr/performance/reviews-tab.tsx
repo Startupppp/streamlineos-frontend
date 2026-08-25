@@ -261,12 +261,12 @@ export function ReviewsTab() {
                 : "border-l-amber-400";
             const statusBadgeClass =
               review.status === "COMPLETED"
-                ? "border-emerald-200 bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800"
+                ? "border-status-success-rule bg-status-success-surface text-status-success-ink"
                 : review.status === "IN_PROGRESS"
-                ? "border-blue-200 bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-800"
+                ? "border-status-info-rule bg-status-info-surface text-status-info-ink"
                 : review.status === "ARCHIVED"
                 ? "border-border bg-muted text-muted-foreground"
-                : "border-amber-200 bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800";
+                : "border-status-warning-rule bg-status-warning-surface text-status-warning-ink";
 
             return (
               <Card
@@ -280,9 +280,9 @@ export function ReviewsTab() {
                     </Badge>
                     <div className="flex items-center gap-1 shrink-0">
                       {review.overallRating && (
-                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-800">
-                          <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
-                          <span className="text-micro font-bold text-amber-700 dark:text-amber-300">
+                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-status-warning-surface border border-status-warning-rule">
+                          <Star className="h-3 w-3 fill-amber-500 text-status-warning-ink" />
+                          <span className="text-micro font-bold text-status-warning-ink">
                             {Number(review.overallRating).toFixed(1)}
                           </span>
                         </div>
@@ -324,7 +324,7 @@ export function ReviewsTab() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-xs w-full border border-border/60 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 dark:hover:bg-emerald-950/20 dark:hover:text-emerald-400 transition-colors duration-200"
+                      className="text-xs w-full border border-border/60 hover:bg-status-success-surface hover:text-status-success-ink hover:border-status-success-rule transition-colors duration-200"
                       onClick={() => handleComplete(review.id)}
                     >
                       <CheckCircle2 className="h-3 w-3 mr-1.5" />Mark Complete

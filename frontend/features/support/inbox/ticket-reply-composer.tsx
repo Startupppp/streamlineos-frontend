@@ -306,7 +306,7 @@ export function TicketReplyComposer({ ticketId }: TicketReplyComposerProps) {
                   >
                     <TruncatedText text={macro.title} className="flex-1" />
                     {macro.category && (
-                      <Badge variant="secondary" className="text-[9px] shrink-0">
+                      <Badge variant="secondary" className="text-micro shrink-0">
                         {macro.category}
                       </Badge>
                     )}
@@ -346,7 +346,7 @@ export function TicketReplyComposer({ ticketId }: TicketReplyComposerProps) {
           placeholder={isInternal ? "Add internal note... (type @name to notify a teammate)" : "Type your reply..."}
           className={cn(
             "min-h-[60px] max-h-[120px] text-sm resize-none",
-            isInternal && "bg-amber-50/50 dark:bg-amber-950/10 border-amber-200 dark:border-amber-800/40",
+            isInternal && "bg-status-warning-surface border-status-warning-rule",
           )}
           onKeyDown={handleKeyDown}
         />

@@ -34,7 +34,7 @@ function TimerRow({
       <div className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
         <span className="text-dense font-medium text-muted-foreground">{label}</span>
         <div className="text-right">
-          <p className="text-dense text-emerald-600 dark:text-emerald-400 font-medium">Met — {metLabel}</p>
+          <p className="text-dense text-status-success-ink font-medium">Met — {metLabel}</p>
           <p className="text-micro text-muted-foreground">Due {dueLabel}</p>
         </div>
       </div>
@@ -43,11 +43,11 @@ function TimerRow({
 
   return (
     <div className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
-      <span className={cn("text-dense font-medium", breached ? "text-red-600 dark:text-red-400" : "text-muted-foreground")}>
+      <span className={cn("text-dense font-medium", breached ? "text-status-danger-ink" : "text-muted-foreground")}>
         {label}
       </span>
       <div className="text-right">
-        <p className={cn("text-dense font-medium", breached ? "text-red-600 dark:text-red-400" : "text-foreground")}>
+        <p className={cn("text-dense font-medium", breached ? "text-status-danger-ink" : "text-foreground")}>
           {breached ? "Breached" : "Pending"} — due {dueLabel}
         </p>
       </div>
@@ -67,11 +67,11 @@ export function IncidentSlaPanel({ incident }: IncidentSlaPanelProps) {
   return (
     <div className={cn(
       "rounded-xl border bg-card px-4 py-3",
-      isBreached ? "border-red-200 bg-red-50/40 dark:border-red-500/30 dark:bg-red-500/10" : "border-border",
+      isBreached ? "border-status-danger-rule bg-status-danger-surface" : "border-border",
     )}>
       <p className={cn(
         "text-micro font-semibold uppercase tracking-wider mb-2",
-        isBreached ? "text-red-600" : "text-muted-foreground",
+        isBreached ? "text-status-danger-ink" : "text-muted-foreground",
       )}>
         SLA Status
       </p>

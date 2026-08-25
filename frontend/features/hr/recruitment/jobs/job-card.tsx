@@ -178,7 +178,7 @@ export function JobCard({
             </span>
           )}
           {externalPlatforms.map((platform) => (
-            <Badge key={platform} variant="secondary" className="text-[9px] px-1 py-0 h-4 uppercase">{platform}</Badge>
+            <Badge key={platform} variant="secondary" className="text-micro px-1 py-0 h-4 uppercase">{platform}</Badge>
           ))}
         </div>
 

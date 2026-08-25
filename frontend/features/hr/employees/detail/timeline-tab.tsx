@@ -21,7 +21,7 @@ function entryIcon(type: HrTimelineEntry["type"]) {
 
 function entryColor(type: HrTimelineEntry["type"]) {
   if (type === "status_transition") return "bg-primary/10 text-primary";
-  if (type === "effective_change") return "bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300";
+  if (type === "effective_change") return "bg-status-warning-surface text-status-warning-ink";
   return "bg-muted text-muted-foreground";
 }
 

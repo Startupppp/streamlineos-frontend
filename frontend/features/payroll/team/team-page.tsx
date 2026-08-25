@@ -85,7 +85,7 @@ const MEMBER_COLUMNS: DataTableColumn<ManagerTeamMember>[] = [
     header: "",
     cell: (row) =>
       row.actionCount > 0 ? (
-        <span className="inline-flex items-center rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-micro font-medium text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+        <span className="inline-flex items-center rounded-md border border-status-warning-rule bg-status-warning-surface px-1.5 py-0.5 text-micro font-medium text-status-warning-ink">
           {row.actionCount} open
         </span>
       ) : null,

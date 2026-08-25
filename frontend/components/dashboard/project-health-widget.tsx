@@ -43,8 +43,8 @@ export function BusinessPulseWidget() {
           </Button>
         </div>
       ) : (
-        <div className="rounded-xl border border-border/60 bg-emerald-500/5 p-4 text-center">
-          <p className="text-2xl font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
+        <div className="rounded-xl border border-border/60 bg-status-success-surface p-4 text-center">
+          <p className="text-2xl font-bold tabular-nums text-status-success-ink">
             {data?.conversionRate ?? 0}%
           </p>
           <p className="text-xs text-muted-foreground mt-1">

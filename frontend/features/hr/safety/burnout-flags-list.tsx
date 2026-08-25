@@ -29,7 +29,7 @@ export function BurnoutFlagsList() {
   return (
     <Card className="p-4 bg-card border border-border rounded-xl">
       <div className="flex items-center gap-2 mb-3">
-        <AlertTriangle className="h-4 w-4 text-orange-500" />
+        <AlertTriangle className="h-4 w-4 text-status-warning-ink" />
         <p className="text-sm font-semibold text-foreground">Burnout Risk Signals</p>
         <p className="text-xs text-muted-foreground ml-auto">Last 7 days</p>
       </div>
@@ -47,7 +47,7 @@ export function BurnoutFlagsList() {
           {data.map((flag) => (
             <div
               key={flag.userId}
-              className="flex items-center justify-between gap-2 rounded-lg border bg-orange-50 border-orange-200 dark:bg-orange-500/10 dark:border-orange-500/30 px-3 py-2 min-w-0"
+              className="flex items-center justify-between gap-2 rounded-lg border bg-status-warning-surface border-status-warning-rule px-3 py-2 min-w-0"
             >
               <div className="min-w-0 flex-1">
                 <TruncatedText text={getUserDisplayName(memberById.get(flag.userId))} className="text-xs font-medium text-foreground" />
@@ -55,7 +55,7 @@ export function BurnoutFlagsList() {
                   {flag.checkCount} check-in{flag.checkCount !== 1 ? "s" : ""}
                 </p>
               </div>
-              <Badge variant="outline" className="text-orange-700 border-orange-300 bg-orange-50 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30 text-xs">
+              <Badge variant="outline" className="text-status-warning-ink border-status-warning-rule bg-status-warning-surface text-xs">
                 Avg {flag.avgScore.toFixed(1)} / 10
               </Badge>
             </div>

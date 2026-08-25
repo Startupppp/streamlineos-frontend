@@ -117,9 +117,9 @@ export function UploadSheet({
       isPending={isPending || isUploading}
     >
       {existingDoc?.status === "RE_UPLOAD_REQUESTED" && existingDoc.remarks && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-500/10 dark:border-amber-900 px-3 py-2.5 text-xs text-amber-800 dark:text-amber-300">
+        <div className="rounded-lg border border-status-warning-rule bg-status-warning-surface px-3 py-2.5 text-xs text-status-warning-ink">
           <p className="font-semibold mb-0.5">Reviewer remarks</p>
-          <p className="text-amber-700 dark:text-amber-300">{existingDoc.remarks}</p>
+          <p className="text-status-warning-ink">{existingDoc.remarks}</p>
         </div>
       )}
 
@@ -131,7 +131,7 @@ export function UploadSheet({
           className={cn(
             "rounded-lg border border-dashed p-6 transition-colors duration-200",
             fileError
-              ? "border-rose-400 bg-rose-50 dark:bg-rose-500/10"
+              ? "border-status-danger-rule bg-status-danger-surface"
               : "border-border hover:border-muted-foreground/40",
           )}
         >
@@ -158,7 +158,7 @@ export function UploadSheet({
           {selectedFile && (
             <button
               type="button"
-              className="text-dense text-muted-foreground hover:text-rose-500 underline block mx-auto mt-2 transition-colors duration-200"
+              className="text-dense text-muted-foreground hover:text-status-danger-ink underline block mx-auto mt-2 transition-colors duration-200"
               onClick={handleRemoveFile}
             >
               Remove file
@@ -166,7 +166,7 @@ export function UploadSheet({
           )}
         </div>
         {fileError && (
-          <p className="text-dense text-rose-600 dark:text-rose-300" role="alert">
+          <p className="text-dense text-status-danger-ink" role="alert">
             {fileError}
           </p>
         )}

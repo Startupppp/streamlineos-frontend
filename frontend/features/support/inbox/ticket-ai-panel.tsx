@@ -157,7 +157,7 @@ export function TicketAiPanel({ ticketId, onInsertReply, replyDraftContent }: Ti
         <Sparkles className="h-3.5 w-3.5 shrink-0" />
         AI Insights
         {pendingSuggestions.length > 0 && (
-          <Badge variant="secondary" className="text-[9px] px-1.5 py-0">
+          <Badge variant="secondary" className="text-micro px-1.5 py-0">
             {pendingSuggestions.length}
           </Badge>
         )}

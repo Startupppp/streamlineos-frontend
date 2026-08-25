@@ -23,13 +23,13 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 
 function terminationStatusBadgeClass(status: string | null): string {
   if (status === "APPROVED" || status === "COMPLETED")
-    return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800";
+    return "bg-status-success-surface text-status-success-ink border-status-success-rule";
   if (status === "PENDING_FINAL")
-    return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800";
+    return "bg-status-warning-surface text-status-warning-ink border-status-warning-rule";
   if (status === "REJECTED")
-    return "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-800";
+    return "bg-status-danger-surface text-status-danger-ink border-status-danger-rule";
   if (status === "SENT")
-    return "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-800";
+    return "bg-status-info-surface text-status-info-ink border-status-info-rule";
   return "bg-muted text-muted-foreground border-border";
 }
 
@@ -117,7 +117,7 @@ export function TerminationDetailSheet({
             )}
           >
             <Avatar className="h-10 w-10 shrink-0">
-              <AvatarFallback className="text-xs font-bold bg-rose-100 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300">
+              <AvatarFallback className="text-xs font-bold bg-status-danger-surface text-status-danger-ink">
                 {getInitials(reviewRecord.employee?.name ?? null)}
               </AvatarFallback>
             </Avatar>
@@ -190,14 +190,14 @@ export function TerminationDetailSheet({
               )}
 
             {reviewRecord.noticePeriodWaived && (
-              <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-500/10 dark:border-amber-900 p-3 space-y-1">
+              <div className="rounded-lg border border-status-warning-rule bg-status-warning-surface p-3 space-y-1">
                 <div className="flex items-center gap-1.5">
-                  <AlertTriangle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" />
-                  <p className="text-dense font-semibold text-amber-700 dark:text-amber-300 uppercase tracking-wider">
+                  <AlertTriangle className="h-3.5 w-3.5 text-status-warning-ink" />
+                  <p className="text-dense font-semibold text-status-warning-ink uppercase tracking-wider">
                     Notice Period
                   </p>
                 </div>
-                <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">
+                <p className="text-sm font-semibold text-status-warning-ink">
                   Waived
                 </p>
               </div>
@@ -213,7 +213,7 @@ export function TerminationDetailSheet({
                 {(reviewRecord.reasons ?? []).map((terminationReason) => (
                   <span
                     key={terminationReason}
-                    className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-800"
+                    className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-status-danger-surface text-status-danger-ink border-status-danger-rule"
                   >
                     {terminationReason}
                   </span>

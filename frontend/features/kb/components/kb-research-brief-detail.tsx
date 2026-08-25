@@ -31,8 +31,8 @@ const STATUS_LABELS: Record<KbResearchBriefStatus, string> = {
 const STATUS_CLASSES: Record<KbResearchBriefStatus, string> = {
   queued: "bg-muted text-muted-foreground border-border",
   running: "bg-primary/10 text-primary border-primary/20",
-  completed: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  failed: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  completed: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  failed: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };
 
 function buildBriefCitations(citations: KbResearchBriefCitation[]): Citation[] {

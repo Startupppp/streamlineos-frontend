@@ -40,19 +40,19 @@ const CR_STATUS_LABELS: Record<ChangeRequestStatus, string> = {
 const CR_STATUS_STYLES: Record<ChangeRequestStatus, string> = {
   submitted: "text-muted-foreground border-border bg-muted/40",
   under_review:
-    "text-blue-700 border-blue-200 bg-blue-50 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+    "text-status-info-ink border-status-info-rule bg-status-info-surface",
   estimated:
-    "text-amber-700 border-amber-200 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+    "text-status-warning-ink border-status-warning-rule bg-status-warning-surface",
   awaiting_approval:
-    "text-orange-700 border-orange-200 bg-orange-50 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30",
+    "text-status-warning-ink border-status-warning-rule bg-status-warning-surface",
   approved:
-    "text-emerald-700 border-emerald-200 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+    "text-status-success-ink border-status-success-rule bg-status-success-surface",
   rejected:
-    "text-red-700 border-red-200 bg-red-50 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+    "text-status-danger-ink border-status-danger-rule bg-status-danger-surface",
   in_progress:
-    "text-blue-700 border-blue-200 bg-blue-50 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+    "text-status-info-ink border-status-info-rule bg-status-info-surface",
   completed:
-    "text-emerald-700 border-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+    "text-status-success-ink border-status-success-rule bg-status-success-surface",
 };
 
 function SectionTitle({

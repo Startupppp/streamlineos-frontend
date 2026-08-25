@@ -139,7 +139,7 @@ export function DocumentTable({
                         className={cn(
                           "inline-flex items-center text-micro font-semibold px-1.5 py-0 rounded-full border",
                           tag.toLowerCase().includes("confidential")
-                            ? "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30"
+                            ? "bg-status-danger-surface text-status-danger-ink border-status-danger-rule"
                             : "bg-muted text-muted-foreground border-border",
                         )}
                       >

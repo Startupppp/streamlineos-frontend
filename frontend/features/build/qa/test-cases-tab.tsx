@@ -38,14 +38,14 @@ import { TestCaseSheet } from "./test-case-sheet";
 
 const PRIORITY_STYLES: Record<TestCasePriority, string> = {
   low: "text-muted-foreground border-border",
-  medium: "text-amber-600 border-amber-200 dark:text-amber-400 dark:border-amber-500/30",
-  high: "text-red-600 border-red-200 dark:text-red-400 dark:border-red-500/30",
+  medium: "text-status-warning-ink border-status-warning-rule",
+  high: "text-status-danger-ink border-status-danger-rule",
 };
 
 const AUTOMATION_STYLES: Record<TestCaseAutomationStatus, string> = {
   manual: "text-muted-foreground border-border",
-  automated: "text-green-600 border-green-200 dark:text-green-400 dark:border-green-500/30",
-  planned: "text-blue-600 border-blue-200 dark:text-blue-400 dark:border-blue-500/30",
+  automated: "text-status-success-ink border-status-success-rule",
+  planned: "text-status-info-ink border-status-info-rule",
 };
 
 function priorityLabel(p: TestCasePriority) {

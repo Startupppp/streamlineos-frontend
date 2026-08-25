@@ -53,7 +53,7 @@ function buildWebhookColumns(retry: RetryMutation): DataTableColumn<PaymentWebho
         <span
           className={cn(
             "text-dense font-medium",
-            row.processingStatus === "failed" ? "text-rose-600" : "text-emerald-600",
+            row.processingStatus === "failed" ? "text-status-danger-ink" : "text-status-success-ink",
           )}
         >
           {row.processingStatus}

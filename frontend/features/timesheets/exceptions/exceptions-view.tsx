@@ -259,7 +259,7 @@ export function ExceptionsView() {
                       iconSize={12}
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6 text-emerald-600 hover:text-emerald-600 dark:text-emerald-400"
+                      className="h-6 w-6 text-status-success-ink hover:text-status-success-ink"
                       title="Resolve"
                       onClick={() => handleResolveRequest(row)}
                     />

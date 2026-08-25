@@ -47,7 +47,7 @@ const ExternalLinkRow = memo(function ExternalLinkRow({ link, onRemove }: Extern
   const handleRemove = useCallback(() => onRemove(link.id), [link.id, onRemove]);
   return (
     <li className="flex items-center gap-1.5 text-xs">
-      <Badge variant="outline" className="text-[9px] px-1 py-0">
+      <Badge variant="outline" className="text-micro px-1 py-0">
         {entityTypeLabel(link.entityType)}
       </Badge>
       <TruncatedText text={link.label} className="flex-1" />

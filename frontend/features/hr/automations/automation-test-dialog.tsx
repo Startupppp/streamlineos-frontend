@@ -89,7 +89,7 @@ export function AutomationTestDialog({ rule, onClose }: Props) {
             <div className="space-y-3 border border-border rounded-lg p-3">
               <div className="flex items-center gap-2">
                 {result.matched ? (
-                  <CheckCircle className="h-4 w-4 text-emerald-500" />
+                  <CheckCircle className="h-4 w-4 text-status-success-ink" />
                 ) : (
                   <XCircle className="h-4 w-4 text-muted-foreground" />
                 )}

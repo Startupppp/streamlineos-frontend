@@ -404,12 +404,12 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
         >
           <div className="flex min-h-0 w-full flex-1 flex-col gap-3 overflow-hidden">
             {!selfService && approvedLeavesThisWeek.length > 0 && (
-              <Card className="overflow-hidden border-amber-200/50 bg-amber-50/50 dark:border-amber-500/30 dark:bg-amber-500/10">
+              <Card className="overflow-hidden border-status-warning-rule bg-status-warning-surface">
                 <CardHeader className="border-b px-4 pb-3 pt-3">
-                  <CardTitle className="flex items-center gap-2 text-sm font-semibold text-amber-800 dark:text-amber-300">
+                  <CardTitle className="flex items-center gap-2 text-sm font-semibold text-status-warning-ink">
                     <Users className="h-4 w-4" />
                     Who&apos;s Out This Week
-                    <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-100 px-1.5 text-micro font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+                    <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-status-warning-surface px-1.5 text-micro font-semibold text-status-warning-ink">
                       {approvedLeavesThisWeek.length}
                     </span>
                   </CardTitle>
@@ -419,11 +419,11 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
                     {approvedLeavesThisWeek.map((leave) => (
                       <div
                         key={leave.id}
-                        className="flex items-center gap-2 rounded-lg border border-amber-200/50 bg-card px-3 py-2 dark:border-amber-500/30"
+                        className="flex items-center gap-2 rounded-lg border border-status-warning-rule bg-card px-3 py-2"
                       >
                         <Avatar className="w-7">
                           <AvatarImage src={resolveImageUrl(leave.user?.image)} />
-                          <AvatarFallback className="bg-amber-100 text-micro text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+                          <AvatarFallback className="bg-status-warning-surface text-micro text-status-warning-ink">
                             {leave.user?.firstName?.[0]}
                             {leave.user?.lastName?.[0]}
                           </AvatarFallback>
@@ -437,7 +437,7 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
                             {format(new Date(leave.startDate), "MMM dd")} –{" "}
                             {format(new Date(leave.endDate), "MMM dd")}
                             {leave.leaveType && (
-                              <span className="ml-1 text-amber-600 dark:text-amber-300">
+                              <span className="ml-1 text-status-warning-ink">
                                 · {leave.leaveType.name}
                               </span>
                             )}

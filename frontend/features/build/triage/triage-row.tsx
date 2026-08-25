@@ -80,7 +80,7 @@ export const TriageRow = memo(function TriageRow({
               <span className="flex items-center gap-1.5">
                 <Avatar className="h-5 w-5">
                   <AvatarImage src={resolveImageUrl(ticket.assignee.image)} />
-                  <AvatarFallback className="text-[8px]">
+                  <AvatarFallback className="text-micro">
                     {getUserInitials(ticket.assignee)}
                   </AvatarFallback>
                 </Avatar>

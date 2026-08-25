@@ -44,9 +44,9 @@ const fnfKeys = {
 };
 
 function fnfStatusBadgeClass(status: string | null): string {
-  if (status === "PAID") return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800";
-  if (status === "APPROVED") return "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-800";
-  if (status === "PENDING_APPROVAL") return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800";
+  if (status === "PAID") return "bg-status-success-surface text-status-success-ink border-status-success-rule";
+  if (status === "APPROVED") return "bg-status-info-surface text-status-info-ink border-status-info-rule";
+  if (status === "PENDING_APPROVAL") return "bg-status-warning-surface text-status-warning-ink border-status-warning-rule";
   return "bg-muted text-muted-foreground border-border";
 }
 
@@ -86,11 +86,11 @@ function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
             className={cn(
               "h-7 w-7 rounded-lg flex items-center justify-center shrink-0",
               item.status === "PAID"
-                ? "bg-emerald-100 dark:bg-emerald-500/10"
+                ? "bg-status-success-surface"
                 : item.status === "APPROVED"
-                  ? "bg-blue-100 dark:bg-blue-500/10"
+                  ? "bg-status-info-surface"
                   : item.status === "PENDING_APPROVAL"
-                    ? "bg-amber-100 dark:bg-amber-500/10"
+                    ? "bg-status-warning-surface"
                     : "bg-muted"
             )}
           >
@@ -98,11 +98,11 @@ function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
               className={cn(
                 "h-3.5 w-3.5",
                 item.status === "PAID"
-                  ? "text-emerald-700 dark:text-emerald-300"
+                  ? "text-status-success-ink"
                   : item.status === "APPROVED"
-                    ? "text-blue-700 dark:text-blue-300"
+                    ? "text-status-info-ink"
                     : item.status === "PENDING_APPROVAL"
-                      ? "text-amber-700 dark:text-amber-300"
+                      ? "text-status-warning-ink"
                       : "text-muted-foreground"
               )}
             />
@@ -131,7 +131,7 @@ function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
                 </span>
               )}
               {item.deductions && Number(item.deductions) > 0 && (
-                <span className="text-rose-600 dark:text-rose-300">
+                <span className="text-status-danger-ink">
                   −₹{Number(item.deductions).toLocaleString("en-IN")} deductions
                 </span>
               )}

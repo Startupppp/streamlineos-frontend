@@ -46,29 +46,29 @@ function AnnouncementItem({
       className={cn(
         "relative rounded-lg border p-3 text-sm",
         ann.isPinned
-          ? "border-amber-400 bg-amber-100 dark:bg-amber-900/50 dark:border-amber-600"
-          : "border-amber-200 bg-card dark:bg-amber-950/30 dark:border-amber-700/50",
+          ? "border-status-warning-rule bg-status-warning-surface"
+          : "border-status-warning-rule bg-card",
       )}
     >
       {ann.isPinned && (
         <Pin
           role="img"
           aria-label="Pinned"
-          className="absolute top-2 right-2 h-3 w-3 text-amber-500"
+          className="absolute top-2 right-2 h-3 w-3 text-status-warning-ink"
         />
       )}
-      <p className="text-amber-900 dark:text-amber-100 leading-snug pr-4">
+      <p className="text-status-warning-ink leading-snug pr-4">
         {ann.content}
       </p>
       <div className="flex items-center justify-between mt-2 gap-2">
-        <span className="text-dense text-amber-600 dark:text-amber-400">
+        <span className="text-dense text-status-warning-ink">
           {authorDisplay} · {format(parseISO(ann.createdAt), "MMM d, yyyy")}
         </span>
         {isAdmin && (
           <button
             type="button"
             onClick={handleDelete}
-            className="text-amber-500 hover:text-amber-700 transition-colors"
+            className="text-status-warning-ink hover:text-status-warning-ink transition-colors"
             aria-label={`Delete announcement from ${authorDisplay}`}
             disabled={isDeleting}
           >
@@ -129,14 +129,14 @@ export function AnnouncementsWidget() {
   };
 
   return (
-    <Card className="h-full flex flex-col bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800">
+    <Card className="h-full flex flex-col bg-status-warning-surface border-status-warning-rule">
       <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0 shrink-0">
         <div className="flex items-center gap-2">
           <Megaphone
-            className="h-4 w-4 text-amber-600 shrink-0"
+            className="h-4 w-4 text-status-warning-ink shrink-0"
             aria-hidden="true"
           />
-          <CardTitle className="text-sm font-semibold text-amber-900 dark:text-amber-100">
+          <CardTitle className="text-sm font-semibold text-status-warning-ink">
             Announcements
           </CardTitle>
         </div>
@@ -144,7 +144,7 @@ export function AnnouncementsWidget() {
           <Button
             variant="ghost"
             size="sm"
-            className="px-2 text-amber-700 hover:text-amber-900 hover:bg-amber-100 dark:text-amber-300 dark:hover:bg-amber-900/40"
+            className="px-2 text-status-warning-ink hover:text-status-warning-ink hover:bg-status-warning-surface"
             onClick={handleToggleForm}
             aria-label="Add announcement"
           >
@@ -155,20 +155,20 @@ export function AnnouncementsWidget() {
       </CardHeader>
       <CardContent className="flex-1 overflow-hidden space-y-3">
         {showForm && isAdmin && (
-          <div className="space-y-2 rounded-lg border border-amber-200 dark:border-amber-700 bg-amber-50/40 dark:bg-amber-950/40 p-3">
+          <div className="space-y-2 rounded-lg border border-status-warning-rule bg-status-warning-surface p-3">
             <Input
               placeholder="Title"
               value={title}
               onChange={handleTitleChange}
               maxLength={200}
-              className="text-sm bg-transparent border-amber-200 dark:border-amber-700 focus-visible:ring-amber-400"
+              className="text-sm bg-transparent border-status-warning-rule focus-visible:ring-status-warning-rule"
               aria-label="Announcement title"
             />
             <Textarea
               placeholder="Write an announcement..."
               value={content}
               onChange={handleContentChange}
-              className="text-sm min-h-[72px] resize-none bg-transparent border-amber-200 dark:border-amber-700 focus-visible:ring-amber-400"
+              className="text-sm min-h-[72px] resize-none bg-transparent border-status-warning-rule focus-visible:ring-status-warning-rule"
               aria-label="Announcement content"
             />
             <div className="flex items-center justify-between gap-2">
@@ -177,10 +177,10 @@ export function AnnouncementsWidget() {
                   type="checkbox"
                   checked={isPinned}
                   onChange={handlePinnedChange}
-                  className="rounded border-amber-300 text-amber-600 focus:ring-amber-400"
+                  className="rounded border-status-warning-rule text-status-warning-ink focus:ring-status-warning-rule"
                   aria-label="Pin this announcement"
                 />
-                <span className="text-xs text-amber-700 dark:text-amber-300">
+                <span className="text-xs text-status-warning-ink">
                   Pin
                 </span>
               </label>
@@ -214,7 +214,7 @@ export function AnnouncementsWidget() {
             {[0, 1].map((i) => (
               <Skeleton
                 key={i}
-                className="h-14 w-full rounded-lg bg-amber-100 dark:bg-amber-900/40"
+                className="h-14 w-full rounded-lg bg-status-warning-surface"
               />
             ))}
           </div>

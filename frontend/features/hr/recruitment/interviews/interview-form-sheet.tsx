@@ -228,7 +228,7 @@ export function InterviewFormSheet({
           <FieldGroup
             icon={User}
             label="Candidate"
-            colorClass="bg-blue-100 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400"
+            colorClass="bg-status-info-surface text-status-info-ink"
           >
             <CandidateSelect
               candidates={allCandidates}
@@ -244,7 +244,7 @@ export function InterviewFormSheet({
           <FieldGroup
             icon={Briefcase}
             label="Job Position"
-            colorClass="bg-blue-100 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400"
+            colorClass="bg-status-info-surface text-status-info-ink"
           >
             <Select value={jobPostingId} onValueChange={setJobPostingId}>
               <SelectTrigger className="">
@@ -265,7 +265,7 @@ export function InterviewFormSheet({
           <FieldGroup
             icon={Calendar}
             label="Schedule"
-            colorClass="bg-emerald-100 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400"
+            colorClass="bg-status-success-surface text-status-success-ink"
           >
             <div className="space-y-2.5">
               <Input
@@ -341,7 +341,7 @@ export function InterviewFormSheet({
           <FieldGroup
             icon={User}
             label="Interviewers"
-            colorClass="bg-muted text-muted-foreground dark:bg-slate-800/60 dark:text-slate-400"
+            colorClass="bg-muted text-muted-foreground"
           >
             <InterviewerSelect
               orgMembers={orgMembers}

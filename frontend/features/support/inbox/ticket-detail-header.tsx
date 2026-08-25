@@ -36,9 +36,9 @@ import type { SupportTicket, SupportTicketStatus } from "@/types/support";
 
 const PRIORITY_COLORS: Record<string, string> = {
   LOW: "bg-muted text-muted-foreground",
-  MEDIUM: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-  HIGH: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
-  URGENT: "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-300",
+  MEDIUM: "bg-status-info-surface text-status-info-ink",
+  HIGH: "bg-status-warning-surface text-status-warning-ink",
+  URGENT: "bg-status-danger-surface text-status-danger-ink",
 };
 
 function toTitleCase(str: string) {
@@ -192,7 +192,7 @@ export function TicketDetailHeader({ ticket, onBack, onInsertReply, replyDraftCo
             aria-label={isFollowing ? "Unfollow ticket" : "Follow ticket"}
             title={isFollowing ? "Unfollow ticket" : "Follow ticket"}
           >
-            <Star className={cn("h-3.5 w-3.5", isFollowing && "fill-amber-400 text-amber-400")} />
+            <Star className={cn("h-3.5 w-3.5", isFollowing && "fill-amber-400 text-status-warning-ink")} />
           </Button>
           <div className="min-w-0">
             <TruncatedText text={toTitleCase(ticket.title)} className="text-sm font-bold" />

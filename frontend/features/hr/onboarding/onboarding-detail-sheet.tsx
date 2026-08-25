@@ -256,8 +256,8 @@ export const EmployeeDocumentsTab = forwardRef<
         <div className={cn("p-3.5", !isWizard && "p-4")}>
           <div className="mb-2 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <div className="flex w-7 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-500/10">
-                <FileText className="h-3.5 w-3.5 text-emerald-700 dark:text-emerald-300" />
+              <div className="flex w-7 items-center justify-center rounded-lg bg-status-success-surface">
+                <FileText className="h-3.5 w-3.5 text-status-success-ink" />
               </div>
               <p className="text-sm font-semibold text-foreground">
                 Document checklist
@@ -272,7 +272,7 @@ export const EmployeeDocumentsTab = forwardRef<
             className="h-1.5 [&>div]:bg-emerald-500 [&>div]:transition-all [&>div]:duration-500"
           />
           {progressPct === 100 ? (
-            <p className="mt-1.5 flex items-center gap-1 text-dense font-semibold text-emerald-600 dark:text-emerald-300">
+            <p className="mt-1.5 flex items-center gap-1 text-dense font-semibold text-status-success-ink">
               <CheckCircle2 className="h-3 w-3" />
               All documents approved
             </p>

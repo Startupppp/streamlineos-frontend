@@ -16,17 +16,17 @@ import { PM_PANEL } from "@/features/build/shared/pm-chrome";
 import type { TestRunResult, TestResultStatus, TestCasePriority } from "@/types/projects";
 
 const STATUS_OPTIONS: { value: TestResultStatus; label: string; activeClass: string }[] = [
-  { value: "not_run", label: "Not Run", activeClass: "bg-muted text-foreground border-border dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30" },
-  { value: "passed", label: "Pass", activeClass: "bg-green-50 text-green-700 border-green-300 dark:bg-green-500/10 dark:text-green-300 dark:border-green-500/30" },
-  { value: "failed", label: "Fail", activeClass: "bg-red-50 text-red-700 border-red-300 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30" },
-  { value: "blocked", label: "Blocked", activeClass: "bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30" },
-  { value: "skipped", label: "Skip", activeClass: "bg-muted text-muted-foreground border-border dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30" },
+  { value: "not_run", label: "Not Run", activeClass: "bg-muted text-foreground border-border" },
+  { value: "passed", label: "Pass", activeClass: "bg-status-success-surface text-status-success-ink border-status-success-rule" },
+  { value: "failed", label: "Fail", activeClass: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule" },
+  { value: "blocked", label: "Blocked", activeClass: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule" },
+  { value: "skipped", label: "Skip", activeClass: "bg-muted text-muted-foreground border-border" },
 ];
 
 const PRIORITY_STYLES: Record<TestCasePriority, string> = {
   low: "text-muted-foreground border-border",
-  medium: "text-amber-600 border-amber-200 dark:text-amber-400 dark:border-amber-500/30",
-  high: "text-red-600 border-red-200 dark:text-red-400 dark:border-red-500/30",
+  medium: "text-status-warning-ink border-status-warning-rule",
+  high: "text-status-danger-ink border-status-danger-rule",
 };
 
 interface ResultRowProps {

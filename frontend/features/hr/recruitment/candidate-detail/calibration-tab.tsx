@@ -31,17 +31,17 @@ interface CalibrationTabProps {
 }
 
 const DECISIONS = [
-  { value: "STRONG_HIRE", label: "Strong Hire", badgeClass: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800" },
-  { value: "HIRE", label: "Hire", badgeClass: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800" },
-  { value: "HOLD", label: "Hold", badgeClass: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-800" },
-  { value: "NO_HIRE", label: "No Hire", badgeClass: "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/40 dark:text-rose-300 dark:border-rose-800" },
+  { value: "STRONG_HIRE", label: "Strong Hire", badgeClass: "bg-status-success-surface text-status-success-ink border-status-success-rule" },
+  { value: "HIRE", label: "Hire", badgeClass: "bg-status-info-surface text-status-info-ink border-status-info-rule" },
+  { value: "HOLD", label: "Hold", badgeClass: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule" },
+  { value: "NO_HIRE", label: "No Hire", badgeClass: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule" },
 ] as const;
 
 const STATUS_CONFIG = {
-  completed: { label: "Completed", accentClass: "border-l-emerald-500", badgeClass: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800" },
-  scheduled: { label: "Scheduled", accentClass: "border-l-blue-500", badgeClass: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800" },
-  cancelled: { label: "Cancelled", accentClass: "border-l-rose-500", badgeClass: "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/40 dark:text-rose-300 dark:border-rose-800" },
-  pending: { label: "Pending", accentClass: "border-l-amber-500", badgeClass: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-800" },
+  completed: { label: "Completed", accentClass: "border-l-emerald-500", badgeClass: "bg-status-success-surface text-status-success-ink border-status-success-rule" },
+  scheduled: { label: "Scheduled", accentClass: "border-l-blue-500", badgeClass: "bg-status-info-surface text-status-info-ink border-status-info-rule" },
+  cancelled: { label: "Cancelled", accentClass: "border-l-rose-500", badgeClass: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule" },
+  pending: { label: "Pending", accentClass: "border-l-amber-500", badgeClass: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule" },
 } as const;
 
 type SessionStatus = keyof typeof STATUS_CONFIG;
@@ -89,8 +89,8 @@ function CalibrationSessionCard({ session, onEdit, onMarkComplete }: Calibration
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2">
-            <div className="w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
-              <TrendingUp className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+            <div className="w-7 rounded-lg bg-status-info-surface flex items-center justify-center shrink-0">
+              <TrendingUp className="h-3.5 w-3.5 text-status-info-ink" />
             </div>
             <div>
               <p className="text-sm font-semibold text-foreground">
@@ -134,7 +134,7 @@ function CalibrationSessionCard({ session, onEdit, onMarkComplete }: Calibration
             <Button
               variant="ghost"
               size="sm"
-              className="gap-1.5 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+              className="gap-1.5 text-xs text-status-success-ink hover:text-status-success-ink hover:bg-status-success-surface"
               onClick={handleMarkComplete}
             >
               <CheckCircle className="h-3 w-3" />

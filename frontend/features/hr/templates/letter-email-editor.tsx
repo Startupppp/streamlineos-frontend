@@ -34,7 +34,7 @@ function VariableToken({ variable, onInsert }: { variable: TemplateVariable; onI
       className={cn(
         "inline-flex items-center px-2 py-0.5 rounded-full text-micro font-mono border transition-colors cursor-pointer",
         variable.sensitive
-          ? "bg-red-50 hover:bg-red-100 text-red-700 border-red-200 dark:bg-red-500/10 dark:hover:bg-red-500/20 dark:text-red-300 dark:border-red-500/30"
+          ? "bg-status-danger-surface hover:bg-status-danger-surface text-status-danger-ink border-status-danger-rule"
           : "bg-primary/5 hover:bg-primary/10 text-foreground border-primary/20",
       )}
     >
@@ -97,7 +97,7 @@ export function LetterEmailEditor({
       <Card className="rounded-xl border border-border overflow-hidden">
         <CardHeader className="pb-2 border-b px-4 pt-3">
           <div className="flex items-center gap-2">
-            <Braces className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" />
+            <Braces className="h-3.5 w-3.5 text-status-warning-ink" />
             <CardTitle className="text-xs font-semibold">Variable Tokens</CardTitle>
           </div>
         </CardHeader>

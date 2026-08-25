@@ -98,7 +98,7 @@ function PollCard({
 
   const STATUS_COLORS: Record<HrPoll["status"], string> = {
     draft: "bg-muted text-muted-foreground border-border",
-    active: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+    active: "bg-status-success-surface text-status-success-ink border-status-success-rule",
     closed: "bg-muted text-muted-foreground border-border",
   };
 

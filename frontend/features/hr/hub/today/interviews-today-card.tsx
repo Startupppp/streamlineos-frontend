@@ -46,8 +46,8 @@ export function InterviewsTodayCard({
         <ul className="space-y-1.5">
           {todayInterviews.map((i) => (
             <li key={i.id} className="flex items-center gap-2 min-w-0">
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-500/10">
-                <CalendarClock className="h-3 w-3 text-blue-600 dark:text-blue-300" />
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-status-info-surface">
+                <CalendarClock className="h-3 w-3 text-status-info-ink" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium text-foreground truncate">

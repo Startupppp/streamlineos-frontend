@@ -506,7 +506,7 @@ function ProviderRow({
           {provider.sandboxMode && (
             <Badge
               variant="outline"
-              className="text-micro h-4 px-1.5 shrink-0 border-amber-300 text-amber-600"
+              className="text-micro h-4 px-1.5 shrink-0 border-status-warning-rule text-status-warning-ink"
             >
               Sandbox
             </Badge>
@@ -516,7 +516,7 @@ function ProviderRow({
             className={cn(
               "text-micro h-4 px-1.5 shrink-0",
               provider.enabled
-                ? "border-emerald-300 text-emerald-600"
+                ? "border-status-success-rule text-status-success-ink"
                 : "text-muted-foreground",
             )}
           >

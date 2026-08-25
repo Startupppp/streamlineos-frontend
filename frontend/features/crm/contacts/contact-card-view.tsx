@@ -197,7 +197,7 @@ export function ContactCardView({
                     <Link href={`/crm/deals/${contact.deal.id}`}>
                       <Badge
                         variant="secondary"
-                        className="text-micro text-status-warning-ink border-status-warning-rule hover:border-amber-400 gap-1 cursor-pointer"
+                        className="text-micro text-status-warning-ink border-status-warning-rule hover:border-status-warning-rule gap-1 cursor-pointer"
                       >
                         <Link2 className="h-2.5 w-2.5" />
                         Deal: {contact.deal.name}

@@ -19,9 +19,9 @@ import { cn } from "@/lib/utils";
 
 const MATURITY_STYLE: Record<string, string> = {
   production_baseline:
-    "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+    "bg-status-success-surface text-status-success-ink border-status-success-rule",
   pilot:
-    "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+    "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   template:
     "bg-muted text-muted-foreground border-border",
 };
@@ -132,7 +132,7 @@ export function EntitiesSection() {
                     className="flex items-start gap-2 px-2.5 py-1.5 text-dense bg-card"
                   >
                     {item.done ? (
-                      <CheckCircle className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                      <CheckCircle className="h-3.5 w-3.5 text-status-success-ink shrink-0 mt-0.5" />
                     ) : (
                       <Circle className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
                     )}

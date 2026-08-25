@@ -35,7 +35,7 @@ function CopyButton({ copied, onClick }: CopyButtonProps) {
       {...hoverHandlers}
     >
       {copied ? (
-        <CheckCheckIcon ref={iconRef} size={12} className="text-emerald-500" />
+        <CheckCheckIcon ref={iconRef} size={12} className="text-status-success-ink" />
       ) : (
         <CopyIcon ref={iconRef} size={12} />
       )}

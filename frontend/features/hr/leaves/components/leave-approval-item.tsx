@@ -81,7 +81,7 @@ export function LeaveApprovalItem({
                 {pConfig?.label}
               </span>
               {lopDays > 0 && (
-                <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border border-orange-200 dark:border-orange-500/30 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-300">
+                <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border border-status-warning-rule bg-status-warning-surface text-status-warning-ink">
                   <AlertTriangle className="h-2.5 w-2.5" />
                   LOP: {lopDays}d
                 </span>

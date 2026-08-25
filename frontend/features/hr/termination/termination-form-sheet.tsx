@@ -179,11 +179,11 @@ export function TerminationFormSheet({
       isPending={isPending}
       submitDisabled={submitDisabled}
     >
-      <div className="rounded-lg border border-rose-200 bg-rose-50 dark:border-rose-800/50 dark:bg-rose-500/10 px-3 py-2.5">
-        <p className="text-dense font-semibold text-rose-700 dark:text-rose-300">
+      <div className="rounded-lg border border-status-danger-rule bg-status-danger-surface px-3 py-2.5">
+        <p className="text-dense font-semibold text-status-danger-ink">
           Sensitive Action
         </p>
-        <p className="text-dense text-rose-600/80 dark:text-rose-300/70 mt-0.5">
+        <p className="text-dense text-status-danger-ink mt-0.5">
           Termination records are permanent and will initiate the offboarding process once approved.
         </p>
       </div>
@@ -194,7 +194,7 @@ export function TerminationFormSheet({
         </p>
         <div className="space-y-1.5">
           <Label className="text-sm font-medium">
-            Select Employee <span className="text-rose-500">*</span>
+            Select Employee <span className="text-status-danger-ink">*</span>
           </Label>
           <Combobox
             options={employeeOptions}
@@ -215,7 +215,7 @@ export function TerminationFormSheet({
 
         <div className="space-y-1.5">
           <Label className="text-sm font-medium">
-            Termination Reason <span className="text-rose-500">*</span>
+            Termination Reason <span className="text-status-danger-ink">*</span>
           </Label>
           <Select value={selectedReason} onValueChange={onSelectedReasonChange}>
             <SelectTrigger aria-label="Select termination reason">
@@ -235,13 +235,13 @@ export function TerminationFormSheet({
           <Label className="text-sm font-medium">
             Remarks{" "}
             {isOtherReason ? (
-              <span className="text-rose-500">*</span>
+              <span className="text-status-danger-ink">*</span>
             ) : (
               <span className="text-muted-foreground font-normal">(optional)</span>
             )}
           </Label>
           {isOtherReason && (
-            <p className="text-dense text-amber-600 dark:text-amber-300">
+            <p className="text-dense text-status-warning-ink">
               Required: Describe the specific reason for selecting &apos;Other&apos; (min. 10 characters).
             </p>
           )}
@@ -267,7 +267,7 @@ export function TerminationFormSheet({
 
         <div className="space-y-1.5">
           <Label className="text-sm font-medium">
-            Effective Date <span className="text-rose-500">*</span>
+            Effective Date <span className="text-status-danger-ink">*</span>
           </Label>
           <DatePicker value={effectiveDate ?? ""} onChange={onEffectiveDateChange} placeholder="Pick a date" className="text-sm" fromDate={new Date()} />
           <p className="text-dense text-muted-foreground">

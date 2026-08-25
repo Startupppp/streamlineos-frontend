@@ -241,13 +241,13 @@ export function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
           )}
           {canActivateUser && (
             <DropdownMenuItem onClick={handleActivate}>
-              <ShieldCheck className="h-3.5 w-3.5 mr-2 text-green-600" />
+              <ShieldCheck className="h-3.5 w-3.5 mr-2 text-status-success-ink" />
               {isArchived ? "Restore" : "Activate"}
             </DropdownMenuItem>
           )}
           {canSuspendUser && (
             <DropdownMenuItem onClick={handleOpenSuspendConfirm}>
-              <ShieldOff className="h-3.5 w-3.5 mr-2 text-yellow-600" />
+              <ShieldOff className="h-3.5 w-3.5 mr-2 text-status-warning-ink" />
               Suspend
             </DropdownMenuItem>
           )}

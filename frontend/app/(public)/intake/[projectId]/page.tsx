@@ -120,11 +120,11 @@ export default function PublicIntakePage() {
         <Card className="rounded-t-none border-t-0 px-6 py-6 shadow-noir">
           {mutation.isSuccess ? (
             <div className="text-center py-6 space-y-3">
-              <div className="w-16 h-16 rounded-full bg-emerald-100 mx-auto flex items-center justify-center">
-                <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+              <div className="w-16 h-16 rounded-full bg-status-success-surface mx-auto flex items-center justify-center">
+                <CheckCircle2 className="w-8 h-8 text-status-success-ink" />
               </div>
-              <p className="text-lg font-semibold text-slate-900">Request submitted</p>
-              <p className="text-sm text-slate-500">
+              <p className="text-lg font-semibold text-muted-foreground">Request submitted</p>
+              <p className="text-sm text-muted-foreground">
                 Your request has been received and will be reviewed by the team. Thank you for reaching out.
               </p>
             </div>

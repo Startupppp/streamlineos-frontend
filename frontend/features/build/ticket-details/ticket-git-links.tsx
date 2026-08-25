@@ -21,8 +21,8 @@ function ProviderLabel({ provider }: { provider: GitProvider }) {
 
 function RefTypeIcon({ refType }: { refType: GitRefType }) {
   if (refType === "commit") return <GitCommit className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />;
-  if (refType === "pull_request") return <GitMerge className="h-3.5 w-3.5 shrink-0 text-blue-500" />;
-  return <GitBranch className="h-3.5 w-3.5 shrink-0 text-blue-500" />;
+  if (refType === "pull_request") return <GitMerge className="h-3.5 w-3.5 shrink-0 text-status-info-ink" />;
+  return <GitBranch className="h-3.5 w-3.5 shrink-0 text-status-info-ink" />;
 }
 
 function StatusBadge({ status }: { status: string | null }) {
@@ -31,7 +31,7 @@ function StatusBadge({ status }: { status: string | null }) {
   const variant =
     lower === "merged" ? "default" : lower === "open" ? "secondary" : "outline";
   return (
-    <Badge variant={variant} className="h-4 px-1 text-[9px] capitalize shrink-0">
+    <Badge variant={variant} className="h-4 px-1 text-micro capitalize shrink-0">
       {status}
     </Badge>
   );

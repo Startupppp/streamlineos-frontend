@@ -32,11 +32,11 @@ const MAX_LINKS = 5;
 
 const statusPillClass: Record<string, string> = {
   APPROVED:
-    "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800",
+    "bg-status-success-surface text-status-success-ink border-status-success-rule",
   PENDING:
-    "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800",
+    "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   REJECTED:
-    "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-800",
+    "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };
 
 function parseLinks(raw: string | undefined): string[] {
@@ -205,12 +205,12 @@ export function WorkLogEntryRow({
             {format(date, "EEE")}
           </span>
           {today && (
-            <span className="mt-0.5 rounded bg-primary/10 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-primary">
+            <span className="mt-0.5 rounded bg-primary/10 px-1.5 py-px text-micro font-bold uppercase tracking-wide text-primary">
               Today
             </span>
           )}
           {isWeekendDay && !today && (
-            <span className="mt-0.5 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground/80">
+            <span className="mt-0.5 text-micro font-semibold uppercase tracking-wide text-muted-foreground/80">
               Wknd
             </span>
           )}
@@ -262,7 +262,7 @@ export function WorkLogEntryRow({
                 {status && (
                   <span
                     className={cn(
-                      "rounded-full border px-1.5 py-px text-[9px] font-semibold uppercase",
+                      "rounded-full border px-1.5 py-px text-micro font-semibold uppercase",
                       statusPillClass[status] ??
                         "border-border bg-muted text-muted-foreground",
                     )}
@@ -280,7 +280,7 @@ export function WorkLogEntryRow({
           ) : (
             <div className="space-y-2">
               {lockedSaved && (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+                <div className="rounded-lg border border-status-warning-rule bg-status-warning-surface px-3 py-2 text-xs text-status-warning-ink">
                   This log is saved and locked. Ask HR or a manager with attendance access to edit it.
                 </div>
               )}

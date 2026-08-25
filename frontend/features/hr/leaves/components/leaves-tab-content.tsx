@@ -197,7 +197,7 @@ export function LeavesTabContent({
             priorityConfig["MEDIUM"] ?? {
               label: "Medium",
               dotColor: "bg-amber-500",
-              textColor: "text-amber-600",
+              textColor: "text-status-warning-ink",
             };
           return (
             <div className="flex items-center gap-1.5">
@@ -218,12 +218,12 @@ export function LeavesTabContent({
           const status = row.status ?? "PENDING";
           const statusBadgeClass =
             status === "PENDING"
-              ? "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800"
+              ? "bg-status-warning-surface text-status-warning-ink border-status-warning-rule"
               : status === "APPROVED"
-                ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800"
+                ? "bg-status-success-surface text-status-success-ink border-status-success-rule"
                 : status === "CANCELLED"
                   ? "bg-muted text-muted-foreground border-border"
-                  : "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-800";
+                  : "bg-status-danger-surface text-status-danger-ink border-status-danger-rule";
           return (
             <div className="flex flex-col gap-0.5">
               <span
@@ -242,7 +242,7 @@ export function LeavesTabContent({
               )}
               {status === "REJECTED" && row.rejectionReason && (
                 <span
-                  className="max-w-[120px] truncate text-micro text-rose-500 dark:text-rose-300"
+                  className="max-w-[120px] truncate text-micro text-status-danger-ink"
                   title={row.rejectionReason}
                 >
                   {row.rejectionReason}

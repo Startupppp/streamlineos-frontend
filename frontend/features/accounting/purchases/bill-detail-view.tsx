@@ -9,11 +9,11 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import type { PurchaseBill, PurchaseBillStatus } from "@/types/accounting";
 
 const STATUS_CLASS: Record<PurchaseBillStatus, string> = {
-  DRAFT: "bg-amber-50 text-amber-700 border-amber-200/70 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  PENDING_APPROVAL: "bg-amber-50 text-amber-700 border-amber-200/70 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  POSTED: "bg-blue-50 text-blue-700 border-blue-200/70 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  PARTIALLY_PAID: "bg-sky-50 text-sky-700 border-sky-200/70 dark:bg-sky-500/10 dark:text-sky-300 dark:border-sky-500/30",
-  PAID: "bg-emerald-50 text-emerald-700 border-emerald-200/70 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  DRAFT: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  PENDING_APPROVAL: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  POSTED: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  PARTIALLY_PAID: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  PAID: "bg-status-success-surface text-status-success-ink border-status-success-rule",
   CANCELLED: "bg-muted text-muted-foreground border-border",
 };
 
@@ -177,10 +177,10 @@ export function BillDetailView({
   return (
     <div className="space-y-4">
       {isPendingApproval && (
-        <div className="rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-500/30 dark:bg-blue-500/10 p-4 flex items-start justify-between gap-4">
+        <div className="rounded-lg border border-status-info-rule bg-status-info-surface p-4 flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold text-blue-800 dark:text-blue-300">Pending approval</p>
-            <p className="text-xs text-blue-700 dark:text-blue-300 mt-0.5">
+            <p className="text-sm font-semibold text-status-info-ink">Pending approval</p>
+            <p className="text-xs text-status-info-ink mt-0.5">
               This bill is awaiting approval before it can be posted.
             </p>
           </div>
@@ -317,7 +317,7 @@ export function BillDetailView({
             </div>
             <div className="flex justify-between font-medium">
               <span>Outstanding</span>
-              <span className={outstanding > 0.005 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400"}>
+              <span className={outstanding > 0.005 ? "text-status-warning-ink" : "text-status-success-ink"}>
                 {formatNum(outstanding)}
               </span>
             </div>

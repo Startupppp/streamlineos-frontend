@@ -89,7 +89,7 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
         <span className="flex items-center gap-2">
           <RunStatusBadge status={run.status} />
           {run.status === "REOPENED" && run.reopenReason && (
-            <span className="text-amber-600 text-dense">Reason: {run.reopenReason}</span>
+            <span className="text-status-warning-ink text-dense">Reason: {run.reopenReason}</span>
           )}
         </span>
       }
@@ -154,7 +154,7 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
         )}
 
         {data?.payoutHealth && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-amber-200 bg-amber-50 text-dense text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-status-warning-rule bg-status-warning-surface text-dense text-status-warning-ink">
             <span>⚠️</span>
             <span>
               This run is marked {run.status.replace(/_/g, " ")}, but not everyone was actually paid:{" "}
@@ -204,7 +204,7 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
             <TabsTrigger value="exceptions" className="gap-1">
               Exceptions
               {openExceptions > 0 && (
-                <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-red-100 text-red-700 text-[9px] font-bold dark:bg-red-500/10 dark:text-red-300">
+                <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-status-danger-surface text-status-danger-ink text-micro font-bold">
                   {openExceptions}
                 </span>
               )}

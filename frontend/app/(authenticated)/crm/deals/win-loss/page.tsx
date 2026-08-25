@@ -26,11 +26,11 @@ import { useWinLossAnalysis } from "@/hooks/api/crm";
 import { formatCurrency } from "@/features/crm/lib/format-currency";
 
 const REASON_COLORS = [
-  "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
-  "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
+  "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  "bg-status-success-surface text-status-success-ink border-status-success-rule",
   "bg-muted text-muted-foreground border-border",
 ];
 
@@ -149,13 +149,13 @@ export default function WinLossAnalysisPage() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-center gap-8 py-4">
                 <div className="text-center">
-                  <div className="text-4xl font-bold text-emerald-600 dark:text-emerald-400">{s.won}</div>
+                  <div className="text-4xl font-bold text-status-success-ink">{s.won}</div>
                   <div className="text-sm text-muted-foreground mt-1">Won</div>
                   <div className="text-xs text-muted-foreground">{formatCurrency(s.wonValue)}</div>
                 </div>
                 <div className="h-16 w-px bg-border" />
                 <div className="text-center">
-                  <div className="text-4xl font-bold text-red-600 dark:text-red-400">{s.lost}</div>
+                  <div className="text-4xl font-bold text-status-danger-ink">{s.lost}</div>
                   <div className="text-sm text-muted-foreground mt-1">Lost</div>
                   <div className="text-xs text-muted-foreground">{formatCurrency(s.lostValue)}</div>
                 </div>
@@ -183,7 +183,7 @@ export default function WinLossAnalysisPage() {
                 </div>
                 <div className="flex justify-between text-sm mt-1">
                   <span className="text-muted-foreground">Revenue captured</span>
-                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                  <span className="font-semibold text-status-success-ink">
                     {totalRevenue > 0
                       ? `${Math.round((s.wonValue / totalRevenue) * 100)}%`
                       : "—"}
@@ -196,7 +196,7 @@ export default function WinLossAnalysisPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <BarChart3 className="h-4 w-4 text-red-600 dark:text-red-400" />
+                <BarChart3 className="h-4 w-4 text-status-danger-ink" />
                 Lost Reason Breakdown
               </CardTitle>
             </CardHeader>

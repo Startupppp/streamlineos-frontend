@@ -315,8 +315,8 @@ export function EssReimbursementsSection({
                 className="flex items-center justify-between border-b border-border px-4 py-3 last:border-0 transition-colors hover:bg-muted/30"
               >
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex w-8 shrink-0 items-center justify-center rounded-md bg-emerald-50 dark:bg-emerald-500/10">
-                    <Receipt className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                  <div className="flex w-8 shrink-0 items-center justify-center rounded-md bg-status-success-surface">
+                    <Receipt className="h-4 w-4 text-status-success-ink" />
                   </div>
                   <div className="min-w-0">
                     <TruncatedText text={r.category} className="text-sm font-medium text-foreground" />

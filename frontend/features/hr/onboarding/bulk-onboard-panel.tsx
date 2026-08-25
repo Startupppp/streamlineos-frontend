@@ -293,7 +293,7 @@ export function BulkOnboardPanel() {
                 <CardTitle className="text-sm">Preview · {fileName}</CardTitle>
                 <CardDescription className="text-xs mt-0.5">
                   {previewRows.length} row{previewRows.length === 1 ? "" : "s"} ·{" "}
-                  <span className="text-emerald-600 dark:text-emerald-300">{validCount} ready</span>
+                  <span className="text-status-success-ink">{validCount} ready</span>
                   {invalidCount > 0 && (
                     <>
                       {" · "}
@@ -310,7 +310,7 @@ export function BulkOnboardPanel() {
           </CardHeader>
           <CardContent className="space-y-4">
             {invalidCount > 0 && (
-              <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-amber-800 dark:text-amber-200">
+              <div className="flex items-start gap-2 rounded-lg border border-status-warning-rule bg-status-warning-surface px-3 py-2 text-xs text-status-warning-ink">
                 <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
                 <span>
                   Rows with errors will be skipped. Fix them in your file and re-upload, or continue to import only the ready rows.

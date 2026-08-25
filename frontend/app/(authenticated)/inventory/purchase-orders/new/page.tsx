@@ -160,11 +160,11 @@ export default function NewPurchaseOrderPage() {
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
         {hasNoVendors && (
-          <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-            <Store className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+          <div className="flex items-start gap-3 rounded-lg border border-status-warning-rule bg-status-warning-surface px-4 py-3 text-sm text-status-warning-ink">
+            <Store className="mt-0.5 h-4 w-4 shrink-0 text-status-warning-ink" />
             <div>
               <p className="font-medium">No vendors found</p>
-              <p className="text-amber-700 dark:text-amber-400">
+              <p className="text-status-warning-ink">
                 You need at least one vendor to create a purchase order.{" "}
                 <Link href="/inventory/vendors/new" className="underline underline-offset-2 font-medium">
                   Create a vendor

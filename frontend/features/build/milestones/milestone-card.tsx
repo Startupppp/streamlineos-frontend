@@ -22,15 +22,15 @@ const STATUS_CONFIG = {
   },
   ACHIEVED: {
     label: "Achieved",
-    color: "text-emerald-600 dark:text-emerald-400",
+    color: "text-status-success-ink",
     badgeClassName:
-      "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 border-0",
+      "bg-status-success-surface text-status-success-ink border-0",
     stripeClassName: "border-l-emerald-500",
   },
   MISSED: {
     label: "Missed",
-    color: "text-red-600 dark:text-red-400",
-    badgeClassName: "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-300 border-0",
+    color: "text-status-danger-ink",
+    badgeClassName: "bg-status-danger-surface text-status-danger-ink border-0",
     stripeClassName: "border-l-red-500",
   },
 } as const;

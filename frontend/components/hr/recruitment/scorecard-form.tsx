@@ -56,23 +56,23 @@ const RECOMMENDATION_OPTIONS: RecommendationOption[] = [
     label: "Hire",
     Icon: CheckCircle2,
     badgeClass:
-      "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-    activeClass: "border-green-500 bg-green-50 dark:bg-green-500/10",
+      "bg-status-success-surface text-status-success-ink",
+    activeClass: "border-status-success-rule bg-status-success-surface",
   },
   {
     value: "NO_HIRE",
     label: "No Hire",
     Icon: XCircle,
-    badgeClass: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
-    activeClass: "border-red-500 bg-red-50 dark:bg-red-500/10",
+    badgeClass: "bg-status-danger-surface text-status-danger-ink",
+    activeClass: "border-status-danger-rule bg-status-danger-surface",
   },
   {
     value: "MAYBE",
     label: "Maybe",
     Icon: HelpCircle,
     badgeClass:
-      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
-    activeClass: "border-yellow-500 bg-yellow-50 dark:bg-yellow-500/10",
+      "bg-status-warning-surface text-status-warning-ink",
+    activeClass: "border-status-warning-rule bg-status-warning-surface",
   },
 ];
 
@@ -142,7 +142,7 @@ function StarButton({ star, display, readOnly, onChange, onHover, onLeave }: Sta
         className={cn(
           "h-5 w-5 transition-colors",
           star <= display
-            ? "fill-yellow-400 text-yellow-400"
+            ? "fill-yellow-400 text-status-warning-ink"
             : "fill-transparent text-muted-foreground",
         )}
       />
@@ -327,7 +327,7 @@ export function ScorecardForm({
     <Form {...form}>
       <div className="space-y-6">
         {isBlindMode && (
-          <div className="flex items-start gap-2 rounded-md border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-800 dark:border-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300">
+          <div className="flex items-start gap-2 rounded-md border border-status-warning-rule bg-status-warning-surface px-4 py-3 text-sm text-status-warning-ink">
             <EyeOff className="mt-0.5 h-4 w-4 shrink-0" />
             <span>Your scorecard is hidden from others until you submit</span>
           </div>

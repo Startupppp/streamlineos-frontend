@@ -114,7 +114,7 @@ function GroupListItem({
       </div>
       <div className="flex items-center gap-0.5 shrink-0">
         {group.isSystem ? (
-          <Badge variant="outline" className="text-[9px] px-1.5">
+          <Badge variant="outline" className="text-micro px-1.5">
             System
           </Badge>
         ) : canManage ? (

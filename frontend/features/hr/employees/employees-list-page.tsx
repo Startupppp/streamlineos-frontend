@@ -60,7 +60,7 @@ function buildEmployeeListColumns(
           <div className="flex items-center gap-3">
             <Avatar className="w-9 h-9 shrink-0 ring-2 ring-background shadow-sm">
               <AvatarImage src={resolveImageUrl(emp.image)} alt="" />
-              <AvatarFallback className="bg-blue-500/10 text-blue-700 dark:text-blue-300 text-xs font-bold">
+              <AvatarFallback className="bg-status-info-surface text-status-info-ink text-xs font-bold">
                 {displayName[0]?.toUpperCase()}
               </AvatarFallback>
             </Avatar>
@@ -101,7 +101,7 @@ function buildEmployeeListColumns(
       cell: (emp) => {
         const dept = getDept(emp);
         return dept ? (
-          <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-blue-50 text-blue-700 border-blue-200/70 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-800/40">
+          <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-status-info-surface text-status-info-ink border-status-info-rule">
             {dept}
           </span>
         ) : (

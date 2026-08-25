@@ -43,7 +43,7 @@ export function AttachmentPreview({
       ) : (
         <div className="h-10 w-10 rounded border border-border bg-muted flex items-center justify-center shrink-0">
           {file.type === "application/pdf" ? (
-            <FileText className="h-5 w-5 text-red-500" />
+            <FileText className="h-5 w-5 text-status-danger-ink" />
           ) : (
             <File className="h-5 w-5 text-muted-foreground" />
           )}

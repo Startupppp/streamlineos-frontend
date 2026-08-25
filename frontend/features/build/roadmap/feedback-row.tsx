@@ -168,7 +168,7 @@ export const FeedbackRow = memo(function FeedbackRow({
             {isMerged ? (
               <Badge
                 variant="outline"
-                className="border-amber-200 bg-amber-50 text-micro text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300"
+                className="border-status-warning-rule bg-status-warning-surface text-micro text-status-warning-ink"
               >
                 Merged duplicate
               </Badge>

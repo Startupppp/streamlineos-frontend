@@ -466,7 +466,7 @@ export function AutomationBuilderSheet({
                             {ACTION_TYPES.find((a) => a.value === action.type)?.label ?? action.type}
                           </Badge>
                           {action.type.startsWith("ai_") && (
-                            <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                            <Sparkles className="h-3.5 w-3.5 text-status-warning-ink" />
                           )}
                         </div>
                         <Button
@@ -497,7 +497,7 @@ export function AutomationBuilderSheet({
                 </div>
               )}
               {actions.some((a) => a.type.startsWith("ai_")) && (
-                <div className="flex items-start gap-1.5 rounded-md bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-800 p-2 text-xs text-amber-700 dark:text-amber-300">
+                <div className="flex items-start gap-1.5 rounded-md bg-status-warning-surface border border-status-warning-rule p-2 text-xs text-status-warning-ink">
                   <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5" />
                   <span>AI actions consume credits from your organization&apos;s AI budget.</span>
                 </div>
@@ -525,7 +525,7 @@ export function AutomationBuilderSheet({
                     {testResult.actionResults.map((r, i) => (
                       <div key={i} className="flex items-start gap-2 text-xs">
                         {r.ok ? (
-                          <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
+                          <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5 text-status-success-ink" />
                         ) : (
                           <XCircle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-destructive" />
                         )}

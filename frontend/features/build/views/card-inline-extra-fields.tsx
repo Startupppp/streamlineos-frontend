@@ -150,7 +150,7 @@ export const InlineLabels = memo(function InlineLabels({
               )}
             />
             {selectedIds.length > 0 && (
-              <span className="text-[9px] text-muted-foreground font-mono">{selectedIds.length}</span>
+              <span className="text-micro text-muted-foreground font-mono">{selectedIds.length}</span>
             )}
           </button>
         </ResponsivePopoverTrigger>

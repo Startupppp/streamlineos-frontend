@@ -11,10 +11,10 @@ import { format } from "date-fns";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 const priorityColors: Record<string, string> = {
-  URGENT: "bg-red-100 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
-  HIGH: "bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30",
-  MEDIUM: "bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-500/10 dark:text-yellow-300 dark:border-yellow-500/30",
-  LOW: "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30",
+  URGENT: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
+  HIGH: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  MEDIUM: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  LOW: "bg-muted text-muted-foreground border-border",
 };
 
 export function MyTasksWidget() {

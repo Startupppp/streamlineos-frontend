@@ -44,14 +44,14 @@ function StarButton({ starValue, displayRating, onStarClick, onStarHover }: Star
       type="button"
       onClick={handleClick}
       onMouseEnter={handleMouseEnter}
-      className="transition-transform duration-200 hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 rounded"
+      className="transition-transform duration-200 hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-warning-rule rounded"
       aria-label={`Rate ${starValue} out of 5`}
     >
       <Star
         className={cn(
           "h-7 w-7 transition-colors duration-200",
           starValue <= displayRating
-            ? "text-amber-400 fill-amber-400"
+            ? "text-status-warning-ink fill-amber-400"
             : "text-muted-foreground/30"
         )}
       />
@@ -94,7 +94,7 @@ function RubricEntryRow({ entry, index, onCategoryNameChange, onScoreChange, onC
             className="text-xs font-medium flex-1"
           />
           <div className="flex items-center gap-1 shrink-0">
-            <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
+            <Star className="h-3.5 w-3.5 text-status-warning-ink fill-amber-400" />
             <span className="text-sm font-bold tabular-nums text-foreground w-5 text-center">{entry.score}</span>
             <span className="text-micro text-muted-foreground">/{entry.maxScore}</span>
           </div>
@@ -135,10 +135,10 @@ const DEFAULT_RUBRIC_CATEGORIES = [
 ];
 
 const RESULT_CONFIG: Record<InterviewResult, { label: string; colorClass: string }> = {
-  PENDING: { label: "Pending", colorClass: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300" },
-  PASSED: { label: "Passed", colorClass: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300" },
-  FAILED: { label: "Failed", colorClass: "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/40 dark:text-rose-300" },
-  NO_SHOW: { label: "No Show", colorClass: "bg-muted text-muted-foreground border-border dark:bg-slate-800/60 dark:text-slate-400" },
+  PENDING: { label: "Pending", colorClass: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule" },
+  PASSED: { label: "Passed", colorClass: "bg-status-success-surface text-status-success-ink border-status-success-rule" },
+  FAILED: { label: "Failed", colorClass: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule" },
+  NO_SHOW: { label: "No Show", colorClass: "bg-muted text-muted-foreground border-border" },
 };
 
 const schema = z.object({
@@ -245,7 +245,7 @@ export function InterviewFeedbackForm({ interview, open, onOpenChange }: Intervi
       <Form {...form}>
         <div className="space-y-2">
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-7 rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 flex items-center justify-center shrink-0">
+            <div className="w-7 rounded-lg bg-status-warning-surface text-status-warning-ink flex items-center justify-center shrink-0">
               <Star className="h-3.5 w-3.5" />
             </div>
             <span className="text-sm font-semibold text-foreground">Overall Rating</span>
@@ -262,7 +262,7 @@ export function InterviewFeedbackForm({ interview, open, onOpenChange }: Intervi
                 />
               ))}
               {overallRating > 0 && (
-                <span className="ml-2 text-sm font-semibold text-amber-600 dark:text-amber-400 tabular-nums">
+                <span className="ml-2 text-sm font-semibold text-status-warning-ink tabular-nums">
                   {overallRating}/5
                 </span>
               )}
@@ -276,7 +276,7 @@ export function InterviewFeedbackForm({ interview, open, onOpenChange }: Intervi
           render={({ field }) => (
             <FormItem className="space-y-2">
               <div className="flex items-center gap-2 mb-1">
-                <div className="w-7 rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 flex items-center justify-center shrink-0">
+                <div className="w-7 rounded-lg bg-status-info-surface text-status-info-ink flex items-center justify-center shrink-0">
                   <ClipboardList className="h-3.5 w-3.5" />
                 </div>
                 <FormLabel className="text-sm font-semibold text-foreground">Decision</FormLabel>
@@ -308,13 +308,13 @@ export function InterviewFeedbackForm({ interview, open, onOpenChange }: Intervi
         <div className="space-y-2">
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-2">
-              <div className="w-7 rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 flex items-center justify-center shrink-0">
+              <div className="w-7 rounded-lg bg-status-info-surface text-status-info-ink flex items-center justify-center shrink-0">
                 <BarChart3 className="h-3.5 w-3.5" />
               </div>
               <span className="text-sm font-semibold text-foreground">Scoring Rubric</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-muted text-foreground border-border dark:bg-slate-800/60 dark:text-slate-300 dark:border-slate-700">
+              <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-muted text-foreground border-border">
                 Avg: {avgScore}/10
               </span>
               <Button
@@ -350,7 +350,7 @@ export function InterviewFeedbackForm({ interview, open, onOpenChange }: Intervi
           render={({ field }) => (
             <FormItem className="space-y-2">
               <div className="flex items-center gap-2 mb-1">
-                <div className="w-7 rounded-lg bg-emerald-100 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <div className="w-7 rounded-lg bg-status-success-surface text-status-success-ink flex items-center justify-center shrink-0">
                   <MessageSquare className="h-3.5 w-3.5" />
                 </div>
                 <FormLabel className="text-sm font-semibold text-foreground">Overall Feedback</FormLabel>

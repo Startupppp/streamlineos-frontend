@@ -42,10 +42,10 @@ import { useRunInputs, usePatchInput, useReimportInputs } from "@/hooks/api/payr
 import type { RunInput, PayrollInputSource } from "@/types/payroll/runs";
 
 const SOURCE_COLORS: Record<PayrollInputSource, string> = {
-  ATTENDANCE: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  LEAVE: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  TIMESHEET: "bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-500/10 dark:text-cyan-300 dark:border-cyan-500/30",
-  UPLOAD: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  ATTENDANCE: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  LEAVE: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  TIMESHEET: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  UPLOAD: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   MANUAL: "bg-muted text-muted-foreground border-border",
 };
 
@@ -150,7 +150,7 @@ const COLUMNS: DataTableColumn<RunInput>[] = [
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="inline-flex items-center">
-                <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+                <AlertTriangle className="h-3.5 w-3.5 text-status-warning-ink" />
               </span>
             </TooltipTrigger>
             <TooltipContent side="left" className="max-w-[220px] text-dense">

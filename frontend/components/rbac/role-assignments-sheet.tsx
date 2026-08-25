@@ -471,7 +471,7 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
                           <Badge
                             key={via}
                             variant="secondary"
-                            className="text-[9px]"
+                            className="text-micro"
                           >
                             {via}
                           </Badge>

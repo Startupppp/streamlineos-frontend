@@ -142,8 +142,8 @@ export function ReadinessRail({
                 className={cn(
                   "inline-flex items-center rounded-full border px-2 py-0.5 text-micro font-semibold uppercase tracking-wide",
                   canPay
-                    ? "border-emerald-400/50 text-emerald-800 dark:text-emerald-200"
-                    : "border-red-400/40 text-red-800 dark:text-red-200",
+                    ? "border-status-success-rule text-status-success-ink"
+                    : "border-status-danger-rule text-status-danger-ink",
                 )}
               >
                 {canPay ? "Can pay" : "Cannot pay"}

@@ -164,11 +164,11 @@ export function AdminExpenseItem({
             className={cn(
               "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border",
               status === "PENDING" &&
-                "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800",
+                "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
               status === "APPROVED" &&
-                "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800",
+                "bg-status-success-surface text-status-success-ink border-status-success-rule",
               status === "REJECTED" &&
-                "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-800",
+                "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
               status === "PAID" &&
                 "bg-muted text-muted-foreground border-border",
             )}
@@ -197,7 +197,7 @@ export function AdminExpenseItem({
         <div className="flex items-center gap-2 flex-wrap">
           <Avatar className="h-5 w-5">
             <AvatarImage src={resolveImageUrl(expense.user?.image)} />
-            <AvatarFallback className="text-[9px] bg-muted">
+            <AvatarFallback className="text-micro bg-muted">
               {expense.user?.firstName?.[0]}
               {expense.user?.lastName?.[0]}
             </AvatarFallback>

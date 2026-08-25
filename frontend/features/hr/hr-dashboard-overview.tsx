@@ -47,8 +47,8 @@ function LeaveCalendarWidget() {
     <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden flex flex-col">
       <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/50 shrink-0 bg-gradient-to-r from-amber-500/[0.04] to-transparent">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-500/10 flex items-center justify-center shrink-0">
-            <CalendarOff className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" />
+          <div className="w-8 h-8 rounded-xl bg-status-warning-surface flex items-center justify-center shrink-0">
+            <CalendarOff className="h-3.5 w-3.5 text-status-warning-ink" />
           </div>
           <div>
             <h3 className="text-sm font-semibold text-foreground leading-tight">
@@ -101,7 +101,7 @@ function LeaveCalendarWidget() {
                   {leave.userImage && (
                     <AvatarImage src={leave.userImage} alt={leave.userName} />
                   )}
-                  <AvatarFallback className="text-micro bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 font-semibold">
+                  <AvatarFallback className="text-micro bg-status-warning-surface text-status-warning-ink font-semibold">
                     {leave.userName.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -116,7 +116,7 @@ function LeaveCalendarWidget() {
                     </span>
                   </p>
                 </div>
-                <span className="text-micro px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 font-semibold shrink-0 uppercase tracking-wide">
+                <span className="text-micro px-2 py-0.5 rounded-full bg-status-warning-surface text-status-warning-ink font-semibold shrink-0 uppercase tracking-wide">
                   {leave.status}
                 </span>
               </div>
@@ -135,8 +135,8 @@ function OnboardingStatusWidget() {
     <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden flex flex-col">
       <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/50 shrink-0 bg-gradient-to-r from-emerald-500/[0.04] to-transparent">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center shrink-0">
-            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-300" />
+          <div className="w-8 h-8 rounded-xl bg-status-success-surface flex items-center justify-center shrink-0">
+            <CheckCircle2 className="h-3.5 w-3.5 text-status-success-ink" />
           </div>
           <div>
             <h3 className="text-sm font-semibold text-foreground leading-tight">
@@ -192,10 +192,10 @@ function OnboardingStatusWidget() {
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-3">
-                  <span className="flex items-center gap-1 text-amber-600 dark:text-amber-300 font-medium">
+                  <span className="flex items-center gap-1 text-status-warning-ink font-medium">
                     <Clock className="h-3 w-3" /> {data.inProgress} in progress
                   </span>
-                  <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-300 font-medium">
+                  <span className="flex items-center gap-1 text-status-success-ink font-medium">
                     <CheckCircle2 className="h-3 w-3" /> {data.completed} done
                   </span>
                 </div>

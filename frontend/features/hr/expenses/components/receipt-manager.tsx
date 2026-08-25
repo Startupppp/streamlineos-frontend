@@ -114,7 +114,7 @@ export function ReceiptManager({
                   <span className="text-lg leading-none" aria-hidden>
                     {receiptKindEmoji(kind)}
                   </span>
-                  <span className="text-[9px] font-semibold uppercase text-primary">
+                  <span className="text-micro font-semibold uppercase text-primary">
                     {receiptKindLabel(kind)}
                   </span>
                 </div>

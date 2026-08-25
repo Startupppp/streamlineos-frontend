@@ -34,12 +34,12 @@ const SOURCE_LABELS: Record<string, string> = {
 };
 
 const SOURCE_COLORS = [
-  { bar: "bg-blue-500", badge: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30" },
-  { bar: "bg-amber-500", badge: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30" },
-  { bar: "bg-emerald-500", badge: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
-  { bar: "bg-blue-400", badge: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30" },
-  { bar: "bg-rose-500", badge: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30" },
-  { bar: "bg-cyan-500", badge: "bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-500/10 dark:text-cyan-300 dark:border-cyan-500/30" },
+  { bar: "bg-category-blue-fill", badge: "bg-status-info-surface text-status-info-ink border-status-info-rule" },
+  { bar: "bg-category-amber-fill", badge: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule" },
+  { bar: "bg-category-emerald-fill", badge: "bg-status-success-surface text-status-success-ink border-status-success-rule" },
+  { bar: "bg-category-blue-fill", badge: "bg-status-info-surface text-status-info-ink border-status-info-rule" },
+  { bar: "bg-category-rose-fill", badge: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule" },
+  { bar: "bg-category-cyan-fill", badge: "bg-status-info-surface text-status-info-ink border-status-info-rule" },
   { bar: "bg-muted-foreground", badge: "bg-muted text-muted-foreground border-border" },
 ];
 
@@ -168,12 +168,12 @@ export default function LeadSourceReportPage() {
                             <div className="flex items-center gap-2">
                               <Badge
                                 variant="outline"
-                                className={cn("text-[9px] px-1.5 py-0 h-4", color.badge)}
+                                className={cn("text-micro px-1.5 py-0 h-4", color.badge)}
                               >
                                 {label}
                               </Badge>
                               {topSource?.source === s.source && (
-                                <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4">
+                                <Badge variant="secondary" className="text-micro px-1.5 py-0 h-4">
                                   Top
                                 </Badge>
                               )}
@@ -184,7 +184,7 @@ export default function LeadSourceReportPage() {
                                 <div className="text-micro text-muted-foreground">leads</div>
                               </div>
                               <div className="text-center">
-                                <div className="font-semibold tabular-nums text-emerald-700 dark:text-emerald-400">
+                                <div className="font-semibold tabular-nums text-status-success-ink">
                                   {s.converted}
                                 </div>
                                 <div className="text-micro text-muted-foreground">converted</div>
@@ -194,9 +194,9 @@ export default function LeadSourceReportPage() {
                                   className={cn(
                                     "font-semibold tabular-nums",
                                     s.conversionRate >= 30
-                                      ? "text-emerald-700 dark:text-emerald-400"
+                                      ? "text-status-success-ink"
                                       : s.conversionRate >= 15
-                                        ? "text-amber-700 dark:text-amber-400"
+                                        ? "text-status-warning-ink"
                                         : "text-muted-foreground",
                                   )}
                                 >
@@ -235,7 +235,7 @@ export default function LeadSourceReportPage() {
               <Card className="shadow-noir">
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    <TrendingUp className="h-4 w-4 text-status-success-ink" />
                     Conversion Rate by Source
                   </CardTitle>
                 </CardHeader>

@@ -83,7 +83,7 @@ export function buildAssetColumns(
           <div className="flex items-center gap-2">
             <Avatar className="h-6 w-6">
               {imageUrl && <AvatarImage src={imageUrl} alt={displayName} />}
-              <AvatarFallback className="text-[9px] bg-primary/10 text-primary">
+              <AvatarFallback className="text-micro bg-primary/10 text-primary">
                 {initials}
               </AvatarFallback>
             </Avatar>

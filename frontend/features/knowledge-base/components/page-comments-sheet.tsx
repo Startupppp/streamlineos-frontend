@@ -134,7 +134,7 @@ function CommentRow({ comment, replies, pageId, onReply }: CommentRowProps) {
               </button>
               {!isResolved && (
                 <button
-                  className="text-xs text-muted-foreground hover:text-green-600 transition-colors"
+                  className="text-xs text-muted-foreground hover:text-status-success-ink transition-colors"
                   onClick={handleResolve}
                 >
                   <KbCheckIcon className="h-3 w-3 inline mr-0.5" />

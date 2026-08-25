@@ -262,7 +262,7 @@ export function QuestionFormBody({
             questionLength >= QUESTION_MAX_LENGTH
               ? "text-destructive"
               : questionLength >= QUESTION_MAX_LENGTH - 30
-                ? "text-amber-600"
+                ? "text-status-warning-ink"
                 : "text-muted-foreground"
           )}
         >
@@ -339,7 +339,7 @@ export function QuestionFormBody({
             tagsCount >= TAGS_MAX_COUNT
               ? "text-destructive"
               : tagsCount >= TAGS_MAX_COUNT - 1
-                ? "text-amber-600"
+                ? "text-status-warning-ink"
                 : "text-muted-foreground"
           )}
         >
@@ -366,7 +366,7 @@ export function QuestionFormBody({
             sampleAnswerLength >= SAMPLE_ANSWER_MAX_LENGTH
               ? "text-destructive"
               : sampleAnswerLength >= SAMPLE_ANSWER_MAX_LENGTH - 20
-                ? "text-amber-600"
+                ? "text-status-warning-ink"
                 : "text-muted-foreground"
           )}
         >
@@ -391,7 +391,7 @@ export function QuestionFormBody({
             keywordsCount >= KEYWORDS_MAX_COUNT
               ? "text-destructive"
               : keywordsCount >= KEYWORDS_MAX_COUNT - 1
-                ? "text-amber-600"
+                ? "text-status-warning-ink"
                 : "text-muted-foreground"
           )}
         >

@@ -16,13 +16,13 @@ import {
 import { cn } from "@/lib/utils";
 
 const BUCKET_STYLE: Record<AgingBucket, string> = {
-  fresh: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  fresh: "bg-status-success-surface text-status-success-ink border-status-success-rule",
   watch:
-    "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+    "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   overdue:
-    "bg-orange-50 text-orange-800 border-orange-200 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30",
+    "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   critical:
-    "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30",
+    "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };
 
 const KIND_LABEL: Record<ServiceDeliveryItem["kind"], string> = {

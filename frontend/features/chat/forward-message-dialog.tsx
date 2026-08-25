@@ -114,7 +114,7 @@ export function ForwardMessageDialog({ message, open, onOpenChange }: ForwardMes
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
-          <DialogTitle className="text-[15px] font-bold">Forward Message</DialogTitle>
+          <DialogTitle className="text-sm font-bold">Forward Message</DialogTitle>
         </DialogHeader>
 
         {previewText && (

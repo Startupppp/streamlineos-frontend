@@ -183,8 +183,8 @@ export function DefaultStarButton({
         className={cn(
           "h-7 w-7 shrink-0 transition-colors duration-200",
           isCurrentDefault
-            ? "text-amber-500 hover:text-amber-600"
-            : "text-muted-foreground/40 hover:text-amber-400",
+            ? "text-status-warning-ink hover:text-status-warning-ink"
+            : "text-muted-foreground/40 hover:text-status-warning-ink",
         )}
         onClick={handleClick}
         disabled={isPending}

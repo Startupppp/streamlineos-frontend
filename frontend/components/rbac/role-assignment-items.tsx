@@ -36,7 +36,7 @@ export function AssignableUserItem({
     >
       <Avatar className="h-6 w-6">
         <AvatarImage src={member.image ?? undefined} alt={member.name ?? ""} />
-        <AvatarFallback className="text-[9px]">
+        <AvatarFallback className="text-micro">
           {getInitials(member.name ?? member.email)}
         </AvatarFallback>
       </Avatar>

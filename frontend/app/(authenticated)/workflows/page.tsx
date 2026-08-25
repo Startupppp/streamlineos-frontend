@@ -83,9 +83,9 @@ type StatusFilter = WorkflowStatus | "all";
 
 const STATUS_BADGE_CLASS: Record<WorkflowStatus, string> = {
   draft: "bg-muted text-muted-foreground",
-  published: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300",
-  disabled: "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-300",
-  archived: "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-300",
+  published: "bg-status-success-surface text-status-success-ink",
+  disabled: "bg-status-warning-surface text-status-warning-ink",
+  archived: "bg-status-danger-surface text-status-danger-ink",
 };
 
 const STATUS_LEFT_BORDER: Record<WorkflowStatus, string> = {

@@ -28,18 +28,18 @@ function statusBadgeClass(status: string | null): string {
   if (!status)
     return "bg-muted text-muted-foreground border-border";
   if (status === "SUBMITTED" || status === "PENDING_HR")
-    return "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-800";
+    return "bg-status-info-surface text-status-info-ink border-status-info-rule";
   if (status === "HR_APPROVED")
-    return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800";
+    return "bg-status-warning-surface text-status-warning-ink border-status-warning-rule";
   if (
     status === "FINAL_APPROVED" ||
     status === "IN_PROGRESS" ||
     status === "COMPLETED" ||
     status === "APPROVED"
   )
-    return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800";
+    return "bg-status-success-surface text-status-success-ink border-status-success-rule";
   if (status === "REJECTED" || status === "WITHDRAWN")
-    return "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-800";
+    return "bg-status-danger-surface text-status-danger-ink border-status-danger-rule";
   return "bg-muted text-muted-foreground border-border";
 }
 
@@ -107,7 +107,7 @@ export function ResignationCard({
       <CardContent className="p-4 flex items-center gap-4">
         <Avatar className="h-9 w-9 shrink-0">
           <AvatarImage src={resolveImageUrl(r.user?.image ?? null)} />
-          <AvatarFallback className="text-xs font-semibold bg-rose-100 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300">
+          <AvatarFallback className="text-xs font-semibold bg-status-danger-surface text-status-danger-ink">
             {r.user?.name?.[0] ?? "?"}
           </AvatarFallback>
         </Avatar>
@@ -130,7 +130,7 @@ export function ResignationCard({
             {r.reasonCategory && (
               <Badge
                 variant="outline"
-                className="text-[9px] font-semibold hidden sm:inline-flex bg-muted text-muted-foreground border-border"
+                className="text-micro font-semibold hidden sm:inline-flex bg-muted text-muted-foreground border-border"
               >
                 {r.reasonCategory}
               </Badge>
@@ -138,7 +138,7 @@ export function ResignationCard({
             {r.noticePeriodDays && (
               <Badge
                 variant="outline"
-                className="text-[9px] font-semibold hidden sm:inline-flex bg-primary/10 text-primary border-primary/20"
+                className="text-micro font-semibold hidden sm:inline-flex bg-primary/10 text-primary border-primary/20"
               >
                 {r.noticePeriodDays}d notice
               </Badge>
@@ -153,7 +153,7 @@ export function ResignationCard({
               </span>
             )}
             {daysLeft !== null && daysLeft > 0 && (
-              <span className="flex items-center gap-1 text-amber-600 dark:text-amber-300 font-medium">
+              <span className="flex items-center gap-1 text-status-warning-ink font-medium">
                 <Clock className="h-3 w-3" />
                 {daysLeft} days left
               </span>

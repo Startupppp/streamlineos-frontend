@@ -1,9 +1,9 @@
 const ROUND_TYPE_COLORS: Record<string, string> = {
-  HR_SCREENING: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-  TECHNICAL: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-  MANAGER: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
-  CULTURAL_FIT: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300",
-  FINAL: "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-300",
+  HR_SCREENING: "bg-status-info-surface text-status-info-ink",
+  TECHNICAL: "bg-status-info-surface text-status-info-ink",
+  MANAGER: "bg-status-warning-surface text-status-warning-ink",
+  CULTURAL_FIT: "bg-status-success-surface text-status-success-ink",
+  FINAL: "bg-status-danger-surface text-status-danger-ink",
   CUSTOM: "bg-muted text-muted-foreground",
 };
 

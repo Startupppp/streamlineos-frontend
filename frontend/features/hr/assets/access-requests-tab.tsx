@@ -25,15 +25,15 @@ import { SecurityIllustration } from "@/components/illustrations";
 const STATUS_META: Record<string, { label: string; badge: string }> = {
   requested: {
     label: "Requested",
-    badge: "bg-amber-100 border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-300",
+    badge: "bg-status-warning-surface border-status-warning-rule text-status-warning-ink",
   },
   granted: {
     label: "Granted",
-    badge: "bg-emerald-100 border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/30 dark:text-emerald-300",
+    badge: "bg-status-success-surface border-status-success-rule text-status-success-ink",
   },
   revoked: {
     label: "Revoked",
-    badge: "bg-rose-100 border-rose-200 text-rose-700 dark:bg-rose-500/10 dark:border-rose-500/30 dark:text-rose-300",
+    badge: "bg-status-danger-surface border-status-danger-rule text-status-danger-ink",
   },
 };
 
@@ -135,7 +135,7 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
             <SecurityIllustration />
           </div>
           <div>
-            <p className="text-[0.875rem] font-semibold text-foreground">No access requests</p>
+            <p className="text-sm font-semibold text-foreground">No access requests</p>
             <p className="mt-0.5 text-xs text-muted-foreground max-w-[200px]">
               Software and app access requests will appear here.
             </p>

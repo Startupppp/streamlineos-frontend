@@ -103,7 +103,7 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
           className="h-7 text-xs"
           onClick={handleFilterSuccess}
         >
-          <CheckCircle className="h-3 w-3 mr-1 text-green-600 dark:text-green-400" />
+          <CheckCircle className="h-3 w-3 mr-1 text-status-success-ink" />
           Successful
         </Button>
         <Button
@@ -112,7 +112,7 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
           className="h-7 text-xs"
           onClick={handleFilterFailed}
         >
-          <XCircle className="h-3 w-3 mr-1 text-red-500 dark:text-red-400" />
+          <XCircle className="h-3 w-3 mr-1 text-status-danger-ink" />
           Failed
         </Button>
       </div>
@@ -134,9 +134,9 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
             >
               <div className="mt-0.5">
                 {entry.success ? (
-                  <CheckCircle className="h-3.5 w-3.5 text-green-500 dark:text-green-400" />
+                  <CheckCircle className="h-3.5 w-3.5 text-status-success-ink" />
                 ) : (
-                  <XCircle className="h-3.5 w-3.5 text-red-400" />
+                  <XCircle className="h-3.5 w-3.5 text-status-danger-ink" />
                 )}
               </div>
               <div className="flex-1 min-w-0">

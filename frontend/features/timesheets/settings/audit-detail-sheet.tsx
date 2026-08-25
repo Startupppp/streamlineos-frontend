@@ -95,7 +95,7 @@ function DiffTable({ before, after }: DiffTableProps) {
       data={rows}
       columns={columns}
       getRowKey={(row) => row.key}
-      rowClassName={(row) => row.changed ? "bg-amber-50 dark:bg-amber-950/20" : ""}
+      rowClassName={(row) => row.changed ? "bg-status-warning-surface" : ""}
       className="border-0 rounded-none text-xs"
     />
   );

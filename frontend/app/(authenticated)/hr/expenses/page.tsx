@@ -279,7 +279,7 @@ export default function ExpensesPage() {
         actions={
           <div className="flex items-center gap-2 flex-wrap">
             {pendingCount > 0 && (
-              <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800">
+              <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-status-warning-surface text-status-warning-ink border-status-warning-rule">
                 {pendingCount} pending
               </span>
             )}

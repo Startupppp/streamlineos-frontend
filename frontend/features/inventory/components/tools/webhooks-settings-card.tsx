@@ -146,7 +146,7 @@ export function WebhooksSettingsCard() {
       headerClassName: "w-[80px] text-center",
       className: "text-center",
       cell: (wh) => (
-        <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 border">
+        <Badge variant="outline" className="h-4 text-micro px-1.5 py-0 border">
           {wh.events.length}
         </Badge>
       ),
@@ -161,8 +161,8 @@ export function WebhooksSettingsCard() {
           variant="outline"
           className={
             wh.isActive
-              ? "h-4 text-[9px] px-1.5 py-0 border border-emerald-200 text-emerald-700 bg-emerald-50 dark:border-emerald-500/30 dark:text-emerald-300 dark:bg-emerald-500/10"
-              : "h-4 text-[9px] px-1.5 py-0 border"
+              ? "h-4 text-micro px-1.5 py-0 border border-status-success-rule text-status-success-ink bg-status-success-surface"
+              : "h-4 text-micro px-1.5 py-0 border"
           }
         >
           {wh.isActive ? "Active" : "Off"}

@@ -107,7 +107,7 @@ export default function TrialBalancePage() {
                 Status
               </span>
               {tb.balanced ? (
-                <span className="inline-flex items-center px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-700 text-xs font-medium border border-emerald-500/20">
+                <span className="inline-flex items-center px-2 py-1 rounded-md bg-status-success-surface text-status-success-ink text-xs font-medium border border-status-success-rule">
                   Balanced ✓
                 </span>
               ) : (

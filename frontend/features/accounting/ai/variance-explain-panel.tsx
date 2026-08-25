@@ -29,8 +29,8 @@ function FactorRow({ factor }: { factor: AiNarrationFactor }) {
         className={cn(
           "mt-0.5 shrink-0 rounded-full px-1.5 py-0.5 text-micro font-medium",
           factor.isFactual
-            ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-            : "bg-amber-500/10 text-amber-700 dark:text-amber-400",
+            ? "bg-status-success-surface text-status-success-ink"
+            : "bg-status-warning-surface text-status-warning-ink",
         )}
       >
         {factor.isFactual ? "Fact" : "Inference"}

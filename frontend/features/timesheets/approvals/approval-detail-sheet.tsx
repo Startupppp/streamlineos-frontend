@@ -201,19 +201,19 @@ export function ApprovalDetailSheet({
               </p>
             )}
             {period.approvedAt && (
-              <p className="text-emerald-600">
+              <p className="text-status-success-ink">
                 Approved{" "}
                 {format(parseISO(period.approvedAt), "MMM d, yyyy 'at' h:mm a")}
               </p>
             )}
             {period.rejectedAt && (
-              <p className="text-red-600">
+              <p className="text-status-danger-ink">
                 Rejected{" "}
                 {format(parseISO(period.rejectedAt), "MMM d, yyyy 'at' h:mm a")}
               </p>
             )}
             {period.rejectionReason && (
-              <p className="text-red-600">Reason: {period.rejectionReason}</p>
+              <p className="text-status-danger-ink">Reason: {period.rejectionReason}</p>
             )}
           </div>
         )}
@@ -267,7 +267,7 @@ export function ApprovalDetailSheet({
                           </p>
                           <Badge
                             className={cn(
-                              "text-[9px] border px-1 py-0",
+                              "text-micro border px-1 py-0",
                               ENTRY_STATUS_BADGE[entry.status],
                             )}
                           >

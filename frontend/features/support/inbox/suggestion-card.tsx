@@ -72,7 +72,7 @@ function SuggestionBody({ suggestion, macros }: SuggestionBodyProps) {
       return <Badge variant="outline" className="text-micro">{suggestion.payload.priority}</Badge>;
     case "spam":
       return (
-        <div className="flex items-center gap-1.5 text-xs text-red-700 dark:text-red-400 bg-destructive/10 rounded px-2 py-1">
+        <div className="flex items-center gap-1.5 text-xs text-status-danger-ink bg-destructive/10 rounded px-2 py-1">
           <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
           Flagged as likely spam
         </div>
@@ -181,7 +181,7 @@ export function PendingSuggestionCard({
           {isReply && suggestion.payload.escalated && (
             <Badge
               variant="outline"
-              className="text-[9px] px-1 py-0 gap-0.5 text-amber-600 border-amber-300 bg-amber-50 dark:text-amber-400 dark:border-amber-500/40 dark:bg-amber-500/10 shrink-0"
+              className="text-micro px-1 py-0 gap-0.5 text-status-warning-ink border-status-warning-rule bg-status-warning-surface shrink-0"
             >
               <AlertTriangle className="h-2.5 w-2.5" />
               Escalate
@@ -191,7 +191,7 @@ export function PendingSuggestionCard({
         <div className="flex items-center gap-1 shrink-0">
           <AnimatedIconButton
             type="button" variant="ghost" size="icon"
-            className="h-6 w-6 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950/30"
+            className="h-6 w-6 text-status-success-ink hover:text-status-success-ink hover:bg-status-success-surface"
             aria-label={`Helpful — ${acceptLabel(suggestion)}`}
             title={`Helpful — ${acceptLabel(suggestion)}`}
             disabled={isResolvePending}
@@ -243,10 +243,10 @@ export function ResolvedSuggestionCard({ suggestion, macros }: ResolvedSuggestio
         <div className="flex items-center gap-1 shrink-0">
           {suggestion.feedback && (
             suggestion.feedback === "helpful"
-              ? <ThumbsUp className="h-3 w-3 text-green-600" aria-label="Marked helpful" />
-              : <ThumbsDown className="h-3 w-3 text-red-600" aria-label="Marked not helpful" />
+              ? <ThumbsUp className="h-3 w-3 text-status-success-ink" aria-label="Marked helpful" />
+              : <ThumbsDown className="h-3 w-3 text-status-danger-ink" aria-label="Marked not helpful" />
           )}
-          <Badge variant="outline" className="text-[9px] px-1.5 py-0 capitalize">{suggestion.status}</Badge>
+          <Badge variant="outline" className="text-micro px-1.5 py-0 capitalize">{suggestion.status}</Badge>
         </div>
       </div>
       <SuggestionBody suggestion={suggestion} macros={macros} />

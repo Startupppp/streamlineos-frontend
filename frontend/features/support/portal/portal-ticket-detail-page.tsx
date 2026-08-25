@@ -95,7 +95,7 @@ export function PortalTicketDetailPage({ portalTicketId }: PortalTicketDetailPag
         </div>
 
         {isClosed && (
-          <div className="shrink-0 mt-3 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 dark:border-emerald-800/40 dark:bg-emerald-950/20 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-400">
+          <div className="shrink-0 mt-3 flex items-center gap-2 rounded-lg border border-status-success-rule bg-status-success-surface px-3 py-2 text-xs text-status-success-ink">
             <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
             This ticket is {ticket.status === "CLOSED" ? "closed" : "resolved"}. Sending a new reply will notify our support team.
           </div>

@@ -67,13 +67,13 @@ function InterviewRow({ task }: { task: InterviewTask }) {
         {task.needsFeedback ? (
           <Badge
             variant="outline"
-            className="h-4 shrink-0 px-1.5 py-0 text-[9px] border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-400"
+            className="h-4 shrink-0 px-1.5 py-0 text-micro border-status-warning-rule bg-status-warning-surface text-status-warning-ink"
           >
             <AlertTriangle className="mr-0.5 h-2.5 w-2.5" aria-hidden="true" />
             Feedback
           </Badge>
         ) : (
-          <Badge variant="outline" className="h-4 shrink-0 px-1.5 py-0 text-[9px]">
+          <Badge variant="outline" className="h-4 shrink-0 px-1.5 py-0 text-micro">
             Today
           </Badge>
         )}

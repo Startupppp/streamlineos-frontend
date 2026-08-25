@@ -136,7 +136,7 @@ function SimulateContent() {
                   <span className="flex items-center gap-2 min-w-0">
                     <Avatar className="h-5 w-5 shrink-0">
                       <AvatarImage src={selectedEmployee.image ?? undefined} />
-                      <AvatarFallback className="text-[9px]">
+                      <AvatarFallback className="text-micro">
                         {getInitials(selectedEmployee.name ?? selectedEmployee.email)}
                       </AvatarFallback>
                     </Avatar>
@@ -226,7 +226,7 @@ function EmployeeCommandItem({ employee, onSelect }: EmployeeCommandItemProps) {
     <CommandItem onSelect={handleSelect} className="flex items-center gap-2 cursor-pointer">
       <Avatar className="h-6 w-6 shrink-0">
         <AvatarImage src={employee.image ?? undefined} />
-        <AvatarFallback className="text-[9px]">
+        <AvatarFallback className="text-micro">
           {getInitials(employee.name ?? employee.email)}
         </AvatarFallback>
       </Avatar>
@@ -427,7 +427,7 @@ function PermissionRow({ permKey, scope }: PermissionRowProps) {
       <td className="py-1.5">
         <Badge
           variant={SCOPE_BADGE_VARIANT[scope]}
-          className="text-[9px] px-1.5 py-0"
+          className="text-micro px-1.5 py-0"
         >
           {scope}
         </Badge>

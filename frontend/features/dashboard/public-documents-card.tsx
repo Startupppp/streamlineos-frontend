@@ -176,9 +176,9 @@ function MyPendingUploadsSection() {
 
   return (
     <>
-      <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-2.5 dark:border-amber-800 dark:bg-amber-900/20">
+      <div className="mb-3 rounded-lg border border-status-warning-rule bg-status-warning-surface p-2.5">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-dense font-medium text-amber-800 dark:text-amber-300">
+          <p className="text-dense font-medium text-status-warning-ink">
             {count} document{count === 1 ? "" : "s"} to upload
           </p>
           <Button
@@ -195,7 +195,7 @@ function MyPendingUploadsSection() {
           {pending.slice(0, MAX_PENDING_SHOWN).map((doc) => (
             <li
               key={`${doc.documentTypeId}-${doc.reason}`}
-              className="flex items-center justify-between gap-2 text-micro text-amber-700 dark:text-amber-400"
+              className="flex items-center justify-between gap-2 text-micro text-status-warning-ink"
             >
               <TruncatedText
                 text={doc.documentTypeName}
@@ -207,7 +207,7 @@ function MyPendingUploadsSection() {
             </li>
           ))}
           {count > MAX_PENDING_SHOWN && (
-            <li className="text-micro text-amber-700 dark:text-amber-400">
+            <li className="text-micro text-status-warning-ink">
               +{count - MAX_PENDING_SHOWN} more
             </li>
           )}
@@ -270,7 +270,7 @@ export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
                 label="expiring soon"
                 value={docStats?.expiringIn30Days ?? 0}
                 href="/hr/documents"
-                tone="text-amber-600"
+                tone="text-status-warning-ink"
               />
             )}
             {showSignatureChip && <AwaitingSignatureChip />}
@@ -280,7 +280,7 @@ export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
                 label="missing docs"
                 value={missingCount ?? 0}
                 href="/hr/document-review"
-                tone="text-red-600"
+                tone="text-status-danger-ink"
               />
             )}
           </div>

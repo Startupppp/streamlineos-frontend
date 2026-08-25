@@ -55,7 +55,7 @@ export function WordLimitedTextarea({
               id={counterId}
               className={cn(
                 "text-micro text-right tabular-nums",
-                atLimit ? "text-destructive" : nearLimit ? "text-amber-600" : "text-muted-foreground",
+                atLimit ? "text-destructive" : nearLimit ? "text-status-warning-ink" : "text-muted-foreground",
               )}
             >
               {words}/{maxWords} words

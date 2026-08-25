@@ -81,8 +81,8 @@ function ProbationEntryCard() {
       </p>
       <Card className="rounded-2xl border border-border/70 bg-card/90 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
         <CardContent className="p-4 flex items-start gap-3">
-          <div className="w-7 rounded-lg bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center shrink-0">
-            <ShieldCheck className="h-3.5 w-3.5 text-blue-700 dark:text-blue-300" />
+          <div className="w-7 rounded-lg bg-status-info-surface flex items-center justify-center shrink-0">
+            <ShieldCheck className="h-3.5 w-3.5 text-status-info-ink" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-foreground">Probation Reviews</p>
@@ -115,8 +115,8 @@ function HrDocumentsTab({
         {canConfigure && (
           <Card className="rounded-2xl border border-border/70 bg-card/90 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
             <CardContent className="p-4 flex items-start gap-3">
-              <div className="w-7 rounded-lg bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center shrink-0">
-                <Settings className="h-3.5 w-3.5 text-blue-700 dark:text-blue-300" />
+              <div className="w-7 rounded-lg bg-status-info-surface flex items-center justify-center shrink-0">
+                <Settings className="h-3.5 w-3.5 text-status-info-ink" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-foreground">Configure Document Types</p>
@@ -134,8 +134,8 @@ function HrDocumentsTab({
         {canReview && (
           <Card className="rounded-2xl border border-border/70 bg-card/90 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
             <CardContent className="p-4 flex items-start gap-3">
-              <div className="w-7 rounded-lg bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center shrink-0">
-                <ClipboardCheck className="h-3.5 w-3.5 text-blue-700 dark:text-blue-300" />
+              <div className="w-7 rounded-lg bg-status-info-surface flex items-center justify-center shrink-0">
+                <ClipboardCheck className="h-3.5 w-3.5 text-status-info-ink" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-foreground">Review Documents</p>

@@ -356,7 +356,7 @@ export function MyPayrollPageContent() {
                 <Link
                   key={a.key}
                   href={a.href}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 text-dense font-medium text-amber-900 transition-colors hover:bg-amber-100 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200 dark:hover:bg-amber-500/15"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-status-warning-rule bg-status-warning-surface px-2.5 py-1 text-dense font-medium text-status-warning-ink transition-colors hover:bg-status-warning-surface"
                 >
                   <AlertTriangle className="h-3 w-3 shrink-0" />
                   {a.label}

@@ -31,9 +31,9 @@ import { TestRunSheet } from "./test-run-sheet";
 
 const RUN_STATUS_STYLES: Record<TestRunStatus, string> = {
   not_started: "text-muted-foreground border-border",
-  in_progress: "text-blue-600 border-blue-200 dark:text-blue-400 dark:border-blue-500/30",
-  completed: "text-green-600 border-green-200 dark:text-green-400 dark:border-green-500/30",
-  aborted: "text-red-600 border-red-200 dark:text-red-400 dark:border-red-500/30",
+  in_progress: "text-status-info-ink border-status-info-rule",
+  completed: "text-status-success-ink border-status-success-rule",
+  aborted: "text-status-danger-ink border-status-danger-rule",
 };
 
 const RUN_STATUS_LABELS: Record<TestRunStatus, string> = {

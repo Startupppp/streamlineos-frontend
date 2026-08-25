@@ -42,7 +42,7 @@ export function StepWelcome({
             Launch your organization on{" "}
             <span className="brand-sweep">{BRAND_NAME}</span>
           </h1>
-          <p className="w-full text-sm leading-relaxed text-muted-foreground sm:max-w-md sm:text-[15px]">
+          <p className="w-full text-sm leading-relaxed text-muted-foreground sm:max-w-md sm:text-sm">
             A few questions shape your modules, defaults, and team invites —
             then you land ready to run.
           </p>

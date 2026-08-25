@@ -8,27 +8,27 @@ const STATUS_CONFIG: Record<
   OPEN: {
     label: "Open",
     className:
-      "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+      "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   },
   DRAFTED: {
     label: "Drafted",
     className:
-      "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+      "bg-status-info-surface text-status-info-ink border-status-info-rule",
   },
   ROUTED: {
     label: "Routed",
     className:
-      "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+      "bg-status-info-surface text-status-info-ink border-status-info-rule",
   },
   PUBLISHED: {
     label: "Published",
     className:
-      "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+      "bg-status-success-surface text-status-success-ink border-status-success-rule",
   },
   DISMISSED: {
     label: "Dismissed",
     className:
-      "bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-500/10 dark:text-slate-400 dark:border-slate-500/30",
+      "bg-muted text-muted-foreground border-border",
   },
 };
 

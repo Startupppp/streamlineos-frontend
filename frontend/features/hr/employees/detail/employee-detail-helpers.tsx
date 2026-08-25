@@ -23,7 +23,7 @@ export function AvailabilityBadge({ userId }: { userId: string }) {
   if (entry.status === "ON_LEAVE") {
     const label = `On Leave${entry.leaveType ? ` (${entry.leaveType})` : ""}`;
     return (
-      <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30">
+      <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-status-danger-surface text-status-danger-ink border-status-danger-rule">
         <XCircle className="h-3 w-3" />
         {label}
       </span>
@@ -31,14 +31,14 @@ export function AvailabilityBadge({ userId }: { userId: string }) {
   }
   if (entry.status === "HALF_DAY") {
     return (
-      <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
+      <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-status-warning-surface text-status-warning-ink border-status-warning-rule">
         <AlertCircle className="h-3 w-3" />
         Half Day
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
+    <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-status-success-surface text-status-success-ink border-status-success-rule">
       <CheckCircle2 className="h-3 w-3" />
       Available
     </span>
@@ -208,13 +208,13 @@ export function ManagerScorecardSection({ employeeId }: { employeeId: string }) 
                 ? `${scorecard.teamAttendanceRate}%`
                 : "N/A"
             }
-            colorClass="text-emerald-700 dark:text-emerald-300"
+            colorClass="text-status-success-ink"
           />
         </div>
         {scorecard.pendingLeaveRequests > 0 && (
-          <div className="mt-3 flex items-center gap-1.5 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 px-3 py-2">
-            <AlertCircle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300 shrink-0" />
-            <p className="text-xs text-amber-700 dark:text-amber-300 font-medium">
+          <div className="mt-3 flex items-center gap-1.5 rounded-lg bg-status-warning-surface border border-status-warning-rule px-3 py-2">
+            <AlertCircle className="h-3.5 w-3.5 text-status-warning-ink shrink-0" />
+            <p className="text-xs text-status-warning-ink font-medium">
               {scorecard.pendingLeaveRequests} pending leave request
               {scorecard.pendingLeaveRequests !== 1 ? "s" : ""} awaiting
               approval

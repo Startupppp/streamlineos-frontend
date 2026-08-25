@@ -53,15 +53,15 @@ const STATUS_STEP: Record<SoStatus, number> = {
 type StepState = "completed" | "active" | "future";
 
 const STEP_CLS: Record<StepState, string> = {
-  completed: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  active: "bg-amber-100 text-amber-700 border-amber-200 font-medium dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  completed: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  active: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule font-medium",
   future: "bg-muted text-muted-foreground border-border",
 };
 
 function FulfillmentStepper({ status }: { status: SoStatus }) {
   if (status === "CANCELLED") {
     return (
-      <span className="text-micro px-2 py-0.5 rounded border bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30">
+      <span className="text-micro px-2 py-0.5 rounded border bg-status-danger-surface text-status-danger-ink border-status-danger-rule">
         Cancelled
       </span>
     );
@@ -88,7 +88,7 @@ function FulfillmentStepper({ status }: { status: SoStatus }) {
 function AtpIndicator({ available, requested }: { available: number; requested: number }) {
   if (available >= requested) {
     return (
-      <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded px-1.5 py-0.5 dark:bg-green-500/10 dark:text-green-300 dark:border-green-500/30">
+      <span className="inline-flex items-center gap-1 text-xs font-medium text-status-success-ink bg-status-success-surface border border-status-success-rule rounded px-1.5 py-0.5">
         <span className="size-1.5 rounded-full bg-green-500 inline-block" />
         In stock
       </span>
@@ -96,14 +96,14 @@ function AtpIndicator({ available, requested }: { available: number; requested: 
   }
   if (available > 0) {
     return (
-      <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
+      <span className="inline-flex items-center gap-1 text-xs font-medium text-status-warning-ink bg-status-warning-surface border border-status-warning-rule rounded px-1.5 py-0.5">
         <span className="size-1.5 rounded-full bg-amber-500 inline-block" />
         Partial ({available})
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded px-1.5 py-0.5 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30">
+    <span className="inline-flex items-center gap-1 text-xs font-medium text-status-danger-ink bg-status-danger-surface border border-status-danger-rule rounded px-1.5 py-0.5">
       <span className="size-1.5 rounded-full bg-red-500 inline-block" />
       Insufficient
     </span>

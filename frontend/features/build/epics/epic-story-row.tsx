@@ -83,7 +83,7 @@ export const EpicStoryRow = memo(function EpicStoryRow({
                 className={cn(
                   "h-5 shrink-0 px-1.5 text-micro",
                   isDone &&
-                    "border-emerald-500 text-emerald-600 dark:text-emerald-400",
+                    "border-status-success-rule text-status-success-ink",
                 )}
               >
                 {statusEntry.label}

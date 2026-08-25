@@ -34,7 +34,7 @@ function RuleCard({ item }: { item: EffectiveRuleItem }) {
         </span>
         <Badge
           variant="outline"
-          className="text-xs px-2 py-0.5 bg-emerald-50 text-emerald-700 border-emerald-200 shrink-0 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
+          className="text-xs px-2 py-0.5 bg-status-success-surface text-status-success-ink border-status-success-rule shrink-0"
         >
           {item.matchedPolicy.status}
         </Badge>
@@ -58,7 +58,7 @@ function RuleCard({ item }: { item: EffectiveRuleItem }) {
       </div>
 
       <details className="group">
-        <summary className="text-xs text-blue-600 dark:text-blue-300 cursor-pointer select-none list-none flex items-center gap-1">
+        <summary className="text-xs text-status-info-ink cursor-pointer select-none list-none flex items-center gap-1">
           <span className="group-open:hidden">▶ Show rules</span>
           <span className="hidden group-open:inline">▼ Hide rules</span>
         </summary>

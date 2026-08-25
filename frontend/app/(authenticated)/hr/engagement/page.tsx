@@ -209,7 +209,7 @@ function OverviewTab() {
             </div>
           ) : eom && eomName ? (
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-full bg-amber-100 dark:bg-amber-500/10 flex items-center justify-center text-amber-700 dark:text-amber-300 font-bold text-lg">
+              <div className="h-12 w-12 rounded-full bg-status-warning-surface flex items-center justify-center text-status-warning-ink font-bold text-lg">
                 {eomInitials}
               </div>
               <div>

@@ -51,15 +51,15 @@ const STATUS_BADGE: Record<
   },
   ISSUED: {
     label: "Issued",
-    className: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+    className: "bg-status-info-surface text-status-info-ink border-status-info-rule",
   },
   PAID: {
     label: "Paid",
-    className: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+    className: "bg-status-success-surface text-status-success-ink border-status-success-rule",
   },
   FAILED: {
     label: "Failed",
-    className: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+    className: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
   },
   VOIDED: {
     label: "Voided",
@@ -112,7 +112,7 @@ const paymentColumns: DataTableColumn<Payment>[] = [
     key: "amount",
     header: "Amount",
     headerClassName: "text-right",
-    className: "text-right font-mono text-sm font-medium text-emerald-600 dark:text-emerald-400",
+    className: "text-right font-mono text-sm font-medium text-status-success-ink",
     cell: (p) => fmt(p.amount),
   },
 ];
@@ -414,7 +414,7 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
             </LoadingButton>
           )}
           {invoice.status === "PAID" && outstanding <= 0 && (
-            <div className="flex items-center gap-1.5 text-sm text-emerald-600 dark:text-emerald-400 font-medium">
+            <div className="flex items-center gap-1.5 text-sm text-status-success-ink font-medium">
               <Check className="h-4 w-4" /> Fully Paid
             </div>
           )}

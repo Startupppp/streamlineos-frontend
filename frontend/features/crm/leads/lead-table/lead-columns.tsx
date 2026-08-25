@@ -108,7 +108,7 @@ export function useLeadCellRenderer({
             href={`https://wa.me/${lead.whatsappNumber.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Hi ${lead.name}, this is from StreamlineOS.`)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-dense text-status-success-ink hover:text-emerald-300"
+            className="inline-flex items-center gap-1 text-dense text-status-success-ink hover:text-status-success-ink"
           >
             <MessageCircle className="h-3 w-3" />
             <span className="font-mono">{lead.whatsappNumber}</span>

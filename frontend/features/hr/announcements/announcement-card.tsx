@@ -44,11 +44,11 @@ const STATUS_LABELS: Record<HrAnnouncement["status"], string> = {
 export const STATUS_COLORS: Record<HrAnnouncement["status"], string> = {
   DRAFT: "bg-muted text-muted-foreground border-border",
   SCHEDULED:
-    "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+    "bg-status-info-surface text-status-info-ink border-status-info-rule",
   PUBLISHED:
-    "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+    "bg-status-success-surface text-status-success-ink border-status-success-rule",
   EXPIRED:
-    "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+    "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
 };
 
 const STATUS_ACCENT: Record<HrAnnouncement["status"], string> = {
@@ -117,7 +117,7 @@ export function AnnouncementCard({
             <div className="flex min-w-0 items-center gap-1.5">
               {announcement.isPinned ? (
                 <Pin
-                  className="size-3.5 shrink-0 text-amber-500 dark:text-amber-400"
+                  className="size-3.5 shrink-0 text-status-warning-ink"
                   aria-label="Pinned"
                 />
               ) : null}

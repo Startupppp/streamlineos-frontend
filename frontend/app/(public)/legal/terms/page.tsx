@@ -47,7 +47,7 @@ export default function TermsPage() {
         </p>
         <p>
           The terms apply to everything at{" "}
-          <span className="font-mono text-blue-600">{BRAND_DOMAIN}</span> and any subdomains —
+          <span className="font-mono text-status-info-ink">{BRAND_DOMAIN}</span> and any subdomains —
           marketing site, application, APIs, embeds, the lot.
         </p>
       </LegalSection>
@@ -61,7 +61,7 @@ export default function TermsPage() {
           <li>Keep your credentials confidential. Enable MFA — we strongly recommend it.</li>
           <li>
             Notify us immediately if you suspect unauthorized access (write to{" "}
-            <a href={`mailto:${BRAND_SUPPORT_EMAIL}`} className="font-mono text-blue-600 hover:underline">
+            <a href={`mailto:${BRAND_SUPPORT_EMAIL}`} className="font-mono text-status-info-ink hover:underline">
               {BRAND_SUPPORT_EMAIL}
             </a>
             ).
@@ -100,7 +100,7 @@ export default function TermsPage() {
           </li>
           <li>
             Probe, scan, or stress-test the platform without our written authorization. See{" "}
-            <Link href="/legal/security" className="text-blue-600 hover:underline">
+            <Link href="/legal/security" className="text-status-info-ink hover:underline">
               Security
             </Link>{" "}
             for the disclosure programme.
@@ -111,7 +111,7 @@ export default function TermsPage() {
       <LegalSection id="subscription" title="Subscription & billing">
         <p>
           The current plans and prices are at{" "}
-          <Link href="/#pricing" className="text-blue-600 hover:underline">
+          <Link href="/#pricing" className="text-status-info-ink hover:underline">
             {BRAND_DOMAIN}/#pricing
           </Link>
           . Starter is {PRICING.currency}
@@ -221,7 +221,7 @@ export default function TermsPage() {
         </p>
         <p>
           You can cancel any time from{" "}
-          <span className="font-mono text-blue-600">Settings &rarr; Billing</span>. Effective
+          <span className="font-mono text-status-info-ink">Settings &rarr; Billing</span>. Effective
           at the end of the current billing period.
         </p>
       </LegalSection>
@@ -282,7 +282,7 @@ export default function TermsPage() {
       <LegalSection id="contact" title="Contact">
         <p>
           Questions about these terms?{" "}
-          <a href={`mailto:${BRAND_SUPPORT_EMAIL}`} className="font-mono text-blue-600 hover:underline">
+          <a href={`mailto:${BRAND_SUPPORT_EMAIL}`} className="font-mono text-status-info-ink hover:underline">
             {BRAND_SUPPORT_EMAIL}
           </a>{" "}
           — a real person reads them.

@@ -115,7 +115,7 @@ export function ChatSearchDialog({ open, onOpenChange, onSelectChannel }: ChatSe
                     <TruncatedText text={ch.name ?? "Untitled channel"} className="text-label font-semibold text-foreground" />
                     {ch.description && <TruncatedText text={ch.description} className="text-dense text-muted-foreground" />}
                   </div>
-                  <span className={cn("text-dense font-medium px-2 py-0.5 rounded-full", ch.isMember ? "bg-green-500/10 text-green-600 dark:text-green-400" : "bg-muted text-muted-foreground")}>
+                  <span className={cn("text-dense font-medium px-2 py-0.5 rounded-full", ch.isMember ? "bg-status-success-surface text-status-success-ink" : "bg-muted text-muted-foreground")}>
                     {ch.isMember ? "Joined" : "Join"}
                   </span>
                 </button>

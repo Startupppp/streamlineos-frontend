@@ -35,8 +35,8 @@ function formatDate(value: string | null): string {
 
 function daysInactiveClass(days: number | null): string {
   if (days === null) return "text-muted-foreground";
-  if (days >= 180) return "text-red-700 font-medium";
-  if (days >= 90) return "text-amber-600 font-medium";
+  if (days >= 180) return "text-status-danger-ink font-medium";
+  if (days >= 90) return "text-status-warning-ink font-medium";
   return "";
 }
 

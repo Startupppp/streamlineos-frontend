@@ -45,26 +45,26 @@ export type FinanceStatus =
   | CreditStatus;
 
 const STATUS_CLASSES: Record<FinanceStatus, string> = {
-  DRAFT: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  SENT: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  PARTIALLY_PAID: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  PAID: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  OVERDUE: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  DRAFT: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  SENT: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  PARTIALLY_PAID: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  PAID: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  OVERDUE: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
   VOID: "bg-muted text-muted-foreground border-border",
-  PENDING_APPROVAL: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  POSTED: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  PENDING_APPROVAL: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  POSTED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
   CANCELLED: "bg-muted text-muted-foreground border-border",
-  SUBMITTED: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  APPROVED: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  REIMBURSEMENT_PENDING: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  REIMBURSED: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  REJECTED: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
-  OPEN: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  CLOSING: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  SUBMITTED: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  APPROVED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  REIMBURSEMENT_PENDING: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  REIMBURSED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  REJECTED: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
+  OPEN: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  CLOSING: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   CLOSED: "bg-muted text-muted-foreground border-border",
   LOCKED: "bg-muted text-muted-foreground border-border",
-  PENDING: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  APPLIED: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  PENDING: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  APPLIED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
 };
 
 const STATUS_LABELS: Record<FinanceStatus, string> = {
@@ -99,7 +99,7 @@ type FinanceStatusBadgeProps = {
 };
 
 const SIZE_CLASSES: Record<BadgeSize, string> = {
-  row: "text-[9px] px-1.5 py-0 h-4",
+  row: "text-micro px-1.5 py-0 h-4",
   chip: "text-xs px-2 py-0.5",
 };
 

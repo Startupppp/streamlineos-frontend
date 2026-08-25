@@ -63,14 +63,14 @@ const FIELD_TYPES: Array<{ value: CustomFieldType; label: string }> = [
 
 const fieldTypeColors: Record<CustomFieldType, string> = {
   text: "bg-muted text-muted-foreground",
-  number: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-  date: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
-  user: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-  select: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
-  multi_select: "bg-teal-100 text-teal-700 dark:bg-teal-500/10 dark:text-teal-300",
-  checkbox: "bg-pink-100 text-pink-700 dark:bg-pink-500/10 dark:text-pink-300",
-  url: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300",
-  currency: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300",
+  number: "bg-status-info-surface text-status-info-ink",
+  date: "bg-status-warning-surface text-status-warning-ink",
+  user: "bg-status-info-surface text-status-info-ink",
+  select: "bg-status-success-surface text-status-success-ink",
+  multi_select: "bg-status-success-surface text-status-success-ink",
+  checkbox: "bg-category-pink-surface text-category-pink-ink",
+  url: "bg-status-info-surface text-status-info-ink",
+  currency: "bg-status-success-surface text-status-success-ink",
 };
 
 interface CustomFieldItem {
@@ -122,7 +122,7 @@ const CustomFieldRow = memo(function CustomFieldRow({
       {field.required && (
         <Badge
           variant="outline"
-          className="text-micro shrink-0 border-red-200 text-red-600 dark:border-red-500/30 dark:text-red-400"
+          className="text-micro shrink-0 border-status-danger-rule text-status-danger-ink"
         >
           required
         </Badge>
@@ -131,7 +131,7 @@ const CustomFieldRow = memo(function CustomFieldRow({
         trigger={
           <button
             type="button"
-            className="w-7 flex items-center justify-center rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors shrink-0"
+            className="w-7 flex items-center justify-center rounded-lg text-status-danger-ink hover:text-status-danger-ink hover:bg-status-danger-surface transition-colors shrink-0"
             aria-label="Delete field"
             {...deleteHoverHandlers}
           >

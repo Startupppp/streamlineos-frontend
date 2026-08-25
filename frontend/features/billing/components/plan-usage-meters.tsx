@@ -111,14 +111,14 @@ export function PlanUsageMeters({ onUpgradeClick }: PlanUsageMetersProps) {
         <h3 className="text-sm font-semibold text-foreground">Plan Usage</h3>
         {hasNearLimit && onUpgradeClick && (
           <Button variant="outline" size="sm" onClick={onUpgradeClick} className="text-xs h-7">
-            <AlertCircle className="h-3 w-3 mr-1.5 text-amber-500" />
+            <AlertCircle className="h-3 w-3 mr-1.5 text-status-warning-ink" />
             Upgrade plan
           </Button>
         )}
         {hasNearLimit && !onUpgradeClick && (
           <Button variant="outline" size="sm" asChild className="text-xs h-7">
             <Link href="/settings/billing?tab=plan">
-              <AlertCircle className="h-3 w-3 mr-1.5 text-amber-500" />
+              <AlertCircle className="h-3 w-3 mr-1.5 text-status-warning-ink" />
               Upgrade plan
             </Link>
           </Button>

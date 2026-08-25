@@ -16,9 +16,9 @@ export function LandingWalkthrough() {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] as const }}
           className="max-w-2xl text-center mx-auto mb-10 sm:mb-14 lg:mb-20"
         >
-          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-[-0.03em] leading-[1.05] text-slate-900">
+          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-[-0.03em] leading-[1.05] text-muted-foreground">
             One workspace.{" "}
-            <span className="text-blue-600">Four moments that matter.</span>
+            <span className="text-status-info-ink">Four moments that matter.</span>
           </h2>
         </motion.div>
 
@@ -68,14 +68,14 @@ function WalkthroughRow({
           <span className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-blue-600 text-white text-dense font-bold font-mono shrink-0">
             {String(index + 1).padStart(2, "0")}
           </span>
-          <span className="text-xs font-medium text-blue-600">
+          <span className="text-xs font-medium text-status-info-ink">
             {step.eyebrow}
           </span>
         </div>
-        <h3 className="font-display text-xl sm:text-2xl lg:text-4xl font-bold text-slate-900 tracking-[-0.02em] leading-tight mb-3 sm:mb-4">
+        <h3 className="font-display text-xl sm:text-2xl lg:text-4xl font-bold text-muted-foreground tracking-[-0.02em] leading-tight mb-3 sm:mb-4">
           {step.title}
         </h3>
-        <p className="text-slate-600 text-sm sm:text-base lg:text-lg leading-relaxed mb-4 sm:mb-5">
+        <p className="text-muted-foreground text-sm sm:text-base lg:text-lg leading-relaxed mb-4 sm:mb-5">
           {step.description}
         </p>
         <ul className="space-y-2.5">
@@ -84,7 +84,7 @@ function WalkthroughRow({
               <span className="mt-0.5 h-5 w-5 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 inline-flex items-center justify-center shrink-0 shadow-[0_4px_12px_-4px_rgba(59,130,246,0.5)]">
                 <Check className="h-3 w-3 text-white" strokeWidth={3} />
               </span>
-              <span className="text-label sm:text-sm text-slate-700 min-w-0">
+              <span className="text-label sm:text-sm text-muted-foreground min-w-0">
                 {b}
               </span>
             </li>
@@ -120,7 +120,7 @@ function WalkthroughVisual({ index }: { index: number }) {
   const visuals = [HireVisual, OnboardVisual, DeliverVisual, CloseVisual];
   const Visual = visuals[index] ?? HireVisual;
   return (
-    <div className="relative aspect-[5/4] sm:aspect-[5/4] rounded-xl sm:rounded-2xl border border-slate-200/80 bg-white/80 backdrop-blur-sm overflow-hidden p-3.5 sm:p-6 shadow-[0_20px_60px_-24px_rgba(30,64,175,0.18)]">
+    <div className="relative aspect-[5/4] sm:aspect-[5/4] rounded-xl sm:rounded-2xl border border-border bg-white/80 backdrop-blur-sm overflow-hidden p-3.5 sm:p-6 shadow-[0_20px_60px_-24px_rgba(30,64,175,0.18)]">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(59,130,246,0.10),_transparent_60%)]" />
       <div className="relative h-full min-w-0 overflow-hidden">
         <Visual />
@@ -130,7 +130,7 @@ function WalkthroughVisual({ index }: { index: number }) {
 }
 
 const cardCls =
-  "rounded-lg sm:rounded-xl border border-slate-200 bg-white p-2.5 sm:p-4 shadow-sm";
+  "rounded-lg sm:rounded-xl border border-border bg-white p-2.5 sm:p-4 shadow-sm";
 
 function HireVisual() {
   const candidates = [
@@ -140,9 +140,9 @@ function HireVisual() {
   ];
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between text-dense font-medium text-slate-500">
+      <div className="flex items-center justify-between text-dense font-medium text-muted-foreground">
         <span>Candidates · AI scored</span>
-        <span className="text-blue-600">3 new</span>
+        <span className="text-status-info-ink">3 new</span>
       </div>
       {candidates.map((c, i) => (
         <motion.div
@@ -166,15 +166,15 @@ function HireVisual() {
                 .join("")}
             </span>
             <div className="min-w-0">
-              <p className="text-dense sm:text-xs font-semibold text-slate-900 truncate">
+              <p className="text-dense sm:text-xs font-semibold text-muted-foreground truncate">
                 {c.name}
               </p>
-              <p className="text-[9px] sm:text-micro text-slate-500 font-mono truncate">
+              <p className="text-micro sm:text-micro text-muted-foreground font-mono truncate">
                 {c.role}
               </p>
             </div>
           </div>
-          <span className="text-micro sm:text-dense font-mono text-emerald-700 px-1.5 sm:px-2 py-1 rounded-md bg-emerald-50 border border-emerald-200 shrink-0">
+          <span className="text-micro sm:text-dense font-mono text-status-success-ink px-1.5 sm:px-2 py-1 rounded-md bg-status-success-surface border border-status-success-rule shrink-0">
             {c.score}
           </span>
         </motion.div>
@@ -193,11 +193,11 @@ function OnboardVisual() {
   ];
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between text-dense font-medium text-slate-500">
+      <div className="flex items-center justify-between text-dense font-medium text-muted-foreground">
         <span>Onboarding · Aarav Singh</span>
-        <span className="text-blue-600">60%</span>
+        <span className="text-status-info-ink">60%</span>
       </div>
-      <div className="h-2 rounded-full bg-slate-200 overflow-hidden">
+      <div className="h-2 rounded-full bg-muted overflow-hidden">
         <motion.div
           initial={{ width: 0 }}
           whileInView={{ width: "60%" }}
@@ -216,19 +216,19 @@ function OnboardVisual() {
             transition={{ duration: 0.4, delay: 0.4 + i * 0.08 }}
             className={`flex items-center gap-3 text-xs ${
               s.done
-                ? "text-slate-600"
+                ? "text-muted-foreground"
                 : s.current
-                  ? "text-slate-900 font-medium"
-                  : "text-slate-400"
+                  ? "text-muted-foreground font-medium"
+                  : "text-muted-foreground"
             }`}
           >
             <span
-              className={`h-4 w-4 rounded-full border inline-flex items-center justify-center text-[8px] ${
+              className={`h-4 w-4 rounded-full border inline-flex items-center justify-center text-micro ${
                 s.done
-                  ? "bg-blue-600 border-blue-500 text-white"
+                  ? "bg-blue-600 border-status-info-rule text-white"
                   : s.current
-                    ? "border-cyan-400 text-cyan-600"
-                    : "border-slate-300"
+                    ? "border-status-info-rule text-status-info-ink"
+                    : "border-border"
               }`}
             >
               {s.done ? "✓" : s.current ? "•" : ""}
@@ -263,11 +263,11 @@ function DeliverVisual() {
           transition={{ duration: 0.5, delay: ci * 0.1 }}
           className={`rounded-lg sm:rounded-xl border p-1.5 sm:p-2.5 space-y-1 sm:space-y-1.5 min-w-0 ${
             col.highlight
-              ? "bg-blue-50 border-blue-200"
-              : "bg-slate-50/70 border-slate-200"
+              ? "bg-status-info-surface border-status-info-rule"
+              : "bg-muted border-border"
           }`}
         >
-          <div className="flex items-center justify-between gap-1 text-[9px] sm:text-dense font-medium text-slate-500 mb-1 min-w-0">
+          <div className="flex items-center justify-between gap-1 text-micro sm:text-dense font-medium text-muted-foreground mb-1 min-w-0">
             <span className="truncate">{col.title}</span>
             <span className="shrink-0">{col.count}</span>
           </div>
@@ -278,7 +278,7 @@ function DeliverVisual() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.35, delay: ci * 0.1 + ti * 0.06 }}
-              className="rounded-md bg-white border border-slate-200 p-1.5 sm:p-2 text-[9px] sm:text-micro text-slate-700 leading-tight shadow-sm truncate"
+              className="rounded-md bg-white border border-border p-1.5 sm:p-2 text-micro sm:text-micro text-muted-foreground leading-tight shadow-sm truncate"
             >
               {it}
             </motion.div>
@@ -299,18 +299,18 @@ function CloseVisual() {
   const maxBar = Math.max(...bars.map((b) => b.value));
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between text-dense font-medium text-slate-500">
+      <div className="flex items-center justify-between text-dense font-medium text-muted-foreground">
         <span>Forecast · Q3</span>
-        <span className="text-emerald-700">$1.42M ARR</span>
+        <span className="text-status-success-ink">$1.42M ARR</span>
       </div>
       <div className="space-y-2.5 pt-2">
         {bars.map((b, i) => (
           <div key={b.label}>
             <div className="flex items-center justify-between text-dense mb-1">
-              <span className="text-slate-700">{b.label}</span>
-              <span className="text-slate-500 font-mono">${b.value}k</span>
+              <span className="text-muted-foreground">{b.label}</span>
+              <span className="text-muted-foreground font-mono">${b.value}k</span>
             </div>
-            <div className="h-2 rounded-full bg-slate-200/70 overflow-hidden">
+            <div className="h-2 rounded-full bg-muted overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
                 whileInView={{ width: `${(b.value / maxBar) * 100}%` }}
@@ -322,9 +322,9 @@ function CloseVisual() {
           </div>
         ))}
       </div>
-      <div className="pt-2 border-t border-slate-200 text-micro font-mono text-slate-500 flex items-center justify-between">
+      <div className="pt-2 border-t border-border text-micro font-mono text-muted-foreground flex items-center justify-between">
         <span>AI confidence</span>
-        <span className="text-blue-600">87%</span>
+        <span className="text-status-info-ink">87%</span>
       </div>
     </div>
   );

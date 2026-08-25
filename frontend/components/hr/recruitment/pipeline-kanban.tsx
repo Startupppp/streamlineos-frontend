@@ -152,11 +152,11 @@ export function PipelineKanban({
   }, []);
 
   const FLOW_STAGES = [
-    { label: "New", color: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300", count: stageTotals["NEW"] ?? 0 },
-    { label: "Screening", color: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300", count: stageTotals["SCREENING"] ?? 0 },
-    { label: "Interview", color: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300", count: stageTotals["INTERVIEW"] ?? 0 },
-    { label: "Offer", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300", count: stageTotals["OFFER"] ?? 0 },
-    { label: "Hired", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300", count: stageTotals["HIRED"] ?? 0 },
+    { label: "New", color: "bg-muted text-muted-foreground dark:bg-slate-800", count: stageTotals["NEW"] ?? 0 },
+    { label: "Screening", color: "bg-status-info-surface text-status-info-ink dark:bg-blue-900", count: stageTotals["SCREENING"] ?? 0 },
+    { label: "Interview", color: "bg-status-warning-surface text-status-warning-ink dark:bg-amber-900", count: stageTotals["INTERVIEW"] ?? 0 },
+    { label: "Offer", color: "bg-status-info-surface text-status-info-ink", count: stageTotals["OFFER"] ?? 0 },
+    { label: "Hired", color: "bg-status-success-surface text-status-success-ink dark:bg-emerald-900", count: stageTotals["HIRED"] ?? 0 },
   ];
   const rejectedCount = stageTotals["REJECTED"] ?? 0;
 
@@ -197,7 +197,7 @@ export function PipelineKanban({
           </div>
         ))}
         {rejectedCount > 0 && (
-          <span className="ml-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-rose-100 text-rose-700 dark:bg-rose-900 dark:text-rose-300">
+          <span className="ml-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-status-danger-surface text-status-danger-ink dark:bg-rose-900">
             <XCircle className="h-3 w-3" />
             Rejected
             <span className="font-bold">{rejectedCount}</span>

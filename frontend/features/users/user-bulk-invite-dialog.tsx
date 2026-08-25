@@ -145,16 +145,16 @@ export function UserBulkInviteDialog({ open, onOpenChange }: UserBulkInviteDialo
                 allFailed
                   ? "bg-destructive/10"
                   : hasFailures
-                    ? "bg-amber-50 dark:bg-amber-500/10"
-                    : "bg-emerald-50 dark:bg-emerald-500/10",
+                    ? "bg-status-warning-surface"
+                    : "bg-status-success-surface",
               )}
             >
               {allFailed ? (
                 <XCircle className="size-7 text-destructive" />
               ) : hasFailures ? (
-                <AlertTriangle className="size-7 text-amber-600 dark:text-amber-400" />
+                <AlertTriangle className="size-7 text-status-warning-ink" />
               ) : (
-                <CheckCircle2 className="size-7 text-emerald-600 dark:text-emerald-400" />
+                <CheckCircle2 className="size-7 text-status-success-ink" />
               )}
             </div>
 

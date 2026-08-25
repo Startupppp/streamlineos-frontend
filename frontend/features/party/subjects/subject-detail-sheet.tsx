@@ -117,7 +117,7 @@ export function SubjectDetailSheet({
                       >
                         <Link
                           href={`/parties?partyId=${link.partyId}`}
-                          className="min-w-0 truncate text-sm font-medium text-blue-600 hover:underline"
+                          className="min-w-0 truncate text-sm font-medium text-status-info-ink hover:underline"
                         >
                           {link.name}
                         </Link>

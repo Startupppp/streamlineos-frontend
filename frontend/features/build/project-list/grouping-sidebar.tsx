@@ -90,7 +90,7 @@ function GroupingSidebarBody({
       meta: (
         <span
           className={cn(
-            "inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-sm text-[9px] font-bold",
+            "inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-sm text-micro font-bold",
             getColorSafe(projectStatusColors, s),
           )}
         />
@@ -153,7 +153,7 @@ function GroupingSidebarBody({
             {project.manager?.image ? (
               <AvatarImage src={resolveImageUrl(project.manager.image)} alt={name} />
             ) : null}
-            <AvatarFallback className="text-[7px]">{initials}</AvatarFallback>
+            <AvatarFallback className="text-micro">{initials}</AvatarFallback>
           </Avatar>
         ),
       });
@@ -188,7 +188,7 @@ function GroupingSidebarBody({
             {member.image ? (
               <AvatarImage src={resolveImageUrl(member.image)} alt={name} />
             ) : null}
-            <AvatarFallback className="text-[7px]">{initials}</AvatarFallback>
+            <AvatarFallback className="text-micro">{initials}</AvatarFallback>
           </Avatar>
         ),
       });

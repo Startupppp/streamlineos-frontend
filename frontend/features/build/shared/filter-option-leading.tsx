@@ -67,7 +67,7 @@ export function FilterAssigneeLeading({
     return (
       <Avatar className="h-4 w-4 shrink-0">
         <AvatarImage src={resolveImageUrl(member.image)} />
-        <AvatarFallback className="text-[7px] bg-primary/10 font-medium text-primary">
+        <AvatarFallback className="text-micro bg-primary/10 font-medium text-primary">
           {getUserInitials(member)}
         </AvatarFallback>
       </Avatar>

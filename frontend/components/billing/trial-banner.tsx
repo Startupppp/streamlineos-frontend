@@ -41,14 +41,14 @@ export function TrialBanner() {
     <div
       role="region"
       aria-label="Trial expiry notice"
-      className="flex items-center justify-between gap-2 border-b border-amber-200 bg-amber-50 px-3 py-2 shrink-0 dark:border-amber-500/30 dark:bg-amber-500/10 sm:gap-3 sm:px-4"
+      className="flex items-center justify-between gap-2 border-b border-status-warning-rule bg-status-warning-surface px-3 py-2 shrink-0 sm:gap-3 sm:px-4"
     >
       <div className="flex min-w-0 items-center gap-2">
         <Clock
-          className="h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400"
+          className="h-3.5 w-3.5 shrink-0 text-status-warning-ink"
           aria-hidden="true"
         />
-        <p className="min-w-0 text-xs leading-snug text-amber-800 dark:text-amber-200">
+        <p className="min-w-0 text-xs leading-snug text-status-warning-ink">
           {daysLeft === 0 ? (
             <strong>{label}</strong>
           ) : (
@@ -85,7 +85,7 @@ export function TrialBanner() {
           type="button"
           onClick={handleDismiss}
           aria-label="Dismiss trial notice"
-          className="flex h-7 w-7 items-center justify-center rounded text-amber-600 transition-colors hover:bg-amber-100 hover:text-amber-800 dark:text-amber-400 dark:hover:bg-amber-500/20 dark:hover:text-amber-200 sm:h-5 sm:w-5"
+          className="flex h-7 w-7 items-center justify-center rounded text-status-warning-ink transition-colors hover:bg-status-warning-surface hover:text-status-warning-ink sm:h-5 sm:w-5"
         >
           <X className="h-3 w-3" aria-hidden="true" />
         </button>

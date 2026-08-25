@@ -44,25 +44,25 @@ const STATUS_CONFIG: Record<
   PENDING: {
     label: "Pending",
     icon: Clock,
-    badgeClass: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-800",
+    badgeClass: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
     accentClass: "border-l-amber-500",
   },
   IN_PROGRESS: {
     label: "In Progress",
     icon: AlertCircle,
-    badgeClass: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800",
+    badgeClass: "bg-status-info-surface text-status-info-ink border-status-info-rule",
     accentClass: "border-l-blue-500",
   },
   COMPLETED: {
     label: "Completed",
     icon: CheckCircle2,
-    badgeClass: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800",
+    badgeClass: "bg-status-success-surface text-status-success-ink border-status-success-rule",
     accentClass: "border-l-emerald-500",
   },
   DECLINED: {
     label: "Declined",
     icon: XCircle,
-    badgeClass: "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/40 dark:text-rose-300 dark:border-rose-800",
+    badgeClass: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
     accentClass: "border-l-rose-500",
   },
 };
@@ -153,7 +153,7 @@ export function ReferenceChecksTab({ candidateId }: Props) {
             <SheetBody className="space-y-4 px-4 py-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-foreground/80">
-                  Reference Name<span className="text-rose-500 ml-0.5">*</span>
+                  Reference Name<span className="text-status-danger-ink ml-0.5">*</span>
                 </label>
                 <Input placeholder="e.g. Rajesh Kumar" value={refName} onChange={handleRefNameChange} />
               </div>

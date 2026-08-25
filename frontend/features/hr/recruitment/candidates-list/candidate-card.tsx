@@ -40,15 +40,15 @@ export const STAGE_CONFIG: {
     value: "NEW",
     label: "New",
     accent: "border-l-border",
-    pill: "bg-muted text-muted-foreground dark:bg-slate-800 dark:text-slate-200",
+    pill: "bg-muted text-muted-foreground dark:bg-slate-800",
     dot: "bg-muted-foreground/50",
-    activePill: "bg-primary text-primary-foreground dark:bg-slate-100 dark:text-slate-800",
+    activePill: "bg-primary text-primary-foreground",
   },
   {
     value: "SCREENING",
     label: "Screening",
     accent: "border-l-blue-500",
-    pill: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+    pill: "bg-status-info-surface text-status-info-ink",
     dot: "bg-blue-500",
     activePill: "bg-blue-600 text-white",
   },
@@ -56,7 +56,7 @@ export const STAGE_CONFIG: {
     value: "INTERVIEW",
     label: "Interview",
     accent: "border-l-amber-500",
-    pill: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+    pill: "bg-status-warning-surface text-status-warning-ink",
     dot: "bg-amber-500",
     activePill: "bg-amber-600 text-white",
   },
@@ -64,7 +64,7 @@ export const STAGE_CONFIG: {
     value: "OFFER",
     label: "Offer",
     accent: "border-l-blue-500",
-    pill: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
+    pill: "bg-status-info-surface text-status-info-ink",
     dot: "bg-blue-500",
     activePill: "bg-blue-600 text-white",
   },
@@ -72,7 +72,7 @@ export const STAGE_CONFIG: {
     value: "HIRED",
     label: "Hired",
     accent: "border-l-emerald-500",
-    pill: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
+    pill: "bg-status-success-surface text-status-success-ink",
     dot: "bg-emerald-500",
     activePill: "bg-emerald-600 text-white",
   },
@@ -80,7 +80,7 @@ export const STAGE_CONFIG: {
     value: "REJECTED",
     label: "Rejected",
     accent: "border-l-rose-400",
-    pill: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
+    pill: "bg-status-danger-surface text-status-danger-ink",
     dot: "bg-rose-400",
     activePill: "bg-rose-600 text-white",
   },
@@ -254,7 +254,7 @@ export function CandidateCard({
                   className={cn(
                     "h-3 w-3",
                     i < candidate.rating!
-                      ? "text-amber-500 fill-amber-500"
+                      ? "text-status-warning-ink fill-amber-500"
                       : "text-border fill-transparent",
                   )}
                 />

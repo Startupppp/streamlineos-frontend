@@ -76,7 +76,7 @@ export function SharedFilesPanel({ channelId, onClose }: { channelId: number; on
                 >
                   <div className={cn("h-9 w-9 rounded-lg flex flex-col items-center justify-center shrink-0", colors.bg)}>
                     <FileText className={cn("h-4 w-4", colors.text)} />
-                    <span className={cn("text-[6px] font-bold text-white px-1 rounded mt-0.5", colors.badge)}>
+                    <span className={cn("text-micro font-bold text-white px-1 rounded mt-0.5", colors.badge)}>
                       {getFileExt(file.fileName)}
                     </span>
                   </div>

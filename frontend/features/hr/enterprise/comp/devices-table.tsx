@@ -23,9 +23,9 @@ interface Props {
 }
 
 const STATUS_ICON = {
-  active: <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />,
+  active: <CheckCircle2 className="h-3.5 w-3.5 text-status-success-ink" />,
   inactive: <WifiOff className="h-3.5 w-3.5 text-muted-foreground" />,
-  faulty: <AlertCircle className="h-3.5 w-3.5 text-red-500" />,
+  faulty: <AlertCircle className="h-3.5 w-3.5 text-status-danger-ink" />,
 };
 
 const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive"> = {

@@ -238,11 +238,11 @@ export function CyclesTab() {
                 : "border-l-border";
             const badgeClass =
               cycle.status === "ACTIVE"
-                ? "border-emerald-200 bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800"
+                ? "border-status-success-rule bg-status-success-surface text-status-success-ink"
                 : cycle.status === "COMPLETED"
-                ? "border-blue-200 bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-800"
+                ? "border-status-info-rule bg-status-info-surface text-status-info-ink"
                 : cycle.status === "CANCELLED"
-                ? "border-rose-200 bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-800"
+                ? "border-status-danger-rule bg-status-danger-surface text-status-danger-ink"
                 : "border-border bg-muted text-muted-foreground";
             const progressBarClass =
               cycle.status === "ACTIVE"

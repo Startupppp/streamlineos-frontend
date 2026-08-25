@@ -328,7 +328,7 @@ export default function ImportPage() {
                         </span>
                         <span className="w-20">
                           {hasDupe(item.title) && (
-                            <span className="flex items-center gap-1 text-xs text-amber-600">
+                            <span className="flex items-center gap-1 text-xs text-status-warning-ink">
                               <KbTriangleAlertIcon className="h-3 w-3" />
                               Duplicate
                             </span>

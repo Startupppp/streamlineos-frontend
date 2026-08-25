@@ -33,7 +33,7 @@ export function ActivityRowItem({ row }: { row: ActivityRow }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 min-w-0">
           <p className="text-xs font-semibold text-foreground truncate">{primary}</p>
-          <span className="shrink-0 text-[9px] font-medium px-1.5 py-px rounded-full bg-muted text-muted-foreground">
+          <span className="shrink-0 text-micro font-medium px-1.5 py-px rounded-full bg-muted text-muted-foreground">
             {sourceLabel}
           </span>
         </div>
@@ -43,7 +43,7 @@ export function ActivityRowItem({ row }: { row: ActivityRow }) {
         <HrStatusBadge
           status={isUrgent ? "rejected" : "pending"}
           label={age}
-          className="shrink-0 text-[9px]"
+          className="shrink-0 text-micro"
         />
       )}
     </Link>

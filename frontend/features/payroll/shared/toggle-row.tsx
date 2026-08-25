@@ -38,7 +38,7 @@ export function ToggleRow({
           <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
         )}
         {impactHint && (
-          <p className="text-xs text-amber-600 mt-0.5">{impactHint}</p>
+          <p className="text-xs text-status-warning-ink mt-0.5">{impactHint}</p>
         )}
       </div>
       <Switch

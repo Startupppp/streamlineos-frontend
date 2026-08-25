@@ -173,7 +173,7 @@ export function OwnershipSection({
               <div className="flex items-center gap-2">
                 <Badge
                   variant="outline"
-                  className="gap-1 border-amber-300 bg-amber-50 text-xs text-amber-700 dark:border-amber-700/50 dark:bg-amber-500/10 dark:text-amber-400"
+                  className="gap-1 border-status-warning-rule bg-status-warning-surface text-xs text-status-warning-ink"
                 >
                   <Clock className="h-3 w-3" />
                   Transfer pending → {pending.toDisplayName}

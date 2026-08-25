@@ -19,9 +19,9 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 const LEVEL_COLORS: Record<number, string> = {
   1: "bg-muted text-muted-foreground",
   2: "bg-primary/10 text-primary",
-  3: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
-  4: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300",
-  5: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
+  3: "bg-status-warning-surface text-status-warning-ink",
+  4: "bg-status-success-surface text-status-success-ink",
+  5: "bg-status-info-surface text-status-info-ink",
 };
 
 const LEVEL_SHORT: Record<number, string> = { 1: "B", 2: "E", 3: "I", 4: "A", 5: "X" };
@@ -165,7 +165,7 @@ export default function SkillsMatrixPage() {
                         <div className="flex items-center gap-2">
                           <Avatar className="h-6 w-6 shrink-0">
                             <AvatarImage src={employeeRecord.image ?? undefined} />
-                            <AvatarFallback className="text-[9px]">{getInitials(employeeRecord.name)}</AvatarFallback>
+                            <AvatarFallback className="text-micro">{getInitials(employeeRecord.name)}</AvatarFallback>
                           </Avatar>
                           <TruncatedText text={employeeRecord.name ?? ""} className="font-medium max-w-[110px]" />
                         </div>

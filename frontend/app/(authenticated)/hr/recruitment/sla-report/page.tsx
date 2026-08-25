@@ -23,14 +23,14 @@ const SlaBreachChart = dynamic(
 
 function breachColor(pct: number) {
   if (pct >= 50) return "text-destructive";
-  if (pct >= 25) return "text-yellow-600 dark:text-yellow-400";
-  return "text-green-600 dark:text-green-400";
+  if (pct >= 25) return "text-status-warning-ink";
+  return "text-status-success-ink";
 }
 
 function breachBg(pct: number) {
   if (pct >= 50) return "bg-destructive/10";
-  if (pct >= 25) return "bg-yellow-50 dark:bg-yellow-950/20";
-  return "bg-green-50 dark:bg-green-950/20";
+  if (pct >= 25) return "bg-status-warning-surface";
+  return "bg-status-success-surface";
 }
 
 interface SlaStageEntry {
@@ -180,7 +180,7 @@ export default function SlaReportPage() {
                         <p className="text-micro text-muted-foreground">avg breach rate</p>
                       </div>
                       {s.avgBreachPct >= 25 && (
-                        <AlertTriangle className={cn("h-4 w-4 mt-1", s.avgBreachPct >= 50 ? "text-destructive" : "text-yellow-500")} />
+                        <AlertTriangle className={cn("h-4 w-4 mt-1", s.avgBreachPct >= 50 ? "text-destructive" : "text-status-warning-ink")} />
                       )}
                     </div>
                     <Progress value={s.avgBreachPct} className="h-1.5" />

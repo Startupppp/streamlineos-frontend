@@ -172,7 +172,7 @@ export function RolloutDocumentsDialog({
         {succeeded ? (
           <div className="flex flex-col items-center gap-4 py-8 text-center">
             <CheckCircle2
-              className="h-12 w-12 text-green-500"
+              className="h-12 w-12 text-status-success-ink"
               aria-hidden="true"
             />
             <p className="text-lg font-semibold">

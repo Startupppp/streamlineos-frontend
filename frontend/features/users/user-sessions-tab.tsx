@@ -128,7 +128,7 @@ export function UserSessionsTab({ userId }: UserSessionsTabProps) {
       cell: (row) => {
         const active = isSessionActive(row);
         return active ? (
-          <Badge variant="outline" className="text-micro border-green-200 dark:border-green-500/30 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-500/10">
+          <Badge variant="outline" className="text-micro border-status-success-rule text-status-success-ink bg-status-success-surface">
             Active
           </Badge>
         ) : (

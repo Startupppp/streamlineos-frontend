@@ -134,7 +134,7 @@ export function ClientUpdateCard({ projectId, featureEnabled, requiredPlan }: Cl
               {...copyHoverHandlers}
             >
               {copied ? (
-                <CheckIcon ref={copyIconRef} size={14} className="text-emerald-500" />
+                <CheckIcon ref={copyIconRef} size={14} className="text-status-success-ink" />
               ) : (
                 <CopyIcon ref={copyIconRef} size={14} />
               )}

@@ -135,7 +135,7 @@ export default function CompanyDetailPage({
       header: "Name",
       cell: (lead) => (
         <div className="flex items-center gap-2">
-          <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center text-[9px] font-semibold text-primary shrink-0">
+          <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center text-micro font-semibold text-primary shrink-0">
             {(lead.name ?? "?")[0]?.toUpperCase()}
           </div>
           <div className="min-w-0">

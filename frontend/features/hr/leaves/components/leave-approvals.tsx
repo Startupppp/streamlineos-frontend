@@ -207,7 +207,7 @@ export function LeaveApprovalsContent({
               </div>
               Pending WFH Requests
               {pendingWfhRequests && pendingWfhRequests.length > 0 && (
-                <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-amber-100 dark:bg-amber-500/10 text-micro font-semibold text-amber-700 dark:text-amber-300">
+                <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-status-warning-surface text-micro font-semibold text-status-warning-ink">
                   {pendingWfhRequests.length}
                 </span>
               )}

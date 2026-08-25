@@ -33,10 +33,10 @@ import {
 
 const VALUE_TYPE_CLASS: Record<string, string> = {
   string: "bg-primary/10 text-foreground border-primary/30",
-  number: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  boolean: "bg-green-50 text-green-700 border-green-200 dark:bg-green-500/10 dark:text-green-300 dark:border-green-500/30",
-  object: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  array: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30",
+  number: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  boolean: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  object: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  array: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
 };
 
 interface VariableCardProps {

@@ -99,7 +99,7 @@ export function WorkLogTotalHoursCard({
       <CardContent className="py-3 px-4">
         <div className="flex items-center gap-6">
           <div>
-            <p className="text-3xl font-bold tabular-nums text-emerald-700 dark:text-emerald-300">
+            <p className="text-3xl font-bold tabular-nums text-status-success-ink">
               {totalHours}
               <span className="text-lg ml-1 font-semibold">h</span>
             </p>

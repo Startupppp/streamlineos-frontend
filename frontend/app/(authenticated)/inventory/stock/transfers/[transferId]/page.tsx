@@ -106,8 +106,8 @@ function buildLineColumns(isCompleted: boolean): DataTableColumn<TransferLine>[]
         return (
           <span
             className={cn(
-              variance < 0 && "text-red-600",
-              variance > 0 && "text-amber-600",
+              variance < 0 && "text-status-danger-ink",
+              variance > 0 && "text-status-warning-ink",
               variance === 0 && "text-muted-foreground",
             )}
           >

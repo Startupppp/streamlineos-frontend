@@ -153,7 +153,7 @@ export function WorkLogAdvancedFiltersSheet({
         <AnimatedIconButton icon={SlidersHorizontalIcon} iconSize={12} iconClassName="mr-0" variant="outline" size="sm" className="relative gap-1.5 text-xs">
           <span className="hidden sm:inline">Filters</span>
           {activeFilterCount > 0 && (
-            <Badge className="absolute -top-1.5 -right-1.5 h-4 w-4 p-0 flex items-center justify-center text-[9px] bg-primary text-primary-foreground border-0 font-bold">
+            <Badge className="absolute -top-1.5 -right-1.5 h-4 w-4 p-0 flex items-center justify-center text-micro bg-primary text-primary-foreground border-0 font-bold">
               {activeFilterCount}
             </Badge>
           )}

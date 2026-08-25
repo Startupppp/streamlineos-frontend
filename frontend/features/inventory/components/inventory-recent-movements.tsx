@@ -8,22 +8,22 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { useStockTransactions, type TransactionType, type StockTransaction } from "@/hooks/api/inventory/stock";
 
 const MOVEMENT_TYPE_CONFIG: Record<TransactionType, { label: string; className: string }> = {
-  PURCHASE: { label: "Purchase", className: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
-  SALE: { label: "Sale", className: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30" },
+  PURCHASE: { label: "Purchase", className: "bg-status-success-surface text-status-success-ink border-status-success-rule" },
+  SALE: { label: "Sale", className: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule" },
   ADJUSTMENT_IN: { label: "Adj In", className: "bg-primary/5 text-foreground border-border" },
-  ADJUSTMENT_OUT: { label: "Adj Out", className: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30" },
-  TRANSFER_IN: { label: "Transfer In", className: "bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-500/10 dark:text-cyan-300 dark:border-cyan-500/30" },
+  ADJUSTMENT_OUT: { label: "Adj Out", className: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule" },
+  TRANSFER_IN: { label: "Transfer In", className: "bg-status-info-surface text-status-info-ink border-status-info-rule" },
   TRANSFER_OUT: { label: "Transfer Out", className: "bg-primary/5 text-foreground border-border" },
-  RETURN_IN: { label: "Return In", className: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
-  RETURN_OUT: { label: "Return Out", className: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30" },
+  RETURN_IN: { label: "Return In", className: "bg-status-success-surface text-status-success-ink border-status-success-rule" },
+  RETURN_OUT: { label: "Return Out", className: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule" },
   GRN: { label: "GRN", className: "bg-primary/5 text-foreground border-border" },
-  OPENING_BALANCE: { label: "Opening", className: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30" },
-  VENDOR_RETURN: { label: "Vendor Rtn", className: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30" },
-  CUSTOMER_RETURN: { label: "Cust Rtn", className: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
-  CYCLE_COUNT_GAIN: { label: "Count Gain", className: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
-  CYCLE_COUNT_LOSS: { label: "Count Loss", className: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30" },
-  SCRAP: { label: "Scrap", className: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30" },
-  QUARANTINE_IN: { label: "Quar In", className: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30" },
+  OPENING_BALANCE: { label: "Opening", className: "bg-status-info-surface text-status-info-ink border-status-info-rule" },
+  VENDOR_RETURN: { label: "Vendor Rtn", className: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule" },
+  CUSTOMER_RETURN: { label: "Cust Rtn", className: "bg-status-success-surface text-status-success-ink border-status-success-rule" },
+  CYCLE_COUNT_GAIN: { label: "Count Gain", className: "bg-status-success-surface text-status-success-ink border-status-success-rule" },
+  CYCLE_COUNT_LOSS: { label: "Count Loss", className: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule" },
+  SCRAP: { label: "Scrap", className: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule" },
+  QUARANTINE_IN: { label: "Quar In", className: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule" },
   QUARANTINE_OUT: { label: "Quar Out", className: "bg-primary/5 text-foreground border-border" },
   RESERVATION_CREATE: { label: "Reserved", className: "bg-muted text-muted-foreground border-border" },
   RESERVATION_RELEASE: { label: "Res. Release", className: "bg-muted text-muted-foreground border-border" },
@@ -63,7 +63,7 @@ function renderProductCell(row: StockTransaction) {
 function renderTypeCell(row: StockTransaction) {
   const config = MOVEMENT_TYPE_CONFIG[row.transactionType];
   return (
-    <Badge variant="outline" className={`h-4 text-[9px] px-1.5 py-0 font-medium ${config.className}`}>
+    <Badge variant="outline" className={`h-4 text-micro px-1.5 py-0 font-medium ${config.className}`}>
       {config.label}
     </Badge>
   );
@@ -75,7 +75,7 @@ function renderQtyCell(row: StockTransaction) {
   return (
     <span
       className={`text-dense font-mono tabular-nums font-semibold ${
-        isPositive ? "text-emerald-600" : "text-red-600"
+        isPositive ? "text-status-success-ink" : "text-status-danger-ink"
       }`}
     >
       {isPositive ? `+${absQty}` : `-${absQty}`}

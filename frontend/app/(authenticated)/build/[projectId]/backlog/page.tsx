@@ -191,7 +191,7 @@ export default function BacklogPage({ params }: PageProps) {
             <div className="flex items-center gap-1.5">
               <Avatar className="h-6 w-6">
                 <AvatarImage src={resolveImageUrl(ticket.assignee.image)} />
-                <AvatarFallback className="text-[8px]">
+                <AvatarFallback className="text-micro">
                   {getUserInitials(ticket.assignee)}
                 </AvatarFallback>
               </Avatar>

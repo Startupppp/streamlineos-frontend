@@ -127,7 +127,7 @@ export function RunsPageContent() {
       header: "Exceptions",
       cell: (row) =>
         (row.exceptionCount ?? 0) > 0 ? (
-          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium bg-red-50 text-red-700 border border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30">
+          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium bg-status-danger-surface text-status-danger-ink border border-status-danger-rule">
             {row.exceptionCount}
           </span>
         ) : (

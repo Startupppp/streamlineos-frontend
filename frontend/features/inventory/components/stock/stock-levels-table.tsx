@@ -31,12 +31,12 @@ export { STOCK_STATUS_ORDER };
 
 const StockStatusIcon = memo(function StockStatusIcon({ status }: { status: StockStatus }) {
   if (status === "critical") {
-    return <AlertTriangle className="h-3.5 w-3.5 text-red-500" aria-label="Below reorder point" />;
+    return <AlertTriangle className="h-3.5 w-3.5 text-status-danger-ink" aria-label="Below reorder point" />;
   }
   if (status === "low") {
-    return <TrendingDown className="h-3.5 w-3.5 text-amber-500" aria-label="Below minimum stock" />;
+    return <TrendingDown className="h-3.5 w-3.5 text-status-warning-ink" aria-label="Below minimum stock" />;
   }
-  return <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" aria-label="Stock OK" />;
+  return <CheckCircle2 className="h-3.5 w-3.5 text-status-success-ink" aria-label="Stock OK" />;
 });
 
 interface StockLevelsTableProps {
@@ -126,9 +126,9 @@ export const StockLevelsTable = memo(function StockLevelsTable({ rows, onShowAva
         const s = getStockStatus(row);
         return (
           <span className={cn(
-            s === "critical" && "text-red-600",
-            s === "low" && "text-amber-600",
-            s === "ok" && "text-emerald-600",
+            s === "critical" && "text-status-danger-ink",
+            s === "low" && "text-status-warning-ink",
+            s === "ok" && "text-status-success-ink",
           )}>
             {row.available.toLocaleString()}
           </span>
@@ -142,7 +142,7 @@ export const StockLevelsTable = memo(function StockLevelsTable({ rows, onShowAva
       className: "text-right font-mono tabular-nums hidden lg:table-cell",
       cell: (row) => (
         <span className={cn(
-          row.blockedQty > 0 ? "text-amber-600 font-medium" : "text-muted-foreground",
+          row.blockedQty > 0 ? "text-status-warning-ink font-medium" : "text-muted-foreground",
         )}>
           {row.blockedQty.toLocaleString()}
         </span>
@@ -155,7 +155,7 @@ export const StockLevelsTable = memo(function StockLevelsTable({ rows, onShowAva
       className: "text-right font-mono tabular-nums hidden lg:table-cell",
       cell: (row) => (
         <span className={cn(
-          row.qualityHoldQty > 0 ? "text-red-600 font-medium" : "text-muted-foreground",
+          row.qualityHoldQty > 0 ? "text-status-danger-ink font-medium" : "text-muted-foreground",
         )}>
           {row.qualityHoldQty.toLocaleString()}
         </span>
@@ -206,8 +206,8 @@ export const StockLevelsTable = memo(function StockLevelsTable({ rows, onShowAva
 
   function getRowClassName(row: StockLevelRow): string {
     const s = getStockStatus(row);
-    if (s === "critical") return "bg-red-50/50 dark:bg-red-500/5";
-    if (s === "low") return "bg-amber-50/50 dark:bg-amber-500/5";
+    if (s === "critical") return "bg-status-danger-surface";
+    if (s === "low") return "bg-status-warning-surface";
     return "";
   }
 

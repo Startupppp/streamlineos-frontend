@@ -25,7 +25,7 @@ interface FormProps {
 
 function AiBadge() {
   return (
-    <Badge variant="secondary" className="gap-1 text-dense text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-500/10">
+    <Badge variant="secondary" className="gap-1 text-dense text-status-warning-ink border-status-warning-rule bg-status-warning-surface">
       <Sparkles className="h-3 w-3" /> AI
     </Badge>
   );
@@ -202,7 +202,7 @@ export function RoutingSuggestionNodeForm({ config, onChange }: FormProps) {
         <AiBadge />
         <span className="text-xs text-muted-foreground">Routing suggestion</span>
       </div>
-      <div className="flex items-start gap-1.5 rounded-md bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-800 p-2 text-xs text-amber-700 dark:text-amber-300">
+      <div className="flex items-start gap-1.5 rounded-md bg-status-warning-surface border border-status-warning-rule p-2 text-xs text-status-warning-ink">
         <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
         <span>
           AI Routing Suggestion — generates a suggestion for human review. Never executes automatically.

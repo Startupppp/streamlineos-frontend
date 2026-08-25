@@ -34,10 +34,10 @@ import {
 import { toast } from "sonner";
 
 const PRIORITY_BADGE: Record<string, string> = {
-  low: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  medium: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  high: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30",
-  urgent: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  low: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  medium: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  high: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  urgent: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };
 
 interface PolicyRowActionsProps {
@@ -94,7 +94,7 @@ function buildBreachedColumns(): DataTableColumn<BreachedLead>[] {
       key: "status",
       header: "Status",
       cell: (row): ReactNode => (
-        <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-muted text-muted-foreground border-border">
+        <Badge variant="outline" className="text-micro h-4 px-1.5 py-0 bg-muted text-muted-foreground border-border">
           {row.status}
         </Badge>
       ),
@@ -105,7 +105,7 @@ function buildBreachedColumns(): DataTableColumn<BreachedLead>[] {
       headerClassName: "text-right",
       className: "text-right",
       cell: (row): ReactNode => (
-        <span className="text-dense text-red-700 dark:text-red-400 font-mono tabular-nums">
+        <span className="text-dense text-status-danger-ink font-mono tabular-nums">
           {row.slaDeadline ? new Date(row.slaDeadline).toLocaleDateString() : "N/A"}
         </span>
       ),
@@ -121,7 +121,7 @@ function BreachedLeadsTable({ leads }: { leads: BreachedLead[] }) {
     <Card className="bg-card rounded-xl border border-border shadow-sm">
       <CardHeader className="px-4 py-3">
         <CardTitle className="text-sm font-semibold flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4 text-red-600" />
+          <AlertTriangle className="h-4 w-4 text-status-danger-ink" />
           Recent SLA Breaches ({leads.length})
         </CardTitle>
       </CardHeader>
@@ -146,7 +146,7 @@ function buildPolicyColumns(
       key: "appliesTo",
       header: "Applies To",
       cell: (row): ReactNode => (
-        <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-muted text-muted-foreground border-border capitalize">
+        <Badge variant="outline" className="text-micro h-4 px-1.5 py-0 bg-muted text-muted-foreground border-border capitalize">
           {row.appliesTo}
         </Badge>
       ),
@@ -157,7 +157,7 @@ function buildPolicyColumns(
       cell: (row): ReactNode => (
         <Badge
           variant="outline"
-          className={cn("text-[9px] h-4 px-1.5 py-0 capitalize", PRIORITY_BADGE[row.priority] ?? PRIORITY_BADGE["medium"])}
+          className={cn("text-micro h-4 px-1.5 py-0 capitalize", PRIORITY_BADGE[row.priority] ?? PRIORITY_BADGE["medium"])}
         >
           {row.priority}
         </Badge>

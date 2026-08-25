@@ -118,7 +118,7 @@ export function WorkLogFiltersPanel({
           {filters.selectedUserId && employees && (
             <Badge
               variant="secondary"
-              className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border border-blue-200 bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30 pr-1"
+              className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border border-status-info-rule bg-status-info-surface text-status-info-ink pr-1"
             >
               {(() => {
                 const e = employees.find(
@@ -135,7 +135,7 @@ export function WorkLogFiltersPanel({
           {filters.month !== undefined && (
             <Badge
               variant="secondary"
-              className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border border-amber-200 bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30 pr-1"
+              className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border border-status-warning-rule bg-status-warning-surface text-status-warning-ink pr-1"
             >
               {format(new Date(filters.year, filters.month, 1), "MMMM")}
               <FilterClearButton onClick={handleClearMonth} ariaLabel="Remove month filter" />

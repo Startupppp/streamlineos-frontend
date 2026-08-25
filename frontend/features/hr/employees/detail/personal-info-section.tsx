@@ -64,7 +64,7 @@ export function PersonalInfoSection() {
               </FormControl>
               <FormMessage />
               {showSameNameWarning && (
-                <p className="text-xs text-amber-600 mt-1">
+                <p className="text-xs text-status-warning-ink mt-1">
                   First name and last name appear to be the same.
                 </p>
               )}

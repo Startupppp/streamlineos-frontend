@@ -71,7 +71,7 @@ function CandidateIntakeRow({ candidate: c, isSelected, duplicate, onToggle, onS
           <button
             type="button"
             onClick={handleDuplicateClick}
-            className="inline-flex items-center gap-1 text-micro font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 hover:bg-amber-200 transition-colors"
+            className="inline-flex items-center gap-1 text-micro font-medium px-2 py-0.5 rounded-full bg-status-warning-surface text-status-warning-ink hover:bg-amber-200 transition-colors"
           >
             <AlertTriangle className="h-2.5 w-2.5" />
             Possible duplicate
@@ -204,7 +204,7 @@ export default function IntakeInboxPage() {
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground">{selectedIds.size} selected</span>
               <LoadingButton size="sm" variant="outline" className="gap-1.5" onClick={handleBulkShortlist} isPending={bulkShortlist.isPending} loadingText="Shortlisting…">
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                <CheckCircle2 className="h-3.5 w-3.5 text-status-success-ink" />
                 Shortlist
               </LoadingButton>
               <Button size="sm" variant="outline" className="gap-1.5 text-destructive" onClick={handleOpenReject}>

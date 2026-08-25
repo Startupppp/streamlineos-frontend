@@ -172,7 +172,7 @@ function ProgressBadge({ doneCount, total, compact = false }: ProgressBadgeProps
       className={cn(
         "absolute rounded-full bg-background border border-border font-semibold text-foreground flex items-center justify-center leading-none tabular-nums",
         compact
-          ? "-top-1 -right-1 h-4 min-w-4 px-0.5 text-[9px]"
+          ? "-top-1 -right-1 h-4 min-w-4 px-0.5 text-micro"
           : "-top-1.5 -right-1.5 h-5 min-w-5 px-0.5 text-micro",
       )}
       aria-hidden="true"

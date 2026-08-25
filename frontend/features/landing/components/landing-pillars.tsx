@@ -16,16 +16,16 @@ export function LandingPillars() {
           transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] as const }}
           className="max-w-2xl mb-8 sm:mb-12 lg:mb-14"
         >
-          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-[-0.03em] leading-[1.05] text-slate-900 text-balance">
+          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-[-0.03em] leading-[1.05] text-muted-foreground text-balance">
             Built like infrastructure.{" "}
             <span className="text-brand-core">Used like an app.</span>
           </h2>
-          <p className="mt-3 text-slate-500 text-sm sm:text-base text-pretty">
+          <p className="mt-3 text-muted-foreground text-sm sm:text-base text-pretty">
             Why teams choose StreamlineOS over a stack of point tools.
           </p>
         </motion.div>
 
-        <div className="max-w-6xl mx-auto divide-y divide-slate-200/80 border-y border-slate-200/80">
+        <div className="max-w-6xl mx-auto divide-y divide-border border-y border-border">
           {pillars.map((p, i) => {
             const Icon = p.icon;
             return (
@@ -44,10 +44,10 @@ export function LandingPillars() {
                 <div className="h-10 w-10 rounded-lg bg-brand-core/8 border border-brand-core/15 inline-flex items-center justify-center group-hover:bg-brand-core group-hover:border-brand-core transition-colors duration-300">
                   <Icon className="h-[18px] w-[18px] text-brand-core group-hover:text-white transition-colors duration-300" />
                 </div>
-                <h3 className="font-display text-[15px] sm:text-base font-bold text-slate-900 sm:pt-2">
+                <h3 className="font-display text-sm sm:text-base font-bold text-muted-foreground sm:pt-2">
                   {p.title}
                 </h3>
-                <p className="text-label sm:text-sm text-slate-500 leading-relaxed sm:pt-2">
+                <p className="text-label sm:text-sm text-muted-foreground leading-relaxed sm:pt-2">
                   {p.description}
                 </p>
               </motion.div>

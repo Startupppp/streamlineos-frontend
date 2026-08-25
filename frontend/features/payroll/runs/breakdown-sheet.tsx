@@ -261,7 +261,7 @@ export function BreakdownSheet({
                   </div>
                   <div className="flex items-center justify-between text-dense">
                     <span className="text-muted-foreground">Deductions</span>
-                    <span className="font-mono tabular-nums text-red-600">
+                    <span className="font-mono tabular-nums text-status-danger-ink">
                       −{formatMoney(snapshot.totals.deductions)}
                     </span>
                   </div>
@@ -282,8 +282,8 @@ export function BreakdownSheet({
                         className={cn(
                           "ml-2 font-mono",
                           parseFloat(snapshot.variance.netDelta) >= 0
-                            ? "text-emerald-600"
-                            : "text-red-600",
+                            ? "text-status-success-ink"
+                            : "text-status-danger-ink",
                         )}
                       >
                         {parseFloat(snapshot.variance.netDelta) >= 0 ? "+" : ""}
@@ -320,7 +320,7 @@ export function BreakdownSheet({
                   </Button>
                 ))}
               {data?.holdReason && (
-                <TruncatedText text={`On hold: ${data.holdReason}`} className="text-micro text-amber-600" />
+                <TruncatedText text={`On hold: ${data.holdReason}`} className="text-micro text-status-warning-ink" />
               )}
             </div>
           )}

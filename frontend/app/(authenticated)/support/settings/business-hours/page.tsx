@@ -119,8 +119,8 @@ export default function BusinessHoursPage() {
         <Badge
           variant="outline"
           className={cn(
-            "text-[9px] h-4 px-1.5 py-0",
-            bh.is24x7 ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" : "bg-muted text-muted-foreground border-border",
+            "text-micro h-4 px-1.5 py-0",
+            bh.is24x7 ? "bg-status-success-surface text-status-success-ink border-status-success-rule" : "bg-muted text-muted-foreground border-border",
           )}
         >
           {bh.is24x7 ? "24/7" : "Scheduled"}
@@ -131,7 +131,7 @@ export default function BusinessHoursPage() {
       key: "isDefault",
       header: "Default",
       cell: (bh) => bh.isDefault ? (
-        <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-primary/10 text-foreground border-primary/20">
+        <Badge variant="outline" className="text-micro h-4 px-1.5 py-0 bg-primary/10 text-foreground border-primary/20">
           Default
         </Badge>
       ) : null,

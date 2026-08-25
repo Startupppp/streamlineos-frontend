@@ -78,18 +78,18 @@ function SessionMetric({
         "flex min-w-0 flex-1 flex-col items-center gap-1.5 rounded-xl border px-3 py-3 transition-colors",
         emphasized &&
           tone === "work" &&
-          "border-emerald-200 bg-emerald-50/70 dark:border-emerald-500/30 dark:bg-emerald-500/10",
+          "border-status-success-rule bg-status-success-surface",
         emphasized &&
           tone === "break" &&
-          "border-amber-200 bg-amber-50/70 dark:border-amber-500/30 dark:bg-amber-500/10",
+          "border-status-warning-rule bg-status-warning-surface",
         !emphasized && "border-border/80 bg-muted/30",
       )}
     >
       <div
         className={cn(
           "flex items-center gap-1.5",
-          emphasized && tone === "work" && "text-emerald-700 dark:text-emerald-300",
-          emphasized && tone === "break" && "text-amber-700 dark:text-amber-300",
+          emphasized && tone === "work" && "text-status-success-ink",
+          emphasized && tone === "break" && "text-status-warning-ink",
           !emphasized && "text-muted-foreground",
         )}
       >
@@ -313,15 +313,15 @@ export const TimerCard = memo(function TimerCard({
           className={cn(
             "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
             isOnBreak &&
-              "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200",
+              "border-status-warning-rule bg-status-warning-surface text-status-warning-ink",
             isCheckedIn &&
               !isOnBreak &&
-              "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200",
+              "border-status-success-rule bg-status-success-surface text-status-success-ink",
             !isActive &&
               !isBlockedDay &&
               "border-border bg-muted/50 text-muted-foreground",
             isBlockedDay &&
-              "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200",
+              "border-status-warning-rule bg-status-warning-surface text-status-warning-ink",
           )}
         >
           {isOnBreak ? <Coffee className="h-3 w-3 text-current" /> : null}
@@ -380,7 +380,7 @@ export const TimerCard = memo(function TimerCard({
                 onClick={handleBreakToggle}
                 disabled={isBlockedDay}
                 isPending={breakMutation.isPending}
-                className="h-10 w-full gap-1.5 border-amber-200 text-amber-700 hover:bg-amber-50 hover:text-amber-800 dark:border-amber-500/30 dark:text-amber-300 dark:hover:bg-amber-500/10 dark:hover:text-amber-200"
+                className="h-10 w-full gap-1.5 border-status-warning-rule text-status-warning-ink hover:bg-status-warning-surface hover:text-status-warning-ink"
               >
                 <Pause className="h-4 w-4 text-current" />
                 Take Break

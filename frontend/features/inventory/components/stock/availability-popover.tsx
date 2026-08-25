@@ -49,7 +49,7 @@ const WAREHOUSE_COLUMNS: DataTableColumn<StockAvailabilityByWarehouse>[] = [
     key: "available",
     header: "Available",
     headerClassName: "text-right",
-    className: "text-right font-semibold text-emerald-700",
+    className: "text-right font-semibold text-status-success-ink",
     cell: (row) => Number(row.available).toLocaleString(undefined, { maximumFractionDigits: 4 }),
   },
 ];

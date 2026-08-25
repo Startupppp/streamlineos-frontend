@@ -85,7 +85,7 @@ export function GenerationFailureStage({
           className={cn(
             "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1",
             orgExists
-              ? "border-amber-200/60 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10"
+              ? "border-status-warning-rule bg-status-warning-surface"
               : "border-destructive/25 bg-destructive/10",
           )}
         >
@@ -100,7 +100,7 @@ export function GenerationFailureStage({
             className={cn(
               "text-dense font-semibold tracking-tight",
               orgExists
-                ? "text-amber-700 dark:text-amber-400"
+                ? "text-status-warning-ink"
                 : "text-destructive",
             )}
           >

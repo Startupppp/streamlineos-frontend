@@ -80,7 +80,7 @@ export function WatcherList({ projectId, ticketId }: WatcherListProps) {
           {watchers.map((w) => (
             <Avatar key={w.userId} className="h-6 w-6" title={getUserDisplayName(w.user)}>
               <AvatarImage src={resolveImageUrl(w.user?.image)} />
-              <AvatarFallback className="text-[8px] bg-primary/10 text-primary">
+              <AvatarFallback className="text-micro bg-primary/10 text-primary">
                 {getUserInitials(w.user)}
               </AvatarFallback>
             </Avatar>

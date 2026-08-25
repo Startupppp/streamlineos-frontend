@@ -79,7 +79,7 @@ export function Section7({ form }: SectionProps) {
 
         <div className="space-y-1.5">
           <Label className="text-xs font-semibold text-foreground/80">
-            Interview Rounds<span className="text-rose-500 ml-0.5">*</span>
+            Interview Rounds<span className="text-status-danger-ink ml-0.5">*</span>
           </Label>
           <p className="text-micro text-muted-foreground">Select at least one round</p>
           <div className="grid sm:grid-cols-2 gap-2 mt-1">

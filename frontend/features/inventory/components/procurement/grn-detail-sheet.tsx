@@ -65,7 +65,7 @@ const grnLineColumns: DataTableColumn<GrnLine>[] = [
         <Badge
           variant="outline"
           className={cn(
-            "h-4 text-[9px] px-1.5 py-0",
+            "h-4 text-micro px-1.5 py-0",
             GRN_QUALITY_BADGE[line.qualityStatus],
           )}
         >

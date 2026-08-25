@@ -143,9 +143,9 @@ export default function BalanceSheetPage() {
           {report && (
             <div className="ml-auto text-sm">
               {report.balanced ? (
-                <span className="text-emerald-600 dark:text-emerald-400">Balanced ✓</span>
+                <span className="text-status-success-ink">Balanced ✓</span>
               ) : (
-                <span className="text-rose-600 dark:text-rose-400">
+                <span className="text-status-danger-ink">
                   Imbalanced — Assets ≠ Liabilities + Equity
                 </span>
               )}
@@ -206,13 +206,13 @@ export default function BalanceSheetPage() {
             title="Liabilities"
             rows={report.liabilities}
             total={report.totalLiabilities}
-            accentClass="bg-rose-50 border-rose-200/60 dark:bg-rose-500/10 dark:border-rose-500/30"
+            accentClass="bg-status-danger-surface border-status-danger-rule"
           />
           <Section
             title="Equity"
             rows={report.equity}
             total={report.totalEquity}
-            accentClass="bg-emerald-50 border-emerald-200/60 dark:bg-emerald-500/10 dark:border-emerald-500/30"
+            accentClass="bg-status-success-surface border-status-success-rule"
             extraRow={{
               label: "Retained Earnings (period-to-date)",
               value: report.retainedEarnings,

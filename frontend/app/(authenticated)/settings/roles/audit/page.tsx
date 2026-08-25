@@ -100,7 +100,7 @@ const columns: DataTableColumn<AuditLogEntry>[] = [
         <div className="flex items-center gap-2 min-w-0">
           <Avatar className="h-6 w-6 shrink-0">
             <AvatarImage src={log.userImage ?? undefined} />
-            <AvatarFallback className="text-[9px]">
+            <AvatarFallback className="text-micro">
               {getInitials(displayName)}
             </AvatarFallback>
           </Avatar>

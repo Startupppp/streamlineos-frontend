@@ -17,11 +17,11 @@ interface CandidateCardProps {
 }
 
 const SOURCE_COLORS: Record<string, string> = {
-  LINKEDIN: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
-  REFERRAL: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
-  DIRECT: "bg-muted text-muted-foreground dark:bg-slate-800 dark:text-slate-300",
-  JOB_PORTAL: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
-  CAMPUS: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
+  LINKEDIN: "bg-status-info-surface text-status-info-ink",
+  REFERRAL: "bg-status-info-surface text-status-info-ink",
+  DIRECT: "bg-muted text-muted-foreground dark:bg-slate-800",
+  JOB_PORTAL: "bg-status-warning-surface text-status-warning-ink",
+  CAMPUS: "bg-status-success-surface text-status-success-ink",
 };
 
 function getSourceColor(source: string) {
@@ -89,7 +89,7 @@ export const CandidateCard = memo(function CandidateCard({
             <div className="flex items-center gap-1.5 flex-wrap">
               {candidate.source && (
                 <span className={cn(
-                  "inline-flex items-center text-[9px] font-semibold px-1.5 py-0.5 rounded-full uppercase tracking-wide",
+                  "inline-flex items-center text-micro font-semibold px-1.5 py-0.5 rounded-full uppercase tracking-wide",
                   getSourceColor(candidate.source)
                 )}>
                   {candidate.source.replace(/_/g, " ")}
@@ -108,16 +108,16 @@ export const CandidateCard = memo(function CandidateCard({
                         className={cn(
                           "h-2.5 w-2.5",
                           i < (candidate.rating ?? 0)
-                            ? "text-amber-400 fill-amber-400"
+                            ? "text-status-warning-ink fill-amber-400"
                             : "text-border fill-transparent"
                         )}
                       />
                     ))}
-                    <span className="text-micro font-semibold text-amber-600 dark:text-amber-400 ml-0.5">{candidate.rating}</span>
+                    <span className="text-micro font-semibold text-status-warning-ink ml-0.5">{candidate.rating}</span>
                   </div>
                 ) : <span />}
                 {candidate.appliedAt && (
-                  <div className="flex items-center gap-0.5 text-[9px] text-muted-foreground">
+                  <div className="flex items-center gap-0.5 text-micro text-muted-foreground">
                     <Clock className="h-2.5 w-2.5" />
                     {formatDistanceToNow(new Date(candidate.appliedAt), { addSuffix: true })}
                   </div>

@@ -78,7 +78,7 @@ function StatusBadge({ status }: { status: string }) {
     return (
       <Badge
         variant="outline"
-        className="h-4 text-[9px] px-1.5 py-0 border-emerald-200 text-emerald-700 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
+        className="h-4 text-micro px-1.5 py-0 border-status-success-rule text-status-success-ink bg-status-success-surface"
       >
         Active
       </Badge>
@@ -87,7 +87,7 @@ function StatusBadge({ status }: { status: string }) {
   return (
     <Badge
       variant="outline"
-      className="h-4 text-[9px] px-1.5 py-0 border-border text-muted-foreground bg-muted"
+      className="h-4 text-micro px-1.5 py-0 border-border text-muted-foreground bg-muted"
     >
       Inactive
     </Badge>
@@ -99,7 +99,7 @@ function StockBadge({ qty }: { qty: number }) {
     return (
       <Badge
         variant="outline"
-        className="h-4 text-[9px] px-1.5 py-0 tabular-nums border-red-200 text-red-700 bg-red-50 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30"
+        className="h-4 text-micro px-1.5 py-0 tabular-nums border-status-danger-rule text-status-danger-ink bg-status-danger-surface"
       >
         Out
       </Badge>
@@ -109,7 +109,7 @@ function StockBadge({ qty }: { qty: number }) {
     return (
       <Badge
         variant="outline"
-        className="h-4 text-[9px] px-1.5 py-0 tabular-nums border-amber-200 text-amber-700 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30"
+        className="h-4 text-micro px-1.5 py-0 tabular-nums border-status-warning-rule text-status-warning-ink bg-status-warning-surface"
       >
         {qty} low
       </Badge>
@@ -118,7 +118,7 @@ function StockBadge({ qty }: { qty: number }) {
   return (
     <Badge
       variant="outline"
-      className="h-4 text-[9px] px-1.5 py-0 tabular-nums border-emerald-200 text-emerald-700 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
+      className="h-4 text-micro px-1.5 py-0 tabular-nums border-status-success-rule text-status-success-ink bg-status-success-surface"
     >
       {qty}
     </Badge>
@@ -137,7 +137,7 @@ function TrackingBadge({
     return (
       <Badge
         variant="outline"
-        className="h-4 text-[9px] px-1.5 py-0 bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30"
+        className="h-4 text-micro px-1.5 py-0 bg-status-warning-surface text-status-warning-ink border-status-warning-rule"
       >
         Lot
       </Badge>
@@ -146,7 +146,7 @@ function TrackingBadge({
   return (
     <Badge
       variant="outline"
-      className="h-4 text-[9px] px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30"
+      className="h-4 text-micro px-1.5 py-0 bg-status-info-surface text-status-info-ink border-status-info-rule"
     >
       Serial
     </Badge>

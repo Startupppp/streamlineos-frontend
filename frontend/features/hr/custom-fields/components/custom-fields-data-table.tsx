@@ -76,7 +76,7 @@ export function CustomFieldsDataTable({ entityType, fields }: CustomFieldsDataTa
       header: "Name",
       cell: (row) => (
         <div className="flex items-center gap-1.5">
-          {row.isSensitive && <Lock className="h-3.5 w-3.5 text-amber-600 shrink-0" />}
+          {row.isSensitive && <Lock className="h-3.5 w-3.5 text-status-warning-ink shrink-0" />}
           <span className="font-medium">{row.name}</span>
         </div>
       ),
@@ -102,7 +102,7 @@ export function CustomFieldsDataTable({ entityType, fields }: CustomFieldsDataTa
             <Badge variant="outline" className="text-dense text-primary border-primary/30">required</Badge>
           )}
           {row.isSensitive && (
-            <Badge variant="outline" className="text-dense text-amber-700 border-amber-200 gap-0.5">
+            <Badge variant="outline" className="text-dense text-status-warning-ink border-status-warning-rule gap-0.5">
               <Lock className="h-2.5 w-2.5" /> sensitive
             </Badge>
           )}

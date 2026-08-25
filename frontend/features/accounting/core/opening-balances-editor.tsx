@@ -224,7 +224,7 @@ export function OpeningBalancesEditor({ onSuccess }: OpeningBalancesEditorProps)
       />
 
       {!isBalanced && (
-        <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 dark:text-amber-300 dark:bg-amber-500/10 dark:border-amber-500/30">
+        <p className="text-xs text-status-warning-ink bg-status-warning-surface border border-status-warning-rule rounded-md px-3 py-2">
           Difference: {formatMoney(difference)} — this amount will be auto-posted to Retained Earnings
         </p>
       )}

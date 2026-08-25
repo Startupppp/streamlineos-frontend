@@ -57,10 +57,10 @@ function buildEventColumns(
           variant="outline"
           className={
             ev.status === "DELIVERED"
-              ? "h-4 text-[9px] px-1.5 py-0 border border-emerald-200 text-emerald-700 bg-emerald-50 dark:border-emerald-500/30 dark:text-emerald-300 dark:bg-emerald-500/10"
+              ? "h-4 text-micro px-1.5 py-0 border border-status-success-rule text-status-success-ink bg-status-success-surface"
               : ev.status === "FAILED"
-                ? "h-4 text-[9px] px-1.5 py-0 border border-red-200 text-red-700 bg-red-50 dark:border-red-500/30 dark:text-red-300 dark:bg-red-500/10"
-                : "h-4 text-[9px] px-1.5 py-0 border"
+                ? "h-4 text-micro px-1.5 py-0 border border-status-danger-rule text-status-danger-ink bg-status-danger-surface"
+                : "h-4 text-micro px-1.5 py-0 border"
           }
         >
           {ev.status}

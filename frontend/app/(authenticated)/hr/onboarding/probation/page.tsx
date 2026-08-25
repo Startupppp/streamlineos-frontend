@@ -29,23 +29,23 @@ type StatusConfig = {
 const STATUS_CONFIG: Record<string, StatusConfig> = {
   in_probation: {
     label: "In Probation",
-    className: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-800",
+    className: "bg-status-info-surface text-status-info-ink border-status-info-rule",
   },
   review_due: {
     label: "Review Due",
-    className: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800",
+    className: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   },
   extended: {
     label: "Extended",
-    className: "bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-800",
+    className: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   },
   confirmed: {
     label: "Confirmed",
-    className: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800",
+    className: "bg-status-success-surface text-status-success-ink border-status-success-rule",
   },
   terminated: {
     label: "Terminated",
-    className: "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-800",
+    className: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
   },
 };
 
@@ -111,7 +111,7 @@ function ProbationRow({ review, canManage, onExtend, onConfirm }: ProbationRowPr
             {review.extensionCount > 0 && (
               <Badge
                 variant="outline"
-                className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground border-border"
+                className="text-micro font-semibold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground border-border"
               >
                 {review.extensionCount}x extended
               </Badge>

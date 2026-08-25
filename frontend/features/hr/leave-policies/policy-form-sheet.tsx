@@ -215,8 +215,8 @@ export function PolicyFormSheet({
                     <FormItem>
                       <FormLabel>Leave Type</FormLabel>
                       {leaveTypeOptions.length === 0 ? (
-                        <div className="space-y-2 rounded-lg border border-amber-200/80 bg-amber-50/60 p-3 dark:border-amber-500/25 dark:bg-amber-500/10">
-                          <p className="text-xs text-amber-800 dark:text-amber-200">
+                        <div className="space-y-2 rounded-lg border border-status-warning-rule bg-status-warning-surface p-3">
+                          <p className="text-xs text-status-warning-ink">
                             No leave types configured yet. Create your first one
                             here, then attach this policy to it.
                           </p>
@@ -230,7 +230,7 @@ export function PolicyFormSheet({
                           >
                             Use standard Indian defaults
                           </LoadingButton>
-                          <p className="text-center text-micro uppercase tracking-wider text-amber-800/60 dark:text-amber-200/60">
+                          <p className="text-center text-micro uppercase tracking-wider text-status-warning-ink">
                             or create one
                           </p>
                           <div className="flex flex-col gap-2 sm:flex-row">

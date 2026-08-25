@@ -41,7 +41,7 @@ interface LinkedTicketRowProps {
 const LinkedTicketRow = memo(function LinkedTicketRow({ link }: LinkedTicketRowProps) {
   return (
     <li className="text-xs flex items-center gap-1.5">
-      <Badge variant="outline" className="text-[9px] px-1 py-0">
+      <Badge variant="outline" className="text-micro px-1 py-0">
         {link.relation}
       </Badge>
       <TruncatedText text={`#${link.linkedTicketId} ${link.linkedTicket?.title ?? ""}`} />

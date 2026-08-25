@@ -69,7 +69,7 @@ function ExpenseRow({
       <Badge
         variant="outline"
         className={cn(
-          "h-4 px-1.5 py-0 text-[9px] shrink-0",
+          "h-4 px-1.5 py-0 text-micro shrink-0",
           style?.bg,
           style?.text,
           style?.border,

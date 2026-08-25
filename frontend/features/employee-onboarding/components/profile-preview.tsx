@@ -132,7 +132,7 @@ function ProfilePreviewInner({
               </p>
             </div>
           </div>
-          <span className="shrink-0 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 text-micro font-semibold text-emerald-700 dark:text-emerald-300">
+          <span className="shrink-0 rounded-full border border-status-success-rule bg-status-success-surface px-2 py-0.5 text-micro font-semibold text-status-success-ink">
             Active
           </span>
         </div>
@@ -153,7 +153,7 @@ function ProfilePreviewInner({
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.18, ease: WIZARD_EASE }}
                   className={cn(
-                    "truncate font-display text-[1.15rem] font-extrabold tracking-[-0.03em]",
+                    "truncate font-display text-lg font-extrabold tracking-[-0.03em]",
                     nameFilled ? "text-foreground" : "text-muted-foreground/60",
                   )}
                 >

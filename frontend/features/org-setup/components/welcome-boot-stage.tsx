@@ -174,7 +174,7 @@ function WelcomeBootStageInner({
                       )}
                     >
                       <mod.Icon className="h-3.5 w-3.5" strokeWidth={2.25} />
-                      <span className="text-[9px] font-medium tracking-tight">
+                      <span className="text-micro font-medium tracking-tight">
                         {mod.label}
                       </span>
                       {!reduceMotion ? (
@@ -209,7 +209,7 @@ function WelcomeBootStageInner({
                       <p className="text-micro font-medium text-brand-deep">
                         Dashboard · live
                       </p>
-                      <p className="truncate font-display text-[15px] font-extrabold tracking-[-0.02em] text-foreground sm:text-base">
+                      <p className="truncate font-display text-sm font-extrabold tracking-[-0.02em] text-foreground sm:text-base">
                         First day online
                       </p>
                     </div>
@@ -223,7 +223,7 @@ function WelcomeBootStageInner({
                         delay: reduceMotion ? 0 : 0.5,
                         ease: PREVIEW_EASE,
                       }}
-                      className="shrink-0 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-micro font-semibold text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
+                      className="shrink-0 rounded-md border border-status-success-rule bg-status-success-surface px-2 py-0.5 text-micro font-semibold text-status-success-ink"
                     >
                       Boot OK
                     </motion.div>
@@ -242,7 +242,7 @@ function WelcomeBootStageInner({
                         }}
                         className="rounded-xl border border-border/70 bg-gradient-to-br from-brand-core/[0.06] via-card to-brand-cyan/[0.04] px-2.5 py-2.5"
                       >
-                        <p className="text-[9px] font-medium text-muted-foreground">
+                        <p className="text-micro font-medium text-muted-foreground">
                           {tile}
                         </p>
                         <p className="mt-1 font-display text-sm font-extrabold tracking-tight text-foreground">

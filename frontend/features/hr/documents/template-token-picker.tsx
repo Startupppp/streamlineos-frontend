@@ -25,9 +25,9 @@ function getTokenColorClasses(token: string): string {
   const color = TOKEN_COLORS[token];
   switch (color) {
     case "blue":
-      return "bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30";
+      return "bg-status-info-surface hover:bg-status-info-surface text-status-info-ink border-status-info-rule";
     case "emerald":
-      return "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30";
+      return "bg-status-success-surface hover:bg-status-success-surface text-status-success-ink border-status-success-rule";
     case "primary":
       return "bg-primary/5 hover:bg-primary/10 text-foreground border-primary/20 dark:bg-primary/10 dark:hover:bg-primary/15 dark:text-foreground dark:border-primary/30";
     default:
@@ -86,8 +86,8 @@ export function TemplateTokenPicker({
     <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
       <CardHeader className="pb-3 border-b px-5 pt-4">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 rounded-lg bg-amber-100 dark:bg-amber-500/10 flex items-center justify-center shrink-0">
-            <Braces className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" />
+          <div className="w-7 rounded-lg bg-status-warning-surface flex items-center justify-center shrink-0">
+            <Braces className="h-3.5 w-3.5 text-status-warning-ink" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold text-foreground">Variable Tokens</CardTitle>

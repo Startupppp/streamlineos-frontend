@@ -21,12 +21,12 @@ const TYPE_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 const TYPE_COLOR: Record<string, string> = {
-  AUDIT: "bg-muted text-muted-foreground dark:bg-slate-800 dark:text-slate-300",
+  AUDIT: "bg-muted text-muted-foreground dark:bg-slate-800",
   INTERVIEW:
-    "bg-blue-100 text-blue-600 dark:bg-blue-950/40 dark:text-blue-300",
-  MESSAGE: "bg-blue-100 text-blue-600 dark:bg-blue-950/40 dark:text-blue-300",
+    "bg-status-info-surface text-status-info-ink",
+  MESSAGE: "bg-status-info-surface text-status-info-ink",
   DOCUMENT:
-    "bg-amber-100 text-amber-600 dark:bg-amber-950/40 dark:text-amber-300",
+    "bg-status-warning-surface text-status-warning-ink",
 };
 
 function formatLabel(label: string): string {

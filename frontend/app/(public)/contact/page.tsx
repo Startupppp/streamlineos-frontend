@@ -47,11 +47,11 @@ export default function ContactPage() {
     <PublicShell>
       <section className="container mx-auto px-4 lg:px-8 max-w-3xl text-center">
         <PublicEyebrow>Contact us</PublicEyebrow>
-        <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-[-0.035em] leading-[1.02] text-slate-900 mb-5">
+        <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-[-0.035em] leading-[1.02] text-muted-foreground mb-5">
           Tell us what you&apos;re{" "}
-          <span className="text-blue-600">trying to solve.</span>
+          <span className="text-status-info-ink">trying to solve.</span>
         </h1>
-        <p className="text-slate-600 text-lg leading-relaxed max-w-2xl mx-auto">
+        <p className="text-muted-foreground text-lg leading-relaxed max-w-2xl mx-auto">
           Pricing questions, demos, partnerships, security disclosures â€” every message reaches
           a human on our team. We aim to reply within one business day.
         </p>
@@ -69,20 +69,20 @@ export default function ContactPage() {
               <Link
                 key={c.label}
                 href={c.href}
-                className="group block rounded-2xl border border-slate-200/80 bg-white/70 backdrop-blur-sm p-5 hover:border-blue-300/70 hover:bg-white transition-colors"
+                className="group block rounded-2xl border border-border bg-white/70 backdrop-blur-sm p-5 hover:border-status-info-rule hover:bg-white transition-colors"
               >
                 <div className="flex items-start gap-4">
                   <span className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 inline-flex items-center justify-center shrink-0 shadow-[0_6px_18px_-6px_rgba(59,130,246,0.5)] group-hover:scale-105 transition-transform">
                     <Icon className="h-4 w-4 text-white" />
                   </span>
                   <div className="min-w-0">
-                    <p className="font-display text-[15px] font-bold text-slate-900 mb-0.5">
+                    <p className="font-display text-sm font-bold text-muted-foreground mb-0.5">
                       {c.label}
                     </p>
-                    <p className="text-label text-slate-600 leading-relaxed mb-1.5">
+                    <p className="text-label text-muted-foreground leading-relaxed mb-1.5">
                       {c.description}
                     </p>
-                    <p className="text-xs font-mono text-blue-600 break-all">{c.value}</p>
+                    <p className="text-xs font-mono text-status-info-ink break-all">{c.value}</p>
                   </div>
                 </div>
               </Link>

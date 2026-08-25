@@ -112,7 +112,7 @@ export function AnonymousReportDialog({ open, onOpenChange }: Props) {
 
         {submitted ? (
           <div className="flex flex-col items-center gap-3 py-6 text-center">
-            <CheckCircle2 className="h-10 w-10 text-green-600" />
+            <CheckCircle2 className="h-10 w-10 text-status-success-ink" />
             <p className="text-sm font-semibold text-foreground">Report Submitted</p>
             <p className="text-xs text-muted-foreground">
               Your case reference number is{" "}

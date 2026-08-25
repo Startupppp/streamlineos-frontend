@@ -83,7 +83,7 @@ export const InlineProjectDates = memo(function InlineProjectDates({
           <button
             type="button"
             className={cn(
-              "flex shrink-0 items-center gap-0.5 text-[9px] font-medium transition-colors hover:opacity-80",
+              "flex shrink-0 items-center gap-0.5 text-micro font-medium transition-colors hover:opacity-80",
               dateMeta
                 ? dateToneClasses[dateMeta.tone]
                 : "text-muted-foreground/60",

@@ -10,10 +10,10 @@ import type { RunEmployee } from "@/types/payroll/runs";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 const WORKER_TYPE_COLORS: Record<string, string> = {
-  EMPLOYEE: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  CONTRACTOR: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  CONSULTANT: "bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-500/10 dark:text-cyan-300 dark:border-cyan-500/30",
-  INTERN: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  EMPLOYEE: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  CONTRACTOR: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  CONSULTANT: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  INTERN: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   EOR: "bg-muted text-muted-foreground border-border",
 };
 
@@ -59,7 +59,7 @@ const COLUMNS: DataTableColumn<RunEmployee>[] = [
     header: "Deductions",
     className: "text-right",
     cell: (row) => (
-      <span className="font-mono text-dense tabular-nums text-red-600 dark:text-red-400">
+      <span className="font-mono text-dense tabular-nums text-status-danger-ink">
         {row.totalDeductions ? `−${formatMoney(row.totalDeductions)}` : "—"}
       </span>
     ),
@@ -140,7 +140,7 @@ export function EmployeesTab({ runId, isLocked }: EmployeesTabProps) {
               </div>
               <div>
                 <p className="text-muted-foreground">Ded.</p>
-                <p className="font-mono tabular-nums text-red-600 dark:text-red-400">
+                <p className="font-mono tabular-nums text-status-danger-ink">
                   {row.totalDeductions ? `−${formatMoney(row.totalDeductions)}` : "—"}
                 </p>
               </div>

@@ -31,9 +31,9 @@ import { getErrorMessage } from "@/lib/get-error-message";
 type ReturnStatus = "DRAFT" | "POSTED" | "CANCELLED";
 
 const RETURN_STATUS_BADGE: Record<ReturnStatus, string> = {
-  DRAFT: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  POSTED: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  CANCELLED: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  DRAFT: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  POSTED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  CANCELLED: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };
 
 function formatDate(value: string | null | undefined): string {
@@ -45,7 +45,7 @@ function formatDate(value: string | null | undefined): string {
 function ReturnStatusBadge({ status }: { status: VendorReturnStatus | CustomerReturnStatus }) {
   const cls = RETURN_STATUS_BADGE[status] ?? "bg-muted text-muted-foreground border-border";
   return (
-    <Badge variant="outline" className={cn("h-4 text-[9px] px-1.5 py-0", cls)}>
+    <Badge variant="outline" className={cn("h-4 text-micro px-1.5 py-0", cls)}>
       {status}
     </Badge>
   );

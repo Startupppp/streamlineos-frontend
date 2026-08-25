@@ -94,7 +94,7 @@ export function ChangeImpactCard({ projectId, featureEnabled, requiredPlan }: Ch
               <ul className="space-y-1">
                 {result.riskSummary.map((r) => (
                   <li key={r} className="flex items-start gap-1.5 text-xs text-foreground/80">
-                    <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0 text-amber-500" />
+                    <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0 text-status-warning-ink" />
                     {r}
                   </li>
                 ))}

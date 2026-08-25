@@ -228,7 +228,7 @@ export function PermissionMatrix({
               </Badge>
             )}
             {dirty && (
-              <Badge className="text-micro shrink-0 bg-amber-100 dark:bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-500/30">
+              <Badge className="text-micro shrink-0 bg-status-warning-surface text-status-warning-ink border-status-warning-rule">
                 Unsaved
               </Badge>
             )}
@@ -370,7 +370,7 @@ function PermissionChangeSummary({
     <div className="max-h-[45dvh] space-y-3 overflow-y-auto text-label">
       {added.length > 0 && (
         <div>
-          <p className="font-medium text-emerald-700 dark:text-emerald-300">
+          <p className="font-medium text-status-success-ink">
             Granting {added.length}
           </p>
           <ul className="mt-1 space-y-0.5 font-mono text-dense text-muted-foreground">
@@ -382,7 +382,7 @@ function PermissionChangeSummary({
       )}
       {removed.length > 0 && (
         <div>
-          <p className="font-medium text-red-700 dark:text-red-300">
+          <p className="font-medium text-status-danger-ink">
             Revoking {removed.length}
           </p>
           <ul className="mt-1 space-y-0.5 font-mono text-dense text-muted-foreground">
@@ -394,7 +394,7 @@ function PermissionChangeSummary({
       )}
       {rescoped.length > 0 && (
         <div>
-          <p className="font-medium text-amber-700 dark:text-amber-300">
+          <p className="font-medium text-status-warning-ink">
             Changing scope on {rescoped.length}
           </p>
           <ul className="mt-1 space-y-0.5 font-mono text-dense text-muted-foreground">

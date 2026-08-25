@@ -39,14 +39,14 @@ const CATEGORY_ICONS: Record<string, AnimatedNavIconComponent> = {
 };
 
 const CATEGORY_TONES: Record<string, { bg: string; text: string }> = {
-  Core: { bg: "bg-blue-50 dark:bg-blue-500/10", text: "text-blue-600 dark:text-blue-400" },
-  Receivables: { bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400" },
-  Payables: { bg: "bg-orange-50 dark:bg-orange-500/10", text: "text-orange-600 dark:text-orange-400" },
-  Sales: { bg: "bg-cyan-50 dark:bg-cyan-500/10", text: "text-cyan-600 dark:text-cyan-400" },
-  Expenses: { bg: "bg-amber-50 dark:bg-amber-500/10", text: "text-amber-600 dark:text-amber-400" },
-  Tax: { bg: "bg-blue-50 dark:bg-blue-500/10", text: "text-blue-600 dark:text-blue-400" },
-  Analytics: { bg: "bg-sky-50 dark:bg-sky-500/10", text: "text-sky-600 dark:text-sky-400" },
-  Budgeting: { bg: "bg-pink-50 dark:bg-pink-500/10", text: "text-pink-600 dark:text-pink-400" },
+  Core: { bg: "bg-status-info-surface", text: "text-status-info-ink" },
+  Receivables: { bg: "bg-status-success-surface", text: "text-status-success-ink" },
+  Payables: { bg: "bg-status-warning-surface", text: "text-status-warning-ink" },
+  Sales: { bg: "bg-status-info-surface", text: "text-status-info-ink" },
+  Expenses: { bg: "bg-status-warning-surface", text: "text-status-warning-ink" },
+  Tax: { bg: "bg-status-info-surface", text: "text-status-info-ink" },
+  Analytics: { bg: "bg-status-info-surface", text: "text-status-info-ink" },
+  Budgeting: { bg: "bg-category-pink-surface", text: "text-category-pink-ink" },
   Overview: { bg: "bg-muted", text: "text-muted-foreground" },
 };
 
@@ -90,7 +90,7 @@ function ReportCard({ item, category }: ReportCardProps) {
         <TruncatedText text={item.name} className="text-sm font-semibold text-foreground" />
         <TruncatedText text={item.description} lines={2} className="mt-0.5 text-xs text-muted-foreground leading-snug" />
         {item.exportable && (
-          <span className="inline-flex mt-1.5 items-center px-1.5 py-0.5 rounded text-micro font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/70 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
+          <span className="inline-flex mt-1.5 items-center px-1.5 py-0.5 rounded text-micro font-medium bg-status-success-surface text-status-success-ink border border-status-success-rule">
             Exportable
           </span>
         )}

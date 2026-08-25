@@ -29,8 +29,8 @@ interface InterviewerStat {
 
 function getSpeedLabel(hours: number | null): { label: string; color: string } {
   if (hours === null) return { label: "—", color: "text-muted-foreground" };
-  if (hours <= 24) return { label: "< 24h", color: "text-emerald-600 dark:text-emerald-400" };
-  if (hours <= 48) return { label: `${Math.round(hours)}h`, color: "text-amber-600 dark:text-amber-400" };
+  if (hours <= 24) return { label: "< 24h", color: "text-status-success-ink" };
+  if (hours <= 48) return { label: `${Math.round(hours)}h`, color: "text-status-warning-ink" };
   return { label: `${Math.round(hours)}h`, color: "text-destructive" };
 }
 
@@ -80,7 +80,7 @@ const INTERVIEWER_PERF_COLUMNS: DataTableColumn<InterviewerStat>[] = [
     headerClassName: "text-center",
     className: "text-center",
     cell: (stat) => (
-      <span className="tabular-nums text-emerald-600 dark:text-emerald-400 font-medium">
+      <span className="tabular-nums text-status-success-ink font-medium">
         {stat.submitted}
       </span>
     ),
@@ -94,7 +94,7 @@ const INTERVIEWER_PERF_COLUMNS: DataTableColumn<InterviewerStat>[] = [
     className: "text-center",
     cell: (stat) =>
       stat.pending > 0 ? (
-        <Badge variant="outline" className="text-amber-600 border-amber-300 dark:border-amber-700">
+        <Badge variant="outline" className="text-status-warning-ink border-status-warning-rule">
           {stat.pending}
         </Badge>
       ) : (
@@ -121,12 +121,12 @@ const INTERVIEWER_PERF_COLUMNS: DataTableColumn<InterviewerStat>[] = [
       return (
         <div className="flex items-center gap-1.5 flex-wrap">
           {hireCount > 0 && (
-            <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 border-0 text-xs">
+            <Badge className="bg-status-success-surface text-status-success-ink border-0 text-xs">
               HIRE ×{hireCount}
             </Badge>
           )}
           {maybeCount > 0 && (
-            <Badge variant="outline" className="text-amber-600 border-amber-300 text-xs">
+            <Badge variant="outline" className="text-status-warning-ink border-status-warning-rule text-xs">
               MAYBE ×{maybeCount}
             </Badge>
           )}

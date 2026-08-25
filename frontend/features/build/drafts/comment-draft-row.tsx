@@ -183,7 +183,7 @@ export function CommentDraftRow({ draft, onOpen, onDelete }: CommentDraftRowProp
               <span className="inline-flex min-w-0 max-w-[8.5rem] items-center gap-1 text-micro text-muted-foreground">
                 <Avatar className="h-3.5 w-3.5 shrink-0">
                   <AvatarImage src={resolveImageUrl(assignee.image)} />
-                  <AvatarFallback className="bg-primary/10 text-[7px] font-medium text-primary">
+                  <AvatarFallback className="bg-primary/10 text-micro font-medium text-primary">
                     {getUserInitials(assignee)}
                   </AvatarFallback>
                 </Avatar>

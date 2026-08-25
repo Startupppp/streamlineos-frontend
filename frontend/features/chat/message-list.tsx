@@ -286,9 +286,9 @@ export function MessageList({
                   <Fragment key={msg.id}>
                     {showUnreadDivider && (
                       <div className="flex items-center gap-3 my-2 px-2">
-                        <div className="flex-1 h-px bg-red-400/60" />
-                        <span className="text-micro font-bold text-red-500 whitespace-nowrap px-2">New Messages</span>
-                        <div className="flex-1 h-px bg-red-400/60" />
+                        <div className="flex-1 h-px bg-status-danger-surface" />
+                        <span className="text-micro font-bold text-status-danger-ink whitespace-nowrap px-2">New Messages</span>
+                        <div className="flex-1 h-px bg-status-danger-surface" />
                       </div>
                     )}
                     <MessageItem
@@ -325,7 +325,7 @@ export function MessageList({
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center py-10">
               <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500/15 to-blue-500/5 flex items-center justify-center mb-3">
-                <Send className="h-5 w-5 text-blue-600" />
+                <Send className="h-5 w-5 text-status-info-ink" />
               </div>
               <h4 className="text-sm font-semibold mb-0.5">
                 {channelType === "DIRECT"

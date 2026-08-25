@@ -57,11 +57,11 @@ const MODULE_TONE: Record<string, { bg: string; text: string }> = {
   crm: { bg: "bg-primary/10", text: "text-primary" },
   hr: { bg: "bg-primary/10", text: "text-primary" },
   inventory: { bg: "bg-primary/10", text: "text-primary" },
-  accounting: { bg: "bg-amber-50 dark:bg-amber-500/10", text: "text-amber-600 dark:text-amber-400" },
+  accounting: { bg: "bg-status-warning-surface", text: "text-status-warning-ink" },
   build: { bg: "bg-primary/10", text: "text-primary" },
   support: { bg: "bg-primary/10", text: "text-primary" },
   kb: { bg: "bg-primary/10", text: "text-primary" },
-  chat: { bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400" },
+  chat: { bg: "bg-status-success-surface", text: "text-status-success-ink" },
 };
 
 const DEFAULT_TONE = { bg: "bg-muted", text: "text-muted-foreground" };
@@ -157,7 +157,7 @@ function ModuleSetupBanner({ checklist }: { checklist: ModuleChecklist }) {
                       className="mt-0.5 shrink-0"
                     >
                       {done ? (
-                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        <CheckCircle2 className="h-4 w-4 text-status-success-ink" />
                       ) : (
                         <Circle className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
                       )}

@@ -48,14 +48,14 @@ export function ValidationPanel({ runId }: ValidationPanelProps) {
         <ChevronRightIcon ref={chevronIconRef} size={16} className={cn("transition-transform", isExpanded && "rotate-90")} />
         Bank Validation
         {hasBlockers && (
-          <span className="ml-1 text-xs font-medium text-red-600">({blockers.length} blockers)</span>
+          <span className="ml-1 text-xs font-medium text-status-danger-ink">({blockers.length} blockers)</span>
         )}
       </button>
 
       {isExpanded && (
         <div className="border border-border rounded-lg overflow-hidden">
           {!data || (!hasBlockers && warnings.length === 0) ? (
-            <div className="flex items-center gap-2 px-4 py-3 text-sm text-emerald-700 bg-emerald-50 dark:text-emerald-300 dark:bg-emerald-500/10">
+            <div className="flex items-center gap-2 px-4 py-3 text-sm text-status-success-ink bg-status-success-surface">
               <CheckCircle2 className="h-4 w-4 shrink-0" />
               All employees ready for payout
             </div>
@@ -63,9 +63,9 @@ export function ValidationPanel({ runId }: ValidationPanelProps) {
             <>
               {hasBlockers && (
                 <div>
-                  <div className="flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-500/10 border-b border-border">
-                    <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400 shrink-0" />
-                    <span className="text-xs font-semibold text-red-700 dark:text-red-300">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-status-danger-surface border-b border-border">
+                    <AlertCircle className="h-4 w-4 text-status-danger-ink shrink-0" />
+                    <span className="text-xs font-semibold text-status-danger-ink">
                       {blockers.length} employee(s) with errors
                     </span>
                   </div>
@@ -86,7 +86,7 @@ export function ValidationPanel({ runId }: ValidationPanelProps) {
                         {item.errors.map((err, i) => (
                           <span
                             key={i}
-                            className="inline-flex items-center rounded px-1.5 py-0.5 text-micro font-medium bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-300"
+                            className="inline-flex items-center rounded px-1.5 py-0.5 text-micro font-medium bg-status-danger-surface text-status-danger-ink"
                           >
                             {err}
                           </span>
@@ -99,9 +99,9 @@ export function ValidationPanel({ runId }: ValidationPanelProps) {
 
               {warnings.length > 0 && (
                 <div>
-                  <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-500/10 border-b border-border">
-                    <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
-                    <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-status-warning-surface border-b border-border">
+                    <AlertTriangle className="h-4 w-4 text-status-warning-ink shrink-0" />
+                    <span className="text-xs font-semibold text-status-warning-ink">
                       {warnings.length} employee(s) with warnings
                     </span>
                   </div>
@@ -117,7 +117,7 @@ export function ValidationPanel({ runId }: ValidationPanelProps) {
                         {item.warnings.map((w, i) => (
                           <span
                             key={i}
-                            className="inline-flex items-center rounded px-1.5 py-0.5 text-micro font-medium bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"
+                            className="inline-flex items-center rounded px-1.5 py-0.5 text-micro font-medium bg-status-warning-surface text-status-warning-ink"
                           >
                             {w}
                           </span>

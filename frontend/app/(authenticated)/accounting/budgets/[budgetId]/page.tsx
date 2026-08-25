@@ -149,7 +149,7 @@ const BVA_COLUMNS: DataTableColumn<BvaAccountPeriodRow>[] = [
     cell: (row: BvaAccountPeriodRow): ReactNode => {
       const varianceNum = parseFloat(row.variance);
       return (
-        <Money value={varianceNum} className={varianceNum > 0 ? "text-red-600 dark:text-red-400" : undefined} />
+        <Money value={varianceNum} className={varianceNum > 0 ? "text-status-danger-ink" : undefined} />
       );
     },
   },
@@ -159,7 +159,7 @@ const BVA_COLUMNS: DataTableColumn<BvaAccountPeriodRow>[] = [
     className: "px-3 py-2 w-20",
     cell: (row: BvaAccountPeriodRow): ReactNode =>
       row.exceeded ? (
-        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30 text-[9px] px-1.5 py-0 h-4">
+        <Badge variant="outline" className="bg-status-danger-surface text-status-danger-ink border-status-danger-rule text-micro px-1.5 py-0 h-4">
           Over
         </Badge>
       ) : null,
@@ -201,7 +201,7 @@ function BvaTab({ budgetId }: BvaTabProps) {
       <span className="w-4" />
       <Money
         value={parseFloat(totals.variance)}
-        className={parseFloat(totals.variance) > 0 ? "text-red-600 dark:text-red-400" : undefined}
+        className={parseFloat(totals.variance) > 0 ? "text-status-danger-ink" : undefined}
       />
       <span className="w-20" />
     </div>

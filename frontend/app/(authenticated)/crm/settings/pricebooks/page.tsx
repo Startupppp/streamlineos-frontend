@@ -211,7 +211,7 @@ export default function PricebooksPage() {
       header: "Status",
       cell: (pb) =>
         pb.isActive ? (
-          <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
+          <Badge variant="outline" className="bg-status-success-surface text-status-success-ink border-status-success-rule">
             Active
           </Badge>
         ) : (

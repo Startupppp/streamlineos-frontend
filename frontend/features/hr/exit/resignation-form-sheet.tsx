@@ -285,13 +285,13 @@ export function ResignationFormSheet({ open, onOpenChange }: ResignationFormShee
           <span className="text-muted-foreground font-normal">(optional)</span>
         </label>
         {resignationLetterUrl ? (
-          <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 dark:bg-emerald-500/10 dark:border-emerald-800 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-300">
+          <div className="flex items-center gap-2 rounded-lg border border-status-success-rule bg-status-success-surface px-3 py-2 text-xs text-status-success-ink">
             <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
             <span className="flex-1 truncate">Letter uploaded successfully</span>
             <button
               type="button"
               onClick={handleRemoveLetterUrl}
-              className="text-emerald-600 hover:text-emerald-800 dark:text-emerald-300 dark:hover:text-emerald-300 transition-colors duration-200"
+              className="text-status-success-ink hover:text-status-success-ink transition-colors duration-200"
               aria-label="Remove uploaded letter"
             >
               ×

@@ -50,13 +50,13 @@ export function TicketDetailTimeline({ ticket }: TicketDetailTimelineProps) {
               className={cn(
                 "flex gap-2.5 rounded-lg p-3",
                 isInternalMsg
-                  ? "bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40"
+                  ? "bg-status-warning-surface border border-status-warning-rule"
                   : "bg-muted/20",
               )}
             >
               <Avatar className="h-7 w-7 shrink-0 mt-0.5">
                 <AvatarImage src={resolveImageUrl(msg.author?.image)} />
-                <AvatarFallback className="text-[9px]">{getInitials(msg.author?.name)}</AvatarFallback>
+                <AvatarFallback className="text-micro">{getInitials(msg.author?.name)}</AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -64,7 +64,7 @@ export function TicketDetailTimeline({ ticket }: TicketDetailTimelineProps) {
                   {isInternalMsg && (
                     <Badge
                       variant="outline"
-                      className="text-[9px] px-1 py-0 gap-0.5 border-amber-400 bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:border-amber-700 dark:text-amber-400"
+                      className="text-micro px-1 py-0 gap-0.5 border-status-warning-rule bg-status-warning-surface text-status-warning-ink"
                     >
                       <Lock className="h-2.5 w-2.5" /> Internal Note
                     </Badge>

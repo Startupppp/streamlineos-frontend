@@ -39,7 +39,7 @@ function ThreadMessage({ message, currentUserId, isParent, resolveUserName }: Th
     <div className={cn("flex gap-2.5 px-4", isParent ? "py-3" : "py-1")}>
       <Avatar className="w-7 shrink-0 mt-0.5 border border-border/30 shadow-sm">
         <AvatarImage src={resolveImageUrl(message.sender?.image)} />
-        <AvatarFallback className="text-[8px] font-bold bg-muted text-muted-foreground">
+        <AvatarFallback className="text-micro font-bold bg-muted text-muted-foreground">
           {getInitials(senderName)}
         </AvatarFallback>
       </Avatar>
@@ -264,7 +264,7 @@ export function ThreadPanel({
       </ScrollArea>
 
       <div className="p-3 border-t border-border/40 shrink-0">
-        <div className="flex items-end gap-2 rounded-xl border border-border/50 bg-background px-3 py-2 focus-within:border-blue-500/40 transition-colors">
+        <div className="flex items-end gap-2 rounded-xl border border-border/50 bg-background px-3 py-2 focus-within:border-status-info-rule transition-colors">
           <textarea
             ref={inputRef}
             value={input}

@@ -41,17 +41,17 @@ const STATUS_CONFIG: Record<
   draft: {
     label: "Draft",
     className:
-      "text-amber-700 border-amber-300 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+      "text-status-warning-ink border-status-warning-rule bg-status-warning-surface",
   },
   released: {
     label: "Released",
     className:
-      "text-emerald-700 border-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+      "text-status-success-ink border-status-success-rule bg-status-success-surface",
   },
   archived: {
     label: "Archived",
     className:
-      "text-muted-foreground border-border bg-muted dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30",
+      "text-muted-foreground border-border bg-muted",
   },
 };
 

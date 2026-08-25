@@ -221,7 +221,7 @@ export function SubtaskComposer({ ticketId, projectId, projectStatuses }: Subtas
           <button type="button" aria-label="Set assignee" className="shrink-0">
             {selectedMember ? (
               <Avatar className="h-5 w-5 border border-background cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all">
-                <AvatarFallback className="text-[7px] bg-primary/10 text-primary font-medium">
+                <AvatarFallback className="text-micro bg-primary/10 text-primary font-medium">
                   {getUserInitials(selectedMember)}
                 </AvatarFallback>
               </Avatar>
@@ -251,7 +251,7 @@ export function SubtaskComposer({ ticketId, projectId, projectStatuses }: Subtas
                   >
                     <Avatar className="mr-2 h-5 w-5 shrink-0">
                       <AvatarImage src={resolveImageUrl(m.image)} />
-                      <AvatarFallback className="text-[7px]">{getUserInitials(m)}</AvatarFallback>
+                      <AvatarFallback className="text-micro">{getUserInitials(m)}</AvatarFallback>
                     </Avatar>
                     <span className="truncate text-xs">{getUserDisplayName(m)}</span>
                     {m.id === assigneeId && <Check className="ml-auto h-3 w-3" />}

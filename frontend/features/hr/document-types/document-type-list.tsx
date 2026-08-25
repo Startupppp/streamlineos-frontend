@@ -82,7 +82,7 @@ export function DocumentTypeList({
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="w-7 p-0 text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-colors duration-200"
+                      className="w-7 p-0 text-muted-foreground hover:text-status-success-ink hover:bg-status-success-surface transition-colors duration-200"
                       onClick={handleReactivate}
                       aria-label={`Reactivate ${documentType.name}`}
                     >
@@ -131,7 +131,7 @@ export function DocumentTypeList({
         header: "Mandatory",
         cell: (documentType) =>
           documentType.isMandatory ? (
-            <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-700">
+            <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-status-warning-surface text-status-warning-ink border-status-warning-rule">
               Required
             </span>
           ) : (
@@ -146,7 +146,7 @@ export function DocumentTypeList({
         cell: (documentType) => {
           const isActive = documentType.isActive !== false;
           return isActive ? (
-            <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-700">
+            <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-status-success-surface text-status-success-ink border-status-success-rule">
               Active
             </span>
           ) : (
@@ -174,7 +174,7 @@ export function DocumentTypeList({
               (documentType.applicableRoles ?? []).map((role) => (
                 <span
                   key={role}
-                  className="inline-flex items-center text-[9px] font-semibold px-1.5 py-0.5 rounded-full border bg-muted text-muted-foreground border-border"
+                  className="inline-flex items-center text-micro font-semibold px-1.5 py-0.5 rounded-full border bg-muted text-muted-foreground border-border"
                 >
                   {role}
                 </span>

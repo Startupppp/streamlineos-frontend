@@ -93,7 +93,7 @@ export function EntityCard({
             {entity.supported.import && (
               <Badge
                 variant="secondary"
-                className="text-[9px] px-1.5 h-5 font-medium uppercase tracking-wide"
+                className="text-micro px-1.5 h-5 font-medium uppercase tracking-wide"
               >
                 Import
               </Badge>
@@ -101,7 +101,7 @@ export function EntityCard({
             {entity.supported.export && (
               <Badge
                 variant="outline"
-                className="text-[9px] px-1.5 h-5 font-medium uppercase tracking-wide"
+                className="text-micro px-1.5 h-5 font-medium uppercase tracking-wide"
               >
                 Export
               </Badge>
@@ -120,9 +120,9 @@ export function EntityCard({
               className={cn(
                 "flex items-center gap-1.5 text-dense",
                 upload.status === "success"
-                  ? "text-emerald-600"
+                  ? "text-status-success-ink"
                   : upload.status === "error"
-                    ? "text-red-600"
+                    ? "text-status-danger-ink"
                     : "text-muted-foreground",
               )}
             >

@@ -155,9 +155,9 @@ function HealthRow({
       {isLoading ? (
         <Skeleton className="size-4 rounded-full" />
       ) : ok ? (
-        <CheckCircle2 className="size-3.5 shrink-0 text-emerald-500" />
+        <CheckCircle2 className="size-3.5 shrink-0 text-status-success-ink" />
       ) : (
-        <AlertCircle className="size-3.5 shrink-0 text-amber-500" />
+        <AlertCircle className="size-3.5 shrink-0 text-status-warning-ink" />
       )}
       <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
         {label}
@@ -288,8 +288,8 @@ export function OrganizationStructurePage() {
                       className={cn(
                         "h-5 px-1.5 text-micro",
                         isSetupComplete
-                          ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                          : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+                          ? "border-status-success-rule bg-status-success-surface text-status-success-ink"
+                          : "border-status-warning-rule bg-status-warning-surface text-status-warning-ink",
                       )}
                     >
                       {isSetupComplete ? "Ready" : "Incomplete"}

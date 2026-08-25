@@ -61,11 +61,11 @@ const STATUS_OPTIONS = [
 
 const STATUS_BADGE: Record<PurchaseOrderStatus, string> = {
   DRAFT: "bg-muted text-muted-foreground border-border",
-  SENT: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  PARTIAL: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  RECEIVED: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  SENT: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  PARTIAL: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  RECEIVED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
   CLOSED: "bg-muted text-muted-foreground border-border",
-  CANCELLED: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  CANCELLED: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };
 
 const VALID_STATUSES = new Set<string>([
@@ -80,7 +80,7 @@ function formatDate(value: string | null): string {
 
 function StatusBadge({ status }: { status: PurchaseOrderStatus }) {
   return (
-    <Badge variant="outline" className={cn("h-4 text-[9px] px-1.5 py-0", STATUS_BADGE[status])}>
+    <Badge variant="outline" className={cn("h-4 text-micro px-1.5 py-0", STATUS_BADGE[status])}>
       {status}
     </Badge>
   );
@@ -394,11 +394,11 @@ export default function PurchaseOrdersListPage() {
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
         {hasNoVendors && (
-          <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-            <Store className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+          <div className="flex items-start gap-3 rounded-lg border border-status-warning-rule bg-status-warning-surface px-4 py-3 text-sm text-status-warning-ink">
+            <Store className="mt-0.5 h-4 w-4 shrink-0 text-status-warning-ink" />
             <div>
               <p className="font-medium">No vendors configured</p>
-              <p className="text-amber-700 dark:text-amber-400">
+              <p className="text-status-warning-ink">
                 You need at least one vendor before creating a purchase order.{" "}
                 <Link href="/inventory/vendors/new" className="underline underline-offset-2 font-medium">
                   Create a vendor

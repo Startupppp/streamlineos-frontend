@@ -91,7 +91,7 @@ export function TokenGallery() {
 
       <Section
         title="Status"
-        hint="Named by role, not hue. Both themes come from the same class, which is what a literal like bg-emerald-50 cannot do."
+        hint="Named by role, not hue. Both themes come from the same class, which is what a literal like bg-status-success-surface cannot do."
       >
         <div className="flex flex-col gap-gap-grid">
           {STATUS_TONES.map((tone) => (

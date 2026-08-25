@@ -42,10 +42,10 @@ import { WorkAuthSheet } from "./work-auth-sheet";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 function WorkAuthStatusBadge({ status }: { status: WorkAuthorization["status"] }) {
-  if (status === "expired") return <Badge className="bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30">Expired</Badge>;
-  if (status === "expiring") return <Badge className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">Expiring</Badge>;
-  if (status === "pending_renewal") return <Badge className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30">Pending renewal</Badge>;
-  return <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">Active</Badge>;
+  if (status === "expired") return <Badge className="bg-status-danger-surface text-status-danger-ink border-status-danger-rule">Expired</Badge>;
+  if (status === "expiring") return <Badge className="bg-status-warning-surface text-status-warning-ink border-status-warning-rule">Expiring</Badge>;
+  if (status === "pending_renewal") return <Badge className="bg-status-info-surface text-status-info-ink border-status-info-rule">Pending renewal</Badge>;
+  return <Badge className="bg-status-success-surface text-status-success-ink border-status-success-rule">Active</Badge>;
 }
 
 export function CompliancePageContent() {

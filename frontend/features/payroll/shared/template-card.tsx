@@ -140,7 +140,7 @@ export function TemplateCard({ template, selected, onSelect, actions }: Template
             {shownToggles.map((key) => (
               <span
                 key={key}
-                className="inline-flex items-center px-1.5 py-0.5 rounded text-micro bg-blue-50 text-blue-700 border border-blue-100 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30"
+                className="inline-flex items-center px-1.5 py-0.5 rounded text-micro bg-status-info-surface text-status-info-ink border border-status-info-rule"
               >
                 {TOGGLE_CHIP_LABELS[key] ?? key}
               </span>

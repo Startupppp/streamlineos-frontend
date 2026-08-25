@@ -139,10 +139,10 @@ export function ReconciliationClient() {
         </div>
 
         {hasMismatch && workspace && (
-          <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-lg px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
+          <div className="flex items-center gap-2 bg-status-warning-surface border border-status-warning-rule rounded-lg px-3 py-2 text-xs text-status-warning-ink">
             <AlertTriangle className="h-4 w-4 shrink-0" />
             <span>
-              Balance mismatch of <Money value={balanceDiff} className="text-amber-900 font-medium" />.
+              Balance mismatch of <Money value={balanceDiff} className="text-status-warning-ink font-medium" />.
               Reconcile remaining transactions to close the gap.
             </span>
           </div>
@@ -225,7 +225,7 @@ export function ReconciliationClient() {
                             <Money
                               value={amount}
                               compact
-                              className={amount >= 0 ? "text-emerald-600" : "text-red-600"}
+                              className={amount >= 0 ? "text-status-success-ink" : "text-status-danger-ink"}
                             />
                             <BankTxnStatusBadge status={txn.status} />
                           </div>

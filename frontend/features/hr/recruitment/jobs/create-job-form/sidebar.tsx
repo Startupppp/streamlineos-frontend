@@ -58,7 +58,7 @@ function SidebarStepButton({ step, idx, onStepClick }: SidebarStepButtonProps) {
           className={cn(
             "text-xs font-medium leading-tight",
             step.active ? "text-foreground" : "text-muted-foreground",
-            step.hasError && "text-rose-600 dark:text-rose-400"
+            step.hasError && "text-status-danger-ink"
           )}
         />
         <TruncatedText text={step.subtitle} className="text-micro text-muted-foreground/70 leading-tight mt-0.5" />

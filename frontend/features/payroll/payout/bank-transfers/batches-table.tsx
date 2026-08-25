@@ -17,11 +17,11 @@ import type { PayoutBatch, BankBatchStatus, BatchFormat } from "@/types/payroll"
 
 const BATCH_STATUS_STYLES: Record<BankBatchStatus, string> = {
   DRAFT: "bg-muted text-muted-foreground",
-  GENERATED: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-  SENT: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
-  PARTIALLY_PAID: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
-  PAID: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
-  FAILED: "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-300",
+  GENERATED: "bg-status-info-surface text-status-info-ink",
+  SENT: "bg-status-warning-surface text-status-warning-ink",
+  PARTIALLY_PAID: "bg-status-warning-surface text-status-warning-ink",
+  PAID: "bg-status-success-surface text-status-success-ink",
+  FAILED: "bg-status-danger-surface text-status-danger-ink",
 };
 
 interface BatchesTableProps {

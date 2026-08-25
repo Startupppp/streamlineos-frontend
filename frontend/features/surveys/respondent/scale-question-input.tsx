@@ -13,10 +13,10 @@ const CSAT_LABELS_5: Record<number, string> = {
 
 function satisfactionTone(value: number, max: number): string {
   const ratio = (value - 1) / Math.max(max - 1, 1);
-  if (ratio <= 0.25) return "border-red-300 bg-red-50 text-red-700 ring-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30 dark:ring-red-500/30";
-  if (ratio <= 0.5) return "border-amber-300 bg-amber-50 text-amber-800 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30 dark:ring-amber-500/30";
-  if (ratio <= 0.75) return "border-blue-300 bg-blue-50 text-blue-800 ring-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30 dark:ring-blue-500/30";
-  return "border-emerald-300 bg-emerald-50 text-emerald-800 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30 dark:ring-emerald-500/30";
+  if (ratio <= 0.25) return "border-status-danger-rule bg-status-danger-surface text-status-danger-ink ring-status-danger-rule";
+  if (ratio <= 0.5) return "border-status-warning-rule bg-status-warning-surface text-status-warning-ink ring-status-warning-rule";
+  if (ratio <= 0.75) return "border-status-info-rule bg-status-info-surface text-status-info-ink ring-status-info-rule";
+  return "border-status-success-rule bg-status-success-surface text-status-success-ink ring-status-success-rule";
 }
 
 function NumericScale({
@@ -106,9 +106,9 @@ export function NpsInput({ value, onChange }: QuestionInputProps) {
 
   function npsTone(n: number, selected: boolean): string {
     if (!selected) return "border-border bg-background hover:bg-muted/60";
-    if (n <= 6) return "border-red-300 bg-red-50 text-red-700 ring-2 ring-red-200 ring-offset-1 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30";
-    if (n <= 8) return "border-amber-300 bg-amber-50 text-amber-800 ring-2 ring-amber-200 ring-offset-1 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30";
-    return "border-emerald-300 bg-emerald-50 text-emerald-800 ring-2 ring-emerald-200 ring-offset-1 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30";
+    if (n <= 6) return "border-status-danger-rule bg-status-danger-surface text-status-danger-ink ring-2 ring-status-danger-rule ring-offset-1";
+    if (n <= 8) return "border-status-warning-rule bg-status-warning-surface text-status-warning-ink ring-2 ring-status-warning-rule ring-offset-1";
+    return "border-status-success-rule bg-status-success-surface text-status-success-ink ring-2 ring-status-success-rule ring-offset-1";
   }
 
   return (
@@ -156,7 +156,7 @@ export function StarRatingInput({ question, value, onChange }: QuestionInputProp
             <Star
               className={cn(
                 "h-9 w-9",
-                n <= current ? "fill-amber-400 text-amber-400" : "text-muted-foreground/25",
+                n <= current ? "fill-amber-400 text-status-warning-ink" : "text-muted-foreground/25",
               )}
             />
           </button>

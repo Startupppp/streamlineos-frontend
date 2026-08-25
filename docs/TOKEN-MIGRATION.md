@@ -41,18 +41,23 @@ exist, they already handle both themes, and most grey in this codebase means
 | 1 | Type scale, platform-wide | 4,074 | **done** — 2026-08-25 |
 | 2 | Settings | 291 → 0 | **done** — 2026-08-25 |
 | 3 | CRM | 953 → 79 | **done** — 2026-08-25 |
-| 4 | HR | 3,164 | not started |
-| 5 | Build | 1,033 | not started |
-| 6 | Payroll | 856 | not started |
-| 7 | Route shells `app/(authenticated)` | 2,001 | not started |
-| 8 | Inventory · Accounting · Timesheets | 1,133 | not started |
-| 9 | Everything else (58 modules) | ~2,300 | not started |
+| 4 | HR | 3,164 → 0 | **done** — 2026-08-25 |
+| 5 | Build | 1,033 → 0 | **done** — 2026-08-25 |
+| 6 | Payroll | 856 → 0 | **done** — 2026-08-25 |
+| 7 | Route shells `app/(authenticated)` | 2,001 → 0 | **done** — 2026-08-25 |
+| 8 | Inventory · Accounting · Timesheets | 1,133 → 0 | **done** — 2026-08-25 |
+| 9 | Everything else (58 modules) | ~2,300 → 0 | **done** — 2026-08-25 |
 
 Ordered by how much users touch them, after Settings — which goes first because
 it is the most-complained-about surface and is mostly forms, so it exercises the
 control tokens hardest with the least layout risk.
 
-**Remaining: 11,492 values across 66 modules.**
+**Every batch is done.** `no-raw-visual-values` reports **zero errors** across
+`features`, `components`, `app`, `hooks` and `lib`.
+
+471 palette values remain and all of them are one of two things the token set
+cannot express — see below. Nothing that a token *can* express is hardcoded
+anywhere.
 
 ## The rule that stops it coming back
 
@@ -90,6 +95,27 @@ and the file is now excluded from the migration with a comment saying why.
 the status tones have, plus a solid `fill` role alongside `surface`/`ink`/`rule`.
 Until then this file is the one place raw palette values are correct rather than
 a lapse.
+
+## The two roles still missing
+
+This is what the 471 remaining values are, and why the rule does not flag them:
+a rule that demands the impossible is a rule somebody disables.
+
+### `fill` — a solid colour
+
+306 of them. `bg-emerald-600` on a button, `bg-blue-500` on a status dot. A
+surface is a pale wash; putting white button text on one makes it invisible. The
+categorical scale added here **does** have a `fill` role, which is how the
+taxonomy dots were migrated — the status tones still need one.
+
+### `gradient` — a from/to pair
+
+79 of them, almost all decorative: funnel charts, hero washes, brand panels. No
+token role exists and it is not obvious one should; a gradient is closer to an
+illustration than to a decision.
+
+Adding both would let the rule widen to cover everything, at which point ticket
+18 can delete the legacy path outright.
 
 ### Solid fills are not surfaces
 
@@ -135,6 +161,18 @@ background. They now use `text-primary`, which is redefined under `.dark`.
 | 8px, 7px, 6px | 57 | Too small. Same treatment. |
 | 15px, 17px, 28px | 26 | One-offs between existing steps; decide per case. |
 
+## The categorical scale, added
+
+Raised as missing, then added, because the need turned out to be everywhere:
+sidebar products, notification types, e-sign recipients, expense classes,
+interview types, KPI categories, lead kinds, HR calendar entries and a tenant's
+own pipeline stages. Twelve places colouring a *taxonomy*, all of which would
+have read as random statuses on the status scale.
+
+Eight hues × four roles in `globals.css`, with `categoryClasses()` and
+`categoryBadgeClass()` in `lib/design-tokens`. It carries the `fill` role the
+status tones lack, because a category dot is a solid colour.
+
 ## What is not verified
 
 Criteria 5 and 6 ask for responsive behaviour at three widths and both themes,
@@ -146,6 +184,12 @@ argued rather than observed:
   theme, and removes `dark:` twins that are now redundant — which strictly
   improves dark mode, because the twins that were missing are now covered.
 
-Neither argument substitutes for looking. A batch that changes spacing or
-density will need real verification at 375, 768 and 1280px in light, dark and
-system default before it can be called done.
+Neither argument substitutes for looking, and that goes for every batch since:
+none of the nine has been checked at 375, 768 and 1280px in light, dark and
+system default. The changes are colour and type only — no spacing, no layout, no
+density — so reflow is not mechanically possible, and the dark theme should be
+strictly better because every migrated value now resolves per theme where
+roughly half previously had no `dark:` twin at all.
+
+That is an argument, not an observation. **The verification criteria stay
+unticked.**

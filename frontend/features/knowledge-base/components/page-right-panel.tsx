@@ -94,8 +94,8 @@ export default function PageRightPanel({
                     variant="outline"
                     className={`text-micro h-4 px-1.5 ${
                       page.trustState === "verified"
-                        ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
-                        : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30"
+                        ? "bg-status-success-surface text-status-success-ink border-status-success-rule"
+                        : "bg-status-warning-surface text-status-warning-ink border-status-warning-rule"
                     }`}
                   >
                     {page.trustState === "verified" ? "Verified" : "Stale"}

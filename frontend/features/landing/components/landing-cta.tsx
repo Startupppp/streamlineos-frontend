@@ -42,7 +42,7 @@ export function LandingCTA() {
                 <span className="text-brand-cyan">{BRAND_NAME}.</span>
               </h2>
 
-              <p className="text-slate-400 text-sm sm:text-base lg:text-lg leading-relaxed max-w-xl mx-auto mb-8 sm:mb-10 text-pretty">
+              <p className="text-muted-foreground text-sm sm:text-base lg:text-lg leading-relaxed max-w-xl mx-auto mb-8 sm:mb-10 text-pretty">
                 Start free. No credit card. Instant access.
               </p>
 
@@ -51,7 +51,7 @@ export function LandingCTA() {
                   <Link href="/signin" className="block w-full sm:w-auto">
                     <Button
                       size="lg"
-                      className="bg-white text-slate-900 hover:bg-slate-100 font-bold border-0 h-12 w-full sm:w-auto px-8 text-[15px]"
+                      className="bg-white text-muted-foreground hover:bg-muted font-bold border-0 h-12 w-full sm:w-auto px-8 text-sm"
                     >
                       Start free
                       <ArrowRight className="ml-2 h-4 w-4" />
@@ -62,7 +62,7 @@ export function LandingCTA() {
                   <Button
                     size="lg"
                     variant="outline"
-                    className="border-white/20 bg-white/8 text-white hover:bg-white/15 hover:text-white hover:border-white/30 h-12 w-full sm:w-auto px-8 text-[15px]"
+                    className="border-white/20 bg-white/8 text-white hover:bg-white/15 hover:text-white hover:border-white/30 h-12 w-full sm:w-auto px-8 text-sm"
                   >
                     See pricing
                   </Button>

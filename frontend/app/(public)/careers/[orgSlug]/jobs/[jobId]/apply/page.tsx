@@ -118,8 +118,8 @@ export default function ApplyPage({ params }: Props) {
       <main className="min-h-dvh bg-background flex items-center justify-center px-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center pb-3">
-            <div className="w-14 h-14 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-3">
-              <svg className="w-7 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <div className="w-14 h-14 rounded-full bg-status-success-surface flex items-center justify-center mx-auto mb-3">
+              <svg className="w-7 text-status-success-ink" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
@@ -133,7 +133,7 @@ export default function ApplyPage({ params }: Props) {
               <p className="text-xs text-muted-foreground mb-1">Tracking Link</p>
               <a
                 href={`/application-status/${trackingToken}`}
-                className="text-sm text-blue-600 hover:underline break-all"
+                className="text-sm text-status-info-ink hover:underline break-all"
               >
                 {typeof window !== "undefined" ? `${window.location.origin}/application-status/${trackingToken}` : `/application-status/${trackingToken}`}
               </a>

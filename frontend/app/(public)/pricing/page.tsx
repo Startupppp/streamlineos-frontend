@@ -120,11 +120,11 @@ export default function PricingPage() {
         {/* Hero */}
         <section className="container mx-auto px-4 lg:px-8 max-w-3xl text-center">
           <PublicEyebrow>Pricing</PublicEyebrow>
-          <h1 className="font-display text-4xl sm:text-5xl font-extrabold tracking-tight text-slate-900 leading-[1.08]">
+          <h1 className="font-display text-4xl sm:text-5xl font-extrabold tracking-tight text-muted-foreground leading-[1.08]">
             Simple pricing.{" "}
-            <span className="text-blue-600">Every app included.</span>
+            <span className="text-status-info-ink">Every app included.</span>
           </h1>
-          <p className="mt-4 text-slate-600 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto">
+          <p className="mt-4 text-muted-foreground text-base sm:text-lg leading-relaxed max-w-2xl mx-auto">
             One price per seat. No per-module fees, no surprise upsells — just the full platform
             for your team.
           </p>
@@ -133,14 +133,14 @@ export default function PricingPage() {
             {highlights.map((item) => (
               <div
                 key={item.label}
-                className="flex items-center gap-3 rounded-xl border border-slate-200/80 bg-white px-4 py-3 text-left shadow-sm min-w-[200px]"
+                className="flex items-center gap-3 rounded-xl border border-border bg-white px-4 py-3 text-left shadow-sm min-w-[200px]"
               >
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-status-info-surface text-status-info-ink">
                   <item.icon className="h-4 w-4" aria-hidden />
                 </span>
                 <span>
-                  <span className="block text-sm font-semibold text-slate-900">{item.label}</span>
-                  <span className="block text-xs text-slate-500">{item.detail}</span>
+                  <span className="block text-sm font-semibold text-muted-foreground">{item.label}</span>
+                  <span className="block text-xs text-muted-foreground">{item.detail}</span>
                 </span>
               </div>
             ))}
@@ -155,14 +155,14 @@ export default function PricingPage() {
         </section>
 
         {/* Savings */}
-        <section className="mt-20 lg:mt-24 border-t border-slate-200/80 bg-slate-50/60">
+        <section className="mt-20 lg:mt-24 border-t border-border bg-muted">
           <div className="container mx-auto px-4 lg:px-8 max-w-3xl py-16 lg:py-20">
             <div className="text-center mb-10">
               <PublicEyebrow>Savings</PublicEyebrow>
-              <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+              <h2 className="font-display text-2xl sm:text-3xl font-bold text-muted-foreground tracking-tight">
                 See what you&apos;d save
               </h2>
-              <p className="mt-2 text-sm text-slate-600 max-w-md mx-auto">
+              <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
                 Compare StreamlineOS against typical all-in-one platforms and a per-tool stack.
               </p>
             </div>
@@ -175,10 +175,10 @@ export default function PricingPage() {
           <div className="container mx-auto px-4 lg:px-8 max-w-6xl py-16 lg:py-20">
             <div className="text-center mb-10">
               <PublicEyebrow>Compare</PublicEyebrow>
-              <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+              <h2 className="font-display text-2xl sm:text-3xl font-bold text-muted-foreground tracking-tight">
                 Plan comparison
               </h2>
-              <p className="mt-2 text-sm text-slate-600 max-w-lg mx-auto">
+              <p className="mt-2 text-sm text-muted-foreground max-w-lg mx-auto">
                 All paid plans include every app. Differences are scale, AI, and enterprise
                 controls.
               </p>
@@ -188,11 +188,11 @@ export default function PricingPage() {
         </section>
 
         {/* FAQ */}
-        <section className="border-t border-slate-200/80 bg-slate-50/60">
+        <section className="border-t border-border bg-muted">
           <div className="container mx-auto px-4 lg:px-8 max-w-2xl py-16 lg:py-20">
             <div className="text-center mb-10">
               <PublicEyebrow>FAQ</PublicEyebrow>
-              <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+              <h2 className="font-display text-2xl sm:text-3xl font-bold text-muted-foreground tracking-tight">
                 Common questions
               </h2>
             </div>
@@ -202,11 +202,11 @@ export default function PricingPage() {
 
         {/* CTA */}
         <section className="container mx-auto px-4 lg:px-8 max-w-2xl pb-4">
-          <div className="rounded-2xl border border-slate-200 bg-white p-8 sm:p-10 text-center shadow-sm">
-            <h2 className="font-display text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+          <div className="rounded-2xl border border-border bg-white p-8 sm:p-10 text-center shadow-sm">
+            <h2 className="font-display text-xl sm:text-2xl font-bold text-muted-foreground tracking-tight">
               Not sure which plan fits?
             </h2>
-            <p className="mt-2 text-sm text-slate-600 leading-relaxed max-w-md mx-auto">
+            <p className="mt-2 text-sm text-muted-foreground leading-relaxed max-w-md mx-auto">
               Book a 30-minute call with a founder. We&apos;ll map your stack and tell you honestly
               whether StreamlineOS is the right fit.
             </p>

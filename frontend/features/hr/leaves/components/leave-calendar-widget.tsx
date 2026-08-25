@@ -48,9 +48,9 @@ export function LeaveCalendarWidget({
     <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <div className="w-7 rounded-lg bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center">
+          <div className="w-7 rounded-lg bg-status-success-surface flex items-center justify-center">
             <CalendarDays
-              className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-300"
+              className="h-3.5 w-3.5 text-status-success-ink"
               aria-hidden="true"
             />
           </div>
@@ -91,14 +91,14 @@ export function LeaveCalendarWidget({
                       title={`${l.user?.firstName} ${l.user?.lastName}`}
                     >
                       <AvatarImage src={resolveImageUrl(l.user?.image)} />
-                      <AvatarFallback className="text-[8px] bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+                      <AvatarFallback className="text-micro bg-status-warning-surface text-status-warning-ink">
                         {l.user?.firstName?.[0]}
                         {l.user?.lastName?.[0]}
                       </AvatarFallback>
                     </Avatar>
                   ))}
                   {leaves.length > 3 && (
-                    <span className="text-[9px] text-muted-foreground self-end">
+                    <span className="text-micro text-muted-foreground self-end">
                       +{leaves.length - 3}
                     </span>
                   )}

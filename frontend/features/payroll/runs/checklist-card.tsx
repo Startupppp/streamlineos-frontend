@@ -39,7 +39,7 @@ export function ChecklistCard({ items }: ChecklistCardProps) {
               )}
             >
               {item.done ? (
-                <CheckCircle className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                <CheckCircle className="h-3.5 w-3.5 text-status-success-ink shrink-0 mt-0.5" />
               ) : (
                 <Circle className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
               )}

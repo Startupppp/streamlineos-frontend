@@ -197,8 +197,8 @@ export function EssPayslipsSection({
                 className="flex items-center justify-between border-b border-border px-4 py-3 last:border-0 transition-colors hover:bg-muted/30"
               >
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex w-8 shrink-0 items-center justify-center rounded-md bg-blue-50 dark:bg-blue-500/10">
-                    <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <div className="flex w-8 shrink-0 items-center justify-center rounded-md bg-status-info-surface">
+                    <FileText className="h-4 w-4 text-status-info-ink" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-medium leading-none text-foreground">

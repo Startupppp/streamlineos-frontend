@@ -310,7 +310,7 @@ export function PackageDetailSheet({ open, onOpenChange, packageId }: PackageDet
             <div className="flex items-center gap-3">
               <Badge
                 variant="outline"
-                className={cn("h-4 text-[9px] px-1.5 py-0 border", PACKAGE_STATUS_BADGE[pkg.status])}
+                className={cn("h-4 text-micro px-1.5 py-0 border", PACKAGE_STATUS_BADGE[pkg.status])}
               >
                 {PACKAGE_STATUS_LABEL[pkg.status]}
               </Badge>

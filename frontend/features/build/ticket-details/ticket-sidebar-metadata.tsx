@@ -97,7 +97,7 @@ export function TicketSidebarMetadata({
           <div className="flex items-center gap-1.5 min-w-0">
             <Avatar className="h-5 w-5 shrink-0">
               <AvatarImage src={resolveImageUrl(reporter.image)} />
-              <AvatarFallback className="text-[7px] bg-primary/10 text-primary">
+              <AvatarFallback className="text-micro bg-primary/10 text-primary">
                 {getUserInitials(reporter)}
               </AvatarFallback>
             </Avatar>

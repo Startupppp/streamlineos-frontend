@@ -58,7 +58,7 @@ const EventRow = memo(function EventRow({
       <div className="text-right shrink-0 text-muted-foreground tabular-nums">
         <p>{new Date(event.date).toLocaleDateString()}</p>
         <p
-          className={`font-semibold ${event.qty >= 0 ? "text-emerald-600" : "text-red-600"}`}
+          className={`font-semibold ${event.qty >= 0 ? "text-status-success-ink" : "text-status-danger-ink"}`}
         >
           {event.qty >= 0 ? "+" : ""}
           {event.qty}

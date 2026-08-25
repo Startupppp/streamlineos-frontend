@@ -44,7 +44,7 @@ export function ProgressTimeline({ id }: { id: number }) {
                 className={cn(
                   "h-4 w-4 rounded-full border-2 transition-colors shrink-0",
                   step.status === "completed"
-                    ? "bg-emerald-500 border-emerald-500"
+                    ? "bg-emerald-500 border-status-success-rule"
                     : step.status === "current"
                     ? "bg-background border-primary ring-2 ring-primary/30"
                     : "bg-background border-input"
@@ -67,7 +67,7 @@ export function ProgressTimeline({ id }: { id: number }) {
                 className={cn(
                   "text-dense leading-tight",
                   step.status === "completed"
-                    ? "text-emerald-700 dark:text-emerald-300 font-medium"
+                    ? "text-status-success-ink font-medium"
                     : step.status === "current"
                     ? "text-foreground font-semibold"
                     : "text-muted-foreground"

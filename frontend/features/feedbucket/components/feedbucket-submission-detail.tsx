@@ -96,10 +96,10 @@ function ConsoleLogsPanel({ logs }: { logs: FeedbucketConsoleEntry[] }) {
 }
 
 function statusColor(entry: FeedbucketNetworkEntry): string {
-  if (!entry.ok || entry.status === 0) return "text-red-500";
-  if (entry.status >= 500) return "text-red-500";
-  if (entry.status >= 400) return "text-amber-500";
-  return "text-green-600";
+  if (!entry.ok || entry.status === 0) return "text-status-danger-ink";
+  if (entry.status >= 500) return "text-status-danger-ink";
+  if (entry.status >= 400) return "text-status-warning-ink";
+  return "text-status-success-ink";
 }
 
 function NetworkLogsPanel({ logs }: { logs: FeedbucketNetworkEntry[] }) {

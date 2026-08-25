@@ -101,7 +101,7 @@ export function RequestActionCell({
               {status !== "APPROVED" && status !== "CANCELLED" && (
                 <DropdownMenuItem
                   onClick={handleApproveRequest}
-                  className="text-emerald-600"
+                  className="text-status-success-ink"
                 >
                   <Check className="mr-2 h-4 w-4" />
                   Approve

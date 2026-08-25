@@ -115,7 +115,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
             <SectionHeader
               icon={User}
               label="Personal Information"
-              colorClass="bg-blue-100 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400"
+              colorClass="bg-status-info-surface text-status-info-ink"
             />
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
@@ -221,7 +221,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
             <SectionHeader
               icon={Briefcase}
               label="Professional Background"
-              colorClass="bg-blue-100 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400"
+              colorClass="bg-status-info-surface text-status-info-ink"
             />
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
@@ -328,7 +328,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
             <SectionHeader
               icon={FileText}
               label="Notes"
-              colorClass="bg-muted text-muted-foreground dark:bg-slate-800/60 dark:text-slate-400"
+              colorClass="bg-muted text-muted-foreground"
             />
             <FormField
               control={form.control}

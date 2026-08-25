@@ -251,7 +251,7 @@ function TemplateCard({ template, onEdit, onDelete }: TemplateCardProps) {
         </div>
         <div className="flex items-center gap-1">
           {template.isActive ? (
-            <Badge variant="outline" className="text-micro bg-emerald-500/10 text-emerald-600 border-emerald-500/20">Active</Badge>
+            <Badge variant="outline" className="text-micro bg-status-success-surface text-status-success-ink border-status-success-rule">Active</Badge>
           ) : (
             <Badge variant="outline" className="text-micro">Inactive</Badge>
           )}

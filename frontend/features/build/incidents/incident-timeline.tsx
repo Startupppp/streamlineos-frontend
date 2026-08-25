@@ -27,11 +27,11 @@ const STATUS_LABELS: Record<IncidentStatus, string> = {
 };
 
 const STATUS_STYLES: Record<IncidentStatus, string> = {
-  detected: "text-red-600 border-red-200",
-  investigating: "text-orange-600 border-orange-200",
-  mitigating: "text-amber-600 border-amber-200",
-  resolved: "text-emerald-600 border-emerald-200",
-  postmortem: "text-blue-600 border-blue-200",
+  detected: "text-status-danger-ink border-status-danger-rule",
+  investigating: "text-status-warning-ink border-status-warning-rule",
+  mitigating: "text-status-warning-ink border-status-warning-rule",
+  resolved: "text-status-success-ink border-status-success-rule",
+  postmortem: "text-status-info-ink border-status-info-rule",
   closed: "text-muted-foreground border-border",
 };
 

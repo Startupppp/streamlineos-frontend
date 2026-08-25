@@ -64,7 +64,7 @@ export function AssetReturnsEmptyState({
         <EmptyDevicesIllustration />
       </div>
       <div>
-        <p className="text-[0.9375rem] font-semibold text-foreground">
+        <p className="text-sm font-semibold text-foreground">
           No asset returns tracked
         </p>
         <p className="mt-1 text-sm text-muted-foreground max-w-xs">

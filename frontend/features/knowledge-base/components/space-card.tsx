@@ -20,7 +20,7 @@ const AUDIENCE_LABELS: Record<KbAudience, string> = {
 
 const AUDIENCE_BADGE_CLASS: Record<KbAudience, string> = {
   internal: "bg-muted text-muted-foreground border-border",
-  public: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  public: "bg-status-success-surface text-status-success-ink border-status-success-rule",
   mixed: "bg-primary/10 text-foreground border-primary/20",
 };
 

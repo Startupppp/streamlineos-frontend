@@ -42,19 +42,19 @@ import {
 
 const STATUS_CONFIG: Record<WorkflowStatus, { label: string; cls: string }> = {
   draft: { label: "Draft", cls: "bg-muted text-muted-foreground border-border" },
-  published: { label: "Active", cls: "bg-green-50 text-green-700 border-green-200 dark:bg-green-500/10 dark:text-green-300 dark:border-green-500/30" },
-  disabled: { label: "Disabled", cls: "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-500/10 dark:text-yellow-300 dark:border-yellow-500/30" },
-  archived: { label: "Archived", cls: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30" },
+  published: { label: "Active", cls: "bg-status-success-surface text-status-success-ink border-status-success-rule" },
+  disabled: { label: "Disabled", cls: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule" },
+  archived: { label: "Archived", cls: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule" },
 };
 
 const EXEC_STATUS_CONFIG: Record<ExecutionStatus, { label: string; cls: string; icon: React.ReactNode }> = {
   pending: { label: "Pending", cls: "bg-muted text-muted-foreground", icon: <Clock className="h-3 w-3" /> },
-  running: { label: "Running", cls: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300", icon: <Loader2 className="h-3 w-3 animate-spin" /> },
-  waiting: { label: "Waiting", cls: "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-300", icon: <Clock className="h-3 w-3" /> },
-  completed: { label: "Completed", cls: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300", icon: <CheckCircle2 className="h-3 w-3" /> },
-  failed: { label: "Failed", cls: "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-300", icon: <XCircle className="h-3 w-3" /> },
+  running: { label: "Running", cls: "bg-status-info-surface text-status-info-ink", icon: <Loader2 className="h-3 w-3 animate-spin" /> },
+  waiting: { label: "Waiting", cls: "bg-status-warning-surface text-status-warning-ink", icon: <Clock className="h-3 w-3" /> },
+  completed: { label: "Completed", cls: "bg-status-success-surface text-status-success-ink", icon: <CheckCircle2 className="h-3 w-3" /> },
+  failed: { label: "Failed", cls: "bg-status-danger-surface text-status-danger-ink", icon: <XCircle className="h-3 w-3" /> },
   cancelled: { label: "Cancelled", cls: "bg-muted text-muted-foreground", icon: <XCircle className="h-3 w-3" /> },
-  timed_out: { label: "Timed Out", cls: "bg-orange-100 text-orange-700 dark:bg-orange-500/10 dark:text-orange-300", icon: <AlertCircle className="h-3 w-3" /> },
+  timed_out: { label: "Timed Out", cls: "bg-status-warning-surface text-status-warning-ink", icon: <AlertCircle className="h-3 w-3" /> },
 };
 
 function formatDuration(ms: number | null): string {

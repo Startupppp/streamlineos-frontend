@@ -50,9 +50,9 @@ const URGENCY_CONFIG: Record<
   ReorderReportRow["urgency"],
   { label: string; className: string; dotClass: string }
 > = {
-  critical: { label: "Critical", className: "bg-red-50 border-red-200 dark:bg-red-500/10 dark:border-red-500/30", dotClass: "bg-red-500" },
-  high: { label: "High", className: "bg-amber-50 border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/30", dotClass: "bg-amber-500" },
-  medium: { label: "Medium", className: "bg-blue-50 border-blue-200 dark:bg-blue-500/10 dark:border-blue-500/30", dotClass: "bg-blue-400" },
+  critical: { label: "Critical", className: "bg-status-danger-surface border-status-danger-rule", dotClass: "bg-red-500" },
+  high: { label: "High", className: "bg-status-warning-surface border-status-warning-rule", dotClass: "bg-amber-500" },
+  medium: { label: "Medium", className: "bg-status-info-surface border-status-info-rule", dotClass: "bg-blue-400" },
 };
 
 function KpiSkeletons() {
@@ -135,7 +135,7 @@ function LowStockAlertSection() {
                 <span className="tabular-nums">{item.deficit}</span> more
               </p>
             </div>
-            <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 shrink-0">
+            <Badge variant="outline" className="text-micro h-4 px-1.5 py-0 shrink-0">
               {urgency.label}
             </Badge>
           </div>
@@ -150,7 +150,7 @@ function ExpiryAlertsCard({ count }: { count: number }) {
     <Card>
       <CardHeader className="border-b border-border/60 pb-3">
         <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <Calendar className="h-3.5 w-3.5 text-amber-500" aria-hidden="true" />
+          <Calendar className="h-3.5 w-3.5 text-status-warning-ink" aria-hidden="true" />
           Expiry Alerts
         </CardTitle>
         <CardAction>
@@ -171,7 +171,7 @@ function ExpiryAlertsCard({ count }: { count: number }) {
           />
         ) : (
           <div className="space-y-2">
-            <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-500/30 dark:bg-amber-500/10">
+            <div className="flex items-center gap-3 rounded-lg border border-status-warning-rule bg-status-warning-surface p-3">
               <div className="h-2 w-2 rounded-full bg-amber-500 shrink-0" />
               <div className="flex-1">
                 <p className="text-dense font-semibold text-foreground">
@@ -182,7 +182,7 @@ function ExpiryAlertsCard({ count }: { count: number }) {
               <Link href="/inventory/expiry">
                 <Badge
                   variant="outline"
-                  className="text-micro h-5 cursor-pointer bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100 transition-colors dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-300 dark:hover:bg-amber-500/10"
+                  className="text-micro h-5 cursor-pointer bg-status-warning-surface border-status-warning-rule text-status-warning-ink hover:bg-status-warning-surface transition-colors"
                 >
                   View lots
                 </Badge>
@@ -312,11 +312,11 @@ export function InventoryDashboardClient() {
         )}
 
         {hasAlerts && (
-          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-500/30 dark:bg-amber-500/10">
-            <span className="text-dense font-semibold text-amber-700 shrink-0 dark:text-amber-300">Attention needed:</span>
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-status-warning-rule bg-status-warning-surface px-3 py-2">
+            <span className="text-dense font-semibold text-status-warning-ink shrink-0">Attention needed:</span>
             {expiringLotsCount > 0 && (
               <Link href="/inventory/expiry">
-                <Badge variant="outline" className="bg-amber-50 border-amber-300 text-amber-700 text-micro h-5 cursor-pointer hover:bg-amber-100 transition-colors dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-300 dark:hover:bg-amber-500/10">
+                <Badge variant="outline" className="bg-status-warning-surface border-status-warning-rule text-status-warning-ink text-micro h-5 cursor-pointer hover:bg-status-warning-surface transition-colors">
                   <Calendar className="h-2.5 w-2.5 mr-1" aria-hidden="true" />
                   {expiringLotsCount} expiring lot{expiringLotsCount !== 1 ? "s" : ""}
                 </Badge>
@@ -324,7 +324,7 @@ export function InventoryDashboardClient() {
             )}
             {qualityHoldQty > 0 && (
               <Link href="/inventory/stock">
-                <Badge variant="outline" className="bg-amber-50 border-amber-300 text-amber-700 text-micro h-5 cursor-pointer hover:bg-amber-100 transition-colors dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-300 dark:hover:bg-amber-500/10">
+                <Badge variant="outline" className="bg-status-warning-surface border-status-warning-rule text-status-warning-ink text-micro h-5 cursor-pointer hover:bg-status-warning-surface transition-colors">
                   <ShieldAlert className="h-2.5 w-2.5 mr-1" aria-hidden="true" />
                   {qualityHoldQty} on quality hold
                 </Badge>
@@ -332,7 +332,7 @@ export function InventoryDashboardClient() {
             )}
             {failedChannelSyncsCount > 0 && (
               <Link href="/inventory">
-                <Badge variant="outline" className="bg-red-50 border-red-300 text-red-700 text-micro h-5 cursor-pointer hover:bg-red-100 transition-colors dark:bg-red-500/10 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10">
+                <Badge variant="outline" className="bg-status-danger-surface border-status-danger-rule text-status-danger-ink text-micro h-5 cursor-pointer hover:bg-status-danger-surface transition-colors">
                   <AlertTriangle className="h-2.5 w-2.5 mr-1" aria-hidden="true" />
                   {failedChannelSyncsCount} failed sync{failedChannelSyncsCount !== 1 ? "s" : ""}
                 </Badge>
@@ -340,7 +340,7 @@ export function InventoryDashboardClient() {
             )}
             {openInspectionsCount > 0 && (
               <Link href="/inventory/stock">
-                <Badge variant="outline" className="bg-blue-50 border-blue-300 text-blue-700 text-micro h-5 cursor-pointer hover:bg-blue-100 transition-colors dark:bg-blue-500/10 dark:border-blue-500/30 dark:text-blue-300 dark:hover:bg-blue-500/10">
+                <Badge variant="outline" className="bg-status-info-surface border-status-info-rule text-status-info-ink text-micro h-5 cursor-pointer hover:bg-status-info-surface transition-colors">
                   <BookOpen className="h-2.5 w-2.5 mr-1" aria-hidden="true" />
                   {openInspectionsCount} open inspection{openInspectionsCount !== 1 ? "s" : ""}
                 </Badge>
@@ -372,7 +372,7 @@ export function InventoryDashboardClient() {
           <Card className="lg:col-span-2">
             <CardHeader className="border-b border-border/60 pb-3">
               <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <AlertTriangle className="h-3.5 w-3.5 text-amber-500" aria-hidden="true" />
+                <AlertTriangle className="h-3.5 w-3.5 text-status-warning-ink" aria-hidden="true" />
                 Low Stock Alerts
               </CardTitle>
               <CardAction>

@@ -82,8 +82,8 @@ export function EssSalarySection() {
         {earnings.length > 0 && (
           <div>
             <div className="px-4 py-2 flex items-center gap-1.5 border-b border-border">
-              <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
-              <span className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">Earnings</span>
+              <TrendingUp className="h-3.5 w-3.5 text-status-success-ink" />
+              <span className="text-xs font-semibold text-status-success-ink uppercase tracking-wide">Earnings</span>
             </div>
             {earnings.map((c, idx) => (
               <div
@@ -100,8 +100,8 @@ export function EssSalarySection() {
         {deductions.length > 0 && (
           <div className="border-t border-border">
             <div className="px-4 py-2 flex items-center gap-1.5 border-b border-border">
-              <TrendingDown className="h-3.5 w-3.5 text-red-600" />
-              <span className="text-xs font-semibold text-red-700 uppercase tracking-wide">Deductions</span>
+              <TrendingDown className="h-3.5 w-3.5 text-status-danger-ink" />
+              <span className="text-xs font-semibold text-status-danger-ink uppercase tracking-wide">Deductions</span>
             </div>
             {deductions.map((c, idx) => (
               <div
@@ -109,7 +109,7 @@ export function EssSalarySection() {
                 className={cn("flex items-center justify-between gap-2 px-4 py-2.5 text-sm min-w-0", idx < deductions.length - 1 && "border-b border-border")}
               >
                 <TruncatedText text={c.name} className="min-w-0 flex-1 text-foreground" />
-                <span className="tabular-nums font-medium text-red-600 shrink-0">– {formatMoney(c.amount)}</span>
+                <span className="tabular-nums font-medium text-status-danger-ink shrink-0">– {formatMoney(c.amount)}</span>
               </div>
             ))}
           </div>

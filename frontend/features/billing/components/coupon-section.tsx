@@ -16,7 +16,7 @@ const RemoveCouponButton = forwardRef<HTMLButtonElement, { onClick: () => void }
         ref={ref}
         type="button"
         onClick={onClick}
-        className="text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-200 rounded"
+        className="text-status-success-ink hover:text-status-success-ink rounded"
         aria-label="Remove coupon"
         {...hoverHandlers}
       >
@@ -82,9 +82,9 @@ export function CouponSection({
             <p className="text-sm font-medium">Have a coupon code?</p>
           </div>
           {appliedCoupon ? (
-            <div className="flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 dark:border-emerald-500/30 dark:bg-emerald-500/10 px-3 py-2">
-              <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-              <p className="text-sm text-emerald-700 dark:text-emerald-300 flex-1">{appliedCoupon.message}</p>
+            <div className="flex items-center gap-2 rounded-md border border-status-success-rule bg-status-success-surface px-3 py-2">
+              <Check className="h-4 w-4 text-status-success-ink shrink-0" />
+              <p className="text-sm text-status-success-ink flex-1">{appliedCoupon.message}</p>
               <RemoveCouponButton onClick={onRemove} />
             </div>
           ) : (

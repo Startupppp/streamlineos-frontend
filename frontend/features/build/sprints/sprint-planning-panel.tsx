@@ -139,11 +139,11 @@ export function SprintPlanningPanel({
                 {format(startDate, "MMM d")} — {format(endDate, "MMM d, yyyy")}
               </span>
               <span>{(sprint.tickets ?? []).length} tickets</span>
-              <span className={cn("font-medium", isOverCapacity && "text-red-500")}>
+              <span className={cn("font-medium", isOverCapacity && "text-status-danger-ink")}>
                 {sprintTotalPoints}pt{sprintCapacity != null ? `/${sprintCapacity}pt` : ""}
               </span>
               {sprintCapacity != null && (
-                <span className={cn(isOverCapacity ? "text-red-500" : "text-muted-foreground")}>
+                <span className={cn(isOverCapacity ? "text-status-danger-ink" : "text-muted-foreground")}>
                   {isOverCapacity
                     ? `${sprintTotalPoints - sprintCapacity}pt over capacity`
                     : `${remainingCapacity}pt remaining`}
@@ -165,13 +165,13 @@ export function SprintPlanningPanel({
         {(isOverCapacity || sprintUnestimatedCount > 0) && (
           <div className="flex flex-wrap gap-2 pt-1">
             {isOverCapacity && (
-              <div className="flex items-center gap-1.5 text-xs text-red-600 bg-red-50 border border-red-200 rounded px-2 py-1 dark:text-red-400 dark:bg-red-500/10 dark:border-red-500/30">
+              <div className="flex items-center gap-1.5 text-xs text-status-danger-ink bg-status-danger-surface border border-status-danger-rule rounded px-2 py-1">
                 <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden />
                 Sprint exceeds capacity by {sprintTotalPoints - (sprintCapacity ?? 0)} points
               </div>
             )}
             {sprintUnestimatedCount > 0 && (
-              <div className="flex items-center gap-1.5 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-2 py-1 dark:text-amber-400 dark:bg-amber-500/10 dark:border-amber-500/30">
+              <div className="flex items-center gap-1.5 text-xs text-status-warning-ink bg-status-warning-surface border border-status-warning-rule rounded px-2 py-1">
                 <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden />
                 {sprintUnestimatedCount} ticket{sprintUnestimatedCount !== 1 ? "s" : ""} without an estimate
               </div>

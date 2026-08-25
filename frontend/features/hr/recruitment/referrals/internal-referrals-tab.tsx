@@ -124,7 +124,7 @@ function ReferralCard({ referral, onStatusChange, onMarkBonus, isUpdating }: Ref
               {referral.relationship && <span className="capitalize">{referral.relationship}</span>}
               <span>{format(new Date(referral.createdAt), "MMM d, yyyy")}</span>
               {referral.bonusPaidAt && (
-                <span className="text-green-600">
+                <span className="text-status-success-ink">
                   Bonus paid {format(new Date(referral.bonusPaidAt), "MMM d, yyyy")}
                   {referral.bonusAmount && ` · ₹${parseFloat(referral.bonusAmount).toLocaleString()}`}
                 </span>

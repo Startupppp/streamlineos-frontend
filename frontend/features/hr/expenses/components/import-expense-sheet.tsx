@@ -344,11 +344,11 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
             <div className={cn(
               "rounded-lg border p-4",
               importResult.success
-                ? "border-emerald-200 bg-emerald-50 dark:border-emerald-500/30 dark:bg-emerald-500/10"
+                ? "border-status-success-rule bg-status-success-surface"
                 : "border-destructive bg-destructive/10",
             )}>
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
+                <CheckCircle2 className="h-5 w-5 text-status-success-ink" />
                 <div>
                   <p className="text-sm font-medium">Successfully imported {importResult.count} expense(s)</p>
                   {importResult.skipped > 0 && (
@@ -357,7 +357,7 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
                 </div>
               </div>
               {importResult.skipped > 0 && (importResult.skippedReasons?.length ?? 0) > 0 && (
-                <details className="mt-3 border-t border-emerald-200/60 dark:border-emerald-500/30 pt-3 text-xs">
+                <details className="mt-3 border-t border-status-success-rule pt-3 text-xs">
                   <summary className="cursor-pointer font-medium text-foreground">
                     View skipped row reasons
                   </summary>

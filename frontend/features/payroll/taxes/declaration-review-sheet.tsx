@@ -51,8 +51,8 @@ const REGIME_BADGE: Record<string, string> = {
 
 const STATUS_BADGE: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground border-border",
-  SUBMITTED: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  VERIFIED: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  SUBMITTED: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  VERIFIED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
 };
 
 interface DeclarationReviewSheetProps {

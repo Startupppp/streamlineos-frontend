@@ -33,7 +33,7 @@ const DayCell = memo(function DayCell({ hours }: { hours: number }) {
     <span
       className={cn(
         "tabular-nums font-medium",
-        hours >= 7 ? "text-emerald-600" : hours >= 4 ? "text-amber-600" : "text-muted-foreground",
+        hours >= 7 ? "text-status-success-ink" : hours >= 4 ? "text-status-warning-ink" : "text-muted-foreground",
       )}
     >
       {hours.toFixed(1)}

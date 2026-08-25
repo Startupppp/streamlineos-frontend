@@ -66,7 +66,7 @@ export function buildComponentColumns(
       cell: (row) => (
         <div className="flex items-center gap-1">
           {row.taxable && (
-            <span className="text-micro px-1 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
+            <span className="text-micro px-1 py-0.5 rounded bg-status-warning-surface text-status-warning-ink border border-status-warning-rule">
               Tax
             </span>
           )}
@@ -76,7 +76,7 @@ export function buildComponentColumns(
             </span>
           )}
           {row.isStatutory && (
-            <span className="text-micro px-1 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30">
+            <span className="text-micro px-1 py-0.5 rounded bg-status-info-surface text-status-info-ink border border-status-info-rule">
               Stat
             </span>
           )}

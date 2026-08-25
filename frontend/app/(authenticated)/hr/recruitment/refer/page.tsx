@@ -203,7 +203,7 @@ export default function ReferPage() {
                             {referral.jobPosting && <p>{referral.jobPosting.title}</p>}
                             <p>{format(new Date(referral.createdAt), "MMM d, yyyy")}</p>
                             {referral.bonusPaidAt && referral.bonusAmount && (
-                              <p className="text-green-600 font-medium">
+                              <p className="text-status-success-ink font-medium">
                                 Bonus: ₹{parseFloat(referral.bonusAmount).toLocaleString()} paid {format(new Date(referral.bonusPaidAt), "MMM d, yyyy")}
                               </p>
                             )}

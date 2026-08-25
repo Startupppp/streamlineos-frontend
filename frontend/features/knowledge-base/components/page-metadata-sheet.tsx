@@ -47,7 +47,7 @@ const FIELD_CLASS = "h-9 w-full text-label bg-card border-input shadow-xs";
 const ACTION_BTN_BASE = "h-9 w-full text-label";
 const ACTION_BTN_NEUTRAL = `${ACTION_BTN_BASE} bg-card border border-input shadow-xs hover:bg-muted/50`;
 const ACTION_BTN_DANGER = `${ACTION_BTN_BASE} text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive`;
-const ACTION_BTN_WARNING = `${ACTION_BTN_BASE} text-amber-700 border-amber-200 hover:bg-amber-50 hover:text-amber-700 dark:text-amber-300 dark:border-amber-500/30 dark:hover:bg-amber-500/10`;
+const ACTION_BTN_WARNING = `${ACTION_BTN_BASE} text-status-warning-ink border-status-warning-rule hover:bg-status-warning-surface hover:text-status-warning-ink`;
 
 const CONTENT_TYPE_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "note", label: "Note" },
@@ -298,7 +298,7 @@ export default function PageMetadataSheet({
                   {trustState === "verified" && (
                     <Badge
                       variant="outline"
-                      className="text-micro h-4 px-1.5 bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
+                      className="text-micro h-4 px-1.5 bg-status-success-surface text-status-success-ink border-status-success-rule"
                     >
                       Verified
                     </Badge>
@@ -306,7 +306,7 @@ export default function PageMetadataSheet({
                   {trustState === "verification_expired" && (
                     <Badge
                       variant="outline"
-                      className="text-micro h-4 px-1.5 bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30"
+                      className="text-micro h-4 px-1.5 bg-status-warning-surface text-status-warning-ink border-status-warning-rule"
                     >
                       Stale
                     </Badge>

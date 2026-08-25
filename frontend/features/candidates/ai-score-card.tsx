@@ -17,8 +17,8 @@ const AI_SCORE_DIMENSIONS: Array<{ key: keyof AiScoreResult["breakdown"]; label:
 ];
 
 function scoreColor(score: number): string {
-  if (score >= 70) return "text-green-600";
-  if (score >= 40) return "text-yellow-600";
+  if (score >= 70) return "text-status-success-ink";
+  if (score >= 40) return "text-status-warning-ink";
   return "text-destructive";
 }
 

@@ -69,7 +69,7 @@ function AlertRow({
         </div>
         <Badge
           variant="outline"
-          className={cn("h-4 shrink-0 px-1.5 py-0 text-[9px]", priority.color)}
+          className={cn("h-4 shrink-0 px-1.5 py-0 text-micro", priority.color)}
         >
           {priority.label}
         </Badge>

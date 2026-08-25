@@ -109,7 +109,7 @@ export function PayrollSimulator() {
                 <div key={i} className="flex items-center justify-between text-sm rounded-md border border-border px-3 py-1.5">
                   <span>{c.name}</span>
                   <div className="flex items-center gap-2">
-                    <span className={c.type === "earning" ? "text-emerald-600" : "text-red-600"}>
+                    <span className={c.type === "earning" ? "text-status-success-ink" : "text-status-danger-ink"}>
                       {c.type === "earning" ? "+" : "-"}{c.amount}
                     </span>
                     <AnimatedIconButton

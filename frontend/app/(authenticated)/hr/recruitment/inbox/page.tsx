@@ -62,7 +62,7 @@ function ThreadItem({
           {thread.unreadCount > 0 && (
             <Badge
               variant="default"
-              className="h-4 min-w-4 px-1 text-[9px] rounded-full"
+              className="h-4 min-w-4 px-1 text-micro rounded-full"
             >
               {thread.unreadCount}
             </Badge>

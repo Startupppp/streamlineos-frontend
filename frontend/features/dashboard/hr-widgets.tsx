@@ -44,9 +44,9 @@ interface MyLeaveRequestSummary {
 }
 
 const LEAVE_STATUS_TONE: Record<string, string> = {
-  PENDING: "text-amber-600",
-  APPROVED: "text-emerald-600",
-  REJECTED: "text-red-600",
+  PENDING: "text-status-warning-ink",
+  APPROVED: "text-status-success-ink",
+  REJECTED: "text-status-danger-ink",
   CANCELLED: "text-muted-foreground",
 };
 
@@ -79,7 +79,7 @@ export function LeavesTodayWidget() {
   return (
     <WidgetCard
       icon={CalendarOff}
-      iconClassName="text-orange-500"
+      iconClassName="text-status-warning-ink"
       title="Who's On Leave Today"
       badge={leaves.length || undefined}
       isLoading={isLoading}
@@ -116,7 +116,7 @@ export function UpcomingHolidaysWidget() {
   return (
     <WidgetCard
       icon={TreePalm}
-      iconClassName="text-emerald-500"
+      iconClassName="text-status-success-ink"
       title="Upcoming Holidays"
       isLoading={isLoading}
       loadingRows={2}
@@ -126,8 +126,8 @@ export function UpcomingHolidaysWidget() {
       <ul className="space-y-2.5">
         {holidays.map((h: UpcomingHoliday) => (
           <li key={h.id} className="flex items-center gap-2.5">
-            <div className="w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
-              <CalendarHeart className="h-4 w-4 text-emerald-600" />
+            <div className="w-8 rounded-lg bg-status-success-surface flex items-center justify-center shrink-0">
+              <CalendarHeart className="h-4 w-4 text-status-success-ink" />
             </div>
             <div className="flex-1 min-w-0">
               <TruncatedText text={h.name} className="text-xs font-medium" />
@@ -241,7 +241,7 @@ export function BirthdaysWidget() {
   return (
     <WidgetCard
       icon={Cake}
-      iconClassName="text-pink-500"
+      iconClassName="text-category-pink-ink"
       title="Birthdays & Anniversaries"
       isLoading={isLoading}
       isEmpty={!entries.length}
@@ -252,7 +252,7 @@ export function BirthdaysWidget() {
           <li key={b.id} className="flex items-center gap-2.5">
             <Avatar className="w-7">
               <AvatarImage src={resolveImageUrl(b.image)} />
-              <AvatarFallback className="text-micro bg-pink-500/10 text-pink-600">
+              <AvatarFallback className="text-micro bg-category-pink-surface text-category-pink-ink">
                 {b.name?.[0]}
               </AvatarFallback>
             </Avatar>
@@ -260,7 +260,7 @@ export function BirthdaysWidget() {
               <TruncatedText text={b.name ?? ""} className="text-xs font-medium" />
               <div className="flex items-center gap-1.5">
                 {b.type === "birthday" && (
-                  <span className="text-micro text-pink-600 flex items-center gap-0.5">
+                  <span className="text-micro text-category-pink-ink flex items-center gap-0.5">
                     <Cake className="h-3 w-3" /> Birthday{" "}
                     {b.date ? format(new Date(b.date), "MMM d") : ""}
                   </span>
@@ -289,7 +289,7 @@ export function PendingApprovalsWidget() {
   return (
     <WidgetCard
       icon={AlertCircle}
-      iconClassName="text-red-500"
+      iconClassName="text-status-danger-ink"
       title="Pending Approvals"
       badge={data?.total || undefined}
       isLoading={isLoading}
@@ -341,7 +341,7 @@ export function TeamAttendanceWidget({
         </StatCardGrid>
         <div className="h-2 rounded-full bg-muted overflow-hidden">
           <div
-            className="h-full rounded-full bg-emerald-500 transition-all"
+            className="h-full rounded-full bg-category-emerald-fill transition-all"
             style={{
               width: `${data?.total ? (data.present / data.total) * 100 : 0}%`,
             }}

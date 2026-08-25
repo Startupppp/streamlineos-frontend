@@ -89,7 +89,7 @@ export function MfaSettings() {
           <div className="min-w-0 space-y-1">
             <div className="flex items-center gap-2">
               {isEnabled ? (
-                <ShieldCheck className="h-4 w-4 shrink-0 text-green-500 dark:text-green-400" />
+                <ShieldCheck className="h-4 w-4 shrink-0 text-status-success-ink" />
               ) : (
                 <Shield className="h-4 w-4 shrink-0 text-muted-foreground" />
               )}
@@ -99,7 +99,7 @@ export function MfaSettings() {
               {isEnabled && (
                 <Badge
                   variant="secondary"
-                  className="border-green-500/20 bg-green-500/10 text-xs text-green-600"
+                  className="border-status-success-rule bg-status-success-surface text-xs text-status-success-ink"
                 >
                   Enabled
                 </Badge>
@@ -249,7 +249,7 @@ export function MfaSettings() {
             <Button variant="outline" size="sm" onClick={handleCopyAll}>
               {copied ? (
                 <>
-                  <Check className="mr-1.5 h-3.5 w-3.5 text-green-500" />
+                  <Check className="mr-1.5 h-3.5 w-3.5 text-status-success-ink" />
                   Copied
                 </>
               ) : (

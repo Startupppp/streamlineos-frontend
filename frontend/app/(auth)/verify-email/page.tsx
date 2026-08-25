@@ -82,13 +82,13 @@ function SuccessIcon() {
   return (
     <div className="relative mx-auto mb-4 flex h-14 w-14 items-center justify-center">
       <div
-        className="absolute inset-0 rounded-full bg-emerald-500/10"
+        className="absolute inset-0 rounded-full bg-status-success-surface"
         aria-hidden="true"
       />
       {shouldReduceMotion ? (
-        <div className="relative flex h-14 w-14 items-center justify-center rounded-full border border-emerald-500/20 bg-card shadow-sm">
+        <div className="relative flex h-14 w-14 items-center justify-center rounded-full border border-status-success-rule bg-card shadow-sm">
           <CheckCircle2
-            className="w-7 text-emerald-600"
+            className="w-7 text-status-success-ink"
             strokeWidth={1.75}
             aria-hidden="true"
           />
@@ -96,10 +96,10 @@ function SuccessIcon() {
       ) : (
         <motion.div
           variants={scaleIn}
-          className="relative flex h-14 w-14 items-center justify-center rounded-full border border-emerald-500/20 bg-card shadow-sm"
+          className="relative flex h-14 w-14 items-center justify-center rounded-full border border-status-success-rule bg-card shadow-sm"
         >
           <CheckCircle2
-            className="w-7 text-emerald-600"
+            className="w-7 text-status-success-ink"
             strokeWidth={1.75}
             aria-hidden="true"
           />
@@ -131,7 +131,7 @@ function SetupProgress() {
     >
       <div className="flex items-center gap-2.5">
         <Loader2
-          className="h-3.5 w-3.5 animate-spin text-blue-600 shrink-0"
+          className="h-3.5 w-3.5 animate-spin text-status-info-ink shrink-0"
           aria-hidden="true"
         />
         <p className="text-sm text-muted-foreground">Setting up your account…</p>
@@ -276,7 +276,7 @@ function VerifyEmailForm() {
         <AuthStatusSection>
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-border bg-muted/60">
             <Loader2
-              className="h-6 w-6 animate-spin text-blue-600"
+              className="h-6 w-6 animate-spin text-status-info-ink"
               aria-hidden="true"
             />
           </div>
@@ -452,7 +452,7 @@ function LoadingCard() {
     <div className="w-full max-w-sm text-center">
       <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-border bg-muted/60">
         <Loader2
-          className="h-6 w-6 animate-spin text-blue-600"
+          className="h-6 w-6 animate-spin text-status-info-ink"
           aria-hidden="true"
         />
       </div>

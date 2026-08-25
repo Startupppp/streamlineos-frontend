@@ -66,7 +66,7 @@ export function LeaveRequestFormFields({
               Leave Type
             </FormLabel>
             {leaveTypes.length === 0 ? (
-              <div className="space-y-2 rounded-lg border border-dashed border-amber-300/80 bg-amber-50/80 px-3 py-3 dark:border-amber-500/30 dark:bg-amber-500/10">
+              <div className="space-y-2 rounded-lg border border-dashed border-status-warning-rule bg-status-warning-surface px-3 py-3">
                 <p className="text-sm font-medium text-foreground">
                   No leave types configured
                 </p>

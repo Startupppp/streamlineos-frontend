@@ -240,7 +240,7 @@ export default function QuotesPage() {
         cell: (q) => (
           <Badge
             variant="outline"
-            className={`text-[9px] px-1.5 py-0 h-4 ${STATUS_BADGE_CLASSES[q.status]}`}
+            className={`text-micro px-1.5 py-0 h-4 ${STATUS_BADGE_CLASSES[q.status]}`}
           >
             {STATUS_LABELS[q.status]}
           </Badge>

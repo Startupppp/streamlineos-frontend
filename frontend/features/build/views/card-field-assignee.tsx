@@ -67,13 +67,13 @@ export const InlineAssignee = memo(function InlineAssignee({
   const trigger = assignee ? (
     <Avatar className="h-5 w-5 border border-background shrink-0 cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all">
       <AvatarImage src={resolveImageUrl(assignee.image)} />
-      <AvatarFallback className="text-[7px] bg-primary/10 text-primary font-medium">
+      <AvatarFallback className="text-micro bg-primary/10 text-primary font-medium">
         {getUserInitials(assignee)}
       </AvatarFallback>
     </Avatar>
   ) : (
     <div className="h-5 w-5 rounded-full bg-muted border border-dashed border-muted-foreground/30 flex items-center justify-center shrink-0 cursor-pointer hover:border-muted-foreground/60 transition-colors">
-      <span className="text-[7px] text-muted-foreground">?</span>
+      <span className="text-micro text-muted-foreground">?</span>
     </div>
   );
 
@@ -113,7 +113,7 @@ export const InlineAssignee = memo(function InlineAssignee({
                   >
                     <Avatar className="mr-2 h-5 w-5 shrink-0">
                       <AvatarImage src={resolveImageUrl(m.image)} />
-                      <AvatarFallback className="text-[7px]">
+                      <AvatarFallback className="text-micro">
                         {getUserInitials(m)}
                       </AvatarFallback>
                     </Avatar>

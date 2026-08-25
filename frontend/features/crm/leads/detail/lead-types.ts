@@ -13,21 +13,21 @@ export const STATUS_PIPELINE = [
 export type PipelineStatus = (typeof STATUS_PIPELINE)[number];
 
 export const STATUS_STYLES: Record<string, { color: string; bg: string }> = {
-  NEW:        { color: "text-white", bg: "bg-blue-600 border border-status-info-rule"    },
-  CONTACTED:  { color: "text-white", bg: "bg-cyan-600 border border-status-info-rule"    },
-  INTERESTED: { color: "text-white", bg: "bg-amber-600 border border-status-warning-rule"   },
-  QUALIFIED:  { color: "text-white", bg: "bg-blue-600 border border-status-info-rule"  },
-  CONVERTED:  { color: "text-white", bg: "bg-emerald-600 border border-status-success-rule" },
-  LOST:       { color: "text-white", bg: "bg-rose-600 border border-status-danger-rule"    },
+  NEW:        { color: "text-white", bg: "bg-category-blue-fill border border-status-info-rule"    },
+  CONTACTED:  { color: "text-white", bg: "bg-category-cyan-fill border border-status-info-rule"    },
+  INTERESTED: { color: "text-white", bg: "bg-category-amber-fill border border-status-warning-rule"   },
+  QUALIFIED:  { color: "text-white", bg: "bg-category-blue-fill border border-status-info-rule"  },
+  CONVERTED:  { color: "text-white", bg: "bg-category-emerald-fill border border-status-success-rule" },
+  LOST:       { color: "text-white", bg: "bg-category-rose-fill border border-status-danger-rule"    },
 };
 
 export const PRIORITY_STYLES: Record<
   string,
   { label: string; color: string; bg: string }
 > = {
-  HOT:  { label: "Hot",  color: "text-white", bg: "bg-red-600 border border-status-danger-rule"    },
-  WARM: { label: "Warm", color: "text-white", bg: "bg-orange-600 border border-status-warning-rule" },
-  COLD: { label: "Cold", color: "text-white", bg: "bg-sky-600 border border-status-info-rule"    },
+  HOT:  { label: "Hot",  color: "text-white", bg: "bg-category-rose-fill border border-status-danger-rule"    },
+  WARM: { label: "Warm", color: "text-white", bg: "bg-category-amber-fill border border-status-warning-rule" },
+  COLD: { label: "Cold", color: "text-white", bg: "bg-category-blue-fill border border-status-info-rule"    },
 };
 
 export const TIMELINE_ICONS: Record<
@@ -83,9 +83,9 @@ export type EditForm = z.infer<typeof editSchema>;
 
 export function getScoreBadge(score: number | null | undefined) {
   const s = score ?? 0;
-  if (s <= 30) return { label: "Low",    color: "text-white", bg: "bg-rose-600 border border-status-danger-rule"    };
-  if (s <= 60) return { label: "Medium", color: "text-white", bg: "bg-amber-600 border border-status-warning-rule"   };
-  return              { label: "Hot",    color: "text-white", bg: "bg-emerald-600 border border-status-success-rule" };
+  if (s <= 30) return { label: "Low",    color: "text-white", bg: "bg-category-rose-fill border border-status-danger-rule"    };
+  if (s <= 60) return { label: "Medium", color: "text-white", bg: "bg-category-amber-fill border border-status-warning-rule"   };
+  return              { label: "Hot",    color: "text-white", bg: "bg-category-emerald-fill border border-status-success-rule" };
 }
 
 export function getSlaCountdown(deadline: Date | string | null | undefined) {
@@ -94,10 +94,10 @@ export function getSlaCountdown(deadline: Date | string | null | undefined) {
   const dl = new Date(deadline);
   const diff = dl.getTime() - now.getTime();
   if (diff <= 0)
-    return { label: "Breached", color: "text-white bg-rose-600 border border-status-danger-rule" };
+    return { label: "Breached", color: "text-white bg-category-rose-fill border border-status-danger-rule" };
   const hours = Math.floor(diff / (1000 * 60 * 60));
   const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
   if (hours < 4)
-    return { label: `${hours}h ${mins}m left`, color: "text-white bg-amber-600 border border-status-warning-rule" };
-  return   { label: `${hours}h ${mins}m left`, color: "text-white bg-emerald-600 border border-status-success-rule" };
+    return { label: `${hours}h ${mins}m left`, color: "text-white bg-category-amber-fill border border-status-warning-rule" };
+  return   { label: `${hours}h ${mins}m left`, color: "text-white bg-category-emerald-fill border border-status-success-rule" };
 }

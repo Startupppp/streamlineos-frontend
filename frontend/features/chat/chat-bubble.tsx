@@ -439,7 +439,7 @@ export function ChatBubble({
           {showSender ? (
             <Avatar className="w-7 border border-border/30 shadow-sm">
               <AvatarImage src={resolveImageUrl(message.sender?.image)} />
-              <AvatarFallback className="text-[8px] font-bold bg-muted text-muted-foreground">
+              <AvatarFallback className="text-micro font-bold bg-muted text-muted-foreground">
                 {getInitials(senderName)}
               </AvatarFallback>
             </Avatar>
@@ -585,7 +585,7 @@ export function ChatBubble({
                         )}>
                           <FileText className={cn("h-4 w-4", isOwn ? "text-primary-foreground/80" : colors.text)} />
                           <span className={cn(
-                            "text-[6px] font-bold px-1 rounded mt-0.5",
+                            "text-micro font-bold px-1 rounded mt-0.5",
                             isOwn ? "bg-primary-foreground/25 text-primary-foreground" : cn("text-white", colors.badge)
                           )}>
                             {getFileExt(att.fileName)}
@@ -707,14 +707,14 @@ export function ChatBubble({
                 <SaveButton
                   isSaved={isSaved ?? false}
                   onClick={isSaved ? onUnsaveMsg : onSave}
-                  className={cn("p-1.5 hover:bg-muted/50 hover:text-foreground", isSaved ? "text-amber-500" : "text-muted-foreground")}
+                  className={cn("p-1.5 hover:bg-muted/50 hover:text-foreground", isSaved ? "text-status-warning-ink" : "text-muted-foreground")}
                   title={isSaved ? "Unsave" : "Save message"}
                   aria-label={isSaved ? "Unsave message" : "Save message"}
                 />
               )}
               <button
                 onClick={handlePinToggle}
-                className={cn("p-1.5 hover:bg-muted/50 hover:text-foreground", isPinned ? "text-amber-500" : "text-muted-foreground")}
+                className={cn("p-1.5 hover:bg-muted/50 hover:text-foreground", isPinned ? "text-status-warning-ink" : "text-muted-foreground")}
                 title={isPinned ? "Unpin" : "Pin"}
                 aria-label={isPinned ? "Unpin message" : "Pin message"}
               >
@@ -790,14 +790,14 @@ export function ChatBubble({
               {isOwn && (
                 <div className="relative group/delete">
                   <DeleteButton
-                    className="p-1.5 hover:bg-red-500/10 text-muted-foreground hover:text-red-400"
+                    className="p-1.5 hover:bg-status-danger-surface text-muted-foreground hover:text-status-danger-ink"
                     title="Delete"
                     aria-label="Delete"
                   />
                   <div className="absolute right-0 top-full mt-1 hidden group-hover/delete:flex flex-col bg-background border border-border rounded-lg shadow-lg overflow-hidden z-50 min-w-[160px]">
                     <button
                       onClick={onDelete}
-                      className="px-3 py-2 text-dense text-left hover:bg-red-500/10 text-red-500 font-medium whitespace-nowrap"
+                      className="px-3 py-2 text-dense text-left hover:bg-status-danger-surface text-status-danger-ink font-medium whitespace-nowrap"
                     >
                       Delete for Everyone
                     </button>

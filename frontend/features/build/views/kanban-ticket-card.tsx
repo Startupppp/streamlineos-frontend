@@ -90,7 +90,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
             />
           </div>
         ) : null}
-        <p className={cn(TEXT_TWO_LINES, "flex-1 text-[12.5px] font-medium leading-snug text-foreground/95")}>
+        <p className={cn(TEXT_TWO_LINES, "flex-1 text-xs font-medium leading-snug text-foreground/95")}>
           {ticket.title}
         </p>
         <TicketQuickActions

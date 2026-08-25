@@ -120,7 +120,7 @@ const COLUMNS: DataTableColumn<ExpenseWithExtras>[] = [
             <Tooltip>
               <TooltipTrigger asChild>
                 <span className="inline-flex">
-                  <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+                  <AlertTriangle className="h-3.5 w-3.5 text-status-warning-ink" />
                 </span>
               </TooltipTrigger>
               <TooltipContent>

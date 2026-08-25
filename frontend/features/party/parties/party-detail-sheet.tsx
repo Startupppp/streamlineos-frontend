@@ -89,7 +89,7 @@ export function PartyDetailSheet({ partyId, onOpenChange, onOpenSubject }: Party
                         {onOpenSubject ? (
                           <button
                             type="button"
-                            className="min-w-0 truncate text-left text-sm font-medium text-blue-600 hover:underline"
+                            className="min-w-0 truncate text-left text-sm font-medium text-status-info-ink hover:underline"
                             onClick={() => onOpenSubject(link.subjectId)}
                           >
                             {link.title}

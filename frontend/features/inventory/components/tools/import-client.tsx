@@ -79,7 +79,7 @@ const IMPORT_HISTORY_COLUMNS: DataTableColumn<ImportJobRow>[] = [
     key: "errorCount",
     header: "Errors",
     cell: (job) => (
-      <span className={`text-xs ${job.errorCount > 0 ? "text-red-600 font-medium" : ""}`}>
+      <span className={`text-xs ${job.errorCount > 0 ? "text-status-danger-ink font-medium" : ""}`}>
         {job.errorCount}
       </span>
     ),

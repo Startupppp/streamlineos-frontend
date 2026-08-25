@@ -17,7 +17,7 @@ const FnfRow = memo(function FnfRow({ label, value, highlight }: { label: string
   return (
     <div className={`flex items-center justify-between border-b border-border px-4 py-2.5 text-sm last:border-0 ${highlight ? "bg-muted/40" : ""}`}>
       <span className={highlight ? "font-semibold text-foreground" : "text-muted-foreground"}>{label}</span>
-      <span className={`tabular-nums ${highlight ? "text-base font-bold text-emerald-700" : "font-medium text-foreground"}`}>
+      <span className={`tabular-nums ${highlight ? "text-base font-bold text-status-success-ink" : "font-medium text-foreground"}`}>
         {formatMoney(value)}
       </span>
     </div>

@@ -111,7 +111,7 @@ export function QuestionList({
                 <Badge
                   key={kw}
                   variant="outline"
-                  className="text-micro px-1 py-0 border-amber-400/60 text-amber-600"
+                  className="text-micro px-1 py-0 border-status-warning-rule text-status-warning-ink"
                 >
                   {kw}
                 </Badge>
@@ -119,7 +119,7 @@ export function QuestionList({
               {q.keywords.length > 3 && (
                 <Badge
                   variant="outline"
-                  className="text-micro px-1 py-0 border-amber-400/60 text-amber-600"
+                  className="text-micro px-1 py-0 border-status-warning-rule text-status-warning-ink"
                 >
                   +{q.keywords.length - 3}
                 </Badge>

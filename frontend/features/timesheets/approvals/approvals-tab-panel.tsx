@@ -158,7 +158,7 @@ function ApprovalsTable({
           onClick={onBulkApprove}
           disabled={isBulkPending}
         >
-          <CheckCircle className="h-3 w-3 text-emerald-600" />
+          <CheckCircle className="h-3 w-3 text-status-success-ink" />
           Approve
         </Button>
         <Button

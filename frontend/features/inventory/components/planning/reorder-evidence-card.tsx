@@ -39,7 +39,7 @@ const EvidenceGrid = memo(function EvidenceGrid({ evidence }: EvidenceGridProps)
             key={f.label}
             className="flex flex-col gap-0.5 rounded-md border border-border bg-muted/40 px-2 py-1.5"
           >
-            <span className="text-[9px] text-muted-foreground">{f.label}</span>
+            <span className="text-micro text-muted-foreground">{f.label}</span>
             <span className="text-xs font-semibold text-foreground">{f.value}</span>
           </div>
         ))}
@@ -83,7 +83,7 @@ export const AiNarrationSection = memo(function AiNarrationSection({
               key={i}
               className="flex flex-col gap-0.5 rounded-md border border-border bg-muted/40 px-2 py-1.5"
             >
-              <span className="text-[9px] text-muted-foreground">{f.label}</span>
+              <span className="text-micro text-muted-foreground">{f.label}</span>
               <span className="text-xs font-semibold text-foreground">{f.value}</span>
             </div>
           ))}
@@ -100,7 +100,7 @@ export const AiNarrationSection = memo(function AiNarrationSection({
               <div key={i} className="flex items-start gap-1.5">
                 <Badge
                   variant="outline"
-                  className="text-[9px] h-4 px-1 shrink-0 mt-0.5 bg-primary/5 border-primary/20 text-primary"
+                  className="text-micro h-4 px-1 shrink-0 mt-0.5 bg-primary/5 border-primary/20 text-primary"
                 >
                   {f.label}
                 </Badge>
@@ -119,7 +119,7 @@ export const AiNarrationSection = memo(function AiNarrationSection({
           <ul className="space-y-1">
             {explanation.suggestedActions.map((action, i) => (
               <li key={i} className="flex items-start gap-1.5 text-dense text-muted-foreground">
-                <span className="shrink-0 mt-0.5 h-3.5 w-3.5 rounded-full border border-primary/30 bg-primary/5 flex items-center justify-center text-[8px] font-bold text-primary">
+                <span className="shrink-0 mt-0.5 h-3.5 w-3.5 rounded-full border border-primary/30 bg-primary/5 flex items-center justify-center text-micro font-bold text-primary">
                   {i + 1}
                 </span>
                 {action}

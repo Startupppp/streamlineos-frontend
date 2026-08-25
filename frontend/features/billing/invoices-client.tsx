@@ -216,7 +216,7 @@ export function InvoicesClient() {
       cell: (inv) => {
         const config = STATUS_CONFIG[inv.status];
         return (
-          <Badge variant={config.variant} className="gap-1 text-[9px] h-4 px-1.5 py-0">
+          <Badge variant={config.variant} className="gap-1 text-micro h-4 px-1.5 py-0">
             <config.icon className="h-3 w-3" />
             {config.label}
           </Badge>

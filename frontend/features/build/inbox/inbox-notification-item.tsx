@@ -54,15 +54,15 @@ function getCategoryIcon(
   type: NotificationType,
 ): React.ReactNode {
   if (category === "PROJECTS") {
-    if (type === "SUCCESS") return <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />;
-    if (type === "WARNING") return <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />;
+    if (type === "SUCCESS") return <CheckCircle className="h-3.5 w-3.5 text-status-success-ink" />;
+    if (type === "WARNING") return <AlertTriangle className="h-3.5 w-3.5 text-status-warning-ink" />;
     if (type === "ERROR") return <AlertCircle className="h-3.5 w-3.5 text-destructive" />;
     return <GitPullRequest className="h-3.5 w-3.5 text-muted-foreground" />;
   }
   if (category === "HRMS") return <UserCheck className="h-3.5 w-3.5 text-muted-foreground" />;
   if (category === "CHAT") return <AtSign className="h-3.5 w-3.5 text-primary" />;
-  if (type === "SUCCESS") return <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />;
-  if (type === "WARNING") return <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />;
+  if (type === "SUCCESS") return <CheckCircle className="h-3.5 w-3.5 text-status-success-ink" />;
+  if (type === "WARNING") return <AlertTriangle className="h-3.5 w-3.5 text-status-warning-ink" />;
   if (type === "ERROR") return <AlertCircle className="h-3.5 w-3.5 text-destructive" />;
   if (type === "INFO") return <Info className="h-3.5 w-3.5 text-muted-foreground" />;
   return <Bell className="h-3.5 w-3.5 text-muted-foreground" />;
@@ -211,7 +211,7 @@ export function InboxNotificationItem({
               <span className="inline-flex min-w-0 max-w-[8.5rem] items-center gap-1 text-micro text-muted-foreground">
                 <Avatar className="h-3.5 w-3.5 shrink-0">
                   <AvatarImage src={resolveImageUrl(assignee.image)} />
-                  <AvatarFallback className="bg-primary/10 text-[7px] font-medium text-primary">
+                  <AvatarFallback className="bg-primary/10 text-micro font-medium text-primary">
                     {getUserInitials(assignee)}
                   </AvatarFallback>
                 </Avatar>

@@ -197,7 +197,7 @@ function ExternalReferralCard({ referral, onStatusChange, onMarkReward, isUpdati
               {referral.referrer && <span>Referred by {referral.referrer.name} ({referral.referrer.email})</span>}
               <span>{format(new Date(referral.createdAt), "MMM d, yyyy")}</span>
               {referral.rewardPaidAt && (
-                <span className="text-green-600">
+                <span className="text-status-success-ink">
                   Reward paid {format(new Date(referral.rewardPaidAt), "MMM d, yyyy")}
                   {referral.rewardAmount && ` · ₹${parseFloat(referral.rewardAmount).toLocaleString()}`}
                 </span>

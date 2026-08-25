@@ -427,7 +427,7 @@ export function RecurringJournalSheet({
               <span
                 className={cn(
                   "text-xs font-medium",
-                  isBalanced ? "text-emerald-600" : "text-red-600",
+                  isBalanced ? "text-status-success-ink" : "text-status-danger-ink",
                 )}
               >
                 {isBalanced

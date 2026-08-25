@@ -57,7 +57,7 @@ const RELATION_LABELS: Record<WorkItemRelationType, { label: string; icon: React
   duplicate_of: {
     label: "Duplicate of",
     icon: <Copy className="h-3 w-3" />,
-    color: "text-yellow-600 dark:text-yellow-400",
+    color: "text-status-warning-ink",
   },
   relates_to: {
     label: "Relates to",

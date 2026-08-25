@@ -53,12 +53,12 @@ const FOLLOW_UP_CHIPS = [
 
 function confidenceClasses(c: AiSeverity): string {
   if (c === "high") {
-    return "bg-emerald-50 text-emerald-700 border-emerald-200/70 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30";
+    return "bg-status-success-surface text-status-success-ink border-status-success-rule";
   }
   if (c === "medium") {
-    return "bg-amber-50 text-amber-700 border-amber-200/70 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30";
+    return "bg-status-warning-surface text-status-warning-ink border-status-warning-rule";
   }
-  return "bg-muted text-muted-foreground border-border/70 dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30";
+  return "bg-muted text-muted-foreground border-border/70";
 }
 
 const UserBubble = memo(function UserBubble({

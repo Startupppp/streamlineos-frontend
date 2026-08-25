@@ -53,8 +53,8 @@ function LotViewButton({ id, lotNumber }: { id: number; lotNumber: string }) {
 function getExpiryClass(dateStr: string | null): string {
   if (!dateStr) return "";
   const diff = (new Date(dateStr).getTime() - Date.now()) / 86400000;
-  if (diff < 0) return "text-red-600 font-medium";
-  if (diff <= 30) return "text-amber-600 font-medium";
+  if (diff < 0) return "text-status-danger-ink font-medium";
+  if (diff <= 30) return "text-status-warning-ink font-medium";
   return "text-muted-foreground";
 }
 

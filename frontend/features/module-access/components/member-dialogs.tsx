@@ -359,7 +359,7 @@ export function ConfirmRemoveDialog({
         </DialogHeader>
 
         {ownershipError && (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-700/50 dark:bg-amber-500/10 dark:text-amber-300">
+          <div className="rounded-lg border border-status-warning-rule bg-status-warning-surface px-4 py-3 text-sm text-status-warning-ink">
             This user is the module owner and cannot be removed. Transfer module
             ownership to another member first, then retry.
           </div>

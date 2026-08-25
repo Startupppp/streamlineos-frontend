@@ -78,7 +78,7 @@ function CreatePoolSheet() {
         <SheetBody className="px-4 py-4 space-y-4">
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-foreground/80">
-              Name<span className="text-rose-500 ml-0.5">*</span>
+              Name<span className="text-status-danger-ink ml-0.5">*</span>
             </label>
             <Input placeholder="e.g. Future Engineers" value={name} onChange={handleNameChange} />
           </div>

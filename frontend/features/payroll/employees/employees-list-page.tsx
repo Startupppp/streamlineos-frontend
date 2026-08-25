@@ -24,7 +24,7 @@ import { usePayrollWorkforceLabel } from "@/features/payroll/lib/payroll-workfor
 import { useState } from "react";
 
 const STATUS_CONFIG: Record<SalaryProfileStatus, { className: string; label: string }> = {
-  ACTIVE: { className: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30", label: "Active" },
+  ACTIVE: { className: "bg-status-success-surface text-status-success-ink border-status-success-rule", label: "Active" },
   UPCOMING: { className: "bg-primary/10 text-foreground border-primary/20", label: "Upcoming" },
   SUPERSEDED: { className: "bg-muted text-muted-foreground border-border", label: "Superseded" },
 };

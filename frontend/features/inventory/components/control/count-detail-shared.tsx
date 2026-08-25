@@ -50,8 +50,8 @@ export interface CountDetailSharedProps {
 function VarianceCell({ value }: { value: number | null }) {
   if (value === null) return <span className="text-muted-foreground">—</span>;
   if (value === 0) return <span className="tabular-nums">0</span>;
-  if (value > 0) return <span className="tabular-nums text-emerald-600">+{value}</span>;
-  return <span className="tabular-nums text-red-600">{value}</span>;
+  if (value > 0) return <span className="tabular-nums text-status-success-ink">+{value}</span>;
+  return <span className="tabular-nums text-status-danger-ink">{value}</span>;
 }
 
 const DebouncedQtyInput = memo(function DebouncedQtyInput({

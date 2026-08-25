@@ -62,16 +62,16 @@ export function HandbookVersionCard({
           className={cn(
             "h-7 w-7 rounded-lg flex items-center justify-center shrink-0",
             isPublished
-              ? "bg-emerald-100 dark:bg-emerald-500/10"
-              : "bg-amber-100 dark:bg-amber-500/10"
+              ? "bg-status-success-surface"
+              : "bg-status-warning-surface"
           )}
         >
           <FileText
             className={cn(
               "h-3.5 w-3.5",
               isPublished
-                ? "text-emerald-600 dark:text-emerald-300"
-                : "text-amber-600 dark:text-amber-300"
+                ? "text-status-success-ink"
+                : "text-status-warning-ink"
             )}
           />
         </div>
@@ -88,8 +88,8 @@ export function HandbookVersionCard({
               className={cn(
                 "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border shrink-0",
                 isPublished
-                  ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
-                  : "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30"
+                  ? "bg-status-success-surface text-status-success-ink border-status-success-rule"
+                  : "bg-status-warning-surface text-status-warning-ink border-status-warning-rule"
               )}
             >
               {isPublished ? "PUBLISHED" : "DRAFT"}

@@ -49,10 +49,10 @@ const TXN_LABELS: Record<
   AiCreditTransaction["type"],
   { label: string; sign: string; color: string }
 > = {
-  PURCHASE: { label: "Purchase", sign: "+", color: "text-green-600 dark:text-green-400" },
-  PLAN_GRANT: { label: "Plan Grant", sign: "+", color: "text-green-600 dark:text-green-400" },
+  PURCHASE: { label: "Purchase", sign: "+", color: "text-status-success-ink" },
+  PLAN_GRANT: { label: "Plan Grant", sign: "+", color: "text-status-success-ink" },
   USAGE: { label: "Usage", sign: "-", color: "text-foreground" },
-  REFUND: { label: "Refund", sign: "+", color: "text-blue-600 dark:text-blue-400" },
+  REFUND: { label: "Refund", sign: "+", color: "text-status-info-ink" },
   EXPIRY: { label: "Expiry", sign: "-", color: "text-destructive" },
 };
 

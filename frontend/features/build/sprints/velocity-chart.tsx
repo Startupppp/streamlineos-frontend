@@ -82,7 +82,7 @@ export const VelocityChart = memo(function VelocityChart({ sprints }: VelocityCh
             <div key={item.name} className="flex min-w-0 flex-1 flex-col items-center gap-1">
               <div className="flex w-full items-end gap-0.5" style={{ height: "108px" }}>
                 <div
-                  className="flex-1 rounded-t bg-blue-200 transition-all dark:bg-blue-900/50"
+                  className="flex-1 rounded-t bg-blue-200 transition-all"
                   style={{ height: `${(item.committed / maxPoints) * 100}%` }}
                   title={`Committed: ${item.committed} pts`}
                 />
@@ -103,7 +103,7 @@ export const VelocityChart = memo(function VelocityChart({ sprints }: VelocityCh
         </div>
         <div className="mt-3 flex items-center justify-center gap-4">
           <div className="flex items-center gap-1.5">
-            <div className="h-2.5 w-2.5 rounded bg-blue-200 dark:bg-blue-900/50" />
+            <div className="h-2.5 w-2.5 rounded bg-blue-200" />
             <span className="text-micro text-muted-foreground">Committed</span>
           </div>
           <div className="flex items-center gap-1.5">

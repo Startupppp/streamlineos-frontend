@@ -142,7 +142,7 @@ function Calendar({
         head_row: "flex w-full",
         head_cell: cn(
           "text-muted-foreground rounded-md font-normal flex-1 text-center",
-          compact ? "text-micro" : "w-9 text-[0.8rem]",
+          compact ? "text-micro" : "w-9 text-label",
         ),
         row: cn("flex w-full", compact ? "mt-1" : "mt-2"),
         cell: cn(

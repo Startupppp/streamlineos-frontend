@@ -87,7 +87,7 @@ const TaskPreviewRow = memo(function TaskPreviewRow({
       </span>
       <span
         className={cn(
-          "shrink-0 rounded px-1 py-px text-[9px] font-semibold uppercase tracking-wide",
+          "shrink-0 rounded px-1 py-px text-micro font-semibold uppercase tracking-wide",
           typeColor,
         )}
       >
@@ -95,7 +95,7 @@ const TaskPreviewRow = memo(function TaskPreviewRow({
       </span>
       <TruncatedText text={title} className="flex-1 text-dense text-foreground/90" />
       {phase ? (
-        <span className="shrink-0 rounded bg-muted px-1 py-px text-[9px] text-muted-foreground">
+        <span className="shrink-0 rounded bg-muted px-1 py-px text-micro text-muted-foreground">
           {phase}
         </span>
       ) : null}
@@ -158,7 +158,7 @@ export const TemplateCard = memo(function TemplateCard({
                 text={template.name}
                 className="text-sm font-semibold text-foreground transition-colors group-hover:text-primary"
               />
-              <span className="inline-flex shrink-0 items-center gap-0.5 rounded-md bg-muted px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground">
+              <span className="inline-flex shrink-0 items-center gap-0.5 rounded-md bg-muted px-1.5 py-0.5 text-micro font-medium text-muted-foreground">
                 <ListChecks className="h-2.5 w-2.5" aria-hidden="true" />
                 {taskCount} {taskCount === 1 ? "task" : "tasks"}
               </span>
@@ -167,7 +167,7 @@ export const TemplateCard = memo(function TemplateCard({
             <Badge
               variant="secondary"
               className={cn(
-                "mt-1.5 gap-1 rounded-full border-0 px-2 py-0 text-[9px] font-semibold uppercase tracking-wide",
+                "mt-1.5 gap-1 rounded-full border-0 px-2 py-0 text-micro font-semibold uppercase tracking-wide",
                 badgeColor,
               )}
             >

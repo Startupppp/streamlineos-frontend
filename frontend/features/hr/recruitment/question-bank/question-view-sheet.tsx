@@ -111,7 +111,7 @@ export function QuestionViewSheet({
                   <Badge
                     key={kw}
                     variant="outline"
-                    className="text-micro px-1 py-0 border-amber-400/60 text-amber-600 dark:text-amber-400 dark:border-amber-500/30"
+                    className="text-micro px-1 py-0 border-status-warning-rule text-status-warning-ink"
                   >
                     {kw}
                   </Badge>

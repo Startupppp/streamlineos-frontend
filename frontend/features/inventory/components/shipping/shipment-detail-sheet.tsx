@@ -171,7 +171,7 @@ export function ShipmentDetailSheet({ open, onOpenChange, shipmentId }: Shipment
               <Badge
                 variant="outline"
                 className={cn(
-                  "h-4 text-[9px] px-1.5 py-0 border",
+                  "h-4 text-micro px-1.5 py-0 border",
                   SHIPMENT_STATUS_BADGE[shipment.status],
                 )}
               >
@@ -268,7 +268,7 @@ export function ShipmentDetailSheet({ open, onOpenChange, shipmentId }: Shipment
                       <Badge
                         variant="outline"
                         className={cn(
-                          "h-4 text-[9px] px-1.5 py-0 border",
+                          "h-4 text-micro px-1.5 py-0 border",
                           PACKAGE_STATUS_BADGE[pkg.status],
                         )}
                       >

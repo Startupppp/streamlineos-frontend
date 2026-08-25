@@ -68,7 +68,7 @@ export function InviteReferrersSheet() {
               onClick={handleCopy}
             />
           </div>
-          {copied && <p className="text-xs text-green-600">Copied to clipboard.</p>}
+          {copied && <p className="text-xs text-status-success-ink">Copied to clipboard.</p>}
         </SheetBody>
       </SheetContent>
     </Sheet>

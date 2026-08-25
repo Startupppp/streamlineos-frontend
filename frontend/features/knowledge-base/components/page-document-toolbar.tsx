@@ -172,7 +172,7 @@ export function PageDocumentToolbar({
           <Button
             variant="ghost"
             size="icon"
-            className={`h-8 w-8 ${page.isFavorite ? "text-amber-500" : ""}`}
+            className={`h-8 w-8 ${page.isFavorite ? "text-status-warning-ink" : ""}`}
             onClick={handleToggleFavorite}
             aria-label={
               page.isFavorite ? "Remove from favorites" : "Add to favorites"

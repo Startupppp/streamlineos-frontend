@@ -89,14 +89,14 @@ export const SprintCard = memo(function SprintCard({ summary, isLoading, error, 
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className={`p-2.5 rounded-lg border ${summary.daysRemaining <= SPRINT_DANGER_DAYS ? "bg-red-500/10 border-red-500/30" : "bg-muted/50 border-border"}`}>
+              <div className={`p-2.5 rounded-lg border ${summary.daysRemaining <= SPRINT_DANGER_DAYS ? "bg-status-danger-surface border-status-danger-rule" : "bg-muted/50 border-border"}`}>
                 <p className="text-xs text-muted-foreground flex items-center gap-1">
                   Days Left
                   {summary.daysRemaining <= SPRINT_DANGER_DAYS && (
-                    <AlertTriangle className="h-3 w-3 text-red-500" aria-hidden="true" />
+                    <AlertTriangle className="h-3 w-3 text-status-danger-ink" aria-hidden="true" />
                   )}
                 </p>
-                <p className={`text-lg font-bold ${summary.daysRemaining <= SPRINT_DANGER_DAYS ? "text-red-500" : "text-foreground"}`}>
+                <p className={`text-lg font-bold ${summary.daysRemaining <= SPRINT_DANGER_DAYS ? "text-status-danger-ink" : "text-foreground"}`}>
                   {summary.daysRemaining}
                   {summary.daysRemaining <= SPRINT_DANGER_DAYS && (
                     <span className="text-xs font-medium ml-1">Urgent</span>

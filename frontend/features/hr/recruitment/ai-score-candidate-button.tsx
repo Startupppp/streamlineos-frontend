@@ -44,17 +44,17 @@ export function AIScoreCandidateButton({ candidateId, jobId, compact }: AIScoreC
   }
 
   const fitColor = (level: string) => {
-    if (level === "excellent") return "text-emerald-500";
-    if (level === "good") return "text-amber-500";
-    if (level === "average") return "text-orange-500";
-    return "text-red-500";
+    if (level === "excellent") return "text-status-success-ink";
+    if (level === "good") return "text-status-warning-ink";
+    if (level === "average") return "text-status-warning-ink";
+    return "text-status-danger-ink";
   };
 
   const fitBg = (level: string) => {
-    if (level === "excellent") return "bg-emerald-500/10";
-    if (level === "good") return "bg-amber-500/10";
-    if (level === "average") return "bg-orange-500/10";
-    return "bg-red-500/10";
+    if (level === "excellent") return "bg-status-success-surface";
+    if (level === "good") return "bg-status-warning-surface";
+    if (level === "average") return "bg-status-warning-surface";
+    return "bg-status-danger-surface";
   };
 
   function handleCompactClick(e: React.MouseEvent) {
@@ -162,12 +162,12 @@ function ScoreDetails({
       <div className="flex items-center gap-2">
         <div className={cn("h-12 w-12 rounded-lg flex flex-col items-center justify-center font-bold", fitBg(result.fitLevel), fitColor(result.fitLevel))}>
           <span className="text-base leading-none">{result.score}</span>
-          <span className="text-[8px] uppercase tracking-wider mt-0.5">fit</span>
+          <span className="text-micro uppercase tracking-wider mt-0.5">fit</span>
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
             <p className="text-xs font-medium">Candidate Score</p>
-            <Badge variant="secondary" className={cn("text-[9px] h-4 px-1 capitalize", fitColor(result.fitLevel))}>
+            <Badge variant="secondary" className={cn("text-micro h-4 px-1 capitalize", fitColor(result.fitLevel))}>
               {result.fitLevel}
             </Badge>
           </div>
@@ -180,7 +180,7 @@ function ScoreDetails({
           <p className="text-micro font-medium text-muted-foreground uppercase tracking-wider mb-1">Strengths</p>
           {result.strengths.map((s, i) => (
             <div key={i} className="flex items-start gap-1.5 text-dense">
-              <TrendingUp className="h-3 w-3 text-emerald-500 mt-0.5 shrink-0" />
+              <TrendingUp className="h-3 w-3 text-status-success-ink mt-0.5 shrink-0" />
               <span>{s}</span>
             </div>
           ))}
@@ -192,7 +192,7 @@ function ScoreDetails({
           <p className="text-micro font-medium text-muted-foreground uppercase tracking-wider mb-1">Concerns</p>
           {result.concerns.map((c, i) => (
             <div key={i} className="flex items-start gap-1.5 text-dense">
-              <AlertCircle className="h-3 w-3 text-red-400 mt-0.5 shrink-0" />
+              <AlertCircle className="h-3 w-3 text-status-danger-ink mt-0.5 shrink-0" />
               <span>{c}</span>
             </div>
           ))}

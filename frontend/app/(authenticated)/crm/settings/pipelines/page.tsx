@@ -202,13 +202,13 @@ export default function PipelinesPage() {
                       >
                         <Badge
                           variant="outline"
-                          className={cn("text-[9px] h-4 px-1.5 py-0 shrink-0", typeMeta?.badgeClass)}
+                          className={cn("text-micro h-4 px-1.5 py-0 shrink-0", typeMeta?.badgeClass)}
                         >
                           {typeMeta?.label}
                         </Badge>
                         <TruncatedText text={pipeline.name} className="text-xs font-medium flex-1" />
                         {pipeline.isDefault && (
-                          <Star className="h-3 w-3 text-amber-500 shrink-0 fill-amber-400" />
+                          <Star className="h-3 w-3 text-status-warning-ink shrink-0 fill-amber-400" />
                         )}
                         <Switch
                           checked={pipeline.isActive}
@@ -238,7 +238,7 @@ export default function PipelinesPage() {
                     <span className="text-sm font-semibold">{selectedPipeline.name}</span>
                     <Badge
                       variant="outline"
-                      className={cn("text-[9px] h-4 px-1.5", getPipelineTypeMeta(selectedPipeline.type)?.badgeClass)}
+                      className={cn("text-micro h-4 px-1.5", getPipelineTypeMeta(selectedPipeline.type)?.badgeClass)}
                     >
                       {getPipelineTypeMeta(selectedPipeline.type)?.label}
                     </Badge>

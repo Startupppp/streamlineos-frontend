@@ -109,9 +109,9 @@ export default function OpeningBalancesPage() {
               </CardContent>
             </Card>
 
-            <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 dark:bg-amber-500/10 dark:border-amber-500/30">
-              <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5 dark:text-amber-400" />
-              <p className="text-xs text-amber-800 dark:text-amber-300">
+            <div className="flex items-start gap-2 rounded-lg border border-status-warning-rule bg-status-warning-surface px-3 py-2.5">
+              <AlertTriangle className="h-4 w-4 text-status-warning-ink shrink-0 mt-0.5" />
+              <p className="text-xs text-status-warning-ink">
                 Re-posting will reverse the existing entry and create a new one.
               </p>
             </div>

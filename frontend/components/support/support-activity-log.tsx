@@ -102,7 +102,7 @@ export function SupportActivityLog({ supportTicketId }: SupportActivityLogProps)
               <div className="flex items-center gap-2 flex-wrap">
                 <Avatar className="h-4 w-4 shrink-0">
                   <AvatarImage src={resolveImageUrl(entry.userImage)} />
-                  <AvatarFallback className="text-[8px]">
+                  <AvatarFallback className="text-micro">
                     {getInitials(entry.userName)}
                   </AvatarFallback>
                 </Avatar>

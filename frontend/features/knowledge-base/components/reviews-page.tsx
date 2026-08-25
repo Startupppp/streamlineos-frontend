@@ -60,7 +60,7 @@ function isOverdue(dueAt: string | null, status: KbReviewStatus): boolean {
 function StatusBadge({ status }: { status: KbReviewStatus }) {
   if (status === "pending") {
     return (
-      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-dense font-medium bg-amber-50 text-amber-700 border border-amber-200/70 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
+      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-dense font-medium bg-status-warning-surface text-status-warning-ink border border-status-warning-rule">
         <KbAlertCircleIcon className="h-3 w-3" />
         Pending
       </span>
@@ -68,14 +68,14 @@ function StatusBadge({ status }: { status: KbReviewStatus }) {
   }
   if (status === "approved") {
     return (
-      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-dense font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/70 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
+      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-dense font-medium bg-status-success-surface text-status-success-ink border border-status-success-rule">
         <KbCheckCircleIcon className="h-3 w-3" />
         Approved
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-dense font-medium bg-red-50 text-red-700 border border-red-200/70 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30">
+    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-dense font-medium bg-status-danger-surface text-status-danger-ink border border-status-danger-rule">
       <KbXCircleIcon className="h-3 w-3" />
       Rejected
     </span>
@@ -95,7 +95,7 @@ function TypeBadge({ type }: { type: KbReviewType }) {
   }
   return (
     <Badge
-      className="bg-blue-50 text-blue-700 border-blue-200/70 text-dense dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30"
+      className="bg-status-info-surface text-status-info-ink border-status-info-rule text-dense"
       variant="outline"
     >
       Freshness
@@ -314,7 +314,7 @@ export default function ReviewsPage() {
           <span
             className={cn(
               "text-sm tabular-nums",
-              overdue ? "text-red-600 font-medium" : "text-muted-foreground",
+              overdue ? "text-status-danger-ink font-medium" : "text-muted-foreground",
             )}
           >
             {review.dueAt ? kbFormatDate(review.dueAt) : "—"}
@@ -342,7 +342,7 @@ export default function ReviewsPage() {
             <Button
               size="sm"
               variant="outline"
-              className="text-xs text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:text-emerald-300 dark:border-emerald-500/30 dark:hover:bg-emerald-500/10"
+              className="text-xs text-status-success-ink border-status-success-rule hover:bg-status-success-surface"
               onClick={makeApproveHandler(review)}
             >
               Approve

@@ -32,27 +32,27 @@ interface Props {
 function statusBadge(status: HrWebhookDeliveryStatus) {
   if (status === "delivered") {
     return (
-      <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-dense">
+      <Badge className="bg-status-success-surface text-status-success-ink border-status-success-rule text-dense">
         Delivered
       </Badge>
     );
   }
   if (status === "dead") {
     return (
-      <Badge className="bg-red-500/10 text-red-600 border-red-500/20 text-dense">
+      <Badge className="bg-status-danger-surface text-status-danger-ink border-status-danger-rule text-dense">
         Dead
       </Badge>
     );
   }
   if (status === "failed") {
     return (
-      <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/20 text-dense">
+      <Badge className="bg-status-warning-surface text-status-warning-ink border-status-warning-rule text-dense">
         Failed
       </Badge>
     );
   }
   return (
-    <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20 text-dense">
+    <Badge className="bg-status-info-surface text-status-info-ink border-status-info-rule text-dense">
       Pending
     </Badge>
   );
@@ -89,7 +89,7 @@ function DeliveryRow({
           )}
         </div>
         {delivery.error && (
-          <TruncatedText text={delivery.error} className="text-xs text-red-600 min-w-0" />
+          <TruncatedText text={delivery.error} className="text-xs text-status-danger-ink min-w-0" />
         )}
         <p className="text-dense text-muted-foreground">
           {delivery.lastAttemptAt

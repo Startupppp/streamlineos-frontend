@@ -35,7 +35,7 @@ function MemberChip({ member, onRemove }: ChipProps) {
     <span className="inline-flex items-center gap-1.5 rounded-full border bg-muted/50 py-0.5 pl-0.5 pr-2 text-xs">
       <Avatar className="h-5 w-5 shrink-0">
         <AvatarImage src={resolveImageUrl(member.image)} />
-        <AvatarFallback className="text-[9px]">{getInitials(name)}</AvatarFallback>
+        <AvatarFallback className="text-micro">{getInitials(name)}</AvatarFallback>
       </Avatar>
       <TruncatedText text={name} className="max-w-[10rem]" />
       <button

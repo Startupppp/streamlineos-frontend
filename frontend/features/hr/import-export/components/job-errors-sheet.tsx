@@ -27,7 +27,7 @@ type ErrorRow = { row: number; field?: string | null; message: string; _idx: num
 const errorColumns: DataTableColumn<ErrorRow>[] = [
   { key: "row", header: "Row", cell: (r) => <span className="tabular-nums text-muted-foreground">{r.row}</span> },
   { key: "field", header: "Field", cell: (r) => <span className="font-mono text-muted-foreground">{r.field ?? "—"}</span> },
-  { key: "message", header: "Message", cell: (r) => <span className="text-red-700 dark:text-red-300">{r.message}</span> },
+  { key: "message", header: "Message", cell: (r) => <span className="text-status-danger-ink">{r.message}</span> },
 ];
 
 interface JobErrorsSheetProps {
@@ -78,19 +78,19 @@ export function JobErrorsSheet({ jobId, open, onOpenChange }: JobErrorsSheetProp
           {job && (
             <>
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-lg border border-emerald-200 bg-emerald-50 dark:bg-emerald-500/10 dark:border-emerald-500/30 p-3">
-                  <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 mb-0.5">
+                <div className="rounded-lg border border-status-success-rule bg-status-success-surface p-3">
+                  <div className="flex items-center gap-1.5 text-status-success-ink mb-0.5">
                     <CheckCircle2 className="h-4 w-4" />
                     <span className="text-xs font-medium">Valid rows</span>
                   </div>
-                  <p className="text-2xl font-semibold text-emerald-800 dark:text-emerald-300">{job.validRows}</p>
+                  <p className="text-2xl font-semibold text-status-success-ink">{job.validRows}</p>
                 </div>
-                <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-500/10 dark:border-red-500/30 p-3">
-                  <div className="flex items-center gap-1.5 text-red-700 dark:text-red-300 mb-0.5">
+                <div className="rounded-lg border border-status-danger-rule bg-status-danger-surface p-3">
+                  <div className="flex items-center gap-1.5 text-status-danger-ink mb-0.5">
                     <AlertCircle className="h-4 w-4" />
                     <span className="text-xs font-medium">Error rows</span>
                   </div>
-                  <p className="text-2xl font-semibold text-red-800 dark:text-red-300">{job.errorRows}</p>
+                  <p className="text-2xl font-semibold text-status-danger-ink">{job.errorRows}</p>
                 </div>
               </div>
 
@@ -108,7 +108,7 @@ export function JobErrorsSheet({ jobId, open, onOpenChange }: JobErrorsSheetProp
               )}
 
               {job.errorRows === 0 && (
-                <div className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300 rounded-lg border border-emerald-200 bg-emerald-50 dark:bg-emerald-500/10 dark:border-emerald-500/30 px-3 py-2">
+                <div className="flex items-center gap-2 text-sm text-status-success-ink rounded-lg border border-status-success-rule bg-status-success-surface px-3 py-2">
                   <CheckCircle2 className="h-4 w-4 shrink-0" />
                   All rows processed without errors
                 </div>

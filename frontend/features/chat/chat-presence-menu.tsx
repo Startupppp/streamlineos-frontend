@@ -67,7 +67,7 @@ export function ChatPresenceMenu({
           <div className="relative shrink-0">
             <Avatar className={cn("border border-border/30", compact ? "size-5" : "size-7")}>
               <AvatarImage src={resolveImageUrl(session?.user?.image)} />
-              <AvatarFallback className="bg-primary/10 text-[9px] font-semibold text-primary">
+              <AvatarFallback className="bg-primary/10 text-micro font-semibold text-primary">
                 {session?.user?.name?.charAt(0)?.toUpperCase() ?? "U"}
               </AvatarFallback>
             </Avatar>

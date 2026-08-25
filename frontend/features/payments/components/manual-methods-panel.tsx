@@ -68,7 +68,7 @@ function MethodEditor({ methodType, label, existing }: { methodType: ManualMetho
           <Landmark className="h-3.5 w-3.5 text-muted-foreground" />
           <p className="text-label font-medium text-foreground">{label}</p>
         </div>
-        <span className={cn("text-dense font-medium", isEnabled ? "text-emerald-600" : "text-muted-foreground")}>
+        <span className={cn("text-dense font-medium", isEnabled ? "text-status-success-ink" : "text-muted-foreground")}>
           {isEnabled ? "Enabled" : existing?.status === "disabled" ? "Disabled" : "Missing instructions"}
         </span>
       </div>

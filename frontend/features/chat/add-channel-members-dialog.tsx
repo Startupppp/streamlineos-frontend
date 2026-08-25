@@ -172,7 +172,7 @@ export function AddChannelMembersDialog({
                     </div>
                     <Avatar className="w-7 shrink-0">
                       <AvatarImage src={resolveImageUrl(user.image)} />
-                      <AvatarFallback className="text-[9px]">
+                      <AvatarFallback className="text-micro">
                         {getInitials(user.name)}
                       </AvatarFallback>
                     </Avatar>

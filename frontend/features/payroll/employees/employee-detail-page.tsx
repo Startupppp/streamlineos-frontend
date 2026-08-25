@@ -25,7 +25,7 @@ import type {
 import { cn } from "@/lib/utils";
 
 const STATUS_CONFIG: Record<SalaryProfileStatus, { className: string; label: string }> = {
-  ACTIVE: { className: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30", label: "Active" },
+  ACTIVE: { className: "bg-status-success-surface text-status-success-ink border-status-success-rule", label: "Active" },
   UPCOMING: { className: "bg-primary/10 text-foreground border-primary/20", label: "Upcoming" },
   SUPERSEDED: { className: "bg-muted text-muted-foreground border-border", label: "Superseded" },
 };
@@ -57,7 +57,7 @@ const COMPONENT_COLUMNS: DataTableColumn<ProfileComponent>[] = [
         <div className="flex items-center gap-1.5">
           <span className="font-medium text-foreground">{comp.name}</span>
           {comp.isOverride && (
-            <span className="text-[9px] px-1 rounded bg-amber-100 text-amber-700 border border-amber-200 font-medium dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
+            <span className="text-micro px-1 rounded bg-status-warning-surface text-status-warning-ink border border-status-warning-rule font-medium">
               override
             </span>
           )}

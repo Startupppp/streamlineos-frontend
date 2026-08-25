@@ -36,17 +36,17 @@ const STATUS_META: Record<
 > = {
   PRESENT: {
     label: "Present",
-    tone: "bg-emerald-500/10 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+    tone: "bg-status-success-surface text-status-success-ink border-status-success-rule",
     Icon: Wifi,
   },
   ON_BREAK: {
     label: "On Break",
-    tone: "bg-amber-500/10 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+    tone: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
     Icon: Coffee,
   },
   CHECKED_OUT: {
     label: "Checked Out",
-    tone: "bg-blue-500/10 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+    tone: "bg-status-info-surface text-status-info-ink border-status-info-rule",
     Icon: LogOut,
   },
   OFFLINE: {
@@ -57,9 +57,9 @@ const STATUS_META: Record<
 };
 
 const SUMMARY_TONES: Record<TeamAttendanceEntry["status"], string> = {
-  PRESENT: "text-emerald-600",
-  ON_BREAK: "text-amber-600",
-  CHECKED_OUT: "text-blue-600",
+  PRESENT: "text-status-success-ink",
+  ON_BREAK: "text-status-warning-ink",
+  CHECKED_OUT: "text-status-info-ink",
   OFFLINE: "text-muted-foreground",
 };
 

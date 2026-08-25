@@ -63,7 +63,7 @@ const STATUS_STYLES: Record<string, StatusStyle> = {
   ACTIVE: {
     label: "Active",
     dotClassName: "bg-emerald-500",
-    badgeClassName: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400",
+    badgeClassName: "bg-status-success-surface text-status-success-ink",
     stripeClassName: "border-l-emerald-500",
   },
   PLANNED: {
@@ -142,7 +142,7 @@ export const SprintCard = memo(function SprintCard({ sprint, projectId, onStart,
             <Badge
               variant="secondary"
               className={cn(
-                "shrink-0 gap-0.5 rounded-full border-0 px-1.5 py-0 text-[8px] font-semibold uppercase tracking-wide",
+                "shrink-0 gap-0.5 rounded-full border-0 px-1.5 py-0 text-micro font-semibold uppercase tracking-wide",
                 statusStyle.badgeClassName,
               )}
             >
@@ -232,7 +232,7 @@ export const SprintCard = memo(function SprintCard({ sprint, projectId, onStart,
           />
         </div>
 
-        <div className="flex items-center justify-between gap-1.5 text-[9px] font-medium tabular-nums text-muted-foreground">
+        <div className="flex items-center justify-between gap-1.5 text-micro font-medium tabular-nums text-muted-foreground">
           <span className="min-w-0 truncate">
             {completedPoints}/{totalPoints} pts
             <span className="mx-1 text-border" aria-hidden="true">
@@ -240,7 +240,7 @@ export const SprintCard = memo(function SprintCard({ sprint, projectId, onStart,
             </span>
             {doneTickets}/{tickets.length} tickets
           </span>
-          <span className={cn("shrink-0", isOverdue && "text-red-500 dark:text-red-400")}>
+          <span className={cn("shrink-0", isOverdue && "text-status-danger-ink")}>
             {daysLabel}
           </span>
         </div>

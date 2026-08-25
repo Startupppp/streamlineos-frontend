@@ -132,7 +132,7 @@ export function BillingLeakageTab({ params, enabled }: BillingLeakageTabProps) {
                 <span
                   className={
                     data.missingRateHours > 0
-                      ? "font-medium tabular-nums text-amber-600 dark:text-amber-400"
+                      ? "font-medium tabular-nums text-status-warning-ink"
                       : "font-medium tabular-nums"
                   }
                 >
@@ -144,7 +144,7 @@ export function BillingLeakageTab({ params, enabled }: BillingLeakageTabProps) {
                 <span
                   className={
                     data.voidedHours > 0
-                      ? "font-medium tabular-nums text-red-600 dark:text-red-400"
+                      ? "font-medium tabular-nums text-status-danger-ink"
                       : "font-medium tabular-nums"
                   }
                 >

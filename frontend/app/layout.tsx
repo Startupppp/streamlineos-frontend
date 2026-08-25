@@ -139,7 +139,7 @@ export default async function RootLayout({
       </head>
       <body
         suppressHydrationWarning
-        className="font-sans min-h-dvh bg-background text-foreground antialiased selection:bg-blue-500/20 selection:text-blue-950 dark:selection:bg-blue-400/30 dark:selection:text-blue-50"
+        className="font-sans min-h-dvh bg-background text-foreground antialiased selection:bg-status-info-surface selection:text-status-info-ink"
       >
         <GoogleTagManagerNoscript />
         <SessionProvider session={session}>
