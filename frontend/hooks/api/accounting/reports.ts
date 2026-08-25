@@ -1,245 +1,172 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, type UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
+import type {
+  AccountLedgerWindow,
+  AgingParams,
+  AgingReport,
+  BalanceSheetParams,
+  BalanceSheetReport,
+  CashFlowReport,
+  ProfitLossParams,
+  ProfitLossReport,
+  ReportKey,
+  ReportRangeParams,
+  TaxSummaryReport,
+  TrialBalanceParams,
+  TrialBalanceStatement,
+} from "@/types/accounting-reports";
 
-export interface ReportCatalogItem {
-  id: string;
-  name: string;
-  description: string;
-  endpoint: string;
-  params: readonly string[];
-  category: string;
-  exportable: boolean;
-}
+type QueryOpts<T> = Omit<UseQueryOptions<T, Error>, "queryKey" | "queryFn">;
 
-export interface StatementLine {
-  date: string;
-  docType: string;
-  docNumber: string;
-  debit: string;
-  credit: string;
-  runningBalance: string;
-}
+const REPORT_STALE = 60 * 1000;
 
-export interface CustomerStatement {
-  client: { id: number; name: string };
-  openingBalance: string;
-  lines: StatementLine[];
-  closingBalance: string;
-}
+type QueryParams = Record<string, string | number | boolean | undefined>;
 
-export interface VendorStatement {
-  vendor: { id: number; name: string };
-  openingBalance: string;
-  lines: StatementLine[];
-  closingBalance: string;
-}
-
-export interface SalesByCustomerRow {
-  clientId: number;
-  clientName: string;
-  invoiceCount: number;
-  totalBilled: string;
-  totalPaid: string;
-  outstanding: string;
-}
-
-export interface SalesByItemRow {
-  description: string;
-  totalQuantity: number;
-  totalAmount: string;
-  invoiceCount: number;
-}
-
-export interface ExpenseByCategoryRow {
-  categoryId: number;
-  categoryName: string;
-  totalAmount: string;
-  count: number;
-}
-
-export interface TaxSummaryRow {
-  month: string;
-  outputCgst: string;
-  outputSgst: string;
-  outputIgst: string;
-  inputCgst: string;
-  inputSgst: string;
-  inputIgst: string;
-  netPayable: string;
-}
-
-export interface ProfitabilityRow {
-  projectId?: number;
-  projectName?: string;
-  departmentId?: number;
-  departmentName?: string;
-  revenue: string;
-  cost: string;
-  margin: string;
-  marginPct: number;
-}
-
-export interface WorkingCapital {
-  asOf: string;
-  currentAssets: string;
-  currentLiabilities: string;
-  workingCapital: string;
-  ratio: number;
-}
-
-export interface BurnRateReport {
-  months: Array<{ month: string; netOutflow: string }>;
-  averageBurnRate: string;
-}
-
-export interface CashRunwayReport {
-  cashBalance: string;
-  averageBurnRate: string;
-  runwayMonths: number | null;
-  projectedMonths: Array<{ month: string; projectedBalance: string }>;
-}
-
-function toQuery(params: Record<string, string | undefined>): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const [k, v] of Object.entries(params)) {
-    if (v !== undefined && v !== "") out[k] = v;
+function reportParams(input: object): QueryParams {
+  const out: QueryParams = {};
+  for (const [key, value] of Object.entries(input)) {
+    if (value === undefined || value === null) continue;
+    if (typeof value === "boolean") out[key] = value ? "true" : "false";
+    else if (typeof value === "number") out[key] = value;
+    else out[key] = String(value);
   }
   return out;
 }
 
-export function useReportsCatalog() {
-  return useQuery<ReportCatalogItem[], Error>({
-    queryKey: [...queryKeys.accounting.all, "reports", "catalog"],
-    queryFn: () => apiClient.get<ReportCatalogItem[]>("/accounting/reports/catalog"),
-    staleTime: 300_000,
-  });
-}
-
-export function useCustomerStatement(clientId: number | null, from?: string, to?: string) {
-  return useQuery<CustomerStatement, Error>({
-    queryKey: [...queryKeys.accounting.all, "reports", "customer-statement", clientId, from, to],
+export function useTrialBalanceReport(
+  params: TrialBalanceParams,
+  options?: QueryOpts<TrialBalanceStatement>,
+) {
+  const canRead = useCan("accounting:reports:read");
+  const search = reportParams(params);
+  return useQuery<TrialBalanceStatement, Error>({
+    queryKey: queryKeys.accountingReports.trialBalance(search),
     queryFn: () =>
-      apiClient.get<CustomerStatement>(
-        `/accounting/reports/customer-statement/${clientId}`,
-        toQuery({ from, to }),
-      ),
-    enabled: clientId !== null && clientId > 0,
-    staleTime: 60_000,
+      apiClient.get<TrialBalanceStatement>("/accounting/reports/trial-balance", search),
+    staleTime: REPORT_STALE,
+    ...options,
+    enabled: canRead && !!params.asOf && (options?.enabled ?? true),
   });
 }
 
-export function useVendorStatement(vendorId: number | null, from?: string, to?: string) {
-  return useQuery<VendorStatement, Error>({
-    queryKey: [...queryKeys.accounting.all, "reports", "vendor-statement", vendorId, from, to],
+export function useProfitLossReport(
+  params: ProfitLossParams,
+  options?: QueryOpts<ProfitLossReport>,
+) {
+  const canRead = useCan("accounting:reports:read");
+  const search = reportParams(params);
+  return useQuery<ProfitLossReport, Error>({
+    queryKey: queryKeys.accountingReports.profitLoss(search),
+    queryFn: () => apiClient.get<ProfitLossReport>("/accounting/reports/pnl", search),
+    staleTime: REPORT_STALE,
+    ...options,
+    enabled: canRead && !!params.from && !!params.to && (options?.enabled ?? true),
+  });
+}
+
+export function useBalanceSheetReport(
+  params: BalanceSheetParams,
+  options?: QueryOpts<BalanceSheetReport>,
+) {
+  const canRead = useCan("accounting:reports:read");
+  const search = reportParams(params);
+  return useQuery<BalanceSheetReport, Error>({
+    queryKey: queryKeys.accountingReports.balanceSheet(search),
     queryFn: () =>
-      apiClient.get<VendorStatement>(
-        `/accounting/reports/vendor-statement/${vendorId}`,
-        toQuery({ from, to }),
-      ),
-    enabled: vendorId !== null && vendorId > 0,
-    staleTime: 60_000,
+      apiClient.get<BalanceSheetReport>("/accounting/reports/balance-sheet", search),
+    staleTime: REPORT_STALE,
+    ...options,
+    enabled: canRead && !!params.asOf && (options?.enabled ?? true),
   });
 }
 
-export function useSalesByCustomer(from?: string, to?: string) {
-  return useQuery<SalesByCustomerRow[], Error>({
-    queryKey: [...queryKeys.accounting.all, "reports", "sales-by-customer", from, to],
+export function useCashFlowReport(
+  params: ReportRangeParams,
+  options?: QueryOpts<CashFlowReport>,
+) {
+  const canRead = useCan("accounting:reports:read");
+  const search = reportParams(params);
+  return useQuery<CashFlowReport, Error>({
+    queryKey: queryKeys.accountingReports.cashFlow(search),
+    queryFn: () => apiClient.get<CashFlowReport>("/accounting/reports/cash-flow", search),
+    staleTime: REPORT_STALE,
+    ...options,
+    enabled: canRead && !!params.from && !!params.to && (options?.enabled ?? true),
+  });
+}
+
+export function useAgingReport(params: AgingParams, options?: QueryOpts<AgingReport>) {
+  const canRead = useCan("accounting:reports:read");
+  const search = reportParams(params);
+  return useQuery<AgingReport, Error>({
+    queryKey: queryKeys.accountingReports.aging(search),
+    queryFn: () => apiClient.get<AgingReport>("/accounting/reports/aging", search),
+    staleTime: REPORT_STALE,
+    ...options,
+    enabled: canRead && !!params.asOf && (options?.enabled ?? true),
+  });
+}
+
+export function useTaxSummaryReport(
+  params: ReportRangeParams,
+  options?: QueryOpts<TaxSummaryReport>,
+) {
+  const canRead = useCan("accounting:reports:read");
+  const search = reportParams(params);
+  return useQuery<TaxSummaryReport, Error>({
+    queryKey: queryKeys.accountingReports.taxSummary(search),
     queryFn: () =>
-      apiClient.get<SalesByCustomerRow[]>(
-        "/accounting/reports/sales-by-customer",
-        toQuery({ from, to }),
-      ),
-    staleTime: 60_000,
+      apiClient.get<TaxSummaryReport>("/accounting/reports/tax-summary", search),
+    staleTime: REPORT_STALE,
+    ...options,
+    enabled: canRead && !!params.from && !!params.to && (options?.enabled ?? true),
   });
 }
 
-export function useSalesByItem(from?: string, to?: string) {
-  return useQuery<SalesByItemRow[], Error>({
-    queryKey: [...queryKeys.accounting.all, "reports", "sales-by-item", from, to],
+export function useAccountLedgerWindow(
+  accountId: string,
+  params: { from: string; to: string },
+  options?: QueryOpts<AccountLedgerWindow>,
+) {
+  const canRead = useCan("accounting:general-ledger:read");
+  const search = reportParams(params);
+  return useQuery<AccountLedgerWindow, Error>({
+    queryKey: queryKeys.accountingLedger.accountLedger(accountId, search),
     queryFn: () =>
-      apiClient.get<SalesByItemRow[]>(
-        "/accounting/reports/sales-by-item",
-        toQuery({ from, to }),
-      ),
-    staleTime: 60_000,
+      apiClient.get<AccountLedgerWindow>(`/accounting/accounts/${accountId}/ledger`, search),
+    staleTime: REPORT_STALE,
+    ...options,
+    enabled:
+      canRead && !!accountId && !!params.from && !!params.to && (options?.enabled ?? true),
   });
 }
 
-export function useExpenseByCategory(from?: string, to?: string) {
-  return useQuery<ExpenseByCategoryRow[], Error>({
-    queryKey: [...queryKeys.accounting.all, "reports", "expense-by-category", from, to],
-    queryFn: () =>
-      apiClient.get<ExpenseByCategoryRow[]>(
-        "/accounting/reports/expense-by-category",
-        toQuery({ from, to }),
-      ),
-    staleTime: 60_000,
-  });
+export interface ExportReportInput {
+  report: ReportKey;
+  params: Record<string, unknown>;
+  filename: string;
 }
 
-export function useTaxSummary(from?: string, to?: string) {
-  return useQuery<TaxSummaryRow[], Error>({
-    queryKey: [...queryKeys.accounting.all, "reports", "tax-summary", from, to],
-    queryFn: () =>
-      apiClient.get<TaxSummaryRow[]>(
-        "/accounting/reports/tax-summary",
-        toQuery({ from, to }),
-      ),
-    staleTime: 60_000,
-  });
-}
-
-export function useProjectProfitability(from?: string, to?: string) {
-  return useQuery<ProfitabilityRow[], Error>({
-    queryKey: [...queryKeys.accounting.all, "reports", "project-profitability", from, to],
-    queryFn: () =>
-      apiClient.get<ProfitabilityRow[]>(
-        "/accounting/reports/project-profitability",
-        toQuery({ from, to }),
-      ),
-    staleTime: 60_000,
-  });
-}
-
-export function useDepartmentProfitability(from?: string, to?: string) {
-  return useQuery<ProfitabilityRow[], Error>({
-    queryKey: [...queryKeys.accounting.all, "reports", "department-profitability", from, to],
-    queryFn: () =>
-      apiClient.get<ProfitabilityRow[]>(
-        "/accounting/reports/department-profitability",
-        toQuery({ from, to }),
-      ),
-    staleTime: 60_000,
-  });
-}
-
-export function useWorkingCapital(asOf?: string) {
-  return useQuery<WorkingCapital, Error>({
-    queryKey: [...queryKeys.accounting.all, "reports", "working-capital", asOf],
-    queryFn: () =>
-      apiClient.get<WorkingCapital>(
-        "/accounting/reports/working-capital",
-        toQuery({ asOf }),
-      ),
-    staleTime: 60_000,
-  });
-}
-
-export function useBurnRate() {
-  return useQuery<BurnRateReport, Error>({
-    queryKey: [...queryKeys.accounting.all, "reports", "burn-rate"],
-    queryFn: () => apiClient.get<BurnRateReport>("/accounting/reports/burn-rate"),
-    staleTime: 60_000,
-  });
-}
-
-export function useCashRunway() {
-  return useQuery<CashRunwayReport, Error>({
-    queryKey: [...queryKeys.accounting.all, "reports", "cash-runway"],
-    queryFn: () => apiClient.get<CashRunwayReport>("/accounting/reports/cash-runway"),
-    staleTime: 60_000,
+export function useExportReport() {
+  return useMutation<void, Error, ExportReportInput>({
+    mutationKey: ["accounting", "reports", "export"],
+    mutationFn: async ({ report, params, filename }) => {
+      const blob = await apiClient.download(
+        "/accounting/reports/export",
+        reportParams({ ...params, report }),
+      );
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    },
   });
 }

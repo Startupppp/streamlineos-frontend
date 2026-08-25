@@ -392,19 +392,30 @@ Full text of any pre-2026-08-03 entry is in git history.
   - Standalone product: own tile + sidebar, RBAC-only core module (no `@RequireModule`); backend `timesheets-core/`
 
 ### Accounting
-- [x] `/accounting` · `/accounting/access` · `/accounting/setup` (6-step wizard) · `/accounting/settings` · `/accounting/settings/automations`
-- [x] `/accounting/coa` · `/accounting/coa/[accountId]` · `/accounting/journal` · `/accounting/journal/new` · `/accounting/journal/[entryId]` · `/accounting/general-ledger` · `/accounting/opening-balances` · `/accounting/dimensions` · `/accounting/period-close`
-- [x] `/accounting/trial-balance` · `/accounting/profit-loss` · `/accounting/balance-sheet` · `/accounting/cash-flow`
-- [x] `/accounting/invoices` · `/accounting/invoices/[invoiceId]` · `/accounting/recurring-invoices` · `/accounting/credit-notes` · `/accounting/payments-received` · `/accounting/payment-reminders` · `/accounting/customers` · `/accounting/customers/[clientId]` · `/accounting/aged-receivables`
-- [x] `/accounting/purchase-bills` · `/accounting/purchase-bills/new` · `/accounting/purchase-bills/[billId]` · `/accounting/recurring-bills` · `/accounting/vendor-credits` · `/accounting/vendor-payments` · `/accounting/vendors` · `/accounting/vendors/[vendorId]` · `/accounting/aged-payables`
-- [x] `/accounting/payment-runs` · `/accounting/payment-runs/[runId]` — Create from filters → approve → execute
-- [x] `/accounting/banking` · `/accounting/banking/[bankAccountId]` · `/accounting/banking/import` · `/accounting/banking/reconciliation` · `/accounting/banking/transfers`
-- [x] `/accounting/expenses` · `/accounting/expenses/receipts` · `/accounting/expenses/reimbursements` · `/accounting/expenses/reimbursements/[batchId]` · `/accounting/expenses/policies`
-- [x] `/accounting/taxes` · `/accounting/taxes/codes` · `/accounting/taxes/payments` · `/accounting/taxes/reports` · `/accounting/gstr-1` · `/accounting/gstr-3b`
-- [x] `/accounting/budgets` · `/accounting/budgets/[budgetId]` · `/accounting/forecast` · `/accounting/scenarios`
-- [x] `/accounting/assets` · `/accounting/assets/[assetId]` · `/accounting/assets/depreciation` · `/accounting/approvals`
-- [x] `/accounting/reports` · `/accounting/reports/burn-rate` · `/accounting/reports/customer-statement` · `/accounting/reports/department-profitability` · `/accounting/reports/expense-by-category` · `/accounting/reports/project-profitability`
-- [x] `/accounting/reports/sales-by-customer` · `/accounting/reports/sales-by-item` · `/accounting/reports/tax-summary` · `/accounting/reports/vendor-statement` · `/accounting/reports/working-capital`
+
+Rewritten from scratch onto a new ledger kernel (2026-08-25). Every screen posts
+through `LedgerService`; money is integer minor units end to end; tax comes from
+a pluggable engine, never a hardcoded GST split. Founder wording by default with
+an accountant-label toggle on every report.
+
+- [x] `/accounting` — founder hub: cash, what customers owe, what we owe, profit this month
+- [x] `/accounting/setup` — one-step enable (book + chart of accounts + fiscal year + tax rates) and tax registrations
+- [x] `/accounting/coa` · `/accounting/journal` · `/accounting/journal/[journalId]` · `/accounting/general-ledger` · `/accounting/period-close` · `/accounting/opening-balances`
+- [x] `/accounting/trial-balance` · `/accounting/profit-loss` · `/accounting/balance-sheet` · `/accounting/cash-flow` · `/accounting/reports` · `/accounting/reports/aging` · `/accounting/taxes`
+- [x] `/accounting/invoices` · `/accounting/invoices/new` · `/accounting/invoices/[invoiceId]` · `/accounting/credit-notes` · `/accounting/credit-notes/new` · `/accounting/credit-notes/[creditNoteId]` · `/accounting/payments-received` · `/accounting/customers` · `/accounting/customers/[partyId]` · `/accounting/aged-receivables`
+- [x] `/accounting/purchase-bills` · `/accounting/purchase-bills/new` · `/accounting/purchase-bills/[apDocumentId]` · `/accounting/vendor-credits` · `/accounting/vendor-credits/new` · `/accounting/vendor-payments` · `/accounting/vendors` · `/accounting/vendors/[vendorId]` · `/accounting/aged-payables`
+- [x] `/accounting/banking` · `/accounting/banking/import` · `/accounting/banking/reconciliation`
+- [x] `/accounting/access` · `/accounting/settings` · `/accounting/settings/automations` · `/accounting/settings/payment-providers`
+
+**Deleted with no replacement** — the rewritten backend does not serve them:
+`recurring-invoices` · `recurring-bills` · `payment-runs` · `payment-reminders` ·
+`dimensions` · `approvals` · `budgets` · `forecast` ·
+`scenarios` · `assets` · `gstr-1` · `gstr-3b` · `taxes/codes` · `taxes/payments` ·
+`taxes/reports` · `banking/transfers` · `coa/[accountId]` · the nine
+`reports/*` sub-reports. Sidebar nav updated to match; 20 dead links removed.
+
+**Employee expenses stay in HR**, not accounting: `/hr/expenses`, `/hr/travel`,
+`/me/expenses` are unchanged. The old `/accounting/expenses/*` mirror is gone.
 
 ### Billing
 - [x] `/settings/billing` — Platform Plan (plan cards, promo code, seats, usage meters) · Payments · Billing Profile; the old `/billing`, `/billing/seats`, and `/settings/subscription` routes are deleted

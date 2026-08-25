@@ -1,284 +1,433 @@
 "use client";
 
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseQueryOptions,
+} from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
+import type { Journal } from "@/types/accounting-kernel";
 import type {
-  ArPayment,
-  ArPaymentMethod,
-  CreditNote,
-  CreditNoteStatus,
-  RecurringInvoiceTemplate,
-  RecordPaymentInput,
+  AgingQuery,
+  AgingReport,
+  AgingOpenItem,
+  AllocationLineInput,
+  ArDocumentPage,
+  ArDocumentView,
+  ArReceiptPage,
+  ArReceiptView,
   CreateCreditNoteInput,
-  ApplyCreditNoteInput,
-  CreateRecurringTemplateInput,
-  UpdateRecurringTemplateInput,
-} from "@/types/accounting/ar";
+  CreateInvoiceInput,
+  CreateReceiptInput,
+  CreditNoteAllocationResult,
+  CreditNoteFromInvoiceInput,
+  DeletedResult,
+  FrozenTaxLine,
+  ListArDocumentsQuery,
+  ListReceiptsQuery,
+  ReverseReceiptInput,
+  TaxPreview,
+  UpdateArDraftInput,
+} from "@/types/accounting-ar";
 
-const base = ["streamlineos", "accounting"] as const;
+type QueryOpts<T> = Omit<UseQueryOptions<T, Error>, "queryKey" | "queryFn">;
 
-const arKeys = {
-  creditNotes: {
-    all: [...base, "credit-notes"] as const,
-    list: (p?: unknown) => [...base, "credit-notes", "list", p] as const,
-    detail: (id: number) => [...base, "credit-notes", id] as const,
-  },
-  recurringTemplates: {
-    all: [...base, "recurring-templates"] as const,
-    list: (p?: unknown) => [...base, "recurring-templates", "list", p] as const,
-    detail: (id: number) => [...base, "recurring-templates", id] as const,
-  },
-  arPayments: {
-    all: [...base, "ar-payments"] as const,
-    list: (p?: unknown) => [...base, "ar-payments", "list", p] as const,
-  },
-};
+const LIVE_STALE = 0;
+const STANDARD_LIST_STALE = 30 * 1000;
+const ENTITY_STALE = 60 * 1000;
 
-interface ListResponse<T> {
-  items: T[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
+export const RECEIVABLES_READ = "accounting:receivables:read";
+export const RECEIVABLES_MANAGE = "accounting:receivables:manage";
+export const RECEIVABLES_APPROVE = "accounting:receivables:approve";
+export const CREDIT_NOTES_READ = "accounting:credit-notes:read";
+export const CREDIT_NOTES_CREATE = "accounting:credit-notes:create";
+export const CREDIT_NOTES_MANAGE = "accounting:credit-notes:manage";
+export const TAXES_READ = "accounting:taxes:read";
+
+const INVOICES_PATH = "/accounting/ar/invoices";
+const CREDIT_NOTES_PATH = "/accounting/ar/credit-notes";
+const RECEIPTS_PATH = "/accounting/ar/receipts";
+const AGING_PATH = "/accounting/ar/aging";
+
+function documentParams(query: ListArDocumentsQuery): Record<string, unknown> {
+  return {
+    partyId: query.partyId,
+    status: query.status,
+    openOnly: query.openOnly ? "true" : undefined,
+    from: query.from,
+    to: query.to,
+    search: query.search ? query.search : undefined,
+    page: query.page,
+    pageSize: query.pageSize,
+  };
 }
 
-function toQuery<P extends object>(params: P): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const [k, v] of Object.entries(params)) {
-    if (v === undefined || v === null || v === "") continue;
-    out[k] = String(v);
-  }
-  return out;
+function receiptParams(query: ListReceiptsQuery): Record<string, unknown> {
+  return {
+    partyId: query.partyId,
+    status: query.status,
+    unappliedOnly: query.unappliedOnly ? "true" : undefined,
+    from: query.from,
+    to: query.to,
+    page: query.page,
+    pageSize: query.pageSize,
+  };
 }
 
-export interface ListCreditNotesParams {
-  status?: CreditNoteStatus;
-  clientId?: number;
-  page?: number;
-  pageSize?: number;
+function agingParams(query: AgingQuery): Record<string, unknown> {
+  return {
+    asOf: query.asOf,
+    basis: query.basis,
+    partyId: query.partyId,
+    currency: query.currency,
+    includeSettled: query.includeSettled ? "true" : undefined,
+  };
 }
 
-export function useCreditNotes(params: ListCreditNotesParams = {}) {
-  return useQuery<ListResponse<CreditNote>, Error>({
-    queryKey: arKeys.creditNotes.list(params),
-    queryFn: () =>
-      apiClient.get<ListResponse<CreditNote>>(
-        "/accounting/credit-notes",
-        toQuery(params),
-      ),
-    staleTime: 30_000,
+export function useArInvoices(
+  query: ListArDocumentsQuery = {},
+  options?: QueryOpts<ArDocumentPage>,
+) {
+  const canRead = useCan(RECEIVABLES_READ);
+  return useQuery<ArDocumentPage, Error>({
+    queryKey: queryKeys.accountingAr.invoices(documentParams(query)),
+    queryFn: () => apiClient.get<ArDocumentPage>(INVOICES_PATH, documentParams(query)),
+    staleTime: STANDARD_LIST_STALE,
     placeholderData: keepPreviousData,
+    ...options,
+    enabled: canRead && (options?.enabled ?? true),
   });
 }
 
-export interface ListRecurringTemplatesParams {
-  isActive?: boolean;
-  page?: number;
-  pageSize?: number;
-}
-
-export function useRecurringTemplates(params: ListRecurringTemplatesParams = {}) {
-  return useQuery<ListResponse<RecurringInvoiceTemplate>, Error>({
-    queryKey: arKeys.recurringTemplates.list(params),
-    queryFn: () =>
-      apiClient.get<ListResponse<RecurringInvoiceTemplate>>(
-        "/accounting/recurring-invoices",
-        toQuery(params),
-      ),
-    staleTime: 60_000,
+export function useArInvoice(invoiceId: string, options?: QueryOpts<ArDocumentView>) {
+  const canRead = useCan(RECEIVABLES_READ);
+  return useQuery<ArDocumentView, Error>({
+    queryKey: queryKeys.accountingAr.invoice(invoiceId),
+    queryFn: () => apiClient.get<ArDocumentView>(`${INVOICES_PATH}/${invoiceId}`),
+    staleTime: ENTITY_STALE,
+    ...options,
+    enabled: canRead && !!invoiceId && (options?.enabled ?? true),
   });
 }
 
-export interface ArPaymentsParams {
-  method?: ArPaymentMethod;
-  clientId?: number;
-  from?: string;
-  to?: string;
-  page?: number;
-  pageSize?: number;
-}
-
-export function useArPayments(params: ArPaymentsParams = {}) {
-  return useQuery<ListResponse<ArPayment>, Error>({
-    queryKey: arKeys.arPayments.list(params),
-    queryFn: () =>
-      apiClient.get<ListResponse<ArPayment>>(
-        "/accounting/ar-payments",
-        toQuery(params),
-      ),
-    staleTime: 30_000,
+export function useArInvoiceTaxPreview(
+  invoiceId: string,
+  revision: string,
+  options?: QueryOpts<TaxPreview>,
+) {
+  const canRead = useCan(RECEIVABLES_READ);
+  return useQuery<TaxPreview, Error>({
+    queryKey: queryKeys.accountingAr.invoiceTaxPreview(invoiceId, revision),
+    queryFn: () => apiClient.get<TaxPreview>(`${INVOICES_PATH}/${invoiceId}/tax-preview`),
+    staleTime: LIVE_STALE,
+    placeholderData: keepPreviousData,
+    retry: false,
+    ...options,
+    enabled: canRead && !!invoiceId && (options?.enabled ?? true),
   });
 }
 
-export function useVoidInvoice() {
+export function useArInvoiceTaxLines(invoiceId: string, options?: QueryOpts<FrozenTaxLine[]>) {
+  const canRead = useCan(TAXES_READ);
+  return useQuery<FrozenTaxLine[], Error>({
+    queryKey: queryKeys.accountingAr.invoiceTaxLines(invoiceId),
+    queryFn: () => apiClient.get<FrozenTaxLine[]>(`${INVOICES_PATH}/${invoiceId}/tax-lines`),
+    staleTime: ENTITY_STALE,
+    ...options,
+    enabled: canRead && !!invoiceId && (options?.enabled ?? true),
+  });
+}
+
+export function useCreateArInvoice() {
   const queryClient = useQueryClient();
-  return useMutation<{ id: number; status: string }, Error, { invoiceId: number }>({
-    mutationKey: ["void-invoice"],
-    mutationFn: ({ invoiceId }) =>
-      apiClient.post<{ id: number; status: string }>(
-        `/invoices/${invoiceId}/void`,
-      ),
+  return useMutation<ArDocumentView, Error, CreateInvoiceInput>({
+    mutationKey: ["accounting", "ar", "invoices", "create"],
+    mutationFn: (input) => apiClient.post<ArDocumentView>(INVOICES_PATH, input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.accountingAr.all });
     },
   });
 }
 
-export function useRecordPaymentWithAllocations() {
+export function useUpdateArInvoiceDraft() {
+  const queryClient = useQueryClient();
+  return useMutation<ArDocumentView, Error, { invoiceId: string; input: UpdateArDraftInput }>({
+    mutationKey: ["accounting", "ar", "invoices", "update"],
+    mutationFn: ({ invoiceId, input }) =>
+      apiClient.patch<ArDocumentView>(`${INVOICES_PATH}/${invoiceId}`, input),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.accountingAr.invoice(variables.invoiceId) });
+      queryClient.invalidateQueries({ queryKey: [...queryKeys.accountingAr.all, "invoices"] });
+    },
+  });
+}
+
+export function useDeleteArInvoiceDraft() {
+  const queryClient = useQueryClient();
+  return useMutation<DeletedResult, Error, string>({
+    mutationKey: ["accounting", "ar", "invoices", "delete"],
+    mutationFn: (invoiceId) => apiClient.delete<DeletedResult>(`${INVOICES_PATH}/${invoiceId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.accountingAr.all });
+    },
+  });
+}
+
+export function usePostArInvoice() {
+  const queryClient = useQueryClient();
+  return useMutation<{ document: ArDocumentView; journal: Journal }, Error, string>({
+    mutationKey: ["accounting", "ar", "invoices", "post"],
+    mutationFn: (invoiceId) =>
+      apiClient.post<{ document: ArDocumentView; journal: Journal }>(
+        `${INVOICES_PATH}/${invoiceId}/post`,
+        {},
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.accountingAr.all });
+    },
+  });
+}
+
+export function useCreditNoteFromInvoice() {
   const queryClient = useQueryClient();
   return useMutation<
-    { id: number },
+    ArDocumentView,
     Error,
-    { invoiceId: number } & RecordPaymentInput
+    { invoiceId: string; input: CreditNoteFromInvoiceInput }
   >({
-    mutationKey: ["record-payment-ar"],
-    mutationFn: ({ invoiceId, ...body }) =>
-      apiClient.post<{ id: number }>(`/invoices/${invoiceId}/payments`, body),
+    mutationKey: ["accounting", "ar", "invoices", "creditNote"],
+    mutationFn: ({ invoiceId, input }) =>
+      apiClient.post<ArDocumentView>(`${INVOICES_PATH}/${invoiceId}/credit-note`, input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.accountingAr.all });
     },
+  });
+}
+
+export function useCreditNotes(
+  query: ListArDocumentsQuery = {},
+  options?: QueryOpts<ArDocumentPage>,
+) {
+  const canRead = useCan(CREDIT_NOTES_READ);
+  return useQuery<ArDocumentPage, Error>({
+    queryKey: queryKeys.accountingAr.creditNotes(documentParams(query)),
+    queryFn: () => apiClient.get<ArDocumentPage>(CREDIT_NOTES_PATH, documentParams(query)),
+    staleTime: STANDARD_LIST_STALE,
+    placeholderData: keepPreviousData,
+    ...options,
+    enabled: canRead && (options?.enabled ?? true),
+  });
+}
+
+export function useCreditNote(creditNoteId: string, options?: QueryOpts<ArDocumentView>) {
+  const canRead = useCan(CREDIT_NOTES_READ);
+  return useQuery<ArDocumentView, Error>({
+    queryKey: queryKeys.accountingAr.creditNote(creditNoteId),
+    queryFn: () => apiClient.get<ArDocumentView>(`${CREDIT_NOTES_PATH}/${creditNoteId}`),
+    staleTime: ENTITY_STALE,
+    ...options,
+    enabled: canRead && !!creditNoteId && (options?.enabled ?? true),
+  });
+}
+
+export function useCreditNoteTaxPreview(
+  creditNoteId: string,
+  revision: string,
+  options?: QueryOpts<TaxPreview>,
+) {
+  const canRead = useCan(CREDIT_NOTES_READ);
+  return useQuery<TaxPreview, Error>({
+    queryKey: queryKeys.accountingAr.creditNoteTaxPreview(creditNoteId, revision),
+    queryFn: () => apiClient.get<TaxPreview>(`${CREDIT_NOTES_PATH}/${creditNoteId}/tax-preview`),
+    staleTime: LIVE_STALE,
+    placeholderData: keepPreviousData,
+    retry: false,
+    ...options,
+    enabled: canRead && !!creditNoteId && (options?.enabled ?? true),
   });
 }
 
 export function useCreateCreditNote() {
   const queryClient = useQueryClient();
-  return useMutation<CreditNote, Error, CreateCreditNoteInput>({
-    mutationKey: ["create-credit-note"],
-    mutationFn: (body) =>
-      apiClient.post<CreditNote>("/accounting/credit-notes", body),
+  return useMutation<ArDocumentView, Error, CreateCreditNoteInput>({
+    mutationKey: ["accounting", "ar", "creditNotes", "create"],
+    mutationFn: (input) => apiClient.post<ArDocumentView>(CREDIT_NOTES_PATH, input),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.accountingAr.all });
+    },
+  });
+}
+
+export function useUpdateCreditNoteDraft() {
+  const queryClient = useQueryClient();
+  return useMutation<ArDocumentView, Error, { creditNoteId: string; input: UpdateArDraftInput }>({
+    mutationKey: ["accounting", "ar", "creditNotes", "update"],
+    mutationFn: ({ creditNoteId, input }) =>
+      apiClient.patch<ArDocumentView>(`${CREDIT_NOTES_PATH}/${creditNoteId}`, input),
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
-        queryKey: arKeys.creditNotes.all,
-        exact: false,
+        queryKey: queryKeys.accountingAr.creditNote(variables.creditNoteId),
       });
+      queryClient.invalidateQueries({ queryKey: [...queryKeys.accountingAr.all, "creditNotes"] });
+    },
+  });
+}
+
+export function useDeleteCreditNoteDraft() {
+  const queryClient = useQueryClient();
+  return useMutation<DeletedResult, Error, string>({
+    mutationKey: ["accounting", "ar", "creditNotes", "delete"],
+    mutationFn: (creditNoteId) =>
+      apiClient.delete<DeletedResult>(`${CREDIT_NOTES_PATH}/${creditNoteId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.accountingAr.all });
     },
   });
 }
 
 export function usePostCreditNote() {
   const queryClient = useQueryClient();
-  return useMutation<
-    { id: number; status: string; needsApproval?: boolean },
-    Error,
-    { creditNoteId: number }
-  >({
-    mutationKey: ["post-credit-note"],
-    mutationFn: ({ creditNoteId }) =>
-      apiClient.post<{ id: number; status: string; needsApproval?: boolean }>(
-        `/accounting/credit-notes/${creditNoteId}/post`,
-      ),
-    onSuccess: (_, { creditNoteId }) => {
-      queryClient.invalidateQueries({
-        queryKey: arKeys.creditNotes.detail(creditNoteId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: arKeys.creditNotes.all,
-        exact: false,
-      });
-    },
-  });
-}
-
-export function useApplyCreditNote() {
-  const queryClient = useQueryClient();
-  return useMutation<
-    { id: number; invoiceId: number; appliedAmount: number },
-    Error,
-    { creditNoteId: number } & ApplyCreditNoteInput
-  >({
-    mutationKey: ["apply-credit-note"],
-    mutationFn: ({ creditNoteId, ...body }) =>
-      apiClient.post<{ id: number; invoiceId: number; appliedAmount: number }>(
-        `/accounting/credit-notes/${creditNoteId}/apply`,
-        body,
+  return useMutation<{ document: ArDocumentView; journal: Journal }, Error, string>({
+    mutationKey: ["accounting", "ar", "creditNotes", "post"],
+    mutationFn: (creditNoteId) =>
+      apiClient.post<{ document: ArDocumentView; journal: Journal }>(
+        `${CREDIT_NOTES_PATH}/${creditNoteId}/post`,
+        {},
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: arKeys.creditNotes.all,
-        exact: false,
-      });
-      queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.accountingAr.all });
     },
   });
 }
 
-export function useCreateRecurringTemplate() {
-  const queryClient = useQueryClient();
-  return useMutation<RecurringInvoiceTemplate, Error, CreateRecurringTemplateInput>({
-    mutationKey: ["create-recurring-template"],
-    mutationFn: (body) =>
-      apiClient.post<RecurringInvoiceTemplate>("/accounting/recurring-invoices", body),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: arKeys.recurringTemplates.all,
-        exact: false,
-      });
-    },
-  });
-}
-
-export function useUpdateRecurringTemplate() {
+export function useAllocateCreditNote() {
   const queryClient = useQueryClient();
   return useMutation<
-    RecurringInvoiceTemplate,
+    CreditNoteAllocationResult,
     Error,
-    { templateId: number } & UpdateRecurringTemplateInput
+    { creditNoteId: string; allocations: AllocationLineInput[] }
   >({
-    mutationKey: ["update-recurring-template"],
-    mutationFn: ({ templateId, ...body }) =>
-      apiClient.patch<RecurringInvoiceTemplate>(
-        `/accounting/recurring-invoices/${templateId}`,
-        body,
-      ),
-    onSuccess: (_, { templateId }) => {
-      queryClient.invalidateQueries({
-        queryKey: arKeys.recurringTemplates.all,
-        exact: false,
-      });
-      queryClient.invalidateQueries({
-        queryKey: arKeys.recurringTemplates.detail(templateId),
-      });
-    },
-  });
-}
-
-export function useDeleteRecurringTemplate() {
-  const queryClient = useQueryClient();
-  return useMutation<{ id: number; deleted: boolean }, Error, { templateId: number }>({
-    mutationKey: ["delete-recurring-template"],
-    mutationFn: ({ templateId }) =>
-      apiClient.delete<{ id: number; deleted: boolean }>(
-        `/accounting/recurring-invoices/${templateId}`,
-      ),
-    onSuccess: (_, { templateId }) => {
-      queryClient.invalidateQueries({
-        queryKey: arKeys.recurringTemplates.all,
-        exact: false,
-      });
-      queryClient.invalidateQueries({
-        queryKey: arKeys.recurringTemplates.detail(templateId),
-      });
-    },
-  });
-}
-
-export function useRunRecurringTemplate() {
-  const queryClient = useQueryClient();
-  return useMutation<{ invoiceId: number }, Error, { templateId: number }>({
-    mutationKey: ["run-recurring-template"],
-    mutationFn: ({ templateId }) =>
-      apiClient.post<{ invoiceId: number }>(
-        `/accounting/recurring-invoices/${templateId}/run-now`,
+    mutationKey: ["accounting", "ar", "creditNotes", "allocate"],
+    mutationFn: ({ creditNoteId, allocations }) =>
+      apiClient.post<CreditNoteAllocationResult>(
+        `${CREDIT_NOTES_PATH}/${creditNoteId}/allocations`,
+        { allocations },
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: arKeys.recurringTemplates.all,
-        exact: false,
-      });
-      queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.accountingAr.all });
     },
   });
 }
 
-export * from "./ar-collections";
+export function useArReceipts(query: ListReceiptsQuery = {}, options?: QueryOpts<ArReceiptPage>) {
+  const canRead = useCan(RECEIVABLES_READ);
+  return useQuery<ArReceiptPage, Error>({
+    queryKey: queryKeys.accountingAr.receipts(receiptParams(query)),
+    queryFn: () => apiClient.get<ArReceiptPage>(RECEIPTS_PATH, receiptParams(query)),
+    staleTime: STANDARD_LIST_STALE,
+    placeholderData: keepPreviousData,
+    ...options,
+    enabled: canRead && (options?.enabled ?? true),
+  });
+}
+
+export function useArReceipt(receiptId: string, options?: QueryOpts<ArReceiptView>) {
+  const canRead = useCan(RECEIVABLES_READ);
+  return useQuery<ArReceiptView, Error>({
+    queryKey: queryKeys.accountingAr.receipt(receiptId),
+    queryFn: () => apiClient.get<ArReceiptView>(`${RECEIPTS_PATH}/${receiptId}`),
+    staleTime: ENTITY_STALE,
+    ...options,
+    enabled: canRead && !!receiptId && (options?.enabled ?? true),
+  });
+}
+
+export function useCreateArReceipt() {
+  const queryClient = useQueryClient();
+  return useMutation<{ receipt: ArReceiptView; journal: Journal }, Error, CreateReceiptInput>({
+    mutationKey: ["accounting", "ar", "receipts", "create"],
+    mutationFn: (input) =>
+      apiClient.post<{ receipt: ArReceiptView; journal: Journal }>(RECEIPTS_PATH, input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.accountingAr.all });
+    },
+  });
+}
+
+export function useAllocateArReceipt() {
+  const queryClient = useQueryClient();
+  return useMutation<
+    ArReceiptView,
+    Error,
+    { receiptId: string; allocations: AllocationLineInput[] }
+  >({
+    mutationKey: ["accounting", "ar", "receipts", "allocate"],
+    mutationFn: ({ receiptId, allocations }) =>
+      apiClient.post<ArReceiptView>(`${RECEIPTS_PATH}/${receiptId}/allocations`, { allocations }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.accountingAr.all });
+    },
+  });
+}
+
+export function useAllocateArReceiptFifo() {
+  const queryClient = useQueryClient();
+  return useMutation<ArReceiptView, Error, { receiptId: string; maxAmountMinor?: number }>({
+    mutationKey: ["accounting", "ar", "receipts", "allocateFifo"],
+    mutationFn: ({ receiptId, maxAmountMinor }) =>
+      apiClient.post<ArReceiptView>(
+        `${RECEIPTS_PATH}/${receiptId}/allocations/fifo`,
+        maxAmountMinor === undefined ? {} : { maxAmountMinor },
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.accountingAr.all });
+    },
+  });
+}
+
+export function useReverseArReceipt() {
+  const queryClient = useQueryClient();
+  return useMutation<
+    { receipt: ArReceiptView; reversalJournal: Journal | null },
+    Error,
+    { receiptId: string; input: ReverseReceiptInput }
+  >({
+    mutationKey: ["accounting", "ar", "receipts", "reverse"],
+    mutationFn: ({ receiptId, input }) =>
+      apiClient.post<{ receipt: ArReceiptView; reversalJournal: Journal | null }>(
+        `${RECEIPTS_PATH}/${receiptId}/reverse`,
+        input,
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.accountingAr.all });
+    },
+  });
+}
+
+export function useArAging(query: AgingQuery = {}, options?: QueryOpts<AgingReport>) {
+  const canRead = useCan(RECEIVABLES_READ);
+  return useQuery<AgingReport, Error>({
+    queryKey: queryKeys.accountingAr.aging(agingParams(query)),
+    queryFn: () => apiClient.get<AgingReport>(AGING_PATH, agingParams(query)),
+    staleTime: STANDARD_LIST_STALE,
+    placeholderData: keepPreviousData,
+    ...options,
+    enabled: canRead && (options?.enabled ?? true),
+  });
+}
+
+export function useArOpenItems(query: AgingQuery = {}, options?: QueryOpts<AgingOpenItem[]>) {
+  const canRead = useCan(RECEIVABLES_READ);
+  return useQuery<AgingOpenItem[], Error>({
+    queryKey: queryKeys.accountingAr.openItems(agingParams(query)),
+    queryFn: () => apiClient.get<AgingOpenItem[]>(`${AGING_PATH}/open-items`, agingParams(query)),
+    staleTime: STANDARD_LIST_STALE,
+    placeholderData: keepPreviousData,
+    ...options,
+    enabled: canRead && (options?.enabled ?? true),
+  });
+}
