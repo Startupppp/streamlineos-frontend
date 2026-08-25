@@ -162,17 +162,10 @@ function PricingCard({
             variant={tier.highlight ? "default" : "outline"}
             className="h-10 w-full font-semibold"
           >
-            {isFree ? "Start free" : tier.cta}
+            {tier.cta}
             <ArrowRight className="ml-2 h-3.5 w-3.5" aria-hidden />
           </Button>
         </Link>
-        {!isFree && tier.id !== "enterprise" ? (
-          <Link href={`${tier.ctaHref}&trial=1`} className="block">
-            <Button variant="ghost" className="h-9 w-full text-xs text-muted-foreground">
-              Try free for 14 days
-            </Button>
-          </Link>
-        ) : null}
       </div>
     </motion.div>
   );
