@@ -1,6 +1,6 @@
 import { requireSession } from "@/lib/rbac/require-permission";
 import { RequireModule } from "@/components/auth/require-module";
-import TrashPage from "@/features/knowledge-base/components/trash-page";
+import TrashPage from "@/features/wiki/components/trash-page";
 
 export default async function KnowledgeBaseTrashPage() {
   await requireSession();

@@ -2,7 +2,7 @@
 
 import { use } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { KbResearchBriefDetail } from "@/features/kb/components/kb-research-brief-detail";
+import { KbResearchBriefDetail } from "@/features/help-centre/components/kb-research-brief-detail";
 
 interface PageProps {
   params: Promise<{ briefId: string }>;

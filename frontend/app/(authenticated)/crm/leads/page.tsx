@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import type { DropResult } from "@hello-pangea/dnd";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState } from "@/components/shared";
@@ -24,7 +25,7 @@ import {
 import { useCreateDeal } from "@/hooks/api/crm";
 import { useLeadsFilters } from "@/hooks/common/use-leads-filters";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useScope } from "@/hooks/api/access";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { LeadsStatsBar } from "@/features/crm/leads/leads-stats-bar";
@@ -42,6 +43,12 @@ export default function LeadsPipelinePage() {
   const canAssign = useCan("crm:leads:assign");
   const canDelete = useCan("crm:leads:delete");
   const canCreateDeal = useCan("crm:deals:create");
+  const scope = useScope("crm:leads:view");
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
   const { data: board, isLoading: boardLoading, isError: boardError, refetch: refetchBoard } = useLeadBoard();
   const { data: stats, isLoading: statsLoading, isError: statsError } = useLeadStats();
   const { open: createOpen, onOpenChange: setCreateOpen } = useQueryParamOpen("create");
@@ -65,8 +72,13 @@ export default function LeadsPipelinePage() {
     setSort,
     setTablePage,
     setPageSize,
-    clearFilters,
   } = useLeadsFilters();
+
+  const handleClearFilters = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    ["status", "priority", "source", "q", "page"].forEach((k) => params.delete(k));
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [searchParams, router, pathname]);
 
   const { data: tableData, isLoading: tableLoading } = useLeads({
     search: searchQuery.trim() || undefined,
@@ -406,7 +418,8 @@ export default function LeadsPipelinePage() {
           onStatusFilterChange={setStatusFilter}
           onPriorityFilterChange={setPriorityFilter}
           onSourceFilterChange={setSourceFilter}
-          onClearFilters={clearFilters}
+          onClearFilters={handleClearFilters}
+          scope={scope}
         />
       }
     >

@@ -26,7 +26,6 @@ import {
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
 import { useAccess, useCan } from "@/hooks/api/access";
-import { usePermissions } from "@/lib/rbac/hooks";
 import { useEntitlements } from "@/hooks/api/entitlements";
 import {
   PRODUCT_DEFINITIONS,
@@ -75,7 +74,7 @@ interface ProductGridProps {
   enabledModules: string[];
   lockedModules: string[];
   canManageModules: boolean;
-  permissions: string[];
+  scopes: Readonly<Record<string, unknown>> | undefined;
   effectiveRole: string;
   onClose: () => void;
   shouldReduceMotion: boolean | null;
@@ -236,7 +235,7 @@ function ProductGrid({
   enabledModules,
   lockedModules,
   canManageModules,
-  permissions,
+  scopes,
   effectiveRole,
   onClose,
   shouldReduceMotion,
@@ -247,7 +246,7 @@ function ProductGrid({
       const groups = getNavGroupsForProduct(
         product.key,
         effectiveRole,
-        permissions,
+        scopes,
         enabledModules,
       );
       const hasAccess = groups.some((group) => group.routes.length > 0);
@@ -276,7 +275,7 @@ function ProductGrid({
     });
   }, [
     effectiveRole,
-    permissions,
+    scopes,
     enabledModules,
     lockedModules,
     canManageModules,
@@ -350,12 +349,12 @@ export function ProductSwitcherMenu({
   const { data: entitlements } = useEntitlements(open);
   const lockedModules = entitlements?.lockedModules ?? [];
   const canManageModules = useCan("settings:manage");
-  const { permissions } = usePermissions();
   const { data: access } = useAccess();
   const effectiveRole =
     access?.isOrgOwner === true
       ? "OWNER"
       : "MEMBER";
+  const scopes = access?.scopes;
 
   const handleOpenChange = useCallback(
     (next: boolean) => {
@@ -493,7 +492,7 @@ export function ProductSwitcherMenu({
             enabledModules={enabledModules}
             lockedModules={lockedModules}
             canManageModules={canManageModules}
-            permissions={permissions}
+            scopes={scopes}
             effectiveRole={effectiveRole}
             onClose={handleClose}
             shouldReduceMotion={shouldReduceMotion}
@@ -549,7 +548,7 @@ export function ProductSwitcherMenu({
                 enabledModules={enabledModules}
                 lockedModules={lockedModules}
                 canManageModules={canManageModules}
-                permissions={permissions}
+                scopes={scopes}
                 effectiveRole={effectiveRole}
                 onClose={handleClose}
                 shouldReduceMotion={shouldReduceMotion}

@@ -1,4 +1,4 @@
-import { KbArticleEditorPage } from "@/features/kb/components/kb-article-editor-page";
+import { KbArticleEditorPage } from "@/features/help-centre/components/kb-article-editor-page";
 
 export default async function SupportKbArticlePage({
   params,

@@ -94,10 +94,7 @@ export function AppSidebar({
     return match ? match[1] : null;
   }, [pathname]);
 
-  const permissions = useMemo(
-    () => (access ? Object.keys(access.scopes) : []),
-    [access?.scopes],
-  );
+  const scopes = access?.scopes;
   const canApproveLeaves = useCan("hr:leaves:approve");
   const canReadChat = useCan("chat:channels:read");
   const enabledModules = useEnabledModules();
@@ -107,10 +104,10 @@ export function AppSidebar({
     return getNavGroupsForProduct(
       activeProduct,
       effectiveRole,
-      permissions,
+      scopes,
       enabledModules,
     );
-  }, [activeProduct, effectiveRole, permissions, enabledModules]);
+  }, [activeProduct, effectiveRole, scopes, enabledModules]);
 
   const activeGroupLabel = useMemo(() => {
     for (const group of navGroups) {

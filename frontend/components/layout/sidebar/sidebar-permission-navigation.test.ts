@@ -23,11 +23,15 @@ const ACCESS_ONLY_CASES = [
   ["timesheets", "timesheets:access:view", "/timesheets/access"],
 ] as const;
 
+function scopesOf(keys: readonly string[]): Record<string, "all"> {
+  return Object.fromEntries(keys.map((key) => [key, "all" as const]));
+}
+
 function hrefsFor(
   product: Parameters<typeof getNavGroupsForProduct>[0],
   permissions: string[],
 ): string[] {
-  return getNavGroupsForProduct(product, "MEMBER", permissions, [
+  return getNavGroupsForProduct(product, "MEMBER", scopesOf(permissions), [
     product === "hrms"
       ? "HR"
       : product === "finance"
@@ -43,7 +47,7 @@ function hrefsFor(
 describe("permission-aware product navigation", () => {
   it("fails closed while module entitlement data is absent or loaded empty", () => {
     expect(isModuleEnabled("hrms", [])).toBe(false);
-    expect(getNavGroupsForProduct("hrms", "OWNER", [], [])).toEqual([]);
+    expect(getNavGroupsForProduct("hrms", "OWNER", scopesOf([]), [])).toEqual([]);
     expect(isModuleEnabled("home", [])).toBe(true);
     expect(isModuleEnabled("administration", [])).toBe(true);
   });
@@ -65,7 +69,7 @@ describe("permission-aware product navigation", () => {
     const groups = getNavGroupsForProduct(
       "hrms",
       "MEMBER",
-      permissions,
+      scopesOf(permissions),
       ["HR"],
     );
     const topLevelHrefs = groups.flatMap((group) =>
@@ -103,7 +107,7 @@ describe("permission-aware product navigation", () => {
     const groups = getNavGroupsForProduct(
       "hrms",
       "MEMBER",
-      ["hr:employees:view"],
+      scopesOf(["hr:employees:view"]),
       ["HR"],
     );
     const routes = groups.flatMap((group) => flattenNavRoutes(group.routes));
@@ -143,7 +147,7 @@ describe("permission-aware product navigation", () => {
     const groups = getNavGroupsForProduct(
       "hrms",
       "MEMBER",
-      ["hr:access:view"],
+      scopesOf(["hr:access:view"]),
       ["HR"],
     );
 

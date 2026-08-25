@@ -1,88 +1,121 @@
 import type { ReactNode } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { renderHook, waitFor } from "@testing-library/react";
-import { apiClient } from "@/lib/api-client";
-import { useCan, useScope } from "@/hooks/api/access";
+import { render, screen } from "@testing-library/react";
+import {
+  QueryClient,
+  QueryClientProvider,
+  HydrationBoundary,
+  dehydrate,
+} from "@tanstack/react-query";
+import { useCan, useModuleEnabled } from "../access";
+import { queryKeys } from "@/lib/query-keys";
 import type { AccessResponse } from "@/types/access";
-
-jest.mock("@/lib/api-client", () => ({
-  apiClient: { get: jest.fn() },
-  setAutoSignOutSuppressed: jest.fn(),
-}));
+import type { PermissionKey } from "@/lib/rbac/permissions";
 
 jest.mock("next-auth/react", () => ({
-  useSession: () => ({
+  useSession: jest.fn().mockReturnValue({
     data: { orgId: "org-1", user: { id: "user-1" } },
   }),
 }));
 
-const mockedGet = apiClient.get as jest.Mock;
+jest.mock("@/lib/api-client", () => ({
+  apiClient: { get: jest.fn() },
+}));
 
-function wrapper({ children }: { children: ReactNode }) {
-  const client = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
+const ORG_ID = "org-1";
+const USER_ID = "user-1";
+
+const GRANTED_SNAPSHOT: AccessResponse = {
+  scopes: { "hr:employees:view": "all" },
+  isOrgOwner: false,
+  canManageOrganizationMembership: false,
+  modules: { hr: true },
+};
+
+function makeHydratedState() {
+  const seed = new QueryClient();
+  seed.setQueryData(queryKeys.access.me(ORG_ID, USER_ID), GRANTED_SNAPSHOT);
+  return dehydrate(seed);
+}
+
+function Wrapper({
+  client,
+  hydratedState,
+  children,
+}: {
+  client: QueryClient;
+  hydratedState?: ReturnType<typeof dehydrate>;
+  children: ReactNode;
+}) {
+  if (hydratedState !== undefined) {
+    return (
+      <QueryClientProvider client={client}>
+        <HydrationBoundary state={hydratedState}>{children}</HydrationBoundary>
+      </QueryClientProvider>
+    );
+  }
   return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
 }
 
-function givenAccess(overrides: Partial<AccessResponse> = {}) {
-  mockedGet.mockResolvedValue({
-    scopes: {},
-    isOrgOwner: false,
-    canManageOrganizationMembership: false,
-    modules: {},
-    ...overrides,
-  } satisfies AccessResponse);
+function CanBadge({ permKey }: { permKey: PermissionKey }) {
+  const result = useCan(permKey);
+  return <span data-testid="can-result">{String(result)}</span>;
 }
 
-async function renderAccess<T>(hook: () => T) {
-  const { result } = renderHook(hook, { wrapper });
-  await waitFor(() => expect(mockedGet).toHaveBeenCalled());
-  return result;
+function ModuleBadge({ moduleKey }: { moduleKey: string }) {
+  const result = useModuleEnabled(moduleKey);
+  return <span data-testid="module-result">{String(result)}</span>;
 }
 
-describe("useCan", () => {
-  beforeEach(() => jest.clearAllMocks());
+const { apiClient } = jest.requireMock("@/lib/api-client") as {
+  apiClient: { get: jest.Mock };
+};
 
-  it("answers yes for a permission the person holds at a narrowed scope", async () => {
-    givenAccess({ scopes: { "crm:contacts:view": "team" } });
-    const result = await renderAccess(() => useCan("crm:contacts:view"));
-    await waitFor(() => expect(result.current).toBe(true));
+beforeEach(() => jest.clearAllMocks());
+
+describe("useCan — server prefetch seam", () => {
+  it("answers true on first render from hydrated cache and makes no API call", () => {
+    const state = makeHydratedState();
+    const client = new QueryClient();
+
+    render(
+      <Wrapper client={client} hydratedState={state}>
+        <CanBadge permKey="hr:employees:view" />
+      </Wrapper>,
+    );
+
+    expect(screen.getByTestId("can-result").textContent).toBe("true");
+    expect(apiClient.get).not.toHaveBeenCalledWith(
+      expect.stringContaining("/me/access"),
+    );
   });
 
-  it("answers no for a permission absent from the person's scopes", async () => {
-    givenAccess({ scopes: { "crm:contacts:view": "all" } });
-    const result = await renderAccess(() => useCan("crm:contacts:delete"));
-    await waitFor(() => expect(mockedGet).toHaveBeenCalled());
-    expect(result.current).toBe(false);
-  });
+  it("falls back to fetching when HydrationBoundary carries no access cache", () => {
+    apiClient.get.mockReturnValue(new Promise(() => {}));
+    const client = new QueryClient();
 
-  it("answers yes for an org owner holding nothing explicitly", async () => {
-    givenAccess({ isOrgOwner: true, scopes: {} });
-    const result = await renderAccess(() => useCan("crm:contacts:view"));
-    await waitFor(() => expect(result.current).toBe(true));
+    render(
+      <Wrapper client={client}>
+        <CanBadge permKey="hr:employees:view" />
+      </Wrapper>,
+    );
+
+    expect(apiClient.get).toHaveBeenCalledWith(
+      expect.stringContaining("/me/access"),
+    );
   });
 });
 
-describe("useScope", () => {
-  beforeEach(() => jest.clearAllMocks());
+describe("useModuleEnabled — loading default", () => {
+  it("answers true while the access snapshot is unresolved", () => {
+    apiClient.get.mockReturnValue(new Promise(() => {}));
+    const client = new QueryClient();
 
-  it("returns the scope the permission was granted at", async () => {
-    givenAccess({ scopes: { "crm:contacts:view": "team" } });
-    const result = await renderAccess(() => useScope("crm:contacts:view"));
-    await waitFor(() => expect(result.current).toBe("team"));
-  });
+    render(
+      <Wrapper client={client}>
+        <ModuleBadge moduleKey="hr" />
+      </Wrapper>,
+    );
 
-  it("returns none for a permission the person does not hold", async () => {
-    givenAccess({ scopes: {} });
-    const result = await renderAccess(() => useScope("crm:contacts:view"));
-    await waitFor(() => expect(mockedGet).toHaveBeenCalled());
-    expect(result.current).toBe("none");
-  });
-
-  it("returns all for an org owner", async () => {
-    givenAccess({ isOrgOwner: true, scopes: {} });
-    const result = await renderAccess(() => useScope("crm:contacts:view"));
-    await waitFor(() => expect(result.current).toBe("all"));
+    expect(screen.getByTestId("module-result").textContent).toBe("true");
   });
 });

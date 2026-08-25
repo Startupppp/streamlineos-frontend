@@ -4,7 +4,7 @@ import { nanoid } from "nanoid";
 import { toast } from "sonner";
 import type { Path, TElement } from "platejs";
 import type { PlateEditor } from "platejs/react";
-import type { UploadedKbMedia } from "@/features/knowledge-base/lib/upload-kb-media";
+import type { UploadedKbMedia } from "@/features/wiki/lib/upload-kb-media";
 
 export type EditorMediaType = "img" | "video" | "audio" | "file";
 

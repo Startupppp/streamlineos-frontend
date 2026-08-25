@@ -11,6 +11,14 @@ import { WORK_MANAGEMENT_NAV_GROUPS } from "./sidebar-nav-groups-work-management
 import { KNOWLEDGE_SUPPORT_NAV_GROUPS } from "./sidebar-nav-groups-knowledge-support";
 import { ADMINISTRATION_NAV_GROUPS } from "./sidebar-nav-groups-administration";
 import { isModuleEnabled } from "./sidebar-products";
+
+type GrantedScopes = Readonly<Record<string, unknown>>;
+type GrantedPredicate = (permissionKey: string) => boolean;
+
+const grantedFrom =
+  (scopes: GrantedScopes | undefined): GrantedPredicate =>
+  (permissionKey) =>
+    scopes !== undefined && permissionKey in scopes;
 import type {
   NavGroup,
   NavRoute,
@@ -124,18 +132,18 @@ export const NAV_GROUPS: NavGroup[] = [
 
 function matchesPermission(
   required: PermissionRequirement | undefined,
-  granted: Set<string>,
+  granted: GrantedPredicate,
 ): boolean {
   if (!required) return true;
   const reqs = Array.isArray(required) ? required : [required];
   if (reqs.length === 0) return true;
-  return reqs.some((p) => granted.has(p));
+  return reqs.some((p) => granted(p));
 }
 
 function filterRoute(
   route: NavRoute,
   isOwner: boolean,
-  granted: Set<string>,
+  granted: GrantedPredicate,
   enabledModules: string[],
   inheritedPermission?: PermissionRequirement,
 ): NavRoute[] {
@@ -172,13 +180,13 @@ function filterRoute(
 
 export function getNavGroupsForUser(
   role: string | undefined,
-  permissions: string[] | undefined,
+  scopes: GrantedScopes | undefined,
   enabledModules: string[] = [],
 ): NavGroup[] {
   if (!role) return [];
 
   const isOwner = role === ROLES.OWNER;
-  const granted = new Set(permissions ?? []);
+  const granted = grantedFrom(scopes);
 
   return NAV_GROUPS.filter(
     (group) => !group.module || isModuleEnabled(group.module, enabledModules),
@@ -306,11 +314,11 @@ export function resolveNavRouteAccess(pathname: string): NavRouteAccess {
 
 function getHomeNavGroups(
   role: string | undefined,
-  permissions: string[] | undefined,
+  scopes: GrantedScopes | undefined,
   enabledModules: string[],
 ): NavGroup[] {
   const isOwner = role === ROLES.OWNER;
-  const granted = new Set(permissions ?? []);
+  const granted = grantedFrom(scopes);
 
   return HOME_NAV_GROUPS.map((group) => ({
     ...group,
@@ -329,12 +337,12 @@ function getHomeNavGroups(
 export function getNavGroupsForProduct(
   productKey: ProductKey,
   role: string | undefined,
-  permissions: string[] | undefined,
+  scopes: GrantedScopes | undefined,
   enabledModules: string[] = [],
 ): NavGroup[] {
   if (productKey === "home")
-    return getHomeNavGroups(role, permissions, enabledModules);
+    return getHomeNavGroups(role, scopes, enabledModules);
 
-  const allGroups = getNavGroupsForUser(role, permissions, enabledModules);
+  const allGroups = getNavGroupsForUser(role, scopes, enabledModules);
   return allGroups.filter((group) => group.product === productKey);
 }

@@ -4,8 +4,8 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { KbResearchBriefForm } from "@/features/kb/components/kb-research-brief-form";
-import { KbResearchBriefCard } from "@/features/kb/components/kb-research-brief-card";
+import { KbResearchBriefForm } from "@/features/help-centre/components/kb-research-brief-form";
+import { KbResearchBriefCard } from "@/features/help-centre/components/kb-research-brief-card";
 import { useKbResearchBriefs } from "@/hooks/api/kb/research-briefs";
 
 function BriefListSkeleton() {

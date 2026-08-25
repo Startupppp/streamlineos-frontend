@@ -37,7 +37,6 @@ import {
   flattenNavRoutes,
   getNavGroupsForUser,
 } from "./sidebar/sidebar-nav-items";
-import { usePermissions } from "@/lib/rbac/hooks";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
 import { cn } from "@/lib/utils";
 import { useCommandPalette } from "@/features/command-palette";
@@ -133,15 +132,15 @@ export function CommandPalette() {
     access?.isOrgOwner === true
       ? "OWNER"
       : "MEMBER";
-  const { permissions } = usePermissions();
+  const scopes = access?.scopes;
   const enabledModules = useEnabledModules();
   const { paletteOpen, setPaletteOpen, openCreateTicket } = useCommandPalette();
 
   const projectId = useMemo(() => extractProjectId(pathname), [pathname]);
 
   const navGroups = useMemo(
-    () => getNavGroupsForUser(role, permissions, enabledModules),
-    [role, permissions, enabledModules],
+    () => getNavGroupsForUser(role, scopes, enabledModules),
+    [role, scopes, enabledModules],
   );
 
   const pages = useMemo(() => {

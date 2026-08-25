@@ -69,7 +69,7 @@ export function useCanManageOrganizationMembership(): boolean {
  */
 export function useModuleEnabled(moduleKey: string): boolean {
   const { data } = useAccess();
-  if (!data) return false;
+  if (!data) return true;
   return data.modules[normalizeOrgModuleKey(moduleKey)] === true;
 }
 
