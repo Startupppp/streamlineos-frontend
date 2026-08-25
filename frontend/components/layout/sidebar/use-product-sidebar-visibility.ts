@@ -3,7 +3,6 @@
 import { useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
-import { usePermissions } from "@/lib/rbac/hooks";
 import { useAccess } from "@/hooks/api/access";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
 import {
@@ -24,9 +23,9 @@ export function useProductSidebarVisibility(): {
 } {
   const { status } = useSession();
   const pathname = usePathname();
-  const { permissions } = usePermissions();
   const { data: access } = useAccess();
   const enabledModules = useEnabledModules();
+  const scopes = access?.scopes;
 
   const isOrgOwner =
     access?.isOrgOwner === true;
@@ -38,10 +37,10 @@ export function useProductSidebarVisibility(): {
     return getNavGroupsForProduct(
       activeProduct,
       effectiveRole,
-      permissions,
+      scopes,
       enabledModules,
     );
-  }, [activeProduct, effectiveRole, permissions, enabledModules]);
+  }, [activeProduct, effectiveRole, scopes, enabledModules]);
 
   const hideSidebar =
     status !== "loading" &&
