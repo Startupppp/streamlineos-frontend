@@ -92,6 +92,16 @@ export default function LeadsPipelinePage() {
   });
 
   const { data: teamCapacity } = useSalesTeamCapacity();
+  const teamMembers = useMemo(
+    () =>
+      (teamCapacity || []).map((m) => ({
+        id: m.id,
+        name: m.name,
+        image: m.image,
+      })),
+    [teamCapacity],
+  );
+
   const updateLeadMutation = useUpdateLead();
   const assignLeadMutation = useAssignLead();
   const createDealMutation = useCreateDeal();
@@ -437,6 +447,7 @@ export default function LeadsPipelinePage() {
               onAssign={handleAssign}
               onBulkUpdate={handleBulkUpdate}
               onBulkDelete={handleBulkDelete}
+              teamMembers={teamMembers}
               isLoading={tableLoading}
               canUpdate={canUpdate}
               canAssign={canAssign}

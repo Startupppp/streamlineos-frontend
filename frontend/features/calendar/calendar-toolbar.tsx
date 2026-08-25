@@ -42,6 +42,7 @@ import {
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import type { View } from "./big-calendar-wrapper";
+import { CalendarSourcePanel } from "./calendar-source-panel";
 
 type ViewMode = "calendar" | "list" | "history";
 
@@ -293,9 +294,12 @@ export const CalendarToolbar = memo(function CalendarToolbar({
             <Handshake className="h-3.5 w-3.5" />
             <span className="hidden xl:inline">CRM events</span>
           </Button>
+
+          <CalendarSourcePanel />
         </div>
 
-        <div className="lg:hidden">
+        <div className="flex items-center gap-1.5 lg:hidden">
+          <CalendarSourcePanel />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <AnimatedIconButton

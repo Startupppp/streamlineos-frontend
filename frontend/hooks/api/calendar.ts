@@ -259,3 +259,35 @@ export function useExternalCalendarEvents(start: Date, end: Date, enabled: boole
     staleTime: 60_000,
   });
 }
+
+export interface CalendarSource {
+  key: string;
+  label: string;
+  module: string;
+  enabled: boolean;
+}
+
+export function useCalendarSources() {
+  const canView = useCan("calendar:read");
+  return useQuery({
+    queryKey: queryKeys.calendar.sources(),
+    queryFn: () => apiClient.get<CalendarSource[]>("/calendar/sources"),
+    staleTime: 30_000,
+    enabled: canView,
+  });
+}
+
+export function useSetCalendarSourcePreference() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["calendar", "sources", "set-preference"],
+    mutationFn: ({ sourceKey, enabled }: { sourceKey: string; enabled: boolean }) =>
+      apiClient.put<{ sourceKey: string; enabled: boolean }>(
+        `/calendar/sources/${sourceKey}`,
+        { enabled },
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.calendar.all, exact: false });
+    },
+  });
+}

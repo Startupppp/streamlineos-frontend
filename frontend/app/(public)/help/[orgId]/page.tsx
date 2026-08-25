@@ -1,15 +1,23 @@
 import type { Metadata } from "next";
-import { HelpCenterClient } from "@/features/help-centre/components/help-center-client";
+import { notFound } from "next/navigation";
+import {
+  publicGet,
+  type PublicOrgInfo,
+  type PublicKbListData,
+} from "@/lib/public-fetch";
 import { BRAND_NAME } from "@/lib/branding";
+import { PublicHelpCentreContent } from "@/features/help-centre/components/public-help-centre-content";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 type Props = { params: Promise<{ orgId: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { orgId } = await params;
-  const title = "Help Center";
-  const description = `Search articles and find answers, powered by ${BRAND_NAME}.`;
+  const org = await publicGet<PublicOrgInfo>(`/public/org/${orgId}`);
+  if (!org) return { title: "Help Center" };
+  const title = `${org.name} Help Center`;
+  const description = `Find answers and explore articles in ${org.name}'s help center, powered by ${BRAND_NAME}.`;
   return {
     title,
     description,
@@ -19,7 +27,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function PublicHelpCenterPage({ params }: Props) {
+export default async function PublicHelpCentreLandingPage({ params }: Props) {
   const { orgId } = await params;
-  return <HelpCenterClient orgId={orgId} />;
+  const [org, data] = await Promise.all([
+    publicGet<PublicOrgInfo>(`/public/org/${orgId}`),
+    publicGet<PublicKbListData>("/public/kb", { org: orgId }),
+  ]);
+  if (!org) return notFound();
+  return (
+    <PublicHelpCentreContent
+      orgId={orgId}
+      orgName={org.name}
+      data={data ?? { categories: [], articles: [] }}
+    />
+  );
 }
