@@ -6,7 +6,7 @@ The evidence: 24 types emitted across 9 modules — `accounting.*` (7), `invento
 
 **Blocked by:** None — ticket 01 shipped the registry and the relay.
 
-**Status:** analysis complete — implementation deliberately not started
+**Status:** analysis complete · 1 of 8 wired · 7 need product input
 
 ## Acceptance criteria
 
@@ -90,11 +90,44 @@ The `accounting.journal.posted` events are PENDING because the flush has not yet
 
 The ticket's claim — "the suppressed count after a flush equals only the deliberately-unsubscribed types" — is consistent with the current state: the 7 SUPPRESSED rows are entirely from the three fire-and-forget build types. After the PENDING `accounting.journal.posted` events are flushed, they will also become SUPPRESSED (fire-and-forget verdict), which is correct.
 
+## Wireable-now split (2026-08-25)
+
+### Wireable — catalog entries exist, targets are FK-determined
+
+| Domain event | Catalog entries matched | Consumer | File |
+|---|---|---|---|
+| `survey.response.submitted` | `survey.response.received` (owner) · `survey.certification.passed` / `survey.certification.failed` (respondent, only when `passed ≠ null`) | `SurveyResponseSubmittedConsumerService` | `src/modules/surveys/survey-response-submitted-consumer.service.ts` |
+
+### Needs product input — no matching catalog entry
+
+| Domain event | Product decision required |
+|---|---|
+| `accounting.bill.approved` | No `accounting.bill.approved` catalog entry. Decide: who is notified (bill submitter? AP team?), what channel, deduplication window, wording. |
+| `accounting.invoice.issued` | No `accounting.invoice.issued` catalog entry. Decide: does the system send the invoice to the customer, or just notify internal staff? Which channel? |
+| `build.sprint.completed` | No `build.sprint.completed` catalog entry (only `build.sprint.started` and `build.sprint.ending` exist). Decide: who is notified (all project members? only the sprint owner?), wording. |
+| `build.release.published` | No `build.release.published` catalog entry. Decide: who is notified (project members? stakeholders?), channel, wording. |
+| `inventory.purchase_order.received` | No `inventory.purchase_order.received` catalog entry. Decide: who gets the GRN alert (AP team? procurement manager?), channel, wording. |
+| `inventory.stock.low` | Catalog entry `inventory.stock.low` EXISTS, but the target audience ("inventory managers") is a product decision — no single permission key unambiguously identifies who should receive reorder alerts (`inventory:replenishment:manage`, `inventory:stock:adjust`, `inventory:products:read` are all candidates). Decide: which permission key(s) define the audience. |
+| `inventory.shipment.dispatched` | No `inventory.shipment.dispatched` catalog entry. Decide: notify the sales team? the customer (external email)? internal dispatch staff? |
+
+### Needs explicit sign-off — money-moving
+
+| Domain event | Reason |
+|---|---|
+| `inventory.sales_order.fulfilled` → create customer invoice | AR integration. Money moves on consumer execution. Requires product + finance sign-off before implementation, regardless of any catalog entry. |
+
+### Fire-and-forget confirmed untouched (10 types)
+
+`accounting.period.closed` · `accounting.bill.paid` · `accounting.invoice.paid` · `accounting.payment.received` · `build.project.created` · `build.ticket.created` · `build.ticket.status_changed` · `sign.envelope.sent` · `sign.envelope.completed` · `sign.envelope.voided` · `support.ticket.created` · `support.ticket.resolved`
+
+No consumer was added to any of these. Their synchronous reactions remain the authoritative path.
+
 ## Todo
 
 - [x] Enumerate the 24 types from the producers and write the per-type verdict table into this ticket before writing any code
 - [x] For each "should have one", say what the consumer does and which module owns it
-- [ ] Implement the consumers one at a time, each with its own spec
+- [x] Implement the consumers one at a time, each with its own spec (`survey.response.submitted` — 17 tests, 0 typecheck errors)
+- [ ] Implement consumers for remaining types once product decisions are made (see table above)
 - [ ] Re-run the real flush and confirm the delivered/suppressed split matches the table
 - [ ] Set **Status** to `done` and update this ticket's row in `../README.md`
 
@@ -115,3 +148,30 @@ Writing seven consumers means deciding who gets notified, through which channel,
 The analysis is the deliverable that unblocks that work; it is done. Each consumer should ship as its own ticket with a product owner, using `DealClosedConsumerService` as the template — inbox claim fence, self-registration, its own tenant transaction.
 
 **Live state at time of writing:** 26 `accounting.journal.posted` PENDING (not yet flushed), 7 build-namespace events SUPPRESSED — consistent with their fire-and-forget verdicts.
+
+---
+
+## Update (2026-08-25) — one consumer wired, seven held
+
+The line held was: **implement only where an existing notification catalog entry already specifies the reaction.** Inventing a notification's audience, channel and wording is a product decision, and doing it unasked is the mistake recorded in c7 ticket 03.
+
+**Wired: `survey.response.submitted`** → `SurveyResponseSubmittedConsumerService` in the surveys module. Three catalog entries already existed (`survey.response.received`, `survey.certification.passed`, `survey.certification.failed`) and the recipients are FK-determined — the form owner, and the respondent via the participant record — so nothing had to be invented. 9 suites / 93 tests pass.
+
+**Held — each needs one specific decision:**
+
+| Event | The decision needed |
+|---|---|
+| `inventory.stock.low` | **Closest to ready** — the catalog entry already exists. Only question: which permission key identifies "inventory managers" (`inventory:replenishment:manage`? `inventory:stock:adjust`?). |
+| `accounting.bill.approved` | Who is notified, on what channel, in what words. |
+| `accounting.invoice.issued` | Internal staff notification, or send to the customer? |
+| `build.sprint.completed` | Audience and wording (only `sprint.started` / `sprint.ending` exist). |
+| `build.release.published` | Project members, stakeholders, or both. |
+| `inventory.purchase_order.received` | Who gets the goods-received alert — AP or procurement. |
+| `inventory.shipment.dispatched` | Internal sales team, or an external customer email. |
+| `inventory.sales_order.fulfilled` | **Money-moving** — creates an AR invoice. Needs product AND finance sign-off regardless of catalog state. |
+
+### One correction to the record
+
+The implementing agent reported that `DealClosedConsumerService` has an exactly-once defect — that claiming before the work leaves a committed inbox row if the work throws, so retries skip silently. **That is not correct, and it was checked rather than accepted.** `InboxConsumer.claim` writes through the ALS-routed handle, and the relay already wraps `consumer.handle(event)` in `runInNewTenantTransaction` — so the claim and the work share one transaction and a throw rolls back both.
+
+The new consumer opens its own `db.transaction` inside `handle()`, which becomes a savepoint nested in the relay's transaction. That is harmless and its tests pass, but it is an unnecessary divergence from the house pattern adopted on a false premise. Left as-is rather than churned; noted so the next consumer follows `DealClosedConsumerService` instead.
