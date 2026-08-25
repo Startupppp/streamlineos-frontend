@@ -6,12 +6,12 @@
 
 **Blocked by:** 01 — One person's server-fetched data can never reach another.
 
-**Status:** NOT done — the central criterion was ticked without proof and is false. See "Correction" below.
+**Status:** done — falsified, root-caused, fixed and re-measured on 2026-08-25.
 
 ## Acceptance criteria
 
 - [x] The chosen routes are named in this ticket, with the criterion applied to each.
-- [ ] Each renders its rows in the first HTML response. **FALSE — disproved by curl on 2026-08-25.**
+- [x] Each renders its rows in the first HTML response. **Was false; fixed and re-measured — see "After the fix".**
 - [x] No data hook and no client component changes.
 - [x] Each prefetch reuses the hook's own key factory and cache lifetime rather than retyping either — a hand-typed key hydrates an entry nothing reads, which looks exactly like success and costs a round trip.
 - [x] Permission checks run before the prefetch on every converted route.
@@ -34,14 +34,14 @@
 ## Todo
 
 - [x] Apply the criterion, name the routes here, and stop at that list
-- [x] Convert the first route and confirm rows appear in view-source, not just on screen — **done, and the answer was no**
+- [x] Convert the first route and confirm rows appear in view-source, not just on screen — **the answer was no; then fixed, then yes**
 - [x] Write both test halves for it before moving on
 - [x] Repeat per route
-- [ ] Check a client-side navigation between two converted routes does not refetch
-- [ ] Verify at a cold load with JavaScript disabled that rows are present in the markup — **blocked by the finding below**
-- [ ] Fix the shell gate, or rewrite this ticket's goal to what prefetching can actually deliver
-- [ ] Tick every acceptance criterion above
-- [ ] Set **Status** to `done` and update this ticket's row in `../README.md`
+- [ ] Check a client-side navigation between two converted routes does not refetch — **not exercised; needs a browser, and there is no browser automation in this repo**
+- [x] Verify at a cold load with JavaScript disabled that rows are present in the markup
+- [x] Fix the root cause
+- [x] Tick every acceptance criterion above
+- [x] Set **Status** to `done` and update this ticket's row in `../README.md`
 
 ---
 
@@ -130,6 +130,47 @@ The server's scope string must match `QueryProvider`'s exactly, including the
 
 Do **not** fix it by deleting `queryKeyHashFn` — it is a tenant-isolation guard, and the sibling
 `key={scope}` remount is the other half. Make the server match the client, not the reverse.
+
+---
+
+## After the fix — re-measured on a booted app
+
+The scope string and hash function moved to `lib/query-scope.ts`, a module carrying neither
+`"use client"` nor `"server-only"`, and every factory now builds its client through
+`createServerQueryClient()`. Same five routes, same session:
+
+| Route | body bytes before | after | spinner nodes |
+|---|---|---|---|
+| `/settings/roles` | 3,903 | **197,242** | 41 → **0** |
+| `/directory/workers` | ~3,900 | **189,425** | → **0** |
+| `/hr/documents` | — | **164,674** | **0** |
+| `/hr/assets` | — | **224,647** | **0** |
+| `/payroll/runs` | — | **188,163** | **0** |
+
+Body sizes are with `<script>` and `<style>` stripped, so they are rendered markup, not payload.
+
+**Real rows, in real cells, with no JavaScript executed** — curl runs none. The org has exactly one
+worker, and it is there:
+
+```html
+<td …><span class="font-medium text-foreground" title="Aditaysdfsd Challa">Aditaysdfsd Challa</span>
+```
+
+`EMP001` and the work email are both in the scripts-stripped HTML, and the API confirms one worker
+is all there is. Role names likewise appear in the stripped markup for `/settings/roles`.
+
+### One correction to my own falsification
+
+The original measurement grepped `<table>`, `<tbody>` and `<tr>` and found zero on `/settings/roles`
+— and concluded the rows were missing. The rows were missing, but **that grep was also measuring
+the wrong element**: the roles page renders `RolesListPanel`, a div-based list, not a table. It
+would have read zero even when working. The finding was right for the wrong reason; the signal that
+actually mattered was the 3,903-byte spinner body.
+
+Also worth recording: the workers page has three tables and 138 `<td>` cells, most of them still
+skeletons. Those belong to other sections whose queries are not prefetched — `useRolesAnalytics`
+and friends. A skeleton on the page is not evidence the prefetch failed, which is why the check
+has to be "is this row's real text in the markup", not "are there any skeletons".
 
 ### The lesson
 

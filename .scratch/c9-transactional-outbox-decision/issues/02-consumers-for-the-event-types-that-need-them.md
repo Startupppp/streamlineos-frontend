@@ -6,7 +6,7 @@ The evidence: 24 types emitted across 9 modules — `accounting.*` (7), `invento
 
 **Blocked by:** None — ticket 01 shipped the registry and the relay.
 
-**Status:** analysis complete · 1 of 8 wired · 7 need product input
+**Status:** analysis complete · 2 of 8 wired · 6 need product input
 
 ## Acceptance criteria
 
@@ -195,7 +195,7 @@ The line held was: **implement only where an existing notification catalog entry
 
 | Event | The decision needed |
 |---|---|
-| `inventory.stock.low` | **Closest to ready** — the catalog entry already exists. Only question: which permission key identifies "inventory managers" (`inventory:replenishment:manage`? `inventory:stock:adjust`?). |
+| ~~`inventory.stock.low`~~ | **DECIDED and WIRED 2026-08-25** — audience is `inventory:replenishment:manage`, catalogued as "Manage reorder rules and replenishment". The event fires when a variant crosses its **reorder point**, so that key names exactly the people who act on it; `inventory:stock:adjust` and `inventory:products:read` were rejected as wrong and far too wide. Channel and priority already came from the existing catalog entry. Recipients resolve through `AccessService.membersWithPermission`, which already accounts for roles, delegations, per-person grants and module ownership — rather than a second, weaker query beside it. `InvStockLowConsumerService`, registered in `inv-replenishment.module.ts`; 5 suites / 44 tests; madge still acyclic after the new Outbox and Notifications imports. |
 | `accounting.bill.approved` | Who is notified, on what channel, in what words. |
 | `accounting.invoice.issued` | Internal staff notification, or send to the customer? |
 | `build.sprint.completed` | Audience and wording (only `sprint.started` / `sprint.ending` exist). |

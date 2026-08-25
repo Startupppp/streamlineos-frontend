@@ -8,9 +8,19 @@ Tickets 01→02→03 are an expand→migrate→contract sequence on the server; 
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 04 | [Gated controls are there in the first paint](issues/04-access-is-prefetched-on-the-server.md) | — | **REOPENED** — true after hydration, false in the server HTML |
+| — | all six tickets complete and retired | — | **candidate complete** |
 
-**Ticket 04 reopened 2026-08-25.** An earlier pass marked its first-paint criterion PASS because the dehydrated access snapshot, with real scope keys, was found in the first HTML response. Finding data in the payload is not the control being rendered. Curl shows the served `<body>` is a full-screen spinner — same root cause as c8 ticket 02. Two other criteria that had never been verified *were* closed in the same pass, including the cross-tenant one: an org-A snapshot is unreadable under an org-B session because `orgId` is in the query key.
+**Candidate closed 2026-08-25**, after ticket 04 was falsified, root-caused, fixed and re-measured in one pass.
+
+It had been marked PASS because the dehydrated access snapshot, with real scope keys, was found in the first HTML response. **Finding data in the payload is not the control being rendered** — the served `<body>` was a 3,903-byte full-screen spinner.
+
+The cause was one line, shared with c8 ticket 02: the app hashes every query key with the signed-in scope prefixed (`query-provider.tsx:37`), while every prefetch factory built a plain `new QueryClient()` with the default hash. The snapshot hydrated into the cache holding its data, and `getQueryData` on the identical key returned `undefined`. So `prefetchAccess` was not merely failing to server-render — it was saving nothing at all.
+
+Fixed by moving the scope string and hash function to `lib/query-scope.ts`, a module with neither `"use client"` nor `"server-only"`, because both sides must hash identically. `createAppQueryClient` could not simply be reused on the server: it lives in a `"use client"` module and throws when called from a Server Component, which is very likely how the factories came to use a plain client.
+
+**The proof is the absence of the loading screen.** `dashboard-shell.tsx:166` renders `AppLoadingScreen` when `!access`, so a spinner in the server HTML *is* "access was undefined during SSR". Across five routes, `aria-busy="true"` nodes went 41 → **0** and the stripped `<body>` went 3,903 → 164,000–224,000 bytes.
+
+Two criteria that had never been verified were also closed, including the cross-tenant one: an org-A snapshot is unreadable under an org-B session because `orgId` is in the key.
 
 **On completing a ticket:** tick its todo list, set its `Status` to `done` in the ticket file, and update its row above.
 

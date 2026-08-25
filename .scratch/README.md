@@ -10,13 +10,32 @@ Nine candidates, nine specs in [`docs/specs/`](../docs/specs/README.md), 29 tick
 | [c7 — Chat message fan-out](c7-chat-message-fanout/README.md) | 3 | **3** | 0 | — complete |
 | [c5 — Payment provider adapter](c5-payment-provider-adapter/README.md) | 4 | **4** | 0 | — complete |
 | [c6 — Split help centre and wiki](c6-split-kb-help-centre-and-wiki/README.md) | 3 | **3** | 0 | — complete |
-| [c3 — One representation of capability](c3-one-representation-of-capability/README.md) | 6 | 5 | 1 | ticket 04 **reopened** — first paint is false in server HTML |
-| [c8 — Frontend server-data seam](c8-frontend-server-data-seam/README.md) | 3 | 2 | 1 | ticket 02 **reopened** — rows are not in the server HTML |
-| [c9 — Transactional outbox](c9-transactional-outbox-decision/README.md) | 1 → 4 | 2 | 2 | 7 consumers (one product decision each) · unify notifications (held) |
+| [c3 — One representation of capability](c3-one-representation-of-capability/README.md) | 6 | **6** | 0 | — complete |
+| [c8 — Frontend server-data seam](c8-frontend-server-data-seam/README.md) | 3 | 2 | 1 | ticket 02 done bar one browser-only check |
+| [c9 — Transactional outbox](c9-transactional-outbox-decision/README.md) | 1 → 4 | 2 | 2 | 6 consumers (one product decision each) · unify notifications (held) |
 
-**29 tickets → 26 retired, 4 open. Six candidates complete: c1, c2, c4, c5, c6, c7.**
+**29 tickets → 27 retired, 3 open. Seven candidates complete: c1, c2, c3, c4, c5, c6, c7.**
 
-The open count fell by four and rose by two: c5, c6 and c8-03 closed on live evidence, and **c3-04 and c8-02 were reopened because criteria had been ticked without proof and are false.** Reopening them is the result, not a setback — see the correction sections in both tickets.
+## The one defect worth remembering from this program
+
+Two tickets were ticked, then falsified, then root-caused, then fixed, in that order — and the cause was a single line.
+
+`query-provider.tsx:37` hashes every query key with the signed-in scope prefixed, as a tenant guard. All five prefetch factories built a plain `new QueryClient()` with the **default** hash. So `dehydrate()` wrote `["streamlineos","access","me",…]`, `hydrate()` inserted under it, and every lookup in the app computed `["authenticated:org:user",["streamlineos","access","me",…]]`.
+
+The entry was in the cache, `status:"success"`, holding its data — and `getQueryData` on the identical key returned `undefined`. **Every server prefetch in the application was dead.** Nothing failed; the page refetched and looked fine.
+
+Why it survived so long, and what each layer could not see:
+
+- **Typecheck, `next build`, 99 suites** — all green. A hash mismatch is not a type error.
+- **The prefetch tests** assert the cache gets populated. They never look at markup, so they cannot fail when the shell refuses to render.
+- **The factory tests** mock the factory out entirely and assert the route's permission-check ordering. Not one of them ever ran a real factory.
+- **A verification pass** marked it PASS on finding the snapshot in the first HTML with real scope keys. Data in the payload is not a control being rendered.
+
+It is the exact failure c8-02's own criteria named — *"a hand-typed key hydrates an entry nothing reads, which looks exactly like success"* — reached by a route nobody checked: not a hand-typed key, a one-sided hash function.
+
+**Fixed** by moving the scope string and hash into `lib/query-scope.ts`, carrying neither `"use client"` nor `"server-only"`, since both sides must hash identically. `createAppQueryClient` could not be reused on the server — it is in a `"use client"` module and throws from a Server Component, which is very likely how the factories came to use a plain client at all.
+
+**Re-measured:** `aria-busy="true"` nodes 41 → **0** across five routes; scripts-stripped `<body>` 3,903 → 164,000–224,000 bytes; the org's single worker renders as a real cell with no JavaScript executed. The new test hydrates a server-dehydrated state into the app's own client, and reverting one factory was confirmed to fail it.
 
 ## Verification state (2026-08-25)
 
