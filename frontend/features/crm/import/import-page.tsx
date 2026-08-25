@@ -14,7 +14,7 @@ import {
   usePreviewImport,
   useRevertImport,
 } from "@/hooks/api/crm/import";
-import { parseCsv } from "@/lib/csv-parse";
+import { CsvParseError, parseCsv } from "@/lib/csv-parse";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
@@ -30,18 +30,58 @@ export function CrmImportPage() {
   const [parsed, setParsed] = useState<{ filename?: string; headers: string[]; rows: string[][] } | null>(null);
   const [overrides, setOverrides] = useState<Record<string, string>>({});
   const [preview, setPreview] = useState<ImportPreview | null>(null);
+  /**
+   * The answers the *current* preview was actually built from.
+   *
+   * Committing sends nothing but `crmImportId` — the server replays the plan it
+   * persisted at preview time, and overrides are applied only while planning.
+   * So a choice made after the preview returned has not reached the plan, and
+   * without this the local `overrides` would vouch for a plan that never saw
+   * them: the mapping panel says "You chose Email", the commit button enables,
+   * and the import runs with that column still unmapped.
+   */
+  const [previewOverrides, setPreviewOverrides] = useState<Record<string, string>>({});
   const [committed, setCommitted] = useState<{ crmImportId: string; created: number; updated: number } | null>(null);
 
   const previewImport = usePreviewImport();
   const commitImport = useCommitImport();
   const revertImport = useRevertImport();
 
-  const unanswered = preview?.needsConfirmation.filter((column) => !overrides[column.header]) ?? [];
+  /**
+   * What is still unanswered, taken from the server rather than from local
+   * state. `applyOverrides` rewrites an answered column to `mapped`, and
+   * `needsConfirmation` reports only the `ambiguous` ones — so the plan itself
+   * is the honest account of what is still open.
+   */
+  const unanswered = preview?.needsConfirmation ?? [];
+  /** Answers have moved on since this plan was built, so it no longer describes what would happen. */
+  const choicesChanged = preview !== null && !sameAnswers(overrides, previewOverrides);
 
   function readFile(file: File) {
+    // A new file invalidates everything staged for the old one. Cleared up
+    // front so that every early return below leaves nothing behind — a
+    // rejected file used to leave the previous one loaded and importable,
+    // under the new file's name in the user's mind.
+    setParsed(null);
+    setPreview(null);
+    setPreviewOverrides({});
+    setCommitted(null);
+    setOverrides({});
+
     const reader = new FileReader();
+    reader.onerror = () => toast.error("That file could not be read. Try selecting it again.");
     reader.onload = () => {
-      const { headers, rows } = parseCsv(String(reader.result ?? ""));
+      let headers: string[];
+      let rows: string[][];
+      try {
+        ({ headers, rows } = parseCsv(String(reader.result ?? "")));
+      } catch (error) {
+        // A file that cannot be parsed unambiguously is refused outright.
+        // Importing an approximation of someone's data is worse than not
+        // importing it, because nothing downstream would reveal the difference.
+        toast.error(error instanceof CsvParseError ? error.message : getErrorMessage(error));
+        return;
+      }
 
       if (headers.length === 0) {
         toast.error("That file has no header row.");
@@ -53,26 +93,29 @@ export function CrmImportPage() {
       }
 
       setParsed({ filename: file.name, headers, rows });
-      setPreview(null);
-      setCommitted(null);
-      setOverrides({});
     };
     reader.readAsText(file);
   }
 
   function runPreview() {
     if (!parsed) return;
+    // Captured rather than read at settle time: the answers this plan is built
+    // from are the ones sent with it, not whatever state holds when it returns.
+    const sent = overrides;
     previewImport.mutate(
-      { ...parsed, overrides: Object.keys(overrides).length > 0 ? overrides : undefined },
+      { ...parsed, overrides: Object.keys(sent).length > 0 ? sent : undefined },
       {
-        onSuccess: (result) => setPreview(result),
+        onSuccess: (result) => {
+          setPreview(result);
+          setPreviewOverrides(sent);
+        },
         onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
   }
 
   function runCommit() {
-    if (!preview) return;
+    if (!preview || choicesChanged) return;
     commitImport.mutate(preview.crmImportId, {
       onSuccess: (result) => {
         setCommitted({ crmImportId: preview.crmImportId, ...result });
@@ -222,9 +265,15 @@ export function CrmImportPage() {
                 ))}
               </ul>
 
-              {unanswered.length > 0 ? (
+              {choicesChanged ? (
                 <p role="alert" className="text-label text-status-warning-ink">
-                  Answer {unanswered.length} {unanswered.length === 1 ? "column" : "columns"} above first.
+                  Your column choices changed. Check again to see what they would do — this plan
+                  was built before them.
+                </p>
+              ) : unanswered.length > 0 ? (
+                <p role="alert" className="text-label text-status-warning-ink">
+                  Answer {unanswered.length} {unanswered.length === 1 ? "column" : "columns"} above,
+                  then check again.
                 </p>
               ) : null}
 
@@ -232,7 +281,7 @@ export function CrmImportPage() {
                 type="button"
                 className="self-start"
                 isPending={commitImport.isPending}
-                disabled={unanswered.length > 0 || preview.summary.total === 0}
+                disabled={unanswered.length > 0 || choicesChanged || preview.summary.total === 0}
                 onClick={runCommit}
               >
                 Import {preview.summary.create + preview.summary.update} records
@@ -267,6 +316,18 @@ export function CrmImportPage() {
       ) : null}
     </div>
   );
+}
+
+/**
+ * Whether two sets of column answers are the same.
+ *
+ * A shallow compare is exactly right: the values are field names chosen from a
+ * fixed list, so there is nothing nested to miss.
+ */
+function sameAnswers(a: Record<string, string>, b: Record<string, string>): boolean {
+  const keys = Object.keys(a);
+  if (keys.length !== Object.keys(b).length) return false;
+  return keys.every((key) => a[key] === b[key]);
 }
 
 function toneFor(action: string): string {

@@ -1,15 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  CheckSquare,
-  ChevronDown,
-  MoveRight,
-  UserPlus,
-  Mail,
-  FileText,
-  Undo2,
-} from "lucide-react";
+import { CheckSquare, ChevronDown, FileText, HelpCircle, Mail, MoveRight, Undo2, UserPlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { statusToneClasses, type StatusTone } from "@/lib/design-tokens";
@@ -78,8 +70,22 @@ export function DecisionEntryRow({
 }: DecisionEntryRowProps) {
   const [showDetail, setShowDetail] = useState(false);
 
-  const Icon = KIND_ICON[decision.kind];
-  const outcomeTone = OUTCOME_TONE[decision.outcome];
+  /**
+   * Every lookup below is keyed on a value the *server* chose, so none of them
+   * is as total as its `Record<DecisionKind, …>` type claims. `DECISION_KINDS`
+   * and `DECISION_OUTCOMES` are hand-duplicated across the two repositories
+   * with no shared contract, so adding a sixth kind server-side would resolve
+   * `Icon` to `undefined` and `<Icon />` throws "Element type is invalid" —
+   * taking down the entire review feed through `crm/error.tsx`.
+   *
+   * This page is the whole oversight mechanism for a product that acts without
+   * asking. It must degrade to showing an unfamiliar decision plainly, never to
+   * showing nothing: an unreviewable action is worse than an unlabelled one.
+   */
+  const Icon = KIND_ICON[decision.kind] ?? HelpCircle;
+  const kindLabel = KIND_LABELS[decision.kind] ?? decision.kind;
+  const outcomeTone = OUTCOME_TONE[decision.outcome] ?? "neutral";
+  const outcomeLabel = OUTCOME_LABELS[decision.outcome] ?? decision.outcome;
   const subject = subjectOf(decision);
 
   /**
@@ -118,12 +124,12 @@ export function DecisionEntryRow({
         <div className="min-w-0 flex-1">
           {/* Wraps on a phone, sits on one line from sm up. */}
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="text-sm font-medium">{KIND_LABELS[decision.kind]}</span>
+            <span className="text-sm font-medium">{kindLabel}</span>
             {subject ? (
               <span className="truncate text-sm text-muted-foreground">{subject}</span>
             ) : null}
             <Badge variant="outline" className={cn("text-micro", tone(outcomeTone))}>
-              {OUTCOME_LABELS[decision.outcome]}
+              {outcomeLabel}
             </Badge>
           </div>
 

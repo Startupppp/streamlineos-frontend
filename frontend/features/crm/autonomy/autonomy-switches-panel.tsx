@@ -6,6 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCan } from "@/hooks/api/access";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useAutonomySwitches, useSetAutonomySwitch } from "@/hooks/api/crm/autonomy";
 import { KIND_LABELS, type EffectiveSwitch } from "@/types/crm/autonomy";
 
@@ -67,6 +68,20 @@ export function AutonomySwitchesPanel() {
         {data?.effective.map((effective) => {
           const platformVeto = vetoedByPlatform(effective);
           const busy = setSwitch.isPending && setSwitch.variables?.kind === effective.kind;
+          /**
+           * A failed toggle must say so, on the row it failed on.
+           *
+           * Nothing here is optimistic — the `Switch` is driven by server data —
+           * so a rejected PATCH simply leaves it where it was. Without this the
+           * only feedback is the control snapping back, which reads as a
+           * mis-click. This is the one switch whose purpose is stopping the
+           * product from acting: an admin who believes they turned automation
+           * off and did not is the worst outcome this screen can produce.
+           */
+          const failed =
+            setSwitch.isError && setSwitch.variables?.kind === effective.kind
+              ? getErrorMessage(setSwitch.error)
+              : null;
 
           return (
             <div
@@ -103,6 +118,14 @@ export function AutonomySwitchesPanel() {
                   }
                 />
               </div>
+
+              {/* `w-full` so the wrapping row puts it on its own line, under the
+                  control it belongs to rather than beside it. */}
+              {failed ? (
+                <p role="alert" className="w-full text-label text-status-danger-ink">
+                  {failed} — this action is still {effective.allowed ? "on" : "off"}.
+                </p>
+              ) : null}
             </div>
           );
         })}

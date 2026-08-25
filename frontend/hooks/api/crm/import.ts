@@ -63,18 +63,31 @@ export function useRevertImport() {
  * and would 401 in a new tab.
  */
 export async function downloadExport(entity: string, format: "csv" | "json"): Promise<void> {
-  const path = entity === "archive" ? "/crm/export/archive" : `/crm/export?entity=${entity}&format=${format}`;
-  const body = await apiClient.get<unknown>(path);
+  const isJson = format === "json" || entity === "archive";
+  const path = entity === "archive" ? "/crm/export/archive" : "/crm/export";
+  const params = entity === "archive" ? undefined : { entity, format };
 
-  const text = typeof body === "string" ? body : JSON.stringify(body, null, 2);
-  const type = format === "json" || entity === "archive" ? "application/json" : "text/csv";
-  const extension = format === "json" || entity === "archive" ? "json" : "csv";
+  /**
+   * `download`, not `get`. The export endpoint writes its body with `res.send`,
+   * bypassing the envelope interceptor — so a CSV arrives as raw `text/csv`,
+   * and `apiClient.get` would hand it to `parseApiResponse`, which calls
+   * `res.json()` with no guard on the success path. Every CSV export therefore
+   * failed with a `SyntaxError` surfaced as a toast, and nothing downloaded.
+   *
+   * Taking the `Blob` also preserves the server's exact bytes rather than
+   * re-serialising them, which matters for the JSON archive: parsing and
+   * re-stringifying it reformats a file the user may diff or re-import.
+   */
+  const blob = await apiClient.download(path, params);
 
-  const url = URL.createObjectURL(new Blob([text], { type }));
+  const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `${entity}-${new Date().toISOString().slice(0, 10)}.${extension}`;
+  link.download = `${entity}-${new Date().toISOString().slice(0, 10)}.${isJson ? "json" : "csv"}`;
+  // Appended before clicking: a detached anchor's click is ignored outside Chrome.
+  document.body.appendChild(link);
   link.click();
+  link.remove();
   // Revoked, or every export leaks a blob for the life of the tab.
   URL.revokeObjectURL(url);
 }
