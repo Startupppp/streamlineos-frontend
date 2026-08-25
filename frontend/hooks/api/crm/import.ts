@@ -4,9 +4,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
-  CommitResult,
+  ImportProgress,
   ImportPreview,
-  RevertResult,
 } from "@/types/crm/import";
 
 /**
@@ -18,6 +17,7 @@ import type {
  */
 export function usePreviewImport() {
   return useMutation({
+    mutationKey: ["crm", "imports", "preview"],
     mutationFn: (input: {
       filename?: string;
       headers: string[];
@@ -28,69 +28,62 @@ export function usePreviewImport() {
 }
 
 /**
- * How many times a single import may be asked to continue.
+ * How long to wait between polls.
  *
- * Each call commits for about twenty seconds, so this is roughly ten minutes of
- * work — far beyond the 5,000-row ceiling the upload accepts. It exists so that
- * a server that somehow stops making progress cannot spin here forever.
+ * The server works in short attempts and returns as soon as one is spent, so
+ * polling faster than this buys nothing and costs a request per second.
  */
-const MAX_COMMIT_CALLS = 30;
+const POLL_MS = 1_500;
+
+/** A ceiling on polling, so a job that stops advancing cannot spin forever. */
+const MAX_POLLS = 400;
 
 export function useCommitImport() {
   const queryClient = useQueryClient();
 
   return useMutation({
     /**
-     * Commits until the server says it is done.
+     * Starts the import, then polls until it says it is done.
      *
-     * The server works under a time budget and returns `complete: false` with
-     * the rows it did not reach, rather than holding one request open until a
-     * statement timeout kills it and rolls the whole thing back. So finishing
-     * is the client's job. Each iteration is a separate request, which matters:
-     * `authedFetch` mints a fresh `Idempotency-Key` per request, and reusing one
-     * would make the server replay the first response and the import would never
-     * advance.
+     * The commit is a durable workflow: one POST starts (or re-joins) the run
+     * and executes a single attempt, so finishing takes several calls. The only
+     * terminating condition is `complete`.
+     *
+     * The previous version also stopped when a call reported no progress, on the
+     * reasoning that a stalled pass could not be helped by asking again. That
+     * was true of the inline implementation and is false now — a poll landing
+     * between attempts legitimately reports zero, and treating it as fatal would
+     * abandon a healthy import.
      */
     mutationFn: async ({
       crmImportId,
       onProgress,
     }: {
       crmImportId: string;
-      onProgress?: (soFar: CommitResult) => void;
-    }): Promise<CommitResult> => {
-      const total: CommitResult = {
-        created: 0,
-        updated: 0,
-        failed: 0,
-        remaining: 0,
-        complete: false,
-      };
+      onProgress?: (progress: ImportProgress) => void;
+    }): Promise<ImportProgress> => {
+      let progress = await apiClient.post<ImportProgress>(
+        `/crm/imports/${crmImportId}/commit`,
+        {},
+      );
+      onProgress?.(progress);
 
-      for (let call = 0; call < MAX_COMMIT_CALLS; call++) {
-        const batch = await apiClient.post<CommitResult>(
-          `/crm/imports/${crmImportId}/commit`,
-          {},
-        );
-        total.created += batch.created;
-        total.updated += batch.updated;
-        total.failed += batch.failed;
-        // Not summed: it is what is left right now, not a running tally.
-        total.remaining = batch.remaining;
-        total.complete = batch.complete;
-
-        if (batch.complete) return total;
-        onProgress?.({ ...total });
-
-        // No progress and not complete means asking again will not help.
-        if (batch.created + batch.updated + batch.failed === 0)
+      for (let poll = 0; poll < MAX_POLLS && !progress.complete; poll++) {
+        await new Promise((resolve) => setTimeout(resolve, POLL_MS));
+        progress = await apiClient.get<ImportProgress>(`/crm/imports/${crmImportId}/progress`);
+        onProgress?.(progress);
+        if (progress.status === "failed")
           throw new Error(
-            `The import stopped with ${batch.remaining} rows left and made no progress. Nothing was undone — you can try again.`,
+            `The import stopped with ${progress.remaining} of ${progress.total} rows left. What it had already written stands, and you can take the whole import back.`,
           );
       }
 
-      throw new Error(
-        `The import is taking more calls than expected and has been stopped with ${total.remaining} rows left. Nothing was undone.`,
-      );
+      if (!progress.complete)
+        throw new Error(
+          `The import is still running after ${Math.round((MAX_POLLS * POLL_MS) / 60_000)} minutes and this page has stopped watching it. It has not been cancelled — reopen this import to see where it got to.`,
+        );
+
+      return progress;
     },
     onSuccess: () => {
       // An import touches parties, contacts and subjects at once; anything on
@@ -105,8 +98,9 @@ export function useRevertImport() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: ["crm", "imports", "revert"],
     mutationFn: (crmImportId: string) =>
-      apiClient.post<RevertResult>(`/crm/imports/${crmImportId}/revert`, {}),
+      apiClient.post<ImportProgress>(`/crm/imports/${crmImportId}/revert`, {}),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.crm.all });
       void queryClient.invalidateQueries({ queryKey: queryKeys.party.all });

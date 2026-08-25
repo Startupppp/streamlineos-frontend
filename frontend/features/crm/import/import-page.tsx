@@ -18,7 +18,7 @@ import { CsvParseError, parseCsv } from "@/lib/csv-parse";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
-import { EXPORT_ENTITIES, type ImportPreview } from "@/types/crm/import";
+import { EXPORT_ENTITIES, type ImportPreview, type ImportProgress } from "@/types/crm/import";
 import { ColumnMappingReview } from "./column-mapping-review";
 
 /** A file this size is a paste, not a migration; the connectors are Phase 2. */
@@ -41,7 +41,7 @@ export function CrmImportPage() {
    * and the import runs with that column still unmapped.
    */
   const [previewOverrides, setPreviewOverrides] = useState<Record<string, string>>({});
-  const [committed, setCommitted] = useState<{ crmImportId: string; created: number; updated: number } | null>(null);
+  const [committed, setCommitted] = useState<ImportProgress | null>(null);
   /**
    * How far a multi-call commit has got.
    *
@@ -130,19 +130,21 @@ export function CrmImportPage() {
         crmImportId: preview.crmImportId,
         onProgress: (soFar) =>
           setProgress({
-            done: soFar.created + soFar.updated + soFar.failed,
+            done: soFar.created + soFar.updated + soFar.merged + soFar.skipped + soFar.failed,
             remaining: soFar.remaining,
           }),
       },
       {
         onSuccess: (result) => {
           setProgress(null);
-          setCommitted({ crmImportId: preview.crmImportId, ...result });
-          toast.success(
-            result.failed > 0
-              ? `${result.created} created, ${result.updated} updated, ${result.failed} could not be read`
-              : `${result.created} created, ${result.updated} updated`,
-          );
+          setCommitted(result);
+          const parts = [`${result.created} created`, `${result.updated} updated`];
+          if (result.merged > 0) parts.push(`${result.merged} folded into rows above`);
+          // Not written, and the reason a person needs to know: they are waiting
+          // in the data quality queue for somebody's judgement, not lost.
+          if (result.review > 0) parts.push(`${result.review} sent for review`);
+          if (result.failed > 0) parts.push(`${result.failed} could not be read`);
+          toast.success(parts.join(", "));
         },
         onError: (error) => {
           setProgress(null);
@@ -156,7 +158,9 @@ export function CrmImportPage() {
     if (!committed) return;
     revertImport.mutate(committed.crmImportId, {
       onSuccess: (result) => {
-        toast.success(`Undone — ${result.deleted} removed, ${result.restored} put back`);
+        // Revert returns the same job shape as commit now, so what came back is
+        // a count of rows undone rather than two separate tallies.
+        toast.success(`Undone — ${result.reverted} of ${result.total} rows put back as they were`);
         setCommitted(null);
         setPreview(null);
         setParsed(null);
@@ -286,6 +290,8 @@ export function CrmImportPage() {
               <div className="flex flex-wrap gap-gap-grid">
                 <Summary label="Created" value={preview.summary.create} tone="success" />
                 <Summary label="Updated" value={preview.summary.update} tone="info" />
+                <Summary label="Merged" value={preview.summary.merge} tone="info" />
+                <Summary label="For review" value={preview.summary.review} tone="warning" />
                 <Summary label="Skipped" value={preview.summary.skip} tone="neutral" />
               </div>
 
@@ -318,8 +324,9 @@ export function CrmImportPage() {
 
               {progress ? (
                 <p aria-live="polite" className="text-label text-muted-foreground">
-                  {progress.done} done, {progress.remaining} to go — this file needs
-                  more than one pass. Leave the page open.
+                  {progress.done} done, {progress.remaining} to go. This runs on the
+                  server and carries on if you leave — reopen the import to see where
+                  it got to.
                 </p>
               ) : null}
 
@@ -389,7 +396,7 @@ function Summary({
 }: {
   label: string;
   value: number;
-  tone: "success" | "info" | "neutral";
+  tone: "success" | "info" | "warning" | "neutral";
 }) {
   return (
     <div>
