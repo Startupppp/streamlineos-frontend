@@ -1,6 +1,6 @@
 # 01 — Expand: Party absorbs the legacy fields, and a resolver maps old ids to it
 
-**Status:** not started
+**Status:** done — see notes
 **Track:** A — identity convergence
 **Blocks:** 02-08
 **Blocked by:** —
@@ -41,3 +41,18 @@ The scale, measured on this branch rather than taken from the PRD:
 `leads` 70 module files, `contacts` 29, `clients` 24, `businessParties` 9,
 across 14 modules — `crm` 25, `leads` 19, `ai` 11, `clients` 8, `email` 7,
 `contacts` 6, then a long tail of 1-3 each.
+
+## Notes (2026-08-25)
+
+Done and merged. 35 columns absorbed, three map tables with composite FKs to both
+sides, resolver at `src/modules/party/party-legacy-seam.ts`. Migrations 0240 and
+0241 applied and verified against the database: 16 columns to 51, zero unmapped
+rows in every legacy table. Six fixture-based DB tests prove totality,
+idempotency and soft-delete parity — totality is the one property a mocked
+database cannot demonstrate.
+
+**Design finding, unresolved:** `contacts.organization_id` is a real FK to
+`crm_organizations`, and a party's employer should be another party. Nothing
+gives `crm_organizations` parties to point at, so only the free text survives in
+`company_name`. That is the largest gap and it blocks a clean contract of
+`contacts` in ticket 08.

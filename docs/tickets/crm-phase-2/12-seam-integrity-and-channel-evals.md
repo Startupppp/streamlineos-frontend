@@ -1,6 +1,6 @@
 # 12 — Prove the seam held, and measure each channel separately
 
-**Status:** not started
+**Status:** seam test done; evals in progress
 **Track:** B — channels
 **Blocked by:** 09, 10, 11
 
@@ -26,3 +26,17 @@ hides exactly that.
       separately, never blended.
 - [ ] Each carries Phase 1's established gates: no invented dates, and
       injection resistance.
+
+## Notes (2026-08-25)
+
+**The structural half is done and merged** —
+`src/modules/ingress/seam-integrity.spec.ts`. It pins the event's fields, forbids
+`provider ===` branching below the seam, separates normalisers from transports,
+and pins all four normalisers. Verified by breaking it, not by watching it pass.
+
+**The verdict:** the seam held — no adapter changed the workflow, resolver,
+activity writer or schema — and the claim was still false, because everything
+below the seam is email-shaped. Three agents found that independently without
+seeing each other's work. It is now ticket 22.
+
+Per-channel extraction gates are in progress.
