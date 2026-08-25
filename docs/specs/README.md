@@ -1,34 +1,69 @@
-# Architecture review — nine candidate PRDs
+# Architecture review — the candidate PRDs
 
-Derived from the architecture review of **2026-08-23** (scope: org- and module-level RBAC, billing, chat, calendar, notifications, inbox, knowledge base / wiki, chatbot).
+Two rounds. **c1–c9** came from the review of **2026-08-23** (scope: org- and module-level RBAC, billing, chat, calendar, notifications, inbox, knowledge base / wiki, chatbot) and are **all closed**. **c10–c18** come from the four-pass review of **2026-08-25**, which went deeper on query cost, schema, deletion and reliability.
 
-**Every candidate was re-verified at source on 2026-08-25 before its PRD was written.** Five had shipped in the ~85 commits between the review and that date. Each PRD is headed with its verified status and specs only what actually remains — read the status line before planning work.
+## Round one — c1–c9, closed
 
-| # | Candidate | Verified status | What remains |
+Verified at source 2026-08-25. Every one shipped; the status lines inside those files predate the work and are kept for history.
+
+| # | Candidate | Closed by |
+|---|---|---|
+| [c1](c1-kb-visibility-seam.md) | KB visibility predicate as a seam | `isPageIndexable` is lifecycle-only now — no visibility rule at index time |
+| [c2](c2-calendar-source-registry.md) | Calendar source seam | `calendar_source_preferences` table + service; per-person toggles persist |
+| [c3](c3-one-representation-of-capability.md) | One representation of capability | Flat array gone, `usePermissions` removed, `useScope` has a production consumer |
+| [c4](c4-module-availability-interface.md) | One interface for module availability | One `isCoreModuleKey`; the four remaining stubs are all test fixtures |
+| [c5](c5-payment-provider-adapter.md) | Route the money through the adapter | Adapter + `adapters/`, zero provider calls in `BillingService`, import-boundary spec |
+| [c6](c6-split-kb-help-centre-and-wiki.md) | Split the two products inside `kb/` | `help-centre/` and `wiki/` split; no dual frontend directories |
+| [c7](c7-chat-message-fanout.md) | Chat send path as a fan-out module | `ChatMessageFanoutService` behind `MessageFanout` |
+| [c8](c8-frontend-server-data-seam.md) | Frontend server-data seam | 28 of 29 retired; 11 hydration boundaries, 5 prefetch modules |
+| [c9](c9-transactional-outbox-decision.md) | Decide what the outbox is for | Wired — 6 consumers register via `InboxConsumer`, flush is cron-guarded |
+
+## Round two — c10–c18
+
+| # | Candidate | What it fixes | Wave |
 |---|---|---|---|
-| [c1](c1-kb-visibility-seam.md) | KB visibility predicate as a seam both paths cross | **Shipped**, one residue | `isPageIndexable` still hand-writes a visibility rule at index time — no longer a leak, now a capability gap: authors and project members cannot find their own pages via search |
-| [c2](c2-calendar-source-registry.md) | Calendar source seam | **Shipped** | Per-person source toggles are not stored, so the product's "toggleable sources" promise is half delivered |
-| [c3](c3-one-representation-of-capability.md) | One representation of "what may this person do" | **Half shipped** | Server still builds the flat array; `usePermissions()` resurrected it on the client; gated controls still flash; `useScope` has no production consumer |
-| [c4](c4-module-availability-interface.md) | One interface answers module availability | **Seam shipped, inputs did not** | Two of four callers stub `getPlanLockedModules`; three different definitions of `isCoreModule` feed the one seam |
-| [c5](c5-payment-provider-adapter.md) | Route the money through the adapter | **Not started** | `BillingService` injects `RazorpayService` and calls it at 11 sites, including all three money operations the interface declares |
-| [c6](c6-split-kb-help-centre-and-wiki.md) | Split the two products inside `kb/` | **Shipped on the backend** | Frontend still has `features/kb` vs `features/knowledge-base`; `migration/` has no end date; shared `kb:` namespace is undecided |
-| [c7](c7-chat-message-fanout.md) | Chat send path as a fan-out module | **Shipped** | Seam built but unused for its purpose: push is still in-process, and the fan-out re-reads the sender on every message |
-| [c8](c8-frontend-server-data-seam.md) | Frontend server-data seam | **Seam built, rollout at 1 route** | 590 pages, 343 `"use client"` — unchanged. One route prefetches. Access is the highest-leverage next one |
-| [c9](c9-transactional-outbox-decision.md) | Decide what the transactional outbox is for | **Unchanged — a decision, not a defect** | 23 producers, 1 consumer, `flush()` a no-op by design. Wire it or retire it |
+| [c10](c10-module-role-standing.md) | Make module standing answerable | A module owner cannot list their own module's members | 3 |
+| [c11](c11-read-cost-budgets.md) | Read-cost budgets in CI | The one instrument that proves a query is fast guards 2 of 3,385 routes | 1 |
+| [c12](c12-text-search-id-probe.md) | Route search through the id probe | Global search bypasses the indexes built for it — 5 parallel seq scans per keystroke | 0 |
+| [c13](c13-one-list-contract.md) | One contract for every list | A ticket past #100 cannot be opened at all — deep links silently fail | 0 |
+| [c14](c14-set-based-sweeps.md) | Sweeps operate on sets | Leave accrual: 5,000 reads and 2,500 transactions per org, per month | 1 |
+| [c15](c15-outbound-io-leaves-the-request.md) | Outbound I/O leaves the transaction | Every request holds a transaction; three providers have no timeout | 0 |
+| [c16](c16-schema-says-what-it-means.md) | The schema says what it means | Two person tables, naive calendar timestamps, write-only recurrence | 2 |
+| [c17](c17-billing-writes-are-provable.md) | Every billing write is provable | Paid-not-credited, inert coupon guards, quota fails open | 0 |
+| [c18](c18-removals-are-proved.md) | Removals are proved, not grepped | A route scan was wrong by three orders of magnitude | 2 |
+
+## The verdict, unchanged across four passes
+
+**The architecture does not need replacing.** Zero import cycles in both repos. Zero unused frontend files across 4,429. The backend's only 11 unused files are a deliberate, spec-guarded arrangement. CI rebuilds the database from empty. The RBAC model as originally envisioned — org owner/admin/member, module owner/admin/member, per-permission grants, cross-org membership — is **substantially already built**, and the ladder is structural and stored rather than a naming convention.
+
+What the fourth pass found was not systemic decay. It was **four concentrated problems and one structural gap**: the instrument that proves a query is fast exists and is pointed at two queries.
 
 ## Suggested order
 
-1. **c8's access prefetch** — one edit to the authenticated layout. Ends the gated-control flash on every authenticated page and closes half of c3.
-2. **c4's stubbed inputs** — two `async () => []` literals delete a branch of a state machine. Reconcile `isCoreModule` first, behind the snapshot/authorize parity test.
-3. **c5** — the only remaining gap on a money path, and the only candidate that has not moved at all.
-4. **c3's backend half** — five call sites, one `@Global()` service, and a test that cannot be written today.
-5. **c6's frontend rename** — cheapest work in the review, highest legibility payoff.
-6. **c9** — decide, with the row-count evidence, before any code moves.
-7. **c1's index eligibility** and **c7's sender read** — small, safe, do them when in the file.
-8. **c2's toggles** — a product feature, not an architecture fix; schedule as such.
+**Wave 0 — stops a loss or fixes a live bug.**
+
+1. **c17's webhook and guards** — a customer can pay and not be credited; a single-use coupon is unlimited; quota fails open. Each is small and each is currently losing money.
+2. **c15's timeouts** — three providers with no deadline, inside a transaction that spans the request. One line each, and it is a pool-exhaustion fix rather than a politeness one.
+3. **c13's ticket-by-key** — the only correctness bug found in the review. Tickets past the hundredth cannot be opened; deep links, notification links and shared URLs fail.
+4. **c12's search routing** — the highest-traffic query in the product, currently five parallel sequential scans. The pattern is already written and proven in `leads-read`.
+
+**Wave 1 — stops recurrence.**
+
+5. **c11's read budgets** — the highest-leverage item in the review. Every finding above was found by a person reading source; none of it needed to be.
+6. **c14's leave accrual** — background work fails quietly and multiplies by tenant count.
+
+**Wave 2 — mechanical, parallelisable.**
+
+7. **c13's remaining items**, **c16's four schema defects**, **c18's consolidations**.
+
+**Wave 3 — the read side.**
+
+8. **c10** — module standing. A gap in the product, not a defect in the model.
 
 ## Reading these
 
-- **No file paths with line numbers are load-bearing.** They were accurate on 2026-08-25 and cited as evidence, not as instructions. Re-read at source.
-- **The review itself is one day stale in places** — c3 in particular. Anyone working from the review HTML rather than these PRDs will try to delete fields that no longer exist.
-- Candidates the review deliberately did not raise (downgrade not revoking a paid module, the frontend permission subset, two-segment keys, `PermissionGuard` not being global, per-request transaction count, jsonb reactions / plaintext invite tokens / serial PKs / unpartitioned chat) are recorded decisions or already-disproved claims. Do not re-raise them.
+- **No file path or line number is load-bearing.** They were accurate on 2026-08-25 and cited as evidence, not instruction. Re-read at source.
+- **Each spec's "Already shipped" section is as important as its "To build".** Round one's main failure mode was re-specifying work that had landed.
+- **Numbers in these specs are measured, not estimated.** Where a number was corrected mid-review, the correction is recorded rather than the original quietly replaced.
+- **Static analysis produces candidates, not conclusions.** Three scans in this review were wrong in the same direction — a route join off by three orders of magnitude, an N+1 count of 155 that was really 57, an unbounded-read count of 588 that was really about 85. All three were caught by classifying rather than counting. c18 records the standard.
+- **Deliberately not raised**, because they are recorded decisions or already-disproved claims: the frontend permission-key subset (intentional and tested), downgrade not revoking an enabled module, table splitting by width, key-type unification, migrating all naive timestamps, wrapping every `ilike()` call site, and `PermissionGuard` not being global. Do not re-raise them.
