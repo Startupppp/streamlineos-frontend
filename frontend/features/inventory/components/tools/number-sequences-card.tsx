@@ -94,7 +94,7 @@ function SequenceRow({
             min={seq.nextNumber}
           />
           {state.nextNumberError && (
-            <p className="text-[10px] text-destructive mt-0.5">{state.nextNumberError}</p>
+            <p className="text-micro text-destructive mt-0.5">{state.nextNumberError}</p>
           )}
         </div>
       </TableCell>

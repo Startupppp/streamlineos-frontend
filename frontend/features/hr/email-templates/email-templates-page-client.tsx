@@ -78,7 +78,7 @@ function TemplateCard({ template, onCopy, onEdit, onDelete }: TemplateCardProps)
     <Card className="rounded-2xl border border-border/70 bg-card/90 shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
       <CardContent className="p-3 space-y-2">
         <div className="flex items-center justify-between">
-          <span className={cn("inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border", categoryClass)}>
+          <span className={cn("inline-flex items-center text-micro font-semibold px-2 py-0.5 rounded-full border", categoryClass)}>
             {categoryKey}
           </span>
           <div className="flex gap-1">
@@ -98,7 +98,7 @@ function TemplateCard({ template, onCopy, onEdit, onDelete }: TemplateCardProps)
           <TruncatedText text={template.body} lines={2} className="text-xs text-muted-foreground mt-1" />
         </div>
         <div>
-          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/20">
+          <span className="text-micro font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/20">
             {`{{${varCount}}} variables`}
           </span>
         </div>

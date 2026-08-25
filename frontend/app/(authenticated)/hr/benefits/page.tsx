@@ -168,7 +168,7 @@ function buildPlanColumns(
         <Badge
           variant="outline"
           className={cn(
-            "text-[10px]",
+            "text-micro",
             plan.status === "active" && "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
             plan.status === "draft" && "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
             plan.status === "archived" && "bg-muted text-muted-foreground border-border",
@@ -244,7 +244,7 @@ function buildClaimColumns(
       cell: (claim) => {
         const meta = CLAIM_STATUS_META[claim.status];
         return (
-          <Badge variant="outline" className={cn("text-[10px]", meta.className)}>
+          <Badge variant="outline" className={cn("text-micro", meta.className)}>
             {meta.label}
           </Badge>
         );

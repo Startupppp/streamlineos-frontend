@@ -108,7 +108,7 @@ export function QuoteDetailContent({ quote, subtotal }: QuoteDetailContentProps)
               <div className="flex items-start gap-2.5">
                 <Building2 className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
                 <div className="min-w-0">
-                  <p className="text-[10px] text-muted-foreground">Deal</p>
+                  <p className="text-micro text-muted-foreground">Deal</p>
                   <Link
                     href={`/crm/deals/${quote.deal.id}`}
                     className="text-xs font-medium text-primary hover:underline block"
@@ -122,7 +122,7 @@ export function QuoteDetailContent({ quote, subtotal }: QuoteDetailContentProps)
               <div className="flex items-start gap-2.5">
                 <User className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
                 <div className="min-w-0">
-                  <p className="text-[10px] text-muted-foreground">Client</p>
+                  <p className="text-micro text-muted-foreground">Client</p>
                   <Link
                     href={`/crm/clients/${quote.client.id}`}
                     className="text-xs font-medium text-primary hover:underline block"
@@ -135,7 +135,7 @@ export function QuoteDetailContent({ quote, subtotal }: QuoteDetailContentProps)
             <div className="flex items-start gap-2.5">
               <Calendar className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
               <div>
-                <p className="text-[10px] text-muted-foreground">Valid Until</p>
+                <p className="text-micro text-muted-foreground">Valid Until</p>
                 <p className="text-xs font-medium">{formatDate(quote.validUntil)}</p>
               </div>
             </div>
@@ -143,7 +143,7 @@ export function QuoteDetailContent({ quote, subtotal }: QuoteDetailContentProps)
               <div className="flex items-start gap-2.5">
                 <User className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-[10px] text-muted-foreground">Created By</p>
+                  <p className="text-micro text-muted-foreground">Created By</p>
                   <p className="text-xs font-medium">{quote.createdBy.name ?? "—"}</p>
                 </div>
               </div>
@@ -151,7 +151,7 @@ export function QuoteDetailContent({ quote, subtotal }: QuoteDetailContentProps)
             <div className="flex items-start gap-2.5">
               <Calendar className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
               <div>
-                <p className="text-[10px] text-muted-foreground">Created</p>
+                <p className="text-micro text-muted-foreground">Created</p>
                 <p className="text-xs">{formatDate(quote.createdAt)}</p>
               </div>
             </div>
@@ -168,7 +168,7 @@ export function QuoteDetailContent({ quote, subtotal }: QuoteDetailContentProps)
                 <div className="flex items-center gap-2">
                   <Send className="h-3 w-3 text-primary shrink-0" />
                   <div>
-                    <p className="text-[10px] text-muted-foreground">Sent</p>
+                    <p className="text-micro text-muted-foreground">Sent</p>
                     <p className="text-xs">{formatDate(quote.sentAt)}</p>
                   </div>
                 </div>
@@ -177,7 +177,7 @@ export function QuoteDetailContent({ quote, subtotal }: QuoteDetailContentProps)
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-3 w-3 text-emerald-500 shrink-0" />
                   <div>
-                    <p className="text-[10px] text-muted-foreground">Accepted</p>
+                    <p className="text-micro text-muted-foreground">Accepted</p>
                     <p className="text-xs">{formatDate(quote.acceptedAt)}</p>
                   </div>
                 </div>
@@ -186,10 +186,10 @@ export function QuoteDetailContent({ quote, subtotal }: QuoteDetailContentProps)
                 <div className="flex items-center gap-2">
                   <XCircle className="h-3 w-3 text-red-500 shrink-0" />
                   <div>
-                    <p className="text-[10px] text-muted-foreground">Rejected</p>
+                    <p className="text-micro text-muted-foreground">Rejected</p>
                     <p className="text-xs">{formatDate(quote.rejectedAt)}</p>
                     {quote.rejectionReason && (
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                      <p className="text-micro text-muted-foreground mt-0.5">
                         {quote.rejectionReason}
                       </p>
                     )}

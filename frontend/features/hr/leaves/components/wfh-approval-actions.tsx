@@ -32,7 +32,7 @@ export function WfhApprovalActions({
     <div className="flex gap-2">
       <LoadingButton
         size="sm"
-        className="h-7 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-semibold px-3 gap-1 border-0 transition-colors duration-200"
+        className="h-7 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white text-dense font-semibold px-3 gap-1 border-0 transition-colors duration-200"
         onClick={handleApprove}
         isPending={isPending}
       >
@@ -41,7 +41,7 @@ export function WfhApprovalActions({
       </LoadingButton>
       <Button
         size="sm"
-        className="h-7 rounded-full bg-transparent border border-destructive/30 text-destructive hover:bg-destructive/10 text-[11px] font-semibold px-3 gap-1 transition-colors duration-200"
+        className="h-7 rounded-full bg-transparent border border-destructive/30 text-destructive hover:bg-destructive/10 text-dense font-semibold px-3 gap-1 transition-colors duration-200"
         onClick={handleReject}
         disabled={isPending}
       >

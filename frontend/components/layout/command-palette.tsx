@@ -325,14 +325,14 @@ export function CommandPalette() {
                     <p className="text-sm font-medium truncate leading-tight text-foreground">
                       {item.title}
                     </p>
-                    <p className="text-[11px] text-muted-foreground truncate leading-tight mt-0.5">
+                    <p className="text-dense text-muted-foreground truncate leading-tight mt-0.5">
                       {item.subtitle}
                     </p>
                   </div>
                   {item.status && (
                     <Badge
                       variant="secondary"
-                      className="text-[10px] h-4 shrink-0"
+                      className="text-micro h-4 shrink-0"
                     >
                       {item.status}
                     </Badge>
@@ -366,7 +366,7 @@ export function CommandPalette() {
                   <span className="flex-1 text-sm truncate text-foreground">
                     {page.name}
                   </span>
-                  <span className="text-[11px] text-muted-foreground shrink-0 hidden sm:block transition-colors">
+                  <span className="text-dense text-muted-foreground shrink-0 hidden sm:block transition-colors">
                     {page.href}
                   </span>
                   <ArrowRight className={COMMAND_ARROW_CLASS} />
@@ -443,7 +443,7 @@ export function CommandPalette() {
             <CommandSeparator className="my-1" />
 
             <div className="px-2 pb-1 pt-2">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+              <p className="text-micro font-semibold uppercase tracking-widest text-muted-foreground">
                 Quick navigation
               </p>
             </div>

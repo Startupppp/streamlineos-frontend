@@ -84,29 +84,29 @@ export const WorkItemRow = memo(function WorkItemRow({
           <p
             className={cn(
               TEXT_ONE_LINE,
-              "text-[13px] font-medium leading-tight text-foreground transition-colors group-hover:text-primary",
+              "text-label font-medium leading-tight text-foreground transition-colors group-hover:text-primary",
             )}
             title={item.title}
           >
             {item.title}
           </p>
           <div className="mt-0.5 flex min-w-0 items-center gap-1.5 overflow-hidden">
-            <span className="shrink-0 font-mono text-[10px] font-medium text-primary/80">
+            <span className="shrink-0 font-mono text-micro font-medium text-primary/80">
               {item.projectKey}
             </span>
-            <span className="shrink-0 text-[10px] text-muted-foreground/70">·</span>
+            <span className="shrink-0 text-micro text-muted-foreground/70">·</span>
             <span
-              className={cn(TEXT_ONE_LINE, "min-w-0 flex-1 text-[10px] text-muted-foreground")}
+              className={cn(TEXT_ONE_LINE, "min-w-0 flex-1 text-micro text-muted-foreground")}
               title={item.projectName}
             >
               {item.projectName}
             </span>
-            <span className="shrink-0 text-[10px] text-muted-foreground/70">·</span>
-            <span className="shrink-0 text-[10px] text-muted-foreground">{item.type}</span>
+            <span className="shrink-0 text-micro text-muted-foreground/70">·</span>
+            <span className="shrink-0 text-micro text-muted-foreground">{item.type}</span>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
-          <StatusBadge status={item.status} className="text-[11px]" />
+          <StatusBadge status={item.status} className="text-dense" />
           <ChevronRight className="h-3 w-3 -translate-x-1 text-muted-foreground opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100" />
         </div>
       </Link>
@@ -128,10 +128,10 @@ export function BucketSection({
     <PmPanel>
       <div className="flex items-center gap-2 border-b border-border/50 bg-muted/20 px-3 py-2">
         <cfg.icon className={cn("h-3.5 w-3.5 shrink-0", cfg.iconClass)} />
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <span className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
           {cfg.label}
         </span>
-        <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-primary">
+        <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-micro font-medium tabular-nums text-primary">
           {items.length}
         </span>
       </div>

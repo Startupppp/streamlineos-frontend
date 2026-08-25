@@ -222,7 +222,7 @@ export function KbConversationList({
           <>
             {groups.map(({ label, items }) => (
               <div key={label} className="mb-1">
-                <p className="px-2 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/60">{label}</p>
+                <p className="px-2 pb-1 pt-2 text-micro font-semibold uppercase tracking-wide text-muted-foreground/60">{label}</p>
                 {items.map((conv) => (
                   <div
                     key={conv.id}
@@ -250,7 +250,7 @@ export function KbConversationList({
                         className="min-w-0 flex-1 text-left"
                       >
                         <TruncatedText text={conv.title ?? "New conversation"} className="text-xs font-medium leading-tight text-foreground" />
-                        <p className="text-[10px] text-muted-foreground">{relativeTime(conv.updatedAt)}</p>
+                        <p className="text-micro text-muted-foreground">{relativeTime(conv.updatedAt)}</p>
                       </button>
                     )}
                     <ConversationRowActions

@@ -198,7 +198,7 @@ export default function AssetDetailPage() {
         subtitle={`${asset.assetNumber} · ${categoryName}`}
         backHref="/accounting/assets"
         badge={
-          <Badge variant="outline" className={`text-[10px] px-1.5 py-0.5 ${ASSET_STATUS_CLASSES[asset.status] ?? ""}`}>
+          <Badge variant="outline" className={`text-micro px-1.5 py-0.5 ${ASSET_STATUS_CLASSES[asset.status] ?? ""}`}>
             {ASSET_STATUS_LABELS[asset.status] ?? asset.status}
           </Badge>
         }
@@ -250,42 +250,42 @@ export default function AssetDetailPage() {
             <h2 className="text-sm font-semibold text-foreground mb-3">Asset Details</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 rounded-lg border border-border p-4 bg-card">
               <div>
-                <p className="text-[11px] text-muted-foreground">Acquisition Date</p>
+                <p className="text-dense text-muted-foreground">Acquisition Date</p>
                 <p className="text-sm font-medium mt-0.5">{formatDate(asset.acquisitionDate)}</p>
               </div>
               <div>
-                <p className="text-[11px] text-muted-foreground">Salvage Value</p>
+                <p className="text-dense text-muted-foreground">Salvage Value</p>
                 <p className="text-sm font-medium mt-0.5"><Money value={salvageValue} /></p>
               </div>
               <div>
-                <p className="text-[11px] text-muted-foreground">Useful Life</p>
+                <p className="text-dense text-muted-foreground">Useful Life</p>
                 <p className="text-sm font-medium mt-0.5">{asset.usefulLifeMonths} months</p>
               </div>
               <div>
-                <p className="text-[11px] text-muted-foreground">Depr. Method</p>
+                <p className="text-dense text-muted-foreground">Depr. Method</p>
                 <p className="text-sm font-medium mt-0.5">{asset.depreciationMethod.replace(/_/g, " ")}</p>
               </div>
               {asset.activatedAt && (
                 <div>
-                  <p className="text-[11px] text-muted-foreground">Activated</p>
+                  <p className="text-dense text-muted-foreground">Activated</p>
                   <p className="text-sm font-medium mt-0.5">{formatDate(asset.activatedAt)}</p>
                 </div>
               )}
               {asset.disposedAt && (
                 <div>
-                  <p className="text-[11px] text-muted-foreground">Disposed</p>
+                  <p className="text-dense text-muted-foreground">Disposed</p>
                   <p className="text-sm font-medium mt-0.5">{formatDate(asset.disposedAt)}</p>
                 </div>
               )}
               {asset.disposalProceeds && (
                 <div>
-                  <p className="text-[11px] text-muted-foreground">Disposal Proceeds</p>
+                  <p className="text-dense text-muted-foreground">Disposal Proceeds</p>
                   <p className="text-sm font-medium mt-0.5"><Money value={parseFloat(asset.disposalProceeds)} /></p>
                 </div>
               )}
               {asset.disposalGainLoss && (
                 <div>
-                  <p className="text-[11px] text-muted-foreground">Gain / Loss</p>
+                  <p className="text-dense text-muted-foreground">Gain / Loss</p>
                   <p className="text-sm font-medium mt-0.5"><Money value={parseFloat(asset.disposalGainLoss)} /></p>
                 </div>
               )}

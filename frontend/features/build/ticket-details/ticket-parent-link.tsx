@@ -59,14 +59,14 @@ export function TicketParentLink({
       )}
     >
       <CornerLeftUp className="h-3 w-3 shrink-0 text-muted-foreground/70" />
-      <span className="shrink-0 font-mono text-[10px] text-muted-foreground/80 group-hover:text-foreground">
+      <span className="shrink-0 font-mono text-micro text-muted-foreground/80 group-hover:text-foreground">
         {displayKey}
       </span>
       <TruncatedText
         text={parent.title}
         className={cn(
           "min-w-0 text-muted-foreground group-hover:text-foreground",
-          density === "field" ? "text-xs" : "text-[11px]",
+          density === "field" ? "text-xs" : "text-dense",
         )}
       />
     </Link>

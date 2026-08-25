@@ -71,24 +71,24 @@ function WellnessPulseCard() {
   if (!data) return null;
   return (
     <div className="rounded-lg border border-border bg-card p-3 space-y-1.5">
-      <p className="text-[12px] font-semibold">7-day wellness pulse</p>
-      <p className="text-[10px] text-muted-foreground leading-snug">{data.honestyNote}</p>
+      <p className="text-xs font-semibold">7-day wellness pulse</p>
+      <p className="text-micro text-muted-foreground leading-snug">{data.honestyNote}</p>
       {data.suppressed ? (
-        <p className="text-[12px] text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Suppressed — fewer than {data.minGroupSize} respondents (k-anonymity).
         </p>
       ) : (
-        <div className="flex gap-4 text-[12px] pt-1">
+        <div className="flex gap-4 text-xs pt-1">
           <div>
-            <p className="text-muted-foreground text-[10px]">Avg score</p>
+            <p className="text-muted-foreground text-micro">Avg score</p>
             <p className="font-semibold tabular-nums">{data.avgScore ?? "—"}</p>
           </div>
           <div>
-            <p className="text-muted-foreground text-[10px]">Respondents</p>
+            <p className="text-muted-foreground text-micro">Respondents</p>
             <p className="font-semibold tabular-nums">{data.respondents ?? "—"}</p>
           </div>
           <div>
-            <p className="text-muted-foreground text-[10px]">Check-ins</p>
+            <p className="text-muted-foreground text-micro">Check-ins</p>
             <p className="font-semibold tabular-nums">{data.checkins ?? "—"}</p>
           </div>
         </div>

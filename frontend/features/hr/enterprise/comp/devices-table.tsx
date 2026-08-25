@@ -85,7 +85,7 @@ export function DevicesTable({ canManage, onAdd, onEdit }: Props) {
             cell: (r) => (
               <div className="flex items-center gap-1.5">
                 {STATUS_ICON[r.status]}
-                <Badge variant={STATUS_VARIANT[r.status]} className="capitalize text-[11px]">{r.status}</Badge>
+                <Badge variant={STATUS_VARIANT[r.status]} className="capitalize text-dense">{r.status}</Badge>
               </div>
             ),
           },

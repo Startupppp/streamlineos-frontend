@@ -260,7 +260,7 @@ export default function CandidatesPage() {
               <>
                 <div className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
                   <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
-                    <span className="text-[10px] font-bold text-primary-foreground">
+                    <span className="text-micro font-bold text-primary-foreground">
                       {selectedIds.size}
                     </span>
                   </div>

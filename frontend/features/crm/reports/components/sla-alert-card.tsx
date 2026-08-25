@@ -27,14 +27,14 @@ export function SlaAlertCard({ slaData }: SlaAlertCardProps) {
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <TruncatedText text={lead.leadName} className="text-sm font-medium" />
-                <Badge variant="outline" className="text-[10px] shrink-0">
+                <Badge variant="outline" className="text-micro shrink-0">
                   {lead.status}
                 </Badge>
                 {lead.priority && (
                   <Badge
                     variant="outline"
                     className={cn(
-                      "text-[10px] shrink-0",
+                      "text-micro shrink-0",
                       lead.priority === "HOT" &&
                         "border-red-500/50 text-red-500 dark:text-red-400",
                       lead.priority === "WARM" &&

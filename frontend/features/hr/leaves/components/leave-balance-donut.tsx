@@ -101,9 +101,9 @@ export function LeaveBalanceDonut({ balances, allowedNames }: { balances: LeaveB
                         backgroundColor: DONUT_COLORS[i % DONUT_COLORS.length],
                       }}
                     />
-                    <TruncatedText text={item.name} className="text-[11px] font-medium text-muted-foreground" />
+                    <TruncatedText text={item.name} className="text-dense font-medium text-muted-foreground" />
                   </div>
-                  <span className="text-[11px] font-semibold text-foreground shrink-0 tabular-nums">
+                  <span className="text-dense font-semibold text-foreground shrink-0 tabular-nums">
                     {item.remaining}/{item.total}
                   </span>
                 </div>

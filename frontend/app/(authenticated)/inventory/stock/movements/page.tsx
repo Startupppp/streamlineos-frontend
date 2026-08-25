@@ -108,10 +108,10 @@ function renderTypeCell(row: StockTransaction) {
 function renderProductCell(row: StockTransaction) {
   return (
     <div>
-      <div className="font-medium text-[11px] text-foreground truncate max-w-[160px]">
+      <div className="font-medium text-dense text-foreground truncate max-w-[160px]">
         {row.productVariant?.product?.name ?? row.productVariant?.name ?? "—"}
       </div>
-      <div className="text-[10px] font-mono text-muted-foreground">
+      <div className="text-micro font-mono text-muted-foreground">
         {row.productVariant?.sku ?? "—"}
       </div>
     </div>
@@ -123,8 +123,8 @@ function renderWarehouseCell(row: StockTransaction) {
   const location = row.location?.name ?? null;
   return (
     <div>
-      <div className="text-[11px] text-foreground truncate max-w-[120px]">{warehouse}</div>
-      {location && <div className="text-[10px] text-muted-foreground truncate max-w-[120px]">{location}</div>}
+      <div className="text-dense text-foreground truncate max-w-[120px]">{warehouse}</div>
+      {location && <div className="text-micro text-muted-foreground truncate max-w-[120px]">{location}</div>}
     </div>
   );
 }
@@ -150,14 +150,14 @@ function renderSourceCell(row: StockTransaction) {
     return (
       <Link
         href={`${basePath}/${row.referenceId}`}
-        className="font-mono text-primary hover:underline text-[11px]"
+        className="font-mono text-primary hover:underline text-dense"
         onClick={(e) => e.stopPropagation()}
       >
         {refLabel}
       </Link>
     );
   }
-  return <span className="text-muted-foreground font-mono text-[11px]">{refLabel}</span>;
+  return <span className="text-muted-foreground font-mono text-dense">{refLabel}</span>;
 }
 
 function renderByCell(row: StockTransaction) {
@@ -222,13 +222,13 @@ const MOVEMENTS_COLUMNS: DataTableColumn<StockTransaction>[] = [
   {
     key: "by",
     header: "By",
-    className: "text-muted-foreground text-[11px]",
+    className: "text-muted-foreground text-dense",
     cell: renderByCell,
   },
   {
     key: "notes",
     header: "Notes",
-    className: "text-[11px]",
+    className: "text-dense",
     cell: renderNotesCell,
   },
 ];

@@ -52,13 +52,13 @@ function InterviewRow({ task }: { task: InterviewTask }) {
         className="flex items-center gap-2.5 rounded-lg border border-border/60 px-2.5 py-2 hover:bg-muted/50 transition-colors"
       >
         <Avatar className="w-7">
-          <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+          <AvatarFallback className="text-micro bg-primary/10 text-primary">
             {task.candidateName[0]}
           </AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
           <TruncatedText text={task.candidateName} className="text-xs font-medium" />
-          <p className="text-[10px] text-muted-foreground capitalize">
+          <p className="text-micro text-muted-foreground capitalize">
             {format(task.scheduledAt, isToday(task.scheduledAt) ? "h:mm a" : "MMM d, h:mm a")}
             {" · "}
             {task.type.replace(/_/g, " ").toLowerCase()}
@@ -128,7 +128,7 @@ export function RecruitmentWidget() {
       <div className="space-y-2.5">
         {pendingFeedbackCount > 0 && (
           <div className="flex items-center justify-between rounded-lg border border-border/60 px-2.5 py-2">
-            <span className="text-[11px] text-muted-foreground">
+            <span className="text-dense text-muted-foreground">
               Scorecards awaiting feedback
             </span>
             <span className="text-sm font-semibold tabular-nums">

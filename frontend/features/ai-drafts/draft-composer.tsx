@@ -31,7 +31,7 @@ function CopyButton({ copied, onClick }: CopyButtonProps) {
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+      className="inline-flex items-center gap-1 text-micro text-muted-foreground hover:text-foreground transition-colors"
       {...hoverHandlers}
     >
       {copied ? (
@@ -54,7 +54,7 @@ function EditToggleButton({ editing, onClick }: EditToggleButtonProps) {
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors ml-2"
+      className="inline-flex items-center gap-1 text-micro text-muted-foreground hover:text-foreground transition-colors ml-2"
     >
       {editing ? <Check className="h-3 w-3" /> : <Edit2 className="h-3 w-3" />}
       {editing ? "Done" : "Edit"}
@@ -119,13 +119,13 @@ export function DraftComposer({
 
       {subject && (
         <div>
-          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">Subject</p>
+          <p className="text-micro font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">Subject</p>
           <p className="text-xs text-foreground">{subject}</p>
         </div>
       )}
 
       <div>
-        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">Body</p>
+        <p className="text-micro font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">Body</p>
         {editing ? (
           <Textarea
             value={editedDraft}

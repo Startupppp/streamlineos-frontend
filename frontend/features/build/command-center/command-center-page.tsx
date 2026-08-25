@@ -221,7 +221,7 @@ export function CommandCenterPage() {
 
           <PmSection index={1} className="min-w-0 w-full max-w-full overflow-hidden">
             <PmPanel className={COMMAND_CENTER_JUMP_PANEL}>
-              <p className="mb-1.5 px-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+              <p className="mb-1.5 px-0.5 text-micro font-medium uppercase tracking-wider text-muted-foreground">
                 Jump to
               </p>
               <PinnedNav defaultProjectId={projects[0]?.id ?? null} />
@@ -251,7 +251,7 @@ export function CommandCenterPage() {
           </div>
 
           <motion.p
-            className="hidden min-w-0 w-full max-w-full text-center text-[10px] text-muted-foreground/70 md:block"
+            className="hidden min-w-0 w-full max-w-full text-center text-micro text-muted-foreground/70 md:block"
             initial={shouldReduceMotion ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ ...pmSnappy, delay: 0.28 }}

@@ -160,7 +160,7 @@ export function UomCreateForm({ onSuccess }: UomCreateFormProps) {
                       {...field}
                     />
                   </FormControl>
-                  <p className="text-[10px] text-muted-foreground mt-1">
+                  <p className="text-micro text-muted-foreground mt-1">
                     Ratio to base unit: {field.value || "—"}:1
                   </p>
                   <FormMessage />
@@ -169,7 +169,7 @@ export function UomCreateForm({ onSuccess }: UomCreateFormProps) {
             />
           )}
           {isBase && (
-            <p className="text-[10px] text-muted-foreground self-center">
+            <p className="text-micro text-muted-foreground self-center">
               This UOM is the base unit for its category.
             </p>
           )}

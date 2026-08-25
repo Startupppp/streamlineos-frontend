@@ -146,7 +146,7 @@ export function GenerationProgressStage({
                 {progress}
                 <span className="text-base font-bold text-muted-foreground">%</span>
               </span>
-              <span className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+              <span className="mt-0.5 text-micro font-medium uppercase tracking-[0.14em] text-muted-foreground">
                 launch
               </span>
             </div>
@@ -157,7 +157,7 @@ export function GenerationProgressStage({
               <span className="block text-balance break-words">Assembling {workspaceLabel}</span>
             </h2>
             <p
-              className="min-w-0 truncate text-[13px] text-muted-foreground"
+              className="min-w-0 truncate text-label text-muted-foreground"
               aria-live="polite"
             >
               {activeLabel}
@@ -181,12 +181,12 @@ export function GenerationProgressStage({
             />
           </div>
           <div className="flex items-center justify-between px-0.5">
-            <p className="text-[11px] font-medium text-muted-foreground">
+            <p className="text-dense font-medium text-muted-foreground">
               {isComplete
                 ? `${BRAND_NAME} ready`
                 : `${Math.min(completedSteps + 1, total)} of ${total}`}
             </p>
-            <p className="text-[11px] tabular-nums text-muted-foreground">
+            <p className="text-dense tabular-nums text-muted-foreground">
               {progress}%
             </p>
           </div>
@@ -227,7 +227,7 @@ export function GenerationProgressStage({
 
                 <span
                   className={cn(
-                    "relative min-w-0 flex-1 truncate text-[13px] tracking-tight transition-colors duration-300",
+                    "relative min-w-0 flex-1 truncate text-label tracking-tight transition-colors duration-300",
                     done && "font-medium text-foreground",
                     active && "font-semibold text-brand-deep dark:text-brand-bright",
                     pending && "text-muted-foreground",
@@ -265,10 +265,10 @@ export function GenerationProgressStage({
             transition={{ duration: 0.25, ease: PREVIEW_EASE }}
             className="mt-2 rounded-xl border border-amber-200/60 bg-amber-50 px-3.5 py-3 dark:border-amber-500/30 dark:bg-amber-500/10"
           >
-            <p className="text-[12px] font-semibold text-amber-800 dark:text-amber-300">
+            <p className="text-xs font-semibold text-amber-800 dark:text-amber-300">
               Starter content wasn&apos;t generated
             </p>
-            <p className="mt-0.5 break-words text-[12px] text-amber-700 dark:text-amber-400">
+            <p className="mt-0.5 break-words text-xs text-amber-700 dark:text-amber-400">
               {generationPending.failureMessage}
             </p>
             <div className="mt-2.5 flex gap-2">

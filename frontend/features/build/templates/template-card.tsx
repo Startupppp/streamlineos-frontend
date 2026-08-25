@@ -80,7 +80,7 @@ const TaskPreviewRow = memo(function TaskPreviewRow({
   return (
     <div className="flex min-w-0 items-center gap-2 rounded-md bg-muted/40 px-2 py-1.5">
       <span
-        className="w-3 shrink-0 text-center text-[10px] tabular-nums text-muted-foreground/50"
+        className="w-3 shrink-0 text-center text-micro tabular-nums text-muted-foreground/50"
         aria-hidden="true"
       >
         {index + 1}
@@ -93,7 +93,7 @@ const TaskPreviewRow = memo(function TaskPreviewRow({
       >
         {type}
       </span>
-      <TruncatedText text={title} className="flex-1 text-[11px] text-foreground/90" />
+      <TruncatedText text={title} className="flex-1 text-dense text-foreground/90" />
       {phase ? (
         <span className="shrink-0 rounded bg-muted px-1 py-px text-[9px] text-muted-foreground">
           {phase}
@@ -144,7 +144,7 @@ export const TemplateCard = memo(function TemplateCard({
           <div
             className={cn(
               "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset",
-              "text-[11px] font-bold tracking-tight",
+              "text-dense font-bold tracking-tight",
               avatarTint,
             )}
             aria-hidden="true"
@@ -179,7 +179,7 @@ export const TemplateCard = memo(function TemplateCard({
 
         {template.description ? (
           <p
-            className={cn(TEXT_TWO_LINES, "mb-2.5 flex-1 text-[11px] leading-relaxed text-muted-foreground")}
+            className={cn(TEXT_TWO_LINES, "mb-2.5 flex-1 text-dense leading-relaxed text-muted-foreground")}
             title={template.description}
           >
             {template.description}
@@ -201,7 +201,7 @@ export const TemplateCard = memo(function TemplateCard({
                 />
               ))}
               {overflow > 0 ? (
-                <p className="pl-1 text-[10px] text-muted-foreground">
+                <p className="pl-1 text-micro text-muted-foreground">
                   +{overflow} more {overflow === 1 ? "task" : "tasks"}
                 </p>
               ) : null}
@@ -212,7 +212,7 @@ export const TemplateCard = memo(function TemplateCard({
                 className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50"
                 aria-hidden="true"
               />
-              <span className="text-[10px] text-muted-foreground/70">No tasks defined</span>
+              <span className="text-micro text-muted-foreground/70">No tasks defined</span>
             </div>
           )}
 

@@ -253,7 +253,7 @@ export default function NewPurchaseOrderPage() {
 
             <Card className="overflow-hidden">
               <div className="space-y-2 p-4 pb-0">
-                <Label className="text-[13px] font-medium">
+                <Label className="text-label font-medium">
                   Lines <span className="text-destructive">*</span>
                 </Label>
               </div>

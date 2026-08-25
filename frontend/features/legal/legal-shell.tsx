@@ -33,7 +33,7 @@ export function LegalShell({ eyebrow, title, intro, effectiveDate, sections, chi
         </h1>
         <p className="text-slate-600 text-lg leading-relaxed max-w-3xl">{intro}</p>
 
-        <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px] font-medium text-slate-500">
+        <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-medium text-slate-500">
           <span className="inline-flex items-center gap-1.5">
             <Calendar className="h-3 w-3 text-blue-500" />
             Effective {effectiveDate}
@@ -57,7 +57,7 @@ export function LegalShell({ eyebrow, title, intro, effectiveDate, sections, chi
       <section className="container mx-auto px-4 lg:px-8 max-w-7xl mt-12 lg:mt-16 grid lg:grid-cols-12 gap-10">
         <aside className="lg:col-span-3 order-2 lg:order-1">
           <div className="lg:sticky lg:top-28 rounded-2xl border border-slate-200/80 bg-white/70 backdrop-blur-sm p-5">
-            <p className="text-[11px] font-medium text-slate-400 mb-3">
+            <p className="text-dense font-medium text-slate-400 mb-3">
               On this page
             </p>
             <ol className="space-y-1.5">
@@ -65,9 +65,9 @@ export function LegalShell({ eyebrow, title, intro, effectiveDate, sections, chi
                 <li key={s.id}>
                   <a
                     href={`#${s.id}`}
-                    className="group flex items-start gap-3 text-[13px] text-slate-600 hover:text-blue-700 transition-colors py-1"
+                    className="group flex items-start gap-3 text-label text-slate-600 hover:text-blue-700 transition-colors py-1"
                   >
-                    <span className="text-[10px] font-mono tabular-nums text-slate-400 group-hover:text-blue-500 mt-1 shrink-0">
+                    <span className="text-micro font-mono tabular-nums text-slate-400 group-hover:text-blue-500 mt-1 shrink-0">
                       {String(i + 1).padStart(2, "0")}
                     </span>
                     <span className="leading-snug">{s.title}</span>
@@ -107,8 +107,8 @@ export function LegalSection({
 
 export function PlainEnglish({ children }: { children: ReactNode }) {
   return (
-    <div className="not-prose rounded-xl border border-blue-200/60 bg-blue-50/50 px-4 py-3.5 my-5 text-[14px] text-slate-700 leading-relaxed">
-      <p className="text-[11px] font-semibold text-blue-600 mb-1.5">
+    <div className="not-prose rounded-xl border border-blue-200/60 bg-blue-50/50 px-4 py-3.5 my-5 text-sm text-slate-700 leading-relaxed">
+      <p className="text-dense font-semibold text-blue-600 mb-1.5">
         Plain English
       </p>
       {children}

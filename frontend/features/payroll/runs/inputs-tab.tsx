@@ -90,7 +90,7 @@ const COLUMNS: DataTableColumn<RunInput>[] = [
     key: "employee",
     header: "Employee",
     cell: (row) => (
-      <TruncatedText text={row.userName ?? row.userId.slice(0, 8)} className="text-[11px] font-medium" />
+      <TruncatedText text={row.userName ?? row.userId.slice(0, 8)} className="text-dense font-medium" />
     ),
   },
   {
@@ -98,7 +98,7 @@ const COLUMNS: DataTableColumn<RunInput>[] = [
     header: "Source",
     cell: (row) => (
       <span
-        className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${SOURCE_COLORS[row.source]}`}
+        className={`inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium border ${SOURCE_COLORS[row.source]}`}
       >
         {row.source}
       </span>
@@ -153,7 +153,7 @@ const COLUMNS: DataTableColumn<RunInput>[] = [
                 <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
               </span>
             </TooltipTrigger>
-            <TooltipContent side="left" className="max-w-[220px] text-[11px]">
+            <TooltipContent side="left" className="max-w-[220px] text-dense">
               {msg}
             </TooltipContent>
           </Tooltip>

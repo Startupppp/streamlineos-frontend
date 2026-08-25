@@ -96,7 +96,7 @@ function RubricEntryRow({ entry, index, onCategoryNameChange, onScoreChange, onC
           <div className="flex items-center gap-1 shrink-0">
             <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
             <span className="text-sm font-bold tabular-nums text-foreground w-5 text-center">{entry.score}</span>
-            <span className="text-[10px] text-muted-foreground">/{entry.maxScore}</span>
+            <span className="text-micro text-muted-foreground">/{entry.maxScore}</span>
           </div>
           <TooltipIconButton
             type="button"
@@ -291,7 +291,7 @@ export function InterviewFeedbackForm({ interview, open, onOpenChange }: Intervi
                   {(Object.keys(RESULT_CONFIG) as InterviewResult[]).map((key) => (
                     <SelectItem key={key} value={key}>
                       <span className={cn(
-                        "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+                        "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border",
                         RESULT_CONFIG[key].colorClass
                       )}>
                         {RESULT_CONFIG[key].label}
@@ -314,7 +314,7 @@ export function InterviewFeedbackForm({ interview, open, onOpenChange }: Intervi
               <span className="text-sm font-semibold text-foreground">Scoring Rubric</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-foreground border-border dark:bg-slate-800/60 dark:text-slate-300 dark:border-slate-700">
+              <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-muted text-foreground border-border dark:bg-slate-800/60 dark:text-slate-300 dark:border-slate-700">
                 Avg: {avgScore}/10
               </span>
               <Button

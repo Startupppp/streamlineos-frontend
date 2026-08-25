@@ -62,7 +62,7 @@ export function MeetingsCard({ meetings, onAddMeeting, onDeleteMeeting }: Meetin
                   <div className="flex items-center gap-2">
                     <Calendar className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                     <TruncatedText text={m.title} className="font-medium text-sm" />
-                    <Badge variant="outline" className="text-[10px] shrink-0">{m.status}</Badge>
+                    <Badge variant="outline" className="text-micro shrink-0">{m.status}</Badge>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
                     {format(new Date(m.scheduledAt), "dd MMM yyyy, HH:mm")}

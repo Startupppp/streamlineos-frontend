@@ -117,14 +117,14 @@ export function GeneratePayoutDialog({
                       <SelectItem key={f} value={f}>
                         {f.replace("_CSV", " CSV").replace("_", " ")}
                         {f === recommendedFormat && (
-                          <span className="ml-1.5 text-[10px] text-muted-foreground">(recommended)</span>
+                          <span className="ml-1.5 text-micro text-muted-foreground">(recommended)</span>
                         )}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              <p className="text-[11px] text-muted-foreground leading-snug">
+              <p className="text-dense text-muted-foreground leading-snug">
                 A signed download link will be available immediately after generation. To
                 re-download, generate a new batch.
               </p>

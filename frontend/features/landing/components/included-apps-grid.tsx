@@ -77,7 +77,7 @@ function AppChip({
       </motion.span>
       <span
         className={`font-medium text-slate-800 truncate ${
-          compact ? "text-[11px]" : "text-[12px]"
+          compact ? "text-dense" : "text-xs"
         }`}
       >
         {app.name}

@@ -124,7 +124,7 @@ export default function BlueprintsPage() {
                     >
                       <div className="flex-1 min-w-0">
                         <TruncatedText text={bp.name} className="text-xs font-medium" />
-                        <TruncatedText text={getPipelineName(bp.pipelineId)} className="text-[10px] text-muted-foreground" />
+                        <TruncatedText text={getPipelineName(bp.pipelineId)} className="text-micro text-muted-foreground" />
                       </div>
                       <Switch
                         checked={bp.isActive}

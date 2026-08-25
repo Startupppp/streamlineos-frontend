@@ -55,7 +55,7 @@ export function ChannelMemberRow({
       <div className="relative shrink-0">
         <Avatar className="w-8">
           <AvatarImage src={resolveImageUrl(member.user?.image)} />
-          <AvatarFallback className="text-[10px] font-medium">
+          <AvatarFallback className="text-micro font-medium">
             {getInitials(member.user?.name)}
           </AvatarFallback>
         </Avatar>
@@ -73,16 +73,16 @@ export function ChannelMemberRow({
           <div className={FLEX_TITLE_SLOT}>
             <TruncatedText
               text={member.user?.name ?? ""}
-              className="w-full text-[13px] font-medium"
+              className="w-full text-label font-medium"
             />
           </div>
           {isYou ? (
-            <span className="shrink-0 text-[13px] font-normal text-muted-foreground">(you)</span>
+            <span className="shrink-0 text-label font-normal text-muted-foreground">(you)</span>
           ) : null}
         </div>
         <TruncatedText
           text={member.user?.email ?? ""}
-          className="w-full text-[11px] text-muted-foreground"
+          className="w-full text-dense text-muted-foreground"
         />
       </div>
       {member.role === "ADMIN" && (

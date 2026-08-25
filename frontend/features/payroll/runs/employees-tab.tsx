@@ -28,8 +28,8 @@ const COLUMNS: DataTableColumn<RunEmployee>[] = [
     header: "Employee",
     cell: (row) => (
       <div className="flex flex-col gap-0.5 min-w-0">
-        <TruncatedText text={row.userName} className="text-[11px] font-medium" />
-        <TruncatedText text={row.userEmail} className="text-[10px] text-muted-foreground" />
+        <TruncatedText text={row.userName} className="text-dense font-medium" />
+        <TruncatedText text={row.userEmail} className="text-micro text-muted-foreground" />
       </div>
     ),
   },
@@ -38,7 +38,7 @@ const COLUMNS: DataTableColumn<RunEmployee>[] = [
     header: "Type",
     cell: (row) => (
       <span
-        className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${
+        className={`inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium border ${
           WORKER_TYPE_COLORS[row.workerType] ?? "bg-muted text-muted-foreground border-border"
         }`}
       >
@@ -51,7 +51,7 @@ const COLUMNS: DataTableColumn<RunEmployee>[] = [
     header: "Gross",
     className: "text-right",
     cell: (row) => (
-      <span className="font-mono text-[11px] tabular-nums">{formatMoney(row.gross)}</span>
+      <span className="font-mono text-dense tabular-nums">{formatMoney(row.gross)}</span>
     ),
   },
   {
@@ -59,7 +59,7 @@ const COLUMNS: DataTableColumn<RunEmployee>[] = [
     header: "Deductions",
     className: "text-right",
     cell: (row) => (
-      <span className="font-mono text-[11px] tabular-nums text-red-600 dark:text-red-400">
+      <span className="font-mono text-dense tabular-nums text-red-600 dark:text-red-400">
         {row.totalDeductions ? `−${formatMoney(row.totalDeductions)}` : "—"}
       </span>
     ),
@@ -69,7 +69,7 @@ const COLUMNS: DataTableColumn<RunEmployee>[] = [
     header: "Net",
     className: "text-right",
     cell: (row) => (
-      <span className="font-mono text-[11px] tabular-nums font-medium">
+      <span className="font-mono text-dense tabular-nums font-medium">
         {formatMoney(row.net)}
       </span>
     ),
@@ -78,7 +78,7 @@ const COLUMNS: DataTableColumn<RunEmployee>[] = [
     key: "status",
     header: "Status",
     cell: (row) => (
-      <span className="text-[10px] text-muted-foreground capitalize">
+      <span className="text-micro text-muted-foreground capitalize">
         {row.status.toLowerCase().replace(/_/g, " ")}
       </span>
     ),
@@ -127,13 +127,13 @@ export function EmployeesTab({ runId, isLocked }: EmployeesTabProps) {
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
                 <p className="text-sm font-medium truncate">{row.userName}</p>
-                <p className="text-[11px] text-muted-foreground truncate">{row.userEmail}</p>
+                <p className="text-dense text-muted-foreground truncate">{row.userEmail}</p>
               </div>
-              <span className="text-[10px] text-muted-foreground shrink-0 capitalize">
+              <span className="text-micro text-muted-foreground shrink-0 capitalize">
                 {row.status.toLowerCase().replace(/_/g, " ")}
               </span>
             </div>
-            <div className="grid grid-cols-3 gap-2 text-[11px]">
+            <div className="grid grid-cols-3 gap-2 text-dense">
               <div>
                 <p className="text-muted-foreground">Gross</p>
                 <p className="font-mono tabular-nums">{formatMoney(row.gross)}</p>

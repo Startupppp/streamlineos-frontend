@@ -83,8 +83,8 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
   return (
     <div className="flex min-h-0 flex-1 flex-col space-y-3">
       <div className="shrink-0">
-        <p className="text-[13px] font-medium">Sign-in history</p>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-label font-medium">Sign-in history</p>
+        <p className="text-dense text-muted-foreground">
           Successful and failed authentication attempts for security review.
         </p>
       </div>
@@ -145,7 +145,7 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
                   {entry.failureReason && (
                     <Badge
                       variant="destructive"
-                      className="text-[10px] h-4 px-1"
+                      className="text-micro h-4 px-1"
                     >
                       {entry.failureReason}
                     </Badge>

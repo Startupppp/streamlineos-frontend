@@ -134,7 +134,7 @@ export default function BalanceSheetPage() {
           <div className="flex flex-col gap-1">
             <label
               htmlFor="balance-sheet-asof"
-              className="text-[11px] font-medium text-muted-foreground leading-none"
+              className="text-dense font-medium text-muted-foreground leading-none"
             >
               As of
             </label>

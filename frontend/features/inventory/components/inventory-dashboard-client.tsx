@@ -121,15 +121,15 @@ function LowStockAlertSection() {
           >
             <div className={`h-2 w-2 rounded-full shrink-0 ${urgency.dotClass}`} />
             <div className="flex-1 min-w-0">
-              <TruncatedText text={item.productName} className="text-[11px] font-semibold text-foreground" />
-              <p className="text-[11px] text-muted-foreground font-mono">{item.variantSku}</p>
+              <TruncatedText text={item.productName} className="text-dense font-semibold text-foreground" />
+              <p className="text-dense text-muted-foreground font-mono">{item.variantSku}</p>
             </div>
             <div className="text-right shrink-0">
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-dense text-muted-foreground">
                 On hand:{" "}
                 <span className="font-semibold tabular-nums text-foreground">{item.onHand}</span>
               </p>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-dense text-muted-foreground">
                 Reorder at{" "}
                 <span className="tabular-nums">{item.reorderPoint}</span> · Need{" "}
                 <span className="tabular-nums">{item.deficit}</span> more
@@ -174,15 +174,15 @@ function ExpiryAlertsCard({ count }: { count: number }) {
             <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-500/30 dark:bg-amber-500/10">
               <div className="h-2 w-2 rounded-full bg-amber-500 shrink-0" />
               <div className="flex-1">
-                <p className="text-[11px] font-semibold text-foreground">
+                <p className="text-dense font-semibold text-foreground">
                   {count} lot{count !== 1 ? "s" : ""} expiring soon
                 </p>
-                <p className="text-[11px] text-muted-foreground">within the next 30 days</p>
+                <p className="text-dense text-muted-foreground">within the next 30 days</p>
               </div>
               <Link href="/inventory/expiry">
                 <Badge
                   variant="outline"
-                  className="text-[10px] h-5 cursor-pointer bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100 transition-colors dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-300 dark:hover:bg-amber-500/10"
+                  className="text-micro h-5 cursor-pointer bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100 transition-colors dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-300 dark:hover:bg-amber-500/10"
                 >
                   View lots
                 </Badge>
@@ -313,10 +313,10 @@ export function InventoryDashboardClient() {
 
         {hasAlerts && (
           <div className="flex flex-wrap items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-500/30 dark:bg-amber-500/10">
-            <span className="text-[11px] font-semibold text-amber-700 shrink-0 dark:text-amber-300">Attention needed:</span>
+            <span className="text-dense font-semibold text-amber-700 shrink-0 dark:text-amber-300">Attention needed:</span>
             {expiringLotsCount > 0 && (
               <Link href="/inventory/expiry">
-                <Badge variant="outline" className="bg-amber-50 border-amber-300 text-amber-700 text-[10px] h-5 cursor-pointer hover:bg-amber-100 transition-colors dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-300 dark:hover:bg-amber-500/10">
+                <Badge variant="outline" className="bg-amber-50 border-amber-300 text-amber-700 text-micro h-5 cursor-pointer hover:bg-amber-100 transition-colors dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-300 dark:hover:bg-amber-500/10">
                   <Calendar className="h-2.5 w-2.5 mr-1" aria-hidden="true" />
                   {expiringLotsCount} expiring lot{expiringLotsCount !== 1 ? "s" : ""}
                 </Badge>
@@ -324,7 +324,7 @@ export function InventoryDashboardClient() {
             )}
             {qualityHoldQty > 0 && (
               <Link href="/inventory/stock">
-                <Badge variant="outline" className="bg-amber-50 border-amber-300 text-amber-700 text-[10px] h-5 cursor-pointer hover:bg-amber-100 transition-colors dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-300 dark:hover:bg-amber-500/10">
+                <Badge variant="outline" className="bg-amber-50 border-amber-300 text-amber-700 text-micro h-5 cursor-pointer hover:bg-amber-100 transition-colors dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-300 dark:hover:bg-amber-500/10">
                   <ShieldAlert className="h-2.5 w-2.5 mr-1" aria-hidden="true" />
                   {qualityHoldQty} on quality hold
                 </Badge>
@@ -332,7 +332,7 @@ export function InventoryDashboardClient() {
             )}
             {failedChannelSyncsCount > 0 && (
               <Link href="/inventory">
-                <Badge variant="outline" className="bg-red-50 border-red-300 text-red-700 text-[10px] h-5 cursor-pointer hover:bg-red-100 transition-colors dark:bg-red-500/10 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10">
+                <Badge variant="outline" className="bg-red-50 border-red-300 text-red-700 text-micro h-5 cursor-pointer hover:bg-red-100 transition-colors dark:bg-red-500/10 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10">
                   <AlertTriangle className="h-2.5 w-2.5 mr-1" aria-hidden="true" />
                   {failedChannelSyncsCount} failed sync{failedChannelSyncsCount !== 1 ? "s" : ""}
                 </Badge>
@@ -340,7 +340,7 @@ export function InventoryDashboardClient() {
             )}
             {openInspectionsCount > 0 && (
               <Link href="/inventory/stock">
-                <Badge variant="outline" className="bg-blue-50 border-blue-300 text-blue-700 text-[10px] h-5 cursor-pointer hover:bg-blue-100 transition-colors dark:bg-blue-500/10 dark:border-blue-500/30 dark:text-blue-300 dark:hover:bg-blue-500/10">
+                <Badge variant="outline" className="bg-blue-50 border-blue-300 text-blue-700 text-micro h-5 cursor-pointer hover:bg-blue-100 transition-colors dark:bg-blue-500/10 dark:border-blue-500/30 dark:text-blue-300 dark:hover:bg-blue-500/10">
                   <BookOpen className="h-2.5 w-2.5 mr-1" aria-hidden="true" />
                   {openInspectionsCount} open inspection{openInspectionsCount !== 1 ? "s" : ""}
                 </Badge>

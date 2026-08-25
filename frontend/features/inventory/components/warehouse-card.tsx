@@ -82,11 +82,11 @@ export const WarehouseCard = memo(function WarehouseCard({ warehouse }: { wareho
                       </Badge>
                     )}
                   </div>
-                  <p className="mt-0.5 text-[11px] text-muted-foreground font-mono">
+                  <p className="mt-0.5 text-dense text-muted-foreground font-mono">
                     {warehouse.code}
                   </p>
                   {cityLine && (
-                    <div className="mt-1.5 flex items-center gap-1 text-[11px] text-muted-foreground">
+                    <div className="mt-1.5 flex items-center gap-1 text-dense text-muted-foreground">
                       <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
                       <TruncatedText text={cityLine} />
                     </div>
@@ -97,7 +97,7 @@ export const WarehouseCard = memo(function WarehouseCard({ warehouse }: { wareho
                 <p className="text-lg font-semibold tabular-nums text-foreground">
                   {locationCount}
                 </p>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-dense text-muted-foreground">
                   {locationCount === 1 ? "location" : "locations"}
                 </p>
               </div>

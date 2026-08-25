@@ -19,7 +19,7 @@ export function TemplatePreviewPanel({ previewHtml }: TemplatePreviewPanelProps)
             </div>
             <div>
               <CardTitle className="text-sm font-semibold text-foreground">Live Preview</CardTitle>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
+              <p className="text-dense text-muted-foreground mt-0.5">
                 Rendered with sample data. Tokens without a sample value remain as-is.
               </p>
             </div>

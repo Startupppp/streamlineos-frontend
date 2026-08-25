@@ -94,17 +94,17 @@ function TreeItem({
         )}
         <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
         <span className="font-medium text-sm truncate flex-1">{name}</span>
-        <Badge variant="outline" className="hidden h-5 px-2 text-[10px] sm:inline-flex">
+        <Badge variant="outline" className="hidden h-5 px-2 text-micro sm:inline-flex">
           {NODE_LABELS[type]}
         </Badge>
         <span className="text-xs text-muted-foreground font-mono">{code}</span>
         {status !== "ACTIVE" && (
-          <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
+          <Badge variant="secondary" className="text-micro h-4 px-1.5">
             {status}
           </Badge>
         )}
         {childCount > 0 && (
-          <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full tabular-nums">
+          <span className="text-micro text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full tabular-nums">
             {childCount}
           </span>
         )}

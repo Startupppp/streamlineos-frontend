@@ -242,7 +242,7 @@ export default function PipelinesPage() {
                     >
                       {getPipelineTypeMeta(selectedPipeline.type)?.label}
                     </Badge>
-                    <span className="text-[11px] text-muted-foreground">
+                    <span className="text-dense text-muted-foreground">
                       {sortedStages.length} stage{sortedStages.length !== 1 ? "s" : ""}
                     </span>
                   </div>

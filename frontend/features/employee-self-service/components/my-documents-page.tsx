@@ -102,17 +102,17 @@ export function MyDocumentsPage() {
                   <StatusIcon className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13px] font-medium text-foreground">
+                  <p className="truncate text-label font-medium text-foreground">
                     {document.documentTypeName}
                   </p>
-                  <p className="truncate text-[11px] text-muted-foreground">
+                  <p className="truncate text-dense text-muted-foreground">
                     {document.remarks ??
                       (document.isMandatory ? "Required document" : "Optional document")}
                   </p>
                 </div>
                 <Badge
                   variant="outline"
-                  className={`h-5 shrink-0 px-2 py-0.5 text-[10px] ${STATUS_CLASSES[document.status]}`}
+                  className={`h-5 shrink-0 px-2 py-0.5 text-micro ${STATUS_CLASSES[document.status]}`}
                 >
                   {STATUS_LABELS[document.status]}
                 </Badge>

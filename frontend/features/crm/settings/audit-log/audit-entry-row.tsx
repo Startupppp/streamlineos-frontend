@@ -214,13 +214,13 @@ export function AuditEntryRow({ entry, isLast }: AuditEntryRowProps) {
                 <ChangesDisplay metadata={entry.metadata} />
               )}
               {entry.ipAddress && (
-                <p className="text-[10px] text-muted-foreground/60 mt-1">
+                <p className="text-micro text-muted-foreground/60 mt-1">
                   IP: {entry.ipAddress}
                 </p>
               )}
             </div>
             <span
-              className="text-[10px] text-muted-foreground whitespace-nowrap shrink-0"
+              className="text-micro text-muted-foreground whitespace-nowrap shrink-0"
               title={absoluteTime}
             >
               {relativeTime}

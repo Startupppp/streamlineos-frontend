@@ -81,7 +81,7 @@ export function Section7({ form }: SectionProps) {
           <Label className="text-xs font-semibold text-foreground/80">
             Interview Rounds<span className="text-rose-500 ml-0.5">*</span>
           </Label>
-          <p className="text-[10px] text-muted-foreground">Select at least one round</p>
+          <p className="text-micro text-muted-foreground">Select at least one round</p>
           <div className="grid sm:grid-cols-2 gap-2 mt-1">
             {INTERVIEW_ROUND_OPTIONS.map(({ value, label }) => (
               <InterviewRoundOption
@@ -156,7 +156,7 @@ function ScreeningQuestionRow({ question: q, idx, onUpdate, onRemove }: Screenin
   return (
     <div className="rounded-xl border border-border p-3 space-y-2">
       <div className="flex items-start gap-2">
-        <span className="text-[11px] font-semibold text-muted-foreground mt-2 shrink-0">{idx + 1}.</span>
+        <span className="text-dense font-semibold text-muted-foreground mt-2 shrink-0">{idx + 1}.</span>
         <Input
           placeholder="e.g. Do you have a valid work visa?"
           value={q.question}
@@ -274,7 +274,7 @@ export function Section8({ form }: SectionProps) {
               Add question
             </AnimatedIconButton>
           </div>
-          <p className="text-[10px] text-muted-foreground">
+          <p className="text-micro text-muted-foreground">
             Shown to applicants on the public apply form. Knockout questions flag the application for review — they
             never auto-reject a candidate.
           </p>

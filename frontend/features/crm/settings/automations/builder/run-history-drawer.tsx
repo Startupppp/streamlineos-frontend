@@ -62,17 +62,17 @@ export const RunHistoryDrawer = memo(function RunHistoryDrawer({ ruleId, open, o
                     </div>
                     <Badge
                       variant="outline"
-                      className={cn("text-[10px] h-4 px-1.5", cfg.color)}
+                      className={cn("text-micro h-4 px-1.5", cfg.color)}
                     >
                       {cfg.label}
                     </Badge>
                   </div>
-                  <div className="text-[11px] text-muted-foreground flex gap-3">
+                  <div className="text-dense text-muted-foreground flex gap-3">
                     <span>{new Date(run.startedAt).toLocaleString()}</span>
                     <span className="capitalize">{run.entityType} {run.entityId}</span>
                   </div>
                   {run.error && (
-                    <p className="text-[11px] text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-500/10 rounded px-2 py-1">{run.error}</p>
+                    <p className="text-dense text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-500/10 rounded px-2 py-1">{run.error}</p>
                   )}
                   {run.steps && run.steps.length > 0 && (
                     <div className="space-y-1 pl-2 border-l-2 border-border ml-2">
@@ -83,10 +83,10 @@ export const RunHistoryDrawer = memo(function RunHistoryDrawer({ ruleId, open, o
                             "bg-red-500": step.status === "error",
                             "bg-amber-400": step.status === "skipped",
                           })} />
-                          <span className="text-[10px] text-muted-foreground">{step.type}</span>
-                          {step.message && <span className="text-[10px] text-muted-foreground">— {step.message}</span>}
+                          <span className="text-micro text-muted-foreground">{step.type}</span>
+                          {step.message && <span className="text-micro text-muted-foreground">— {step.message}</span>}
                           {step.branchTaken && (
-                            <span className="text-[10px] text-primary font-medium">→ {step.branchTaken}</span>
+                            <span className="text-micro text-primary font-medium">→ {step.branchTaken}</span>
                           )}
                         </div>
                       ))}

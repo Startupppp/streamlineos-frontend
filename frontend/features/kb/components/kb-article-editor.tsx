@@ -362,7 +362,7 @@ export function KbArticleEditor({
                     <SelectItem value="public">Public</SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-dense text-muted-foreground">
                   Public + published articles appear on the help center.
                 </p>
               </div>

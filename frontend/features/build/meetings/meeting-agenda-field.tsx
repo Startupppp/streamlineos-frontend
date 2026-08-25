@@ -43,7 +43,7 @@ export function MeetingAgendaField({ onGenerateAgenda, hasActiveSprint }: Meetin
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-6 text-[11px] gap-1 text-primary hover:text-primary/80 px-2"
+                    className="h-6 text-dense gap-1 text-primary hover:text-primary/80 px-2"
                   >
                     <SparklesIcon className="h-3 w-3" />
                     Generate

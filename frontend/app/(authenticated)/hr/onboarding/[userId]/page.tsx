@@ -112,12 +112,12 @@ function TaskCard({
             </div>
 
             {task.description && (
-              <p className="text-[12px] text-muted-foreground">{task.description}</p>
+              <p className="text-xs text-muted-foreground">{task.description}</p>
             )}
 
             <div className="flex items-center gap-3 mt-1">
               {task.dueDate && (
-                <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                <span className="flex items-center gap-1 text-dense text-muted-foreground">
                   {overdue ? (
                     <AlertCircle className="h-3 w-3 text-destructive" />
                   ) : (
@@ -127,7 +127,7 @@ function TaskCard({
                 </span>
               )}
               {done && task.completedAt && (
-                <span className="text-[11px] text-green-600 dark:text-green-300">
+                <span className="text-dense text-green-600 dark:text-green-300">
                   Completed {formatDate(task.completedAt)}
                 </span>
               )}

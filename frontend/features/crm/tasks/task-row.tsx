@@ -118,7 +118,7 @@ export function TaskRow({
         {task.entityType && task.entityId != null && (
           <Link
             href={`${ENTITY_PATHS[task.entityType]}/${task.entityId}`}
-            className="text-[11px] text-primary hover:underline truncate"
+            className="text-dense text-primary hover:underline truncate"
           >
             {ENTITY_LABELS[task.entityType]} #{task.entityId}
           </Link>
@@ -128,7 +128,7 @@ export function TaskRow({
       {task.dueDate && (
         <span
           className={cn(
-            "text-[11px] shrink-0 tabular-nums",
+            "text-dense shrink-0 tabular-nums",
             getDueDateClass(task.dueDate, task.status),
           )}
         >

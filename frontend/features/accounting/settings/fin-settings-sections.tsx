@@ -235,7 +235,7 @@ export function PoliciesSection({ policies, canManage }: PoliciesSectionProps) {
         key: "isActive",
         header: "Active",
         cell: (row) => (
-          <Badge variant={row.isActive ? "default" : "secondary"} className="text-[10px]">
+          <Badge variant={row.isActive ? "default" : "secondary"} className="text-micro">
             {row.isActive ? "Active" : "Inactive"}
           </Badge>
         ),

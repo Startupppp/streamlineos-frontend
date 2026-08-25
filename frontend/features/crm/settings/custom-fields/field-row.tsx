@@ -95,17 +95,17 @@ export function FieldRow({ field, onEdit, onDeleteRequest, onToggle }: FieldRowP
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <TruncatedText text={field.label} className="text-sm font-medium" />
-                <span className="text-[10px] text-muted-foreground font-mono">{field.name}</span>
-                <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0.5", typeConfig.className)}>
+                <span className="text-micro text-muted-foreground font-mono">{field.name}</span>
+                <Badge variant="outline" className={cn("text-micro px-1.5 py-0.5", typeConfig.className)}>
                   {typeConfig.label}
                 </Badge>
                 {field.isRequired && (
-                  <Badge variant="outline" className="text-[10px]">
+                  <Badge variant="outline" className="text-micro">
                     Required
                   </Badge>
                 )}
                 {field.fieldType === "select" && field.options && field.options.length > 0 && (
-                  <Badge variant="secondary" className="text-[10px]">
+                  <Badge variant="secondary" className="text-micro">
                     {field.options.length} options
                   </Badge>
                 )}

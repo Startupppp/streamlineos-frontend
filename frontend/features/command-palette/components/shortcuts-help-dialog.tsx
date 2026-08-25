@@ -17,7 +17,7 @@ function ShortcutRow({ keys, label }: ShortcutRowProps) {
         {keys.map((key) => (
           <kbd
             key={key}
-            className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded border border-border bg-muted px-1.5 font-mono text-[11px] text-muted-foreground"
+            className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded border border-border bg-muted px-1.5 font-mono text-dense text-muted-foreground"
           >
             {key}
           </kbd>
@@ -55,7 +55,7 @@ export function ShortcutsHelpDialog() {
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+            <p className="mb-1 text-micro font-semibold uppercase tracking-widest text-muted-foreground/60">
               Global
             </p>
             <div className="divide-y divide-border/50">
@@ -65,7 +65,7 @@ export function ShortcutsHelpDialog() {
             </div>
           </div>
           <div>
-            <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+            <p className="mb-1 text-micro font-semibold uppercase tracking-widest text-muted-foreground/60">
               Inside a project
             </p>
             <div className="divide-y divide-border/50">
@@ -75,7 +75,7 @@ export function ShortcutsHelpDialog() {
             </div>
           </div>
         </div>
-        <p className="mt-4 text-[11px] text-muted-foreground/50">
+        <p className="mt-4 text-dense text-muted-foreground/50">
           Shortcuts are disabled while typing in inputs.
         </p>
       </DialogContent>

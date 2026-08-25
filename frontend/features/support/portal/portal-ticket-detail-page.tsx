@@ -86,16 +86,16 @@ export function PortalTicketDetailPage({ portalTicketId }: PortalTicketDetailPag
           <Badge variant="outline" className={PRIORITY_COLORS[ticket.priority]}>
             {ticket.priority}
           </Badge>
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-dense text-muted-foreground">
             Created {formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true })}
           </span>
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-dense text-muted-foreground">
             Updated {formatDistanceToNow(new Date(ticket.updatedAt), { addSuffix: true })}
           </span>
         </div>
 
         {isClosed && (
-          <div className="shrink-0 mt-3 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 dark:border-emerald-800/40 dark:bg-emerald-950/20 px-3 py-2 text-[12px] text-emerald-700 dark:text-emerald-400">
+          <div className="shrink-0 mt-3 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 dark:border-emerald-800/40 dark:bg-emerald-950/20 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-400">
             <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
             This ticket is {ticket.status === "CLOSED" ? "closed" : "resolved"}. Sending a new reply will notify our support team.
           </div>
@@ -118,11 +118,11 @@ export function PortalTicketDetailPage({ portalTicketId }: PortalTicketDetailPag
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-xs font-semibold">{isMine ? "You" : "Support Team"}</span>
-                    <span className="text-[10px] text-muted-foreground">
+                    <span className="text-micro text-muted-foreground">
                       {formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}
                     </span>
                   </div>
-                  <p className="text-[13px] whitespace-pre-wrap">{msg.body}</p>
+                  <p className="text-label whitespace-pre-wrap">{msg.body}</p>
                   {msg.attachments.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mt-1.5">
                       {msg.attachments.map((att, i) => {
@@ -133,7 +133,7 @@ export function PortalTicketDetailPage({ portalTicketId }: PortalTicketDetailPag
                             href={att.fileUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-[11px] text-primary hover:underline bg-primary/10 rounded px-2 py-0.5 border border-primary/30"
+                            className="flex items-center gap-1 text-dense text-primary hover:underline bg-primary/10 rounded px-2 py-0.5 border border-primary/30"
                           >
                             <Icon className="h-3 w-3 shrink-0" />
                             <span className="truncate max-w-[120px]">{att.fileName}</span>

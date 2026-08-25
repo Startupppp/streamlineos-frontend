@@ -166,7 +166,7 @@ export function TicketCustomFields({
 
   return (
     <div className="space-y-2">
-      <h4 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+      <h4 className="text-dense font-medium uppercase tracking-wide text-muted-foreground">
         Custom Fields
       </h4>
       {fields.map((field) => (

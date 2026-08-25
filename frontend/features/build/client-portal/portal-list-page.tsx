@@ -102,16 +102,16 @@ export function PortalListPage() {
                           text={project.name}
                           className="text-sm font-semibold text-foreground transition-colors group-hover:text-primary"
                         />
-                        <p className="font-mono text-[10px] text-muted-foreground">{project.key}</p>
+                        <p className="font-mono text-micro text-muted-foreground">{project.key}</p>
                       </div>
                       <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
                     </div>
                     <div className="mt-3 flex min-w-0 flex-wrap items-center gap-2">
-                      <Badge variant="outline" className="text-[10px] capitalize">
+                      <Badge variant="outline" className="text-micro capitalize">
                         {project.status}
                       </Badge>
                       {project.startDate ?? project.targetEndDate ? (
-                        <span className="flex min-w-0 items-center gap-1 text-[10px] text-muted-foreground">
+                        <span className="flex min-w-0 items-center gap-1 text-micro text-muted-foreground">
                           <CalendarDays className="h-3 w-3 shrink-0" />
                           <span className={TEXT_ONE_LINE}>
                             {formatDate(project.startDate)} –{" "}

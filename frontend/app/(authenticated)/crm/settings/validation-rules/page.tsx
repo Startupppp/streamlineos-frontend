@@ -112,7 +112,7 @@ function TestPanel({ entityType }: TestPanelProps) {
               <button
                 key={k}
                 type="button"
-                className="inline-flex items-center gap-1 text-[10px] bg-muted border border-border rounded px-1.5 py-0.5 hover:bg-destructive/10 hover:border-destructive/40 transition-colors"
+                className="inline-flex items-center gap-1 text-micro bg-muted border border-border rounded px-1.5 py-0.5 hover:bg-destructive/10 hover:border-destructive/40 transition-colors"
                 onClick={() => handleRemoveField(k)}
               >
                 <span className="font-mono text-muted-foreground">{k}</span>
@@ -128,7 +128,7 @@ function TestPanel({ entityType }: TestPanelProps) {
         </LoadingButton>
         {testMutation.data && (
           <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs space-y-1.5">
-            <div className="font-semibold text-[10px] uppercase tracking-wide text-muted-foreground">Result</div>
+            <div className="font-semibold text-micro uppercase tracking-wide text-muted-foreground">Result</div>
             {errorEntries.length === 0 ? (
               <span className="text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 rounded px-1.5 py-0.5 font-medium dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
                 All rules pass
@@ -138,7 +138,7 @@ function TestPanel({ entityType }: TestPanelProps) {
                 {errorEntries.map(([field, message]) => (
                   <div key={field} className="flex items-start gap-1.5">
                     <span className="font-mono text-[9px] bg-red-50 text-red-700 border border-red-200 rounded px-1.5 py-0.5 shrink-0 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30">{field}</span>
-                    <span className="text-muted-foreground text-[10px]">{message}</span>
+                    <span className="text-muted-foreground text-micro">{message}</span>
                   </div>
                 ))}
               </div>
@@ -241,7 +241,7 @@ function EntityRulesTab({ entityType, onNewRule }: EntityRulesTabProps) {
       key: "field",
       header: "Field",
       cell: (row): ReactNode => (
-        <span className="font-mono text-[10px] bg-muted px-1.5 py-0.5 rounded">{row.field}</span>
+        <span className="font-mono text-micro bg-muted px-1.5 py-0.5 rounded">{row.field}</span>
       ),
     },
     {
@@ -279,7 +279,7 @@ function EntityRulesTab({ entityType, onNewRule }: EntityRulesTabProps) {
       headerClassName: "text-center",
       className: "text-center",
       cell: (row): ReactNode => (
-        <span className="text-[10px] text-muted-foreground">{row.sortOrder}</span>
+        <span className="text-micro text-muted-foreground">{row.sortOrder}</span>
       ),
     },
     {

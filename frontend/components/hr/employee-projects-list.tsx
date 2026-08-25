@@ -58,7 +58,7 @@ export function EmployeeProjectsList({ projects }: { projects: ProjectItem[] }) 
                                         </h4>
                                         <Badge
                                             variant="secondary"
-                                            className="text-[10px] mt-1 bg-muted text-muted-foreground font-medium"
+                                            className="text-micro mt-1 bg-muted text-muted-foreground font-medium"
                                         >
                                             {item.role || 'MEMBER'}
                                         </Badge>
@@ -71,7 +71,7 @@ export function EmployeeProjectsList({ projects }: { projects: ProjectItem[] }) 
 
                                 <div className="grid grid-cols-3 gap-2 text-center border-t border-border pt-3">
                                     <div className="flex flex-col items-center gap-0.5">
-                                        <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                                        <span className="text-micro text-muted-foreground uppercase tracking-wide">
                                             To Do
                                         </span>
                                         <span className="font-bold text-sm text-foreground">
@@ -79,7 +79,7 @@ export function EmployeeProjectsList({ projects }: { projects: ProjectItem[] }) 
                                         </span>
                                     </div>
                                     <div className="flex flex-col items-center gap-0.5">
-                                        <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                                        <span className="text-micro text-muted-foreground uppercase tracking-wide">
                                             In Progress
                                         </span>
                                         <span className="font-bold text-sm text-primary">
@@ -87,7 +87,7 @@ export function EmployeeProjectsList({ projects }: { projects: ProjectItem[] }) 
                                         </span>
                                     </div>
                                     <div className="flex flex-col items-center gap-0.5">
-                                        <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                                        <span className="text-micro text-muted-foreground uppercase tracking-wide">
                                             Done
                                         </span>
                                         <span className="font-bold text-sm text-emerald-600 dark:text-emerald-300">

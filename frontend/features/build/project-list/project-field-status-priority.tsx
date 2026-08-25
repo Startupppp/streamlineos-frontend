@@ -163,7 +163,7 @@ export const InlineProjectPriority = memo(function InlineProjectPriority({
         <PopoverTrigger asChild>
           <button
             type="button"
-            className="flex items-center gap-1 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+            className="flex items-center gap-1 text-dense text-muted-foreground transition-colors hover:text-foreground"
             aria-label="Change project priority"
           >
             <span

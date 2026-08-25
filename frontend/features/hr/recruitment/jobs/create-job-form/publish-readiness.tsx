@@ -69,7 +69,7 @@ export function PublishReadiness({ steps, onStepClick }: PublishReadinessProps) 
         </Button>
       </ResponsivePopoverTrigger>
       <ResponsivePopoverContent align="end" className="w-64 p-2" title="Publish readiness">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-2 pb-1.5">
+        <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground px-2 pb-1.5">
           Publish readiness
         </p>
         <div className="space-y-0.5">

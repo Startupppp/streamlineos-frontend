@@ -41,7 +41,7 @@ function TimerDigit({ value, label }: { value: number; label: string }) {
           {formatTimerSegment(value)}
         </span>
       </div>
-      <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+      <span className="text-micro font-medium uppercase tracking-[0.14em] text-muted-foreground">
         {label}
       </span>
     </div>
@@ -94,7 +94,7 @@ function SessionMetric({
         )}
       >
         <Icon className="size-3.5 shrink-0 text-current" aria-hidden />
-        <span className="text-[11px] font-medium uppercase tracking-[0.12em]">
+        <span className="text-dense font-medium uppercase tracking-[0.12em]">
           {label}
         </span>
       </div>

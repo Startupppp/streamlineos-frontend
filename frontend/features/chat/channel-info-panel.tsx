@@ -288,7 +288,7 @@ export function ChannelInfoPanel({
   return (
     <div className="flex h-full w-80 min-w-0 flex-col overflow-hidden">
       <div className="h-[56px] px-4 border-b border-border/40 flex items-center justify-between shrink-0">
-        <h3 className="text-[14px] font-bold">Details</h3>
+        <h3 className="text-sm font-bold">Details</h3>
         <div className="flex items-center gap-1">
           {isAdmin && isMultiMemberChannel && !editing && (
             <button
@@ -352,24 +352,24 @@ export function ChannelInfoPanel({
                 </button>
               </div>
               <div>
-                <Label className="text-[11px] font-medium text-muted-foreground mb-1 block">
+                <Label className="text-dense font-medium text-muted-foreground mb-1 block">
                   Name
                 </Label>
                 <Input
                   value={editName}
                   onChange={handleEditNameChange}
-                  className="text-[13px] bg-muted/30"
+                  className="text-label bg-muted/30"
                 />
               </div>
               <div>
-                <Label className="text-[11px] font-medium text-muted-foreground mb-1 block">
+                <Label className="text-dense font-medium text-muted-foreground mb-1 block">
                   Description
                 </Label>
                 <Input
                   value={editDesc}
                   onChange={handleEditDescChange}
                   placeholder="Add a description..."
-                  className="text-[13px] bg-muted/30"
+                  className="text-label bg-muted/30"
                 />
               </div>
               <div className="flex gap-2">
@@ -377,7 +377,7 @@ export function ChannelInfoPanel({
                   variant="outline"
                   size="sm"
                   onClick={handleCancelEdit}
-                  className="flex-1 h-8 text-[12px]"
+                  className="flex-1 h-8 text-xs"
                 >
                   Cancel
                 </Button>
@@ -386,7 +386,7 @@ export function ChannelInfoPanel({
                   onClick={handleSaveEdit}
                   disabled={!editName.trim()}
                   isPending={updateChannel.isPending}
-                  className="flex-1 h-8 text-[12px]"
+                  className="flex-1 h-8 text-xs"
                 >
                   Save
                 </LoadingButton>
@@ -441,7 +441,7 @@ export function ChannelInfoPanel({
               )}
               <TruncatedText text={displayName} className="text-[17px] font-bold max-w-[200px]" />
               {channel?.type === "DIRECT" ? (
-                <p className="text-[12px] text-muted-foreground mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   {otherMember
                     ? onlineUserIds.has(otherMember.id)
                       ? "Online"
@@ -450,7 +450,7 @@ export function ChannelInfoPanel({
                 </p>
               ) : (
                 channel?.description && (
-                  <p className="text-[12px] text-muted-foreground mt-1 max-w-[240px]">
+                  <p className="text-xs text-muted-foreground mt-1 max-w-[240px]">
                     {channel.description}
                   </p>
                 )
@@ -460,7 +460,7 @@ export function ChannelInfoPanel({
 
           {pins && pins.length > 0 && (
             <div className="mb-6">
-              <h5 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1 flex items-center gap-1.5">
+              <h5 className="text-dense font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1 flex items-center gap-1.5">
                 <Bookmark className="h-3 w-3" />
                 Pinned Messages ({pins.length})
               </h5>
@@ -479,8 +479,8 @@ export function ChannelInfoPanel({
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <TruncatedText text={pin.message.sender?.name ?? ""} className="text-[11px] font-semibold" />
-                      <p className="text-[12px] text-muted-foreground line-clamp-2 break-words">
+                      <TruncatedText text={pin.message.sender?.name ?? ""} className="text-dense font-semibold" />
+                      <p className="text-xs text-muted-foreground line-clamp-2 break-words">
                         {pin.message.content ??
                           (pin.message.attachments.length > 0
                             ? `${pin.message.attachments.length} attachment(s)`
@@ -506,20 +506,20 @@ export function ChannelInfoPanel({
 
           <div>
             <div className="flex items-center justify-between mb-3 px-1">
-              <h5 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+              <h5 className="text-dense font-bold text-muted-foreground uppercase tracking-wider">
                 Members ({channel?.members?.length ?? 0})
               </h5>
               {isAdmin && isMultiMemberChannel && (
                 <AddMemberButton
                   onClick={() => setShowAddMembers(true)}
-                  className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:text-primary/80 transition-colors"
+                  className="inline-flex items-center gap-1 text-dense font-medium text-primary hover:text-primary/80 transition-colors"
                 />
               )}
             </div>
 
             {onlineMembers.length > 0 && (
               <div className="mb-3">
-                <p className="text-[10px] font-bold text-emerald-600/80 uppercase tracking-wider px-2 mb-1">
+                <p className="text-micro font-bold text-emerald-600/80 uppercase tracking-wider px-2 mb-1">
                   Online — {onlineMembers.length}
                 </p>
                 <div className="space-y-0.5">
@@ -542,7 +542,7 @@ export function ChannelInfoPanel({
 
             {offlineMembers.length > 0 && (
               <div>
-                <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider px-2 mb-1">
+                <p className="text-micro font-bold text-muted-foreground/60 uppercase tracking-wider px-2 mb-1">
                   Offline — {offlineMembers.length}
                 </p>
                 <div className="space-y-0.5">
@@ -583,7 +583,7 @@ export function ChannelInfoPanel({
               ];
               return (
                 <div className="mt-4 pt-4 border-t border-border/30">
-                  <h5 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1 flex items-center gap-1.5">
+                  <h5 className="text-dense font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1 flex items-center gap-1.5">
                     {isMuted ? (
                       <BellOff className="h-3 w-3" />
                     ) : (
@@ -593,7 +593,7 @@ export function ChannelInfoPanel({
                   </h5>
                   {isMuted ? (
                     <div className="flex flex-col gap-2">
-                      <p className="text-[12px] text-muted-foreground px-1">
+                      <p className="text-xs text-muted-foreground px-1">
                         Muted until{" "}
                         {mutedUntil &&
                         new Date(mutedUntil).getFullYear() >= 2099
@@ -605,7 +605,7 @@ export function ChannelInfoPanel({
                       <LoadingButton
                         variant="outline"
                         size="sm"
-                        className="w-full h-8 text-[12px]"
+                        className="w-full h-8 text-xs"
                         onClick={() => unmuteChannel.mutate(channelId)}
                         isPending={unmuteChannel.isPending}
                       >
@@ -624,7 +624,7 @@ export function ChannelInfoPanel({
                             })
                           }
                           disabled={muteChannel.isPending}
-                          className="inline-flex h-8 items-center justify-center px-2 rounded-lg border border-border/50 text-[11px] font-medium hover:bg-muted/40 transition-colors disabled:opacity-50"
+                          className="inline-flex h-8 items-center justify-center px-2 rounded-lg border border-border/50 text-dense font-medium hover:bg-muted/40 transition-colors disabled:opacity-50"
                         >
                           {opt.label}
                         </button>
@@ -637,7 +637,7 @@ export function ChannelInfoPanel({
 
           {channel?.createdAt && (
             <div className="mt-6 pt-4 border-t border-border/30">
-              <p className="text-[11px] text-muted-foreground/50 text-center">
+              <p className="text-dense text-muted-foreground/50 text-center">
                 {channel.type === "GROUP"
                   ? `Created ${formatDistanceToNow(new Date(channel.createdAt), { addSuffix: true })}`
                   : `Started ${formatDistanceToNow(new Date(channel.createdAt), { addSuffix: true })}`}
@@ -650,7 +650,7 @@ export function ChannelInfoPanel({
               <LoadingButton
                 variant="outline"
                 size="sm"
-                className="w-full h-8 text-[12px]"
+                className="w-full h-8 text-xs"
                 onClick={handleUnarchive}
                 isPending={unarchiveChannel.isPending}
               >
@@ -661,7 +661,7 @@ export function ChannelInfoPanel({
               <LoadingButton
                 variant="outline"
                 size="sm"
-                className="w-full h-8 text-[12px]"
+                className="w-full h-8 text-xs"
                 onClick={handleArchive}
                 isPending={archiveChannel.isPending}
               >

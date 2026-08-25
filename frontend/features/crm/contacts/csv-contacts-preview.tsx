@@ -82,7 +82,7 @@ const contactColumns: DataTableColumn<ParsedContactWithIdx>[] = [
     header: "Source",
     cell: (row) =>
       row.source ? (
-        <Badge variant="outline" className="text-[10px]">
+        <Badge variant="outline" className="text-micro">
           {row.source}
         </Badge>
       ) : (

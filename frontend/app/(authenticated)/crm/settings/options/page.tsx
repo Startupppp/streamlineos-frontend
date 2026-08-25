@@ -221,12 +221,12 @@ function OptionRow({ option, showTerminal, onDeleteRequest }: OptionRowProps) {
         onBlur={handleLabelBlur}
         className="text-xs w-32 shrink-0 border-transparent hover:border-input focus:border-input bg-transparent"
       />
-      <span className="font-mono text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground shrink-0">
+      <span className="font-mono text-micro bg-muted px-1.5 py-0.5 rounded text-muted-foreground shrink-0">
         {option.key}
       </span>
       <div className="flex items-center gap-3 ml-auto shrink-0">
         {showTerminal && (
-          <label className="flex items-center gap-1.5 text-[10px] text-muted-foreground cursor-pointer">
+          <label className="flex items-center gap-1.5 text-micro text-muted-foreground cursor-pointer">
             Terminal
             <Switch
               checked={option.isTerminal}
@@ -235,7 +235,7 @@ function OptionRow({ option, showTerminal, onDeleteRequest }: OptionRowProps) {
             />
           </label>
         )}
-        <label className="flex items-center gap-1.5 text-[10px] text-muted-foreground cursor-pointer">
+        <label className="flex items-center gap-1.5 text-micro text-muted-foreground cursor-pointer">
           Active
           <Switch
             checked={option.isActive}

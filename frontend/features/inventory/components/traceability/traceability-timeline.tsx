@@ -28,7 +28,7 @@ function TimelineSection({ dotClass, label, children }: TimelineSectionProps) {
         <div className="w-px flex-1 bg-border mt-1" />
       </div>
       <div className="pb-5 min-w-0 flex-1">
-        <p className="text-[11px] font-semibold text-foreground uppercase tracking-wider mb-1.5">
+        <p className="text-dense font-semibold text-foreground uppercase tracking-wider mb-1.5">
           {label}
         </p>
         {children}
@@ -43,7 +43,7 @@ const EventRow = memo(function EventRow({
   event: TraceabilityEvent;
 }) {
   return (
-    <div className="flex items-start justify-between gap-2 text-[11px] py-0.5">
+    <div className="flex items-start justify-between gap-2 text-dense py-0.5">
       <div className="min-w-0 flex-1">
         <span className="font-medium text-foreground">{event.eventType}</span>
         {event.referenceType && event.referenceId && (
@@ -70,7 +70,7 @@ const EventRow = memo(function EventRow({
 
 const StockRow = memo(function StockRow({ loc }: { loc: LotStockByLocation }) {
   return (
-    <div className="flex items-center justify-between text-[11px] py-0.5">
+    <div className="flex items-center justify-between text-dense py-0.5">
       <div>
         <span className="font-medium text-foreground">{loc.locationName}</span>
         <span className="text-muted-foreground ml-1.5">
@@ -106,7 +106,7 @@ export function TraceabilityTimeline({
 
   if (!result) {
     return (
-      <p className="text-[12px] text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         No traceability data available.
       </p>
     );
@@ -116,7 +116,7 @@ export function TraceabilityTimeline({
     <div className="space-y-0 pl-1">
       <TimelineSection dotClass="bg-primary" label="Origin">
         {result.origin ? (
-          <div className="text-[11px]">
+          <div className="text-dense">
             <span className="font-medium text-foreground">
               {result.origin.vendorName ?? "Unknown vendor"}
             </span>
@@ -132,7 +132,7 @@ export function TraceabilityTimeline({
             )}
           </div>
         ) : (
-          <p className="text-[11px] text-muted-foreground">No origin data</p>
+          <p className="text-dense text-muted-foreground">No origin data</p>
         )}
       </TimelineSection>
 
@@ -154,7 +154,7 @@ export function TraceabilityTimeline({
             ))}
           </div>
         ) : (
-          <p className="text-[11px] text-muted-foreground">No stock on hand</p>
+          <p className="text-dense text-muted-foreground">No stock on hand</p>
         )}
       </TimelineSection>
 

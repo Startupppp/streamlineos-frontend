@@ -127,7 +127,7 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
           <div
             className={cn(
               "flex h-7 w-7 shrink-0 items-center justify-center rounded-md ring-1 ring-inset",
-              "text-[10px] font-bold tracking-tight transition-transform duration-150 group-hover:scale-105",
+              "text-micro font-bold tracking-tight transition-transform duration-150 group-hover:scale-105",
               avatarTint,
             )}
             aria-hidden="true"
@@ -142,7 +142,7 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
                   {project.key}
                 </span>
                 <h3
-                  className="text-[13px] font-semibold leading-tight text-foreground transition-colors group-hover:text-primary min-w-0"
+                  className="text-label font-semibold leading-tight text-foreground transition-colors group-hover:text-primary min-w-0"
                 >
                   {canEdit ? (
                     <InlineProjectTitle projectId={project.id} currentName={project.name} />
@@ -226,7 +226,7 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
               />
             ) : project.description ? (
               <p
-                className={cn(TEXT_TWO_LINES, "mt-1 text-[10px] text-muted-foreground")}
+                className={cn(TEXT_TWO_LINES, "mt-1 text-micro text-muted-foreground")}
                 title={project.description}
               >
                 {project.description}
@@ -239,7 +239,7 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
           {hasTickets ? (
             <>
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[10px] font-medium tabular-nums text-muted-foreground">
+                <span className="text-micro font-medium tabular-nums text-muted-foreground">
                   <span className="text-foreground">{progressValue}%</span> complete
                 </span>
                 <ChevronRightIcon

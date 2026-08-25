@@ -34,7 +34,7 @@ export function LandingStats() {
                     decimals={stat.decimals ?? 0}
                   />
                 </p>
-                <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 leading-snug px-0.5">
+                <p className="text-micro sm:text-dense font-medium text-slate-500 leading-snug px-0.5">
                   {stat.label}
                 </p>
               </motion.div>

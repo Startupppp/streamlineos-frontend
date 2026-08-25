@@ -67,28 +67,28 @@ export function TaxReportTab() {
       header: "Employee",
       cell: (row) => (
         <div className="flex flex-col gap-0.5">
-          <span className="text-[11px] font-medium">{row.userName}</span>
-          <span className="text-[10px] text-muted-foreground">{row.userEmail}</span>
+          <span className="text-dense font-medium">{row.userName}</span>
+          <span className="text-micro text-muted-foreground">{row.userEmail}</span>
         </div>
       ),
     },
     {
       key: "regime",
       header: "Regime",
-      cell: (row) => <span className="text-[11px]">{row.regime}</span>,
+      cell: (row) => <span className="text-dense">{row.regime}</span>,
     },
     {
       key: "total",
       header: "Total Declared",
       className: "text-right",
       cell: (row) => (
-        <span className="font-mono tabular-nums text-[11px] font-medium">{formatMoney(calcTotal(row))}</span>
+        <span className="font-mono tabular-nums text-dense font-medium">{formatMoney(calcTotal(row))}</span>
       ),
     },
     {
       key: "status",
       header: "Status",
-      cell: (row) => <span className="text-[11px] capitalize">{row.status.toLowerCase()}</span>,
+      cell: (row) => <span className="text-dense capitalize">{row.status.toLowerCase()}</span>,
     },
   ];
 

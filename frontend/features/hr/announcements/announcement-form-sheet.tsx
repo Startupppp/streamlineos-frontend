@@ -472,7 +472,7 @@ export function AnnouncementFormSheet({
         <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-4 py-3">
           <div>
             <p className="text-xs font-medium text-foreground">Pin announcement</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
+            <p className="text-dense text-muted-foreground mt-0.5">
               Pinned announcements appear at the top
             </p>
           </div>

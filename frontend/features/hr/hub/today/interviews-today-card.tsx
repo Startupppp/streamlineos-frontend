@@ -58,7 +58,7 @@ export function InterviewsTodayCard({
                       })
                     : "Candidate"}
                 </p>
-                <p className="text-[10px] text-muted-foreground truncate">
+                <p className="text-micro text-muted-foreground truncate">
                   {format(new Date(i.scheduledAt), "h:mm a")}
                   {i.type ? ` · ${i.type}` : ""}
                 </p>

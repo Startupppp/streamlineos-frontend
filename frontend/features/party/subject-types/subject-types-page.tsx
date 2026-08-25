@@ -111,11 +111,11 @@ export function SubjectTypesPage() {
                 <div className="flex min-w-0 flex-col gap-1">
                   <div className="flex min-w-0 items-center gap-2">
                     <span className="truncate text-sm font-medium">{type.plural}</span>
-                    <Badge variant="outline" className="h-5 shrink-0 px-2 py-0.5 font-mono text-[10px]">
+                    <Badge variant="outline" className="h-5 shrink-0 px-2 py-0.5 font-mono text-micro">
                       {type.key}
                     </Badge>
                   </div>
-                  <span className="text-[13px] text-muted-foreground">
+                  <span className="text-label text-muted-foreground">
                     {type.fields.length} field{type.fields.length === 1 ? "" : "s"} · titled by{" "}
                     {type.fields.find((field) => field.name === type.titleField)?.label ??
                       type.titleField}

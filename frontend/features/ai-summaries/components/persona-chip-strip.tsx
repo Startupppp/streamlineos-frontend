@@ -41,7 +41,7 @@ function ChipButton({ chip, isSelected, onSelect }: ChipButtonProps) {
       type="button"
       onClick={handleClick}
       className={cn(
-        "flex-shrink-0 inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors border",
+        "flex-shrink-0 inline-flex items-center rounded-full px-2.5 py-1 text-dense font-medium transition-colors border",
         isSelected
           ? "border-primary bg-primary text-primary-foreground"
           : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-primary/50",

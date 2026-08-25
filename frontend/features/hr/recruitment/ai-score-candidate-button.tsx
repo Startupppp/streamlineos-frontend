@@ -95,7 +95,7 @@ export function AIScoreCandidateButton({ candidateId, jobId, compact }: AIScoreC
                 Accept AI Score
               </LoadingButton>
             </div>
-            <p className="mt-2 text-[10px] text-muted-foreground leading-snug">
+            <p className="mt-2 text-micro text-muted-foreground leading-snug">
               AI estimate only. Human decision required. Scores are for reference purposes and must not be used to automatically accept or reject candidates.
             </p>
           </PopoverContent>
@@ -130,7 +130,7 @@ export function AIScoreCandidateButton({ candidateId, jobId, compact }: AIScoreC
               Accept AI Score
             </LoadingButton>
           </div>
-          <p className="text-[10px] text-muted-foreground leading-snug">
+          <p className="text-micro text-muted-foreground leading-snug">
             AI estimate only. Human decision required. Scores are for reference purposes and must not be used to automatically accept or reject candidates.
           </p>
         </>
@@ -171,15 +171,15 @@ function ScoreDetails({
               {result.fitLevel}
             </Badge>
           </div>
-          <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">{result.reasoning}</p>
+          <p className="text-dense text-muted-foreground leading-snug mt-0.5">{result.reasoning}</p>
         </div>
       </div>
 
       {result.strengths.length > 0 && (
         <div>
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Strengths</p>
+          <p className="text-micro font-medium text-muted-foreground uppercase tracking-wider mb-1">Strengths</p>
           {result.strengths.map((s, i) => (
-            <div key={i} className="flex items-start gap-1.5 text-[11px]">
+            <div key={i} className="flex items-start gap-1.5 text-dense">
               <TrendingUp className="h-3 w-3 text-emerald-500 mt-0.5 shrink-0" />
               <span>{s}</span>
             </div>
@@ -189,9 +189,9 @@ function ScoreDetails({
 
       {result.concerns.length > 0 && (
         <div>
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Concerns</p>
+          <p className="text-micro font-medium text-muted-foreground uppercase tracking-wider mb-1">Concerns</p>
           {result.concerns.map((c, i) => (
-            <div key={i} className="flex items-start gap-1.5 text-[11px]">
+            <div key={i} className="flex items-start gap-1.5 text-dense">
               <AlertCircle className="h-3 w-3 text-red-400 mt-0.5 shrink-0" />
               <span>{c}</span>
             </div>
@@ -201,9 +201,9 @@ function ScoreDetails({
 
       {result.suggestedQuestions.length > 0 && (
         <div>
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Suggested Questions</p>
+          <p className="text-micro font-medium text-muted-foreground uppercase tracking-wider mb-1">Suggested Questions</p>
           {result.suggestedQuestions.map((q, i) => (
-            <div key={i} className="flex items-start gap-1.5 text-[11px]">
+            <div key={i} className="flex items-start gap-1.5 text-dense">
               <MessageSquare className="h-3 w-3 text-muted-foreground mt-0.5 shrink-0" />
               <span>{q}</span>
             </div>
@@ -211,7 +211,7 @@ function ScoreDetails({
         </div>
       )}
 
-      <p className="text-[10px] text-muted-foreground italic leading-snug">
+      <p className="text-micro text-muted-foreground italic leading-snug">
         AI estimate only. Human decision required.
       </p>
     </div>

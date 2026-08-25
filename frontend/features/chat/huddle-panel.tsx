@@ -224,14 +224,14 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
       {expanded && (
         <div className="px-4 pb-3">
           {micError && (
-            <div className="px-3 py-2 text-[11px] text-red-500 bg-red-500/10 rounded-lg mb-2 flex items-center gap-2">
+            <div className="px-3 py-2 text-dense text-red-500 bg-red-500/10 rounded-lg mb-2 flex items-center gap-2">
               <MicOff className="h-3.5 w-3.5 shrink-0" />
               <span className="flex-1">{micError}</span>
             </div>
           )}
 
           {realtimeError && (
-            <div className="px-3 py-2 text-[11px] text-amber-600 bg-amber-500/10 rounded-lg mb-2">
+            <div className="px-3 py-2 text-dense text-amber-600 bg-amber-500/10 rounded-lg mb-2">
               {realtimeError}
             </div>
           )}
@@ -413,8 +413,8 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
 
           {showInviteDialog && inviteBlockedByPlan && (
             <div className="mt-3 border border-border/40 rounded-xl p-3 bg-muted/20">
-              <p className="text-[11px] font-semibold mb-1">Invite to huddle</p>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-dense font-semibold mb-1">Invite to huddle</p>
+              <p className="text-dense text-muted-foreground">
                 Huddles are one-to-one on the Free plan. Upgrade to start group huddles.
               </p>
             </div>
@@ -422,17 +422,17 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
 
           {showInviteDialog && !inviteBlockedByPlan && (
             <div className="mt-3 border border-border/40 rounded-xl p-3 bg-muted/20">
-              <p className="text-[11px] font-semibold mb-2">Invite to huddle</p>
+              <p className="text-dense font-semibold mb-2">Invite to huddle</p>
               <UserCombobox
                 value={inviteUserId}
                 onChange={setInviteUserId}
                 placeholder="Select member to invite…"
                 excludeUserId={currentUserId}
-                className="text-[12px] mb-2"
+                className="text-xs mb-2"
               />
               <LoadingButton
                 size="sm"
-                className="text-[11px]"
+                className="text-dense"
                 disabled={!inviteUserId}
                 isPending={inviteToHuddle.isPending}
                 onClick={() => {

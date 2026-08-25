@@ -32,14 +32,14 @@ export function LandingPricing() {
             <h3 className="font-display text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
               Cut costs with StreamlineOS
             </h3>
-            <p className="text-[12px] sm:text-[13px] text-slate-600 mt-1.5">
+            <p className="text-xs sm:text-label text-slate-600 mt-1.5">
               Cost savings based on average price per user for each app.
             </p>
           </div>
           <SavingsCalculator />
         </div>
 
-        <p className="mt-10 text-center text-[12px] text-slate-500">
+        <p className="mt-10 text-center text-xs text-slate-500">
           Need the full feature matrix?{" "}
           <Link href="/pricing" className="text-blue-600 hover:underline font-medium">
             See detailed pricing comparison →

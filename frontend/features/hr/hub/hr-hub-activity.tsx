@@ -100,7 +100,7 @@ export function HrHubActivity({
           {access.canCases && (
             <Link
               href="/hr/service-delivery"
-              className="text-[10px] font-medium text-blue-600 hover:underline dark:text-blue-400"
+              className="text-micro font-medium text-blue-600 hover:underline dark:text-blue-400"
             >
               Service delivery
             </Link>
@@ -108,7 +108,7 @@ export function HrHubActivity({
           {access.canProbation && (
             <Link
               href="/hr/onboarding/probation"
-              className="text-[10px] font-medium text-blue-600 hover:underline dark:text-blue-400"
+              className="text-micro font-medium text-blue-600 hover:underline dark:text-blue-400"
             >
               Probation
             </Link>
@@ -116,7 +116,7 @@ export function HrHubActivity({
           {access.canExit && (
             <Link
               href="/hr/exit"
-              className="text-[10px] font-medium text-blue-600 hover:underline dark:text-blue-400"
+              className="text-micro font-medium text-blue-600 hover:underline dark:text-blue-400"
             >
               Exits
             </Link>

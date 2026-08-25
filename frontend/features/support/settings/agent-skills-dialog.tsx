@@ -35,7 +35,7 @@ function SkillChipRemoveButton({ skill, onRemove }: { skill: string; onRemove: (
 
 function SkillChip({ skill, onRemove }: SkillChipProps) {
   return (
-    <Badge variant="secondary" className="text-[10px] gap-1">
+    <Badge variant="secondary" className="text-micro gap-1">
       {skill}
       <SkillChipRemoveButton skill={skill} onRemove={onRemove} />
     </Badge>

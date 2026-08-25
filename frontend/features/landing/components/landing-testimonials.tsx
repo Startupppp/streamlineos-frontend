@@ -57,7 +57,7 @@ export function LandingTestimonials() {
             </div>
           ))}
         </div>
-        <p className="mt-3 text-center text-[11px] text-slate-400 px-4">
+        <p className="mt-3 text-center text-dense text-slate-400 px-4">
           Swipe to see more
         </p>
       </div>
@@ -101,18 +101,18 @@ function TestimonialCard({
           <Star key={idx} className="h-3 w-3 fill-amber-400 text-amber-400" />
         ))}
       </div>
-      <p className="text-[13px] sm:text-[14px] text-slate-700 leading-relaxed mb-5 line-clamp-5">
+      <p className="text-label sm:text-sm text-slate-700 leading-relaxed mb-5 line-clamp-5">
         &ldquo;{testimonial.quote}&rdquo;
       </p>
       <div className="flex items-center gap-3 pt-4 border-t border-slate-100">
-        <span className="h-9 w-9 rounded-full inline-flex items-center justify-center text-[11px] font-bold text-white shrink-0 bg-brand-core">
+        <span className="h-9 w-9 rounded-full inline-flex items-center justify-center text-dense font-bold text-white shrink-0 bg-brand-core">
           {testimonial.initials}
         </span>
         <div className="min-w-0">
-          <p className="text-[13px] font-semibold text-slate-900 truncate">
+          <p className="text-label font-semibold text-slate-900 truncate">
             {testimonial.name}
           </p>
-          <p className="text-[11px] text-slate-500 truncate">{testimonial.role}</p>
+          <p className="text-dense text-slate-500 truncate">{testimonial.role}</p>
         </div>
       </div>
     </motion.div>

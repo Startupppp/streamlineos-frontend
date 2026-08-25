@@ -109,7 +109,7 @@ export function SupportActivityLog({ supportTicketId }: SupportActivityLogProps)
                 <TruncatedText text={entry.userName ?? "System"} className="text-xs font-medium" />
                 <span className="text-xs text-muted-foreground">{entry.label}</span>
                 {entry.createdAt && (
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="text-micro text-muted-foreground">
                     {formatDistanceToNow(new Date(entry.createdAt), {
                       addSuffix: true,
                     })}
@@ -117,7 +117,7 @@ export function SupportActivityLog({ supportTicketId }: SupportActivityLogProps)
                 )}
               </div>
               {change && (
-                <TruncatedText text={change} className="text-[11px] text-muted-foreground mt-0.5" />
+                <TruncatedText text={change} className="text-dense text-muted-foreground mt-0.5" />
               )}
             </div>
           </li>

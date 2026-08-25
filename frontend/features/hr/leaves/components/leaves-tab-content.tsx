@@ -135,7 +135,7 @@ export function LeavesTabContent({
                   text={typeName.replace(" Leave", "")}
                   className="text-sm font-semibold leading-tight text-foreground"
                 />
-                <p className="text-[10px] text-muted-foreground">Leave</p>
+                <p className="text-micro text-muted-foreground">Leave</p>
               </div>
             </div>
           );
@@ -202,7 +202,7 @@ export function LeavesTabContent({
           return (
             <div className="flex items-center gap-1.5">
               <span className={cn("h-1.5 w-1.5 rounded-full", pConfig.dotColor)} />
-              <span className={cn("text-[10px] font-semibold", pConfig.textColor)}>
+              <span className={cn("text-micro font-semibold", pConfig.textColor)}>
                 {pConfig.label}
               </span>
             </div>
@@ -228,7 +228,7 @@ export function LeavesTabContent({
             <div className="flex flex-col gap-0.5">
               <span
                 className={cn(
-                  "inline-flex w-fit items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold",
+                  "inline-flex w-fit items-center rounded-full border px-2 py-0.5 text-micro font-semibold",
                   statusBadgeClass,
                 )}
               >
@@ -237,12 +237,12 @@ export function LeavesTabContent({
               {row.managerComment && (
                 <TruncatedText
                   text={`"${row.managerComment}"`}
-                  className="max-w-[120px] text-[10px] text-muted-foreground"
+                  className="max-w-[120px] text-micro text-muted-foreground"
                 />
               )}
               {status === "REJECTED" && row.rejectionReason && (
                 <span
-                  className="max-w-[120px] truncate text-[10px] text-rose-500 dark:text-rose-300"
+                  className="max-w-[120px] truncate text-micro text-rose-500 dark:text-rose-300"
                   title={row.rejectionReason}
                 >
                   {row.rejectionReason}

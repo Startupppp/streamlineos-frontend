@@ -29,7 +29,7 @@ export function PortalHeader({ showProjectsLink = false }: PortalHeaderProps) {
             <span className="text-sm font-semibold tracking-tight text-foreground leading-none">
               {BRAND_NAME}
             </span>
-            <span className="text-[10px] font-medium text-muted-foreground leading-none mt-0.5">
+            <span className="text-micro font-medium text-muted-foreground leading-none mt-0.5">
               Client Portal
             </span>
           </div>

@@ -76,7 +76,7 @@ export function DecideDialog({
         <DialogHeader>
           <DialogTitle>Make Decision</DialogTitle>
           {approvalTitle && (
-            <DialogDescription className="text-[13px]">{approvalTitle}</DialogDescription>
+            <DialogDescription className="text-label">{approvalTitle}</DialogDescription>
           )}
         </DialogHeader>
         <Form {...form}>

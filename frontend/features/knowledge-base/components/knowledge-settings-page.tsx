@@ -95,7 +95,7 @@ function ModuleStatusSection() {
             Core module · Always on
           </p>
         </div>
-        <span className="ml-auto inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/70 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30 shrink-0">
+        <span className="ml-auto inline-flex items-center px-2 py-0.5 rounded text-dense font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/70 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30 shrink-0">
           Active
         </span>
       </div>
@@ -346,7 +346,7 @@ function ArticleMigrationSection() {
 
           {preview && preview.sample.length > 0 && (
             <div className="rounded-md border border-border bg-muted/10 px-3 py-2 space-y-1">
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+              <p className="text-dense font-medium text-muted-foreground uppercase tracking-wide">
                 Sample ({Math.min(preview.sample.length, 10)} of{" "}
                 {preview.willMigrate})
               </p>

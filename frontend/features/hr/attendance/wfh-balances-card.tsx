@@ -98,7 +98,7 @@ export const WfhBalancesCard = memo(function WfhBalancesCard() {
       </CardHeader>
       <CardContent className="space-y-4 px-4 pb-4 pt-4">
         <div>
-          <div className="mb-2 flex justify-between text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <div className="mb-2 flex justify-between text-dense font-semibold uppercase tracking-wider text-muted-foreground">
             <span>Monthly Quota</span>
             <span className="text-sm font-semibold normal-case tracking-normal text-foreground">
               {stats.approved} / {wfhQuota}
@@ -113,15 +113,15 @@ export const WfhBalancesCard = memo(function WfhBalancesCard() {
 
         <div className="grid grid-cols-3 gap-2">
           <div className="rounded-lg border border-border bg-muted/30 px-2.5 py-2">
-            <p className="text-[10px] text-muted-foreground">Left</p>
+            <p className="text-micro text-muted-foreground">Left</p>
             <p className="text-sm font-semibold tabular-nums">{remaining}</p>
           </div>
           <div className="rounded-lg border border-border bg-muted/30 px-2.5 py-2">
-            <p className="text-[10px] text-muted-foreground">Used</p>
+            <p className="text-micro text-muted-foreground">Used</p>
             <p className="text-sm font-semibold tabular-nums">{stats.approved}</p>
           </div>
           <div className="rounded-lg border border-border bg-muted/30 px-2.5 py-2">
-            <p className="text-[10px] text-muted-foreground">Pending</p>
+            <p className="text-micro text-muted-foreground">Pending</p>
             <p className="text-sm font-semibold tabular-nums">{stats.pending}</p>
           </div>
         </div>

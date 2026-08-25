@@ -21,7 +21,7 @@ export function AiGeneratedLabel({ timestamp, className }: AiGeneratedLabelProps
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border border-border bg-muted/60 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground",
+        "inline-flex items-center gap-1 rounded-full border border-border bg-muted/60 px-1.5 py-0.5 text-micro font-medium text-muted-foreground",
         className,
       )}
     >

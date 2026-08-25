@@ -73,13 +73,13 @@ export function LeaveCalendarWidget({
               >
                 <div
                   className={cn(
-                    "text-[10px] font-medium text-center leading-tight mb-1",
+                    "text-micro font-medium text-center leading-tight mb-1",
                     isToday ? "text-primary" : "text-muted-foreground",
                   )}
                 >
                   {format(day, "EEE")}
                   <br />
-                  <span className={cn("text-[11px]", isToday && "font-bold")}>
+                  <span className={cn("text-dense", isToday && "font-bold")}>
                     {format(day, "d")}
                   </span>
                 </div>

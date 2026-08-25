@@ -210,12 +210,12 @@ export function EssPayslipsSection({
                     {payslip.workerType === "CONTRACTOR" && (
                       <div className="mt-0.5 flex flex-wrap items-center gap-2">
                         {payslip.invoiceNumber && (
-                          <span className="text-[10px] text-muted-foreground">
+                          <span className="text-micro text-muted-foreground">
                             Invoice #{payslip.invoiceNumber}
                           </span>
                         )}
                         {payslip.paymentAdvice && (
-                          <span className="text-[10px] text-muted-foreground">
+                          <span className="text-micro text-muted-foreground">
                             Advice: {payslip.paymentAdvice}
                           </span>
                         )}
@@ -229,7 +229,7 @@ export function EssPayslipsSection({
                       {formatMoney(payslip.net)}
                     </span>
                     {payslip.net && (
-                      <span className="text-[10px] text-muted-foreground">
+                      <span className="text-micro text-muted-foreground">
                         {numberToWords(Math.round(parseFloat(payslip.net)))} only
                       </span>
                     )}

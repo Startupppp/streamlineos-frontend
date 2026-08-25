@@ -235,7 +235,7 @@ export function AppLoadingScreen({
           </div>
 
           <motion.span
-            className="text-[10px] font-medium tracking-[0.2em] text-muted-foreground uppercase"
+            className="text-micro font-medium tracking-[0.2em] text-muted-foreground uppercase"
             initial={{ opacity: 0 }}
             animate={{ opacity: [0.25, 0.4, 0.95, 0.3] }}
             transition={{

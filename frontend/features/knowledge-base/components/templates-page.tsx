@@ -78,7 +78,7 @@ function TemplateCard({
       <div className="flex items-start gap-3 p-3 rounded-lg border border-border bg-card hover:bg-muted/30 transition-colors">
         <span className="text-xl shrink-0 mt-0.5">{template.icon ?? "📄"}</span>
         <div className="flex-1 min-w-0">
-          <TruncatedText text={template.name} className="text-[13px] font-medium" />
+          <TruncatedText text={template.name} className="text-label font-medium" />
           {template.description && (
             <TruncatedText text={template.description} lines={2} className="text-xs text-muted-foreground mt-0.5" />
           )}
@@ -147,7 +147,7 @@ function StarterCard({ template, onUse, isCreating }: StarterCardProps) {
     <div className="flex items-start gap-3 p-3 rounded-lg border border-border bg-card hover:bg-muted/30 transition-colors">
       <span className="text-xl shrink-0 mt-0.5">{template.icon}</span>
       <div className="flex-1 min-w-0">
-        <TruncatedText text={template.name} className="text-[13px] font-medium" />
+        <TruncatedText text={template.name} className="text-label font-medium" />
         <TruncatedText text={template.description} lines={2} className="text-xs text-muted-foreground mt-0.5" />
       </div>
       <LoadingButton

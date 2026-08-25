@@ -64,12 +64,12 @@ export function SetupHelp() {
         <AccordionContent className="space-y-3 pb-1">
           <p className="text-xs text-muted-foreground">
             See{" "}
-            <code className="rounded bg-muted px-1 text-[11px]">docs/mcp-agent-access.md</code>{" "}
+            <code className="rounded bg-muted px-1 text-dense">docs/mcp-agent-access.md</code>{" "}
             for full docs.
           </p>
           <div className="space-y-1.5">
             <p className="text-xs font-medium text-foreground">
-              Cursor — <code className="rounded bg-muted px-1 text-[11px]">.cursor/mcp.json</code>
+              Cursor — <code className="rounded bg-muted px-1 text-dense">.cursor/mcp.json</code>
             </p>
             <div className="relative rounded-md bg-muted p-3">
               <pre className="pr-7 font-mono text-xs leading-relaxed break-all whitespace-pre-wrap">

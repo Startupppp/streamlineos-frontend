@@ -159,7 +159,7 @@ interface VariableButtonProps {
 function VariableButton({ variable, formType, onInsert }: VariableButtonProps) {
   const handleClick = useCallback(() => onInsert(variable, formType), [variable, formType, onInsert]);
   return (
-    <Button type="button" variant="outline" size="sm" className="text-[10px] h-6 px-2" onClick={handleClick}>
+    <Button type="button" variant="outline" size="sm" className="text-micro h-6 px-2" onClick={handleClick}>
       {variable}
     </Button>
   );
@@ -285,7 +285,7 @@ export default function EmailTemplatesPage() {
                       <FormLabel>Template Name</FormLabel>
                       <FormControl><Input {...field} placeholder="e.g. Welcome Email" maxLength={100} /></FormControl>
                       <FormMessage />
-                      <FormDescription className="text-[10px]">{field.value.length}/100 characters</FormDescription>
+                      <FormDescription className="text-micro">{field.value.length}/100 characters</FormDescription>
                     </FormItem>
                   )} />
                   <FormField control={createForm.control} name="subject" render={({ field }) => (
@@ -293,7 +293,7 @@ export default function EmailTemplatesPage() {
                       <FormLabel>Subject</FormLabel>
                       <FormControl><Input {...field} placeholder="e.g. Welcome to StreamlineOS, {{lead.name}}" maxLength={200} /></FormControl>
                       <FormMessage />
-                      <FormDescription className="text-[10px]">{field.value.length}/200 characters</FormDescription>
+                      <FormDescription className="text-micro">{field.value.length}/200 characters</FormDescription>
                     </FormItem>
                   )} />
                   <FormField control={createForm.control} name="body" render={({ field }) => (
@@ -301,7 +301,7 @@ export default function EmailTemplatesPage() {
                       <FormLabel>Body</FormLabel>
                       <FormControl><Textarea {...field} rows={8} placeholder="Write your email body..." /></FormControl>
                       <FormMessage />
-                      <FormDescription className="text-[10px]">{field.value.length} characters (min 10)</FormDescription>
+                      <FormDescription className="text-micro">{field.value.length} characters (min 10)</FormDescription>
                     </FormItem>
                   )} />
                   <div>
@@ -372,7 +372,7 @@ export default function EmailTemplatesPage() {
                           <FormLabel>Template Name</FormLabel>
                           <FormControl><Input {...field} maxLength={100} /></FormControl>
                           <FormMessage />
-                          <FormDescription className="text-[10px]">{field.value.length}/100 characters</FormDescription>
+                          <FormDescription className="text-micro">{field.value.length}/100 characters</FormDescription>
                         </FormItem>
                       )} />
                       <FormField control={editForm.control} name="subject" render={({ field }) => (
@@ -380,7 +380,7 @@ export default function EmailTemplatesPage() {
                           <FormLabel>Subject</FormLabel>
                           <FormControl><Input {...field} maxLength={200} /></FormControl>
                           <FormMessage />
-                          <FormDescription className="text-[10px]">{field.value.length}/200 characters</FormDescription>
+                          <FormDescription className="text-micro">{field.value.length}/200 characters</FormDescription>
                         </FormItem>
                       )} />
                       <FormField control={editForm.control} name="body" render={({ field }) => (
@@ -388,7 +388,7 @@ export default function EmailTemplatesPage() {
                           <FormLabel>Body</FormLabel>
                           <FormControl><Textarea {...field} rows={8} /></FormControl>
                           <FormMessage />
-                          <FormDescription className="text-[10px]">{field.value.length} characters (min 10)</FormDescription>
+                          <FormDescription className="text-micro">{field.value.length} characters (min 10)</FormDescription>
                         </FormItem>
                       )} />
                       <div>
@@ -433,7 +433,7 @@ export default function EmailTemplatesPage() {
                       <p className="text-sm whitespace-pre-wrap">{interpolate(previewTemplate.body, SAMPLE_DATA)}</p>
                     </div>
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-2">Preview uses sample data for variable interpolation</p>
+                  <p className="text-micro text-muted-foreground mt-2">Preview uses sample data for variable interpolation</p>
                 </CardContent>
               </Card>
             )}

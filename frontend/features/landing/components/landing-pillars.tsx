@@ -47,7 +47,7 @@ export function LandingPillars() {
                 <h3 className="font-display text-[15px] sm:text-base font-bold text-slate-900 sm:pt-2">
                   {p.title}
                 </h3>
-                <p className="text-[13px] sm:text-[14px] text-slate-500 leading-relaxed sm:pt-2">
+                <p className="text-label sm:text-sm text-slate-500 leading-relaxed sm:pt-2">
                   {p.description}
                 </p>
               </motion.div>

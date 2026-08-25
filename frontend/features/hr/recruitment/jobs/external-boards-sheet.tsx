@@ -275,7 +275,7 @@ export function ExternalBoardsSheet({
                     />
                   </div>
                 </div>
-                <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                <div className="flex items-center gap-3 text-dense text-muted-foreground">
                   <span>{posting.applicantCount} applicants</span>
                   <span>{posting.qualifiedCount} qualified</span>
                   <span>{posting.hiredCount} hired</span>

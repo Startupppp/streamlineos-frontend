@@ -55,7 +55,7 @@ function ApprovalCard({
               </p>
               <Badge
                 variant="secondary"
-                className="text-[10px] bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30"
+                className="text-micro bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30"
               >
                 Pending
               </Badge>
@@ -63,7 +63,7 @@ function ApprovalCard({
             <p className="text-xs text-muted-foreground mt-0.5">
               Execution: {approval.executionId.slice(0, 8)}...
             </p>
-            <div className="flex items-center gap-3 mt-2 text-[11px] text-muted-foreground">
+            <div className="flex items-center gap-3 mt-2 text-dense text-muted-foreground">
               <span>
                 Created {format(new Date(approval.createdAt), "MMM d, HH:mm")}
               </span>

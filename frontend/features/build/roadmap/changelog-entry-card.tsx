@@ -58,15 +58,15 @@ export const ChangelogEntryCard = memo(function ChangelogEntryCard({
         <div className="min-w-0 space-y-1.5">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <TruncatedText text={entry.title} className="text-sm font-medium" />
-            <Badge variant={CHANGELOG_TYPE_VARIANT[entry.type]} className="text-[10px]">
+            <Badge variant={CHANGELOG_TYPE_VARIANT[entry.type]} className="text-micro">
               {CHANGELOG_TYPE_OPTIONS.find((o) => o.value === entry.type)?.label}
             </Badge>
             {entry.version ? (
-              <Badge variant="outline" className="text-[10px]">
+              <Badge variant="outline" className="text-micro">
                 {entry.version}
               </Badge>
             ) : null}
-            <Badge variant={entry.isPublished ? "default" : "outline"} className="text-[10px]">
+            <Badge variant={entry.isPublished ? "default" : "outline"} className="text-micro">
               {entry.isPublished ? "Published" : "Draft"}
             </Badge>
           </div>
@@ -78,7 +78,7 @@ export const ChangelogEntryCard = memo(function ChangelogEntryCard({
               {entry.content}
             </p>
           ) : null}
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-dense text-muted-foreground">
             {entry.publishedAt
               ? `Published ${format(new Date(entry.publishedAt), "MMM d, yyyy")}`
               : `Created ${format(new Date(entry.createdAt), "MMM d, yyyy")}`}

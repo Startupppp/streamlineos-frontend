@@ -99,10 +99,10 @@ export const MilestoneCard = memo(function MilestoneCard({
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-start justify-between gap-2">
             <div className="min-w-0 space-y-0.5">
-              <TruncatedText text={milestone.name} className="text-[13px] font-semibold text-foreground" />
+              <TruncatedText text={milestone.name} className="text-label font-semibold text-foreground" />
               {milestone.description ? (
                 <p
-                  className={cn(TEXT_TWO_LINES, "text-[11px] text-muted-foreground")}
+                  className={cn(TEXT_TWO_LINES, "text-dense text-muted-foreground")}
                   title={milestone.description}
                 >
                   {milestone.description}
@@ -112,7 +112,7 @@ export const MilestoneCard = memo(function MilestoneCard({
             <Badge
               variant="secondary"
               className={cn(
-                "h-5 shrink-0 rounded-full px-1.5 text-[10px] font-semibold uppercase tracking-wide",
+                "h-5 shrink-0 rounded-full px-1.5 text-micro font-semibold uppercase tracking-wide",
                 cfg.badgeClassName,
               )}
             >
@@ -121,7 +121,7 @@ export const MilestoneCard = memo(function MilestoneCard({
           </div>
 
           <div className="mt-2 flex min-w-0 items-center justify-between gap-2">
-            <div className="flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground">
+            <div className="flex min-w-0 items-center gap-1.5 text-dense text-muted-foreground">
               <CalendarCheck2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
               <span className="shrink-0 tabular-nums">{format(dateObj, "MMM d, yyyy")}</span>
               {daysLabel ? (

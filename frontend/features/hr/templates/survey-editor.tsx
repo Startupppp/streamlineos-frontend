@@ -64,7 +64,7 @@ export function SurveyEditor({ questions, onChange }: SurveyEditorProps) {
       {questions.map((q, idx) => (
         <div key={q.id} className="p-3 rounded-lg border bg-card space-y-2">
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-mono text-muted-foreground w-5 shrink-0">{idx + 1}.</span>
+            <span className="text-dense font-mono text-muted-foreground w-5 shrink-0">{idx + 1}.</span>
             <Input
               placeholder="Question text"
               value={q.text}
@@ -90,7 +90,7 @@ export function SurveyEditor({ questions, onChange }: SurveyEditorProps) {
                 onCheckedChange={(v) => handleChange(q.id, { required: v })}
                 className="scale-75"
               />
-              <span className="text-[11px] text-muted-foreground">Req</span>
+              <span className="text-dense text-muted-foreground">Req</span>
             </div>
             <TooltipIconButton
               icon={Trash2Icon}

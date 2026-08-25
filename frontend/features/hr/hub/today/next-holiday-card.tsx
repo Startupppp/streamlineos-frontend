@@ -50,7 +50,7 @@ export function NextHolidayCard({
             <p className="text-sm font-semibold text-foreground truncate">
               {next.name}
             </p>
-            <p className="text-[10px] text-muted-foreground">
+            <p className="text-micro text-muted-foreground">
               {format(new Date(next.date), "EEEE, MMM d")}
               {daysUntil !== null && daysUntil > 0
                 ? ` · in ${daysUntil} day${daysUntil !== 1 ? "s" : ""}`

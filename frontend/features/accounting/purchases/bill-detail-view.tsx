@@ -213,7 +213,7 @@ export function BillDetailView({
         <CardContent className="p-5">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-4 text-sm">
             <div>
-              <p className="text-[11px] font-medium text-muted-foreground mb-1">Status</p>
+              <p className="text-dense font-medium text-muted-foreground mb-1">Status</p>
               <span
                 className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium border ${STATUS_CLASS[bill.status]}`}
               >
@@ -221,44 +221,44 @@ export function BillDetailView({
               </span>
             </div>
             <div>
-              <p className="text-[11px] font-medium text-muted-foreground mb-1">Vendor</p>
+              <p className="text-dense font-medium text-muted-foreground mb-1">Vendor</p>
               <TruncatedText text={bill.vendorName ?? "—"} className="text-sm text-foreground" />
             </div>
             <div>
-              <p className="text-[11px] font-medium text-muted-foreground mb-1">Vendor bill #</p>
+              <p className="text-dense font-medium text-muted-foreground mb-1">Vendor bill #</p>
               <p className="text-sm text-foreground">{bill.vendorBillNumber ?? "—"}</p>
             </div>
             <div>
-              <p className="text-[11px] font-medium text-muted-foreground mb-1">Bill date</p>
+              <p className="text-dense font-medium text-muted-foreground mb-1">Bill date</p>
               <p className="text-sm tabular-nums text-foreground">{formatDate(bill.billDate)}</p>
             </div>
             <div>
-              <p className="text-[11px] font-medium text-muted-foreground mb-1">Due date</p>
+              <p className="text-dense font-medium text-muted-foreground mb-1">Due date</p>
               <p className="text-sm tabular-nums text-foreground">{formatDate(bill.dueDate)}</p>
             </div>
             <div>
-              <p className="text-[11px] font-medium text-muted-foreground mb-1">Place of supply</p>
+              <p className="text-dense font-medium text-muted-foreground mb-1">Place of supply</p>
               <p className="text-sm text-foreground">{bill.placeOfSupply ?? "—"}</p>
             </div>
             <div>
-              <p className="text-[11px] font-medium text-muted-foreground mb-1">Vendor GSTIN</p>
+              <p className="text-dense font-medium text-muted-foreground mb-1">Vendor GSTIN</p>
               <p className="text-sm font-mono text-foreground">{bill.vendorGstin ?? "—"}</p>
             </div>
             <div>
-              <p className="text-[11px] font-medium text-muted-foreground mb-1">Supplier GSTIN</p>
+              <p className="text-dense font-medium text-muted-foreground mb-1">Supplier GSTIN</p>
               <p className="text-sm font-mono text-foreground">{bill.supplierGstin ?? "—"}</p>
             </div>
             <div>
-              <p className="text-[11px] font-medium text-muted-foreground mb-1">Reverse charge</p>
+              <p className="text-dense font-medium text-muted-foreground mb-1">Reverse charge</p>
               <p className="text-sm text-foreground">{bill.reverseCharge ? "Yes" : "No"}</p>
             </div>
             <div>
-              <p className="text-[11px] font-medium text-muted-foreground mb-1">Expense account</p>
+              <p className="text-dense font-medium text-muted-foreground mb-1">Expense account</p>
               <p className="text-sm font-mono text-foreground">{bill.expenseAccountCode ?? "—"}</p>
             </div>
             {bill.notes && (
               <div className="col-span-2 sm:col-span-4">
-                <p className="text-[11px] font-medium text-muted-foreground mb-1">Notes</p>
+                <p className="text-dense font-medium text-muted-foreground mb-1">Notes</p>
                 <p className="text-sm text-foreground leading-relaxed">{bill.notes}</p>
               </div>
             )}

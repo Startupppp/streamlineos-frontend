@@ -102,7 +102,7 @@ export function ActivityCard({ activity, index }: ActivityCardProps) {
             <TruncatedText text={activity.title} className="text-sm font-semibold text-foreground max-w-sm" />
             <Badge
               className={cn(
-                "text-[10px] border-0 gap-1 font-medium shrink-0",
+                "text-micro border-0 gap-1 font-medium shrink-0",
                 statusCfg.bg,
                 statusCfg.color,
               )}
@@ -122,7 +122,7 @@ export function ActivityCard({ activity, index }: ActivityCardProps) {
             {entityPath && activity.entityType && (
               <Link
                 href={entityPath}
-                className="inline-flex items-center gap-1 text-[10px] text-primary hover:text-primary/80 font-medium transition-colors"
+                className="inline-flex items-center gap-1 text-micro text-primary hover:text-primary/80 font-medium transition-colors"
               >
                 {ENTITY_LABELS[activity.entityType]}
                 <ExternalLink className="h-2.5 w-2.5" />
@@ -130,19 +130,19 @@ export function ActivityCard({ activity, index }: ActivityCardProps) {
             )}
 
             {activity.dueDate && (
-              <span className="text-[10px] text-muted-foreground tabular-nums">
+              <span className="text-micro text-muted-foreground tabular-nums">
                 Due {format(new Date(activity.dueDate), "MMM d, yyyy")}
               </span>
             )}
 
             {activity.completedAt && (
-              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 tabular-nums">
+              <span className="text-micro text-emerald-600 dark:text-emerald-400 tabular-nums">
                 Completed {format(new Date(activity.completedAt), "MMM d, yyyy")}
               </span>
             )}
 
             {activity.createdAt && (
-              <span className="text-[10px] text-muted-foreground/60 tabular-nums">
+              <span className="text-micro text-muted-foreground/60 tabular-nums">
                 Created {format(new Date(activity.createdAt), "MMM d")}
               </span>
             )}

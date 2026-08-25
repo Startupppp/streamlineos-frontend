@@ -25,7 +25,7 @@ const MODE_LABELS: Record<string, string> = {
 export function RoundTypeBadge({ type }: { type: string }) {
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${ROUND_TYPE_COLORS[type] ?? "bg-muted text-muted-foreground"}`}
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-micro font-medium ${ROUND_TYPE_COLORS[type] ?? "bg-muted text-muted-foreground"}`}
     >
       {ROUND_TYPE_LABELS[type] ?? type}
     </span>
@@ -34,7 +34,7 @@ export function RoundTypeBadge({ type }: { type: string }) {
 
 export function ModeBadge({ mode }: { mode: string }) {
   return (
-    <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+    <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-micro font-medium text-muted-foreground">
       {MODE_LABELS[mode] ?? mode}
     </span>
   );

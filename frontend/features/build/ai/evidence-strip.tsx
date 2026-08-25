@@ -19,14 +19,14 @@ export function EvidenceStrip({ evidence }: EvidenceStripProps) {
       {chips.map(({ key, label, cls }) => (
         <span
           key={key}
-          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[11px] font-medium tabular-nums ${cls}`}
+          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-dense font-medium tabular-nums ${cls}`}
         >
           <span className="font-bold">{evidence[key]}</span>
           {label}
         </span>
       ))}
       {evidence.sprintProgressPct !== undefined && (
-        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[11px] font-medium tabular-nums bg-muted text-muted-foreground border-border/70 dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30">
+        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-dense font-medium tabular-nums bg-muted text-muted-foreground border-border/70 dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30">
           <span className="font-bold">{evidence.sprintProgressPct}%</span>
           Sprint
         </span>

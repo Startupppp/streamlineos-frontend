@@ -101,7 +101,7 @@ function PricingCard({
       }`}
     >
       {tier.badge ? (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 px-3 py-0.5 text-[11px] font-semibold text-white tracking-wide whitespace-nowrap">
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 px-3 py-0.5 text-dense font-semibold text-white tracking-wide whitespace-nowrap">
           {tier.badge}
         </div>
       ) : null}

@@ -41,7 +41,7 @@ function StepRailInner({ sequence, currentIndex, saveState, onStepSelect }: Step
                     <StepMarker done={done} active={active} index={i} />
                     <span
                       className={cn(
-                        "whitespace-nowrap text-[12px] font-medium",
+                        "whitespace-nowrap text-xs font-medium",
                         active ? "text-brand-deep" : "text-foreground",
                       )}
                     >
@@ -56,7 +56,7 @@ function StepRailInner({ sequence, currentIndex, saveState, onStepSelect }: Step
                     <StepMarker done={done} active={active} index={i} />
                     <span
                       className={cn(
-                        "whitespace-nowrap text-[12px] font-medium",
+                        "whitespace-nowrap text-xs font-medium",
                         active
                           ? "text-brand-deep"
                           : done
@@ -85,14 +85,14 @@ function StepRailInner({ sequence, currentIndex, saveState, onStepSelect }: Step
       </ol>
 
       <div className="mt-1 flex items-center justify-between gap-3">
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-dense text-muted-foreground">
           {minutesLeft > 0 ? `About ${minutesLeft} min left` : "Almost done"}
         </p>
         <motion.p
           key={saveState}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="flex min-h-4 items-center gap-1.5 text-[11px] text-muted-foreground"
+          className="flex min-h-4 items-center gap-1.5 text-dense text-muted-foreground"
           aria-live="polite"
         >
           {saveState === "saved" ? (
@@ -119,7 +119,7 @@ function StepMarker({
   return (
     <span
       className={cn(
-        "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[10px] font-semibold",
+        "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-micro font-semibold",
         done
           ? "border-foreground bg-foreground text-background"
           : active

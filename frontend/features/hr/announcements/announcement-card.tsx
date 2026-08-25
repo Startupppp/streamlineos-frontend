@@ -106,7 +106,7 @@ export function AnnouncementCard({
     >
       <div className="flex gap-3">
         <div
-          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold text-muted-foreground"
+          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-micro font-semibold text-muted-foreground"
           aria-hidden
         >
           {getInitials(announcement.authorId)}
@@ -130,7 +130,7 @@ export function AnnouncementCard({
             <div className="flex shrink-0 items-center gap-0.5">
               <span
                 className={cn(
-                  "inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-medium",
+                  "inline-flex items-center rounded-md border px-1.5 py-0.5 text-micro font-medium",
                   STATUS_COLORS[announcement.status],
                 )}
               >
@@ -161,7 +161,7 @@ export function AnnouncementCard({
             </div>
           </div>
 
-          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-dense text-muted-foreground">
             <time dateTime={announcement.createdAt}>
               {formatDate(announcement.createdAt)}
             </time>
@@ -184,7 +184,7 @@ export function AnnouncementCard({
 
           <p
             className={cn(
-              "mt-2 text-[13px] leading-relaxed text-muted-foreground",
+              "mt-2 text-label leading-relaxed text-muted-foreground",
               !expanded && "line-clamp-2",
             )}
           >
@@ -195,7 +195,7 @@ export function AnnouncementCard({
             <button
               type="button"
               onClick={handleToggleExpand}
-              className="mt-1 inline-flex items-center gap-0.5 text-[11px] font-medium text-primary hover:underline"
+              className="mt-1 inline-flex items-center gap-0.5 text-dense font-medium text-primary hover:underline"
             >
               {expanded ? (
                 <>

@@ -77,16 +77,16 @@ function AppCard({
       <div className="flex-1 min-w-0 space-y-1">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm font-medium">{config.label}</span>
-          <Badge variant="outline" className="text-[11px]">
+          <Badge variant="outline" className="text-dense">
             {config.category}
           </Badge>
           {isConnected ? (
-            <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[11px] gap-1">
+            <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-dense gap-1">
               <CheckCircle2 className="h-3 w-3" />
               {connection.status === "needs_reauth" ? "Needs Reauth" : "Connected"}
             </Badge>
           ) : (
-            <Badge className="bg-muted text-muted-foreground border-border text-[11px] gap-1">
+            <Badge className="bg-muted text-muted-foreground border-border text-dense gap-1">
               <XCircle className="h-3 w-3" />
               Not Connected
             </Badge>
@@ -96,7 +96,7 @@ function AppCard({
         {connection?.accountEmail && (
           <TruncatedText
             text={connection.accountEmail}
-            className="text-[11px] text-muted-foreground font-mono min-w-0 break-all"
+            className="text-dense text-muted-foreground font-mono min-w-0 break-all"
           />
         )}
       </div>

@@ -40,9 +40,9 @@ function AccessNavRow({ href, label, description }: AccessNavRowProps) {
       {...hoverHandlers}
     >
       <span className="min-w-0">
-        <span className="block text-[13px] font-normal leading-tight">{label}</span>
+        <span className="block text-label font-normal leading-tight">{label}</span>
         {description ? (
-          <span className="mt-0.5 block truncate text-[11px] text-muted-foreground leading-tight">
+          <span className="mt-0.5 block truncate text-dense text-muted-foreground leading-tight">
             {description}
           </span>
         ) : null}
@@ -108,7 +108,7 @@ export function UserAccessLinksSection({ userId }: UserAccessLinksSectionProps) 
       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
         Access management
       </p>
-      <p className="text-[11px] text-muted-foreground">
+      <p className="text-dense text-muted-foreground">
         Manage org-wide roles here, then assign module roles where this person works.
       </p>
 
@@ -124,7 +124,7 @@ export function UserAccessLinksSection({ userId }: UserAccessLinksSectionProps) 
 
       {visibleModules.length > 0 && (
         <div className="space-y-1 pt-1">
-          <p className="text-[11px] text-muted-foreground">Module roles</p>
+          <p className="text-dense text-muted-foreground">Module roles</p>
           <div>
             {visibleModules.map((entry) => {
               const href = userId

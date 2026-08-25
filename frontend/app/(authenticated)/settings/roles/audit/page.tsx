@@ -86,7 +86,7 @@ const columns: DataTableColumn<AuditLogEntry>[] = [
     header: "When",
     className: "whitespace-nowrap",
     cell: (log) => (
-      <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+      <span className="text-dense text-muted-foreground whitespace-nowrap">
         {formatTimestamp(log.createdAt)}
       </span>
     ),
@@ -107,7 +107,7 @@ const columns: DataTableColumn<AuditLogEntry>[] = [
           <div className="min-w-0">
             <p className="text-xs font-medium truncate max-w-[140px]">{log.userName ?? log.userEmail ?? "Unknown"}</p>
             {log.userName && log.userEmail && (
-              <p className="text-[10px] text-muted-foreground truncate max-w-[140px]">{log.userEmail}</p>
+              <p className="text-micro text-muted-foreground truncate max-w-[140px]">{log.userEmail}</p>
             )}
           </div>
         </div>
@@ -121,12 +121,12 @@ const columns: DataTableColumn<AuditLogEntry>[] = [
     cell: (log) => {
       const meta = ACTION_META[log.action];
       return meta ? (
-        <Badge variant={meta.variant} className="text-[10px] px-1.5 gap-1 whitespace-nowrap">
+        <Badge variant={meta.variant} className="text-micro px-1.5 gap-1 whitespace-nowrap">
           <meta.Icon className="h-3 w-3" />
           {meta.label}
         </Badge>
       ) : (
-        <Badge variant="outline" className="text-[10px] px-1.5 font-mono whitespace-nowrap">
+        <Badge variant="outline" className="text-micro px-1.5 font-mono whitespace-nowrap">
           {log.action}
         </Badge>
       );
@@ -138,7 +138,7 @@ const columns: DataTableColumn<AuditLogEntry>[] = [
     cell: (log) => {
       const targetLabel = resolveTargetLabel(log);
       return targetLabel ? (
-        <span className="font-mono text-[11px] bg-muted/40 px-1.5 py-0.5 rounded">{targetLabel}</span>
+        <span className="font-mono text-dense bg-muted/40 px-1.5 py-0.5 rounded">{targetLabel}</span>
       ) : (
         <span className="text-muted-foreground">—</span>
       );
@@ -150,7 +150,7 @@ const columns: DataTableColumn<AuditLogEntry>[] = [
     cell: (log) => {
       const affectedUser = resolveAffectedUser(log);
       return (
-        <span className="text-[11px] text-muted-foreground">
+        <span className="text-dense text-muted-foreground">
           {affectedUser ?? "—"}
         </span>
       );

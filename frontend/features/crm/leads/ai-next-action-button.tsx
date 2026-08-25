@@ -138,15 +138,15 @@ function ActionDetails({
           </div>
         </div>
       </div>
-      <p className="text-[11px] text-muted-foreground leading-snug">
+      <p className="text-dense text-muted-foreground leading-snug">
         {result.reasoning}
       </p>
       {result.template && (
         <div className="rounded-md border border-border bg-muted/40 p-2">
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
+          <p className="text-micro font-medium text-muted-foreground uppercase tracking-wider mb-1">
             Template
           </p>
-          <p className="text-[11px] leading-snug whitespace-pre-wrap">
+          <p className="text-dense leading-snug whitespace-pre-wrap">
             {result.template}
           </p>
         </div>

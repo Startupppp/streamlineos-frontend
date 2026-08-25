@@ -228,7 +228,7 @@ export function ShipmentDetailSheet({ open, onOpenChange, shipmentId }: Shipment
                   />
                 </div>
               </div>
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-micro text-muted-foreground">
                 Carrier integrations coming soon — enter tracking manually
               </p>
               <LoadingButton

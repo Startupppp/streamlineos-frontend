@@ -279,7 +279,7 @@ export function EssTaxSection({
             </div>
             {declaration.status === "DRAFT" && declaration.reviewNote && (
               <div className="px-4 py-3 bg-red-50 dark:bg-red-500/10 border-b border-border">
-                <p className="text-[11px] font-semibold text-red-700 dark:text-red-300 mb-0.5">Rejection Reason</p>
+                <p className="text-dense font-semibold text-red-700 dark:text-red-300 mb-0.5">Rejection Reason</p>
                 <p className="text-xs text-red-600 dark:text-red-400">{declaration.reviewNote}</p>
               </div>
             )}

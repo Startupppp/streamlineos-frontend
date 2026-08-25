@@ -175,7 +175,7 @@ export function TicketRelatedLinksEditor({
             </div>
           </div>
           {ticketError ? (
-            <p className="text-[10px] text-destructive">{ticketError}</p>
+            <p className="text-micro text-destructive">{ticketError}</p>
           ) : null}
         </div>
       ) : null}
@@ -193,7 +193,7 @@ export function TicketRelatedLinksEditor({
             aria-describedby={urlError ? "link-url-error" : undefined}
           />
           {urlError ? (
-            <p id="link-url-error" className="mt-0.5 text-[10px] text-destructive">
+            <p id="link-url-error" className="mt-0.5 text-micro text-destructive">
               {urlError}
             </p>
           ) : null}
@@ -234,7 +234,7 @@ export function TicketRelatedLinksEditor({
                 {link.label || link.url}
               </a>
               {link.label ? (
-                <span className="max-w-[80px] min-w-0 truncate text-[10px] text-muted-foreground" title={link.url}>
+                <span className="max-w-[80px] min-w-0 truncate text-micro text-muted-foreground" title={link.url}>
                   {link.url}
                 </span>
               ) : null}

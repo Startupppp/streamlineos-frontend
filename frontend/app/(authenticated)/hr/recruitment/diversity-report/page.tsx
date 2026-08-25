@@ -193,13 +193,13 @@ export default function DiversityReportPage() {
             </Button>
           )}
           {hasActiveFilters && filters.from && (
-            <Badge variant="secondary" className="text-[10px]">From: {filters.from}</Badge>
+            <Badge variant="secondary" className="text-micro">From: {filters.from}</Badge>
           )}
           {hasActiveFilters && filters.to && (
-            <Badge variant="secondary" className="text-[10px]">To: {filters.to}</Badge>
+            <Badge variant="secondary" className="text-micro">To: {filters.to}</Badge>
           )}
           {hasActiveFilters && filters.departmentIds.length > 0 && (
-            <Badge variant="secondary" className="text-[10px]">
+            <Badge variant="secondary" className="text-micro">
               {filters.departmentIds.length} dept{filters.departmentIds.length !== 1 ? "s" : ""}
             </Badge>
           )}

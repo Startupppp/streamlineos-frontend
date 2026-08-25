@@ -88,7 +88,7 @@ export function FormRenderer({ fields, onSubmit, isPending, readOnly = false, in
               {field.label}
               {field.required && <span className="text-destructive ml-0.5">*</span>}
               {field.sensitive && !readOnly && (
-                <span className="ml-1 text-[10px] text-amber-600 font-normal">(sensitive)</span>
+                <span className="ml-1 text-micro text-amber-600 font-normal">(sensitive)</span>
               )}
             </Label>
 

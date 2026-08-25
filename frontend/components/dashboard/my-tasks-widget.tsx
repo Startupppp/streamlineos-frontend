@@ -65,7 +65,7 @@ export function MyTasksWidget() {
                   {task.priority && (
                     <span
                       className={cn(
-                        "text-[10px] font-semibold px-1.5 py-0.5 rounded border",
+                        "text-micro font-semibold px-1.5 py-0.5 rounded border",
                         priorityColors[task.priority] ??
                           "bg-muted text-muted-foreground border-border",
                       )}
@@ -76,7 +76,7 @@ export function MyTasksWidget() {
                   {task.dueDate && (
                     <span
                       className={cn(
-                        "text-[10px] font-medium",
+                        "text-micro font-medium",
                         isOverdue
                           ? "text-destructive"
                           : "text-muted-foreground",
@@ -88,7 +88,7 @@ export function MyTasksWidget() {
                   )}
                 </div>
               </div>
-              <Badge variant="outline" className="text-[10px] shrink-0">
+              <Badge variant="outline" className="text-micro shrink-0">
                 {task.status.replace(/_/g, " ")}
               </Badge>
             </li>

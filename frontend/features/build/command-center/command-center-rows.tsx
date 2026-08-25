@@ -85,16 +85,16 @@ export const MyWorkRow = memo(function MyWorkRow({
         <div className={FLEX_TITLE_SLOT}>
           <TruncatedText
             text={item.title}
-            className="text-[13px] font-medium leading-tight text-foreground transition-colors group-hover:text-primary"
+            className="text-label font-medium leading-tight text-foreground transition-colors group-hover:text-primary"
           />
           <div className="mt-0.5 flex min-w-0 items-center gap-1.5 overflow-hidden">
-            <span className="shrink-0 font-mono text-[10px] font-medium text-primary/80">
+            <span className="shrink-0 font-mono text-micro font-medium text-primary/80">
               {item.projectKey}
             </span>
-            <span className="shrink-0 text-[10px] text-muted-foreground/70">·</span>
+            <span className="shrink-0 text-micro text-muted-foreground/70">·</span>
             <TruncatedText
               text={item.projectName}
-              className="min-w-0 flex-1 text-[10px] text-muted-foreground"
+              className="min-w-0 flex-1 text-micro text-muted-foreground"
             />
           </div>
         </div>
@@ -108,7 +108,7 @@ export const MyWorkRow = memo(function MyWorkRow({
               <AlertCircle className="h-3.5 w-3.5 text-red-500" aria-label="Overdue" />
             </motion.span>
           ) : null}
-          <StatusBadge status={item.status} className="text-[11px]" />
+          <StatusBadge status={item.status} className="text-dense" />
           <ChevronRightIcon
             ref={chevronRef}
             size={12}
@@ -165,19 +165,19 @@ export const ProjectCard = memo(function ProjectCard({
       >
         <Link
           href={base}
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-[10px] font-bold text-primary ring-1 ring-primary/10 transition-transform duration-150 group-hover:scale-105 group-hover:ring-primary/25"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-micro font-bold text-primary ring-1 ring-primary/10 transition-transform duration-150 group-hover:scale-105 group-hover:ring-primary/25"
         >
           {project.key.substring(0, 2).toUpperCase()}
         </Link>
         <Link href={base} className={FLEX_TITLE_SLOT}>
           <TruncatedText
             text={project.name}
-            className="text-[13px] font-medium text-foreground transition-colors group-hover:text-primary"
+            className="text-label font-medium text-foreground transition-colors group-hover:text-primary"
           />
           {project.description ? (
-            <TruncatedText text={project.description} className="text-[11px] text-muted-foreground" />
+            <TruncatedText text={project.description} className="text-dense text-muted-foreground" />
           ) : (
-            <p className="font-mono text-[10px] text-muted-foreground/80">{project.key}</p>
+            <p className="font-mono text-micro text-muted-foreground/80">{project.key}</p>
           )}
         </Link>
         {project.progress.total > 0 ? (
@@ -190,7 +190,7 @@ export const ProjectCard = memo(function ProjectCard({
                 transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: 0.12 }}
               />
             </div>
-            <span className="w-7 text-right text-[10px] tabular-nums text-muted-foreground">
+            <span className="w-7 text-right text-micro tabular-nums text-muted-foreground">
               {progress}%
             </span>
           </div>
@@ -200,7 +200,7 @@ export const ProjectCard = memo(function ProjectCard({
             <Badge
               variant="outline"
               className={cn(
-                "h-4 max-w-[5.5rem] truncate px-1.5 py-0 text-[10px] group-hover:hidden",
+                "h-4 max-w-[5.5rem] truncate px-1.5 py-0 text-micro group-hover:hidden",
                 STATUS_COLOR[project.status] ?? "",
               )}
             >

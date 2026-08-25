@@ -181,7 +181,7 @@ function AIScoreDetails({
             <p className="text-xs font-medium">AI Score</p>
             {result.confidence && (
               <span className={cn(
-                "text-[10px] px-1.5 py-0.5 rounded font-medium capitalize",
+                "text-micro px-1.5 py-0.5 rounded font-medium capitalize",
                 result.confidence === "high" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" :
                 result.confidence === "medium" ? "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300" :
                 "bg-muted text-muted-foreground",
@@ -190,7 +190,7 @@ function AIScoreDetails({
               </span>
             )}
           </div>
-          <p className="text-[11px] text-muted-foreground leading-snug">
+          <p className="text-dense text-muted-foreground leading-snug">
             {result.reasoning}
           </p>
         </div>
@@ -198,11 +198,11 @@ function AIScoreDetails({
 
       {result.strengths.length > 0 && (
         <div>
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
+          <p className="text-micro font-medium text-muted-foreground uppercase tracking-wider mb-1">
             Strengths
           </p>
           {result.strengths.map((s, i) => (
-            <div key={i} className="flex items-start gap-1.5 text-[11px]">
+            <div key={i} className="flex items-start gap-1.5 text-dense">
               <TrendingUp className="h-3 w-3 text-emerald-500 dark:text-emerald-400 mt-0.5 shrink-0" />
               <span>{s}</span>
             </div>
@@ -212,11 +212,11 @@ function AIScoreDetails({
 
       {result.weaknesses.length > 0 && (
         <div>
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
+          <p className="text-micro font-medium text-muted-foreground uppercase tracking-wider mb-1">
             Weaknesses
           </p>
           {result.weaknesses.map((w, i) => (
-            <div key={i} className="flex items-start gap-1.5 text-[11px]">
+            <div key={i} className="flex items-start gap-1.5 text-dense">
               <TrendingDown className="h-3 w-3 text-red-400 mt-0.5 shrink-0" />
               <span>{w}</span>
             </div>
@@ -226,11 +226,11 @@ function AIScoreDetails({
 
       {result.suggestedActions.length > 0 && (
         <div>
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
+          <p className="text-micro font-medium text-muted-foreground uppercase tracking-wider mb-1">
             Suggested Actions
           </p>
           {result.suggestedActions.map((a, i) => (
-            <div key={i} className="flex items-start gap-1.5 text-[11px]">
+            <div key={i} className="flex items-start gap-1.5 text-dense">
               <AlertCircle className="h-3 w-3 text-primary mt-0.5 shrink-0" />
               <span>{a}</span>
             </div>

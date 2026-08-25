@@ -238,7 +238,7 @@ export default function GoalDetailPage({ params }: { params: Promise<{ goalId: s
           <div className="flex items-center gap-2">
             <ListChecks className="h-4 w-4 text-muted-foreground" />
             <h2 className="text-sm font-semibold">Key Results</h2>
-            <Badge variant="secondary" className="text-[10px]">
+            <Badge variant="secondary" className="text-micro">
               {detail.keyResults.length}
             </Badge>
           </div>
@@ -265,7 +265,7 @@ export default function GoalDetailPage({ params }: { params: Promise<{ goalId: s
             <div className="flex items-center gap-2">
               <Link2 className="h-4 w-4 text-muted-foreground" />
               <h2 className="text-sm font-semibold">Linked Work Items</h2>
-              <Badge variant="secondary" className="text-[10px]">
+              <Badge variant="secondary" className="text-micro">
                 {detail.links.length}
               </Badge>
             </div>
@@ -330,7 +330,7 @@ export default function GoalDetailPage({ params }: { params: Promise<{ goalId: s
                         {update.note}
                       </p>
                     ) : null}
-                    <p className="mt-0.5 text-[11px] text-muted-foreground">
+                    <p className="mt-0.5 text-dense text-muted-foreground">
                       {formatDistanceToNow(new Date(update.createdAt), { addSuffix: true })}
                     </p>
                   </div>

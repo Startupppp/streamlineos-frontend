@@ -225,7 +225,7 @@ export function GoalsTab() {
     <div className="flex flex-col flex-1 min-h-0 gap-4">
       <div className="flex items-center justify-between shrink-0">
         <div>
-          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+          <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
             Total Goals
           </p>
           <p className="text-3xl font-bold tabular-nums text-foreground">
@@ -269,7 +269,7 @@ export function GoalsTab() {
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-start justify-between gap-2">
                     <Badge
-                      className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${statusBadgeClass}`}
+                      className={`inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border ${statusBadgeClass}`}
                     >
                       {(goal.status ?? "IN_PROGRESS").replace("_", " ")}
                     </Badge>
@@ -322,17 +322,17 @@ export function GoalsTab() {
                       <div className="h-5 w-5 rounded-md bg-amber-100 dark:bg-amber-500/10 flex items-center justify-center shrink-0">
                         <Calendar className="h-3 w-3 text-amber-600 dark:text-amber-300" />
                       </div>
-                      <p className="text-[11px] font-medium text-muted-foreground">
+                      <p className="text-dense font-medium text-muted-foreground">
                         Due {format(new Date(goal.endDate), "MMM d, yyyy")}
                       </p>
                     </div>
                   )}
                   <div className="space-y-1.5">
                     <div className="flex justify-between items-center">
-                      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      <span className="text-micro font-semibold text-muted-foreground uppercase tracking-wider">
                         Progress
                       </span>
-                      <span className="text-[10px] font-bold text-foreground">
+                      <span className="text-micro font-bold text-foreground">
                         {progress}%
                       </span>
                     </div>

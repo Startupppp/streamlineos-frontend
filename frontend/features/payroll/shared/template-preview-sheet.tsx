@@ -106,7 +106,7 @@ export function TemplatePreviewSheet({
 
               {Object.entries(groups).map(([groupLabel, lines]) => (
                 <div key={groupLabel} className="space-y-1">
-                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
+                  <p className="text-micro uppercase tracking-widest text-muted-foreground font-semibold">
                     {groupLabel}
                   </p>
                   <div className="rounded-md border border-border overflow-hidden">
@@ -121,7 +121,7 @@ export function TemplatePreviewSheet({
                         <div>
                           <p className="font-medium">{line.name}</p>
                           {line.explain && (
-                            <p className="text-muted-foreground text-[10px]">{line.explain}</p>
+                            <p className="text-muted-foreground text-micro">{line.explain}</p>
                           )}
                         </div>
                         <span className="font-mono tabular-nums shrink-0 ml-2">

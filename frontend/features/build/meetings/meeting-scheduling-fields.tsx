@@ -76,7 +76,7 @@ export function MeetingSchedulingFields() {
       </div>
 
       {tz && (
-        <p className="text-[11px] text-muted-foreground -mt-2">
+        <p className="text-dense text-muted-foreground -mt-2">
           Timezone: <span className="font-medium">{tz}</span>
         </p>
       )}

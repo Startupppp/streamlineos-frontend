@@ -89,7 +89,7 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
         <span className="flex items-center gap-2">
           <RunStatusBadge status={run.status} />
           {run.status === "REOPENED" && run.reopenReason && (
-            <span className="text-amber-600 text-[11px]">Reason: {run.reopenReason}</span>
+            <span className="text-amber-600 text-dense">Reason: {run.reopenReason}</span>
           )}
         </span>
       }
@@ -147,14 +147,14 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
         />
 
         {isLocked && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-muted/30 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-muted/30 text-dense text-muted-foreground">
             <span>🔒</span>
             <span>Locked — snapshot immutable. No changes can be made to this run.</span>
           </div>
         )}
 
         {data?.payoutHealth && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-amber-200 bg-amber-50 text-[11px] text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-amber-200 bg-amber-50 text-dense text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
             <span>⚠️</span>
             <span>
               This run is marked {run.status.replace(/_/g, " ")}, but not everyone was actually paid:{" "}

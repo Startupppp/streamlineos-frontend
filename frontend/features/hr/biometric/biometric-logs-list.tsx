@@ -34,7 +34,7 @@ const columns: DataTableColumn<BiometricLog>[] = [
     cell: (log) => (
       <Badge
         variant={log.punchType === "IN" ? "default" : "secondary"}
-        className="text-[11px]"
+        className="text-dense"
       >
         {log.punchType}
       </Badge>

@@ -74,11 +74,11 @@ function ApprovalsTable({
         header: "Member",
         cell: (row) => (
           <div>
-            <p className="text-[11px] font-medium">
+            <p className="text-dense font-medium">
               {row.user?.name ?? row.user?.email ?? "Unknown user"}
             </p>
             {row.user?.name && (
-              <p className="text-[10px] text-muted-foreground">{row.user.email}</p>
+              <p className="text-micro text-muted-foreground">{row.user.email}</p>
             )}
           </div>
         ),
@@ -89,7 +89,7 @@ function ApprovalsTable({
         key: "period",
         header: "Period",
         cell: (row) => (
-          <span className="text-[11px] tabular-nums">
+          <span className="text-dense tabular-nums">
             {format(parseISO(row.periodStart), "MMM d")} –{" "}
             {format(parseISO(row.periodEnd), "MMM d")}
           </span>
@@ -118,7 +118,7 @@ function ApprovalsTable({
         header: "Submitted",
         cell: (row) =>
           row.submittedAt ? (
-            <span className="text-[11px] text-muted-foreground">
+            <span className="text-dense text-muted-foreground">
               {format(parseISO(row.submittedAt), "MMM d, yyyy")}
             </span>
           ) : (
@@ -133,7 +133,7 @@ function ApprovalsTable({
         cell: (row) => (
           <Badge
             className={cn(
-              "text-[10px] border px-1.5 py-0",
+              "text-micro border px-1.5 py-0",
               PERIOD_STATUS_BADGE[row.status],
             )}
           >

@@ -160,7 +160,7 @@ export function AdjustmentDetailSheet({ adjustmentId, open, onOpenChange }: Adju
                   <Badge
                     variant="outline"
                     className={cn(
-                      "h-5 text-[10px] px-2 py-0.5",
+                      "h-5 text-micro px-2 py-0.5",
                       ADJUSTMENT_STATUS_BADGE[status],
                     )}
                   >

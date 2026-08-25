@@ -33,7 +33,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           </Link>
           <Link
             href="/"
-            className="text-[12px] font-medium text-slate-500 hover:text-slate-900 transition-colors"
+            className="text-xs font-medium text-slate-500 hover:text-slate-900 transition-colors"
           >
             ← Back to site
           </Link>
@@ -51,7 +51,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           </div>
         </main>
 
-        <footer className="flex shrink-0 items-center justify-between px-5 py-4 text-[12px] font-medium text-slate-400 sm:px-8 sm:py-5 xl:px-10 ">
+        <footer className="flex shrink-0 items-center justify-between px-5 py-4 text-xs font-medium text-slate-400 sm:px-8 sm:py-5 xl:px-10 ">
           <p>
             &copy; {new Date().getFullYear()} {BRAND_NAME}
           </p>

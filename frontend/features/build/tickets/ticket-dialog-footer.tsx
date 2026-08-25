@@ -69,7 +69,7 @@ export function TicketDialogFooter({
           multiple
           onChange={onFileChange}
         />
-        <span className="sr-only text-[10px] text-muted-foreground md:not-sr-only md:inline md:truncate">
+        <span className="sr-only text-micro text-muted-foreground md:not-sr-only md:inline md:truncate">
           Up to {MAX_FILES} files, 25MB each, 100MB total
           {files.length > 0 &&
             ` · ${files.length}/${MAX_FILES} · ${formatBytes(totalSize)}`}

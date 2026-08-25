@@ -93,9 +93,9 @@ export const InlineEstimate = memo(function InlineEstimate({
             onChange={handleValueChange}
             onBlur={handleSubmit}
             onKeyDown={handleKeyDown}
-            className="h-6 w-12 border-border bg-background px-1.5 py-0 text-[11px] font-mono tabular-nums shadow-none"
+            className="h-6 w-12 border-border bg-background px-1.5 py-0 text-dense font-mono tabular-nums shadow-none"
           />
-          <span className="shrink-0 text-[10px] font-mono text-muted-foreground">
+          <span className="shrink-0 text-micro font-mono text-muted-foreground">
             pts
           </span>
         </span>
@@ -119,7 +119,7 @@ export const InlineEstimate = memo(function InlineEstimate({
         />
         <span
           className={cn(
-            "font-mono text-[10px]",
+            "font-mono text-micro",
             display != null ? "text-foreground" : "text-muted-foreground/50",
           )}
         >

@@ -282,7 +282,7 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
                   />
                   Users
                 </h3>
-                <Badge variant="outline" className="text-[10px]">
+                <Badge variant="outline" className="text-micro">
                   {directUsers.length} assigned
                 </Badge>
               </div>
@@ -315,7 +315,7 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
                 </CommandList>
                 {orgMembersTotalPages > 1 && (
                   <div className="flex items-center justify-between gap-2 px-3 py-2 border-t border-border/40">
-                    <span className="text-[11px] text-muted-foreground">
+                    <span className="text-dense text-muted-foreground">
                       Page {userPage} of {orgMembersTotalPages}
                     </span>
                     <div className="flex gap-1">
@@ -382,7 +382,7 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
                   />
                   Departments
                 </h3>
-                <Badge variant="outline" className="text-[10px]">
+                <Badge variant="outline" className="text-micro">
                   {assignedDepartments.length} assigned
                 </Badge>
               </div>
@@ -431,7 +431,7 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
             <section className="space-y-2">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold">Effective members</h3>
-                <Badge variant="outline" className="text-[10px]">
+                <Badge variant="outline" className="text-micro">
                   {effectiveList.length} total
                 </Badge>
               </div>
@@ -456,14 +456,14 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
                           src={user.image ?? undefined}
                           alt={user.name ?? ""}
                         />
-                        <AvatarFallback className="text-[10px]">
+                        <AvatarFallback className="text-micro">
                           {getInitials(user.name ?? user.email ?? "?")}
                         </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0 flex-1">
-                        <TruncatedText text={user.name ?? user.email ?? "Unknown"} className="text-[13px] font-medium" />
+                        <TruncatedText text={user.name ?? user.email ?? "Unknown"} className="text-label font-medium" />
                         {user.email && (
-                          <TruncatedText text={user.email} className="text-[11px] text-muted-foreground" />
+                          <TruncatedText text={user.email} className="text-dense text-muted-foreground" />
                         )}
                       </div>
                       <div className="flex flex-wrap items-center justify-end gap-1 shrink-0">

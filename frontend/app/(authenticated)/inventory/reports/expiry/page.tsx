@@ -70,7 +70,7 @@ function buildColumns(): DataTableColumn<ExpiryReportRow>[] {
     {
       key: "lotNumber",
       header: "Lot #",
-      cell: (row) => <span className="font-mono tabular-nums text-[11px]">{row.lotNumber}</span>,
+      cell: (row) => <span className="font-mono tabular-nums text-dense">{row.lotNumber}</span>,
     },
     {
       key: "productName",
@@ -82,7 +82,7 @@ function buildColumns(): DataTableColumn<ExpiryReportRow>[] {
     {
       key: "variantSku",
       header: "SKU",
-      cell: (row) => <span className="font-mono text-[11px]">{row.variantSku}</span>,
+      cell: (row) => <span className="font-mono text-dense">{row.variantSku}</span>,
     },
     {
       key: "totalOnHand",
@@ -98,7 +98,7 @@ function buildColumns(): DataTableColumn<ExpiryReportRow>[] {
     {
       key: "expiryDate",
       header: "Expiry Date",
-      cell: (row) => <span className="text-[11px]">{formatDate(row.expiryDate)}</span>,
+      cell: (row) => <span className="text-dense">{formatDate(row.expiryDate)}</span>,
       sortable: true,
       sortValue: (row) => row.expiryDate,
     },

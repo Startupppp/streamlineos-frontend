@@ -306,7 +306,7 @@ export function OrgCatalogTable<T extends CatalogItem>({
                   <div className="flex-1 min-w-0">
                     <TruncatedText text={item.name} className="text-sm font-medium" />
                     {item.code && (
-                      <p className="text-[11px] text-muted-foreground font-mono">
+                      <p className="text-dense text-muted-foreground font-mono">
                         {item.code}
                       </p>
                     )}

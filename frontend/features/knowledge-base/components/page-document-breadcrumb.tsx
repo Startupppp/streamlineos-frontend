@@ -69,14 +69,14 @@ export function PageDocumentBreadcrumb({
         <div className="flex items-center gap-1.5 shrink-0">
           <Badge
             variant="outline"
-            className={`text-[10px] h-4 px-1.5 ${KB_STATUS_BADGE_CLASS[page.status] ?? ""}`}
+            className={`text-micro h-4 px-1.5 ${KB_STATUS_BADGE_CLASS[page.status] ?? ""}`}
           >
             {KB_STATUS_LABELS[page.status] ?? page.status}
           </Badge>
           {page.trustState === "verified" && (
             <Badge
               variant="outline"
-              className="text-[10px] h-4 px-1.5 bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
+              className="text-micro h-4 px-1.5 bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
             >
               Verified
             </Badge>
@@ -84,7 +84,7 @@ export function PageDocumentBreadcrumb({
           {page.trustState === "verification_expired" && (
             <Badge
               variant="outline"
-              className="text-[10px] h-4 px-1.5 bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30"
+              className="text-micro h-4 px-1.5 bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30"
             >
               Stale
             </Badge>

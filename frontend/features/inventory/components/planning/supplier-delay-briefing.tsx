@@ -59,7 +59,7 @@ const VendorDelayCard = memo(function VendorDelayCard({ vendor }: VendorDelayCar
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <TruckIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-          <span className="text-[12px] font-semibold text-foreground truncate">
+          <span className="text-xs font-semibold text-foreground truncate">
             {vendor.vendorName}
           </span>
         </div>
@@ -101,13 +101,13 @@ export const SupplierDelayBriefing = memo(function SupplierDelayBriefing({
     <Card className="border-border shadow-sm">
       <CardHeader className="pb-2 pt-3 px-4">
         <div className="flex items-center justify-between gap-2">
-          <CardTitle className="text-[13px] font-semibold text-foreground">
+          <CardTitle className="text-label font-semibold text-foreground">
             Supplier Delay Briefing
           </CardTitle>
           <LoadingButton
             variant="outline"
             size="sm"
-            className="h-7 text-[10px] gap-1.5"
+            className="h-7 text-micro gap-1.5"
             onClick={handleRefetch}
             isPending={isFetching}
             loadingText="Refreshing…"
@@ -133,7 +133,7 @@ export const SupplierDelayBriefing = memo(function SupplierDelayBriefing({
         )}
 
         {isError && (
-          <p className="text-[11px] text-destructive">{getErrorMessage(error)}</p>
+          <p className="text-dense text-destructive">{getErrorMessage(error)}</p>
         )}
 
         {!isLoading && !isError && data && (
@@ -141,12 +141,12 @@ export const SupplierDelayBriefing = memo(function SupplierDelayBriefing({
             {data.narration && (
               <div className="rounded-lg border border-border bg-muted/30 p-3">
                 <div className="flex items-center gap-2 mb-1.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  <p className="text-micro font-semibold uppercase tracking-wide text-muted-foreground">
                     AI Briefing
                   </p>
                   <AiGeneratedLabel timestamp={data.generatedAt} />
                 </div>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                <p className="text-dense text-muted-foreground leading-relaxed">
                   {data.narration}
                 </p>
               </div>
@@ -155,8 +155,8 @@ export const SupplierDelayBriefing = memo(function SupplierDelayBriefing({
             {data.vendors.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-6 text-center">
                 <TruckIcon className="h-7 w-7 text-muted-foreground/40 mb-2" />
-                <p className="text-[12px] font-medium text-foreground">No supplier delays detected</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">
+                <p className="text-xs font-medium text-foreground">No supplier delays detected</p>
+                <p className="text-dense text-muted-foreground mt-0.5">
                   All vendors are within expected delivery windows.
                 </p>
               </div>

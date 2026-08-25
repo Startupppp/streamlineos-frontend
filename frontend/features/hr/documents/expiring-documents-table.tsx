@@ -62,7 +62,7 @@ const columns: DataTableColumn<MergedItem>[] = [
     cell: (item) => (
       <div>
         <TruncatedText text={item.name} className="text-sm font-medium text-foreground max-w-[200px]" />
-        <p className="text-[10px] text-muted-foreground">{item.type}</p>
+        <p className="text-micro text-muted-foreground">{item.type}</p>
       </div>
     ),
   },
@@ -85,7 +85,7 @@ const columns: DataTableColumn<MergedItem>[] = [
     cell: (item) => (
       <span
         className={cn(
-          "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+          "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border",
           urgencyBadge(item.expiryDate),
         )}
       >

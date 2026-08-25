@@ -236,7 +236,7 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
                   ))}
                   {docsTotalPages > 1 && (
                     <div className="flex items-center justify-between pt-1">
-                      <span className="text-[11px] text-muted-foreground">
+                      <span className="text-dense text-muted-foreground">
                         Page {docsPage} of {docsTotalPages}
                       </span>
                       <div className="flex items-center gap-2">

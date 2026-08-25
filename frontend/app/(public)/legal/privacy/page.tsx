@@ -162,8 +162,8 @@ export default function PrivacyPage() {
           default.
         </p>
         <div className="not-prose overflow-x-auto rounded-xl border border-slate-200">
-          <table className="w-full text-[13px]">
-            <thead className="bg-slate-50 text-[11px] font-medium text-slate-500">
+          <table className="w-full text-label">
+            <thead className="bg-slate-50 text-dense font-medium text-slate-500">
               <tr>
                 <th className="px-4 py-2.5 text-left font-medium">Vendor</th>
                 <th className="px-4 py-2.5 text-left font-medium">Purpose</th>
@@ -184,7 +184,7 @@ export default function PrivacyPage() {
                 <tr key={vendor}>
                   <td className="px-4 py-2.5 font-medium text-slate-900">{vendor}</td>
                   <td className="px-4 py-2.5 text-slate-600">{purpose}</td>
-                  <td className="px-4 py-2.5 text-slate-500 font-mono text-[11px]">{region}</td>
+                  <td className="px-4 py-2.5 text-slate-500 font-mono text-dense">{region}</td>
                 </tr>
               ))}
             </tbody>

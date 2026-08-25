@@ -212,7 +212,7 @@ export function EntityActionDialog({
                   }}
                 />
                 {form.formState.errors[input.name] ? (
-                  <p className="text-[13px] text-destructive">
+                  <p className="text-label text-destructive">
                     {String(form.formState.errors[input.name]?.message ?? "")}
                   </p>
                 ) : null}

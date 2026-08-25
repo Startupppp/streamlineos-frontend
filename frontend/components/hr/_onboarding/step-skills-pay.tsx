@@ -178,7 +178,7 @@ export function StepSkillsPay({ form }: StepSkillsPayProps) {
                 {formatRoundedInr(breakdown.net)}
               </span>
             </div>
-            <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
+            <p className="mt-3 text-dense leading-relaxed text-muted-foreground">
               Basic and HRA are saved exactly as shown. The remaining balance is
               allocated across your organisation&apos;s payroll components.
             </p>

@@ -40,18 +40,18 @@ export function useMembersColumns({
             <div className="flex items-center gap-2.5 min-w-0">
               <Avatar className="h-7 w-7 shrink-0">
                 <AvatarImage src={member.image ?? undefined} alt={displayName} />
-                <AvatarFallback className="text-[10px] font-semibold bg-primary/10 text-foreground">
+                <AvatarFallback className="text-micro font-semibold bg-primary/10 text-foreground">
                   {getUserInitials(member)}
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0">
                 <TruncatedText
                   text={displayName}
-                  className="text-[12px] font-medium leading-tight text-foreground"
+                  className="text-xs font-medium leading-tight text-foreground"
                 />
                 <TruncatedText
                   text={`@${handle}`}
-                  className="text-[10px] text-muted-foreground leading-tight"
+                  className="text-micro text-muted-foreground leading-tight"
                 />
               </div>
             </div>
@@ -76,7 +76,7 @@ export function useMembersColumns({
         sortValue: (m) => m.addedAt,
         className: "tabular-nums",
         cell: (member) => (
-          <span className="text-[11px] text-muted-foreground tabular-nums">
+          <span className="text-dense text-muted-foreground tabular-nums">
             {formatDistanceToNow(new Date(member.addedAt), { addSuffix: true })}
           </span>
         ),
@@ -89,7 +89,7 @@ export function useMembersColumns({
         header: "Teams",
         cell: (member) => {
           if (!member.teams.length) {
-            return <span className="text-[11px] text-muted-foreground">—</span>;
+            return <span className="text-dense text-muted-foreground">—</span>;
           }
           return (
             <div className="flex flex-wrap gap-1">
@@ -97,7 +97,7 @@ export function useMembersColumns({
                 <Badge
                   key={t}
                   variant="outline"
-                  className="h-[18px] px-1.5 text-[10px] font-normal"
+                  className="h-[18px] px-1.5 text-micro font-normal"
                 >
                   {t}
                 </Badge>

@@ -154,7 +154,7 @@ export function ExceptionsView() {
         cell: (row) => (
           <Badge
             className={cn(
-              "text-[10px] border px-1.5 py-0",
+              "text-micro border px-1.5 py-0",
               EXCEPTION_SEVERITY_BADGE[row.severity],
             )}
           >
@@ -168,7 +168,7 @@ export function ExceptionsView() {
         key: "rule",
         header: "Rule",
         cell: (row) => (
-          <span className="text-[11px] font-medium">
+          <span className="text-dense font-medium">
             {EXCEPTION_RULE_LABEL[row.rule]}
           </span>
         ),
@@ -181,7 +181,7 @@ export function ExceptionsView() {
         className: "max-w-[280px]",
         cell: (row) => (
           <span
-            className="block truncate text-[11px] text-muted-foreground"
+            className="block truncate text-dense text-muted-foreground"
             title={row.message}
           >
             {row.message}
@@ -193,11 +193,11 @@ export function ExceptionsView() {
         header: "Member",
         cell: (row) => (
           <div>
-            <p className="text-[11px] font-medium">
+            <p className="text-dense font-medium">
               {row.user?.name ?? row.user?.email ?? "Unknown user"}
             </p>
             {row.user?.name && row.user?.email && (
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-micro text-muted-foreground">
                 {row.user.email}
               </p>
             )}
@@ -212,7 +212,7 @@ export function ExceptionsView() {
         cell: (row) => (
           <Badge
             className={cn(
-              "text-[10px] border px-1.5 py-0",
+              "text-micro border px-1.5 py-0",
               EXCEPTION_STATUS_BADGE[row.status],
             )}
           >
@@ -225,7 +225,7 @@ export function ExceptionsView() {
         header: "Due",
         cell: (row) =>
           row.dueDate ? (
-            <span className="text-[11px] tabular-nums">
+            <span className="text-dense tabular-nums">
               {format(parseISO(row.dueDate), "MMM d, yyyy")}
             </span>
           ) : (
@@ -238,7 +238,7 @@ export function ExceptionsView() {
         key: "createdAt",
         header: "Detected",
         cell: (row) => (
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-dense text-muted-foreground">
             {format(parseISO(row.createdAt), "MMM d, yyyy")}
           </span>
         ),

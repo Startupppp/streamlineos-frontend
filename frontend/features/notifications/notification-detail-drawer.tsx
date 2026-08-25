@@ -134,11 +134,11 @@ export function NotificationDetailDrawer({
             <div className="min-w-0 flex-1">
               <SheetTitle className="text-base leading-snug text-left">{notification.title}</SheetTitle>
               <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                <Badge variant="outline" className="text-[10px] h-4 px-1.5">{categoryConfig.label}</Badge>
+                <Badge variant="outline" className="text-micro h-4 px-1.5">{categoryConfig.label}</Badge>
                 {notification.sourceModule && (
-                  <Badge variant="secondary" className="text-[10px] h-4 px-1.5">{notification.sourceModule}</Badge>
+                  <Badge variant="secondary" className="text-micro h-4 px-1.5">{notification.sourceModule}</Badge>
                 )}
-                <span className={cn("inline-flex items-center gap-1 text-[11px]", priorityConfig.color)}>
+                <span className={cn("inline-flex items-center gap-1 text-dense", priorityConfig.color)}>
                   <span className={cn("h-1.5 w-1.5 rounded-full", priorityConfig.dotColor)} />
                   {priorityConfig.label}
                 </span>
@@ -177,7 +177,7 @@ export function NotificationDetailDrawer({
             {notification.eventKey && (
               <div className="flex justify-between gap-2">
                 <dt className="text-muted-foreground shrink-0">Event</dt>
-                <dd className="text-foreground font-mono text-[11px] truncate max-w-[60%]">{notification.eventKey}</dd>
+                <dd className="text-foreground font-mono text-dense truncate max-w-[60%]">{notification.eventKey}</dd>
               </div>
             )}
           </dl>

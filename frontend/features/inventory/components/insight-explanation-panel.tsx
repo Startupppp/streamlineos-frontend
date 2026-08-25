@@ -21,7 +21,7 @@ const EvidenceSection = memo(function EvidenceSection({ narration }: EvidenceSec
   return (
     <div className="space-y-3">
       <div>
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
+        <p className="text-micro font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
           Evidence
         </p>
         <div className="grid grid-cols-2 gap-1.5">
@@ -36,7 +36,7 @@ const EvidenceSection = memo(function EvidenceSection({ narration }: EvidenceSec
 
       <div>
         <div className="flex items-center gap-2 mb-1.5">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <p className="text-micro font-semibold uppercase tracking-wide text-muted-foreground">
             AI Narration
           </p>
           <AiGeneratedLabel />
@@ -46,7 +46,7 @@ const EvidenceSection = memo(function EvidenceSection({ narration }: EvidenceSec
 
       {suggestions.length > 0 && (
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
+          <p className="text-micro font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
             Operational Notes
           </p>
           <div className="space-y-1">
@@ -55,7 +55,7 @@ const EvidenceSection = memo(function EvidenceSection({ narration }: EvidenceSec
                 <Badge variant="outline" className="text-[9px] h-4 px-1 shrink-0 mt-0.5 bg-primary/5 border-primary/20 text-primary">
                   {f.label}
                 </Badge>
-                <span className="text-[11px] text-muted-foreground">{f.value}</span>
+                <span className="text-dense text-muted-foreground">{f.value}</span>
               </div>
             ))}
           </div>
@@ -64,12 +64,12 @@ const EvidenceSection = memo(function EvidenceSection({ narration }: EvidenceSec
 
       {narration.suggestedActions.length > 0 && (
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
+          <p className="text-micro font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
             Suggested Actions
           </p>
           <ul className="space-y-1">
             {narration.suggestedActions.map((action: string, i: number) => (
-              <li key={i} className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
+              <li key={i} className="flex items-start gap-1.5 text-dense text-muted-foreground">
                 <span className="shrink-0 mt-0.5 h-3.5 w-3.5 rounded-full border border-primary/30 bg-primary/5 flex items-center justify-center text-[8px] font-bold text-primary">
                   {i + 1}
                 </span>
@@ -102,13 +102,13 @@ export const InsightExplanationPanel = memo(function InsightExplanationPanel({
   return (
     <Card className="mt-2 border-border/60">
       <CardHeader className="pb-2 pt-3 px-3">
-        <CardTitle className="text-[11px] font-semibold text-foreground flex items-center justify-between gap-2">
+        <CardTitle className="text-dense font-semibold text-foreground flex items-center justify-between gap-2">
           <span>{insight.title}</span>
           {!narration && (
             <LoadingButton
               size="sm"
               variant="outline"
-              className="text-[10px] h-6 px-2"
+              className="text-micro h-6 px-2"
               isPending={explainMutation.isPending}
               loadingText="Explaining…"
               onClick={handleExplain}
@@ -130,7 +130,7 @@ export const InsightExplanationPanel = memo(function InsightExplanationPanel({
 
       {explainMutation.isError && (
         <CardContent className="px-3 pb-3">
-          <p className="text-[11px] text-destructive">
+          <p className="text-dense text-destructive">
             {explainMutation.error != null ? getErrorMessage(explainMutation.error) : "Failed to generate explanation. Try again."}
           </p>
         </CardContent>

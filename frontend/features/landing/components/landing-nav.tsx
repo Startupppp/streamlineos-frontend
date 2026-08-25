@@ -90,7 +90,7 @@ export function LandingNav() {
               <a
                 key={l.label}
                 href={l.href}
-                className="text-[13px] font-medium text-slate-600 hover:text-slate-900 transition-colors duration-200"
+                className="text-label font-medium text-slate-600 hover:text-slate-900 transition-colors duration-200"
               >
                 {l.label}
               </a>

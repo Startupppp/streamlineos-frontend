@@ -111,7 +111,7 @@ export function TestPanel({ blueprintId, stages }: TestPanelProps) {
         </div>
 
         <div className="space-y-1.5">
-          <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+          <div className="text-micro font-medium text-muted-foreground uppercase tracking-wide">
             Sample Fields
           </div>
           {sampleFields.map((row, idx) => (
@@ -134,7 +134,7 @@ export function TestPanel({ blueprintId, stages }: TestPanelProps) {
             type="button"
             variant="ghost"
             size="sm"
-            className="h-6 text-[10px] px-2"
+            className="h-6 text-micro px-2"
             onClick={handleAddRow}
           >
             <Plus className="h-3 w-3 mr-1" />
@@ -167,7 +167,7 @@ export function TestPanel({ blueprintId, stages }: TestPanelProps) {
             {!testTransition.data.allowed && testTransition.data.missing.length > 0 && (
               <ul className="list-disc list-inside space-y-0.5">
                 {testTransition.data.missing.map((m) => (
-                  <li key={m} className="text-[11px]">
+                  <li key={m} className="text-dense">
                     {m}
                   </li>
                 ))}

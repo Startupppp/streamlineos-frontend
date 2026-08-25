@@ -155,7 +155,7 @@ export function DocumentExtractPanel({ onDraftReady, className }: DocumentExtrac
               className="block text-xs text-muted-foreground file:mr-3 file:rounded file:border-0 file:bg-muted file:px-2.5 file:py-1 file:text-xs file:font-medium file:text-foreground hover:file:bg-muted/70 cursor-pointer"
             />
             {selectedFile && (
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-dense text-muted-foreground">
                 Selected: <span className="font-medium text-foreground">{selectedFile.name}</span>
               </p>
             )}
@@ -184,7 +184,7 @@ export function DocumentExtractPanel({ onDraftReady, className }: DocumentExtrac
               <AiGeneratedLabel timestamp={mutation.data.generatedAt} />
               <span
                 className={cn(
-                  "rounded-full px-1.5 py-0.5 text-[10px] font-medium border",
+                  "rounded-full px-1.5 py-0.5 text-micro font-medium border",
                   mutation.data.confidence === "high"
                     ? "border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10"
                     : mutation.data.confidence === "medium"

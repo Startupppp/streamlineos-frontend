@@ -37,12 +37,12 @@ export function StatusTimeline({ status }: { status: TransferStatus }) {
                 {done ? (
                   <Check className="h-3.5 w-3.5" aria-hidden="true" />
                 ) : (
-                  <span className="text-[11px] font-semibold">{i + 1}</span>
+                  <span className="text-dense font-semibold">{i + 1}</span>
                 )}
               </div>
               <span
                 className={cn(
-                  "text-[10px] font-medium",
+                  "text-micro font-medium",
                   done
                     ? "text-foreground"
                     : active && !cancelled
@@ -72,7 +72,7 @@ export function LocationCell({
   if (!location) {
     return (
       <div>
-        <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-1">
+        <p className="text-dense font-medium text-muted-foreground uppercase tracking-wide mb-1">
           {label}
         </p>
         <p className="text-sm text-muted-foreground">—</p>
@@ -81,7 +81,7 @@ export function LocationCell({
   }
   return (
     <div>
-      <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-1">
+      <p className="text-dense font-medium text-muted-foreground uppercase tracking-wide mb-1">
         {label}
       </p>
       {location.warehouse && (

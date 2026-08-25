@@ -76,11 +76,11 @@ function DueDateCard({ label, dueDate, href }: DueDateCardProps) {
       <Card className="hover:bg-muted/30 transition-colors cursor-pointer h-full">
         <CardContent className="p-3 flex items-center justify-between gap-2">
           <div>
-            <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
+            <p className="text-dense font-medium text-muted-foreground">{label}</p>
             <p className="text-sm font-semibold text-foreground">{dueDate}</p>
           </div>
           {isUrgent && (
-            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[10px] shrink-0 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
+            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-micro shrink-0 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
               {days <= 0 ? "Due today" : `${days}d left`}
             </Badge>
           )}
@@ -98,7 +98,7 @@ function RecentPaymentRow({ payment }: RecentPaymentRowProps) {
   return (
     <div className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
       <div className="flex items-center gap-2">
-        <Badge variant="secondary" className="text-[10px] shrink-0">
+        <Badge variant="secondary" className="text-micro shrink-0">
           {TAX_TYPE_LABELS[payment.taxType]}
         </Badge>
         <span className="text-xs text-muted-foreground">
@@ -107,7 +107,7 @@ function RecentPaymentRow({ payment }: RecentPaymentRowProps) {
       </div>
       <div className="text-right">
         <Money value={parseFloat(payment.amount)} className="text-sm font-semibold" />
-        <p className="text-[10px] text-muted-foreground">{payment.paidDate}</p>
+        <p className="text-micro text-muted-foreground">{payment.paidDate}</p>
       </div>
     </div>
   );
@@ -157,7 +157,7 @@ export default function TaxPage() {
           <div className="flex flex-col gap-1">
             <label
               htmlFor="tax-from"
-              className="text-[11px] font-medium text-muted-foreground leading-none"
+              className="text-dense font-medium text-muted-foreground leading-none"
             >
               From
             </label>
@@ -172,7 +172,7 @@ export default function TaxPage() {
           <div className="flex flex-col gap-1">
             <label
               htmlFor="tax-to"
-              className="text-[11px] font-medium text-muted-foreground leading-none"
+              className="text-dense font-medium text-muted-foreground leading-none"
             >
               To
             </label>

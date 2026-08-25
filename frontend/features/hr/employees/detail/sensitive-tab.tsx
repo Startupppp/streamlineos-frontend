@@ -277,7 +277,7 @@ export function EmployeeSensitiveTab({ userId }: Props) {
                 </div>
                 <div>
                   <p className="text-sm font-semibold">Sensitive Information</p>
-                  <p className="text-[11px] text-muted-foreground">Encrypted at rest — access is audited</p>
+                  <p className="text-dense text-muted-foreground">Encrypted at rest — access is audited</p>
                 </div>
               </div>
               {canManage && (

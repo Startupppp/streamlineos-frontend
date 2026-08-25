@@ -105,7 +105,7 @@ function ComplianceDashboard() {
                 {row.clearedPct}%
               </span>
             </div>
-            <div className="flex flex-wrap gap-3 text-[11px]">
+            <div className="flex flex-wrap gap-3 text-dense">
               <span className="text-muted-foreground">
                 Total: <span className="font-medium text-foreground">{row.total}</span>
               </span>
@@ -160,7 +160,7 @@ function buildBgvColumns(
       key: "type",
       header: "Type",
       cell: (bgv) => (
-        <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-foreground border-border">
+        <span className="inline-flex items-center text-micro font-semibold px-2 py-0.5 rounded-full border bg-muted text-foreground border-border">
           {bgv.type}
         </span>
       ),
@@ -170,7 +170,7 @@ function buildBgvColumns(
       header: "Vendor",
       cell: (bgv) =>
         bgv.provider ? (
-          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/20">
+          <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/20">
             <Building2 className="h-2.5 w-2.5" />
             {bgv.provider}
           </span>
@@ -204,7 +204,7 @@ function buildBgvColumns(
         return (
           <span
             className={cn(
-              "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+              "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border",
               statusCfg.badge,
             )}
           >

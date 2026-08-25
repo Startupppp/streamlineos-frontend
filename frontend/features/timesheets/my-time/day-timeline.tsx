@@ -53,21 +53,21 @@ const EntryRow = memo(function EntryRow({ entry, onEdit, onVoid }: EntryRowProps
             <TruncatedText text={entry.project.name} className="text-xs text-muted-foreground" />
           )}
           {entry.ticket && (
-            <span className="text-[11px] text-muted-foreground/70">#{entry.ticket.ticketNumber}</span>
+            <span className="text-dense text-muted-foreground/70">#{entry.ticket.ticketNumber}</span>
           )}
         </div>
         {entry.description && (
           <TruncatedText text={entry.description} className="text-xs text-muted-foreground mt-0.5" />
         )}
         <div className="flex items-center gap-1.5 mt-1">
-          <Badge variant="outline" className={cn("text-[10px] h-4 px-1.5 border", ENTRY_STATUS_BADGE[entry.status])}>
+          <Badge variant="outline" className={cn("text-micro h-4 px-1.5 border", ENTRY_STATUS_BADGE[entry.status])}>
             {entry.status.charAt(0) + entry.status.slice(1).toLowerCase()}
           </Badge>
-          <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-border text-muted-foreground">
+          <Badge variant="outline" className="text-micro h-4 px-1.5 border-border text-muted-foreground">
             {BILLING_TYPE_LABEL[entry.billingType]}
           </Badge>
           {isLocked && (
-            <span className="text-[10px] text-muted-foreground/60">Locked</span>
+            <span className="text-micro text-muted-foreground/60">Locked</span>
           )}
         </div>
       </div>
@@ -166,7 +166,7 @@ export function DayTimeline({ entries, days }: DayTimelineProps) {
               )}
             >
               <span className="font-medium">{format(parseISO(d), "EEE")}</span>
-              <span className={cn("text-[10px]", active ? "text-background/70" : "text-muted-foreground")}>
+              <span className={cn("text-micro", active ? "text-background/70" : "text-muted-foreground")}>
                 {format(parseISO(d), "d")}
               </span>
               {dayEntryCount > 0 && (

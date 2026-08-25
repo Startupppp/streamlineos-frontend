@@ -99,7 +99,7 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
             >
               <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
               <span className="flex-1 min-w-0">
-                <span className="block text-[13px] font-medium text-foreground">{label}</span>
+                <span className="block text-label font-medium text-foreground">{label}</span>
                 <span className="block text-xs text-muted-foreground">{description}</span>
               </span>
               {currentVisibility === value && (

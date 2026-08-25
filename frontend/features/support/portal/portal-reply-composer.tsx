@@ -118,7 +118,7 @@ export function PortalReplyComposer({ ticketId }: PortalReplyComposerProps) {
           {pendingFiles.map((f, i) => {
             const Icon = fileMimeIcon(f.mimeType);
             return (
-              <div key={i} className="flex items-center gap-1 text-[11px] bg-muted rounded px-2 py-0.5 border">
+              <div key={i} className="flex items-center gap-1 text-dense bg-muted rounded px-2 py-0.5 border">
                 <Icon className="h-3 w-3 text-muted-foreground shrink-0" />
                 <span className="truncate max-w-[100px]">{f.fileName}</span>
                 <button

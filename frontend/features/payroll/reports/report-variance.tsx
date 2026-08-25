@@ -32,14 +32,14 @@ const COLUMNS: DataTableColumn<VarianceEmployeeRow>[] = [
   {
     key: "name",
     header: "Name",
-    cell: (row) => <span className="text-[11px] font-medium">{row.name}</span>,
+    cell: (row) => <span className="text-dense font-medium">{row.name}</span>,
   },
   {
     key: "prevGross",
     header: "Prev Gross",
     className: "text-right",
     cell: (row) => (
-      <span className="font-mono text-[11px] tabular-nums">{formatMoney(row.prevGross)}</span>
+      <span className="font-mono text-dense tabular-nums">{formatMoney(row.prevGross)}</span>
     ),
   },
   {
@@ -47,7 +47,7 @@ const COLUMNS: DataTableColumn<VarianceEmployeeRow>[] = [
     header: "Curr Gross",
     className: "text-right",
     cell: (row) => (
-      <span className="font-mono text-[11px] tabular-nums">{formatMoney(row.currGross)}</span>
+      <span className="font-mono text-dense tabular-nums">{formatMoney(row.currGross)}</span>
     ),
   },
   {
@@ -55,7 +55,7 @@ const COLUMNS: DataTableColumn<VarianceEmployeeRow>[] = [
     header: "Gross Δ",
     className: "text-right",
     cell: (row) => (
-      <span className={cn("font-mono text-[11px] tabular-nums font-medium", getDeltaClass(row.grossDelta))}>
+      <span className={cn("font-mono text-dense tabular-nums font-medium", getDeltaClass(row.grossDelta))}>
         {formatDelta(row.grossDelta)}
       </span>
     ),
@@ -65,7 +65,7 @@ const COLUMNS: DataTableColumn<VarianceEmployeeRow>[] = [
     header: "Prev Net",
     className: "text-right",
     cell: (row) => (
-      <span className="font-mono text-[11px] tabular-nums">{formatMoney(row.prevNet)}</span>
+      <span className="font-mono text-dense tabular-nums">{formatMoney(row.prevNet)}</span>
     ),
   },
   {
@@ -73,7 +73,7 @@ const COLUMNS: DataTableColumn<VarianceEmployeeRow>[] = [
     header: "Curr Net",
     className: "text-right",
     cell: (row) => (
-      <span className="font-mono text-[11px] tabular-nums">{formatMoney(row.currNet)}</span>
+      <span className="font-mono text-dense tabular-nums">{formatMoney(row.currNet)}</span>
     ),
   },
   {
@@ -81,7 +81,7 @@ const COLUMNS: DataTableColumn<VarianceEmployeeRow>[] = [
     header: "Net Δ",
     className: "text-right",
     cell: (row) => (
-      <span className={cn("font-mono text-[11px] tabular-nums font-medium", getDeltaClass(row.netDelta))}>
+      <span className={cn("font-mono text-dense tabular-nums font-medium", getDeltaClass(row.netDelta))}>
         {formatDelta(row.netDelta)}
       </span>
     ),

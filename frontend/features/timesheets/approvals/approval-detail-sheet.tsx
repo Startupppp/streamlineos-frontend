@@ -179,7 +179,7 @@ export function ApprovalDetailSheet({
           <div className="flex items-center gap-2 mb-3 flex-wrap">
             <Badge
               className={cn(
-                "text-[10px] border px-1.5 py-0",
+                "text-micro border px-1.5 py-0",
                 PERIOD_STATUS_BADGE[period.status],
               )}
             >
@@ -193,7 +193,7 @@ export function ApprovalDetailSheet({
         )}
 
         {period && (
-          <div className="mb-4 space-y-0.5 text-[11px] text-muted-foreground">
+          <div className="mb-4 space-y-0.5 text-dense text-muted-foreground">
             {period.submittedAt && (
               <p>
                 Submitted{" "}
@@ -242,10 +242,10 @@ export function ApprovalDetailSheet({
               return (
                 <div key={date}>
                   <div className="flex items-center justify-between mb-1.5">
-                    <p className="text-[11px] font-medium text-muted-foreground">
+                    <p className="text-dense font-medium text-muted-foreground">
                       {format(parseISO(date), "EEE, MMM d")}
                     </p>
-                    <span className="text-[11px] tabular-nums font-semibold">
+                    <span className="text-dense tabular-nums font-semibold">
                       {dayTotal.toFixed(1)}h
                     </span>
                   </div>
@@ -253,7 +253,7 @@ export function ApprovalDetailSheet({
                     {dayEntries.map((entry) => (
                       <div
                         key={entry.id}
-                        className="flex items-start justify-between px-2.5 py-1.5 rounded-md bg-muted/40 text-[11px]"
+                        className="flex items-start justify-between px-2.5 py-1.5 rounded-md bg-muted/40 text-dense"
                       >
                         <div className="min-w-0">
                           <TruncatedText text={entry.project?.name ?? "—"} className="font-medium max-w-[280px]" />

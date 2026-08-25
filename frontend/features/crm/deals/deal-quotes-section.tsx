@@ -259,7 +259,7 @@ export function DealQuotesSection({ dealId }: DealQuotesSectionProps) {
             <FileText className="h-4 w-4 text-muted-foreground" />
             <h3 className="text-sm font-semibold">Quotes</h3>
             {quotes.length > 0 && (
-              <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
+              <Badge variant="secondary" className="text-micro h-4 px-1.5">
                 {quotes.length}
               </Badge>
             )}

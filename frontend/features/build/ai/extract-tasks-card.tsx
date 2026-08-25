@@ -61,7 +61,7 @@ export function ExtractTasksCard({
         value={text}
         onChange={handleTextChange}
         placeholder="Paste meeting notes, a chat thread, or any unstructured text…"
-        className="min-h-[80px] resize-none text-[13px]"
+        className="min-h-[80px] resize-none text-label"
         disabled={mutation.isPending}
         aria-label="Text to extract tasks from"
       />
@@ -97,7 +97,7 @@ export function ExtractTasksCard({
       ) : null}
 
       {mutation.isError ? (
-        <p className="text-[13px] leading-snug text-destructive">
+        <p className="text-label leading-snug text-destructive">
           {getErrorMessage(mutation.error)}
         </p>
       ) : null}
@@ -105,7 +105,7 @@ export function ExtractTasksCard({
       {result ? (
         <div className="border-t border-border/60 pt-1">
           {result.tasks.length === 0 ? (
-            <p className="text-[13px] text-muted-foreground">
+            <p className="text-label text-muted-foreground">
               No actionable tasks found in the text.
             </p>
           ) : (

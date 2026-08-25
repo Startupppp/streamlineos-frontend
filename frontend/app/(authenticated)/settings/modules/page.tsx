@@ -78,10 +78,10 @@ function ModuleCard({
         <Icon className="h-[15px] w-[15px]" strokeWidth={1.75} />
       </span>
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-semibold text-foreground leading-tight truncate">
+        <p className="text-label font-semibold text-foreground leading-tight truncate">
           {entry.label}
         </p>
-        <p className="text-[11px] text-muted-foreground truncate leading-tight mt-0.5">
+        <p className="text-dense text-muted-foreground truncate leading-tight mt-0.5">
           {entry.description
             ? entry.description
             : core

@@ -63,7 +63,7 @@ const TXN_COLUMNS: DataTableColumn<BankTransaction>[] = [
     key: "txnDate",
     header: "Date",
     cell: (row) => (
-      <span className="text-[11px] tabular-nums text-muted-foreground">
+      <span className="text-dense tabular-nums text-muted-foreground">
         {formatDate(row.txnDate)}
       </span>
     ),
@@ -75,14 +75,14 @@ const TXN_COLUMNS: DataTableColumn<BankTransaction>[] = [
     key: "description",
     header: "Description",
     cell: (row) => (
-      <TruncatedText text={row.description} className="text-[11px]" />
+      <TruncatedText text={row.description} className="text-dense" />
     ),
   },
   {
     key: "reference",
     header: "Reference",
     cell: (row) => (
-      <span className="text-[11px] text-muted-foreground font-mono">
+      <span className="text-dense text-muted-foreground font-mono">
         {row.reference ?? "—"}
       </span>
     ),
@@ -92,9 +92,9 @@ const TXN_COLUMNS: DataTableColumn<BankTransaction>[] = [
     key: "counterparty",
     header: "Counterparty",
     cell: (row) => row.counterparty ? (
-      <TruncatedText text={row.counterparty} className="text-[11px] text-muted-foreground" />
+      <TruncatedText text={row.counterparty} className="text-dense text-muted-foreground" />
     ) : (
-      <span className="text-[11px] text-muted-foreground">—</span>
+      <span className="text-dense text-muted-foreground">—</span>
     ),
     className: "w-[150px]",
   },

@@ -71,7 +71,7 @@ function MemberRow({ member, selected, onToggle }: RowProps) {
     >
       <Avatar className="w-7 shrink-0">
         <AvatarImage src={resolveImageUrl(member.image)} />
-        <AvatarFallback className="text-[10px]">{getInitials(name)}</AvatarFallback>
+        <AvatarFallback className="text-micro">{getInitials(name)}</AvatarFallback>
       </Avatar>
       <div className="flex min-w-0 flex-1 flex-col">
         <TruncatedText text={name} className={cn("text-sm", selected && "font-medium")} />

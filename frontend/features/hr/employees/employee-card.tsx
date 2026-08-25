@@ -49,7 +49,7 @@ export function EmployeeCard({ employee: emp, department }: EmployeeCardProps) {
           <div className="flex items-start gap-2.5 sm:gap-3">
             <Avatar className="h-9 w-9 shrink-0 ring-2 ring-border/60 sm:h-11 sm:w-11">
               <AvatarImage src={resolveImageUrl(emp.image)} alt="" />
-              <AvatarFallback className="bg-primary/10 text-[11px] font-semibold text-primary sm:text-xs">
+              <AvatarFallback className="bg-primary/10 text-dense font-semibold text-primary sm:text-xs">
                 {initials}
               </AvatarFallback>
             </Avatar>
@@ -62,7 +62,7 @@ export function EmployeeCard({ employee: emp, department }: EmployeeCardProps) {
               <div className="mt-1">
                 <span
                   className={cn(
-                    "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold leading-none",
+                    "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-micro font-semibold leading-none",
                     isActive
                       ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
                       : "border-border bg-muted text-muted-foreground",
@@ -87,11 +87,11 @@ export function EmployeeCard({ employee: emp, department }: EmployeeCardProps) {
               ) : null}
 
               {(department || employeeId) && (
-                <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground sm:mt-1.5">
+                <div className="mt-1 flex min-w-0 items-center gap-1.5 text-dense text-muted-foreground sm:mt-1.5">
                   {department ? (
                     <span className="inline-flex min-w-0 max-w-[65%] items-center gap-1">
                       <Building2 className="h-3 w-3 shrink-0 opacity-60" />
-                      <TruncatedText text={department} className="text-[11px]" />
+                      <TruncatedText text={department} className="text-dense" />
                     </span>
                   ) : null}
                   {department && employeeId ? (
@@ -102,7 +102,7 @@ export function EmployeeCard({ employee: emp, department }: EmployeeCardProps) {
                   {employeeId ? (
                     <TruncatedText
                       text={employeeId}
-                      className="font-mono text-[11px] text-muted-foreground"
+                      className="font-mono text-dense text-muted-foreground"
                     />
                   ) : null}
                 </div>
@@ -115,7 +115,7 @@ export function EmployeeCard({ employee: emp, department }: EmployeeCardProps) {
               <Mail className="h-3 w-3 shrink-0 text-muted-foreground/70" />
               <TruncatedText
                 text={emp.email}
-                className="text-[11px] text-muted-foreground"
+                className="text-dense text-muted-foreground"
               />
             </div>
           ) : null}

@@ -46,7 +46,7 @@ export function VaultAccessLog({ candidateId }: VaultAccessLogProps) {
               <div key={log.id} className="flex items-center gap-2 py-1 text-xs">
                 <Badge
                   variant={log.action === "DOWNLOAD" ? "default" : "secondary"}
-                  className="text-[10px] px-1 py-0 shrink-0"
+                  className="text-micro px-1 py-0 shrink-0"
                 >
                   {log.action}
                 </Badge>

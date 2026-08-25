@@ -78,11 +78,11 @@ function InvitationHero({
         </div>
         <div className="min-w-0 flex-1 pt-0.5">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-600">
+            <p className="text-micro font-semibold uppercase tracking-[0.16em] text-blue-600">
               {verified ? "Workspace invitation" : "Invitation status"}
             </p>
             {verified ? (
-              <span className="hidden items-center gap-1 rounded-full border border-blue-200 bg-white px-2 py-0.5 text-[10px] font-semibold text-blue-700 min-[420px]:inline-flex">
+              <span className="hidden items-center gap-1 rounded-full border border-blue-200 bg-white px-2 py-0.5 text-micro font-semibold text-blue-700 min-[420px]:inline-flex">
                 <ShieldCheck className="h-3 w-3" />
                 Secure access
               </span>
@@ -114,7 +114,7 @@ function InvitationDetails({
   return (
     <dl className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
       <div className="min-w-0 rounded-lg border border-slate-200/90 bg-slate-50/70 px-3.5 py-2.5">
-        <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+        <dt className="text-micro font-semibold uppercase tracking-wide text-slate-500">
           Workspace
         </dt>
         <dd className="mt-0.5 truncate text-sm font-semibold text-slate-950">
@@ -122,7 +122,7 @@ function InvitationDetails({
         </dd>
       </div>
       <div className="min-w-0 rounded-lg border border-slate-200/90 bg-slate-50/70 px-3.5 py-2.5">
-        <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+        <dt className="text-micro font-semibold uppercase tracking-wide text-slate-500">
           Access role
         </dt>
         <dd className="mt-0.5 truncate text-sm font-semibold text-blue-700">
@@ -130,7 +130,7 @@ function InvitationDetails({
         </dd>
       </div>
       <div className="min-w-0 rounded-lg border border-slate-200/90 bg-slate-50/70 px-3.5 py-2.5 min-[420px]:col-span-2">
-        <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+        <dt className="text-micro font-semibold uppercase tracking-wide text-slate-500">
           Invitation sent to
         </dt>
         <dd className="mt-0.5 truncate text-sm font-medium text-slate-700">
@@ -139,7 +139,7 @@ function InvitationDetails({
       </div>
       {accountEmail ? (
         <div className="min-w-0 rounded-lg border border-slate-200/90 bg-slate-50/70 px-3.5 py-2.5 min-[420px]:col-span-2">
-          <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+          <dt className="text-micro font-semibold uppercase tracking-wide text-slate-500">
             Signed in as
           </dt>
           <dd className="mt-0.5 truncate text-sm font-medium text-slate-700">

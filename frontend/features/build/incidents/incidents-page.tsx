@@ -141,7 +141,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
       key: "incidentNumber",
       header: "ID",
       cell: (row) => (
-        <Link href={`/build/${projectId}/incidents/${row.id}`} className="text-[11px] font-mono text-primary hover:underline">
+        <Link href={`/build/${projectId}/incidents/${row.id}`} className="text-dense font-mono text-primary hover:underline">
           INC-{row.incidentNumber}
         </Link>
       ),
@@ -152,14 +152,14 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
       header: "Title",
       className: TABLE_TITLE_CELL,
       cell: (row) => (
-        <TruncatedText text={row.title} className="text-[11px] font-medium" />
+        <TruncatedText text={row.title} className="text-dense font-medium" />
       ),
     },
     {
       key: "severity",
       header: "Severity",
       cell: (row) => (
-        <Badge variant="outline" className={`text-[10px] capitalize ${SEVERITY_STYLES[row.severity]}`}>
+        <Badge variant="outline" className={`text-micro capitalize ${SEVERITY_STYLES[row.severity]}`}>
           {row.severity}
         </Badge>
       ),
@@ -169,7 +169,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
       key: "status",
       header: "Status",
       cell: (row) => (
-        <Badge variant="outline" className={`text-[10px] ${STATUS_STYLES[row.status]}`}>
+        <Badge variant="outline" className={`text-micro ${STATUS_STYLES[row.status]}`}>
           {STATUS_LABELS[row.status]}
         </Badge>
       ),
@@ -181,10 +181,10 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
       cell: (row) => {
         const state = getSlaState(row);
         if (state.label === "Met")
-          return <Badge variant="outline" className="text-[10px] text-muted-foreground border-border">Met</Badge>;
+          return <Badge variant="outline" className="text-micro text-muted-foreground border-border">Met</Badge>;
         if (state.responseBreached || state.resolutionBreached)
-          return <Badge variant="outline" className="text-[10px] text-red-600 border-red-200 bg-red-50 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30">Breached</Badge>;
-        return <Badge variant="outline" className="text-[10px] text-emerald-600 border-emerald-200 dark:text-emerald-400 dark:border-emerald-500/30">On track</Badge>;
+          return <Badge variant="outline" className="text-micro text-red-600 border-red-200 bg-red-50 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30">Breached</Badge>;
+        return <Badge variant="outline" className="text-micro text-emerald-600 border-emerald-200 dark:text-emerald-400 dark:border-emerald-500/30">On track</Badge>;
       },
       className: "w-[90px]",
     },
@@ -193,7 +193,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
       header: "Owner",
       cell: (row) => {
         const member = members.find((m) => m.userId === row.ownerId);
-        return <span className="text-[11px] text-muted-foreground">{member ? (member.name ?? member.email) : "—"}</span>;
+        return <span className="text-dense text-muted-foreground">{member ? (member.name ?? member.email) : "—"}</span>;
       },
       className: "w-[120px]",
     },
@@ -201,7 +201,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
       key: "detectedAt",
       header: "Detected",
       cell: (row) => (
-        <span className="text-[11px] text-muted-foreground">
+        <span className="text-dense text-muted-foreground">
           {row.detectedAt ? new Date(row.detectedAt).toLocaleDateString() : "—"}
         </span>
       ),
@@ -260,7 +260,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
       filters={filtersBar}
       actions={
         canManage ? (
-          <Button size="sm" className="text-[11px]" onClick={handleNew}>
+          <Button size="sm" className="text-dense" onClick={handleNew}>
             <Plus className="h-3.5 w-3.5 mr-1" />
             New Incident
           </Button>

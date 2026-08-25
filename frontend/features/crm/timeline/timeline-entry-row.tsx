@@ -88,14 +88,14 @@ export function TimelineEntryRow({ entry, onComplete, isCompleting = false }: Ti
             {describe(entry)}
           </span>
 
-          <Badge variant="outline" className="h-5 shrink-0 px-2 py-0.5 text-[10px]">
+          <Badge variant="outline" className="h-5 shrink-0 px-2 py-0.5 text-micro">
             {KIND_LABEL[entry.kind]}
           </Badge>
 
           {entry.actorKind === "system" ? (
             <Badge
               variant="outline"
-              className={cn("h-5 shrink-0 px-2 py-0.5 text-[10px]", tone("info"))}
+              className={cn("h-5 shrink-0 px-2 py-0.5 text-micro", tone("info"))}
             >
               Automatic
             </Badge>
@@ -104,7 +104,7 @@ export function TimelineEntryRow({ entry, onComplete, isCompleting = false }: Ti
           {overdue ? (
             <Badge
               variant="outline"
-              className={cn("h-5 shrink-0 px-2 py-0.5 text-[10px]", tone("danger"))}
+              className={cn("h-5 shrink-0 px-2 py-0.5 text-micro", tone("danger"))}
             >
               Overdue
             </Badge>
@@ -114,12 +114,12 @@ export function TimelineEntryRow({ entry, onComplete, isCompleting = false }: Ti
         {entry.body ? (
           // Wrapped, not truncated: the ticket asks for the same information on a
           // phone with nothing silently cut off.
-          <p className="min-w-0 whitespace-pre-wrap break-words text-[13px] text-muted-foreground">
+          <p className="min-w-0 whitespace-pre-wrap break-words text-label text-muted-foreground">
             {entry.body}
           </p>
         ) : null}
 
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-dense text-muted-foreground">
           <span className="tabular-nums">{formatTime(entry.occurredAt)}</span>
           <span aria-hidden="true">·</span>
           <span className="min-w-0 break-words">{actorText(entry)}</span>

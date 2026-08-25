@@ -134,7 +134,7 @@ function buildGrnColumns(onRowClick: (id: number) => void): DataTableColumn<GrnR
       cell: (row) => (
         <button
           type="button"
-          className="font-mono text-[11px] text-primary hover:underline"
+          className="font-mono text-dense text-primary hover:underline"
           onClick={(e) => { e.stopPropagation(); onRowClick(row.id); }}
         >
           {row.grnNumber}
@@ -367,9 +367,9 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
               ) : "—"}
             </dd>
             <dt className="text-muted-foreground">Order date</dt>
-            <dd className="font-mono tabular-nums text-[13px]">{formatDate(po.orderDate)}</dd>
+            <dd className="font-mono tabular-nums text-label">{formatDate(po.orderDate)}</dd>
             <dt className="text-muted-foreground">Expected delivery</dt>
-            <dd className="font-mono tabular-nums text-[13px]">{formatDate(po.expectedDeliveryDate)}</dd>
+            <dd className="font-mono tabular-nums text-label">{formatDate(po.expectedDeliveryDate)}</dd>
             <dt className="text-muted-foreground">Warehouse</dt>
             <dd>{po.warehouse?.name ?? "—"}</dd>
             <dt className="text-muted-foreground">Currency</dt>
@@ -392,7 +392,7 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
 
         <Card className="p-4">
           <div className="flex justify-end">
-            <div className="space-y-1 text-[13px] w-64">
+            <div className="space-y-1 text-label w-64">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Subtotal</span>
                 <span className="font-mono tabular-nums">{formatAmount(po.subtotal)}</span>

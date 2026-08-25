@@ -52,19 +52,19 @@ function DetailBody({ row }: { row: PayrollSummaryRow }) {
     <div className="space-y-5 px-6 py-5">
       <div className="grid grid-cols-3 gap-2">
         <div className="rounded-lg border border-border bg-primary/5 p-3 text-center">
-          <p className="text-[11px] text-muted-foreground">Payable</p>
+          <p className="text-dense text-muted-foreground">Payable</p>
           <p className="text-lg font-semibold tabular-nums text-foreground">{row.totalPayableHours.toFixed(1)}</p>
-          <p className="text-[10px] text-muted-foreground">hours</p>
+          <p className="text-micro text-muted-foreground">hours</p>
         </div>
         <div className="rounded-lg border border-border bg-amber-50 dark:bg-amber-500/10 p-3 text-center">
-          <p className="text-[11px] text-muted-foreground">Overtime</p>
+          <p className="text-dense text-muted-foreground">Overtime</p>
           <p className="text-lg font-semibold tabular-nums text-amber-700 dark:text-amber-300">{row.overtimeHours.toFixed(1)}</p>
-          <p className="text-[10px] text-muted-foreground">hours</p>
+          <p className="text-micro text-muted-foreground">hours</p>
         </div>
         <div className="rounded-lg border border-border bg-card p-3 text-center">
-          <p className="text-[11px] text-muted-foreground">Entries</p>
+          <p className="text-dense text-muted-foreground">Entries</p>
           <p className="text-lg font-semibold tabular-nums">{row.entryCount}</p>
-          <p className="text-[10px] text-muted-foreground">logged</p>
+          <p className="text-micro text-muted-foreground">logged</p>
         </div>
       </div>
 
@@ -80,7 +80,7 @@ function DetailBody({ row }: { row: PayrollSummaryRow }) {
       )}
 
       <div>
-        <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2">
+        <p className="text-dense font-medium text-muted-foreground uppercase tracking-wider mb-2">
           Hour Breakdown
         </p>
         <div className="rounded-lg border border-border bg-card px-3">
@@ -99,12 +99,12 @@ function DetailBody({ row }: { row: PayrollSummaryRow }) {
 
       <div className="flex items-center gap-2">
         {row.hasPendingEntries && (
-          <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700 text-[10px] dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
+          <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700 text-micro dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
             Pending entries
           </Badge>
         )}
         {row.totalPayableHours > 0 && !row.hasPendingEntries && (
-          <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 text-[10px] dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
+          <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 text-micro dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
             Ready
           </Badge>
         )}

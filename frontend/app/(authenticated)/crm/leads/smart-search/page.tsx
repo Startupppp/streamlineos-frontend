@@ -77,9 +77,9 @@ function FilterBadges({ filters }: { filters: Record<string, unknown> }) {
 
   return (
     <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-      <span className="text-[11px] text-muted-foreground font-medium">Interpreted as:</span>
+      <span className="text-dense text-muted-foreground font-medium">Interpreted as:</span>
       {entries.map(([key, val]) => (
-        <Badge key={key} variant="outline" className="text-[10px] gap-1 h-5 px-2">
+        <Badge key={key} variant="outline" className="text-micro gap-1 h-5 px-2">
           <span className="text-muted-foreground">{labelMap[key] ?? key}:</span>
           <span className="font-medium">{format(key, val)}</span>
         </Badge>
@@ -101,7 +101,7 @@ const COLUMNS: DataTableColumn<NLSearchLead>[] = [
           {lead.name}
         </Link>
         {lead.email && (
-          <p className="text-[10px] text-muted-foreground mt-0.5 break-all">{lead.email}</p>
+          <p className="text-micro text-muted-foreground mt-0.5 break-all">{lead.email}</p>
         )}
       </div>
     ),
@@ -301,7 +301,7 @@ export default function SmartLeadSearchPage() {
         ) : hasResult ? (
           <div className="flex flex-1 min-h-0 flex-col space-y-4">
             <FilterBadges filters={data.parsedFilters} />
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-dense text-muted-foreground">
               <span className="font-semibold text-foreground tabular-nums">{data.total}</span>{" "}
               {data.total === 1 ? "result" : "results"} found
             </p>

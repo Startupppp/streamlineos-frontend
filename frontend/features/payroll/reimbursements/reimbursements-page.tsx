@@ -144,7 +144,7 @@ export function ReimbursementsPageContent() {
           approveLabel="Approve"
           rejectLabel="Reject Claim"
           size="sm"
-          className="[&_button]:h-6 [&_button]:text-[10px] [&_button]:px-2"
+          className="[&_button]:h-6 [&_button]:text-micro [&_button]:px-2"
         />
       ) : null,
   };
@@ -155,8 +155,8 @@ export function ReimbursementsPageContent() {
       header: "Employee",
       cell: (row) => (
         <div className="flex flex-col gap-0.5 min-w-0">
-          <TruncatedText text={row.user?.name ?? "—"} className="text-[11px] font-medium" />
-          <TruncatedText text={row.user?.email ?? "Unknown user"} className="text-[10px] text-muted-foreground" />
+          <TruncatedText text={row.user?.name ?? "—"} className="text-dense font-medium" />
+          <TruncatedText text={row.user?.email ?? "Unknown user"} className="text-micro text-muted-foreground" />
         </div>
       ),
     },
@@ -164,7 +164,7 @@ export function ReimbursementsPageContent() {
       key: "category",
       header: "Category",
       cell: (row) => (
-        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border bg-muted text-muted-foreground border-border">
+        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium border bg-muted text-muted-foreground border-border">
           {row.category}
         </span>
       ),
@@ -174,7 +174,7 @@ export function ReimbursementsPageContent() {
       header: "Amount",
       className: "text-right",
       cell: (row) => (
-        <span className="font-mono text-[11px] tabular-nums">{formatMoney(row.amount)}</span>
+        <span className="font-mono text-dense tabular-nums">{formatMoney(row.amount)}</span>
       ),
     },
     {
@@ -186,12 +186,12 @@ export function ReimbursementsPageContent() {
             href={row.receiptUrl}
             target="_blank"
             rel="noreferrer"
-            className="text-[10px] text-primary hover:underline"
+            className="text-micro text-primary hover:underline"
           >
             View
           </a>
         ) : (
-          <span className="text-[10px] text-muted-foreground">—</span>
+          <span className="text-micro text-muted-foreground">—</span>
         ),
     },
     {
@@ -203,7 +203,7 @@ export function ReimbursementsPageContent() {
       key: "submitted",
       header: "Submitted",
       cell: (row) => (
-        <span className="text-[10px] text-muted-foreground">{formatDate(row.createdAt)}</span>
+        <span className="text-micro text-muted-foreground">{formatDate(row.createdAt)}</span>
       ),
     },
     ...(canApprove ? [actionColumn] : []),
@@ -253,7 +253,7 @@ export function ReimbursementsPageContent() {
       filters={filterBar}
     >
       <div className="flex flex-1 min-h-0 flex-col gap-3">
-        <div className="shrink-0 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-[12px] text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300">
+        <div className="shrink-0 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300">
           Approved claims flow into the{" "}
           <span className="font-medium">{formatMonth(month)}</span> payroll run automatically.
           Approved reimbursements are included as payroll inputs.

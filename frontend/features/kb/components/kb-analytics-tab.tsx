@@ -51,7 +51,7 @@ export function KbAnalyticsTab() {
         <div className="flex items-center gap-2">
           <Search className="h-4 w-4 text-muted-foreground" />
           <h3 className="text-sm font-semibold">Content Gaps</h3>
-          <span className="text-[11px] text-muted-foreground">Queries with no useful results</span>
+          <span className="text-dense text-muted-foreground">Queries with no useful results</span>
         </div>
         <KbContentGaps />
       </div>

@@ -82,7 +82,7 @@ export const RecentActivityCard = memo(function RecentActivityCard({ items, isLo
                           <span className="text-xs text-muted-foreground font-mono">
                             {item.projectKey ?? "???"}-{item.ticketNumber ?? "?"}
                           </span>
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                          <Badge variant="outline" className="text-micro px-1.5 py-0">
                             {item.status?.replaceAll("_", " ")}
                           </Badge>
                         </div>
@@ -99,7 +99,7 @@ export const RecentActivityCard = memo(function RecentActivityCard({ items, isLo
                       {item.assignee && (
                         <Avatar className="w-8 flex-shrink-0">
                           <AvatarImage src={resolveImageUrl(item.assignee.image)} />
-                          <AvatarFallback className="text-[10px]">
+                          <AvatarFallback className="text-micro">
                             {getInitials(null, item.assignee.firstName, item.assignee.lastName)}
                           </AvatarFallback>
                         </Avatar>

@@ -56,7 +56,7 @@ export function WidgetCard({
           )}
           <CardTitle className="text-sm font-semibold truncate">{title}</CardTitle>
           {badge && (
-            <Badge variant="secondary" className="text-[10px] h-5 px-1.5 shrink-0">
+            <Badge variant="secondary" className="text-micro h-5 px-1.5 shrink-0">
               {badge}
             </Badge>
           )}

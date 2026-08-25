@@ -41,9 +41,9 @@ export function ClientTimelineTab({ clientId }: { clientId: number }) {
             <TrendingUp className="h-3 w-3 text-muted-foreground" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-medium text-foreground truncate">{event.title}</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">{event.description}</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">
+            <p className="text-dense font-medium text-foreground truncate">{event.title}</p>
+            <p className="text-dense text-muted-foreground mt-0.5 line-clamp-2">{event.description}</p>
+            <p className="text-micro text-muted-foreground mt-0.5">
               {formatDateTime(event.date)}
               {event.user && ` · ${event.user}`}
             </p>

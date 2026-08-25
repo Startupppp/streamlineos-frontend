@@ -39,22 +39,22 @@ const billingPreviewColumns: DataTableColumn<BillingGroup>[] = [
   {
     key: "projectName",
     header: "Project",
-    headerClassName: "text-[10px] py-1 px-2 font-bold uppercase tracking-wider",
-    className: "text-[11px] py-1 px-2 truncate max-w-[160px]",
+    headerClassName: "text-micro py-1 px-2 font-bold uppercase tracking-wider",
+    className: "text-dense py-1 px-2 truncate max-w-[160px]",
     cell: (row) => row.projectName,
   },
   {
     key: "totalHours",
     header: "Hours",
-    headerClassName: "text-[10px] py-1 px-2 font-bold uppercase tracking-wider text-right",
-    className: "text-[11px] py-1 px-2 font-mono text-right",
+    headerClassName: "text-micro py-1 px-2 font-bold uppercase tracking-wider text-right",
+    className: "text-dense py-1 px-2 font-mono text-right",
     cell: (row) => row.totalHours.toFixed(1),
   },
   {
     key: "billableAmount",
     header: "Amount",
-    headerClassName: "text-[10px] py-1 px-2 font-bold uppercase tracking-wider text-right",
-    className: "text-[11px] py-1 px-2 font-mono text-right",
+    headerClassName: "text-micro py-1 px-2 font-bold uppercase tracking-wider text-right",
+    className: "text-dense py-1 px-2 font-mono text-right",
     cell: (row) => formatMoney(row.billableAmount, row.currency),
   },
 ];
@@ -138,7 +138,7 @@ export function BillingExportDialog({
           </div>
 
           <div className="space-y-1.5">
-            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+            <p className="text-dense font-medium text-muted-foreground uppercase tracking-wider">
               Preview ({groups.length} project{groups.length !== 1 ? "s" : ""})
             </p>
             <div className="max-h-[160px] overflow-auto">

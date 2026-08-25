@@ -52,7 +52,7 @@ export function HuddleParticipantCard({
           )}
         >
           <AvatarImage src={resolveImageUrl(participant.user?.image)} />
-          <AvatarFallback className="text-[11px] font-semibold">
+          <AvatarFallback className="text-dense font-semibold">
             {getInitials(participant.user?.name)}
           </AvatarFallback>
         </Avatar>
@@ -79,13 +79,13 @@ export function HuddleParticipantCard({
       </div>
       <TruncatedText
         text={isCurrentUser ? "You" : (participant.user?.name ?? "Unknown")}
-        className="text-[11px] text-center w-full leading-tight"
+        className="text-dense text-center w-full leading-tight"
       />
       {isHost && !isCurrentUser && onKick && (
         <button
           onClick={onKick}
           {...kickHoverHandlers}
-          className="text-[10px] text-red-500/60 hover:text-red-500 transition-colors flex items-center gap-0.5"
+          className="text-micro text-red-500/60 hover:text-red-500 transition-colors flex items-center gap-0.5"
           aria-label="Remove from huddle"
         >
           <UserMinusIcon ref={kickIconRef} size={10} />

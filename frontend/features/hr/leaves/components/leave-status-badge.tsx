@@ -34,7 +34,7 @@ export function LeaveStatusBadge({ status }: { status: string }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+        "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border",
         c!.className,
       )}
     >

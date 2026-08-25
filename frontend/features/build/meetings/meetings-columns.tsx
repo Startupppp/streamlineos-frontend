@@ -49,9 +49,9 @@ export function buildMeetingsColumns(
             <TruncatedText text={row.title} />
           </Link>
           {row.sprintId != null && sprintMap.has(row.sprintId) ? (
-            <span className="flex max-w-full min-w-0 items-center gap-1 text-[11px] text-muted-foreground">
+            <span className="flex max-w-full min-w-0 items-center gap-1 text-dense text-muted-foreground">
               <Layers className="h-3 w-3 shrink-0" />
-              <TruncatedText text={sprintMap.get(row.sprintId)?.name ?? ""} className="text-[11px]" />
+              <TruncatedText text={sprintMap.get(row.sprintId)?.name ?? ""} className="text-dense" />
             </span>
           ) : null}
         </div>
@@ -89,7 +89,7 @@ export function buildMeetingsColumns(
             <span className="text-sm text-muted-foreground">—</span>
           )}
           {row.durationMinutes != null ? (
-            <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+            <span className="flex items-center gap-1 text-dense text-muted-foreground">
               <Clock className="h-3 w-3 shrink-0" />
               {row.durationMinutes}m
             </span>
@@ -140,7 +140,7 @@ export function buildMeetingsColumns(
               {(row.unresolvedActionItemCount ?? 0) > 0 ? (
                 <Badge
                   variant="outline"
-                  className="ml-0.5 px-1 py-0 text-[10px] text-amber-600 border-amber-200 dark:text-amber-400 dark:border-amber-500/30"
+                  className="ml-0.5 px-1 py-0 text-micro text-amber-600 border-amber-200 dark:text-amber-400 dark:border-amber-500/30"
                 >
                   {row.unresolvedActionItemCount} open
                 </Badge>

@@ -64,7 +64,7 @@ export function buildKbHistoryRows(messages: ChatMessage[]): KbHistoryRow[] {
 export function DaySeparator({ label }: { label: string }) {
   return (
     <div className="flex items-center justify-center py-0.5">
-      <span className="rounded-full bg-muted px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+      <span className="rounded-full bg-muted px-2.5 py-0.5 text-micro font-medium text-muted-foreground">
         {label}
       </span>
     </div>
@@ -173,7 +173,7 @@ function Citations({
 
   return (
     <div className="mt-2.5 border-t border-border/60 pt-2.5">
-      <p className="mb-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">
+      <p className="mb-1.5 text-micro font-medium uppercase tracking-wide text-muted-foreground/70">
         Sources
       </p>
       <div className="flex flex-wrap gap-1.5">
@@ -185,7 +185,7 @@ function Citations({
                 type="button"
                 data-page-id={citation.pageId}
                 onClick={onCitation}
-                className="inline-flex max-w-[12rem] items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[11px] text-accent transition-colors hover:bg-muted"
+                className="inline-flex max-w-[12rem] items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-dense text-accent transition-colors hover:bg-muted"
               >
                 <BookOpenTextIcon size={11} />
                 <TruncatedText text={(citation.title ?? "").trim() || "Untitled page"} />
@@ -198,7 +198,7 @@ function Citations({
           return (
             <span
               key={isSource ? `source-${citation.sourceId}` : `article-${citation.articleId}`}
-              className="inline-flex max-w-[12rem] items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[11px] text-muted-foreground"
+              className="inline-flex max-w-[12rem] items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-dense text-muted-foreground"
             >
               <BookOpenTextIcon size={11} />
               <TruncatedText text={label} />

@@ -40,7 +40,7 @@ export function buildAssetColumns(
       key: "type",
       header: "Type",
       cell: (asset) => (
-        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted border-border text-foreground">
+        <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-muted border-border text-foreground">
           {asset.type}
         </span>
       ),
@@ -60,7 +60,7 @@ export function buildAssetColumns(
       cell: (asset) => {
         const meta = STATUS_META[asset.status ?? "AVAILABLE"] ?? STATUS_META.AVAILABLE;
         return (
-          <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", meta.badge)}>
+          <span className={cn("inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border", meta.badge)}>
             {meta.label}
           </span>
         );

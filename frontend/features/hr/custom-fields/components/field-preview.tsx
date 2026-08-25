@@ -28,17 +28,17 @@ export function FieldPreview({
       <div className="flex items-center gap-1.5 flex-wrap min-w-0">
         <TruncatedText text={name || "Untitled"} className="min-w-0 flex-1 text-sm font-medium" />
         {isRequired && (
-          <Badge variant="outline" className="text-[10px] h-4 px-1 text-primary border-primary/30">
+          <Badge variant="outline" className="text-micro h-4 px-1 text-primary border-primary/30">
             required
           </Badge>
         )}
         {isSensitive && (
-          <Badge variant="outline" className="text-[10px] h-4 px-1 text-amber-700 border-amber-200 gap-0.5">
+          <Badge variant="outline" className="text-micro h-4 px-1 text-amber-700 border-amber-200 gap-0.5">
             <Lock className="h-2.5 w-2.5" /> sensitive
           </Badge>
         )}
       </div>
-      {helpText && <TruncatedText text={helpText} lines={2} className="text-[11px] text-muted-foreground" />}
+      {helpText && <TruncatedText text={helpText} lines={2} className="text-dense text-muted-foreground" />}
       <div className="mt-1">
         {fieldType === "boolean" ? (
           <div className="flex items-center gap-2">

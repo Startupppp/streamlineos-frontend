@@ -309,7 +309,7 @@ function ChannelCard({ channel, onToggle, onEdit, onDelete, canManage }: Channel
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-sm font-medium truncate">{channel.name}</h3>
-              <Badge variant="secondary" className="text-[10px]">
+              <Badge variant="secondary" className="text-micro">
                 {channelTypeLabel(channel.type)}
               </Badge>
             </div>

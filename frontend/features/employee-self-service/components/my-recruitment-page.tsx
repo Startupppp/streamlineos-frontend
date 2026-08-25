@@ -215,11 +215,11 @@ export function MyRecruitmentPage() {
                       <p className="truncate text-sm font-semibold">
                         {interview.candidateFirstName} {interview.candidateLastName}
                       </p>
-                      <Badge variant="outline" className="text-[10px]">
+                      <Badge variant="outline" className="text-micro">
                         {interview.type}
                       </Badge>
                       {submitted ? (
-                        <Badge variant="secondary" className="gap-1 text-[10px]">
+                        <Badge variant="secondary" className="gap-1 text-micro">
                           <CheckCircle2 className="h-3 w-3" /> Feedback submitted
                         </Badge>
                       ) : null}

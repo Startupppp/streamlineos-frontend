@@ -382,7 +382,7 @@ function VerifyEmailForm() {
       <AuthStatusSection className="mt-6 space-y-3">
         {email && (
           <div className="rounded-xl border border-border bg-card p-4 text-center shadow-sm">
-            <p className="text-[13px] text-muted-foreground">
+            <p className="text-label text-muted-foreground">
               Verification email sent to
             </p>
             <p className="mt-1 text-sm font-medium text-foreground">{email}</p>
@@ -407,7 +407,7 @@ function VerifyEmailForm() {
             className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0"
             aria-hidden="true"
           />
-          <p className="text-[12px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Didn&apos;t receive an email? Check your spam folder or contact
             support.
           </p>

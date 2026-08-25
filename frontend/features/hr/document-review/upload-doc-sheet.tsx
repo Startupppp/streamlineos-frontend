@@ -228,7 +228,7 @@ export function UploadDocSheet({
             </Select>
             {typesError && typeOptions.length === 0 ? (
               <div className="flex items-center justify-between gap-2">
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-dense text-muted-foreground">
                   Couldn’t load document types.
                 </p>
                 <Button
@@ -243,7 +243,7 @@ export function UploadDocSheet({
               </div>
             ) : null}
             {!typesLoading && !typesError && typeOptions.length === 0 ? (
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-dense text-muted-foreground">
                 No document types configured. Ask HR to add them under Document
                 Types.
               </p>
@@ -292,7 +292,7 @@ export function UploadDocSheet({
               accept="application/pdf,image/*,.doc,.docx"
               onChange={handleFileChange}
             />
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-dense text-muted-foreground">
               Accepted: PDF, images, Word documents. Max 10 MB.
             </p>
           </div>

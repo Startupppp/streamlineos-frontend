@@ -54,8 +54,8 @@ export function BiometricDevicesList({ canManage, onEdit }: Props) {
             <div className="min-w-0">
               <TruncatedText text={device.name} className="text-sm font-semibold text-foreground" />
               <div className="flex items-center gap-1.5 mt-1">
-                <Badge variant="secondary" className="text-[11px]">{device.vendor}</Badge>
-                <span className="flex items-center gap-1 text-[11px]">
+                <Badge variant="secondary" className="text-dense">{device.vendor}</Badge>
+                <span className="flex items-center gap-1 text-dense">
                   {device.isOnline ? (
                     <Wifi className="h-3 w-3 text-emerald-500" />
                   ) : (

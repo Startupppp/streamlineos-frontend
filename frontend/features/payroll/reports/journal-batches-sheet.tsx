@@ -187,21 +187,21 @@ export function JournalBatchesSheet({ open, onOpenChange, month }: JournalBatche
                           <span className="text-sm font-semibold text-foreground">
                             Version {batch.version}
                           </span>
-                          <Badge variant="outline" className={`text-[10px] ${STATUS_TONE[batch.status]}`}>
+                          <Badge variant="outline" className={`text-micro ${STATUS_TONE[batch.status]}`}>
                             {batch.status}
                           </Badge>
                           {batch.provisional && (
-                            <Badge variant="outline" className="border-amber-200 bg-amber-50 text-[10px] text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+                            <Badge variant="outline" className="border-amber-200 bg-amber-50 text-micro text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
                               Provisional
                             </Badge>
                           )}
                           {batch.reversalOfBatchId !== null && (
-                            <Badge variant="outline" className="text-[10px]">
+                            <Badge variant="outline" className="text-micro">
                               Reverses v{batch.reversalOfBatchId}
                             </Badge>
                           )}
                         </div>
-                        <p className="mt-1 text-[11px] text-muted-foreground">
+                        <p className="mt-1 text-dense text-muted-foreground">
                           {batch.lineCount} lines · created {formatStamp(batch.createdAt)}
                           {batch.postedAt ? ` · posted ${formatStamp(batch.postedAt)}` : ""}
                         </p>
@@ -217,7 +217,7 @@ export function JournalBatchesSheet({ open, onOpenChange, month }: JournalBatche
                     </div>
 
                     {batch.reversalReason && (
-                      <p className="mt-2 rounded-md bg-muted/50 px-2.5 py-1.5 text-[11px] text-muted-foreground">
+                      <p className="mt-2 rounded-md bg-muted/50 px-2.5 py-1.5 text-dense text-muted-foreground">
                         Reason: {batch.reversalReason}
                       </p>
                     )}
@@ -227,8 +227,8 @@ export function JournalBatchesSheet({ open, onOpenChange, month }: JournalBatche
                         variant="outline"
                         className={
                           batch.reconciliationStatus === "RECONCILED"
-                            ? "border-emerald-200 bg-emerald-50 text-[10px] text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
-                            : "text-[10px]"
+                            ? "border-emerald-200 bg-emerald-50 text-micro text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
+                            : "text-micro"
                         }
                       >
                         {batch.reconciliationStatus}

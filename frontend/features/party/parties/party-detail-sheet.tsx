@@ -97,7 +97,7 @@ export function PartyDetailSheet({ partyId, onOpenChange, onOpenSubject }: Party
                         ) : (
                           <span className="min-w-0 truncate text-sm font-medium">{link.title}</span>
                         )}
-                        <Badge variant="outline" className="h-5 shrink-0 px-2 py-0.5 text-[10px]">
+                        <Badge variant="outline" className="h-5 shrink-0 px-2 py-0.5 text-micro">
                           {link.relationship}
                         </Badge>
                       </li>

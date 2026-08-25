@@ -75,7 +75,7 @@ const SERIALS_COLUMNS: DataTableColumn<SerialItem>[] = [
     cell: (row) => (
       <>
         <TruncatedText text={row.productName} className="font-medium text-foreground" />
-        <span className="text-muted-foreground font-mono text-[10px]">{row.variantSku}</span>
+        <span className="text-muted-foreground font-mono text-micro">{row.variantSku}</span>
       </>
     ),
   },
@@ -85,7 +85,7 @@ const SERIALS_COLUMNS: DataTableColumn<SerialItem>[] = [
     cell: (row) => (
       <Badge
         variant="outline"
-        className={`text-[10px] px-1.5 ${SERIAL_STATUS_BADGE[row.status]}`}
+        className={`text-micro px-1.5 ${SERIAL_STATUS_BADGE[row.status]}`}
       >
         {SERIAL_STATUS_LABEL[row.status]}
       </Badge>

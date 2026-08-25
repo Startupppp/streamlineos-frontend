@@ -161,7 +161,7 @@ export function PersonalTokensTab({
       key: "prefix",
       header: "Prefix",
       cell: (t) => (
-        <code className="text-[11px] bg-muted px-1.5 py-0.5 rounded">
+        <code className="text-dense bg-muted px-1.5 py-0.5 rounded">
           {t.prefix}…
         </code>
       ),
@@ -182,7 +182,7 @@ export function PersonalTokensTab({
             </Badge>
           )}
           {t.scopes.length === 0 && (
-            <span className="text-[11px] text-muted-foreground">No scopes</span>
+            <span className="text-dense text-muted-foreground">No scopes</span>
           )}
         </div>
       ),
@@ -194,7 +194,7 @@ export function PersonalTokensTab({
       cell: (t) => {
         if (!t.expiresAt) {
           return (
-            <Badge variant="secondary" className="h-5 px-2 text-[10px] text-amber-700">
+            <Badge variant="secondary" className="h-5 px-2 text-micro text-amber-700">
               Disabled · rotate
             </Badge>
           );

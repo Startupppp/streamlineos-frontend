@@ -106,11 +106,11 @@ export function TranslateDraftSection({
       {result && (
         <div className="rounded-md border border-border/60 bg-muted/30 p-2 space-y-1.5">
           {result.detectedSourceLanguage && (
-            <p className="text-[10px] text-muted-foreground">
+            <p className="text-micro text-muted-foreground">
               Detected: {result.detectedSourceLanguage}
             </p>
           )}
-          <p className="text-[12px] text-foreground/90 whitespace-pre-wrap line-clamp-6">
+          <p className="text-xs text-foreground/90 whitespace-pre-wrap line-clamp-6">
             {result.translatedText}
           </p>
           <div className="flex items-center gap-1.5">

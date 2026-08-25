@@ -631,7 +631,7 @@ export function EventCreateDialog({
                     )}
                   />
                   {form.locationError && (
-                    <p className="text-[10px] text-destructive">{form.locationError}</p>
+                    <p className="text-micro text-destructive">{form.locationError}</p>
                   )}
                 </div>
               </div>
@@ -643,7 +643,7 @@ export function EventCreateDialog({
                   {displayLinkedKey ? (
                     <div className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-1.5">
                       <Ticket className="h-3.5 w-3.5 text-primary shrink-0" />
-                      <span className="font-mono text-[11px] text-primary shrink-0">
+                      <span className="font-mono text-dense text-primary shrink-0">
                         {displayLinkedKey}
                       </span>
                       {displayLinkedTitle && (

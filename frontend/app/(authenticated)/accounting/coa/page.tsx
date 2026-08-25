@@ -228,7 +228,7 @@ function buildColumns(
       cell: ({ node }: FlatNode): ReactNode => {
         const typeClass = TYPE_BADGE_CLASSES[node.accountType] ?? "border-border text-muted-foreground bg-muted";
         return (
-          <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", typeClass)}>
+          <Badge variant="outline" className={cn("text-micro px-1.5 py-0", typeClass)}>
             {node.accountType}
           </Badge>
         );
@@ -239,7 +239,7 @@ function buildColumns(
       header: "Status",
       className: "w-[100px]",
       cell: ({ node }: FlatNode): ReactNode => (
-        <Badge variant={node.isActive ? "default" : "secondary"} className="text-[10px] px-1.5 py-0">
+        <Badge variant={node.isActive ? "default" : "secondary"} className="text-micro px-1.5 py-0">
           {node.isActive ? "Active" : "Inactive"}
         </Badge>
       ),

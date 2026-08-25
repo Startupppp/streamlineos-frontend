@@ -78,7 +78,7 @@ function SectionHeader({
       </div>
       <h2 className="text-sm font-semibold text-foreground">{title}</h2>
       {count !== undefined && (
-        <span className="ml-1 rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+        <span className="ml-1 rounded-full bg-muted px-1.5 py-0.5 text-micro font-medium text-muted-foreground">
           {count}
         </span>
       )}
@@ -112,7 +112,7 @@ function MilestonesSection({ milestones }: { milestones: PortalMilestone[] }) {
             {m.status && (
               <span
                 className={cn(
-                  "inline-flex px-1.5 py-0.5 rounded text-[10px] font-semibold",
+                  "inline-flex px-1.5 py-0.5 rounded text-micro font-semibold",
                   statusStyle(m.status),
                 )}
               >
@@ -156,7 +156,7 @@ function TasksSection({ tasks }: { tasks: PortalTask[] }) {
             )}
             <span
               className={cn(
-                "inline-flex px-1.5 py-0.5 rounded text-[10px] font-semibold",
+                "inline-flex px-1.5 py-0.5 rounded text-micro font-semibold",
                 statusStyle(t.status),
               )}
             >
@@ -230,7 +230,7 @@ function CommentsSection({ comments }: { comments: PortalComment[] }) {
             <span className="text-xs font-semibold text-foreground">
               {c.authorName ?? "Team member"}
             </span>
-            <span className="text-[10px] text-muted-foreground">
+            <span className="text-micro text-muted-foreground">
               {formatDate(c.createdAt)}
             </span>
           </div>
@@ -369,13 +369,13 @@ export default function PortalProjectPage({ params }: PortalProjectPageProps) {
               <div className="flex items-center gap-2 mb-2">
                 <span
                   className={cn(
-                    "inline-flex px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide",
+                    "inline-flex px-1.5 py-0.5 rounded text-micro font-semibold uppercase tracking-wide",
                     statusStyle(project.status),
                   )}
                 >
                   {formatStatus(project.status)}
                 </span>
-                <span className="text-[10px] font-mono text-muted-foreground">
+                <span className="text-micro font-mono text-muted-foreground">
                   {project.key}
                 </span>
               </div>

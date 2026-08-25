@@ -74,7 +74,7 @@ export default function PageRightPanel({
       {!collapsed && (
         <div className="w-64 border-l border-border overflow-y-auto pb-16 px-4 space-y-5 text-sm">
           <section>
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+            <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wide mb-2">
               Details
             </p>
             <div className="space-y-1.5">
@@ -82,7 +82,7 @@ export default function PageRightPanel({
                 <span className="text-muted-foreground text-xs">Status</span>
                 <Badge
                   variant="outline"
-                  className={`text-[10px] h-4 px-1.5 ${KB_STATUS_BADGE_CLASS[page.status] ?? ""}`}
+                  className={`text-micro h-4 px-1.5 ${KB_STATUS_BADGE_CLASS[page.status] ?? ""}`}
                 >
                   {KB_STATUS_LABELS[page.status] ?? page.status}
                 </Badge>
@@ -92,7 +92,7 @@ export default function PageRightPanel({
                   <span className="text-muted-foreground text-xs">Trust</span>
                   <Badge
                     variant="outline"
-                    className={`text-[10px] h-4 px-1.5 ${
+                    className={`text-micro h-4 px-1.5 ${
                       page.trustState === "verified"
                         ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
                         : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30"
@@ -118,7 +118,7 @@ export default function PageRightPanel({
           </section>
 
           <section>
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+            <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wide mb-2">
               Backlinks ({backlinks.length})
             </p>
             {backlinks.length === 0 ? (
@@ -142,7 +142,7 @@ export default function PageRightPanel({
           </section>
 
           <section>
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+            <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wide mb-2">
               Linked records ({recordLinks.length})
             </p>
             {recordLinks.length === 0 ? (

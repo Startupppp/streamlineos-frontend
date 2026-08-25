@@ -67,7 +67,7 @@ function StatusBadge({ status }: { status: TeamAttendanceEntry["status"] }) {
   const meta = STATUS_META[status];
   const Icon = meta.Icon;
   return (
-    <Badge className={cn("gap-1 text-[10px] font-medium", meta.tone)}>
+    <Badge className={cn("gap-1 text-micro font-medium", meta.tone)}>
       <Icon className="h-2.5 w-2.5" />
       {meta.label}
     </Badge>
@@ -89,9 +89,9 @@ function MemberRow({ entry }: { entry: TeamAttendanceEntry }) {
           text={entry.name}
           className="text-sm font-medium hover:underline"
         />
-        <div className="flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground">
+        <div className="flex min-w-0 items-center gap-1.5 text-dense text-muted-foreground">
           {entry.department ? (
-            <TruncatedText text={entry.department} className="text-[11px] text-muted-foreground" />
+            <TruncatedText text={entry.department} className="text-dense text-muted-foreground" />
           ) : (
             <span>No department</span>
           )}
@@ -106,7 +106,7 @@ function MemberRow({ entry }: { entry: TeamAttendanceEntry }) {
       <div className="flex shrink-0 flex-col items-end gap-0.5">
         <StatusBadge status={entry.status} />
         {entry.checkIn && (
-          <span className="text-[10px] tabular-nums text-muted-foreground">
+          <span className="text-micro tabular-nums text-muted-foreground">
             In {format(new Date(entry.checkIn), "h:mm a")}
             {entry.checkOut
               ? ` · Out ${format(new Date(entry.checkOut), "h:mm a")}`
@@ -233,7 +233,7 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
                   >
                     {counts[status]}
                   </span>
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <span className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">
                     {STATUS_META[status].label}
                   </span>
                 </button>

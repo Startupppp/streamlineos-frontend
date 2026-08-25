@@ -118,7 +118,7 @@ export function AddMemberDialog({
           {allGroups.length > 0 ? (
             <div className="space-y-1.5">
               <p className="text-sm font-medium">Assign to groups</p>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-dense text-muted-foreground">
                 A member gets module access through its groups — pick at least one.
               </p>
               <div className="space-y-1 max-h-40 overflow-y-auto">
@@ -140,7 +140,7 @@ export function AddMemberDialog({
             </div>
           ) : (
             <div className="rounded-md border border-border/60 bg-muted/30 px-3 py-2.5">
-              <p className="text-[11px] leading-relaxed text-muted-foreground">
+              <p className="text-dense leading-relaxed text-muted-foreground">
                 This module has no role groups yet. Create one on the Roles tab
                 first — a member can only get access through a group.
               </p>
@@ -268,7 +268,7 @@ export function EditGroupsDialog({
         </div>
 
         {allGroups.length > 0 && selectedGroupIds.size === 0 && (
-          <p className="text-[11px] leading-relaxed text-muted-foreground">
+          <p className="text-dense leading-relaxed text-muted-foreground">
             A member keeps module access through their groups. To take access
             away entirely, close this and use Remove.
           </p>

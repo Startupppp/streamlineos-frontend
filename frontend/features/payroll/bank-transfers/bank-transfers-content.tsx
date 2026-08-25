@@ -70,7 +70,7 @@ export function BankTransfersContent() {
               </span>
               <span
                 className={cn(
-                  "inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                  "inline-flex items-center rounded px-1.5 py-0.5 text-micro font-semibold uppercase tracking-wide",
                   RUN_STATUS_STYLES[run.status] ?? "bg-muted text-muted-foreground",
                 )}
               >

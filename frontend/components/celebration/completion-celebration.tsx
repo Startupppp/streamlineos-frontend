@@ -92,7 +92,7 @@ export function CompletionCelebration({
                   initial={{ opacity: 0, x: reduceMotion ? 0 : -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.2 + i * 0.07, duration: 0.2, ease: "easeOut" }}
-                  className="flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2 text-[13px] text-foreground"
+                  className="flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2 text-label text-foreground"
                 >
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-brand-core/10 text-brand-core dark:bg-brand-core/15 dark:text-brand-bright">
                     <HighlightIcon className="h-3.5 w-3.5" aria-hidden />

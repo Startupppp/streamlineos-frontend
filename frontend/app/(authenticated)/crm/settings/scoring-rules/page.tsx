@@ -134,10 +134,10 @@ function ScoringRuleRow({ rule, isEditing, editForm, onEditSubmit, onEdit, onDel
         </>
       ) : (
         <>
-          <TableCell className="text-[11px] px-2 py-1 capitalize">{FIELDS.find(f => f.value === rule.field)?.label ?? rule.field}</TableCell>
-          <TableCell className="text-[11px] px-2 py-1">{OPERATORS.find(o => o.value === rule.operator)?.label ?? rule.operator}</TableCell>
-          <TableCell className="text-[11px] px-2 py-1">{rule.value}</TableCell>
-          <TableCell className="text-[11px] px-2 py-1 text-right">
+          <TableCell className="text-dense px-2 py-1 capitalize">{FIELDS.find(f => f.value === rule.field)?.label ?? rule.field}</TableCell>
+          <TableCell className="text-dense px-2 py-1">{OPERATORS.find(o => o.value === rule.operator)?.label ?? rule.operator}</TableCell>
+          <TableCell className="text-dense px-2 py-1">{rule.value}</TableCell>
+          <TableCell className="text-dense px-2 py-1 text-right">
             <Badge
               variant="outline"
               className={cn(
@@ -150,7 +150,7 @@ function ScoringRuleRow({ rule, isEditing, editForm, onEditSubmit, onEdit, onDel
               {rule.points > 0 ? "+" : ""}{rule.points}
             </Badge>
           </TableCell>
-          <TableCell className="text-[11px] px-2 py-1 text-right">
+          <TableCell className="text-dense px-2 py-1 text-right">
             <div className="flex items-center justify-end gap-1">
               <Button variant="ghost" size="icon" className="w-7" onClick={handleEdit} aria-label="Edit">
                 <Pencil className="h-3.5 w-3.5" />
@@ -362,11 +362,11 @@ export default function ScoringRulesPage() {
                   <Table>
                     <TableHeader className="sticky top-0 z-10 bg-muted/80">
                       <TableRow className="border-b-2 border-border hover:bg-transparent">
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Field</TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Operator</TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Value</TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Points</TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Actions</TableHead>
+                        <TableHead className="text-micro uppercase tracking-wider font-bold px-2 py-1.5">Field</TableHead>
+                        <TableHead className="text-micro uppercase tracking-wider font-bold px-2 py-1.5">Operator</TableHead>
+                        <TableHead className="text-micro uppercase tracking-wider font-bold px-2 py-1.5">Value</TableHead>
+                        <TableHead className="text-micro uppercase tracking-wider font-bold px-2 py-1.5 text-right">Points</TableHead>
+                        <TableHead className="text-micro uppercase tracking-wider font-bold px-2 py-1.5 text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>

@@ -111,7 +111,7 @@ const EditableLineRow = memo(function EditableLineRow({
   return (
     <div className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-1.5 items-end">
       <div className="space-y-0.5">
-        <Label className="text-[10px] font-semibold text-foreground/80">Variant</Label>
+        <Label className="text-micro font-semibold text-foreground/80">Variant</Label>
         <ProductVariantCombobox
           value={line.variantId}
           onChange={handleVariantChange}
@@ -119,7 +119,7 @@ const EditableLineRow = memo(function EditableLineRow({
         />
       </div>
       <div className="space-y-0.5">
-        <Label className="text-[10px] font-semibold text-foreground/80">Qty</Label>
+        <Label className="text-micro font-semibold text-foreground/80">Qty</Label>
         <Input
           type="number"
           min="1"
@@ -129,7 +129,7 @@ const EditableLineRow = memo(function EditableLineRow({
         />
       </div>
       <div className="space-y-0.5">
-        <Label className="text-[10px] font-semibold text-foreground/80">Lot</Label>
+        <Label className="text-micro font-semibold text-foreground/80">Lot</Label>
         <Select
           value={line.lotId || "none"}
           onValueChange={handleLotChange}
@@ -149,7 +149,7 @@ const EditableLineRow = memo(function EditableLineRow({
         </Select>
       </div>
       <div className="space-y-0.5">
-        <Label className="text-[10px] font-semibold text-foreground/80">Serial</Label>
+        <Label className="text-micro font-semibold text-foreground/80">Serial</Label>
         <Select
           value={line.serialId || "none"}
           onValueChange={handleSerialChange}

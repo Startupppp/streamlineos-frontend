@@ -87,7 +87,7 @@ export function RichHero({
             {hasCopy ? (
               <div className="min-w-0 max-w-2xl flex-1">
                 {eyebrow ? (
-                  <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-600/80 dark:text-blue-300/80">
+                  <p className="mb-1.5 text-dense font-semibold uppercase tracking-[0.14em] text-blue-600/80 dark:text-blue-300/80">
                     {eyebrow}
                   </p>
                 ) : null}
@@ -177,7 +177,7 @@ export function RichQuickAction({
           <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-0 -translate-x-1 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0" />
         </div>
         {description && (
-          <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground line-clamp-2 sm:line-clamp-1 md:line-clamp-2">
+          <p className="mt-0.5 text-dense leading-snug text-muted-foreground line-clamp-2 sm:line-clamp-1 md:line-clamp-2">
             {description}
           </p>
         )}

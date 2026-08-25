@@ -142,7 +142,7 @@ export const ModuleCard = memo(function ModuleCard({
               <div
                 className={cn(
                   "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset",
-                  isEmojiAvatar ? "text-xl leading-none" : "text-[11px] font-bold tracking-tight",
+                  isEmojiAvatar ? "text-xl leading-none" : "text-dense font-bold tracking-tight",
                   style.avatar,
                 )}
                 aria-hidden="true"
@@ -157,7 +157,7 @@ export const ModuleCard = memo(function ModuleCard({
                   </h3>
                   <span
                     className={cn(
-                      "inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold",
+                      "inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-micro font-semibold",
                       style.badge,
                     )}
                   >
@@ -166,7 +166,7 @@ export const ModuleCard = memo(function ModuleCard({
                 </div>
 
                 {mod.description ? (
-                  <p className={cn(TEXT_ONE_LINE, "mt-1 text-[11px] text-muted-foreground")}>
+                  <p className={cn(TEXT_ONE_LINE, "mt-1 text-dense text-muted-foreground")}>
                     {mod.description}
                   </p>
                 ) : null}
@@ -175,7 +175,7 @@ export const ModuleCard = memo(function ModuleCard({
 
             <div className="mt-auto space-y-2">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[11px] font-medium tabular-nums text-muted-foreground">
+                <span className="text-dense font-medium tabular-nums text-muted-foreground">
                   <span className="text-foreground">{progress}%</span> complete
                 </span>
                 <ArrowRight
@@ -206,7 +206,7 @@ export const ModuleCard = memo(function ModuleCard({
               </div>
 
               {(mod.startDate || mod.endDate) ? (
-                <p className="flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground">
+                <p className="flex min-w-0 items-center gap-1.5 text-dense text-muted-foreground">
                   <Calendar className="h-3 w-3 shrink-0 opacity-70" aria-hidden="true" />
                   <span className="min-w-0 truncate">
                     {formatModuleDate(mod.startDate)} — {formatModuleDate(mod.endDate)}
@@ -215,7 +215,7 @@ export const ModuleCard = memo(function ModuleCard({
               ) : null}
 
               {mod.leadId ? (
-                <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                <p className="flex items-center gap-1.5 text-dense text-muted-foreground">
                   <User className="h-3 w-3 shrink-0 opacity-70" aria-hidden="true" />
                   <span className="truncate">Lead assigned</span>
                 </p>

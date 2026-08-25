@@ -98,7 +98,7 @@ export function MyTimeView() {
     : { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.22, ease: "easeOut" as const } };
 
   const periodBadge = period ? (
-    <span className={cn("inline-flex items-center px-1.5 py-0.5 rounded-md text-[11px] font-medium border", PERIOD_STATUS_BADGE[period.status])}>
+    <span className={cn("inline-flex items-center px-1.5 py-0.5 rounded-md text-dense font-medium border", PERIOD_STATUS_BADGE[period.status])}>
       {PERIOD_STATUS_LABEL[period.status]}
     </span>
   ) : null;

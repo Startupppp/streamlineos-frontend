@@ -104,7 +104,7 @@ export default function SequencesPage() {
       key: "entityType",
       header: "Entity",
       cell: (seq) => (
-        <Badge variant="outline" className="text-[11px] capitalize">
+        <Badge variant="outline" className="text-dense capitalize">
           {seq.entityType}
         </Badge>
       ),

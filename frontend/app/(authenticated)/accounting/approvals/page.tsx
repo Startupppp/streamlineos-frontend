@@ -203,7 +203,7 @@ export default function FinanceApprovalsPage() {
       key: "type",
       header: "Type",
       cell: (req) => (
-        <Badge variant="outline" className="text-[10px] font-mono">
+        <Badge variant="outline" className="text-micro font-mono">
           {req.recordType.replace(/_/g, " ")}
         </Badge>
       ),

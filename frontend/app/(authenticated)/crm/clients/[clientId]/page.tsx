@@ -125,12 +125,12 @@ export default function ClientDetailPage({
         <div className="flex items-center gap-2 flex-wrap">
           <Badge
             variant="outline"
-            className={cn("h-5 px-2 py-0.5 text-[10px]", STATUS_BADGE_CLASSES[client.status])}
+            className={cn("h-5 px-2 py-0.5 text-micro", STATUS_BADGE_CLASSES[client.status])}
           >
             {STATUS_LABELS[client.status]}
           </Badge>
           {client.planName && (
-            <span className="text-[13px] text-muted-foreground">{client.planName}</span>
+            <span className="text-label text-muted-foreground">{client.planName}</span>
           )}
         </div>
       }

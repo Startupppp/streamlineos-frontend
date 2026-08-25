@@ -115,7 +115,7 @@ function StructureRow({
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <p className="truncate text-[13px] font-semibold text-foreground">
+            <p className="truncate text-label font-semibold text-foreground">
               {item.title}
             </p>
             {isLoading ? (
@@ -123,13 +123,13 @@ function StructureRow({
             ) : (
               <Badge
                 variant="secondary"
-                className="h-5 px-1.5 text-[10px] tabular-nums"
+                className="h-5 px-1.5 text-micro tabular-nums"
               >
                 {count}
               </Badge>
             )}
           </div>
-          <p className="truncate text-[11px] text-muted-foreground">
+          <p className="truncate text-dense text-muted-foreground">
             {item.description}
           </p>
         </div>
@@ -159,13 +159,13 @@ function HealthRow({
       ) : (
         <AlertCircle className="size-3.5 shrink-0 text-amber-500" />
       )}
-      <span className="min-w-0 flex-1 truncate text-[12px] text-muted-foreground">
+      <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
         {label}
       </span>
       {isLoading ? (
         <Skeleton className="h-4 w-6" />
       ) : (
-        <span className="text-[12px] font-medium tabular-nums text-foreground">
+        <span className="text-xs font-medium tabular-nums text-foreground">
           {count}
         </span>
       )}
@@ -233,10 +233,10 @@ export function OrganizationStructurePage() {
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.4fr_1fr]">
             <section className="rounded-xl border border-border bg-card shadow-sm">
               <div className="border-b border-border px-4 py-3">
-                <h2 className="text-[13px] font-semibold text-foreground">
+                <h2 className="text-label font-semibold text-foreground">
                   Reporting hierarchy
                 </h2>
-                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                <p className="mt-0.5 text-dense text-muted-foreground">
                   Use only the levels your organization needs.
                 </p>
               </div>
@@ -256,10 +256,10 @@ export function OrganizationStructurePage() {
             <div className="flex flex-col gap-4">
               <section className="rounded-xl border border-border bg-card shadow-sm">
                 <div className="border-b border-border px-4 py-3">
-                  <h2 className="text-[13px] font-semibold text-foreground">
+                  <h2 className="text-label font-semibold text-foreground">
                     Places & finance
                   </h2>
-                  <p className="mt-0.5 text-[11px] text-muted-foreground">
+                  <p className="mt-0.5 text-dense text-muted-foreground">
                     Support dimensions outside the reporting chain.
                   </p>
                 </div>
@@ -277,7 +277,7 @@ export function OrganizationStructurePage() {
 
               <section className="rounded-xl border border-border bg-card p-4 shadow-sm">
                 <div className="mb-2 flex items-center justify-between gap-2">
-                  <h2 className="text-[13px] font-semibold text-foreground">
+                  <h2 className="text-label font-semibold text-foreground">
                     Setup health
                   </h2>
                   {isLoading ? (
@@ -286,7 +286,7 @@ export function OrganizationStructurePage() {
                     <Badge
                       variant="outline"
                       className={cn(
-                        "h-5 px-1.5 text-[10px]",
+                        "h-5 px-1.5 text-micro",
                         isSetupComplete
                           ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
                           : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
@@ -325,7 +325,7 @@ export function OrganizationStructurePage() {
                 {!isLoading && !isSetupComplete ? (
                   <Link
                     href="/settings/organization"
-                    className="mt-3 inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline"
+                    className="mt-3 inline-flex items-center gap-1 text-dense font-medium text-primary hover:underline"
                   >
                     Complete org profile
                     <ArrowRight className="size-3" />

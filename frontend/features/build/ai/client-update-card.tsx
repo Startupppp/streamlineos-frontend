@@ -86,7 +86,7 @@ export function ClientUpdateCard({ projectId, featureEnabled, requiredPlan }: Cl
 
       {mutation.isError ? (
         <div className="space-y-2.5">
-          <p className="text-[13px] leading-snug text-destructive">
+          <p className="text-label leading-snug text-destructive">
             {getErrorMessage(mutation.error)}
           </p>
           <LoadingButton
@@ -103,14 +103,14 @@ export function ClientUpdateCard({ projectId, featureEnabled, requiredPlan }: Cl
 
       {result ? (
         <div className="space-y-3">
-          <p className="text-[13px] font-semibold text-foreground">{result.headline}</p>
-          <p className="text-[13px] leading-relaxed text-muted-foreground">{result.body}</p>
+          <p className="text-label font-semibold text-foreground">{result.headline}</p>
+          <p className="text-label leading-relaxed text-muted-foreground">{result.body}</p>
           {result.sections.length > 0 ? (
             <div className="space-y-2.5">
               {result.sections.map((section, i) => (
                 <div key={i} className="space-y-1">
-                  <p className="text-[12px] font-semibold text-foreground/80">{section.heading}</p>
-                  <p className="text-[12px] leading-relaxed text-muted-foreground">{section.content}</p>
+                  <p className="text-xs font-semibold text-foreground/80">{section.heading}</p>
+                  <p className="text-xs leading-relaxed text-muted-foreground">{section.content}</p>
                 </div>
               ))}
             </div>

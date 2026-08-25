@@ -62,7 +62,7 @@ export function useLeadCellRenderer({
         return (
           <button
             onClick={() => copyToClipboard(formatLeadId(lead.id), "Lead ID")}
-            className="font-mono text-[10px] text-muted-foreground hover:text-foreground tabular-nums whitespace-nowrap"
+            className="font-mono text-micro text-muted-foreground hover:text-foreground tabular-nums whitespace-nowrap"
             title="Click to copy"
           >
             {formatLeadId(lead.id)}
@@ -70,12 +70,12 @@ export function useLeadCellRenderer({
         );
 
       case "createdAt":
-        return <span className="text-[11px] text-muted-foreground tabular-nums whitespace-nowrap">{formatDate(lead.createdAt)}</span>;
+        return <span className="text-dense text-muted-foreground tabular-nums whitespace-nowrap">{formatDate(lead.createdAt)}</span>;
 
       case "name":
         return (
           <button
-            className="font-medium text-[12px] hover:text-primary hover:underline text-left block max-w-[140px]"
+            className="font-medium text-xs hover:text-primary hover:underline text-left block max-w-[140px]"
             onClick={() => router.push(`/crm/leads/${lead.id}`)}
           >
             <TruncatedText text={lead.name} />
@@ -86,21 +86,21 @@ export function useLeadCellRenderer({
         return lead.email ? (
           <button
             onClick={() => copyToClipboard(lead.email!, "Email")}
-            className="text-[11px] text-muted-foreground hover:text-foreground block max-w-[140px]"
+            className="text-dense text-muted-foreground hover:text-foreground block max-w-[140px]"
           >
             <TruncatedText text={lead.email} />
           </button>
-        ) : <span className="text-[11px] text-muted-foreground/50">—</span>;
+        ) : <span className="text-dense text-muted-foreground/50">—</span>;
 
       case "phone":
         return lead.phone ? (
           <button
             onClick={() => copyToClipboard(lead.phone!, "Phone")}
-            className="text-[11px] text-muted-foreground hover:text-foreground font-mono whitespace-nowrap"
+            className="text-dense text-muted-foreground hover:text-foreground font-mono whitespace-nowrap"
           >
             {lead.phone}
           </button>
-        ) : <span className="text-[11px] text-muted-foreground/50">—</span>;
+        ) : <span className="text-dense text-muted-foreground/50">—</span>;
 
       case "whatsapp":
         return lead.whatsappNumber ? (
@@ -108,23 +108,23 @@ export function useLeadCellRenderer({
             href={`https://wa.me/${lead.whatsappNumber.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Hi ${lead.name}, this is from StreamlineOS.`)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-[11px] text-emerald-400 hover:text-emerald-300"
+            className="inline-flex items-center gap-1 text-dense text-emerald-400 hover:text-emerald-300"
           >
             <MessageCircle className="h-3 w-3" />
             <span className="font-mono">{lead.whatsappNumber}</span>
           </a>
-        ) : <span className="text-[11px] text-muted-foreground/50">—</span>;
+        ) : <span className="text-dense text-muted-foreground/50">—</span>;
 
       case "company":
         return lead.company
-          ? <TruncatedText text={lead.company} className="text-[11px] max-w-[100px] block" />
-          : <span className="text-[11px]">—</span>;
+          ? <TruncatedText text={lead.company} className="text-dense max-w-[100px] block" />
+          : <span className="text-dense">—</span>;
 
       case "city":
-        return <span className="text-[11px]">{lead.city || "—"}</span>;
+        return <span className="text-dense">{lead.city || "—"}</span>;
 
       case "source":
-        if (!lead.source) return <span className="text-[11px] text-muted-foreground/50">—</span>;
+        if (!lead.source) return <span className="text-dense text-muted-foreground/50">—</span>;
         return (
           <CrmOptionBadge
             option={resolveOption(sourceOptions, lead.source)}
@@ -142,10 +142,10 @@ export function useLeadCellRenderer({
                 setEditingCell(null);
               }}
             >
-              <SelectTrigger className="h-6 text-[10px] w-[100px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-6 text-micro w-[100px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {statusOptions.map((s) => (
-                  <SelectItem key={s.id} value={s.key} className="text-[11px]">{s.label}</SelectItem>
+                  <SelectItem key={s.id} value={s.key} className="text-dense">{s.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -177,16 +177,16 @@ export function useLeadCellRenderer({
                 setEditingCell(null);
               }}
             >
-              <SelectTrigger className="h-6 text-[10px] w-[80px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-6 text-micro w-[80px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {priorityOptions.map((p) => (
-                  <SelectItem key={p.id} value={p.key} className="text-[11px]">{p.label}</SelectItem>
+                  <SelectItem key={p.id} value={p.key} className="text-dense">{p.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           );
         }
-        if (!lead.priority) return <span className="text-[11px] text-muted-foreground/50">—</span>;
+        if (!lead.priority) return <span className="text-dense text-muted-foreground/50">—</span>;
         return (
           <div
             className={canUpdate ? "cursor-pointer" : undefined}
@@ -208,7 +208,7 @@ export function useLeadCellRenderer({
           <TooltipProvider delayDuration={200}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="text-[11px] text-muted-foreground truncate max-w-[100px] block cursor-help">
+                <span className="text-dense text-muted-foreground truncate max-w-[100px] block cursor-help">
                   {lead.notes}
                 </span>
               </TooltipTrigger>
@@ -217,15 +217,15 @@ export function useLeadCellRenderer({
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-        ) : <span className="text-[11px] text-muted-foreground/50">—</span>;
+        ) : <span className="text-dense text-muted-foreground/50">—</span>;
 
       case "followUpDate":
-        if (!lead.followUpDate) return <span className="text-[11px] text-muted-foreground/50">—</span>;
+        if (!lead.followUpDate) return <span className="text-dense text-muted-foreground/50">—</span>;
         const fDate = new Date(lead.followUpDate);
         const isOverdue = fDate < new Date();
         return (
           <span className={cn(
-            "text-[11px] tabular-nums whitespace-nowrap font-medium",
+            "text-dense tabular-nums whitespace-nowrap font-medium",
             isOverdue ? "text-red-400" : "text-emerald-400",
           )}>
             {formatDate(lead.followUpDate)}
@@ -233,21 +233,21 @@ export function useLeadCellRenderer({
         );
 
       case "investmentInterest":
-        return <span className="text-[11px] font-mono tabular-nums text-primary">{formatINR(lead.investmentInterest)}</span>;
+        return <span className="text-dense font-mono tabular-nums text-primary">{formatINR(lead.investmentInterest)}</span>;
 
       case "potentialValue":
-        return <span className="text-[11px] font-mono tabular-nums">{formatINR(lead.potentialValue)}</span>;
+        return <span className="text-dense font-mono tabular-nums">{formatINR(lead.potentialValue)}</span>;
 
       case "assignedTo":
         if (isEditing) {
           return (
             <Select onValueChange={(v) => { onAssign(lead.id, v); setEditingCell(null); }}>
-              <SelectTrigger className="h-6 text-[10px] w-[120px]">
+              <SelectTrigger className="h-6 text-micro w-[120px]">
                 <SelectValue placeholder="Select..." />
               </SelectTrigger>
               <SelectContent>
                 {teamMembers.map((m) => (
-                  <SelectItem key={m.id} value={m.id} className="text-[11px]">
+                  <SelectItem key={m.id} value={m.id} className="text-dense">
                     {m.name || "Unknown"}
                   </SelectItem>
                 ))}
@@ -270,12 +270,12 @@ export function useLeadCellRenderer({
                 {lead.assignedTo.name?.charAt(0) || "?"}
               </AvatarFallback>
             </Avatar>
-            <TruncatedText text={lead.assignedTo.name} className="text-[11px] max-w-[70px]" />
+            <TruncatedText text={lead.assignedTo.name} className="text-dense max-w-[70px]" />
           </div>
         ) : (
           <span
             className={cn(
-              "text-[11px] text-muted-foreground/50",
+              "text-dense text-muted-foreground/50",
               canAssign && "cursor-pointer hover:text-foreground",
             )}
             onDoubleClick={
@@ -305,10 +305,10 @@ export function useLeadCellRenderer({
               <span className="text-[8px] text-muted-foreground">+{lead.tags.length - 2}</span>
             )}
           </div>
-        ) : <span className="text-[11px] text-muted-foreground/50">—</span>;
+        ) : <span className="text-dense text-muted-foreground/50">—</span>;
 
       case "sla": {
-        if (!lead.slaDeadline) return <span className="text-[11px] text-muted-foreground/50">—</span>;
+        if (!lead.slaDeadline) return <span className="text-dense text-muted-foreground/50">—</span>;
         const deadline = new Date(lead.slaDeadline);
         const overdue = deadline < new Date();
         return (

@@ -95,7 +95,7 @@ export function QuestionViewSheet({
             {tags.length > 0 ? (
               <div className="flex flex-wrap gap-1">
                 {tags.map((tag) => (
-                  <Badge key={tag} variant="secondary" className="text-[10px] px-1 py-0">
+                  <Badge key={tag} variant="secondary" className="text-micro px-1 py-0">
                     {tag}
                   </Badge>
                 ))}
@@ -111,7 +111,7 @@ export function QuestionViewSheet({
                   <Badge
                     key={kw}
                     variant="outline"
-                    className="text-[10px] px-1 py-0 border-amber-400/60 text-amber-600 dark:text-amber-400 dark:border-amber-500/30"
+                    className="text-micro px-1 py-0 border-amber-400/60 text-amber-600 dark:text-amber-400 dark:border-amber-500/30"
                   >
                     {kw}
                   </Badge>

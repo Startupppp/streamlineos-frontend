@@ -26,10 +26,10 @@ export function AuditTab({ providerKey }: { providerKey: string }) {
       {events.map((event) => (
         <li key={event.id} className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
           <div>
-            <p className="text-[12px] font-medium text-foreground">{event.action.replace(/_/g, " ").replace(/\./g, " · ")}</p>
-            {event.environment && <p className="text-[11px] text-muted-foreground">{event.environment} environment</p>}
+            <p className="text-xs font-medium text-foreground">{event.action.replace(/_/g, " ").replace(/\./g, " · ")}</p>
+            {event.environment && <p className="text-dense text-muted-foreground">{event.environment} environment</p>}
           </div>
-          <span className="text-[11px] text-muted-foreground shrink-0">
+          <span className="text-dense text-muted-foreground shrink-0">
             {new Date(event.createdAt).toLocaleString()}
           </span>
         </li>

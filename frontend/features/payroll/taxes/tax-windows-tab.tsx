@@ -67,27 +67,27 @@ export function TaxWindowsTab() {
     {
       key: "financialYear",
       header: "Financial Year",
-      cell: (row) => <span className="font-medium text-[11px]">{row.financialYear}</span>,
+      cell: (row) => <span className="font-medium text-dense">{row.financialYear}</span>,
     },
     {
       key: "opensAt",
       header: "Opens At",
-      cell: (row) => <span className="text-[11px]">{formatDate(row.opensAt)}</span>,
+      cell: (row) => <span className="text-dense">{formatDate(row.opensAt)}</span>,
     },
     {
       key: "closesAt",
       header: "Closes At",
-      cell: (row) => <span className="text-[11px]">{formatDate(row.closesAt)}</span>,
+      cell: (row) => <span className="text-dense">{formatDate(row.closesAt)}</span>,
     },
     {
       key: "proofDeadline",
       header: "Proof Deadline",
-      cell: (row) => <span className="text-[11px]">{formatDate(row.proofDeadline)}</span>,
+      cell: (row) => <span className="text-dense">{formatDate(row.proofDeadline)}</span>,
     },
     {
       key: "lockDate",
       header: "Lock Date",
-      cell: (row) => <span className="text-[11px]">{formatDate(row.lockDate)}</span>,
+      cell: (row) => <span className="text-dense">{formatDate(row.lockDate)}</span>,
     },
     {
       key: "status",
@@ -104,7 +104,7 @@ export function TaxWindowsTab() {
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 text-[10px] px-2"
+              className="h-6 text-micro px-2"
               onClick={() => setSheetWindow(row)}
             >
               Edit
@@ -113,7 +113,7 @@ export function TaxWindowsTab() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-6 text-[10px] px-2"
+                className="h-6 text-micro px-2"
                 onClick={() =>
                   setAdvanceTarget({ window: row, next: advance.next, confirm: advance.confirm })
                 }

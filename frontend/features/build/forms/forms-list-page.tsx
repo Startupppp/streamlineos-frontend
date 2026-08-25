@@ -127,7 +127,7 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
       key: "type",
       header: "Type",
       cell: (row) => (
-        <Badge variant="outline" className="text-[10px] px-1.5">
+        <Badge variant="outline" className="text-micro px-1.5">
           {FORM_TYPE_LABELS[row.type]}
         </Badge>
       ),
@@ -136,7 +136,7 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
       key: "isActive",
       header: "Status",
       cell: (row) => (
-        <Badge variant={row.isActive ? "default" : "secondary"} className="text-[10px] px-1.5">
+        <Badge variant={row.isActive ? "default" : "secondary"} className="text-micro px-1.5">
           {row.isActive ? "Active" : "Inactive"}
         </Badge>
       ),
@@ -153,7 +153,7 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
       className: "w-20",
       cell: (row) =>
         row.isPublic ? (
-          <Badge variant="outline" className="text-[10px] px-1.5 text-primary border-primary/30">
+          <Badge variant="outline" className="text-micro px-1.5 text-primary border-primary/30">
             Public
           </Badge>
         ) : null,

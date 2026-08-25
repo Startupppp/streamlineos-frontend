@@ -33,7 +33,7 @@ export function LandingCTA() {
             </div>
 
             <div className="relative">
-              <p className="text-[12px] font-medium text-brand-bright mb-5 sm:mb-6">
+              <p className="text-xs font-medium text-brand-bright mb-5 sm:mb-6">
                 Free for the first {PRICING.freeSeatLimit} seats
               </p>
 

@@ -169,7 +169,7 @@ export function CampaignsTab() {
                     <Megaphone className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                     <p className="text-sm font-semibold text-foreground">{c.name}</p>
                     <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border ${
+                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-micro font-medium border ${
                         STATUS_COLORS[c.status]
                       }`}
                     >
@@ -180,7 +180,7 @@ export function CampaignsTab() {
                     <TruncatedText text={c.description} lines={2} className="text-xs text-muted-foreground mt-1" />
                   )}
                   {(c.startsAt || c.endsAt) && (
-                    <p className="text-[11px] text-muted-foreground mt-1">
+                    <p className="text-dense text-muted-foreground mt-1">
                       {c.startsAt && `From ${new Date(c.startsAt).toLocaleDateString()}`}
                       {c.startsAt && c.endsAt && " → "}
                       {c.endsAt && new Date(c.endsAt).toLocaleDateString()}

@@ -203,7 +203,7 @@ function PreviewPanel() {
         </LoadingButton>
         {previewRule.data && (
           <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs space-y-2">
-            <p className="font-semibold text-[10px] uppercase tracking-wide text-muted-foreground">Trace</p>
+            <p className="font-semibold text-micro uppercase tracking-wide text-muted-foreground">Trace</p>
             {previewRule.data.trace.map((step) => (
               <div key={step.ruleId} className="flex items-start gap-2">
                 {step.matched

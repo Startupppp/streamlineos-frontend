@@ -100,7 +100,7 @@ export default function WorkflowAnalyticsPage() {
               <Card className="bg-card rounded-xl border border-border shadow-sm">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-semibold">Execution Trend</CardTitle>
-                  <div className="flex items-center gap-4 text-[11px] text-muted-foreground mt-1">
+                  <div className="flex items-center gap-4 text-dense text-muted-foreground mt-1">
                     <span className="flex items-center gap-1.5">
                       <span className="w-3 h-1.5 rounded-full bg-primary inline-block" />
                       Total
@@ -114,11 +114,11 @@ export default function WorkflowAnalyticsPage() {
                 <CardContent className="space-y-2.5">
                   {data.executionTrend.map((item) => (
                     <div key={item.date} className="flex items-center gap-3">
-                      <span className="text-[11px] text-muted-foreground tabular-nums w-20 shrink-0">
+                      <span className="text-dense text-muted-foreground tabular-nums w-20 shrink-0">
                         {format(new Date(item.date), "MMM d")}
                       </span>
                       <TrendBar count={item.count} max={maxCount} successCount={item.successCount} />
-                      <span className="text-[11px] tabular-nums text-foreground w-8 text-right shrink-0">
+                      <span className="text-dense tabular-nums text-foreground w-8 text-right shrink-0">
                         {item.count}
                       </span>
                     </div>
@@ -128,7 +128,7 @@ export default function WorkflowAnalyticsPage() {
             </motion.div>
           )}
 
-          <p className="text-[11px] text-muted-foreground text-center">
+          <p className="text-dense text-muted-foreground text-center">
             Analytics data refreshes every hour
           </p>
         </div>

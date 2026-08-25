@@ -230,10 +230,10 @@ export function ReviewsTab() {
       <div className="flex items-center justify-between gap-2 flex-wrap shrink-0">
         <Tabs value={statusFilter} onValueChange={setStatusFilter}>
           <TabsList className="bg-muted/50">
-            <TabsTrigger value="all" className="text-[11px]">All ({reviewsList.length})</TabsTrigger>
-            <TabsTrigger value="DRAFT" className="text-[11px]">Draft</TabsTrigger>
-            <TabsTrigger value="IN_PROGRESS" className="text-[11px]">In Progress</TabsTrigger>
-            <TabsTrigger value="COMPLETED" className="text-[11px]">Completed</TabsTrigger>
+            <TabsTrigger value="all" className="text-dense">All ({reviewsList.length})</TabsTrigger>
+            <TabsTrigger value="DRAFT" className="text-dense">Draft</TabsTrigger>
+            <TabsTrigger value="IN_PROGRESS" className="text-dense">In Progress</TabsTrigger>
+            <TabsTrigger value="COMPLETED" className="text-dense">Completed</TabsTrigger>
           </TabsList>
         </Tabs>
         <AnimatedIconButton icon={PlusIcon} size="sm" className="gap-1.5" iconSize={14} onClick={handleOpenSheet}>
@@ -275,14 +275,14 @@ export function ReviewsTab() {
               >
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-start justify-between gap-2">
-                    <Badge className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${statusBadgeClass}`}>
+                    <Badge className={`inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border ${statusBadgeClass}`}>
                       {review.status ?? "DRAFT"}
                     </Badge>
                     <div className="flex items-center gap-1 shrink-0">
                       {review.overallRating && (
                         <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-800">
                           <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
-                          <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300">
+                          <span className="text-micro font-bold text-amber-700 dark:text-amber-300">
                             {Number(review.overallRating).toFixed(1)}
                           </span>
                         </div>
@@ -300,7 +300,7 @@ export function ReviewsTab() {
                   <div className="flex items-center gap-2">
                     <Avatar className="w-7 shrink-0">
                       <AvatarImage src={resolveImageUrl(review.user?.image ?? null)} />
-                      <AvatarFallback className="text-[10px] font-semibold bg-primary/10 text-primary">
+                      <AvatarFallback className="text-micro font-semibold bg-primary/10 text-primary">
                         {review.user?.name?.[0] ?? "?"}
                       </AvatarFallback>
                     </Avatar>
@@ -312,12 +312,12 @@ export function ReviewsTab() {
                       {review.reviewer?.name && (
                         <TruncatedText
                           text={`by ${review.reviewer.name}`}
-                          className="text-[10px] text-muted-foreground"
+                          className="text-micro text-muted-foreground"
                         />
                       )}
                     </div>
                   </div>
-                  <p className="text-[10px] text-muted-foreground font-medium">
+                  <p className="text-micro text-muted-foreground font-medium">
                     {review.periodStart} → {review.periodEnd}
                   </p>
                   {review.status !== "COMPLETED" && (
@@ -447,7 +447,7 @@ export function ReviewsTab() {
         </div>
         {employeeId && periodStart && periodEnd && (
           <div className="pt-2 border-t border-border">
-            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">AI Assist</p>
+            <p className="text-micro font-medium text-muted-foreground uppercase tracking-wider mb-2">AI Assist</p>
             <AIGenerateReviewButton
               userId={employeeId}
               userName={employees.find((e) => e.id === employeeId)?.name ?? "Employee"}

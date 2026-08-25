@@ -126,7 +126,7 @@ export function TerminationDetailSheet({
                 <TruncatedText text={reviewRecord.employee?.name ?? "Employee"} className="text-sm font-semibold" />
                 <span
                   className={cn(
-                    "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+                    "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border",
                     terminationStatusBadgeClass(reviewRecord.status),
                   )}
                 >
@@ -146,7 +146,7 @@ export function TerminationDetailSheet({
             <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-1">
               <div className="flex items-center gap-1.5">
                 <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
                   Effective Date
                 </p>
               </div>
@@ -161,7 +161,7 @@ export function TerminationDetailSheet({
               <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-1">
                 <div className="flex items-center gap-1.5">
                   <User className="h-3.5 w-3.5 text-muted-foreground" />
-                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
                     Employee ID
                   </p>
                 </div>
@@ -176,7 +176,7 @@ export function TerminationDetailSheet({
                 <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-1">
                   <div className="flex items-center gap-1.5">
                     <BadgeDollarSign className="h-3.5 w-3.5 text-muted-foreground" />
-                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
                       Severance
                     </p>
                   </div>
@@ -193,7 +193,7 @@ export function TerminationDetailSheet({
               <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-500/10 dark:border-amber-900 p-3 space-y-1">
                 <div className="flex items-center gap-1.5">
                   <AlertTriangle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" />
-                  <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-300 uppercase tracking-wider">
+                  <p className="text-dense font-semibold text-amber-700 dark:text-amber-300 uppercase tracking-wider">
                     Notice Period
                   </p>
                 </div>
@@ -206,14 +206,14 @@ export function TerminationDetailSheet({
 
           {(reviewRecord.reasons ?? []).length > 0 && (
             <div className="space-y-2">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
                 Reasons
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {(reviewRecord.reasons ?? []).map((terminationReason) => (
                   <span
                     key={terminationReason}
-                    className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-800"
+                    className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-800"
                   >
                     {terminationReason}
                   </span>
@@ -224,7 +224,7 @@ export function TerminationDetailSheet({
 
           {reviewRecord.detailedExplanation && (
             <div className="space-y-1.5">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
                 Detailed Explanation
               </p>
               <div className="rounded-lg border border-border bg-muted/30 px-3 py-2.5">
@@ -269,7 +269,7 @@ export function TerminationDetailSheet({
             <>
               <Separator />
               <div className="space-y-1.5">
-                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
                   FINAL Remarks
                 </p>
                 <div className="rounded-lg border border-border bg-muted/30 px-3 py-2.5">

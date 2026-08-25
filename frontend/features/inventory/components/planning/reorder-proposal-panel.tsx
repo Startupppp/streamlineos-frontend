@@ -43,14 +43,14 @@ const DraftProposalCard = memo(function DraftProposalCard({
     <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2">
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold text-foreground">Draft PO Ready</p>
-          <p className="text-[10px] text-muted-foreground">
+          <p className="text-dense font-semibold text-foreground">Draft PO Ready</p>
+          <p className="text-micro text-muted-foreground">
             Expires {expiresAt} · Proposal {proposal.proposalId.slice(0, 8)}…
           </p>
         </div>
         <LoadingButton
           size="sm"
-          className="text-[10px] h-7 px-2 shrink-0"
+          className="text-micro h-7 px-2 shrink-0"
           isPending={isPending}
           loadingText="Creating…"
           onClick={handleConfirmClick}
@@ -58,7 +58,7 @@ const DraftProposalCard = memo(function DraftProposalCard({
           Confirm &amp; Create Draft PO
         </LoadingButton>
       </div>
-      <p className="text-[10px] text-muted-foreground">
+      <p className="text-micro text-muted-foreground">
         This will create a <span className="font-medium">DRAFT</span> purchase order for{" "}
         {productName}. No stock movements occur until the PO is confirmed.
       </p>
@@ -125,7 +125,7 @@ export const ReorderProposalPanel = memo(function ReorderProposalPanel({
   return (
     <Card className="mt-2 border-border/60">
       <CardHeader className="pb-2 pt-3 px-3">
-        <CardTitle className="text-[11px] font-semibold text-foreground flex items-center justify-between gap-2">
+        <CardTitle className="text-dense font-semibold text-foreground flex items-center justify-between gap-2">
           <span className="flex items-center gap-1.5">
             <Sparkles className="h-3 w-3 text-muted-foreground" />
             AI Reorder Explanation
@@ -135,7 +135,7 @@ export const ReorderProposalPanel = memo(function ReorderProposalPanel({
               <LoadingButton
                 size="sm"
                 variant="outline"
-                className="text-[10px] h-6 px-2"
+                className="text-micro h-6 px-2"
                 isPending={isLoading}
                 loadingText="Analyzing…"
                 onClick={handleExplain}
@@ -173,7 +173,7 @@ export const ReorderProposalPanel = memo(function ReorderProposalPanel({
             )}
 
             {proposalMutation.isError && (
-              <p className="text-[11px] text-destructive">
+              <p className="text-dense text-destructive">
                 {getErrorMessage(proposalMutation.error)}
               </p>
             )}
@@ -186,7 +186,7 @@ export const ReorderProposalPanel = memo(function ReorderProposalPanel({
                 />
                 <Separator />
                 {confirmed ? (
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-dense text-muted-foreground">
                     Draft PO created successfully.
                   </p>
                 ) : (
@@ -198,7 +198,7 @@ export const ReorderProposalPanel = memo(function ReorderProposalPanel({
                   />
                 )}
                 {confirmMutation.isError && (
-                  <p className="text-[11px] text-destructive">
+                  <p className="text-dense text-destructive">
                     {getErrorMessage(confirmMutation.error)}
                   </p>
                 )}

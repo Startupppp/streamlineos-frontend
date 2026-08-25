@@ -87,25 +87,25 @@ export function ClientOnboardingTab({ clientId }: { clientId: number }) {
                 <label
                   htmlFor={`onboarding-${item.id}`}
                   className={cn(
-                    "text-[11px] font-medium cursor-pointer",
+                    "text-dense font-medium cursor-pointer",
                     isCompleted && "line-through text-muted-foreground",
                   )}
                 >
                   {item.title}
                 </label>
                 {item.description && (
-                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                  <p className="text-micro text-muted-foreground mt-0.5">
                     {item.description}
                   </p>
                 )}
                 <div className="flex items-center gap-3 mt-0.5">
                   {item.assignee?.name && (
-                    <span className="text-[10px] text-muted-foreground">
+                    <span className="text-micro text-muted-foreground">
                       {item.assignee.name}
                     </span>
                   )}
                   {item.dueDate && (
-                    <span className="text-[10px] text-muted-foreground">
+                    <span className="text-micro text-muted-foreground">
                       Due {formatDate(item.dueDate)}
                     </span>
                   )}

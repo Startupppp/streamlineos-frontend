@@ -43,7 +43,7 @@ function OptionRows({ control, fieldIndex }: OptionRowsProps) {
 
   return (
     <div className="flex flex-col gap-2 sm:col-span-2">
-      <FormLabel className="text-[11px] uppercase tracking-wider text-muted-foreground">
+      <FormLabel className="text-dense uppercase tracking-wider text-muted-foreground">
         Options
       </FormLabel>
 
@@ -147,7 +147,7 @@ export function SubjectTypeFieldRow({ form, index, onRemove, canRemove }: Subjec
           <FormItem>
             <FormLabel>Machine name</FormLabel>
             <FormControl>
-              <Input placeholder="asking-price" className="font-mono text-[13px]" {...field} />
+              <Input placeholder="asking-price" className="font-mono text-label" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>

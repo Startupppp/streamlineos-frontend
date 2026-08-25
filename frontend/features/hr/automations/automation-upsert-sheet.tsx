@@ -272,7 +272,7 @@ export function AutomationUpsertSheet({ rule, onClose }: Props) {
               {eventDef && (
                 <div className="flex flex-wrap gap-1 mt-1">
                   {eventDef.fields.map((f) => (
-                    <Badge key={f.field} variant="secondary" className="text-[10px]">{f.field}: {f.type}</Badge>
+                    <Badge key={f.field} variant="secondary" className="text-micro">{f.field}: {f.type}</Badge>
                   ))}
                 </div>
               )}

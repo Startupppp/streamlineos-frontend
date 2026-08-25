@@ -127,7 +127,7 @@ export function HuddleChatPanel({
       <div className="h-12 px-4 border-b border-white/10 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
           <MessageSquare className="h-4 w-4 text-white/60" />
-          <h3 className="text-[13px] font-semibold text-white">Huddle Chat</h3>
+          <h3 className="text-label font-semibold text-white">Huddle Chat</h3>
         </div>
         <button
           onClick={onClose}
@@ -149,10 +149,10 @@ export function HuddleChatPanel({
               msg.userId === currentUserId ? "items-end" : "items-start",
             )}
           >
-            <span className="text-[10px] text-white/40 mb-0.5">{msg.name}</span>
+            <span className="text-micro text-white/40 mb-0.5">{msg.name}</span>
             <div
               className={cn(
-                "max-w-[220px] px-3 py-1.5 rounded-xl text-[12px] leading-[1.5]",
+                "max-w-[220px] px-3 py-1.5 rounded-xl text-xs leading-[1.5]",
                 msg.userId === currentUserId
                   ? "bg-primary text-primary-foreground rounded-br-md"
                   : "bg-white/10 text-white rounded-bl-md",
@@ -173,7 +173,7 @@ export function HuddleChatPanel({
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Message..."
-            className="flex-1 bg-transparent text-[12px] text-white placeholder:text-white/40 focus:outline-none"
+            className="flex-1 bg-transparent text-xs text-white placeholder:text-white/40 focus:outline-none"
           />
           <button
             onClick={handleSend}

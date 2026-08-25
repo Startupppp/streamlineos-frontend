@@ -18,7 +18,7 @@ export function MobileProgressBar({
   return (
     <div className="mb-2.5 min-w-0 shrink-0 border-b border-border/70 pb-2.5 md:hidden">
       <div className="mb-1 flex min-w-0 items-center justify-between gap-3">
-        <p className="min-w-0 truncate text-[13px] font-semibold text-foreground">
+        <p className="min-w-0 truncate text-label font-semibold text-foreground">
           {stepId ? STEP_TITLES[stepId] : "Onboarding"}
         </p>
         <p className="shrink-0 text-xs tabular-nums text-muted-foreground">

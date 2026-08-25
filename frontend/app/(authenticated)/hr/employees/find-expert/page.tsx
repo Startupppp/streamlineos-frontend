@@ -208,12 +208,12 @@ export default function FindExpertPage() {
                                   <TruncatedText text={expert.designation} className="text-xs text-muted-foreground" />
                                 )}
                                 {expert.role && (
-                                  <TruncatedText text={expert.role} className="text-[10px] text-muted-foreground/70" />
+                                  <TruncatedText text={expert.role} className="text-micro text-muted-foreground/70" />
                                 )}
                               </div>
                             </Link>
                             <span
-                              className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold ${PROFICIENCY_COLORS[expert.matchedLevel] ?? PROFICIENCY_COLORS[1]}`}
+                              className={`shrink-0 rounded px-1.5 py-0.5 text-micro font-semibold ${PROFICIENCY_COLORS[expert.matchedLevel] ?? PROFICIENCY_COLORS[1]}`}
                               title={`${expert.matchedSkill}: ${PROFICIENCY_LABELS[expert.matchedLevel] ?? `L${expert.matchedLevel}`}`}
                             >
                               {PROFICIENCY_LABELS[expert.matchedLevel] ?? `L${expert.matchedLevel}`}
@@ -229,7 +229,7 @@ export default function FindExpertPage() {
                                 <Badge
                                   key={skill.name}
                                   variant={isMatched ? "default" : "secondary"}
-                                  className="text-[11px] gap-1"
+                                  className="text-dense gap-1"
                                 >
                                   {skill.name}
                                   {isMatched && (
@@ -241,7 +241,7 @@ export default function FindExpertPage() {
                               );
                             })}
                             {expert.skills.length > 5 && (
-                              <Badge variant="outline" className="text-[11px]">
+                              <Badge variant="outline" className="text-dense">
                                 +{expert.skills.length - 5}
                               </Badge>
                             )}

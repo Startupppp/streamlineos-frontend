@@ -82,7 +82,7 @@ export default function Gstr3BPage() {
           <div className="flex flex-col gap-1">
             <label
               htmlFor="gstr3b-from"
-              className="text-[11px] font-medium text-muted-foreground leading-none"
+              className="text-dense font-medium text-muted-foreground leading-none"
             >
               From
             </label>
@@ -91,7 +91,7 @@ export default function Gstr3BPage() {
           <div className="flex flex-col gap-1">
             <label
               htmlFor="gstr3b-to"
-              className="text-[11px] font-medium text-muted-foreground leading-none"
+              className="text-dense font-medium text-muted-foreground leading-none"
             >
               To
             </label>

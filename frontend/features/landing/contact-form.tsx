@@ -158,7 +158,7 @@ export function ContactForm() {
             </p>
             <button
               onClick={handleReset}
-              className="mt-7 text-[12px] font-medium text-slate-500 hover:text-slate-900 transition-colors"
+              className="mt-7 text-xs font-medium text-slate-500 hover:text-slate-900 transition-colors"
             >
               ← Send another message
             </button>
@@ -176,7 +176,7 @@ export function ContactForm() {
             className="space-y-5"
           >
             <div>
-              <Label className="text-[13px] font-medium text-slate-700 mb-2 block">
+              <Label className="text-label font-medium text-slate-700 mb-2 block">
                 What can we help with?
               </Label>
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
@@ -188,7 +188,7 @@ export function ContactForm() {
                       type="button"
                       onClick={() => handleTopicSelect(t.value)}
                       className={cn(
-                        "text-[12px] font-medium rounded-lg border px-2.5 py-2 transition-all",
+                        "text-xs font-medium rounded-lg border px-2.5 py-2 transition-all",
                         selected
                           ? "bg-slate-900 text-white border-slate-900 shadow-sm"
                           : "bg-white text-slate-600 border-slate-200 hover:border-blue-300 hover:text-slate-900",
@@ -281,7 +281,7 @@ export function ContactForm() {
               <ArrowRight className="ml-2 h-4 w-4" />
             </LoadingButton>
 
-            <p className="text-[12px] font-medium text-slate-400 text-center">
+            <p className="text-xs font-medium text-slate-400 text-center">
               Your message is encrypted in transit. We&apos;ll never share your
               email.
             </p>
@@ -307,7 +307,7 @@ function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <Label className="text-[13px] font-medium text-slate-700 flex items-center gap-1.5">
+      <Label className="text-label font-medium text-slate-700 flex items-center gap-1.5">
         {label}
         {required && (
           <span className="text-red-500" aria-hidden>
@@ -315,14 +315,14 @@ function Field({
           </span>
         )}
         {hint && (
-          <span className="text-[11px] font-normal text-slate-400">
+          <span className="text-dense font-normal text-slate-400">
             ({hint})
           </span>
         )}
       </Label>
       {children}
       {error && (
-        <p role="alert" className="text-[12px] text-red-600">
+        <p role="alert" className="text-xs text-red-600">
           {error}
         </p>
       )}

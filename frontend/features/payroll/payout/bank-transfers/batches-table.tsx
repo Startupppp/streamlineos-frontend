@@ -122,7 +122,7 @@ export function BatchesTable({
       cell: (row) => (
         <span
           className={cn(
-            "inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+            "inline-flex items-center rounded px-1.5 py-0.5 text-micro font-semibold uppercase tracking-wide",
             BATCH_STATUS_STYLES[row.status],
           )}
         >
@@ -185,7 +185,7 @@ export function BatchesTable({
                 <span className="font-mono text-xs font-medium">{row.batchNumber}</span>
                 <span
                   className={cn(
-                    "inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                    "inline-flex items-center rounded px-1.5 py-0.5 text-micro font-semibold uppercase tracking-wide",
                     BATCH_STATUS_STYLES[row.status],
                   )}
                 >

@@ -49,7 +49,7 @@ export function AskOsConfirmationCard({ action, summary, preview, token, onConfi
       onDiscard={onCancelled}
     >
       <div className="space-y-1">
-        <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Action: {action}</p>
+        <p className="text-micro uppercase tracking-wide text-muted-foreground font-medium">Action: {action}</p>
         <PreviewTable preview={preview} />
       </div>
     </AiDraftCard>

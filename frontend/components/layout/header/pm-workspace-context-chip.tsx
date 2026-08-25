@@ -60,7 +60,7 @@ export function PmWorkspaceContextChip({ className }: PmWorkspaceContextChipProp
         title={`PM Workspace: ${label}`}
       >
         <Boxes className="h-3.5 w-3.5 shrink-0" aria-hidden />
-        <span className="truncate text-[11px] font-medium">{label}</span>
+        <span className="truncate text-dense font-medium">{label}</span>
       </div>
     );
   }
@@ -75,7 +75,7 @@ export function PmWorkspaceContextChip({ className }: PmWorkspaceContextChipProp
         aria-label={`PM Workspace: ${label}. Switch workspace.`}
       >
         <Boxes className="h-3.5 w-3.5 shrink-0" aria-hidden />
-        <span className="truncate text-[11px] font-medium">{label}</span>
+        <span className="truncate text-dense font-medium">{label}</span>
         <ChevronDown className="h-3 w-3 shrink-0 opacity-60" aria-hidden />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="min-w-[10rem]">
@@ -88,7 +88,7 @@ export function PmWorkspaceContextChip({ className }: PmWorkspaceContextChipProp
           >
             {workspace.name}
             {workspace.isDefault ? (
-              <span className="ml-auto text-[10px] text-muted-foreground">Default</span>
+              <span className="ml-auto text-micro text-muted-foreground">Default</span>
             ) : null}
           </DropdownMenuItem>
         ))}

@@ -31,7 +31,7 @@ interface DisplayPrefsPopoverProps {
 
 function SectionLabel({ children }: { children: string }) {
   return (
-    <p className="mb-1 mt-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground first:mt-0">
+    <p className="mb-1 mt-3 text-micro font-semibold uppercase tracking-wider text-muted-foreground first:mt-0">
       {children}
     </p>
   );
@@ -104,7 +104,7 @@ export function DisplayPrefsPopover({
         title="Display options"
         className="w-60 p-3"
       >
-        <p className="mb-3 text-[13px] font-semibold text-foreground">Display options</p>
+        <p className="mb-3 text-label font-semibold text-foreground">Display options</p>
 
         <SectionLabel>Group by</SectionLabel>
         <Select value={prefs.groupBy} onValueChange={handleGroupByChange}>

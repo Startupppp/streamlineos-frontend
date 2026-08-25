@@ -37,7 +37,7 @@ export function ActivityRowItem({ row }: { row: ActivityRow }) {
             {sourceLabel}
           </span>
         </div>
-        <p className="text-[10px] text-muted-foreground truncate mt-0.5">{secondary}</p>
+        <p className="text-micro text-muted-foreground truncate mt-0.5">{secondary}</p>
       </div>
       {age && (
         <HrStatusBadge

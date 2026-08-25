@@ -113,7 +113,7 @@ export function ActivityTimeline({ anchor, emptyDescription, className }: Activi
       <div className="flex min-w-0 flex-col gap-4">
         {days.map((day) => (
           <section key={day.day} className="flex min-w-0 flex-col gap-2">
-            <h3 className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+            <h3 className="text-dense font-medium uppercase tracking-wider text-muted-foreground">
               {formatDateOnly(day.day)}
             </h3>
             <ul className="flex min-w-0 flex-col">

@@ -46,7 +46,7 @@ export function CustomerDisplayPrefsPopover({
         title="Display properties"
         className="w-64 p-3"
       >
-        <p className="mb-3 text-[13px] font-semibold text-foreground">
+        <p className="mb-3 text-label font-semibold text-foreground">
           Display properties
         </p>
         <div>

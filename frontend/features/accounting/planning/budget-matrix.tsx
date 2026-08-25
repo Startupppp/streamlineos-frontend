@@ -169,7 +169,7 @@ export function BudgetMatrix({ budget, readOnly = false }: BudgetMatrixProps) {
                   <td className="sticky left-0 z-10 bg-inherit min-w-[220px] px-3 py-1.5 border border-border/40">
                     <div className="flex flex-col leading-tight">
                       <TruncatedText text={acc.accountName} className="text-xs font-medium max-w-[200px]" />
-                      <span className="text-[10px] text-muted-foreground font-mono">
+                      <span className="text-micro text-muted-foreground font-mono">
                         {acc.accountCode}
                       </span>
                     </div>

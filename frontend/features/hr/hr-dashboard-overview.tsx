@@ -55,7 +55,7 @@ function LeaveCalendarWidget() {
               On Leave This Week
             </h3>
             {!isLoading && (
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-micro text-muted-foreground">
                 {thisWeekLeaves.length} employee
                 {thisWeekLeaves.length !== 1 ? "s" : ""}
               </p>
@@ -101,13 +101,13 @@ function LeaveCalendarWidget() {
                   {leave.userImage && (
                     <AvatarImage src={leave.userImage} alt={leave.userName} />
                   )}
-                  <AvatarFallback className="text-[10px] bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 font-semibold">
+                  <AvatarFallback className="text-micro bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 font-semibold">
                     {leave.userName.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <TruncatedText text={leave.userName} className="text-xs font-semibold text-foreground" />
-                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                  <p className="text-micro text-muted-foreground mt-0.5">
                     {formatDateLabel(leave.startDate)} –{" "}
                     {formatDateLabel(leave.endDate)}
                     <span className="mx-1">·</span>
@@ -116,7 +116,7 @@ function LeaveCalendarWidget() {
                     </span>
                   </p>
                 </div>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 font-semibold shrink-0 uppercase tracking-wide">
+                <span className="text-micro px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 font-semibold shrink-0 uppercase tracking-wide">
                   {leave.status}
                 </span>
               </div>
@@ -143,7 +143,7 @@ function OnboardingStatusWidget() {
               Onboarding Progress
             </h3>
             {!isLoading && data && (
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-micro text-muted-foreground">
                 {data.total} total · {data.completed} complete
               </p>
             )}
@@ -218,7 +218,7 @@ function OnboardingStatusWidget() {
                     key={hire.userId}
                     className="flex items-center gap-3 group"
                   >
-                    <div className="w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-[10px] font-bold text-primary">
+                    <div className="w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-micro font-bold text-primary">
                       {hire.name.slice(0, 2).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0 space-y-1">
@@ -230,7 +230,7 @@ function OnboardingStatusWidget() {
                             style={{ width: `${hire.pct}%` }}
                           />
                         </div>
-                        <span className="text-[10px] text-muted-foreground tabular-nums w-7 text-right shrink-0">
+                        <span className="text-micro text-muted-foreground tabular-nums w-7 text-right shrink-0">
                           {hire.pct}%
                         </span>
                       </div>

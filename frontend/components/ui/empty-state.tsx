@@ -109,7 +109,7 @@ export function EmptyState({
       <h3
         className={cn(
           "font-semibold text-foreground",
-          compact ? "text-[13px] leading-tight" : "text-[0.9375rem]"
+          compact ? "text-label leading-tight" : "text-[0.9375rem]"
         )}
       >
         {title}
@@ -119,7 +119,7 @@ export function EmptyState({
         <p
           className={cn(
             "text-muted-foreground mt-0.5 max-w-xs leading-snug",
-            compact ? "text-[11px]" : "text-sm mt-1"
+            compact ? "text-dense" : "text-sm mt-1"
           )}
         >
           {description}

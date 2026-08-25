@@ -131,7 +131,7 @@ function AutomationCard({ auto, onToggle, onSetDeleteId, isTogglePending }: Auto
                 Then: {ACTION_LABELS[auto.action] ?? auto.action}
               </span>
             </div>
-            <p className="text-[10px] text-muted-foreground">
+            <p className="text-micro text-muted-foreground">
               Created {format(new Date(auto.createdAt), "dd MMM yyyy")}
               {auto.creator?.name && ` by ${auto.creator.name}`}
             </p>

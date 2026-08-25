@@ -60,7 +60,7 @@ export function MobileFilterDrawer({
           <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" />
           <span className="truncate">{label}</span>
           {activeCount > 0 && (
-            <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
+            <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary text-micro font-semibold text-primary-foreground">
               {activeCount}
             </span>
           )}

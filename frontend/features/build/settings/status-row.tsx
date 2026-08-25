@@ -274,7 +274,7 @@ export const StatusRow = memo(function StatusRow({
             aria-label="Status name"
           />
           {renameError ? (
-            <p className="text-[10px] text-destructive mt-0.5 truncate">
+            <p className="text-micro text-destructive mt-0.5 truncate">
               {renameError}
             </p>
           ) : null}
@@ -313,7 +313,7 @@ export const StatusRow = memo(function StatusRow({
       ) : (
         <Badge
           variant="secondary"
-          className={cn("text-[10px] shrink-0", typeConfig.color)}
+          className={cn("text-micro shrink-0", typeConfig.color)}
         >
           {typeConfig.label}
         </Badge>

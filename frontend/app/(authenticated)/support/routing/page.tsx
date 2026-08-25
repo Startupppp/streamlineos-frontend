@@ -230,7 +230,7 @@ function SkillBadgeRemoveButton({ skill, onRemove }: { skill: string; onRemove: 
 
 function SkillBadge({ skill, onRemove }: SkillBadgeProps) {
   return (
-    <Badge variant="secondary" className="text-[10px] gap-1">
+    <Badge variant="secondary" className="text-micro gap-1">
       {skill}
       <SkillBadgeRemoveButton skill={skill} onRemove={onRemove} />
     </Badge>
@@ -643,31 +643,31 @@ function RuleCard({
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-sm font-medium truncate">{rule.name}</h3>
               {rule.setPriority && (
-                <Badge variant="secondary" className="text-[10px]">
+                <Badge variant="secondary" className="text-micro">
                   → {rule.setPriority}
                 </Badge>
               )}
               {rule.assignmentMode === "static" && assigneeName && (
-                <Badge variant="outline" className="text-[10px]">
+                <Badge variant="outline" className="text-micro">
                   → {assigneeName}
                 </Badge>
               )}
               {rule.assignmentMode !== "static" && (
-                <Badge variant="outline" className="text-[10px]">
+                <Badge variant="outline" className="text-micro">
                   {ASSIGNMENT_MODES.find((m) => m.value === rule.assignmentMode)?.label ?? rule.assignmentMode}
                   {" · "}
                   {rule.candidateAgentIds.length} agent{rule.candidateAgentIds.length === 1 ? "" : "s"}
                 </Badge>
               )}
               {rule.requiredSkills.length > 0 && (
-                <Badge variant="outline" className="text-[10px]">
+                <Badge variant="outline" className="text-micro">
                   Skills: {rule.requiredSkills.join(", ")}
                 </Badge>
               )}
             </div>
             <div className="flex flex-wrap gap-1.5 mt-1.5">
               {rule.conditions.map((c, ci) => (
-                <Badge key={ci} variant="outline" className="text-[10px]">
+                <Badge key={ci} variant="outline" className="text-micro">
                   {FIELDS.find((f) => f.value === c.field)?.label ?? c.field}{" "}
                   {OPERATORS.find((o) => o.value === c.op)?.label ?? c.op} {c.value}
                 </Badge>

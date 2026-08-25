@@ -95,7 +95,7 @@ export function ComplianceCalendar() {
               </div>
               <span
                 className={cn(
-                  "shrink-0 inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+                  "shrink-0 inline-flex items-center text-micro font-semibold px-2 py-0.5 rounded-full border",
                   EVENT_TYPE_STYLES[ev.type] ?? "",
                 )}
               >

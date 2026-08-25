@@ -25,7 +25,7 @@ interface Props {
 function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-0.5 border-b border-border/60 py-2 last:border-0">
-      <span className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</span>
+      <span className="text-dense uppercase tracking-wide text-muted-foreground">{label}</span>
       <span className="text-sm text-foreground">{value}</span>
     </div>
   );

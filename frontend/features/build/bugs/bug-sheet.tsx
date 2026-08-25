@@ -183,11 +183,11 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[11px]">Title <span className="text-destructive">*</span></FormLabel>
+                      <FormLabel className="text-dense">Title <span className="text-destructive">*</span></FormLabel>
                       <FormControl>
-                        <Input {...field} className="text-[11px]" placeholder="Short bug description" />
+                        <Input {...field} className="text-dense" placeholder="Short bug description" />
                       </FormControl>
-                      <FormMessage className="text-[10px]" />
+                      <FormMessage className="text-micro" />
                     </FormItem>
                   )}
                 />
@@ -197,7 +197,7 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[11px]">Description</FormLabel>
+                      <FormLabel className="text-dense">Description</FormLabel>
                       <FormControl>
                         <TiptapEditor
                           content={field.value}
@@ -208,7 +208,7 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
                           menuMode="static"
                         />
                       </FormControl>
-                      <FormMessage className="text-[10px]" />
+                      <FormMessage className="text-micro" />
                     </FormItem>
                   )}
                 />
@@ -219,7 +219,7 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
                     name="severity"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[11px]">Severity</FormLabel>
+                        <FormLabel className="text-dense">Severity</FormLabel>
                         <Select value={field.value} onValueChange={field.onChange}>
                           <FormControl>
                             <SelectTrigger><SelectValue /></SelectTrigger>
@@ -230,7 +230,7 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
                             ))}
                           </SelectContent>
                         </Select>
-                        <FormMessage className="text-[10px]" />
+                        <FormMessage className="text-micro" />
                       </FormItem>
                     )}
                   />
@@ -239,7 +239,7 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
                     name="priority"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[11px]">Priority</FormLabel>
+                        <FormLabel className="text-dense">Priority</FormLabel>
                         <Select value={field.value} onValueChange={field.onChange}>
                           <FormControl>
                             <SelectTrigger><SelectValue /></SelectTrigger>
@@ -250,7 +250,7 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
                             ))}
                           </SelectContent>
                         </Select>
-                        <FormMessage className="text-[10px]" />
+                        <FormMessage className="text-micro" />
                       </FormItem>
                     )}
                   />
@@ -259,7 +259,7 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
                     name="status"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[11px]">Status</FormLabel>
+                        <FormLabel className="text-dense">Status</FormLabel>
                         <Select value={field.value} onValueChange={field.onChange}>
                           <FormControl>
                             <SelectTrigger><SelectValue /></SelectTrigger>
@@ -270,7 +270,7 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
                             ))}
                           </SelectContent>
                         </Select>
-                        <FormMessage className="text-[10px]" />
+                        <FormMessage className="text-micro" />
                       </FormItem>
                     )}
                   />
@@ -281,11 +281,11 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
                   name="stepsToReproduce"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[11px]">Steps to Reproduce</FormLabel>
+                      <FormLabel className="text-dense">Steps to Reproduce</FormLabel>
                       <FormControl>
-                        <Textarea {...field} className="text-[11px] min-h-[72px] resize-none" placeholder="1. Go to...&#10;2. Click..." />
+                        <Textarea {...field} className="text-dense min-h-[72px] resize-none" placeholder="1. Go to...&#10;2. Click..." />
                       </FormControl>
-                      <FormMessage className="text-[10px]" />
+                      <FormMessage className="text-micro" />
                     </FormItem>
                   )}
                 />
@@ -296,11 +296,11 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
                     name="expectedResult"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[11px]">Expected Result</FormLabel>
+                        <FormLabel className="text-dense">Expected Result</FormLabel>
                         <FormControl>
-                          <Textarea {...field} className="text-[11px] min-h-[56px] resize-none" placeholder="What should happen" />
+                          <Textarea {...field} className="text-dense min-h-[56px] resize-none" placeholder="What should happen" />
                         </FormControl>
-                        <FormMessage className="text-[10px]" />
+                        <FormMessage className="text-micro" />
                       </FormItem>
                     )}
                   />
@@ -309,11 +309,11 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
                     name="actualResult"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[11px]">Actual Result</FormLabel>
+                        <FormLabel className="text-dense">Actual Result</FormLabel>
                         <FormControl>
-                          <Textarea {...field} className="text-[11px] min-h-[56px] resize-none" placeholder="What actually happens" />
+                          <Textarea {...field} className="text-dense min-h-[56px] resize-none" placeholder="What actually happens" />
                         </FormControl>
-                        <FormMessage className="text-[10px]" />
+                        <FormMessage className="text-micro" />
                       </FormItem>
                     )}
                   />
@@ -325,11 +325,11 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
                     name="environment"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[11px]">Environment</FormLabel>
+                        <FormLabel className="text-dense">Environment</FormLabel>
                         <FormControl>
-                          <Input {...field} className="text-[11px]" placeholder="e.g. Production" />
+                          <Input {...field} className="text-dense" placeholder="e.g. Production" />
                         </FormControl>
-                        <FormMessage className="text-[10px]" />
+                        <FormMessage className="text-micro" />
                       </FormItem>
                     )}
                   />
@@ -338,11 +338,11 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
                     name="browserDevice"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[11px]">Browser / Device</FormLabel>
+                        <FormLabel className="text-dense">Browser / Device</FormLabel>
                         <FormControl>
-                          <Input {...field} className="text-[11px]" placeholder="e.g. Chrome 124" />
+                          <Input {...field} className="text-dense" placeholder="e.g. Chrome 124" />
                         </FormControl>
-                        <FormMessage className="text-[10px]" />
+                        <FormMessage className="text-micro" />
                       </FormItem>
                     )}
                   />
@@ -354,7 +354,7 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
                     name="assigneeId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[11px]">Assignee</FormLabel>
+                        <FormLabel className="text-dense">Assignee</FormLabel>
                         <ProjectMemberSelect
                           projectId={projectId}
                           mode="single"
@@ -362,9 +362,9 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
                           onChange={(v) => field.onChange(v ?? "none")}
                           allowUnassigned
                           placeholder="Unassigned"
-                          className="text-[11px]"
+                          className="text-dense"
                         />
-                        <FormMessage className="text-[10px]" />
+                        <FormMessage className="text-micro" />
                       </FormItem>
                     )}
                   />
@@ -373,7 +373,7 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
                     name="qaOwnerId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[11px]">QA Owner</FormLabel>
+                        <FormLabel className="text-dense">QA Owner</FormLabel>
                         <ProjectMemberSelect
                           projectId={projectId}
                           mode="single"
@@ -381,9 +381,9 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
                           onChange={(v) => field.onChange(v ?? "none")}
                           allowUnassigned
                           placeholder="Unassigned"
-                          className="text-[11px]"
+                          className="text-dense"
                         />
-                        <FormMessage className="text-[10px]" />
+                        <FormMessage className="text-micro" />
                       </FormItem>
                     )}
                   />
@@ -395,7 +395,7 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
                     name="affectedReleaseId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[11px]">Affected Release</FormLabel>
+                        <FormLabel className="text-dense">Affected Release</FormLabel>
                         <FormControl>
                           <ReleaseCombobox
                             projectId={projectId}
@@ -403,10 +403,10 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
                             onChange={field.onChange}
                             placeholder="Select release…"
                             allowClear
-                            className="text-[11px]"
+                            className="text-dense"
                           />
                         </FormControl>
-                        <FormMessage className="text-[10px]" />
+                        <FormMessage className="text-micro" />
                       </FormItem>
                     )}
                   />
@@ -415,7 +415,7 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
                     name="fixedReleaseId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[11px]">Fixed Release</FormLabel>
+                        <FormLabel className="text-dense">Fixed Release</FormLabel>
                         <FormControl>
                           <ReleaseCombobox
                             projectId={projectId}
@@ -423,10 +423,10 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
                             onChange={field.onChange}
                             placeholder="Select release…"
                             allowClear
-                            className="text-[11px]"
+                            className="text-dense"
                           />
                         </FormControl>
-                        <FormMessage className="text-[10px]" />
+                        <FormMessage className="text-micro" />
                       </FormItem>
                     )}
                   />
@@ -435,7 +435,7 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
                     name="linkedTicketId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[11px]">Linked Ticket</FormLabel>
+                        <FormLabel className="text-dense">Linked Ticket</FormLabel>
                         <FormControl>
                           <TicketCombobox
                             projectId={projectId}
@@ -444,10 +444,10 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
                             onChange={field.onChange}
                             placeholder="Link a ticket…"
                             allowClear
-                            className="text-[11px]"
+                            className="text-dense"
                           />
                         </FormControl>
-                        <FormMessage className="text-[10px]" />
+                        <FormMessage className="text-micro" />
                       </FormItem>
                     )}
                   />
@@ -458,9 +458,9 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
             <SheetFooter className="px-5 py-3 border-t shrink-0">
               <div className="grid w-full grid-cols-2 gap-2">
                 <SheetClose asChild>
-                  <Button variant="outline" size="sm" className="text-[11px]">Cancel</Button>
+                  <Button variant="outline" size="sm" className="text-dense">Cancel</Button>
                 </SheetClose>
-                <LoadingButton type="submit" size="sm" className="text-[11px]" isPending={isPending} loadingText="Saving…">
+                <LoadingButton type="submit" size="sm" className="text-dense" isPending={isPending} loadingText="Saving…">
                   {editBug ? "Save Changes" : "Report Bug"}
                 </LoadingButton>
               </div>

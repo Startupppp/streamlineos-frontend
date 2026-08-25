@@ -92,7 +92,7 @@ export function ChecklistEditor({ items, onChange }: ChecklistEditorProps) {
             </SelectContent>
           </Select>
           <div className="flex items-center gap-1 shrink-0">
-            <span className="text-[11px] text-muted-foreground">Day</span>
+            <span className="text-dense text-muted-foreground">Day</span>
             <Input
               type="number"
               min={-30}
@@ -108,7 +108,7 @@ export function ChecklistEditor({ items, onChange }: ChecklistEditorProps) {
               onCheckedChange={(v) => handleChange(item.id, { required: v })}
               className="scale-75"
             />
-            <span className="text-[11px] text-muted-foreground">Req</span>
+            <span className="text-dense text-muted-foreground">Req</span>
           </div>
           <TooltipIconButton
             icon={Trash2Icon}

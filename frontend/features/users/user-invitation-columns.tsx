@@ -73,7 +73,7 @@ function InvitationRoleSelect({
 
   return (
     <Select value={role} onValueChange={handleValueChange} disabled={disabled}>
-      <SelectTrigger className="h-6 w-fit min-w-[7rem] border-input bg-card text-[11px]">
+      <SelectTrigger className="h-6 w-fit min-w-[7rem] border-input bg-card text-dense">
         <SelectValue />
       </SelectTrigger>
       <SelectContent className="min-w-[var(--radix-select-trigger-width)]">

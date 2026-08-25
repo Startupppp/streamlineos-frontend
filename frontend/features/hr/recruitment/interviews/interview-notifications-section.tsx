@@ -30,7 +30,7 @@ export function InterviewNotificationsSection({
         <div className="flex items-center justify-between px-4 py-3 border-b border-border/60">
           <div>
             <p className="text-sm font-medium text-foreground">Email</p>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-dense text-muted-foreground">
               Notify via email
             </p>
           </div>
@@ -43,7 +43,7 @@ export function InterviewNotificationsSection({
         <div className="flex items-center justify-between px-4 py-3">
           <div>
             <p className="text-sm font-medium text-foreground">WhatsApp</p>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-dense text-muted-foreground">
               Requires Twilio configuration
             </p>
           </div>

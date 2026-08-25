@@ -143,7 +143,7 @@ export default function CompanyDetailPage({
               ? <TruncatedText text={lead.name} className="font-medium" />
               : <span className="font-medium">—</span>}
             {lead.email && (
-              <TruncatedText text={lead.email} className="text-[10px] text-muted-foreground" />
+              <TruncatedText text={lead.email} className="text-micro text-muted-foreground" />
             )}
           </div>
         </div>

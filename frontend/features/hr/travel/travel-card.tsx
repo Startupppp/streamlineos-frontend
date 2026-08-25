@@ -37,7 +37,7 @@ export function TravelCard({ request }: { request: TravelRequest }) {
             </div>
             <span
               className={cn(
-                "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0",
+                "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border shrink-0",
                 cfg.className,
               )}
             >
@@ -60,7 +60,7 @@ export function TravelCard({ request }: { request: TravelRequest }) {
               </div>
             )}
             {request.advanceRequired && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted border border-border text-muted-foreground">
+              <span className="inline-flex items-center gap-1 text-micro font-medium px-1.5 py-0.5 rounded bg-muted border border-border text-muted-foreground">
                 <Building className="h-2.5 w-2.5" />
                 Advance
               </span>

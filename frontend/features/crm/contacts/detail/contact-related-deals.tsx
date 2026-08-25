@@ -61,7 +61,7 @@ function DealRow({ dealId }: { dealId: number }) {
       </td>
       <td className="px-4 py-2.5">
         <Badge
-          className={cn("text-[10px] border-0 capitalize", stageConfig.className)}
+          className={cn("text-micro border-0 capitalize", stageConfig.className)}
         >
           {stageConfig.label}
         </Badge>

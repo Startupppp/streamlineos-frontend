@@ -349,7 +349,7 @@ export function MemberPicker(props: MemberPickerProps) {
             {selectedMembers.map((m) => (
               <Badge key={m.id} variant="secondary" className="gap-1.5 pl-0.5 pr-1.5 py-0.5">
                 <MemberAvatar member={m} className="h-4 w-4" />
-                <TruncatedText text={getUserDisplayName(m)} className="text-[11px] max-w-[120px]" />
+                <TruncatedText text={getUserDisplayName(m)} className="text-dense max-w-[120px]" />
                 <button
                   type="button"
                   className="text-muted-foreground/70 hover:text-destructive transition-colors leading-none"

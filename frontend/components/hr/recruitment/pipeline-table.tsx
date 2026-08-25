@@ -47,7 +47,7 @@ const PIPELINE_COLUMNS: DataTableColumn<PipelineRow>[] = [
         >
           {row.name}
         </Link>
-        <p className="text-[11px] text-muted-foreground">{row.jobTitle ?? row.email}</p>
+        <p className="text-dense text-muted-foreground">{row.jobTitle ?? row.email}</p>
       </div>
     ),
   },

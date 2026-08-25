@@ -40,7 +40,7 @@ interface LinkedTicketRowProps {
 
 const LinkedTicketRow = memo(function LinkedTicketRow({ link }: LinkedTicketRowProps) {
   return (
-    <li className="text-[12px] flex items-center gap-1.5">
+    <li className="text-xs flex items-center gap-1.5">
       <Badge variant="outline" className="text-[9px] px-1 py-0">
         {link.relation}
       </Badge>
@@ -65,7 +65,7 @@ const TicketTagBadge = memo(function TicketTagBadge({
   }, [onDetach, tagId]);
 
   return (
-    <Badge variant="outline" className="text-[10px] gap-1 pr-1">
+    <Badge variant="outline" className="text-micro gap-1 pr-1">
       {name}
       <button
         type="button"
@@ -194,7 +194,7 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
       <button
         type="button"
         onClick={handleToggle}
-        className="flex items-center gap-1.5 w-full text-left text-[11px] font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground transition-colors"
+        className="flex items-center gap-1.5 w-full text-left text-dense font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground transition-colors"
       >
         <TagIcon className="h-3.5 w-3.5 shrink-0" />
         Tags & Related Tickets
@@ -204,7 +204,7 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
       {open && (
         <div className="mt-2 space-y-3 pb-1">
           <div>
-            <p className="text-[11px] font-semibold text-foreground/80 mb-1.5">Tags</p>
+            <p className="text-dense font-semibold text-foreground/80 mb-1.5">Tags</p>
             <div className="flex flex-wrap gap-1.5 mb-2">
               {(ticketTags ?? []).map((tag) => (
                 <TicketTagBadge
@@ -242,7 +242,7 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
           </div>
 
           <div>
-            <p className="text-[11px] font-semibold text-foreground/80 mb-1.5 flex items-center gap-1">
+            <p className="text-dense font-semibold text-foreground/80 mb-1.5 flex items-center gap-1">
               <Link2 className="h-3 w-3" /> Related tickets
             </p>
             {(links ?? []).length > 0 && (
@@ -283,7 +283,7 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
           </div>
 
           <div>
-            <p className="text-[11px] font-semibold text-foreground/80 mb-1.5 flex items-center gap-1">
+            <p className="text-dense font-semibold text-foreground/80 mb-1.5 flex items-center gap-1">
               <GitMerge className="h-3 w-3" /> Merge into another ticket
             </p>
             <div className="flex items-center gap-2">
@@ -308,7 +308,7 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
           </div>
 
           <div>
-            <p className="text-[11px] font-semibold text-foreground/80 mb-1.5 flex items-center gap-1">
+            <p className="text-dense font-semibold text-foreground/80 mb-1.5 flex items-center gap-1">
               <Split className="h-3 w-3" /> Split into a new ticket
             </p>
             <div className="space-y-1.5">

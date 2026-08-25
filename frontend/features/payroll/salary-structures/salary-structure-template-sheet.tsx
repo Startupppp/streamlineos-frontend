@@ -45,7 +45,7 @@ interface SalaryStructureTemplateSheetProps {
 function FieldGroup({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+      <Label className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
         {label}
       </Label>
       {children}
@@ -86,7 +86,7 @@ function CtcPreview({ values }: { values: TemplateFormValues }) {
 
   return (
     <div className="rounded-xl bg-primary/5 border border-border px-4 py-3 space-y-1.5">
-      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+      <p className="text-micro font-semibold text-muted-foreground uppercase tracking-wider mb-2">
         Live CTC Preview
       </p>
       {rows.map((row) => (
@@ -246,7 +246,7 @@ export function SalaryStructureTemplateSheet({
 
       <Separator />
 
-      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+      <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
         Allowances
       </p>
 
@@ -291,7 +291,7 @@ export function SalaryStructureTemplateSheet({
 
       <Separator />
 
-      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+      <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
         Deductions
       </p>
 
@@ -319,7 +319,7 @@ export function SalaryStructureTemplateSheet({
 
       <Separator />
 
-      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+      <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
         Validity
       </p>
 

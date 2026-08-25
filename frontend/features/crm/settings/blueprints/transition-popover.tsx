@@ -125,20 +125,20 @@ export function TransitionPopover({
 
   return (
     <div className="w-72 space-y-3 p-1">
-      <div className="text-[11px] font-semibold text-foreground">
+      <div className="text-dense font-semibold text-foreground">
         {fromStage.label} → {toStage.label}
       </div>
       <Separator />
 
       <div>
-        <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1.5">
+        <div className="text-micro font-medium text-muted-foreground uppercase tracking-wide mb-1.5">
           Required Fields
         </div>
         <div className="flex flex-wrap gap-1 mb-1.5">
           {requiredFields.map((f) => (
             <span
               key={f}
-              className="inline-flex items-center gap-0.5 bg-muted text-muted-foreground text-[10px] px-1.5 h-5 rounded"
+              className="inline-flex items-center gap-0.5 bg-muted text-muted-foreground text-micro px-1.5 h-5 rounded"
             >
               {f}
               <button type="button" onClick={() => handleRemoveField(f)} className="ml-0.5 hover:text-destructive">
@@ -158,7 +158,7 @@ export function TransitionPopover({
 
       {activityTypes.length > 0 && (
         <div>
-          <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1.5">
+          <div className="text-micro font-medium text-muted-foreground uppercase tracking-wide mb-1.5">
             Required Activity Types
           </div>
           <div className="space-y-1 max-h-28 overflow-y-auto">

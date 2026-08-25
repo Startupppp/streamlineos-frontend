@@ -97,7 +97,7 @@ export const InlineProjectDates = memo(function InlineProjectDates({
         <PopoverContent className="w-auto p-0" align="end">
           <div className="flex divide-x divide-border">
             <div className="p-2">
-              <p className="mb-1.5 px-1 text-[10px] font-medium text-muted-foreground">
+              <p className="mb-1.5 px-1 text-micro font-medium text-muted-foreground">
                 Start
               </p>
               <CalendarComponent
@@ -120,7 +120,7 @@ export const InlineProjectDates = memo(function InlineProjectDates({
               )}
             </div>
             <div className="p-2">
-              <p className="mb-1.5 px-1 text-[10px] font-medium text-muted-foreground">
+              <p className="mb-1.5 px-1 text-micro font-medium text-muted-foreground">
                 End
               </p>
               <CalendarComponent

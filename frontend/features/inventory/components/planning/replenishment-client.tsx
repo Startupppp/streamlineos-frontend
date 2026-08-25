@@ -60,49 +60,49 @@ function buildColumns(
       header: "Product / SKU",
       cell: (row) => (
         <div>
-          <TruncatedText text={row.productName} className="text-[11px] font-medium" />
-          <p className="text-[11px] text-muted-foreground font-mono">{row.variantSku}</p>
+          <TruncatedText text={row.productName} className="text-dense font-medium" />
+          <p className="text-dense text-muted-foreground font-mono">{row.variantSku}</p>
         </div>
       ),
     },
     {
       key: "warehouseName",
       header: "Warehouse",
-      cell: (row) => <TruncatedText text={row.warehouseName ?? ""} className="text-[11px] text-muted-foreground" />,
+      cell: (row) => <TruncatedText text={row.warehouseName ?? ""} className="text-dense text-muted-foreground" />,
     },
     {
       key: "currentStock",
       header: "Current Stock",
-      className: "tabular-nums text-[11px]",
+      className: "tabular-nums text-dense",
       cell: (row) => row.currentStock,
     },
     {
       key: "minQty",
       header: "Min Qty",
-      className: "tabular-nums text-[11px]",
+      className: "tabular-nums text-dense",
       cell: (row) => row.minQty,
     },
     {
       key: "suggestedQty",
       header: "Suggested Qty",
-      className: "tabular-nums text-[11px] font-semibold text-primary",
+      className: "tabular-nums text-dense font-semibold text-primary",
       cell: (row) => row.suggestedQty,
     },
     {
       key: "vendorName",
       header: "Vendor",
-      cell: (row) => <TruncatedText text={row.vendorName ?? "—"} className="text-[11px] text-muted-foreground" />,
+      cell: (row) => <TruncatedText text={row.vendorName ?? "—"} className="text-dense text-muted-foreground" />,
     },
     {
       key: "expectedDate",
       header: "Expected Date",
-      cell: (row) => <span className="text-[11px] text-muted-foreground">{formatDate(row.expectedDate)}</span>,
+      cell: (row) => <span className="text-dense text-muted-foreground">{formatDate(row.expectedDate)}</span>,
     },
     {
       key: "reason",
       header: "Reason",
       cell: (row) => (
-        <TruncatedText text={row.reason} className="text-[11px] text-muted-foreground max-w-[160px]" />
+        <TruncatedText text={row.reason} className="text-dense text-muted-foreground max-w-[160px]" />
       ),
     },
     {
@@ -130,7 +130,7 @@ function ExpandAiButton({ rowId, isExpanded, onExpand }: ExpandAiButtonProps) {
     <Button
       variant={isExpanded ? "secondary" : "ghost"}
       size="sm"
-      className="h-6 text-[10px] px-2 gap-1"
+      className="h-6 text-micro px-2 gap-1"
       onClick={() => onExpand(rowId)}
     >
       AI Explain

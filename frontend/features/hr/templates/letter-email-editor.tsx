@@ -32,7 +32,7 @@ function VariableToken({ variable, onInsert }: { variable: TemplateVariable; onI
       onClick={handleClick}
       title={`${variable.label} — ${variable.example}`}
       className={cn(
-        "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono border transition-colors cursor-pointer",
+        "inline-flex items-center px-2 py-0.5 rounded-full text-micro font-mono border transition-colors cursor-pointer",
         variable.sensitive
           ? "bg-red-50 hover:bg-red-100 text-red-700 border-red-200 dark:bg-red-500/10 dark:hover:bg-red-500/20 dark:text-red-300 dark:border-red-500/30"
           : "bg-primary/5 hover:bg-primary/10 text-foreground border-primary/20",
@@ -106,7 +106,7 @@ export function LetterEmailEditor({
           <div className="max-h-32 overflow-y-auto space-y-1.5">
             {Object.entries(grouped).map(([group, vars]) => (
               <div key={group}>
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">{group}</p>
+                <p className="text-micro font-semibold text-muted-foreground uppercase tracking-wider mb-1">{group}</p>
                 <div className="flex flex-wrap gap-1">
                   {vars.map((v) => (
                     <VariableToken key={v.token} variable={v} onInsert={handleInsertToken} />

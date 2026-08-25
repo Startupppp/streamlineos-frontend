@@ -121,7 +121,7 @@ function StageHistoryBody({ dealId }: { dealId: number | null }) {
                 <Badge
                   variant="outline"
                   className={cn(
-                    "h-5 shrink-0 px-2 py-0.5 text-[10px]",
+                    "h-5 shrink-0 px-2 py-0.5 text-micro",
                     tone("info"),
                   )}
                 >

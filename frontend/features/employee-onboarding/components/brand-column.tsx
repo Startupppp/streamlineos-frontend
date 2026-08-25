@@ -49,7 +49,7 @@ function BrandColumnInner({ stepId, snapshot }: BrandColumnProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.18, ease: WIZARD_EASE }}
-            className="max-w-sm text-[13px] leading-relaxed text-muted-foreground"
+            className="max-w-sm text-label leading-relaxed text-muted-foreground"
           >
             {guide.why}
           </motion.p>
@@ -63,7 +63,7 @@ function BrandColumnInner({ stepId, snapshot }: BrandColumnProps) {
           className="min-h-0 flex-1"
         />
         {guide.minutes > 0 ? (
-          <p className="shrink-0 text-[11px] text-muted-foreground/80">
+          <p className="shrink-0 text-dense text-muted-foreground/80">
             About {guide.minutes} min on this step
           </p>
         ) : null}

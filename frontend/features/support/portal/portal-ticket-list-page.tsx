@@ -83,11 +83,11 @@ export function PortalTicketListPage() {
                 <Badge variant="outline" className={PRIORITY_COLORS[ticket.priority]}>
                   {ticket.priority}
                 </Badge>
-                <Badge variant="outline" className="text-[11px]">
+                <Badge variant="outline" className="text-dense">
                   {formatCategoryLabel(ticket.category)}
                 </Badge>
               </div>
-              <p className="mt-2.5 text-[11px] text-muted-foreground">
+              <p className="mt-2.5 text-dense text-muted-foreground">
                 Updated {formatDistanceToNow(new Date(ticket.updatedAt), { addSuffix: true })}
               </p>
             </Link>

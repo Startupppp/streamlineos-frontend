@@ -97,7 +97,7 @@ function ImportCard({ config, onImport }: ImportCardProps) {
           Import
         </Badge>
       </div>
-      <TruncatedText text={config.description} lines={2} className="text-[12px] text-muted-foreground leading-snug" />
+      <TruncatedText text={config.description} lines={2} className="text-xs text-muted-foreground leading-snug" />
       <div className="mt-auto">
         <AnimatedIconButton
           icon={UploadIcon}

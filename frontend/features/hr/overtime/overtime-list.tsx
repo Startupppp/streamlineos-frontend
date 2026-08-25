@@ -90,7 +90,7 @@ export function OvertimeList({ canManage }: Props) {
         header: "Comp-Off",
         cell: (req) =>
           req.convertToCompOff ? (
-            <Badge variant="secondary" className="text-[11px]">Yes</Badge>
+            <Badge variant="secondary" className="text-dense">Yes</Badge>
           ) : (
             <span className="text-xs text-muted-foreground">No</span>
           ),
@@ -99,7 +99,7 @@ export function OvertimeList({ canManage }: Props) {
         key: "status",
         header: "Status",
         cell: (req) => (
-          <Badge variant={STATUS_VARIANTS[req.status] ?? "secondary"} className="text-[11px]">
+          <Badge variant={STATUS_VARIANTS[req.status] ?? "secondary"} className="text-dense">
             {req.status}
           </Badge>
         ),

@@ -58,7 +58,7 @@ function ResultBadge({ result }: { result: string | null }) {
   const Icon = config.icon;
   return (
     <span className={cn(
-      "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+      "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border",
       config.className
     )}>
       <Icon className="h-3 w-3" />
@@ -72,7 +72,7 @@ function TypeBadge({ type, panelCount }: { type: string | null; panelCount?: num
   return (
     <div className="flex items-center gap-1">
       <span className={cn(
-        "inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full",
+        "inline-flex items-center text-micro font-semibold px-2 py-0.5 rounded-full",
         config.className
       )}>
         {type ?? "—"}
@@ -107,7 +107,7 @@ function FeedbackButton({ interview, onFeedback }: { interview: Interview; onFee
 function CandidateAvatar({ firstName, lastName }: { firstName?: string; lastName?: string }) {
   const initials = `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.toUpperCase();
   return (
-    <div className="w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-[10px] font-bold text-primary border border-primary/20">
+    <div className="w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-micro font-bold text-primary border border-primary/20">
       {initials}
     </div>
   );
@@ -192,7 +192,7 @@ export function InterviewList() {
       cell: (interview) => (
         <div className="text-sm">
           <p className="font-medium text-foreground">{format(new Date(interview.scheduledAt), "MMM d, yyyy")}</p>
-          <p className="text-[11px] text-muted-foreground">{format(new Date(interview.scheduledAt), "h:mm a")}</p>
+          <p className="text-dense text-muted-foreground">{format(new Date(interview.scheduledAt), "h:mm a")}</p>
         </div>
       ),
     },
@@ -228,7 +228,7 @@ export function InterviewList() {
         <div className="flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 mb-3">
           <div className="flex items-center gap-2">
             <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
-              <span className="text-[10px] font-bold text-primary-foreground">{selectedIds.size}</span>
+              <span className="text-micro font-bold text-primary-foreground">{selectedIds.size}</span>
             </div>
             <span className="text-sm font-semibold text-foreground">
               {selectedIds.size} interview{selectedIds.size !== 1 ? "s" : ""} selected

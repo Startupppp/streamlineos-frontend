@@ -259,7 +259,7 @@ export function SelfEditProfileForm({
                   {errors.image.message}
                 </p>
               )}
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-dense text-muted-foreground">
                 Paste a direct image URL (jpg/png). Use your company photo or a
                 professional headshot.
               </p>
@@ -287,7 +287,7 @@ export function SelfEditProfileForm({
             {errors.bio && (
               <p className="text-xs text-destructive">{errors.bio.message}</p>
             )}
-            <p className="text-[11px] text-muted-foreground ml-auto">
+            <p className="text-dense text-muted-foreground ml-auto">
               {(watch("bio") ?? "").length}/500
             </p>
           </div>

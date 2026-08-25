@@ -197,12 +197,12 @@ export function MeetingsTab() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <TruncatedText text={`${m.manager?.name ?? ""} & ${m.employee?.name ?? ""}`} className="text-sm font-medium" />
-                  <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                  <p className="text-micro text-muted-foreground flex items-center gap-1">
                     <Clock className="h-3 w-3" />
                     {format(new Date(m.scheduledAt), "PPp")} &middot; {m.duration}min
                   </p>
                 </div>
-                <Badge variant={m.status === "COMPLETED" ? "default" : m.status === "CANCELLED" ? "destructive" : "outline"} className="text-[10px] shrink-0">
+                <Badge variant={m.status === "COMPLETED" ? "default" : m.status === "CANCELLED" ? "destructive" : "outline"} className="text-micro shrink-0">
                   {m.status}
                 </Badge>
                 <DropdownMenu>

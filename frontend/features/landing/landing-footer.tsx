@@ -71,7 +71,7 @@ export function LandingFooter() {
 
           {footerCols.map((col) => (
             <MotionItem key={col.title} className="min-w-0">
-              <h4 className="text-[11px] font-semibold text-slate-500 mb-3 sm:mb-4">
+              <h4 className="text-dense font-semibold text-slate-500 mb-3 sm:mb-4">
                 {col.title}
               </h4>
               <ul className="space-y-2.5">
@@ -97,7 +97,7 @@ export function LandingFooter() {
           <p className="text-xs font-mono text-slate-400">
             &copy; {new Date().getFullYear()} {BRAND_NAME}. All rights reserved.
           </p>
-          <p className="text-[11px] font-medium text-slate-400">
+          <p className="text-dense font-medium text-slate-400">
             Made for teams that ship
           </p>
         </MotionReveal>

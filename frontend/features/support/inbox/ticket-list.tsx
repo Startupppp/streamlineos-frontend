@@ -53,8 +53,8 @@ function TicketListItem({ ticket, isSelected, onSelect }: TicketListItemProps) {
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <TruncatedText text={toTitleCase(ticket.title)} className="text-[13px] font-semibold" />
-          <p className="text-[11px] text-muted-foreground mt-0.5">
+          <TruncatedText text={toTitleCase(ticket.title)} className="text-label font-semibold" />
+          <p className="text-dense text-muted-foreground mt-0.5">
             #{ticket.id} {ticket.client?.name ? `- ${ticket.client.name}` : ""}
           </p>
         </div>
@@ -74,10 +74,10 @@ function TicketListItem({ ticket, isSelected, onSelect }: TicketListItemProps) {
       </div>
       <div className="flex items-center gap-2 mt-1.5">
         <StatusIcon className="h-3 w-3 text-muted-foreground" />
-        <span className="text-[10px] text-muted-foreground">
+        <span className="text-micro text-muted-foreground">
           {ticket.status.replace("_", " ")}
         </span>
-        <span className="text-[10px] text-muted-foreground ml-auto">
+        <span className="text-micro text-muted-foreground ml-auto">
           {ticket.createdAt
             ? formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true })
             : ""}

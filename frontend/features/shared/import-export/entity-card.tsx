@@ -109,7 +109,7 @@ export function EntityCard({
           </div>
         </div>
 
-        <TruncatedText text={entity.description} lines={2} className="text-[12px] text-muted-foreground leading-snug" />
+        <TruncatedText text={entity.description} lines={2} className="text-xs text-muted-foreground leading-snug" />
 
         {upload.status !== "idle" && (
           <div className="space-y-1">
@@ -118,7 +118,7 @@ export function EntityCard({
             )}
             <div
               className={cn(
-                "flex items-center gap-1.5 text-[11px]",
+                "flex items-center gap-1.5 text-dense",
                 upload.status === "success"
                   ? "text-emerald-600"
                   : upload.status === "error"
@@ -187,7 +187,7 @@ export function EntityCard({
             <a
               href={entity.templateUrl}
               download
-              className="text-[10px] text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
+              className="text-micro text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
             >
               <FileSpreadsheet className="h-3 w-3" />
               Download template

@@ -108,7 +108,7 @@ const COLUMNS: DataTableColumn<ClientAccount>[] = [
     sortValue: (a) => a.clientName,
     cell: (a) => (
       <div className="flex items-center gap-2 min-w-0">
-        <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-[10px] font-semibold text-muted-foreground shrink-0">
+        <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-micro font-semibold text-muted-foreground shrink-0">
           {(a.clientName[0] ?? "?").toUpperCase()}
         </div>
         <TruncatedText text={a.clientName} className="font-medium max-w-[140px]" />

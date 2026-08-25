@@ -27,7 +27,7 @@ export function HrEventDetailSheet({ event, onClose }: HrEventDetailSheetProps) 
           {type && (
             <Badge
               variant="outline"
-              className={cn("w-fit text-[10px]", HR_CALENDAR_TYPE_COLORS[type])}
+              className={cn("w-fit text-micro", HR_CALENDAR_TYPE_COLORS[type])}
             >
               {HR_CALENDAR_TYPE_LABELS[type]}
             </Badge>
@@ -39,7 +39,7 @@ export function HrEventDetailSheet({ event, onClose }: HrEventDetailSheetProps) 
               <CalendarDays className="h-3.5 w-3.5 shrink-0 mt-0.5" />
               <span>{format(event.start, "EEE, MMM d, yyyy")}</span>
             </div>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-dense text-muted-foreground">
               Read-only HR event. Manage it from the HR module.
             </p>
           </SheetBody>

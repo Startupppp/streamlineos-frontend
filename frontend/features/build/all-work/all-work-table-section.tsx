@@ -14,20 +14,20 @@ function buildTableColumns(onTicketClick: (id: number) => void): DataTableColumn
     {
       key: "key",
       header: "ID",
-      headerClassName: "w-16 text-[10px] uppercase tracking-wider font-bold",
-      className: "font-mono text-[11px] text-muted-foreground",
+      headerClassName: "w-16 text-micro uppercase tracking-wider font-bold",
+      className: "font-mono text-dense text-muted-foreground",
       cell: (row) => `${row.sequenceId ?? row.ticketNumber}`,
     },
     {
       key: "title",
       header: "Title",
       className: TABLE_TITLE_CELL,
-      headerClassName: "text-[10px] uppercase tracking-wider font-bold",
+      headerClassName: "text-micro uppercase tracking-wider font-bold",
       cell: (row) => (
         <button
           type="button"
           onClick={() => onTicketClick(row.id)}
-          className="text-left text-[13px] font-medium hover:underline underline-offset-2 min-w-0 w-full"
+          className="text-left text-label font-medium hover:underline underline-offset-2 min-w-0 w-full"
         >
           <TruncatedText text={row.title} />
         </button>
@@ -36,40 +36,40 @@ function buildTableColumns(onTicketClick: (id: number) => void): DataTableColumn
     {
       key: "status",
       header: "Status",
-      headerClassName: "w-28 text-[10px] uppercase tracking-wider font-bold",
-      className: "text-[11px] text-muted-foreground",
+      headerClassName: "w-28 text-micro uppercase tracking-wider font-bold",
+      className: "text-dense text-muted-foreground",
       cell: (row) => row.status.replace(/_/g, " "),
     },
     {
       key: "priority",
       header: "Priority",
-      headerClassName: "w-24 text-[10px] uppercase tracking-wider font-bold",
-      className: "text-[11px] text-muted-foreground",
+      headerClassName: "w-24 text-micro uppercase tracking-wider font-bold",
+      className: "text-dense text-muted-foreground",
       cell: (row) => row.priority ?? "—",
     },
     {
       key: "assignee",
       header: "Assignee",
-      headerClassName: "w-32 text-[10px] uppercase tracking-wider font-bold",
-      className: "text-[12px]",
+      headerClassName: "w-32 text-micro uppercase tracking-wider font-bold",
+      className: "text-xs",
       cell: (row) => {
         if (!row.assignee) {
-          return <span className="text-[11px] text-muted-foreground">—</span>;
+          return <span className="text-dense text-muted-foreground">—</span>;
         }
         const fullName = [row.assignee.firstName, row.assignee.lastName]
           .filter(Boolean)
           .join(" ");
         const name = row.assignee.name ?? (fullName || (row.assignee.email ?? "—"));
         return (
-          <TruncatedText text={name} className="max-w-[8rem] text-[11px]" />
+          <TruncatedText text={name} className="max-w-[8rem] text-dense" />
         );
       },
     },
     {
       key: "dueDate",
       header: "Due Date",
-      headerClassName: "w-28 text-[10px] uppercase tracking-wider font-bold",
-      className: "font-mono text-[11px] tabular-nums",
+      headerClassName: "w-28 text-micro uppercase tracking-wider font-bold",
+      className: "font-mono text-dense tabular-nums",
       cell: (row) =>
         row.dueDate
           ? new Date(row.dueDate).toLocaleDateString("en-IN", { month: "short", day: "numeric" })

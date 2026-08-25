@@ -73,8 +73,8 @@ const InsightRow = memo(function InsightRow({
           {getSeverityLabel(insight.severity)}
         </Badge>
         <div className="flex-1 min-w-0">
-          <p className="text-[11px] font-semibold text-foreground">{insight.title}</p>
-          <TruncatedText text={insight.body} className="text-[11px] text-muted-foreground" lines={2} />
+          <p className="text-dense font-semibold text-foreground">{insight.title}</p>
+          <TruncatedText text={insight.body} className="text-dense text-muted-foreground" lines={2} />
         </div>
         <div className="flex items-center gap-1 shrink-0">
           <Button

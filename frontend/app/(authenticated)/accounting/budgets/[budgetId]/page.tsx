@@ -514,7 +514,7 @@ export default function BudgetDetailPage() {
                 className="mt-1"
                 placeholder="0"
               />
-              <p className="text-[11px] text-muted-foreground mt-1">
+              <p className="text-dense text-muted-foreground mt-1">
                 Apply a percentage uplift to all line amounts (e.g. 5 = +5%)
               </p>
             </div>

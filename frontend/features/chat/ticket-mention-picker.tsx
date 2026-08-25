@@ -63,11 +63,11 @@ export function TicketMentionPicker({
             ) : (
               <Clock className="h-4 w-4 text-muted-foreground/40" />
             )}
-            <p className="text-[12px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               {isSearching ? "No matching tickets" : "No recent tickets"}
             </p>
             {!isSearching && (
-              <p className="text-[11px] text-muted-foreground/60">
+              <p className="text-dense text-muted-foreground/60">
                 Type to search all tickets
               </p>
             )}
@@ -75,7 +75,7 @@ export function TicketMentionPicker({
         ) : (
           <div>
             {!isSearching && tickets.length > 0 && (
-              <p className="px-3 pt-2 pb-1 text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wide flex items-center gap-1">
+              <p className="px-3 pt-2 pb-1 text-micro font-medium text-muted-foreground/60 uppercase tracking-wide flex items-center gap-1">
                 <Clock className="h-3 w-3" />
                 Recently updated
               </p>
@@ -92,10 +92,10 @@ export function TicketMentionPicker({
                   idx === selectedIndex && "bg-accent",
                 )}
               >
-                <span className="font-mono text-[11px] text-muted-foreground shrink-0 w-16 truncate">
+                <span className="font-mono text-dense text-muted-foreground shrink-0 w-16 truncate">
                   {ticket.projectKey}-{ticket.ticketNumber}
                 </span>
-                <TruncatedText text={ticket.title} className="flex-1 min-w-0 text-[13px] text-foreground" />
+                <TruncatedText text={ticket.title} className="flex-1 min-w-0 text-label text-foreground" />
                 <span
                   className={cn("h-2 w-2 rounded-full shrink-0", getStatusDotClass(ticket.status))}
                 />

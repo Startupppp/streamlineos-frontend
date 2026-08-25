@@ -87,10 +87,10 @@ export function OfferNegotiationSheet({ candidateId, offer, onClose }: Props) {
                 {negotiations.map((n) => (
                   <div key={n.id} className="rounded-lg border px-3 py-2.5 space-y-1">
                     <div className="flex items-center justify-between">
-                      <Badge variant={n.direction === "CANDIDATE_COUNTER" ? "secondary" : "outline"} className="text-[10px]">
+                      <Badge variant={n.direction === "CANDIDATE_COUNTER" ? "secondary" : "outline"} className="text-micro">
                         {n.direction === "CANDIDATE_COUNTER" ? "Candidate Counter" : "Internal Response"}
                       </Badge>
-                      <span className="text-[11px] text-muted-foreground">{format(new Date(n.createdAt), "MMM d, yyyy")}</span>
+                      <span className="text-dense text-muted-foreground">{format(new Date(n.createdAt), "MMM d, yyyy")}</span>
                     </div>
                     {n.proposedSalary && <p className="text-sm font-medium">{formatINR(n.proposedSalary)}</p>}
                     {n.message && <p className="text-xs text-muted-foreground">{n.message}</p>}
@@ -134,10 +134,10 @@ export function OfferNegotiationSheet({ candidateId, offer, onClose }: Props) {
                   <div key={v.id} className="rounded-lg border px-3 py-2.5">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-medium">v{v.versionNumber}</span>
-                      <span className="text-[11px] text-muted-foreground">{format(new Date(v.createdAt), "MMM d, yyyy")}</span>
+                      <span className="text-dense text-muted-foreground">{format(new Date(v.createdAt), "MMM d, yyyy")}</span>
                     </div>
                     <p className="text-sm">{formatINR(v.offeredSalary)} · {v.offeredDesignation ?? "—"}</p>
-                    {v.changeReason && <p className="text-[11px] text-muted-foreground">{v.changeReason}</p>}
+                    {v.changeReason && <p className="text-dense text-muted-foreground">{v.changeReason}</p>}
                   </div>
                 ))}
               </div>

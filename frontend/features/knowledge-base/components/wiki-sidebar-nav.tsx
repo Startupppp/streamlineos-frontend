@@ -411,7 +411,7 @@ export default function WikiSidebarNav({
       >
         {groups.map((group) => (
           <AccordionItem key={group.id} value={group.id} className="border-none">
-            <AccordionTrigger className="items-center gap-2 px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 hover:bg-muted/60 hover:text-foreground hover:no-underline [&>svg]:size-3">
+            <AccordionTrigger className="items-center gap-2 px-2 py-1.5 text-dense font-semibold uppercase tracking-wider text-muted-foreground/60 hover:bg-muted/60 hover:text-foreground hover:no-underline [&>svg]:size-3">
               {group.label}
             </AccordionTrigger>
             <AccordionContent className="space-y-0.5 pb-0.5">

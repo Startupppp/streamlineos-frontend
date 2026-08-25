@@ -217,7 +217,7 @@ export function AddLocationSheet({
                 name="isPickable"
                 render={({ field }) => (
                   <FormItem className="flex flex-col items-start gap-1 rounded-md border p-2">
-                    <FormLabel className="text-[11px] font-medium cursor-pointer">Pickable</FormLabel>
+                    <FormLabel className="text-dense font-medium cursor-pointer">Pickable</FormLabel>
                     <FormControl>
                       <Switch checked={field.value} onCheckedChange={field.onChange} />
                     </FormControl>
@@ -229,7 +229,7 @@ export function AddLocationSheet({
                 name="isReceivable"
                 render={({ field }) => (
                   <FormItem className="flex flex-col items-start gap-1 rounded-md border p-2">
-                    <FormLabel className="text-[11px] font-medium cursor-pointer">Receivable</FormLabel>
+                    <FormLabel className="text-dense font-medium cursor-pointer">Receivable</FormLabel>
                     <FormControl>
                       <Switch checked={field.value} onCheckedChange={field.onChange} />
                     </FormControl>
@@ -241,7 +241,7 @@ export function AddLocationSheet({
                 name="isSellable"
                 render={({ field }) => (
                   <FormItem className="flex flex-col items-start gap-1 rounded-md border p-2">
-                    <FormLabel className="text-[11px] font-medium cursor-pointer">Sellable</FormLabel>
+                    <FormLabel className="text-dense font-medium cursor-pointer">Sellable</FormLabel>
                     <FormControl>
                       <Switch checked={field.value} onCheckedChange={field.onChange} />
                     </FormControl>

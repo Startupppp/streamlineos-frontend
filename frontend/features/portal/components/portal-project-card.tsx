@@ -25,7 +25,7 @@ interface CapabilityChipProps {
 
 function CapabilityChip({ icon, label }: CapabilityChipProps) {
   return (
-    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary/5 text-foreground/70">
+    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-micro font-medium bg-primary/5 text-foreground/70">
       {icon}
       {label}
     </span>
@@ -52,13 +52,13 @@ export function PortalProjectCard({ project }: PortalProjectCardProps) {
           <div className="flex items-center gap-2 mb-1">
             <span
               className={cn(
-                "inline-flex px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide",
+                "inline-flex px-1.5 py-0.5 rounded text-micro font-semibold uppercase tracking-wide",
                 statusStyle(project.status),
               )}
             >
               {formatStatus(project.status)}
             </span>
-            <span className="text-[10px] font-mono text-muted-foreground">
+            <span className="text-micro font-mono text-muted-foreground">
               {project.key}
             </span>
           </div>

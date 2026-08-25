@@ -86,12 +86,12 @@ export const ViewCard = memo(function ViewCard({
         </div>
         <div className="flex items-center gap-1 shrink-0">
           {isPinned && (
-            <Badge variant="outline" className="text-[10px] bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
+            <Badge variant="outline" className="text-micro bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
               Pinned
             </Badge>
           )}
           {isPrivate && (
-            <Badge variant="outline" className="text-[10px] text-muted-foreground">
+            <Badge variant="outline" className="text-micro text-muted-foreground">
               Personal
             </Badge>
           )}

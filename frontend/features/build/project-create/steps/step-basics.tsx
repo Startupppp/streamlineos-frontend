@@ -345,7 +345,7 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
                                       {getUserDisplayName({ name: m.name, email: m.email })}
                                     </span>
                                     {m.name && (
-                                      <span className="truncate text-[10px] text-muted-foreground block">
+                                      <span className="truncate text-micro text-muted-foreground block">
                                         {m.email}
                                       </span>
                                     )}

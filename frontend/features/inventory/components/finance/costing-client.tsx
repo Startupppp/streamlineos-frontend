@@ -75,7 +75,7 @@ function CostingGuidanceCard() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {METHOD_EXPLANATIONS.map((m) => (
             <div key={m.method} className="space-y-0.5">
-              <span className={`inline-flex items-center px-2 py-0.5 rounded-md border text-[11px] font-medium ${METHOD_BADGE_CLASS[m.method]}`}>
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-md border text-dense font-medium ${METHOD_BADGE_CLASS[m.method]}`}>
                 {m.label}
               </span>
               <p className="text-xs text-muted-foreground leading-snug">{m.description}</p>
@@ -102,7 +102,7 @@ const columns: DataTableColumn<CostingProductRow>[] = [
     key: "costingMethod",
     header: "Costing Method",
     cell: (row) => (
-      <span className={`inline-flex items-center px-2 py-0.5 rounded-md border text-[11px] font-medium ${METHOD_BADGE_CLASS[row.costingMethod]}`}>
+      <span className={`inline-flex items-center px-2 py-0.5 rounded-md border text-dense font-medium ${METHOD_BADGE_CLASS[row.costingMethod]}`}>
         {METHOD_LABEL[row.costingMethod]}
       </span>
     ),

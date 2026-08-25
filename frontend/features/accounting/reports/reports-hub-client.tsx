@@ -90,7 +90,7 @@ function ReportCard({ item, category }: ReportCardProps) {
         <TruncatedText text={item.name} className="text-sm font-semibold text-foreground" />
         <TruncatedText text={item.description} lines={2} className="mt-0.5 text-xs text-muted-foreground leading-snug" />
         {item.exportable && (
-          <span className="inline-flex mt-1.5 items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/70 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
+          <span className="inline-flex mt-1.5 items-center px-1.5 py-0.5 rounded text-micro font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/70 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
             Exportable
           </span>
         )}

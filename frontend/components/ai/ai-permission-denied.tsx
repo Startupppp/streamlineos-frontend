@@ -17,11 +17,11 @@ export function AiPermissionDenied({ reason, className }: AiPermissionDeniedProp
       )}
     >
       <Lock className="h-4 w-4 text-muted-foreground/60" aria-hidden />
-      <p className="text-[12px] font-medium text-muted-foreground">
+      <p className="text-xs font-medium text-muted-foreground">
         You don&apos;t have access to this AI feature
       </p>
       {reason && (
-        <p className="text-[11px] text-muted-foreground/70">{reason}</p>
+        <p className="text-dense text-muted-foreground/70">{reason}</p>
       )}
     </div>
   );

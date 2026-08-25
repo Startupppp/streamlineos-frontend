@@ -124,7 +124,7 @@ export function LabelEditRow({
             {previewLabel}
           </span>
         </span>
-        <span className="font-mono text-[10px] uppercase text-muted-foreground">
+        <span className="font-mono text-micro uppercase text-muted-foreground">
           {resolvedColor}
         </span>
       </div>

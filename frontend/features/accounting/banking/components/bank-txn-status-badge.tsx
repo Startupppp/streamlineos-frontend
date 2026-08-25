@@ -38,7 +38,7 @@ export function BankTxnStatusBadge({ status, size = "row" }: BankTxnStatusBadgeP
     <span
       className={cn(
         "inline-flex items-center rounded-md border font-medium tabular-nums",
-        size === "chip" ? "px-2 py-1 text-xs" : "px-1.5 py-0.5 text-[11px]",
+        size === "chip" ? "px-2 py-1 text-xs" : "px-1.5 py-0.5 text-dense",
         config.className,
       )}
     >

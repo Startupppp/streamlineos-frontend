@@ -66,7 +66,7 @@ function buildEmployeeListColumns(
             </Avatar>
             <div className="min-w-0">
               <TruncatedText text={displayName} className="text-sm font-semibold text-foreground" />
-              {emp.email && <TruncatedText text={emp.email} className="text-[11px] text-muted-foreground" />}
+              {emp.email && <TruncatedText text={emp.email} className="text-dense text-muted-foreground" />}
             </div>
           </div>
         );
@@ -101,7 +101,7 @@ function buildEmployeeListColumns(
       cell: (emp) => {
         const dept = getDept(emp);
         return dept ? (
-          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-blue-50 text-blue-700 border-blue-200/70 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-800/40">
+          <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-blue-50 text-blue-700 border-blue-200/70 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-800/40">
             {dept}
           </span>
         ) : (

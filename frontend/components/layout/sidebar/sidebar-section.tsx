@@ -78,7 +78,7 @@ export function SidebarSection({
             onClick={onToggleGroup}
             className="w-full flex items-center justify-between px-2 py-1 mb-0.5 group/header rounded-md hover:bg-sidebar-accent transition-colors"
           >
-            <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/35 select-none transition-colors">
+            <span className="text-micro font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/35 select-none transition-colors">
               {group.label}
             </span>
             <ChevronDown
@@ -90,7 +90,7 @@ export function SidebarSection({
           </button>
         ) : (
           <div className="px-2 pt-3 pb-1">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/35 select-none">
+            <span className="text-micro font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/35 select-none">
               {group.label}
             </span>
           </div>
@@ -233,7 +233,7 @@ function ExpandedItem({ route, depth, pathname, pendingLeaves, onNavigate, accen
         />
         <TruncatedText text={route.label} className={cn("flex-1 text-[0.8125rem]", isActive && "text-sidebar-foreground")} />
         {hasBadge && (
-          <span className="inline-flex items-center justify-center h-[18px] min-w-[18px] px-1 rounded-full text-[10px] font-bold tabular-nums leading-none bg-amber-500 text-white">
+          <span className="inline-flex items-center justify-center h-[18px] min-w-[18px] px-1 rounded-full text-micro font-bold tabular-nums leading-none bg-amber-500 text-white">
             {count > 99 ? "99+" : count}
           </span>
         )}

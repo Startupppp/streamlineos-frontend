@@ -121,7 +121,7 @@ export function ResignationCard({
             <Badge
               variant="outline"
               className={cn(
-                "text-[10px] font-semibold px-2 py-0.5 rounded-full",
+                "text-micro font-semibold px-2 py-0.5 rounded-full",
                 statusBadgeClass(r.status),
               )}
             >
@@ -144,7 +144,7 @@ export function ResignationCard({
               </Badge>
             )}
           </div>
-          <div className="flex items-center gap-3 text-[10px] text-muted-foreground mt-0.5 flex-wrap">
+          <div className="flex items-center gap-3 text-micro text-muted-foreground mt-0.5 flex-wrap">
             {r.user?.designation && <span>{r.user.designation}</span>}
             {r.lastWorkingDate && (
               <span className="flex items-center gap-1">

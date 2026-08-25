@@ -69,7 +69,7 @@ function FilterMenuItem({
       </span>
       <span className="flex-1 text-left">{label}</span>
       {badge !== undefined && badge > 0 && (
-        <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
+        <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-micro font-semibold text-primary-foreground">
           {badge}
         </span>
       )}
@@ -190,7 +190,7 @@ export function NotificationFilterBar({
             <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" />
             <span className="truncate">{mobileFilterLabel}</span>
             {activeFilterCount > 0 && (
-              <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
+              <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary text-micro font-semibold text-primary-foreground">
                 {activeFilterCount}
               </span>
             )}
@@ -257,7 +257,7 @@ export function NotificationFilterBar({
               <span className="flex items-center gap-1.5">
                 {tab.label}
                 {tab.value === "UNREAD" && unreadCount > 0 && (
-                  <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
+                  <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-micro font-semibold text-primary-foreground">
                     {unreadCount}
                   </span>
                 )}

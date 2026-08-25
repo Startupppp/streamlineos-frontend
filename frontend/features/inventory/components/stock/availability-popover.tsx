@@ -82,7 +82,7 @@ export function AvailabilityPopover({ open, onOpenChange, variantId, variantName
 
           {data.warehouseBreakdown.length > 0 && (
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+              <p className="text-dense font-semibold uppercase tracking-wider text-muted-foreground mb-2">
                 By Warehouse
               </p>
               <DataTable

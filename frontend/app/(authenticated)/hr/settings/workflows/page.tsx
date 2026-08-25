@@ -196,9 +196,9 @@ export default function WorkflowSettingsPage() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <TruncatedText text={def.name} className="text-sm font-medium" />
                       {def.isDefault && (
-                        <Badge variant="secondary" className="text-[10px]">Default</Badge>
+                        <Badge variant="secondary" className="text-micro">Default</Badge>
                       )}
-                      <Badge className={`text-[10px] ${statusCfg.className}`}>{statusCfg.label}</Badge>
+                      <Badge className={`text-micro ${statusCfg.className}`}>{statusCfg.label}</Badge>
                       <span className="text-xs text-muted-foreground">v{def.version}</span>
                     </div>
                     <div className="flex items-center gap-2 mt-1">

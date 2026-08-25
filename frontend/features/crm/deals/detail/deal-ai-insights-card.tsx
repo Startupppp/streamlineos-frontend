@@ -179,7 +179,7 @@ export function DealAiInsightsCard({ dealId, dealName }: DealAiInsightsCardProps
             )}
 
             <div className="flex items-center justify-between pt-1">
-              <Badge variant="secondary" className="text-[10px]">
+              <Badge variant="secondary" className="text-micro">
                 AI generated
               </Badge>
               <LoadingButton

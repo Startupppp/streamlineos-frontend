@@ -125,13 +125,13 @@ export function ContactMergeDialog({ pair, currentContactId, open, onOpenChange,
                     }`}
                   >
                     <div className="flex items-start gap-2">
-                      <div className="w-7 rounded-full bg-primary/10 flex items-center justify-center text-[11px] font-semibold text-primary shrink-0">
+                      <div className="w-7 rounded-full bg-primary/10 flex items-center justify-center text-dense font-semibold text-primary shrink-0">
                         {c.name[0]?.toUpperCase() ?? "?"}
                       </div>
                       <div className="min-w-0 flex-1">
                         <TruncatedText text={c.name} className="text-xs font-medium" />
-                        {c.email && <TruncatedText text={c.email} className="text-[10px] text-muted-foreground" />}
-                        {c.phone && <p className="text-[10px] text-muted-foreground font-mono">{c.phone}</p>}
+                        {c.email && <TruncatedText text={c.email} className="text-micro text-muted-foreground" />}
+                        {c.phone && <p className="text-micro text-muted-foreground font-mono">{c.phone}</p>}
                       </div>
                       {isPrimary && (
                         <Badge className="text-[9px] px-1.5 py-0 h-4 bg-primary shrink-0">Primary</Badge>

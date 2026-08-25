@@ -40,7 +40,7 @@ const PackItemRow = memo(function PackItemRow({ item }: { item: StatutoryPackIte
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm font-medium text-foreground">{item.label}</span>
           <span
-            className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${KIND_STYLES[item.kind] ?? "bg-muted text-muted-foreground"}`}
+            className={`inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium ${KIND_STYLES[item.kind] ?? "bg-muted text-muted-foreground"}`}
           >
             {KIND_LABELS[item.kind] ?? item.kind}
           </span>
@@ -50,7 +50,7 @@ const PackItemRow = memo(function PackItemRow({ item }: { item: StatutoryPackIte
         )}
       </div>
       <span
-        className={`shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${
+        className={`shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium border ${
           item.enabled
             ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
             : "bg-muted text-muted-foreground border-border"

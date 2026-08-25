@@ -363,7 +363,7 @@ export function GeneralSettingsForm() {
               />
             </div>
           </div>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-dense text-muted-foreground">
             Used to detect missing and under-logged timesheets in the exceptions queue.
           </p>
         </CardContent>

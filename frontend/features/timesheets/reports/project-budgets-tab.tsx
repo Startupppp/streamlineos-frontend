@@ -61,21 +61,21 @@ function BudgetCard({ budget, canManage, onEdit, onDelete }: BudgetCardProps) {
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <TruncatedText text={budget.projectName ?? "Unassigned"} className="text-sm font-medium text-foreground" />
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-dense text-muted-foreground">
               {budget.budgetType === "HOURS" ? "Hours budget" : "Amount budget"}
             </p>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
             {burn.over ? (
-              <Badge className="text-[10px] border px-1.5 py-0 bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-300 border-red-200 dark:border-red-500/30">
+              <Badge className="text-micro border px-1.5 py-0 bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-300 border-red-200 dark:border-red-500/30">
                 Over budget
               </Badge>
             ) : burn.alertLevel >= 80 ? (
-              <Badge className="text-[10px] border px-1.5 py-0 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30">
+              <Badge className="text-micro border px-1.5 py-0 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30">
                 At risk
               </Badge>
             ) : (
-              <Badge className="text-[10px] border px-1.5 py-0 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30">
+              <Badge className="text-micro border px-1.5 py-0 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30">
                 On track
               </Badge>
             )}
@@ -104,7 +104,7 @@ function BudgetCard({ budget, canManage, onEdit, onDelete }: BudgetCardProps) {
           />
         </div>
 
-        <div className="flex items-center justify-between text-[11px] tabular-nums">
+        <div className="flex items-center justify-between text-dense tabular-nums">
           <span className="text-muted-foreground">
             {formatValue(budget, burn.consumed)} of {formatValue(budget, burn.budget)}
           </span>

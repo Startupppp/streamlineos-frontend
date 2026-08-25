@@ -54,14 +54,14 @@ function IncidentActions({
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
     <div className="flex items-center gap-2">
-      <Button size="sm" variant="outline" className="text-[11px]" onClick={onEdit}>
+      <Button size="sm" variant="outline" className="text-dense" onClick={onEdit}>
         <Pencil className="h-3.5 w-3.5 mr-1" />
         Edit
       </Button>
       <Button
         size="sm"
         variant="outline"
-        className="text-[11px] text-destructive border-destructive/30 hover:bg-destructive/5"
+        className="text-dense text-destructive border-destructive/30 hover:bg-destructive/5"
         onClick={onDelete}
         {...hoverHandlers}
       >
@@ -134,10 +134,10 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
       backHref={`/build/${projectId}/incidents`}
       badge={
         <div className="flex items-center gap-1.5">
-          <Badge variant="outline" className={`text-[10px] capitalize ${SEVERITY_STYLES[incident.severity]}`}>
+          <Badge variant="outline" className={`text-micro capitalize ${SEVERITY_STYLES[incident.severity]}`}>
             {incident.severity}
           </Badge>
-          <Badge variant="outline" className={`text-[10px] ${STATUS_STYLES[incident.status]}`}>
+          <Badge variant="outline" className={`text-micro ${STATUS_STYLES[incident.status]}`}>
             {STATUS_LABELS[incident.status]}
           </Badge>
         </div>
@@ -156,13 +156,13 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
           <InfoSection label="Root Cause" value={incident.rootCause} />
           <InfoSection label="Customer Comms" value={incident.customerComms} />
           <div className="space-y-1">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Owner</p>
-            <p className="text-[12px]">{owner ? (owner.name ?? owner.email) : "—"}</p>
+            <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Owner</p>
+            <p className="text-xs">{owner ? (owner.name ?? owner.email) : "—"}</p>
           </div>
           {incident.linkedTicketId ? (
             <div className="space-y-1">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Linked Ticket</p>
-              <Badge variant="outline" className="text-[10px] font-mono">#{incident.linkedTicketId}</Badge>
+              <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Linked Ticket</p>
+              <Badge variant="outline" className="text-micro font-mono">#{incident.linkedTicketId}</Badge>
             </div>
           ) : null}
         </div>
@@ -198,8 +198,8 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
 function InfoSection({ label, value }: { label: string; value: string | null }) {
   return (
     <div className="space-y-1">
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className="whitespace-pre-wrap text-[12px] text-foreground">
+      <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="whitespace-pre-wrap text-xs text-foreground">
         {value ?? <span className="italic text-muted-foreground">Not set</span>}
       </p>
     </div>

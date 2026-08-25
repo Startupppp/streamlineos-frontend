@@ -60,7 +60,7 @@ function MemberRow({
     <div className="flex items-center gap-3 px-4 py-3 border-b border-border/60 last:border-0">
       <Avatar className="h-7 w-7 shrink-0">
         <AvatarImage src={member.avatarUrl ?? undefined} />
-        <AvatarFallback className="text-[10px]">
+        <AvatarFallback className="text-micro">
           {getUserInitials(member.displayName)}
         </AvatarFallback>
       </Avatar>

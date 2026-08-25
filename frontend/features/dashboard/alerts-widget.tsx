@@ -59,11 +59,11 @@ function AlertRow({
         <div className="min-w-0 flex-1">
           <TruncatedText text={notification.title} className="text-xs font-medium" />
           {notification.message && (
-            <p className="truncate text-[10px] text-muted-foreground">
+            <p className="truncate text-micro text-muted-foreground">
               {notification.message}
             </p>
           )}
-          <p className="mt-0.5 text-[10px] text-muted-foreground">
+          <p className="mt-0.5 text-micro text-muted-foreground">
             {formatRelativeTime(notification.createdAt)}
           </p>
         </div>

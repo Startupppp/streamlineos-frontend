@@ -65,7 +65,7 @@ export const CandidateCard = memo(function CandidateCard({
 
           <div className="p-3 space-y-2.5">
             <div className="flex items-center gap-2.5 pr-5">
-              <div className="h-9 w-9 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 bg-gradient-to-br from-primary/20 to-primary/10 text-primary border border-primary/20 ring-2 ring-background">
+              <div className="h-9 w-9 rounded-full flex items-center justify-center text-dense font-bold shrink-0 bg-gradient-to-br from-primary/20 to-primary/10 text-primary border border-primary/20 ring-2 ring-background">
                 {initials}
               </div>
               <div className="min-w-0 flex-1">
@@ -74,12 +74,12 @@ export const CandidateCard = memo(function CandidateCard({
                   {candidate.jobTitle ? (
                     <>
                       <Briefcase className="h-2.5 w-2.5 shrink-0 text-muted-foreground" />
-                      <TruncatedText text={candidate.jobTitle} className="text-[10px] text-muted-foreground" />
+                      <TruncatedText text={candidate.jobTitle} className="text-micro text-muted-foreground" />
                     </>
                   ) : (
                     <>
                       <MailIcon className="h-2.5 w-2.5 shrink-0 text-muted-foreground" />
-                      <TruncatedText text={candidate.email} className="text-[10px] text-muted-foreground" />
+                      <TruncatedText text={candidate.email} className="text-micro text-muted-foreground" />
                     </>
                   )}
                 </div>
@@ -113,7 +113,7 @@ export const CandidateCard = memo(function CandidateCard({
                         )}
                       />
                     ))}
-                    <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 ml-0.5">{candidate.rating}</span>
+                    <span className="text-micro font-semibold text-amber-600 dark:text-amber-400 ml-0.5">{candidate.rating}</span>
                   </div>
                 ) : <span />}
                 {candidate.appliedAt && (

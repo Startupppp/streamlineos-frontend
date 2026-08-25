@@ -249,7 +249,7 @@ export function CountDetailShared({
           status ? (
             <Badge
               variant="outline"
-              className={`text-[10px] h-5 px-2 ${CYCLE_COUNT_STATUS_BADGE[status]}`}
+              className={`text-micro h-5 px-2 ${CYCLE_COUNT_STATUS_BADGE[status]}`}
             >
               {CYCLE_COUNT_STATUS_LABEL[status]}
             </Badge>

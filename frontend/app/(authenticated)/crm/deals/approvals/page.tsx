@@ -338,7 +338,7 @@ export default function DealApprovalsPage() {
           </AlertDialogHeader>
           {confirmAction?.action === "reject" && (
             <div className="space-y-1.5 py-2">
-              <label htmlFor="rejection-reason" className="text-[13px] font-medium">
+              <label htmlFor="rejection-reason" className="text-label font-medium">
                 Rejection Reason
               </label>
               <Textarea

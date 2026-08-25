@@ -105,12 +105,12 @@ export default function BusinessHoursPage() {
     {
       key: "name",
       header: "Name",
-      cell: (bh) => <span className="text-[11px] font-medium">{bh.name}</span>,
+      cell: (bh) => <span className="text-dense font-medium">{bh.name}</span>,
     },
     {
       key: "timezone",
       header: "Timezone",
-      cell: (bh) => <span className="text-[11px]">{bh.timezone}</span>,
+      cell: (bh) => <span className="text-dense">{bh.timezone}</span>,
     },
     {
       key: "coverage",

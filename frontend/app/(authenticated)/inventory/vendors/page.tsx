@@ -188,7 +188,7 @@ export default function VendorsListPage() {
     {
       key: "code",
       header: "Code",
-      cell: (v) => <span className="font-mono text-[11px]">{v.code}</span>,
+      cell: (v) => <span className="font-mono text-dense">{v.code}</span>,
     },
     {
       key: "email",

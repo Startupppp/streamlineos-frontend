@@ -82,7 +82,7 @@ function LogRow({ log, endpointId, canManage }: LogRowProps) {
           {isBlocked && (
             <Badge
               variant="outline"
-              className="text-[10px] shrink-0 border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10"
+              className="text-micro shrink-0 border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10"
             >
               Blocked
             </Badge>
@@ -90,7 +90,7 @@ function LogRow({ log, endpointId, canManage }: LogRowProps) {
           {!isBlocked && log.statusCode !== null && (
             <Badge
               variant={log.success ? "outline" : "destructive"}
-              className="text-[10px] shrink-0"
+              className="text-micro shrink-0"
             >
               {log.statusCode}
             </Badge>

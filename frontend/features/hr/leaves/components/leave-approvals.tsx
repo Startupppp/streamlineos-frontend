@@ -114,7 +114,7 @@ export function LeaveApprovalsContent({
               </div>
               Leave Requests
               {allIncomingLeaveRequests.length > 0 && (
-                <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
+                <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-muted text-micro font-semibold text-muted-foreground">
                   {allIncomingLeaveRequests.length}
                 </span>
               )}
@@ -128,7 +128,7 @@ export function LeaveApprovalsContent({
                   className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground pb-3 pt-2 px-4 text-xs duration-200"
                 >
                   All
-                  <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
+                  <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-muted text-micro font-semibold text-muted-foreground">
                     {allIncomingLeaveRequests.length}
                   </span>
                 </TabsTrigger>
@@ -138,7 +138,7 @@ export function LeaveApprovalsContent({
                 >
                   Pending
                   {incomingLeaveRequests.length > 0 && (
-                    <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-amber-500 text-[10px] font-bold text-white">
+                    <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-amber-500 text-micro font-bold text-white">
                       {incomingLeaveRequests.length}
                     </span>
                   )}
@@ -149,7 +149,7 @@ export function LeaveApprovalsContent({
                 >
                   Approved
                   {approvedRequests.length > 0 && (
-                    <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
+                    <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-muted text-micro font-semibold text-muted-foreground">
                       {approvedRequests.length}
                     </span>
                   )}
@@ -160,7 +160,7 @@ export function LeaveApprovalsContent({
                 >
                   Rejected
                   {rejectedRequests.length > 0 && (
-                    <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
+                    <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-muted text-micro font-semibold text-muted-foreground">
                       {rejectedRequests.length}
                     </span>
                   )}
@@ -207,7 +207,7 @@ export function LeaveApprovalsContent({
               </div>
               Pending WFH Requests
               {pendingWfhRequests && pendingWfhRequests.length > 0 && (
-                <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-amber-100 dark:bg-amber-500/10 text-[10px] font-semibold text-amber-700 dark:text-amber-300">
+                <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-amber-100 dark:bg-amber-500/10 text-micro font-semibold text-amber-700 dark:text-amber-300">
                   {pendingWfhRequests.length}
                 </span>
               )}

@@ -153,28 +153,28 @@ function CreditDetailSheet({
         <div className="px-6 py-4 space-y-4">
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <p className="text-[11px] text-muted-foreground mb-0.5">Vendor</p>
+              <p className="text-dense text-muted-foreground mb-0.5">Vendor</p>
               <p>{credit.vendorName ?? "—"}</p>
             </div>
             <div>
-              <p className="text-[11px] text-muted-foreground mb-0.5">Status</p>
+              <p className="text-dense text-muted-foreground mb-0.5">Status</p>
               <FinanceStatusBadge status={credit.status} size="chip" />
             </div>
             <div>
-              <p className="text-[11px] text-muted-foreground mb-0.5">Total</p>
+              <p className="text-dense text-muted-foreground mb-0.5">Total</p>
               <Money value={Number(credit.total)} />
             </div>
             <div>
-              <p className="text-[11px] text-muted-foreground mb-0.5">Applied</p>
+              <p className="text-dense text-muted-foreground mb-0.5">Applied</p>
               <Money value={Number(credit.appliedAmount)} />
             </div>
             <div>
-              <p className="text-[11px] text-muted-foreground mb-0.5">Remaining</p>
+              <p className="text-dense text-muted-foreground mb-0.5">Remaining</p>
               <Money value={Number(credit.total) - Number(credit.appliedAmount)} />
             </div>
             {credit.reason && (
               <div className="col-span-2">
-                <p className="text-[11px] text-muted-foreground mb-0.5">Reason</p>
+                <p className="text-dense text-muted-foreground mb-0.5">Reason</p>
                 <p className="text-sm">{credit.reason}</p>
               </div>
             )}

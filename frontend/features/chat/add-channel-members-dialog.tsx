@@ -130,7 +130,7 @@ export function AddChannelMembersDialog({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-4 pt-4 pb-3">
-          <DialogTitle className="text-[16px]">Add members</DialogTitle>
+          <DialogTitle className="text-base">Add members</DialogTitle>
         </DialogHeader>
 
         <div className="px-4 pb-3">
@@ -142,7 +142,7 @@ export function AddChannelMembersDialog({
         <ScrollArea className="h-[280px] border-t border-border/30">
           <div className="p-1">
             {filteredUsers.length === 0 ? (
-              <p className="text-[13px] text-muted-foreground text-center py-8 px-4">
+              <p className="text-label text-muted-foreground text-center py-8 px-4">
                 {availableUsers.length === 0
                   ? "Everyone in your org is already in this channel."
                   : "No people match your search."}
@@ -177,8 +177,8 @@ export function AddChannelMembersDialog({
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0 text-left">
-                      <TruncatedText text={user.name ?? ""} className="text-[13px] font-medium" />
-                      <TruncatedText text={user.email ?? ""} className="text-[11px] text-muted-foreground" />
+                      <TruncatedText text={user.name ?? ""} className="text-label font-medium" />
+                      <TruncatedText text={user.email ?? ""} className="text-dense text-muted-foreground" />
                     </div>
                   </button>
                 );
@@ -189,11 +189,11 @@ export function AddChannelMembersDialog({
 
         {isAdmin && (
           <div className="px-4 py-3 border-t border-border/30">
-            <p className="text-[11px] font-medium text-muted-foreground mb-1.5">
+            <p className="text-dense font-medium text-muted-foreground mb-1.5">
               Invite link
             </p>
             {isInviteLinkLoading ? (
-              <div className="h-9 flex items-center px-3 text-[12px] text-muted-foreground">
+              <div className="h-9 flex items-center px-3 text-xs text-muted-foreground">
                 <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" />
                 Loading link...
               </div>
@@ -202,7 +202,7 @@ export function AddChannelMembersDialog({
                 <Input
                   readOnly
                   value={inviteUrl ?? ""}
-                  className="text-[12px] bg-muted/30 border-border/30 flex-1 truncate"
+                  className="text-xs bg-muted/30 border-border/30 flex-1 truncate"
                   onFocus={(e) => e.currentTarget.select()}
                 />
                 <AnimatedIconButton
@@ -231,7 +231,7 @@ export function AddChannelMembersDialog({
                 </LoadingButton>
               </div>
             )}
-            <p className="text-[10px] text-muted-foreground/70 mt-1.5">
+            <p className="text-micro text-muted-foreground/70 mt-1.5">
               Anyone signed in to your org with this link can join this channel.
             </p>
           </div>

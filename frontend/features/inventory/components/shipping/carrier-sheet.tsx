@@ -187,7 +187,7 @@ export function CarrierSheet({
                     {...field}
                   />
                 </FormControl>
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-micro text-muted-foreground">
                   Use {"{tracking}"} as placeholder
                 </p>
                 <FormMessage />

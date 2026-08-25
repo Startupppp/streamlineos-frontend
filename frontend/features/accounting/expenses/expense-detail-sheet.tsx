@@ -154,40 +154,40 @@ export function ExpenseDetailSheet({ expense, open, onOpenChange }: ExpenseDetai
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <p className="text-[11px] text-muted-foreground mb-0.5">Employee</p>
+            <p className="text-dense text-muted-foreground mb-0.5">Employee</p>
             <p className="text-sm font-medium">{getUserDisplayName(expense.user)}</p>
           </div>
           <div>
-            <p className="text-[11px] text-muted-foreground mb-0.5">Status</p>
+            <p className="text-dense text-muted-foreground mb-0.5">Status</p>
             {expense.status && isExpenseStatus(expense.status) && (
               <FinanceStatusBadge status={expense.status} size="chip" />
             )}
           </div>
           <div>
-            <p className="text-[11px] text-muted-foreground mb-0.5">Date</p>
+            <p className="text-dense text-muted-foreground mb-0.5">Date</p>
             <p className="text-sm">{formatDate(expense.expenseDate)}</p>
           </div>
           <div>
-            <p className="text-[11px] text-muted-foreground mb-0.5">Amount</p>
+            <p className="text-dense text-muted-foreground mb-0.5">Amount</p>
             <Money value={parseFloat(expense.amount)} className="text-sm font-semibold" />
           </div>
           <div>
-            <p className="text-[11px] text-muted-foreground mb-0.5">Category</p>
+            <p className="text-dense text-muted-foreground mb-0.5">Category</p>
             <p className="text-sm">{expense.category}</p>
           </div>
           <div>
-            <p className="text-[11px] text-muted-foreground mb-0.5">Merchant</p>
+            <p className="text-dense text-muted-foreground mb-0.5">Merchant</p>
             <p className="text-sm">{expense.merchant ?? "—"}</p>
           </div>
           {expense.taxAmount !== undefined && expense.taxAmount !== null && (
             <div>
-              <p className="text-[11px] text-muted-foreground mb-0.5">Tax</p>
+              <p className="text-dense text-muted-foreground mb-0.5">Tax</p>
               <Money value={parseFloat(expense.taxAmount)} className="text-sm" />
             </div>
           )}
           {expense.description && (
             <div className="col-span-2">
-              <p className="text-[11px] text-muted-foreground mb-0.5">Description</p>
+              <p className="text-dense text-muted-foreground mb-0.5">Description</p>
               <p className="text-sm text-muted-foreground">{expense.description}</p>
             </div>
           )}
@@ -195,7 +195,7 @@ export function ExpenseDetailSheet({ expense, open, onOpenChange }: ExpenseDetai
 
         {receipts.length > 0 && (
             <div>
-              <p className="text-[11px] text-muted-foreground mb-1">
+              <p className="text-dense text-muted-foreground mb-1">
                 Receipt{receipts.length > 1 ? "s" : ""}
               </p>
               <div className="flex flex-col gap-1">
@@ -217,14 +217,14 @@ export function ExpenseDetailSheet({ expense, open, onOpenChange }: ExpenseDetai
 
         {expense.approvedAt && (
           <div className="pt-2 border-t border-border/50">
-            <p className="text-[11px] text-muted-foreground mb-0.5">Approved by</p>
+            <p className="text-dense text-muted-foreground mb-0.5">Approved by</p>
             <p className="text-sm">{getUserDisplayName(expense.approver)} · {formatDate(String(expense.approvedAt))}</p>
           </div>
         )}
 
         {expense.rejectionReason && (
           <div className="pt-2 border-t border-border/50">
-            <p className="text-[11px] text-muted-foreground mb-0.5">Rejection reason</p>
+            <p className="text-dense text-muted-foreground mb-0.5">Rejection reason</p>
             <p className="text-sm text-red-600">{expense.rejectionReason}</p>
           </div>
         )}

@@ -120,7 +120,7 @@ export function DeclarationReviewSheet({ declaration, onClose }: DeclarationRevi
             <div className="flex items-center gap-2">
               <SheetTitle className="flex-1">Tax Declaration</SheetTitle>
               <span
-                className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${STATUS_BADGE[declaration.status] ?? ""}`}
+                className={`inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium border ${STATUS_BADGE[declaration.status] ?? ""}`}
               >
                 {declaration.status}
               </span>
@@ -134,7 +134,7 @@ export function DeclarationReviewSheet({ declaration, onClose }: DeclarationRevi
               <div className="flex items-center gap-2 mt-2">
                 <span className="text-xs text-muted-foreground">FY {declaration.financialYear}</span>
                 <span
-                  className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${REGIME_BADGE[declaration.regime] ?? ""}`}
+                  className={`inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium border ${REGIME_BADGE[declaration.regime] ?? ""}`}
                 >
                   {declaration.regime} Regime
                 </span>
@@ -142,11 +142,11 @@ export function DeclarationReviewSheet({ declaration, onClose }: DeclarationRevi
             </div>
 
             <div className="rounded-md border border-border overflow-hidden">
-              <table className="w-full text-[11px]">
+              <table className="w-full text-dense">
                 <thead>
                   <tr className="bg-muted/60 border-b border-border">
-                    <th className="text-left px-3 py-2 font-semibold text-[10px] uppercase tracking-wide">Section</th>
-                    <th className="text-right px-3 py-2 font-semibold text-[10px] uppercase tracking-wide">Amount</th>
+                    <th className="text-left px-3 py-2 font-semibold text-micro uppercase tracking-wide">Section</th>
+                    <th className="text-right px-3 py-2 font-semibold text-micro uppercase tracking-wide">Amount</th>
                   </tr>
                 </thead>
                 <tbody>

@@ -68,24 +68,24 @@ function VariableCard({ variable, index, onDelete }: VariableCardProps) {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <code className="text-sm font-semibold font-mono text-foreground">{variable.key}</code>
-                <Badge variant="outline" className={`text-[10px] border ${badgeClass}`}>
+                <Badge variant="outline" className={`text-micro border ${badgeClass}`}>
                   {variable.valueType}
                 </Badge>
               </div>
               <div className="flex items-center gap-3 mt-1 flex-wrap">
                 <Link
                   href={`/workflows/${variable.workflowId}`}
-                  className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                  className="inline-flex items-center gap-1 text-dense text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <Link2 className="h-3 w-3" />
                   {variable.workflowName}
                 </Link>
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-dense text-muted-foreground">
                   Added {format(new Date(variable.createdAt), "MMM d, yyyy")}
                 </span>
               </div>
               {variable.defaultValue !== null && variable.defaultValue !== undefined && (
-                <p className="text-[11px] text-muted-foreground mt-0.5">
+                <p className="text-dense text-muted-foreground mt-0.5">
                   Default: <code className="font-mono">{JSON.stringify(variable.defaultValue)}</code>
                 </p>
               )}

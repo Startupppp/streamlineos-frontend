@@ -69,12 +69,12 @@ export function TicketDetailTimeline({ ticket }: TicketDetailTimelineProps) {
                       <Lock className="h-2.5 w-2.5" /> Internal Note
                     </Badge>
                   )}
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="text-micro text-muted-foreground">
                     {msg.createdAt ? formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true }) : ""}
                   </span>
                 </div>
                 {msg.body && msg.body !== "(attachment)" && (
-                  <p className="text-[13px] mt-0.5 whitespace-pre-wrap">{msg.body}</p>
+                  <p className="text-label mt-0.5 whitespace-pre-wrap">{msg.body}</p>
                 )}
                 {msg.body && msg.body !== "(attachment)" && (
                   <MessageTranslateControl ticketId={ticket.id} messageId={msg.id} />
@@ -89,7 +89,7 @@ export function TicketDetailTimeline({ ticket }: TicketDetailTimelineProps) {
                           href={att.fileUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-[11px] text-primary hover:underline bg-primary/10 rounded px-2 py-0.5 border border-primary/30"
+                          className="flex items-center gap-1 text-dense text-primary hover:underline bg-primary/10 rounded px-2 py-0.5 border border-primary/30"
                         >
                           <Icon className="h-3 w-3 shrink-0" />
                           <span className="truncate max-w-[120px]">{att.fileName}</span>
@@ -105,7 +105,7 @@ export function TicketDetailTimeline({ ticket }: TicketDetailTimelineProps) {
       </div>
 
       <div className="mt-5 pt-4 border-t border-border/40">
-        <h4 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+        <h4 className="text-dense font-semibold uppercase tracking-wide text-muted-foreground mb-3">
           Activity
         </h4>
         <SupportActivityLog supportTicketId={ticket.id} />

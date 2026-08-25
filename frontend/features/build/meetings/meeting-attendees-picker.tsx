@@ -59,7 +59,7 @@ export function MeetingAttendeePicker({
                     {getUserInitials(member)}
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-[11px] truncate max-w-[120px]">
+                <span className="text-dense truncate max-w-[120px]">
                   {getUserDisplayName(member)}
                 </span>
                 <button

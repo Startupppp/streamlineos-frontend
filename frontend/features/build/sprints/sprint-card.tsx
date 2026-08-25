@@ -134,7 +134,7 @@ export const SprintCard = memo(function SprintCard({ sprint, projectId, onStart,
             <div className="flex min-w-0 flex-1">
               <Link
                 href={`/build/${projectId}?sprint=${sprint.id}`}
-                className="flex-1 min-w-0 text-[13px] font-semibold leading-tight text-foreground transition-colors hover:text-primary"
+                className="flex-1 min-w-0 text-label font-semibold leading-tight text-foreground transition-colors hover:text-primary"
               >
                 <TruncatedText text={sprint.name} />
               </Link>
@@ -152,13 +152,13 @@ export const SprintCard = memo(function SprintCard({ sprint, projectId, onStart,
           </div>
 
           {sprint.goal ? (
-            <p className="mt-0.5 flex min-w-0 items-center gap-1 text-[10px] text-muted-foreground">
+            <p className="mt-0.5 flex min-w-0 items-center gap-1 text-micro text-muted-foreground">
               <Target className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
               <TruncatedText text={sprint.goal} />
             </p>
           ) : null}
 
-          <p className="mt-1 text-[10px] tabular-nums text-muted-foreground">
+          <p className="mt-1 text-micro tabular-nums text-muted-foreground">
             {format(startDate, "MMM d")} — {format(endDate, "MMM d, yyyy")}
           </p>
         </div>

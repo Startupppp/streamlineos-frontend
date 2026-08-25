@@ -71,7 +71,7 @@ const COLUMNS: DataTableColumn<HrImportJob>[] = [
       <Badge
         variant="outline"
         className={cn(
-          "text-[10px] px-1.5 h-5 font-medium",
+          "text-micro px-1.5 h-5 font-medium",
           STATUS_BADGE[row.status].className,
         )}
       >
@@ -129,7 +129,7 @@ export function JobHistoryTable({ entity }: JobHistoryTableProps) {
           <Button
             variant="ghost"
             size="sm"
-            className="h-6 text-[11px] px-2"
+            className="h-6 text-dense px-2"
             onClick={() => handleViewErrors(row.id)}
           >
             View errors

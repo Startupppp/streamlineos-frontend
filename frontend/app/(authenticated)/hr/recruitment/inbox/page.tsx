@@ -67,7 +67,7 @@ function ThreadItem({
               {thread.unreadCount}
             </Badge>
           )}
-          <span className="text-[10px] text-muted-foreground">
+          <span className="text-micro text-muted-foreground">
             {format(new Date(thread.lastMessageAt), "MMM d")}
           </span>
         </div>
@@ -100,7 +100,7 @@ function MessageBubble({ msg }: { msg: CandidateMessage }) {
         <p className="whitespace-pre-wrap leading-relaxed">{msg.body}</p>
         <p
           className={cn(
-            "text-[10px] mt-1 opacity-60",
+            "text-micro mt-1 opacity-60",
             isOutbound ? "text-right" : "text-left",
           )}
         >
@@ -206,7 +206,7 @@ function ComposeBar({
           Send
         </LoadingButton>
       </div>
-      <p className="text-[10px] text-muted-foreground">Cmd+Enter to send</p>
+      <p className="text-micro text-muted-foreground">Cmd+Enter to send</p>
     </div>
   );
 }

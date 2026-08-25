@@ -25,7 +25,7 @@ interface LinkedRowProps {
 function LinkedRow({ href, icon: Icon, label, title, detail, isLoading }: LinkedRowProps) {
   return (
     <div className="min-w-0">
-      <p className="text-[11px] font-medium tracking-wider uppercase text-muted-foreground">
+      <p className="text-dense font-medium tracking-wider uppercase text-muted-foreground">
         {label}
       </p>
       {isLoading ? (

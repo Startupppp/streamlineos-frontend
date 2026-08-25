@@ -83,7 +83,7 @@ const columns: DataTableColumn<SalesOrderListItem>[] = [
     cell: (so) => (
       <Link
         href={`/inventory/sales-orders/${so.id}`}
-        className="font-mono text-[11px] text-primary hover:underline transition-colors"
+        className="font-mono text-dense text-primary hover:underline transition-colors"
       >
         {so.soNumber}
       </Link>

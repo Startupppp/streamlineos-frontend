@@ -127,18 +127,18 @@ export function PageWrapper({
                       <h1 className={cn(titleClass, "w-fit shrink-0")}>{title}</h1>
                     ) : null}
                     {badge && (
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-primary/10 text-foreground text-[11px] font-medium tabular-nums border border-primary/20">
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-primary/10 text-foreground text-dense font-medium tabular-nums border border-primary/20">
                         {badge}
                       </span>
                     )}
                   </div>
                 )}
                 {subtitle && typeof subtitle === "string" ? (
-                  <p className="mt-1 text-[13px] text-muted-foreground leading-snug max-w-2xl">
+                  <p className="mt-1 text-label text-muted-foreground leading-snug max-w-2xl">
                     {subtitle}
                   </p>
                 ) : subtitle ? (
-                  <div className="mt-1 text-[13px] text-muted-foreground leading-snug max-w-2xl">
+                  <div className="mt-1 text-label text-muted-foreground leading-snug max-w-2xl">
                     {subtitle}
                   </div>
                 ) : null}

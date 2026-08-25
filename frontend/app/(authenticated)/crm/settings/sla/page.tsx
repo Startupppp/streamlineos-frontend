@@ -85,7 +85,7 @@ function buildBreachedColumns(): DataTableColumn<BreachedLead>[] {
       key: "lead",
       header: "Lead",
       cell: (row): ReactNode => (
-        <Link href={`/crm/leads/${row.id}`} className="text-[11px] font-medium hover:underline text-foreground">
+        <Link href={`/crm/leads/${row.id}`} className="text-dense font-medium hover:underline text-foreground">
           {row.name}
         </Link>
       ),
@@ -105,7 +105,7 @@ function buildBreachedColumns(): DataTableColumn<BreachedLead>[] {
       headerClassName: "text-right",
       className: "text-right",
       cell: (row): ReactNode => (
-        <span className="text-[11px] text-red-700 dark:text-red-400 font-mono tabular-nums">
+        <span className="text-dense text-red-700 dark:text-red-400 font-mono tabular-nums">
           {row.slaDeadline ? new Date(row.slaDeadline).toLocaleDateString() : "N/A"}
         </span>
       ),
@@ -139,7 +139,7 @@ function buildPolicyColumns(
       key: "name",
       header: "Name",
       cell: (row): ReactNode => (
-        <span className="text-[11px] font-medium">{row.name}</span>
+        <span className="text-dense font-medium">{row.name}</span>
       ),
     },
     {
@@ -169,7 +169,7 @@ function buildPolicyColumns(
       headerClassName: "text-right",
       className: "text-right",
       cell: (row): ReactNode => (
-        <span className="text-[11px] font-mono tabular-nums">{row.firstResponseHours}h</span>
+        <span className="text-dense font-mono tabular-nums">{row.firstResponseHours}h</span>
       ),
     },
     {
@@ -178,7 +178,7 @@ function buildPolicyColumns(
       headerClassName: "text-right",
       className: "text-right",
       cell: (row): ReactNode => (
-        <span className="text-[11px] font-mono tabular-nums">{row.resolutionHours}h</span>
+        <span className="text-dense font-mono tabular-nums">{row.resolutionHours}h</span>
       ),
     },
     {

@@ -247,7 +247,7 @@ export function ResignationFormSheet({ open, onOpenChange }: ResignationFormShee
           maxLength={2000}
           className="resize-none w-full"
         />
-        <p className="text-[11px] text-muted-foreground text-right">{reason.length} / 2000 (min 50)</p>
+        <p className="text-dense text-muted-foreground text-right">{reason.length} / 2000 (min 50)</p>
       </div>
 
       <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2.5">

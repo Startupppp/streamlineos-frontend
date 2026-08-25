@@ -117,63 +117,63 @@ const STOCK_SUMMARY_COLUMNS: DataTableColumn<StockSummaryRow>[] = [
     key: "productName",
     header: "Product",
     cell: (row) => (
-      <span className="font-medium text-[11px]">{row.productName}</span>
+      <span className="font-medium text-dense">{row.productName}</span>
     ),
   },
   {
     key: "sku",
     header: "SKU",
     cell: (row) => (
-      <span className="font-mono tabular-nums text-[11px]">{row.sku}</span>
+      <span className="font-mono tabular-nums text-dense">{row.sku}</span>
     ),
   },
   {
     key: "categoryName",
     header: "Category",
     cell: (row) => (
-      <span className="text-[11px]">{row.categoryName ?? "—"}</span>
+      <span className="text-dense">{row.categoryName ?? "—"}</span>
     ),
   },
   {
     key: "warehouseName",
     header: "Warehouse",
     cell: (row) => (
-      <span className="text-[11px]">{row.warehouseName ?? "—"}</span>
+      <span className="text-dense">{row.warehouseName ?? "—"}</span>
     ),
   },
   {
     key: "onHandQty",
     header: "On Hand",
     headerClassName: "text-right",
-    className: "text-right font-mono tabular-nums text-[11px]",
+    className: "text-right font-mono tabular-nums text-dense",
     cell: (row) => row.onHandQty,
   },
   {
     key: "reservedQty",
     header: "Reserved",
     headerClassName: "text-right",
-    className: "text-right font-mono tabular-nums text-[11px]",
+    className: "text-right font-mono tabular-nums text-dense",
     cell: (row) => row.reservedQty,
   },
   {
     key: "availableQty",
     header: "Available",
     headerClassName: "text-right",
-    className: "text-right font-mono tabular-nums text-[11px]",
+    className: "text-right font-mono tabular-nums text-dense",
     cell: (row) => row.availableQty,
   },
   {
     key: "reorderPoint",
     header: "Reorder Pt.",
     headerClassName: "text-right",
-    className: "text-right font-mono tabular-nums text-[11px]",
+    className: "text-right font-mono tabular-nums text-dense",
     cell: (row) => row.reorderPoint ?? "—",
   },
   {
     key: "totalValue",
     header: "Total Value",
     headerClassName: "text-right",
-    className: "text-right font-mono tabular-nums text-[11px]",
+    className: "text-right font-mono tabular-nums text-dense",
     cell: (row) => (row.totalValue > 0 ? row.totalValue.toFixed(2) : "—"),
   },
   {

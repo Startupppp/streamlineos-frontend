@@ -32,9 +32,9 @@ export function KbCategoryListItem({ category, onEdit, onDelete }: KbCategoryLis
           <div className="flex items-center gap-2">
             <TruncatedText text={category.name} className="font-medium text-sm" />
             {category.isPublished ? (
-              <Badge variant="default" className="text-[10px]">Published</Badge>
+              <Badge variant="default" className="text-micro">Published</Badge>
             ) : (
-              <Badge variant="secondary" className="text-[10px]">Hidden</Badge>
+              <Badge variant="secondary" className="text-micro">Hidden</Badge>
             )}
           </div>
           {category.description && (

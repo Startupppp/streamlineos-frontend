@@ -311,7 +311,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
             placeholder="0"
             className="h-6 w-12 border-0 bg-transparent px-1 py-0 text-xs font-mono tabular-nums shadow-none focus-visible:ring-0"
           />
-          <span className="shrink-0 text-[10px] text-muted-foreground">pts</span>
+          <span className="shrink-0 text-micro text-muted-foreground">pts</span>
         </div>
 
         <ResponsivePopover open={labelsOpen} onOpenChange={setLabelsOpen} modal>
@@ -393,7 +393,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
             <Badge
               key={label.id}
               variant="secondary"
-              className="h-5 gap-1 px-1.5 text-[10px] leading-none"
+              className="h-5 gap-1 px-1.5 text-micro leading-none"
               style={{ borderLeft: `2px solid ${label.color ?? "#3b82f6"}` }}
             >
               <span className="leading-none">{label.name}</span>

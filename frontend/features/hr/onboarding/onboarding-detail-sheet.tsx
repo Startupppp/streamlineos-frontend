@@ -263,7 +263,7 @@ export const EmployeeDocumentsTab = forwardRef<
                 Document checklist
               </p>
             </div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <span className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
               {approvedCount} / {checklist.length} approved
             </span>
           </div>
@@ -272,7 +272,7 @@ export const EmployeeDocumentsTab = forwardRef<
             className="h-1.5 [&>div]:bg-emerald-500 [&>div]:transition-all [&>div]:duration-500"
           />
           {progressPct === 100 ? (
-            <p className="mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-300">
+            <p className="mt-1.5 flex items-center gap-1 text-dense font-semibold text-emerald-600 dark:text-emerald-300">
               <CheckCircle2 className="h-3 w-3" />
               All documents approved
             </p>

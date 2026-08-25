@@ -51,7 +51,7 @@ export function ChatMobileBottomNav({
           icon={MenuIcon}
           iconSize={20}
           variant="ghost"
-          className="h-auto min-w-11 flex-col gap-0.5 py-1 text-[10px] text-muted-foreground"
+          className="h-auto min-w-11 flex-col gap-0.5 py-1 text-micro text-muted-foreground"
           onClick={onOpenMobileMenu}
           aria-label="Menu"
         >
@@ -61,7 +61,7 @@ export function ChatMobileBottomNav({
           icon={SearchIcon}
           iconSize={20}
           variant="ghost"
-          className="h-auto min-w-11 flex-col gap-0.5 py-1 text-[10px] text-muted-foreground"
+          className="h-auto min-w-11 flex-col gap-0.5 py-1 text-micro text-muted-foreground"
           onClick={handleSearch}
           aria-label="Search conversations"
         >
@@ -71,7 +71,7 @@ export function ChatMobileBottomNav({
           icon={CompassIcon}
           iconSize={20}
           variant="ghost"
-          className="h-auto min-w-11 flex-col gap-0.5 py-1 text-[10px] text-muted-foreground"
+          className="h-auto min-w-11 flex-col gap-0.5 py-1 text-micro text-muted-foreground"
           onClick={handleExplore}
           aria-label="Explore channels"
         >
@@ -83,7 +83,7 @@ export function ChatMobileBottomNav({
               icon={PlusIcon}
               iconSize={20}
               variant="ghost"
-              className="h-auto min-w-11 flex-col gap-0.5 py-1 text-[10px] text-muted-foreground"
+              className="h-auto min-w-11 flex-col gap-0.5 py-1 text-micro text-muted-foreground"
               aria-label="Create conversation"
             >
               Create

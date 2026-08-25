@@ -81,7 +81,7 @@ const COLUMNS: DataTableColumn<ComplianceReportUser>[] = [
     header: "Overdue",
     cell: (row) =>
       row.periodsOverdue > 0 ? (
-        <Badge className="border px-1.5 py-0 text-[10px] bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-300 border-red-200 dark:border-red-500/30">
+        <Badge className="border px-1.5 py-0 text-micro bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-300 border-red-200 dark:border-red-500/30">
           {row.periodsOverdue} overdue
         </Badge>
       ) : (
@@ -102,7 +102,7 @@ function renderComplianceMobileCard(row: ComplianceReportUser) {
       <div className="flex items-center justify-between gap-2">
         <p className="truncate text-sm font-medium text-foreground">{memberLabel(row.name, row.email)}</p>
         {row.periodsOverdue > 0 ? (
-          <Badge className="shrink-0 border px-1.5 py-0 text-[10px] bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-300 border-red-200 dark:border-red-500/30">
+          <Badge className="shrink-0 border px-1.5 py-0 text-micro bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-300 border-red-200 dark:border-red-500/30">
             {row.periodsOverdue} overdue
           </Badge>
         ) : null}

@@ -73,7 +73,7 @@ export function SpaceCard({
         </div>
         <Badge
           variant="outline"
-          className={`text-[10px] h-4 px-1.5 shrink-0 ${AUDIENCE_BADGE_CLASS[audience]}`}
+          className={`text-micro h-4 px-1.5 shrink-0 ${AUDIENCE_BADGE_CLASS[audience]}`}
         >
           {AUDIENCE_LABELS[audience]}
         </Badge>

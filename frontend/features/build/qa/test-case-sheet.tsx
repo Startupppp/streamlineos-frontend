@@ -188,11 +188,11 @@ export function TestCaseSheet({
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[11px]">Title <span className="text-destructive">*</span></FormLabel>
+                      <FormLabel className="text-dense">Title <span className="text-destructive">*</span></FormLabel>
                       <FormControl>
-                        <Input {...field} className="text-[11px]" placeholder="Test case title" />
+                        <Input {...field} className="text-dense" placeholder="Test case title" />
                       </FormControl>
-                      <FormMessage className="text-[10px]" />
+                      <FormMessage className="text-micro" />
                     </FormItem>
                   )}
                 />
@@ -203,7 +203,7 @@ export function TestCaseSheet({
                     name="suiteId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[11px]">Suite</FormLabel>
+                        <FormLabel className="text-dense">Suite</FormLabel>
                         <Select value={field.value} onValueChange={field.onChange}>
                           <FormControl>
                             <SelectTrigger><SelectValue /></SelectTrigger>
@@ -215,7 +215,7 @@ export function TestCaseSheet({
                             ))}
                           </SelectContent>
                         </Select>
-                        <FormMessage className="text-[10px]" />
+                        <FormMessage className="text-micro" />
                       </FormItem>
                     )}
                   />
@@ -224,7 +224,7 @@ export function TestCaseSheet({
                     name="priority"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[11px]">Priority</FormLabel>
+                        <FormLabel className="text-dense">Priority</FormLabel>
                         <Select value={field.value} onValueChange={field.onChange}>
                           <FormControl>
                             <SelectTrigger><SelectValue /></SelectTrigger>
@@ -235,7 +235,7 @@ export function TestCaseSheet({
                             <SelectItem value="high">High</SelectItem>
                           </SelectContent>
                         </Select>
-                        <FormMessage className="text-[10px]" />
+                        <FormMessage className="text-micro" />
                       </FormItem>
                     )}
                   />
@@ -247,7 +247,7 @@ export function TestCaseSheet({
                     name="automationStatus"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[11px]">Automation</FormLabel>
+                        <FormLabel className="text-dense">Automation</FormLabel>
                         <Select value={field.value} onValueChange={field.onChange}>
                           <FormControl>
                             <SelectTrigger><SelectValue /></SelectTrigger>
@@ -258,7 +258,7 @@ export function TestCaseSheet({
                             <SelectItem value="planned">Planned</SelectItem>
                           </SelectContent>
                         </Select>
-                        <FormMessage className="text-[10px]" />
+                        <FormMessage className="text-micro" />
                       </FormItem>
                     )}
                   />
@@ -267,11 +267,11 @@ export function TestCaseSheet({
                     name="component"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[11px]">Component</FormLabel>
+                        <FormLabel className="text-dense">Component</FormLabel>
                         <FormControl>
-                          <Input {...field} className="text-[11px]" placeholder="e.g. Auth" />
+                          <Input {...field} className="text-dense" placeholder="e.g. Auth" />
                         </FormControl>
-                        <FormMessage className="text-[10px]" />
+                        <FormMessage className="text-micro" />
                       </FormItem>
                     )}
                   />
@@ -282,27 +282,27 @@ export function TestCaseSheet({
                   name="preconditions"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[11px]">Preconditions</FormLabel>
+                      <FormLabel className="text-dense">Preconditions</FormLabel>
                       <FormControl>
                         <Textarea
                           {...field}
-                          className="text-[11px] min-h-[60px] resize-none"
+                          className="text-dense min-h-[60px] resize-none"
                           placeholder="Steps to set up before testing..."
                         />
                       </FormControl>
-                      <FormMessage className="text-[10px]" />
+                      <FormMessage className="text-micro" />
                     </FormItem>
                   )}
                 />
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <FormLabel className="text-[11px]">Steps</FormLabel>
+                    <FormLabel className="text-dense">Steps</FormLabel>
                     <AnimatedIconButton
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-6 text-[10px]"
+                      className="h-6 text-micro"
                       onClick={addStep}
                       icon={PlusIcon}
                       iconSize={12}
@@ -312,18 +312,18 @@ export function TestCaseSheet({
                     </AnimatedIconButton>
                   </div>
                   {fields.length === 0 && (
-                    <p className="text-[10px] text-muted-foreground">No steps yet.</p>
+                    <p className="text-micro text-muted-foreground">No steps yet.</p>
                   )}
                   {fields.map((fieldItem, idx) => (
                     <div key={fieldItem.id} className="grid grid-cols-[1fr_1fr_auto] gap-1.5 items-start">
                       <Input
                         {...form.register(`steps.${idx}.action`)}
-                        className="text-[10px]"
+                        className="text-micro"
                         placeholder={`Step ${idx + 1} action`}
                       />
                       <Input
                         {...form.register(`steps.${idx}.expected`)}
-                        className="text-[10px]"
+                        className="text-micro"
                         placeholder="Expected result"
                       />
                       <AnimatedIconButton
@@ -344,15 +344,15 @@ export function TestCaseSheet({
                   name="expectedResult"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[11px]">Expected Result</FormLabel>
+                      <FormLabel className="text-dense">Expected Result</FormLabel>
                       <FormControl>
                         <Textarea
                           {...field}
-                          className="text-[11px] min-h-[60px] resize-none"
+                          className="text-dense min-h-[60px] resize-none"
                           placeholder="Overall expected outcome..."
                         />
                       </FormControl>
-                      <FormMessage className="text-[10px]" />
+                      <FormMessage className="text-micro" />
                     </FormItem>
                   )}
                 />
@@ -362,7 +362,7 @@ export function TestCaseSheet({
                   name="linkedTicketId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[11px]">Linked Ticket</FormLabel>
+                      <FormLabel className="text-dense">Linked Ticket</FormLabel>
                       <FormControl>
                         <TicketCombobox
                           projectId={projectId}
@@ -371,10 +371,10 @@ export function TestCaseSheet({
                           onChange={field.onChange}
                           placeholder="Link a ticket…"
                           allowClear
-                          className="text-[11px]"
+                          className="text-dense"
                         />
                       </FormControl>
-                      <FormMessage className="text-[10px]" />
+                      <FormMessage className="text-micro" />
                     </FormItem>
                   )}
                 />
@@ -384,12 +384,12 @@ export function TestCaseSheet({
             <SheetFooter className="px-5 py-3 border-t shrink-0">
               <div className="grid w-full grid-cols-2 gap-2">
                 <SheetClose asChild>
-                  <Button variant="outline" size="sm" className="text-[11px]">Cancel</Button>
+                  <Button variant="outline" size="sm" className="text-dense">Cancel</Button>
                 </SheetClose>
                 <LoadingButton
                   type="submit"
                   size="sm"
-                  className="text-[11px]"
+                  className="text-dense"
                   isPending={isPending}
                   loadingText="Saving…"
                 >

@@ -43,7 +43,7 @@ const BILLING_COLUMNS: DataTableColumn<BillingGroup>[] = [
   {
     key: "project",
     header: "Project",
-    cell: (row) => <TruncatedText text={row.projectName} className="font-medium text-[11px]" />,
+    cell: (row) => <TruncatedText text={row.projectName} className="font-medium text-dense" />,
     className: "min-w-[160px]",
   },
   {
@@ -97,11 +97,11 @@ const BILLING_COLUMNS: DataTableColumn<BillingGroup>[] = [
     header: "Status",
     cell: (row) =>
       row.missingRate ? (
-        <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700 text-[10px] dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
+        <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700 text-micro dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
           Missing rate
         </Badge>
       ) : (
-        <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 text-[10px] dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
+        <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 text-micro dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
           Ready
         </Badge>
       ),

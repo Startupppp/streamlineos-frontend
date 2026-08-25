@@ -72,7 +72,7 @@ const grnLineColumns: DataTableColumn<GrnLine>[] = [
           {GRN_QUALITY_LABEL[line.qualityStatus]}
         </Badge>
         {line.rejectionReason && (
-          <TruncatedText text={line.rejectionReason} lines={2} className="text-[10px] text-muted-foreground mt-0.5" />
+          <TruncatedText text={line.rejectionReason} lines={2} className="text-micro text-muted-foreground mt-0.5" />
         )}
       </>
     ),
@@ -85,10 +85,10 @@ const grnLineColumns: DataTableColumn<GrnLine>[] = [
       if (line.lotNumber) {
         return (
           <div>
-            <span className="text-muted-foreground text-[10px]">LOT:</span>{" "}
+            <span className="text-muted-foreground text-micro">LOT:</span>{" "}
             {line.lotNumber}
             {line.expiryDate && (
-              <div className="text-[10px] text-muted-foreground">
+              <div className="text-micro text-muted-foreground">
                 Exp: {formatDate(line.expiryDate)}
               </div>
             )}
@@ -98,7 +98,7 @@ const grnLineColumns: DataTableColumn<GrnLine>[] = [
       if (line.serialNumbers && line.serialNumbers.length > 0) {
         return (
           <div>
-            <span className="text-muted-foreground text-[10px]">S/N:</span>{" "}
+            <span className="text-muted-foreground text-micro">S/N:</span>{" "}
             {line.serialNumbers.slice(0, 3).join(", ")}
             {line.serialNumbers.length > 3 && (
               <span className="text-muted-foreground">

@@ -147,7 +147,7 @@ export function StepReview({ draft, goNext, goBack }: StepReviewProps) {
             <ol className="space-y-1.5">
               {approvalChain.map((stage) => (
                 <li key={stage.stage} className="flex items-center gap-2 text-sm">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-micro font-bold">
                     {stage.stage}
                   </span>
                   <span className="text-foreground">{stage.stageName}</span>

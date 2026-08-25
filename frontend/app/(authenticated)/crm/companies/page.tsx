@@ -145,7 +145,7 @@ export default function CompaniesPage() {
       sortValue: (o) => o.name,
       cell: (o) => (
         <div className="flex items-center gap-2">
-          <div className="h-6 w-6 rounded-md bg-primary/10 flex items-center justify-center text-[10px] font-semibold text-primary shrink-0">
+          <div className="h-6 w-6 rounded-md bg-primary/10 flex items-center justify-center text-micro font-semibold text-primary shrink-0">
             {o.name[0]?.toUpperCase() ?? "?"}
           </div>
           <Link

@@ -79,10 +79,10 @@ export default function ContactPage() {
                     <p className="font-display text-[15px] font-bold text-slate-900 mb-0.5">
                       {c.label}
                     </p>
-                    <p className="text-[13px] text-slate-600 leading-relaxed mb-1.5">
+                    <p className="text-label text-slate-600 leading-relaxed mb-1.5">
                       {c.description}
                     </p>
-                    <p className="text-[12px] font-mono text-blue-600 break-all">{c.value}</p>
+                    <p className="text-xs font-mono text-blue-600 break-all">{c.value}</p>
                   </div>
                 </div>
               </Link>

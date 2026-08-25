@@ -92,7 +92,7 @@ export function PolicyConflictBanner({ policyId, className }: Props) {
       </div>
       <ConflictList conflicts={data.conflicts} />
       {!data.canActivate && (
-        <p className="mt-2 text-[11px] text-muted-foreground">
+        <p className="mt-2 text-dense text-muted-foreground">
           Equal-priority overlaps are blocked. Raise priority, narrow scopes, or force-activate only
           if intentional.
         </p>

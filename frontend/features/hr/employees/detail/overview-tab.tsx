@@ -31,7 +31,7 @@ export function OverviewTab({ employeeId, skillsList, projects, tickets }: Overv
               {skillsList.map((skill) => (
                 <span
                   key={skill}
-                  className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30"
+                  className="inline-flex items-center text-micro font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30"
                 >
                   {skill}
                 </span>

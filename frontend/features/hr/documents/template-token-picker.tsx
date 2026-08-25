@@ -48,7 +48,7 @@ function TokenButton({ token, colorClasses, onInsert }: TokenButtonProps) {
       type="button"
       onClick={handleClick}
       className={cn(
-        "inline-flex items-center px-2 py-1 rounded-full text-[11px] font-mono border transition-colors duration-200 cursor-pointer",
+        "inline-flex items-center px-2 py-1 rounded-full text-dense font-mono border transition-colors duration-200 cursor-pointer",
         colorClasses,
       )}
       title={`Insert {{${token}}}`}
@@ -91,7 +91,7 @@ export function TemplateTokenPicker({
           </div>
           <div>
             <CardTitle className="text-sm font-semibold text-foreground">Variable Tokens</CardTitle>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
+            <p className="text-dense text-muted-foreground mt-0.5">
               Click a token to insert it at your cursor position.
             </p>
           </div>
@@ -111,7 +111,7 @@ export function TemplateTokenPicker({
               />
             ))
           ) : (
-            <p className="text-[11px] text-muted-foreground py-1">No tokens match your search.</p>
+            <p className="text-dense text-muted-foreground py-1">No tokens match your search.</p>
           )}
         </div>
 
@@ -119,14 +119,14 @@ export function TemplateTokenPicker({
           <>
             <Separator />
             <div>
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
+              <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
                 Detected in content
               </p>
               <div className="flex flex-wrap gap-1">
                 {detectedVariables.map((v) => (
                   <span
                     key={v}
-                    className="inline-flex items-center gap-1 text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/30"
+                    className="inline-flex items-center gap-1 text-micro font-mono font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/30"
                   >
                     {`{{${v}}}`}
                   </span>

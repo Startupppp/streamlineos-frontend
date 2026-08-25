@@ -65,10 +65,10 @@ function WalkthroughRow({
         }`}
       >
         <div className="flex items-center gap-3 mb-4">
-          <span className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-blue-600 text-white text-[11px] font-bold font-mono shrink-0">
+          <span className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-blue-600 text-white text-dense font-bold font-mono shrink-0">
             {String(index + 1).padStart(2, "0")}
           </span>
-          <span className="text-[12px] font-medium text-blue-600">
+          <span className="text-xs font-medium text-blue-600">
             {step.eyebrow}
           </span>
         </div>
@@ -84,7 +84,7 @@ function WalkthroughRow({
               <span className="mt-0.5 h-5 w-5 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 inline-flex items-center justify-center shrink-0 shadow-[0_4px_12px_-4px_rgba(59,130,246,0.5)]">
                 <Check className="h-3 w-3 text-white" strokeWidth={3} />
               </span>
-              <span className="text-[13px] sm:text-[14px] text-slate-700 min-w-0">
+              <span className="text-label sm:text-sm text-slate-700 min-w-0">
                 {b}
               </span>
             </li>
@@ -140,7 +140,7 @@ function HireVisual() {
   ];
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between text-[11px] font-medium text-slate-500">
+      <div className="flex items-center justify-between text-dense font-medium text-slate-500">
         <span>Candidates · AI scored</span>
         <span className="text-blue-600">3 new</span>
       </div>
@@ -155,7 +155,7 @@ function HireVisual() {
         >
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <span
-              className="h-8 w-8 sm:h-9 sm:w-9 rounded-full inline-flex items-center justify-center text-[11px] font-bold text-white shrink-0"
+              className="h-8 w-8 sm:h-9 sm:w-9 rounded-full inline-flex items-center justify-center text-dense font-bold text-white shrink-0"
               style={{
                 background: "linear-gradient(135deg, #3b82f6, #06b6d4)",
               }}
@@ -166,15 +166,15 @@ function HireVisual() {
                 .join("")}
             </span>
             <div className="min-w-0">
-              <p className="text-[11px] sm:text-[12px] font-semibold text-slate-900 truncate">
+              <p className="text-dense sm:text-xs font-semibold text-slate-900 truncate">
                 {c.name}
               </p>
-              <p className="text-[9px] sm:text-[10px] text-slate-500 font-mono truncate">
+              <p className="text-[9px] sm:text-micro text-slate-500 font-mono truncate">
                 {c.role}
               </p>
             </div>
           </div>
-          <span className="text-[10px] sm:text-[11px] font-mono text-emerald-700 px-1.5 sm:px-2 py-1 rounded-md bg-emerald-50 border border-emerald-200 shrink-0">
+          <span className="text-micro sm:text-dense font-mono text-emerald-700 px-1.5 sm:px-2 py-1 rounded-md bg-emerald-50 border border-emerald-200 shrink-0">
             {c.score}
           </span>
         </motion.div>
@@ -193,7 +193,7 @@ function OnboardVisual() {
   ];
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between text-[11px] font-medium text-slate-500">
+      <div className="flex items-center justify-between text-dense font-medium text-slate-500">
         <span>Onboarding · Aarav Singh</span>
         <span className="text-blue-600">60%</span>
       </div>
@@ -214,7 +214,7 @@ function OnboardVisual() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.4, delay: 0.4 + i * 0.08 }}
-            className={`flex items-center gap-3 text-[12px] ${
+            className={`flex items-center gap-3 text-xs ${
               s.done
                 ? "text-slate-600"
                 : s.current
@@ -267,7 +267,7 @@ function DeliverVisual() {
               : "bg-slate-50/70 border-slate-200"
           }`}
         >
-          <div className="flex items-center justify-between gap-1 text-[9px] sm:text-[11px] font-medium text-slate-500 mb-1 min-w-0">
+          <div className="flex items-center justify-between gap-1 text-[9px] sm:text-dense font-medium text-slate-500 mb-1 min-w-0">
             <span className="truncate">{col.title}</span>
             <span className="shrink-0">{col.count}</span>
           </div>
@@ -278,7 +278,7 @@ function DeliverVisual() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.35, delay: ci * 0.1 + ti * 0.06 }}
-              className="rounded-md bg-white border border-slate-200 p-1.5 sm:p-2 text-[9px] sm:text-[10px] text-slate-700 leading-tight shadow-sm truncate"
+              className="rounded-md bg-white border border-slate-200 p-1.5 sm:p-2 text-[9px] sm:text-micro text-slate-700 leading-tight shadow-sm truncate"
             >
               {it}
             </motion.div>
@@ -299,14 +299,14 @@ function CloseVisual() {
   const maxBar = Math.max(...bars.map((b) => b.value));
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between text-[11px] font-medium text-slate-500">
+      <div className="flex items-center justify-between text-dense font-medium text-slate-500">
         <span>Forecast · Q3</span>
         <span className="text-emerald-700">$1.42M ARR</span>
       </div>
       <div className="space-y-2.5 pt-2">
         {bars.map((b, i) => (
           <div key={b.label}>
-            <div className="flex items-center justify-between text-[11px] mb-1">
+            <div className="flex items-center justify-between text-dense mb-1">
               <span className="text-slate-700">{b.label}</span>
               <span className="text-slate-500 font-mono">${b.value}k</span>
             </div>
@@ -322,7 +322,7 @@ function CloseVisual() {
           </div>
         ))}
       </div>
-      <div className="pt-2 border-t border-slate-200 text-[10px] font-mono text-slate-500 flex items-center justify-between">
+      <div className="pt-2 border-t border-slate-200 text-micro font-mono text-slate-500 flex items-center justify-between">
         <span>AI confidence</span>
         <span className="text-blue-600">87%</span>
       </div>

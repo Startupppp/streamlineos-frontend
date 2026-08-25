@@ -151,16 +151,16 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
       <div className="flex flex-1 min-h-0 flex-col gap-4">
         <div className="flex flex-wrap gap-4 rounded-lg border border-border bg-card px-4 py-3">
           <div>
-            <p className="text-[11px] text-muted-foreground mb-0.5">Total</p>
+            <p className="text-dense text-muted-foreground mb-0.5">Total</p>
             <Money value={parseFloat(batch.totalAmount)} className="text-lg font-semibold" />
           </div>
           <div>
-            <p className="text-[11px] text-muted-foreground mb-0.5">Items</p>
+            <p className="text-dense text-muted-foreground mb-0.5">Items</p>
             <p className="text-lg font-semibold">{items.length}</p>
           </div>
           {batch.approvedAt && (
             <div>
-              <p className="text-[11px] text-muted-foreground mb-0.5">Approved by</p>
+              <p className="text-dense text-muted-foreground mb-0.5">Approved by</p>
               <p className="text-sm">
                 {getUserDisplayName(batch.approver)} · {formatDate(batch.approvedAt)}
               </p>
@@ -168,7 +168,7 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
           )}
           {batch.paidDate && (
             <div>
-              <p className="text-[11px] text-muted-foreground mb-0.5">Paid date</p>
+              <p className="text-dense text-muted-foreground mb-0.5">Paid date</p>
               <p className="text-sm">{formatDate(batch.paidDate)}</p>
             </div>
           )}

@@ -25,7 +25,7 @@ interface FormProps {
 
 function AiBadge() {
   return (
-    <Badge variant="secondary" className="gap-1 text-[11px] text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-500/10">
+    <Badge variant="secondary" className="gap-1 text-dense text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-500/10">
       <Sparkles className="h-3 w-3" /> AI
     </Badge>
   );

@@ -17,7 +17,7 @@ const columns: DataTableColumn<WarehouseStockRow>[] = [
     key: "location",
     header: "Location",
     cell: (row) => (
-      <span className="text-[11px]">
+      <span className="text-dense">
         {row.locationName}
         <span className="font-mono text-muted-foreground ml-1">{row.locationCode}</span>
       </span>
@@ -29,7 +29,7 @@ const columns: DataTableColumn<WarehouseStockRow>[] = [
     cell: (row) => (
       <Link
         href={`/inventory/products/${row.productId}`}
-        className="text-[11px] hover:underline text-foreground"
+        className="text-dense hover:underline text-foreground"
       >
         {row.productName}
       </Link>
@@ -39,7 +39,7 @@ const columns: DataTableColumn<WarehouseStockRow>[] = [
     key: "sku",
     header: "SKU",
     cell: (row) => (
-      <span className="text-[11px] font-mono text-muted-foreground">{row.variantSku}</span>
+      <span className="text-dense font-mono text-muted-foreground">{row.variantSku}</span>
     ),
   },
   {
@@ -48,7 +48,7 @@ const columns: DataTableColumn<WarehouseStockRow>[] = [
     headerClassName: "text-right",
     className: "text-right",
     cell: (row) => (
-      <span className="text-[11px] font-mono tabular-nums">{row.onHand}</span>
+      <span className="text-dense font-mono tabular-nums">{row.onHand}</span>
     ),
   },
   {
@@ -57,7 +57,7 @@ const columns: DataTableColumn<WarehouseStockRow>[] = [
     headerClassName: "text-right",
     className: "text-right",
     cell: (row) => (
-      <span className="text-[11px] font-mono tabular-nums text-muted-foreground">
+      <span className="text-dense font-mono tabular-nums text-muted-foreground">
         {row.committed}
       </span>
     ),
@@ -68,7 +68,7 @@ const columns: DataTableColumn<WarehouseStockRow>[] = [
     headerClassName: "text-right",
     className: "text-right",
     cell: (row) => (
-      <span className="text-[11px] font-mono tabular-nums text-muted-foreground">
+      <span className="text-dense font-mono tabular-nums text-muted-foreground">
         {row.onOrder}
       </span>
     ),

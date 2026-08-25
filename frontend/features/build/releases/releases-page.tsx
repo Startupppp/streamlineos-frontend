@@ -68,7 +68,7 @@ function NewReleaseButton({ onClick }: { onClick: () => void }) {
   return (
     <Button
       size="sm"
-      className="gap-1 text-[11px]"
+      className="gap-1 text-dense"
       onClick={onClick}
       {...hoverHandlers}
     >
@@ -175,7 +175,7 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
         cell: (r) => (
           <div className={cn(TEXT_FLEX_CHILD, "space-y-0.5 overflow-hidden")}>
             <TruncatedText text={r.name} className="text-xs font-medium text-foreground" />
-            <TruncatedText text={r.version} className="font-mono text-[10px] text-muted-foreground" />
+            <TruncatedText text={r.version} className="font-mono text-micro text-muted-foreground" />
           </div>
         ),
       },
@@ -189,7 +189,7 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
           return (
             <Badge
               variant="outline"
-              className={cn("h-5 py-0 text-[10px]", cfg.className)}
+              className={cn("h-5 py-0 text-micro", cfg.className)}
             >
               {cfg.label}
             </Badge>

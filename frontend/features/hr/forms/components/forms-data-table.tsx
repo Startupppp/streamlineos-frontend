@@ -74,7 +74,7 @@ export function FormsDataTable({ forms }: FormsDataTableProps) {
       key: "status",
       header: "Status",
       cell: (row) => (
-        <Badge variant="outline" className={"text-[11px] " + (STATUS_COLORS[row.status] ?? "")}>
+        <Badge variant="outline" className={"text-dense " + (STATUS_COLORS[row.status] ?? "")}>
           {row.status}
         </Badge>
       ),
@@ -83,7 +83,7 @@ export function FormsDataTable({ forms }: FormsDataTableProps) {
       key: "audience",
       header: "Audience",
       cell: (row) => (
-        <Badge variant="outline" className="text-[11px]">
+        <Badge variant="outline" className="text-dense">
           {row.audience}
         </Badge>
       ),
@@ -100,7 +100,7 @@ export function FormsDataTable({ forms }: FormsDataTableProps) {
       header: "Workflow",
       cell: (row) =>
         row.workflowObjectType ? (
-          <Badge variant="secondary" className="text-[11px]">
+          <Badge variant="secondary" className="text-dense">
             {row.workflowObjectType.replace(/_/g, " ")}
           </Badge>
         ) : (

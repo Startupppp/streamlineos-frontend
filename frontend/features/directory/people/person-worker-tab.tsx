@@ -78,7 +78,7 @@ function WorkerSummary({ worker }: { worker: Worker }) {
         <span className="text-muted-foreground">#{worker.workerNumber}</span>
       ) : null}
       {worker.isPayee ? (
-        <Badge variant="outline" className="text-[10px]">
+        <Badge variant="outline" className="text-micro">
           Payee
         </Badge>
       ) : null}

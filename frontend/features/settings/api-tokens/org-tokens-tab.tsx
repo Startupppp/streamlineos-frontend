@@ -99,7 +99,7 @@ export function OrgTokensTab({ showCreate, onShowCreateChange }: OrgTokensTabPro
         <div className="flex flex-col">
           <span className="font-medium">{t.name}</span>
           {t.description && (
-            <TruncatedText text={t.description} className="text-[10px] text-muted-foreground max-w-[180px]" />
+            <TruncatedText text={t.description} className="text-micro text-muted-foreground max-w-[180px]" />
           )}
         </div>
       ),
@@ -108,7 +108,7 @@ export function OrgTokensTab({ showCreate, onShowCreateChange }: OrgTokensTabPro
       key: "prefix",
       header: "Prefix",
       cell: (t) => (
-        <code className="text-[11px] bg-muted px-1.5 py-0.5 rounded">
+        <code className="text-dense bg-muted px-1.5 py-0.5 rounded">
           {t.keyPrefix}…
         </code>
       ),
@@ -117,7 +117,7 @@ export function OrgTokensTab({ showCreate, onShowCreateChange }: OrgTokensTabPro
       key: "scopes",
       header: "Capability",
       cell: (t) => (
-        <Badge variant="outline" className="h-5 px-2 text-[10px]">
+        <Badge variant="outline" className="h-5 px-2 text-micro">
           {t.scopes.includes("leads:write") ? "Lead ingestion" : "Legacy CRM access"}
         </Badge>
       ),

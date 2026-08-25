@@ -57,13 +57,13 @@ const TaskItem = memo(function TaskItem({ task, idx, projectId, isChecked, onTog
         htmlFor={`stl-task-${projectId}-${idx}`}
         className="flex-1 min-w-0 cursor-pointer"
       >
-        <span className="text-[13px] text-foreground block truncate">{task.title}</span>
+        <span className="text-label text-foreground block truncate">{task.title}</span>
         {task.badge && (
-          <span className="text-[11px] text-muted-foreground">{task.badge}</span>
+          <span className="text-dense text-muted-foreground">{task.badge}</span>
         )}
       </label>
       <span
-        className={`shrink-0 inline-flex items-center px-1.5 py-0.5 rounded border text-[10px] font-semibold uppercase tracking-wide ${severityClasses(task.priority)}`}
+        className={`shrink-0 inline-flex items-center px-1.5 py-0.5 rounded border text-micro font-semibold uppercase tracking-wide ${severityClasses(task.priority)}`}
       >
         {task.priority}
       </span>
@@ -150,11 +150,11 @@ export function SuggestedTaskList({ items, projectId }: SuggestedTaskListProps) 
         <button
           type="button"
           onClick={handleSelectAll}
-          className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+          className="text-dense text-muted-foreground hover:text-foreground transition-colors"
         >
           {selected.size === items.length ? "Deselect all" : "Select all"}
         </button>
-        <p className="text-[11px] text-muted-foreground italic">
+        <p className="text-dense text-muted-foreground italic">
           Suggestions only — nothing is created until you click Create
         </p>
       </div>
@@ -164,7 +164,7 @@ export function SuggestedTaskList({ items, projectId }: SuggestedTaskListProps) 
           <div key={label || "__flat__"}>
             {label && (
               <div className="px-3 py-1.5 bg-muted/40">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/80">
+                <p className="text-dense font-semibold uppercase tracking-wider text-muted-foreground/80">
                   {label}
                 </p>
               </div>

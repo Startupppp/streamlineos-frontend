@@ -201,13 +201,13 @@ export function RequisitionCard({
         </div>
 
         <div className="flex flex-wrap gap-1.5 mb-4">
-          <span className={cn("inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border", statusStyle.badge)}>
+          <span className={cn("inline-flex items-center text-micro font-semibold px-2 py-0.5 rounded-full border", statusStyle.badge)}>
             {statusStyle.label}
           </span>
-          <span className={cn("inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border", priorityStyle)}>
+          <span className={cn("inline-flex items-center text-micro font-semibold px-2 py-0.5 rounded-full border", priorityStyle)}>
             {req.priority}
           </span>
-          <span className="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+          <span className="inline-flex items-center text-micro font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
             {TYPE_LABELS[req.type] ?? req.type}
           </span>
         </div>

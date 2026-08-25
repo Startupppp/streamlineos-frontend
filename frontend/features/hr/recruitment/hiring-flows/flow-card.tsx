@@ -48,7 +48,7 @@ export function FlowCard({ flow, onEdit, onAddRound, onEditRound, onDelete }: Fl
               <TruncatedText text={flow.name} />
             </CardTitle>
             {flow.isDefault && (
-              <Badge variant="secondary" className="text-[10px] shrink-0">
+              <Badge variant="secondary" className="text-micro shrink-0">
                 Default
               </Badge>
             )}

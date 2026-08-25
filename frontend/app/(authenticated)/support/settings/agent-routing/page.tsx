@@ -38,7 +38,7 @@ function AgentSkillsRow({ userId, label, skills, isAvailable, onEdit }: AgentSki
         <div className="flex flex-wrap gap-1.5 mt-1.5">
           {skills.length > 0 ? (
             skills.map((skill) => (
-              <Badge key={skill} variant="secondary" className="text-[10px]">
+              <Badge key={skill} variant="secondary" className="text-micro">
                 {skill}
               </Badge>
             ))

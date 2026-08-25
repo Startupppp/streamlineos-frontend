@@ -52,7 +52,7 @@ function buildColumns(): DataTableColumn<SlowMovingRow>[] {
     {
       key: "variantSku",
       header: "SKU",
-      cell: (row) => <span className="font-mono tabular-nums text-[11px]">{row.variantSku}</span>,
+      cell: (row) => <span className="font-mono tabular-nums text-dense">{row.variantSku}</span>,
     },
     {
       key: "onHand",
@@ -78,7 +78,7 @@ function buildColumns(): DataTableColumn<SlowMovingRow>[] {
       key: "lastMovement",
       header: "Last Movement",
       cell: (row) => (
-        <span className="text-muted-foreground text-[11px]">
+        <span className="text-muted-foreground text-dense">
           {formatDate(row.lastMovement)}
         </span>
       ),

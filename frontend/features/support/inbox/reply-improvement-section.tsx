@@ -66,12 +66,12 @@ export function ReplyImprovementSection({
 
       {result && (
         <div className="rounded-md border border-border/60 bg-muted/30 p-2 space-y-1.5">
-          <p className="text-[11px] font-medium text-muted-foreground">Improved version</p>
-          <p className="text-[12px] text-foreground/90 whitespace-pre-wrap line-clamp-6">
+          <p className="text-dense font-medium text-muted-foreground">Improved version</p>
+          <p className="text-xs text-foreground/90 whitespace-pre-wrap line-clamp-6">
             {result.improved}
           </p>
           {result.changes.length > 0 && (
-            <ul className="list-disc list-inside text-[10px] text-muted-foreground space-y-0.5">
+            <ul className="list-disc list-inside text-micro text-muted-foreground space-y-0.5">
               {result.changes.map((change, i) => (
                 <li key={i}>{change}</li>
               ))}

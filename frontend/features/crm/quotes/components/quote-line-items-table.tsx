@@ -13,7 +13,7 @@ function buildColumns(currency: string): DataTableColumn<QuoteLineItem>[] {
     {
       key: "description",
       header: "Description",
-      cell: (row) => <TruncatedText text={row.description} lines={2} className="text-[11px] max-w-[200px]" />,
+      cell: (row) => <TruncatedText text={row.description} lines={2} className="text-dense max-w-[200px]" />,
     },
     {
       key: "quantity",
@@ -21,7 +21,7 @@ function buildColumns(currency: string): DataTableColumn<QuoteLineItem>[] {
       headerClassName: "text-right w-16",
       className: "text-right",
       cell: (row) => (
-        <span className="text-[11px] tabular-nums">{parseFloat(row.quantity)}</span>
+        <span className="text-dense tabular-nums">{parseFloat(row.quantity)}</span>
       ),
     },
     {
@@ -30,7 +30,7 @@ function buildColumns(currency: string): DataTableColumn<QuoteLineItem>[] {
       headerClassName: "text-right w-28",
       className: "text-right",
       cell: (row) => (
-        <span className="text-[11px] tabular-nums">
+        <span className="text-dense tabular-nums">
           {formatCurrency(row.unitPrice, currency)}
         </span>
       ),
@@ -41,7 +41,7 @@ function buildColumns(currency: string): DataTableColumn<QuoteLineItem>[] {
       headerClassName: "text-right w-16",
       className: "text-right",
       cell: (row) => (
-        <span className="text-[11px] tabular-nums text-muted-foreground">
+        <span className="text-dense tabular-nums text-muted-foreground">
           {parseFloat(row.taxRate)}%
         </span>
       ),
@@ -52,7 +52,7 @@ function buildColumns(currency: string): DataTableColumn<QuoteLineItem>[] {
       headerClassName: "text-right w-28",
       className: "text-right",
       cell: (row) => (
-        <span className="text-[11px] tabular-nums font-medium">
+        <span className="text-dense tabular-nums font-medium">
           {formatCurrency(row.amount, currency)}
         </span>
       ),

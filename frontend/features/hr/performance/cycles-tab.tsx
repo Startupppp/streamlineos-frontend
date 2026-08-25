@@ -263,23 +263,23 @@ export function CyclesTab() {
                     <div className="min-w-0 flex-1 space-y-2.5">
                       <div className="flex items-center gap-2 flex-wrap">
                         <TruncatedText text={cycle.name ?? ""} className="text-sm font-semibold text-foreground" />
-                        <Badge className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${badgeClass}`}>
+                        <Badge className={`inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border ${badgeClass}`}>
                           {cycle.status ?? "DRAFT"}
                         </Badge>
                         {cycle.type && (
-                          <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border border-border bg-muted text-muted-foreground">
+                          <span className="inline-flex items-center text-micro font-semibold px-2 py-0.5 rounded-full border border-border bg-muted text-muted-foreground">
                             {cycle.type.replace("_", " ")}
                           </span>
                         )}
                       </div>
-                      <p className="text-[11px] text-muted-foreground">
+                      <p className="text-dense text-muted-foreground">
                         {cycle.periodStart} → {cycle.periodEnd}
                         {cycle.deadline && <> &middot; Deadline: {cycle.deadline}</>}
                       </p>
                       <div className="space-y-1">
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Completion</span>
-                          <span className="text-[10px] font-semibold text-foreground">{progress}%</span>
+                          <span className="text-micro font-semibold text-muted-foreground uppercase tracking-wider">Completion</span>
+                          <span className="text-micro font-semibold text-foreground">{progress}%</span>
                         </div>
                         <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                           <div
@@ -342,7 +342,7 @@ export function CyclesTab() {
                     </SelectContent>
                   </Select>
                 </FormControl>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-dense text-muted-foreground">
                   {watchedType === "QUARTERLY" && "3-month performance review. Best for fast-paced teams that need frequent check-ins and course corrections."}
                   {watchedType === "HALF_YEARLY" && "6-month review cycle. Provides a balanced mid-year checkpoint for goal progress and development feedback."}
                   {watchedType === "ANNUAL" && "Comprehensive year-end evaluation covering overall performance, growth, and compensation decisions."}

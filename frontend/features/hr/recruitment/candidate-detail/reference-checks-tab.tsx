@@ -135,7 +135,7 @@ export function ReferenceChecksTab({ candidateId }: Props) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+        <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
           {checks?.length ?? 0} reference{checks?.length !== 1 ? "s" : ""}
         </p>
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
@@ -266,7 +266,7 @@ const ReferenceCheckCard = memo(function ReferenceCheckCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <p className="text-sm font-semibold text-foreground">{check.referenceName}</p>
-              <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", cfg.badgeClass)}>
+              <span className={cn("inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border", cfg.badgeClass)}>
                 <Icon className="h-2.5 w-2.5" />
                 {cfg.label}
               </span>
@@ -274,13 +274,13 @@ const ReferenceCheckCard = memo(function ReferenceCheckCard({
 
             <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
               {check.referenceDesignation && (
-                <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                <span className="text-dense text-muted-foreground flex items-center gap-1">
                   <User2 className="h-3 w-3 shrink-0" />
                   {check.referenceDesignation}
                 </span>
               )}
               {check.referenceCompany && (
-                <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                <span className="text-dense text-muted-foreground flex items-center gap-1">
                   <Building2 className="h-3 w-3 shrink-0" />
                   {check.referenceCompany}
                 </span>
@@ -288,7 +288,7 @@ const ReferenceCheckCard = memo(function ReferenceCheckCard({
               {check.referenceEmail && (
                 <a
                   href={`mailto:${check.referenceEmail}`}
-                  className="text-[11px] text-primary flex items-center gap-1 hover:underline"
+                  className="text-dense text-primary flex items-center gap-1 hover:underline"
                 >
                   <Mail className="h-3 w-3 shrink-0" />
                   {check.referenceEmail}
@@ -297,7 +297,7 @@ const ReferenceCheckCard = memo(function ReferenceCheckCard({
               {check.referencePhone && (
                 <a
                   href={`tel:${check.referencePhone}`}
-                  className="text-[11px] text-muted-foreground flex items-center gap-1 hover:underline"
+                  className="text-dense text-muted-foreground flex items-center gap-1 hover:underline"
                 >
                   <Phone className="h-3 w-3 shrink-0" />
                   {check.referencePhone}
@@ -306,14 +306,14 @@ const ReferenceCheckCard = memo(function ReferenceCheckCard({
             </div>
 
             {check.relationship && (
-              <p className="text-[11px] text-muted-foreground mt-1.5">
+              <p className="text-dense text-muted-foreground mt-1.5">
                 Relationship:{" "}
                 <span className="text-foreground font-medium">{check.relationship}</span>
               </p>
             )}
 
             {check.notes && (
-              <TruncatedText text={check.notes} lines={2} className="text-[11px] text-muted-foreground mt-2 leading-relaxed" />
+              <TruncatedText text={check.notes} lines={2} className="text-dense text-muted-foreground mt-2 leading-relaxed" />
             )}
           </div>
 

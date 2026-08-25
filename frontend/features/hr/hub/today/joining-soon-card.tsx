@@ -46,7 +46,7 @@ export function JoiningSoonCard({
                       style={{ width: `${hire.pct}%` }}
                     />
                   </div>
-                  <span className="text-[10px] text-muted-foreground shrink-0">
+                  <span className="text-micro text-muted-foreground shrink-0">
                     {hire.pct}%
                   </span>
                 </div>

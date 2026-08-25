@@ -139,7 +139,7 @@ export const BalanceCard = React.memo(function BalanceCard({
               aria-hidden="true"
             />
           </div>
-          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+          <span className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
             {config.label}
           </span>
         </div>
@@ -159,7 +159,7 @@ export const BalanceCard = React.memo(function BalanceCard({
             </span>
           )}
         </div>
-        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-3 mt-1">
+        <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider mb-3 mt-1">
           {isUnpaid ? "Days Taken" : "Days Available"}
         </p>
 
@@ -242,7 +242,7 @@ export const WfhRequestItem = React.memo(function WfhRequestItem({
       <div className="flex items-center gap-2 shrink-0 ml-3">
         <span
           className={cn(
-            "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+            "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border",
             getColorSafe(wfhStatusColors, status),
           )}
         >

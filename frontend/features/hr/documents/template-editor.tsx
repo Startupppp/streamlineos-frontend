@@ -307,7 +307,7 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
                     <CardTitle className="text-sm font-semibold text-foreground">
                       Template Details
                     </CardTitle>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                    <p className="text-dense text-muted-foreground mt-0.5">
                       Basic metadata for this template.
                     </p>
                   </div>
@@ -381,9 +381,9 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
                     <CardTitle className="text-sm font-semibold text-foreground">
                       HTML Content
                     </CardTitle>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                    <p className="text-dense text-muted-foreground mt-0.5">
                       Write raw HTML. Use{" "}
-                      <code className="text-[10px] px-1 rounded bg-muted">
+                      <code className="text-micro px-1 rounded bg-muted">
                         {"{{Variable_Name}}"}
                       </code>{" "}
                       tokens as placeholders.

@@ -133,7 +133,7 @@ export function RuleSheet({ open, onOpenChange, editing, entityType, rulesCount,
           <form onSubmit={form.handleSubmit(handleFormSubmit)} className="flex min-h-0 flex-1 flex-col">
             <SheetBody className="space-y-5 px-6 py-5">
             <div className="space-y-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Scope</p>
+              <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Scope</p>
               <FormField
                 control={form.control}
                 name="entityType"
@@ -177,7 +177,7 @@ export function RuleSheet({ open, onOpenChange, editing, entityType, rulesCount,
             <Separator />
 
             <div className="space-y-3">
-              <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Rule</p>
+              <p className="text-micro uppercase tracking-wider font-semibold text-muted-foreground">Rule</p>
               <FormField
                 control={form.control}
                 name="ruleType"
@@ -208,7 +208,7 @@ export function RuleSheet({ open, onOpenChange, editing, entityType, rulesCount,
             <Separator />
 
             <div className="space-y-3">
-              <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Config</p>
+              <p className="text-micro uppercase tracking-wider font-semibold text-muted-foreground">Config</p>
 
               {watchedRuleType === "regex" && (
                 <FormField

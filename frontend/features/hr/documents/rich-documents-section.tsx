@@ -40,18 +40,18 @@ function RichDocumentRow({ doc, onDelete, isDeletePending, canManage }: RichDocu
           <TruncatedText text={doc.title} className="text-sm font-medium text-foreground" />
           <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
             {doc.templateType && (
-              <span className="inline-flex items-center text-[10px] font-semibold px-1.5 py-0 rounded-full border bg-muted text-muted-foreground border-border">
+              <span className="inline-flex items-center text-micro font-semibold px-1.5 py-0 rounded-full border bg-muted text-muted-foreground border-border">
                 {doc.templateType}
               </span>
             )}
             {doc.isPublished && (
-              <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
+              <span className="inline-flex items-center gap-0.5 text-micro font-semibold px-1.5 py-0 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
                 <Globe className="h-2.5 w-2.5" />
                 Published
               </span>
             )}
             {doc.updatedAt && (
-              <span className="text-[10px] text-muted-foreground">
+              <span className="text-micro text-muted-foreground">
                 {formatDistanceToNow(new Date(doc.updatedAt), { addSuffix: true })}
               </span>
             )}
@@ -139,7 +139,7 @@ export function RichDocumentsSection() {
             </div>
             <h3 className="text-sm font-semibold text-foreground">Created Documents</h3>
           </div>
-          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
+          <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
             {total}
           </span>
         </div>
@@ -156,7 +156,7 @@ export function RichDocumentsSection() {
         </div>
         {totalPages > 1 && (
           <div className="flex items-center justify-between pt-3">
-            <span className="text-[11px] text-muted-foreground">
+            <span className="text-dense text-muted-foreground">
               Page {page} of {totalPages}
             </span>
             <div className="flex items-center gap-2">

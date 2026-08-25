@@ -119,7 +119,7 @@ export function DocumentTypeList({
               <div>
                 <p className="text-sm font-semibold text-foreground">{documentType.name}</p>
                 {documentType.description && (
-                  <TruncatedText text={documentType.description} className="text-[11px] text-muted-foreground mt-0.5" />
+                  <TruncatedText text={documentType.description} className="text-dense text-muted-foreground mt-0.5" />
                 )}
               </div>
             </div>
@@ -131,11 +131,11 @@ export function DocumentTypeList({
         header: "Mandatory",
         cell: (documentType) =>
           documentType.isMandatory ? (
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-700">
+            <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-700">
               Required
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
+            <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
               Optional
             </span>
           ),
@@ -146,11 +146,11 @@ export function DocumentTypeList({
         cell: (documentType) => {
           const isActive = documentType.isActive !== false;
           return isActive ? (
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-700">
+            <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-700">
               Active
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
+            <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
               Inactive
             </span>
           );

@@ -188,14 +188,14 @@ function OverviewTab() {
             ) : (
               <p className="text-xs text-muted-foreground py-4 text-center">No mood data yet</p>
             )}
-            <p className="text-[11px] text-muted-foreground">Aggregated — groups with &lt;5 responses are hidden</p>
+            <p className="text-dense text-muted-foreground">Aggregated — groups with &lt;5 responses are hidden</p>
           </div>
         )}
 
         <div className="bg-card border border-border rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold text-foreground">Employee of the Month</p>
-            <Badge variant="secondary" className="text-[10px]">
+            <Badge variant="secondary" className="text-micro">
               {overview?.employeeOfMonth?.period ?? "—"}
             </Badge>
           </div>
@@ -214,7 +214,7 @@ function OverviewTab() {
               </div>
               <div>
                 <p className="text-xs font-semibold text-foreground">{eomName}</p>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-dense text-muted-foreground">
                   {eom.recognitions} kudos · {eom.points} pts
                 </p>
               </div>

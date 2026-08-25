@@ -41,10 +41,10 @@ export const FloatingComposition = memo(function FloatingComposition({
       >
         <FloatLayer reduce={reduce} amplitude={3} duration={7}>
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[10px] font-medium text-brand-core">Sprint 24</span>
+            <span className="text-micro font-medium text-brand-core">Sprint 24</span>
             <span className="text-[9px] font-mono text-slate-400">12/24</span>
           </div>
-          <p className="text-[12px] font-semibold text-slate-900 mb-1.5 leading-tight">
+          <p className="text-xs font-semibold text-slate-900 mb-1.5 leading-tight">
             Ship onboarding v3
           </p>
           <div className="space-y-1.5">
@@ -86,11 +86,11 @@ export const FloatingComposition = memo(function FloatingComposition({
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-3.5 w-3.5 text-brand-core" />
-                <span className="text-[11px] font-medium text-slate-600">
+                <span className="text-dense font-medium text-slate-600">
                   Pipeline · Q2
                 </span>
               </div>
-              <span className="text-[10px] font-mono text-emerald-700 px-1.5 py-0.5 rounded bg-emerald-50 border border-emerald-100">
+              <span className="text-micro font-mono text-emerald-700 px-1.5 py-0.5 rounded bg-emerald-50 border border-emerald-100">
                 +12.4%
               </span>
             </div>
@@ -108,7 +108,7 @@ export const FloatingComposition = memo(function FloatingComposition({
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.45, delay: 0.35 + i * 0.07 }}
                 >
-                  <div className="flex justify-between text-[11px] mb-1">
+                  <div className="flex justify-between text-dense mb-1">
                     <span className="text-slate-700 font-medium">{s.label}</span>
                     <span className="text-slate-500 font-mono">{s.count}</span>
                   </div>
@@ -128,7 +128,7 @@ export const FloatingComposition = memo(function FloatingComposition({
               ))}
             </div>
 
-            <div className="mt-4 pt-3 border-t border-slate-200 flex items-center justify-between text-[10px]">
+            <div className="mt-4 pt-3 border-t border-slate-200 flex items-center justify-between text-micro">
               <span className="text-slate-500 font-medium">Forecast</span>
               <span className="font-mono text-slate-900 font-semibold">$2.4M ARR</span>
             </div>
@@ -149,7 +149,7 @@ export const FloatingComposition = memo(function FloatingComposition({
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-1.5">
               <Users className="h-3 w-3 text-brand-cyan" />
-              <span className="text-[10px] font-medium text-slate-600">Attendance</span>
+              <span className="text-micro font-medium text-slate-600">Attendance</span>
             </div>
             <span className="text-[9px] font-mono text-emerald-700 px-1.5 py-0.5 rounded bg-emerald-50">
               94%

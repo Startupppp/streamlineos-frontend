@@ -144,7 +144,7 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
                     />
 
                     <div className="flex flex-col gap-2">
-                      <h4 className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                      <h4 className="text-dense font-medium uppercase tracking-wider text-muted-foreground">
                         Stage history
                       </h4>
                       <DealStageHistory dealId={deal.id} />

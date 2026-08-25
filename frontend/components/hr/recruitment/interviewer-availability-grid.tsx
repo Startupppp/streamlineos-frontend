@@ -62,7 +62,7 @@ export function InterviewerAvailabilityGrid({
           {hourLabels.map((label) => (
             <div
               key={label}
-              className="text-[10px] text-muted-foreground"
+              className="text-micro text-muted-foreground"
               style={{ width: `${100 / TOTAL_HOURS}%` }}
             >
               {label}
@@ -109,7 +109,7 @@ export function InterviewerAvailabilityGrid({
         </div>
       ))}
 
-      <div className="flex items-center gap-4 text-[10px] text-muted-foreground ml-20">
+      <div className="flex items-center gap-4 text-micro text-muted-foreground ml-20">
         <div className="flex items-center gap-1">
           <div className="w-3 h-2 rounded-sm bg-emerald-100 dark:bg-emerald-900/30 border" />
           Free

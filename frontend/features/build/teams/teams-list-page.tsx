@@ -186,7 +186,7 @@ export function TeamsListPage() {
             <span className="text-base leading-none">{row.icon}</span>
           ) : (
             <span
-              className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10px] font-bold text-white"
+              className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-micro font-bold text-white"
               style={{ backgroundColor: row.color ?? "#64748b" }}
             >
               {row.key.slice(0, 2)}
@@ -203,7 +203,7 @@ export function TeamsListPage() {
             {row.name}
           </Link>
           {row.isPrivate ? (
-            <Badge variant="outline" className="text-[10px]">
+            <Badge variant="outline" className="text-micro">
               Private
             </Badge>
           ) : null}

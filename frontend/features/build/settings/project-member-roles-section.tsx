@@ -65,7 +65,7 @@ const MemberRoleRow = memo(function MemberRoleRow({
 
   return (
     <div className="flex items-center gap-3 py-2">
-      <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-[11px] font-medium shrink-0 select-none">
+      <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-dense font-medium shrink-0 select-none">
         {member.image ? (
           <img
             src={member.image}
@@ -78,7 +78,7 @@ const MemberRoleRow = memo(function MemberRoleRow({
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{displayName}</p>
-        <p className="text-[11px] text-muted-foreground truncate">
+        <p className="text-dense text-muted-foreground truncate">
           {member.email}
         </p>
       </div>

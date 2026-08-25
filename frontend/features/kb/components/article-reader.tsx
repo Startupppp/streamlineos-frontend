@@ -220,7 +220,7 @@ export function ArticleReader({ orgId, slug }: ArticleReaderProps) {
                 {article.tags && article.tags.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-6">
                     {article.tags.map((tag) => (
-                      <Badge key={tag} variant="outline" className="text-[11px]">
+                      <Badge key={tag} variant="outline" className="text-dense">
                         {tag}
                       </Badge>
                     ))}

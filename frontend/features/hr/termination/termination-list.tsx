@@ -84,18 +84,18 @@ function TerminationCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <TruncatedText text={employee?.name ?? "Employee"} className="text-sm font-semibold" />
-              <StatusBadge status={status} label={statusLabel(status)} className="text-[10px] shrink-0" />
+              <StatusBadge status={status} label={statusLabel(status)} className="text-micro shrink-0" />
               {emailStatus === "failed" && (
                 <Badge
                   variant="outline"
-                  className="text-[10px] font-semibold shrink-0 px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-800"
+                  className="text-micro font-semibold shrink-0 px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-800"
                 >
                   Email Failed
                 </Badge>
               )}
             </div>
 
-            <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-0.5 flex-wrap">
+            <div className="flex items-center gap-3 text-dense text-muted-foreground mt-0.5 flex-wrap">
               {employee?.designation && (
                 <span className="flex items-center gap-1">
                   <User className="h-3 w-3" />
@@ -121,7 +121,7 @@ function TerminationCard({
             </div>
 
             {status === "REJECTED" && record.finalRemarks && (
-              <p className="text-[11px] text-rose-600 dark:text-rose-300 mt-1 line-clamp-2">
+              <p className="text-dense text-rose-600 dark:text-rose-300 mt-1 line-clamp-2">
                 FINAL: {record.finalRemarks}
               </p>
             )}
@@ -235,7 +235,7 @@ function TerminationCard({
             )}
 
             {status === "COMPLETED" && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800">
+              <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800">
                 Completed
               </span>
             )}

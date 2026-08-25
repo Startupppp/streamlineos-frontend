@@ -107,16 +107,16 @@ const AccountRow = memo(function AccountRow({
         <div className="flex items-center gap-1.5 mt-0.5">
           <TruncatedText
             text={TOOLKIT_LABELS[connection.toolkit] ?? connection.toolkit}
-            className="text-[11px] text-muted-foreground"
+            className="text-dense text-muted-foreground"
           />
           {connection.isPrimary && (
-            <Badge variant="outline" className="text-[10px] h-4 px-1 py-0">
+            <Badge variant="outline" className="text-micro h-4 px-1 py-0">
               Default
             </Badge>
           )}
         </div>
       </div>
-      <Badge variant={statusVariant} className="text-[10px] shrink-0">
+      <Badge variant={statusVariant} className="text-micro shrink-0">
         {connection.status === "active"
           ? "Connected"
           : connection.status === "needs_reauth"

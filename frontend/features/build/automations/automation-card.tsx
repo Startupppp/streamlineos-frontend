@@ -95,7 +95,7 @@ export function AutomationCard({ automation, onToggle, onDelete, onEdit }: Autom
             />
             <Badge
               variant="secondary"
-              className="text-[10px] bg-muted text-muted-foreground border-border shrink-0"
+              className="text-micro bg-muted text-muted-foreground border-border shrink-0"
             >
               {getTriggerLabel(automation.triggerEvent)}
             </Badge>
@@ -113,7 +113,7 @@ export function AutomationCard({ automation, onToggle, onDelete, onEdit }: Autom
           </div>
           <div className="flex flex-wrap gap-1 mt-2">
             {automation.actions.map((a, i) => (
-              <Badge key={i} variant="outline" className="text-[10px] px-1.5 py-0">
+              <Badge key={i} variant="outline" className="text-micro px-1.5 py-0">
                 {getActionLabel(a.type)}
               </Badge>
             ))}

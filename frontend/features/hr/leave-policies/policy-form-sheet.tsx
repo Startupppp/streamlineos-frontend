@@ -230,7 +230,7 @@ export function PolicyFormSheet({
                           >
                             Use standard Indian defaults
                           </LoadingButton>
-                          <p className="text-center text-[10px] uppercase tracking-wider text-amber-800/60 dark:text-amber-200/60">
+                          <p className="text-center text-micro uppercase tracking-wider text-amber-800/60 dark:text-amber-200/60">
                             or create one
                           </p>
                           <div className="flex flex-col gap-2 sm:flex-row">

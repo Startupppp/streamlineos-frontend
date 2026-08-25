@@ -165,7 +165,7 @@ export function PublicationsTab({ canManage }: PublicationsTabProps) {
       {
         key: "userId",
         header: "Employee",
-        cell: (row) => <span className="text-[11px]">{getUserDisplayName(memberById.get(row.userId))}</span>,
+        cell: (row) => <span className="text-dense">{getUserDisplayName(memberById.get(row.userId))}</span>,
       },
       {
         key: "status",
@@ -173,7 +173,7 @@ export function PublicationsTab({ canManage }: PublicationsTabProps) {
         cell: (row) => (
           <span
             className={cn(
-              "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold uppercase",
+              "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-micro font-semibold uppercase",
               STATUS_CLASSES[row.status],
             )}
           >
@@ -185,13 +185,13 @@ export function PublicationsTab({ canManage }: PublicationsTabProps) {
       {
         key: "channel",
         header: "Channel",
-        cell: (row) => <span className="text-[11px]">{row.channel}</span>,
+        cell: (row) => <span className="text-dense">{row.channel}</span>,
       },
       {
         key: "publishedAt",
         header: "Published At",
         cell: (row) => (
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-dense text-muted-foreground">
             {row.publishedAt
               ? new Date(row.publishedAt).toLocaleDateString()
               : "—"}
@@ -207,7 +207,7 @@ export function PublicationsTab({ canManage }: PublicationsTabProps) {
             <LoadingButton
               variant="outline"
               size="sm"
-              className="h-6 text-[11px] gap-1"
+              className="h-6 text-dense gap-1"
               disabled={!row.pdfUrl}
               isPending={isDownloading}
               onClick={() => handleDownload(row.id)}

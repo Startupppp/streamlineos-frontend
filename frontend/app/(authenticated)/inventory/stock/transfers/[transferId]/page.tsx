@@ -217,7 +217,7 @@ export default function TransferDetailPage({
     !isLoading && !isError && transfer ? (
       <Badge
         variant="outline"
-        className={cn("h-5 text-[10px] px-2 py-0.5", TRANSFER_STATUS_BADGE[transfer.status])}
+        className={cn("h-5 text-micro px-2 py-0.5", TRANSFER_STATUS_BADGE[transfer.status])}
       >
         {TRANSFER_STATUS_LABEL[transfer.status]}
       </Badge>
@@ -365,7 +365,7 @@ export default function TransferDetailPage({
                   <div className="flex items-center gap-2">
                     <Package className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                     <span className="text-sm font-semibold">Line Items</span>
-                    <span className="text-[11px] text-muted-foreground tabular-nums">
+                    <span className="text-dense text-muted-foreground tabular-nums">
                       ({lines.length})
                     </span>
                   </div>

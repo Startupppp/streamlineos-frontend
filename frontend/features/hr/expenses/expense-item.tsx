@@ -121,7 +121,7 @@ export function AdminExpenseItem({
               <span className="text-2xl leading-none" aria-hidden>
                 {receiptKindEmoji(receiptKind)}
               </span>
-              <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              <span className="text-micro font-semibold uppercase tracking-wide text-muted-foreground">
                 {receiptKindLabel(receiptKind)}
               </span>
             </div>
@@ -129,7 +129,7 @@ export function AdminExpenseItem({
             <Receipt className="h-6 w-6 text-muted-foreground/50" />
           )}
           {receipts.length > 1 && (
-            <span className="absolute bottom-1 right-1 rounded-md bg-background/90 px-1.5 py-0.5 text-[10px] font-semibold text-foreground shadow-sm">
+            <span className="absolute bottom-1 right-1 rounded-md bg-background/90 px-1.5 py-0.5 text-micro font-semibold text-foreground shadow-sm">
               +{receipts.length - 1}
             </span>
           )}
@@ -162,7 +162,7 @@ export function AdminExpenseItem({
         <div className="flex items-center gap-2 mb-1.5">
           <span
             className={cn(
-              "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+              "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border",
               status === "PENDING" &&
                 "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800",
               status === "APPROVED" &&
@@ -181,7 +181,7 @@ export function AdminExpenseItem({
                   ? "Paid"
                   : "Rejected"}
           </span>
-          <span className="text-[10px] font-medium text-muted-foreground tabular-nums">
+          <span className="text-micro font-medium text-muted-foreground tabular-nums">
             #EXP-{new Date(expense.expenseDate).getFullYear()}-
             {expense.id.toString().padStart(3, "0")}
           </span>
@@ -219,7 +219,7 @@ export function AdminExpenseItem({
       </div>
 
       <div className="text-right min-w-[130px] flex-shrink-0 hidden lg:block">
-        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
+        <p className="text-micro font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
           Category
         </p>
         <div className="flex items-center gap-1.5 justify-end">
@@ -236,20 +236,20 @@ export function AdminExpenseItem({
           </span>
         </div>
         {expense.description && (
-          <p className="text-[11px] text-muted-foreground mt-1 truncate max-w-[130px]">
+          <p className="text-dense text-muted-foreground mt-1 truncate max-w-[130px]">
             {expense.description}
           </p>
         )}
       </div>
 
       <div className="text-right min-w-[160px] flex-shrink-0">
-        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">
+        <p className="text-micro font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">
           Amount
         </p>
         <p className="text-2xl font-bold font-mono tabular-nums text-foreground">
           {formatINR(expense.amount)}
         </p>
-        <p className="text-[10px] text-muted-foreground mb-3">INR</p>
+        <p className="text-micro text-muted-foreground mb-3">INR</p>
 
         {isRejecting ? (
           <div className="space-y-2 text-left">

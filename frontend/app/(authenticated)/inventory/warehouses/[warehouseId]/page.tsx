@@ -52,7 +52,7 @@ function LocationRow({ location }: { location: WarehouseLocation }) {
           {LOCATION_TYPE_LABELS[location.locationType]}
         </Badge>
         <span className="text-sm font-medium text-foreground truncate">{location.name}</span>
-        <span className="text-[11px] text-muted-foreground font-mono shrink-0">
+        <span className="text-dense text-muted-foreground font-mono shrink-0">
           {location.code}
         </span>
       </div>
@@ -242,7 +242,7 @@ export default function WarehouseDetailPage({
                           >
                             {LOCATION_TYPE_LABELS[lt]}
                           </Badge>
-                          <span className="text-[11px] text-muted-foreground tabular-nums">
+                          <span className="text-dense text-muted-foreground tabular-nums">
                             {items.length} {items.length === 1 ? "location" : "locations"}
                           </span>
                         </div>

@@ -101,7 +101,7 @@ export function ReferralsTab({ candidateId }: Props) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+        <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
           {referrals?.length ?? 0} referral{referrals?.length !== 1 ? "s" : ""}
         </p>
         <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
@@ -165,7 +165,7 @@ export function ReferralsTab({ candidateId }: Props) {
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {r.bonusEligible && (
-                    <Badge variant="secondary" className="text-[10px] gap-1">
+                    <Badge variant="secondary" className="text-micro gap-1">
                       <Gift className="h-2.5 w-2.5" />
                       Bonus eligible
                     </Badge>
@@ -174,7 +174,7 @@ export function ReferralsTab({ candidateId }: Props) {
                     <MarkPaidButton referralId={r.id} isPending={updateReferral.isPending} onMarkPaid={handleMarkPaid} />
                   )}
                   {r.bonusPaidAt && (
-                    <Badge variant="outline" className="text-[10px]">Paid</Badge>
+                    <Badge variant="outline" className="text-micro">Paid</Badge>
                   )}
                 </div>
               </div>

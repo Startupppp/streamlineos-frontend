@@ -307,7 +307,7 @@ export function LeadDetailSheet({
                   <div className="grid grid-cols-2 gap-3">
                     {lead.potentialValue && (
                       <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30">
-                        <p className="text-[11px] text-muted-foreground mb-1">
+                        <p className="text-dense text-muted-foreground mb-1">
                           Potential Value
                         </p>
                         <p className="text-lg font-bold text-emerald-500 dark:text-emerald-400">
@@ -317,7 +317,7 @@ export function LeadDetailSheet({
                     )}
                     {lead.investmentInterest && (
                       <div className="p-3 rounded-lg bg-primary/10 border border-primary/30">
-                        <p className="text-[11px] text-muted-foreground mb-1">
+                        <p className="text-dense text-muted-foreground mb-1">
                           Investment Interest
                         </p>
                         <p className="text-lg font-bold text-primary">

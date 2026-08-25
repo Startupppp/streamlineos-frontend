@@ -219,7 +219,7 @@ function WorkflowNodeComponent({
       </div>
       {data.description && (
         <div className="px-3 py-1.5 border-t border-border/60">
-          <TruncatedText text={data.description ?? ""} className="text-[11px] text-muted-foreground leading-snug" />
+          <TruncatedText text={data.description ?? ""} className="text-dense text-muted-foreground leading-snug" />
         </div>
       )}
     </div>
@@ -311,7 +311,7 @@ function PaletteItem({ item }: { item: (typeof NODE_PALETTE)[0] }) {
       <span className={cn("shrink-0", item.color)}>{item.icon}</span>
       <div className="min-w-0">
         <p className="text-xs font-semibold text-foreground leading-tight">{item.label}</p>
-        <TruncatedText text={item.description} className="text-[10px] text-muted-foreground leading-tight" />
+        <TruncatedText text={item.description} className="text-micro text-muted-foreground leading-tight" />
       </div>
     </div>
   );
@@ -455,10 +455,10 @@ function BuilderCanvas({ workflow, workflowId }: BuilderCanvasProps) {
     <div className="flex h-full w-full overflow-hidden bg-background">
       <div className="w-56 shrink-0 border-r border-border bg-card flex flex-col shadow-sm">
         <div className="px-3 py-3 border-b border-border">
-          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+          <p className="text-micro font-semibold text-muted-foreground uppercase tracking-wider mb-1">
             Node Palette
           </p>
-          <p className="text-[10px] text-muted-foreground">Drag nodes onto canvas</p>
+          <p className="text-micro text-muted-foreground">Drag nodes onto canvas</p>
         </div>
         <ScrollArea hideScrollbar className="min-h-0 flex-1">
           <div className="overscroll-contain space-y-1.5 p-2">
@@ -502,7 +502,7 @@ function BuilderCanvas({ workflow, workflowId }: BuilderCanvasProps) {
           )}
           <span
             className={cn(
-              "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border",
+              "inline-flex items-center px-2 py-0.5 rounded-full text-micro font-medium border",
               statusBadge.cls,
             )}
           >
@@ -556,7 +556,7 @@ function BuilderCanvas({ workflow, workflowId }: BuilderCanvasProps) {
               <Controls className="border border-border shadow-sm rounded-lg overflow-hidden" />
               <MiniMap className="border border-border shadow-sm rounded-lg overflow-hidden" />
               <Panel position="bottom-center">
-                <div className="bg-card/90 backdrop-blur-sm border border-border rounded-full px-4 py-1.5 shadow-sm flex items-center gap-3 text-[11px] text-muted-foreground">
+                <div className="bg-card/90 backdrop-blur-sm border border-border rounded-full px-4 py-1.5 shadow-sm flex items-center gap-3 text-dense text-muted-foreground">
                   <span>{nodes.length} node{nodes.length !== 1 ? "s" : ""}</span>
                   <span className="w-px h-3 bg-border" />
                   <span>{edges.length} connection{edges.length !== 1 ? "s" : ""}</span>

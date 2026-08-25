@@ -185,7 +185,7 @@ function PredictDetails({
               {result.confidence}
             </Badge>
           </div>
-          <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">
+          <p className="text-dense text-muted-foreground leading-snug mt-0.5">
             {result.reasoning}
           </p>
         </div>
@@ -193,11 +193,11 @@ function PredictDetails({
 
       {result.positiveSignals.length > 0 && (
         <div>
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
+          <p className="text-micro font-medium text-muted-foreground uppercase tracking-wider mb-1">
             Positive Signals
           </p>
           {result.positiveSignals.map((s, i) => (
-            <div key={i} className="flex items-start gap-1.5 text-[11px]">
+            <div key={i} className="flex items-start gap-1.5 text-dense">
               <TrendingUp className="h-3 w-3 text-emerald-500 dark:text-emerald-400 mt-0.5 shrink-0" />
               <span>{s}</span>
             </div>
@@ -207,11 +207,11 @@ function PredictDetails({
 
       {result.riskFactors.length > 0 && (
         <div>
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
+          <p className="text-micro font-medium text-muted-foreground uppercase tracking-wider mb-1">
             Risk Factors
           </p>
           {result.riskFactors.map((r, i) => (
-            <div key={i} className="flex items-start gap-1.5 text-[11px]">
+            <div key={i} className="flex items-start gap-1.5 text-dense">
               <AlertTriangle className="h-3 w-3 text-red-400 mt-0.5 shrink-0" />
               <span>{r}</span>
             </div>
@@ -221,11 +221,11 @@ function PredictDetails({
 
       {result.recommendedActions.length > 0 && (
         <div>
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
+          <p className="text-micro font-medium text-muted-foreground uppercase tracking-wider mb-1">
             Recommended Actions
           </p>
           {result.recommendedActions.map((a, i) => (
-            <div key={i} className="flex items-start gap-1.5 text-[11px]">
+            <div key={i} className="flex items-start gap-1.5 text-dense">
               <Lightbulb className="h-3 w-3 text-primary mt-0.5 shrink-0" />
               <span>{a}</span>
             </div>
@@ -233,7 +233,7 @@ function PredictDetails({
         </div>
       )}
       {result.estimateDisclaimer && (
-        <p className="text-[10px] text-muted-foreground italic border-t border-border pt-1.5 mt-1">
+        <p className="text-micro text-muted-foreground italic border-t border-border pt-1.5 mt-1">
           {result.estimateDisclaimer}
         </p>
       )}

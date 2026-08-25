@@ -76,7 +76,7 @@ const PRIORITY_STYLES: Record<BugPriority, string> = {
 function ReportBugButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <Button size="sm" className="gap-1 text-[11px]" onClick={onClick} {...hoverHandlers}>
+    <Button size="sm" className="gap-1 text-dense" onClick={onClick} {...hoverHandlers}>
       <PlusIcon ref={iconRef} size={14} />
       Report Bug
     </Button>
@@ -172,7 +172,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
     {
       key: "bugNumber",
       header: "ID",
-      cell: (row) => <span className="font-mono text-[11px] text-muted-foreground">BUG-{row.bugNumber}</span>,
+      cell: (row) => <span className="font-mono text-dense text-muted-foreground">BUG-{row.bugNumber}</span>,
       className: "w-[72px]",
     },
     {
@@ -181,7 +181,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
       className: TABLE_TITLE_CELL,
       cell: (row) => (
         <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
-          <TruncatedText text={row.title} className="text-[11px] font-medium" />
+          <TruncatedText text={row.title} className="text-dense font-medium" />
           {row.reopenCount > 0 ? (
             <Badge variant="outline" className="shrink-0 text-[9px] text-orange-600 border-orange-200 dark:text-orange-400 dark:border-orange-500/30">
               ×{row.reopenCount}
@@ -194,7 +194,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
       key: "severity",
       header: "Severity",
       cell: (row) => (
-        <Badge variant="outline" className={cn("text-[10px] capitalize", SEVERITY_STYLES[row.severity])}>
+        <Badge variant="outline" className={cn("text-micro capitalize", SEVERITY_STYLES[row.severity])}>
           {row.severity}
         </Badge>
       ),
@@ -204,7 +204,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
       key: "status",
       header: "Status",
       cell: (row) => (
-        <Badge variant="outline" className={cn("text-[10px]", STATUS_STYLES[row.status])}>
+        <Badge variant="outline" className={cn("text-micro", STATUS_STYLES[row.status])}>
           {STATUS_LABELS[row.status]}
         </Badge>
       ),
@@ -214,7 +214,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
       key: "priority",
       header: "Priority",
       cell: (row) => (
-        <Badge variant="outline" className={cn("text-[10px] capitalize", PRIORITY_STYLES[row.priority])}>
+        <Badge variant="outline" className={cn("text-micro capitalize", PRIORITY_STYLES[row.priority])}>
           {row.priority}
         </Badge>
       ),
@@ -227,7 +227,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
         const member = members.find((m) => m.id === row.assigneeId);
         const label = member ? getUserDisplayName(member) : "—";
         return (
-          <TruncatedText text={label} className="max-w-[7rem] text-[11px] text-muted-foreground" />
+          <TruncatedText text={label} className="max-w-[7rem] text-dense text-muted-foreground" />
         );
       },
       className: "w-[120px]",

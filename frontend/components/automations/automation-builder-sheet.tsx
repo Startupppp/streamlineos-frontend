@@ -94,20 +94,20 @@ function defaultActionConfig(type: ExtendedAutomationActionType): ExtendedAutoma
 function ActionResultBadge({ status }: { status: AutomationTestResult["status"] }) {
   if (status === "success") {
     return (
-      <Badge variant="default" className="gap-1 text-[11px]">
+      <Badge variant="default" className="gap-1 text-dense">
         <CheckCircle2 className="h-3 w-3" /> Matched
       </Badge>
     );
   }
   if (status === "skipped") {
     return (
-      <Badge variant="secondary" className="gap-1 text-[11px]">
+      <Badge variant="secondary" className="gap-1 text-dense">
         <MinusCircle className="h-3 w-3" /> Skipped
       </Badge>
     );
   }
   return (
-    <Badge variant="destructive" className="gap-1 text-[11px]">
+    <Badge variant="destructive" className="gap-1 text-dense">
       <XCircle className="h-3 w-3" /> Failed
     </Badge>
   );
@@ -462,7 +462,7 @@ export function AutomationBuilderSheet({
                     <div key={index} className="rounded-lg border border-border/60 p-3 space-y-2.5">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5">
-                          <Badge variant="secondary" className="text-[11px]">
+                          <Badge variant="secondary" className="text-dense">
                             {ACTION_TYPES.find((a) => a.value === action.type)?.label ?? action.type}
                           </Badge>
                           {action.type.startsWith("ai_") && (

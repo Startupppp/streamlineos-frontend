@@ -38,7 +38,7 @@ interface CandidateProfileCardProps {
 
 function SkillBadge({ skill }: { skill: string }) {
   return (
-    <Badge key={skill} variant="outline" className="text-[10px]">
+    <Badge key={skill} variant="outline" className="text-micro">
       {skill}
     </Badge>
   );

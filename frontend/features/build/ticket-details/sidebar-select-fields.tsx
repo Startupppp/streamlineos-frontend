@@ -80,7 +80,7 @@ const CONTROL_CLASS =
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+    <span className="mb-1 block text-micro font-medium uppercase tracking-wide text-muted-foreground">
       {children}
     </span>
   );

@@ -52,7 +52,7 @@ const MemberBreakdownCell = memo(function MemberBreakdownCell({
       <div className="min-w-0">
         <TruncatedText text={displayName} className="text-sm font-medium" />
         {email ? (
-          <TruncatedText text={email} className="text-[11px] text-muted-foreground" />
+          <TruncatedText text={email} className="text-dense text-muted-foreground" />
         ) : null}
       </div>
     </div>

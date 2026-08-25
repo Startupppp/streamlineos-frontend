@@ -48,14 +48,14 @@ function SessionRow({ session: s, onRevoke, revokePending }: SessionRowProps) {
       <span className="text-muted-foreground flex-shrink-0">{getDeviceIcon(s)}</span>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <TruncatedText text={formatClientDeviceLabel(s)} className="text-[13px] font-medium" />
+          <TruncatedText text={formatClientDeviceLabel(s)} className="text-label font-medium" />
           {s.isCurrent && (
-            <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-emerald-300 text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
+            <Badge variant="outline" className="text-micro h-4 px-1.5 border-emerald-300 text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
               Current
             </Badge>
           )}
         </div>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-dense text-muted-foreground">
           {s.ipAddress ? `${s.ipAddress} · ` : ""}
           Active {formatDistanceToNow(new Date(s.lastActive), { addSuffix: true })}
         </p>
@@ -116,8 +116,8 @@ function SessionsSection() {
             <Monitor className="h-4 w-4 text-muted-foreground" />
           </div>
           <div>
-            <p className="text-[13px] font-semibold text-foreground">My sessions</p>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-label font-semibold text-foreground">My sessions</p>
+            <p className="text-dense text-muted-foreground">
               Manage the devices signed in to your account.
             </p>
           </div>
@@ -154,7 +154,7 @@ function SessionsSection() {
           ))}
         </div>
       ) : !sessions?.length ? (
-        <p className="text-[12px] text-muted-foreground text-center py-4">No active sessions found.</p>
+        <p className="text-xs text-muted-foreground text-center py-4">No active sessions found.</p>
       ) : (
         <div className="space-y-2">
           {sessions.map((s) => (
@@ -178,19 +178,19 @@ function SignInRow({ entry }: { entry: LoginEntry }) {
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 items-center gap-2">
-          <p className="truncate text-[13px] font-medium text-foreground">
+          <p className="truncate text-label font-medium text-foreground">
             {client || "Unknown client"}
           </p>
           <Badge
             variant="outline"
             className={entry.success
-              ? "h-5 shrink-0 border-emerald-500/30 bg-emerald-500/10 px-2 text-[10px] text-emerald-700 dark:text-emerald-300"
-              : "h-5 shrink-0 border-destructive/30 bg-destructive/10 px-2 text-[10px] text-destructive"}
+              ? "h-5 shrink-0 border-emerald-500/30 bg-emerald-500/10 px-2 text-micro text-emerald-700 dark:text-emerald-300"
+              : "h-5 shrink-0 border-destructive/30 bg-destructive/10 px-2 text-micro text-destructive"}
           >
             {entry.success ? "Successful" : "Failed"}
           </Badge>
         </div>
-        <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+        <p className="mt-0.5 truncate text-dense text-muted-foreground">
           {entry.ipAddress ?? "IP unavailable"} · {formatDistanceToNow(new Date(entry.createdAt), { addSuffix: true })}
         </p>
       </div>
@@ -213,8 +213,8 @@ function RecentSignInsSection() {
           <LogIn className="size-4 text-muted-foreground" />
         </div>
         <div>
-          <p className="text-[13px] font-semibold text-foreground">Recent sign-ins</p>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-label font-semibold text-foreground">Recent sign-ins</p>
+          <p className="text-dense text-muted-foreground">
             Review the latest successful and failed access attempts.
           </p>
         </div>

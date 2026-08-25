@@ -77,7 +77,7 @@ const UserBubble = memo(function UserBubble({
     >
       <div
         className={cn(
-          "max-w-[min(85%,20rem)] sm:max-w-[85%] rounded-2xl rounded-br-md bg-primary px-3.5 py-2.5 text-[13px] leading-relaxed text-primary-foreground shadow-sm",
+          "max-w-[min(85%,20rem)] sm:max-w-[85%] rounded-2xl rounded-br-md bg-primary px-3.5 py-2.5 text-label leading-relaxed text-primary-foreground shadow-sm",
           USER_BUBBLE_TEXT,
         )}
       >
@@ -107,13 +107,13 @@ const ThreadEntry = memo(function ThreadEntry({
         <div className="min-w-0 flex-1 space-y-2 rounded-2xl rounded-tl-md border border-border bg-card px-3 py-2.5 shadow-sm sm:px-3.5">
           <span
             className={cn(
-              "inline-flex items-center rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+              "inline-flex items-center rounded border px-1.5 py-0.5 text-micro font-semibold uppercase tracking-wide",
               confidenceClasses(entry.confidence),
             )}
           >
             {entry.confidence} confidence
           </span>
-          <p className={cn(TEXT_BODY, "whitespace-pre-wrap text-[13px] leading-relaxed text-foreground")}>
+          <p className={cn(TEXT_BODY, "whitespace-pre-wrap text-label leading-relaxed text-foreground")}>
             {entry.answer}
           </p>
           {entry.evidence ? <EvidenceStrip evidence={entry.evidence} /> : null}
@@ -142,8 +142,8 @@ const PromptChip = memo(function PromptChip({
       className={cn(
         "text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         variant === "starter"
-          ? "w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-[13px] text-foreground shadow-sm hover:bg-muted/50"
-          : "rounded-full border border-border bg-card px-2.5 py-1 text-[11px] text-muted-foreground shadow-sm hover:bg-muted hover:text-foreground",
+          ? "w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-label text-foreground shadow-sm hover:bg-muted/50"
+          : "rounded-full border border-border bg-card px-2.5 py-1 text-dense text-muted-foreground shadow-sm hover:bg-muted hover:text-foreground",
       )}
     >
       {label}
@@ -172,7 +172,7 @@ function EmptyWelcome({
         <p className="text-base font-semibold tracking-tight text-foreground">
           How can I help with this project?
         </p>
-        <p className="mx-auto max-w-sm text-[13px] text-muted-foreground leading-snug">
+        <p className="mx-auto max-w-sm text-label text-muted-foreground leading-snug">
           Ask about risks, blockers, progress, or sprint status — answers stay grounded in this project&apos;s data.
         </p>
       </div>
@@ -323,7 +323,7 @@ export function AiChatPanel({
 
                 {mutation.isError ? (
                   <div className="flex items-start justify-between gap-3 rounded-xl border border-destructive/20 bg-destructive/5 px-3.5 py-2.5">
-                    <p className="flex-1 text-[13px] leading-snug text-destructive">
+                    <p className="flex-1 text-label leading-snug text-destructive">
                       {getErrorMessage(mutation.error)}
                     </p>
                     <Button
@@ -368,7 +368,7 @@ export function AiChatPanel({
               rows={1}
               disabled={mutation.isPending}
               aria-label="Question input"
-              className="min-h-8 max-h-36 min-w-0 flex-1 resize-none border-border bg-background py-2.5 text-[13px]"
+              className="min-h-8 max-h-36 min-w-0 flex-1 resize-none border-border bg-background py-2.5 text-label"
             />
             <LoadingButton
               type="submit"

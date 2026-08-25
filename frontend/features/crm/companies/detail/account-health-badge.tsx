@@ -61,7 +61,7 @@ export function AccountHealthBadge({
     return (
       <Badge
         variant="outline"
-        className={cn("text-[10px] bg-muted text-muted-foreground border-border", className)}
+        className={cn("text-micro bg-muted text-muted-foreground border-border", className)}
       >
         N/A
       </Badge>
@@ -74,7 +74,7 @@ export function AccountHealthBadge({
     <Badge
       variant="outline"
       className={cn(
-        "text-[10px] flex items-center gap-1.5 px-2 py-0.5",
+        "text-micro flex items-center gap-1.5 px-2 py-0.5",
         badgeClass,
         className,
       )}

@@ -146,7 +146,7 @@ export default function CashFlowPage() {
           <div className="flex flex-col gap-1">
             <label
               htmlFor="cash-flow-from"
-              className="text-[11px] font-medium text-muted-foreground leading-none"
+              className="text-dense font-medium text-muted-foreground leading-none"
             >
               From
             </label>
@@ -155,7 +155,7 @@ export default function CashFlowPage() {
           <div className="flex flex-col gap-1">
             <label
               htmlFor="cash-flow-to"
-              className="text-[11px] font-medium text-muted-foreground leading-none"
+              className="text-dense font-medium text-muted-foreground leading-none"
             >
               To
             </label>

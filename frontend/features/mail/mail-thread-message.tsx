@@ -63,7 +63,7 @@ const AttachmentChip = forwardRef<HTMLButtonElement, AttachmentChipProps>(
     return (
       <button
         type="button"
-        className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50 border border-border/40 text-[11px] text-foreground/80 hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring max-w-[200px]"
+        className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50 border border-border/40 text-dense text-foreground/80 hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring max-w-[200px]"
         onClick={handleClick}
         {...hoverHandlers}
         aria-label={`Download ${fileName}`}
@@ -124,14 +124,14 @@ export function MailThreadMessage({
           className="h-3.5 w-3.5 text-muted-foreground shrink-0"
           aria-hidden
         />
-        <span className="text-[12px] font-medium text-foreground/80 shrink-0">
+        <span className="text-xs font-medium text-foreground/80 shrink-0">
           {senderLabel}
         </span>
         <TruncatedText
           text={message.snippet}
-          className="text-[11px] text-muted-foreground flex-1 min-w-0"
+          className="text-dense text-muted-foreground flex-1 min-w-0"
         />
-        <span className="text-[11px] text-muted-foreground shrink-0 font-mono tabular-nums">
+        <span className="text-dense text-muted-foreground shrink-0 font-mono tabular-nums">
           {formatDetailDate(message.date)}
         </span>
       </button>
@@ -158,17 +158,17 @@ export function MailThreadMessage({
         />
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline justify-between gap-2 min-w-0">
-            <span className="text-[13px] font-semibold text-foreground truncate">
+            <span className="text-label font-semibold text-foreground truncate">
               {senderLabel}
             </span>
-            <span className="text-[11px] text-muted-foreground shrink-0 font-mono tabular-nums">
+            <span className="text-dense text-muted-foreground shrink-0 font-mono tabular-nums">
               {formatDetailDate(message.date)}
             </span>
           </div>
           {recipientsLabel && (
             <TruncatedText
               text={`To: ${recipientsLabel}`}
-              className="text-[11px] text-muted-foreground mt-0.5"
+              className="text-dense text-muted-foreground mt-0.5"
             />
           )}
         </div>
@@ -182,12 +182,12 @@ export function MailThreadMessage({
             className="mt-1 overflow-x-auto rounded-lg border border-border/50 bg-white text-neutral-900 shadow-sm"
             style={{ colorScheme: "light" }}
           >
-            <pre className="whitespace-pre-wrap break-words px-4 py-3 font-sans text-[13px] leading-relaxed text-neutral-900">
+            <pre className="whitespace-pre-wrap break-words px-4 py-3 font-sans text-label leading-relaxed text-neutral-900">
               {message.bodyText}
             </pre>
           </div>
         ) : (
-          <p className="text-[12px] text-muted-foreground italic">No content</p>
+          <p className="text-xs text-muted-foreground italic">No content</p>
         )}
 
         {message.attachments.length > 0 && (

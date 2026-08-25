@@ -50,11 +50,11 @@ function renderProductCell(row: StockTransaction) {
     <>
       <TruncatedText
         text={row.productVariant?.product?.name ?? row.productVariant?.name ?? "—"}
-        className="text-[11px] font-medium text-foreground"
+        className="text-dense font-medium text-foreground"
       />
       <TruncatedText
         text={row.productVariant?.sku ?? "—"}
-        className="text-[11px] text-muted-foreground font-mono"
+        className="text-dense text-muted-foreground font-mono"
       />
     </>
   );
@@ -74,7 +74,7 @@ function renderQtyCell(row: StockTransaction) {
   const isPositive = row.quantityChange >= 0;
   return (
     <span
-      className={`text-[11px] font-mono tabular-nums font-semibold ${
+      className={`text-dense font-mono tabular-nums font-semibold ${
         isPositive ? "text-emerald-600" : "text-red-600"
       }`}
     >
@@ -85,13 +85,13 @@ function renderQtyCell(row: StockTransaction) {
 
 function renderLocationCell(row: StockTransaction) {
   return (
-    <TruncatedText text={row.location?.name ?? "—"} className="text-[11px] text-foreground" />
+    <TruncatedText text={row.location?.name ?? "—"} className="text-dense text-foreground" />
   );
 }
 
 function renderUserCell(row: StockTransaction) {
   return (
-    <TruncatedText text={row.creator?.name ?? "System"} className="text-[11px] text-muted-foreground" />
+    <TruncatedText text={row.creator?.name ?? "System"} className="text-dense text-muted-foreground" />
   );
 }
 

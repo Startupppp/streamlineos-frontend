@@ -211,7 +211,7 @@ export function DocumentFormFields({
                   placeholder="Select employee (optional)"
                 />
               </FormControl>
-              <FormDescription className="text-[11px]">Leave empty for company-wide documents</FormDescription>
+              <FormDescription className="text-dense">Leave empty for company-wide documents</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -264,7 +264,7 @@ export function DocumentFormFields({
                 />
               </PopoverContent>
             </Popover>
-            <FormDescription className="text-[11px]">
+            <FormDescription className="text-dense">
               Set an expiry date for contracts or certificates
             </FormDescription>
             <FormMessage />
@@ -301,7 +301,7 @@ export function DocumentFormFields({
             {tags.map((tag) => (
               <span
                 key={tag}
-                className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-muted text-foreground border border-border"
+                className="inline-flex items-center gap-1 text-dense font-medium px-2 py-0.5 rounded-full bg-muted text-foreground border border-border"
               >
                 {tag}
                 <TagRemoveButton tag={tag} onClick={onRemoveTag} />
@@ -329,7 +329,7 @@ export function DocumentFormFields({
                 )}
                 {field.value ? "Public Document" : "Private Document"}
               </FormLabel>
-              <FormDescription className="text-[11px] pl-9">
+              <FormDescription className="text-dense pl-9">
                 {field.value
                   ? "All employees can view this document"
                   : "Only admins and the owner can view this"}

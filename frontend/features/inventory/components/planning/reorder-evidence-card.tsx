@@ -30,7 +30,7 @@ const EvidenceGrid = memo(function EvidenceGrid({ evidence }: EvidenceGridProps)
 
   return (
     <div>
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
+      <p className="text-micro font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
         Evidence (Deterministic)
       </p>
       <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
@@ -45,7 +45,7 @@ const EvidenceGrid = memo(function EvidenceGrid({ evidence }: EvidenceGridProps)
         ))}
       </div>
       {evidence.reason && (
-        <p className="mt-2 text-[11px] text-muted-foreground">
+        <p className="mt-2 text-dense text-muted-foreground">
           <span className="font-medium text-foreground">Reason: </span>
           {evidence.reason}
         </p>
@@ -68,7 +68,7 @@ export const AiNarrationSection = memo(function AiNarrationSection({
     <div className="space-y-3">
       <div>
         <div className="flex items-center gap-2 mb-1.5">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <p className="text-micro font-semibold uppercase tracking-wide text-muted-foreground">
             AI Narration
           </p>
           <AiGeneratedLabel />
@@ -92,7 +92,7 @@ export const AiNarrationSection = memo(function AiNarrationSection({
 
       {nonFactual.length > 0 && (
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
+          <p className="text-micro font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
             Operational Notes
           </p>
           <div className="space-y-1">
@@ -104,7 +104,7 @@ export const AiNarrationSection = memo(function AiNarrationSection({
                 >
                   {f.label}
                 </Badge>
-                <span className="text-[11px] text-muted-foreground">{f.value}</span>
+                <span className="text-dense text-muted-foreground">{f.value}</span>
               </div>
             ))}
           </div>
@@ -113,12 +113,12 @@ export const AiNarrationSection = memo(function AiNarrationSection({
 
       {explanation.suggestedActions.length > 0 && (
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
+          <p className="text-micro font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
             Suggested Actions
           </p>
           <ul className="space-y-1">
             {explanation.suggestedActions.map((action, i) => (
-              <li key={i} className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
+              <li key={i} className="flex items-start gap-1.5 text-dense text-muted-foreground">
                 <span className="shrink-0 mt-0.5 h-3.5 w-3.5 rounded-full border border-primary/30 bg-primary/5 flex items-center justify-center text-[8px] font-bold text-primary">
                   {i + 1}
                 </span>

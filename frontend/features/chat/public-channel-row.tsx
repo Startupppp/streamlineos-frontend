@@ -40,15 +40,15 @@ export function PublicChannelRow({
         <Hash className="h-4 w-4 text-emerald-600" />
       </div>
       <div className="flex-1 min-w-0">
-        <TruncatedText text={channel.name} className="text-[13px] font-semibold" />
+        <TruncatedText text={channel.name} className="text-label font-semibold" />
         {channel.description && (
-          <TruncatedText text={channel.description} className="text-[11px] text-muted-foreground" />
+          <TruncatedText text={channel.description} className="text-dense text-muted-foreground" />
         )}
         <div className="flex items-center gap-1 mt-0.5">
           <Users className="h-3 w-3 text-muted-foreground/50" />
-          <span className="text-[11px] text-muted-foreground/60">{channel.memberCount} member{channel.memberCount !== 1 ? "s" : ""}</span>
+          <span className="text-dense text-muted-foreground/60">{channel.memberCount} member{channel.memberCount !== 1 ? "s" : ""}</span>
           <Globe className="h-3 w-3 text-muted-foreground/50 ml-2" />
-          <span className="text-[11px] text-muted-foreground/60">Public</span>
+          <span className="text-dense text-muted-foreground/60">Public</span>
         </div>
       </div>
       <div className="shrink-0">
@@ -56,7 +56,7 @@ export function PublicChannelRow({
           <LoadingButton
             variant="outline"
             size="sm"
-            className="text-[12px]"
+            className="text-xs"
             onClick={(e) => { e.stopPropagation(); handleLeave(); }}
             isPending={leavingId === channel.id}
             loadingText="Leaving…"
@@ -66,7 +66,7 @@ export function PublicChannelRow({
         ) : (
           <LoadingButton
             size="sm"
-            className="text-[12px]"
+            className="text-xs"
             onClick={(e) => { e.stopPropagation(); handleJoin(); }}
             isPending={joiningId === channel.id}
             loadingText="Joining…"

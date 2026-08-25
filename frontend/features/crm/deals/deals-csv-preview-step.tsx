@@ -53,7 +53,7 @@ export function DealsPreviewStep({
       key: "stage",
       header: "Stage",
       cell: (row) => row.stage ? (
-        <Badge variant="outline" className="text-[10px]">{row.stage}</Badge>
+        <Badge variant="outline" className="text-micro">{row.stage}</Badge>
       ) : "—",
     },
     {

@@ -99,20 +99,20 @@ function DeliveryRow({ delivery }: { delivery: WebhookDelivery }) {
         <span className="min-w-0 flex-1 font-mono text-xs text-muted-foreground truncate" title={delivery.event}>
           {delivery.event}
         </span>
-        <Badge variant="outline" className="text-[10px] shrink-0 font-mono">
+        <Badge variant="outline" className="text-micro shrink-0 font-mono">
           {delivery.responseCode ?? "—"}
         </Badge>
         {delivery.attempts > 1 && (
-          <Badge variant="secondary" className="text-[10px] shrink-0">
+          <Badge variant="secondary" className="text-micro shrink-0">
             {delivery.attempts}x
           </Badge>
         )}
-        <span className="text-[10px] text-muted-foreground shrink-0">
+        <span className="text-micro text-muted-foreground shrink-0">
           {new Date(delivery.deliveredAt).toLocaleTimeString()}
         </span>
       </div>
       {delivery.lastError && delivery.status === "failed" && (
-        <p className="mt-0.5 ml-5 text-[10px] text-red-500 truncate" title={delivery.lastError}>{delivery.lastError}</p>
+        <p className="mt-0.5 ml-5 text-micro text-red-500 truncate" title={delivery.lastError}>{delivery.lastError}</p>
       )}
     </div>
   );
@@ -173,13 +173,13 @@ function WebhookCard({
               <Badge
                 key={e}
                 variant="secondary"
-                className="text-[10px] py-0 px-1.5 bg-muted text-muted-foreground border-border font-mono"
+                className="text-micro py-0 px-1.5 bg-muted text-muted-foreground border-border font-mono"
               >
                 {e}
               </Badge>
             ))}
             {webhook.events.length > 3 && (
-              <Badge variant="secondary" className="text-[10px] py-0 px-1.5">
+              <Badge variant="secondary" className="text-micro py-0 px-1.5">
                 +{webhook.events.length - 3} more
               </Badge>
             )}

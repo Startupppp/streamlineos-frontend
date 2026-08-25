@@ -59,7 +59,7 @@ function FilterOption({ label, active, onSelect }: FilterOptionProps) {
       type="button"
       onClick={onSelect}
       className={cn(
-        "flex w-full items-center rounded-md px-2 py-1.5 text-left text-[13px] transition-colors",
+        "flex w-full items-center rounded-md px-2 py-1.5 text-left text-label transition-colors",
         active
           ? "bg-primary/10 text-primary font-medium"
           : "text-foreground hover:bg-muted",
@@ -73,7 +73,7 @@ function FilterOption({ label, active, onSelect }: FilterOptionProps) {
 function FilterSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mb-3">
-      <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <p className="mb-1 text-micro font-semibold uppercase tracking-wider text-muted-foreground">
         {title}
       </p>
       <div className="space-y-0.5">{children}</div>
@@ -131,7 +131,7 @@ export function AddFilterPopover({ filters, onFiltersChange }: AddFilterPopoverP
           <Filter className="h-3.5 w-3.5" aria-hidden="true" />
           <span className="hidden sm:inline">Filters</span>
           {hasAny ? (
-            <Badge className="ml-0.5 h-4 min-w-4 rounded-full px-1 text-[10px]">
+            <Badge className="ml-0.5 h-4 min-w-4 rounded-full px-1 text-micro">
               {activeCount}
             </Badge>
           ) : null}
@@ -143,12 +143,12 @@ export function AddFilterPopover({ filters, onFiltersChange }: AddFilterPopoverP
         className="w-72 p-3"
       >
         <div className="mb-3 flex items-center justify-between">
-          <p className="text-[13px] font-semibold text-foreground">Add filter</p>
+          <p className="text-label font-semibold text-foreground">Add filter</p>
           {hasAny ? (
             <button
               type="button"
               onClick={handleClearAll}
-              className="flex items-center gap-0.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center gap-0.5 text-dense text-muted-foreground hover:text-foreground transition-colors"
             >
               <X className="h-3 w-3" />
               Clear all
@@ -164,7 +164,7 @@ export function AddFilterPopover({ filters, onFiltersChange }: AddFilterPopoverP
                 type="button"
                 onClick={() => handleCategorySelect(cat.key)}
                 className={cn(
-                  "flex w-full items-center rounded-md px-2 py-1.5 text-left text-[12px] transition-colors",
+                  "flex w-full items-center rounded-md px-2 py-1.5 text-left text-xs transition-colors",
                   activeCategory === cat.key
                     ? "bg-primary text-primary-foreground font-medium"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -201,20 +201,20 @@ export function AddFilterPopover({ filters, onFiltersChange }: AddFilterPopoverP
                     onSelect={() => handleHealthSelect(h)}
                   />
                 ))}
-                <p className="mt-2 text-[10px] text-muted-foreground/70 italic">
+                <p className="mt-2 text-micro text-muted-foreground/70 italic">
                   Health score is a backend gap — not in current API response.
                 </p>
               </FilterSection>
             ) : activeCategory === "lead" ? (
-              <p className="text-[12px] text-muted-foreground py-2">
+              <p className="text-xs text-muted-foreground py-2">
                 Lead filter requires a user lookup endpoint — backend gap. Use the Status filter above or search by name.
               </p>
             ) : activeCategory === "startAfter" || activeCategory === "endBefore" ? (
-              <p className="text-[12px] text-muted-foreground py-2">
+              <p className="text-xs text-muted-foreground py-2">
                 Date filters are a backend gap — the current /projects API does not accept date range params.
               </p>
             ) : (
-              <p className="text-[12px] text-muted-foreground py-2">
+              <p className="text-xs text-muted-foreground py-2">
                 Select a filter category on the left.
               </p>
             )}
@@ -266,7 +266,7 @@ export function ActiveFilterChips({ filters, onRemove, leadName }: ActiveFilterC
         <Badge
           key={chip.key}
           variant="secondary"
-          className="h-6 gap-1 pl-2 pr-1 text-[11px] font-normal"
+          className="h-6 gap-1 pl-2 pr-1 text-dense font-normal"
         >
           {chip.label}
           <button

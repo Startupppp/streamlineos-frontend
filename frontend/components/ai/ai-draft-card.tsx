@@ -54,7 +54,7 @@ export function AiDraftCard({
       <div className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-2">
         <AiGeneratedLabel timestamp={timestamp} />
         {title && (
-          <TruncatedText text={title} className="flex-1 text-[12px] font-medium text-foreground" />
+          <TruncatedText text={title} className="flex-1 text-xs font-medium text-foreground" />
         )}
         {confidence !== undefined && (
           <AiConfidenceBadge confidence={confidence} />

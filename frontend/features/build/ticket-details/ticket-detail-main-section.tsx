@@ -134,7 +134,7 @@ export function TicketDetailMainSection({
 
       <div className="min-w-0">
         {isPreview ? (
-          <h3 className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+          <h3 className="mb-2 text-dense font-medium uppercase tracking-wide text-muted-foreground">
             Description
           </h3>
         ) : (
@@ -166,7 +166,7 @@ export function TicketDetailMainSection({
           />
           {ticket.attachments && ticket.attachments.length > 0 && (
             <div>
-              <h4 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-2">
+              <h4 className="text-dense font-medium uppercase tracking-wide text-muted-foreground mb-2">
                 Attachments
               </h4>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -191,7 +191,7 @@ export function TicketDetailMainSection({
                       onClick={() => void viewFile(att.fileUrl)}
                       className="group relative aspect-video rounded-md overflow-hidden bg-muted border hover:border-primary/50 transition-all text-left"
                     >
-                      <div className="flex items-center justify-center h-full text-muted-foreground text-[10px] p-1 text-center">
+                      <div className="flex items-center justify-center h-full text-muted-foreground text-micro p-1 text-center">
                         {att.fileName}
                       </div>
                     </button>

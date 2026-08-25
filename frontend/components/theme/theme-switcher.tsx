@@ -37,7 +37,7 @@ function ModeOption({ mode }: { mode: AppThemeModeOption }) {
       onClick={handleSelect}
       aria-pressed={isActive}
       className={cn(
-        "flex flex-1 flex-col items-center gap-1 rounded-lg border px-2 py-1.5 text-[11px] font-medium transition-colors",
+        "flex flex-1 flex-col items-center gap-1 rounded-lg border px-2 py-1.5 text-dense font-medium transition-colors",
         isActive
           ? "border-ring bg-accent text-accent-foreground"
           : "border-border text-muted-foreground hover:bg-accent hover:text-accent-foreground",

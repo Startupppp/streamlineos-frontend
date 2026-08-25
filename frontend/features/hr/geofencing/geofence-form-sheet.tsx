@@ -166,7 +166,7 @@ export function GeofenceFormSheet({ open, onOpenChange, fence }: Props) {
                     className="w-full"
                   />
                 </FormControl>
-                <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                <div className="flex justify-between text-micro text-muted-foreground mt-1">
                   <span>50m</span>
                   <span>2000m</span>
                 </div>

@@ -87,7 +87,7 @@ export function ProjectMoreMenu({
           variant="ghost"
           {...animatedNavHoverHandlers}
           className={cn(
-            "relative h-8 w-full justify-start gap-2 rounded-md px-2 text-[13px] font-medium",
+            "relative h-8 w-full justify-start gap-2 rounded-md px-2 text-label font-medium",
             collapsed && "mx-auto h-8 w-8 justify-center px-0",
             anyActive
               ? "bg-primary/10 text-foreground"
@@ -135,7 +135,7 @@ export function ProjectMoreMenu({
             <div className="p-1.5">
               {filteredGroups.map((group) => (
                 <div key={group.id} className="mb-1.5 last:mb-0">
-                  <p className="px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/60">
+                  <p className="px-2 py-1 text-micro font-semibold uppercase tracking-[0.12em] text-muted-foreground/60">
                     {group.label}
                   </p>
                   <div className="space-y-0.5">
@@ -159,7 +159,7 @@ export function ProjectMoreMenu({
               type="button"
               onClick={handleCustomize}
               {...customizeHover.animatedNavHoverHandlers}
-              className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[13px] font-medium text-foreground transition-colors hover:bg-muted/70"
+              className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-label font-medium text-foreground transition-colors hover:bg-muted/70"
             >
               <SidebarAnimatedNavIcon
                 icon={SlidersHorizontalIcon}
@@ -193,7 +193,7 @@ function MoreLink({
       onClick={onClick}
       {...animatedNavHoverHandlers}
       className={cn(
-        "flex items-center gap-2 rounded-lg px-2 py-1.5 text-[13px] transition-all duration-150",
+        "flex items-center gap-2 rounded-lg px-2 py-1.5 text-label transition-all duration-150",
         active
           ? "bg-primary/10 font-medium text-foreground"
           : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",

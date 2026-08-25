@@ -132,7 +132,7 @@ export function ReviewEditor({ sections, onChange }: ReviewEditorProps) {
                     onCheckedChange={(v) => handleChangeQuestion(section.id, q.id, { required: v })}
                     className="scale-75"
                   />
-                  <span className="text-[10px] text-muted-foreground">Req</span>
+                  <span className="text-micro text-muted-foreground">Req</span>
                 </div>
                 <TooltipIconButton
                   icon={Trash2Icon}

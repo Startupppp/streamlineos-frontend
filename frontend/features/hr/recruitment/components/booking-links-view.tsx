@@ -29,7 +29,7 @@ const STATUS_BADGE: Record<HrBookingLink["status"], { label: string; className: 
 function StatusBadgeCell({ status }: { status: HrBookingLink["status"] }) {
   const cfg = STATUS_BADGE[status] ?? STATUS_BADGE.pending;
   return (
-    <Badge variant="outline" className={`text-[10px] ${cfg.className}`}>
+    <Badge variant="outline" className={`text-micro ${cfg.className}`}>
       {cfg.label}
     </Badge>
   );

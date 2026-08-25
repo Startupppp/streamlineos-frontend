@@ -277,7 +277,7 @@ export function InterviewFormSheet({
               />
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                  <label className="text-dense font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                     <Clock className="h-3 w-3" />
                     Format
                   </label>
@@ -295,7 +295,7 @@ export function InterviewFormSheet({
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  <label className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
                     Duration (min)
                   </label>
                   <Input
@@ -311,7 +311,7 @@ export function InterviewFormSheet({
               </div>
               {format_ === "VIDEO" && (
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                  <label className="text-dense font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                     <Video className="h-3 w-3" />
                     Meet Link <span className="text-destructive">*</span>
                   </label>

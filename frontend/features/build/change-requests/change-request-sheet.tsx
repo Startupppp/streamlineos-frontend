@@ -156,11 +156,11 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[11px]">Title <span className="text-destructive">*</span></FormLabel>
+                      <FormLabel className="text-dense">Title <span className="text-destructive">*</span></FormLabel>
                       <FormControl>
-                        <Input {...field} className="text-[11px]" placeholder="Describe the change" />
+                        <Input {...field} className="text-dense" placeholder="Describe the change" />
                       </FormControl>
-                      <FormMessage className="text-[10px]" />
+                      <FormMessage className="text-micro" />
                     </FormItem>
                   )}
                 />
@@ -169,7 +169,7 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[11px]">Description</FormLabel>
+                      <FormLabel className="text-dense">Description</FormLabel>
                       <FormControl>
                         <TiptapEditor
                           content={field.value}
@@ -181,7 +181,7 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
                           menuMode="static"
                         />
                       </FormControl>
-                      <FormMessage className="text-[10px]" />
+                      <FormMessage className="text-micro" />
                     </FormItem>
                   )}
                 />
@@ -190,15 +190,15 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
                   name="impact"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[11px]">Impact</FormLabel>
+                      <FormLabel className="text-dense">Impact</FormLabel>
                       <FormControl>
                         <Textarea
                           {...field}
-                          className="text-[11px] min-h-[60px] resize-none"
+                          className="text-dense min-h-[60px] resize-none"
                           placeholder="Impact on scope, schedule, or cost..."
                         />
                       </FormControl>
-                      <FormMessage className="text-[10px]" />
+                      <FormMessage className="text-micro" />
                     </FormItem>
                   )}
                 />
@@ -209,7 +209,7 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
                       name="status"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-[11px]">Status</FormLabel>
+                          <FormLabel className="text-dense">Status</FormLabel>
                           <Select value={field.value} onValueChange={field.onChange}>
                             <FormControl>
                               <SelectTrigger><SelectValue /></SelectTrigger>
@@ -220,7 +220,7 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
                               ))}
                             </SelectContent>
                           </Select>
-                          <FormMessage className="text-[10px]" />
+                          <FormMessage className="text-micro" />
                         </FormItem>
                       )}
                     />
@@ -230,11 +230,11 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
                         name="estimateHours"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-[11px]">Estimate (hrs)</FormLabel>
+                            <FormLabel className="text-dense">Estimate (hrs)</FormLabel>
                             <FormControl>
-                              <Input {...field} type="number" step="0.5" className="text-[11px]" placeholder="0" />
+                              <Input {...field} type="number" step="0.5" className="text-dense" placeholder="0" />
                             </FormControl>
-                            <FormMessage className="text-[10px]" />
+                            <FormMessage className="text-micro" />
                           </FormItem>
                         )}
                       />
@@ -243,11 +243,11 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
                         name="budgetRs"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-[11px]">Budget (₹)</FormLabel>
+                            <FormLabel className="text-dense">Budget (₹)</FormLabel>
                             <FormControl>
-                              <Input {...field} type="number" step="1" className="text-[11px]" placeholder="0" />
+                              <Input {...field} type="number" step="1" className="text-dense" placeholder="0" />
                             </FormControl>
-                            <FormMessage className="text-[10px]" />
+                            <FormMessage className="text-micro" />
                           </FormItem>
                         )}
                       />
@@ -256,11 +256,11 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
                         name="timelineDays"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-[11px]">Timeline (days)</FormLabel>
+                            <FormLabel className="text-dense">Timeline (days)</FormLabel>
                             <FormControl>
-                              <Input {...field} type="number" className="text-[11px]" placeholder="0" />
+                              <Input {...field} type="number" className="text-dense" placeholder="0" />
                             </FormControl>
-                            <FormMessage className="text-[10px]" />
+                            <FormMessage className="text-micro" />
                           </FormItem>
                         )}
                       />
@@ -270,7 +270,7 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
                       name="approvalOwnerId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-[11px]">Approval Owner</FormLabel>
+                          <FormLabel className="text-dense">Approval Owner</FormLabel>
                           <ProjectMemberSelect
                             projectId={projectId}
                             mode="single"
@@ -278,9 +278,9 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
                             onChange={(v) => field.onChange(v ?? "none")}
                             allowUnassigned
                             placeholder="Unassigned"
-                            className="text-[11px]"
+                            className="text-dense"
                           />
-                          <FormMessage className="text-[10px]" />
+                          <FormMessage className="text-micro" />
                         </FormItem>
                       )}
                     />
@@ -289,15 +289,15 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
                       name="decisionComment"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-[11px]">Decision Comment</FormLabel>
+                          <FormLabel className="text-dense">Decision Comment</FormLabel>
                           <FormControl>
                             <Textarea
                               {...field}
-                              className="text-[11px] min-h-[56px] resize-none"
+                              className="text-dense min-h-[56px] resize-none"
                               placeholder="Approve/reject reasoning..."
                             />
                           </FormControl>
-                          <FormMessage className="text-[10px]" />
+                          <FormMessage className="text-micro" />
                         </FormItem>
                       )}
                     />
@@ -308,9 +308,9 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
             <SheetFooter className="px-5 py-3 border-t shrink-0">
               <div className="grid w-full grid-cols-2 gap-2">
                 <SheetClose asChild>
-                  <Button variant="outline" size="sm" className="text-[11px]">Cancel</Button>
+                  <Button variant="outline" size="sm" className="text-dense">Cancel</Button>
                 </SheetClose>
-                <LoadingButton type="submit" size="sm" className="text-[11px]" isPending={isPending} loadingText="Saving…">
+                <LoadingButton type="submit" size="sm" className="text-dense" isPending={isPending} loadingText="Saving…">
                   {editCr ? "Save Changes" : "Create"}
                 </LoadingButton>
               </div>

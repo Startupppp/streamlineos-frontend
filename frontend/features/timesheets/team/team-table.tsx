@@ -54,8 +54,8 @@ export function TeamTable({ rows, weekStart, isLoading, onRowClick }: TeamTableP
         header: "Member",
         cell: (row) => (
           <div className="min-w-0">
-            <TruncatedText text={row.name || row.email} className="font-medium text-[11px] text-foreground" />
-            {row.name && <TruncatedText text={row.email} className="text-[10px] text-muted-foreground" />}
+            <TruncatedText text={row.name || row.email} className="font-medium text-dense text-foreground" />
+            {row.name && <TruncatedText text={row.email} className="text-micro text-muted-foreground" />}
           </div>
         ),
         sortable: true,
@@ -88,12 +88,12 @@ export function TeamTable({ rows, weekStart, isLoading, onRowClick }: TeamTableP
         cell: (row) => {
           if (row.status === "MISSING")
             return (
-              <Badge className="text-[10px] border px-1.5 py-0 bg-muted text-muted-foreground border-border">
+              <Badge className="text-micro border px-1.5 py-0 bg-muted text-muted-foreground border-border">
                 Missing
               </Badge>
             );
           return (
-            <Badge className={cn("text-[10px] border px-1.5 py-0", PERIOD_STATUS_BADGE[row.status])}>
+            <Badge className={cn("text-micro border px-1.5 py-0", PERIOD_STATUS_BADGE[row.status])}>
               {PERIOD_STATUS_LABEL[row.status]}
             </Badge>
           );

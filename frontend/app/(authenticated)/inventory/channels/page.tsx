@@ -110,7 +110,7 @@ const ChannelCard = memo(function ChannelCard({ channel, onEdit, onViewPublicati
             <Badge
               variant="outline"
               className={cn(
-                "text-[11px] shrink-0",
+                "text-dense shrink-0",
                 channel.status === "ACTIVE"
                   ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
                   : "bg-muted text-muted-foreground border-border",
@@ -123,7 +123,7 @@ const ChannelCard = memo(function ChannelCard({ channel, onEdit, onViewPublicati
           <div className="flex flex-wrap gap-1.5">
             <Badge
               variant="outline"
-              className={cn("text-[11px]", CHANNEL_TYPE_BADGE[channel.channelType])}
+              className={cn("text-dense", CHANNEL_TYPE_BADGE[channel.channelType])}
             >
               {CHANNEL_TYPE_LABEL[channel.channelType]}
             </Badge>
@@ -131,7 +131,7 @@ const ChannelCard = memo(function ChannelCard({ channel, onEdit, onViewPublicati
             {channel.lastSyncStatus && (
               <Badge
                 variant="outline"
-                className={cn("text-[11px]", SYNC_STATUS_BADGE[channel.lastSyncStatus])}
+                className={cn("text-dense", SYNC_STATUS_BADGE[channel.lastSyncStatus])}
               >
                 {SYNC_STATUS_LABEL[channel.lastSyncStatus]}
               </Badge>
@@ -139,18 +139,18 @@ const ChannelCard = memo(function ChannelCard({ channel, onEdit, onViewPublicati
           </div>
 
           {isExternal && (
-            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <div className="flex items-center gap-1.5 text-dense text-muted-foreground">
               <Info className="h-3 w-3 shrink-0" />
               <span>External sync requires provider connection</span>
             </div>
           )}
 
           <div className="space-y-0.5">
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-dense text-muted-foreground">
               Last sync: {formatDate(channel.lastSyncAt)}
             </p>
             {channel.safetyBuffer != null && (
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-dense text-muted-foreground">
                 Safety buffer: {channel.safetyBuffer}%
               </p>
             )}

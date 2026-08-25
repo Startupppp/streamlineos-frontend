@@ -76,7 +76,7 @@ const LOTS_COLUMNS: DataTableColumn<LotItem>[] = [
     cell: (row) => (
       <>
         <TruncatedText text={row.productName} className="font-medium text-foreground" />
-        <span className="text-muted-foreground font-mono text-[10px]">{row.variantSku}</span>
+        <span className="text-muted-foreground font-mono text-micro">{row.variantSku}</span>
       </>
     ),
   },
@@ -86,7 +86,7 @@ const LOTS_COLUMNS: DataTableColumn<LotItem>[] = [
     cell: (row) => (
       <Badge
         variant="outline"
-        className={`text-[10px] px-1.5 ${LOT_STATUS_BADGE[row.status]}`}
+        className={`text-micro px-1.5 ${LOT_STATUS_BADGE[row.status]}`}
       >
         {LOT_STATUS_LABEL[row.status]}
       </Badge>

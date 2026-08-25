@@ -152,7 +152,7 @@ export default function BacklogPage({ params }: PageProps) {
       {
         key: "id",
         header: "ID",
-        className: "w-[80px] font-mono text-[11px] text-muted-foreground",
+        className: "w-[80px] font-mono text-dense text-muted-foreground",
         cell: (ticket) => (
           <span className="flex items-center gap-1.5">
             <TicketTypeIcon type={ticket.type} />
@@ -165,7 +165,7 @@ export default function BacklogPage({ params }: PageProps) {
         header: "Title",
         className: TABLE_TITLE_CELL,
         cell: (ticket) => (
-          <TruncatedText text={ticket.title ?? "—"} className="text-[11px] font-medium" />
+          <TruncatedText text={ticket.title ?? "—"} className="text-dense font-medium" />
         ),
       },
       {
@@ -195,7 +195,7 @@ export default function BacklogPage({ params }: PageProps) {
                   {getUserInitials(ticket.assignee)}
                 </AvatarFallback>
               </Avatar>
-              <TruncatedText text={getUserDisplayName(ticket.assignee)} className="text-[11px]" />
+              <TruncatedText text={getUserDisplayName(ticket.assignee)} className="text-dense" />
             </div>
           ) : (
             <span className="text-xs text-muted-foreground">—</span>
@@ -204,7 +204,7 @@ export default function BacklogPage({ params }: PageProps) {
       {
         key: "created",
         header: "Created",
-        className: "hidden lg:table-cell w-[110px] text-[11px] text-muted-foreground",
+        className: "hidden lg:table-cell w-[110px] text-dense text-muted-foreground",
         headerClassName: "hidden lg:table-cell",
         cell: (ticket) =>
           ticket.createdAt ? format(new Date(ticket.createdAt), "MMM d") : "—",

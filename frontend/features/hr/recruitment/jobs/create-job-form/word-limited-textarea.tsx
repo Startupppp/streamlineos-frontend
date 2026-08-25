@@ -54,7 +54,7 @@ export function WordLimitedTextarea({
             <p
               id={counterId}
               className={cn(
-                "text-[10px] text-right tabular-nums",
+                "text-micro text-right tabular-nums",
                 atLimit ? "text-destructive" : nearLimit ? "text-amber-600" : "text-muted-foreground",
               )}
             >

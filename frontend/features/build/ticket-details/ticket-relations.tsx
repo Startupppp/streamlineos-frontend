@@ -227,7 +227,7 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
             if (!rels?.length) return null;
             return (
               <div key={type}>
-                <p className={cn("text-[10px] font-medium flex items-center gap-1 mb-1", meta.color)}>
+                <p className={cn("text-micro font-medium flex items-center gap-1 mb-1", meta.color)}>
                   {meta.icon}
                   {meta.label}
                 </p>

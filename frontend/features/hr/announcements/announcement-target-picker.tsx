@@ -126,7 +126,7 @@ export function AnnouncementTargetPicker({
             <Badge
               key={opt.value}
               variant="secondary"
-              className="gap-1 pr-1 text-[10px] font-medium"
+              className="gap-1 pr-1 text-micro font-medium"
             >
               {opt.label}
               <button

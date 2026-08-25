@@ -233,7 +233,7 @@ export default function SprintsPage({ params }: PageProps) {
           <div className="space-y-5">
             {activeSprints.length > 0 ? (
               <PmSection index={0}>
-                <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <p className="mb-2 text-micro font-semibold uppercase tracking-wider text-muted-foreground">
                   Active
                 </p>
                 <PmStaggerList className="grid gap-2.5">
@@ -258,7 +258,7 @@ export default function SprintsPage({ params }: PageProps) {
 
             {plannedSprints.length > 0 ? (
               <PmSection index={1}>
-                <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <p className="mb-2 text-micro font-semibold uppercase tracking-wider text-muted-foreground">
                   Planned
                 </p>
                 <PmStaggerList className="grid gap-2.5">
@@ -283,7 +283,7 @@ export default function SprintsPage({ params }: PageProps) {
                   <VelocityChart sprints={completedSprints} />
                 </PmSection>
                 <PmSection index={3}>
-                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <p className="mb-2 text-micro font-semibold uppercase tracking-wider text-muted-foreground">
                     Completed
                   </p>
                   <PmStaggerList className="grid gap-2.5">

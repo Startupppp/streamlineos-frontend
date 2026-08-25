@@ -99,7 +99,7 @@ export function PolicyPreviewDialog({ policyId, open, onOpenChange }: Props) {
                         key={i}
                         className="flex items-center gap-2 text-xs text-foreground/80"
                       >
-                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                        <Badge variant="secondary" className="text-micro px-1.5 py-0">
                           {SCOPE_TYPE_LABELS[s.scopeType as keyof typeof SCOPE_TYPE_LABELS] ?? s.scopeType}
                         </Badge>
                         <TruncatedText text={s.scopeValue || "(org)"} className="font-mono min-w-0 flex-1" />
@@ -122,7 +122,7 @@ export function PolicyPreviewDialog({ policyId, open, onOpenChange }: Props) {
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                       Resolved Rules
                     </p>
-                    <pre className="text-[10px] font-mono bg-background rounded p-2 border border-border overflow-auto max-h-32">
+                    <pre className="text-micro font-mono bg-background rounded p-2 border border-border overflow-auto max-h-32">
                       {JSON.stringify(data.rules, null, 2)}
                     </pre>
                   </div>

@@ -105,7 +105,7 @@ export const FeedbackRow = memo(function FeedbackRow({
                 </p>
               ) : null}
               {post.submittedByName ? (
-                <p className={cn(TEXT_ONE_LINE, "mt-1 text-[11px] text-muted-foreground")}>
+                <p className={cn(TEXT_ONE_LINE, "mt-1 text-dense text-muted-foreground")}>
                   by {post.submittedByName}
                 </p>
               ) : null}
@@ -162,13 +162,13 @@ export const FeedbackRow = memo(function FeedbackRow({
                 ))}
               </SelectContent>
             </Select>
-            <Badge variant={FEEDBACK_STATUS_VARIANT[post.status]} className="text-[10px]">
+            <Badge variant={FEEDBACK_STATUS_VARIANT[post.status]} className="text-micro">
               {FEEDBACK_STATUS_OPTIONS.find((o) => o.value === post.status)?.label}
             </Badge>
             {isMerged ? (
               <Badge
                 variant="outline"
-                className="border-amber-200 bg-amber-50 text-[10px] text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300"
+                className="border-amber-200 bg-amber-50 text-micro text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300"
               >
                 Merged duplicate
               </Badge>

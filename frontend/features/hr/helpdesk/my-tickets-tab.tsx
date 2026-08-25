@@ -113,18 +113,18 @@ function TicketRow({ ticket, onClick }: { ticket: HelpdeskTicket; onClick: () =>
     >
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap mb-0.5">
-          <span className={cn("text-[10px] font-semibold px-1.5 py-0.5 rounded-full", STATUS_COLORS[ticket.status])}>
+          <span className={cn("text-micro font-semibold px-1.5 py-0.5 rounded-full", STATUS_COLORS[ticket.status])}>
             {STATUS_LABELS[ticket.status]}
           </span>
-          <span className="text-[10px] text-muted-foreground capitalize">
+          <span className="text-micro text-muted-foreground capitalize">
             {ticket.category ? (HELPDESK_CATEGORY_LABELS[ticket.category as keyof typeof HELPDESK_CATEGORY_LABELS] ?? ticket.category) : "Other"}
           </span>
           {ticket.isConfidential && (
-            <Badge variant="secondary" className="text-[10px] h-4 px-1">Confidential</Badge>
+            <Badge variant="secondary" className="text-micro h-4 px-1">Confidential</Badge>
           )}
         </div>
         <TruncatedText text={ticket.title} className="text-sm font-medium text-foreground" />
-        <p className="text-[11px] text-muted-foreground mt-0.5">
+        <p className="text-dense text-muted-foreground mt-0.5">
           {format(new Date(ticket.createdAt), "MMM d, yyyy")}
           <span className={cn("ml-2 font-medium", PRIORITY_COLORS[ticket.priority])}>{ticket.priority}</span>
         </p>

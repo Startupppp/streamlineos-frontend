@@ -98,7 +98,7 @@ export function GenerationFailureStage({
           />
           <span
             className={cn(
-              "text-[11px] font-semibold tracking-tight",
+              "text-dense font-semibold tracking-tight",
               orgExists
                 ? "text-amber-700 dark:text-amber-400"
                 : "text-destructive",
@@ -112,17 +112,17 @@ export function GenerationFailureStage({
           <h2 className="min-w-0 w-full font-display text-[1.35rem] font-extrabold leading-[1.1] tracking-[-0.03em] text-foreground sm:text-[1.5rem]">
             <span className="block text-balance break-words">{title}</span>
           </h2>
-          <p className="text-[13px] text-muted-foreground">{subtitle}</p>
+          <p className="text-label text-muted-foreground">{subtitle}</p>
         </div>
 
         <div
           role="alert"
           className="w-full min-w-0 max-w-full rounded-xl border border-destructive/25 bg-destructive/5 px-3 py-2.5 text-center md:max-w-sm"
         >
-          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-destructive/80">
+          <p className="text-dense font-semibold uppercase tracking-[0.12em] text-destructive/80">
             What went wrong
           </p>
-          <p className="mt-1 break-words text-[13px] text-foreground">
+          <p className="mt-1 break-words text-label text-foreground">
             {setupError.message}
           </p>
         </div>
@@ -164,7 +164,7 @@ export function GenerationFailureStage({
             </div>
           )}
 
-          <p className="relative z-10 mt-2 text-[11px] text-muted-foreground">
+          <p className="relative z-10 mt-2 text-dense text-muted-foreground">
             Still stuck? Email{" "}
             <a
               href={SUPPORT_MAILTO}

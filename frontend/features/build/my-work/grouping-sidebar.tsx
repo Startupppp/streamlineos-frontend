@@ -74,7 +74,7 @@ const SidebarRow = memo(function SidebarRow({
       <span className="min-w-0 flex-1 truncate">{row.label}</span>
       <span
         className={cn(
-          "shrink-0 rounded px-1 py-0.5 text-[10px] font-medium tabular-nums",
+          "shrink-0 rounded px-1 py-0.5 text-micro font-medium tabular-nums",
           isActive ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground",
         )}
       >

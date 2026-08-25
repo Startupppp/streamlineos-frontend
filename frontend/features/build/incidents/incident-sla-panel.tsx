@@ -18,8 +18,8 @@ function TimerRow({
   if (!dueAt) {
     return (
       <div className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
-        <span className="text-[11px] font-medium text-muted-foreground">{label}</span>
-        <span className="text-[11px] text-muted-foreground">No SLA set</span>
+        <span className="text-dense font-medium text-muted-foreground">{label}</span>
+        <span className="text-dense text-muted-foreground">No SLA set</span>
       </div>
     );
   }
@@ -32,10 +32,10 @@ function TimerRow({
     const metLabel = metDate.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
     return (
       <div className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
-        <span className="text-[11px] font-medium text-muted-foreground">{label}</span>
+        <span className="text-dense font-medium text-muted-foreground">{label}</span>
         <div className="text-right">
-          <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">Met — {metLabel}</p>
-          <p className="text-[10px] text-muted-foreground">Due {dueLabel}</p>
+          <p className="text-dense text-emerald-600 dark:text-emerald-400 font-medium">Met — {metLabel}</p>
+          <p className="text-micro text-muted-foreground">Due {dueLabel}</p>
         </div>
       </div>
     );
@@ -43,11 +43,11 @@ function TimerRow({
 
   return (
     <div className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
-      <span className={cn("text-[11px] font-medium", breached ? "text-red-600 dark:text-red-400" : "text-muted-foreground")}>
+      <span className={cn("text-dense font-medium", breached ? "text-red-600 dark:text-red-400" : "text-muted-foreground")}>
         {label}
       </span>
       <div className="text-right">
-        <p className={cn("text-[11px] font-medium", breached ? "text-red-600 dark:text-red-400" : "text-foreground")}>
+        <p className={cn("text-dense font-medium", breached ? "text-red-600 dark:text-red-400" : "text-foreground")}>
           {breached ? "Breached" : "Pending"} — due {dueLabel}
         </p>
       </div>
@@ -70,7 +70,7 @@ export function IncidentSlaPanel({ incident }: IncidentSlaPanelProps) {
       isBreached ? "border-red-200 bg-red-50/40 dark:border-red-500/30 dark:bg-red-500/10" : "border-border",
     )}>
       <p className={cn(
-        "text-[10px] font-semibold uppercase tracking-wider mb-2",
+        "text-micro font-semibold uppercase tracking-wider mb-2",
         isBreached ? "text-red-600" : "text-muted-foreground",
       )}>
         SLA Status

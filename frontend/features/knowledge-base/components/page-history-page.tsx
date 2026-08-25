@@ -71,7 +71,7 @@ function DiffSummary({ versionTitle, versionContent, currentTitle, currentConten
       {diff.excerpt && (
         <div>
           <p className="text-xs text-muted-foreground mb-1">First difference (from this version):</p>
-          <p className="text-[11px] text-foreground bg-muted rounded px-2 py-1.5 font-mono break-all line-clamp-3">
+          <p className="text-dense text-foreground bg-muted rounded px-2 py-1.5 font-mono break-all line-clamp-3">
             &hellip;{diff.excerpt}&hellip;
           </p>
         </div>

@@ -83,7 +83,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
               </span>
               <Badge
                 variant="outline"
-                className={`text-[10px] h-4 px-1.5 ${AUDIENCE_BADGE_CLASS[audience]}`}
+                className={`text-micro h-4 px-1.5 ${AUDIENCE_BADGE_CLASS[audience]}`}
               >
                 {AUDIENCE_LABELS[audience]}
               </Badge>

@@ -71,7 +71,7 @@ export const CustomerTable = React.memo(function CustomerTable({
             )}
           >
             <span
-              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-[10px] font-semibold text-primary"
+              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-micro font-semibold text-primary"
               aria-hidden="true"
             >
               {c.name[0]?.toUpperCase() ?? "?"}
@@ -79,10 +79,10 @@ export const CustomerTable = React.memo(function CustomerTable({
             <div className="min-w-0 flex-1">
               <TruncatedText
                 text={c.name}
-                className="text-[13px] font-medium text-foreground transition-colors group-hover:text-primary"
+                className="text-label font-medium text-foreground transition-colors group-hover:text-primary"
               />
               {c.industry ? (
-                <p className="text-[11px] text-muted-foreground leading-none mt-0.5 truncate">
+                <p className="text-dense text-muted-foreground leading-none mt-0.5 truncate">
                   {c.industry}
                 </p>
               ) : null}
@@ -164,7 +164,7 @@ export const CustomerTable = React.memo(function CustomerTable({
             <Badge
               variant="outline"
               className={cn(
-                "h-5 rounded-full border px-1.5 text-[10px] font-medium",
+                "h-5 rounded-full border px-1.5 text-micro font-medium",
                 className,
               )}
             >

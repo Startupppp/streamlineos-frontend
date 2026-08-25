@@ -47,7 +47,7 @@ export function ActionCard({
       <div className="min-w-0 flex-1">
         <p className="text-xs font-medium text-muted-foreground">{title}</p>
         <p className="text-lg font-semibold tabular-nums text-foreground leading-tight">{value}</p>
-        <TruncatedText text={description} className="text-[10px] text-muted-foreground mt-0.5" />
+        <TruncatedText text={description} className="text-micro text-muted-foreground mt-0.5" />
       </div>
     </Link>
   );

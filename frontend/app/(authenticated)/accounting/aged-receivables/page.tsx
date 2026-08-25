@@ -101,7 +101,7 @@ export default function AgedReceivablesPage() {
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
           <div className="flex flex-col gap-1">
-            <label htmlFor="aged-asof" className="text-[11px] font-medium text-muted-foreground leading-none">As of</label>
+            <label htmlFor="aged-asof" className="text-dense font-medium text-muted-foreground leading-none">As of</label>
             <DatePicker id="aged-asof" value={asOf ?? ""} onChange={handleAsOfChange} placeholder="Pick a date" className="w-[160px]" />
           </div>
         </div>

@@ -18,13 +18,13 @@ interface KbContentGapsProps {
 function GapKindBadge({ kind }: { kind: KbContentGapRow["gapKind"] }) {
   if (kind === "ai_no_context") {
     return (
-      <Badge variant="outline" className="text-[10px] h-5 bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
+      <Badge variant="outline" className="text-micro h-5 bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
         AI no-context
       </Badge>
     );
   }
   return (
-    <Badge variant="outline" className="text-[10px] h-5 bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30">
+    <Badge variant="outline" className="text-micro h-5 bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30">
       Search
     </Badge>
   );
@@ -42,11 +42,11 @@ function GapRow({ row }: { row: KbContentGapRow }) {
   return (
     <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border/50 bg-card text-sm hover:bg-muted/30 transition-colors">
       <GapKindBadge kind={row.gapKind} />
-      <span className="flex-1 min-w-0 truncate text-[13px]">
+      <span className="flex-1 min-w-0 truncate text-label">
         {row.query ?? <span className="text-muted-foreground italic">Unknown query</span>}
       </span>
-      <span className="shrink-0 text-[12px] font-medium tabular-nums">{row.count}×</span>
-      <span className="shrink-0 text-[11px] text-muted-foreground w-[90px] text-right">{formattedDate}</span>
+      <span className="shrink-0 text-xs font-medium tabular-nums">{row.count}×</span>
+      <span className="shrink-0 text-dense text-muted-foreground w-[90px] text-right">{formattedDate}</span>
     </div>
   );
 }
@@ -86,7 +86,7 @@ export function KbContentGaps({ range, filter = "all" }: KbContentGapsProps) {
 
   return (
     <div className="space-y-1.5">
-      <div className="flex items-center gap-3 px-3 py-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+      <div className="flex items-center gap-3 px-3 py-1.5 text-micro font-medium uppercase tracking-wide text-muted-foreground">
         <span className="w-[90px] shrink-0">Kind</span>
         <span className="flex-1">Query</span>
         <span className="shrink-0">Count</span>

@@ -39,7 +39,7 @@ export function ChannelAvatar({
         <AvatarImage src={resolveImageUrl(otherMember?.image)} />
         <AvatarFallback
           className={cn(
-            "text-[10px] font-semibold bg-primary/10 text-primary",
+            "text-micro font-semibold bg-primary/10 text-primary",
             round,
           )}
         >

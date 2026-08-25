@@ -178,16 +178,16 @@ export default function LeadSourceReportPage() {
                                 </Badge>
                               )}
                             </div>
-                            <div className="flex items-center gap-4 text-[11px]">
+                            <div className="flex items-center gap-4 text-dense">
                               <div className="text-center">
                                 <div className="font-semibold tabular-nums">{s.count}</div>
-                                <div className="text-[10px] text-muted-foreground">leads</div>
+                                <div className="text-micro text-muted-foreground">leads</div>
                               </div>
                               <div className="text-center">
                                 <div className="font-semibold tabular-nums text-emerald-700 dark:text-emerald-400">
                                   {s.converted}
                                 </div>
-                                <div className="text-[10px] text-muted-foreground">converted</div>
+                                <div className="text-micro text-muted-foreground">converted</div>
                               </div>
                               <div className="text-center">
                                 <div
@@ -202,14 +202,14 @@ export default function LeadSourceReportPage() {
                                 >
                                   {s.conversionRate}%
                                 </div>
-                                <div className="text-[10px] text-muted-foreground">rate</div>
+                                <div className="text-micro text-muted-foreground">rate</div>
                               </div>
                               <div className="text-center hidden sm:block">
-                                <div className="font-semibold tabular-nums text-[11px]">
+                                <div className="font-semibold tabular-nums text-dense">
                                   <IndianRupee className="h-3 w-3 inline mr-0.5 text-primary" />
                                   {formatCurrency(s.totalValue)}
                                 </div>
-                                <div className="text-[10px] text-muted-foreground">value</div>
+                                <div className="text-micro text-muted-foreground">value</div>
                               </div>
                             </div>
                           </div>
@@ -257,7 +257,7 @@ export default function LeadSourceReportPage() {
                                 key={s.source}
                                 className="flex flex-col items-center gap-1 flex-1"
                               >
-                                <span className="text-[11px] font-semibold text-muted-foreground tabular-nums">
+                                <span className="text-dense font-semibold text-muted-foreground tabular-nums">
                                   {s.conversionRate}%
                                 </span>
                                 <div
@@ -275,7 +275,7 @@ export default function LeadSourceReportPage() {
                                     transition={{ duration: 0.6, delay: i * 0.08 }}
                                   />
                                 </div>
-                                <span className="text-[10px] text-muted-foreground text-center leading-tight">
+                                <span className="text-micro text-muted-foreground text-center leading-tight">
                                   {label}
                                 </span>
                               </div>

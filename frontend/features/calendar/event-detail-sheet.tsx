@@ -250,14 +250,14 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                             >
                               <Badge
                                 variant="outline"
-                                className="font-mono text-[10px] shrink-0 text-muted-foreground border-border"
+                                className="font-mono text-micro shrink-0 text-muted-foreground border-border"
                               >
                                 {event.linkedTicket.key}
                               </Badge>
                               <TruncatedText text={event.linkedTicket.title} className="text-sm flex-1 text-foreground" />
                               <Badge
                                 variant="secondary"
-                                className="text-[10px] h-4 px-1.5 shrink-0 capitalize"
+                                className="text-micro h-4 px-1.5 shrink-0 capitalize"
                               >
                                 {event.linkedTicket.status.toLowerCase().replace(/_/g, " ")}
                               </Badge>
@@ -366,7 +366,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                                 <AvatarImage
                                   src={resolveImageUrl(a.user?.image ?? null)}
                                 />
-                                <AvatarFallback className="text-[10px]">
+                                <AvatarFallback className="text-micro">
                                   {(a.user?.name ?? a.user?.email ?? "?")
                                     .slice(0, 2)
                                     .toUpperCase()}
@@ -375,7 +375,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                               <TruncatedText text={a.user?.name ?? a.user?.email ?? "Unknown"} className="flex-1 text-xs" />
                               <Badge
                                 variant="outline"
-                                className={`text-[10px] h-4 px-1.5 capitalize ${
+                                className={`text-micro h-4 px-1.5 capitalize ${
                                   a.status === "accepted"
                                     ? "border-green-200 text-green-600 dark:border-green-900 dark:text-green-400"
                                     : a.status === "declined"

@@ -208,17 +208,17 @@ export function BulkOnboardPanel() {
 
       <Card className="border-border/70 shadow-sm">
         <CardContent className="p-3 sm:p-4">
-          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-2">
+          <p className="text-dense font-medium text-muted-foreground uppercase tracking-wide mb-2">
             Required columns
           </p>
           <div className="flex flex-wrap gap-1.5">
             {BULK_ONBOARD_COLUMNS.filter((c) => c.required).map((c) => (
-              <Badge key={c.key} variant="outline" className="text-[10px] h-5 font-mono font-normal">
+              <Badge key={c.key} variant="outline" className="text-micro h-5 font-mono font-normal">
                 {c.header}
               </Badge>
             ))}
           </div>
-          <p className="text-[11px] text-muted-foreground mt-2">
+          <p className="text-dense text-muted-foreground mt-2">
             Optional: phone, gender, role, employeeId, joiningDate, dateOfBirth, taxId, monthlySalary, bank fields.
             {deptNameList.length > 0 && (
               <>
@@ -275,7 +275,7 @@ export function BulkOnboardPanel() {
               onChange={handleFileInput}
               aria-label="Upload employee onboard file"
             />
-            <div className="mt-3 flex items-start gap-2 text-[11px] text-muted-foreground">
+            <div className="mt-3 flex items-start gap-2 text-dense text-muted-foreground">
               <FileSpreadsheet className="h-3.5 w-3.5 shrink-0 mt-0.5" />
               <span>
                 Prefer downloading the template first so columns match. The sample row can be edited or deleted.

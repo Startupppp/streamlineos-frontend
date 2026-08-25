@@ -22,7 +22,7 @@ interface ReimbursementStatusBadgeProps {
 }
 
 export function ReimbursementStatusBadge({ status }: ReimbursementStatusBadgeProps) {
-  if (!status) return <span className="text-[10px] text-muted-foreground">—</span>;
+  if (!status) return <span className="text-micro text-muted-foreground">—</span>;
   return (
     <SemanticBadge
       tone={STATUS_TONES[status]}

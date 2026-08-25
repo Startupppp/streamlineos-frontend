@@ -146,7 +146,7 @@ export function WebhookCard({
               </span>
             ) : (
               (wh.events ?? []).map((ev) => (
-                <Badge key={ev} variant="secondary" className="text-[10px]">
+                <Badge key={ev} variant="secondary" className="text-micro">
                   {ev}
                 </Badge>
               ))

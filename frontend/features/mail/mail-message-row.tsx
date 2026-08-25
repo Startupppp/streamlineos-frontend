@@ -215,7 +215,7 @@ export function MailMessageRow({
           <TruncatedText
             text={senderLabel}
             className={cn(
-              "text-[13px] min-w-0",
+              "text-label min-w-0",
               !message.isRead
                 ? "font-semibold text-foreground"
                 : "font-medium text-foreground/80",
@@ -241,7 +241,7 @@ export function MailMessageRow({
           ) : (
             <span
               className={cn(
-                "text-[11px] text-muted-foreground tabular-nums",
+                "text-dense text-muted-foreground tabular-nums",
                 !message.isRead && "font-medium text-foreground/70",
               )}
             >
@@ -254,7 +254,7 @@ export function MailMessageRow({
         <TruncatedText
           text={message.subject || "(no subject)"}
           className={cn(
-            "text-[12px] flex-1 min-w-0",
+            "text-xs flex-1 min-w-0",
             !message.isRead
               ? "font-semibold text-foreground"
               : "text-foreground/70",
@@ -270,7 +270,7 @@ export function MailMessageRow({
       <div className="flex items-center justify-between gap-1 mt-0.5 pl-3">
         <TruncatedText
           text={message.snippet}
-          className="text-[11px] text-muted-foreground flex-1 min-w-0"
+          className="text-dense text-muted-foreground flex-1 min-w-0"
         />
         <StarButton
           messageId={message.id}

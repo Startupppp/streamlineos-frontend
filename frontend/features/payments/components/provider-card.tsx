@@ -52,16 +52,16 @@ export function ProviderCard({ catalogEntry, provider, selected, onSelect, onCon
         {provider && <ProviderStatusBadge status={provider.status} />}
       </div>
 
-      <p className="text-[11px] text-muted-foreground">
+      <p className="text-dense text-muted-foreground">
         {catalogEntry.supportedPaymentMethods.slice(0, 4).join(" · ") || "Manual recording"}
       </p>
 
       {!catalogEntry.isImplemented ? (
-        <p className="text-[11px] text-muted-foreground italic">Coming soon</p>
+        <p className="text-dense text-muted-foreground italic">Coming soon</p>
       ) : isManual ? (
-        <p className="text-[11px] text-muted-foreground">Configure instructions for invoices</p>
+        <p className="text-dense text-muted-foreground">Configure instructions for invoices</p>
       ) : provider ? (
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-dense text-muted-foreground">
           {provider.environment === "live" ? "Live environment" : "Test environment"}
         </p>
       ) : (

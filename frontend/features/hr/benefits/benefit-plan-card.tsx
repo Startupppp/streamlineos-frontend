@@ -50,7 +50,7 @@ export function BenefitPlanCard({ plan, enrolled, onEnroll, onWaive, onEdit, isA
               )}
             </div>
           </div>
-          <Badge variant="outline" className="text-[10px] shrink-0">
+          <Badge variant="outline" className="text-micro shrink-0">
             {meta.label}
           </Badge>
         </div>
@@ -81,7 +81,7 @@ export function BenefitPlanCard({ plan, enrolled, onEnroll, onWaive, onEdit, isA
             </LoadingButton>
           )}
           {enrolled && !isAdmin && (
-            <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-[10px] dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">Enrolled</Badge>
+            <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-micro dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">Enrolled</Badge>
           )}
           {isAdmin && onEdit && (
             <Button size="sm" variant="outline" className="text-xs" onClick={onEdit}>

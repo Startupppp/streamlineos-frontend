@@ -106,7 +106,7 @@ const AccountRow = memo(function AccountRow({
         />
         <TruncatedText
           text={`${TOOLKIT_LABELS[connection.toolkit]}${connection.isPrimary ? " · Default" : ""}`}
-          className="text-[11px] text-muted-foreground"
+          className="text-dense text-muted-foreground"
         />
       </div>
       {connection.status === "needs_reauth" ? (

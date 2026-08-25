@@ -154,14 +154,14 @@ export function DocumentChecklistRow({
                     )}
                   />
                   {docType.isMandatory ? (
-                    <span className="inline-flex shrink-0 items-center rounded-full border border-border bg-muted px-1.5 py-px text-[10px] font-semibold text-muted-foreground">
+                    <span className="inline-flex shrink-0 items-center rounded-full border border-border bg-muted px-1.5 py-px text-micro font-semibold text-muted-foreground">
                       Required
                     </span>
                   ) : null}
                   {submission ? (
                     <span
                       className={cn(
-                        "inline-flex shrink-0 items-center rounded-full border px-1.5 py-px text-[10px] font-semibold",
+                        "inline-flex shrink-0 items-center rounded-full border px-1.5 py-px text-micro font-semibold",
                         docStatusBadgeClass(submission.status),
                       )}
                     >

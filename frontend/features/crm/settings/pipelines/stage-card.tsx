@@ -94,7 +94,7 @@ export function StageCard({
           </div>
           <span className={cn("size-2.5 rounded-full shrink-0", dotClass)} />
           <TruncatedText text={stage.label} className="font-medium text-sm min-w-[80px] flex-1" />
-          <span className="font-mono text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground shrink-0">
+          <span className="font-mono text-micro bg-muted px-1.5 py-0.5 rounded text-muted-foreground shrink-0">
             {stage.key}
           </span>
           <div className="flex items-center gap-0.5 shrink-0">
@@ -109,9 +109,9 @@ export function StageCard({
             </Button>
           </div>
           <Select value={stage.stageType} onValueChange={handleStageTypeChange}>
-            <SelectTrigger className="h-6 w-[72px] text-[11px] border-none shadow-none px-1.5">
+            <SelectTrigger className="h-6 w-[72px] text-dense border-none shadow-none px-1.5">
               <SelectValue>
-                <span className={cn("text-[11px]", stageTypeMeta?.className)}>{stageTypeMeta?.label}</span>
+                <span className={cn("text-dense", stageTypeMeta?.className)}>{stageTypeMeta?.label}</span>
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -124,11 +124,11 @@ export function StageCard({
           </Select>
           <Input ref={slaRef} type="number" min={1} defaultValue={stage.slaHours ?? ""} placeholder="SLA" className="w-16 text-xs" onBlur={handleSlaBlur} />
           <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-[10px] text-muted-foreground">Appr.</span>
+            <span className="text-micro text-muted-foreground">Appr.</span>
             <Switch checked={stage.requiresApproval} onCheckedChange={handleApprovalChange} className="scale-75" />
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-[10px] text-muted-foreground">Terminal</span>
+            <span className="text-micro text-muted-foreground">Terminal</span>
             <Switch checked={stage.isTerminal} onCheckedChange={handleTerminalChange} className="scale-75" />
           </div>
           <CrmStageBadge stage={stage} size="table" />

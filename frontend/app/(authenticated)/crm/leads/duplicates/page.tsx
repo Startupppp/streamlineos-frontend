@@ -88,26 +88,26 @@ function DuplicateGroupCard({
     {
       key: "name",
       header: "Name",
-      cell: (row) => <TruncatedText text={row.name} className="text-[11px] font-medium max-w-[120px]" />,
+      cell: (row) => <TruncatedText text={row.name} className="text-dense font-medium max-w-[120px]" />,
     },
     {
       key: "email",
       header: "Email",
-      cell: (row) => <span className="text-[11px] text-muted-foreground break-all">{row.email ?? "—"}</span>,
+      cell: (row) => <span className="text-dense text-muted-foreground break-all">{row.email ?? "—"}</span>,
     },
     {
       key: "phone",
       header: "Phone",
       headerClassName: "hidden md:table-cell",
       className: "hidden md:table-cell",
-      cell: (row) => <span className="text-[11px] text-muted-foreground">{row.phone ?? "—"}</span>,
+      cell: (row) => <span className="text-dense text-muted-foreground">{row.phone ?? "—"}</span>,
     },
     {
       key: "company",
       header: "Company",
       headerClassName: "hidden md:table-cell",
       className: "hidden md:table-cell",
-      cell: (row) => <span className="text-[11px] text-muted-foreground">{row.company ?? "—"}</span>,
+      cell: (row) => <span className="text-dense text-muted-foreground">{row.company ?? "—"}</span>,
     },
     {
       key: "status",
@@ -126,7 +126,7 @@ function DuplicateGroupCard({
       header: "Created",
       headerClassName: "hidden md:table-cell",
       className: "hidden md:table-cell",
-      cell: (row) => <span className="text-[11px] text-muted-foreground">{formatDate(row.createdAt)}</span>,
+      cell: (row) => <span className="text-dense text-muted-foreground">{formatDate(row.createdAt)}</span>,
     },
     {
       key: "action",
@@ -144,7 +144,7 @@ function DuplicateGroupCard({
         <Button
           size="sm"
           variant="destructive"
-          className="h-6 text-[10px] px-2"
+          className="h-6 text-micro px-2"
           onClick={handleMergeClick}
         >
           Remove Duplicate
@@ -157,7 +157,7 @@ function DuplicateGroupCard({
     <Card className="overflow-hidden">
       <CardHeader className="pb-3">
         <div className="flex flex-wrap items-center gap-3">
-          <span className="text-[11px] font-medium text-muted-foreground">
+          <span className="text-dense font-medium text-muted-foreground">
             Group #{index + 1}
           </span>
           <Badge

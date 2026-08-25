@@ -59,7 +59,7 @@ export function BlogCard({ post }: BlogCardProps) {
               className="rounded-full object-cover"
             />
           ) : (
-            <span className="flex size-7 items-center justify-center rounded-full bg-muted text-[11px] font-medium">
+            <span className="flex size-7 items-center justify-center rounded-full bg-muted text-dense font-medium">
               {post.author?.name?.[0]?.toUpperCase() ?? "?"}
             </span>
           )}

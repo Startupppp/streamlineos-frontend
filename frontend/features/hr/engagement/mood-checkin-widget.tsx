@@ -60,12 +60,12 @@ export function MoodCheckinWidget() {
               }`}
           >
             <span className="text-xl leading-none">{emoji}</span>
-            <span className="text-[10px] text-muted-foreground font-medium">{label}</span>
+            <span className="text-micro text-muted-foreground font-medium">{label}</span>
           </button>
         ))}
       </div>
       {todayEntry && (
-        <p className="text-[11px] text-center text-muted-foreground">
+        <p className="text-dense text-center text-muted-foreground">
           You logged <span className="font-medium">{MOODS.find((m) => m.value === todayEntry.mood)?.label}</span> today
         </p>
       )}

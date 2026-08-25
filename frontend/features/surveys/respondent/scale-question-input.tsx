@@ -61,7 +61,7 @@ function NumericScale({
             >
               <span className="text-base tabular-nums">{n}</span>
               {showValueLabels && max <= 5 && CSAT_LABELS_5[n] ? (
-                <span className="mt-0.5 hidden text-[10px] font-medium leading-tight text-current/80 sm:block">
+                <span className="mt-0.5 hidden text-micro font-medium leading-tight text-current/80 sm:block">
                   {CSAT_LABELS_5[n]}
                 </span>
               ) : null}

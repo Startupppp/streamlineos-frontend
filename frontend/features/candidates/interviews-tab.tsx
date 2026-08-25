@@ -51,7 +51,7 @@ const InterviewRow = memo(function InterviewRow({
                   ? "destructive"
                   : "outline"
             }
-            className="text-[10px]"
+            className="text-micro"
           >
             {interview.result ?? "PENDING"}
           </Badge>

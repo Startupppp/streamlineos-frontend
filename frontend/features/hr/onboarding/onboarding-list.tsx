@@ -89,7 +89,7 @@ export function OnboardingList() {
                   <div className="flex items-center gap-3">
                     <div
                       className={cn(
-                        "h-7 w-7 rounded-lg flex items-center justify-center shrink-0 text-[10px] font-bold",
+                        "h-7 w-7 rounded-lg flex items-center justify-center shrink-0 text-micro font-bold",
                         rowStatus === "completed"
                           ? "bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
                           : rowStatus === "stalled" || rowStatus === "in_progress"
@@ -106,7 +106,7 @@ export function OnboardingList() {
                         {rowStatus === "completed" && (
                           <Badge
                             variant="outline"
-                            className="text-[10px] font-semibold shrink-0 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800"
+                            className="text-micro font-semibold shrink-0 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800"
                           >
                             Completed
                           </Badge>
@@ -114,7 +114,7 @@ export function OnboardingList() {
                         {rowStatus === "stalled" && (
                           <Badge
                             variant="outline"
-                            className="text-[10px] font-semibold shrink-0 px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800"
+                            className="text-micro font-semibold shrink-0 px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800"
                           >
                             Stalled
                           </Badge>
@@ -122,7 +122,7 @@ export function OnboardingList() {
                         {rowStatus === "in_progress" && (
                           <Badge
                             variant="outline"
-                            className="text-[10px] font-semibold shrink-0 px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800"
+                            className="text-micro font-semibold shrink-0 px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800"
                           >
                             In Progress
                           </Badge>
@@ -130,7 +130,7 @@ export function OnboardingList() {
                         {rowStatus === "not_started" && (
                           <Badge
                             variant="outline"
-                            className="text-[10px] font-semibold shrink-0 px-2 py-0.5 rounded-full bg-muted text-muted-foreground border-border"
+                            className="text-micro font-semibold shrink-0 px-2 py-0.5 rounded-full bg-muted text-muted-foreground border-border"
                           >
                             Not Started
                           </Badge>
@@ -141,7 +141,7 @@ export function OnboardingList() {
                           value={row.percentComplete}
                           className="h-1.5 flex-1 [&>div]:bg-emerald-500"
                         />
-                        <span className="text-[11px] font-semibold text-muted-foreground tabular-nums shrink-0">
+                        <span className="text-dense font-semibold text-muted-foreground tabular-nums shrink-0">
                           {row.percentComplete}% · {row.completedTasks}/{row.totalTasks}
                         </span>
                       </div>

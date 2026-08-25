@@ -190,12 +190,12 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
                 {isExpanded ? <ChevronDownIcon ref={expandIconRef} size={14} /> : <ChevronRightIcon ref={expandIconRef} size={14} />}
               </Button>
               <div className="min-w-0 space-y-0.5">
-                <CardTitle className="flex min-w-0 items-center gap-1.5 text-[13px] font-semibold">
+                <CardTitle className="flex min-w-0 items-center gap-1.5 text-label font-semibold">
                   <Layers className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                   <TruncatedText text={epic.title} />
                 </CardTitle>
                 {epic.description ? (
-                  <p className={cn(TEXT_TWO_LINES, "text-[11px] text-muted-foreground")} title={epic.description}>
+                  <p className={cn(TEXT_TWO_LINES, "text-dense text-muted-foreground")} title={epic.description}>
                     {epic.description}
                   </p>
                 ) : null}
@@ -204,7 +204,7 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
             <div className="ml-1 flex shrink-0 items-center gap-1" onClick={handleStopPropagation}>
               <Badge
                 variant="outline"
-                className={cn("h-5 px-1.5 text-[10px]", getColorSafe(priorityColors, epic.priority || "MEDIUM"))}
+                className={cn("h-5 px-1.5 text-micro", getColorSafe(priorityColors, epic.priority || "MEDIUM"))}
               >
                 {epic.priority || "MEDIUM"}
               </Badge>
@@ -242,7 +242,7 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
           </div>
 
           <div className="ml-7 mt-2 space-y-1">
-            <div className="flex items-center justify-between gap-2 text-[10px] tabular-nums text-muted-foreground">
+            <div className="flex items-center justify-between gap-2 text-micro tabular-nums text-muted-foreground">
               <span className="min-w-0 truncate">
                 {completedItems} of {totalItems} stories
               </span>

@@ -20,7 +20,7 @@ export function BvaExplainCell({ row }: BvaExplainCellProps) {
       <button
         type="button"
         onClick={handleToggle}
-        className="text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors text-left"
+        className="text-dense text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors text-left"
       >
         {open ? "Hide" : "Explain"}
       </button>

@@ -167,7 +167,7 @@ export function ShareDialog({ projectId, whiteboard, open, onOpenChange }: Share
                 >
                   <Icon className="h-4 w-4 shrink-0" />
                   <span className="font-medium">{label}</span>
-                  <span className="text-[10px] leading-tight opacity-70">{desc}</span>
+                  <span className="text-micro leading-tight opacity-70">{desc}</span>
                 </button>
               ))}
             </div>

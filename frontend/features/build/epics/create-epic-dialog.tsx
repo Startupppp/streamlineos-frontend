@@ -127,7 +127,7 @@ export function CreateEpicDialog({ projectId, trigger }: CreateEpicDialogProps) 
                 <FormItem>
                   <div className="flex items-center justify-between">
                     <FormLabel>Description</FormLabel>
-                    <span className="text-[10px] text-muted-foreground tabular-nums">
+                    <span className="text-micro text-muted-foreground tabular-nums">
                       {(field.value ?? "").length} / 2000
                     </span>
                   </div>

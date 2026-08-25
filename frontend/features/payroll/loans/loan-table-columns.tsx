@@ -43,7 +43,7 @@ const PendingActions = memo(function PendingActions({
       <Button
         variant="outline"
         size="sm"
-        className="h-6 px-2 text-[10px]"
+        className="h-6 px-2 text-micro"
         onClick={handleApprove}
       >
         Approve
@@ -51,7 +51,7 @@ const PendingActions = memo(function PendingActions({
       <Button
         variant="outline"
         size="sm"
-        className="h-6 px-2 text-[10px] text-destructive border-destructive/30 hover:bg-destructive/10"
+        className="h-6 px-2 text-micro text-destructive border-destructive/30 hover:bg-destructive/10"
         onClick={handleReject}
       >
         Reject
@@ -84,7 +84,7 @@ const ActiveActions = memo(function ActiveActions({
       <Button
         variant="outline"
         size="sm"
-        className="h-6 px-2 text-[10px]"
+        className="h-6 px-2 text-micro"
         onClick={handleSkip}
       >
         Skip EMI
@@ -92,7 +92,7 @@ const ActiveActions = memo(function ActiveActions({
       <Button
         variant="outline"
         size="sm"
-        className="h-6 px-2 text-[10px]"
+        className="h-6 px-2 text-micro"
         onClick={handleExtra}
       >
         Extra
@@ -100,7 +100,7 @@ const ActiveActions = memo(function ActiveActions({
       <Button
         variant="outline"
         size="sm"
-        className="h-6 px-2 text-[10px]"
+        className="h-6 px-2 text-micro"
         onClick={handleForeclose}
       >
         Foreclose
@@ -120,8 +120,8 @@ export function buildLoanColumns({
       header: "Employee",
       cell: (row) => (
         <div className="flex flex-col gap-0.5 min-w-0">
-          <TruncatedText text={row.user.name ?? "—"} className="text-[11px] font-medium" />
-          <TruncatedText text={row.user.email} className="text-[10px] text-muted-foreground" />
+          <TruncatedText text={row.user.name ?? "—"} className="text-dense font-medium" />
+          <TruncatedText text={row.user.email} className="text-micro text-muted-foreground" />
         </div>
       ),
     },
@@ -131,7 +131,7 @@ export function buildLoanColumns({
       className: "text-right",
       headerClassName: "text-right",
       cell: (row) => (
-        <span className="font-mono tabular-nums text-right text-[11px]">
+        <span className="font-mono tabular-nums text-right text-dense">
           {formatMoney(row.amount)}
         </span>
       ),
@@ -142,7 +142,7 @@ export function buildLoanColumns({
       className: "text-right",
       headerClassName: "text-right",
       cell: (row) => (
-        <span className="font-mono tabular-nums text-right text-[11px]">
+        <span className="font-mono tabular-nums text-right text-dense">
           {row.emiAmount ? formatMoney(row.emiAmount) : "—"}
         </span>
       ),
@@ -156,7 +156,7 @@ export function buildLoanColumns({
         const pct = total > 0 ? Math.min((paid / total) * 100, 100) : 0;
         return (
           <div className="flex flex-col gap-1 min-w-[80px]">
-            <span className="text-[10px] text-muted-foreground">
+            <span className="text-micro text-muted-foreground">
               {paid}/{total} EMIs
             </span>
             <div className="h-1.5 rounded-full bg-muted overflow-hidden">
@@ -177,7 +177,7 @@ export function buildLoanColumns({
       cell: (row) => {
         const outstanding = computeOutstanding(row.totalEmis, row.paidEmis, row.emiAmount);
         return (
-          <span className="font-mono tabular-nums text-right text-[11px]">
+          <span className="font-mono tabular-nums text-right text-dense">
             {outstanding > 0 ? formatMoney(outstanding) : "—"}
           </span>
         );

@@ -197,7 +197,7 @@ export function SubjectTypeFormSheet({ open, onOpenChange, type }: SubjectTypeFo
                       <FormControl>
                         <Input
                           placeholder="property"
-                          className="font-mono text-[13px]"
+                          className="font-mono text-label"
                           disabled={isEdit}
                           {...field}
                         />

@@ -31,16 +31,16 @@ export function ReadinessRail({ providerKey }: { providerKey: string | null }) {
         <p className="text-sm font-semibold text-foreground">
           {readiness.readyForLive ? "Ready for live payments" : "Live readiness"}
         </p>
-        <p className="text-[11px] text-muted-foreground mt-0.5">
+        <p className="text-dense text-muted-foreground mt-0.5">
           {readiness.completedChecks.length} check{readiness.completedChecks.length === 1 ? "" : "s"} passed
         </p>
       </div>
 
       {readiness.blockers.length > 0 && (
         <div className="space-y-1.5">
-          <p className="text-[11px] font-semibold text-rose-700 dark:text-rose-400 uppercase tracking-wide">Blockers</p>
+          <p className="text-dense font-semibold text-rose-700 dark:text-rose-400 uppercase tracking-wide">Blockers</p>
           {readiness.blockers.map((blocker) => (
-            <div key={blocker} className="flex items-start gap-1.5 text-[12px] text-rose-700 dark:text-rose-400">
+            <div key={blocker} className="flex items-start gap-1.5 text-xs text-rose-700 dark:text-rose-400">
               <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
               <span>{blocker}</span>
             </div>
@@ -50,9 +50,9 @@ export function ReadinessRail({ providerKey }: { providerKey: string | null }) {
 
       {readiness.warnings.length > 0 && (
         <div className="space-y-1.5">
-          <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wide">Warnings</p>
+          <p className="text-dense font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wide">Warnings</p>
           {readiness.warnings.map((warning) => (
-            <div key={warning} className="flex items-start gap-1.5 text-[12px] text-amber-700 dark:text-amber-400">
+            <div key={warning} className="flex items-start gap-1.5 text-xs text-amber-700 dark:text-amber-400">
               <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
               <span>{warning}</span>
             </div>
@@ -62,9 +62,9 @@ export function ReadinessRail({ providerKey }: { providerKey: string | null }) {
 
       {readiness.completedChecks.length > 0 && (
         <div className="space-y-1.5">
-          <p className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wide">Completed</p>
+          <p className="text-dense font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wide">Completed</p>
           {readiness.completedChecks.map((check) => (
-            <div key={check} className="flex items-start gap-1.5 text-[12px] text-muted-foreground">
+            <div key={check} className="flex items-start gap-1.5 text-xs text-muted-foreground">
               <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
               <span>{check.replace(/_/g, " ")}</span>
             </div>

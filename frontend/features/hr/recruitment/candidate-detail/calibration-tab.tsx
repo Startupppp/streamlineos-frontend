@@ -54,12 +54,12 @@ function DecisionBadge({ decision }: { decision: string | null }) {
   if (!decision) return null;
   const found = DECISIONS.find((x) => x.value === decision);
   if (!found) return (
-    <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
+    <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
       {decision}
     </span>
   );
   return (
-    <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", found.badgeClass)}>
+    <span className={cn("inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border", found.badgeClass)}>
       {found.label}
     </span>
   );
@@ -97,7 +97,7 @@ function CalibrationSessionCard({ session, onEdit, onMarkComplete }: Calibration
                 Calibration #{session.id}
               </p>
               {session.scheduledAt && (
-                <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                <p className="text-dense text-muted-foreground flex items-center gap-1 mt-0.5">
                   <Calendar className="h-3 w-3" />
                   {format(new Date(session.scheduledAt), "PPp")}
                 </p>
@@ -106,14 +106,14 @@ function CalibrationSessionCard({ session, onEdit, onMarkComplete }: Calibration
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {session.decision && <DecisionBadge decision={session.decision} />}
-            <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", cfg.badgeClass)}>
+            <span className={cn("inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border", cfg.badgeClass)}>
               {cfg.label}
             </span>
           </div>
         </div>
 
         {session.participantIds.length > 0 && (
-          <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 mt-2">
+          <p className="text-dense text-muted-foreground flex items-center gap-1.5 mt-2">
             <Users className="h-3 w-3" />
             {session.participantIds.length} participant{session.participantIds.length !== 1 ? "s" : ""}
           </p>

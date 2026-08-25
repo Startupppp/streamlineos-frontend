@@ -16,7 +16,7 @@ function ProviderLabel({ provider }: { provider: GitProvider }) {
     gitlab: "GitLab",
     bitbucket: "Bitbucket",
   };
-  return <span className="text-[10px] text-muted-foreground font-medium">{labels[provider]}</span>;
+  return <span className="text-micro text-muted-foreground font-medium">{labels[provider]}</span>;
 }
 
 function RefTypeIcon({ refType }: { refType: GitRefType }) {
@@ -52,11 +52,11 @@ export function TicketGitLinks({ projectId, ticketId }: TicketGitLinksProps) {
 
   return (
     <div>
-      <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide block mb-1.5">
+      <span className="text-micro text-muted-foreground font-medium uppercase tracking-wide block mb-1.5">
         Development
       </span>
       {!links || links.length === 0 ? (
-        <p className="text-[11px] text-muted-foreground italic">No linked commits or PRs yet</p>
+        <p className="text-dense text-muted-foreground italic">No linked commits or PRs yet</p>
       ) : (
         <div className="space-y-1.5">
           {links.map((link) => (
@@ -75,19 +75,19 @@ export function TicketGitLinks({ projectId, ticketId }: TicketGitLinksProps) {
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[11px] text-foreground hover:text-accent truncate block leading-snug group"
+                    className="text-dense text-foreground hover:text-accent truncate block leading-snug group"
                     title={link.title ?? link.externalId ?? undefined}
                   >
                     <span className="truncate">{link.title ?? link.externalId}</span>
                     <ExternalLink className="h-2.5 w-2.5 inline ml-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                   </a>
                 ) : (
-                  <span className="text-[11px] text-foreground truncate block leading-snug" title={link.title ?? link.externalId ?? undefined}>
+                  <span className="text-dense text-foreground truncate block leading-snug" title={link.title ?? link.externalId ?? undefined}>
                     {link.title ?? link.externalId}
                   </span>
                 )}
                 {link.author && (
-                  <span className="text-[10px] text-muted-foreground">by {link.author}</span>
+                  <span className="text-micro text-muted-foreground">by {link.author}</span>
                 )}
               </div>
             </div>

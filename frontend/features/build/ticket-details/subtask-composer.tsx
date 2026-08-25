@@ -149,7 +149,7 @@ export function SubtaskComposer({ ticketId, projectId, projectStatuses }: Subtas
                   entry={currentStatusEntry}
                   className="h-1.5 w-1.5 rounded-full shrink-0"
                 />
-                <span className="text-[10px] text-muted-foreground">{currentStatusEntry.label}</span>
+                <span className="text-micro text-muted-foreground">{currentStatusEntry.label}</span>
               </>
             ) : (
               <span className="h-2 w-2 rounded-full border border-dashed border-muted-foreground/40 shrink-0" />

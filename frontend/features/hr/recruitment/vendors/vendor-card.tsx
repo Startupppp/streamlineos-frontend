@@ -56,7 +56,7 @@ export function VendorCard({ vendor, isHr, onEdit, onViewSubmissions, onDelete }
             <p className="font-semibold text-sm">{vendor.name}</p>
             {vendor.contactName && <p className="text-xs text-muted-foreground">{vendor.contactName}</p>}
           </div>
-          <Badge variant={vendor.status === "ACTIVE" ? "default" : "secondary"} className="text-[10px] shrink-0">
+          <Badge variant={vendor.status === "ACTIVE" ? "default" : "secondary"} className="text-micro shrink-0">
             {vendor.status === "ACTIVE" ? "Active" : "Inactive"}
           </Badge>
         </div>
@@ -64,15 +64,15 @@ export function VendorCard({ vendor, isHr, onEdit, onViewSubmissions, onDelete }
         <div className="grid grid-cols-3 gap-2 text-center">
           <div className="bg-muted/50 rounded-md py-1.5">
             <p className="text-sm font-semibold">{vendor.submissionCount}</p>
-            <p className="text-[10px] text-muted-foreground">Submissions</p>
+            <p className="text-micro text-muted-foreground">Submissions</p>
           </div>
           <div className="bg-muted/50 rounded-md py-1.5">
             <p className="text-sm font-semibold">{vendor.placements}</p>
-            <p className="text-[10px] text-muted-foreground">Placed</p>
+            <p className="text-micro text-muted-foreground">Placed</p>
           </div>
           <div className="bg-muted/50 rounded-md py-1.5">
             <p className="text-sm font-semibold">${parseFloat(vendor.revenueTotal || "0").toLocaleString()}</p>
-            <p className="text-[10px] text-muted-foreground">Revenue</p>
+            <p className="text-micro text-muted-foreground">Revenue</p>
           </div>
         </div>
 
@@ -84,7 +84,7 @@ export function VendorCard({ vendor, isHr, onEdit, onViewSubmissions, onDelete }
 
         {portalLink && (
           <div className="flex items-center gap-1.5">
-            <Input readOnly value={portalLink} className="text-[11px]" />
+            <Input readOnly value={portalLink} className="text-dense" />
           </div>
         )}
 

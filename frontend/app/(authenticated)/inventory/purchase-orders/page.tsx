@@ -203,7 +203,7 @@ const columns: DataTableColumn<PurchaseOrderSummary>[] = [
       <div onClick={(e) => e.stopPropagation()}>
         <Link
           href={`/inventory/purchase-orders/${po.id}`}
-          className="font-mono text-[11px] text-primary hover:underline transition-colors"
+          className="font-mono text-dense text-primary hover:underline transition-colors"
         >
           {po.poNumber}
         </Link>

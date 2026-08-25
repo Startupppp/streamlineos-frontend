@@ -74,7 +74,7 @@ function CopyButton({ text }: { text: string }) {
     <button
       type="button"
       onClick={handleCopy}
-      className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+      className="inline-flex items-center gap-1 text-micro text-muted-foreground hover:text-foreground transition-colors"
     >
       {copied ? (
         <CheckCheck className="h-3 w-3 text-emerald-500 dark:text-emerald-400" />
@@ -273,7 +273,7 @@ function NotesSummaryTab({ aiEnabled }: { aiEnabled: boolean }) {
           )}
           <Badge
             variant="outline"
-            className={`text-[10px] capitalize ${SENTIMENT_COLOR[result.sentiment] ?? ""}`}
+            className={`text-micro capitalize ${SENTIMENT_COLOR[result.sentiment] ?? ""}`}
           >
             {result.sentiment} sentiment
           </Badge>
@@ -422,12 +422,12 @@ export function AiAssistantPanel({ entityType, entityId, entityName, onOpenEmail
             <div className="px-4 pb-4">
               <Tabs defaultValue="email">
                 <TabsList className="mb-3">
-                  <TabsTrigger value="email" className="text-[10px]">Email Draft</TabsTrigger>
-                  <TabsTrigger value="notes" className="text-[10px]">Notes</TabsTrigger>
-                  <TabsTrigger value="objection" className="text-[10px]">Objection</TabsTrigger>
-                  <TabsTrigger value="followup" className="text-[10px]">Follow-up</TabsTrigger>
+                  <TabsTrigger value="email" className="text-micro">Email Draft</TabsTrigger>
+                  <TabsTrigger value="notes" className="text-micro">Notes</TabsTrigger>
+                  <TabsTrigger value="objection" className="text-micro">Objection</TabsTrigger>
+                  <TabsTrigger value="followup" className="text-micro">Follow-up</TabsTrigger>
                   {entityType === "lead" && (
-                    <TabsTrigger value="actions" className="text-[10px]">Next Actions</TabsTrigger>
+                    <TabsTrigger value="actions" className="text-micro">Next Actions</TabsTrigger>
                   )}
                 </TabsList>
                 <TabsContent value="email">

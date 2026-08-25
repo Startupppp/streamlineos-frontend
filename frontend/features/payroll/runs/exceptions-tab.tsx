@@ -185,11 +185,11 @@ export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
           <div key={severity} className="space-y-1">
             <div className="flex items-center gap-2 px-1">
               <span
-                className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium border ${cfg.className}`}
+                className={`inline-flex items-center px-2 py-0.5 rounded text-micro font-medium border ${cfg.className}`}
               >
                 {cfg.label}
               </span>
-              <span className="text-[11px] text-muted-foreground">{rows.length}</span>
+              <span className="text-dense text-muted-foreground">{rows.length}</span>
             </div>
             <div className="rounded-md border border-border overflow-hidden">
               {rows.map((ex, idx) => {
@@ -197,14 +197,14 @@ export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
                 return (
                   <div
                     key={ex.id}
-                    className={`flex items-center gap-3 px-3 py-2 text-[11px] ${idx > 0 ? "border-t border-border" : ""}`}
+                    className={`flex items-center gap-3 px-3 py-2 text-dense ${idx > 0 ? "border-t border-border" : ""}`}
                   >
-                    <span className="font-mono text-[10px] text-muted-foreground shrink-0">
+                    <span className="font-mono text-micro text-muted-foreground shrink-0">
                       {ex.code}
                     </span>
                     <TruncatedText text={ex.message ?? ""} className="flex-1 text-foreground min-w-0" />
                     <span
-                      className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border shrink-0 ${stCfg.className}`}
+                      className={`inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium border shrink-0 ${stCfg.className}`}
                     >
                       {stCfg.label}
                     </span>
@@ -214,7 +214,7 @@ export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
                           <LoadingButton
                             size="sm"
                             variant="ghost"
-                            className="h-6 px-2 text-[10px]"
+                            className="h-6 px-2 text-micro"
                             onClick={() => handleResolve(ex)}
                             isPending={resolveMutation.isPending}
                           >
@@ -225,7 +225,7 @@ export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-6 px-2 text-[10px] text-amber-700"
+                            className="h-6 px-2 text-micro text-amber-700"
                             onClick={() => handleOverrideRequest(ex)}
                           >
                             Override

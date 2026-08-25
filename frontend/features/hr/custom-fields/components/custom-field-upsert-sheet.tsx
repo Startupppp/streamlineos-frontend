@@ -272,7 +272,7 @@ export function CustomFieldUpsertSheet({
                         {form.formState.errors.key.message}
                       </p>
                     )}
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-dense text-muted-foreground">
                       Lowercase letters, numbers, underscores only. Cannot start with a number or
                       use reserved names.
                     </p>

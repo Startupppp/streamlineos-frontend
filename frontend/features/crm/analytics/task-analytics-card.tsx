@@ -58,12 +58,12 @@ export function TaskAnalyticsCard({ taskAnalytics }: TaskAnalyticsCardProps) {
           </StatCardGrid>
           {taskAnalytics.perRep.length > 0 && (
             <div className="space-y-2">
-              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+              <p className="text-micro font-medium text-muted-foreground uppercase tracking-wider">
                 Per Rep
               </p>
               {taskAnalytics.perRep.slice(0, 8).map((rep) => (
                 <div key={rep.assigneeId} className="flex items-center gap-3">
-                  <p className="text-[11px] font-medium w-32 truncate shrink-0">
+                  <p className="text-dense font-medium w-32 truncate shrink-0">
                     {rep.name}
                   </p>
                   <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
@@ -72,14 +72,14 @@ export function TaskAnalyticsCard({ taskAnalytics }: TaskAnalyticsCardProps) {
                       style={{ transform: `scaleX(${rep.completionRate / 100})` }}
                     />
                   </div>
-                  <span className="text-[11px] tabular-nums w-10 text-right shrink-0">
+                  <span className="text-dense tabular-nums w-10 text-right shrink-0">
                     {rep.completionRate}%
                   </span>
-                  <span className="text-[11px] text-muted-foreground tabular-nums w-12 text-right shrink-0">
+                  <span className="text-dense text-muted-foreground tabular-nums w-12 text-right shrink-0">
                     {rep.completed}/{rep.total}
                   </span>
                   {rep.overdue > 0 && (
-                    <span className="text-[10px] text-destructive shrink-0">
+                    <span className="text-micro text-destructive shrink-0">
                       {rep.overdue} late
                     </span>
                   )}

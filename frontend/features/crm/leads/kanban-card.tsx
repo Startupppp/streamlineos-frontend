@@ -110,7 +110,7 @@ function SlaCountdown({ deadline }: { deadline: string | Date }) {
         <TooltipTrigger asChild>
           <span
             className={cn(
-              "inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full border font-medium",
+              "inline-flex items-center gap-0.5 text-micro px-1.5 py-0.5 rounded-full border font-medium",
               overdue
                 ? "bg-red-500/10 text-red-500 border-red-500/30"
                 : urgent
@@ -167,7 +167,7 @@ function ScoreExplainerBadge({
         <TooltipTrigger asChild>
           <span
             className={cn(
-              "inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full border font-semibold cursor-help",
+              "inline-flex items-center gap-0.5 text-micro px-1.5 py-0.5 rounded-full border font-semibold cursor-help",
               color,
             )}
             onClick={handleStopPropagation}
@@ -184,7 +184,7 @@ function ScoreExplainerBadge({
           <p className="text-xs font-semibold">Score: {score}/100</p>
           {data ? (
             data.firedRules.length === 0 ? (
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-dense text-muted-foreground">
                 No scoring rules matched this lead.
               </p>
             ) : (
@@ -192,7 +192,7 @@ function ScoreExplainerBadge({
                 {data.firedRules.map((r, i) => (
                   <div
                     key={i}
-                    className="flex items-center justify-between gap-2 text-[11px]"
+                    className="flex items-center justify-between gap-2 text-dense"
                   >
                     <span className="truncate">{r.name}</span>
                     <span className="font-semibold text-emerald-500 dark:text-emerald-400 shrink-0">
@@ -200,13 +200,13 @@ function ScoreExplainerBadge({
                     </span>
                   </div>
                 ))}
-                <p className="text-[10px] text-muted-foreground pt-0.5 border-t border-border">
+                <p className="text-micro text-muted-foreground pt-0.5 border-t border-border">
                   {data.firedRules.length} of {data.totalRules} rules matched
                 </p>
               </div>
             )
           ) : (
-            <p className="text-[11px] text-muted-foreground">Loading...</p>
+            <p className="text-dense text-muted-foreground">Loading...</p>
           )}
         </TooltipContent>
       </Tooltip>
@@ -299,7 +299,7 @@ export const KanbanCard = memo(function KanbanCard({
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <TruncatedText text={lead.name} className="text-sm font-medium" />
-                      <p className="text-[10px] font-mono text-muted-foreground/50 leading-none mt-0.5">
+                      <p className="text-micro font-mono text-muted-foreground/50 leading-none mt-0.5">
                         LD-{String(lead.id).padStart(5, "0")}
                       </p>
                     </div>
@@ -308,7 +308,7 @@ export const KanbanCard = memo(function KanbanCard({
                         <AvatarImage
                           src={resolveImageUrl(lead.assignedTo.image)}
                         />
-                        <AvatarFallback className="text-[10px]">
+                        <AvatarFallback className="text-micro">
                           {getInitials(lead.assignedTo.name ?? "")}
                         </AvatarFallback>
                       </Avatar>
@@ -334,7 +334,7 @@ export const KanbanCard = memo(function KanbanCard({
                     {lead.priority && (
                       <span
                         className={cn(
-                          "text-[10px] px-1.5 py-0.5 rounded-full border font-semibold",
+                          "text-micro px-1.5 py-0.5 rounded-full border font-semibold",
                           PRIORITY_CONFIG[lead.priority] ?? PRIORITY_CONFIG["WARM"],
                         )}
                       >
@@ -344,7 +344,7 @@ export const KanbanCard = memo(function KanbanCard({
                     {lead.source && (
                       <span
                         className={cn(
-                          "text-[10px] px-1.5 py-0.5 rounded-full border",
+                          "text-micro px-1.5 py-0.5 rounded-full border",
                           SOURCE_COLORS[lead.source] || SOURCE_COLORS.other,
                         )}
                       >
@@ -352,7 +352,7 @@ export const KanbanCard = memo(function KanbanCard({
                       </span>
                     )}
                     {lead.potentialValue && Number(lead.potentialValue) > 0 && (
-                      <span className="text-[10px] text-primary font-semibold">
+                      <span className="text-micro text-primary font-semibold">
                         {formatINRCompact(lead.potentialValue)}
                       </span>
                     )}
@@ -365,7 +365,7 @@ export const KanbanCard = memo(function KanbanCard({
 
                   <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/30">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] text-muted-foreground">
+                      <span className="text-micro text-muted-foreground">
                         {lead.createdAt ? timeAgo(lead.createdAt) : "—"}
                       </span>
                       {lead.score != null && lead.score > 0 ? (

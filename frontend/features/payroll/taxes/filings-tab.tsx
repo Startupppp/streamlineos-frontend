@@ -94,7 +94,7 @@ function getDefaultMonth(): string {
 function StatusBadge({ status }: { status: FilingStatus }) {
   return (
     <span
-      className={`inline-flex items-center rounded-md border px-1.5 py-0.5 text-[11px] font-medium ${STATUS_BADGE[status]}`}
+      className={`inline-flex items-center rounded-md border px-1.5 py-0.5 text-dense font-medium ${STATUS_BADGE[status]}`}
     >
       {STATUS_LABEL[status]}
     </span>
@@ -193,7 +193,7 @@ export function FilingsTab() {
       key: "filingType",
       header: "Filing",
       cell: (row: PayrollFiling) => (
-        <span className="text-[13px] font-medium text-foreground">
+        <span className="text-label font-medium text-foreground">
           {FILING_TYPE_LABEL[row.filingType]}
         </span>
       ),
@@ -202,13 +202,13 @@ export function FilingsTab() {
       key: "fiscalYear",
       header: "Period / FY",
       cell: (row: PayrollFiling) => (
-        <span className="text-[12px] text-muted-foreground tabular-nums">
+        <span className="text-xs text-muted-foreground tabular-nums">
           {row.fiscalYear ?? "—"}
           {row.ruleVersion ? (
-            <span className="ml-1 text-[10px] opacity-80">· {row.ruleVersion}</span>
+            <span className="ml-1 text-micro opacity-80">· {row.ruleVersion}</span>
           ) : null}
           {row.entityId != null ? (
-            <span className="ml-1 text-[10px] opacity-80">· entity #{row.entityId}</span>
+            <span className="ml-1 text-micro opacity-80">· entity #{row.entityId}</span>
           ) : null}
         </span>
       ),
@@ -220,7 +220,7 @@ export function FilingsTab() {
         <div className="flex flex-col gap-0.5">
           <StatusBadge status={row.status} />
           {row.statusLabel && (
-            <span className="text-[11px] text-muted-foreground">{row.statusLabel}</span>
+            <span className="text-dense text-muted-foreground">{row.statusLabel}</span>
           )}
         </div>
       ),
@@ -229,7 +229,7 @@ export function FilingsTab() {
       key: "ref",
       header: "Challan / Ack. ref",
       cell: (row: PayrollFiling) => (
-        <span className="text-[12px] text-muted-foreground tabular-nums">
+        <span className="text-xs text-muted-foreground tabular-nums">
           {row.acknowledgementRef ?? row.challanRef ?? "—"}
         </span>
       ),
@@ -268,7 +268,7 @@ export function FilingsTab() {
       >
         <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-700 dark:text-amber-300" />
         <div className="min-w-0 space-y-0.5">
-          <p className="text-[12px] font-medium text-amber-900 dark:text-amber-100">
+          <p className="text-xs font-medium text-amber-900 dark:text-amber-100">
             {honestyLabel}
             {ruleBundle ? (
               <span className="ml-1.5 font-normal text-amber-800/80 dark:text-amber-200/70">
@@ -276,7 +276,7 @@ export function FilingsTab() {
               </span>
             ) : null}
           </p>
-          <p className="text-[11px] leading-snug text-amber-800/90 dark:text-amber-200/80">
+          <p className="text-dense leading-snug text-amber-800/90 dark:text-amber-200/80">
             {capabilityNote}
             {capability && !capability.automaticFiling && !capability.automaticRemittance
               ? " Automatic filing and remittance are not available."
@@ -286,7 +286,7 @@ export function FilingsTab() {
       </div>
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-[12px] text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Build CSV exports from a payroll run month, submit them on the government portal,
           then record the acknowledgement. StreamlineOS does not file returns or pay
           challans on your behalf.
@@ -308,15 +308,15 @@ export function FilingsTab() {
         mobileCard={(row) => (
           <div className="flex flex-col gap-1.5 px-1 py-2">
             <div className="flex items-center justify-between">
-              <span className="text-[13px] font-medium text-foreground">
+              <span className="text-label font-medium text-foreground">
                 {FILING_TYPE_LABEL[row.filingType]}
               </span>
               <StatusBadge status={row.status} />
             </div>
             {row.statusLabel && (
-              <span className="text-[11px] text-muted-foreground">{row.statusLabel}</span>
+              <span className="text-dense text-muted-foreground">{row.statusLabel}</span>
             )}
-            <div className="flex items-center justify-between text-[11px] text-muted-foreground tabular-nums">
+            <div className="flex items-center justify-between text-dense text-muted-foreground tabular-nums">
               <span>{row.fiscalYear ?? "—"}</span>
               <span>{row.acknowledgementRef ?? row.challanRef ?? "No ref"}</span>
             </div>
@@ -366,7 +366,7 @@ export function FilingsTab() {
           </DialogHeader>
           <div className="space-y-3 py-3">
             <div className="space-y-1.5">
-              <label className="block text-[13px] font-medium text-foreground">
+              <label className="block text-label font-medium text-foreground">
                 Filing type
               </label>
               <Select value={exportType} onValueChange={(v) => setExportType(v as FilingType)}>
@@ -383,18 +383,18 @@ export function FilingsTab() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <label className="block text-[13px] font-medium text-foreground">
+              <label className="block text-label font-medium text-foreground">
                 Payroll month
               </label>
               <MonthPicker value={exportMonth} onChange={setExportMonth} className="w-full" />
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-dense text-muted-foreground">
                 Uses the REGULAR run for this month when present. Empty CSV if no run/lines
                 match.
               </p>
             </div>
             {indiaEntities.length > 0 && (
               <div className="space-y-1.5">
-                <label className="block text-[13px] font-medium text-foreground">
+                <label className="block text-label font-medium text-foreground">
                   Legal entity (India)
                 </label>
                 <Select
@@ -412,13 +412,13 @@ export function FilingsTab() {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-dense text-muted-foreground">
                   India PF/ESI/TDS export builders only. Non-IN entities are blocked on the
                   server.
                 </p>
               </div>
             )}
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-dense text-muted-foreground">
               Financial year {getCurrentFY()}
               {ruleBundle ? ` · rule ${ruleBundle}` : ""}. {honestyLabel}.
               {exportType === "FORM16"
@@ -448,12 +448,12 @@ export function FilingsTab() {
             <DialogTitle>Record acknowledgement</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-3">
-            <p className="text-[12px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               {ackTarget ? FILING_TYPE_LABEL[ackTarget.filingType] : ""} — enter the portal
               challan and/or acknowledgement reference to mark this filing acknowledged.
             </p>
             <div className="space-y-1.5">
-              <label className="block text-[13px] font-medium text-foreground">
+              <label className="block text-label font-medium text-foreground">
                 Challan reference
               </label>
               <Input
@@ -464,7 +464,7 @@ export function FilingsTab() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="block text-[13px] font-medium text-foreground">
+              <label className="block text-label font-medium text-foreground">
                 Acknowledgement reference
               </label>
               <Input

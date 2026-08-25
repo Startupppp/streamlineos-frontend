@@ -127,7 +127,7 @@ export function EmailChipsInput({
       {value.map((email) => (
         <span
           key={email}
-          className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted text-[11px] font-medium text-foreground/80 border border-border/60"
+          className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted text-dense font-medium text-foreground/80 border border-border/60"
         >
           <span className="max-w-[160px] truncate">{email}</span>
           {!disabled && (
@@ -149,7 +149,7 @@ export function EmailChipsInput({
         ref={inputRef}
         id={inputId}
         type="text"
-        className="flex-1 min-w-[120px] bg-transparent text-[13px] outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed"
+        className="flex-1 min-w-[120px] bg-transparent text-label outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed"
         value={inputValue}
         onChange={handleChange}
         onKeyDown={handleKeyDown}

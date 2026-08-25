@@ -118,7 +118,7 @@ export function OfferCard({
 
         {offer.approvalRemarks && (
           <div className="rounded-md border border-muted bg-muted/30 px-3 py-2 mb-3">
-            <p className="text-[10px] text-muted-foreground uppercase font-medium mb-0.5">Approval Remarks</p>
+            <p className="text-micro text-muted-foreground uppercase font-medium mb-0.5">Approval Remarks</p>
             <p className="text-xs">{offer.approvalRemarks}</p>
           </div>
         )}

@@ -181,7 +181,7 @@ function buildValuationColumns(
       key: "costingMethod",
       header: "Costing Method",
       cell: (row) => (
-        <span className={`inline-flex items-center px-2 py-0.5 rounded-md border text-[11px] font-medium ${METHOD_BADGE_CLASS[row.costingMethod]}`}>
+        <span className={`inline-flex items-center px-2 py-0.5 rounded-md border text-dense font-medium ${METHOD_BADGE_CLASS[row.costingMethod]}`}>
           {METHOD_LABEL[row.costingMethod]}
         </span>
       ),

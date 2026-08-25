@@ -67,7 +67,7 @@ function ProfileFields({ person }: { person: OrganizationPerson }) {
             key={label}
             className="flex flex-col gap-0.5 border-b border-border/60 py-2 last:border-0"
           >
-            <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
+            <span className="text-dense uppercase tracking-wide text-muted-foreground">
               {label}
             </span>
             <span className={cn("text-sm text-foreground", TEXT_ONE_LINE)}>
@@ -78,7 +78,7 @@ function ProfileFields({ person }: { person: OrganizationPerson }) {
       )}
       {person.bio ? (
         <div className="pt-2">
-          <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
+          <span className="text-dense uppercase tracking-wide text-muted-foreground">
             Bio
           </span>
           <p className="mt-1 text-sm leading-relaxed text-muted-foreground">

@@ -55,7 +55,7 @@ export const FilterPill = React.forwardRef<HTMLButtonElement, FilterPillProps>(
         {count != null && (
           <span
             className={cn(
-              "min-w-[18px] rounded-full px-1.5 py-0.5 text-center text-[10px] font-semibold leading-none",
+              "min-w-[18px] rounded-full px-1.5 py-0.5 text-center text-micro font-semibold leading-none",
               active
                 ? "bg-white/20 dark:bg-black/20"
                 : "bg-muted text-muted-foreground",

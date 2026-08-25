@@ -37,7 +37,7 @@ function TemplateCard({
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-2">
           <CardTitle className="text-sm font-semibold">{template.name}</CardTitle>
-          <Badge variant="secondary" className="text-[10px] shrink-0">
+          <Badge variant="secondary" className="text-micro shrink-0">
             {template.category}
           </Badge>
         </div>

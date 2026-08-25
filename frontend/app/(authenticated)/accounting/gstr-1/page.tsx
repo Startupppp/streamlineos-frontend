@@ -65,7 +65,7 @@ function SummaryStat({ label, value, tone = "default" }: SummaryStatProps) {
     tone === "muted" ? "text-muted-foreground" : "text-foreground";
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-[11px] font-medium text-muted-foreground leading-none">
+      <span className="text-dense font-medium text-muted-foreground leading-none">
         {label}
       </span>
       <span
@@ -224,7 +224,7 @@ export default function Gstr1Page() {
           <div className="flex flex-col gap-1">
             <label
               htmlFor="gstr1-from"
-              className="text-[11px] font-medium text-muted-foreground leading-none"
+              className="text-dense font-medium text-muted-foreground leading-none"
             >
               From
             </label>
@@ -233,7 +233,7 @@ export default function Gstr1Page() {
           <div className="flex flex-col gap-1">
             <label
               htmlFor="gstr1-to"
-              className="text-[11px] font-medium text-muted-foreground leading-none"
+              className="text-dense font-medium text-muted-foreground leading-none"
             >
               To
             </label>

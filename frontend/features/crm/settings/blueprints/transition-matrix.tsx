@@ -84,7 +84,7 @@ export function TransitionMatrix({ blueprint, stages }: TransitionMatrixProps) {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="text-[10px] border-collapse w-full">
+        <table className="text-micro border-collapse w-full">
           <thead>
             <tr>
               <th className="text-left text-muted-foreground font-medium px-2 py-1.5 whitespace-nowrap border-b border-border w-24">
@@ -103,7 +103,7 @@ export function TransitionMatrix({ blueprint, stages }: TransitionMatrixProps) {
           <tbody>
             {stages.map((fromStage) => (
               <tr key={fromStage.key} className="border-b border-border/50 hover:bg-muted/20">
-                <td className="px-2 py-1.5 font-medium text-[10px] whitespace-nowrap text-foreground">
+                <td className="px-2 py-1.5 font-medium text-micro whitespace-nowrap text-foreground">
                   {fromStage.label}
                 </td>
                 {stages.map((toStage) => (

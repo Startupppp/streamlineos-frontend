@@ -96,7 +96,7 @@ export function ActivityTab({ candidateId }: Props) {
                 )}
               <TruncatedText
                 text={`${event.actor ? `${event.actor} · ` : ""}${formatDistanceToNow(new Date(event.at), { addSuffix: true })}`}
-                className="text-[11px] text-muted-foreground mt-1"
+                className="text-dense text-muted-foreground mt-1"
               />
             </div>
           </div>

@@ -30,13 +30,13 @@ const components: Components = {
     const isBlock = className?.startsWith("language-");
     if (isBlock) {
       return (
-        <code className="block bg-muted/80 border border-border rounded-md px-2.5 py-2 font-mono text-[10px] leading-relaxed overflow-x-auto whitespace-pre">
+        <code className="block bg-muted/80 border border-border rounded-md px-2.5 py-2 font-mono text-micro leading-relaxed overflow-x-auto whitespace-pre">
           {children}
         </code>
       );
     }
     return (
-      <code className="bg-muted/80 border border-border rounded px-1 py-0.5 font-mono text-[10px]">
+      <code className="bg-muted/80 border border-border rounded px-1 py-0.5 font-mono text-micro">
         {children}
       </code>
     );

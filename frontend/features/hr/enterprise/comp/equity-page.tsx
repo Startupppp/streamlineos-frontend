@@ -64,7 +64,7 @@ export function EquityPage() {
     {
       key: "status",
       header: "Status",
-      cell: (r: EquityGrant) => <Badge variant={STATUS_VARIANT[r.status]} className="capitalize text-[11px]">{r.status}</Badge>,
+      cell: (r: EquityGrant) => <Badge variant={STATUS_VARIANT[r.status]} className="capitalize text-dense">{r.status}</Badge>,
     },
     {
       key: "board",

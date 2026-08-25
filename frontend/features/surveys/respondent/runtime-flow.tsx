@@ -237,7 +237,7 @@ export function RuntimeFlow({
         </LoadingButton>
       </div>
 
-      <p className="text-center text-[11px] text-muted-foreground">
+      <p className="text-center text-dense text-muted-foreground">
         Press Enter to continue
       </p>
     </div>

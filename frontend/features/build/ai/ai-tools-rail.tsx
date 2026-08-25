@@ -47,7 +47,7 @@ interface ToolSection {
 }
 
 const TRIGGER_CLASS =
-  "min-h-10 rounded-none px-3 py-2.5 text-[13px] font-medium hover:no-underline hover:bg-muted/50 data-[state=open]:bg-muted/40 transition-colors";
+  "min-h-10 rounded-none px-3 py-2.5 text-label font-medium hover:no-underline hover:bg-muted/50 data-[state=open]:bg-muted/40 transition-colors";
 
 const CONTENT_CLASS = "px-3 pb-3 pt-1";
 
@@ -112,7 +112,7 @@ function ToolAccordion({ sections, triggerClassName, contentClassName }: ToolAcc
           <AccordionTrigger className={triggerClassName ?? TRIGGER_CLASS}>
             <div className="flex flex-col items-start gap-0.5 text-left">
               <span className="text-foreground">{label}</span>
-              <span className="text-[11px] font-normal text-muted-foreground">{description}</span>
+              <span className="text-dense font-normal text-muted-foreground">{description}</span>
             </div>
           </AccordionTrigger>
           <AccordionContent className={contentClassName ?? CONTENT_CLASS}>
@@ -137,7 +137,7 @@ function ToolsHeader({
     <div className="flex shrink-0 items-center justify-between border-b border-border bg-card px-3 py-2.5">
       <div className="flex items-center gap-2">
         <Wrench className="h-3.5 w-3.5 text-muted-foreground" />
-        <span className="text-[12px] font-semibold text-foreground">AI Tools</span>
+        <span className="text-xs font-semibold text-foreground">AI Tools</span>
       </div>
       {showClose && onClose ? (
         <AnimatedIconButton
@@ -257,7 +257,7 @@ export function AiToolsRail({
           />
           <Wrench className="h-3 w-3 text-muted-foreground" />
           <span
-            className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground"
+            className="text-micro font-semibold uppercase tracking-widest text-muted-foreground"
             style={{ writingMode: "vertical-rl", textOrientation: "mixed" }}
           >
             AI Tools

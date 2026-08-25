@@ -92,10 +92,10 @@ function CommentRow({ comment, replies, pageId, onReply }: CommentRowProps) {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[13px] font-medium">{comment.authorName ?? "Unknown"}</span>
+            <span className="text-label font-medium">{comment.authorName ?? "Unknown"}</span>
             <span className="text-xs text-muted-foreground">{kbTimeAgo(comment.createdAt)}</span>
             {isResolved && (
-              <Badge variant="secondary" className="text-[10px] h-4 px-1.5 py-0">
+              <Badge variant="secondary" className="text-micro h-4 px-1.5 py-0">
                 Resolved
               </Badge>
             )}

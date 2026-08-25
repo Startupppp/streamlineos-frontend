@@ -59,7 +59,7 @@ function HeatmapSkeleton() {
             {DAY_LABELS.map((d, i) => (
               <div
                 key={d}
-                className={`h-3 text-[10px] leading-3 text-muted-foreground ${i % 2 === 0 ? "invisible" : ""}`}
+                className={`h-3 text-micro leading-3 text-muted-foreground ${i % 2 === 0 ? "invisible" : ""}`}
               >
                 {d}
               </div>
@@ -194,7 +194,7 @@ export function AttendanceHeatmap() {
               <span className="text-sm font-bold text-foreground tabular-nums">
                 {data.summary.totalDays}
               </span>
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <span className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
                 Days
               </span>
             </div>
@@ -202,7 +202,7 @@ export function AttendanceHeatmap() {
               <span className="text-sm font-bold text-foreground tabular-nums">
                 {data.summary.totalHours}h
               </span>
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <span className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
                 Hours
               </span>
             </div>
@@ -210,7 +210,7 @@ export function AttendanceHeatmap() {
               <span className="text-sm font-bold text-foreground tabular-nums">
                 {data.summary.avgHoursPerDay}h
               </span>
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <span className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
                 Avg/Day
               </span>
             </div>
@@ -218,7 +218,7 @@ export function AttendanceHeatmap() {
               <span className="text-sm font-bold text-foreground tabular-nums">
                 {data.summary.longestStreak}d
               </span>
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <span className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
                 Streak
               </span>
             </div>
@@ -235,7 +235,7 @@ export function AttendanceHeatmap() {
                 {monthPositions.map(({ month, col }) => (
                   <div
                     key={`${month}-${col}`}
-                    className="absolute text-[10px] text-muted-foreground"
+                    className="absolute text-micro text-muted-foreground"
                     style={{ left: `${col * 14}px` }}
                   >
                     {MONTH_LABELS[month]}
@@ -247,7 +247,7 @@ export function AttendanceHeatmap() {
                   {DAY_LABELS.map((d, i) => (
                     <div
                       key={d}
-                      className={`h-3 text-[10px] leading-3 text-muted-foreground ${i % 2 === 0 ? "invisible" : ""}`}
+                      className={`h-3 text-micro leading-3 text-muted-foreground ${i % 2 === 0 ? "invisible" : ""}`}
                     >
                       {d}
                     </div>
@@ -279,7 +279,7 @@ export function AttendanceHeatmap() {
                 ))}
               </div>
               <div className="mt-3 flex items-center gap-1.5 pl-8">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <span className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">
                   Less
                 </span>
                 {[0, 1, 2, 3, 4].map((level) => (
@@ -288,7 +288,7 @@ export function AttendanceHeatmap() {
                     className={`${CELL} ${intensityClasses[level]}`}
                   />
                 ))}
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <span className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">
                   More
                 </span>
               </div>

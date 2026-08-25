@@ -139,7 +139,7 @@ export function ChannelItem({
             <TruncatedText
               text={displayName}
               className={cn(
-                "text-[13px] leading-tight",
+                "text-label leading-tight",
                 hasUnread || isActive
                   ? "font-bold text-foreground"
                   : "font-medium text-muted-foreground",
@@ -149,7 +149,7 @@ export function ChannelItem({
             {lastMessageTime && (
               <span
                 className={cn(
-                  "text-[11px] text-muted-foreground tabular-nums shrink-0 transition-opacity duration-150",
+                  "text-dense text-muted-foreground tabular-nums shrink-0 transition-opacity duration-150",
                   !hasUnread && "group-hover/item:opacity-0",
                 )}
               >
@@ -159,13 +159,13 @@ export function ChannelItem({
           </div>
 
           <div className="flex items-center justify-between gap-1.5 mt-0.5 min-w-0">
-            <p className="min-w-0 flex-1 text-[11px] text-muted-foreground/60 line-clamp-1 break-all break-words leading-tight">
+            <p className="min-w-0 flex-1 text-dense text-muted-foreground/60 line-clamp-1 break-all break-words leading-tight">
               {channel.lastMessage?.content
                 ? `${channel.type === "GROUP" ? `${channel.lastMessage.senderName?.split(" ")[0]}: ` : ""}${channel.lastMessage.content}`
                 : "No messages yet"}
             </p>
             {hasUnread && (
-              <span className="h-[18px] min-w-[18px] flex items-center justify-center bg-primary text-primary-foreground text-[10px] font-bold rounded-full px-1 shrink-0 transition-opacity duration-150 group-hover/item:opacity-0">
+              <span className="h-[18px] min-w-[18px] flex items-center justify-center bg-primary text-primary-foreground text-micro font-bold rounded-full px-1 shrink-0 transition-opacity duration-150 group-hover/item:opacity-0">
                 {channel.unreadCount > 99 ? "99+" : channel.unreadCount}
               </span>
             )}

@@ -34,7 +34,7 @@ function PayrollSelfCard() {
       <div className="space-y-2.5">
         {data?.latestPayslip ? (
           <div className="rounded-lg border border-border/60 p-2.5">
-            <p className="text-[10px] text-muted-foreground">Latest payslip</p>
+            <p className="text-micro text-muted-foreground">Latest payslip</p>
             <div className="flex items-baseline justify-between mt-0.5">
               <span className="text-sm font-medium">{data.latestPayslip.month}</span>
               <span className="text-lg font-bold tabular-nums">
@@ -48,7 +48,7 @@ function PayrollSelfCard() {
           </p>
         )}
         {data?.nextPayDate && (
-          <div className="flex items-center justify-between text-[11px]">
+          <div className="flex items-center justify-between text-dense">
             <span className="text-muted-foreground">Next payroll</span>
             <span className="font-medium">
               {format(new Date(data.nextPayDate.date), "MMM d, yyyy")}
@@ -56,7 +56,7 @@ function PayrollSelfCard() {
           </div>
         )}
         {data && Number(data.pendingReimbursementsCount) > 0 && (
-          <div className="flex items-center justify-between text-[11px]">
+          <div className="flex items-center justify-between text-dense">
             <span className="text-muted-foreground">Pending reimbursements</span>
             <span className="font-medium">{data.pendingReimbursementsCount}</span>
           </div>
@@ -105,7 +105,7 @@ function PayrollAdminCard() {
           />
         </StatCardGrid>
         {nextEvent && (
-          <div className="flex items-center justify-between text-[11px]">
+          <div className="flex items-center justify-between text-dense">
             <span className="text-muted-foreground">Next: {nextEvent.label}</span>
             <span className="font-medium">
               {format(new Date(nextEvent.date), "MMM d")}

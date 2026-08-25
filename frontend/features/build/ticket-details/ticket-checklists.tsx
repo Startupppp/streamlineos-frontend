@@ -305,7 +305,7 @@ function ChecklistSection({
             {checklist.title}
           </span>
         )}
-        <span className="text-[10px] text-muted-foreground font-mono">
+        <span className="text-micro text-muted-foreground font-mono">
           {completed}/{total}
         </span>
         <DeleteChecklistButton onClick={handleDeleteChecklist} />

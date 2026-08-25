@@ -86,7 +86,7 @@ function buildColumns(
       cell: (row) => (
         <span
           className={cn(
-            "inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+            "inline-flex items-center rounded px-1.5 py-0.5 text-micro font-semibold uppercase tracking-wide",
             ITEM_STATUS_STYLES[row.status],
           )}
         >
@@ -112,7 +112,7 @@ function buildColumns(
             <Button
               size="sm"
               variant="outline"
-              className="h-6 text-[10px] px-2"
+              className="h-6 text-micro px-2"
               onClick={() => onAction("paid", row)}
             >
               Mark Paid
@@ -120,7 +120,7 @@ function buildColumns(
             <Button
               size="sm"
               variant="outline"
-              className="h-6 text-[10px] px-2 text-destructive border-destructive/30 hover:bg-destructive/10"
+              className="h-6 text-micro px-2 text-destructive border-destructive/30 hover:bg-destructive/10"
               onClick={() => onAction("failed", row)}
             >
               Mark Failed
@@ -230,7 +230,7 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
                     <span>{batch.batchNumber}</span>
                     <span
                       className={cn(
-                        "inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                        "inline-flex items-center rounded px-1.5 py-0.5 text-micro font-semibold uppercase tracking-wide",
                         BATCH_STATUS_STYLES[batch.status],
                       )}
                     >
@@ -244,7 +244,7 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
             </SheetHeader>
             {canImportReturn && (
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-[10px] text-muted-foreground leading-snug max-w-md">
+                <p className="text-micro text-muted-foreground leading-snug max-w-md">
                   Import bank return CSV (itemId or userId, status, utr). Manual workflow — no bank
                   network connection.
                 </p>

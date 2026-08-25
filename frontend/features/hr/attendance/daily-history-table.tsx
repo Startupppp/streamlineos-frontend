@@ -105,7 +105,7 @@ const columns: DataTableColumn<AttendanceLog>[] = [
       return (
         <Badge
           className={cn(
-            "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold",
+            "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-micro font-semibold",
             badgeClass,
           )}
         >

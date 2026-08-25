@@ -50,7 +50,7 @@ export function CelebrationsCard({
                     lastName: b.lastName,
                   })}
                 </p>
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-micro text-muted-foreground">
                   {b.daysUntil === 0
                     ? "Today!"
                     : b.daysUntil === 1

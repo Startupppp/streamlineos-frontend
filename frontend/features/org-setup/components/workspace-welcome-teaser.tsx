@@ -47,7 +47,7 @@ function WorkspaceWelcomeTeaserInner({
             delay: reduceMotion ? 0 : 0.35,
             ease: PREVIEW_EASE,
           }}
-          className="mt-3 shrink-0 px-1 text-center font-display text-[13px] font-semibold tracking-tight text-foreground text-balance lg:text-sm"
+          className="mt-3 shrink-0 px-1 text-center font-display text-label font-semibold tracking-tight text-foreground text-balance lg:text-sm"
         >
           Watch <span className="brand-sweep">{workspaceLabel}</span> come
           online — modules, defaults, and roles assemble as you answer.

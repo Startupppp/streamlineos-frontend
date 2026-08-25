@@ -85,7 +85,7 @@ const columns: DataTableColumn<ForecastRow>[] = [
     cell: (row) => {
       const badge = getRiskBadge(row.stockoutRisk);
       return (
-        <span className={`inline-flex items-center px-2 py-0.5 rounded-md border text-[11px] font-medium ${badge.className}`}>
+        <span className={`inline-flex items-center px-2 py-0.5 rounded-md border text-dense font-medium ${badge.className}`}>
           {badge.label}
         </span>
       );

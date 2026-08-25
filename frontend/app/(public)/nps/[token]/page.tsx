@@ -106,7 +106,7 @@ export default function PublicNpsPage() {
                     </button>
                   ))}
                 </div>
-                <div className="mt-1.5 flex justify-between text-[11px] text-slate-400">
+                <div className="mt-1.5 flex justify-between text-dense text-slate-400">
                   <span>Not likely</span>
                   <span>Very likely</span>
                 </div>

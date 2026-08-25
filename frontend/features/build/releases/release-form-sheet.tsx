@@ -233,7 +233,7 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
                   <FormItem>
                     <div className="flex items-center justify-between">
                       <FormLabel>Release Notes</FormLabel>
-                      <span className={`text-[10px] tabular-nums ${descriptionCharCount > 10000 ? "text-destructive" : "text-muted-foreground"}`}>
+                      <span className={`text-micro tabular-nums ${descriptionCharCount > 10000 ? "text-destructive" : "text-muted-foreground"}`}>
                         {descriptionCharCount.toLocaleString()} / 10,000
                       </span>
                     </div>

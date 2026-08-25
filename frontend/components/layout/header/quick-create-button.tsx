@@ -146,7 +146,7 @@ export function QuickCreatePanel({
         {groups.map((group, groupIndex) => (
           <div key={group.id}>
             {groupIndex > 0 ? <div className="my-1 h-px bg-border" /> : null}
-            <p className="mb-1 px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="mb-1 px-1 text-micro font-semibold uppercase tracking-wider text-muted-foreground">
               {group.label}
             </p>
             {group.items.map((action) => {
@@ -252,7 +252,7 @@ function QuickCreateMenuItems({
       {groups.map((group, groupIndex) => (
         <div key={group.id}>
           {groupIndex > 0 ? <div className="my-1 h-px bg-border" /> : null}
-          <p className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <p className="px-2 py-1.5 text-micro font-semibold uppercase tracking-wider text-muted-foreground">
             {group.label}
           </p>
           {group.items.map((action) => {

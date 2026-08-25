@@ -27,20 +27,20 @@ interface AutomationRunsDialogProps {
 function StatusBadge({ status }: { status: AutomationRunStatus }) {
   if (status === "success") {
     return (
-      <Badge variant="default" className="gap-1 text-[11px]">
+      <Badge variant="default" className="gap-1 text-dense">
         <CheckCircle2 className="h-3 w-3" /> Success
       </Badge>
     );
   }
   if (status === "skipped") {
     return (
-      <Badge variant="secondary" className="gap-1 text-[11px]">
+      <Badge variant="secondary" className="gap-1 text-dense">
         <MinusCircle className="h-3 w-3" /> Skipped
       </Badge>
     );
   }
   return (
-    <Badge variant="destructive" className="gap-1 text-[11px]">
+    <Badge variant="destructive" className="gap-1 text-dense">
       <XCircle className="h-3 w-3" /> Failed
     </Badge>
   );
@@ -91,7 +91,7 @@ export function AutomationRunsDialog({ ruleId, ruleName, onClose }: AutomationRu
                 >
                   <div className="flex items-center justify-between gap-2">
                     <StatusBadge status={run.status} />
-                    <span className="text-[11px] text-muted-foreground">
+                    <span className="text-dense text-muted-foreground">
                       {run.createdAt ? format(new Date(run.createdAt), "MMM d, HH:mm") : ""}
                     </span>
                   </div>

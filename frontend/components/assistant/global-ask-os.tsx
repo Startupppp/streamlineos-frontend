@@ -437,7 +437,7 @@ export function GlobalAskOs() {
                       <p className="text-sm font-semibold leading-none text-foreground">
                         Ask OS
                       </p>
-                      <p className="mt-0.5 text-[10px] text-muted-foreground">
+                      <p className="mt-0.5 text-micro text-muted-foreground">
                         Your organization assistant
                       </p>
                     </div>
@@ -547,7 +547,7 @@ export function GlobalAskOs() {
                                 <button
                                   type="button"
                                   onClick={loadOlder}
-                                  className="flex items-center gap-1 rounded-full border border-border bg-background px-3 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted"
+                                  className="flex items-center gap-1 rounded-full border border-border bg-background px-3 py-1 text-dense font-medium text-muted-foreground transition-colors hover:bg-muted"
                                 >
                                   <ChevronUp className="h-3 w-3" />
                                   Load older messages
@@ -556,7 +556,7 @@ export function GlobalAskOs() {
                             </div>
                           ) : (
                             persisted.length > 0 && (
-                              <p className="pb-1 text-center text-[10px] text-muted-foreground/60">
+                              <p className="pb-1 text-center text-micro text-muted-foreground/60">
                                 Beginning of conversation
                               </p>
                             )
@@ -596,7 +596,7 @@ export function GlobalAskOs() {
                             />
                           )}
                           {errorMessage && (
-                            <p className="px-1 text-[11px] text-destructive">
+                            <p className="px-1 text-dense text-destructive">
                               {errorMessage}
                             </p>
                           )}

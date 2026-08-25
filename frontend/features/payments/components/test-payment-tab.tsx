@@ -95,14 +95,14 @@ export function TestPaymentTab({ providerKey }: { providerKey: string }) {
     <div className="space-y-4">
       <Script src="https://checkout.razorpay.com/v1/checkout.js" onLoad={handleRazorpayLoad} />
 
-      <p className="text-[13px] text-muted-foreground">
+      <p className="text-label text-muted-foreground">
         Runs a real order against your test credentials — no money moves. Use this to prove the
         integration works before activating live payments.
       </p>
 
       <div className="flex items-end gap-2">
         <div className="space-y-1.5">
-          <Label htmlFor="test-amount" className="text-[13px]">Amount (INR)</Label>
+          <Label htmlFor="test-amount" className="text-label">Amount (INR)</Label>
           <Input
             id="test-amount"
             value={amount}
@@ -127,7 +127,7 @@ export function TestPaymentTab({ providerKey }: { providerKey: string }) {
             const done = timelineStep >= stepIndex;
             const active = timelineStep === stepIndex - 1 && !failed;
             return (
-              <li key={label} className="flex items-center gap-2 text-[12px]">
+              <li key={label} className="flex items-center gap-2 text-xs">
                 <span
                   className={cn(
                     "h-4 w-4 rounded-full flex items-center justify-center shrink-0",
@@ -149,12 +149,12 @@ export function TestPaymentTab({ providerKey }: { providerKey: string }) {
 
       {transactions && transactions.length > 0 && (
         <div>
-          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
+          <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
             Recent test payments
           </p>
           <ul className="space-y-1">
             {transactions.slice(0, 5).map((t) => (
-              <li key={t.id} className="flex items-center justify-between text-[12px] text-muted-foreground">
+              <li key={t.id} className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>
                   {t.currency} {t.amount}
                 </span>

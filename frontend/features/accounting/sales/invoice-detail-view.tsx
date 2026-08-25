@@ -121,7 +121,7 @@ const CREDIT_NOTE_COLUMNS: DataTableColumn<CreditNote>[] = [
     header: "Status",
     cell: (cn) =>
       cn.status === "APPLIED" ? (
-        <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30 text-[10px] h-4 px-1.5">
+        <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30 text-micro h-4 px-1.5">
           Applied
         </Badge>
       ) : (
@@ -203,7 +203,7 @@ function CollectionPanel({ invoice }: CollectionPanelProps) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
       <div>
-        <p className="text-muted-foreground uppercase tracking-wider font-semibold text-[10px] mb-0.5">
+        <p className="text-muted-foreground uppercase tracking-wider font-semibold text-micro mb-0.5">
           Balance Due
         </p>
         <p className="font-semibold text-sm tabular-nums">
@@ -211,7 +211,7 @@ function CollectionPanel({ invoice }: CollectionPanelProps) {
         </p>
       </div>
       <div>
-        <p className="text-muted-foreground uppercase tracking-wider font-semibold text-[10px] mb-0.5">
+        <p className="text-muted-foreground uppercase tracking-wider font-semibold text-micro mb-0.5">
           Collection Owner
         </p>
         <p className="text-foreground">
@@ -221,7 +221,7 @@ function CollectionPanel({ invoice }: CollectionPanelProps) {
         </p>
       </div>
       <div>
-        <p className="text-muted-foreground uppercase tracking-wider font-semibold text-[10px] mb-0.5">
+        <p className="text-muted-foreground uppercase tracking-wider font-semibold text-micro mb-0.5">
           Promise to Pay
         </p>
         <p className="text-foreground">
@@ -411,13 +411,13 @@ export function InvoiceDetailContent({ invoiceId }: InvoiceDetailContentProps) {
         <div className="rounded-xl border border-border bg-card p-5">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div>
-              <p className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground mb-0.5">
+              <p className="text-micro uppercase font-semibold tracking-wider text-muted-foreground mb-0.5">
                 Customer
               </p>
               <TruncatedText text={invoice.client?.name ?? "—"} className="text-sm font-medium" />
             </div>
             <div>
-              <p className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground mb-0.5">
+              <p className="text-micro uppercase font-semibold tracking-wider text-muted-foreground mb-0.5">
                 Invoice Date
               </p>
               <p className="text-sm tabular-nums">
@@ -425,7 +425,7 @@ export function InvoiceDetailContent({ invoiceId }: InvoiceDetailContentProps) {
               </p>
             </div>
             <div>
-              <p className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground mb-0.5">
+              <p className="text-micro uppercase font-semibold tracking-wider text-muted-foreground mb-0.5">
                 Due Date
               </p>
               <p className="text-sm tabular-nums">
@@ -433,7 +433,7 @@ export function InvoiceDetailContent({ invoiceId }: InvoiceDetailContentProps) {
               </p>
             </div>
             <div>
-              <p className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground mb-0.5">
+              <p className="text-micro uppercase font-semibold tracking-wider text-muted-foreground mb-0.5">
                 Total
               </p>
               <p className="text-sm font-semibold tabular-nums">
@@ -445,7 +445,7 @@ export function InvoiceDetailContent({ invoiceId }: InvoiceDetailContentProps) {
               </p>
             </div>
             <div>
-              <p className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground mb-0.5">
+              <p className="text-micro uppercase font-semibold tracking-wider text-muted-foreground mb-0.5">
                 Amount Paid
               </p>
               <p className="text-sm tabular-nums text-emerald-600 dark:text-emerald-400 font-medium">
@@ -453,7 +453,7 @@ export function InvoiceDetailContent({ invoiceId }: InvoiceDetailContentProps) {
               </p>
             </div>
             <div>
-              <p className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground mb-0.5">
+              <p className="text-micro uppercase font-semibold tracking-wider text-muted-foreground mb-0.5">
                 Balance Due
               </p>
               <p className="text-sm font-semibold tabular-nums text-red-600 dark:text-red-400">
@@ -462,7 +462,7 @@ export function InvoiceDetailContent({ invoiceId }: InvoiceDetailContentProps) {
             </div>
             {invoice.project && (
               <div>
-                <p className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground mb-0.5">
+                <p className="text-micro uppercase font-semibold tracking-wider text-muted-foreground mb-0.5">
                   Project
                 </p>
                 <TruncatedText text={invoice.project.name} className="text-sm" />
@@ -560,7 +560,7 @@ export function InvoiceDetailContent({ invoiceId }: InvoiceDetailContentProps) {
 
         {invoice.notes && (
           <div className="rounded-xl border border-border bg-card px-4 py-3">
-            <p className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground mb-1">
+            <p className="text-micro uppercase font-semibold tracking-wider text-muted-foreground mb-1">
               Notes
             </p>
             <p className="text-xs text-foreground">{invoice.notes}</p>

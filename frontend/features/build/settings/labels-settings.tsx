@@ -149,7 +149,7 @@ function LabelListRow({
           />
           <span className="truncate">{label.name}</span>
         </span>
-        <span className="font-mono text-[10px] uppercase text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+        <span className="font-mono text-micro uppercase text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
           {color}
         </span>
       </button>

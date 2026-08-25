@@ -170,7 +170,7 @@ function ModuleSetupBanner({ checklist }: { checklist: ModuleChecklist }) {
                       >
                         {item.title}
                         {item.required && !done && (
-                          <span className="ml-1.5 text-[10px] font-normal text-muted-foreground">required</span>
+                          <span className="ml-1.5 text-micro font-normal text-muted-foreground">required</span>
                         )}
                       </p>
                       {!done && item.description && (

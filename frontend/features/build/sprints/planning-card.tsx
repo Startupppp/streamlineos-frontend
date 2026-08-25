@@ -97,14 +97,14 @@ export const PlanningCard = function PlanningCard({
           <div className="min-w-0 flex-1 space-y-1 overflow-hidden">
             <div className="flex min-w-0 items-center gap-1 overflow-hidden">
               {ticket.type && <TicketTypeIcon type={ticket.type} size="sm" />}
-              <span className="shrink-0 font-mono text-[10px] text-muted-foreground">{ticketKey}</span>
+              <span className="shrink-0 font-mono text-micro text-muted-foreground">{ticketKey}</span>
               <TruncatedText text={ticket.title ?? ""} className="min-w-0 flex-1 font-medium" />
             </div>
             <div className="flex items-center gap-1.5 flex-wrap">
               {ticket.status && <StatusBadge status={ticket.status} />}
               {ticket.priority && <PriorityBadge priority={ticket.priority} />}
               {ticket.points != null && (
-                <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4">{ticket.points}pt</Badge>
+                <Badge variant="secondary" className="text-micro px-1 py-0 h-4">{ticket.points}pt</Badge>
               )}
               {ticket.assignee ? (
                 <TooltipProvider delayDuration={200}>
@@ -119,7 +119,7 @@ export const PlanningCard = function PlanningCard({
                   </Tooltip>
                 </TooltipProvider>
               ) : (
-                <span className="text-[10px] text-muted-foreground">Unassigned</span>
+                <span className="text-micro text-muted-foreground">Unassigned</span>
               )}
               {showDoneWarning && (
                 <TooltipProvider delayDuration={200}>

@@ -50,7 +50,7 @@ const ADJUSTMENT_COLUMNS: DataTableColumn<AdjustmentListItem>[] = [
   {
     key: "referenceNumber",
     header: "Ref #",
-    className: "font-mono text-[11px] font-semibold text-primary",
+    className: "font-mono text-dense font-semibold text-primary",
     cell: (row) => <span>{row.referenceNumber}</span>,
   },
   {

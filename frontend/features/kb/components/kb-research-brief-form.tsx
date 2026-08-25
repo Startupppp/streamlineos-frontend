@@ -58,15 +58,15 @@ export function KbResearchBriefForm() {
           name="topic"
           render={({ field }) => (
             <FormItem className="flex-1">
-              <FormLabel className="text-[12px]">Research topic</FormLabel>
+              <FormLabel className="text-xs">Research topic</FormLabel>
               <FormControl>
                 <Input
                   {...field}
                   placeholder="e.g. How to configure SSO for enterprise customers"
-                  className="text-[13px]"
+                  className="text-label"
                 />
               </FormControl>
-              <FormMessage className="text-[11px]" />
+              <FormMessage className="text-dense" />
             </FormItem>
           )}
         />
@@ -76,13 +76,13 @@ export function KbResearchBriefForm() {
             name="spaceId"
             render={({ field }) => (
               <FormItem className="w-[160px]">
-                <FormLabel className="text-[12px]">Space (optional)</FormLabel>
+                <FormLabel className="text-xs">Space (optional)</FormLabel>
                 <Select
                   onValueChange={(v) => field.onChange(v === "all" ? undefined : Number(v))}
                   value={field.value ? String(field.value) : "all"}
                 >
                   <FormControl>
-                    <SelectTrigger className="h-9 text-[13px]">
+                    <SelectTrigger className="h-9 text-label">
                       <SelectValue placeholder="All spaces" />
                     </SelectTrigger>
                   </FormControl>

@@ -163,7 +163,7 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
             {count > 0 && (
               <span
                 className={cn(
-                  "h-5 w-5 rounded text-[10px] font-semibold flex items-center justify-center",
+                  "h-5 w-5 rounded text-micro font-semibold flex items-center justify-center",
                   getUtilizationClass(count),
                 )}
               >
@@ -193,12 +193,12 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
                 </span>
                 <TruncatedText text={ticket.title} className="min-w-0 flex-1 text-xs text-foreground" />
                 {ticket.points != null && (
-                  <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">
+                  <span className="shrink-0 text-micro tabular-nums text-muted-foreground">
                     {ticket.points}pt
                   </span>
                 )}
                 {ticket.dueDate && (
-                  <span className="text-[10px] text-muted-foreground shrink-0">
+                  <span className="text-micro text-muted-foreground shrink-0">
                     Due {format(parseISO(ticket.dueDate), "MMM d")}
                   </span>
                 )}

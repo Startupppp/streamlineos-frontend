@@ -288,7 +288,7 @@ export function ActivityFeed({
   return (
     <div className="w-full space-y-4">
       <div className="flex w-full flex-1 min-w-0 flex-col gap-2">
-        <h4 className="flex min-w-0 flex-1 items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+        <h4 className="flex min-w-0 flex-1 items-center gap-1.5 text-dense font-medium uppercase tracking-wide text-muted-foreground">
           <MessageSquare className="h-3.5 w-3.5 shrink-0" />
           <span className="truncate">Activity</span>
           {comments.length > 0 && (

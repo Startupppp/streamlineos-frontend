@@ -45,7 +45,7 @@ function CitationChipInner({ index, citation }: ChipInnerProps) {
         <TooltipTrigger asChild>
           <span
             className={cn(
-              "inline-flex max-w-[140px] cursor-default items-center gap-1 truncate rounded-full border border-border bg-muted/60 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground transition-colors",
+              "inline-flex max-w-[140px] cursor-default items-center gap-1 truncate rounded-full border border-border bg-muted/60 px-1.5 py-0.5 text-micro font-medium text-muted-foreground transition-colors",
               citation.href && "cursor-pointer hover:border-primary/40 hover:bg-muted hover:text-foreground",
             )}
           >
@@ -56,12 +56,12 @@ function CitationChipInner({ index, citation }: ChipInnerProps) {
         {(citation.snippet || freshness) && (
           <TooltipContent side="top" className="max-w-[260px] space-y-1 p-2 text-left">
             {citation.snippet && (
-              <p className="text-[11px] leading-snug text-popover-foreground">
+              <p className="text-dense leading-snug text-popover-foreground">
                 {citation.snippet}
               </p>
             )}
             {freshness && (
-              <p className="text-[10px] text-muted-foreground">{freshness}</p>
+              <p className="text-micro text-muted-foreground">{freshness}</p>
             )}
           </TooltipContent>
         )}

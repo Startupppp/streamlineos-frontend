@@ -275,7 +275,7 @@ function RequestCard({
             <p className="font-semibold text-sm">{req.requestedRole}</p>
             {req.level && <p className="text-xs text-muted-foreground">{req.level}</p>}
           </div>
-          <Badge variant={STATUS_COLORS[req.status]} className="text-[10px] shrink-0">
+          <Badge variant={STATUS_COLORS[req.status]} className="text-micro shrink-0">
             {statusLabel(req.status)}
           </Badge>
         </div>

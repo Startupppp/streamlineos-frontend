@@ -69,7 +69,7 @@ function MemberRow({ member, canManage, onEdit, onRemove, onManageGrants, isRemo
     <div className="flex items-center gap-3 px-4 py-3 border-b border-border/60 last:border-0">
       <Avatar className="h-8 w-8 shrink-0">
         <AvatarImage src={member.avatarUrl ?? undefined} />
-        <AvatarFallback className="text-[10px]">
+        <AvatarFallback className="text-micro">
           {getUserInitials(displayName)}
         </AvatarFallback>
       </Avatar>
@@ -79,12 +79,12 @@ function MemberRow({ member, canManage, onEdit, onRemove, onManageGrants, isRemo
       </div>
       <div className="flex items-center gap-1.5 flex-wrap justify-end shrink-0 max-w-[40%]">
         {member.groups.map((g) => (
-          <Badge key={g.id} variant="secondary" className="text-[10px] px-1.5 py-0">
+          <Badge key={g.id} variant="secondary" className="text-micro px-1.5 py-0">
             {g.name}
           </Badge>
         ))}
         {member.groups.length === 0 && (
-          <span className="text-[11px] text-muted-foreground">No groups</span>
+          <span className="text-dense text-muted-foreground">No groups</span>
         )}
       </div>
       {canManage && (

@@ -86,7 +86,7 @@ export function RecurrencePicker({ value, onChange }: RecurrencePickerProps) {
                   type="button"
                   onClick={() => toggleDay(i)}
                   className={cn(
-                    "h-9 w-9 touch-manipulation rounded-lg border text-[10px] font-medium transition-all sm:h-8 sm:w-8",
+                    "h-9 w-9 touch-manipulation rounded-lg border text-micro font-medium transition-all sm:h-8 sm:w-8",
                     (value.daysOfWeek ?? []).includes(i)
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-input bg-background text-muted-foreground hover:border-primary/30",

@@ -216,7 +216,7 @@ export function ReconciliationClient() {
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <p className="text-[11px] text-muted-foreground tabular-nums">
+                            <p className="text-dense text-muted-foreground tabular-nums">
                               {txn.txnDate}
                             </p>
                             <TruncatedText text={txn.description} className="text-xs font-medium text-foreground mt-0.5" />
@@ -231,7 +231,7 @@ export function ReconciliationClient() {
                           </div>
                         </div>
                         {txn.suggestedMatches && txn.suggestedMatches.length > 0 && (
-                          <p className="text-[10px] text-primary mt-1">
+                          <p className="text-micro text-primary mt-1">
                             {txn.suggestedMatches.length} suggestion
                             {txn.suggestedMatches.length > 1 ? "s" : ""}
                           </p>

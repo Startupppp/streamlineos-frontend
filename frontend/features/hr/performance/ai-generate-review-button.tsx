@@ -99,7 +99,7 @@ ${result.ratings.map((r) => `- ${r.category}: ${r.score}/5 — ${r.comment}`).jo
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Overall Rating</p>
+                    <p className="text-micro font-medium text-muted-foreground uppercase tracking-wider">Overall Rating</p>
                     <p className="text-2xl font-bold text-foreground">{result.overallRating}/5</p>
                   </div>
                   <AnimatedIconButton size="sm" variant="outline" onClick={copyAll} icon={CopyIcon} iconSize={14} iconClassName="mr-1.5">
@@ -108,30 +108,30 @@ ${result.ratings.map((r) => `- ${r.category}: ${r.score}/5 — ${r.comment}`).jo
                 </div>
 
                 <div>
-                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Strengths</p>
+                  <p className="text-micro font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Strengths</p>
                   <p className="text-sm leading-snug">{result.strengths}</p>
                 </div>
 
                 <div>
-                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Areas for Improvement</p>
+                  <p className="text-micro font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Areas for Improvement</p>
                   <p className="text-sm leading-snug">{result.improvements}</p>
                 </div>
 
                 <div>
-                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Overall Comments</p>
+                  <p className="text-micro font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Overall Comments</p>
                   <p className="text-sm leading-snug">{result.comments}</p>
                 </div>
 
                 <div>
-                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Category Ratings</p>
+                  <p className="text-micro font-medium text-muted-foreground uppercase tracking-wider mb-2">Category Ratings</p>
                   <div className="space-y-2">
                     {result.ratings.map((r, i) => (
                       <div key={i} className="rounded-md border border-border bg-muted/20 p-2.5">
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-xs font-medium">{r.category}</span>
-                          <Badge variant="secondary" className="text-[10px] h-5">{r.score}/5</Badge>
+                          <Badge variant="secondary" className="text-micro h-5">{r.score}/5</Badge>
                         </div>
-                        <p className="text-[11px] text-muted-foreground leading-snug">{r.comment}</p>
+                        <p className="text-dense text-muted-foreground leading-snug">{r.comment}</p>
                       </div>
                     ))}
                   </div>

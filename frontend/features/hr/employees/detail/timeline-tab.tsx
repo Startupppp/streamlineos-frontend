@@ -103,7 +103,7 @@ export function EmployeeTimelineTab({ userId }: Props) {
               <CardContent className="p-3">
                 <div className="flex items-start justify-between gap-2 min-w-0">
                   <TruncatedText text={entry.action} className="text-sm font-medium text-foreground leading-snug min-w-0 flex-1" />
-                  <span className="shrink-0 text-[11px] text-muted-foreground whitespace-nowrap">
+                  <span className="shrink-0 text-dense text-muted-foreground whitespace-nowrap">
                     {format(new Date(entry.createdAt), "MMM d, yyyy")}
                   </span>
                 </div>
@@ -113,7 +113,7 @@ export function EmployeeTimelineTab({ userId }: Props) {
                       .filter(([, v]) => v != null && v !== "")
                       .slice(0, 4)
                       .map(([k, v]) => (
-                        <span key={k} className="text-[11px] text-muted-foreground break-words max-w-[18rem]">
+                        <span key={k} className="text-dense text-muted-foreground break-words max-w-[18rem]">
                           <span className="font-medium capitalize">{k.replace(/([A-Z])/g, " $1").trim()}: </span>
                           {String(v)}
                         </span>

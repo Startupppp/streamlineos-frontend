@@ -81,12 +81,12 @@ export function HandbookVersionCard({
             <p className="text-sm font-semibold text-foreground truncate">
               {v.title || `Version ${v.version}`}
             </p>
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/20 shrink-0">
+            <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/20 shrink-0">
               v{v.version}
             </span>
             <span
               className={cn(
-                "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0",
+                "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border shrink-0",
                 isPublished
                   ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
                   : "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30"
@@ -95,9 +95,9 @@ export function HandbookVersionCard({
               {isPublished ? "PUBLISHED" : "DRAFT"}
             </span>
           </div>
-          <div className="flex gap-3 text-[10px] text-muted-foreground mt-1 flex-wrap items-center">
+          <div className="flex gap-3 text-micro text-muted-foreground mt-1 flex-wrap items-center">
             {v.changelog && (
-              <TruncatedText text={v.changelog} className="max-w-[280px] text-[10px] text-muted-foreground" />
+              <TruncatedText text={v.changelog} className="max-w-[280px] text-micro text-muted-foreground" />
             )}
             {v.documentUrl && (
               <a

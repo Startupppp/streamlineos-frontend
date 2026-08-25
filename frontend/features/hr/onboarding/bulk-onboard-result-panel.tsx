@@ -46,15 +46,15 @@ export function BulkOnboardResultPanel({ result, onReset }: BulkOnboardResultPan
             <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-300 tabular-nums">
               {result.created}
             </p>
-            <p className="text-[11px] text-muted-foreground">Created</p>
+            <p className="text-dense text-muted-foreground">Created</p>
           </div>
           <div className="text-center">
             <p className="text-2xl font-bold text-destructive tabular-nums">{result.failed}</p>
-            <p className="text-[11px] text-muted-foreground">Failed</p>
+            <p className="text-dense text-muted-foreground">Failed</p>
           </div>
           <div className="text-center">
             <p className="text-2xl font-bold text-foreground tabular-nums">{result.total}</p>
-            <p className="text-[11px] text-muted-foreground">Total</p>
+            <p className="text-dense text-muted-foreground">Total</p>
           </div>
         </div>
 
@@ -63,7 +63,7 @@ export function BulkOnboardResultPanel({ result, onReset }: BulkOnboardResultPan
             <p className="text-xs font-medium text-destructive mb-2">Failed rows</p>
             <ul className="space-y-1.5">
               {failedResults.map((r) => (
-                <li key={`${r.row}-${r.email}`} className="text-[11px] text-muted-foreground">
+                <li key={`${r.row}-${r.email}`} className="text-dense text-muted-foreground">
                   <span className="font-medium text-foreground">Row {r.row}</span>
                   {" · "}
                   {r.email}

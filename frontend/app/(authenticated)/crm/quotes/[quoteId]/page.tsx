@@ -241,7 +241,7 @@ export default function QuoteDetailPage({
             </span>
             <Badge
               variant="outline"
-              className={cn("text-[10px]", STATUS_BADGE_CLASSES[quote.status])}
+              className={cn("text-micro", STATUS_BADGE_CLASSES[quote.status])}
             >
               {STATUS_LABELS[quote.status]}
             </Badge>

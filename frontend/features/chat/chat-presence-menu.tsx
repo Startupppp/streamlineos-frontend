@@ -80,14 +80,14 @@ export function ChatPresenceMenu({
             />
           </div>
           {compact ? (
-            <span className="text-[10px] leading-none text-muted-foreground">Me</span>
+            <span className="text-micro leading-none text-muted-foreground">Me</span>
           ) : (
             <div className="min-w-0 flex-1">
               <TruncatedText
                 text={session?.user?.name ?? "You"}
-                className="text-[12px] font-medium"
+                className="text-xs font-medium"
               />
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-micro text-muted-foreground">
                 {currentOption.label}
               </p>
             </div>

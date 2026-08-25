@@ -161,7 +161,7 @@ export function CalendarView({ tickets, onTicketClick, projectId }: CalendarView
                             className="flex items-center gap-1 min-w-0 flex-1 text-left"
                           >
                             <div className={cn("h-1.5 w-1.5 rounded-full flex-shrink-0", getStatusDotClass(t.status))} />
-                            <span className="text-[10px] text-foreground truncate">{t.title}</span>
+                            <span className="text-micro text-foreground truncate">{t.title}</span>
                           </button>
                           {projectId != null && (
                             <span onMouseDown={stopEvent} onClick={stopEvent} className="shrink-0 opacity-0 group-hover/chip:opacity-100 transition-opacity">
@@ -175,7 +175,7 @@ export function CalendarView({ tickets, onTicketClick, projectId }: CalendarView
                       );
                     })}
                     {dayTickets.length > 3 && (
-                      <span className="text-[10px] text-muted-foreground px-1.5">+{dayTickets.length - 3} more</span>
+                      <span className="text-micro text-muted-foreground px-1.5">+{dayTickets.length - 3} more</span>
                     )}
                   </div>
                 </div>

@@ -81,7 +81,7 @@ function ExportTypeCard({ exportType, isSelected, onSelect }: ExportTypeCardProp
       }`}
     >
       <p className="text-xs font-semibold text-foreground">{meta.label}</p>
-      <p className="text-[11px] text-muted-foreground mt-0.5">{meta.description}</p>
+      <p className="text-dense text-muted-foreground mt-0.5">{meta.description}</p>
     </button>
   );
 }
@@ -98,7 +98,7 @@ function DownloadJobButton({ onClick, disabled }: DownloadJobButtonProps) {
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex items-center gap-1 text-[11px] font-medium transition-colors ${
+      className={`inline-flex items-center gap-1 text-dense font-medium transition-colors ${
         !disabled ? "text-primary hover:text-primary/80" : "text-muted-foreground cursor-not-allowed"
       }`}
       {...hoverHandlers}
@@ -274,7 +274,7 @@ export function ExportTab() {
                 <p className="text-xs font-semibold text-foreground">
                   Ready to export: {EXPORT_TYPE_META[selectedExportType].label}
                 </p>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-dense text-muted-foreground">
                   {EXPORT_TYPE_META[selectedExportType].description}
                 </p>
               </div>
@@ -296,7 +296,7 @@ export function ExportTab() {
         <div className="flex items-center justify-between mb-2">
           <p className="text-xs font-semibold text-foreground">Export History</p>
           {hasActiveJobs && (
-            <span className="text-[10px] text-muted-foreground">Auto-refreshing…</span>
+            <span className="text-micro text-muted-foreground">Auto-refreshing…</span>
           )}
         </div>
         <ExportJobsTable

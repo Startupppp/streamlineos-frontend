@@ -92,11 +92,11 @@ export function VendorPaymentAllocationDialog({
               className="text-sm"
               {...form.register("vendorPaymentId")}
             />
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-dense text-muted-foreground">
               Enter the vendor payment ID from the payment record.
             </p>
             {form.formState.errors.vendorPaymentId && (
-              <p className="text-[11px] text-destructive">
+              <p className="text-dense text-destructive">
                 {form.formState.errors.vendorPaymentId.message}
               </p>
             )}
@@ -123,7 +123,7 @@ export function VendorPaymentAllocationDialog({
               )}
             />
             {form.formState.errors.billId && (
-              <p className="text-[11px] text-destructive">{form.formState.errors.billId.message}</p>
+              <p className="text-dense text-destructive">{form.formState.errors.billId.message}</p>
             )}
           </div>
 
@@ -141,7 +141,7 @@ export function VendorPaymentAllocationDialog({
               {...form.register("amount")}
             />
             {form.formState.errors.amount && (
-              <p className="text-[11px] text-destructive">{form.formState.errors.amount.message}</p>
+              <p className="text-dense text-destructive">{form.formState.errors.amount.message}</p>
             )}
           </div>
 

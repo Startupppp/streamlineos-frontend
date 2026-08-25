@@ -114,7 +114,7 @@ export function CalibrationTab() {
               value={editing.preRating}
               onChange={(e) => handleChange(row.employeeId, "preRating", e.target.value)}
             />
-            {error && <p className="text-[10px] text-destructive max-w-[8rem]">{error}</p>}
+            {error && <p className="text-micro text-destructive max-w-[8rem]">{error}</p>}
           </div>
         );
       },
@@ -140,7 +140,7 @@ export function CalibrationTab() {
               value={editing.postRating}
               onChange={(e) => handleChange(row.employeeId, "postRating", e.target.value)}
             />
-            {error && <p className="text-[10px] text-destructive max-w-[8rem]">{error}</p>}
+            {error && <p className="text-micro text-destructive max-w-[8rem]">{error}</p>}
           </div>
         );
       },
@@ -162,7 +162,7 @@ export function CalibrationTab() {
               value={editing.note}
               onChange={(e) => handleChange(row.employeeId, "note", e.target.value)}
             />
-            {error && <p className="text-[10px] text-destructive">{error}</p>}
+            {error && <p className="text-micro text-destructive">{error}</p>}
           </div>
         );
       },

@@ -27,7 +27,7 @@ function SuccessRateBar({ row }: { row: AutomationPerformanceRow }) {
       <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
         <div className={`h-full rounded-full ${tone}`} style={{ width: `${pct}%` }} />
       </div>
-      <span className="text-[11px] tabular-nums text-muted-foreground w-9 text-right">
+      <span className="text-dense tabular-nums text-muted-foreground w-9 text-right">
         {pct.toFixed(0)}%
       </span>
     </div>

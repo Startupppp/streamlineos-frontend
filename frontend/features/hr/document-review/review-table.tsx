@@ -88,13 +88,13 @@ function ProgressBar({ approved, total }: { approved: number; total: number }) {
           />
         </div>
         <span
-          className="text-[11px] text-muted-foreground tabular-nums font-semibold shrink-0"
+          className="text-dense text-muted-foreground tabular-nums font-semibold shrink-0"
           aria-label={label}
         >
           {approved}/{total}
         </span>
       </div>
-      <span className="text-[10px] text-muted-foreground leading-tight">{label}</span>
+      <span className="text-micro text-muted-foreground leading-tight">{label}</span>
     </div>
   );
 }
@@ -134,7 +134,7 @@ export function ReviewTable({ list, canReview, onOpenReview, pagination }: Revie
           </Avatar>
           <div className="min-w-0">
             <TruncatedText text={emp.userName ?? "Unknown"} className="text-sm font-semibold text-foreground" />
-            <TruncatedText text={`${emp.designation ?? "—"}${emp.employeeId ? ` · ${emp.employeeId}` : ""}`} className="text-[11px] text-muted-foreground" />
+            <TruncatedText text={`${emp.designation ?? "—"}${emp.employeeId ? ` · ${emp.employeeId}` : ""}`} className="text-dense text-muted-foreground" />
           </div>
         </div>
       ),
@@ -152,7 +152,7 @@ export function ReviewTable({ list, canReview, onOpenReview, pagination }: Revie
       cell: (emp) => (
         <span
           className={cn(
-            "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+            "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border",
             getStatusBadgeClass(emp.onboardingDocStatus),
           )}
         >

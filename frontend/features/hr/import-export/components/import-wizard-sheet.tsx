@@ -186,7 +186,7 @@ export function ImportWizardSheet({
               <div key={s} className="flex items-center gap-1.5">
                 <div
                   className={cn(
-                    "h-5 w-5 rounded-full text-[10px] font-semibold flex items-center justify-center",
+                    "h-5 w-5 rounded-full text-micro font-semibold flex items-center justify-center",
                     step === s
                       ? "bg-primary text-primary-foreground"
                       : step > s

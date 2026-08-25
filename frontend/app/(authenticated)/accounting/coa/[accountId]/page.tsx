@@ -319,7 +319,7 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
               <CardContent className="p-5 space-y-4">
                 <div className="flex flex-wrap items-start gap-x-8 gap-y-4">
                   <div className="min-w-0">
-                    <p className="text-[11px] font-medium text-muted-foreground leading-none uppercase tracking-wide">
+                    <p className="text-dense font-medium text-muted-foreground leading-none uppercase tracking-wide">
                       Code
                     </p>
                     <p className="mt-1.5 text-sm font-mono text-foreground">
@@ -328,7 +328,7 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
                   </div>
 
                   <div className="min-w-0">
-                    <p className="text-[11px] font-medium text-muted-foreground leading-none uppercase tracking-wide">
+                    <p className="text-dense font-medium text-muted-foreground leading-none uppercase tracking-wide">
                       Type
                     </p>
                     <Badge
@@ -340,7 +340,7 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
                   </div>
 
                   <div className="min-w-0">
-                    <p className="text-[11px] font-medium text-muted-foreground leading-none uppercase tracking-wide">
+                    <p className="text-dense font-medium text-muted-foreground leading-none uppercase tracking-wide">
                       Status
                     </p>
                     <Badge
@@ -353,7 +353,7 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
 
                   {parentAccount && (
                     <div className="min-w-0">
-                      <p className="text-[11px] font-medium text-muted-foreground leading-none uppercase tracking-wide">
+                      <p className="text-dense font-medium text-muted-foreground leading-none uppercase tracking-wide">
                         Parent account
                       </p>
                       <Link
@@ -370,7 +370,7 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
                   )}
 
                   <div className="min-w-0">
-                    <p className="text-[11px] font-medium text-muted-foreground leading-none uppercase tracking-wide">
+                    <p className="text-dense font-medium text-muted-foreground leading-none uppercase tracking-wide">
                       Created
                     </p>
                     <p className="mt-1.5 text-sm text-foreground">
@@ -381,7 +381,7 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
 
                 {account.description && (
                   <div className="pt-4 border-t border-border/60">
-                    <p className="text-[11px] font-medium text-muted-foreground leading-none uppercase tracking-wide">
+                    <p className="text-dense font-medium text-muted-foreground leading-none uppercase tracking-wide">
                       Description
                     </p>
                     <p className="mt-2 text-sm text-muted-foreground leading-relaxed">

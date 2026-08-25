@@ -31,13 +31,13 @@ export function VariableChips({ variables }: { variables: string[] }) {
       {visible.map((v) => (
         <span
           key={v}
-          className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-mono bg-muted text-foreground border border-border"
+          className="inline-flex items-center px-1.5 py-0.5 rounded-md text-micro font-mono bg-muted text-foreground border border-border"
         >
           {`{{${v}}}`}
         </span>
       ))}
       {rest > 0 && (
-        <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] bg-muted text-muted-foreground border border-border/50">
+        <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-micro bg-muted text-muted-foreground border border-border/50">
           +{rest}
         </span>
       )}

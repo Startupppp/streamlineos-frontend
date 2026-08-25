@@ -56,7 +56,7 @@ function DependentRow({ dep, onDelete }: { dep: Dependent; onDelete: () => void 
         <div>
           <p className="text-sm font-medium">{dep.name}</p>
           <div className="flex items-center gap-1.5 mt-0.5">
-            <Badge variant="outline" className="text-[10px]">
+            <Badge variant="outline" className="text-micro">
               {dep.relationship}
             </Badge>
             {dep.dateOfBirth && (

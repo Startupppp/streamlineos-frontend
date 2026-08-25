@@ -365,7 +365,7 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
       subtitle={invoice.client?.name ?? "No client"}
       badge={
         <span
-          className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium ${badge.className}`}
+          className={`inline-flex items-center rounded-full border px-2 py-0.5 text-dense font-medium ${badge.className}`}
         >
           {badge.label}
         </span>

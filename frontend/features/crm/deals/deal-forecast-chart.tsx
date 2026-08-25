@@ -113,7 +113,7 @@ export function DealForecastChart({ deals }: DealForecastChartProps) {
                   <div className="flex items-center gap-2 min-w-0">
                     <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${STAGE_DOT[row.stage] ?? "bg-muted-foreground"}`} />
                     <TruncatedText text={STAGE_LABEL[row.stage] ?? row.stage} className="text-sm font-medium" />
-                    <Badge variant="outline" className="text-[10px] h-4 px-1.5 shrink-0">
+                    <Badge variant="outline" className="text-micro h-4 px-1.5 shrink-0">
                       {row.probability}%
                     </Badge>
                     <span className="text-xs text-muted-foreground shrink-0">
@@ -124,7 +124,7 @@ export function DealForecastChart({ deals }: DealForecastChartProps) {
                     <p className="text-sm font-semibold tabular-nums">
                       {formatMoneyCompact(row.weightedValue, money)}
                     </p>
-                    <p className="text-[10px] text-muted-foreground tabular-nums">
+                    <p className="text-micro text-muted-foreground tabular-nums">
                       of {formatMoneyCompact(row.totalValue, money)}
                     </p>
                   </div>

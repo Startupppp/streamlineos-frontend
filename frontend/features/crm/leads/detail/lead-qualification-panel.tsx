@@ -103,7 +103,7 @@ export function LeadQualificationPanel({ leadId, qualificationJson }: LeadQualif
             <CardTitle className="text-sm text-muted-foreground uppercase tracking-wide font-semibold">
               BANT Qualification
             </CardTitle>
-            <Badge className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${scoreConfig.badgeClass}`}>
+            <Badge className={`text-dense font-medium px-2 py-0.5 rounded-full ${scoreConfig.badgeClass}`}>
               <span className={`mr-1.5 inline-block h-1.5 w-1.5 rounded-full ${scoreConfig.dotColor}`} />
               {score}/4 · {scoreConfig.label}
             </Badge>
@@ -146,7 +146,7 @@ export function LeadQualificationPanel({ leadId, qualificationJson }: LeadQualif
                     <p className={`text-xs font-semibold ${checked ? "text-foreground" : "text-foreground"}`}>
                       {criterion.label}
                     </p>
-                    <p className="text-[10px] text-muted-foreground">{criterion.description}</p>
+                    <p className="text-micro text-muted-foreground">{criterion.description}</p>
                   </div>
                 </motion.button>
               );
@@ -154,7 +154,7 @@ export function LeadQualificationPanel({ leadId, qualificationJson }: LeadQualif
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[10px] text-muted-foreground uppercase tracking-wide font-semibold">
+            <label className="text-micro text-muted-foreground uppercase tracking-wide font-semibold">
               Qualification Notes
             </label>
             <Textarea

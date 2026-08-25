@@ -136,7 +136,7 @@ function NetworkLogsPanel({ logs }: { logs: FeedbucketNetworkEntry[] }) {
               {logs.map((entry, i) => (
                 <tr key={i} className="font-mono">
                   <td className="py-0.5 pr-2">
-                    <span className="inline-block rounded px-1 bg-muted text-muted-foreground uppercase text-[10px]">
+                    <span className="inline-block rounded px-1 bg-muted text-muted-foreground uppercase text-micro">
                       {entry.method}
                     </span>
                   </td>

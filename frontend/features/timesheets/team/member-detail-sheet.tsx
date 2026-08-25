@@ -97,7 +97,7 @@ export function MemberDetailSheet({
           <div className="flex items-center gap-2 mb-4 flex-wrap">
             <Badge
               className={cn(
-                "text-[10px] border px-2 py-0.5",
+                "text-micro border px-2 py-0.5",
                 PERIOD_STATUS_BADGE[period.status],
               )}
             >
@@ -131,10 +131,10 @@ export function MemberDetailSheet({
               return (
                 <div key={date}>
                   <div className="flex items-center justify-between mb-1.5">
-                    <p className="text-[11px] font-medium text-muted-foreground">
+                    <p className="text-dense font-medium text-muted-foreground">
                       {format(parseISO(date), "EEE, MMM d")}
                     </p>
-                    <span className="text-[11px] tabular-nums font-semibold">
+                    <span className="text-dense tabular-nums font-semibold">
                       {dayTotal.toFixed(1)}h
                     </span>
                   </div>
@@ -142,7 +142,7 @@ export function MemberDetailSheet({
                     {dayEntries.map((entry) => (
                       <div
                         key={entry.id}
-                        className="flex items-center justify-between px-2.5 py-1.5 rounded-md bg-muted/40 text-[11px]"
+                        className="flex items-center justify-between px-2.5 py-1.5 rounded-md bg-muted/40 text-dense"
                       >
                         <TruncatedText text={entry.project?.name ?? entry.description ?? "—"} className="text-foreground max-w-[280px]" />
                         <span className="tabular-nums text-muted-foreground shrink-0 ml-2">

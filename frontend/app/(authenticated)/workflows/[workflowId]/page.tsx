@@ -68,7 +68,7 @@ function ExecutionRow({ execution }: { execution: WorkflowExecution }) {
   const cfg = EXEC_STATUS_CONFIG[execution.status];
   return (
     <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted transition-colors">
-      <span className={cn("inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium", cfg.cls)}>
+      <span className={cn("inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-dense font-medium", cfg.cls)}>
         {cfg.icon}
         {cfg.label}
       </span>
@@ -115,7 +115,7 @@ function WorkflowOverviewTab({ workflow }: WorkflowOverviewTabProps) {
               <div key={f.label} className="flex items-center gap-2">
                 <span className="text-muted-foreground">{f.icon}</span>
                 <div>
-                  <p className="text-[10px] text-muted-foreground leading-none mb-0.5">{f.label}</p>
+                  <p className="text-micro text-muted-foreground leading-none mb-0.5">{f.label}</p>
                   <p className="text-xs font-medium text-foreground">{f.value}</p>
                 </div>
               </div>
@@ -156,7 +156,7 @@ function ExecutionsTab({ workflowId }: ExecutionsTabProps) {
 
   return (
     <div className="space-y-1">
-      <div className="grid px-3 py-2 text-[10px] font-medium text-muted-foreground uppercase tracking-wide border-b border-border/60"
+      <div className="grid px-3 py-2 text-micro font-medium text-muted-foreground uppercase tracking-wide border-b border-border/60"
         style={{ gridTemplateColumns: "120px 1fr 60px 100px" }}>
         <span>Status</span>
         <span>Trigger</span>
@@ -206,7 +206,7 @@ export default function WorkflowDetailPage() {
       title={workflow?.name ?? "Workflow"}
       badge={
         statusCfg ? (
-          <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border", statusCfg.cls)}>
+          <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-dense font-medium border", statusCfg.cls)}>
             {statusCfg.label}
           </span>
         ) : undefined

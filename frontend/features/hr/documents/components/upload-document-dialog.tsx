@@ -344,7 +344,7 @@ export function UploadDocumentDialog({
             <span className="text-sm font-semibold text-foreground">
               {files.length > 0 ? "Add more files" : "Drop files here or click to browse"}
             </span>
-            <span className="text-[11px] text-muted-foreground mt-1">
+            <span className="text-dense text-muted-foreground mt-1">
               PDF, DOC, XLS, PNG, JPG — up to 10MB each
             </span>
             <input
@@ -359,14 +359,14 @@ export function UploadDocumentDialog({
           {files.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                <span className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
                   {files.length} file{files.length > 1 ? "s" : ""} selected
                 </span>
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-6 text-[11px] text-muted-foreground hover:text-foreground"
+                  className="h-6 text-dense text-muted-foreground hover:text-foreground"
                   onClick={handleClearAllFiles}
                 >
                   Clear all
@@ -389,14 +389,14 @@ export function UploadDocumentDialog({
                         <p className="text-xs font-medium text-foreground truncate">{f.name}</p>
                         <div className="flex items-center gap-1.5 mt-0.5">
                           <span className={cn(
-                            "inline-flex items-center text-[10px] font-semibold px-1.5 py-0 rounded-full border",
+                            "inline-flex items-center text-micro font-semibold px-1.5 py-0 rounded-full border",
                             config.bg,
                             config.text,
                             "border-current/20",
                           )}>
                             {config.badge}
                           </span>
-                          <span className="text-[10px] text-muted-foreground">{formatBytes(f.size)}</span>
+                          <span className="text-micro text-muted-foreground">{formatBytes(f.size)}</span>
                         </div>
                       </div>
                       <RemoveFileButton index={i} onClick={handleRemoveFileAtIndex} />

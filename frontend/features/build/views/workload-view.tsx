@@ -184,7 +184,7 @@ export const WorkloadView = memo(function WorkloadView({
             </div>
             <div>
               <p className="text-lg font-semibold text-foreground tabular-nums">{statValues[stat.id]}</p>
-              <p className="text-[11px] text-muted-foreground">{stat.label}</p>
+              <p className="text-dense text-muted-foreground">{stat.label}</p>
             </div>
           </button>
         ))}
@@ -194,13 +194,13 @@ export const WorkloadView = memo(function WorkloadView({
         <div className="min-h-0 flex-1 overflow-auto">
           <div className="flex min-h-full min-w-max flex-col">
             <div className="sticky top-0 z-10 flex shrink-0 border-b bg-muted/50">
-              <div className="w-52 shrink-0 px-4 py-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              <div className="w-52 shrink-0 px-4 py-2.5 text-micro font-bold text-muted-foreground uppercase tracking-wider">
                 Member
               </div>
-              <div className="w-20 shrink-0 px-2 py-2.5 text-[10px] font-bold text-muted-foreground text-center">
+              <div className="w-20 shrink-0 px-2 py-2.5 text-micro font-bold text-muted-foreground text-center">
                 Tickets
               </div>
-              <div className="w-20 shrink-0 px-2 py-2.5 text-[10px] font-bold text-muted-foreground text-center">
+              <div className="w-20 shrink-0 px-2 py-2.5 text-micro font-bold text-muted-foreground text-center">
                 Points
               </div>
               {days.map((day, i) => (
@@ -211,10 +211,10 @@ export const WorkloadView = memo(function WorkloadView({
                     isSameDay(day, new Date()) && "bg-primary/5",
                   )}
                 >
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                  <p className="text-micro font-bold text-muted-foreground uppercase tracking-wider">
                     {format(day, "EEE")}
                   </p>
-                  <p className={cn("text-[11px]", isSameDay(day, new Date()) ? "text-primary font-bold" : "text-muted-foreground")}>
+                  <p className={cn("text-dense", isSameDay(day, new Date()) ? "text-primary font-bold" : "text-muted-foreground")}>
                     {format(day, "d")}
                   </p>
                 </div>
@@ -308,7 +308,7 @@ export const WorkloadView = memo(function WorkloadView({
                           </span>
                           <TruncatedText text={ticket.title} className="min-w-0 flex-1 text-xs text-foreground" />
                           {ticket.points != null && (
-                            <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">
+                            <span className="shrink-0 text-micro tabular-nums text-muted-foreground">
                               {ticket.points}pt
                             </span>
                           )}

@@ -79,12 +79,12 @@ function WebhookRow({
       <div className="flex-1 min-w-0 space-y-1">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm font-medium truncate">{sub.name}</span>
-          <Badge variant="outline" className="text-[11px] font-mono font-normal">
+          <Badge variant="outline" className="text-dense font-mono font-normal">
             {sub.events.length} event{sub.events.length !== 1 ? "s" : ""}
           </Badge>
         </div>
         <p className="text-xs text-muted-foreground font-mono truncate">{sub.url}</p>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-dense text-muted-foreground">
           Created {formatDistanceToNow(new Date(sub.createdAt), { addSuffix: true })}
         </p>
       </div>

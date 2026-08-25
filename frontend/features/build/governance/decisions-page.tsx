@@ -179,19 +179,19 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
     {
       key: "status", header: "Status",
       cell: (row) => (
-        <Badge variant="outline" className={`text-[10px] px-1.5 py-0.5 ${DEC_STATUS_STYLE[row.status]}`}>
+        <Badge variant="outline" className={`text-micro px-1.5 py-0.5 ${DEC_STATUS_STYLE[row.status]}`}>
           {DEC_STATUS_LABEL[row.status]}
         </Badge>
       ),
     },
     {
       key: "ownerId", header: "Owner",
-      cell: (row) => <span className="text-[11px] text-muted-foreground">{memberName(row.ownerId)}</span>,
+      cell: (row) => <span className="text-dense text-muted-foreground">{memberName(row.ownerId)}</span>,
     },
     {
       key: "decidedAt", header: "Decided", sortable: true, sortValue: (d) => d.decidedAt ?? "",
       cell: (row) => (
-        <span className="text-[11px] tabular-nums text-muted-foreground">
+        <span className="text-dense tabular-nums text-muted-foreground">
           {row.decidedAt ? row.decidedAt.slice(0, 10) : "—"}
         </span>
       ),
@@ -199,7 +199,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
     {
       key: "revisitAt", header: "Revisit", sortable: true, sortValue: (d) => d.revisitAt ?? "",
       cell: (row) => (
-        <span className="text-[11px] tabular-nums text-muted-foreground">
+        <span className="text-dense tabular-nums text-muted-foreground">
           {row.revisitAt ? row.revisitAt.slice(0, 10) : "—"}
         </span>
       ),

@@ -54,7 +54,7 @@ const KanbanColumn = memo(function KanbanColumn({
           <span className={cn("text-xs font-semibold tracking-wide", col.headerText)}>{col.label}</span>
         </div>
         <span className={cn(
-          "inline-flex items-center justify-center rounded-full min-w-[22px] h-5 px-1.5 text-[11px] font-bold bg-white/25",
+          "inline-flex items-center justify-center rounded-full min-w-[22px] h-5 px-1.5 text-dense font-bold bg-white/25",
           col.headerText
         )}>
           {total}
@@ -85,7 +85,7 @@ const KanbanColumn = memo(function KanbanColumn({
               {provided.placeholder}
               {items.length === 0 && !snapshot.isDraggingOver && (
                 <div className="flex flex-col items-center justify-center h-16 rounded-lg border border-dashed border-border/40 gap-1">
-                  <p className="text-[10px] text-muted-foreground/60 font-medium">Drop here</p>
+                  <p className="text-micro text-muted-foreground/60 font-medium">Drop here</p>
                 </div>
               )}
             </div>

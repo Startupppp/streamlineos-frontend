@@ -81,7 +81,7 @@ function ScenarioCard({ scenario, canManage, onEdit, onDelete }: ScenarioCardPro
           <div>
             <p className="font-medium text-sm">{scenario.name}</p>
             {scenario.isDefault && (
-              <span className="text-[10px] text-muted-foreground">Default</span>
+              <span className="text-micro text-muted-foreground">Default</span>
             )}
           </div>
           <Badge variant="outline" className={KIND_CLASSES[scenario.kind] ?? ""}>

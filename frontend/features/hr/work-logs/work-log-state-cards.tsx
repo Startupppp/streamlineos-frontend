@@ -35,7 +35,7 @@ export function WorkLogLoadingCard() {
           aria-label="Loading work logs"
         >
           <Loader2 className="w-8 animate-spin text-muted-foreground" aria-hidden="true" />
-          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+          <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
             Loading work logs
           </p>
         </div>
@@ -103,7 +103,7 @@ export function WorkLogTotalHoursCard({
               {totalHours}
               <span className="text-lg ml-1 font-semibold">h</span>
             </p>
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mt-0.5">
+            <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider mt-0.5">
               Total logged — Q{quarter} {year}
             </p>
           </div>

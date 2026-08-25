@@ -131,7 +131,7 @@ function TrackingBadge({
   method: TrackingMethod | null | undefined;
 }) {
   if (!method || method === "NONE") {
-    return <span className="text-muted-foreground text-[10px]">—</span>;
+    return <span className="text-muted-foreground text-micro">—</span>;
   }
   if (method === "LOT") {
     return (

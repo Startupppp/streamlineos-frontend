@@ -147,7 +147,7 @@ export default function SkillsMatrixPage() {
                       title={skill}
                     >
                       {compact ? (
-                        <span className="block truncate text-[10px] leading-tight">{skill.substring(0, 6)}{skill.length > 6 ? "…" : ""}</span>
+                        <span className="block truncate text-micro leading-tight">{skill.substring(0, 6)}{skill.length > 6 ? "…" : ""}</span>
                       ) : (
                         <div className="[writing-mode:vertical-rl] rotate-180 max-h-24 py-1">{skill}</div>
                       )}
@@ -177,7 +177,7 @@ export default function SkillsMatrixPage() {
                             {level ? (
                               <span
                                 title={`${skill}: ${LEVEL_LABELS[level] ?? `L${level}`}`}
-                                className={`inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold cursor-default ${LEVEL_COLORS[level] ?? LEVEL_COLORS[1]}`}
+                                className={`inline-block rounded px-1.5 py-0.5 text-micro font-semibold cursor-default ${LEVEL_COLORS[level] ?? LEVEL_COLORS[1]}`}
                               >
                                 {compact ? (LEVEL_SHORT[level] ?? `${level}`) : `${level} – ${LEVEL_LABELS[level] ?? `L${level}`}`}
                               </span>
@@ -197,7 +197,7 @@ export default function SkillsMatrixPage() {
             <div className="flex items-center gap-4 mt-4 px-1 flex-wrap">
               {Object.entries(LEVEL_LABELS).map(([levelNumber, levelLabel]) => (
                 <div key={levelNumber} className="flex items-center gap-1.5">
-                  <span className={`inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold ${LEVEL_COLORS[Number(levelNumber)]}`}>
+                  <span className={`inline-block rounded px-1.5 py-0.5 text-micro font-semibold ${LEVEL_COLORS[Number(levelNumber)]}`}>
                     {levelNumber}
                   </span>
                   <span className="text-xs text-muted-foreground">{levelNumber} - {levelLabel}</span>

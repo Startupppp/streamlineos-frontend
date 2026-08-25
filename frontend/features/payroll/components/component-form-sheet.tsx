@@ -252,7 +252,7 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
                       <FormControl>
                         <Input id="comp-formula" {...field} className="text-sm font-mono" placeholder="e.g. basic * 0.12" />
                       </FormControl>
-                      <p className="text-[10px] text-muted-foreground">{FORMULA_HELP}</p>
+                      <p className="text-micro text-muted-foreground">{FORMULA_HELP}</p>
                       <FormMessage className="text-xs" />
                     </FormItem>
                   )}
@@ -283,7 +283,7 @@ export function ComponentFormSheet({ component, open, onOpenChange }: ComponentF
                       <FormItem className="flex items-center justify-between py-2.5 border-b border-border/50 last:border-0">
                         <div>
                           <p className="text-xs font-medium">{label}</p>
-                          <p className="text-[10px] text-muted-foreground">{desc}</p>
+                          <p className="text-micro text-muted-foreground">{desc}</p>
                         </div>
                         <FormControl>
                           <Switch id={name} checked={field.value as boolean} onCheckedChange={field.onChange} />

@@ -19,14 +19,14 @@ const COLUMNS: DataTableColumn<CostCenterRow>[] = [
   {
     key: "costCenter",
     header: "Cost Center",
-    cell: (row) => <TruncatedText text={row.costCenter ?? ""} className="text-[11px] font-medium" />,
+    cell: (row) => <TruncatedText text={row.costCenter ?? ""} className="text-dense font-medium" />,
   },
   {
     key: "employeeCount",
     header: "Employees",
     className: "text-right",
     cell: (row) => (
-      <span className="font-mono text-[11px] tabular-nums text-right">{row.employeeCount}</span>
+      <span className="font-mono text-dense tabular-nums text-right">{row.employeeCount}</span>
     ),
   },
   {
@@ -34,7 +34,7 @@ const COLUMNS: DataTableColumn<CostCenterRow>[] = [
     header: "Gross Total",
     className: "text-right",
     cell: (row) => (
-      <span className="font-mono text-[11px] tabular-nums text-right">{formatMoney(row.grossTotal)}</span>
+      <span className="font-mono text-dense tabular-nums text-right">{formatMoney(row.grossTotal)}</span>
     ),
   },
   {
@@ -42,7 +42,7 @@ const COLUMNS: DataTableColumn<CostCenterRow>[] = [
     header: "Net Total",
     className: "text-right",
     cell: (row) => (
-      <span className="font-mono text-[11px] tabular-nums text-right">{formatMoney(row.netTotal)}</span>
+      <span className="font-mono text-dense tabular-nums text-right">{formatMoney(row.netTotal)}</span>
     ),
   },
 ];
@@ -68,7 +68,7 @@ export function ReportCostCenter({ month, costCenter, workerType }: ReportCostCe
   }, [data]);
 
   const footerNode = totals ? (
-    <span className="text-[11px] text-muted-foreground">
+    <span className="text-dense text-muted-foreground">
       Totals — Gross:{" "}
       <span className="font-mono">{formatMoney(totals.gross)}</span> · Net:{" "}
       <span className="font-mono">{formatMoney(totals.net)}</span>

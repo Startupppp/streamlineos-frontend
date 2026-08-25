@@ -158,22 +158,22 @@ export function JobCard({
         </div>
 
         <div className="flex flex-wrap gap-1.5 mb-3">
-          <span className={cn("inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full", statusStyle.badge)}>
+          <span className={cn("inline-flex items-center text-micro font-semibold px-2 py-0.5 rounded-full", statusStyle.badge)}>
             {statusStyle.label}
           </span>
           {job.location && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+            <span className="inline-flex items-center gap-1 text-micro font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
               <MapPin className="h-2.5 w-2.5" />
               {job.location}
             </span>
           )}
           {job.type && (
-            <span className="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+            <span className="inline-flex items-center text-micro font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
               {job.type.replace(/_/g, " ")}
             </span>
           )}
           {job.isInternal && (
-            <span className="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/10 text-foreground">
+            <span className="inline-flex items-center text-micro font-medium px-2 py-0.5 rounded-full bg-primary/10 text-foreground">
               Internal
             </span>
           )}

@@ -59,7 +59,7 @@ function CalendarCaption({ displayMonth, compact = false }: CaptionProps & { com
           <SelectTrigger
             className={cn(
               "border-0 bg-transparent shadow-none focus:ring-0 font-medium",
-              compact ? "h-6 w-[5.5rem] px-1 text-[11px]" : "h-8 w-[112px] text-xs",
+              compact ? "h-6 w-[5.5rem] px-1 text-dense" : "h-8 w-[112px] text-xs",
             )}
           >
             <SelectValue>{MONTH_NAMES[month]}</SelectValue>
@@ -80,7 +80,7 @@ function CalendarCaption({ displayMonth, compact = false }: CaptionProps & { com
           <SelectTrigger
             className={cn(
               "shrink-0 gap-1 border-0 bg-transparent shadow-none focus:ring-0 font-medium *:data-[slot=select-value]:line-clamp-none",
-              compact ? "h-6 w-[3.25rem] px-1 text-[11px]" : "h-8 w-[4.75rem] px-2 text-xs",
+              compact ? "h-6 w-[3.25rem] px-1 text-dense" : "h-8 w-[4.75rem] px-2 text-xs",
             )}
           >
             <SelectValue>{year}</SelectValue>
@@ -142,7 +142,7 @@ function Calendar({
         head_row: "flex w-full",
         head_cell: cn(
           "text-muted-foreground rounded-md font-normal flex-1 text-center",
-          compact ? "text-[10px]" : "w-9 text-[0.8rem]",
+          compact ? "text-micro" : "w-9 text-[0.8rem]",
         ),
         row: cn("flex w-full", compact ? "mt-1" : "mt-2"),
         cell: cn(

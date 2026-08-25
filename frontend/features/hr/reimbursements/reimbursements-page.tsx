@@ -89,7 +89,7 @@ function ReimbursementActions({
 
   if (!isAdmin) return null;
   if (reimbursementUserId === currentUserId) {
-    return <span className="text-[10px] text-muted-foreground italic">Cannot approve own</span>;
+    return <span className="text-micro text-muted-foreground italic">Cannot approve own</span>;
   }
   return (
     <div className="flex gap-1 justify-end">
@@ -265,7 +265,7 @@ export function ReimbursementsPage() {
       key: "category",
       header: "Category",
       cell: (r) => (
-        <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
+        <span className="inline-flex items-center text-micro font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
           {r.category}
         </span>
       ),
@@ -293,7 +293,7 @@ export function ReimbursementsPage() {
       cell: (r) => {
         const statusCfg = getStatusConfig(r.status);
         return (
-          <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", statusCfg.badge)}>
+          <span className={cn("inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border", statusCfg.badge)}>
             {statusCfg.icon}
             {r.status ?? "PENDING"}
           </span>
@@ -391,7 +391,7 @@ export function ReimbursementsPage() {
               value={customCategory}
               onChange={handleCustomCategoryChange}
             />
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-dense text-muted-foreground">
               Letters, numbers, spaces, apostrophes, periods, and hyphens only.
             </p>
           </div>
@@ -435,7 +435,7 @@ export function ReimbursementsPage() {
               <span className="text-sm font-medium text-foreground/70">
                 {uploadFile.isPending ? "Uploading…" : "Upload receipt"}
               </span>
-              <span className="mt-0.5 text-[11px] text-muted-foreground">
+              <span className="mt-0.5 text-dense text-muted-foreground">
                 PDF, PNG, JPG up to 10MB
               </span>
             </button>
@@ -446,7 +446,7 @@ export function ReimbursementsPage() {
               </div>
               <div className="min-w-0 flex-1">
                 <TruncatedText text={receiptFileName ?? "Receipt"} className="text-sm font-medium text-foreground" />
-                <p className="text-[11px] text-muted-foreground">Attached</p>
+                <p className="text-dense text-muted-foreground">Attached</p>
               </div>
               <Button
                 type="button"

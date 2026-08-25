@@ -143,7 +143,7 @@ export function EventFormFields({
             aria-required
           />
           {titleError && (
-            <p className="text-[10px] text-destructive">{titleError}</p>
+            <p className="text-micro text-destructive">{titleError}</p>
           )}
         </div>
       </div>
@@ -224,7 +224,7 @@ export function EventFormFields({
         </div>
 
         {dateTimeError && (
-          <p className="text-[10px] text-destructive pl-6">{dateTimeError}</p>
+          <p className="text-micro text-destructive pl-6">{dateTimeError}</p>
         )}
       </div>
 

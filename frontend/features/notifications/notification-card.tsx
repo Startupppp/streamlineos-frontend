@@ -195,12 +195,12 @@ export function NotificationCard({
           {pinned && <Pin className="h-3 w-3 shrink-0 text-amber-500" />}
           <Badge
             variant="outline"
-            className="hidden h-4 shrink-0 px-1.5 text-[10px] border-border/60 text-muted-foreground sm:inline-flex"
+            className="hidden h-4 shrink-0 px-1.5 text-micro border-border/60 text-muted-foreground sm:inline-flex"
           >
             {categoryConfig.label}
           </Badge>
           {sourceModule && (
-            <Badge variant="secondary" className="hidden h-4 shrink-0 px-1.5 text-[10px] md:inline-flex">
+            <Badge variant="secondary" className="hidden h-4 shrink-0 px-1.5 text-micro md:inline-flex">
               {sourceModule}
             </Badge>
           )}
@@ -281,7 +281,7 @@ export function NotificationCard({
             )}
           </div>
         )}
-        <span className="text-[11px] text-muted-foreground/60 whitespace-nowrap tabular-nums">
+        <span className="text-dense text-muted-foreground/60 whitespace-nowrap tabular-nums">
           {formatRelativeTime(createdAt)}
         </span>
         {isUnread && !isArchived && (

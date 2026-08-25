@@ -49,7 +49,7 @@ function GroupRowItem({
       type="button"
       onClick={onSelect}
       className={cn(
-        "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[12px] transition-colors",
+        "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors",
         active
           ? "bg-primary/10 text-primary font-medium"
           : "text-foreground hover:bg-muted",
@@ -59,7 +59,7 @@ function GroupRowItem({
       <span className="min-w-0 flex-1 truncate">{row.label}</span>
       <span
         className={cn(
-          "ml-auto shrink-0 rounded-md px-1.5 py-0.5 text-[10px] tabular-nums",
+          "ml-auto shrink-0 rounded-md px-1.5 py-0.5 text-micro tabular-nums",
           active ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground",
         )}
       >
@@ -234,7 +234,7 @@ function GroupingSidebarBody({
               />
             ))
           ) : (
-            <p className="py-4 text-center text-[11px] text-muted-foreground">No projects</p>
+            <p className="py-4 text-center text-dense text-muted-foreground">No projects</p>
           )}
         </TabsContent>
 
@@ -249,7 +249,7 @@ function GroupingSidebarBody({
               />
             ))
           ) : (
-            <p className="py-4 text-center text-[11px] text-muted-foreground">No projects</p>
+            <p className="py-4 text-center text-dense text-muted-foreground">No projects</p>
           )}
         </TabsContent>
 
@@ -264,7 +264,7 @@ function GroupingSidebarBody({
               />
             ))
           ) : (
-            <p className="py-4 text-center text-[11px] text-muted-foreground">No leads assigned</p>
+            <p className="py-4 text-center text-dense text-muted-foreground">No leads assigned</p>
           )}
         </TabsContent>
 
@@ -279,7 +279,7 @@ function GroupingSidebarBody({
               />
             ))
           ) : (
-            <p className="py-4 text-center text-[11px] text-muted-foreground">No members</p>
+            <p className="py-4 text-center text-dense text-muted-foreground">No members</p>
           )}
         </TabsContent>
       </div>

@@ -314,7 +314,7 @@ export function StepSystemAccounts({ onComplete, onSkip }: StepProps) {
                   {m.account ? (
                     <p className="text-xs text-muted-foreground font-mono">{m.account.code} — {m.account.name}</p>
                   ) : (
-                    <Badge variant="secondary" className="text-[10px] mt-0.5 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30">Not mapped</Badge>
+                    <Badge variant="secondary" className="text-micro mt-0.5 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30">Not mapped</Badge>
                   )}
                 </div>
                 <Button variant="ghost" size="sm" className="h-6 text-xs shrink-0 ml-2" onClick={() => setEditMapping(m)}>

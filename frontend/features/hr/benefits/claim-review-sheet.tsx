@@ -149,7 +149,7 @@ export function ClaimReviewSheet({ open, onOpenChange, claim }: Props) {
           </div>
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground">Current Status</span>
-            <Badge variant="outline" className="text-[10px]">
+            <Badge variant="outline" className="text-micro">
               {claim.status}
             </Badge>
           </div>

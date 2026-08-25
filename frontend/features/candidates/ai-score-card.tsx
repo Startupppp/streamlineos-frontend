@@ -97,7 +97,7 @@ export const AiScoreCard = memo(function AiScoreCard({
               </p>
             )}
             {aiScoreGeneratedAt && !isLatestScore && (
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-micro text-muted-foreground">
                 Scored {format(new Date(aiScoreGeneratedAt), "PPp")}
               </p>
             )}

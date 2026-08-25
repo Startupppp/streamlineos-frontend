@@ -90,7 +90,7 @@ export function CustomFieldsDataTable({ entityType, fields }: CustomFieldsDataTa
       key: "type",
       header: "Type",
       cell: (row) => (
-        <Badge variant="secondary" className="text-[11px]">{row.fieldType}</Badge>
+        <Badge variant="secondary" className="text-dense">{row.fieldType}</Badge>
       ),
     },
     {
@@ -99,10 +99,10 @@ export function CustomFieldsDataTable({ entityType, fields }: CustomFieldsDataTa
       cell: (row) => (
         <div className="flex gap-1.5 flex-wrap">
           {row.isRequired && (
-            <Badge variant="outline" className="text-[11px] text-primary border-primary/30">required</Badge>
+            <Badge variant="outline" className="text-dense text-primary border-primary/30">required</Badge>
           )}
           {row.isSensitive && (
-            <Badge variant="outline" className="text-[11px] text-amber-700 border-amber-200 gap-0.5">
+            <Badge variant="outline" className="text-dense text-amber-700 border-amber-200 gap-0.5">
               <Lock className="h-2.5 w-2.5" /> sensitive
             </Badge>
           )}

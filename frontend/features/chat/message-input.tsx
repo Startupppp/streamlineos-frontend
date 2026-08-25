@@ -68,8 +68,8 @@ function MentionItem({ user, idx, mentionIndex, onInsert }: MentionItemProps) {
         <AvatarImage src={resolveImageUrl(user.image)} />
         <AvatarFallback className="text-[8px]">{getInitials(user.name)}</AvatarFallback>
       </Avatar>
-      <span className="text-[13px] font-medium">{user.name}</span>
-      <span className="text-[11px] text-muted-foreground ml-auto">{user.role}</span>
+      <span className="text-label font-medium">{user.name}</span>
+      <span className="text-dense text-muted-foreground ml-auto">{user.role}</span>
     </button>
   );
 }
@@ -103,8 +103,8 @@ function PendingAttachmentItem({ att, idx, onRemove }: PendingAttachmentItemProp
         </div>
       )}
       <div className="min-w-0 max-w-[140px]">
-        <p className="text-[12px] font-medium truncate">{att.fileName}</p>
-        <p className="text-[10px] text-muted-foreground">{formatFileSize(att.fileSize)}</p>
+        <p className="text-xs font-medium truncate">{att.fileName}</p>
+        <p className="text-micro text-muted-foreground">{formatFileSize(att.fileSize)}</p>
       </div>
       <button
         onClick={handleRemove}
@@ -263,10 +263,10 @@ export function MessageInput({
               <div className="w-1 h-9 rounded-full bg-blue-500 shrink-0" />
               <Reply className="h-4 w-4 text-blue-600 shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-[12px] font-bold text-blue-600">
+                <p className="text-xs font-bold text-blue-600">
                   Replying to {replyTo.sender?.name}
                 </p>
-                <p className="text-[12px] text-muted-foreground truncate">
+                <p className="text-xs text-muted-foreground truncate">
                   {replyTo.content}
                 </p>
               </div>
@@ -300,7 +300,7 @@ export function MessageInput({
               >
                 <div className="max-w-[800px] mx-auto">
                   <div className="bg-background border border-border/60 rounded-xl shadow-lg overflow-hidden max-h-[200px] overflow-y-auto">
-                    <div className="px-3 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-b border-border/30">
+                    <div className="px-3 py-1.5 text-micro font-semibold text-muted-foreground uppercase tracking-wider border-b border-border/30">
                       Members
                     </div>
                     {filteredMentions.slice(0, 8).map((user, idx) => (
@@ -354,7 +354,7 @@ export function MessageInput({
               {uploading && (
                 <div className="flex items-center gap-2 bg-muted/40 border border-border/40 rounded-lg px-3 py-2">
                   <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-                  <span className="text-[11px] text-muted-foreground">Uploading...</span>
+                  <span className="text-dense text-muted-foreground">Uploading...</span>
                 </div>
               )}
             </div>
@@ -386,7 +386,7 @@ export function MessageInput({
               onPaste={handlePaste}
               placeholder={`Message ${channelType === "DIRECT" ? displayName : "#" + displayName}...`}
               rows={1}
-              className="w-full bg-transparent text-[14px] resize-none px-4 pt-3 pb-1 focus:outline-none placeholder:text-muted-foreground/60 min-h-[40px] max-h-[160px]"
+              className="w-full bg-transparent text-sm resize-none px-4 pt-3 pb-1 focus:outline-none placeholder:text-muted-foreground/60 min-h-[40px] max-h-[160px]"
             />
             <div className="flex items-center justify-between px-3 py-1.5">
               <div className="flex items-center gap-0.5">
@@ -452,7 +452,7 @@ export function MessageInput({
                 </button>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] text-muted-foreground/50 hidden sm:inline">
+                <span className="text-micro text-muted-foreground/50 hidden sm:inline">
                   Shift+Enter for new line
                 </span>
                 <button

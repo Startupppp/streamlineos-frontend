@@ -30,7 +30,7 @@ export function TimesheetWidget() {
             <div className="min-w-0">
               <p
                 className={cn(
-                  "text-[11px] font-semibold uppercase tracking-wide",
+                  "text-dense font-semibold uppercase tracking-wide",
                   ts.submitted ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400",
                 )}
               >
@@ -62,7 +62,7 @@ export function TimesheetWidget() {
               )}
             </div>
           </div>
-          <p className="text-[11px] text-muted-foreground">{ts.weekLabel}</p>
+          <p className="text-dense text-muted-foreground">{ts.weekLabel}</p>
         </div>
       ) : (
         <EmptyState

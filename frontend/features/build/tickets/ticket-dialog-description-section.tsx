@@ -136,7 +136,7 @@ export function TicketDialogDescriptionSection({
 
       {(showLinksEditor || relatedLinks.length > 0) && (
         <div className="mt-3">
-          <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">
+          <p className="mb-1.5 text-dense font-medium text-muted-foreground">
             Related links
           </p>
           <TicketRelatedLinksEditor
@@ -149,7 +149,7 @@ export function TicketDialogDescriptionSection({
       )}
 
       {fileError && (
-        <p className="mt-2 text-[11px] text-destructive">
+        <p className="mt-2 text-dense text-destructive">
           {fileError}
         </p>
       )}

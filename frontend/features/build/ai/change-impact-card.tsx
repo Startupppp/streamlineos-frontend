@@ -24,8 +24,8 @@ interface ImpactRowProps {
 function ImpactRow({ label, value }: ImpactRowProps) {
   return (
     <div className="space-y-0.5">
-      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className="text-[12px] text-foreground/80">{value}</p>
+      <p className="text-dense font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="text-xs text-foreground/80">{value}</p>
     </div>
   );
 }
@@ -70,7 +70,7 @@ export function ChangeImpactCard({ projectId, featureEnabled, requiredPlan }: Ch
 
       {mutation.isError ? (
         <div className="space-y-2.5">
-          <p className="text-[13px] leading-snug text-destructive">{getErrorMessage(mutation.error)}</p>
+          <p className="text-label leading-snug text-destructive">{getErrorMessage(mutation.error)}</p>
           <LoadingButton variant="outline" size="sm" onClick={handleRun} className="w-full gap-1.5 text-xs">
             <RotateCcw className="h-3.5 w-3.5" />
             Retry
@@ -80,7 +80,7 @@ export function ChangeImpactCard({ projectId, featureEnabled, requiredPlan }: Ch
 
       {result ? (
         <div className="space-y-3">
-          <p className="text-[13px] font-semibold text-foreground">{result.headline}</p>
+          <p className="text-label font-semibold text-foreground">{result.headline}</p>
 
           <div className="space-y-2">
             <ImpactRow label="Scope" value={result.scopeImpact} />
@@ -90,10 +90,10 @@ export function ChangeImpactCard({ projectId, featureEnabled, requiredPlan }: Ch
 
           {result.riskSummary.length > 0 ? (
             <div>
-              <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1">Risks</p>
+              <p className="text-dense font-medium uppercase tracking-wide text-muted-foreground mb-1">Risks</p>
               <ul className="space-y-1">
                 {result.riskSummary.map((r) => (
-                  <li key={r} className="flex items-start gap-1.5 text-[12px] text-foreground/80">
+                  <li key={r} className="flex items-start gap-1.5 text-xs text-foreground/80">
                     <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0 text-amber-500" />
                     {r}
                   </li>
@@ -104,12 +104,12 @@ export function ChangeImpactCard({ projectId, featureEnabled, requiredPlan }: Ch
 
           {result.pendingApprovals.length > 0 ? (
             <div>
-              <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1">
+              <p className="text-dense font-medium uppercase tracking-wide text-muted-foreground mb-1">
                 Pending Approvals
               </p>
               <ul className="space-y-1">
                 {result.pendingApprovals.map((a) => (
-                  <li key={a} className="flex items-start gap-1.5 text-[12px] text-foreground/80">
+                  <li key={a} className="flex items-start gap-1.5 text-xs text-foreground/80">
                     <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary/60" />
                     {a}
                   </li>
@@ -118,7 +118,7 @@ export function ChangeImpactCard({ projectId, featureEnabled, requiredPlan }: Ch
             </div>
           ) : null}
 
-          <div className="flex items-center gap-3 rounded-md border border-border bg-muted/40 px-2.5 py-2 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-3 rounded-md border border-border bg-muted/40 px-2.5 py-2 text-dense text-muted-foreground">
             <span>{result.evidence.openChangeRequests} open CRs</span>
             <span className="text-border">·</span>
             <span>{result.evidence.openRisks} open risks</span>
@@ -126,7 +126,7 @@ export function ChangeImpactCard({ projectId, featureEnabled, requiredPlan }: Ch
             <span>{result.evidence.pendingApprovals} pending approvals</span>
           </div>
 
-          <p className="text-[11px] text-muted-foreground">{result.citations.length} sources cited.</p>
+          <p className="text-dense text-muted-foreground">{result.citations.length} sources cited.</p>
 
           <LoadingButton
             variant="ghost"

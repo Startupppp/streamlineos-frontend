@@ -40,7 +40,7 @@ const columns: DataTableColumn<StockTransaction>[] = [
     key: "createdAt",
     header: "Date",
     cell: (tx) => (
-      <span className="font-mono tabular-nums text-[11px]">{formatDate(tx.createdAt)}</span>
+      <span className="font-mono tabular-nums text-dense">{formatDate(tx.createdAt)}</span>
     ),
     sortable: true,
     sortValue: (tx) => tx.createdAt,
@@ -55,7 +55,7 @@ const columns: DataTableColumn<StockTransaction>[] = [
     key: "sku",
     header: "SKU",
     cell: (tx) => (
-      <span className="font-mono text-[11px] text-muted-foreground">
+      <span className="font-mono text-dense text-muted-foreground">
         {tx.productVariant?.sku ?? tx.productVariant?.product?.sku ?? "—"}
       </span>
     ),
@@ -84,7 +84,7 @@ const columns: DataTableColumn<StockTransaction>[] = [
     key: "referenceId",
     header: "Reference",
     cell: (tx) => (
-      <span className="font-mono text-[11px] text-muted-foreground">
+      <span className="font-mono text-dense text-muted-foreground">
         {tx.referenceId ? `${tx.referenceType ?? ""} ${tx.referenceId}`.trim() : "—"}
       </span>
     ),

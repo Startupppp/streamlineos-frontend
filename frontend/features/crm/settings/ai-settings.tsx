@@ -222,7 +222,7 @@ export function CrmAiSettings() {
                             <span className="text-sm font-medium capitalize">
                               {row.feature.replace(/_/g, " ")}
                             </span>
-                            <Badge variant="secondary" className="text-[10px]">
+                            <Badge variant="secondary" className="text-micro">
                               {row.model}
                             </Badge>
                           </div>

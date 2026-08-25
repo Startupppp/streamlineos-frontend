@@ -128,7 +128,7 @@ const BoardItem = memo(function BoardItem({
             <TruncatedText text={board.name} />
             {visibilityIcon}
           </p>
-          <p className={cn("text-[11px] text-muted-foreground", TEXT_ONE_LINE)}>
+          <p className={cn("text-dense text-muted-foreground", TEXT_ONE_LINE)}>
             {board.elementCount} {board.elementCount === 1 ? "item" : "items"}
           </p>
         </div>

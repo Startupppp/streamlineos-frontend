@@ -252,7 +252,7 @@ export function PmWorkspacesPage() {
             {row.name}
           </span>
           {row.isDefault ? (
-            <Badge variant="outline" className="px-1.5 py-0.5 text-[10px] text-muted-foreground">
+            <Badge variant="outline" className="px-1.5 py-0.5 text-micro text-muted-foreground">
               Default
             </Badge>
           ) : null}

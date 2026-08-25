@@ -161,20 +161,20 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
                   </div>
                   <div className="min-w-0">
                     <TruncatedText text={req.systemName} className="text-sm font-medium text-foreground" />
-                    <p className="text-[10px] text-muted-foreground">
+                    <p className="text-micro text-muted-foreground">
                       {getEmployeeName(employees, req.employeeId)} · {req.accessLevel} · {format(new Date(req.createdAt), "MMM d, yyyy")}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className={cn("inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border", meta.badge)}>
+                  <span className={cn("inline-flex items-center text-micro font-semibold px-2 py-0.5 rounded-full border", meta.badge)}>
                     {meta.label}
                   </span>
                   {canManage && req.status === "requested" && (
                     <LoadingButton
                       size="sm"
                       variant="outline"
-                      className="h-6 text-[10px] px-2"
+                      className="h-6 text-micro px-2"
                       onClick={() => handleGrant(req.id)}
                       isPending={updateMutation.isPending}
                     >
@@ -185,7 +185,7 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
                     <LoadingButton
                       size="sm"
                       variant="outline"
-                      className="h-6 text-[10px] px-2 text-destructive border-destructive/30 hover:bg-destructive/10"
+                      className="h-6 text-micro px-2 text-destructive border-destructive/30 hover:bg-destructive/10"
                       onClick={() => handleRevoke(req.id)}
                       isPending={updateMutation.isPending}
                     >

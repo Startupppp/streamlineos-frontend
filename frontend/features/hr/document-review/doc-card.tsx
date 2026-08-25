@@ -122,12 +122,12 @@ export function DocCard({ doc, canReview, onApprove, onRequestReupload }: DocCar
             <div className="flex items-center gap-1.5 flex-wrap">
               <p className="text-sm font-semibold text-foreground">{doc.documentTypeName}</p>
               {doc.isMandatory && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-700 shrink-0">
+                <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-700 shrink-0">
                   Required
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-3 mt-1 flex-wrap text-[11px] text-muted-foreground">
+            <div className="flex items-center gap-3 mt-1 flex-wrap text-dense text-muted-foreground">
               {doc.hasFile ? (
                 <DocFileLink
                   docId={doc.id}
@@ -141,7 +141,7 @@ export function DocCard({ doc, canReview, onApprove, onRequestReupload }: DocCar
           </div>
           <span
             className={cn(
-              "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0",
+              "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border shrink-0",
               getDocStatusBadgeClass(doc.status),
             )}
           >
@@ -150,13 +150,13 @@ export function DocCard({ doc, canReview, onApprove, onRequestReupload }: DocCar
         </div>
 
         {doc.reviewedAt && (
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-dense text-muted-foreground">
             Reviewed {format(new Date(doc.reviewedAt), "MMM d, yyyy")}
             {doc.reviewerName ? ` by ${doc.reviewerName}` : ""}
           </p>
         )}
         {doc.remarks && (
-          <p className="text-[11px] text-muted-foreground italic border-l-2 border-muted pl-2">
+          <p className="text-dense text-muted-foreground italic border-l-2 border-muted pl-2">
             {doc.remarks}
           </p>
         )}

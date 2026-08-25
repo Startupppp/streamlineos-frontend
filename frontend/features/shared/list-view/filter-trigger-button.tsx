@@ -41,7 +41,7 @@ export const FilterTriggerButton = forwardRef<
     >
       <span className="hidden md:inline">Add filter</span>
       {activeFilterCount > 0 ? (
-        <span className="absolute -right-1 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-primary px-0.5 text-[10px] font-semibold text-primary-foreground md:static md:ml-0.5 md:h-4 md:min-w-4 md:px-1">
+        <span className="absolute -right-1 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-primary px-0.5 text-micro font-semibold text-primary-foreground md:static md:ml-0.5 md:h-4 md:min-w-4 md:px-1">
           {activeFilterCount}
         </span>
       ) : null}

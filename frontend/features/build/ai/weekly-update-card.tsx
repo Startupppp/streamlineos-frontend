@@ -53,7 +53,7 @@ export function WeeklyUpdateCard({ projectId, featureEnabled, requiredPlan }: We
 
       {mutation.isError ? (
         <div className="space-y-2.5">
-          <p className="text-[13px] leading-snug text-destructive">{getErrorMessage(mutation.error)}</p>
+          <p className="text-label leading-snug text-destructive">{getErrorMessage(mutation.error)}</p>
           <LoadingButton variant="outline" size="sm" onClick={handleRun} className="w-full gap-1.5 text-xs">
             <RotateCcw className="h-3.5 w-3.5" />
             Retry
@@ -63,14 +63,14 @@ export function WeeklyUpdateCard({ projectId, featureEnabled, requiredPlan }: We
 
       {result ? (
         <div className="space-y-2.5">
-          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">AI Weekly Draft</p>
-          <p className="text-[13px] font-semibold text-foreground">{result.headline}</p>
+          <p className="text-dense font-medium uppercase tracking-wide text-muted-foreground">AI Weekly Draft</p>
+          <p className="text-label font-semibold text-foreground">{result.headline}</p>
           {result.completedHighlights.length > 0 ? (
             <div>
-              <p className="text-[11px] font-medium text-muted-foreground mb-1">Completed</p>
+              <p className="text-dense font-medium text-muted-foreground mb-1">Completed</p>
               <ul className="space-y-1">
                 {result.completedHighlights.map((h) => (
-                  <li key={h} className="flex items-start gap-1.5 text-[12px] text-foreground/80">
+                  <li key={h} className="flex items-start gap-1.5 text-xs text-foreground/80">
                     <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary" />
                     {h}
                   </li>
@@ -80,10 +80,10 @@ export function WeeklyUpdateCard({ projectId, featureEnabled, requiredPlan }: We
           ) : null}
           {result.blockers.length > 0 ? (
             <div>
-              <p className="text-[11px] font-medium text-muted-foreground mb-1">Blockers</p>
+              <p className="text-dense font-medium text-muted-foreground mb-1">Blockers</p>
               <ul className="space-y-1">
                 {result.blockers.map((b) => (
-                  <li key={b} className="flex items-start gap-1.5 text-[12px] text-destructive/80">
+                  <li key={b} className="flex items-start gap-1.5 text-xs text-destructive/80">
                     <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-destructive" />
                     {b}
                   </li>
@@ -93,10 +93,10 @@ export function WeeklyUpdateCard({ projectId, featureEnabled, requiredPlan }: We
           ) : null}
           {result.upcomingFocus.length > 0 ? (
             <div>
-              <p className="text-[11px] font-medium text-muted-foreground mb-1">Next week focus</p>
+              <p className="text-dense font-medium text-muted-foreground mb-1">Next week focus</p>
               <ul className="space-y-1">
                 {result.upcomingFocus.map((f) => (
-                  <li key={f} className="flex items-start gap-1.5 text-[12px] text-foreground/80">
+                  <li key={f} className="flex items-start gap-1.5 text-xs text-foreground/80">
                     <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary/60" />
                     {f}
                   </li>
@@ -104,7 +104,7 @@ export function WeeklyUpdateCard({ projectId, featureEnabled, requiredPlan }: We
               </ul>
             </div>
           ) : null}
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-dense text-muted-foreground">
             Draft — review before sending. {result.citations.length} sources cited.
           </p>
           <LoadingButton

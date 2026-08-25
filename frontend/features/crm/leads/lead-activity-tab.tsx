@@ -74,7 +74,7 @@ export function LeadActivityTab({ activities }: LeadActivityTabProps) {
                 <p className="text-sm font-medium capitalize">
                   {activity.type.replace("_", "")}
                 </p>
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-dense text-muted-foreground">
                   {timeAgo(activity.date)}
                 </span>
               </div>
@@ -85,12 +85,12 @@ export function LeadActivityTab({ activities }: LeadActivityTabProps) {
                 <p className="text-xs mt-1.5 leading-relaxed line-clamp-3">{activity.notes}</p>
               )}
               {activity.outcome && (
-                <Badge variant="outline" className="text-[10px] mt-2">
+                <Badge variant="outline" className="text-micro mt-2">
                   {activity.outcome}
                 </Badge>
               )}
               {activity.user && (
-                <p className="text-[10px] text-muted-foreground mt-1.5">
+                <p className="text-micro text-muted-foreground mt-1.5">
                   by {activity.user.name}
                 </p>
               )}

@@ -86,7 +86,7 @@ export function ValidationPanel({ runId }: ValidationPanelProps) {
                         {item.errors.map((err, i) => (
                           <span
                             key={i}
-                            className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-300"
+                            className="inline-flex items-center rounded px-1.5 py-0.5 text-micro font-medium bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-300"
                           >
                             {err}
                           </span>
@@ -117,7 +117,7 @@ export function ValidationPanel({ runId }: ValidationPanelProps) {
                         {item.warnings.map((w, i) => (
                           <span
                             key={i}
-                            className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"
+                            className="inline-flex items-center rounded px-1.5 py-0.5 text-micro font-medium bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"
                           >
                             {w}
                           </span>

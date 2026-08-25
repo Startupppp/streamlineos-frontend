@@ -94,7 +94,7 @@ function ProbationRow({ review, canManage, onExtend, onConfirm }: ProbationRowPr
     <Card className="rounded-2xl border border-border/70 bg-card/90 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_10px_28px_-14px_rgba(15,23,42,0.12)] overflow-hidden">
       <CardContent className="p-4 flex items-center gap-4">
         <div className="w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-          <span className="text-[10px] font-bold text-primary">
+          <span className="text-micro font-bold text-primary">
             {review.firstName[0]}{review.lastName[0]}
           </span>
         </div>
@@ -104,7 +104,7 @@ function ProbationRow({ review, canManage, onExtend, onConfirm }: ProbationRowPr
             <TruncatedText text={`${review.firstName} ${review.lastName}`} className="text-sm font-semibold" />
             <Badge
               variant="outline"
-              className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full", config.className)}
+              className={cn("text-micro font-semibold px-2 py-0.5 rounded-full", config.className)}
             >
               {config.label}
             </Badge>
@@ -117,7 +117,7 @@ function ProbationRow({ review, canManage, onExtend, onConfirm }: ProbationRowPr
               </Badge>
             )}
           </div>
-          <div className="flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
+          <div className="flex items-center gap-3 text-dense text-muted-foreground flex-wrap">
             <span>ID: {review.employmentId}</span>
             <span>Ends: {formatDate(effectiveEndDate)}</span>
             {review.workEmail && <span className="hidden sm:inline">{review.workEmail}</span>}

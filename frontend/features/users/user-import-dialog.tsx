@@ -176,7 +176,7 @@ export function UserImportDialog({ open, onOpenChange }: UserImportDialogProps) 
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-medium text-muted-foreground">{preview.length} users found</span>
-                  <Badge variant="secondary" className="text-[10px]">Preview</Badge>
+                  <Badge variant="secondary" className="text-micro">Preview</Badge>
                 </div>
                 <div className="max-h-40 overflow-y-auto">
                   <DataTable

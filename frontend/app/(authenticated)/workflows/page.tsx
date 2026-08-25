@@ -120,13 +120,13 @@ const WorkflowCard = memo(function WorkflowCard({
               </p>
               <span
                 className={cn(
-                  "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium capitalize",
+                  "inline-flex items-center px-2 py-0.5 rounded-full text-micro font-medium capitalize",
                   STATUS_BADGE_CLASS[workflow.status]
                 )}
               >
                 {workflow.status}
               </span>
-              <span className="text-[10px] text-muted-foreground bg-muted border border-border px-1.5 py-0.5 rounded">
+              <span className="text-micro text-muted-foreground bg-muted border border-border px-1.5 py-0.5 rounded">
                 v{workflow.version}
               </span>
             </div>
@@ -137,7 +137,7 @@ const WorkflowCard = memo(function WorkflowCard({
               </p>
             )}
 
-            <p className="text-[11px] text-muted-foreground mt-2">
+            <p className="text-dense text-muted-foreground mt-2">
               Updated{" "}
               {formatDistanceToNow(new Date(workflow.updatedAt), {
                 addSuffix: true,

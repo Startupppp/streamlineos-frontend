@@ -131,7 +131,7 @@ export function ConversionModal({ leadName, open, onClose, onSubmit, canCreateDe
               />
               <div>
                 <p className="text-sm font-medium leading-none">Auto-create Deal</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">Create a new deal pre-filled with lead data</p>
+                <p className="text-dense text-muted-foreground mt-0.5">Create a new deal pre-filled with lead data</p>
               </div>
             </label>
           )}

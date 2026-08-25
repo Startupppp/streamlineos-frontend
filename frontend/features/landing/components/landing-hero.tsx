@@ -109,7 +109,7 @@ export function LandingHero() {
               initial="hidden"
               animate="visible"
               variants={variants}
-              className="mt-5 text-[12px] text-slate-500"
+              className="mt-5 text-xs text-slate-500"
             >
               Free up to {PRICING.freeSeatLimit} seats · No card required
             </motion.p>

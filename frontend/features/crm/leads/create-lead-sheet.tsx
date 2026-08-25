@@ -301,7 +301,7 @@ export function CreateLeadSheet({
                     {dupCheck!.duplicates.map((dup) => (
                       <div
                         key={dup.id}
-                        className="flex items-center justify-between text-[11px]"
+                        className="flex items-center justify-between text-dense"
                       >
                         <TruncatedText text={dup.name} className="font-medium" />
                         <div className="flex items-center gap-2 min-w-0 flex-1 justify-end">
@@ -320,7 +320,7 @@ export function CreateLeadSheet({
                       </div>
                     ))}
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-2">
+                  <p className="text-micro text-muted-foreground mt-2">
                     You can still create this lead if it&apos;s a different
                     person.
                   </p>

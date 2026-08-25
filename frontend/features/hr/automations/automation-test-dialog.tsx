@@ -74,7 +74,7 @@ export function AutomationTestDialog({ rule, onClose }: Props) {
         <div className="space-y-4">
           <div>
             <Label className="text-xs mb-1 block">
-              Sample payload for <Badge variant="secondary" className="text-[10px]">{rule.triggerEvent}</Badge>
+              Sample payload for <Badge variant="secondary" className="text-micro">{rule.triggerEvent}</Badge>
             </Label>
             <Textarea
               value={payloadText}
@@ -100,7 +100,7 @@ export function AutomationTestDialog({ rule, onClose }: Props) {
 
               {result.matchedConditions.length > 0 && (
                 <div className="space-y-1">
-                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Condition Checks</p>
+                  <p className="text-micro font-semibold text-muted-foreground uppercase tracking-wider">Condition Checks</p>
                   {result.matchedConditions.map((mc, i) => (
                     <div key={i} className="flex items-center gap-2 text-xs">
                       <span className={`h-1.5 w-1.5 rounded-full ${mc.matched ? "bg-emerald-500" : "bg-red-500"}`} />
@@ -112,11 +112,11 @@ export function AutomationTestDialog({ rule, onClose }: Props) {
 
               {result.matched && result.wouldRunActions.length > 0 && (
                 <div className="space-y-1">
-                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Would Run Actions</p>
+                  <p className="text-micro font-semibold text-muted-foreground uppercase tracking-wider">Would Run Actions</p>
                   {result.wouldRunActions.map((a, i) => (
                     <div key={i} className="flex items-center gap-2 text-xs">
                       <span className="text-muted-foreground">{i + 1}.</span>
-                      <Badge variant="outline" className="text-[10px]">{a.type}</Badge>
+                      <Badge variant="outline" className="text-micro">{a.type}</Badge>
                     </div>
                   ))}
                 </div>

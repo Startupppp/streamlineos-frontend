@@ -196,7 +196,7 @@ export function TicketDetailHeader({ ticket, onBack, onInsertReply, replyDraftCo
           </Button>
           <div className="min-w-0">
             <TruncatedText text={toTitleCase(ticket.title)} className="text-sm font-bold" />
-            <TruncatedText text={`#${ticket.id}${ticket.client?.name ? ` - ${ticket.client.name}` : ""}`} className="text-[11px] text-muted-foreground" />
+            <TruncatedText text={`#${ticket.id}${ticket.client?.name ? ` - ${ticket.client.name}` : ""}`} className="text-dense text-muted-foreground" />
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap sm:shrink-0">

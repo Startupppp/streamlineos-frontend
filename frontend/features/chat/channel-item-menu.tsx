@@ -235,7 +235,7 @@ export function ChannelItemMenu({
                 </DropdownMenuSub>
               )}
               <DropdownMenuSeparator />
-              <DropdownMenuLabel className="text-[11px] font-semibold text-muted-foreground">
+              <DropdownMenuLabel className="text-dense font-semibold text-muted-foreground">
                 Notify me about
               </DropdownMenuLabel>
               <DropdownMenuRadioGroup

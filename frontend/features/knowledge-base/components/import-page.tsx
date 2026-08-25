@@ -66,7 +66,7 @@ function ImportJobRow({ job }: { job: KbImportJob }) {
               ? "destructive"
               : "outline"
         }
-        className="text-[10px] h-4 px-1.5"
+        className="text-micro h-4 px-1.5"
       >
         {job.status}
       </Badge>
@@ -310,7 +310,7 @@ export default function ImportPage() {
                 </div>
 
                 <div className="rounded-lg border border-border overflow-hidden">
-                  <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-3 px-3 py-1.5 bg-muted/30 text-[11px] font-medium text-muted-foreground">
+                  <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-3 px-3 py-1.5 bg-muted/30 text-dense font-medium text-muted-foreground">
                     <span>Title</span>
                     <span>Size</span>
                     <span>Status</span>

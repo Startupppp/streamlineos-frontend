@@ -91,7 +91,7 @@ function ActivityEntry({ entry }: { entry: RecruiterActivityEntry }) {
 
   return (
     <div className="flex items-start gap-3 rounded-lg border px-3 py-2.5 text-sm">
-      <span className={`mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium ${colorClass}`}>
+      <span className={`mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-micro font-medium ${colorClass}`}>
         {label}
       </span>
       <div className="flex-1 min-w-0">
@@ -133,24 +133,24 @@ function RecruiterCard({
             <CardTitle className="text-sm"><TruncatedText text={recruiter.name ?? recruiter.email} /></CardTitle>
             <TruncatedText text={recruiter.email} className="text-xs text-muted-foreground" />
           </div>
-          <Badge variant="secondary" className="text-[10px] shrink-0">{recruiter.role}</Badge>
+          <Badge variant="secondary" className="text-micro shrink-0">{recruiter.role}</Badge>
         </div>
       </CardHeader>
       <CardContent className="pt-0">
         <div className="grid grid-cols-3 gap-2 mb-3 text-center">
           <div className="rounded-md bg-muted/50 px-2 py-1.5">
             <p className="text-base font-semibold">{recruiter.assignedJobsCount}</p>
-            <p className="text-[10px] text-muted-foreground">Jobs</p>
+            <p className="text-micro text-muted-foreground">Jobs</p>
           </div>
           <div className="rounded-md bg-muted/50 px-2 py-1.5">
             <p className="text-base font-semibold">
               {(recruiter.activitySummary.CANDIDATE_ADDED ?? 0) + (recruiter.activitySummary.INTERVIEW_SCHEDULED ?? 0)}
             </p>
-            <p className="text-[10px] text-muted-foreground">Placed</p>
+            <p className="text-micro text-muted-foreground">Placed</p>
           </div>
           <div className="rounded-md bg-muted/50 px-2 py-1.5">
             <p className="text-base font-semibold">{totalActivity(recruiter.activitySummary)}</p>
-            <p className="text-[10px] text-muted-foreground">Actions</p>
+            <p className="text-micro text-muted-foreground">Actions</p>
           </div>
         </div>
         <Button

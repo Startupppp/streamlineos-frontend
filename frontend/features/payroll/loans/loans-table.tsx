@@ -149,7 +149,7 @@ export function LoansTable() {
           <div className="space-y-1.5">
             <div className="flex items-center justify-between gap-2">
               <p className="text-sm font-medium truncate">{row.user.name ?? row.user.email}</p>
-              <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground shrink-0">
+              <span className="text-micro font-medium uppercase tracking-wide text-muted-foreground shrink-0">
                 {row.status}
               </span>
             </div>

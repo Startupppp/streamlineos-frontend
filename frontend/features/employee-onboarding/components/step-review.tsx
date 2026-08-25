@@ -244,7 +244,7 @@ export function StepReview({
                 <p className="text-sm font-semibold text-foreground">
                   Ready when you are
                 </p>
-                <p className="mt-0.5 text-[13px] leading-relaxed text-muted-foreground">
+                <p className="mt-0.5 text-label leading-relaxed text-muted-foreground">
                   Review the sections below, then submit. HR will verify your
                   details and finish setting you up.
                 </p>

@@ -125,7 +125,7 @@ export function OnboardingTaskCard({ task, onToggle, isToggling }: OnboardingTas
 
               <span
                 className={cn(
-                  "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium shrink-0",
+                  "inline-flex items-center rounded-full px-2 py-0.5 text-micro font-medium shrink-0",
                   ownerBadgeClass(task.ownerRole)
                 )}
               >
@@ -136,7 +136,7 @@ export function OnboardingTaskCard({ task, onToggle, isToggling }: OnboardingTas
             {dueInfo && (
               <p
                 className={cn(
-                  "text-[11px] mt-0.5",
+                  "text-dense mt-0.5",
                   dueInfo.overdue && !isCompleted
                     ? "text-destructive font-medium"
                     : "text-muted-foreground"
@@ -156,7 +156,7 @@ export function OnboardingTaskCard({ task, onToggle, isToggling }: OnboardingTas
                     <button
                       type="button"
                       onClick={() => setExpanded(false)}
-                      className="inline-flex items-center gap-0.5 text-[11px] text-primary mt-1 hover:underline"
+                      className="inline-flex items-center gap-0.5 text-dense text-primary mt-1 hover:underline"
                       aria-label="Collapse description"
                     >
                       <ChevronUp className="h-3 w-3" />
@@ -167,7 +167,7 @@ export function OnboardingTaskCard({ task, onToggle, isToggling }: OnboardingTas
                   <button
                     type="button"
                     onClick={() => setExpanded(true)}
-                    className="inline-flex items-center gap-0.5 text-[11px] text-primary mt-0.5 hover:underline"
+                    className="inline-flex items-center gap-0.5 text-dense text-primary mt-0.5 hover:underline"
                     aria-label="Expand description"
                   >
                     <ChevronDown className="h-3 w-3" />
@@ -179,7 +179,7 @@ export function OnboardingTaskCard({ task, onToggle, isToggling }: OnboardingTas
           </div>
 
           {isCompleted && (
-            <Badge variant="secondary" className="text-[10px] shrink-0 bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-300">
+            <Badge variant="secondary" className="text-micro shrink-0 bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-300">
               Done
             </Badge>
           )}

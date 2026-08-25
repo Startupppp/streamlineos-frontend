@@ -55,7 +55,7 @@ function FieldMappingRow({ field, value, headers, onChange }: FieldMappingRowPro
     <div className="grid grid-cols-2 gap-4 items-center">
       <div className="flex items-center gap-1.5 text-sm">
         <span>{field.label}</span>
-        {field.required && <Badge variant="outline" className="text-[10px] h-4 px-1">required</Badge>}
+        {field.required && <Badge variant="outline" className="text-micro h-4 px-1">required</Badge>}
       </div>
       <Select value={value} onValueChange={handleChange}>
         <SelectTrigger className="text-xs">

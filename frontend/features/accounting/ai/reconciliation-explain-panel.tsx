@@ -17,7 +17,7 @@ function FactorRow({ factor }: { factor: AiNarrationFactor }) {
     <li className="flex items-start gap-2 text-xs">
       <span
         className={cn(
-          "mt-0.5 shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium",
+          "mt-0.5 shrink-0 rounded-full px-1.5 py-0.5 text-micro font-medium",
           factor.isFactual
             ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
             : "bg-amber-500/10 text-amber-700 dark:text-amber-400",
@@ -84,7 +84,7 @@ export function ReconciliationExplainPanel({ matchId, className }: Reconciliatio
         <button
           type="button"
           onClick={handleExplain}
-          className="text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+          className="text-dense text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
         >
           Regenerate
         </button>

@@ -28,7 +28,7 @@ function ScreenTile({ stream, label, muted }: ScreenTileProps) {
       <video ref={videoRef} autoPlay playsInline muted={muted} className="w-full max-h-64 object-contain" />
       <div className="absolute bottom-1.5 left-1.5 flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-black/60">
         <Monitor className="h-2.5 w-2.5 text-white" />
-        <TruncatedText text={label} className="text-[10px] text-white max-w-[160px]" />
+        <TruncatedText text={label} className="text-micro text-white max-w-[160px]" />
       </div>
     </div>
   );

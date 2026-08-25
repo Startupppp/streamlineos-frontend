@@ -175,7 +175,7 @@ export function DealForecastWidget({ deals }: DealForecastWidgetProps) {
           </div>
 
           <div className="mt-4 p-3 rounded-lg bg-muted/40 border">
-            <p className="text-[10px] text-muted-foreground">
+            <p className="text-micro text-muted-foreground">
               Weighted values use deal probability if set, otherwise stage defaults:
               Lead 10% · Contacted 25% · Proposal 50% · Negotiation 75% · Won 100%
             </p>

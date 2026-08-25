@@ -62,7 +62,7 @@ const TXN_COLUMNS: DataTableColumn<AiCreditTransaction>[] = [
     header: "Type",
     cell: (txn): ReactNode => {
       const meta = TXN_LABELS[txn.type] ?? { label: txn.type, sign: "", color: "text-foreground" };
-      return <Badge variant="secondary" className="text-[10px]">{meta.label}</Badge>;
+      return <Badge variant="secondary" className="text-micro">{meta.label}</Badge>;
     },
   },
   {
@@ -173,7 +173,7 @@ function CreditPackCard({
       {...hoverHandlers}
     >
       {pack.bonusCredits > 0 ? (
-        <span className="absolute -top-px right-3 inline-flex items-center rounded-b-md bg-primary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary-foreground">
+        <span className="absolute -top-px right-3 inline-flex items-center rounded-b-md bg-primary px-2 py-0.5 text-micro font-semibold uppercase tracking-wide text-primary-foreground">
           +{pack.bonusCredits.toLocaleString()} bonus
         </span>
       ) : null}

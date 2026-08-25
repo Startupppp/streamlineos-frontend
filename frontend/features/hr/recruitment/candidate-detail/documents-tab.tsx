@@ -83,7 +83,7 @@ function EsignTimeline({ doc }: { doc: RolloutDocumentRecord }) {
 
   if (doc.declinedAt) {
     return (
-      <div className="flex items-center gap-1.5 text-[11px] text-rose-600 dark:text-rose-400 mt-2">
+      <div className="flex items-center gap-1.5 text-dense text-rose-600 dark:text-rose-400 mt-2">
         <XCircle className="h-3 w-3" />
         <span>Declined {format(new Date(doc.declinedAt), "PPp")}</span>
       </div>
@@ -102,7 +102,7 @@ function EsignTimeline({ doc }: { doc: RolloutDocumentRecord }) {
           <div key={step.key} className="flex items-center gap-1">
             <div
               className={cn(
-                "flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full border transition-colors duration-200",
+                "flex items-center gap-1 text-micro font-semibold px-1.5 py-0.5 rounded-full border transition-colors duration-200",
                 done
                   ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800"
                   : "bg-muted text-muted-foreground border-border"
@@ -170,7 +170,7 @@ export function DocumentsTab({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+        <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
           {list.length} document{list.length !== 1 ? "s" : ""}
         </p>
         <Button
@@ -224,7 +224,7 @@ export function DocumentsTab({
                         <TruncatedText text={doc.title} className="text-sm font-semibold text-foreground" />
                       </div>
                       {doc.createdAt && (
-                        <p className="text-[11px] text-muted-foreground mt-1 ml-9">
+                        <p className="text-dense text-muted-foreground mt-1 ml-9">
                           Created {format(new Date(doc.createdAt), "PPP")}
                         </p>
                       )}
@@ -232,7 +232,7 @@ export function DocumentsTab({
                         <EsignTimeline doc={doc} />
                       </div>
                     </div>
-                    <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0", cfg.badgeClass)}>
+                    <span className={cn("inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border shrink-0", cfg.badgeClass)}>
                       <StatusIcon className="h-3 w-3" />
                       {cfg.label}
                     </span>

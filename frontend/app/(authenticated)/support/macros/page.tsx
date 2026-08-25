@@ -211,7 +211,7 @@ function MacroDialog({
                 ))}
               </datalist>
             )}
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-dense text-muted-foreground">
               Pick an existing category to keep grouping consistent, or type a new one.
             </p>
           </div>
@@ -351,18 +351,18 @@ function MacroCard({
             <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
               <p className="font-medium text-sm truncate">{macro.title}</p>
               {macro.category && (
-                <Badge variant="secondary" className="text-[10px]">
+                <Badge variant="secondary" className="text-micro">
                   {macro.category}
                 </Badge>
               )}
-              <Badge variant="outline" className="text-[10px]">
+              <Badge variant="outline" className="text-micro">
                 {VISIBILITY_LABELS[macro.visibility]}
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground mt-1.5 line-clamp-3 whitespace-pre-wrap">
               {macro.body}
             </p>
-            <p className="text-[11px] text-muted-foreground mt-1.5">
+            <p className="text-dense text-muted-foreground mt-1.5">
               Used {usageCount} {usageCount === 1 ? "time" : "times"}
             </p>
           </div>

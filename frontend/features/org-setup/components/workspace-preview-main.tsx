@@ -77,7 +77,7 @@ export function WorkspacePreviewMain({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={transition}
-              className="truncate text-[11px] text-muted-foreground"
+              className="truncate text-dense text-muted-foreground"
             >
               {industryLabel || "Your organization after launch"}
             </motion.p>
@@ -87,7 +87,7 @@ export function WorkspacePreviewMain({
           layout={!reduceMotion}
           transition={layoutTransition}
           className={cn(
-            "relative inline-flex shrink-0 items-center gap-1.5 rounded-full border border-brand-core/25 px-2 py-0.5 text-[10px] font-medium text-brand-deep",
+            "relative inline-flex shrink-0 items-center gap-1.5 rounded-full border border-brand-core/25 px-2 py-0.5 text-micro font-medium text-brand-deep",
             PREVIEW_GRADIENT_LIVE,
           )}
         >
@@ -135,7 +135,7 @@ export function WorkspacePreviewMain({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={transition}
-                className="whitespace-normal text-[11px] leading-snug text-muted-foreground"
+                className="whitespace-normal text-dense leading-snug text-muted-foreground"
               >
                 {metaLine || "Choose goals — this updates live"}
               </motion.p>
@@ -170,7 +170,7 @@ export function WorkspacePreviewMain({
                 <p className="max-w-[14rem] text-xs font-medium text-foreground">
                   {emptyCopy}
                 </p>
-                <p className="max-w-[15rem] text-[11px] text-muted-foreground">
+                <p className="max-w-[15rem] text-dense text-muted-foreground">
                   Sidebar and dashboard fill in with the modules you enable
                 </p>
               </motion.div>
@@ -205,7 +205,7 @@ export function WorkspacePreviewMain({
                           PREVIEW_GRADIENT_CARD,
                         )}
                       >
-                        <p className="truncate text-[10px] text-muted-foreground">
+                        <p className="truncate text-micro text-muted-foreground">
                           {stat.label}
                         </p>
                         <p
@@ -268,11 +268,11 @@ export function WorkspacePreviewMain({
                                 />
                               </span>
                               <div className="min-w-0 space-y-1">
-                                <p className="truncate text-[11px] font-semibold leading-snug text-foreground">
+                                <p className="truncate text-dense font-semibold leading-snug text-foreground">
                                   {widget.title}
                                 </p>
                                 {!compact && (
-                                  <p className="truncate text-[10px] leading-snug text-muted-foreground">
+                                  <p className="truncate text-micro leading-snug text-muted-foreground">
                                     {widget.subtitle}
                                   </p>
                                 )}
@@ -293,7 +293,7 @@ export function WorkspacePreviewMain({
                                       ? 0
                                       : rowIndex * 0.04,
                                   }}
-                                  className="truncate rounded-md bg-gradient-to-r from-muted/50 to-muted/30 px-2 py-1.5 text-[10px] leading-snug text-muted-foreground"
+                                  className="truncate rounded-md bg-gradient-to-r from-muted/50 to-muted/30 px-2 py-1.5 text-micro leading-snug text-muted-foreground"
                                 >
                                   {row}
                                 </motion.li>

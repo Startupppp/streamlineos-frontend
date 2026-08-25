@@ -61,7 +61,7 @@ function AnnouncementItem({
         {ann.content}
       </p>
       <div className="flex items-center justify-between mt-2 gap-2">
-        <span className="text-[11px] text-amber-600 dark:text-amber-400">
+        <span className="text-dense text-amber-600 dark:text-amber-400">
           {authorDisplay} · {format(parseISO(ann.createdAt), "MMM d, yyyy")}
         </span>
         {isAdmin && (

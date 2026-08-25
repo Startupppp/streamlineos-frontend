@@ -109,7 +109,7 @@ export function CsvFieldMapper({
         <span className="text-xs">
           <span className="font-medium">{row.header || `(column ${row.index + 1})`}</span>
           {row.previewVal && (
-            <span className="block text-[10px] text-muted-foreground truncate max-w-[160px]">
+            <span className="block text-micro text-muted-foreground truncate max-w-[160px]">
               e.g. {row.previewVal}
             </span>
           )}

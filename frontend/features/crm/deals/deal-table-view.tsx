@@ -65,7 +65,7 @@ function DealNameButton({ dealId, name, onNavigate }: DealNameButtonProps) {
   const handleClick = useCallback(() => onNavigate(dealId), [dealId, onNavigate]);
   return (
     <button
-      className="font-medium text-[12px] hover:text-primary hover:underline text-left block max-w-[160px]"
+      className="font-medium text-xs hover:text-primary hover:underline text-left block max-w-[160px]"
       onClick={handleClick}
     >
       <TruncatedText text={name} />
@@ -87,9 +87,9 @@ function StageCell({ deal, isEditing, onStageChange, onStartEdit }: StageCellPro
   if (isEditing) {
     return (
       <Select defaultValue={deal.stage} onValueChange={handleValueChange}>
-        <SelectTrigger className="h-6 text-[10px] w-[100px]"><SelectValue /></SelectTrigger>
+        <SelectTrigger className="h-6 text-micro w-[100px]"><SelectValue /></SelectTrigger>
         <SelectContent>
-          {stages.map(s => <SelectItem key={s.key} value={s.key} className="text-[11px]">{s.label}</SelectItem>)}
+          {stages.map(s => <SelectItem key={s.key} value={s.key} className="text-dense">{s.label}</SelectItem>)}
         </SelectContent>
       </Select>
     );
@@ -122,7 +122,7 @@ export function DealTableView({
       key: "dealId",
       header: "Deal ID",
       cell: (row) => (
-        <span className="font-mono text-[10px] text-muted-foreground select-all">
+        <span className="font-mono text-micro text-muted-foreground select-all">
           {formatDealId(row.id)}
         </span>
       ),
@@ -229,7 +229,7 @@ export function DealTableView({
   return (
     <div className="flex flex-col flex-1 min-h-0">
       <div className="shrink-0 flex items-center px-1 pb-1.5">
-        <span className="text-[11px] text-muted-foreground tabular-nums">{deals.length} deals</span>
+        <span className="text-dense text-muted-foreground tabular-nums">{deals.length} deals</span>
       </div>
       <DataTable
         data={deals}

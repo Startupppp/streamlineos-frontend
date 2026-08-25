@@ -114,7 +114,7 @@ function PipelineStep({
         </div>
         <span
           className={cn(
-            "text-[10px] font-medium whitespace-nowrap leading-none",
+            "text-micro font-medium whitespace-nowrap leading-none",
             isActive
               ? isLost
                 ? "text-red-400"

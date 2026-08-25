@@ -191,19 +191,19 @@ export function BankImportClient() {
           <div className="grid grid-cols-3 gap-3 text-center">
             <div className="bg-muted/30 rounded-lg p-3">
               <p className="text-lg font-semibold text-foreground">{importResult.importedCount}</p>
-              <p className="text-[10px] text-muted-foreground">Imported</p>
+              <p className="text-micro text-muted-foreground">Imported</p>
             </div>
             <div className="bg-muted/30 rounded-lg p-3">
               <p className="text-lg font-semibold text-muted-foreground">
                 {importResult.duplicateCount}
               </p>
-              <p className="text-[10px] text-muted-foreground">Duplicates</p>
+              <p className="text-micro text-muted-foreground">Duplicates</p>
             </div>
             <div className="bg-muted/30 rounded-lg p-3">
               <p className="text-lg font-semibold text-red-600">
                 {importResult.errors.length}
               </p>
-              <p className="text-[10px] text-muted-foreground">Errors</p>
+              <p className="text-micro text-muted-foreground">Errors</p>
             </div>
           </div>
 
@@ -214,10 +214,10 @@ export function BankImportClient() {
                 Import errors
               </div>
               {importResult.errors.slice(0, 5).map((err, i) => (
-                <p key={i} className="text-[11px] text-red-600 dark:text-red-400">{err}</p>
+                <p key={i} className="text-dense text-red-600 dark:text-red-400">{err}</p>
               ))}
               {importResult.errors.length > 5 && (
-                <p className="text-[11px] text-red-500 dark:text-red-400">
+                <p className="text-dense text-red-500 dark:text-red-400">
                   +{importResult.errors.length - 5} more errors
                 </p>
               )}
@@ -301,10 +301,10 @@ export function BankImportClient() {
                   </div>
                   {parsedCsv && (
                     <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                      <Badge variant="outline" className="text-[10px]">
+                      <Badge variant="outline" className="text-micro">
                         {parsedCsv.rowCount} rows
                       </Badge>
-                      <Badge variant="outline" className="text-[10px]">
+                      <Badge variant="outline" className="text-micro">
                         {parsedCsv.headers.length} columns
                       </Badge>
                     </div>

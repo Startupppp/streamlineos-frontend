@@ -59,7 +59,7 @@ function automationLabel(a: TestCaseAutomationStatus) {
 function NewCaseButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <Button size="sm" className="ml-auto h-7 gap-1 text-[11px]" onClick={onClick} {...hoverHandlers}>
+    <Button size="sm" className="ml-auto h-7 gap-1 text-dense" onClick={onClick} {...hoverHandlers}>
       <PlusIcon ref={iconRef} size={14} />
       New Test Case
     </Button>
@@ -154,7 +154,7 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
       key: "id",
       header: "ID",
       cell: (row) => (
-        <span className="font-mono text-[11px] text-muted-foreground">
+        <span className="font-mono text-dense text-muted-foreground">
           TC-{row.caseNumber}
         </span>
       ),
@@ -165,14 +165,14 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
       header: "Title",
       className: TABLE_TITLE_CELL,
       cell: (row) => (
-        <TruncatedText text={row.title} className="text-[11px] font-medium" />
+        <TruncatedText text={row.title} className="text-dense font-medium" />
       ),
     },
     {
       key: "priority",
       header: "Priority",
       cell: (row) => (
-        <Badge variant="outline" className={cn("text-[10px]", PRIORITY_STYLES[row.priority])}>
+        <Badge variant="outline" className={cn("text-micro", PRIORITY_STYLES[row.priority])}>
           {priorityLabel(row.priority)}
         </Badge>
       ),
@@ -184,7 +184,7 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
       cell: (row) => (
         <Badge
           variant="outline"
-          className={cn("text-[10px]", AUTOMATION_STYLES[row.automationStatus])}
+          className={cn("text-micro", AUTOMATION_STYLES[row.automationStatus])}
         >
           {automationLabel(row.automationStatus)}
         </Badge>
@@ -195,7 +195,7 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
       key: "component",
       header: "Component",
       cell: (row) => (
-        <span className={cn("max-w-[8rem] text-[11px] text-muted-foreground", TEXT_ONE_LINE)}>
+        <span className={cn("max-w-[8rem] text-dense text-muted-foreground", TEXT_ONE_LINE)}>
           {row.component ?? "—"}
         </span>
       ),

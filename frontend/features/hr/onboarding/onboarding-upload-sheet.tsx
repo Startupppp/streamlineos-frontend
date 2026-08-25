@@ -117,7 +117,7 @@ export function UploadSheet({
       isPending={isPending || isUploading}
     >
       {existingDoc?.status === "RE_UPLOAD_REQUESTED" && existingDoc.remarks && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-500/10 dark:border-amber-900 px-3 py-2.5 text-[12px] text-amber-800 dark:text-amber-300">
+        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-500/10 dark:border-amber-900 px-3 py-2.5 text-xs text-amber-800 dark:text-amber-300">
           <p className="font-semibold mb-0.5">Reviewer remarks</p>
           <p className="text-amber-700 dark:text-amber-300">{existingDoc.remarks}</p>
         </div>
@@ -144,7 +144,7 @@ export function UploadSheet({
                 {selectedFile ? selectedFile.name : "Click to select a file"}
               </p>
               {!selectedFile && (
-                <p className="text-[11px] text-muted-foreground mt-0.5">PDF, DOC, DOCX, JPG, PNG — max 10 MB</p>
+                <p className="text-dense text-muted-foreground mt-0.5">PDF, DOC, DOCX, JPG, PNG — max 10 MB</p>
               )}
             </div>
             <input
@@ -158,7 +158,7 @@ export function UploadSheet({
           {selectedFile && (
             <button
               type="button"
-              className="text-[11px] text-muted-foreground hover:text-rose-500 underline block mx-auto mt-2 transition-colors duration-200"
+              className="text-dense text-muted-foreground hover:text-rose-500 underline block mx-auto mt-2 transition-colors duration-200"
               onClick={handleRemoveFile}
             >
               Remove file
@@ -166,7 +166,7 @@ export function UploadSheet({
           )}
         </div>
         {fileError && (
-          <p className="text-[11px] text-rose-600 dark:text-rose-300" role="alert">
+          <p className="text-dense text-rose-600 dark:text-rose-300" role="alert">
             {fileError}
           </p>
         )}

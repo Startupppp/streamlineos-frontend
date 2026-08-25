@@ -264,7 +264,7 @@ export default function StockLevelsPage() {
           </SelectContent>
         </Select>
       </div>
-      <div className="ml-auto hidden lg:flex items-center gap-3 text-[11px] text-muted-foreground">
+      <div className="ml-auto hidden lg:flex items-center gap-3 text-dense text-muted-foreground">
         <span className="flex items-center gap-1">
           <AlertTriangle className="h-3 w-3 text-red-500" aria-hidden="true" />
           Below reorder point

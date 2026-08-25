@@ -260,7 +260,7 @@ export function MailComposeSheet({
             <div className="flex items-center gap-3">
               <Label
                 htmlFor={`account-${isReply ? "reply" : "compose"}`}
-                className="text-[13px] font-medium w-12 shrink-0"
+                className="text-label font-medium w-12 shrink-0"
               >
                 From
               </Label>
@@ -320,7 +320,7 @@ export function MailComposeSheet({
             <div className="flex items-start gap-3">
               <Label
                 htmlFor={toFieldId}
-                className="text-[13px] font-medium w-12 shrink-0 pt-1.5"
+                className="text-label font-medium w-12 shrink-0 pt-1.5"
               >
                 To
               </Label>
@@ -355,7 +355,7 @@ export function MailComposeSheet({
                   />
                 )}
                 {activeErrors.to && (
-                  <p className="text-[11px] text-destructive mt-1">
+                  <p className="text-dense text-destructive mt-1">
                     {activeErrors.to.message ?? (Array.isArray(activeErrors.to) ? activeErrors.to[0]?.message : undefined)}
                   </p>
                 )}
@@ -365,7 +365,7 @@ export function MailComposeSheet({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-7 text-[11px] px-2 text-muted-foreground"
+                  className="h-7 text-dense px-2 text-muted-foreground"
                   onClick={handleToggleCc}
                 >
                   Cc
@@ -375,7 +375,7 @@ export function MailComposeSheet({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-7 text-[11px] px-2 text-muted-foreground"
+                    className="h-7 text-dense px-2 text-muted-foreground"
                     onClick={handleToggleBcc}
                   >
                     Bcc
@@ -388,7 +388,7 @@ export function MailComposeSheet({
               <div className="flex items-start gap-3">
                 <Label
                   htmlFor={ccFieldId}
-                  className="text-[13px] font-medium w-12 shrink-0 pt-1.5"
+                  className="text-label font-medium w-12 shrink-0 pt-1.5"
                 >
                   Cc
                 </Label>
@@ -428,7 +428,7 @@ export function MailComposeSheet({
               <div className="flex items-start gap-3">
                 <Label
                   htmlFor={bccFieldId}
-                  className="text-[13px] font-medium w-12 shrink-0 pt-1.5"
+                  className="text-label font-medium w-12 shrink-0 pt-1.5"
                 >
                   Bcc
                 </Label>
@@ -453,19 +453,19 @@ export function MailComposeSheet({
               <div className="flex items-center gap-3">
                 <Label
                   htmlFor={subjectFieldId}
-                  className="text-[13px] font-medium w-12 shrink-0"
+                  className="text-label font-medium w-12 shrink-0"
                 >
                   Subject
                 </Label>
                 <div className="flex-1 min-w-0">
                   <Input
                     id={subjectFieldId}
-                    className="h-8 text-[13px]"
+                    className="h-8 text-label"
                     placeholder="Subject"
                     {...composeForm.register("subject")}
                   />
                   {composeForm.formState.errors.subject && (
-                    <p className="text-[11px] text-destructive mt-1">
+                    <p className="text-dense text-destructive mt-1">
                       {composeForm.formState.errors.subject.message}
                     </p>
                   )}
@@ -476,7 +476,7 @@ export function MailComposeSheet({
 
           <div className="flex-1 min-h-0 flex flex-col px-0">
             <div className="flex flex-col gap-1.5 px-6 pt-2 pb-2 border-b border-border/20">
-              <span className="text-[11px] text-muted-foreground">Message</span>
+              <span className="text-dense text-muted-foreground">Message</span>
               <MailAiComposeToolbar
                 accountId={activeAccountId}
                 threadId={activeThreadId}
@@ -508,7 +508,7 @@ export function MailComposeSheet({
               />
             </div>
             {activeErrors.bodyHtml && (
-              <p className="text-[11px] text-destructive px-6 pb-1">
+              <p className="text-dense text-destructive px-6 pb-1">
                 {activeErrors.bodyHtml.message}
               </p>
             )}

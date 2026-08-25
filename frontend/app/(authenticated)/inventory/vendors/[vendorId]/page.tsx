@@ -190,9 +190,9 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
               <dt className="text-muted-foreground">Currency</dt>
               <dd>{vendor.currency}</dd>
               <dt className="text-muted-foreground">Lead time</dt>
-              <dd className="font-mono tabular-nums text-[13px]">{vendor.leadTimeDays} days</dd>
+              <dd className="font-mono tabular-nums text-label">{vendor.leadTimeDays} days</dd>
               <dt className="text-muted-foreground">Payment terms</dt>
-              <dd className="font-mono tabular-nums text-[13px]">Net {vendor.paymentTermsDays}</dd>
+              <dd className="font-mono tabular-nums text-label">Net {vendor.paymentTermsDays}</dd>
               {vendor.address && (
                 <>
                   <dt className="text-muted-foreground">Address</dt>

@@ -21,15 +21,15 @@ function TimelineEventRow({ event }: { event: TimelineEvent }) {
       <div className="min-w-0 flex-1">
         <TruncatedText text={event.label} className="text-xs font-medium" />
         <div className="flex items-center gap-2 mt-0.5">
-          <span className="text-[10px] text-muted-foreground">
+          <span className="text-micro text-muted-foreground">
             {TYPE_LABELS[event.type] ?? event.type}
           </span>
           {event.meta && (
-            <span className="text-[10px] text-muted-foreground">· {event.meta}</span>
+            <span className="text-micro text-muted-foreground">· {event.meta}</span>
           )}
         </div>
       </div>
-      <time className="text-[10px] text-muted-foreground whitespace-nowrap font-mono tabular-nums shrink-0">
+      <time className="text-micro text-muted-foreground whitespace-nowrap font-mono tabular-nums shrink-0">
         {new Date(event.date).toLocaleDateString()}
       </time>
     </div>

@@ -54,7 +54,7 @@ export function ArchivedOrgsRestore({
     return (
       <div className={cn("space-y-1", className)}>
         <div className="my-1 h-px bg-border" role="separator" />
-        <p className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-foreground/70">
+        <p className="px-2 py-1.5 text-micro font-semibold uppercase tracking-wider text-foreground/70">
           Archived
         </p>
         {orgs.map((org) => (

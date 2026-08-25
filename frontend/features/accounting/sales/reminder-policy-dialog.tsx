@@ -154,7 +154,7 @@ export function ReminderPolicyDialog({
                     <Input placeholder="-3, 0, 7, 14" {...field} />
                   </FormControl>
                   <FormMessage />
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-dense text-muted-foreground">
                     Comma-separated days relative to due date. Negative = before, 0 = due date, positive = after.
                   </p>
                 </FormItem>

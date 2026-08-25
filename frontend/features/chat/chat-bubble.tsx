@@ -114,7 +114,7 @@ const TICKET_STATUS_DISPLAY: Record<string, string> = {
  */
 function UnresolvedPill({ label }: { label: string }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/30 px-2.5 py-1.5 my-1 text-[11px] text-muted-foreground">
+    <span className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/30 px-2.5 py-1.5 my-1 text-dense text-muted-foreground">
       <Lock className="h-3 w-3 shrink-0 text-muted-foreground/60" />
       {label}
     </span>
@@ -188,7 +188,7 @@ function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId:
         <button
           type="button"
           onClick={handlePillClick}
-          className="flex items-center gap-1.5 font-mono text-[11px] text-muted-foreground hover:text-foreground"
+          className="flex items-center gap-1.5 font-mono text-dense text-muted-foreground hover:text-foreground"
           aria-label={`Open ${ticketKey}`}
         >
           <Ticket className="h-3 w-3 shrink-0 text-muted-foreground/60" />
@@ -203,7 +203,7 @@ function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId:
       <button
         type="button"
         onClick={handlePillClick}
-        className="flex items-center gap-1 font-mono text-[11px] text-muted-foreground hover:text-foreground shrink-0"
+        className="flex items-center gap-1 font-mono text-dense text-muted-foreground hover:text-foreground shrink-0"
         aria-label={`Open ticket ${ticketKey}`}
       >
         <Ticket className="h-3 w-3 shrink-0 text-muted-foreground/60" />
@@ -213,7 +213,7 @@ function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId:
         <button
           type="button"
           onClick={handlePillClick}
-          className="text-[12px] text-foreground/80 hover:underline max-w-[160px] min-w-0"
+          className="text-xs text-foreground/80 hover:underline max-w-[160px] min-w-0"
         >
           <TruncatedText text={ticketTitle} />
         </button>
@@ -225,7 +225,7 @@ function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId:
               type="button"
               disabled={isChangingStatus}
               className={cn(
-                "inline-flex items-center rounded px-1.5 py-px text-[10px] font-medium cursor-pointer hover:opacity-80 transition-opacity duration-150 ease-out motion-reduce:transition-none",
+                "inline-flex items-center rounded px-1.5 py-px text-micro font-medium cursor-pointer hover:opacity-80 transition-opacity duration-150 ease-out motion-reduce:transition-none",
                 getStatusBadgeClass(currentStatus),
               )}
               aria-label="Change ticket status"
@@ -252,7 +252,7 @@ function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId:
       ) : (
         <span
           className={cn(
-            "inline-flex items-center rounded px-1.5 py-px text-[10px] font-medium",
+            "inline-flex items-center rounded px-1.5 py-px text-micro font-medium",
             getStatusBadgeClass(currentStatus),
           )}
         >
@@ -284,7 +284,7 @@ function CommentPill({ entity }: { entity: CommentEntityRef }) {
     <button
       type="button"
       onClick={handleClick}
-      className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background/80 px-2 py-1 shadow-sm hover:shadow-md transition-all duration-150 ease-out motion-reduce:transition-none text-[11px] text-muted-foreground hover:text-foreground my-1"
+      className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background/80 px-2 py-1 shadow-sm hover:shadow-md transition-all duration-150 ease-out motion-reduce:transition-none text-dense text-muted-foreground hover:text-foreground my-1"
       aria-label={label}
     >
       <MessageSquare className="h-3 w-3 shrink-0 text-primary" />
@@ -416,7 +416,7 @@ export function ChatBubble({
     return (
       <div className={cn("flex mb-[2px] w-full min-w-0", isOwn ? "justify-end" : "justify-start", !isOwn && "ml-9")}>
         <div className="px-3 py-1 rounded-xl bg-muted/20 border border-border/15">
-          <p className="text-[11px] text-muted-foreground/40 italic flex items-center gap-1.5">
+          <p className="text-dense text-muted-foreground/40 italic flex items-center gap-1.5">
             <Trash2 className="h-2.5 w-2.5" />
             Message deleted
           </p>
@@ -449,7 +449,7 @@ export function ChatBubble({
 
       <div className={cn("min-w-0 max-w-[75%] sm:max-w-[65%] relative flex flex-col", isOwn ? "items-end" : "items-start")}>
         {showSender && !isOwn && (
-          <p className="text-[11px] font-bold text-blue mb-1 px-1 ml-1">
+          <p className="text-dense font-bold text-blue mb-1 px-1 ml-1">
             {senderName}
           </p>
         )}
@@ -457,7 +457,7 @@ export function ChatBubble({
         {message.replyTo && (
           <div
             className={cn(
-              "mx-1 mb-0.5 min-w-0 max-w-full px-2.5 py-1.5 rounded-lg border text-[11px]",
+              "mx-1 mb-0.5 min-w-0 max-w-full px-2.5 py-1.5 rounded-lg border text-dense",
               isOwn
                 ? "bg-primary-foreground/10 border-primary-foreground/15"
                 : "bg-muted/50 border-border/40",
@@ -479,15 +479,15 @@ export function ChatBubble({
                 value={editInput}
                 onChange={handleEditInputChange}
                 onKeyDown={handleEditKeyDown}
-                className="w-full bg-transparent text-[14px] resize-none px-3 py-2 focus:outline-none min-h-[40px]"
+                className="w-full bg-transparent text-sm resize-none px-3 py-2 focus:outline-none min-h-[40px]"
                 autoFocus
               />
             </div>
             <div className="flex items-center gap-2 mt-1 px-1">
-              <button onClick={onCancelEdit} className="text-[11px] text-muted-foreground hover:text-foreground">Cancel</button>
+              <button onClick={onCancelEdit} className="text-dense text-muted-foreground hover:text-foreground">Cancel</button>
               <span className="text-muted-foreground/30">|</span>
-              <button onClick={onSaveEdit} className="text-[11px] text-primary font-bold hover:underline">Save</button>
-              <span className="text-[10px] text-muted-foreground/30 ml-auto hidden sm:inline">Esc / Enter</span>
+              <button onClick={onSaveEdit} className="text-dense text-primary font-bold hover:underline">Save</button>
+              <span className="text-micro text-muted-foreground/30 ml-auto hidden sm:inline">Esc / Enter</span>
             </div>
           </div>
         ) : (
@@ -502,7 +502,7 @@ export function ChatBubble({
             {forwardLabel && (
               <div
                 className={cn(
-                  "flex items-center gap-1 mb-1.5 text-[11px] font-medium italic",
+                  "flex items-center gap-1 mb-1.5 text-dense font-medium italic",
                   isOwn ? "text-primary-foreground/85" : "text-muted-foreground",
                 )}
               >
@@ -512,7 +512,7 @@ export function ChatBubble({
             )}
 
             {displayContent && (
-              <div className="min-w-0 text-[14px] leading-[1.55] break-words break-all">
+              <div className="min-w-0 text-sm leading-[1.55] break-words break-all">
                 {renderFormattedContent(displayContent, isOwn)}
               </div>
             )}
@@ -592,8 +592,8 @@ export function ChatBubble({
                           </span>
                         </div>
                         <div className="min-w-0 flex-1">
-                          <TruncatedText text={att.fileName} className="text-[12px] font-semibold" />
-                          <p className={cn("text-[10px] mt-0.5", isOwn ? "text-primary-foreground/60" : "text-muted-foreground")}>
+                          <TruncatedText text={att.fileName} className="text-xs font-semibold" />
+                          <p className={cn("text-micro mt-0.5", isOwn ? "text-primary-foreground/60" : "text-muted-foreground")}>
                             {formatFileSize(att.fileSize)} · {getFileExt(att.fileName)}
                           </p>
                         </div>
@@ -607,13 +607,13 @@ export function ChatBubble({
 
             <div className={cn("flex items-center gap-1.5 mt-1", isOwn ? "justify-end" : "justify-start")}>
               <span
-                className={cn("text-[11px] font-medium", isOwn ? "text-primary-foreground/80" : "text-muted-foreground")}
+                className={cn("text-dense font-medium", isOwn ? "text-primary-foreground/80" : "text-muted-foreground")}
                 title={formatMessageTimeFull(message.createdAt)}
               >
                 {formatMessageTime(message.createdAt)}
               </span>
               {message.isEdited && (
-                <span className={cn("text-[11px]", isOwn ? "text-primary-foreground/60" : "text-muted-foreground/70")}>
+                <span className={cn("text-dense", isOwn ? "text-primary-foreground/60" : "text-muted-foreground/70")}>
                   edited
                 </span>
               )}
@@ -626,7 +626,7 @@ export function ChatBubble({
           <button
             onClick={onOpenThread}
             className={cn(
-              "mt-1 px-1 flex items-center gap-1 text-[11px] font-medium text-primary hover:underline",
+              "mt-1 px-1 flex items-center gap-1 text-dense font-medium text-primary hover:underline",
               isOwn ? "self-end" : "self-start"
             )}
           >
@@ -645,14 +645,14 @@ export function ChatBubble({
                   key={emoji}
                   onClick={handleReactClick}
                   className={cn(
-                    "flex items-center gap-1 px-2 py-0.5 rounded-full border text-[12px] transition-colors",
+                    "flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs transition-colors",
                     hasReacted
                       ? "bg-primary/10 border-primary/30 text-primary"
                       : "bg-muted/40 border-border/30 hover:bg-muted/60"
                   )}
                 >
                   <span>{emoji}</span>
-                  <span className="font-medium text-[11px]">{userIds.length}</span>
+                  <span className="font-medium text-dense">{userIds.length}</span>
                 </button>
               );
             })}
@@ -797,7 +797,7 @@ export function ChatBubble({
                   <div className="absolute right-0 top-full mt-1 hidden group-hover/delete:flex flex-col bg-background border border-border rounded-lg shadow-lg overflow-hidden z-50 min-w-[160px]">
                     <button
                       onClick={onDelete}
-                      className="px-3 py-2 text-[11px] text-left hover:bg-red-500/10 text-red-500 font-medium whitespace-nowrap"
+                      className="px-3 py-2 text-dense text-left hover:bg-red-500/10 text-red-500 font-medium whitespace-nowrap"
                     >
                       Delete for Everyone
                     </button>

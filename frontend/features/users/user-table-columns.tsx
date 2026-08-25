@@ -41,19 +41,19 @@ export function getUserTableColumns(
       <div className="flex items-center gap-2">
         <Avatar className="h-6 w-6 shrink-0">
           <AvatarImage src={user.image ?? undefined} alt={displayName} />
-          <AvatarFallback className="text-[10px] font-semibold">
+          <AvatarFallback className="text-micro font-semibold">
             {getUserInitials(user)}
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0">
           <TruncatedText
             text={displayName}
-            className="text-[11px] font-medium leading-tight"
+            className="text-dense font-medium leading-tight"
           />
           {user.designation && (
             <TruncatedText
               text={user.designation}
-              className="text-[10px] text-muted-foreground"
+              className="text-micro text-muted-foreground"
             />
           )}
         </div>
@@ -67,7 +67,7 @@ export function getUserTableColumns(
 
   function renderRole(user: User) {
     return (
-      <Badge variant="secondary" className="h-4 px-1.5 text-[10px] font-normal">
+      <Badge variant="secondary" className="h-4 px-1.5 text-micro font-normal">
         {formatRoleLabel(user.role)}
       </Badge>
     );

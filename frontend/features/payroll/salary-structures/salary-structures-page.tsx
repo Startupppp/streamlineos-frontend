@@ -75,8 +75,8 @@ const TemplateCard = memo(function TemplateCard({ template, index, onEdit, onDel
           variant={template.isActive ? "default" : "secondary"}
           className={
             template.isActive
-              ? "bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100 text-[11px] dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30 dark:hover:bg-emerald-500/10"
-              : "text-[11px]"
+              ? "bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100 text-dense dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30 dark:hover:bg-emerald-500/10"
+              : "text-dense"
           }
         >
           {template.isActive ? "Active" : "Inactive"}
@@ -95,16 +95,16 @@ const TemplateCard = memo(function TemplateCard({ template, index, onEdit, onDel
 
       <div className="grid grid-cols-2 gap-2">
         <div className="rounded-lg bg-muted/50 border border-border/60 px-3 py-2">
-          <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">PF</p>
+          <p className="text-micro text-muted-foreground font-medium uppercase tracking-wider">PF</p>
           <p className="text-xs font-semibold text-foreground mt-0.5">{template.pfDeductionPercent ?? "12"}%</p>
         </div>
         <div className="rounded-lg bg-muted/50 border border-border/60 px-3 py-2">
-          <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Prof Tax</p>
+          <p className="text-micro text-muted-foreground font-medium uppercase tracking-wider">Prof Tax</p>
           <p className="text-xs font-semibold text-foreground mt-0.5">{formatInr(template.professionalTax)}</p>
         </div>
       </div>
 
-      <p className="text-[11px] text-muted-foreground">
+      <p className="text-dense text-muted-foreground">
         From {template.effectiveFrom}
         {template.effectiveTo ? ` → ${template.effectiveTo}` : " · No end date"}
       </p>

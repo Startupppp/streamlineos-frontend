@@ -104,7 +104,7 @@ const RecognitionCard = memo(function RecognitionCard({
             <span className="text-xs text-muted-foreground">recognized</span>
             <span className="text-xs font-semibold text-foreground">{displayName(r.toUser)}</span>
             <span
-              className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${
+              className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-micro font-medium border ${
                 CATEGORY_COLORS[r.category] ?? CATEGORY_COLORS.KUDOS
               }`}
             >
@@ -136,7 +136,7 @@ const LeaderboardRow = memo(function LeaderboardRow({
       <span className="text-sm w-6 text-center shrink-0">
         {rank < 3 ? medals[rank] : `${rank + 1}`}
       </span>
-      <div className="w-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold shrink-0">
+      <div className="w-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-micro font-bold shrink-0">
         {initials}
       </div>
       <span className="text-xs font-medium text-foreground flex-1 min-w-0 truncate">
@@ -250,15 +250,15 @@ export function BadgesGrid() {
           >
             <span className="text-2xl">{badge.icon}</span>
             <p className="text-xs font-semibold text-foreground leading-tight">{badge.name}</p>
-            <TruncatedText text={badge.description} lines={2} className="text-[10px] text-muted-foreground leading-tight" />
-            <Badge variant="secondary" className="text-[10px] px-1.5 h-4">
+            <TruncatedText text={badge.description} lines={2} className="text-micro text-muted-foreground leading-tight" />
+            <Badge variant="secondary" className="text-micro px-1.5 h-4">
               {badge.points} pts
             </Badge>
             {canManage && (
               <Button
                 size="sm"
                 variant="outline"
-                className="h-6 text-[10px] px-2 mt-1"
+                className="h-6 text-micro px-2 mt-1"
                 onClick={() => setAwardBadgeId(badge.id)}
               >
                 Award

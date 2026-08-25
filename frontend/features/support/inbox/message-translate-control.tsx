@@ -62,7 +62,7 @@ export function MessageTranslateControl({ ticketId, messageId }: MessageTranslat
     <div className="mt-1">
       <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-6 text-[11px] px-1.5 gap-1 text-muted-foreground">
+          <Button variant="ghost" size="sm" className="h-6 text-dense px-1.5 gap-1 text-muted-foreground">
             <Languages className="h-3 w-3" /> Translate
           </Button>
         </PopoverTrigger>
@@ -93,7 +93,7 @@ export function MessageTranslateControl({ ticketId, messageId }: MessageTranslat
         </PopoverContent>
       </Popover>
       {translatedText && (
-        <p className="text-[12px] mt-1 whitespace-pre-wrap bg-muted/40 rounded px-2 py-1 border border-border/40">
+        <p className="text-xs mt-1 whitespace-pre-wrap bg-muted/40 rounded px-2 py-1 border border-border/40">
           {translatedText}
         </p>
       )}

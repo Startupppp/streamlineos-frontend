@@ -108,7 +108,7 @@ function GroupListItem({
     >
       <div className="min-w-0">
         <p className="text-sm font-medium truncate">{group.name}</p>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-dense text-muted-foreground">
           {group.memberCount} members
         </p>
       </div>

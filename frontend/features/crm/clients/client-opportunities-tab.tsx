@@ -32,7 +32,7 @@ const columns: DataTableColumn<ClientOpportunity>[] = [
     header: "Title",
     className: TABLE_TITLE_CELL,
     cell: (row) => (
-      <TruncatedText text={row.title} className="text-[11px] font-medium" />
+      <TruncatedText text={row.title} className="text-dense font-medium" />
     ),
   },
   {
@@ -63,14 +63,14 @@ const columns: DataTableColumn<ClientOpportunity>[] = [
     key: "value",
     header: "Value",
     cell: (row) => (
-      <span className="text-[11px] tabular-nums">{formatAmount(row.value)}</span>
+      <span className="text-dense tabular-nums">{formatAmount(row.value)}</span>
     ),
   },
   {
     key: "expectedCloseDate",
     header: "Expected Close",
     cell: (row) => (
-      <span className="text-[11px] text-muted-foreground">
+      <span className="text-dense text-muted-foreground">
         {formatDate(row.expectedCloseDate)}
       </span>
     ),

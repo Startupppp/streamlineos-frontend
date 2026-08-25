@@ -48,7 +48,7 @@ export function MailInboxSummarySheet({
       <SheetContent className="p-0 flex flex-col gap-0 sm:max-w-lg overflow-hidden">
         <SheetHeader className="shrink-0 border-b border-border px-6 py-4">
           <SheetTitle className="text-base font-semibold">What needs me</SheetTitle>
-          <SheetDescription className="text-[13px] text-muted-foreground">
+          <SheetDescription className="text-label text-muted-foreground">
             AI triage of your inbox — highlights and action items. Review before acting; never auto-sends.
           </SheetDescription>
         </SheetHeader>
@@ -83,13 +83,13 @@ export function MailInboxSummarySheet({
           {summaryState.status === "ready" && (
             <AiDraftCard usage={summaryState.aiUsage}>
               <div className="flex flex-col gap-4">
-                <p className="text-[13px] leading-relaxed text-foreground whitespace-pre-wrap">
+                <p className="text-label leading-relaxed text-foreground whitespace-pre-wrap">
                   {summaryState.summary}
                 </p>
 
                 {summaryState.highlights.length > 0 && (
                   <div>
-                    <p className="text-[12px] font-semibold text-foreground mb-2">
+                    <p className="text-xs font-semibold text-foreground mb-2">
                       Highlights
                     </p>
                     <ul className="flex flex-col gap-2">
@@ -98,13 +98,13 @@ export function MailInboxSummarySheet({
                           key={i}
                           className="flex flex-col gap-0.5 px-3 py-2 rounded-md bg-muted/40 border border-border/40"
                         >
-                          <span className="text-[12px] font-medium text-foreground line-clamp-1">
+                          <span className="text-xs font-medium text-foreground line-clamp-1">
                             {h.subject}
                           </span>
-                          <span className="text-[11px] text-muted-foreground">
+                          <span className="text-dense text-muted-foreground">
                             {h.fromEmail}
                           </span>
-                          <span className="text-[11px] text-foreground/80">{h.reason}</span>
+                          <span className="text-dense text-foreground/80">{h.reason}</span>
                         </li>
                       ))}
                     </ul>
@@ -113,10 +113,10 @@ export function MailInboxSummarySheet({
 
                 {summaryState.actionItems.length > 0 && (
                   <div>
-                    <p className="text-[12px] font-semibold text-foreground mb-2">Action items</p>
+                    <p className="text-xs font-semibold text-foreground mb-2">Action items</p>
                     <ul className="flex flex-col gap-1.5">
                       {summaryState.actionItems.map((item, i) => (
-                        <li key={i} className="flex items-start gap-2 text-[13px] text-foreground">
+                        <li key={i} className="flex items-start gap-2 text-label text-foreground">
                           <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary shrink-0" aria-hidden />
                           <span>{item}</span>
                         </li>

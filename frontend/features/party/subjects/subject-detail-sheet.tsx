@@ -122,7 +122,7 @@ export function SubjectDetailSheet({
                           {link.name}
                         </Link>
                         <span className="flex shrink-0 items-center gap-2">
-                          <Badge variant="outline" className="h-5 px-2 py-0.5 text-[10px]">
+                          <Badge variant="outline" className="h-5 px-2 py-0.5 text-micro">
                             {link.relationship}
                           </Badge>
                           {canManage ? (

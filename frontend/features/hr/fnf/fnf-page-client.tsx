@@ -115,7 +115,7 @@ function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
               )}
               <span
                 className={cn(
-                  "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0",
+                  "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border shrink-0",
                   fnfStatusBadgeClass(item.status)
                 )}
               >
@@ -123,7 +123,7 @@ function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
               </span>
             </div>
 
-            <div className="flex gap-3 text-[10px] text-muted-foreground mt-1 flex-wrap">
+            <div className="flex gap-3 text-micro text-muted-foreground mt-1 flex-wrap">
               {item.netPayable && (
                 <span className="flex items-center gap-0.5 font-semibold text-foreground">
                   <IndianRupee className="h-3 w-3" />
@@ -338,7 +338,7 @@ export function FnfPageClient() {
         </div>
 
         <div className="space-y-2">
-          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+          <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
             Settlement Components (₹)
           </p>
           <div className="grid grid-cols-2 gap-3">

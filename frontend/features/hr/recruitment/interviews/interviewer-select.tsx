@@ -28,7 +28,7 @@ function InterviewerChip({ member: m, onRemove }: InterviewerChipProps) {
     onRemove(m.id);
   }
   return (
-    <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/20">
+    <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/20">
       {m.name ?? m.email}
       <button
         type="button"

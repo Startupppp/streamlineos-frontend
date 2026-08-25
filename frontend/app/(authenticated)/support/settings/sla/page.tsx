@@ -128,7 +128,7 @@ export default function SupportSlaPage() {
     {
       key: "name",
       header: "Name",
-      cell: (policy) => <span className="text-[11px] font-medium">{policy.name}</span>,
+      cell: (policy) => <span className="text-dense font-medium">{policy.name}</span>,
     },
     {
       key: "priority",
@@ -141,19 +141,19 @@ export default function SupportSlaPage() {
           {policy.priority}
         </Badge>
       ) : (
-        <span className="text-muted-foreground text-[11px]">Any</span>
+        <span className="text-muted-foreground text-dense">Any</span>
       ),
     },
     {
       key: "category",
       header: "Category",
-      cell: (policy) => <span className="text-[11px]">{policy.category ?? "—"}</span>,
+      cell: (policy) => <span className="text-dense">{policy.category ?? "—"}</span>,
     },
     {
       key: "businessHours",
       header: "Business Hours",
       cell: (policy) => (
-        <span className="text-[11px]">
+        <span className="text-dense">
           {policy.businessHoursId !== null ? (businessHoursNameById.get(policy.businessHoursId) ?? "24/7") : "24/7"}
         </span>
       ),
@@ -163,14 +163,14 @@ export default function SupportSlaPage() {
       header: "First Response",
       headerClassName: "text-right",
       className: "text-right font-mono tabular-nums",
-      cell: (policy) => <span className="text-[11px] font-mono tabular-nums">{policy.firstResponseTargetMins}m</span>,
+      cell: (policy) => <span className="text-dense font-mono tabular-nums">{policy.firstResponseTargetMins}m</span>,
     },
     {
       key: "resolution",
       header: "Resolution",
       headerClassName: "text-right",
       className: "text-right font-mono tabular-nums",
-      cell: (policy) => <span className="text-[11px] font-mono tabular-nums">{policy.resolutionTargetMins}m</span>,
+      cell: (policy) => <span className="text-dense font-mono tabular-nums">{policy.resolutionTargetMins}m</span>,
     },
     {
       key: "status",

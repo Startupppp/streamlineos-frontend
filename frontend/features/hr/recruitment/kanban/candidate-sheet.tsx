@@ -75,7 +75,7 @@ export const CandidateSheet = memo(function CandidateSheet({
                 {stageConfig && (
                   <span
                     className={cn(
-                      "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full",
+                      "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full",
                       stageConfig.badge
                     )}
                   >
@@ -84,7 +84,7 @@ export const CandidateSheet = memo(function CandidateSheet({
                   </span>
                 )}
                 {candidate.source && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border dark:bg-slate-800/60 dark:text-slate-400 dark:border-slate-700">
+                  <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border dark:bg-slate-800/60 dark:text-slate-400 dark:border-slate-700">
                     {candidate.source}
                   </span>
                 )}
@@ -93,7 +93,7 @@ export const CandidateSheet = memo(function CandidateSheet({
             </div>
             <Link
               href={`/hr/recruitment/candidates/${candidate.id}`}
-              className="shrink-0 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors duration-200 mt-0.5"
+              className="shrink-0 flex items-center gap-1.5 text-dense font-semibold text-muted-foreground hover:text-foreground transition-colors duration-200 mt-0.5"
             >
               <ExternalLink className="h-3.5 w-3.5" />
               Full Profile
@@ -190,7 +190,7 @@ export const CandidateSheet = memo(function CandidateSheet({
             {candidate.slaStatus && (
               <div className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-14px_rgba(15,23,42,0.12)] overflow-hidden border-l-4 border-l-slate-400">
                 <div className="px-4 py-3">
-                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider mb-2">
                     SLA Compliance
                   </p>
                   <div className="flex items-center gap-2">
@@ -233,7 +233,7 @@ export const CandidateSheet = memo(function CandidateSheet({
         {activeTab === "resume" && (
           <div className="flex-1 flex flex-col min-h-0">
             <div className="flex items-center justify-between px-5 py-2.5 border-b border-border/60 bg-muted/20 shrink-0">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+              <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                 <FileText className="h-3.5 w-3.5" />
                 Resume
               </p>

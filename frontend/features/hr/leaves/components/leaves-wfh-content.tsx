@@ -409,7 +409,7 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
                   <CardTitle className="flex items-center gap-2 text-sm font-semibold text-amber-800 dark:text-amber-300">
                     <Users className="h-4 w-4" />
                     Who&apos;s Out This Week
-                    <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-100 px-1.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+                    <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-100 px-1.5 text-micro font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
                       {approvedLeavesThisWeek.length}
                     </span>
                   </CardTitle>
@@ -423,7 +423,7 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
                       >
                         <Avatar className="w-7">
                           <AvatarImage src={resolveImageUrl(leave.user?.image)} />
-                          <AvatarFallback className="bg-amber-100 text-[10px] text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+                          <AvatarFallback className="bg-amber-100 text-micro text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
                             {leave.user?.firstName?.[0]}
                             {leave.user?.lastName?.[0]}
                           </AvatarFallback>
@@ -433,7 +433,7 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
                             text={`${leave.user?.firstName ?? ""} ${leave.user?.lastName ?? ""}`.trim()}
                             className="text-xs font-medium text-foreground"
                           />
-                          <p className="text-[10px] text-muted-foreground">
+                          <p className="text-micro text-muted-foreground">
                             {format(new Date(leave.startDate), "MMM dd")} –{" "}
                             {format(new Date(leave.endDate), "MMM dd")}
                             {leave.leaveType && (

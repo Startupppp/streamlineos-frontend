@@ -61,7 +61,7 @@ const STEP_CLS: Record<StepState, string> = {
 function FulfillmentStepper({ status }: { status: SoStatus }) {
   if (status === "CANCELLED") {
     return (
-      <span className="text-[10px] px-2 py-0.5 rounded border bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30">
+      <span className="text-micro px-2 py-0.5 rounded border bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30">
         Cancelled
       </span>
     );
@@ -74,7 +74,7 @@ function FulfillmentStepper({ status }: { status: SoStatus }) {
         return (
           <span
             key={label}
-            className={`text-[10px] px-2 py-0.5 rounded border inline-flex items-center gap-1 ${STEP_CLS[state]}`}
+            className={`text-micro px-2 py-0.5 rounded border inline-flex items-center gap-1 ${STEP_CLS[state]}`}
           >
             {state === "completed" && <Check className="size-2.5" />}
             {label}
@@ -402,7 +402,7 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
           <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
             <dt className="text-muted-foreground">Status</dt>
             <dd>
-              <Badge variant="outline" className={`h-5 text-[10px] px-2 py-0.5 ${SO_STATUS_BADGE[status]}`}>
+              <Badge variant="outline" className={`h-5 text-micro px-2 py-0.5 ${SO_STATUS_BADGE[status]}`}>
                 {SO_STATUS_LABEL[status]}
               </Badge>
             </dd>

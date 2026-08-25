@@ -108,21 +108,21 @@ const CustomFieldRow = memo(function CustomFieldRow({
           {field.name}
         </p>
         {field.options && field.options.length > 0 && (
-          <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+          <p className="text-dense text-muted-foreground truncate mt-0.5">
             Options: {field.options.join(", ")}
           </p>
         )}
       </div>
       <Badge
         variant="secondary"
-        className={`text-[10px] shrink-0 ${fieldTypeColors[field.type]}`}
+        className={`text-micro shrink-0 ${fieldTypeColors[field.type]}`}
       >
         {field.type.replace("_", " ")}
       </Badge>
       {field.required && (
         <Badge
           variant="outline"
-          className="text-[10px] shrink-0 border-red-200 text-red-600 dark:border-red-500/30 dark:text-red-400"
+          className="text-micro shrink-0 border-red-200 text-red-600 dark:border-red-500/30 dark:text-red-400"
         >
           required
         </Badge>
@@ -284,7 +284,7 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
                             <FormControl>
                               <Input {...field} placeholder="e.g. Story Points" className="text-sm" autoFocus />
                             </FormControl>
-                            <FormMessage className="text-[10px]" />
+                            <FormMessage className="text-micro" />
                           </FormItem>
                         )}
                       />
@@ -304,7 +304,7 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
                                 ))}
                               </SelectContent>
                             </Select>
-                            <FormMessage className="text-[10px]" />
+                            <FormMessage className="text-micro" />
                           </FormItem>
                         )}
                       />
@@ -319,7 +319,7 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
                             <FormControl>
                               <Input {...field} placeholder="Option 1, Option 2, Option 3" className="text-sm" />
                             </FormControl>
-                            <FormMessage className="text-[10px]" />
+                            <FormMessage className="text-micro" />
                           </FormItem>
                         )}
                       />

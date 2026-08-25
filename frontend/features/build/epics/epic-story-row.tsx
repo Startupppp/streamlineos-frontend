@@ -81,7 +81,7 @@ export const EpicStoryRow = memo(function EpicStoryRow({
               <Badge
                 variant="outline"
                 className={cn(
-                  "h-5 shrink-0 px-1.5 text-[10px]",
+                  "h-5 shrink-0 px-1.5 text-micro",
                   isDone &&
                     "border-emerald-500 text-emerald-600 dark:text-emerald-400",
                 )}
@@ -143,7 +143,7 @@ export const EpicStoryRow = memo(function EpicStoryRow({
               story.points > 0 && (
                 <Badge
                   variant="secondary"
-                  className="h-5 shrink-0 px-1.5 text-[10px]"
+                  className="h-5 shrink-0 px-1.5 text-micro"
                 >
                   {story.points} pts
                 </Badge>
@@ -165,7 +165,7 @@ export const EpicStoryRow = memo(function EpicStoryRow({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-6 px-2 text-[11px]"
+                className="h-6 px-2 text-dense"
               >
                 View
               </Button>
@@ -185,7 +185,7 @@ export const EpicStoryRow = memo(function EpicStoryRow({
               <p
                 className={cn(
                   TEXT_ONE_LINE,
-                  "text-[11px] text-muted-foreground",
+                  "text-dense text-muted-foreground",
                 )}
               >
                 {story.description}

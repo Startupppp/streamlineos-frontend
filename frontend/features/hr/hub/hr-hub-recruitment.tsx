@@ -133,15 +133,15 @@ export function HrHubRecruitment({
         />
       ) : stats && openRoles > 0 ? (
         <div className="flex flex-wrap items-center gap-2 mb-1">
-          <span className="text-[10px] font-medium px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
+          <span className="text-micro font-medium px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
             {stats.hiredThisMonth ?? 0} hired this month
           </span>
           {(stats.avgTimeToHireDays ?? 0) > 0 && (
-            <span className="text-[10px] font-medium px-2.5 py-1 rounded-full bg-muted text-muted-foreground">
+            <span className="text-micro font-medium px-2.5 py-1 rounded-full bg-muted text-muted-foreground">
               {stats.avgTimeToHireDays}d avg to hire
             </span>
           )}
-          <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2 text-blue-600 dark:text-blue-400 ml-auto" asChild>
+          <Button variant="ghost" size="sm" className="h-6 text-micro px-2 text-blue-600 dark:text-blue-400 ml-auto" asChild>
             <Link href={recruitmentHref}>
               View all <ArrowRight className="h-3 w-3 ml-0.5" />
             </Link>

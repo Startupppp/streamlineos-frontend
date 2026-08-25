@@ -83,7 +83,7 @@ export default function OpeningBalancesPage() {
               <CardContent className="px-4 py-3">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div>
-                    <p className="text-[11px] font-medium text-muted-foreground">Entry #</p>
+                    <p className="text-dense font-medium text-muted-foreground">Entry #</p>
                     <Link
                       href={`/accounting/journal/${entry.id}`}
                       className="text-sm font-mono text-primary hover:underline"
@@ -92,17 +92,17 @@ export default function OpeningBalancesPage() {
                     </Link>
                   </div>
                   <div>
-                    <p className="text-[11px] font-medium text-muted-foreground">As of date</p>
+                    <p className="text-dense font-medium text-muted-foreground">As of date</p>
                     <p className="text-sm text-foreground">{formatDate(entry.entryDate)}</p>
                   </div>
                   <div>
-                    <p className="text-[11px] font-medium text-muted-foreground">Status</p>
+                    <p className="text-dense font-medium text-muted-foreground">Status</p>
                     <div className="mt-0.5">
                       <FinanceStatusBadge status={toFinanceStatus(entry.status)} size="chip" />
                     </div>
                   </div>
                   <div>
-                    <p className="text-[11px] font-medium text-muted-foreground">Lines</p>
+                    <p className="text-dense font-medium text-muted-foreground">Lines</p>
                     <p className="text-sm text-foreground">{entry.lines.length}</p>
                   </div>
                 </div>

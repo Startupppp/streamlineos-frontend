@@ -111,13 +111,13 @@ function InstanceRow({
           </span>
           <Badge
             variant="outline"
-            className={`text-[10px] gap-0.5 ${chip.className}`}
+            className={`text-micro gap-0.5 ${chip.className}`}
           >
             {chip.icon}
             {chip.label}
           </Badge>
           {isOverdue && (
-            <Badge variant="destructive" className="text-[10px]">
+            <Badge variant="destructive" className="text-micro">
               Overdue
             </Badge>
           )}
@@ -260,7 +260,7 @@ export default function ApprovalsPage() {
                   {inbox.length > 0 && (
                     <Badge
                       variant="secondary"
-                      className="text-[10px] h-4 px-1.5 leading-none"
+                      className="text-micro h-4 px-1.5 leading-none"
                     >
                       {inbox.length}
                     </Badge>

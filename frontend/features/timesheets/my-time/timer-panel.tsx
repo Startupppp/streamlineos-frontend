@@ -169,7 +169,7 @@ export function TimerPanel({ weekStart, weekEnd }: TimerPanelProps) {
           <CardContent className="p-4 space-y-3">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
-                <p className="text-[11px] text-muted-foreground font-medium mb-0.5">
+                <p className="text-dense text-muted-foreground font-medium mb-0.5">
                   {timer.project?.name ?? "No project"}
                   {timer.ticket && (
                   <span className="ml-1.5 text-muted-foreground/70">
@@ -179,10 +179,10 @@ export function TimerPanel({ weekStart, weekEnd }: TimerPanelProps) {
                 </p>
                 <TruncatedText text={timer.description ?? "No description"} className="text-sm text-foreground" />
                 <div className="flex items-center gap-2 mt-1">
-                  <Badge variant="outline" className="text-[10px] h-4 px-1">
+                  <Badge variant="outline" className="text-micro h-4 px-1">
                     {timer.billable ? BILLING_TYPE_LABEL.BILLABLE : BILLING_TYPE_LABEL.NON_BILLABLE}
                   </Badge>
-                  <Badge variant={isRunning ? "default" : "secondary"} className="text-[10px] h-4 px-1">
+                  <Badge variant={isRunning ? "default" : "secondary"} className="text-micro h-4 px-1">
                     {isRunning ? "Running" : "Paused"}
                   </Badge>
                 </div>
@@ -331,7 +331,7 @@ export function TimerPanel({ weekStart, weekEnd }: TimerPanelProps) {
 
       {recentProjects.length > 0 && (
         <div className="space-y-1.5">
-          <p className="text-[11px] font-medium text-muted-foreground px-0.5">Recent projects</p>
+          <p className="text-dense font-medium text-muted-foreground px-0.5">Recent projects</p>
           <div className="flex flex-wrap gap-1.5">
             {recentProjects.map((item) => (
               <button

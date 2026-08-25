@@ -195,10 +195,10 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
                       style={{ width: `${confidencePct}%`, transition: "width 0.4s ease" }}
                     />
                   </div>
-                  <span className="text-[10px] text-muted-foreground">{confidencePct.toFixed(0)}%</span>
+                  <span className="text-micro text-muted-foreground">{confidencePct.toFixed(0)}%</span>
                   <Button
                     size="sm"
-                    className="h-6 text-[11px] px-2"
+                    className="h-6 text-dense px-2"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleConfirmSuggestion(s.id, s.matchedType);

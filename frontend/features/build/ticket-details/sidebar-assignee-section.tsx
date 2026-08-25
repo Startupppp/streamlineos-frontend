@@ -33,7 +33,7 @@ export function SidebarAssigneeSection({
 
   return (
     <div className="space-y-1.5">
-      <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide block">
+      <span className="text-micro text-muted-foreground font-medium uppercase tracking-wide block">
         Assignees
       </span>
       {displayedAssignees.length > 0 && (

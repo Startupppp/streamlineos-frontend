@@ -27,7 +27,7 @@ export function AiUsageChip({ usage, className }: AiUsageChipProps) {
       <TooltipTrigger asChild>
         <span
           className={cn(
-            "inline-flex shrink-0 cursor-default items-center gap-1 text-[11px] tabular-nums text-muted-foreground",
+            "inline-flex shrink-0 cursor-default items-center gap-1 text-dense tabular-nums text-muted-foreground",
             className,
           )}
         >

@@ -121,7 +121,7 @@ function MappingForm({
           name="componentId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-[11px]">Component (optional)</FormLabel>
+              <FormLabel className="text-dense">Component (optional)</FormLabel>
               <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
                   <SelectTrigger>
@@ -146,7 +146,7 @@ function MappingForm({
           name="category"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-[11px]">Category (optional)</FormLabel>
+              <FormLabel className="text-dense">Category (optional)</FormLabel>
               <FormControl>
                 <Input {...field} className="text-xs" placeholder="e.g. EARNINGS" />
               </FormControl>
@@ -159,7 +159,7 @@ function MappingForm({
           name="ledgerName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-[11px]">Ledger Name <span className="text-destructive">*</span></FormLabel>
+              <FormLabel className="text-dense">Ledger Name <span className="text-destructive">*</span></FormLabel>
               <FormControl>
                 <Input {...field} className="text-xs" placeholder="e.g. Salary Expense" />
               </FormControl>
@@ -172,7 +172,7 @@ function MappingForm({
           name="costCenterSource"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-[11px]">Cost Center Source (optional)</FormLabel>
+              <FormLabel className="text-dense">Cost Center Source (optional)</FormLabel>
               <FormControl>
                 <Input {...field} className="text-xs" placeholder="e.g. department" />
               </FormControl>
@@ -185,7 +185,7 @@ function MappingForm({
           name="notes"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-[11px]">Notes (optional)</FormLabel>
+              <FormLabel className="text-dense">Notes (optional)</FormLabel>
               <FormControl>
                 <Input {...field} className="text-xs" />
               </FormControl>
@@ -283,11 +283,11 @@ export function AccountingMappingsSheet({ open: externalOpen, onOpenChange: exte
                   className="flex items-start gap-2 rounded-md border border-border bg-card px-3 py-2"
                 >
                   <div className="flex-1 min-w-0">
-                    <TruncatedText text={m.ledgerName} className="text-[12px] font-medium" />
-                    <p className="text-[11px] text-muted-foreground">
+                    <TruncatedText text={m.ledgerName} className="text-xs font-medium" />
+                    <p className="text-dense text-muted-foreground">
                       {m.category ?? (m.componentId != null ? `Component #${m.componentId}` : "—")}
                     </p>
-                    {m.notes && <TruncatedText text={m.notes} className="text-[10px] text-muted-foreground" />}
+                    {m.notes && <TruncatedText text={m.notes} className="text-micro text-muted-foreground" />}
                   </div>
                   {canManage && (
                     <div className="flex gap-1 shrink-0">
@@ -332,7 +332,7 @@ export function AccountingMappingsSheet({ open: externalOpen, onOpenChange: exte
 
           {showForm && (
             <div className="rounded-md border border-border p-3 bg-muted/30">
-              <p className="text-[11px] font-medium text-foreground mb-3">
+              <p className="text-dense font-medium text-foreground mb-3">
                 {editingMapping ? "Edit Mapping" : "New Mapping"}
               </p>
               <MappingForm

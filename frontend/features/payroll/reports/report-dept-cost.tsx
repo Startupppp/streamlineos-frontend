@@ -19,14 +19,14 @@ const COLUMNS: DataTableColumn<DeptCostRow>[] = [
   {
     key: "department",
     header: "Department",
-    cell: (row) => <TruncatedText text={row.department ?? ""} className="text-[11px] font-medium" />,
+    cell: (row) => <TruncatedText text={row.department ?? ""} className="text-dense font-medium" />,
   },
   {
     key: "employeeCount",
     header: "Employees",
     className: "text-right",
     cell: (row) => (
-      <span className="font-mono text-[11px] tabular-nums text-right">{row.employeeCount}</span>
+      <span className="font-mono text-dense tabular-nums text-right">{row.employeeCount}</span>
     ),
   },
   {
@@ -34,7 +34,7 @@ const COLUMNS: DataTableColumn<DeptCostRow>[] = [
     header: "Gross Total",
     className: "text-right",
     cell: (row) => (
-      <span className="font-mono text-[11px] tabular-nums text-right">{formatMoney(row.grossTotal)}</span>
+      <span className="font-mono text-dense tabular-nums text-right">{formatMoney(row.grossTotal)}</span>
     ),
   },
   {
@@ -42,7 +42,7 @@ const COLUMNS: DataTableColumn<DeptCostRow>[] = [
     header: "Net Total",
     className: "text-right",
     cell: (row) => (
-      <span className="font-mono text-[11px] tabular-nums text-right">{formatMoney(row.netTotal)}</span>
+      <span className="font-mono text-dense tabular-nums text-right">{formatMoney(row.netTotal)}</span>
     ),
   },
   {
@@ -50,7 +50,7 @@ const COLUMNS: DataTableColumn<DeptCostRow>[] = [
     header: "Employer Cost",
     className: "text-right",
     cell: (row) => (
-      <span className="font-mono text-[11px] tabular-nums text-right">{formatMoney(row.employerCostTotal)}</span>
+      <span className="font-mono text-dense tabular-nums text-right">{formatMoney(row.employerCostTotal)}</span>
     ),
   },
 ];
@@ -77,7 +77,7 @@ export function ReportDeptCost({ month, department, workerType }: ReportDeptCost
   }, [data]);
 
   const footerNode = totals ? (
-    <span className="text-[11px] text-muted-foreground">
+    <span className="text-dense text-muted-foreground">
       Totals — Gross:{" "}
       <span className="font-mono">{formatMoney(totals.gross)}</span> · Net:{" "}
       <span className="font-mono">{formatMoney(totals.net)}</span> · Employer Cost:{" "}

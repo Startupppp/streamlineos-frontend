@@ -59,7 +59,7 @@ const PUBLICATION_COLUMNS: DataTableColumn<Publication>[] = [
     cell: (row) => (
       <Badge
         variant="outline"
-        className={cn("text-[11px]", PUBLICATION_STATUS_BADGE[row.status])}
+        className={cn("text-dense", PUBLICATION_STATUS_BADGE[row.status])}
       >
         {PUBLICATION_STATUS_LABEL[row.status]}
       </Badge>

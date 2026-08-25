@@ -103,7 +103,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
       <div className="mt-1.5 flex min-w-0 items-center justify-between gap-1">
         <div className="flex min-w-0 flex-wrap items-center gap-1">
           {showId ? (
-            <span className="shrink-0 font-mono text-[10px] tracking-tight text-muted-foreground/80">
+            <span className="shrink-0 font-mono text-micro tracking-tight text-muted-foreground/80">
               {ticketKey}
             </span>
           ) : null}

@@ -948,7 +948,7 @@ export function MessagePanel({
               align="end"
               disabled={!channelId}
               triggerLabel="AI"
-              className="h-8 px-2 text-[10px]"
+              className="h-8 px-2 text-micro"
             />
           )}
           <DropdownMenu>
@@ -1008,7 +1008,7 @@ export function MessagePanel({
 
             <div className="min-w-0">
               <TruncatedText text={displayName} className="text-[15px] font-bold leading-tight" />
-              <p className="text-[11px] text-muted-foreground leading-tight">
+              <p className="text-dense text-muted-foreground leading-tight">
                 {channel?.type === "DIRECT" ? (
                   isOtherOnline ? (
                     <span className="text-emerald-500 font-medium">Online</span>
@@ -1112,7 +1112,7 @@ export function MessagePanel({
         </div>
 
         {!isOnline && (
-          <div className="shrink-0 px-4 py-1.5 bg-amber-500/10 border-b border-amber-500/20 flex items-center gap-2 text-[12px] text-amber-600 font-medium">
+          <div className="shrink-0 px-4 py-1.5 bg-amber-500/10 border-b border-amber-500/20 flex items-center gap-2 text-xs text-amber-600 font-medium">
             <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
             You&apos;re offline — messages will be sent when you reconnect
           </div>

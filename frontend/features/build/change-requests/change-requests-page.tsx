@@ -56,7 +56,7 @@ const CR_STATUSES: ChangeRequestStatus[] = [
 function NewCrButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <Button size="sm" className="gap-1 text-[11px]" onClick={onClick} {...hoverHandlers}>
+    <Button size="sm" className="gap-1 text-dense" onClick={onClick} {...hoverHandlers}>
       <PlusIcon ref={iconRef} size={14} />
       New Change Request
     </Button>
@@ -134,7 +134,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
     {
       key: "crNumber",
       header: "ID",
-      cell: (row) => <span className="text-[11px] font-mono text-muted-foreground">CR-{row.crNumber}</span>,
+      cell: (row) => <span className="text-dense font-mono text-muted-foreground">CR-{row.crNumber}</span>,
       className: "w-[72px]",
     },
     {
@@ -142,14 +142,14 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
       header: "Title",
       className: TABLE_TITLE_CELL,
       cell: (row) => (
-        <TruncatedText text={row.title} className="text-[11px] font-medium" />
+        <TruncatedText text={row.title} className="text-dense font-medium" />
       ),
     },
     {
       key: "status",
       header: "Status",
       cell: (row) => (
-        <Badge variant="outline" className={`text-[10px] ${CR_STATUS_STYLES[row.status]}`}>
+        <Badge variant="outline" className={`text-micro ${CR_STATUS_STYLES[row.status]}`}>
           {CR_STATUS_LABELS[row.status]}
         </Badge>
       ),
@@ -159,7 +159,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
       key: "estimateMinutes",
       header: "Est. (hrs)",
       cell: (row) => (
-        <span className="text-[11px] text-muted-foreground">
+        <span className="text-dense text-muted-foreground">
           {row.estimateMinutes != null ? (row.estimateMinutes / 60).toFixed(1) : "—"}
         </span>
       ),
@@ -169,7 +169,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
       key: "budgetImpactCents",
       header: "Budget",
       cell: (row) => (
-        <span className="text-[11px] text-muted-foreground">
+        <span className="text-dense text-muted-foreground">
           {row.budgetImpactCents != null ? `₹${(row.budgetImpactCents / 100).toLocaleString("en-IN")}` : "—"}
         </span>
       ),
@@ -179,7 +179,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
       key: "timelineImpactDays",
       header: "Timeline",
       cell: (row) => (
-        <span className="text-[11px] text-muted-foreground">
+        <span className="text-dense text-muted-foreground">
           {row.timelineImpactDays != null ? `${row.timelineImpactDays}d` : "—"}
         </span>
       ),
@@ -190,7 +190,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
       header: "Requester",
       cell: (row) => {
         const m = members.find((m) => m.userId === row.requestedById);
-        return <span className="text-[11px] text-muted-foreground">{m ? (m.name ?? m.email) : "—"}</span>;
+        return <span className="text-dense text-muted-foreground">{m ? (m.name ?? m.email) : "—"}</span>;
       },
       className: "w-[120px]",
     },

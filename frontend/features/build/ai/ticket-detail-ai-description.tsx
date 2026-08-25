@@ -34,7 +34,7 @@ export function TicketDetailAiDescription({
   return (
     <>
       <div className="mb-2 flex items-center justify-between gap-2">
-        <h3 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+        <h3 className="text-dense font-medium uppercase tracking-wide text-muted-foreground">
           Description
         </h3>
         <div className="flex items-center gap-1">

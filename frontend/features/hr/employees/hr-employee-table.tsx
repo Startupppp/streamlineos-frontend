@@ -37,7 +37,7 @@ function EmployeeStatusChip({ isActive }: { isActive: boolean }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+        "inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border",
         isActive
           ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800"
           : "bg-muted text-muted-foreground border-border",
@@ -136,7 +136,7 @@ export function HrEmployeeTable({
         className: "hidden sm:table-cell",
         cell: (user) =>
           user.designation ? (
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border whitespace-nowrap">
+            <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border whitespace-nowrap">
               {user.designation}
             </span>
           ) : (

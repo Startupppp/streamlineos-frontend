@@ -104,11 +104,11 @@ export function ContactTimeline({ contactId, onLogActivity }: ContactTimelinePro
                       <div className="min-w-0">
                         <TruncatedText text={task.title} className="text-xs font-medium text-foreground" />
                         {task.notes && (
-                          <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">
+                          <p className="text-dense text-muted-foreground mt-0.5 line-clamp-2">
                             {task.notes}
                           </p>
                         )}
-                        <time className="text-[10px] text-muted-foreground">
+                        <time className="text-micro text-muted-foreground">
                           {task.createdAt
                             ? formatDistanceToNow(new Date(task.createdAt), { addSuffix: true })
                             : "—"}

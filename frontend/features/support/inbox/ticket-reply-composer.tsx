@@ -269,7 +269,7 @@ export function TicketReplyComposer({ ticketId }: TicketReplyComposerProps) {
         <div className="flex items-center gap-2">
           <Switch checked={isInternal} onCheckedChange={handleToggleInternal} className="h-4 w-7" />
           <Label
-            className="text-[11px] text-muted-foreground cursor-pointer"
+            className="text-dense text-muted-foreground cursor-pointer"
             onClick={handleToggleInternal}
           >
             {isInternal ? "Internal note (not visible to client)" : "Public reply"}
@@ -281,7 +281,7 @@ export function TicketReplyComposer({ ticketId }: TicketReplyComposerProps) {
               type="button"
               variant="ghost"
               size="sm"
-              className="h-6 px-2 text-[11px] text-muted-foreground"
+              className="h-6 px-2 text-dense text-muted-foreground"
             >
               <Wand2 className="h-3 w-3 mr-1" />
               Use macro
@@ -322,7 +322,7 @@ export function TicketReplyComposer({ ticketId }: TicketReplyComposerProps) {
           {pendingFiles.map((f, i) => {
             const Icon = fileMimeIcon(f.mimeType);
             return (
-              <div key={i} className="flex items-center gap-1 text-[11px] bg-muted rounded px-2 py-0.5 border">
+              <div key={i} className="flex items-center gap-1 text-dense bg-muted rounded px-2 py-0.5 border">
                 <Icon className="h-3 w-3 text-muted-foreground shrink-0" />
                 <span className="truncate max-w-[100px]">{f.fileName}</span>
                 <button

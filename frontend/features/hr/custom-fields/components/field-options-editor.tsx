@@ -80,7 +80,7 @@ export function FieldOptionsEditor({
               }}
             />
             {form.formState.errors.options?.[idx]?.label && (
-              <p className="text-[10px] text-destructive">
+              <p className="text-micro text-destructive">
                 {form.formState.errors.options[idx]?.label?.message}
               </p>
             )}
@@ -92,7 +92,7 @@ export function FieldOptionsEditor({
               placeholder="value"
             />
             {form.formState.errors.options?.[idx]?.value && (
-              <p className="text-[10px] text-destructive">
+              <p className="text-micro text-destructive">
                 {form.formState.errors.options[idx]?.value?.message}
               </p>
             )}

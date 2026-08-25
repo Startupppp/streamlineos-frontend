@@ -216,7 +216,7 @@ export function RoundFormSheet({ open, flowId, editRound, onClose }: RoundFormSh
               {errors.slaDays && (
                 <p className="text-xs text-destructive mt-1">{errors.slaDays.message}</p>
               )}
-              <p className="text-[10px] text-muted-foreground mt-1">
+              <p className="text-micro text-muted-foreground mt-1">
                 Max days to complete this round
               </p>
             </div>

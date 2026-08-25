@@ -72,14 +72,14 @@ export function TicketSidebarMetadata({
       )}
 
       <div className="grid grid-cols-1 gap-2 @[18rem]:grid-cols-2 @[18rem]:gap-3">
-        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+        <div className="flex items-center gap-1.5 text-dense text-muted-foreground">
           <Calendar className="h-3 w-3 shrink-0" />
           <span>
             Created{" "}
             {createdAt ? format(new Date(createdAt), "MMM d, yyyy") : "—"}
           </span>
         </div>
-        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+        <div className="flex items-center gap-1.5 text-dense text-muted-foreground">
           <Clock className="h-3 w-3 shrink-0" />
           <span>
             Updated{" "}
@@ -90,7 +90,7 @@ export function TicketSidebarMetadata({
 
       {reporter && (
         <div className="flex items-center gap-2">
-          <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide shrink-0">
+          <span className="text-micro text-muted-foreground font-medium uppercase tracking-wide shrink-0">
             <User className="h-3 w-3 inline mr-0.5" />
             Reporter
           </span>

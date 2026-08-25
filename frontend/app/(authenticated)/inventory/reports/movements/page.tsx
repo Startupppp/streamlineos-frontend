@@ -70,7 +70,7 @@ function buildMovementsColumns(): DataTableColumn<MovementRow>[] {
       key: "createdAt",
       header: "Date",
       cell: (row) => (
-        <span className="text-[11px] whitespace-nowrap text-muted-foreground">
+        <span className="text-dense whitespace-nowrap text-muted-foreground">
           {formatDate(row.createdAt)}
         </span>
       ),
@@ -87,22 +87,22 @@ function buildMovementsColumns(): DataTableColumn<MovementRow>[] {
     {
       key: "productName",
       header: "Product",
-      cell: (row) => <span className="text-[11px] font-medium">{row.productName}</span>,
+      cell: (row) => <span className="text-dense font-medium">{row.productName}</span>,
     },
     {
       key: "sku",
       header: "SKU",
-      cell: (row) => <span className="text-[11px] font-mono">{row.sku}</span>,
+      cell: (row) => <span className="text-dense font-mono">{row.sku}</span>,
     },
     {
       key: "warehouseName",
       header: "Warehouse",
-      cell: (row) => <span className="text-[11px]">{row.warehouseName ?? "—"}</span>,
+      cell: (row) => <span className="text-dense">{row.warehouseName ?? "—"}</span>,
     },
     {
       key: "locationName",
       header: "Location",
-      cell: (row) => <span className="text-[11px]">{row.locationName ?? "—"}</span>,
+      cell: (row) => <span className="text-dense">{row.locationName ?? "—"}</span>,
     },
     {
       key: "quantity",
@@ -111,7 +111,7 @@ function buildMovementsColumns(): DataTableColumn<MovementRow>[] {
       className: "text-right",
       cell: (row) => (
         <span
-          className={`text-[11px] font-mono tabular-nums font-semibold ${row.quantity >= 0 ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}`}
+          className={`text-dense font-mono tabular-nums font-semibold ${row.quantity >= 0 ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}`}
         >
           {row.quantity >= 0 ? `+${row.quantity}` : row.quantity}
         </span>
@@ -121,14 +121,14 @@ function buildMovementsColumns(): DataTableColumn<MovementRow>[] {
       key: "balanceAfter",
       header: "Balance After",
       headerClassName: "text-right",
-      className: "text-right font-mono tabular-nums text-[11px]",
+      className: "text-right font-mono tabular-nums text-dense",
       cell: (row) => row.balanceAfter !== null ? row.balanceAfter : "—",
     },
     {
       key: "referenceType",
       header: "Reference",
       cell: (row) => (
-        <span className="text-[11px]">
+        <span className="text-dense">
           {row.referenceType && row.referenceNumber
             ? `${row.referenceType} ${row.referenceNumber}`
             : (row.notes ?? "—")}
@@ -139,7 +139,7 @@ function buildMovementsColumns(): DataTableColumn<MovementRow>[] {
       key: "performedBy",
       header: "Performed By",
       cell: (row) => (
-        <span className="text-[11px] text-muted-foreground">{row.performedBy ?? "—"}</span>
+        <span className="text-dense text-muted-foreground">{row.performedBy ?? "—"}</span>
       ),
     },
   ];

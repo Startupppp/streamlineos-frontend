@@ -243,7 +243,7 @@ export function CandidateCard({
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-semibold", cfg.pill)}>
+          <span className={cn("px-2 py-0.5 rounded-full text-micro font-semibold", cfg.pill)}>
             {cfg.label}
           </span>
           {candidate.rating !== null && candidate.rating !== undefined && (
@@ -262,7 +262,7 @@ export function CandidateCard({
             </div>
           )}
           {candidate.createdAt && (
-            <div className="flex items-center gap-0.5 ml-auto text-[10px] text-muted-foreground">
+            <div className="flex items-center gap-0.5 ml-auto text-micro text-muted-foreground">
               <Clock className="h-2.5 w-2.5" />
               {formatDistanceToNow(new Date(candidate.createdAt), { addSuffix: true })}
             </div>

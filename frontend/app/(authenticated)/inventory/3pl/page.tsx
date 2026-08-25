@@ -110,7 +110,7 @@ function ThreePlContent() {
         key: "providerKey",
         header: "Provider",
         cell: (row) => (
-          <span className="font-mono text-[11px] text-muted-foreground">{row.providerKey}</span>
+          <span className="font-mono text-dense text-muted-foreground">{row.providerKey}</span>
         ),
       },
       {
@@ -120,7 +120,7 @@ function ThreePlContent() {
           <Badge
             variant="outline"
             className={cn(
-              "text-[11px]",
+              "text-dense",
               row.isActive
                 ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
                 : "bg-muted text-muted-foreground border-border",
@@ -154,7 +154,7 @@ function ThreePlContent() {
           return (
             <Badge
               variant="outline"
-              className={cn("text-[11px]", SYNC_STATUS_BADGE[row.lastSyncStatus])}
+              className={cn("text-dense", SYNC_STATUS_BADGE[row.lastSyncStatus])}
             >
               {SYNC_STATUS_LABEL[row.lastSyncStatus]}
             </Badge>

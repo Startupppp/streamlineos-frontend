@@ -82,7 +82,7 @@ function AvScanBadge({
 }) {
   if (result === "CLEAN") {
     return (
-      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800">
+      <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800">
         <ShieldCheck className="h-2.5 w-2.5" aria-hidden="true" />
         Clean
       </span>
@@ -90,14 +90,14 @@ function AvScanBadge({
   }
   if (result === "INFECTED") {
     return (
-      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800">
+      <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800">
         <ShieldX className="h-2.5 w-2.5" aria-hidden="true" />
         Infected
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700">
+    <span className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700">
       <Clock
         className="h-2.5 w-2.5"
         style={{ animation: "spin 2s linear infinite" }}
@@ -224,7 +224,7 @@ export function VaultDocumentList({ candidateId }: VaultDocumentListProps) {
                   <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                     <span
                       className={cn(
-                        "inline-flex items-center text-[10px] font-semibold px-1.5 py-0 rounded-full border",
+                        "inline-flex items-center text-micro font-semibold px-1.5 py-0 rounded-full border",
                         docTypeBadge,
                       )}
                     >
@@ -239,7 +239,7 @@ export function VaultDocumentList({ candidateId }: VaultDocumentListProps) {
                         );
                         if (daysLeft < 0) {
                           return (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0 rounded-full border bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800">
+                            <span className="inline-flex items-center gap-1 text-micro font-semibold px-1.5 py-0 rounded-full border bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800">
                               <AlertTriangle className="h-2.5 w-2.5" />
                               Expired
                             </span>
@@ -247,7 +247,7 @@ export function VaultDocumentList({ candidateId }: VaultDocumentListProps) {
                         }
                         if (daysLeft <= 30) {
                           return (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800">
+                            <span className="inline-flex items-center gap-1 text-micro font-semibold px-1.5 py-0 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800">
                               <AlertTriangle className="h-2.5 w-2.5" />
                               {daysLeft}d left
                             </span>
@@ -256,7 +256,7 @@ export function VaultDocumentList({ candidateId }: VaultDocumentListProps) {
                         return null;
                       })()}
                     {doc.createdAt && (
-                      <span className="text-[10px] text-muted-foreground tabular-nums">
+                      <span className="text-micro text-muted-foreground tabular-nums">
                         {format(new Date(doc.createdAt), "d MMM yy")}
                       </span>
                     )}
@@ -266,7 +266,7 @@ export function VaultDocumentList({ candidateId }: VaultDocumentListProps) {
 
               <div className="flex items-center gap-1 shrink-0">
                 {doc.avResult === "INFECTED" ? (
-                  <span className="text-[10px] text-rose-600 dark:text-rose-400 flex items-center gap-1 font-semibold">
+                  <span className="text-micro text-rose-600 dark:text-rose-400 flex items-center gap-1 font-semibold">
                     <AlertTriangle className="h-3 w-3" />
                     Blocked
                   </span>

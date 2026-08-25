@@ -32,27 +32,27 @@ interface Props {
 function statusBadge(status: HrWebhookDeliveryStatus) {
   if (status === "delivered") {
     return (
-      <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[11px]">
+      <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-dense">
         Delivered
       </Badge>
     );
   }
   if (status === "dead") {
     return (
-      <Badge className="bg-red-500/10 text-red-600 border-red-500/20 text-[11px]">
+      <Badge className="bg-red-500/10 text-red-600 border-red-500/20 text-dense">
         Dead
       </Badge>
     );
   }
   if (status === "failed") {
     return (
-      <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/20 text-[11px]">
+      <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/20 text-dense">
         Failed
       </Badge>
     );
   }
   return (
-    <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20 text-[11px]">
+    <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20 text-dense">
       Pending
     </Badge>
   );
@@ -81,9 +81,9 @@ function DeliveryRow({
       <div className="flex-1 min-w-0 space-y-1">
         <div className="flex items-center gap-2 flex-wrap">
           {statusBadge(delivery.status)}
-          <code className="text-[11px] text-muted-foreground font-mono">{delivery.event}</code>
+          <code className="text-dense text-muted-foreground font-mono">{delivery.event}</code>
           {delivery.responseStatus && (
-            <span className="text-[11px] text-muted-foreground">
+            <span className="text-dense text-muted-foreground">
               HTTP {delivery.responseStatus}
             </span>
           )}
@@ -91,7 +91,7 @@ function DeliveryRow({
         {delivery.error && (
           <TruncatedText text={delivery.error} className="text-xs text-red-600 min-w-0" />
         )}
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-dense text-muted-foreground">
           {delivery.lastAttemptAt
             ? formatDistanceToNow(new Date(delivery.lastAttemptAt), { addSuffix: true })
             : "Not attempted yet"}{" "}

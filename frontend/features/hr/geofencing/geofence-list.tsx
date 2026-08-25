@@ -63,7 +63,7 @@ export function GeofenceList({ canManage, onEdit }: Props) {
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <TruncatedText text={fence.name} className="text-sm font-semibold text-foreground" />
-              <Badge variant="secondary" className="text-[11px] mt-1">{fence.radiusMeters}m radius</Badge>
+              <Badge variant="secondary" className="text-dense mt-1">{fence.radiusMeters}m radius</Badge>
             </div>
             {canManage && (
               <div className="flex items-center gap-1 shrink-0">

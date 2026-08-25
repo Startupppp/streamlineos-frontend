@@ -110,7 +110,7 @@ function CreditNoteItemRow({
       </div>
       <div className="grid grid-cols-3 gap-2">
         <div className="space-y-1">
-          <Label className="text-[10px] text-muted-foreground">Qty</Label>
+          <Label className="text-micro text-muted-foreground">Qty</Label>
           <Input
             type="number"
             className="text-sm"
@@ -119,7 +119,7 @@ function CreditNoteItemRow({
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-[10px] text-muted-foreground">Rate</Label>
+          <Label className="text-micro text-muted-foreground">Rate</Label>
           <Input
             type="number"
             className="text-sm"
@@ -128,7 +128,7 @@ function CreditNoteItemRow({
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-[10px] text-muted-foreground">GST %</Label>
+          <Label className="text-micro text-muted-foreground">GST %</Label>
           <Select
             value={watch(`items.${index}.gstRate`)}
             onValueChange={handleGstRateChange}

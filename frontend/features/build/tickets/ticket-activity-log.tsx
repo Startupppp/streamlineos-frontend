@@ -71,14 +71,14 @@ const ActivityItem = memo(function ActivityItem({ entry }: ActivityItemProps) {
         {showTransition && (
           <span className="mt-0.5 flex flex-wrap items-center gap-1 text-muted-foreground/90">
             {entry.fromValue && (
-              <span className="max-w-[16rem] truncate rounded bg-muted px-1.5 py-0.5 text-[11px] text-foreground/80 line-through decoration-muted-foreground/50" title={entry.fromValue}>
+              <span className="max-w-[16rem] truncate rounded bg-muted px-1.5 py-0.5 text-dense text-foreground/80 line-through decoration-muted-foreground/50" title={entry.fromValue}>
                 {entry.fromValue}
               </span>
             )}
             {entry.toValue && (
               <>
                 {entry.fromValue && <ArrowRight className="h-3 w-3 shrink-0" />}
-                <span className="max-w-[16rem] truncate rounded bg-primary/10 px-1.5 py-0.5 text-[11px] text-primary" title={entry.toValue}>
+                <span className="max-w-[16rem] truncate rounded bg-primary/10 px-1.5 py-0.5 text-dense text-primary" title={entry.toValue}>
                   {entry.toValue}
                 </span>
               </>
@@ -86,7 +86,7 @@ const ActivityItem = memo(function ActivityItem({ entry }: ActivityItemProps) {
           </span>
         )}
         {timeAgo && (
-          <span className="mt-0.5 block text-[10px] text-muted-foreground/70">{timeAgo}</span>
+          <span className="mt-0.5 block text-micro text-muted-foreground/70">{timeAgo}</span>
         )}
       </div>
     </li>
@@ -98,7 +98,7 @@ export function TicketActivityLog({ projectId, ticketId }: TicketActivityLogProp
 
   return (
     <div className="space-y-3">
-      <h4 className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+      <h4 className="flex items-center gap-1.5 text-dense font-medium uppercase tracking-wide text-muted-foreground">
         <History className="h-3.5 w-3.5" />
         History
       </h4>
@@ -106,7 +106,7 @@ export function TicketActivityLog({ projectId, ticketId }: TicketActivityLogProp
       {isLoading ? (
         <LoadingState variant="list" rows={8} className="p-0" />
       ) : isError ? (
-        <p className="py-2 text-center text-[11px] text-muted-foreground">
+        <p className="py-2 text-center text-dense text-muted-foreground">
           Could not load activity history.
         </p>
       ) : !data || data.length === 0 ? (

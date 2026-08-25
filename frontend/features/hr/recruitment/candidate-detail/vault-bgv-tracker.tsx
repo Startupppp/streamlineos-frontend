@@ -91,7 +91,7 @@ export function BgvTracker({
           Background Verification
         </CardTitle>
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className={cn("text-[11px]", style.color)}>
+          <Badge variant="outline" className={cn("text-dense", style.color)}>
             {style.label}
           </Badge>
           <Button

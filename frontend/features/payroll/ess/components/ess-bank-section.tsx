@@ -262,7 +262,7 @@ function BankSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
                       }
                     />
                   </FormControl>
-                  <p className="text-[11px] text-muted-foreground mt-1">{schemeConf.hint}</p>
+                  <p className="text-dense text-muted-foreground mt-1">{schemeConf.hint}</p>
                   <FormMessage />
                 </FormItem>
               )}

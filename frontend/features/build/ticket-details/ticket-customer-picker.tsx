@@ -53,7 +53,7 @@ export function TicketCustomerPicker({
 
   return (
     <div className="min-w-0">
-      <span className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+      <span className="mb-1 block text-micro font-medium uppercase tracking-wide text-muted-foreground">
         <Building2 className="mr-0.5 inline h-3 w-3" />
         Customer
       </span>

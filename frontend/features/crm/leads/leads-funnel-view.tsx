@@ -152,7 +152,7 @@ export function LeadsFunnelView({ board }: LeadsFunnelViewProps) {
             className={`rounded-lg border p-3 text-center ${STAGE_BG[stage]}`}
           >
             <p className="text-lg font-bold text-foreground">{count}</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">{STAGE_LABELS[stage]}</p>
+            <p className="text-micro text-muted-foreground mt-0.5">{STAGE_LABELS[stage]}</p>
           </motion.div>
         ))}
       </div>
