@@ -8,9 +8,9 @@ What remains is that the seam has not yet been used for its purpose. Push is sti
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 01 | [Sending a message stops re-reading the sender](issues/01-fanout-stops-re-reading-the-sender.md) | — | ready-for-agent |
-| 02 | [A chat delivery outage is detected, not discovered](issues/02-failed-side-effects-leave-a-durable-trace.md) | — | ready-for-agent |
-| 03 | [Sending to a large channel stops costing a fan-out](issues/03-message-fanout-becomes-swappable.md) | 01 | ready-for-agent |
+| 01 | [Sending a message stops re-reading the sender](issues/01-fanout-stops-re-reading-the-sender.md) | — | **done** (premise corrected) |
+| 02 | [A chat delivery outage is detected, not discovered](issues/02-failed-side-effects-leave-a-durable-trace.md) | — | **done** |
+| 03 | [Sending to a large channel stops costing a fan-out](issues/03-message-fanout-becomes-swappable.md) | 01 | **done** — queue transport not wired |
 
 **On completing a ticket:** tick its todo list, set its `Status` to `done` in the ticket file, and update its row above.
 

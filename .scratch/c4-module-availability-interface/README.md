@@ -6,10 +6,10 @@ Spec: [`docs/specs/c4-module-availability-interface.md`](../../docs/specs/c4-mod
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 01 | [What the access snapshot promises is what the next request allows](issues/01-pin-snapshot-authorize-parity.md) | — | ready-for-agent |
-| 02 | [Everyone agrees which modules are core](issues/02-one-definition-of-core-module.md) | 01 | ready-for-agent |
-| 03 | [A person blocked by their plan is told it is their plan](issues/03-canonical-resolver-replaces-the-stubs.md) | 02 | ready-for-agent |
-| 04 | [The module registry describes what actually happens](issues/04-registry-ladder-gains-teeth-or-goes.md) | 02 | ready-for-agent |
+| 01 | [What the access snapshot promises is what the next request allows](issues/01-pin-snapshot-authorize-parity.md) | — | **done** |
+| 02 | [Everyone agrees which modules are core](issues/02-one-definition-of-core-module.md) | 01 | **done** |
+| 03 | [A person blocked by their plan is told it is their plan](issues/03-canonical-resolver-replaces-the-stubs.md) | 02 | **done** |
+| 04 | [The module registry describes what actually happens](issues/04-registry-ladder-gains-teeth-or-goes.md) | 02 | **done** — already had teeth |
 
 **On completing a ticket:** tick its todo list, set its `Status` to `done` in the ticket file, and update its row above.
 

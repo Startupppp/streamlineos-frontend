@@ -2,17 +2,23 @@
 
 Nine candidates, nine specs in [`docs/specs/`](../docs/specs/README.md), 29 tickets here. Every candidate was re-verified at source on 2026-08-25 before its tickets were written; five had shipped in the ~85 commits since the review, so each ticket set covers only what actually remains.
 
-| Candidate | Verified status | Tickets | Ready now |
+| Candidate | Tickets | Landed | Not done |
 |---|---|---|---|
-| [c1 — KB visibility seam](c1-kb-visibility-seam/README.md) | shipped, one residue | 3 | 01 |
-| [c2 — Calendar source registry](c2-calendar-source-registry/README.md) | shipped | 2 | 01 |
-| [c3 — One representation of capability](c3-one-representation-of-capability/README.md) | half shipped | 6 | 01, 04, 05, 06 |
-| [c4 — Module availability interface](c4-module-availability-interface/README.md) | seam shipped, inputs did not | 4 | 01 |
-| [c5 — Payment provider adapter](c5-payment-provider-adapter/README.md) | **not started** | 4 | 01 |
-| [c6 — Split help centre and wiki](c6-split-kb-help-centre-and-wiki/README.md) | shipped on the backend | 3 | 01, 02, 03 |
-| [c7 — Chat message fan-out](c7-chat-message-fanout/README.md) | shipped | 3 | 01, 02 |
-| [c8 — Frontend server-data seam](c8-frontend-server-data-seam/README.md) | seam built, rollout at 1 route | 3 | 01 |
-| [c9 — Transactional outbox](c9-transactional-outbox-decision/README.md) | a decision, not a defect | 1 | 01 |
+| [c1 — KB visibility seam](c1-kb-visibility-seam/README.md) | 3 | 3 | backfill written + unit-tested but **never run** (no DB) |
+| [c2 — Calendar source registry](c2-calendar-source-registry/README.md) | 2 | 2 | partial-failure data not plumbed from the events endpoint |
+| [c3 — One representation of capability](c3-one-representation-of-capability/README.md) | 6 | 6 | — |
+| [c4 — Module availability interface](c4-module-availability-interface/README.md) | 4 | 4 | — |
+| [c5 — Payment provider adapter](c5-payment-provider-adapter/README.md) | 4 | 4 | `billing.controller.ts` still calls the concrete provider |
+| [c6 — Split help centre and wiki](c6-split-kb-help-centre-and-wiki/README.md) | 3 | 3 | HTTP route still says "migration" (breaking change, deferred) |
+| [c7 — Chat message fan-out](c7-chat-message-fanout/README.md) | 3 | 3 | queued transport is in-memory only, off by default |
+| [c8 — Frontend server-data seam](c8-frontend-server-data-seam/README.md) | 3 | 3 | article body client-sanitised; public KB endpoints unrate-limited |
+| [c9 — Transactional outbox](c9-transactional-outbox-decision/README.md) | 1 | evidence only | **the decision itself — needs sign-off** |
+
+## Verification state (2026-08-25)
+
+- **backend** `tsc --noEmit` → 0 errors · 6 shards → 590 suites / ~5,102 tests green, except `hr-canonical-parity-preflight.spec.ts` which fails to RUN because its SQL fixture was deleted in `f43d16b36` **before** this work.
+- **frontend** `tsc --noEmit` → clean · `next build` → passes · full suite → 98 suites / 542 tests green.
+- **Nothing was verified against a running application.** `APP_DATABASE_URL` fails 28P01 — the app role password is rotated, so the API cannot boot. Every acceptance criterion needing a booted app or a browser is left unticked and labelled, not assumed.
 
 ## Working the frontier
 

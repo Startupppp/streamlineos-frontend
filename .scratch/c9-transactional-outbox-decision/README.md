@@ -8,7 +8,7 @@ Two durable write paths with different guarantees, and nothing at the call site 
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 01 | [Decide what the transactional outbox is for](issues/01-decide-what-the-outbox-is-for.md) | — | ready-for-agent |
+| 01 | [Decide what the transactional outbox is for](issues/01-decide-what-the-outbox-is-for.md) | — | evidence gathered — decision awaiting sign-off |
 
 **On completing a ticket:** tick its todo list, set its `Status` to `done` in the ticket file, and update its row above.
 
