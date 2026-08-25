@@ -4,7 +4,7 @@ import { Minus } from 'lucide-react';
 import { useEditorReadOnly, useEditorRef } from 'platejs/react';
 import { Separator } from '@/components/ui/separator';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import type { UploadedKbMedia } from '@/features/knowledge-base/lib/upload-kb-media';
+import type { UploadedKbMedia } from '@/features/wiki/lib/upload-kb-media';
 import { ToolbarButton } from './toolbar-button';
 import { HistoryButtons } from './history-buttons';
 import { TurnIntoDropdown } from './turn-into-dropdown';

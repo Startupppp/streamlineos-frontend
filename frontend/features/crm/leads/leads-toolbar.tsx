@@ -5,10 +5,12 @@ import { LayoutGrid, TableIcon, X, GitBranch } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import { useCrmOptions } from "@/hooks/api/crm";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import type { DataScope } from "@/types/access";
 
 interface LeadsToolbarProps {
   searchQuery: string;
@@ -22,21 +24,18 @@ interface LeadsToolbarProps {
   onPriorityFilterChange: (value: string | undefined) => void;
   onSourceFilterChange: (value: string | undefined) => void;
   onClearFilters: () => void;
+  scope: DataScope;
 }
 
 export function LeadsToolbar({
   searchQuery, onSearchChange, view, onViewChange,
   statusFilter, priorityFilter, sourceFilter,
   onStatusFilterChange, onPriorityFilterChange, onSourceFilterChange,
-  onClearFilters,
+  onClearFilters, scope,
 }: LeadsToolbarProps) {
   const { data: statusOptions = [] } = useCrmOptions("lead_status");
   const { data: priorityOptions = [] } = useCrmOptions("priority");
   const { data: sourceOptions = [] } = useCrmOptions("source");
-
-  const statuses = statusOptions;
-  const priorities = priorityOptions;
-  const sources = sourceOptions;
 
   const [inputValue, setInputValue] = useState(searchQuery);
   const debouncedInput = useDebouncedValue(inputValue, 300);
@@ -64,7 +63,7 @@ export function LeadsToolbar({
 
   return (
     <div className={FILTER_TOOLBAR_ROW}>
-        <SearchInput placeholder="Search leads..." value={inputValue} onValueChange={handleSearchChange} />
+      <SearchInput placeholder="Search leads..." value={inputValue} onValueChange={handleSearchChange} />
 
       <div className="flex h-9 items-center rounded-md border border-input bg-card">
         <Button variant={view === "table" ? "default" : "ghost"} size="sm"
@@ -88,7 +87,7 @@ export function LeadsToolbar({
         <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[110px]")}><SelectValue placeholder="Status" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="all" className="text-xs">All Status</SelectItem>
-          {statuses.map((s) => (
+          {statusOptions.map((s) => (
             <SelectItem key={s.key} value={s.key} className="text-xs">{s.label}</SelectItem>
           ))}
         </SelectContent>
@@ -98,7 +97,7 @@ export function LeadsToolbar({
         <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[100px]")}><SelectValue placeholder="Priority" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="all" className="text-xs">All Priority</SelectItem>
-          {priorities.map((p) => (
+          {priorityOptions.map((p) => (
             <SelectItem key={p.key} value={p.key} className="text-xs">{p.label}</SelectItem>
           ))}
         </SelectContent>
@@ -108,11 +107,20 @@ export function LeadsToolbar({
         <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[110px]")}><SelectValue placeholder="Source" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="all" className="text-xs">All Sources</SelectItem>
-          {sources.map((s) => (
+          {sourceOptions.map((s) => (
             <SelectItem key={s.key} value={s.key} className="text-xs">{s.label}</SelectItem>
           ))}
         </SelectContent>
       </Select>
+
+      {(scope === "own" || scope === "team") && (
+        <Badge
+          variant="outline"
+          className="h-5 shrink-0 self-center px-2 text-[11px] font-medium text-blue-700 border-blue-200 bg-blue-50 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30"
+        >
+          {scope === "own" ? "Your leads only" : "Your team's leads"}
+        </Badge>
+      )}
 
       {hasFilters && (
         <Button variant="ghost" size="sm" className="text-[11px] px-2" onClick={onClearFilters}>

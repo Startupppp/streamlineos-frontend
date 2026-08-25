@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import { format } from "date-fns";
-import { PublicPageContentLoader } from "@/features/knowledge-base/components/public-page-content-loader";
+import { PublicPageContentLoader } from "@/features/wiki/components/public-page-content-loader";
 import { BACKEND_URL } from "@/lib/backend-url";
 
 export const dynamic = "force-dynamic";

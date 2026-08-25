@@ -1,6 +1,6 @@
 import { requireSession } from "@/lib/rbac/require-permission";
 import { RequireModule } from "@/components/auth/require-module";
-import KnowledgeBasePage from "@/features/knowledge-base/components/knowledge-base-page";
+import KnowledgeBasePage from "@/features/wiki/components/knowledge-base-page";
 
 export default async function KnowledgeChatRoute() {
   await requireSession();

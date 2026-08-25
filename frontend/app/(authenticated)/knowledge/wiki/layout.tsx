@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import WikiShell from "@/features/knowledge-base/components/wiki-shell";
+import WikiShell from "@/features/wiki/components/wiki-shell";
 
 export default function KnowledgeWikiLayout({
   children,

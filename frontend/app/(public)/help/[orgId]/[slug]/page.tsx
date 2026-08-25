@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ArticleReader } from "@/features/kb/components/article-reader";
+import { ArticleReader } from "@/features/help-centre/components/article-reader";
 
 export const dynamic = "force-dynamic";
 
