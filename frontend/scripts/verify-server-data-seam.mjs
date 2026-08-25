@@ -54,6 +54,22 @@ sourceHas(serverFetch, "export async function serverGet", path.join(frontendRoot
 sourceHas(serverFetch, "cache(async <T>(token: string, path: string)", path.join(frontendRoot, "lib", "server-fetch.ts"));
 sourceHas(serverFetch, 'Authorization: `Bearer ${token}`', path.join(frontendRoot, "lib", "server-fetch.ts"));
 sourceHas(serverFetch, 'cache: "no-store"', path.join(frontendRoot, "lib", "server-fetch.ts"));
+sourceHas(serverFetch, "AbortSignal.timeout(TIMEOUT_MS)", path.join(frontendRoot, "lib", "server-fetch.ts"));
+
+const authenticatedLayoutPath = path.join(sourceRoot, "(authenticated)", "layout.tsx");
+const authenticatedLayout = await read(authenticatedLayoutPath);
+const accessReadIndex = authenticatedLayout.indexOf("await getServerAccess()");
+const accessPrefetchIndex = authenticatedLayout.indexOf("await prefetchAccess()");
+const accessBoundaryIndex = authenticatedLayout.indexOf("<HydrationBoundary state={state}>");
+assert(accessReadIndex >= 0, "authenticated layout must enforce the server access snapshot");
+assert(accessPrefetchIndex > accessReadIndex, "authenticated layout must prefetch access after its server gate");
+assert(accessBoundaryIndex > accessPrefetchIndex, "authenticated shell must hydrate the access snapshot");
+
+const accessPrefetchPath = path.join(prefetchRoot, "access.ts");
+const accessPrefetch = await read(accessPrefetchPath);
+sourceHas(accessPrefetch, "createServerQueryClient", accessPrefetchPath);
+sourceHas(accessPrefetch, "serverGet<AccessResponse>(\"/me/access\")", accessPrefetchPath);
+sourceHas(accessPrefetch, "catch", accessPrefetchPath);
 
 const prefetchSources = new Map();
 for (const route of authenticatedRoutes) {
