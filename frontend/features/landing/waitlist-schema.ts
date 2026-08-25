@@ -21,7 +21,6 @@ export type WaitlistFieldErrors = Partial<Record<keyof WaitlistFormValues, strin
 
 export type WaitlistEntry = {
   reference: string;
-  position: number;
   alreadyJoined: boolean;
 };
 
