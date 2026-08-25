@@ -144,6 +144,7 @@ interface UpdateCalendarEventPayload
 export interface CalendarEventsResponse {
   events: CalendarListItem[];
   failures: Array<{ key: string; label: string }>;
+  truncated: boolean;
 }
 
 export function useCalendarEvents(start: Date, end: Date) {

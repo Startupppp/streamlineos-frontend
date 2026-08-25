@@ -130,6 +130,7 @@ export function CalendarView() {
   } = useCalendarEvents(rangeStart, rangeEnd);
   const events = eventsResponse?.events ?? [];
   const sourceFailures = eventsResponse?.failures ?? [];
+  const eventsTruncated = eventsResponse?.truncated ?? false;
   const { data: connections = [] } = useCalendarConnections();
   const finalize = useFinalizeIntegrationConnection();
   const finalizeRef = useRef(false);
@@ -374,6 +375,14 @@ export function CalendarView() {
             >
               Retry
             </button>
+          </div>
+        )}
+
+        {eventsTruncated && (
+          <div className="flex shrink-0 items-center gap-2 rounded-md border border-status-warning-rule bg-status-warning-surface px-3 py-1.5">
+            <span className="min-w-0 flex-1 text-dense text-status-warning-ink">
+              Too many events in this period — only the first 2,000 are shown. Switch to a shorter range to see all events.
+            </span>
           </div>
         )}
 
