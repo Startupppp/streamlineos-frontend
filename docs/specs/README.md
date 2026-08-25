@@ -11,10 +11,10 @@ Live c6/c9 report summaries are recorded in [`runtime-evidence-2026-08-26.md`](r
 | [c3](c3-one-representation-of-capability.md) | One representation of capability | Implemented: scope-map seam, hydration contract, and non-excluded capability callers migrated; full production proof remains |
 | [c4](c4-module-availability-interface.md) | One interface for module availability | Implemented: canonical entitlement resolver, parity tests, and production wiring regression coverage; live database proof remains |
 | [c5](c5-payment-provider-adapter.md) | Route the money through the adapter | Implemented: configured-provider resolver, billing isolation, provider-neutral webhook normalization, and neutral headers; concrete adapters still own credentials and legacy Razorpay path remains |
-| [c6](c6-split-kb-help-centre-and-wiki.md) | Split the two products inside `kb/` | Implemented: split, namespace, permanent conversion-tool policy, and failure-safe report; runtime tenant report remains |
+| [c6](c6-split-kb-help-centre-and-wiki.md) | Split the two products inside `kb/` | Implemented: split, namespace, permanent conversion-tool policy, failure-safe report, and live 38-tenant report; one published article remains migratable |
 | [c7](c7-chat-message-fanout.md) | Chat send path as a fan-out module | Implemented: transactional outbox fan-out, injectable provider seam, durable retry, and deterministic effect idempotency; configurable broker-backed implementation remains |
 | [c8](c8-frontend-server-data-seam.md) | Frontend server-data seam | Implemented: duplicate adapter removed, failed-prefetch proof, route verifier, and production-build manifest coverage added; live authenticated browser proof remains |
-| [c9](c9-transactional-outbox-decision.md) | Decide what the outbox is for | Decision, leased worker, retry/fencing, complete report, and stable effect keys implemented; deployed runtime counts and provider-side dedupe evidence remain |
+| [c9](c9-transactional-outbox-decision.md) | Decide what the outbox is for | Decision, leased worker, retry/fencing, complete report, stable effect keys, and live 38-tenant counts implemented; provider-side dedupe evidence remains |
 
 ## The successor program
 
