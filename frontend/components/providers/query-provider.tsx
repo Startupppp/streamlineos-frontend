@@ -7,6 +7,12 @@ import { useSession } from "next-auth/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { isApiError } from "@/lib/api-client";
 import { registerQueryCacheClearer } from "@/lib/query-cache-control";
+import {
+  LOADING_SCOPE,
+  UNAUTHENTICATED_SCOPE,
+  authenticatedScope,
+  scopedQueryKeyHashFn,
+} from "@/lib/query-scope";
 
 const MAX_QUERY_RETRIES = 1;
 
@@ -34,7 +40,7 @@ export function createAppQueryClient(scope = "unscoped"): QueryClient {
         gcTime: 1000 * 60 * 10,
         refetchOnWindowFocus: false,
         retry: shouldRetryQuery,
-        queryKeyHashFn: (queryKey) => JSON.stringify([scope, queryKey]),
+        queryKeyHashFn: scopedQueryKeyHashFn(scope),
       },
       mutations: {
         retry: 0,
@@ -72,10 +78,10 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
   const orgId = session?.orgId ?? "";
   const scope =
     status === "authenticated"
-      ? `authenticated:${orgId}:${userId}`
+      ? authenticatedScope(orgId, userId)
       : status === "loading"
-        ? "loading"
-        : "unauthenticated";
+        ? LOADING_SCOPE
+        : UNAUTHENTICATED_SCOPE;
 
   return (
     <ScopedQueryProvider key={scope} scope={scope}>

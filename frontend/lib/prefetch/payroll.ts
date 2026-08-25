@@ -1,6 +1,7 @@
 import "server-only";
 
-import { QueryClient, dehydrate } from "@tanstack/react-query";
+import { dehydrate } from "@tanstack/react-query";
+import { createServerQueryClient } from "./server-query-client";
 import { queryKeys } from "@/lib/query-keys";
 import { serverGet } from "@/lib/server-fetch";
 import type { PayrollRunListItem } from "@/types/payroll/runs";
@@ -13,7 +14,7 @@ interface PaginatedRuns {
 }
 
 export async function prefetchPayrollRuns() {
-  const queryClient = new QueryClient();
+  const queryClient = await createServerQueryClient();
   await queryClient.prefetchQuery({
     queryKey: queryKeys.payroll.runs({ page: 1, limit: 20 }),
     queryFn: () => serverGet<PaginatedRuns>("/payroll/runs?page=1&limit=20"),

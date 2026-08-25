@@ -1,6 +1,7 @@
 import "server-only";
 
-import { QueryClient, dehydrate } from "@tanstack/react-query";
+import { dehydrate } from "@tanstack/react-query";
+import { createServerQueryClient } from "./server-query-client";
 import { queryKeys } from "@/lib/query-keys";
 import { serverGet } from "@/lib/server-fetch";
 import type { Role } from "@/types/organization";
@@ -21,7 +22,7 @@ interface PaginatedRolesResponse {
 }
 
 export async function prefetchRoles() {
-  const queryClient = new QueryClient();
+  const queryClient = await createServerQueryClient();
   await queryClient.prefetchQuery({
     queryKey: queryKeys.roles.list({ page: 1, limit: 20 }),
     queryFn: () => serverGet<PaginatedRolesResponse>("/roles?page=1&limit=20"),

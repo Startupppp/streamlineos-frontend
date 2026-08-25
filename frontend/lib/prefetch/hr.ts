@@ -1,6 +1,7 @@
 import "server-only";
 
-import { QueryClient, dehydrate } from "@tanstack/react-query";
+import { dehydrate } from "@tanstack/react-query";
+import { createServerQueryClient } from "./server-query-client";
 import { queryKeys } from "@/lib/query-keys";
 import { serverGet } from "@/lib/server-fetch";
 import type { Document, Asset } from "@/types/hr";
@@ -25,7 +26,7 @@ interface HrAssetListResponse {
 }
 
 export async function prefetchHrDocuments() {
-  const queryClient = new QueryClient();
+  const queryClient = await createServerQueryClient();
   await queryClient.prefetchQuery({
     queryKey: queryKeys.hr.documents({ limit: 20 }),
     queryFn: () => serverGet<HrDocumentListResponse>("/hr/documents?limit=20"),
@@ -35,7 +36,7 @@ export async function prefetchHrDocuments() {
 }
 
 export async function prefetchHrAssets() {
-  const queryClient = new QueryClient();
+  const queryClient = await createServerQueryClient();
   await queryClient.prefetchQuery({
     queryKey: queryKeys.hr.assets({ page: 1, limit: 20 }),
     queryFn: () => serverGet<HrAssetListResponse>("/hr/assets?page=1&limit=20"),

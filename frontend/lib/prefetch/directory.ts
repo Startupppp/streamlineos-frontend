@@ -1,6 +1,7 @@
 import "server-only";
 
-import { QueryClient, dehydrate } from "@tanstack/react-query";
+import { dehydrate } from "@tanstack/react-query";
+import { createServerQueryClient } from "./server-query-client";
 import {
   WORKERS_PAGE_SIZE,
   workersListKey,
@@ -10,7 +11,7 @@ import type { WorkersPage } from "@/types/directory/workers";
 
 
 export async function prefetchWorkers() {
-  const queryClient = new QueryClient();
+  const queryClient = await createServerQueryClient();
   await queryClient.prefetchQuery({
     queryKey: workersListKey(),
     queryFn: () =>
