@@ -10,8 +10,6 @@ Tickets 01→02→03 are an expand→migrate→contract sequence on the server; 
 |---|---|---|---|
 | 02 | [Capability checks inside services stop reading the request object](issues/02-the-five-read-sites-move-onto-the-seam.md) | 01 | **done** — five were eight |
 | 04 | [Gated controls are there in the first paint](issues/04-access-is-prefetched-on-the-server.md) | — | **done** |
-| 05 | [The flat permission array stops existing on the client too](issues/05-delete-use-permissions.md) | — | **done** |
-| 06 | [A list narrowed to my own records says so](issues/06-crm-leads-reads-use-scope.md) | — | **done** — premise corrected |
 
 **On completing a ticket:** tick its todo list, set its `Status` to `done` in the ticket file, and update its row above.
 

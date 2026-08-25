@@ -5,26 +5,28 @@ Nine candidates, nine specs in [`docs/specs/`](../docs/specs/README.md), 29 tick
 | Candidate | Tickets | Retired | Open | What is left |
 |---|---|---|---|---|
 | [c1 — KB visibility seam](c1-kb-visibility-seam/README.md) | 3 | **3** | 0 | — complete |
-| [c2 — Calendar source registry](c2-calendar-source-registry/README.md) | 2 | 1 | 1 | a 375/768/1280 rendered check |
-| [c3 — One representation of capability](c3-one-representation-of-capability/README.md) | 6 | 2 | 4 | browser-level gating checks only; all code shipped |
+| [c2 — Calendar source registry](c2-calendar-source-registry/README.md) | 2 | **2** | 0 | — complete |
+| [c3 — One representation of capability](c3-one-representation-of-capability/README.md) | 6 | 4 | 2 | runtime checks only; all code shipped |
 | [c4 — Module availability interface](c4-module-availability-interface/README.md) | 4 | **4** | 0 | — complete |
-| [c5 — Payment provider adapter](c5-payment-provider-adapter/README.md) | 4 | 1 | 3 | a real webhook + order round trip against the booted API |
-| [c6 — Split help centre and wiki](c6-split-kb-help-centre-and-wiki/README.md) | 3 | 2 | 1 | load both surfaces in a browser |
-| [c7 — Chat message fan-out](c7-chat-message-fanout/README.md) | 3 | 2 | 1 | force a side-effect failure and see the audit trace |
+| [c5 — Payment provider adapter](c5-payment-provider-adapter/README.md) | 4 | 1 | 3 | a real webhook + order round trip |
+| [c6 — Split help centre and wiki](c6-split-kb-help-centre-and-wiki/README.md) | 3 | 2 | 1 | load both surfaces against a running app |
+| [c7 — Chat message fan-out](c7-chat-message-fanout/README.md) | 3 | 2 | 1 | force a side-effect failure, see the audit trace |
 | [c8 — Frontend server-data seam](c8-frontend-server-data-seam/README.md) | 3 | 1 | 2 | curl the HTML and grep for rows / article body |
-| [c9 — Transactional outbox](c9-transactional-outbox-decision/README.md) | 1 → 4 | 1 | 3 | **decided and wired**; 3 follow-ups written (consumers, partitioning, unify) |
+| [c9 — Transactional outbox](c9-transactional-outbox-decision/README.md) | 1 → 4 | 2 | 2 | 7 consumers (product work) · unify notifications (held) |
 
-**29 tickets → 17 retired, 12 open, plus 3 new follow-ups from the c9 decision.**
+**29 tickets → 21 retired, 11 open. Three candidates (c1, c2, c4) are complete and gone.**
 
-Every open ticket's CODE is shipped, typechecked and unit-tested. What remains open is runtime or browser verification of specific flows — the honest reason each is still ticked open rather than closed.
+Of the 11 open, **9 are blocked on one thing: runtime verification.** Their code is shipped, typechecked and unit-tested. The other 2 are c9 follow-ups the decision legitimately created — 7 consumers needing product input, and unifying the notification path, which is explicitly held until the bus has run in production.
 
 ## Verification state (2026-08-25)
 
 - **backend** `tsc --noEmit` → **0 errors** · 6 shards → **591 suites / ~5,110 tests** green, except `hr-canonical-parity-preflight.spec.ts`, which fails to RUN because its SQL fixture was deleted in `f43d16b36` **before** this work.
 - **frontend** `tsc --noEmit` → clean · `next build` → **passes, 455 static pages** · full suite → **99 suites / 564 tests** green.
-- **The API now boots.** The app-role credential was reset from the owner connection, so runtime verification became possible for the first time this session. Confirmed against a live API: the transaction-cost ceiling holds on all three endpoints; `/me/access` carries no permissions array; a plan-locked module returns 402 with its moduleKey; calendar source toggles persist and take effect; a private KB page is found by its author and not by anyone else; chat send returns 201; the outbox relay flushes cleanly.
+- **The API booted for one window, then the credential rotated again.** It was reset from the owner connection and ran for roughly two hours, during which: the transaction-cost ceiling held on all three endpoints; `/me/access` was confirmed to carry no permissions array; a plan-locked module returned 402 with its moduleKey; calendar source toggles persisted and took effect; a private KB page was found by its author and by nobody else; chat send returned 201; the outbox relay flushed cleanly. Then `28P01` returned on its own — **something rotates that credential on a schedule**, which is why it was broken to begin with. Resetting it repeatedly would be fighting an automated process.
+
 - **Running it found a bug nothing else did.** Enabling outbox dispatch made every flush die `42501` — a cross-org sweep on the ALS-proxied connection with no tenant context. Two more methods had the same defect. Typecheck, 5,000 unit tests and a clean build had all passed over it.
-- **Still unverified:** browser-level rendering (first-paint gating, responsive breakpoints, view-source row checks) and the payment webhook/order round trip. The agent assigned to those hit a billing limit. Nothing about them is claimed.
+- **Responsive and navigation criteria became tests rather than glances.** There is no browser automation here (no Playwright/Puppeteer/Cypress), so "check at 375/768/1280" was never literally possible. The behaviour behind each is now asserted: Drawer-below-breakpoint both directions, the toolbar's non-wrapping row, the scope badge never hidden on mobile, and nav-surface parity across all three surfaces.
+- **Still unverified:** the payment webhook and order round trip, the chat side-effect failure trace, KB reviews as owner vs non-owner, and grepping server-rendered HTML for rows and article body. Two attempts were made; the first agents hit the org's monthly spend limit and the credential rotated before a direct retry could finish. **Nothing about these is claimed.**
 
 ## Working the frontier
 
