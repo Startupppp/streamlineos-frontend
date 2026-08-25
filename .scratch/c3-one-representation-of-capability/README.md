@@ -8,7 +8,6 @@ Tickets 01→02→03 are an expand→migrate→contract sequence on the server; 
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 02 | [Capability checks inside services stop reading the request object](issues/02-the-five-read-sites-move-onto-the-seam.md) | 01 | **done** — five were eight |
 | 04 | [Gated controls are there in the first paint](issues/04-access-is-prefetched-on-the-server.md) | — | **done** |
 
 **On completing a ticket:** tick its todo list, set its `Status` to `done` in the ticket file, and update its row above.

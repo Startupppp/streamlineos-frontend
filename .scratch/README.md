@@ -6,17 +6,15 @@ Nine candidates, nine specs in [`docs/specs/`](../docs/specs/README.md), 29 tick
 |---|---|---|---|---|
 | [c1 — KB visibility seam](c1-kb-visibility-seam/README.md) | 3 | **3** | 0 | — complete |
 | [c2 — Calendar source registry](c2-calendar-source-registry/README.md) | 2 | **2** | 0 | — complete |
-| [c3 — One representation of capability](c3-one-representation-of-capability/README.md) | 6 | 4 | 2 | runtime checks only; all code shipped |
 | [c4 — Module availability interface](c4-module-availability-interface/README.md) | 4 | **4** | 0 | — complete |
-| [c5 — Payment provider adapter](c5-payment-provider-adapter/README.md) | 4 | 1 | 3 | a real webhook + order round trip |
+| [c7 — Chat message fan-out](c7-chat-message-fanout/README.md) | 3 | **3** | 0 | — complete |
+| [c3 — One representation of capability](c3-one-representation-of-capability/README.md) | 6 | 5 | 1 | first-paint gating in server HTML |
+| [c5 — Payment provider adapter](c5-payment-provider-adapter/README.md) | 4 | 2 | 2 | order round trip — blocker fixed, re-run pending |
 | [c6 — Split help centre and wiki](c6-split-kb-help-centre-and-wiki/README.md) | 3 | 2 | 1 | load both surfaces against a running app |
-| [c7 — Chat message fan-out](c7-chat-message-fanout/README.md) | 3 | 2 | 1 | force a side-effect failure, see the audit trace |
 | [c8 — Frontend server-data seam](c8-frontend-server-data-seam/README.md) | 3 | 1 | 2 | curl the HTML and grep for rows / article body |
-| [c9 — Transactional outbox](c9-transactional-outbox-decision/README.md) | 1 → 4 | 2 | 2 | 7 consumers (product work) · unify notifications (held) |
+| [c9 — Transactional outbox](c9-transactional-outbox-decision/README.md) | 1 → 4 | 2 | 2 | 7 consumers (product decisions) · unify notifications (held) |
 
-**29 tickets → 21 retired, 11 open. Three candidates (c1, c2, c4) are complete and gone.**
-
-Of the 11 open, **9 are blocked on one thing: runtime verification.** Their code is shipped, typechecked and unit-tested. The other 2 are c9 follow-ups the decision legitimately created — 7 consumers needing product input, and unifying the notification path, which is explicitly held until the bus has run in production.
+**29 tickets → 24 retired, 8 open (5 original + 3 c9 follow-ups). Four candidates complete: c1, c2, c4, c7.**
 
 ## Verification state (2026-08-25)
 

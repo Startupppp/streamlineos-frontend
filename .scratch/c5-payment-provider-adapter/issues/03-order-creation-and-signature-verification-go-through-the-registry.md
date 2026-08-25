@@ -25,7 +25,7 @@
 - [x] Migrate the readiness and public-key reads
 - [x] Assert the wrong-signature case leaves no record, not merely that it returned false
 - [x] Confirm transaction mocks invoke their callbacks
-- [ ] Boot the API and complete a real order-and-verify round trip
+- [ ] Boot the API and complete the round trip — **blocker fixed, re-run pending: the DB credential rotated again**
 - [x] Tick every acceptance criterion above
 - [x] Set **Status** to `done` and update this ticket's row in `../README.md`
 
@@ -38,3 +38,11 @@ All remaining operations moved: order creation (both sites), payment-signature v
 **Zero `this.razorpay.*` call sites remain in `billing.service.ts`** — the injection was left in place for ticket 04 to remove after independent verification.
 
 A wrong signature leaves no partial record, asserted as `db.transaction` never being entered. Every transaction mock that is expected to run its body invokes its callback — a bare `jest.fn()` there would silently void every assertion inside the transaction, and that trap was checked deliberately.
+
+### Status (2026-08-25) — the blocker was a real bug, now fixed; re-run pending
+
+The attempted round trip returned **403 for a confirmed org OWNER** holding `billing:subscription:manage`. That was not a flaw in this ticket's work — it was a regression introduced by c4-02, which made `billing` non-core so availability required an `org_modules` row, and **zero rows exist across all 24 organisations**.
+
+**That regression is fixed** (see the `fix(access): billing was unreachable for every org` commit): availability turns on plan gating alone, and the platform-admin ladder governs delegability instead. 34 suites / 381 tests pass.
+
+The order round trip has **not been re-run** — the `streamline_app` credential rotated again before a retry was possible. The signature scheme itself was read at source and is SHA-256 over `"{orderId}|{paymentId}"` with `RAZORPAY_KEY_SECRET`. The sibling webhook path IS verified end to end in ticket 02, including a forged-signature rejection with no state change.

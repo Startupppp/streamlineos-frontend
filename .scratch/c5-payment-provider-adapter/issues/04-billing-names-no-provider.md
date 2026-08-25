@@ -25,7 +25,7 @@ This is the *contract* step, and it is where the deletion test finally bites: af
 - [x] Write the two-fake-adapter substitution test
 - [x] Temporarily delete the interface to confirm the build now fails, then restore
 - [x] Run the module-graph check and the dead-code check against the recorded baseline
-- [ ] Boot the API and complete one full payment round trip — **not exercised: the API boots now, but this specific flow was not run (verification agent hit a billing limit)**
+- [ ] Boot the API and complete the round trip — **blocker fixed, re-run pending: the DB credential rotated again**
 - [x] Tick every acceptance criterion above
 - [x] Set **Status** to `done` and update this ticket's row in `../README.md`
 
@@ -40,3 +40,9 @@ This is the *contract* step, and it is where the deletion test finally bites: af
 **The provider-substitution test exists and was impossible to write before:** the same billing flow driven through two fake adapters with different provider keys produces the same domain outcome with different provider identifiers.
 
 **One leak remains and is documented rather than hidden.** `billing.controller.ts` still injects and calls the concrete provider directly (signature verification and readiness). It is outside this ticket's ownership and the import-boundary test records it explicitly in a known-remaining list instead of widening the rule to hide it. Fixing it is a one-file follow-up.
+
+### Status (2026-08-25) — same blocker, same fix, re-run pending
+
+The full round trip is blocked on the same billing-availability regression described in ticket 03, which is now fixed but not re-verified — the database credential rotated before a retry.
+
+Two legs of the round trip ARE verified: **webhook ingestion** end to end with a valid and a forged signature (ticket 02), and the **provider-substitution test** proving the same billing flow through two different fake adapters yields the same domain outcome with different provider identifiers. The remaining leg — a customer completing payment in Razorpay's hosted checkout — requires calling a live payment provider and is deliberately out of scope.

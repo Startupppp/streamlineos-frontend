@@ -6,7 +6,6 @@ Spec: [`docs/specs/c5-payment-provider-adapter.md`](../../docs/specs/c5-payment-
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 02 | [A forged payment webhook is rejected, and we can prove it](issues/02-webhook-verification-goes-through-the-registry.md) | 01 | **done** |
 | 03 | [Orders and payment signatures go through the seam](issues/03-order-creation-and-signature-verification-go-through-the-registry.md) | 02 | **done** |
 | 04 | [Adding a second payment provider costs one adapter](issues/04-billing-names-no-provider.md) | 03 | **done** — one leak named |
 
