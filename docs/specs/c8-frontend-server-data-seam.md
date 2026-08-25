@@ -1,6 +1,6 @@
 # c8 · Give the frontend a server-data seam
 
-**Status: seam built, rollout at one route.** Verified at source 2026-08-25. The adapter exists (`lib/server-fetch.ts` — `serverGet`, React-`cache`d, bearer token from the session, 8s timeout, parsed through the shared envelope). A prefetch factory exists (`lib/prefetch/directory.ts`). `HydrationBoundary` is used on exactly one route, `/directory/workers`, with a test proving the page renders from the hydrated cache *and* falls back to fetching when it does not. The counts the review measured are unchanged: **590 `page.tsx`, 343 of them `"use client"`.** One is prefetched.
+**Status: seam and selected rollout verified.** Re-audited at source 2026-08-26. The authenticated adapter, access hydration, five selected authenticated route patterns, public Help Centre separation, fallback tests, production build, and static route verifier are present. Live authenticated browser proof remains an operational gate.
 
 **Current audit (2026-08-26):** the authenticated server adapter is implemented, access is hydrated at the authenticated layout, and the selected high-value route set covers workers, payroll runs, roles, HR assets, and HR documents. The public Help Centre intentionally uses `publicGet` as a separate unauthenticated adapter. The older rollout narrative below is retained as review history; focused hydration/fallback tests pass, while server-render/runtime proof remains.
 

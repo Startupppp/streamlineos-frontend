@@ -1,6 +1,6 @@
 # c7 · Turn the chat send path into a fan-out module
 
-**Status: implemented with queue-provider follow-up.** Re-audited at source 2026-08-26. The fan-out now has an injectable provider seam, deterministic idempotency context for realtime/push/notifications, transactional outbox retry, and crash/replay tests. A configurable broker-backed implementation and durable per-channel failure ledger remain open.
+**Status: implemented on the durable transactional outbox.** Re-audited at source 2026-08-26. The fan-out has an injectable outbox-backed provider seam, deterministic idempotency context for realtime/push/notifications, transactional retry, replay protection, and no-double-dispatch tests. An external broker is intentionally not selected; the remaining operational proof is provider-side deduplication and durable per-channel failure observability.
 
 ## Problem Statement
 

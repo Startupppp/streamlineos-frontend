@@ -1,12 +1,12 @@
 # c2 · Give the calendar a source seam
 
-**Status: shipped.** Verified at source 2026-08-25. `CalendarEventSource` is a real interface (`calendar/calendar-event-source.ts`); `CalendarSourceRegistry` dispatches over registered adapters; each owning module registers its own (`hr/hr-calendar.module.ts` → `HrCalendarSource`); `calendar.module.ts` no longer imports `AttendancePolicyModule` or any other module's tables; `CalendarEventSourceLoader` is reduced to native calendar events plus linked-ticket enrichment. This PRD records what shipped, the two things the implementation got right that the review did not ask for, and the one product promise still unmet.
+**Status: shipped with persistence and production-graph coverage.** Re-audited at source 2026-08-26. The registry, granular source adapters, per-user/org preference storage, availability filtering, failure isolation, real module registration coverage, and preference-isolation tests are present. Live HTTP persistence remains an environment-level E2E gate.
 
 ## Problem Statement
 
 The product model says module events — holidays, leaves, birthdays, review cycles, training, travel, interviews — are toggleable **sources** on one unified calendar. The code had no source concept: one loader imported 16 tables from 5 modules and branched per source inside a single fan-out, so "toggleable" was a wish and a sixth source meant widening the loader again. Calendar depended on HR, Hiring, Build, Tasks and Roster; the dependency arrow pointed the wrong way.
 
-**What is still unmet:** the registry now returns a `toggleList` — every registered source's key, label and owning module — but nothing yet *persists a person's choice*. A user cannot turn a source off. The product rule ("module events are toggleable SOURCES from backend aggregates") is half delivered: the sources are real and the list is served; the toggle is not stored, so every enabled source's events arrive on every request.
+**What remains to prove:** the registry and persistence implementation are present; the live HTTP round-trip through the deployed application still needs to be exercised against the database-backed E2E environment.
 
 ## Solution
 

@@ -1,6 +1,6 @@
 # c1 · Make the knowledge-base visibility predicate a seam both paths cross
 
-**Status: shipped, one residue.** Verified at source 2026-08-25. `visibleTo` is now a shared predicate; `pageVisibleTo` and `chunkVisibleTo` both build on it; retrieval crosses it at `kb-search.service.ts:140` (keyword) and `:155` (vector); zero `visibility IN ('org','public')` predicates survive anywhere in `modules/kb/`. The disclosure the review verified — a project-scoped page returned in full by the assistant to someone the direct read 404s — **is fixed**. One hand-written predicate remains, at index time, and it is no longer a leak. It is a capability gap.
+**Status: shipped with seeded parity coverage.** Re-audited at source 2026-08-26. `visibleTo`, `pageVisibleTo`, and `chunkVisibleTo` govern direct, keyword, and vector retrieval; lifecycle-only indexing, resumable backfill, denial-of-wallet guards, and a seeded production-path parity test are present. The live seeded E2E harness still requires its full application test environment.
 
 ## Problem Statement
 
