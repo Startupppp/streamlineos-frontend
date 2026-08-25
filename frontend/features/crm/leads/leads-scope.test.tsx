@@ -60,3 +60,29 @@ describe("LeadsToolbar — a narrowed list says so", () => {
     expect(screen.queryByText("Your team's leads")).not.toBeInTheDocument();
   });
 });
+
+describe("LeadsToolbar — single-row non-wrapping layout", () => {
+  it("wraps all controls in a flex-nowrap row so the toolbar never reflows onto a second line", () => {
+    renderToolbar("all");
+    const row = document.querySelector(".flex-nowrap");
+    expect(row).not.toBeNull();
+  });
+});
+
+describe("LeadsToolbar — scope badge is viewport-invariant", () => {
+  it("the own-scope badge carries no responsive hidden class, keeping it visible at every width", () => {
+    renderToolbar("own");
+    const badge = screen.getByText("Your leads only").closest("[data-slot='badge']");
+    expect(badge).not.toBeNull();
+    const tokens = (badge?.className ?? "").split(/\s+/);
+    expect(tokens.some((t) => t === "hidden" || t.endsWith(":hidden"))).toBe(false);
+  });
+
+  it("the team-scope badge carries no responsive hidden class", () => {
+    renderToolbar("team");
+    const badge = screen.getByText("Your team's leads").closest("[data-slot='badge']");
+    expect(badge).not.toBeNull();
+    const tokens = (badge?.className ?? "").split(/\s+/);
+    expect(tokens.some((t) => t === "hidden" || t.endsWith(":hidden"))).toBe(false);
+  });
+});

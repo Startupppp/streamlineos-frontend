@@ -199,3 +199,16 @@ describe("CalendarSourcePanel — mobile drawer", () => {
     });
   });
 });
+
+describe("CalendarSourcePanel — desktop popover", () => {
+  it("renders inside a popover panel, not a drawer, above the mobile breakpoint", async () => {
+    mockIsMobile = false;
+    setSourcesData([]);
+    render(<CalendarSourcePanel />);
+    openPanel();
+    await waitFor(() => {
+      expect(document.querySelector("[data-slot='drawer-content']")).toBeNull();
+      expect(screen.getByText(/no sources available/i)).not.toBeNull();
+    });
+  });
+});
