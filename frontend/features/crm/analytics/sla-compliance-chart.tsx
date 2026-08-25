@@ -22,7 +22,7 @@ export function SlaComplianceChart({ slaReport }: SlaComplianceChartProps) {
       filename="sla-compliance"
     >
       {!slaReport ? (
-        <EmptyChart message="No SLA data available" />
+        <EmptyChart message="No SLA policy has run against these leads yet" />
       ) : (
         <div className="flex flex-col items-center justify-center h-[280px]">
           <div className="relative h-40 w-40">

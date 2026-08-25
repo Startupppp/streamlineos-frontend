@@ -13,7 +13,7 @@ export function ConversionChart({ data }: ConversionChartProps) {
   return (
     <AnalyticsChartCard title="Won vs Lost" data={data} filename="won-vs-lost">
       {data.length === 0 ? (
-        <EmptyChart />
+        <EmptyChart message="No deals closed in this period" />
       ) : (
         <ResponsiveContainer width="100%" height={280}>
           <PieChart>

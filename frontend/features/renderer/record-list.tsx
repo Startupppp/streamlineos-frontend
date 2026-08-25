@@ -6,6 +6,7 @@ import { isNumericField, type RecordLayout } from "@/lib/renderer/layout";
 import { cn } from "@/lib/utils";
 import { formatFieldText, renderFieldValue, resolveField, type RecordValue } from "./format-value";
 import { densityAttribute, type DensityMode } from "@/lib/design-tokens";
+import { DEFAULT_MONEY_DISPLAY, type MoneyDisplay } from "@/lib/format-utils";
 
 type BorrowedProps = Pick<
   DataTableProps<RecordValue>,
@@ -28,6 +29,16 @@ export interface RecordListProps extends BorrowedProps {
    * should not grow a floating button.
    */
   density?: DensityMode;
+  /**
+   * The tenant's currency, for `money` fields.
+   *
+   * Passed in rather than read from `useOrgDisplay` inside the engine, and
+   * deliberately: the renderer takes its input as data — a layout and rows — and
+   * a hook here would make every consumer, including a test of the engine
+   * itself, require a QueryClientProvider to render a table. Surfaces read the
+   * hook once and hand the value down, the same way they hand down the layout.
+   */
+  money?: MoneyDisplay;
 }
 
 /**
@@ -54,6 +65,7 @@ export function RecordList({
   minWidth,
   className,
   density = "comfortable",
+  money = DEFAULT_MONEY_DISPLAY,
 }: RecordListProps) {
   const columns = useMemo<DataTableColumn<RecordValue>[]>(
     () =>
@@ -76,11 +88,11 @@ export function RecordList({
           className: cn(numeric && "text-right font-mono tabular-nums", column.width),
           headerClassName: numeric ? "text-right" : undefined,
           cell: (row) => {
-            const value = renderFieldValue(field, row[column.field]);
+            const value = renderFieldValue(field, row[column.field], money);
             if (!column.subtitle) return value;
 
             const subtitle = resolveField(layout, column.subtitle);
-            const subtitleText = formatFieldText(subtitle, row[column.subtitle]);
+            const subtitleText = formatFieldText(subtitle, row[column.subtitle], money);
 
             return (
               <div className="flex min-w-0 flex-col gap-0.5">
@@ -95,7 +107,7 @@ export function RecordList({
           },
         };
       }),
-    [layout],
+    [layout, money],
   );
 
   const allColumns = useMemo<DataTableColumn<RecordValue>[]>(
@@ -114,18 +126,18 @@ export function RecordList({
     return (
       <div className="flex min-h-11 min-w-0 flex-col gap-gap-inline p-card-pad">
         <span className="truncate text-sm font-medium">
-          {renderFieldValue(primaryField, row[primaryField.name])}
+          {renderFieldValue(primaryField, row[primaryField.name], money)}
         </span>
         <span className="flex flex-wrap items-center gap-gap-field">
           {layout.list.columns
             .filter((column) => column.field !== primaryField.name)
             .map((column) => {
               const field = resolveField(layout, column.field);
-              const text = formatFieldText(field, row[column.field]);
+              const text = formatFieldText(field, row[column.field], money);
               if (!text) return null;
               return (
                 <span key={column.field} className="text-dense text-muted-foreground">
-                  {renderFieldValue(field, row[column.field])}
+                  {renderFieldValue(field, row[column.field], money)}
                 </span>
               );
             })}

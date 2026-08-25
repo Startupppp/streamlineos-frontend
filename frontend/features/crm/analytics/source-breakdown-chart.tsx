@@ -15,7 +15,7 @@ export function SourceBreakdownChart({ data }: SourceBreakdownChartProps) {
   return (
     <AnalyticsChartCard title="Lead Source Breakdown" data={data} filename="lead-sources">
       {data.length === 0 ? (
-        <EmptyChart />
+        <EmptyChart message="No leads with a recorded source in this period" />
       ) : (
         <ResponsiveContainer width="100%" height={280}>
           <PieChart>

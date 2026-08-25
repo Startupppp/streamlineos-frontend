@@ -123,7 +123,7 @@ export function TeamLeaderboardCard({
         getRowKey={(row) => row.userId}
         isLoading={isLoading}
         emptyState={
-          <ChartEmptyState message="No team data available" compact className="py-10 px-4" />
+          <ChartEmptyState message="No rep has worked a lead yet" compact className="py-10 px-4" />
         }
       />
     </Card>

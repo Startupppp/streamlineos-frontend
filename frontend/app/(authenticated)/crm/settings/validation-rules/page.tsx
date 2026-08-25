@@ -9,6 +9,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -351,12 +352,12 @@ function EntityRulesTab({ entityType, onNewRule }: EntityRulesTabProps) {
         {isLoading ? (
           <DataTableSkeleton rows={12} columns={6} />
         ) : isError ? (
-          <EmptyState
+          <ErrorState
             compact
-            title="Failed to load rules"
-            description="Something went wrong loading validation rules."
-            action={{ label: "Retry", onClick: handleRetry }}
-            className="min-h-[20dvh] border-0 bg-transparent"
+            title="Couldn't load validation rules"
+            description="The rule list didn't load. Check your connection and try again."
+            onRetry={handleRetry}
+            className="min-h-[20dvh]"
           />
         ) : (
           <DataTable

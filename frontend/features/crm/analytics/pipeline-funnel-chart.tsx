@@ -13,7 +13,7 @@ export function PipelineFunnelChart({ data }: PipelineFunnelChartProps) {
   return (
     <AnalyticsChartCard title="Pipeline Funnel" data={data} filename="pipeline-funnel">
       {data.length === 0 ? (
-        <EmptyChart />
+        <EmptyChart message="No leads in the pipeline for this period" />
       ) : (
         <ResponsiveContainer width="100%" height={280}>
           <BarChart data={data} layout="vertical">

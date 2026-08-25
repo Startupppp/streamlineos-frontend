@@ -104,9 +104,25 @@ describe("DecisionEntryRow", () => {
   });
 
   it("carries the exact timestamp even though it shows a relative one", () => {
-    // An audit trail has to be able to answer "when exactly".
-    renderRow(decision());
-    const time = screen.getByText(/ago|just now/i).closest("time");
-    expect(time).toHaveAttribute("dateTime", "2026-08-24T10:00:00.000Z");
+    /**
+     * The clock is frozen, and it has to be. `formatRelativeTime` returns
+     * "just now", "5 minutes ago", "yesterday" or an absolute date depending on
+     * how far in the past the fixture is — so against a real clock this test
+     * asserted something that stopped being true the next morning, which is what
+     * it did. What is being tested is that the exact instant travels in
+     * `dateTime` whatever words are shown, so the words are found by the element
+     * rather than by matching text.
+     */
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date("2026-08-24T10:05:00.000Z"));
+
+    try {
+      renderRow(decision());
+      // An audit trail has to be able to answer "when exactly".
+      const time = screen.getByText("5 minutes ago").closest("time");
+      expect(time).toHaveAttribute("dateTime", "2026-08-24T10:00:00.000Z");
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });

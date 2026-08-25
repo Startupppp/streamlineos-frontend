@@ -13,7 +13,7 @@ export function DealValueChart({ data }: DealValueChartProps) {
   return (
     <AnalyticsChartCard title="Deal Value by Stage" data={data} filename="deal-value-by-stage">
       {data.length === 0 ? (
-        <EmptyChart />
+        <EmptyChart message="No open deals to value in this period" />
       ) : (
         <ResponsiveContainer width="100%" height={280}>
           <BarChart data={data}>

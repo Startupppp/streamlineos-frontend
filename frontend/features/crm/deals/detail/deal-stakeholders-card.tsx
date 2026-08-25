@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -94,7 +95,8 @@ interface DealStakeholdersCardProps {
 }
 
 export function DealStakeholdersCard({ dealId }: DealStakeholdersCardProps) {
-  const { data: stakeholders = [] } = useStakeholders(dealId);
+  const { data: stakeholders = [], isLoading: stakeholdersLoading } =
+    useStakeholders(dealId);
   const createStakeholder = useCreateStakeholder(dealId);
   const deleteStakeholder = useDeleteStakeholder(dealId);
   const [adding, setAdding] = useState(false);
@@ -254,9 +256,20 @@ export function DealStakeholdersCard({ dealId }: DealStakeholdersCardProps) {
             </div>
           </div>
         )}
-        {stakeholders.length === 0 && !adding ? (
+        {stakeholdersLoading ? (
+          <div className="space-y-3" aria-busy="true">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="space-y-1.5">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-4 w-20 rounded-full" />
+              </div>
+            ))}
+          </div>
+        ) : stakeholders.length === 0 && !adding ? (
           <p className="text-xs text-muted-foreground">
-            No stakeholders added.
+            No stakeholders yet. Add the people who decide, approve or block
+            this deal.
           </p>
         ) : (
           stakeholders.map((s) => (

@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState } from "@/components/shared";
 import { DataTableSkeleton } from "@/components/ui/data-table";
-import { CsvUploadDialog } from "@/features/crm/leads/csv-upload-dialog";
+import { ImportLinkButton } from "@/features/crm/import/import-link-button";
 import { LeadTableView } from "@/features/crm/leads/lead-table-view";
 import { LeadExportDialog } from "@/features/crm/leads/lead-export-dialog";
 import {
@@ -23,6 +23,7 @@ import {
   useBulkDeleteLeads,
 } from "@/hooks/api/leads";
 import { useCreateDeal } from "@/hooks/api/crm";
+import { useCrmOptions, resolveOption } from "@/hooks/api/crm/metadata";
 import { useLeadsFilters } from "@/hooks/common/use-leads-filters";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { useCan, useScope } from "@/hooks/api/access";
@@ -90,6 +91,33 @@ export default function LeadsPipelinePage() {
     priority: priorityFilter as "HOT" | "WARM" | "COLD" | undefined,
     source: sourceFilter as "referral" | "campaign" | "cold_call" | "website" | "social_media" | "walk_in" | "other" | undefined,
   });
+
+  const { data: leadStatusOptions = [] } = useCrmOptions("lead_status");
+  const { data: leadPriorityOptions = [] } = useCrmOptions("priority");
+  const { data: leadSourceOptions = [] } = useCrmOptions("source");
+
+  const activeFilterLabels = useMemo(() => {
+    const labels: string[] = [];
+    const trimmed = searchQuery.trim();
+    if (trimmed) labels.push(`search "${trimmed}"`);
+    if (statusFilter)
+      labels.push(`status ${resolveOption(leadStatusOptions, statusFilter).label}`);
+    if (priorityFilter)
+      labels.push(`priority ${resolveOption(leadPriorityOptions, priorityFilter).label}`);
+    if (sourceFilter)
+      labels.push(`source ${resolveOption(leadSourceOptions, sourceFilter).label}`);
+    return labels;
+  }, [
+    searchQuery,
+    statusFilter,
+    priorityFilter,
+    sourceFilter,
+    leadStatusOptions,
+    leadPriorityOptions,
+    leadSourceOptions,
+  ]);
+
+  const handleOpenCreateLead = useCallback(() => setCreateOpen(true), [setCreateOpen]);
 
   const { data: teamCapacity } = useSalesTeamCapacity();
   const teamMembers = useMemo(
@@ -395,7 +423,7 @@ export default function LeadsPipelinePage() {
           <LeadExportDialog />
           {canCreate && (
             <>
-              <CsvUploadDialog />
+              <ImportLinkButton entity="leads" label="Import Leads" />
               <CreateLeadSheet
                 open={createOpen}
                 onOpenChange={setCreateOpen}
@@ -453,6 +481,10 @@ export default function LeadsPipelinePage() {
               canAssign={canAssign}
               canDelete={canDelete}
               canCreateDeal={canCreateDeal}
+              canCreate={canCreate}
+              activeFilterLabels={activeFilterLabels}
+              onClearFilters={clearFilters}
+              onCreateLead={handleOpenCreateLead}
             />
           </div>
         )}
@@ -471,7 +503,13 @@ export default function LeadsPipelinePage() {
 
         {view === "funnel" && (
           <div className="flex-1 min-h-0 mt-2 overflow-auto">
-            <LeadsFunnelView board={filteredBoard} />
+            <LeadsFunnelView
+              board={filteredBoard}
+              searchQuery={searchQuery}
+              onClearSearch={clearFilters}
+              onCreateLead={handleOpenCreateLead}
+              canCreate={canCreate}
+            />
           </div>
         )}
 

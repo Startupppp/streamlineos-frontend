@@ -41,6 +41,7 @@ interface DealSidebarCardsProps {
   client?: Client | null;
   keyDates: KeyDate[];
   meetings?: DealMeeting[];
+  meetingsLoading?: boolean;
   onQuickActionClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
   onAddMeeting: () => void;
   onDeleteMeeting: (meetingId: number) => void;
@@ -68,6 +69,7 @@ export function DealSidebarCards({
   client,
   keyDates,
   meetings,
+  meetingsLoading = false,
   onQuickActionClick,
   onAddMeeting,
   onDeleteMeeting,
@@ -201,6 +203,7 @@ export function DealSidebarCards({
 
       <MeetingsCard
         meetings={meetings}
+        isLoading={meetingsLoading}
         onAddMeeting={onAddMeeting}
         onDeleteMeeting={onDeleteMeeting}
       />

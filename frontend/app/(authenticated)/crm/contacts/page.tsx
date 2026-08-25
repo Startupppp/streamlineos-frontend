@@ -9,6 +9,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { SearchInput } from "@/components/ui/search-input";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { CrmOptionSelect } from "@/features/crm/shared/metadata";
+import { useCrmOptions, resolveOption } from "@/hooks/api/crm/metadata";
 import { ErrorState } from "@/components/shared";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { staggerContainer } from "@/lib/motion-variants";
@@ -18,7 +19,7 @@ import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { CreateContactDialog } from "@/features/crm/contacts/create-contact-dialog";
 import { EditContactSheet } from "@/features/crm/contacts/edit-contact-sheet";
-import { ContactsCsvImportDialog } from "@/features/crm/contacts/contacts-csv-import-dialog";
+import { ImportLinkButton } from "@/features/crm/import/import-link-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PAGE_SIZE } from "@/features/crm/contacts/contacts-constants";
@@ -179,6 +180,21 @@ export default function ContactsPage() {
     [updateParams],
   );
 
+  const { data: contactSourceOptions = [] } = useCrmOptions("source");
+
+  const activeFilterLabels = useMemo(() => {
+    const labels: string[] = [];
+    if (apiSearch) labels.push(`search "${apiSearch}"`);
+    if (sourceFilter !== "all")
+      labels.push(`source ${resolveOption(contactSourceOptions, sourceFilter).label}`);
+    return labels;
+  }, [apiSearch, sourceFilter, contactSourceOptions]);
+
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    updateParams({ q: null, source: null, page: null });
+  }, [updateParams]);
+
   const handleBulkMerge = useCallback(() => {
     setBulkMergeOpen(true);
   }, []);
@@ -227,7 +243,8 @@ export default function ContactsPage() {
     total,
     page,
     totalPages,
-    apiSearch,
+    activeFilterLabels,
+    onClearFilters: handleClearFilters,
     isEnrichPending: enrichContact.isPending,
     onRequestDelete: handleRequestDelete,
     onEdit: handleEdit,
@@ -267,7 +284,7 @@ export default function ContactsPage() {
             </div>
             {canManageContacts && (
               <>
-                <ContactsCsvImportDialog onSuccess={handleRetry} />
+                <ImportLinkButton entity="contacts" />
                 <Button onClick={handleOpenCreate}>
                   <Plus className="h-3.5 w-3.5 mr-1.5" />
                   New Contact
