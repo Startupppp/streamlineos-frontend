@@ -58,9 +58,25 @@ The evidence: 24 types emitted across 9 modules — `accounting.*` (7), `invento
 | Verdict | Count | Types |
 |---|---|---|
 | has a consumer | 1 | `deal.closed` |
-| needs one | 9 | `accounting.bill.approved`, `accounting.invoice.issued`, `build.sprint.completed`, `build.release.published`, `inventory.purchase_order.received`, `inventory.stock.low`, `inventory.shipment.dispatched`, `inventory.sales_order.fulfilled`, `survey.response.submitted` |
+| needs one | 5 | `accounting.bill.approved`, `accounting.invoice.issued`, `build.sprint.completed`, `build.release.published`, `survey.response.submitted` |
 | fire-and-forget | 14 | all others |
 | should stop being emitted | 0 | — |
+| **out of scope** | 4 | every remaining `inventory.*` type — see below |
+
+### Inventory is out of scope for this ticket
+
+`inventory.purchase_order.received`, `inventory.shipment.dispatched`, `inventory.stock.adjusted` and
+`inventory.sales_order.fulfilled` were removed from scope on 2026-08-25. Their analysis rows are
+kept in the table above as a record of what was found, but they are **not work items here** and
+nothing is owed on them.
+
+That also retires this ticket's single largest blocker. `inventory.sales_order.fulfilled` was the
+one money-moving item — it would create an AR invoice on consumer execution — and it required
+finance sign-off regardless of any catalog entry. It is gone from the list rather than parked.
+
+`inventory.stock.low` already shipped before the scope change and stays: it is live, registered and
+tested. Removing an analysis item from a ticket is not a reason to delete working code, so it was
+left alone rather than reverted on inference.
 
 ### Double-apply map (10 fire-and-forget types with active synchronous reactions)
 
@@ -110,15 +126,26 @@ The ticket's claim — "the suppressed count after a flush equals only the delib
 | `accounting.invoice.issued` | No `accounting.invoice.issued` catalog entry. Decide: does the system send the invoice to the customer, or just notify internal staff? Which channel? |
 | `build.sprint.completed` | No `build.sprint.completed` catalog entry (only `build.sprint.started` and `build.sprint.ending` exist). Decide: who is notified (all project members? only the sprint owner?), wording. |
 | `build.release.published` | No `build.release.published` catalog entry. Decide: who is notified (project members? stakeholders?), channel, wording. |
-| `inventory.purchase_order.received` | No `inventory.purchase_order.received` catalog entry. Decide: who gets the GRN alert (AP team? procurement manager?), channel, wording. |
-| `inventory.stock.low` | Catalog entry `inventory.stock.low` EXISTS, but the target audience ("inventory managers") is a product decision — no single permission key unambiguously identifies who should receive reorder alerts (`inventory:replenishment:manage`, `inventory:stock:adjust`, `inventory:products:read` are all candidates). Decide: which permission key(s) define the audience. |
-| `inventory.shipment.dispatched` | No `inventory.shipment.dispatched` catalog entry. Decide: notify the sales team? the customer (external email)? internal dispatch staff? |
 
-### Needs explicit sign-off — money-moving
+*(The four `inventory.*` rows that stood here were removed with the scope change. `inventory.stock.low` was decided and wired before that; the rest are no longer work items.)*
 
-| Domain event | Reason |
-|---|---|
-| `inventory.sales_order.fulfilled` → create customer invoice | AR integration. Money moves on consumer execution. Requires product + finance sign-off before implementation, regardless of any catalog entry. |
+### The narrower rule that unblocked most of what remained
+
+The original split asked "does a catalog entry exist" and, when one did not, parked the type as a
+product decision. That was too coarse. The question that actually matters is **whether the
+recipients are derivable from the data** — because a missing catalog entry is cheap to add by
+mirroring its nearest sibling's channels and priority, while an undecidable audience is not.
+
+So a type is wireable when an existing sibling in this repo already derives the same audience, and
+that derivation can be mirrored rather than invented. `build.sprint.ending` derives its recipients
+from the assignees of open tickets in the sprint — deliberately, with the reasoning written into a
+comment: *"derived from the tickets themselves rather than from project membership, so nobody is
+told a sprint is closing on work they do not own."* That is a derivation, not a preference, and a
+sibling event can follow it.
+
+What stays held is the type where no amount of reading the data settles the question —
+`accounting.invoice.issued`, where "send the invoice to the customer" is an outbound business
+action, not a notification.
 
 ### Fire-and-forget confirmed untouched (10 types)
 
@@ -173,39 +200,33 @@ environment is an ops decision, not a side effect of verifying it.
 
 That is a strong independent justification for the SUPPRESSED decision taken in ticket 01. Had unrouted events been retried to dead-letter instead, the obvious "fix" would have looked like *write consumers for all of them* — which for ten of these would have shipped duplicate user-facing notifications.
 
-**Seven types genuinely need a consumer** and each names its owning module and behaviour in the table. The most valuable is `inventory.sales_order.fulfilled` → create a customer invoice, which is the inventory-to-receivables integration point.
-
-## Why implementation is not started here
-
-Writing seven consumers means deciding who gets notified, through which channel, and with what wording — product decisions, not refactors. Inventing them would repeat the mistake recorded in c7 ticket 03: building something that satisfies a criterion without being asked for.
-
-The analysis is the deliverable that unblocks that work; it is done. Each consumer should ship as its own ticket with a product owner, using `DealClosedConsumerService` as the template — inbox claim fence, self-registration, its own tenant transaction.
+**Five types genuinely need a consumer** after the inventory scope change, and each names its owning module and behaviour in the table.
 
 **Live state at time of writing:** 26 `accounting.journal.posted` PENDING (not yet flushed), 7 build-namespace events SUPPRESSED — consistent with their fire-and-forget verdicts.
 
 ---
 
-## Update (2026-08-25) — one consumer wired, seven held
+## Update (2026-08-25) — consumers wired, inventory removed from scope
 
-The line held was: **implement only where an existing notification catalog entry already specifies the reaction.** Inventing a notification's audience, channel and wording is a product decision, and doing it unasked is the mistake recorded in c7 ticket 03.
+The line first held was: **implement only where an existing notification catalog entry already specifies the reaction.** Inventing a notification's audience, channel and wording is a product decision, and doing it unasked is the mistake recorded in c7 ticket 03.
+
+That rule was later refined, because it was the wrong test. A missing catalog entry is cheap — mirror the nearest sibling's channels and priority. What actually decides wireability is **whether the recipients are derivable from the data**, by mirroring a derivation this repo already makes. See "The narrower rule" above.
 
 **Wired: `survey.response.submitted`** → `SurveyResponseSubmittedConsumerService` in the surveys module. Three catalog entries already existed (`survey.response.received`, `survey.certification.passed`, `survey.certification.failed`) and the recipients are FK-determined — the form owner, and the respondent via the participant record — so nothing had to be invented. 9 suites / 93 tests pass.
 
-**Held — each needs one specific decision:**
+**Wired: `inventory.stock.low`** → audience `inventory:replenishment:manage`, catalogued as "Manage reorder rules and replenishment". The event fires when a variant crosses its **reorder point**, so that key names exactly the people who act on it; `inventory:stock:adjust` and `inventory:products:read` were rejected as wrong and far too wide. Channel and priority came from the existing catalog entry. Recipients resolve through `AccessService.membersWithPermission`, which already accounts for roles, delegations, per-person grants and module ownership — rather than a second, weaker query beside it. `InvStockLowConsumerService`, registered in `inv-replenishment.module.ts`. It shipped before inventory left scope and stays.
+
+**Held after the inventory scope change:**
 
 | Event | The decision needed |
 |---|---|
-| ~~`inventory.stock.low`~~ | **DECIDED and WIRED 2026-08-25** — audience is `inventory:replenishment:manage`, catalogued as "Manage reorder rules and replenishment". The event fires when a variant crosses its **reorder point**, so that key names exactly the people who act on it; `inventory:stock:adjust` and `inventory:products:read` were rejected as wrong and far too wide. Channel and priority already came from the existing catalog entry. Recipients resolve through `AccessService.membersWithPermission`, which already accounts for roles, delegations, per-person grants and module ownership — rather than a second, weaker query beside it. `InvStockLowConsumerService`, registered in `inv-replenishment.module.ts`; 5 suites / 44 tests; madge still acyclic after the new Outbox and Notifications imports. |
-| `accounting.bill.approved` | Who is notified, on what channel, in what words. |
-| `accounting.invoice.issued` | Internal staff notification, or send to the customer? |
-| `build.sprint.completed` | Audience and wording (only `sprint.started` / `sprint.ending` exist). |
-| `build.release.published` | Project members, stakeholders, or both. |
-| `inventory.purchase_order.received` | Who gets the goods-received alert — AP or procurement. |
-| `inventory.shipment.dispatched` | Internal sales team, or an external customer email. |
-| `inventory.sales_order.fulfilled` | **Money-moving** — creates an AR invoice. Needs product AND finance sign-off regardless of catalog state. |
+| `accounting.bill.approved` | Whether the submitter is recorded at all — the payload's `actor_user_id` is the **approver**, not the person who submitted. |
+| `accounting.invoice.issued` | Internal staff notification, or send to the customer? An outbound business action, not a notification. |
+| `build.sprint.completed` | Whether the `sprint.ending` recipient derivation transfers to a completed sprint. |
+| `build.release.published` | Whether a release has any FK-determined audience at all. |
 
 ### One correction to the record
 
 The implementing agent reported that `DealClosedConsumerService` has an exactly-once defect — that claiming before the work leaves a committed inbox row if the work throws, so retries skip silently. **That is not correct, and it was checked rather than accepted.** `InboxConsumer.claim` writes through the ALS-routed handle, and the relay already wraps `consumer.handle(event)` in `runInNewTenantTransaction` — so the claim and the work share one transaction and a throw rolls back both.
 
-The new consumer opens its own `db.transaction` inside `handle()`, which becomes a savepoint nested in the relay's transaction. That is harmless and its tests pass, but it is an unnecessary divergence from the house pattern adopted on a false premise. Left as-is rather than churned; noted so the next consumer follows `DealClosedConsumerService` instead.
+The new consumer opened its own `db.transaction` inside `handle()`, which became a savepoint nested in the relay's transaction. Harmless, and its tests passed — but an unnecessary divergence from the house pattern adopted on a false premise. **Since corrected:** the self-opened transaction was removed after confirming at `outbox-publisher.service.ts:155` that the relay does wrap `handle()`, so every consumer now follows one pattern rather than two.

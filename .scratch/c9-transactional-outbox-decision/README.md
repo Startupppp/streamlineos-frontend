@@ -17,7 +17,11 @@ Two durable write paths with different guarantees, and nothing at the call site 
 
 **Read `claimed:0` carefully.** The first flush returned all zeros against 18 PENDING rows, which looks exactly like a broken claim query. It is not: `OUTBOX_DISPATCH_ENABLED` is unset by default, so `flush()` is a deliberate no-op. The flag was enabled only for the verification and restored afterwards.
 
-**Why 02 stays open at 1 of 8.** The one consumer wired is `survey.response.submitted`, and it was wired because three notification catalog entries already specified the reaction and the recipients are FK-determined — nothing had to be invented. The other seven each need one specific product decision (audience, channel, wording), and `inventory.sales_order.fulfilled` creates an AR invoice and needs finance sign-off regardless. Writing seven notification behaviours to close a ticket is the c7-03 mistake.
+**Inventory left scope on 2026-08-25.** Four `inventory.*` types were removed from ticket 02 as work items; their analysis rows stay as a record. That retires the ticket's largest blocker — `inventory.sales_order.fulfilled` was the one money-moving item, creating an AR invoice on consumer execution and needing finance sign-off regardless of catalog state. `inventory.stock.low` shipped before the change and stays: removing an analysis item from a ticket is not a reason to delete live, tested code.
+
+**The rule for wiring a consumer was refined, and that matters more than the scope change.** The first rule was "implement only where a notification catalog entry already specifies the reaction". That is the wrong test: a missing catalog entry is cheap, since the nearest sibling's channels and priority can be mirrored. What actually decides it is **whether the recipients are derivable from the data**. `build.sprint.ending` already derives its recipients from the assignees of open tickets in the sprint — deliberately, with the reasoning written into a comment: *"derived from the tickets themselves rather than from project membership, so nobody is told a sprint is closing on work they do not own."* A sibling event can mirror a derivation like that without inventing anything.
+
+What stays genuinely undecidable is `accounting.invoice.issued`, where "send the invoice to the customer" is an outbound business action rather than a notification.
 
 **Ticket 01 produces the rest of this directory.** Execution tickets are written once the answer is known; writing both branches now would mean deleting half of them unread.
 
