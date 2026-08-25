@@ -56,11 +56,20 @@ data in the payload is not the same as the control being rendered**, and that di
 whole criterion.
 
 Curling `/settings/roles` as the org owner with a real session: the access query is hydrated with
-`status:"success"` and a matching `queryHash`, and the session is passed to `SessionProvider` — yet
-the served `<body>`, with scripts stripped, is 3,903 bytes containing a full-screen loading spinner.
-No nav, no `<h1>`, no gated control. Root cause is shared with c8-02: `dashboard-shell.tsx:166`
-returns `<AppLoadingScreen>` while `useAccess()` has no data, and the hydrated snapshot is not
-readable during the server render.
+`status:"success"`, and the session is passed to `SessionProvider` — yet the served `<body>`, with
+scripts stripped, is 3,903 bytes containing a full-screen loading spinner. No nav, no `<h1>`, no
+gated control. `dashboard-shell.tsx:166` returns `<AppLoadingScreen>` while `useAccess()` has no
+data.
+
+**Root cause, shared with c8-02 and now pinned:** the app's QueryClient hashes every key with a
+scope prefix (`query-provider.tsx:37`), while `prefetchAccess()` builds a plain `new QueryClient()`
+using the default hash. The snapshot is hydrated under a hash the app never computes, so
+`getQueryData` on the identical key returns `undefined` while the entry sits in the cache holding
+its data. Full evidence, the isolation proof and the proposed fix are in **c8 ticket 02** — one
+fix closes both tickets.
+
+**So `prefetchAccess` currently saves nothing at all**, not even a round trip. The client fetches
+`/me/access` exactly as it would have without it.
 
 So the honest split:
 
