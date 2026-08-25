@@ -1,6 +1,6 @@
 /** Bringing a CRM export in, and taking everything back out. */
 
-export type RowAction = "create" | "update" | "skip";
+export type RowAction = "create" | "update" | "merge" | "review" | "skip";
 
 export type ColumnMapping =
   | { kind: "mapped"; field: string; confidence: number }
@@ -21,11 +21,17 @@ export interface PlannedRow {
   customFields: Record<string, string>;
   matchedPartyId?: string;
   duplicateOfRow?: number;
+  /** Why the planner thinks this row is a near-match, when it does. */
+  match?: { score: number; signals: string[]; candidateName?: string };
 }
 
 export interface ImportSummary {
   create: number;
   update: number;
+  /** Folded into an earlier row of the same file, whose gaps it filled. */
+  merge: number;
+  /** Close enough to an existing party to be worth a person's judgement, so not written. */
+  review: number;
   skip: number;
   total: number;
 }
@@ -46,26 +52,41 @@ export interface ImportPreview {
   warnings: string[];
 }
 
-export interface CommitResult {
-  created: number;
-  updated: number;
-  failed: number;
-  /** Rows the server did not reach before its time budget ran out. */
-  remaining: number;
+/**
+ * Where an import has got to.
+ *
+ * The commit is a durable workflow now, so this is the shape of a job rather
+ * than the result of a call: the same payload comes back from starting it, from
+ * polling it, and from reverting it.
+ */
+export interface ImportProgress {
+  crmImportId: string;
+  status: "previewing" | "committing" | "committed" | "reverting" | "reverted" | "failed";
+  workflowRunId: string | null;
+  runStatus: string | null;
   /**
-   * Whether the import finished. The server commits under a 20-second budget
-   * and leaves the import open when it runs out, so a large file takes several
-   * calls — `false` means call again, it does not mean anything failed.
+   * The only terminating condition.
+   *
+   * Deliberately not "did anything change this call" — a call that lands between
+   * attempts legitimately reports zero progress and is not a failure. The
+   * previous inline implementation could treat no-progress as unrecoverable
+   * because a stalled pass genuinely could not be helped by asking again; that
+   * stopped being true the moment the write became durable.
    */
   complete: boolean;
+  total: number;
+  remaining: number;
+  created: number;
+  updated: number;
+  merged: number;
+  review: number;
+  skipped: number;
+  failed: number;
+  reverted: number;
+  /** After this, the import can no longer be taken back. */
+  revertDeadlineAt: string | null;
 }
 
-export interface RevertResult {
-  deleted: number;
-  restored: number;
-}
-
-/** The fields a column can be pointed at, plus the answer "not this one". */
 export const IMPORT_FIELDS = [
   "name",
   "legalName",
