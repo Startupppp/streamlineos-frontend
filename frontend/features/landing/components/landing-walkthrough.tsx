@@ -81,7 +81,7 @@ function WalkthroughRow({
         <ul className="space-y-2.5">
           {step.bullets.map((b) => (
             <li key={b} className="flex items-start gap-3">
-              <span className="mt-0.5 h-5 w-5 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 inline-flex items-center justify-center shrink-0 shadow-[0_4px_12px_-4px_rgba(59,130,246,0.5)]">
+              <span className="mt-0.5 h-5 w-5 rounded-full bg-gradient-to-br from-gradient-info-from to-gradient-info-to inline-flex items-center justify-center shrink-0 shadow-[0_4px_12px_-4px_rgba(59,130,246,0.5)]">
                 <Check className="h-3 w-3 text-white" strokeWidth={3} />
               </span>
               <span className="text-label sm:text-sm text-muted-foreground min-w-0">
@@ -203,7 +203,7 @@ function OnboardVisual() {
           whileInView={{ width: "60%" }}
           viewport={{ once: true }}
           transition={{ duration: 1.2, delay: 0.3 }}
-          className="h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-400"
+          className="h-full rounded-full bg-gradient-to-r from-gradient-info-from to-gradient-info-to"
         />
       </div>
       <div className="space-y-2 pt-2">
@@ -291,10 +291,10 @@ function DeliverVisual() {
 
 function CloseVisual() {
   const bars = [
-    { label: "Won", value: 64, color: "from-emerald-400 to-cyan-400" },
-    { label: "Negotiation", value: 42, color: "from-cyan-400 to-blue-500" },
-    { label: "Proposal", value: 28, color: "from-blue-500 to-indigo-500" },
-    { label: "Qualified", value: 18, color: "from-indigo-500 to-violet-500" },
+    { label: "Won", value: 64, color: "from-gradient-success-from to-gradient-info-to" },
+    { label: "Negotiation", value: 42, color: "from-gradient-info-from to-gradient-info-to" },
+    { label: "Proposal", value: 28, color: "from-gradient-info-from to-gradient-info-to" },
+    { label: "Qualified", value: 18, color: "from-gradient-info-from to-gradient-info-to" },
   ];
   const maxBar = Math.max(...bars.map((b) => b.value));
   return (

@@ -465,7 +465,7 @@ export function MessageInput({
                   className={cn(
                     "h-9 w-9 rounded-xl flex items-center justify-center transition-all",
                     messageInput.trim() || pendingAttachments.length > 0
-                      ? "bg-gradient-to-r from-blue-500 to-[#d4a544] text-white shadow-md hover:shadow-lg hover:scale-105"
+                      ? "bg-gradient-to-r from-gradient-info-from to-[#d4a544] text-white shadow-md hover:shadow-lg hover:scale-105"
                       : "bg-muted/50 text-muted-foreground/30 cursor-not-allowed"
                   )}
                 >

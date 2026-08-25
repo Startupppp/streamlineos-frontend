@@ -141,7 +141,7 @@ export function ContactForm() {
             transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
             className="py-10 text-center"
           >
-            <div className="mx-auto mb-5 h-14 w-14 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 inline-flex items-center justify-center shadow-[0_18px_40px_-12px_rgba(59,130,246,0.45)]">
+            <div className="mx-auto mb-5 h-14 w-14 rounded-full bg-gradient-to-br from-gradient-info-from to-gradient-info-to inline-flex items-center justify-center shadow-[0_18px_40px_-12px_rgba(59,130,246,0.45)]">
               <CheckCircle2 className="w-7 text-white" strokeWidth={2.5} />
             </div>
             <h3 className="font-display text-2xl font-bold text-muted-foreground mb-2">

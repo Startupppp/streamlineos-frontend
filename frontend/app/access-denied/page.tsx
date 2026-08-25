@@ -14,7 +14,7 @@ export default async function AccessDeniedPage({ searchParams }: AccessDeniedPag
   const requiredList = required ? required.split(",").filter(Boolean) : [];
 
   return (
-    <div className="min-h-dvh w-full flex items-center justify-center p-6 bg-gradient-to-br from-slate-50 via-white to-blue-50">
+    <div className="min-h-dvh w-full flex items-center justify-center p-6 bg-gradient-to-br from-gradient-neutral-from via-white to-gradient-info-to">
       <Card className="max-w-md w-full border-border shadow-accent">
         <CardContent className="p-8 sm:p-10 text-center space-y-6">
           <div className="mx-auto h-14 w-14 rounded-2xl bg-status-danger-surface ring-1 ring-status-danger-rule flex items-center justify-center">

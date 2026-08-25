@@ -196,12 +196,6 @@
 }
 
 /* â”€â”€â”€ Shadow override for dark mode â€” light glass-highlight instead of dark drop â”€â”€â”€ */
-.dark .shadow-noir {
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.04) inset,
-    0 8px 24px -12px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(255, 255, 255, 0.04);
-}
 
 /* â”€â”€â”€ Hide scrollbar utility (top-level, outside @layer so it always wins) â”€â”€â”€ */
 .scrollbar-hide,
@@ -276,24 +270,8 @@
 }
 
 /* â”€â”€â”€ Shadows â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-.shadow-soft {
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.04),
-    0 4px 16px rgba(0, 0, 0, 0.04);
-}
 
-.shadow-medium {
-  box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.07),
-    0 10px 32px -4px rgba(0, 0, 0, 0.06);
-}
 
-.shadow-noir {
-  box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.04),
-    0 8px 24px -10px rgba(15, 23, 42, 0.12),
-    0 0 0 1px rgba(15, 23, 42, 0.04);
-}
 
 /* â”€â”€â”€ Hover effects â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .press-scale {
@@ -507,26 +485,6 @@
   animation: brand-sweep 8s ease-in-out infinite;
 }
 
-.logo-gradient-sweep {
-  background: linear-gradient(
-    120deg,
-    var(--brand-bright) 0%,
-    var(--brand-core) 25%,
-    var(--brand-cyan) 50%,
-    var(--brand-core) 75%,
-    var(--brand-bright) 100%
-  );
-  background-size: 220% 100%;
-  animation: brand-sweep 8s ease-in-out infinite;
-  -webkit-mask-image: url("/logo.svg");
-  mask-image: url("/logo.svg");
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-position: center;
-}
 
 .logo-gradient-static {
   animation: none;
@@ -534,13 +492,6 @@
   background-size: 100% 100%;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .logo-gradient-sweep {
-    animation: none;
-    background: linear-gradient(135deg, var(--brand-core), var(--brand-cyan));
-    background-size: 100% 100%;
-  }
-}
 
 @keyframes goal-everything-border {
   0% {
@@ -1490,6 +1441,14 @@ button.goal-everything-chip[aria-checked="true"]::before {
      a different role from `raised`: one says "above", this says "reachable". */
   --elevation-accent: 0 8px 30px -12px rgba(37, 99, 235, 0.18);
   --elevation-accent-strong: 0 10px 28px -10px rgba(59, 130, 246, 0.5);
+
+  /* A card that draws its own hairline, rather than relying on a border. Was a
+     hand-written `.shadow-noir` in 49 places, with its dark twin in a separate
+     `.dark .shadow-noir` rule — which is exactly the split a token removes. */
+  --elevation-noir:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 8px 24px -10px rgba(15, 23, 42, 0.12),
+    0 0 0 1px rgba(15, 23, 42, 0.04);
 }
 
 .dark {
@@ -1501,6 +1460,13 @@ button.goal-everything-chip[aria-checked="true"]::before {
   --elevation-control: 0 8px 22px -10px rgb(0 0 0 / 0.6);
   --elevation-accent: 0 8px 30px -12px rgba(59, 130, 246, 0.28);
   --elevation-accent-strong: 0 10px 28px -10px rgba(59, 130, 246, 0.55);
+
+  /* The former `.dark .shadow-noir`, verbatim, so nothing shifts. The hairline
+     lifts rather than darkens: a dark ring on a dark ground is invisible. */
+  --elevation-noir:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 8px 24px -12px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
 
@@ -1620,6 +1586,66 @@ button.goal-everything-chip[aria-checked="true"]::before {
   --category-slate-fill: var(--color-slate-400, #94a3b8);
 }
 
+
+/* ─── Gradient stops ───
+   The stops, not the gradient.
+
+   Direction is a layout decision and varies per use — a funnel runs left to
+   right, a hero wash runs to the bottom right — so baking it into a token would
+   need one token per direction. Naming the *stops* keeps Tailwind's own
+   `bg-gradient-to-*` utilities and tokenises the only part that is a colour
+   decision.
+
+   Two strengths per tone: the solid pair for a brand surface, and a `wash` pair
+   at low alpha for an ambient tint behind content. The dark theme inverts the
+   solid pair, because a 500-to-400 ramp that reads as depth on white reads as
+   glare on black. */
+:root {
+  --gradient-success-from: var(--color-emerald-500, #10b981);
+  --gradient-success-to: var(--color-emerald-400, #34d399);
+  --gradient-success-wash-from: color-mix(in oklab, var(--color-emerald-500, #10b981) 15%, transparent);
+  --gradient-success-wash-to: color-mix(in oklab, var(--color-emerald-500, #10b981) 5%, transparent);
+  --gradient-warning-from: var(--color-amber-500, #f59e0b);
+  --gradient-warning-to: var(--color-amber-400, #fbbf24);
+  --gradient-warning-wash-from: color-mix(in oklab, var(--color-amber-500, #f59e0b) 15%, transparent);
+  --gradient-warning-wash-to: color-mix(in oklab, var(--color-amber-500, #f59e0b) 5%, transparent);
+  --gradient-danger-from: var(--color-red-500, #ef4444);
+  --gradient-danger-to: var(--color-red-400, #f87171);
+  --gradient-danger-wash-from: color-mix(in oklab, var(--color-red-500, #ef4444) 15%, transparent);
+  --gradient-danger-wash-to: color-mix(in oklab, var(--color-red-500, #ef4444) 5%, transparent);
+  --gradient-info-from: var(--color-blue-500, #3b82f6);
+  --gradient-info-to: var(--color-blue-400, #60a5fa);
+  --gradient-info-wash-from: color-mix(in oklab, var(--color-blue-500, #3b82f6) 15%, transparent);
+  --gradient-info-wash-to: color-mix(in oklab, var(--color-blue-500, #3b82f6) 5%, transparent);
+  --gradient-neutral-from: var(--color-slate-500, #64748b);
+  --gradient-neutral-to: var(--color-slate-400, #94a3b8);
+  --gradient-neutral-wash-from: color-mix(in oklab, var(--color-slate-500, #64748b) 15%, transparent);
+  --gradient-neutral-wash-to: color-mix(in oklab, var(--color-slate-500, #64748b) 5%, transparent);
+}
+
+.dark {
+  --gradient-success-from: var(--color-emerald-400, #34d399);
+  --gradient-success-to: var(--color-emerald-500, #10b981);
+  --gradient-success-wash-from: color-mix(in oklab, var(--color-emerald-500, #10b981) 22%, transparent);
+  --gradient-success-wash-to: color-mix(in oklab, var(--color-emerald-500, #10b981) 8%, transparent);
+  --gradient-warning-from: var(--color-amber-400, #fbbf24);
+  --gradient-warning-to: var(--color-amber-500, #f59e0b);
+  --gradient-warning-wash-from: color-mix(in oklab, var(--color-amber-500, #f59e0b) 22%, transparent);
+  --gradient-warning-wash-to: color-mix(in oklab, var(--color-amber-500, #f59e0b) 8%, transparent);
+  --gradient-danger-from: var(--color-red-400, #f87171);
+  --gradient-danger-to: var(--color-red-500, #ef4444);
+  --gradient-danger-wash-from: color-mix(in oklab, var(--color-red-500, #ef4444) 22%, transparent);
+  --gradient-danger-wash-to: color-mix(in oklab, var(--color-red-500, #ef4444) 8%, transparent);
+  --gradient-info-from: var(--color-blue-400, #60a5fa);
+  --gradient-info-to: var(--color-blue-500, #3b82f6);
+  --gradient-info-wash-from: color-mix(in oklab, var(--color-blue-500, #3b82f6) 22%, transparent);
+  --gradient-info-wash-to: color-mix(in oklab, var(--color-blue-500, #3b82f6) 8%, transparent);
+  --gradient-neutral-from: var(--color-slate-400, #94a3b8);
+  --gradient-neutral-to: var(--color-slate-500, #64748b);
+  --gradient-neutral-wash-from: color-mix(in oklab, var(--color-slate-500, #64748b) 22%, transparent);
+  --gradient-neutral-wash-to: color-mix(in oklab, var(--color-slate-500, #64748b) 8%, transparent);
+}
+
 /* ─── Utility exposure ───
    `inline` matters: it makes each utility emit var(--token) rather than the
    value resolved at build time, so density and theme switches take effect
@@ -1715,6 +1741,28 @@ button.goal-everything-chip[aria-checked="true"]::before {
   --color-status-neutral-fill: var(--status-neutral-fill);
   --color-status-neutral-fill-hover: var(--status-neutral-fill-hover);
 
+  --color-gradient-success-from: var(--gradient-success-from);
+  --color-gradient-success-to: var(--gradient-success-to);
+  --color-gradient-success-wash-from: var(--gradient-success-wash-from);
+  --color-gradient-success-wash-to: var(--gradient-success-wash-to);
+  --color-gradient-warning-from: var(--gradient-warning-from);
+  --color-gradient-warning-to: var(--gradient-warning-to);
+  --color-gradient-warning-wash-from: var(--gradient-warning-wash-from);
+  --color-gradient-warning-wash-to: var(--gradient-warning-wash-to);
+  --color-gradient-danger-from: var(--gradient-danger-from);
+  --color-gradient-danger-to: var(--gradient-danger-to);
+  --color-gradient-danger-wash-from: var(--gradient-danger-wash-from);
+  --color-gradient-danger-wash-to: var(--gradient-danger-wash-to);
+  --color-gradient-info-from: var(--gradient-info-from);
+  --color-gradient-info-to: var(--gradient-info-to);
+  --color-gradient-info-wash-from: var(--gradient-info-wash-from);
+  --color-gradient-info-wash-to: var(--gradient-info-wash-to);
+  --color-gradient-neutral-from: var(--gradient-neutral-from);
+  --color-gradient-neutral-to: var(--gradient-neutral-to);
+  --color-gradient-neutral-wash-from: var(--gradient-neutral-wash-from);
+  --color-gradient-neutral-wash-to: var(--gradient-neutral-wash-to);
+
+  --shadow-noir: var(--elevation-noir);
   --shadow-panel: var(--elevation-panel);
   --shadow-control: var(--elevation-control);
   --shadow-accent: var(--elevation-accent);

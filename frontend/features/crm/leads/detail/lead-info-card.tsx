@@ -398,7 +398,7 @@ export function LeadInfoCard({
               lead.potentialValue && lead.investmentInterest
                 ?"grid-cols-2"
                 :"grid-cols-1",
-"bg-gradient-to-r from-emerald-500/5 via-transparent to-blue-500/5"
+"bg-gradient-to-r from-gradient-success-wash-from via-transparent to-gradient-info-wash-to"
             )}
           >
             {lead.potentialValue && (

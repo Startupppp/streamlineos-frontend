@@ -72,7 +72,7 @@ export default function ContactPage() {
                 className="group block rounded-2xl border border-border bg-white/70 backdrop-blur-sm p-5 hover:border-status-info-rule hover:bg-white transition-colors"
               >
                 <div className="flex items-start gap-4">
-                  <span className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 inline-flex items-center justify-center shrink-0 shadow-[0_6px_18px_-6px_rgba(59,130,246,0.5)] group-hover:scale-105 transition-transform">
+                  <span className="h-10 w-10 rounded-xl bg-gradient-to-br from-gradient-info-from to-gradient-info-to inline-flex items-center justify-center shrink-0 shadow-[0_6px_18px_-6px_rgba(59,130,246,0.5)] group-hover:scale-105 transition-transform">
                     <Icon className="h-4 w-4 text-white" />
                   </span>
                   <div className="min-w-0">

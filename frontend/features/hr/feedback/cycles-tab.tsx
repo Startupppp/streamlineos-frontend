@@ -367,7 +367,7 @@ export function CyclesTab() {
                   {cycle.status === "DRAFT" && (
                     <Button
                       size="sm"
-                      className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white text-xs"
+                      className="bg-gradient-to-r from-gradient-success-from to-gradient-success-to hover:from-gradient-success-from hover:to-gradient-success-to text-white text-xs"
                       onClick={() => handleActivate(cycle)}
                     >
                       Activate

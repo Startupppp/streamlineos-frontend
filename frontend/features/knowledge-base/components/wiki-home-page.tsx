@@ -48,7 +48,7 @@ const PageCard = memo(function PageCard({
   return (
     <Link
       href={href}
-      className="block p-3 rounded-lg border border-border bg-card shadow-soft hover:bg-muted/50 transition-colors"
+      className="block p-3 rounded-lg border border-border bg-card shadow-panel hover:bg-muted/50 transition-colors"
     >
       <div className="flex items-start gap-3">
         <span className="text-xl shrink-0">

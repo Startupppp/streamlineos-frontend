@@ -20,11 +20,11 @@ const STAGE_LABELS: Record<Stage, string> = {
 };
 
 const STAGE_COLORS: Record<Stage, string> = {
-  NEW: "from-slate-400 to-slate-500",
-  CONTACTED: "from-blue-400 to-blue-500",
-  INTERESTED: "from-blue-400 to-blue-500",
-  QUALIFIED: "from-amber-400 to-amber-500",
-  CONVERTED: "from-emerald-400 to-emerald-500",
+  NEW: "from-gradient-neutral-from to-gradient-neutral-to",
+  CONTACTED: "from-gradient-info-from to-gradient-info-to",
+  INTERESTED: "from-gradient-info-from to-gradient-info-to",
+  QUALIFIED: "from-gradient-warning-from to-gradient-warning-to",
+  CONVERTED: "from-gradient-success-from to-gradient-success-to",
 };
 
 const STAGE_BG: Record<Stage, string> = {

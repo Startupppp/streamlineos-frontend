@@ -36,7 +36,7 @@ export function PublicChannelRow({
       )}
       onClick={handleRowClick}
     >
-      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 flex items-center justify-center border border-border/40 shrink-0">
+      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-gradient-success-wash-from to-gradient-success-wash-to flex items-center justify-center border border-border/40 shrink-0">
         <Hash className="h-4 w-4 text-status-success-ink" />
       </div>
       <div className="flex-1 min-w-0">

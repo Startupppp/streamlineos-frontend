@@ -52,7 +52,7 @@ export function LandingFAQ() {
                     transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] as const }}
                     className={`mt-0.5 h-7 w-7 rounded-full inline-flex items-center justify-center shrink-0 ${
                       isOpen
-                        ? "bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-[0_4px_14px_-4px_rgba(59,130,246,0.5)]"
+                        ? "bg-gradient-to-br from-gradient-info-from to-gradient-info-to text-white shadow-[0_4px_14px_-4px_rgba(59,130,246,0.5)]"
                         : "bg-muted text-muted-foreground"
                     }`}
                   >

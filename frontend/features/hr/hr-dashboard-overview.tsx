@@ -205,7 +205,7 @@ function OnboardingStatusWidget() {
               </div>
               <div className="h-2 rounded-full bg-muted overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-700"
+                  className="h-full bg-gradient-to-r from-gradient-success-from to-gradient-success-to rounded-full transition-all duration-700"
                   style={{ width: `${data.completionPct}%` }}
                 />
               </div>

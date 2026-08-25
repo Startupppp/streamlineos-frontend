@@ -99,8 +99,8 @@ export const FloatingComposition = memo(function FloatingComposition({
               {[
                 { label: "New", count: 142, pct: 100, bar: "from-brand-core to-brand-deep" },
                 { label: "Qualified", count: 86, pct: 72, bar: "from-brand-core to-brand-cyan" },
-                { label: "Proposal", count: 41, pct: 48, bar: "from-brand-cyan to-teal-400" },
-                { label: "Closed Won", count: 18, pct: 28, bar: "from-teal-400 to-emerald-400" },
+                { label: "Proposal", count: 41, pct: 48, bar: "from-brand-cyan to-gradient-success-to" },
+                { label: "Closed Won", count: 18, pct: 28, bar: "from-gradient-success-from to-gradient-success-to" },
               ].map((s, i) => (
                 <motion.div
                   key={s.label}

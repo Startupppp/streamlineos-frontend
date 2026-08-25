@@ -58,8 +58,8 @@ export function RichHero({
     <div
       className={cn(
         "relative shrink-0 overflow-hidden rounded-2xl border border-status-info-rule",
-        "bg-gradient-to-br from-sky-50 via-blue-50 to-blue-100/80",
-        "dark:from-slate-900/40 dark:via-blue-950/30 dark:to-blue-950/20",
+        "bg-gradient-to-br from-gradient-info-from via-blue-50 to-gradient-info-to",
+        "",
         "text-foreground shadow-accent",
         className,
       )}
@@ -144,13 +144,13 @@ export function RichQuickAction({
   tone?: RichTone;
 }) {
   const tones: Record<RichTone, string> = {
-    blue: "from-blue-500/15 to-blue-500/5 text-status-info-ink group-hover:border-status-info-rule",
+    blue: "from-gradient-info-wash-from to-gradient-info-wash-to text-status-info-ink group-hover:border-status-info-rule",
     emerald:
-      "from-emerald-500/15 to-emerald-500/5 text-status-success-ink group-hover:border-status-success-rule",
+      "from-gradient-success-wash-from to-gradient-success-wash-to text-status-success-ink group-hover:border-status-success-rule",
     amber:
-      "from-amber-500/15 to-amber-500/5 text-status-warning-ink group-hover:border-status-warning-rule",
-    rose: "from-rose-500/15 to-rose-500/5 text-status-danger-ink group-hover:border-status-danger-rule",
-    sky: "from-sky-500/15 to-sky-500/5 text-status-info-ink group-hover:border-status-info-rule",
+      "from-gradient-warning-wash-from to-gradient-warning-wash-to text-status-warning-ink group-hover:border-status-warning-rule",
+    rose: "from-gradient-danger-wash-from to-gradient-danger-wash-to text-status-danger-ink group-hover:border-status-danger-rule",
+    sky: "from-gradient-info-wash-from to-gradient-info-wash-to text-status-info-ink group-hover:border-status-info-rule",
   };
 
   return (

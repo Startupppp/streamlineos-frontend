@@ -324,7 +324,7 @@ export function MessageList({
 
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center py-10">
-              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500/15 to-blue-500/5 flex items-center justify-center mb-3">
+              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-gradient-info-wash-from to-gradient-info-wash-to flex items-center justify-center mb-3">
                 <Send className="h-5 w-5 text-status-info-ink" />
               </div>
               <h4 className="text-sm font-semibold mb-0.5">

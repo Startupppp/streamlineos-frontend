@@ -120,7 +120,7 @@ export default function AboutPage() {
                 key={v.title}
                 className="rounded-2xl border border-border bg-white/70 backdrop-blur-sm p-7"
               >
-                <span className="h-11 w-11 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 inline-flex items-center justify-center mb-4 shadow-[0_8px_18px_-6px_rgba(59,130,246,0.5)]">
+                <span className="h-11 w-11 rounded-xl bg-gradient-to-br from-gradient-info-from to-gradient-info-to inline-flex items-center justify-center mb-4 shadow-[0_8px_18px_-6px_rgba(59,130,246,0.5)]">
                   <Icon className="h-5 w-5 text-white" />
                 </span>
                 <h3 className="font-display text-lg font-bold text-muted-foreground mb-2">{v.title}</h3>

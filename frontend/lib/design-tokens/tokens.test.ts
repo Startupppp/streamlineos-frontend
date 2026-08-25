@@ -144,6 +144,46 @@ describe("design token contract", () => {
     });
   });
 
+  /**
+   * The legacy path is gone, not deprecated.
+   *
+   * `.shadow-soft`, `.shadow-medium` and `.shadow-noir` were hand-written
+   * classes doing the elevations' job, with `.shadow-noir`'s dark twin kept in
+   * a separate `.dark .shadow-noir` rule — exactly the split a token removes.
+   * The role survives as `--elevation-noir`; the hand-written definitions do
+   * not, so there is one way to ask for an elevation.
+   */
+  it("has deleted the hand-written shadow classes", () => {
+    // Comments explain these names; only a rule defines one. Without stripping,
+    // the note recording the deletion reports itself as the thing not deleted.
+    const rules = css.replace(/\/\*[\s\S]*?\*\//g, " ");
+    for (const legacy of [".shadow-soft", ".shadow-medium", ".shadow-noir", ".logo-gradient-sweep"])
+      expect(rules).not.toContain(`${legacy} {`);
+    // Including the dark twin, which lived in its own rule.
+    expect(rules).not.toContain(".dark .shadow-noir");
+  });
+
+  it("keeps shadow-noir working, as a token-backed utility", () => {
+    // Same class name, so the 48 call sites did not have to change — but it now
+    // resolves per theme.
+    expect(css).toContain("--elevation-noir:");
+    expect(css).toContain("--shadow-noir: var(--elevation-noir)");
+  });
+
+  it("declares gradient stops for every tone, in both themes", () => {
+    for (const tone of STATUS_TONES) {
+      expect(css).toContain(`--gradient-${tone}-from:`);
+      expect(css).toContain(`--gradient-${tone}-wash-from:`);
+    }
+  });
+
+  it("extends the radius scale below sm, which a checkbox needs", () => {
+    // A checkbox reads as a circle at 6px and a heatmap cell loses its grid,
+    // which is why both were hand-written before these existed.
+    expect(css).toContain("--radius-xs:");
+    expect(css).toContain("--radius-2xs:");
+  });
+
   it("declares the fill role for every tone, in both themes", () => {
     for (const tone of STATUS_TONES) {
       expect(css).toContain(`--status-${tone}-fill:`);

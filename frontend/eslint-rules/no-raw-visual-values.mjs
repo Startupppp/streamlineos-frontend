@@ -34,7 +34,13 @@ const PALETTE = new RegExp(
     // Surfaces and fills: any shade, with or without a fractional alpha.
     `(?:bg-(?:${HUES})-\\d{2,3}(?:\\/\\d{1,3})?\\b(?!\\/\\[)` +
     // Ink and rules at any shade.
-    `|(?:text|border|ring|divide|decoration|placeholder)-(?:${HUES})-\\d{2,3}(?:\\/\\d{1,3})?\\b(?!\\/\\[))`,
+    `|(?:text|border|ring|divide|decoration|placeholder)-(?:${HUES})-\\d{2,3}(?:\\/\\d{1,3})?\\b(?!\\/\\[)` +
+    /*
+     * Gradient stops. `via` is excluded: a middle stop between two tokens is a
+     * decision the two ends already make, and naming one would be a token that
+     * exists to be overridden.
+     */
+    `|(?:from|to)-(?:${HUES})-\\d{2,3}(?:\\/\\d{1,3})?\\b(?!\\/\\[))`,
 );
 
 /** Arbitrary type sizes: `text-[11px]`. */
@@ -56,7 +62,7 @@ const ARBITRARY_RADIUS = /\brounded(?:-[a-z]+)?-\[(?!inherit\])[^\]]+\]/;
 const ARBITRARY_SPACING = /\b(?:p|px|py|pt|pb|pl|pr|m|mx|my|mt|mb|ml|mr|gap|gap-x|gap-y|space-x|space-y)-\[[0-9.]+(?:px|rem|em)\]/;
 
 const CHECKS = [
-  [PALETTE, "palette", "reads a token instead — `bg-status-success-fill` for a solid, `bg-status-success-surface` for a wash, `text-muted-foreground` for quiet text, or `categoryClasses()` when the colour names a category rather than a status. A literal needs a hand-written `dark:` twin, and roughly half the call sites in this codebase forgot theirs."],
+  [PALETTE, "palette", "reads a token instead — `from-gradient-info-from`/`to-gradient-info-to` for a gradient, `bg-status-success-fill` for a solid, `bg-status-success-surface` for a wash, `text-muted-foreground` for quiet text, or `categoryClasses()` when the colour names a category rather than a status. A literal needs a hand-written `dark:` twin, and roughly half the call sites in this codebase forgot theirs."],
   [ARBITRARY_TYPE, "type", "reads a step instead — `text-micro`, `text-dense`, `text-label`, or Tailwind's own `text-xs`/`text-sm`."],
   [ARBITRARY_COLOUR, "colour", "reads a token instead. A raw colour cannot follow the theme."],
   [ARBITRARY_SHADOW, "shadow", "reads an elevation instead — `shadow-card`, `shadow-panel`, `shadow-raised`. A hand-written shadow shows its light-mode self on a dark ground."],
