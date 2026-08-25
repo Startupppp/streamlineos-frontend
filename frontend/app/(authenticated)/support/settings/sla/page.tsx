@@ -39,7 +39,11 @@ import { PolicyFormFields, type BusinessHoursOption } from "@/features/support/s
 const PRIORITY_BADGE: Record<SlaPolicyPriority, string> = {
   LOW: "bg-status-info-surface text-status-info-ink border-status-info-rule",
   MEDIUM: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
-  HIGH: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  // A four-step ladder needs four steps. `high` was orange before the
+  // migration and there is no orange status, so it collapsed onto `medium`'s
+  // amber; the categorical orange restores the rung. The other three keep
+  // status tokens, because there the meaning *is* the status.
+  HIGH: "bg-category-orange-surface text-category-orange-ink border-category-orange-rule",
   URGENT: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };
 

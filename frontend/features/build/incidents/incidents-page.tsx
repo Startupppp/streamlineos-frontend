@@ -35,16 +35,21 @@ import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 
+/**
+ * Two ladders, and both lost their orange rung: `high` and `investigating` were
+ * orange before the migration, and with no orange status they collapsed onto
+ * the amber below them. Everything else here means its status and keeps it.
+ */
 const SEVERITY_STYLES: Record<IncidentSeverity, string> = {
   critical: "text-status-danger-ink border-status-danger-rule bg-status-danger-surface",
-  high: "text-status-warning-ink border-status-warning-rule",
+  high: "text-category-orange-ink border-category-orange-rule",
   medium: "text-status-warning-ink border-status-warning-rule",
   low: "text-muted-foreground border-border",
 };
 
 const STATUS_STYLES: Record<IncidentStatus, string> = {
   detected: "text-status-danger-ink border-status-danger-rule",
-  investigating: "text-status-warning-ink border-status-warning-rule",
+  investigating: "text-category-orange-ink border-category-orange-rule",
   mitigating: "text-status-warning-ink border-status-warning-rule",
   resolved: "text-status-success-ink border-status-success-rule",
   postmortem: "text-status-info-ink border-status-info-rule",

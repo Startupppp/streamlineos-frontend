@@ -14,6 +14,10 @@
  * Mapping those onto the status tones makes one category read as a warning and
  * another as a notice, so they get their own scale.
  *
+ * Sixteen hues. The largest taxonomy (notification categories, 18) still has
+ * to double up, which is allowed only as a named grouping of genuinely
+ * related categories, written down at the call site.
+ *
  * `fill` is the role the status tones lack: a category dot is a solid colour,
  * and a pale surface renders an invisible dot.
  */
@@ -26,6 +30,21 @@ export const CATEGORY_HUES = [
   "cyan",
   "pink",
   "slate",
+  /*
+   * Eight was not enough. The first eight skipped every hue that had a status
+   * equivalent, which left `sky`, `orange`, `green` and the rest of a taxonomy
+   * on `status-*` — distinct dots over byte-identical badges. These eight are
+   * exactly those hues, so a category that happens to look like a status can
+   * say so without meaning it.
+   */
+  "sky",
+  "teal",
+  "green",
+  "orange",
+  "indigo",
+  "fuchsia",
+  "lime",
+  "red",
 ] as const;
 export type CategoryHue = (typeof CATEGORY_HUES)[number];
 
@@ -54,6 +73,14 @@ const CATEGORY_CLASSES: Readonly<Record<CategoryHue, CategoryClasses>> = {
   cyan: { surface: "bg-category-cyan-surface", ink: "text-category-cyan-ink", rule: "border-category-cyan-rule", fill: "bg-category-cyan-fill" },
   pink: { surface: "bg-category-pink-surface", ink: "text-category-pink-ink", rule: "border-category-pink-rule", fill: "bg-category-pink-fill" },
   slate: { surface: "bg-category-slate-surface", ink: "text-category-slate-ink", rule: "border-category-slate-rule", fill: "bg-category-slate-fill" },
+  sky: { surface: "bg-category-sky-surface", ink: "text-category-sky-ink", rule: "border-category-sky-rule", fill: "bg-category-sky-fill" },
+  teal: { surface: "bg-category-teal-surface", ink: "text-category-teal-ink", rule: "border-category-teal-rule", fill: "bg-category-teal-fill" },
+  green: { surface: "bg-category-green-surface", ink: "text-category-green-ink", rule: "border-category-green-rule", fill: "bg-category-green-fill" },
+  orange: { surface: "bg-category-orange-surface", ink: "text-category-orange-ink", rule: "border-category-orange-rule", fill: "bg-category-orange-fill" },
+  indigo: { surface: "bg-category-indigo-surface", ink: "text-category-indigo-ink", rule: "border-category-indigo-rule", fill: "bg-category-indigo-fill" },
+  fuchsia: { surface: "bg-category-fuchsia-surface", ink: "text-category-fuchsia-ink", rule: "border-category-fuchsia-rule", fill: "bg-category-fuchsia-fill" },
+  lime: { surface: "bg-category-lime-surface", ink: "text-category-lime-ink", rule: "border-category-lime-rule", fill: "bg-category-lime-fill" },
+  red: { surface: "bg-category-red-surface", ink: "text-category-red-ink", rule: "border-category-red-rule", fill: "bg-category-red-fill" },
 };
 
 export function categoryClasses(hue: CategoryHue): CategoryClasses {

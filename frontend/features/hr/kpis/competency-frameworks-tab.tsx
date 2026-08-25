@@ -40,10 +40,12 @@ import {
 } from "@/hooks/api/hr";
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Sales: "bg-status-success-surface text-status-success-ink",
-  Finance: "bg-status-info-surface text-status-info-ink",
-  Operations: "bg-status-warning-surface text-status-warning-ink",
-  HR: "bg-status-info-surface text-status-info-ink",
+  // Five business functions, not five statuses: Finance and HR both read "info"
+  // and were the same chip. HR takes violet rather than the blue it shared.
+  Sales: "bg-category-emerald-surface text-category-emerald-ink",
+  Finance: "bg-category-blue-surface text-category-blue-ink",
+  Operations: "bg-category-amber-surface text-category-amber-ink",
+  HR: "bg-category-violet-surface text-category-violet-ink",
   Customer: "bg-category-pink-surface text-category-pink-ink",
 };
 

@@ -36,7 +36,11 @@ import { toast } from "sonner";
 const PRIORITY_BADGE: Record<string, string> = {
   low: "bg-status-info-surface text-status-info-ink border-status-info-rule",
   medium: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
-  high: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  // A four-step ladder needs four steps. `high` was orange before the
+  // migration and there is no orange status, so it collapsed onto `medium`'s
+  // amber; the categorical orange restores the rung. The other three keep
+  // status tokens, because there the meaning *is* the status.
+  high: "bg-category-orange-surface text-category-orange-ink border-category-orange-rule",
   urgent: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };
 

@@ -296,7 +296,7 @@ export const WorkloadView = memo(function WorkloadView({
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.2 }}
-                      className="overflow-hidden bg-status-warning-surface dark:bg-amber-500/[0.05]"
+                      className="overflow-hidden bg-status-warning-surface"
                     >
                       {unassigned.slice(0, 10).map((ticket) => (
                         <div

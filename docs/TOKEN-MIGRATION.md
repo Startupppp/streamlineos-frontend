@@ -194,6 +194,29 @@ Eight hues × four roles in `globals.css`, with `categoryClasses()` and
 `categoryBadgeClass()` in `lib/design-tokens`. It carries the `fill` role the
 status tones lack, because a category dot is a solid colour.
 
+### Widened to sixteen, because eight only half-fixed it
+
+The first eight were the hues with **no** status equivalent — violet, pink,
+fuchsia and friends — and only the solid `fill` role was moved over. Every hue
+that happened to land on a status (blue, sky, cyan, indigo, emerald, green,
+teal, lime, amber, orange, yellow, red, rose) stayed on the status token, inside
+the same lookup table. The result was 291 lines across 57 files where an entry's
+dot was correctly distinct and its badge, background, border and text were
+byte-identical to its neighbour's: a warehouse tree with four kinds of location
+on one blue chip, a sidebar with four products on one blue panel, an e-sign
+envelope where recipients 1 and 6 differed only in the swatch.
+
+Eight more hues — `sky`, `teal`, `green`, `orange`, `indigo`, `fuchsia`, `lime`,
+`red` — in both themes and all four roles, built exactly like the first eight.
+Sixteen covers every taxonomy except notification categories, which has 18; the
+two that double up there are written down at the call site as a named grouping
+(billing with payroll, workflow with sign) rather than left to look like an
+accident.
+
+The rule for an entry is now one line: **all four roles read the same hue.** An
+entry that mixes `bg-category-X-fill` with `bg-status-Y-surface` is the defect,
+not a style.
+
 ## What is not verified
 
 Criteria 5 and 6 ask for responsive behaviour at three widths and both themes,

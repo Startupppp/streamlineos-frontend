@@ -30,13 +30,22 @@ import type { BoardLead } from "./leads-types";
 
 const FALLBACK_STATUSES = ["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"] as const;
 
+/**
+ * Where a lead came from is a taxonomy, not a status — a walk-in is not more
+ * "informational" than a campaign. Three of the seven read "info" and were one
+ * chip on the board. website takes sky rather than the blue it shared with
+ * campaign before the migration.
+ *
+ * PRIORITY_CONFIG below stays on the status scale: hot, warm and cold is a
+ * ladder, and danger/warning/info is what a ladder means.
+ */
 const SOURCE_COLORS: Record<string, string> = {
-  referral: "bg-status-success-surface text-status-success-ink border-status-success-rule",
-  campaign: "bg-status-info-surface text-status-info-ink border-status-info-rule",
-  cold_call: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
-  website: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  referral: "bg-category-green-surface text-category-green-ink border-category-green-rule",
+  campaign: "bg-category-blue-surface text-category-blue-ink border-category-blue-rule",
+  cold_call: "bg-category-orange-surface text-category-orange-ink border-category-orange-rule",
+  website: "bg-category-sky-surface text-category-sky-ink border-category-sky-rule",
   social_media: "bg-category-pink-surface text-category-pink-ink border-category-pink-rule",
-  walk_in: "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  walk_in: "bg-category-cyan-surface text-category-cyan-ink border-category-cyan-rule",
   other: "bg-muted text-muted-foreground border-border",
 };
 

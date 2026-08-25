@@ -61,16 +61,24 @@ const FIELD_TYPES: Array<{ value: CustomFieldType; label: string }> = [
   { value: "user", label: "User" },
 ];
 
+/**
+ * Field type is a taxonomy — a date field is not a warning. Nine types read as
+ * four looks, so select, multi-select and currency were one chip and number,
+ * user and url were another.
+ *
+ * user takes indigo and url sky, rather than the blue all three shared before
+ * the migration; number keeps it.
+ */
 const fieldTypeColors: Record<CustomFieldType, string> = {
   text: "bg-muted text-muted-foreground",
-  number: "bg-status-info-surface text-status-info-ink",
-  date: "bg-status-warning-surface text-status-warning-ink",
-  user: "bg-status-info-surface text-status-info-ink",
-  select: "bg-status-success-surface text-status-success-ink",
-  multi_select: "bg-status-success-surface text-status-success-ink",
+  number: "bg-category-blue-surface text-category-blue-ink",
+  date: "bg-category-amber-surface text-category-amber-ink",
+  user: "bg-category-indigo-surface text-category-indigo-ink",
+  select: "bg-category-emerald-surface text-category-emerald-ink",
+  multi_select: "bg-category-teal-surface text-category-teal-ink",
   checkbox: "bg-category-pink-surface text-category-pink-ink",
-  url: "bg-status-info-surface text-status-info-ink",
-  currency: "bg-status-success-surface text-status-success-ink",
+  url: "bg-category-sky-surface text-category-sky-ink",
+  currency: "bg-category-green-surface text-category-green-ink",
 };
 
 interface CustomFieldItem {

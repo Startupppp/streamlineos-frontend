@@ -56,7 +56,10 @@ const STATUS_STYLES: Record<BugStatus, string> = {
   fixed: "text-status-success-ink border-status-success-rule",
   ready_for_qa: "text-status-info-ink border-status-info-rule",
   verified: "text-status-success-ink border-status-success-rule",
-  reopened: "text-status-warning-ink border-status-warning-rule",
+  // Orange before the migration, and the only thing separating a bug that is
+  // being worked from one that came back. The rest of this table means its
+  // status and keeps it.
+  reopened: "text-category-orange-ink border-category-orange-rule",
   closed: "text-muted-foreground border-border",
 };
 

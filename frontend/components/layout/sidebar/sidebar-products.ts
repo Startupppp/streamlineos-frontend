@@ -64,6 +64,23 @@ export interface ModuleAccent {
   border: string;
 }
 
+/**
+ * A product's colour is its name in the sidebar rail, so no two products may
+ * share one.
+ *
+ * The four roles of an entry all read the same hue. They used to split — a
+ * categorical `text` and `indicator` over a `status-*` `bg` and `border` —
+ * which put crm, timesheets, finance and sign on one blue panel and hrms,
+ * surveys and payroll on one green one, with only the 2px indicator telling
+ * them apart.
+ *
+ * Two hues moved rather than being restored: timesheets keeps indigo but no
+ * longer borrows violet from build, and payroll takes green because it and
+ * surveys were both teal even before the migration.
+ *
+ * home, documents and administration share the neutral on purpose: they are
+ * chrome around the products rather than products themselves.
+ */
 export const MODULE_ACCENTS: Record<ProductKey, ModuleAccent> = {
   home: {
     text: "!text-category-slate-ink",
@@ -73,15 +90,15 @@ export const MODULE_ACCENTS: Record<ProductKey, ModuleAccent> = {
   },
   crm: {
     text: "!text-category-blue-ink",
-    bg: "bg-status-info-surface",
+    bg: "bg-category-blue-surface",
     indicator: "bg-category-blue-fill",
-    border: "border-status-info-rule",
+    border: "border-category-blue-rule",
   },
   hrms: {
     text: "!text-category-emerald-ink",
-    bg: "bg-status-success-surface",
+    bg: "bg-category-emerald-surface",
     indicator: "bg-category-emerald-fill",
-    border: "border-status-success-rule",
+    border: "border-category-emerald-rule",
   },
   build: {
     text: "!text-category-violet-ink",
@@ -90,28 +107,28 @@ export const MODULE_ACCENTS: Record<ProductKey, ModuleAccent> = {
     border: "border-category-violet-rule",
   },
   timesheets: {
-    text: "!text-category-violet-ink",
-    bg: "bg-status-info-surface",
-    indicator: "bg-category-violet-fill",
-    border: "border-status-info-rule",
+    text: "!text-category-indigo-ink",
+    bg: "bg-category-indigo-surface",
+    indicator: "bg-category-indigo-fill",
+    border: "border-category-indigo-rule",
   },
   inventory: {
     text: "!text-category-amber-ink",
-    bg: "bg-status-warning-surface",
+    bg: "bg-category-amber-surface",
     indicator: "bg-category-amber-fill",
-    border: "border-status-warning-rule",
+    border: "border-category-amber-rule",
   },
   finance: {
     text: "!text-category-cyan-ink",
-    bg: "bg-status-info-surface",
+    bg: "bg-category-cyan-surface",
     indicator: "bg-category-cyan-fill",
-    border: "border-status-info-rule",
+    border: "border-category-cyan-rule",
   },
   helpdesk: {
     text: "!text-category-rose-ink",
-    bg: "bg-status-danger-surface",
+    bg: "bg-category-rose-surface",
     indicator: "bg-category-rose-fill",
-    border: "border-status-danger-rule",
+    border: "border-category-rose-rule",
   },
   documents: {
     text: "!text-category-slate-ink",
@@ -120,10 +137,10 @@ export const MODULE_ACCENTS: Record<ProductKey, ModuleAccent> = {
     border: "border-border",
   },
   surveys: {
-    text: "!text-category-cyan-ink",
-    bg: "bg-status-success-surface",
-    indicator: "bg-category-cyan-fill",
-    border: "border-status-success-rule",
+    text: "!text-category-teal-ink",
+    bg: "bg-category-teal-surface",
+    indicator: "bg-category-teal-fill",
+    border: "border-category-teal-rule",
   },
   administration: {
     text: "!text-category-slate-ink",
@@ -132,16 +149,16 @@ export const MODULE_ACCENTS: Record<ProductKey, ModuleAccent> = {
     border: "border-border",
   },
   payroll: {
-    text: "!text-category-cyan-ink",
-    bg: "bg-status-success-surface",
-    indicator: "bg-category-cyan-fill",
-    border: "border-status-success-rule",
+    text: "!text-category-green-ink",
+    bg: "bg-category-green-surface",
+    indicator: "bg-category-green-fill",
+    border: "border-category-green-rule",
   },
   sign: {
-    text: "!text-category-blue-ink",
-    bg: "bg-status-info-surface",
-    indicator: "bg-category-blue-fill",
-    border: "border-status-info-rule",
+    text: "!text-category-sky-ink",
+    bg: "bg-category-sky-surface",
+    indicator: "bg-category-sky-fill",
+    border: "border-category-sky-rule",
   },
 };
 

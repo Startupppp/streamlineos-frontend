@@ -1,9 +1,12 @@
+// Round type is a taxonomy: a final round is not an error and a cultural-fit
+// round is not a success. TECHNICAL takes indigo — the hue it also wears in the
+// interview list — rather than the blue it shared with HR_SCREENING.
 const ROUND_TYPE_COLORS: Record<string, string> = {
-  HR_SCREENING: "bg-status-info-surface text-status-info-ink",
-  TECHNICAL: "bg-status-info-surface text-status-info-ink",
-  MANAGER: "bg-status-warning-surface text-status-warning-ink",
-  CULTURAL_FIT: "bg-status-success-surface text-status-success-ink",
-  FINAL: "bg-status-danger-surface text-status-danger-ink",
+  HR_SCREENING: "bg-category-blue-surface text-category-blue-ink",
+  TECHNICAL: "bg-category-indigo-surface text-category-indigo-ink",
+  MANAGER: "bg-category-amber-surface text-category-amber-ink",
+  CULTURAL_FIT: "bg-category-green-surface text-category-green-ink",
+  FINAL: "bg-category-red-surface text-category-red-ink",
   CUSTOM: "bg-muted text-muted-foreground",
 };
 

@@ -6,7 +6,11 @@ const FALLBACK_COLOR = "bg-muted text-muted-foreground";
 
 export const priorityColors: Record<Priority, string> = {
   URGENT: "bg-status-danger-surface text-status-danger-ink",
-  HIGH: "bg-status-warning-surface text-status-warning-ink",
+  // A four-step ladder needs four steps. `high` was orange before the
+  // migration and there is no orange status, so it collapsed onto `medium`'s
+  // amber; the categorical orange restores the rung. The other three keep
+  // status tokens, because there the meaning *is* the status.
+  HIGH: "bg-category-orange-surface text-category-orange-ink",
   MEDIUM: "bg-status-warning-surface text-status-warning-ink",
   LOW: "bg-muted text-foreground",
 };

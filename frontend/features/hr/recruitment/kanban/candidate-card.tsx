@@ -16,12 +16,14 @@ interface CandidateCardProps {
   onClick: (candidate: AtsPipelineCandidate) => void;
 }
 
+// Where a candidate came from is a taxonomy, not a status. REFERRAL takes
+// indigo rather than the blue it shared with LINKEDIN before the migration.
 const SOURCE_COLORS: Record<string, string> = {
-  LINKEDIN: "bg-status-info-surface text-status-info-ink",
-  REFERRAL: "bg-status-info-surface text-status-info-ink",
+  LINKEDIN: "bg-category-blue-surface text-category-blue-ink",
+  REFERRAL: "bg-category-indigo-surface text-category-indigo-ink",
   DIRECT: "bg-muted text-muted-foreground",
-  JOB_PORTAL: "bg-status-warning-surface text-status-warning-ink",
-  CAMPUS: "bg-status-success-surface text-status-success-ink",
+  JOB_PORTAL: "bg-category-amber-surface text-category-amber-ink",
+  CAMPUS: "bg-category-emerald-surface text-category-emerald-ink",
 };
 
 function getSourceColor(source: string) {

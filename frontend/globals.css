@@ -1513,9 +1513,18 @@ button.goal-everything-chip[aria-checked="true"]::before {
    as a warning and another as a notice, which is worse than leaving them
    hardcoded; that is why the token migration skipped them and raised this.
 
-   Eight hues, chosen to stay distinguishable from one another and from the four
-   status tones. They carry a `fill` role the status tones do not: a category
-   dot is a solid colour, and a pale surface renders an invisible dot. */
+   Sixteen hues, chosen to stay distinguishable from one another and from the
+   four status tones. They carry a `fill` role the status tones do not: a
+   category dot is a solid colour, and a pale surface renders an invisible dot.
+
+   Eight was not enough. Three taxonomies need more: notification categories
+   want 18, sidebar products and a tenant's own CRM palette want 10 each. The
+   first eight deliberately skipped every hue that had a status equivalent,
+   which left those taxonomies sharing a status token — a table where the dot
+   is distinct but the badge behind it is byte-identical. The eight added here
+   (sky, teal, green, orange, indigo, fuchsia, lime, red) are exactly those
+   hues, so a category that happens to look like a status can now say so
+   without meaning it. */
 :root {
   --category-blue-surface: var(--color-blue-50);
   --category-blue-ink: var(--color-blue-600, #2563eb);
@@ -1549,6 +1558,38 @@ button.goal-everything-chip[aria-checked="true"]::before {
   --category-slate-ink: var(--color-slate-600, #475569);
   --category-slate-rule: var(--color-slate-200, #e2e8f0);
   --category-slate-fill: var(--color-slate-500, #64748b);
+  --category-sky-surface: var(--color-sky-50);
+  --category-sky-ink: var(--color-sky-600, #0284c7);
+  --category-sky-rule: var(--color-sky-200, #bae6fd);
+  --category-sky-fill: var(--color-sky-500, #0ea5e9);
+  --category-teal-surface: var(--color-teal-50);
+  --category-teal-ink: var(--color-teal-600, #0d9488);
+  --category-teal-rule: var(--color-teal-200, #99f6e4);
+  --category-teal-fill: var(--color-teal-500, #14b8a6);
+  --category-green-surface: var(--color-green-50);
+  --category-green-ink: var(--color-green-600, #16a34a);
+  --category-green-rule: var(--color-green-200, #bbf7d0);
+  --category-green-fill: var(--color-green-500, #22c55e);
+  --category-orange-surface: var(--color-orange-50);
+  --category-orange-ink: var(--color-orange-600, #ea580c);
+  --category-orange-rule: var(--color-orange-200, #fed7aa);
+  --category-orange-fill: var(--color-orange-500, #f97316);
+  --category-indigo-surface: var(--color-indigo-50);
+  --category-indigo-ink: var(--color-indigo-600, #4f46e5);
+  --category-indigo-rule: var(--color-indigo-200, #c7d2fe);
+  --category-indigo-fill: var(--color-indigo-500, #6366f1);
+  --category-fuchsia-surface: var(--color-fuchsia-50);
+  --category-fuchsia-ink: var(--color-fuchsia-600, #c026d3);
+  --category-fuchsia-rule: var(--color-fuchsia-200, #f5d0fe);
+  --category-fuchsia-fill: var(--color-fuchsia-500, #d946ef);
+  --category-lime-surface: var(--color-lime-50);
+  --category-lime-ink: var(--color-lime-600, #65a30d);
+  --category-lime-rule: var(--color-lime-200, #d9f99d);
+  --category-lime-fill: var(--color-lime-500, #84cc16);
+  --category-red-surface: var(--color-red-50);
+  --category-red-ink: var(--color-red-600, #dc2626);
+  --category-red-rule: var(--color-red-200, #fecaca);
+  --category-red-fill: var(--color-red-500, #ef4444);
 }
 
 .dark {
@@ -1584,6 +1625,38 @@ button.goal-everything-chip[aria-checked="true"]::before {
   --category-slate-ink: var(--color-slate-300, #cbd5e1);
   --category-slate-rule: color-mix(in oklab, var(--color-slate-500, #64748b) 30%, transparent);
   --category-slate-fill: var(--color-slate-400, #94a3b8);
+  --category-sky-surface: color-mix(in oklab, var(--color-sky-500, #0ea5e9) 12%, transparent);
+  --category-sky-ink: var(--color-sky-300, #7dd3fc);
+  --category-sky-rule: color-mix(in oklab, var(--color-sky-500, #0ea5e9) 30%, transparent);
+  --category-sky-fill: var(--color-sky-400, #38bdf8);
+  --category-teal-surface: color-mix(in oklab, var(--color-teal-500, #14b8a6) 12%, transparent);
+  --category-teal-ink: var(--color-teal-300, #5eead4);
+  --category-teal-rule: color-mix(in oklab, var(--color-teal-500, #14b8a6) 30%, transparent);
+  --category-teal-fill: var(--color-teal-400, #2dd4bf);
+  --category-green-surface: color-mix(in oklab, var(--color-green-500, #22c55e) 12%, transparent);
+  --category-green-ink: var(--color-green-300, #86efac);
+  --category-green-rule: color-mix(in oklab, var(--color-green-500, #22c55e) 30%, transparent);
+  --category-green-fill: var(--color-green-400, #4ade80);
+  --category-orange-surface: color-mix(in oklab, var(--color-orange-500, #f97316) 12%, transparent);
+  --category-orange-ink: var(--color-orange-300, #fdba74);
+  --category-orange-rule: color-mix(in oklab, var(--color-orange-500, #f97316) 30%, transparent);
+  --category-orange-fill: var(--color-orange-400, #fb923c);
+  --category-indigo-surface: color-mix(in oklab, var(--color-indigo-500, #6366f1) 12%, transparent);
+  --category-indigo-ink: var(--color-indigo-300, #a5b4fc);
+  --category-indigo-rule: color-mix(in oklab, var(--color-indigo-500, #6366f1) 30%, transparent);
+  --category-indigo-fill: var(--color-indigo-400, #818cf8);
+  --category-fuchsia-surface: color-mix(in oklab, var(--color-fuchsia-500, #d946ef) 12%, transparent);
+  --category-fuchsia-ink: var(--color-fuchsia-300, #f0abfc);
+  --category-fuchsia-rule: color-mix(in oklab, var(--color-fuchsia-500, #d946ef) 30%, transparent);
+  --category-fuchsia-fill: var(--color-fuchsia-400, #e879f9);
+  --category-lime-surface: color-mix(in oklab, var(--color-lime-500, #84cc16) 12%, transparent);
+  --category-lime-ink: var(--color-lime-300, #bef264);
+  --category-lime-rule: color-mix(in oklab, var(--color-lime-500, #84cc16) 30%, transparent);
+  --category-lime-fill: var(--color-lime-400, #a3e635);
+  --category-red-surface: color-mix(in oklab, var(--color-red-500, #ef4444) 12%, transparent);
+  --category-red-ink: var(--color-red-300, #fca5a5);
+  --category-red-rule: color-mix(in oklab, var(--color-red-500, #ef4444) 30%, transparent);
+  --category-red-fill: var(--color-red-400, #f87171);
 }
 
 
@@ -1729,6 +1802,38 @@ button.goal-everything-chip[aria-checked="true"]::before {
   --color-category-slate-ink: var(--category-slate-ink);
   --color-category-slate-rule: var(--category-slate-rule);
   --color-category-slate-fill: var(--category-slate-fill);
+  --color-category-sky-surface: var(--category-sky-surface);
+  --color-category-sky-ink: var(--category-sky-ink);
+  --color-category-sky-rule: var(--category-sky-rule);
+  --color-category-sky-fill: var(--category-sky-fill);
+  --color-category-teal-surface: var(--category-teal-surface);
+  --color-category-teal-ink: var(--category-teal-ink);
+  --color-category-teal-rule: var(--category-teal-rule);
+  --color-category-teal-fill: var(--category-teal-fill);
+  --color-category-green-surface: var(--category-green-surface);
+  --color-category-green-ink: var(--category-green-ink);
+  --color-category-green-rule: var(--category-green-rule);
+  --color-category-green-fill: var(--category-green-fill);
+  --color-category-orange-surface: var(--category-orange-surface);
+  --color-category-orange-ink: var(--category-orange-ink);
+  --color-category-orange-rule: var(--category-orange-rule);
+  --color-category-orange-fill: var(--category-orange-fill);
+  --color-category-indigo-surface: var(--category-indigo-surface);
+  --color-category-indigo-ink: var(--category-indigo-ink);
+  --color-category-indigo-rule: var(--category-indigo-rule);
+  --color-category-indigo-fill: var(--category-indigo-fill);
+  --color-category-fuchsia-surface: var(--category-fuchsia-surface);
+  --color-category-fuchsia-ink: var(--category-fuchsia-ink);
+  --color-category-fuchsia-rule: var(--category-fuchsia-rule);
+  --color-category-fuchsia-fill: var(--category-fuchsia-fill);
+  --color-category-lime-surface: var(--category-lime-surface);
+  --color-category-lime-ink: var(--category-lime-ink);
+  --color-category-lime-rule: var(--category-lime-rule);
+  --color-category-lime-fill: var(--category-lime-fill);
+  --color-category-red-surface: var(--category-red-surface);
+  --color-category-red-ink: var(--category-red-ink);
+  --color-category-red-rule: var(--category-red-rule);
+  --color-category-red-fill: var(--category-red-fill);
 
   --color-status-success-fill: var(--status-success-fill);
   --color-status-success-fill-hover: var(--status-success-fill-hover);

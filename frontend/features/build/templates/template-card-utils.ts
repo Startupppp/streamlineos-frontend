@@ -7,13 +7,19 @@ export const categoryAccentBar: Record<string, string> = {
   HR: "bg-category-amber-fill",
 };
 
+/**
+ * The same six categories as `categoryAccentBar` above, so they read the same
+ * six hues. The bar and the dot were repaired onto the categorical scale and
+ * the badge and the avatar tint were not, which is why SOFTWARE and ONBOARDING
+ * carried distinct bars over identical badges on the same card.
+ */
 export const categoryBadgeColors: Record<string, string> = {
   GENERAL: "bg-muted text-foreground",
-  SOFTWARE: "bg-status-info-surface text-status-info-ink",
-  ONBOARDING: "bg-status-info-surface text-status-info-ink",
-  MARKETING: "bg-status-danger-surface text-status-danger-ink",
-  SALES: "bg-status-success-surface text-status-success-ink",
-  HR: "bg-status-warning-surface text-status-warning-ink",
+  SOFTWARE: "bg-category-blue-surface text-category-blue-ink",
+  ONBOARDING: "bg-category-cyan-surface text-category-cyan-ink",
+  MARKETING: "bg-category-rose-surface text-category-rose-ink",
+  SALES: "bg-category-emerald-surface text-category-emerald-ink",
+  HR: "bg-category-amber-surface text-category-amber-ink",
 };
 
 export const categoryDotColors: Record<string, string> = {
@@ -27,18 +33,23 @@ export const categoryDotColors: Record<string, string> = {
 
 export const categoryAvatarTints: Record<string, string> = {
   GENERAL: "bg-muted text-foreground ring-border",
-  SOFTWARE: "bg-status-info-surface text-status-info-ink ring-status-info-rule",
-  ONBOARDING: "bg-status-info-surface text-status-info-ink ring-status-info-rule",
-  MARKETING: "bg-status-danger-surface text-status-danger-ink ring-status-danger-rule",
-  SALES: "bg-status-success-surface text-status-success-ink ring-status-success-rule",
-  HR: "bg-status-warning-surface text-status-warning-ink ring-status-warning-rule",
+  SOFTWARE: "bg-category-blue-surface text-category-blue-ink ring-category-blue-rule",
+  ONBOARDING: "bg-category-cyan-surface text-category-cyan-ink ring-category-cyan-rule",
+  MARKETING: "bg-category-rose-surface text-category-rose-ink ring-category-rose-rule",
+  SALES: "bg-category-emerald-surface text-category-emerald-ink ring-category-emerald-rule",
+  HR: "bg-category-amber-surface text-category-amber-ink ring-category-amber-rule",
 };
 
+/**
+ * Issue type is a taxonomy, not a severity — a bug is not more urgent than an
+ * epic, it is a different shape of work. EPIC takes violet rather than the blue
+ * it shared with TASK before the migration.
+ */
 export const ticketTypeColors: Record<string, string> = {
-  TASK: "bg-status-info-surface text-status-info-ink",
-  STORY: "bg-status-success-surface text-status-success-ink",
-  BUG: "bg-status-danger-surface text-status-danger-ink",
-  EPIC: "bg-status-info-surface text-status-info-ink",
+  TASK: "bg-category-blue-surface text-category-blue-ink",
+  STORY: "bg-category-emerald-surface text-category-emerald-ink",
+  BUG: "bg-category-red-surface text-category-red-ink",
+  EPIC: "bg-category-violet-surface text-category-violet-ink",
 };
 
 const PREVIEW_LIMIT = 4;

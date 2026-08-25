@@ -143,14 +143,21 @@ export function RichQuickAction({
   description?: string;
   tone?: RichTone;
 }) {
+  /**
+   * `sky` is a sixth tone, not a second name for `blue`, and it is the reason
+   * `bg-gradient-to-br` lives here rather than on the wrapper: the gradient
+   * stops are named per status tone and there is no `sky` status, so the tone
+   * that has no status equivalent carries a flat categorical surface instead
+   * of a wash. Sharing `gradient-info-*` is what made the two identical.
+   */
   const tones: Record<RichTone, string> = {
-    blue: "from-gradient-info-wash-from to-gradient-info-wash-to text-status-info-ink group-hover:border-status-info-rule",
+    blue: "bg-gradient-to-br from-gradient-info-wash-from to-gradient-info-wash-to text-status-info-ink group-hover:border-status-info-rule",
     emerald:
-      "from-gradient-success-wash-from to-gradient-success-wash-to text-status-success-ink group-hover:border-status-success-rule",
+      "bg-gradient-to-br from-gradient-success-wash-from to-gradient-success-wash-to text-status-success-ink group-hover:border-status-success-rule",
     amber:
-      "from-gradient-warning-wash-from to-gradient-warning-wash-to text-status-warning-ink group-hover:border-status-warning-rule",
-    rose: "from-gradient-danger-wash-from to-gradient-danger-wash-to text-status-danger-ink group-hover:border-status-danger-rule",
-    sky: "from-gradient-info-wash-from to-gradient-info-wash-to text-status-info-ink group-hover:border-status-info-rule",
+      "bg-gradient-to-br from-gradient-warning-wash-from to-gradient-warning-wash-to text-status-warning-ink group-hover:border-status-warning-rule",
+    rose: "bg-gradient-to-br from-gradient-danger-wash-from to-gradient-danger-wash-to text-status-danger-ink group-hover:border-status-danger-rule",
+    sky: "bg-category-sky-surface text-category-sky-ink group-hover:border-category-sky-rule",
   };
 
   return (
@@ -165,7 +172,7 @@ export function RichQuickAction({
     >
       <div
         className={cn(
-          "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br border border-transparent sm:h-10 sm:w-10",
+          "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-transparent sm:h-10 sm:w-10",
           tones[tone],
         )}
       >
@@ -252,7 +259,9 @@ export function RichIconWell({
     amber: "bg-status-warning-surface text-status-warning-ink",
     rose: "bg-status-danger-surface text-status-danger-ink",
     slate: "bg-muted text-muted-foreground",
-    sky: "bg-status-info-surface text-status-info-ink",
+    // No `sky` status, so the sixth tone reads the categorical scale rather
+    // than repeating `info`.
+    sky: "bg-category-sky-surface text-category-sky-ink",
   };
 
   const sizes = {

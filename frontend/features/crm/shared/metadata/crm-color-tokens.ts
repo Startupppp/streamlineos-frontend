@@ -7,6 +7,16 @@ export interface CrmTokenClasses {
   chartHex: string;
 }
 
+/**
+ * A tenant picked these, so the hue is the whole point: ten choices have to
+ * look like ten choices.
+ *
+ * `sky`, `orange` and `red` used to borrow `blue`, `amber` and `rose` because
+ * the categorical scale had no hue of their own, which made the picker offer
+ * pairs of identical swatches while `chartHex` kept them apart — the same
+ * stage reading as two colours on one screen. Every entry now names its own
+ * hue, and `chartHex` is that hue's 500.
+ */
 const TOKEN_MAP: Record<CrmColorToken, CrmTokenClasses> = {
   blue: {
     badgeClass: "bg-category-blue-surface text-category-blue-ink border-category-blue-rule",
@@ -27,9 +37,9 @@ const TOKEN_MAP: Record<CrmColorToken, CrmTokenClasses> = {
     chartHex: "#f59e0b",
   },
   red: {
-    badgeClass: "bg-category-rose-surface text-category-rose-ink border-category-rose-rule",
-    dotClass: "bg-category-rose-fill",
-    textClass: "text-category-rose-ink",
+    badgeClass: "bg-category-red-surface text-category-red-ink border-category-red-rule",
+    dotClass: "bg-category-red-fill",
+    textClass: "text-category-red-ink",
     chartHex: "#ef4444",
   },
   slate: {
@@ -45,15 +55,15 @@ const TOKEN_MAP: Record<CrmColorToken, CrmTokenClasses> = {
     chartHex: "#06b6d4",
   },
   sky: {
-    badgeClass: "bg-category-blue-surface text-category-blue-ink border-category-blue-rule",
-    dotClass: "bg-category-blue-fill",
-    textClass: "text-category-blue-ink",
+    badgeClass: "bg-category-sky-surface text-category-sky-ink border-category-sky-rule",
+    dotClass: "bg-category-sky-fill",
+    textClass: "text-category-sky-ink",
     chartHex: "#0ea5e9",
   },
   orange: {
-    badgeClass: "bg-category-amber-surface text-category-amber-ink border-category-amber-rule",
-    dotClass: "bg-category-amber-fill",
-    textClass: "text-category-amber-ink",
+    badgeClass: "bg-category-orange-surface text-category-orange-ink border-category-orange-rule",
+    dotClass: "bg-category-orange-fill",
+    textClass: "text-category-orange-ink",
     chartHex: "#f97316",
   },
   pink: {

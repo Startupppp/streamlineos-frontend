@@ -31,12 +31,14 @@ import {
   type WorkflowVariable,
 } from "@/hooks/api/workflows";
 
+// A value's type is a taxonomy — an array is not a warning. `object` and
+// `array` sit next to each other in the same list and read as one chip.
 const VALUE_TYPE_CLASS: Record<string, string> = {
   string: "bg-primary/10 text-foreground border-primary/30",
-  number: "bg-status-info-surface text-status-info-ink border-status-info-rule",
-  boolean: "bg-status-success-surface text-status-success-ink border-status-success-rule",
-  object: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
-  array: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  number: "bg-category-blue-surface text-category-blue-ink border-category-blue-rule",
+  boolean: "bg-category-green-surface text-category-green-ink border-category-green-rule",
+  object: "bg-category-amber-surface text-category-amber-ink border-category-amber-rule",
+  array: "bg-category-orange-surface text-category-orange-ink border-category-orange-rule",
 };
 
 interface VariableCardProps {
