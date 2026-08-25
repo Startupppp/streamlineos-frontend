@@ -1,6 +1,6 @@
 # c6 · Split the two products living inside `kb/`
 
-**Status: shipped on the backend, unfinished on the frontend and in the data.** Verified at source 2026-08-25. `backend/src/modules/kb/` is now `core/ help-centre/ migration/ retrieval/ wiki/` — 135 files, **one** flat (down from 126 files, 109 flat). The folder reads as a table of contents, exactly the shape `hr/` and `build/` already use, and `retrieval/` exists as the review predicted it would once candidate 1 landed. Two things remain: the frontend still carries both `features/kb/` and `features/knowledge-base/` with nothing marking which is which, and `migration/` — the folder whose whole purpose is to become deletable — has no end date.
+**Status: split and decision recorded; retirement remains data-gated.** Verified at source 2026-08-26. The frontend uses `features/help-centre/` and `features/wiki/`, the backend uses `help-centre/` and `wiki/`, and `GET /kb/article-migration/preview` plus `pnpm report:kb-article-migration` now provide tenant-safe migration evidence. The conversion tool remains intentionally retained until every active organisation reports zero unmigrated articles and the legacy intake decision is recorded.
 
 ## Problem Statement
 
