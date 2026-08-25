@@ -12,13 +12,21 @@ Nine candidates, nine specs in [`docs/specs/`](../docs/specs/README.md), 29 tick
 | [c6 — Split help centre and wiki](c6-split-kb-help-centre-and-wiki/README.md) | 3 | **3** | 0 | — complete |
 | [c3 — One representation of capability](c3-one-representation-of-capability/README.md) | 6 | **6** | 0 | — complete |
 | [c8 — Frontend server-data seam](c8-frontend-server-data-seam/README.md) | 3 | **3** | 0 | — complete |
-| [c9 — Transactional outbox](c9-transactional-outbox-decision/README.md) | 1 → 4 | 3 | 1 | unify notifications — held on its timing condition |
+| [c9 — Transactional outbox](c9-transactional-outbox-decision/README.md) | 1 → 4 | **4** | 0 | — complete |
 
-**29 tickets → 29 retired, 1 open. Eight candidates complete: c1, c2, c3, c4, c5, c6, c7, c8.**
+**29 tickets → 29 retired, 0 open. All nine candidates complete.**
 
-The single open ticket, **c9-04**, is decision-complete rather than blocked. Its gate is answered: nothing the notification path guarantees is architecturally impossible on the bus, so the migration *may* proceed. It waits on the timing condition it always had — the bus has not yet run in production.
+## The defect the last ticket found
 
-Its audit surfaced a defect that outlives the ticket entirely: **`dispatch.emit()` is not durable.** It runs after commit via `registerAfterCommit` and **swallows the error into a log**, so a crash between commit and drain loses the notification silently. 49 call sites across 34 files use it; only 3 use the durable `emitDurable`.
+c9-04 was written to unify two durable write paths. Auditing its gate found that the dominant path was not durable at all: **`dispatch.emit()` ran after commit via `registerAfterCommit` and swallowed the error into a log**, so a crash between commit and drain lost the notification silently — across 49 call sites in 34 files, against 3 using the durable alternative.
+
+`emit()` is now the one way to emit, and it is durable: it records the intent inside the caller's transaction, then drains it the moment that transaction commits, so nothing is lost and latency is unchanged. The 27 `void this.dispatch.emit({…})` call sites are `await` — the notification is part of the caller's unit of work and the code now says so.
+
+**The unification landed on `notification_outbox`, not the domain bus.** The gate had identified two costs of routing notifications through `outbox_events` — recipients travelling in `payload` by convention, and TTL needing re-implementation. Both are costs of the destination rather than of unifying, and both vanish on the notification outbox, where `target_user_ids` is a real column and TTL is already applied downstream.
+
+**Two defects surfaced while fixing it, each worse than the bug being fixed:** a stable dedupe key would have permanently swallowed the second comment on a ticket through `onConflictDoNothing`, because the unique index has no time component and rows are never deleted; and the drain marked its row on a handle with no tenant GUC, which RLS refuses `42501`, leaving the row to be re-dispatched as a genuine duplicate.
+
+Proven on a booted app as `streamline_app` with RLS live, by **discarding the drain hook to simulate a crash** — the intent survived PENDING, the relay recovered it, a real notification appeared. Under the old code that emission left no row at all. 465 DELIVERED rows unchanged.
 
 ## The one defect worth remembering from this program
 
@@ -65,21 +73,10 @@ The credential was reset again and a second window used to run every outstanding
 
 - **Fixed this pass:** the survey consumer's self-opened transaction, adopted because an agent believed `DealClosedConsumerService` had an exactly-once defect. Checking the relay showed it wraps `handle()` in `runInNewTenantTransaction` (`outbox-publisher.service.ts:155`), so the premise was false and the divergence is gone.
 
-## Working the frontier
+## What is left as a decision, not as work
 
-Any ticket whose blockers are all done is grabbable. Thirteen are ready immediately. Three candidates have real chains that must be walked in order, and each uses expand → migrate → contract so the build stays green between steps:
-
-- **c3** 01 → 02 → 03 (the flat permission array on the server)
-- **c4** 01 → 02 → {03, 04} (the availability inputs)
-- **c5** 01 → 02 → 03 → 04 (the money path)
-
-## If you only do a few
-
-1. **c3-04** — hydrate the access snapshot at the authenticated layout. One edit; ends the gated-control flash on every authenticated page; closes half of c3.
-2. **c4-01 → 03** — two `async () => []` literals silently delete a branch of a state machine, and three definitions of "core module" feed one function.
-3. **c5** — the only candidate that has not moved, and the only remaining gap on a money path.
-4. **c6-01** — cheapest work in the review, highest legibility payoff.
-5. **c9-01** — decide, with evidence, before any code moves.
+- **`accounting.invoice.issued`** — the one held event type. "Send the invoice to the customer" is an outbound business action, not a notification, and no FK settles who sends it.
+- **`OUTBOX_DISPATCH_ENABLED` is unset by default**, so the domain bus does not drain in production until someone turns it on. That is a deployment choice; the code is ready and was verified with the flag on.
 
 ## Conventions
 
