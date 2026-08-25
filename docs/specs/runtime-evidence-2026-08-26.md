@@ -42,4 +42,6 @@ The report covers every active organization with no sweep failures. There are
 six pending rows and no dead rows; partitioning remains threshold-deferred and
 external provider deduplication remains an operational requirement. The new
 external-effect ledger is committed in code, but migration `0474` has not been
-deployed, so no live ledger counts are claimed.
+deployed, so the report currently returns `externalEffects.deployed=false` and
+no live ledger counts are claimed. The migration is now registered for normal
+discovery and has passed a read-only dry-run.
