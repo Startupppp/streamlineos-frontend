@@ -24,6 +24,12 @@ semantic class, rather than an accidental choice between two generic event
 paths. A new cross-module event goes through `outbox_events`; a notification
 intent goes through `NotificationDispatchService`.
 
+Chat external effects additionally use the tenant-scoped
+`external_effect_ledger` for lease ownership, stale-attempt fencing,
+per-recipient keys, and durable uncertainty accounting. This ledger cannot
+atomically commit a remote provider call with its database finalization, so it
+records at-least-once recovery rather than claiming universal exactly-once.
+
 The original single-ledger wording is amended by this decision: the two
 ledgers are accepted only because they carry different envelopes and delivery
 semantics. No third durable event ledger is permitted, and notification
@@ -35,6 +41,9 @@ intents must not be emitted directly to `outbox_events`.
 - Unregistered event types fail and enter bounded retry/dead-letter handling.
 - `InboxConsumer` suppresses duplicate and out-of-order aggregate versions;
   this is not a universal exactly-once guarantee for external side effects.
+- Chat external effects are suppressed after durable success and reclaimed
+  through fenced leases after worker loss. Provider-enforced idempotency is
+  still required to close the crash-after-remote-acceptance window.
 - Relay work runs inside a fresh tenant transaction; it never borrows a request
   transaction.
 - `GET /cron/outbox-events-metrics` reports pending, in-flight, dead, and oldest
@@ -46,6 +55,8 @@ intents must not be emitted directly to `outbox_events`.
   metrics endpoint are the operational trigger, not an implicit omission.
 - Notification relay rows have their own lease, retry, dead-letter, and dedupe
   guarantees.
+- Migration `0474_external_effect_ledger.sql` must be deployed before chat
+  external-effect fencing is active in a runtime environment.
 
 ## Migration rule
 

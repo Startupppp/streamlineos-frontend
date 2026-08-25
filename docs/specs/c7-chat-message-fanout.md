@@ -1,6 +1,6 @@
 # c7 · Turn the chat send path into a fan-out module
 
-**Status: implemented on the durable transactional outbox.** Re-audited at source 2026-08-26. The fan-out has an injectable outbox-backed provider seam, deterministic idempotency context for realtime/push/notifications, transactional retry, replay protection, and no-double-dispatch tests. An external broker is intentionally not selected; the remaining operational proof is provider-side deduplication and durable per-channel failure observability.
+**Status: implemented on the durable transactional outbox.** Re-audited at source 2026-08-26. The fan-out has an injectable outbox-backed provider seam, deterministic idempotency context for realtime/push/notifications, a tenant-scoped external-effect ledger with lease fencing, transactional retry, replay protection, and no-double-dispatch tests. An external broker is intentionally not selected; provider-enforced exactly-once and live fault-injection evidence remain open.
 
 ## Problem Statement
 
@@ -45,7 +45,17 @@ Then remove the per-message sender read by passing the sender identity into `Fan
 - **Mentions come from the composer and are membership-checked.** `resolveMentionedUserIds` loads the channel's members, drops the sender, and returns `recipients.filter(id => claimed.has(id))` — the client's claim narrows an authoritative list rather than being trusted. `@everyone` returns all recipients. A client-supplied id for a non-member yields nothing.
 - **`chat-channels.service.ts` no longer writes during a read.** Entity-channel display names are resolved and returned on a copy of the row.
 
-**Remaining**
+**Closure recorded**
+
+The implementation binds the provider seam to the durable outbox and
+re-dispatches realtime and deferred effects after post-commit failures. Each
+external effect is independently recorded in the tenant-scoped
+`external_effect_ledger`, keyed by channel, recipient, or push subscription,
+with lease ownership, stale-attempt fencing, retry state, and uncertainty
+counters. Provider failures propagate to the durable relay. This is
+at-least-once delivery: a crash after remote acceptance and before ledger
+finalization can still duplicate unless the provider enforces the supplied
+idempotency key.
 
 - **`MessageFanout` becomes an interface with two implementations.** `InProcessMessageFanout` is today's service, unchanged. `QueuedMessageFanout` enqueues `FanoutInput` and returns. Selection is configuration. `send()` sees neither.
 - **The queued path keeps realtime in-process.** Story 4: publishing to Ably is what makes the message appear, and it must not wait on a queue. Only push and the two notification publishes move. This means the split is *within* dispatch, not at its boundary — the interface takes the whole input either way and decides internally what to defer.
