@@ -72,6 +72,31 @@ discovered at the start of Phase 3.
 |---|---|---|
 | Sentry (or equivalent) DSN | Ticket 01 — error tracking | Port built, nothing attached |
 | OpenTelemetry collector endpoint | Ticket 01 — span export | Port built, nothing attached |
+| `streamline_app` password, set in the Neon console | Tenant isolation in the running app | **Needed** |
 
-Both are one call at boot once an endpoint exists: `setErrorReporter` and
-`setSpanExporter`. Neither blocks anything else.
+The first two are one call at boot once an endpoint exists: `setErrorReporter`
+and `setSpanExporter`. Neither blocks anything else.
+
+## 5. The application database role — *gates RLS actually being enforced*
+
+**Status: needs one action in the Neon console.**
+
+`streamline_app` exists with the right grants and **no BYPASSRLS**, which is the
+role every tenant policy is written to be evaluated against. Today the
+application still connects as `neondb_owner`, which bypasses RLS — the app logs
+this at boot:
+
+> RLS is enabled but "neondb_owner" has BYPASSRLS, so every tenant policy is inert.
+
+The password cannot be set from here. Neon manages role credentials in its
+control plane, so `ALTER ROLE streamline_app PASSWORD ...` authenticates
+immediately and then reverts when the compute suspends — verified by doing it:
+the app booted fine and failed authentication the next session.
+
+**What to do:** set the `streamline_app` password in the Neon console (or via
+their API), then set `APP_DATABASE_URL` to that connection string. One step, and
+tenant isolation moves from proved-in-a-test to enforced-in-production.
+
+*The isolation suite does not need this* — it provisions its own short-lived
+credential through the owner connection, so the proof that RLS works is not
+waiting on anybody.
