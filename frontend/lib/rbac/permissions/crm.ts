@@ -79,6 +79,8 @@ export const CRM_PERMISSIONS: Permission[] = [
   { name: "crm:activities:view", resource: "crm:activities", action: "view", description: "Read the unified timeline of calls, emails, meetings, notes and tasks" },
   { name: "crm:activities:manage", resource: "crm:activities", action: "manage", description: "Log, edit, complete and remove activities on the timeline" },
   { name: "crm:data-quality:view", resource: "crm:data-quality", action: "view", description: "View CRM data quality dashboard" },
+  { name: "crm:data-quality:assign", resource: "crm:data-quality", action: "assign", description: "Assign data quality findings to a person, or hand them back to the queue" },
+  { name: "crm:data-quality:resolve", resource: "crm:data-quality", action: "resolve", description: "Resolve or dismiss data quality findings in bulk, reverse a resolution, and run the producers" },
   { name: "crm:email-templates:manage", resource: "crm:email-templates", action: "manage", description: "Manage CRM email templates" },
   { name: "crm:offer-fulfillment:create", resource: "crm:offer-fulfillment", action: "create", description: "Create CRM offer → Inventory SKU fulfillment mappings" },
   { name: "crm:offer-fulfillment:delete", resource: "crm:offer-fulfillment", action: "delete", description: "Delete CRM offer → Inventory SKU fulfillment mappings" },
