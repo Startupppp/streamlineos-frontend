@@ -2,6 +2,8 @@
 
 **Implementation status re-audited at source on 2026-08-26.** The scoped c1–c9 seams are implemented and focused tests pass, but the PRDs remain because not every acceptance criterion has 100% production evidence yet. CRM, Inventory, and HRMS ticket work is excluded by direction.
 
+Live c6/c9 report summaries are recorded in [`runtime-evidence-2026-08-26.md`](runtime-evidence-2026-08-26.md).
+
 | # | Candidate | Closed by |
 |---|---|---|
 | [c1](c1-kb-visibility-seam.md) | KB visibility predicate as a seam | Implemented: bounded resumable backfill, seeded direct/keyword/vector parity coverage, and denial-of-wallet tests; live seeded artifact remains unavailable |
