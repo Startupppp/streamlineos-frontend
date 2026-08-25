@@ -39,6 +39,7 @@ export function LeadTableView({
   onStatusChange, onPriorityChange, onAssign,
   onBulkUpdate, onBulkDelete, teamMembers,
   isLoading, canUpdate, canAssign, canDelete, canCreateDeal,
+  canCreate, activeFilterLabels, onClearFilters, onCreateLead,
 }: LeadTableViewProps) {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [editingCell, setEditingCell] = useState<{ leadId: number; column: string } | null>(null);
@@ -165,11 +166,23 @@ export function LeadTableView({
     </div>
   );
 
-  const emptyState = (
+  const isFiltered = activeFilterLabels.length > 0;
+
+  const emptyState = isFiltered ? (
     <EmptyState
       illustration={<EmptyLeadsIllustration />}
-      title="No leads found"
-      description="No leads match your current filters."
+      title="No leads match these filters"
+      description={`Filtering by ${activeFilterLabels.join(", ")}. Clear the filters to see every lead.`}
+      action={{ label: "Clear filters", onClick: onClearFilters }}
+      actionVariant="outline"
+      className="border-0 bg-transparent min-h-[40dvh]"
+    />
+  ) : (
+    <EmptyState
+      illustration={<EmptyLeadsIllustration />}
+      title="No leads yet"
+      description="Leads are the people and companies you are selling to. Add one by hand, or import a CSV to bring your existing list in."
+      action={canCreate ? { label: "Add lead", onClick: onCreateLead } : undefined}
       className="border-0 bg-transparent min-h-[40dvh]"
     />
   );

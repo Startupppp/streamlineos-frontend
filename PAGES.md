@@ -398,6 +398,12 @@ through `LedgerService`; money is integer minor units end to end; tax comes from
 a pluggable engine, never a hardcoded GST split. Founder wording by default with
 an accountant-label toggle on every report.
 
+Drill-to-source is live (PRD 09 §L): `/accounting/general-ledger` serves the real
+entries behind an account — server-paginated, with a running balance that carries
+across pages, a link to `/accounting/journal/[journalId]` on every row and a link
+to the invoice or bill that caused it. It was a stub returning only the opening
+balance until 2026-08-25.
+
 - [x] `/accounting` — founder hub: cash, what customers owe, what we owe, profit this month
 - [x] `/accounting/setup` — one-step enable (book + chart of accounts + fiscal year + tax rates) and tax registrations
 - [x] `/accounting/coa` · `/accounting/journal` · `/accounting/journal/[journalId]` · `/accounting/general-ledger` · `/accounting/period-close` · `/accounting/opening-balances`

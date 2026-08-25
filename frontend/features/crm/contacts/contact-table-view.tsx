@@ -19,7 +19,8 @@ interface ContactTableViewProps {
   total: number;
   page: number;
   totalPages: number;
-  apiSearch: string;
+  activeFilterLabels: string[];
+  onClearFilters: () => void;
   isEnrichPending: boolean;
   selectedIds: Set<number>;
   onSelectionChange: (ids: Set<number>) => void;
@@ -36,7 +37,8 @@ export function ContactTableView({
   items,
   total,
   page,
-  apiSearch,
+  activeFilterLabels,
+  onClearFilters,
   isEnrichPending,
   selectedIds,
   onSelectionChange,
@@ -177,21 +179,24 @@ export function ContactTableView({
           onPageChange,
         }}
         emptyState={
-          <EmptyState
-            illustration={<EmptyPersonIllustration />}
-            title="No contacts found"
-            description={
-              apiSearch
-                ? "No contacts match your search."
-                : "Create your first contact to get started."
-            }
-            action={
-              apiSearch || !canManage
-                ? undefined
-                : { label: "New Contact", onClick: onOpenCreate }
-            }
-            className="border-0 bg-transparent min-h-[40dvh]"
-          />
+          activeFilterLabels.length > 0 ? (
+            <EmptyState
+              illustration={<EmptyPersonIllustration />}
+              title="No contacts match these filters"
+              description={`Filtering by ${activeFilterLabels.join(", ")}. Clear the filters to see every contact.`}
+              action={{ label: "Clear filters", onClick: onClearFilters }}
+              actionVariant="outline"
+              className="border-0 bg-transparent min-h-[40dvh]"
+            />
+          ) : (
+            <EmptyState
+              illustration={<EmptyPersonIllustration />}
+              title="No contacts yet"
+              description="Contacts are the people you deal with at each company. Add one, or import a CSV to bring your existing list in."
+              action={canManage ? { label: "Add contact", onClick: onOpenCreate } : undefined}
+              className="border-0 bg-transparent min-h-[40dvh]"
+            />
+          )
         }
         minWidth="580px"
         className="flex-1 min-h-0"

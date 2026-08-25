@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -87,10 +88,10 @@ export default function BlueprintsPage() {
             {[0, 1, 2].map((i) => <Skeleton key={i} className="h-14 w-full" />)}
           </div>
         ) : isError ? (
-          <EmptyState
-            title="Failed to load blueprints"
-            description="Something went wrong. Please try again."
-            action={{ label: "Retry", onClick: handleRetry }}
+          <ErrorState
+            title="Couldn't load blueprints"
+            description="The blueprint list didn't load. Check your connection and try again."
+            onRetry={handleRetry}
             className={CONTENT_FILL_PANEL}
           />
         ) : !blueprints || blueprints.length === 0 ? (

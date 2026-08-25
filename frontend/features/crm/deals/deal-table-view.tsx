@@ -8,6 +8,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyDealsIllustration } from "@/components/illustrations";
 import { formatDealId, formatMoneyCompact } from "@/lib/format-utils";
 import { useCrmStages, resolveStage } from "@/hooks/api/crm/metadata";
 import { CrmStageBadge } from "@/features/crm/shared/metadata";
@@ -34,6 +36,10 @@ interface DealTableViewProps {
   onSort: (column: string) => void;
   onStageChange: (dealId: number, newStage: string) => void;
   isLoading: boolean;
+  canCreate: boolean;
+  activeFilterLabels: string[];
+  onClearFilters: () => void;
+  onCreateDeal: () => void;
 }
 
 const stopPropagation = (e: React.MouseEvent) => e.stopPropagation();
@@ -104,6 +110,7 @@ function StageCell({ deal, isEditing, onStageChange, onStartEdit }: StageCellPro
 
 export function DealTableView({
   deals, sortColumn, sortDirection, onSort, onStageChange, isLoading,
+  canCreate, activeFilterLabels, onClearFilters, onCreateDeal,
 }: DealTableViewProps) {
   const money = useOrgDisplay();
   const router = useRouter();
@@ -219,11 +226,25 @@ export function DealTableView({
     },
   ];
 
-  const emptyState = (
-    <div className="flex flex-col items-center justify-center min-h-[40dvh] text-center py-12 px-6">
-      <p className="text-sm font-semibold text-foreground">No deals found</p>
-      <p className="text-xs text-muted-foreground mt-1">Try adjusting your filters or create a new deal.</p>
-    </div>
+  const isFiltered = activeFilterLabels.length > 0;
+
+  const emptyState = isFiltered ? (
+    <EmptyState
+      illustration={<EmptyDealsIllustration />}
+      title="No deals match these filters"
+      description={`Filtering by ${activeFilterLabels.join(", ")}. Clear the filters to see every deal.`}
+      action={{ label: "Clear filters", onClick: onClearFilters }}
+      actionVariant="outline"
+      className="border-0 bg-transparent min-h-[40dvh]"
+    />
+  ) : (
+    <EmptyState
+      illustration={<EmptyDealsIllustration />}
+      title="No deals yet"
+      description="A deal tracks one opportunity through your pipeline — its value, stage and close date. Create one to start forecasting."
+      action={canCreate ? { label: "New deal", onClick: onCreateDeal } : undefined}
+      className="border-0 bg-transparent min-h-[40dvh]"
+    />
   );
 
   return (

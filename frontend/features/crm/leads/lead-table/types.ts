@@ -63,6 +63,10 @@ export interface LeadTableViewProps {
   canAssign: boolean;
   canDelete: boolean;
   canCreateDeal: boolean;
+  canCreate: boolean;
+  activeFilterLabels: string[];
+  onClearFilters: () => void;
+  onCreateLead: () => void;
 }
 
 export const PAGE_SIZES = [25, 50, 100] as const;

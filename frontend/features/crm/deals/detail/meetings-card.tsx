@@ -8,6 +8,7 @@ import { Calendar, Plus, Trash2, Video, ExternalLink } from "lucide-react";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
+import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 
 interface Meeting {
@@ -40,9 +41,15 @@ interface MeetingsCardProps {
   meetings: Meeting[] | undefined;
   onAddMeeting: () => void;
   onDeleteMeeting: (id: number) => void;
+  isLoading?: boolean;
 }
 
-export function MeetingsCard({ meetings, onAddMeeting, onDeleteMeeting }: MeetingsCardProps) {
+export function MeetingsCard({
+  meetings,
+  onAddMeeting,
+  onDeleteMeeting,
+  isLoading = false,
+}: MeetingsCardProps) {
   return (
     <Card className="shadow-noir">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -52,7 +59,20 @@ export function MeetingsCard({ meetings, onAddMeeting, onDeleteMeeting }: Meetin
         </Button>
       </CardHeader>
       <CardContent>
-        {!meetings?.length ? (
+        {isLoading ? (
+          <div className="space-y-3" aria-busy="true">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="rounded-lg border bg-muted/30 p-3">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-3.5 w-3.5 shrink-0 rounded" />
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-4 w-16 rounded-full" />
+                </div>
+                <Skeleton className="mt-2 h-3 w-32" />
+              </div>
+            ))}
+          </div>
+        ) : !meetings?.length ? (
           <EmptyState illustration={<EmptyCalendarIllustration />} title="No meetings scheduled" compact />
         ) : (
           <div className="space-y-3">

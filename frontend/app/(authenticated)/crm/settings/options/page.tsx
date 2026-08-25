@@ -29,6 +29,7 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import {
   useCrmMetadata,
@@ -333,10 +334,10 @@ export default function CrmOptionsPage() {
             {[0, 1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-9 w-full" />)}
           </div>
         ) : isError ? (
-          <EmptyState
-            title="Failed to load options"
-            description="Something went wrong. Please try again."
-            action={{ label: "Retry", onClick: handleRetry }}
+          <ErrorState
+            title="Couldn't load options"
+            description="The dropdown options didn't load. Check your connection and try again."
+            onRetry={handleRetry}
             className={CONTENT_FILL_PANEL}
           />
         ) : (

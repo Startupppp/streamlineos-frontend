@@ -30,7 +30,8 @@ interface ContactCardViewProps {
   total: number;
   page: number;
   totalPages: number;
-  apiSearch: string;
+  activeFilterLabels: string[];
+  onClearFilters: () => void;
   isEnrichPending: boolean;
   onRequestDelete: (id: number) => void;
   onEdit: (contact: Contact) => void;
@@ -45,7 +46,8 @@ export function ContactCardView({
   total,
   page,
   totalPages,
-  apiSearch,
+  activeFilterLabels,
+  onClearFilters,
   isEnrichPending,
   onRequestDelete,
   onEdit,
@@ -211,23 +213,25 @@ export function ContactCardView({
         ))}
       </motion.div>
 
-      {items.length === 0 && (
-        <EmptyState
-          illustration={<EmptyPersonIllustration />}
-          title="No contacts found"
-          description={
-            apiSearch
-              ? "No contacts match your search."
-              : "Create your first contact to get started."
-          }
-          action={
-            apiSearch || !canManage
-              ? undefined
-              : { label: "New Contact", onClick: onOpenCreate }
-          }
-          className="min-h-[50dvh]"
-        />
-      )}
+      {items.length === 0 &&
+        (activeFilterLabels.length > 0 ? (
+          <EmptyState
+            illustration={<EmptyPersonIllustration />}
+            title="No contacts match these filters"
+            description={`Filtering by ${activeFilterLabels.join(", ")}. Clear the filters to see every contact.`}
+            action={{ label: "Clear filters", onClick: onClearFilters }}
+            actionVariant="outline"
+            className="min-h-[50dvh]"
+          />
+        ) : (
+          <EmptyState
+            illustration={<EmptyPersonIllustration />}
+            title="No contacts yet"
+            description="Contacts are the people you deal with at each company. Add one, or import a CSV to bring your existing list in."
+            action={canManage ? { label: "Add contact", onClick: onOpenCreate } : undefined}
+            className="min-h-[50dvh]"
+          />
+        ))}
 
       {totalPages > 1 && (
         <motion.div

@@ -18,10 +18,11 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyLeadsIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { CsvUploadDialog } from "@/features/crm/leads/csv-upload-dialog";
+import { ImportLinkButton } from "@/features/crm/import/import-link-button";
 import { LeadDistributionDialog } from "@/features/crm/leads/lead-distribution-dialog";
 import { Users, ArrowRight, FileSpreadsheet } from "lucide-react";
 import { useLeads } from "@/hooks/api/leads";
+import { useCan } from "@/hooks/api/access";
 import { useQueryClient } from "@tanstack/react-query";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { queryKeys } from "@/lib/query-keys";
@@ -98,6 +99,7 @@ export default function LeadDistributionPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const qc = useQueryClient();
+  const canCreateLead = useCan("crm:leads:create");
 
   const [inputValue, setInputValue] = useState(searchParams.get("q") ?? "");
   const [statusFilter, setStatusFilter] = useState(searchParams.get("status") ?? "all");
@@ -215,7 +217,7 @@ export default function LeadDistributionPage() {
       }
       actions={
         <>
-          <CsvUploadDialog onSuccess={refetch} />
+          {canCreateLead ? <ImportLinkButton entity="leads" label="Import Leads" /> : null}
           <Button disabled={selectedIds.size === 0} onClick={handleShowDistribute}>
             <Users className="h-3.5 w-3.5 mr-1.5" />
             Distribute ({selectedIds.size})

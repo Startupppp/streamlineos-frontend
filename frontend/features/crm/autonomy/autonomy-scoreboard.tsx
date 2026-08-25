@@ -14,6 +14,7 @@ import { useAutonomyScoreboard } from "@/hooks/api/crm/autonomy";
 import { statusToneClasses, type StatusTone } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 import { KIND_LABELS, type ScoreboardKindRow } from "@/types/crm/autonomy";
+import { DatasetHealthPanel } from "./dataset-health-panel";
 
 /**
  * A correction rate is only readable next to how much it is based on.
@@ -83,6 +84,12 @@ function KindRow({ row }: { row: ScoreboardKindRow }) {
  * With no approval gate anywhere, this is the evidence a tenant has for
  * enabling an action type — and the strongest argument anyone will make for
  * trusting the product.
+ *
+ * The dataset's own health lives here too, under the same window control. It is
+ * not a second scoreboard beside this one: a tenant has one place it comes to
+ * ask whether any of this is working, and splitting "how often was it right"
+ * from "how good is the data it was right about" into two habits means nobody
+ * ever holds the two side by side.
  */
 export function AutonomyScoreboard() {
   const [days, setDays] = useState(30);
@@ -135,6 +142,13 @@ export function AutonomyScoreboard() {
                 <KindRow key={row.kind} row={row} />
               ))}
             </div>
+
+            {/*
+              Guarded rather than assumed. A client deployed against an older API
+              gets the rest of the card instead of a blank one — and the guard is
+              cheap next to a scoreboard that renders nothing.
+            */}
+            {data.dataset ? <DatasetHealthPanel trend={data.dataset} /> : null}
 
             {/* Spend, so an unprofitable tenant is visible before the invoice. */}
             {data ? (

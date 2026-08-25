@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { Customer360Response, Customer360SectionItem } from "@/types/crm";
 import type { StatTone } from "@/components/ui/stat-card";
 
@@ -138,9 +139,11 @@ export function Customer360Section({ data, isLoading }: Customer360SectionProps)
 
   if (visibleSections.length === 0) {
     return (
-      <p className="text-xs text-muted-foreground py-4 text-center">
-        No data available. You may not have permission to view all sections.
-      </p>
+      <EmptyState
+        title="No sections you can view"
+        description="Customer 360 draws on deals, invoices and support history. You do not have permission to view any of them — ask your administrator for access."
+        compact
+      />
     );
   }
 

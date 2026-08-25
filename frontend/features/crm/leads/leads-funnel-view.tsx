@@ -2,7 +2,8 @@
 
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
-import { ChartEmptyState } from "@/components/charts/chart-empty-state";
+import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyLeadsIllustration } from "@/components/illustrations";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import type { BoardLead } from "@/features/crm/leads/leads-types";
 
@@ -37,17 +38,42 @@ const STAGE_BG: Record<Stage, string> = {
 
 interface LeadsFunnelViewProps {
   board: LeadBoard | null;
+  searchQuery: string;
+  onClearSearch: () => void;
+  onCreateLead: () => void;
+  canCreate: boolean;
 }
 
-export function LeadsFunnelView({ board }: LeadsFunnelViewProps) {
-  if (!board) {
-    return (
-      <div className="flex-1 flex items-center justify-center py-16">
-        <ChartEmptyState
-          message="Add leads to the pipeline to see the conversion funnel"
-          height={220}
-        />
-      </div>
+export function LeadsFunnelView({
+  board,
+  searchQuery,
+  onClearSearch,
+  onCreateLead,
+  canCreate,
+}: LeadsFunnelViewProps) {
+  const totalLeads = board
+    ? STAGE_ORDER.reduce((sum, stage) => sum + (board[stage]?.length ?? 0), 0)
+    : 0;
+
+  if (!board || totalLeads === 0) {
+    const trimmedSearch = searchQuery.trim();
+    return trimmedSearch ? (
+      <EmptyState
+        illustration={<EmptyLeadsIllustration />}
+        title="No leads match this search"
+        description={`Searching for "${trimmedSearch}". Clear the search to see the whole funnel.`}
+        action={{ label: "Clear search", onClick: onClearSearch }}
+        actionVariant="outline"
+        className="flex-1"
+      />
+    ) : (
+      <EmptyState
+        illustration={<EmptyLeadsIllustration />}
+        title="No leads yet"
+        description="The funnel shows how leads convert from one stage to the next. Add a lead and it starts filling in."
+        action={canCreate ? { label: "Add lead", onClick: onCreateLead } : undefined}
+        className="flex-1"
+      />
     );
   }
 

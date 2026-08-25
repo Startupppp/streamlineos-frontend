@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Briefcase, Clock, FileText, Handshake, Contact2, BarChart3, UserCheck, ShieldCheck, Star, TrendingUp, Package, Share2, MailOpen, Zap, History, BarChart2, Inbox, Building2, SlidersHorizontal, Brain, Copy, Search, Sliders, CheckSquare, Key, Activity, Megaphone, Bot, ArrowLeftRight } from "lucide-react";
+import { LayoutDashboard, Users, Briefcase, Clock, FileText, Handshake, Contact2, BarChart3, UserCheck, ShieldCheck, Star, TrendingUp, Package, Share2, MailOpen, Zap, History, BarChart2, Inbox, Building2, SlidersHorizontal, Brain, Copy, Search, Sliders, CheckSquare, Key, Activity, Megaphone, Bot, ArrowLeftRight, AlertTriangle } from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
 export const CRM_NAV_GROUPS: NavGroup[] = [
@@ -131,6 +131,16 @@ export const CRM_NAV_GROUPS: NavGroup[] = [
         icon: Activity,
         href: "/crm/activities",
         requiredPermission: "crm:leads:view",
+      },
+      {
+        // Issues, tasks and complaints — three record types on one surface, so
+        // one destination rather than three. Gated on its own key: seeing how
+        // many complaints are open is a distinct authority from working the
+        // pipeline, and a customer complaint is not a lead.
+        label: "Issues & complaints",
+        icon: AlertTriangle,
+        href: "/crm/issues",
+        requiredPermission: "crm:issues:view",
       },
       {
         // The oversight surface for everything the system does without asking.

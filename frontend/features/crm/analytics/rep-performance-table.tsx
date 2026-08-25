@@ -84,13 +84,13 @@ export function RepPerformanceTable({ leaderboard }: RepPerformanceTableProps) {
   return (
     <AnalyticsChartCard title="Rep Performance" data={chartData} filename="rep-performance">
       {!leaderboard || leaderboard.length === 0 ? (
-        <ChartEmptyState height={220} compact />
+        <ChartEmptyState message="No rep activity in this period" height={220} compact />
       ) : (
         <DataTable
           data={rankedData}
           columns={columns}
           getRowKey={(row) => row.userId}
-          emptyState={<ChartEmptyState height={220} compact />}
+          emptyState={<ChartEmptyState message="No rep activity in this period" height={220} compact />}
         />
       )}
     </AnalyticsChartCard>

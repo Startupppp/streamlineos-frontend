@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { Building2, Clock, AlertCircle, ClipboardList } from "lucide-react";
@@ -11,6 +11,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyChartIllustration } from "@/components/illustrations";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
 import {
   useCrmDataQuality,
   type DataQualityAggregate,
@@ -170,7 +172,11 @@ const CARD_CONFIGS: CardConfig[] = [
 ];
 
 export function DataQualityPage() {
-  const { data, isLoading, error } = useCrmDataQuality();
+  const { data, isLoading, error, refetch } = useCrmDataQuality();
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   if (isLoading) {
     return (
@@ -187,7 +193,12 @@ export function DataQualityPage() {
   if (error || !data) {
     return (
       <PageWrapper title="Data Quality" subtitle="CRM data health overview">
-        <p className="text-sm text-destructive">{getErrorMessage(error)}</p>
+        <ErrorState
+          title="Couldn't load the data quality report"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+          className="flex-1"
+        />
       </PageWrapper>
     );
   }
@@ -197,11 +208,12 @@ export function DataQualityPage() {
   if (allClean) {
     return (
       <PageWrapper title="Data Quality" subtitle="CRM data health overview">
-        <div className="flex flex-col items-center justify-center flex-1 h-full py-16 gap-4">
-          <EmptyChartIllustration className="w-48 h-48" />
-          <p className="text-base font-medium text-foreground">Your CRM data is clean</p>
-          <p className="text-sm text-muted-foreground">No data quality issues found.</p>
-        </div>
+        <EmptyState
+          illustration={<EmptyChartIllustration />}
+          title="Your CRM data is clean"
+          description="Every check passed — no missing emails or phone numbers, no duplicates, no stale or unassigned records."
+          className="flex-1"
+        />
       </PageWrapper>
     );
   }

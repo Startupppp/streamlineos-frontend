@@ -84,6 +84,11 @@ export default function CompaniesPage() {
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const handleOpenCreate = useCallback(() => openCreate(), [openCreate]);
+
+  const handleClearSearch = useCallback(() => {
+    setSearch("");
+    updateParams({ q: null, page: null });
+  }, [updateParams]);
   const handleClearSelection = useCallback(() => setSelectedIds(new Set()), []);
   const handleBulkMerge = useCallback(() => setBulkMergeOpen(true), []);
 
@@ -328,21 +333,24 @@ export default function CompaniesPage() {
                 onPageChange: handlePageChange,
               }}
               emptyState={
-                <EmptyState
-                  illustration={<EmptyCompaniesIllustration className="w-32 h-32" />}
-                  title="No companies found"
-                  description={
-                    debouncedSearch
-                      ? "No companies match your search."
-                      : "Create your first company to get started."
-                  }
-                  action={
-                    debouncedSearch
-                      ? undefined
-                      : { label: "New Company", onClick: handleOpenCreate }
-                  }
-                  className="border-0 bg-transparent min-h-[40dvh]"
-                />
+                debouncedSearch.trim() ? (
+                  <EmptyState
+                    illustration={<EmptyCompaniesIllustration className="w-32 h-32" />}
+                    title="No companies match this search"
+                    description={`Searching for "${debouncedSearch.trim()}". Clear the search to see every company.`}
+                    action={{ label: "Clear search", onClick: handleClearSearch }}
+                    actionVariant="outline"
+                    className="border-0 bg-transparent min-h-[40dvh]"
+                  />
+                ) : (
+                  <EmptyState
+                    illustration={<EmptyCompaniesIllustration className="w-32 h-32" />}
+                    title="No companies yet"
+                    description="A company groups the contacts, leads and deals belonging to one account. Add the first one to start linking records to it."
+                    action={{ label: "Add company", onClick: handleOpenCreate }}
+                    className="border-0 bg-transparent min-h-[40dvh]"
+                  />
+                )
               }
               minWidth="640px"
               className="flex-1 min-h-0"
