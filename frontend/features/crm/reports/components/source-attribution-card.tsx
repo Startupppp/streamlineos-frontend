@@ -99,7 +99,7 @@ export function SourceAttributionCard({
         getRowKey={(row) => row.source}
         isLoading={isLoading}
         emptyState={
-          <ChartEmptyState message="No source data available" compact className="py-10 px-4" />
+          <ChartEmptyState message="No leads with a recorded source yet" compact className="py-10 px-4" />
         }
       />
     </Card>

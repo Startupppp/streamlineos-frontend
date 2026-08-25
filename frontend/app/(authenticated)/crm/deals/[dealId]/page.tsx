@@ -79,7 +79,7 @@ export default function DealDetailPage({
   const [isCreatingProject, setIsCreatingProject] = useState(false);
 
   const updateDeal = useUpdateDeal();
-  const { data: meetings } = useDealMeetings(dealId);
+  const { data: meetings, isLoading: meetingsLoading } = useDealMeetings(dealId);
   const logActivity = useLogDealActivity();
   const createMeeting = useCreateDealMeeting(dealId);
   const deleteMeeting = useDeleteDealMeeting(dealId);
@@ -466,6 +466,7 @@ export default function DealDetailPage({
               client={deal.client}
               keyDates={keyDates}
               meetings={meetings}
+              meetingsLoading={meetingsLoading}
               onQuickActionClick={handleQuickActionClick}
               onAddMeeting={handleOpenMeetingDialog}
               onDeleteMeeting={handleDeleteMeeting}

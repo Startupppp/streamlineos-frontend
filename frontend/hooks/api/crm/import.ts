@@ -42,6 +42,7 @@ export function useCommitImport() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: ["crm", "imports", "commit"],
     /**
      * Starts the import, then polls until it says it is done.
      *

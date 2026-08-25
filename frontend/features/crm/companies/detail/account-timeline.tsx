@@ -4,6 +4,7 @@ import { formatDistanceToNow } from "date-fns";
 import { UserPlus, TrendingUp, Link2, FileText } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyActivityIllustration } from "@/components/illustrations";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import type { OrgTimelineEvent, OrgTimelineEventType } from "@/types/crm";
 
@@ -19,9 +20,24 @@ const eventConfig: Record<
 
 interface AccountTimelineProps {
   events: OrgTimelineEvent[];
+  isLoading?: boolean;
 }
 
-export function AccountTimeline({ events }: AccountTimelineProps) {
+export function AccountTimeline({ events, isLoading = false }: AccountTimelineProps) {
+  if (isLoading) {
+    return (
+      <ol className="relative border-l border-border/60 ml-2 space-y-4" aria-busy="true">
+        {[0, 1, 2, 3].map((i) => (
+          <li key={i} className="ml-4">
+            <Skeleton className="absolute -left-3 h-6 w-6 rounded-full" />
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="mt-1 h-3 w-20" />
+          </li>
+        ))}
+      </ol>
+    );
+  }
+
   if (events.length === 0) {
     return <EmptyState illustration={<EmptyActivityIllustration />} title="No activity yet" compact />;
   }

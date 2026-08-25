@@ -61,6 +61,7 @@ export function useReverseDecision() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: ["crm", "autonomy", "decisions", "reverse"],
     mutationFn: ({
       decisionId,
       reason,
@@ -102,6 +103,7 @@ export function useSetAutonomySwitch() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: ["crm", "autonomy", "switches", "set"],
     mutationFn: (input: { kind: string; enabled: boolean; reason?: string }) =>
       apiClient.patch<SwitchesResponse>("/crm/autonomy/switches", input),
     onSuccess: (data) => {
@@ -138,6 +140,7 @@ export function useMarkReviewed() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: ["crm", "autonomy", "review-queue", "mark-reviewed"],
     mutationFn: (shadowScoreId: string) =>
       apiClient.post<{ reviewed: boolean }>(
         `/crm/autonomy/review-queue/${shadowScoreId}/reviewed`,
@@ -164,6 +167,7 @@ export function useUpdateAutonomySettings() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: ["crm", "autonomy", "settings", "update"],
     mutationFn: (patch: Partial<AutonomySettings>) =>
       apiClient.patch<AutonomySettings>("/crm/autonomy/settings", patch),
     onSuccess: (data) => {
@@ -195,6 +199,7 @@ export function useCancelHold() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: ["crm", "autonomy", "holds", "cancel"],
     mutationFn: ({ holdId, reason }: { holdId: string; reason?: string }) =>
       apiClient.post<{ cancelled: boolean }>(`/crm/autonomy/holds/${holdId}/cancel`, {
         ...(reason ? { reason } : {}),

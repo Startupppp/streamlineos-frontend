@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -164,10 +165,10 @@ export default function PipelinesPage() {
             </div>
           </div>
         ) : isError ? (
-          <EmptyState
-            title="Failed to load pipelines"
-            description="Something went wrong loading pipeline data."
-            action={{ label: "Retry", onClick: handleRetry }}
+          <ErrorState
+            title="Couldn't load pipelines"
+            description="The pipeline list didn't load. Check your connection and try again."
+            onRetry={handleRetry}
             className={CONTENT_FILL_PANEL}
           />
         ) : (

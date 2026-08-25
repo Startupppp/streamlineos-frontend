@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import {
   useTasks,
@@ -103,7 +104,7 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
 
   const createTask = useCreateTask();
   const completeTask = useCompleteTask();
-  const { data: leadTasksData } = useTasks({
+  const { data: leadTasksData, isLoading: tasksLoading } = useTasks({
     entityType: "LEAD",
     entityId: leadId,
     limit: 20,
@@ -350,14 +351,32 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
         </div>
       )}
 
-      {pendingTasks.length === 0 && doneTasks.length === 0 && (
-        <div className="text-center py-8 text-muted-foreground/50">
-          <CalendarClock className="w-8 mx-auto mb-2 opacity-40" />
-          <p className="text-xs">No follow-ups yet</p>
-          <p className="text-dense mt-0.5">
-            Schedule one above to stay on track
-          </p>
+      {tasksLoading ? (
+        <div className="space-y-2" aria-busy="true">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="flex items-start gap-3 rounded-lg border border-border/40 bg-muted/20 p-3"
+            >
+              <Skeleton className="h-8 w-7 shrink-0 rounded-md" />
+              <div className="flex-1 space-y-1.5">
+                <Skeleton className="h-4 w-2/3" />
+                <Skeleton className="h-3 w-24" />
+              </div>
+            </div>
+          ))}
         </div>
+      ) : (
+        pendingTasks.length === 0 &&
+        doneTasks.length === 0 && (
+          <div className="text-center py-8 text-muted-foreground/50">
+            <CalendarClock className="w-8 mx-auto mb-2 opacity-40" />
+            <p className="text-xs">No follow-ups yet</p>
+            <p className="text-dense mt-0.5">
+              Schedule one above to stay on track
+            </p>
+          </div>
+        )
       )}
     </div>
   );

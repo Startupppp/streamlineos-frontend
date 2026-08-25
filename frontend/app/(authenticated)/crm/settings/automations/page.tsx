@@ -9,6 +9,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -255,10 +256,10 @@ export default function AutomationsPage() {
         }
       >
         {isError ? (
-          <EmptyState
-            title="Failed to load automations"
-            description="Could not fetch automation rules."
-            action={{ label: "Retry", onClick: handleRetry }}
+          <ErrorState
+            title="Couldn't load automations"
+            description="The automation rules didn't load. Check your connection and try again."
+            onRetry={handleRetry}
             className={CONTENT_FILL_PANEL}
           />
         ) : rules.length === 0 && !isLoading ? (

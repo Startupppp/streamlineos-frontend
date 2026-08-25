@@ -8,7 +8,7 @@ export default function CrmImportExportPage() {
   return (
     <PageWrapper
       title="Import / Export"
-      subtitle="Export CRM data as CSV. Use CSV Import on Leads, Contacts, or Deals list pages for bulk uploads."
+      subtitle="Export CRM data as CSV. Bringing data in happens at CRM → Import and export."
     >
       <ImportExportGrid entities={CRM_IMPORT_EXPORT_ENTITIES} />
     </PageWrapper>

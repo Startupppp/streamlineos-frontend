@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import type { Scoreboard } from "@/types/crm/autonomy";
+import type { DatasetHealthTrend, Scoreboard } from "@/types/crm/autonomy";
 import { AutonomyScoreboard } from "./autonomy-scoreboard";
 
 const mockUseScoreboard = jest.fn();
@@ -30,7 +30,31 @@ const board = (over: Partial<Scoreboard> = {}): Scoreboard => ({
       shadowDisagreementRate: null,
     },
   ],
+  dataset: dataset(),
   spend: { calls: 140, totalTokens: 91_000, estimatedCostUsd: "1.2345" },
+  ...over,
+});
+
+const dataset = (over: Partial<DatasetHealthTrend> = {}): DatasetHealthTrend => ({
+  windowDays: 30,
+  current: {
+    // 2 high + 1 medium + 5 low, weighted 8/3/1.
+    composite: 24,
+    openTotal: 8,
+    bySeverity: { high: 2, medium: 1, low: 5 },
+    byClass: [
+      { producer: "duplicate", count: 2, weight: 16 },
+      { producer: "staleness", count: 5, weight: 5 },
+      { producer: "contradiction", count: 1, weight: 3 },
+    ],
+  },
+  series: [
+    { capturedOn: "2026-07-25", composite: 40, openTotal: 14 },
+    { capturedOn: "2026-08-24", composite: 24, openTotal: 8 },
+  ],
+  baseline: { capturedOn: "2026-07-25", composite: 40, openTotal: 14 },
+  delta: -16,
+  direction: "improving",
   ...over,
 });
 
@@ -115,5 +139,84 @@ describe("when the numbers cannot be read", () => {
     mockUseScoreboard.mockReturnValue({ data: undefined, isLoading: false, isError: true });
     render(<AutonomyScoreboard />);
     expect(screen.queryByText("0%")).not.toBeInTheDocument();
+  });
+});
+
+/**
+ * Dataset health is on this card rather than a data-quality one of its own,
+ * because a rising correction rate and worsening data are usually one story.
+ */
+describe("the dataset behind the numbers", () => {
+  beforeEach(() => {
+    mockUseScoreboard.mockReturnValue({ data: board(), isLoading: false });
+  });
+
+  it("shows the composite with the raw count beside it", () => {
+    render(<AutonomyScoreboard />);
+    expect(screen.getByText("24")).toBeInTheDocument();
+    // The weighted number alone cannot say whether it is three bad
+    // contradictions or twenty-four stale leads.
+    expect(screen.getByText(/8 open · 2 high, 1 medium, 5 low/)).toBeInTheDocument();
+  });
+
+  it("says which way it moved, and that down is better", () => {
+    render(<AutonomyScoreboard />);
+    expect(screen.getByText("16 better over 30 days")).toBeInTheDocument();
+  });
+
+  it("breaks the number down by class, heaviest first", () => {
+    render(<AutonomyScoreboard />);
+    const classes = screen.getAllByRole("listitem").map((item) => item.textContent);
+    expect(classes[0]).toContain("Duplicate records");
+    expect(classes[0]).toContain("16");
+  });
+
+  /**
+   * The distinction the whole trend rests on. A tenant whose queue was switched
+   * on this morning has no direction — rendering that as "unchanged" would claim
+   * a month of flat data that was never recorded.
+   */
+  it("does not invent a direction before there is history", () => {
+    mockUseScoreboard.mockReturnValue({
+      data: board({ dataset: dataset({ series: [], baseline: null, delta: null, direction: null }) }),
+      isLoading: false,
+    });
+
+    render(<AutonomyScoreboard />);
+    expect(screen.getByText(/No earlier reading yet/)).toBeInTheDocument();
+    expect(screen.queryByText(/unchanged over/i)).not.toBeInTheDocument();
+  });
+
+  it("draws no line from a single point", () => {
+    mockUseScoreboard.mockReturnValue({
+      data: board({
+        dataset: dataset({
+          series: [{ capturedOn: "2026-08-24", composite: 24, openTotal: 8 }],
+        }),
+      }),
+      isLoading: false,
+    });
+
+    render(<AutonomyScoreboard />);
+    expect(screen.queryByRole("img", { name: /Dataset health over/ })).not.toBeInTheDocument();
+  });
+
+  it("says nothing is open rather than showing a bare zero", () => {
+    mockUseScoreboard.mockReturnValue({
+      data: board({
+        dataset: dataset({
+          current: {
+            composite: 0,
+            openTotal: 0,
+            bySeverity: { high: 0, medium: 0, low: 0 },
+            byClass: [],
+          },
+        }),
+      }),
+      isLoading: false,
+    });
+
+    render(<AutonomyScoreboard />);
+    expect(screen.getByText("Nothing open")).toBeInTheDocument();
   });
 });

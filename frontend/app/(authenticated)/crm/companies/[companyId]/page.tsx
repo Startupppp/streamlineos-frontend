@@ -122,8 +122,9 @@ export default function CompanyDetailPage({
   const { data: org, isLoading: orgLoading, isError: orgError, error: orgDetailError, refetch: refetchOrg } = useCrmOrganizationDetail(id);
   const { data: rollup } = useCrmOrgRollup(id);
   const { data: hierarchy } = useCrmOrgHierarchy(id);
-  const { data: timeline } = useCrmOrgTimeline(id);
-  const { data: relatedLeads } = useCrmOrgRelatedLeads(id);
+  const { data: timeline, isLoading: timelineLoading } = useCrmOrgTimeline(id);
+  const { data: relatedLeads, isLoading: relatedLeadsLoading } =
+    useCrmOrgRelatedLeads(id);
   const { data: company360, isLoading: company360Loading } = useCompany360(id);
   const { data: leadStatusOptions = [] } = useCrmOptions("lead_status");
   const { data: priorityOptions = [] } = useCrmOptions("priority");
@@ -360,7 +361,7 @@ export default function CompanyDetailPage({
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-4 py-3">
-                <AccountTimeline events={timeline ?? []} />
+                <AccountTimeline events={timeline ?? []} isLoading={timelineLoading} />
               </CardContent>
             </Card>
 
@@ -383,6 +384,7 @@ export default function CompanyDetailPage({
             data={relatedLeads ?? []}
             columns={relatedLeadsColumns}
             getRowKey={(lead) => lead.id}
+            isLoading={relatedLeadsLoading}
             emptyState={
               <EmptyState
                 title="No related leads"

@@ -110,6 +110,17 @@ function CrmTasksContent() {
   }, [router]);
   const handleSearchChange = useCallback((v: string) => setSearch(v), []);
 
+  const activeFilterLabels = useMemo(() => {
+    const labels: string[] = [];
+    const trimmed = search.trim();
+    if (trimmed) labels.push(`search "${trimmed}"`);
+    if (typeFilter) labels.push(`type ${typeFilter.toLowerCase()}`);
+    if (statusFilter) labels.push(`status ${statusFilter.toLowerCase()}`);
+    if (entityTypeFilter) labels.push(`linked to ${entityTypeFilter.toLowerCase()}`);
+    if (assigneeFilter) labels.push("a specific assignee");
+    return labels;
+  }, [search, typeFilter, statusFilter, entityTypeFilter, assigneeFilter]);
+
   const tasksFilters: TasksFilters = {
     type: typeFilter || undefined,
     status: statusFilter || undefined,
@@ -303,12 +314,21 @@ function CrmTasksContent() {
               })}
             </AnimatePresence>
           </div>
+        ) : activeFilterLabels.length > 0 ? (
+          <EmptyState
+            illustration={<EmptyTasksIllustration />}
+            title="No tasks match these filters"
+            description={`Filtering by ${activeFilterLabels.join(", ")}. Clear the filters to see every task.`}
+            action={{ label: "Clear filters", onClick: handleClearFilters }}
+            actionVariant="outline"
+            className={CONTENT_FILL_PANEL}
+          />
         ) : (
           <EmptyState
             illustration={<EmptyTasksIllustration />}
             title="No tasks yet"
-            description="Create your first task to track follow-ups and action items."
-            action={{ label: "Create Task", onClick: handleCreateOpen }}
+            description="Tasks are the calls, emails and follow-ups you owe a lead, contact or deal. Create one to keep it out of your head."
+            action={{ label: "Create task", onClick: handleCreateOpen }}
             className={CONTENT_FILL_PANEL}
           />
         )}

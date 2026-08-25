@@ -21,6 +21,7 @@ import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/conte
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { staggerContainer } from "@/lib/motion-variants";
 import { EmptyReportIllustration } from "@/components/illustrations";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useCampaigns } from "@/hooks/api/crm/campaigns";
 import { formatCurrency } from "@/features/crm/reports/lib/types";
 import { CampaignSheet } from "./campaign-sheet";
@@ -167,6 +168,10 @@ export function CampaignListPage() {
 
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
 
+  const handleClearFilters = useCallback(() => setStatusFilter("all"), []);
+
+  const statusFilterLabel = STATUS_OPTIONS.find((o) => o.value === statusFilter)?.label ?? statusFilter;
+
   if (isLoading) {
     return (
       <PageWrapper title="Campaigns" subtitle="Track lead sources and ROI" noInternalScroll>
@@ -213,17 +218,24 @@ export function CampaignListPage() {
         className="flex flex-1 min-h-0 flex-col space-y-4"
       >
         {campaigns.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-4 py-20">
-            <EmptyReportIllustration className="h-32 w-32 opacity-60" />
-            <div className="text-center">
-              <p className="text-base font-medium text-muted-foreground">No campaigns yet</p>
-              <p className="text-sm text-muted-foreground/70 mt-1">Create your first campaign to track leads and ROI.</p>
-            </div>
-            <LoadingButton size="sm" onClick={handleOpenSheet}>
-              <Plus className="h-3.5 w-3.5 mr-1.5" />
-              Create Campaign
-            </LoadingButton>
-          </div>
+          statusFilter !== "all" ? (
+            <EmptyState
+              illustration={<EmptyReportIllustration />}
+              title="No campaigns match this filter"
+              description={`Showing status ${statusFilterLabel}. Clear the filter to see every campaign.`}
+              action={{ label: "Clear filter", onClick: handleClearFilters }}
+              actionVariant="outline"
+              className="flex-1"
+            />
+          ) : (
+            <EmptyState
+              illustration={<EmptyReportIllustration />}
+              title="No campaigns yet"
+              description="A campaign groups the leads that came from one push — an ad, an event, an email blast — so you can see what it returned."
+              action={{ label: "Create campaign", onClick: handleOpenSheet }}
+              className="flex-1"
+            />
+          )
         ) : (
           <DataTable columns={columns} data={campaigns} getRowKey={(row) => row.id} className="flex-1 min-h-0" />
         )}

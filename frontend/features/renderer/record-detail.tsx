@@ -1,6 +1,7 @@
 "use client";
 
 import type { RecordLayout } from "@/lib/renderer/layout";
+import { DEFAULT_MONEY_DISPLAY, type MoneyDisplay } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
 import { renderFieldValue, resolveField, type RecordValue } from "./format-value";
 
@@ -8,6 +9,8 @@ export interface RecordDetailProps {
   layout: RecordLayout;
   record: RecordValue;
   className?: string;
+  /** The tenant's currency, for `money` fields. See `RecordListProps.money`. */
+  money?: MoneyDisplay;
 }
 
 /**
@@ -17,10 +20,16 @@ export interface RecordDetailProps {
  * cares about different things sees a different arrangement without a screen
  * being written for them.
  */
-export function RecordDetail({ layout, record, className }: RecordDetailProps) {
+export function RecordDetail({
+  layout,
+  record,
+  className,
+  money = DEFAULT_MONEY_DISPLAY,
+}: RecordDetailProps) {
   const title = renderFieldValue(
     resolveField(layout, layout.titleField),
     record[layout.titleField],
+    money,
   );
 
   return (
@@ -49,7 +58,7 @@ export function RecordDetail({ layout, record, className }: RecordDetailProps) {
                       field.kind === "longText" ? "whitespace-pre-wrap" : "truncate",
                     )}
                   >
-                    {renderFieldValue(field, record[name])}
+                    {renderFieldValue(field, record[name], money)}
                   </dd>
                 </div>
               ))}

@@ -2,6 +2,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import type { QuoteLineItem } from "@/types/crm/quotes";
 import { formatCurrency } from "../lib/quote-utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface QuoteLineItemsTableProps {
   lineItems: QuoteLineItem[];
@@ -67,9 +68,11 @@ export function QuoteLineItemsTable({ lineItems, currency }: QuoteLineItemsTable
       columns={buildColumns(currency)}
       getRowKey={(row) => row.id}
       emptyState={
-        <p className="text-xs text-muted-foreground py-4 text-center">
-          No line items added.
-        </p>
+        <EmptyState
+          compact
+          title="No line items"
+          description="This quote has nothing on it yet. Edit the quote to add products or services."
+        />
       }
     />
   );

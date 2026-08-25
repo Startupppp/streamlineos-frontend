@@ -1,9 +1,8 @@
 "use client";
 
 import { useCallback } from "react";
-import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
-import { EmptyTargetIllustration } from "@/components/illustrations";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 export default function TerritoriesError({
@@ -17,11 +16,10 @@ export default function TerritoriesError({
 
   return (
     <div className="flex-1 flex items-center justify-center p-6">
-      <EmptyState
-        illustration={<EmptyTargetIllustration />}
-        title="Something went wrong"
+      <ErrorState
+        title="Couldn't load territories"
         description={getErrorMessage(error)}
-        action={{ label: "Try again", onClick: handleReset }}
+        onRetry={handleReset}
         className={CONTENT_FILL_PANEL}
       />
     </div>

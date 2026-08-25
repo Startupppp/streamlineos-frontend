@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { statusToneClasses } from "@/lib/design-tokens";
+import { DEFAULT_MONEY_DISPLAY, formatMoney, type MoneyDisplay } from "@/lib/format-utils";
 import { fieldByName, type FieldSpec, type RecordLayout } from "@/lib/renderer/layout";
 
 export type RecordValue = Record<string, unknown>;
@@ -21,8 +22,31 @@ function formatDate(value: unknown): string {
     : parsed.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
 }
 
-export function formatFieldText(field: FieldSpec, value: unknown): string {
+/**
+ * Money renders in the organisation's own currency, never a hardcoded symbol.
+ *
+ * The display is threaded in rather than read from a hook here, because this is
+ * a plain function called from cells and `useOrgDisplay` is a hook — the three
+ * renderer components read it once and pass it down. Absent, it falls back to
+ * the documented default, so a caller that has not wired it yet renders a
+ * plausible number rather than a raw integer.
+ *
+ * An unparseable value is left as it arrived. A malformed amount rendered as a
+ * confident "₹0.00" is worse than one that visibly looks wrong.
+ */
+function formatMoneyField(value: unknown, display: MoneyDisplay): string {
+  const text = asText(value);
+  if (!text) return "";
+  return Number.isFinite(Number(text)) ? formatMoney(text, display) : text;
+}
+
+export function formatFieldText(
+  field: FieldSpec,
+  value: unknown,
+  display: MoneyDisplay = DEFAULT_MONEY_DISPLAY,
+): string {
   if (field.kind === "date") return formatDate(value);
+  if (field.kind === "money") return formatMoneyField(value, display);
 
   if (field.kind === "select" || field.kind === "badge") {
     const option = field.options?.find((candidate) => candidate.value === asText(value));
@@ -40,8 +64,12 @@ export function formatFieldText(field: FieldSpec, value: unknown): string {
  * actionable rather than inert text, because on a record surface the reason you
  * are looking at it is usually to use it.
  */
-export function renderFieldValue(field: FieldSpec, value: unknown): ReactNode {
-  const text = formatFieldText(field, value);
+export function renderFieldValue(
+  field: FieldSpec,
+  value: unknown,
+  display: MoneyDisplay = DEFAULT_MONEY_DISPLAY,
+): ReactNode {
+  const text = formatFieldText(field, value, display);
   if (!text) return <span className="text-muted-foreground">—</span>;
 
   if (field.kind === "badge" || field.kind === "select") {
