@@ -293,7 +293,7 @@ export default function PublicFormPage() {
 
           {formQuery.isError && (
             <div className="text-center py-8">
-              <p className="text-lg font-semibold text-muted-foreground">Form unavailable</p>
+              <p className="text-lg font-semibold text-foreground">Form unavailable</p>
               <p className="text-sm text-muted-foreground mt-2">
                 This form is not currently active or the link is invalid. Please contact the team for an
                 up-to-date link.
@@ -306,7 +306,7 @@ export default function PublicFormPage() {
               <div className="w-16 h-16 rounded-full bg-status-success-surface mx-auto flex items-center justify-center">
                 <CheckCircle2 className="w-8 h-8 text-status-success-ink" />
               </div>
-              <p className="text-lg font-semibold text-muted-foreground">Submission received</p>
+              <p className="text-lg font-semibold text-foreground">Submission received</p>
               <p className="text-sm text-muted-foreground">
                 Your response has been recorded. Thank you for taking the time to fill this out.
               </p>

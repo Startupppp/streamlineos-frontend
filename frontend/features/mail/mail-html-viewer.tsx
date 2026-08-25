@@ -101,11 +101,11 @@ export function MailHtmlViewer({ html, className }: MailHtmlViewerProps) {
         </div>
       )}
       <div
-        className="mail-html-frame overflow-x-auto rounded-lg border border-border/50 bg-white text-muted-foreground shadow-sm"
+        className="mail-html-frame overflow-x-auto rounded-lg border border-border/50 bg-white text-foreground shadow-sm"
         style={{ colorScheme: "light" }}
       >
         <div
-          className="mail-html-body prose prose-sm max-w-none px-4 py-3 text-label leading-relaxed text-muted-foreground break-words [&_a]:text-primary [&_a]:underline [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded [&_table]:max-w-full [&_table]:overflow-x-auto [&_td]:align-top [&_th]:align-top [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground"
+          className="mail-html-body prose prose-sm max-w-none px-4 py-3 text-label leading-relaxed text-foreground break-words [&_a]:text-primary [&_a]:underline [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded [&_table]:max-w-full [&_table]:overflow-x-auto [&_td]:align-top [&_th]:align-top [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground"
           dangerouslySetInnerHTML={{ __html: sanitized }}
         />
       </div>

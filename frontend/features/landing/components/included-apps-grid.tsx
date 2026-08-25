@@ -20,7 +20,7 @@ export function IncludedAppsGrid({
   return (
     <div className={compact ? "mt-8" : "mt-12"}>
       <MotionReveal className="text-center mb-5 max-w-2xl mx-auto">
-        <h3 className="font-display text-base sm:text-lg font-semibold text-muted-foreground tracking-tight">
+        <h3 className="font-display text-base sm:text-lg font-semibold text-foreground tracking-tight">
           {title}
         </h3>
         {subtitle ? (

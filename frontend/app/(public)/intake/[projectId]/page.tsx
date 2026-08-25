@@ -123,7 +123,7 @@ export default function PublicIntakePage() {
               <div className="w-16 h-16 rounded-full bg-status-success-surface mx-auto flex items-center justify-center">
                 <CheckCircle2 className="w-8 h-8 text-status-success-ink" />
               </div>
-              <p className="text-lg font-semibold text-muted-foreground">Request submitted</p>
+              <p className="text-lg font-semibold text-foreground">Request submitted</p>
               <p className="text-sm text-muted-foreground">
                 Your request has been received and will be reviewed by the team. Thank you for reaching out.
               </p>

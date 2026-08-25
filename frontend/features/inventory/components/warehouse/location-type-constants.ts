@@ -35,7 +35,7 @@ export const LOCATION_TYPE_COLORS: Record<LocationType, string> = {
   SHIPPING: "bg-status-info-surface text-status-info-ink border-status-info-rule",
   QUARANTINE: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   SCRAP: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
-  TRANSIT: "bg-muted text-muted-foreground border-border",
+  TRANSIT: "bg-muted text-foreground border-border",
   RETURNS: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };
 

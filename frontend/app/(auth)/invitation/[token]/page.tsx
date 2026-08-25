@@ -88,7 +88,7 @@ function InvitationHero({
               </span>
             ) : null}
           </div>
-          <h1 className="mt-1 font-display text-2xl font-bold tracking-[-0.025em] text-muted-foreground sm:text-[28px]">
+          <h1 className="mt-1 font-display text-2xl font-bold tracking-[-0.025em] text-foreground sm:text-[28px]">
             {title}
           </h1>
           <p className="mt-1 max-w-md text-sm leading-5 text-muted-foreground">
@@ -117,7 +117,7 @@ function InvitationDetails({
         <dt className="text-micro font-semibold uppercase tracking-wide text-muted-foreground">
           Workspace
         </dt>
-        <dd className="mt-0.5 truncate text-sm font-semibold text-muted-foreground">
+        <dd className="mt-0.5 truncate text-sm font-semibold text-foreground">
           {organizationName}
         </dd>
       </div>
@@ -133,7 +133,7 @@ function InvitationDetails({
         <dt className="text-micro font-semibold uppercase tracking-wide text-muted-foreground">
           Invitation sent to
         </dt>
-        <dd className="mt-0.5 truncate text-sm font-medium text-muted-foreground">
+        <dd className="mt-0.5 truncate text-sm font-medium text-foreground">
           {invitedEmail}
         </dd>
       </div>
@@ -142,7 +142,7 @@ function InvitationDetails({
           <dt className="text-micro font-semibold uppercase tracking-wide text-muted-foreground">
             Signed in as
           </dt>
-          <dd className="mt-0.5 truncate text-sm font-medium text-muted-foreground">
+          <dd className="mt-0.5 truncate text-sm font-medium text-foreground">
             {accountEmail}
           </dd>
         </div>

@@ -25,7 +25,7 @@ const MODULE_STATUS_STYLES: Record<ModuleStatus, ModuleStatusStyle> = {
     label: "Backlog",
     stripe: "border-l-slate-400",
     accentBar: "from-gradient-neutral-from to-transparent",
-    badge: "bg-muted text-muted-foreground border-border",
+    badge: "bg-muted text-foreground border-border",
     progressBar: "from-gradient-neutral-from to-gradient-neutral-to",
     avatar: "bg-muted text-muted-foreground ring-border",
   },

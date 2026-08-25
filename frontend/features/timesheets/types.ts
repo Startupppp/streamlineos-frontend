@@ -374,12 +374,12 @@ export interface InvoiceDraftInput {
 }
 
 export const PERIOD_STATUS_BADGE: Record<PeriodStatus, string> = {
-  OPEN: "bg-muted text-muted-foreground border-border",
+  OPEN: "bg-muted text-foreground border-border",
   DRAFT: "bg-status-info-surface text-status-info-ink border-status-info-rule",
   SUBMITTED: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   APPROVED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
   REJECTED: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
-  LOCKED: "bg-muted text-muted-foreground border-border",
+  LOCKED: "bg-muted text-foreground border-border",
   REOPENED: "bg-status-info-surface text-status-info-ink border-status-info-rule",
 };
 
@@ -491,5 +491,5 @@ export const EXCEPTION_STATUS_BADGE: Record<ExceptionStatus, string> = {
   RESOLVED:
     "bg-status-success-surface text-status-success-ink border-status-success-rule",
   DISMISSED:
-    "bg-muted text-muted-foreground border-border",
+    "bg-muted text-foreground border-border",
 };

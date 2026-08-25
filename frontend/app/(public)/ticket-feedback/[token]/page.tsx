@@ -76,7 +76,7 @@ export default function TicketFeedbackPage() {
 
           {surveyQuery.isError && (
             <div className="text-center py-8">
-              <p className="text-lg font-semibold text-muted-foreground">Survey unavailable</p>
+              <p className="text-lg font-semibold text-foreground">Survey unavailable</p>
               <p className="text-sm text-muted-foreground mt-2">
                 This feedback link is invalid or has expired. Please contact the team for an
                 up-to-date link.
@@ -86,7 +86,7 @@ export default function TicketFeedbackPage() {
 
           {surveyQuery.isSuccess && survey && !showThankYou && (
             <div className="space-y-5">
-              <p className="text-sm text-muted-foreground font-medium text-center">
+              <p className="text-sm text-foreground font-medium text-center">
                 How satisfied were you with the resolution of your ticket?
               </p>
 
@@ -152,7 +152,7 @@ export default function TicketFeedbackPage() {
               <div className="w-16 h-16 rounded-full bg-status-success-surface mx-auto flex items-center justify-center">
                 <CheckCircle2 className="w-8 h-8 text-status-success-ink" />
               </div>
-              <p className="text-lg font-semibold text-muted-foreground">
+              <p className="text-lg font-semibold text-foreground">
                 {alreadyResponded && !isSuccess ? "You already responded" : "Feedback received"}
               </p>
               {displayScore !== null && (

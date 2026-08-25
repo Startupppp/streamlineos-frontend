@@ -18,7 +18,7 @@ export function LandingFAQ() {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] as const }}
           className="max-w-2xl text-center mx-auto mb-8 sm:mb-10"
         >
-          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-[-0.03em] leading-[1.05] text-muted-foreground">
+          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-[-0.03em] leading-[1.05] text-foreground">
             Frequently asked <span className="text-status-info-ink">questions.</span>
           </h2>
         </motion.div>
@@ -44,7 +44,7 @@ export function LandingFAQ() {
                   onClick={() => setOpen(isOpen ? null : i)}
                   className="w-full flex items-start sm:items-center justify-between gap-3 sm:gap-6 px-4 sm:px-5 py-3.5 sm:py-4 text-left"
                 >
-                  <span className="font-display text-sm sm:text-base font-semibold text-muted-foreground min-w-0 pr-1">
+                  <span className="font-display text-sm sm:text-base font-semibold text-foreground min-w-0 pr-1">
                     {f.question}
                   </span>
                   <motion.span

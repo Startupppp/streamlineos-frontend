@@ -44,7 +44,7 @@ function OrganizationRow({
         <Building2 className="size-4" aria-hidden="true" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-medium text-muted-foreground">
+        <span className="block truncate text-sm font-medium text-foreground">
           {organization.name}
         </span>
         <span className="block text-xs text-muted-foreground">
@@ -145,7 +145,7 @@ export function SuspendedAccessCard({
           </p>
           <h1
             id="suspended-access-title"
-            className="font-display text-2xl font-bold tracking-tight text-muted-foreground"
+            className="font-display text-2xl font-bold tracking-tight text-foreground"
           >
             Your organization access is suspended
           </h1>
@@ -153,7 +153,7 @@ export function SuspendedAccessCard({
             {organizationName ? (
               <>
                 An administrator paused your access to{" "}
-                <span className="font-semibold text-muted-foreground">
+                <span className="font-semibold text-foreground">
                   {organizationName}
                 </span>
                 .
@@ -195,7 +195,7 @@ export function SuspendedAccessCard({
         ) : availableOrganizations.length > 0 ? (
           <div className="mt-5 rounded-xl border border-border bg-muted p-2">
             <div className="px-2 pb-2 pt-1">
-              <p className="text-sm font-semibold text-muted-foreground">
+              <p className="text-sm font-semibold text-foreground">
                 Continue in another organization
               </p>
               <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
@@ -219,7 +219,7 @@ export function SuspendedAccessCard({
           </div>
         ) : (
           <div className="mt-5 rounded-xl border border-border bg-muted px-4 py-3">
-            <p className="text-sm font-medium text-muted-foreground">
+            <p className="text-sm font-medium text-foreground">
               Your account and organization data are safe.
             </p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">

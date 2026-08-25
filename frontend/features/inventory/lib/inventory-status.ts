@@ -20,7 +20,7 @@ const INFO = "bg-status-info-surface text-status-info-ink border-status-info-rul
 const SUCCESS = "bg-status-success-surface text-status-success-ink border-status-success-rule";
 const WARNING = "bg-status-warning-surface text-status-warning-ink border-status-warning-rule";
 const DANGER = "bg-status-danger-surface text-status-danger-ink border-status-danger-rule";
-const NEUTRAL = "bg-muted text-muted-foreground border-border";
+const NEUTRAL = "bg-muted text-foreground border-border";
 
 export const PO_STATUS_BADGE: Record<PoStatus, string> = {
   DRAFT: INFO,

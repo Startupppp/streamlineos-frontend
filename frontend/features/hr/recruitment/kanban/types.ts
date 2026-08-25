@@ -18,7 +18,7 @@ export const COLUMNS: ColumnConfig[] = [
     label: "New",
     bg: "bg-muted",
     border: "border-border",
-    badge: "bg-muted text-muted-foreground",
+    badge: "bg-muted text-foreground",
     headerGradient: "from-gradient-neutral-from to-gradient-neutral-to",
     headerText: "text-white",
     dot: "bg-white/80",

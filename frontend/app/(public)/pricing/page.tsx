@@ -120,7 +120,7 @@ export default function PricingPage() {
         {/* Hero */}
         <section className="container mx-auto px-4 lg:px-8 max-w-3xl text-center">
           <PublicEyebrow>Pricing</PublicEyebrow>
-          <h1 className="font-display text-4xl sm:text-5xl font-extrabold tracking-tight text-muted-foreground leading-[1.08]">
+          <h1 className="font-display text-4xl sm:text-5xl font-extrabold tracking-tight text-foreground leading-[1.08]">
             Simple pricing.{" "}
             <span className="text-status-info-ink">Every app included.</span>
           </h1>
@@ -139,7 +139,7 @@ export default function PricingPage() {
                   <item.icon className="h-4 w-4" aria-hidden />
                 </span>
                 <span>
-                  <span className="block text-sm font-semibold text-muted-foreground">{item.label}</span>
+                  <span className="block text-sm font-semibold text-foreground">{item.label}</span>
                   <span className="block text-xs text-muted-foreground">{item.detail}</span>
                 </span>
               </div>
@@ -159,7 +159,7 @@ export default function PricingPage() {
           <div className="container mx-auto px-4 lg:px-8 max-w-3xl py-16 lg:py-20">
             <div className="text-center mb-10">
               <PublicEyebrow>Savings</PublicEyebrow>
-              <h2 className="font-display text-2xl sm:text-3xl font-bold text-muted-foreground tracking-tight">
+              <h2 className="font-display text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
                 See what you&apos;d save
               </h2>
               <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
@@ -175,7 +175,7 @@ export default function PricingPage() {
           <div className="container mx-auto px-4 lg:px-8 max-w-6xl py-16 lg:py-20">
             <div className="text-center mb-10">
               <PublicEyebrow>Compare</PublicEyebrow>
-              <h2 className="font-display text-2xl sm:text-3xl font-bold text-muted-foreground tracking-tight">
+              <h2 className="font-display text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
                 Plan comparison
               </h2>
               <p className="mt-2 text-sm text-muted-foreground max-w-lg mx-auto">
@@ -192,7 +192,7 @@ export default function PricingPage() {
           <div className="container mx-auto px-4 lg:px-8 max-w-2xl py-16 lg:py-20">
             <div className="text-center mb-10">
               <PublicEyebrow>FAQ</PublicEyebrow>
-              <h2 className="font-display text-2xl sm:text-3xl font-bold text-muted-foreground tracking-tight">
+              <h2 className="font-display text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
                 Common questions
               </h2>
             </div>
@@ -203,7 +203,7 @@ export default function PricingPage() {
         {/* CTA */}
         <section className="container mx-auto px-4 lg:px-8 max-w-2xl pb-4">
           <div className="rounded-2xl border border-border bg-white p-8 sm:p-10 text-center shadow-sm">
-            <h2 className="font-display text-xl sm:text-2xl font-bold text-muted-foreground tracking-tight">
+            <h2 className="font-display text-xl sm:text-2xl font-bold text-foreground tracking-tight">
               Not sure which plan fits?
             </h2>
             <p className="mt-2 text-sm text-muted-foreground leading-relaxed max-w-md mx-auto">

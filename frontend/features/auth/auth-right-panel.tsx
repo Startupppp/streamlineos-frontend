@@ -34,7 +34,7 @@ export function AuthRightPanel() {
           </span>
         </div>
 
-        <h2 className="font-display text-[2.1rem] xl:text-[2.4rem] font-extrabold leading-[1.04] tracking-[-0.025em] text-muted-foreground max-w-md">
+        <h2 className="font-display text-[2.1rem] xl:text-[2.4rem] font-extrabold leading-[1.04] tracking-[-0.025em] text-foreground max-w-md">
           Run your company on{" "}
           <span className="text-status-info-ink">one platform.</span>
         </h2>
@@ -59,12 +59,12 @@ export function AuthRightPanel() {
             AM
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-label text-muted-foreground leading-snug mb-1.5">
+            <p className="text-label text-foreground leading-snug mb-1.5">
               <Quote className="inline h-3 w-3 text-status-info-ink mr-1 -mt-1" />
               StreamlineOS replaced five separate tools. Our weekly status meeting is gone.
             </p>
             <p className="text-dense font-mono text-muted-foreground">
-              <span className="font-semibold text-muted-foreground not-italic">Arjun Mehta</span>
+              <span className="font-semibold text-foreground not-italic">Arjun Mehta</span>
               {" · "}CTO, FinScale
             </p>
           </div>

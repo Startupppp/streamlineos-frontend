@@ -8,13 +8,13 @@ export const priorityColors: Record<Priority, string> = {
   URGENT: "bg-status-danger-surface text-status-danger-ink",
   HIGH: "bg-status-warning-surface text-status-warning-ink",
   MEDIUM: "bg-status-warning-surface text-status-warning-ink",
-  LOW: "bg-muted text-muted-foreground",
+  LOW: "bg-muted text-foreground",
 };
 
 export const projectStatusColors: Record<ProjectStatus, string> = {
   ACTIVE: "bg-status-success-surface text-status-success-ink",
   PLANNING: "bg-status-info-surface text-status-info-ink",
-  COMPLETED: "bg-muted text-muted-foreground",
+  COMPLETED: "bg-muted text-foreground",
   ON_HOLD: "bg-status-warning-surface text-status-warning-ink",
 };
 

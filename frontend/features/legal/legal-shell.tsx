@@ -28,7 +28,7 @@ export function LegalShell({ eyebrow, title, intro, effectiveDate, sections, chi
     <PublicShell>
       <section className="container mx-auto px-4 lg:px-8 max-w-5xl">
         <PublicEyebrow>{eyebrow}</PublicEyebrow>
-        <h1 className="font-display text-4xl sm:text-5xl lg:text-[3.5rem] font-extrabold tracking-[-0.03em] leading-[1.05] text-muted-foreground mb-5">
+        <h1 className="font-display text-4xl sm:text-5xl lg:text-[3.5rem] font-extrabold tracking-[-0.03em] leading-[1.05] text-foreground mb-5">
           {title}
         </h1>
         <p className="text-muted-foreground text-lg leading-relaxed max-w-3xl">{intro}</p>
@@ -97,17 +97,17 @@ export function LegalSection({
 }) {
   return (
     <section id={id} className="scroll-mt-28 mb-12">
-      <h2 className="font-display text-2xl lg:text-[1.75rem] font-extrabold tracking-[-0.02em] text-muted-foreground mb-4 leading-tight">
+      <h2 className="font-display text-2xl lg:text-[1.75rem] font-extrabold tracking-[-0.02em] text-foreground mb-4 leading-tight">
         {title}
       </h2>
-      <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">{children}</div>
+      <div className="space-y-4 text-sm text-foreground leading-relaxed">{children}</div>
     </section>
   );
 }
 
 export function PlainEnglish({ children }: { children: ReactNode }) {
   return (
-    <div className="not-prose rounded-xl border border-status-info-rule bg-status-info-surface px-4 py-3.5 my-5 text-sm text-muted-foreground leading-relaxed">
+    <div className="not-prose rounded-xl border border-status-info-rule bg-status-info-surface px-4 py-3.5 my-5 text-sm text-foreground leading-relaxed">
       <p className="text-dense font-semibold text-status-info-ink mb-1.5">
         Plain English
       </p>

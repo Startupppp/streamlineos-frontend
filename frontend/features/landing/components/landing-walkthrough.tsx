@@ -16,7 +16,7 @@ export function LandingWalkthrough() {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] as const }}
           className="max-w-2xl text-center mx-auto mb-10 sm:mb-14 lg:mb-20"
         >
-          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-[-0.03em] leading-[1.05] text-muted-foreground">
+          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-[-0.03em] leading-[1.05] text-foreground">
             One workspace.{" "}
             <span className="text-status-info-ink">Four moments that matter.</span>
           </h2>
@@ -72,7 +72,7 @@ function WalkthroughRow({
             {step.eyebrow}
           </span>
         </div>
-        <h3 className="font-display text-xl sm:text-2xl lg:text-4xl font-bold text-muted-foreground tracking-[-0.02em] leading-tight mb-3 sm:mb-4">
+        <h3 className="font-display text-xl sm:text-2xl lg:text-4xl font-bold text-foreground tracking-[-0.02em] leading-tight mb-3 sm:mb-4">
           {step.title}
         </h3>
         <p className="text-muted-foreground text-sm sm:text-base lg:text-lg leading-relaxed mb-4 sm:mb-5">
@@ -84,7 +84,7 @@ function WalkthroughRow({
               <span className="mt-0.5 h-5 w-5 rounded-full bg-gradient-to-br from-gradient-info-from to-gradient-info-to inline-flex items-center justify-center shrink-0 shadow-[0_4px_12px_-4px_rgba(59,130,246,0.5)]">
                 <Check className="h-3 w-3 text-white" strokeWidth={3} />
               </span>
-              <span className="text-label sm:text-sm text-muted-foreground min-w-0">
+              <span className="text-label sm:text-sm text-foreground min-w-0">
                 {b}
               </span>
             </li>
@@ -166,7 +166,7 @@ function HireVisual() {
                 .join("")}
             </span>
             <div className="min-w-0">
-              <p className="text-dense sm:text-xs font-semibold text-muted-foreground truncate">
+              <p className="text-dense sm:text-xs font-semibold text-foreground truncate">
                 {c.name}
               </p>
               <p className="text-micro sm:text-micro text-muted-foreground font-mono truncate">
@@ -218,7 +218,7 @@ function OnboardVisual() {
               s.done
                 ? "text-muted-foreground"
                 : s.current
-                  ? "text-muted-foreground font-medium"
+                  ? "text-foreground font-medium"
                   : "text-muted-foreground"
             }`}
           >
@@ -278,7 +278,7 @@ function DeliverVisual() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.35, delay: ci * 0.1 + ti * 0.06 }}
-              className="rounded-md bg-white border border-border p-1.5 sm:p-2 text-micro sm:text-micro text-muted-foreground leading-tight shadow-sm truncate"
+              className="rounded-md bg-white border border-border p-1.5 sm:p-2 text-micro sm:text-micro text-foreground leading-tight shadow-sm truncate"
             >
               {it}
             </motion.div>
@@ -307,7 +307,7 @@ function CloseVisual() {
         {bars.map((b, i) => (
           <div key={b.label}>
             <div className="flex items-center justify-between text-dense mb-1">
-              <span className="text-muted-foreground">{b.label}</span>
+              <span className="text-foreground">{b.label}</span>
               <span className="text-muted-foreground font-mono">${b.value}k</span>
             </div>
             <div className="h-2 rounded-full bg-muted overflow-hidden">

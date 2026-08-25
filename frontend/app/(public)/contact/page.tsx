@@ -47,7 +47,7 @@ export default function ContactPage() {
     <PublicShell>
       <section className="container mx-auto px-4 lg:px-8 max-w-3xl text-center">
         <PublicEyebrow>Contact us</PublicEyebrow>
-        <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-[-0.035em] leading-[1.02] text-muted-foreground mb-5">
+        <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-[-0.035em] leading-[1.02] text-foreground mb-5">
           Tell us what you&apos;re{" "}
           <span className="text-status-info-ink">trying to solve.</span>
         </h1>
@@ -76,7 +76,7 @@ export default function ContactPage() {
                     <Icon className="h-4 w-4 text-white" />
                   </span>
                   <div className="min-w-0">
-                    <p className="font-display text-sm font-bold text-muted-foreground mb-0.5">
+                    <p className="font-display text-sm font-bold text-foreground mb-0.5">
                       {c.label}
                     </p>
                     <p className="text-label text-muted-foreground leading-relaxed mb-1.5">

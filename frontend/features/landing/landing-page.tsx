@@ -13,7 +13,7 @@ import { LandingPageMotion } from "./landing-page-motion";
 
 export function LandingPage() {
   return (
-    <div className="relative flex min-h-dvh flex-col overflow-x-clip surface-soft text-muted-foreground selection:bg-brand-core/20 selection:text-muted-foreground">
+    <div className="relative flex min-h-dvh flex-col overflow-x-clip surface-soft text-foreground selection:bg-brand-core/20 selection:text-foreground">
       <LandingNav />
       <LandingPageMotion>
         <main className="relative flex-1 min-w-0 overflow-x-clip">

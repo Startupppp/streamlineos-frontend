@@ -144,12 +144,12 @@ export function ContactForm() {
             <div className="mx-auto mb-5 h-14 w-14 rounded-full bg-gradient-to-br from-gradient-info-from to-gradient-info-to inline-flex items-center justify-center shadow-[0_18px_40px_-12px_rgba(59,130,246,0.45)]">
               <CheckCircle2 className="w-7 text-white" strokeWidth={2.5} />
             </div>
-            <h3 className="font-display text-2xl font-bold text-muted-foreground mb-2">
+            <h3 className="font-display text-2xl font-bold text-foreground mb-2">
               Message received.
             </h3>
             <p className="text-muted-foreground text-sm leading-relaxed max-w-md mx-auto">
               Thanks,{" "}
-              <span className="font-semibold text-muted-foreground">
+              <span className="font-semibold text-foreground">
                 {watchedName}
               </span>
               . A human on our team will get back to you within one business day
@@ -158,7 +158,7 @@ export function ContactForm() {
             </p>
             <button
               onClick={handleReset}
-              className="mt-7 text-xs font-medium text-muted-foreground hover:text-muted-foreground transition-colors"
+              className="mt-7 text-xs font-medium text-foreground hover:text-muted-foreground transition-colors"
             >
               ← Send another message
             </button>
@@ -176,7 +176,7 @@ export function ContactForm() {
             className="space-y-5"
           >
             <div>
-              <Label className="text-label font-medium text-muted-foreground mb-2 block">
+              <Label className="text-label font-medium text-foreground mb-2 block">
                 What can we help with?
               </Label>
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
@@ -191,7 +191,7 @@ export function ContactForm() {
                         "text-xs font-medium rounded-lg border px-2.5 py-2 transition-all",
                         selected
                           ? "bg-status-neutral-fill text-white border-border shadow-sm"
-                          : "bg-white text-muted-foreground border-border hover:border-status-info-rule hover:text-muted-foreground",
+                          : "bg-white text-foreground border-border hover:border-status-info-rule hover:text-muted-foreground",
                       )}
                     >
                       {t.label}
@@ -307,7 +307,7 @@ function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <Label className="text-label font-medium text-muted-foreground flex items-center gap-1.5">
+      <Label className="text-label font-medium text-foreground flex items-center gap-1.5">
         {label}
         {required && (
           <span className="text-status-danger-ink" aria-hidden>

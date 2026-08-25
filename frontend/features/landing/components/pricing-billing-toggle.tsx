@@ -25,8 +25,8 @@ export function PricingBillingToggle({
           onClick={() => onChange("annual")}
           className={`rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
             period === "annual"
-              ? "bg-white text-muted-foreground shadow-sm"
-              : "text-muted-foreground hover:text-muted-foreground"
+              ? "bg-white text-foreground shadow-sm"
+              : "text-foreground hover:text-muted-foreground"
           }`}
         >
           Annual
@@ -36,8 +36,8 @@ export function PricingBillingToggle({
           onClick={() => onChange("monthly")}
           className={`rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
             period === "monthly"
-              ? "bg-white text-muted-foreground shadow-sm"
-              : "text-muted-foreground hover:text-muted-foreground"
+              ? "bg-white text-foreground shadow-sm"
+              : "text-foreground hover:text-muted-foreground"
           }`}
         >
           Monthly

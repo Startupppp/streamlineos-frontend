@@ -53,7 +53,7 @@ export function LandingFooter() {
               aria-label={BRAND_NAME}
             >
               <AnimatedLogo size={36} className="rounded-xl shrink-0" />
-              <span className="font-display text-base sm:text-lg font-bold tracking-tight text-muted-foreground truncate">
+              <span className="font-display text-base sm:text-lg font-bold tracking-tight text-foreground truncate">
                 {BRAND_NAME}
               </span>
             </Link>

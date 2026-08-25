@@ -4,7 +4,7 @@ export const LIFECYCLE_BADGE: Record<string, { label: string; className: string 
   CANDIDATE: {
     label: "Candidate",
     className:
-      "bg-muted text-muted-foreground border-border",
+      "bg-muted text-foreground border-border",
   },
   PRE_JOINING: {
     label: "Pre-joining",

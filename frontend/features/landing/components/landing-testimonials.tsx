@@ -36,7 +36,7 @@ export function LandingTestimonials() {
           transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] as const }}
           className="max-w-2xl text-center mx-auto mb-8 sm:mb-12"
         >
-          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-[-0.03em] leading-[1.05] text-muted-foreground text-balance">
+          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-[-0.03em] leading-[1.05] text-foreground text-balance">
             Don&apos;t take our word for it.{" "}
             <span className="text-brand-core">Take theirs.</span>
           </h2>
@@ -101,7 +101,7 @@ function TestimonialCard({
           <Star key={idx} className="h-3 w-3 fill-amber-400 text-status-warning-ink" />
         ))}
       </div>
-      <p className="text-label sm:text-sm text-muted-foreground leading-relaxed mb-5 line-clamp-5">
+      <p className="text-label sm:text-sm text-foreground leading-relaxed mb-5 line-clamp-5">
         &ldquo;{testimonial.quote}&rdquo;
       </p>
       <div className="flex items-center gap-3 pt-4 border-t border-border">
@@ -109,7 +109,7 @@ function TestimonialCard({
           {testimonial.initials}
         </span>
         <div className="min-w-0">
-          <p className="text-label font-semibold text-muted-foreground truncate">
+          <p className="text-label font-semibold text-foreground truncate">
             {testimonial.name}
           </p>
           <p className="text-dense text-muted-foreground truncate">{testimonial.role}</p>

@@ -44,7 +44,7 @@ export const FloatingComposition = memo(function FloatingComposition({
             <span className="text-micro font-medium text-brand-core">Sprint 24</span>
             <span className="text-micro font-mono text-muted-foreground">12/24</span>
           </div>
-          <p className="text-xs font-semibold text-muted-foreground mb-1.5 leading-tight">
+          <p className="text-xs font-semibold text-foreground mb-1.5 leading-tight">
             Ship onboarding v3
           </p>
           <div className="space-y-1.5">
@@ -66,7 +66,7 @@ export const FloatingComposition = memo(function FloatingComposition({
                     <CheckCircle2 className="h-2 w-2 text-white" strokeWidth={3} />
                   )}
                 </span>
-                <span className={t.done ? "text-muted-foreground line-through" : "text-muted-foreground"}>
+                <span className={t.done ? "text-foreground line-through" : "text-muted-foreground"}>
                   {t.label}
                 </span>
               </div>
@@ -109,7 +109,7 @@ export const FloatingComposition = memo(function FloatingComposition({
                   transition={{ duration: 0.45, delay: 0.35 + i * 0.07 }}
                 >
                   <div className="flex justify-between text-dense mb-1">
-                    <span className="text-muted-foreground font-medium">{s.label}</span>
+                    <span className="text-foreground font-medium">{s.label}</span>
                     <span className="text-muted-foreground font-mono">{s.count}</span>
                   </div>
                   <div className="h-1.5 rounded-full bg-muted overflow-hidden">
@@ -130,7 +130,7 @@ export const FloatingComposition = memo(function FloatingComposition({
 
             <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-micro">
               <span className="text-muted-foreground font-medium">Forecast</span>
-              <span className="font-mono text-muted-foreground font-semibold">$2.4M ARR</span>
+              <span className="font-mono text-foreground font-semibold">$2.4M ARR</span>
             </div>
           </div>
         </FloatLayer>
@@ -155,7 +155,7 @@ export const FloatingComposition = memo(function FloatingComposition({
               94%
             </span>
           </div>
-          <p className="font-display text-2xl font-extrabold text-muted-foreground leading-none mb-2.5">
+          <p className="font-display text-2xl font-extrabold text-foreground leading-none mb-2.5">
             47<span className="text-sm font-bold text-muted-foreground">/52</span>
           </p>
           <div className="grid grid-cols-7 gap-1">

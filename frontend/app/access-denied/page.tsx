@@ -1,7 +1,10 @@
+import { headers } from "next/headers";
 import Link from "next/link";
 import { ShieldAlert, Home, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { AppThemeScript } from "@/components/theme/app-theme-script";
+import { AppThemeProvider } from "@/components/theme/app-theme-provider";
 
 interface AccessDeniedPageProps {
   searchParams: Promise<{ required?: string; from?: string }>;
@@ -12,9 +15,21 @@ export const metadata = { title: "Access Denied | StreamlineOS" };
 export default async function AccessDeniedPage({ searchParams }: AccessDeniedPageProps) {
   const { required, from } = await searchParams;
   const requiredList = required ? required.split(",").filter(Boolean) : [];
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
 
+  /**
+   * The theme is mounted here, not inherited.
+   *
+   * This page sits at the root of `app/`, outside the `(authenticated)` group —
+   * so it never saw `AppThemeProvider` or the pre-hydration `AppThemeScript`,
+   * and rendered fully light for a viewer in dark mode. It is only ever shown
+   * to somebody signed in, hitting a screen they lack the permission for, so a
+   * full-brightness flash is exactly the wrong moment for one.
+   */
   return (
-    <div className="min-h-dvh w-full flex items-center justify-center p-6 bg-gradient-to-br from-gradient-neutral-from via-white to-gradient-info-to">
+    <AppThemeProvider>
+      <AppThemeScript nonce={nonce} />
+    <div className="min-h-dvh w-full flex items-center justify-center p-6 bg-gradient-to-br from-gradient-neutral-wash-from via-background to-gradient-info-wash-to">
       <Card className="max-w-md w-full border-border shadow-accent">
         <CardContent className="p-8 sm:p-10 text-center space-y-6">
           <div className="mx-auto h-14 w-14 rounded-2xl bg-status-danger-surface ring-1 ring-status-danger-rule flex items-center justify-center">
@@ -22,7 +37,7 @@ export default async function AccessDeniedPage({ searchParams }: AccessDeniedPag
           </div>
 
           <div className="space-y-2">
-            <h1 className="font-display text-2xl font-extrabold tracking-[-0.02em] text-muted-foreground">
+            <h1 className="font-display text-2xl font-extrabold tracking-[-0.02em] text-foreground">
               You don&apos;t have access to this screen
             </h1>
             <p className="text-sm text-muted-foreground leading-relaxed">
@@ -38,7 +53,7 @@ export default async function AccessDeniedPage({ searchParams }: AccessDeniedPag
                   <p className="text-dense font-medium text-status-info-ink mb-1 leading-none">
                     You tried to open
                   </p>
-                  <p className="font-mono text-xs text-muted-foreground break-all">{from}</p>
+                  <p className="font-mono text-xs text-foreground break-all">{from}</p>
                 </div>
               )}
               {requiredList.length > 0 && (
@@ -48,7 +63,7 @@ export default async function AccessDeniedPage({ searchParams }: AccessDeniedPag
                   </p>
                   <ul className="space-y-0.5">
                     {requiredList.map((p) => (
-                      <li key={p} className="font-mono text-xs text-muted-foreground">
+                      <li key={p} className="font-mono text-xs text-foreground">
                         {p}
                       </li>
                     ))}
@@ -75,5 +90,6 @@ export default async function AccessDeniedPage({ searchParams }: AccessDeniedPag
         </CardContent>
       </Card>
     </div>
+    </AppThemeProvider>
   );
 }

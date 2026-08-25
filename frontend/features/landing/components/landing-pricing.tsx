@@ -17,7 +17,7 @@ export function LandingPricing() {
           transition={{ duration: 0.55 }}
           className="max-w-3xl text-center mx-auto mb-8"
         >
-          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-[-0.03em] leading-[1.05] text-muted-foreground mb-3">
+          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-[-0.03em] leading-[1.05] text-foreground mb-3">
             You are not dreaming!
           </h2>
           <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">
@@ -29,7 +29,7 @@ export function LandingPricing() {
 
         <div className="mt-12 sm:mt-16 max-w-4xl mx-auto">
           <div className="text-center mb-6 sm:mb-8">
-            <h3 className="font-display text-xl sm:text-2xl font-bold text-muted-foreground tracking-tight">
+            <h3 className="font-display text-xl sm:text-2xl font-bold text-foreground tracking-tight">
               Cut costs with StreamlineOS
             </h3>
             <p className="text-xs sm:text-label text-muted-foreground mt-1.5">

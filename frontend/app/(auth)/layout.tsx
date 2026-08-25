@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="relative flex h-[100dvh] overflow-hidden surface-soft text-muted-foreground">
+    <div className="relative flex h-[100dvh] overflow-hidden surface-soft text-foreground">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-status-neutral-fill focus:text-white focus:rounded-md text-sm font-medium"
@@ -27,13 +27,13 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
             aria-label={BRAND_NAME}
           >
             <AnimatedLogo size={34} className="rounded-xl" />
-            <span className="font-display text-base font-bold tracking-tight text-muted-foreground">
+            <span className="font-display text-base font-bold tracking-tight text-foreground">
               {BRAND_NAME}
             </span>
           </Link>
           <Link
             href="/"
-            className="text-xs font-medium text-muted-foreground hover:text-muted-foreground transition-colors"
+            className="text-xs font-medium text-foreground hover:text-muted-foreground transition-colors"
           >
             ← Back to site
           </Link>
@@ -58,13 +58,13 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-4">
             <Link
               href="/legal/privacy"
-              className="hover:text-muted-foreground transition-colors"
+              className="hover:text-foreground transition-colors"
             >
               Privacy
             </Link>
             <Link
               href="/legal/terms"
-              className="hover:text-muted-foreground transition-colors"
+              className="hover:text-foreground transition-colors"
             >
               Terms
             </Link>

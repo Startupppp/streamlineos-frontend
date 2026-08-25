@@ -182,7 +182,7 @@ export default function PrivacyPage() {
                 ["Vercel", "Hosting and edge delivery", "Global"],
               ].map(([vendor, purpose, region]) => (
                 <tr key={vendor}>
-                  <td className="px-4 py-2.5 font-medium text-muted-foreground">{vendor}</td>
+                  <td className="px-4 py-2.5 font-medium text-foreground">{vendor}</td>
                   <td className="px-4 py-2.5 text-muted-foreground">{purpose}</td>
                   <td className="px-4 py-2.5 text-muted-foreground font-mono text-dense">{region}</td>
                 </tr>

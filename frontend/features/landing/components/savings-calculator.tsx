@@ -41,11 +41,11 @@ export function SavingsCalculator() {
           htmlFor="seats-slider"
           className="mb-3 flex items-center justify-between gap-3 text-sm"
         >
-          <span className="inline-flex items-center gap-2 font-medium text-muted-foreground min-w-0">
+          <span className="inline-flex items-center gap-2 font-medium text-foreground min-w-0">
             <Users className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden />
             Team size
           </span>
-          <span className="font-display text-xl sm:text-2xl font-bold tabular-nums text-muted-foreground shrink-0">
+          <span className="font-display text-xl sm:text-2xl font-bold tabular-nums text-foreground shrink-0">
             {seats}
             <span className="ml-1.5 text-sm font-medium text-muted-foreground">users</span>
           </span>
@@ -117,7 +117,7 @@ export function SavingsCalculator() {
       </div>
 
       <details className="mt-5 group">
-        <summary className="cursor-pointer text-sm font-medium text-muted-foreground transition-colors hover:text-muted-foreground">
+        <summary className="cursor-pointer text-sm font-medium text-foreground transition-colors hover:text-muted-foreground">
           Compare against a per-tool stack
         </summary>
         <div className="mt-4 space-y-3 rounded-xl border border-border bg-muted p-4">
@@ -178,7 +178,7 @@ function ComparisonCard({
       <p
         className={`mt-1 font-display font-bold tabular-nums tracking-tight ${
           compact ? "text-xl" : "text-2xl"
-        } ${highlight ? "text-status-info-ink" : "text-muted-foreground"}`}
+        } ${highlight ? "text-status-info-ink" : "text-foreground"}`}
       >
         {amount}
         <span className="ml-1.5 text-xs font-medium text-muted-foreground">/ year</span>

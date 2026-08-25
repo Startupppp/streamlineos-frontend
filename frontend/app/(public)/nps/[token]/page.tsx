@@ -27,7 +27,7 @@ function scoreClasses(score: number, selected: boolean): string {
       : score >= 7
         ? "border-status-warning-rule bg-status-warning-fill text-white"
         : "border-status-danger-rule bg-status-danger-fill text-white";
-  return selected ? active : cn(base, "bg-white text-muted-foreground");
+  return selected ? active : cn(base, "bg-white text-foreground");
 }
 
 export default function PublicNpsPage() {
@@ -76,7 +76,7 @@ export default function PublicNpsPage() {
 
           {surveyQuery.isError && (
             <div className="text-center py-8">
-              <p className="text-lg font-semibold text-muted-foreground">Survey unavailable</p>
+              <p className="text-lg font-semibold text-foreground">Survey unavailable</p>
               <p className="text-sm text-muted-foreground mt-2">
                 This survey is not currently active or the link is invalid. Please contact the team for an
                 up-to-date link.
@@ -86,7 +86,7 @@ export default function PublicNpsPage() {
 
           {surveyQuery.isSuccess && survey && !isSuccess && (
             <div className="space-y-5">
-              <p className="text-sm text-muted-foreground font-medium">{survey.question}</p>
+              <p className="text-sm text-foreground font-medium">{survey.question}</p>
 
               <div>
                 <div className="grid grid-cols-6 gap-1.5 sm:grid-cols-11">
@@ -169,7 +169,7 @@ export default function PublicNpsPage() {
               <div className="w-16 h-16 rounded-full bg-status-success-surface mx-auto flex items-center justify-center">
                 <CheckCircle2 className="w-8 h-8 text-status-success-ink" />
               </div>
-              <p className="text-lg font-semibold text-muted-foreground">Feedback received</p>
+              <p className="text-lg font-semibold text-foreground">Feedback received</p>
               <p className="text-sm text-muted-foreground">
                 Thank you for taking the time to share your thoughts. We truly appreciate it.
               </p>

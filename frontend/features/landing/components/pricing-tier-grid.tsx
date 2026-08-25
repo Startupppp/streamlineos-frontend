@@ -107,7 +107,7 @@ function PricingCard({
       ) : null}
 
       <div className="border-b border-border px-4 sm:px-5 pt-6 pb-5">
-        <h3 className="font-display text-lg font-bold text-muted-foreground">{tier.name}</h3>
+        <h3 className="font-display text-lg font-bold text-foreground">{tier.name}</h3>
         <p className="mt-0.5 text-xs text-muted-foreground">{tier.tagline}</p>
 
         <div className="mt-5 flex items-baseline gap-2 flex-wrap">
@@ -123,7 +123,7 @@ function PricingCard({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2, ease: EASE_OUT }}
-              className="font-display text-2xl sm:text-3xl font-extrabold text-muted-foreground tabular-nums leading-none"
+              className="font-display text-2xl sm:text-3xl font-extrabold text-foreground tabular-nums leading-none"
             >
               {displayPrice}
             </motion.span>

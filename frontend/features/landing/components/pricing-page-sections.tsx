@@ -23,7 +23,7 @@ export function PricingFeatureMatrix({ rows }: PricingFeatureMatrixProps) {
               {PRICING_TIERS.map((tier) => (
                 <th
                   key={tier.id}
-                  className="min-w-[120px] px-3 py-3.5 text-center text-sm font-semibold text-muted-foreground"
+                  className="min-w-[120px] px-3 py-3.5 text-center text-sm font-semibold text-foreground"
                 >
                   {tier.name}
                 </th>
@@ -38,7 +38,7 @@ export function PricingFeatureMatrix({ rows }: PricingFeatureMatrixProps) {
                   i % 2 === 0 ? "bg-white" : "bg-muted"
                 }`}
               >
-                <td className="sticky left-0 z-10 bg-inherit px-4 py-3 text-sm text-muted-foreground">
+                <td className="sticky left-0 z-10 bg-inherit px-4 py-3 text-sm text-foreground">
                   {row.feature}
                 </td>
                 {row.tiers.map((value, j) => (
@@ -57,7 +57,7 @@ export function PricingFeatureMatrix({ rows }: PricingFeatureMatrixProps) {
                         />
                       )
                     ) : (
-                      <span className="text-xs font-medium text-muted-foreground">{value}</span>
+                      <span className="text-xs font-medium text-foreground">{value}</span>
                     )}
                   </td>
                 ))}
@@ -87,7 +87,7 @@ export function PricingFaqAccordion({ items }: { items: FaqItem[] }) {
               aria-expanded={isOpen}
               className="flex w-full cursor-pointer items-center justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-info-rule focus-visible:ring-inset"
             >
-              <span className="text-sm font-medium text-muted-foreground">{f.question}</span>
+              <span className="text-sm font-medium text-foreground">{f.question}</span>
               <ChevronDown
                 className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 ${
                   isOpen ? "rotate-180" : ""

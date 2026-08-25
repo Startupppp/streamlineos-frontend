@@ -29,7 +29,7 @@ const STATUS_CLASSES: Record<InvitationStatus, string> = {
   expired:
     "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
   revoked:
-    "bg-muted text-muted-foreground border-border",
+    "bg-muted text-foreground border-border",
 };
 
 function getInvitationStatus(invitation: Invitation): InvitationStatus {

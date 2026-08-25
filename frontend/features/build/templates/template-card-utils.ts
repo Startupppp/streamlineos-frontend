@@ -8,7 +8,7 @@ export const categoryAccentBar: Record<string, string> = {
 };
 
 export const categoryBadgeColors: Record<string, string> = {
-  GENERAL: "bg-muted text-muted-foreground",
+  GENERAL: "bg-muted text-foreground",
   SOFTWARE: "bg-status-info-surface text-status-info-ink",
   ONBOARDING: "bg-status-info-surface text-status-info-ink",
   MARKETING: "bg-status-danger-surface text-status-danger-ink",
@@ -26,7 +26,7 @@ export const categoryDotColors: Record<string, string> = {
 };
 
 export const categoryAvatarTints: Record<string, string> = {
-  GENERAL: "bg-muted text-muted-foreground ring-border",
+  GENERAL: "bg-muted text-foreground ring-border",
   SOFTWARE: "bg-status-info-surface text-status-info-ink ring-status-info-rule",
   ONBOARDING: "bg-status-info-surface text-status-info-ink ring-status-info-rule",
   MARKETING: "bg-status-danger-surface text-status-danger-ink ring-status-danger-rule",

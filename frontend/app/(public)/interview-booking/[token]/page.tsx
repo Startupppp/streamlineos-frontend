@@ -54,7 +54,7 @@ export default function InterviewBookingPage() {
 
           {isExpired && (
             <div className="text-center py-8">
-              <p className="text-lg font-semibold text-muted-foreground">
+              <p className="text-lg font-semibold text-foreground">
                 Link Expired
               </p>
               <p className="text-sm text-muted-foreground mt-2">
@@ -107,8 +107,8 @@ export default function InterviewBookingPage() {
                       className={cn(
                         "w-full text-left px-4 py-3 rounded-lg border-2 transition-all text-sm press-scale",
                         isSelected
-                          ? "border-primary bg-status-info-surface font-semibold text-muted-foreground"
-                          : "border-border hover:border-border bg-white text-muted-foreground",
+                          ? "border-primary bg-status-info-surface font-semibold text-foreground"
+                          : "border-border hover:border-border bg-white text-foreground",
                       )}
                     >
                       <span className="block font-medium">
@@ -145,7 +145,7 @@ export default function InterviewBookingPage() {
               <div className="w-16 h-16 rounded-full bg-status-success-surface mx-auto flex items-center justify-center">
                 <CheckCircle2 className="w-8 h-8 text-status-success-ink" />
               </div>
-              <p className="text-lg font-semibold text-muted-foreground">
+              <p className="text-lg font-semibold text-foreground">
                 Interview Scheduled!
               </p>
               {selectedSlot && (

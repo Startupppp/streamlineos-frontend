@@ -46,7 +46,7 @@ export default function AboutPage() {
     <PublicShell>
       <section className="container mx-auto px-4 lg:px-8 max-w-5xl">
         <PublicEyebrow>About {BRAND_NAME}</PublicEyebrow>
-        <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-[-0.035em] leading-[1.02] text-muted-foreground mb-6">
+        <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-[-0.035em] leading-[1.02] text-foreground mb-6">
           We&apos;re building the operating system{" "}
           <span className="text-status-info-ink">teams actually use.</span>
         </h1>
@@ -75,11 +75,11 @@ export default function AboutPage() {
       <section className="container mx-auto px-4 lg:px-8 max-w-5xl mt-20 lg:mt-28 grid lg:grid-cols-12 gap-10">
         <div className="lg:col-span-4">
           <PublicEyebrow>Our story</PublicEyebrow>
-          <h2 className="font-display text-3xl lg:text-4xl font-extrabold tracking-[-0.025em] leading-[1.05] text-muted-foreground">
+          <h2 className="font-display text-3xl lg:text-4xl font-extrabold tracking-[-0.025em] leading-[1.05] text-foreground">
             One workspace, because every other path felt wrong.
           </h2>
         </div>
-        <div className="lg:col-span-8 space-y-5 text-sm lg:text-base text-muted-foreground leading-relaxed">
+        <div className="lg:col-span-8 space-y-5 text-sm lg:text-base text-foreground leading-relaxed">
           <p>
             Before {BRAND_NAME}, we ran teams the way most teams still do â€” one SaaS for HR, one
             for sprints, one for sales, one for chat, one for the weekly status meeting. Every
@@ -108,7 +108,7 @@ export default function AboutPage() {
       <section className="container mx-auto px-4 lg:px-8 max-w-6xl mt-20 lg:mt-28">
         <div className="text-center mb-12">
           <PublicEyebrow>What we care about</PublicEyebrow>
-          <h2 className="font-display text-3xl lg:text-4xl font-extrabold tracking-[-0.025em] leading-[1.05] text-muted-foreground">
+          <h2 className="font-display text-3xl lg:text-4xl font-extrabold tracking-[-0.025em] leading-[1.05] text-foreground">
             Four principles we won&apos;t move on.
           </h2>
         </div>
@@ -123,7 +123,7 @@ export default function AboutPage() {
                 <span className="h-11 w-11 rounded-xl bg-gradient-to-br from-gradient-info-from to-gradient-info-to inline-flex items-center justify-center mb-4 shadow-[0_8px_18px_-6px_rgba(59,130,246,0.5)]">
                   <Icon className="h-5 w-5 text-white" />
                 </span>
-                <h3 className="font-display text-lg font-bold text-muted-foreground mb-2">{v.title}</h3>
+                <h3 className="font-display text-lg font-bold text-foreground mb-2">{v.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{v.body}</p>
               </div>
             );
@@ -153,7 +153,7 @@ export default function AboutPage() {
             <Link href="/contact">
               <Button
                 size="lg"
-                className="bg-white text-muted-foreground hover:bg-status-info-surface font-bold border-0 shadow-[0_18px_50px_-12px_rgba(255,255,255,0.3)] h-12 px-8 text-sm"
+                className="bg-white text-foreground hover:bg-status-info-surface font-bold border-0 shadow-[0_18px_50px_-12px_rgba(255,255,255,0.3)] h-12 px-8 text-sm"
               >
                 Get in touch
                 <ArrowRight className="ml-2 h-4 w-4" />

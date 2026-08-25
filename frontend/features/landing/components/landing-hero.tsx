@@ -48,7 +48,7 @@ export function LandingHero() {
               className="inline-flex items-center gap-3 mb-5 sm:mb-6"
             >
               <AnimatedLogo size={52} className="rounded-xl" />
-              <span className="font-display text-[1.65rem] sm:text-[2.15rem] md:text-[2.45rem] font-extrabold tracking-[-0.035em] leading-none text-muted-foreground text-balance">
+              <span className="font-display text-[1.65rem] sm:text-[2.15rem] md:text-[2.45rem] font-extrabold tracking-[-0.035em] leading-none text-foreground text-balance">
                 {BRAND_NAME.slice(0, -2)}
                 <span className="brand-sweep">OS</span>
               </span>
@@ -59,7 +59,7 @@ export function LandingHero() {
               initial="hidden"
               animate="visible"
               variants={variants}
-              className="font-display text-[1.85rem] leading-[1.06] sm:text-4xl md:text-[2.75rem] lg:text-[2.9rem] xl:text-[3.25rem] font-extrabold tracking-[-0.03em] text-muted-foreground text-balance mb-4 sm:mb-5"
+              className="font-display text-[1.85rem] leading-[1.06] sm:text-4xl md:text-[2.75rem] lg:text-[2.9rem] xl:text-[3.25rem] font-extrabold tracking-[-0.03em] text-foreground text-balance mb-4 sm:mb-5"
             >
               All your business on{" "}
               <span className="brand-sweep">one platform.</span>
@@ -73,7 +73,7 @@ export function LandingHero() {
               className="mx-auto lg:mx-0 mb-7 sm:mb-8 max-w-md text-sm sm:text-base text-muted-foreground leading-relaxed text-pretty"
             >
               HR, projects, CRM, chat, and accounting — from{" "}
-              <span className="font-semibold text-muted-foreground">{cheapestAnnualLabel()}</span>
+              <span className="font-semibold text-foreground">{cheapestAnnualLabel()}</span>
               /seat monthly when billed annually.
             </motion.p>
 

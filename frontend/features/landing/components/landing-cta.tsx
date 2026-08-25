@@ -51,7 +51,7 @@ export function LandingCTA() {
                   <Link href="/signin" className="block w-full sm:w-auto">
                     <Button
                       size="lg"
-                      className="bg-white text-muted-foreground hover:bg-muted font-bold border-0 h-12 w-full sm:w-auto px-8 text-sm"
+                      className="bg-white text-foreground hover:bg-muted font-bold border-0 h-12 w-full sm:w-auto px-8 text-sm"
                     >
                       Start free
                       <ArrowRight className="ml-2 h-4 w-4" />

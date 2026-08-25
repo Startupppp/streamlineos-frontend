@@ -179,10 +179,10 @@ export function MailThreadMessage({
           <MailHtmlViewer html={message.bodyHtml} className="mt-1" />
         ) : message.bodyText ? (
           <div
-            className="mt-1 overflow-x-auto rounded-lg border border-border/50 bg-white text-muted-foreground shadow-sm"
+            className="mt-1 overflow-x-auto rounded-lg border border-border/50 bg-white text-foreground shadow-sm"
             style={{ colorScheme: "light" }}
           >
-            <pre className="whitespace-pre-wrap break-words px-4 py-3 font-sans text-label leading-relaxed text-muted-foreground">
+            <pre className="whitespace-pre-wrap break-words px-4 py-3 font-sans text-label leading-relaxed text-foreground">
               {message.bodyText}
             </pre>
           </div>
