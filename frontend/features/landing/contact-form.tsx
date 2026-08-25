@@ -15,6 +15,7 @@ import {
   TurnstileWidget,
   isTurnstileEnabled,
 } from "@/features/security/turnstile-widget";
+import { PublicFormField } from "./components/public-form-field";
 
 type ContactTopic = "sales" | "support" | "partnership" | "press" | "other";
 
@@ -202,7 +203,7 @@ export function ContactForm() {
             </div>
 
             <div className="grid sm:grid-cols-2 gap-4">
-              <Field
+              <PublicFormField
                 label="Name"
                 error={form.formState.errors.name?.message ?? serverFieldErrors.name}
                 required
@@ -211,8 +212,8 @@ export function ContactForm() {
                   placeholder="Aditya Sharma"
                   {...form.register("name")}
                 />
-              </Field>
-              <Field
+              </PublicFormField>
+              <PublicFormField
                 label="Work email"
                 error={form.formState.errors.email?.message ?? serverFieldErrors.email}
                 required
@@ -222,17 +223,17 @@ export function ContactForm() {
                   placeholder="you@company.com"
                   {...form.register("email")}
                 />
-              </Field>
+              </PublicFormField>
             </div>
 
             <div className="grid sm:grid-cols-2 gap-4">
-              <Field label="Company" error={serverFieldErrors.company}>
+              <PublicFormField label="Company" error={serverFieldErrors.company}>
                 <Input
                   placeholder="Acme Inc."
                   {...form.register("company")}
                 />
-              </Field>
-              <Field label="Phone" hint="optional" error={serverFieldErrors.phone}>
+              </PublicFormField>
+              <PublicFormField label="Phone" hint="optional" error={serverFieldErrors.phone}>
                 <Controller
                   control={form.control}
                   name="phone"
@@ -244,10 +245,10 @@ export function ContactForm() {
                     />
                   )}
                 />
-              </Field>
+              </PublicFormField>
             </div>
 
-            <Field
+            <PublicFormField
               label="Tell us what you need"
               error={form.formState.errors.message?.message ?? serverFieldErrors.message}
               required
@@ -258,7 +259,7 @@ export function ContactForm() {
                 className="w-full rounded-md border border-border bg-white px-3 py-2.5 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-info-rule focus-visible:border-status-info-rule resize-y min-h-[120px]"
                 {...form.register("message")}
               />
-            </Field>
+            </PublicFormField>
 
             {turnstileRequired && (
               <TurnstileWidget onToken={setTurnstileToken} className="mt-1" />
@@ -288,44 +289,6 @@ export function ContactForm() {
           </motion.form>
         )}
       </AnimatePresence>
-    </div>
-  );
-}
-
-function Field({
-  label,
-  hint,
-  required,
-  error,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  required?: boolean;
-  error?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <Label className="text-label font-medium text-foreground flex items-center gap-1.5">
-        {label}
-        {required && (
-          <span className="text-status-danger-ink" aria-hidden>
-            *
-          </span>
-        )}
-        {hint && (
-          <span className="text-dense font-normal text-muted-foreground">
-            ({hint})
-          </span>
-        )}
-      </Label>
-      {children}
-      {error && (
-        <p role="alert" className="text-xs text-status-danger-ink">
-          {error}
-        </p>
-      )}
     </div>
   );
 }

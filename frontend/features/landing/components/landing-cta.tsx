@@ -43,17 +43,18 @@ export function LandingCTA() {
               </h2>
 
               <p className="text-muted-foreground text-sm sm:text-base lg:text-lg leading-relaxed max-w-xl mx-auto mb-8 sm:mb-10 text-pretty">
-                Start free. No credit card. Instant access.
+                We&apos;re onboarding new teams in small batches. Tell us about yours
+                and we&apos;ll email you when your invite is ready.
               </p>
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 max-w-sm sm:max-w-none mx-auto">
                 <Magnetic strength={reduce ? 0 : 0.35} className="w-full sm:w-auto">
-                  <Link href="/signin" className="block w-full sm:w-auto">
+                  <Link href="/waitlist" className="block w-full sm:w-auto">
                     <Button
                       size="lg"
                       className="bg-white text-foreground hover:bg-muted font-bold border-0 h-12 w-full sm:w-auto px-8 text-sm"
                     >
-                      Start free
+                      Join the waitlist
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </Link>
