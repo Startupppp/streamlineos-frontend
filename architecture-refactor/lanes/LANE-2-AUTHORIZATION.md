@@ -88,6 +88,8 @@ your final report, and leave the affected box unticked with that reason written 
 `backend/src/app.module.ts` · `backend/src/modules/rbac/permissions/index.ts` ·
 `frontend/lib/rbac/permissions/index.ts`.
 
+**Also orchestrator-owned: `architecture-refactor/README.md`** — the program index. Update your candidate README only.
+
 Write what you need into `architecture-refactor/lane-requests/lane-2.md` — the exact journal entry
 JSON, the exact export line, the exact provider or guard registration. The orchestrator applies
 them. **A migration absent from `_journal.json` never runs and `db:migrate` still reports success**,
@@ -148,9 +150,11 @@ Per ticket, in order:
    this lane; that overrides the standing "never run tests" rule in `CLAUDE.md`. Do not run the
    full suite — workers get killed. Report exact pass/fail counts. **Never report a suite as
    passing that you did not run.**
-4. Only when the ticket file has **zero** `- [ ]` left: set its `**Status:**` line to `done`,
-   update its row in the candidate `README.md`, then update the wave-table counts in
-   `architecture-refactor/README.md`.
+4. Only when the ticket file has **zero** `- [ ]` left: set its `**Status:**` line to `done` and
+   update its row in the candidate `README.md` — `c25-…/README.md`, `c20-…/README.md` or
+   `c15-…/README.md`. **Do NOT touch `architecture-refactor/README.md`.** Four lanes closing
+   tickets at once would each Read-then-Edit that one file and silently lose each other's counts;
+   the orchestrator reconciles it from the ticket files at the end.
 5. **Never delete a ticket file.** Retiring means marking it done and keeping the evidence.
 
 ## Git
