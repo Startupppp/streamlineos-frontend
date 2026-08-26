@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/ui/empty-state";
+import type { PermissionGate } from "@/lib/rbac/permission-gate";
 import { EmptyDealsIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared";
 import { RecordList, asRecordValues, type RecordValue } from "@/features/renderer";
@@ -99,6 +100,8 @@ export interface DealListProps {
   deals: Deal[];
   isLoading: boolean;
   isError: boolean;
+  /** The read's verdict, so an unreadable list is not reported as an empty one. */
+  access: PermissionGate;
   density: DensityMode;
   canCreate: boolean;
   canUpdate: boolean;
@@ -113,6 +116,7 @@ export function DealList({
   deals,
   isLoading,
   isError,
+  access,
   density,
   canCreate,
   canUpdate,
@@ -164,6 +168,7 @@ export function DealList({
   if (rows.length === 0)
     return (
       <EmptyState
+          access={access}
         illustration={<EmptyDealsIllustration />}
         title={isFiltered ? "No deals match these filters" : "No deals yet"}
         description={

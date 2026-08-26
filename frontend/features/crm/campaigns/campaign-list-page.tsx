@@ -61,7 +61,7 @@ export function CampaignListPage() {
   const [density, setDensity] = useDensity();
   const canManageCampaigns = useCan("crm:campaigns:manage");
 
-  const { data, isLoading, isError, refetch } = useCampaigns({
+  const { data, isLoading, isError, refetch, access } = useCampaigns({
     status: statusFilter === "all" ? undefined : statusFilter,
     limit: 50,
   });
@@ -119,6 +119,7 @@ export function CampaignListPage() {
           />
         ) : campaigns.length === 0 ? (
           <EmptyState
+            access={access}
             illustration={<EmptyReportIllustration />}
             title={isFiltered ? "No campaigns match this filter" : "No campaigns yet"}
             description={

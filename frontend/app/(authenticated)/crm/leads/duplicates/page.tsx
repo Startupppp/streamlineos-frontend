@@ -185,7 +185,7 @@ function DuplicatesSkeleton() {
 }
 
 export default function DuplicateLeadsPage() {
-  const { data, isLoading, isFetching, isError, refetch } = useDuplicateLeads();
+  const { data, isLoading, isFetching, isError, refetch, access} = useDuplicateLeads();
   const { mutate: mergeLead, isPending: isMerging } = useMergeLead();
 
   const leadLayout = useLeadLayout();
@@ -267,6 +267,7 @@ export default function DuplicateLeadsPage() {
               news rather than as an empty container.
             */
             <EmptyState
+            access={access}
               illustration={<EmptyLeadsIllustration />}
               title="No duplicates found"
               description="Every lead in your pipeline looks like a distinct person. The scan runs against name, email, phone and company."

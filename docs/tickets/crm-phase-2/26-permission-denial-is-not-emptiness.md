@@ -1,6 +1,6 @@
 # 26 — A user who cannot see a list is told it is empty
 
-**Status:** not started — deliberately. It wants someone who can run the app and watch a denied surface render as an empty one; this cannot be shown by a unit test, and claiming it done from a fixture would be the exact failure the ticket describes.
+**Status:** done — `usePermissionGate` carries the verdict with the read and `EmptyState` renders the refusal, across 89 hooks in 22 files (7 more than this ticket measured). Canaried: disabling the short-circuit fails 2 of the 8 new tests, both on the denial claims.
 **Track:** E — discovered by the empty-state pass
 **Blocked by:** —
 

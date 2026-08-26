@@ -90,7 +90,7 @@ export function ContactListPage() {
     updateParams({ q: debouncedSearch || null, page: null });
   }, [debouncedSearch, searchParams, updateParams]);
 
-  const { data, isLoading, isError, error, refetch } = useContacts({
+  const { data, isLoading, isError, error, refetch, access} = useContacts({
     search: apiSearch || undefined,
     limit: PAGE_SIZE,
     offset: (page - 1) * PAGE_SIZE,
@@ -248,6 +248,7 @@ export function ContactListPage() {
           />
         ) : contacts.length === 0 ? (
           <EmptyState
+            access={access}
             illustration={<EmptyPersonIllustration />}
             title={isFiltered ? "No contacts match this search" : "No contacts yet"}
             description={

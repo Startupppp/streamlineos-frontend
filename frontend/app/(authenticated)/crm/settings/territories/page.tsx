@@ -44,7 +44,7 @@ export default function TerritoriesPage() {
   const [editTarget, setEditTarget] = useState<Territory | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Territory | null>(null);
 
-  const { data, isLoading, isError, refetch } = useTerritories();
+  const { data, isLoading, isError, refetch, access} = useTerritories();
   const updateTerritory = useUpdateTerritory();
   const deleteTerritory = useDeleteTerritory();
 
@@ -187,6 +187,7 @@ export default function TerritoriesPage() {
           />
         ) : rows.length === 0 ? (
           <EmptyState
+            access={access}
             illustration={<EmptyTargetIllustration />}
             title="No territories yet"
             description="A territory is a rule that sends a new lead to the reps who cover it — by state, by city, by industry, by account type."

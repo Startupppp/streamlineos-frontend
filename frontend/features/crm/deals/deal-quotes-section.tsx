@@ -133,7 +133,7 @@ interface DealQuotesSectionProps {
 
 export function DealQuotesSection({ dealId }: DealQuotesSectionProps) {
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const { data, isLoading, isError, refetch } = useDealQuotes(dealId);
+  const { data, isLoading, isError, refetch, access} = useDealQuotes(dealId);
   const canCreateQuote = useCan("crm:quotes:create");
   const createQuote = useCreateQuote();
   const deleteQuote = useDeleteQuote();
@@ -234,6 +234,7 @@ export function DealQuotesSection({ dealId }: DealQuotesSectionProps) {
             />
           ) : rows.length === 0 ? (
             <EmptyState
+            access={access}
               compact
               title="No quotes yet"
               description="A quote prices this deal for the client, line by line. Create one to send it out."

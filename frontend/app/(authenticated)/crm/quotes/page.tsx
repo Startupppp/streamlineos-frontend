@@ -92,7 +92,7 @@ export default function QuotesPage() {
     updateParams({ q: debouncedSearch || null, page: null });
   }, [debouncedSearch, searchParams, updateParams]);
 
-  const { data, isLoading, error, refetch } = useQuotes({
+  const { data, isLoading, error, refetch, access} = useQuotes({
     search: apiSearch || undefined,
     status: isQuoteStatus(statusFilter) ? statusFilter : undefined,
     page,
@@ -252,6 +252,7 @@ export default function QuotesPage() {
             />
           ) : quotes.length === 0 ? (
             <EmptyState
+            access={access}
               illustration={<EmptyDocumentsIllustration />}
               title={hasActiveFilters ? "No quotes match this search" : "No quotes yet"}
               description={
