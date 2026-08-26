@@ -82,7 +82,10 @@ export const FINANCE_NAV_GROUPS: NavGroup[] = [
             label: "What customers owe us",
             icon: FileStack,
             href: "/accounting/aged-receivables",
-            requiredPermission: "accounting:reports:read",
+            // Matches the page's own gate (`requirePermission("accounting:receivables:read")`).
+            // It read `accounting:reports:read`, so anyone holding reports-but-not-receivables
+            // was shown a link that answered 403.
+            requiredPermission: "accounting:receivables:read",
           },
         ],
       },
