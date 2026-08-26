@@ -13,4 +13,4 @@ c17 makes individual writes provable. This candidate supplies the commercial mod
 | 03 | [Proration is stored, not recomputed](issues/03-proration-ledger.md) | 01, 02 | ready-for-agent |
 | 04 | [Usage metering is idempotent and aggregatable](issues/04-usage-metering.md) | 01 | ready-for-agent |
 | 05 | [Invoices snapshot tax and currency immutably](issues/05-tax-currency-invoice-snapshot.md) | 01, 03, 04 | ready-for-agent |
-| 06 | [One subscription table feeds billing and platform administration](issues/06-one-subscription-truth.md) | 01 | ready-for-agent |
+| 06 | One subscription table feeds billing and platform administration | 01 | done |

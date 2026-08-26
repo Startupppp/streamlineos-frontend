@@ -27,10 +27,10 @@ What the passes found was not systemic decay. It was concentrated correctness an
 | [c12 — Route text search through the id probe that already exists](c12-text-search-id-probe/README.md) | 3 | 2 | **1** |
 | [c13 — One contract for every list](c13-one-list-contract/README.md) | 6 | 0 | **6** |
 | [c15 — Outbound I/O leaves the request transaction](c15-outbound-io-leaves-the-request/README.md) | 6 | 2 | **4** |
-| [c17 — Every billing write is provable](c17-billing-writes-are-provable/README.md) | 7 | 5 | **2** |
+| [c17 — Every billing write is provable](c17-billing-writes-are-provable/README.md) | 7 | 6 | **1** |
 | [c19 — A cache key cannot be unsafe, and a write invalidates what it changed](c19-cache-keys-cannot-be-unsafe/README.md) | 5 | 0 | **5** |
 | [c20 — A failure in production is visible](c20-failures-are-visible/README.md) | 5 | 3 | **2** |
-| | **32** | **12** | **20** |
+| | **32** | **13** | **19** |
 
 **c20-01 is done, and it was the right thing to do first.** The reporter port had no adapter, so `reportError` discarded everything — and two of its five call sites (`workflow-runner`, `import-pump`) report *without* also logging, so every workflow-run and import failure was reaching nobody. That is now a structured log record, no vendor.
 
@@ -38,24 +38,24 @@ What the passes found was not systemic decay. It was concentrated correctness an
 
 | Candidate | Tickets | Done | Open |
 |---|---|---|---|
-| [c11 — Make "this query is fast" a thing CI proves](c11-read-cost-budgets/README.md) | 3 | 0 | **3** |
-| [c14 — Background sweeps operate on sets, not on rows](c14-set-based-sweeps/README.md) | 3 | 1 | **2** |
+| [c11 — Make "this query is fast" a thing CI proves](c11-read-cost-budgets/README.md) | 3 | 3 | **0** |
+| [c14 — Background sweeps operate on sets, not on rows](c14-set-based-sweeps/README.md) | 3 | 3 | **0** |
 | [c21 — Right models, right throughput — fan-out, retention and polling](c21-fanout-retention-and-polling/README.md) | 7 | 3 | **4** |
 | [c22 — Scheduled work runs once, and a deploy sheds no requests](c22-scheduled-work-and-deploy-safety/README.md) | 4 | 3 | **1** |
 | [c25 — Authorization cannot be omitted](c25-authorization-cannot-be-omitted/README.md) | 4 | 0 | **4** |
-| [c26 — Commercial billing is a versioned ledger](c26-commercial-billing-ledger/README.md) | 6 | 0 | **6** |
-| [c27 — Indexed knowledge obeys the same visibility as direct reads](c27-permissioned-knowledge-index/README.md) | 5 | 0 | **5** |
-| | **32** | **7** | **25** |
+| [c26 — Commercial billing is a versioned ledger](c26-commercial-billing-ledger/README.md) | 6 | 1 | **5** |
+| [c27 — Indexed knowledge obeys the same visibility as direct reads](c27-permissioned-knowledge-index/README.md) | 5 | 1 | **4** |
+| | **32** | **14** | **18** |
 
 ## Wave 2 — mechanical, parallelisable
 
 | Candidate | Tickets | Done | Open |
 |---|---|---|---|
-| [c16 — The schema says what it means](c16-schema-says-what-it-means/README.md) | 9 | 2 | **7** |
+| [c16 — The schema says what it means](c16-schema-says-what-it-means/README.md) | 9 | 4 | **5** |
 | [c18 — Removals are proved, not grepped](c18-removals-are-proved/README.md) | 4 | 0 | **4** |
 | [c23 — A tenant extends the product without a deploy](c23-tenant-extensibility-without-migrations/README.md) | 5 | 0 | **5** |
-| [c24 — The design system is the only way to build a screen](c24-frontend-consistency-and-access/README.md) | 5 | 2 | **3** |
-| | **23** | **4** | **19** |
+| [c24 — The design system is the only way to build a screen](c24-frontend-consistency-and-access/README.md) | 5 | 5 | **0** |
+| | **23** | **9** | **14** |
 
 ## Wave 3 — the read side
 
@@ -64,11 +64,11 @@ What the passes found was not systemic decay. It was concentrated correctness an
 | [c10 — Make module-level standing answerable](c10-module-role-standing/README.md) | 5 | 5 | **0** |
 | | **5** | **5** | **0** |
 
-**64 tickets open, 28 retired.** A retired ticket has every box verified against source and its file deleted; its row in the candidate index is the surviving record.
+**51 tickets open, 41 retired.** A retired ticket has every box verified against source and its file deleted; its row in the candidate index is the surviving record.
 
 **The index under-reports what is built.** c10 shipped in `191f4817` and c11's read budgets exist, yet both read as untouched — the tickets were never retired. Three of c12's four probes landed in `0475`. Before starting a candidate, check source first: several "open" tickets are verification, not construction. See [`BATCHES.md`](BATCHES.md) for how the remaining work partitions into lanes that can run at once.
 
-## The eight that matter most now
+## The eight that mattered most — five now closed
 
 | Ticket | Why it is first |
 |---|---|
@@ -77,9 +77,9 @@ What the passes found was not systemic decay. It was concentrated correctness an
 | [c25-01](c25-authorization-cannot-be-omitted/issues/01-every-route-declares-exposure.md) | Guard built and wired, **enforcement deliberately off**: 93 controllers sit on a class-level `JwtAuthGuard` and some handlers are universal by design, so deny-by-absence would 403 platform core. Boot report first, flip after. |
 | [c25-04](c25-authorization-cannot-be-omitted/issues/04-rls-coverage-is-a-release-invariant.md) | Verifier now exits non-zero and runs in CI. The gap count is still unknown — it needs a live database. |
 | [c13-05](c13-one-list-contract/issues/05-scrolled-lists-page-by-cursor.md) | Chat cursor verified fixed; multi-account inbox now advances only over rows it returned. Remaining: the equivalence test. |
-| [c26-06](c26-commercial-billing-ledger/issues/06-one-subscription-truth.md) | Shadow table confirmed to have **zero writers** — platform administration was reading an always-empty table, so every customer showed as unsubscribed. Reads now hit `subscriptions`, and the customer list is keyset-paged at 100. Remaining: contract tests. |
-| [c16-03](c16-schema-says-what-it-means/issues/03-a-recurring-event-recurs.md) | **Blocked on a decision.** No RFC-5545 library is installed and the rule is "do not hand-roll RRULE", so expansion cannot be built without adding a dependency. The shared expansion seam and conflict detection exist and are tested; recurrence is the missing half. |
-| [c27-02](c27-permissioned-knowledge-index/issues/02-one-ingestion-state-machine.md) | Article embedding holds request/transaction resources while page indexing is detached but not durable. |
+| ~~c26-06~~ | ✅ **done.** The shadow table had **zero writers**, so platform administration was reading an always-empty table and every customer showed as unsubscribed. Reads hit `subscriptions`, the customer list is keyset-paged at 100, and 18 contract tests pin paid, trial, cancelled, missing and concurrent-webhook states. |
+| ~~c16-03~~ | ✅ **done.** `rrule` 2.8.1 now expands series through the one seam free/busy and conflicts already share. Expansion runs in the event's IANA zone, so a weekly 09:00 meeting stays 09:00 across a DST boundary, and `calendar_event_exceptions` makes one occurrence editable without touching its siblings. |
+| ~~c27-02~~ | ✅ **done** in a concurrent Batch B session — `kb-ingestion-consumer.ts`. |
 
 ## Rules that apply to every ticket here
 
