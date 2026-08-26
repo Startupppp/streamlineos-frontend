@@ -55,7 +55,7 @@ const eslintConfig = defineConfig([
     },
     rules: {
       "streamline/no-raw-visual-values": "error",
-      "streamline/no-unlabelled-icon-button": "warn",
+      "streamline/no-unlabelled-icon-button": "error",
     },
   },
   {
@@ -98,7 +98,7 @@ const eslintConfig = defineConfig([
     },
     rules: {
       "streamline/no-raw-visual-values": ["error", { skip: ["type", "shadow", "radius"] }],
-      "streamline/no-unlabelled-icon-button": "warn",
+      "streamline/no-unlabelled-icon-button": "error",
     },
   },
   globalIgnores([

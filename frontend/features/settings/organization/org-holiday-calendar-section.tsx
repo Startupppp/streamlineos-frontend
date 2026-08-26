@@ -96,6 +96,7 @@ function DeleteHolidayButton({ holidayId, onDelete, disabled }: { holidayId: str
   return (
     <button
       type="button"
+      aria-label="Delete holiday"
       onClick={handleClick}
       disabled={disabled}
       className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
