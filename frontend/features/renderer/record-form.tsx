@@ -158,6 +158,27 @@ export function RecordForm({
     onSubmit(visibleFormValues(layout, mode, submitted, { ...initial, ...submitted }), event);
   }
 
+  /*
+    A form with nothing to fill in is said out loud rather than rendered as a
+    submit button over no controls. It happens when a tenant has hidden every
+    field a narrowed composer writes — rare, and silently posting an empty record
+    would be the worse half of that trade.
+  */
+  if (byName.size === 0)
+    return (
+      <div className={cn("flex min-w-0 flex-col gap-gap-toolbar", className)}>
+        <p className="text-dense text-muted-foreground">
+          Nothing to fill in — every field on this form is hidden by your
+          organisation&rsquo;s layout for {layout.plural.toLowerCase()}.
+        </p>
+        {onCancel ? (
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Close
+          </Button>
+        ) : null}
+      </div>
+    );
+
   return (
     <Form {...form}>
       <form
@@ -173,7 +194,13 @@ export function RecordForm({
 
           return (
             <div key={section.title} className="flex flex-col gap-gap-toolbar">
-              <h3 className="text-label font-medium text-muted-foreground">{section.title}</h3>
+              {/*
+                An empty heading is omitted rather than rendered blank: a
+                narrowed composer over one field has nothing to head.
+              */}
+              {section.title ? (
+                <h3 className="text-label font-medium text-muted-foreground">{section.title}</h3>
+              ) : null}
 
               <div className="grid grid-cols-1 gap-gap-toolbar sm:grid-cols-2">
                 {sectionFields.map((field) => (

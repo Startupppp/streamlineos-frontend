@@ -79,22 +79,6 @@ export const QUOTE_TEMPLATE_LAYOUT: RecordLayout = {
  * why the surface sends `null` for a blank rather than omitting it. The other
  * three are required, so a blank would be a form that fails on submit.
  */
-/**
- * Deliberately NOT in `registry.ts`.
- *
- * Registration was tried and the registry's own tests refused it, correctly. A
- * registered record type must survive a tenant reversing its column order and
- * must have a name a screen can put on a button — and quote settings is a
- * singleton: one row per tenant, no list, nothing to arrange, nothing to name in
- * the plural. It points `titleField` at `defaultExpiryDays` only because
- * `validateLayout` insists on one, and nothing renders it.
- *
- * The layout is still a description and `quote-settings-form` still renders it
- * through `RecordForm`; it simply is not a record *type*. Relaxing two registry
- * guards for one layout would have cost more than it bought. If more singletons
- * arrive, the answer is a singleton shape the registry understands, not an
- * exemption per layout — and `titleField` is the first thing that will need it.
- */
 export const QUOTE_SETTINGS_LAYOUT: RecordLayout = {
   key: "crm:settings:quote-settings",
   singular: "Quoting rules",

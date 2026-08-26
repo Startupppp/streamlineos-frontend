@@ -224,6 +224,79 @@ export function withColumns(layout: RecordLayout, fields: readonly string[]): Re
 }
 
 /**
+ * The same description, narrowed to the fields one composer asks for.
+ *
+ * The form counterpart of `withColumns`, and it exists for the same reason. A
+ * quick action on a record's page — log a note against this lead, put a task
+ * against this deal — asks for two or three fields and supplies the rest from
+ * where it sits: the type is implied by the button, the anchor by the page. The
+ * alternative is a hand-written panel with its own schema beside the record
+ * type it is writing to, which is four more copies of what a field is.
+ *
+ * Not a `LayoutAdjustment`: an adjustment is what a tenant wants everywhere,
+ * this is one composer's framing. Applied after `useTenantLayout`, so it can
+ * only narrow what the tenant already sees.
+ *
+ * The heading is empty by default. A section title over a single textarea is a
+ * label for something nobody was confused about; `RecordForm` omits an empty
+ * one rather than rendering a blank line.
+ */
+export interface FormFraming {
+  /** Empty by default; `RecordForm` omits an empty heading. */
+  readonly title?: string;
+  /**
+   * Fields this composer insists on, even where the record type does not.
+   *
+   * A narrowing may **tighten** and never loosen. An interaction record allows
+   * an empty note, because a call logged with no notes is still a call; a "add a
+   * note" box with nothing in it is not a note, and it is the composer that
+   * knows that, not the record type. Marking the shared field `required` would
+   * make notes mandatory on the full interaction form too, which is the opposite
+   * of what anybody asked for.
+   *
+   * Only tightening is offered. A composer that could mark a required field
+   * optional would submit a record the API rejects.
+   */
+  readonly required?: readonly string[];
+}
+
+export function withFormFields(
+  layout: RecordLayout,
+  fields: readonly string[],
+  framing: FormFraming | string = {},
+): RecordLayout {
+  const { title = "", required = [] } =
+    typeof framing === "string" ? { title: framing, required: [] } : framing;
+
+  const declared = layout.form.sections.flatMap((section) => section.fields);
+  const kept = fields.filter((name) => declared.includes(name));
+
+  /*
+    Nothing kept means nothing to fill in — a tenant has hidden every field this
+    composer writes. Unlike `withColumns`, the whole description is NOT the right
+    fallback here: a "log a note" box that quietly became the full six-field
+    interaction form is a worse outcome than one that says it has nothing to
+    show. `RecordForm` renders that case as a sentence rather than as a submit
+    button over no controls.
+  */
+  if (kept.length === 0) return { ...layout, form: { sections: [] } };
+
+  const tightened = required.filter((name) => kept.includes(name));
+  const withRequired =
+    tightened.length === 0
+      ? layout.fields
+      : layout.fields.map((field) =>
+          tightened.includes(field.name) ? { ...field, required: true } : field,
+        );
+
+  return {
+    ...layout,
+    fields: withRequired,
+    form: { sections: [{ title, fields: kept }] },
+  };
+}
+
+/**
  * What an adjustment asks for that the description cannot honour.
  *
  * Reported rather than thrown, and separately from `applyAdjustment`, which

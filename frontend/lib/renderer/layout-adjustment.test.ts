@@ -5,10 +5,11 @@ import {
   UNGROUPED_SECTION_TITLE,
   validateAdjustment,
   withColumns,
+  withFormFields,
   type LayoutAdjustment,
 } from "./layout-adjustment";
 import { proposeFromFill, MIN_SAMPLE } from "./layout-proposal";
-import { formFields, patchForUpdate, payloadForCreate } from "./layout-schema";
+import { formFields, patchForUpdate, payloadForCreate, schemaForLayout } from "./layout-schema";
 
 /**
  * A description the engine has never seen, so nothing here can pass by knowing
@@ -334,5 +335,90 @@ describe("a description narrowed for a related-records panel", () => {
     const panel = withColumns(LAYOUT, ["mass"]);
     expect(panel.detail).toBe(LAYOUT.detail);
     expect(panel.form).toBe(LAYOUT.form);
+  });
+});
+
+describe("a description narrowed for one composer", () => {
+  it("keeps only the fields the composer asked for", () => {
+    const composer = withFormFields(LAYOUT, ["label", "notes"]);
+    expect(formFields(composer, "create").map((field) => field.name)).toEqual(["label", "notes"]);
+  });
+
+  it("ignores a field the form never offered, rather than smuggling one in", () => {
+    // `collectedAt` is on the form; `nothingCalledThis` is not declared at all.
+    const composer = withFormFields(LAYOUT, ["nothingCalledThis", "collectedAt"]);
+    expect(formFields(composer, "create").map((field) => field.name)).toEqual(["collectedAt"]);
+  });
+
+  it("offers no controls when it can keep nothing, rather than widening to the whole form", () => {
+    /*
+      The opposite of `withColumns`, deliberately. A panel showing every column
+      is worse than one showing four; a "log a note" box that quietly became the
+      full six-field record form is worse than one that says it has nothing to
+      show, which is what `RecordForm` renders for an empty section list.
+    */
+    const composer = withFormFields(LAYOUT, ["nothingCalledThis"]);
+    expect(composer.form.sections).toEqual([]);
+    expect(formFields(composer, "create")).toEqual([]);
+  });
+
+  it("cannot bring back a field the tenant hid, because it narrows what it is given", () => {
+    const adjusted = applyAdjustment(LAYOUT, { layoutKey: "specimen", hidden: ["notes"] });
+    expect(formFields(withFormFields(adjusted, ["notes", "label"]), "edit").map((f) => f.name)).toEqual([
+      "label",
+    ]);
+  });
+
+  it("does not touch the list or the detail view, which the composer is not rendering", () => {
+    const composer = withFormFields(LAYOUT, ["label"]);
+    expect(composer.list).toBe(LAYOUT.list);
+    expect(composer.detail).toBe(LAYOUT.detail);
+  });
+
+  it("still validates against the description rather than a schema written beside it", () => {
+    const composer = withFormFields(LAYOUT, ["label", "mass"]);
+    const schema = schemaForLayout(composer, "create");
+    expect(schema.safeParse({ label: "", mass: "12" }).success).toBe(false);
+    expect(schema.safeParse({ label: "S-1", mass: "twelve" }).success).toBe(false);
+    expect(schema.safeParse({ label: "S-1", mass: "12" }).success).toBe(true);
+  });
+});
+
+describe("a composer whose fields the tenant has all hidden", () => {
+  it("offers no controls rather than quietly widening to the whole form", () => {
+    const adjusted = applyAdjustment(LAYOUT, { layoutKey: "specimen", hidden: ["notes"] });
+    const composer = withFormFields(adjusted, ["notes"]);
+    expect(formFields(composer, "edit")).toEqual([]);
+    // Not the full description: a "log a note" box that became a six-field form
+    // is a worse outcome than one that says it has nothing to show.
+    expect(composer.form.sections).toEqual([]);
+  });
+});
+
+describe("a composer that insists on more than the record type does", () => {
+  it("marks a field required for this framing only", () => {
+    const composer = withFormFields(LAYOUT, ["notes"], { required: ["notes"] });
+    expect(formFields(composer, "create")[0]?.required).toBe(true);
+    // The shared description is untouched: a call logged with no notes is still
+    // a call, and only this composer says otherwise.
+    expect(LAYOUT.fields.find((field) => field.name === "notes")?.required).toBeUndefined();
+  });
+
+  it("enforces the tightened field through the generated schema", () => {
+    const composer = withFormFields(LAYOUT, ["notes"], { required: ["notes"] });
+    const schema = schemaForLayout(composer, "create");
+    expect(schema.safeParse({ notes: "" }).success).toBe(false);
+    expect(schema.safeParse({ notes: "Spoke to Priya" }).success).toBe(true);
+  });
+
+  it("ignores a tightening of a field the composer does not render", () => {
+    const composer = withFormFields(LAYOUT, ["notes"], { required: ["site"] });
+    expect(composer.fields.find((field) => field.name === "site")?.required).toBeUndefined();
+  });
+
+  it("still accepts a plain title as the third argument", () => {
+    expect(withFormFields(LAYOUT, ["notes"], "Log a note").form.sections[0]?.title).toBe(
+      "Log a note",
+    );
   });
 });

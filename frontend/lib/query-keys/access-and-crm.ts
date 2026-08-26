@@ -79,7 +79,7 @@ export const accessAndCrmQueryKeys = {
     issues: (params: Record<string, unknown>) =>
       [...base, "crm", "issues", "list", params] as const,
     issue: (issueRecordId: string) =>
-      [...base, "crm", "issues", "detail", issueRecordId] as const,
+      [...base, "crm", "issues", issueRecordId] as const,
     crmImport: (crmImportId: string) =>
       [...base, "crm", "imports", crmImportId] as const,
     salesDashboard: () => [...base, "crm", "salesDashboard"] as const,

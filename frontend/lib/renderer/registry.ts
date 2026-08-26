@@ -25,7 +25,10 @@ import { AUTOMATION_LAYOUT } from "./crm/settings/automation-layout";
 import { BLUEPRINT_LAYOUT } from "./crm/settings/blueprint-layout";
 import { CUSTOM_FIELD_LAYOUT } from "./crm/settings/custom-field-layout";
 import { EMAIL_TEMPLATE_LAYOUT } from "./crm/settings/email-template-layout";
-import { QUOTE_TEMPLATE_LAYOUT } from "./crm/settings/quote-template-layout";
+import {
+  QUOTE_SETTINGS_LAYOUT,
+  QUOTE_TEMPLATE_LAYOUT,
+} from "./crm/settings/quote-template-layout";
 import { SCORING_RULE_LAYOUT } from "./crm/settings/scoring-rule-layout";
 import { PRICEBOOK_ENTRY_LAYOUT, PRICEBOOK_LAYOUT } from "./crm/settings/pricebook-layout";
 import { PRODUCT_LAYOUT } from "./crm/settings/product-layout";
@@ -186,6 +189,16 @@ export const LAYOUT_REGISTRY: readonly RegisteredLayout[] = [
   },
   {
     layout: QUOTE_TEMPLATE_LAYOUT,
+    section: "CRM settings",
+    viewPermission: "crm:settings:manage",
+  },
+  /*
+    A singleton: organisation-wide quote defaults, one record, never listed. It
+    declares no list columns, which `validateLayout` allows precisely so a record
+    you only ever edit does not have to invent a table to be described.
+  */
+  {
+    layout: QUOTE_SETTINGS_LAYOUT,
     section: "CRM settings",
     viewPermission: "crm:settings:manage",
   },

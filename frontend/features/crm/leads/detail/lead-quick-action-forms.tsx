@@ -1,186 +1,191 @@
 "use client";
 
-import { type UseFormReturn } from "react-hook-form";
-import { FileText } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
-} from "@/components/ui/form";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import type { NoteForm, TaskForm, EmailForm, CallForm } from "./lead-types";
+import { useCallback, useMemo } from "react";
+import { toast } from "sonner";
+import { RecordForm, type RecordFormValues } from "@/features/renderer";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { withFormFields } from "@/lib/renderer/layout-adjustment";
+import { LEAD_ACTIVITY_LAYOUT } from "@/lib/renderer/crm/lead-activity-layout";
+import { TASK_LAYOUT } from "@/lib/renderer/crm/task-layout";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { useLogLeadActivity } from "@/hooks/api/leads";
+import { useCreateTask } from "@/hooks/api/tasks";
 
-interface NotePanelProps {
-  form: UseFormReturn<NoteForm>;
-  onSubmit: (data: NoteForm) => void;
-  isPending: boolean;
-  onCancel: () => void;
+/**
+ * The lead page's quick composers, rendered from the descriptions.
+ *
+ * Each one is the record type it writes to, narrowed to the fields this button
+ * asks for. Everything else the write needs is supplied by where the composer
+ * sits rather than by a control: the activity's type is the button that was
+ * pressed, the task's link is the lead whose page this is, and the date is now.
+ * That is what `withFormFields` is for — the alternative is a hand-written
+ * panel with its own schema beside the record type it is writing to, which is
+ * how these four came to hold a fourth copy of what a note is.
+ *
+ * `useTenantLayout` runs first and the narrowing second, so a composer can only
+ * narrow what the tenant already sees: a field they hid does not come back
+ * through a quick action.
+ *
+ * The note composer is the one that tightens. An interaction allows an empty
+ * note — a call logged with no notes is still a call, which is why the call
+ * composer below tightens nothing — but a box whose whole job is "add a note"
+ * with nothing in it is not a note. That is the composer's knowledge rather
+ * than the record type's, so it is framing here and not `required` on the
+ * shared description.
+ *
+ * Closing resets, because the panel is unmounted when it closes. There is no
+ * `reset()` call here and no form state above this file to hold on to.
+ */
+
+const PANEL_CLASS = "rounded-lg border border-border/30 bg-muted/20 p-4";
+
+const NOTE_FIELDS = ["activityNotes"];
+const CALL_FIELDS = ["subject", "duration", "outcome", "activityNotes"];
+const TASK_FIELDS = ["title", "dueDate"];
+
+interface LeadComposerProps {
+  leadId: number;
+  onDone: () => void;
 }
 
-export function NotePanel({ form, onSubmit, isPending, onCancel }: NotePanelProps) {
+/** A control hands back local wall-clock text; the API stores an instant. */
+function toInstant(value: string | undefined): string | undefined {
+  const text = value?.trim();
+  if (!text) return undefined;
+  const at = new Date(text);
+  return Number.isNaN(at.getTime()) ? undefined : at.toISOString();
+}
+
+function toMinutes(value: string | undefined): number | undefined {
+  const text = value?.trim();
+  if (!text) return undefined;
+  const minutes = Number(text);
+  return Number.isFinite(minutes) ? minutes : undefined;
+}
+
+export function LeadNotePanel({ leadId, onDone }: LeadComposerProps) {
+  const tenantLayout = useTenantLayout(LEAD_ACTIVITY_LAYOUT);
+  const layout = useMemo(
+    () => withFormFields(tenantLayout, NOTE_FIELDS, { required: NOTE_FIELDS }),
+    [tenantLayout],
+  );
+  const logActivity = useLogLeadActivity();
+
+  const handleSubmit = useCallback(
+    (values: RecordFormValues) => {
+      logActivity.mutate(
+        {
+          leadId,
+          type: "note",
+          date: new Date().toISOString(),
+          notes: values.activityNotes?.trim() || undefined,
+        },
+        {
+          onSuccess: () => {
+            toast.success("Note added");
+            onDone();
+          },
+          onError: (err) => toast.error(getErrorMessage(err)),
+        },
+      );
+    },
+    [leadId, logActivity, onDone],
+  );
+
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 p-4 rounded-lg bg-muted/20 border border-border/30">
-        <FormField control={form.control} name="body" render={({ field }) => (
-          <FormItem>
-            <FormLabel>Note <span className="text-destructive">*</span></FormLabel>
-            <FormControl><Textarea {...field} placeholder="Write a note..." rows={3} /></FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={onCancel}>Cancel</Button>
-          <LoadingButton type="submit" size="sm" isPending={isPending} loadingText="Saving...">Save Note</LoadingButton>
-        </div>
-      </form>
-    </Form>
+    <div className={PANEL_CLASS}>
+      <RecordForm
+        layout={layout}
+        mode="create"
+        onSubmit={handleSubmit}
+        onCancel={onDone}
+        isSubmitting={logActivity.isPending}
+        submitLabel="Save Note"
+      />
+    </div>
   );
 }
 
-interface TaskPanelProps {
-  form: UseFormReturn<TaskForm>;
-  onSubmit: (data: TaskForm) => void;
-  isPending: boolean;
-  onCancel: () => void;
-}
+export function LeadCallPanel({ leadId, onDone }: LeadComposerProps) {
+  const tenantLayout = useTenantLayout(LEAD_ACTIVITY_LAYOUT);
+  const layout = useMemo(() => withFormFields(tenantLayout, CALL_FIELDS), [tenantLayout]);
+  const logActivity = useLogLeadActivity();
 
-export function TaskPanel({ form, onSubmit, isPending, onCancel }: TaskPanelProps) {
+  const handleSubmit = useCallback(
+    (values: RecordFormValues) => {
+      logActivity.mutate(
+        {
+          leadId,
+          type: "call",
+          date: new Date().toISOString(),
+          subject: values.subject?.trim() || undefined,
+          duration: toMinutes(values.duration),
+          outcome: values.outcome?.trim() || undefined,
+          notes: values.activityNotes?.trim() || undefined,
+        },
+        {
+          onSuccess: () => {
+            toast.success("Call logged");
+            onDone();
+          },
+          onError: (err) => toast.error(getErrorMessage(err)),
+        },
+      );
+    },
+    [leadId, logActivity, onDone],
+  );
+
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 p-4 rounded-lg bg-muted/20 border border-border/30">
-        <FormField control={form.control} name="title" render={({ field }) => (
-          <FormItem>
-            <FormLabel>Task Title <span className="text-destructive">*</span></FormLabel>
-            <FormControl><Input {...field} placeholder="Follow up with..." /></FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
-        <FormField control={form.control} name="dueDate" render={({ field }) => (
-          <FormItem>
-            <FormLabel>Due Date</FormLabel>
-            <FormControl>
-              <Input type="date" {...field} value={field.value ?? ""} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={onCancel}>Cancel</Button>
-          <LoadingButton type="submit" size="sm" isPending={isPending} loadingText="Creating...">Create Task</LoadingButton>
-        </div>
-      </form>
-    </Form>
+    <div className={PANEL_CLASS}>
+      <RecordForm
+        layout={layout}
+        mode="create"
+        onSubmit={handleSubmit}
+        onCancel={onDone}
+        isSubmitting={logActivity.isPending}
+        submitLabel="Log Call"
+      />
+    </div>
   );
 }
 
-interface EmailPanelProps {
-  form: UseFormReturn<EmailForm>;
-  onSubmit: (data: EmailForm) => void;
-  isPending: boolean;
-  onCancel: () => void;
-  emailTemplates?: { id: number; name: string; subject: string; body: string }[];
-  onApplyTemplate: (templateId: string) => void;
-}
+export function LeadTaskPanel({ leadId, onDone }: LeadComposerProps) {
+  const tenantLayout = useTenantLayout(TASK_LAYOUT);
+  const layout = useMemo(() => withFormFields(tenantLayout, TASK_FIELDS), [tenantLayout]);
+  const createTask = useCreateTask();
 
-export function EmailPanel({ form, onSubmit, isPending, onCancel, emailTemplates, onApplyTemplate }: EmailPanelProps) {
-  return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 p-4 rounded-lg bg-muted/20 border border-border/30">
-        {emailTemplates && emailTemplates.length > 0 && (
-          <div className="flex items-center gap-2">
-            <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-            <Select onValueChange={onApplyTemplate}>
-              <SelectTrigger className="text-xs flex-1">
-                <SelectValue placeholder="Use a template…" />
-              </SelectTrigger>
-              <SelectContent>
-                {emailTemplates.map((t) => (
-                  <SelectItem key={t.id} value={String(t.id)}>{t.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-        <FormField control={form.control} name="to" render={({ field }) => (
-          <FormItem>
-            <FormLabel>To <span className="text-destructive">*</span></FormLabel>
-            <FormControl><Input {...field} placeholder="email@example.com" /></FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
-        <FormField control={form.control} name="subject" render={({ field }) => (
-          <FormItem>
-            <FormLabel>Subject <span className="text-destructive">*</span></FormLabel>
-            <FormControl><Input {...field} placeholder="Subject" /></FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
-        <FormField control={form.control} name="body" render={({ field }) => (
-          <FormItem>
-            <FormLabel>Body <span className="text-destructive">*</span></FormLabel>
-            <FormControl><Textarea {...field} placeholder="Email body..." rows={4} /></FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={onCancel}>Cancel</Button>
-          <LoadingButton type="submit" size="sm" isPending={isPending} loadingText="Sending...">Send Email</LoadingButton>
-        </div>
-      </form>
-    </Form>
+  const handleSubmit = useCallback(
+    (values: RecordFormValues) => {
+      createTask.mutate(
+        {
+          title: values.title?.trim() ?? "",
+          type: "CUSTOM",
+          entityType: "LEAD",
+          entityId: leadId,
+          dueDate: toInstant(values.dueDate),
+        },
+        {
+          onSuccess: () => {
+            toast.success("Task created");
+            onDone();
+          },
+          onError: (err) => toast.error(getErrorMessage(err)),
+        },
+      );
+    },
+    [leadId, createTask, onDone],
   );
-}
 
-interface CallPanelProps {
-  form: UseFormReturn<CallForm>;
-  onSubmit: (data: CallForm) => void;
-  isPending: boolean;
-  onCancel: () => void;
-}
-
-export function CallPanel({ form, onSubmit, isPending, onCancel }: CallPanelProps) {
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 p-4 rounded-lg bg-muted/20 border border-border/30">
-        <FormField control={form.control} name="subject" render={({ field }) => (
-          <FormItem>
-            <FormLabel>Subject</FormLabel>
-            <FormControl><Input {...field} placeholder="Brief description" /></FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
-        <div className="grid grid-cols-2 gap-3">
-          <FormField control={form.control} name="duration" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Duration (min)</FormLabel>
-              <FormControl><Input type="number" {...field} placeholder="30" /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-          <FormField control={form.control} name="outcome" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Outcome</FormLabel>
-              <FormControl><Input {...field} placeholder="Positive / Follow up" /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-        </div>
-        <FormField control={form.control} name="notes" render={({ field }) => (
-          <FormItem>
-            <FormLabel>Notes</FormLabel>
-            <FormControl><Textarea {...field} rows={2} /></FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={onCancel}>Cancel</Button>
-          <LoadingButton type="submit" size="sm" isPending={isPending} loadingText="Logging...">Log Call</LoadingButton>
-        </div>
-      </form>
-    </Form>
+    <div className={PANEL_CLASS}>
+      <RecordForm
+        layout={layout}
+        mode="create"
+        onSubmit={handleSubmit}
+        onCancel={onDone}
+        isSubmitting={createTask.isPending}
+        submitLabel="Create Task"
+      />
+    </div>
   );
 }

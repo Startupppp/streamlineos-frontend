@@ -41,7 +41,15 @@ describe("every registered record layout", () => {
       const reversed = [...layout.fields].map((field) => field.name).reverse();
       const adjusted = applyAdjustment(layout, { layoutKey: layout.key, order: reversed });
       expect(validateLayout(adjusted)).toEqual([]);
-      expect(adjusted.list.columns.filter((column) => column.primary)).toHaveLength(1);
+      /*
+        A list that has columns must still have exactly one primary after the
+        reorder, or the mobile card loses its title. A singleton — a record
+        reached from a settings page and never listed — has no columns to have
+        a primary among, which is why `validateLayout` stopped demanding one.
+      */
+      expect(adjusted.list.columns.filter((column) => column.primary)).toHaveLength(
+        layout.list.columns.length > 0 ? 1 : 0,
+      );
     },
   );
 
@@ -78,7 +86,10 @@ describe("every registered record layout", () => {
     for (const layout of RECORD_LAYOUTS) {
       expect(layout.singular.trim()).not.toBe("");
       expect(layout.plural.trim()).not.toBe("");
-      expect(layout.list.searchPlaceholder.trim()).not.toBe("");
+      // A singleton has no list, so it has nothing to search and needs no
+      // placeholder; every listed record type does.
+      if (layout.list.columns.length > 0)
+        expect(layout.list.searchPlaceholder.trim()).not.toBe("");
     }
   });
 });

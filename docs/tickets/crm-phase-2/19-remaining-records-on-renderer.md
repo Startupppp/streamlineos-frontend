@@ -68,6 +68,14 @@ could not move without it:
 - `referenceToField` — the sibling carrying a *polymorphic* pointer's domain,
   the way `referenceLabel` carries its name. Two migrations hit this
   independently and both stopped rather than describe a lie.
+- `withColumns` and `withFormFields` — a description narrowed for a
+  related-records panel, and for a quick-action composer. Neither is a
+  `LayoutAdjustment`: an adjustment is what a tenant wants everywhere, these are
+  how one screen frames a record type it is embedding. Both are applied *after*
+  the tenant's arrangement, so they can only narrow what the tenant already
+  sees. Without them, every embedded panel and every "log a note against this
+  lead" box forks the description, and the fork is where the two quietly stop
+  agreeing about what a lead is.
 
 One defect was found the same way and fixed rather than declared: the mobile
 card rendered neither `leading` nor `actions`, so below the breakpoint a task
@@ -101,6 +109,20 @@ one screen is exactly the special case the engine exists to prevent. Its grid di
 stop being a second table implementation. This is the screen where money is
 decided; losing the running total to a forced migration would have been the
 wrong trade.
+
+**`features/crm/settings/assignment-rule-sheet.tsx` and the assignment-rules
+page.** The list is a drag-to-reorder priority list: first match wins, so the
+order *is* the record's meaning, and the one platform table has no row
+reordering. The form has five branches on `assignmentType`, a `useFieldArray`
+conditions editor and weighted-member sliders. `visibleWhen` covers the
+branching; the ordering is the blocker, and adding row-drag to the platform
+table for one surface is a table change wearing a vocabulary change's clothes.
+
+**`features/crm/settings/pipelines/create-pipeline-dialog.tsx` and
+`stage-advanced-sheet.tsx`.** The dialog derives a pipeline's key from its name
+as you type, and a description that computes values is a program. The sheet
+edits one stage inside a pipeline's stage array — not a record with an endpoint
+of its own.
 
 **`features/crm/settings/blueprints/transition-matrix.tsx`.** A state-machine
 transition matrix is not a record list — the cells are edges, not rows — and it
