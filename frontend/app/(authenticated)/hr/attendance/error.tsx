@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isChunkLoadError, reportError } from "@/lib/observability";
 
 interface ErrorPageProps {
   error: Error & { digest?: string };
@@ -10,6 +12,13 @@ interface ErrorPageProps {
 }
 
 export default function AttendanceError({ error, reset }: ErrorPageProps) {
+  useEffect(() => {
+    const route = typeof window !== "undefined" ? window.location.pathname : undefined;
+    const extra: Record<string, unknown> = { route, digest: error.digest };
+    if (isChunkLoadError(error)) extra.recoverable = true;
+    reportError(error, extra);
+  }, [error]);
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[400px] gap-4 p-6">
       <div className="rounded-full bg-destructive/10 p-4">

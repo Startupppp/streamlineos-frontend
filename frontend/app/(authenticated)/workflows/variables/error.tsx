@@ -1,7 +1,22 @@
 "use client";
 
+import { useEffect } from "react";
 import { ErrorState } from "@/components/shared/error-state";
+import { isChunkLoadError, reportError } from "@/lib/observability";
 
-export default function VariablesError({ reset }: { reset: () => void }) {
+export default function VariablesError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  useEffect(() => {
+    const route = typeof window !== "undefined" ? window.location.pathname : undefined;
+    const extra: Record<string, unknown> = { route, digest: error.digest };
+    if (isChunkLoadError(error)) extra.recoverable = true;
+    reportError(error, extra);
+  }, [error]);
+
   return <ErrorState title="Failed to load variables" onRetry={reset} className="flex-1" />;
 }

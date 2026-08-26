@@ -8,6 +8,8 @@
 
 const MAX_DEPTH = 4;
 const MAX_STRING = 1_000;
+const MAX_ARRAY = 100;
+const MAX_KEYS = 60;
 const REDACTED = "[redacted]";
 
 const SENSITIVE_SUBSTRINGS = [
@@ -19,13 +21,17 @@ const SENSITIVE_SUBSTRINGS = [
   "cookie",
   "apikey",
   "credential",
+  "privatekey",
   "sessionid",
   "aadhaar",
   "pannumber",
+  "pancard",
   "cardnumber",
+  "accountnumber",
+  "connectionstring",
 ] as const;
 
-const SENSITIVE_EXACT = new Set(["pan", "otp", "cvv", "ssn", "pin"]);
+const SENSITIVE_EXACT = new Set(["pan", "otp", "cvv", "ssn", "dsn", "pin", "query", "driverdetail"]);
 
 function isSensitive(key: string): boolean {
   const normalised = key.toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -63,13 +69,17 @@ function walk(value: unknown, depth: number, seen: WeakSet<object>): unknown {
 
   try {
     if (Array.isArray(value)) {
-      return value.slice(0, 100).map((entry) => walk(entry, depth + 1, seen));
+      const kept = value.slice(0, MAX_ARRAY).map((entry) => walk(entry, depth + 1, seen));
+      if (value.length > MAX_ARRAY) kept.push(`… ${value.length - MAX_ARRAY} more`);
+      return kept;
     }
 
     const out: Record<string, unknown> = {};
-    for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
+    const entries = Object.entries(value as Record<string, unknown>);
+    for (const [key, entry] of entries.slice(0, MAX_KEYS)) {
       out[key] = isSensitive(key) ? REDACTED : walk(entry, depth + 1, seen);
     }
+    if (entries.length > MAX_KEYS) out["…"] = `${entries.length - MAX_KEYS} more keys`;
     return out;
   } finally {
     seen.delete(value);

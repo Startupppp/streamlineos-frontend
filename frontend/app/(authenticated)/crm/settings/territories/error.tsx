@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { ErrorState } from "@/components/shared";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isChunkLoadError, reportError } from "@/lib/observability";
 
 export default function TerritoriesError({
   error,
@@ -12,6 +13,13 @@ export default function TerritoriesError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    const route = typeof window !== "undefined" ? window.location.pathname : undefined;
+    const extra: Record<string, unknown> = { route, digest: error.digest };
+    if (isChunkLoadError(error)) extra.recoverable = true;
+    reportError(error, extra);
+  }, [error]);
+
   const handleReset = useCallback(() => reset(), [reset]);
 
   return (

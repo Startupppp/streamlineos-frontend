@@ -19,10 +19,11 @@ export function ReportingRouteErrorBoundary({
   ...rest
 }: ReportingRouteErrorBoundaryProps) {
   useEffect(() => {
-    if (isChunkLoadError(error)) return;
     const route =
       typeof window !== "undefined" ? window.location.pathname : undefined;
-    reportError(error, { route, digest: error.digest });
+    const extra: Record<string, unknown> = { route, digest: error.digest };
+    if (isChunkLoadError(error)) extra.recoverable = true;
+    reportError(error, extra);
   }, [error]);
 
   return <RouteErrorBoundary error={error} reset={reset} {...rest} />;
