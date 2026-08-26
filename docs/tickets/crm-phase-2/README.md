@@ -31,3 +31,57 @@ outage is the work, and it is what makes every later phase cheaper.
 Party seam as soon as 02 lands. 08 is last in track A; 21 is last overall.
 
 Tracks B and C have no dependency on each other and can run in parallel.
+
+---
+
+## Where the phase actually stands
+
+Measured against `main` in both repos, not against intent. Per-ticket detail is
+in each ticket's `Status:` line.
+
+| | Tickets |
+|---|---|
+| Done | 01–07, 09–19, 21–25 |
+| In progress | 08 (contract) |
+| Blocked on the backend | 20 (tenant layout) — the client is complete and tested; the four `/renderer/layouts/*` routes do not exist yet |
+| Deliberately not done | 26 |
+
+**The identity migration went 71 → 36 readers**, and 12 of the 36 are the seam
+itself — `party-legacy-*.ts` and the divergence report, files that legitimately
+read what they write and are deleted along with the tables. So 24 real readers
+remain of an original 71.
+
+### What is blocking the drop, precisely
+
+Ticket 08 cannot drop `leads`, `clients`, `contacts` and `crm_organizations`
+while anything still reads them, and **13 of the 24 remaining readers are in
+`src/modules/finance/` and `src/modules/accounting/core/`**. Those modules are
+being rewritten onto one `gl_*` kernel by a separate workstream, and this phase
+has no authority to change them. The drop therefore waits on that rewrite
+landing, not on any CRM work. The 11 CRM-owned readers are the part this phase
+can finish, and finishing them is what makes the drop a single migration
+afterwards rather than a project.
+
+That is a real dependency, not a scheduling excuse — and it is worth saying that
+the ratchet is what makes it visible. Without a register of readers, "we still
+read the old tables somewhere" is a feeling; with one it is a list of eleven
+files and a blocked thirteen.
+
+### Two things found while closing the phase, not yet fixed
+
+**`src/modules/crm-import/` is in the wrong place.** The backend rule is that a
+sub-module lives inside its parent — `modules/build/qa/`, never
+`modules/build-qa/` — and the CRM module already follows it everywhere else
+(`crm/core`, `crm/inbox`, `crm/consent`, `crm/entity`, `crm/metadata`,
+`crm/pricebooks`, `crm/automation-studio`). The importer is the one CRM
+sub-module standing outside its parent, which is exactly the shape the rule
+names. Moving it is mechanical but touches every importer import path, so it is
+recorded here rather than done in the middle of ticket 08.
+
+**Main is red in eight suites and nineteen type errors**, all outside this
+phase's files (`common/http`, `billing`, `kb`, `storage`, `chat`, `build`, and a
+CRM automation-studio suite pushed by another session). Every Phase 2 commit was
+verified to add none of them, by running the same gate on a clean checkout of
+`origin/main` and comparing counts. Worth stating plainly: "the suite passes"
+has not been true of this repository's `main` for the whole of this phase, and a
+green local run means the diff is clean, not the tree.

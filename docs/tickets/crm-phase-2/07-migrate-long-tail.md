@@ -1,6 +1,6 @@
 # 07 — Migrate batch: the long tail
 
-**Status:** not started
+**Status:** done — the long tail, and six live defects it walked into.
 **Track:** A — identity convergence
 **Blocks:** 08
 **Blocked by:** 02

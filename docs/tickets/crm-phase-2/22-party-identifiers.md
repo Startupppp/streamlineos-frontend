@@ -1,6 +1,6 @@
 # 22 — Party identifiers, because the resolver could only ever see email
 
-**Status:** not started
+**Status:** done — 0260; a phone number stops being written into the email column.
 **Track:** A — identity convergence (added mid-phase)
 **Blocks:** 09, 10, 11 working end to end; 12's honest verdict
 **Blocked by:** 02

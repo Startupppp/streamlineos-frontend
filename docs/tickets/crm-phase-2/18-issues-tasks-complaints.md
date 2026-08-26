@@ -1,6 +1,6 @@
 # 18 — Issues, tasks and complaints as record types
 
-**Status:** not started
+**Status:** done — issues, tasks and complaints as record types, not three modules.
 **Track:** E — records and renderer
 **Blocked by:** 02
 

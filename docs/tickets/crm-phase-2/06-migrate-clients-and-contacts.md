@@ -1,6 +1,6 @@
 # 06 — Migrate batch: clients and contacts
 
-**Status:** not started
+**Status:** done — clients and contacts batches.
 **Track:** A — identity convergence
 **Blocks:** 08
 **Blocked by:** 02

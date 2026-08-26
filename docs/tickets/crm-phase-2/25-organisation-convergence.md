@@ -1,6 +1,6 @@
 # 25 — A party's employer is another party, and Companies is a fourth identity table
 
-**Status:** not started
+**Status:** done — Companies was the fifth identity table (0262/0263/0264).
 **Track:** A — identity convergence (added mid-phase)
 **Blocks:** 08
 **Blocked by:** 02, 22

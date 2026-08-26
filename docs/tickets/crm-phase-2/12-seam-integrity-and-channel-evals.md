@@ -1,6 +1,6 @@
 # 12 — Prove the seam held, and measure each channel separately
 
-**Status:** done — see notes
+**Status:** done — `seam-integrity.spec.ts` pins the event fields and forbids `provider ===` below the seam.
 **Track:** B — channels
 **Blocked by:** 09, 10, 11
 
