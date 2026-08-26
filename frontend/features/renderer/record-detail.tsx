@@ -1,6 +1,6 @@
 "use client";
 
-import type { RecordLayout } from "@/lib/renderer/layout";
+import { moneyDisplayFor, type RecordLayout } from "@/lib/renderer/layout";
 import { DEFAULT_MONEY_DISPLAY, type MoneyDisplay } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
 import { renderFieldValue, resolveField, type RecordValue } from "./format-value";
@@ -11,6 +11,15 @@ export interface RecordDetailProps {
   className?: string;
   /** The tenant's currency, for `money` fields. See `RecordListProps.money`. */
   money?: MoneyDisplay;
+  /**
+   * Whether to head the sections with the record's name.
+   *
+   * True in a sheet, where nothing else names the record. False on a page whose
+   * wrapper already carries the name as its heading — printing it twice would
+   * put two `h1`s on one document and say the same thing to a screen reader
+   * twice.
+   */
+  showTitle?: boolean;
 }
 
 /**
@@ -25,16 +34,20 @@ export function RecordDetail({
   record,
   className,
   money = DEFAULT_MONEY_DISPLAY,
+  showTitle = true,
 }: RecordDetailProps) {
+  const titleField = resolveField(layout, layout.titleField);
   const title = renderFieldValue(
-    resolveField(layout, layout.titleField),
+    titleField,
     record[layout.titleField],
-    money,
+    moneyDisplayFor(titleField, record, money),
   );
 
   return (
     <div className={cn("flex min-w-0 flex-col gap-gap-section", className)}>
-      <h1 className="truncate text-lg font-semibold tracking-tight">{title}</h1>
+      {showTitle ? (
+        <h1 className="truncate text-lg font-semibold tracking-tight">{title}</h1>
+      ) : null}
 
       {layout.detail.sections.map((section) => {
         const fields = section.fields
@@ -58,7 +71,7 @@ export function RecordDetail({
                       field.kind === "longText" ? "whitespace-pre-wrap" : "truncate",
                     )}
                   >
-                    {renderFieldValue(field, record[name], money)}
+                    {renderFieldValue(field, record[name], moneyDisplayFor(field, record, money), record)}
                   </dd>
                 </div>
               ))}
