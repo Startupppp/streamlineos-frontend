@@ -34,3 +34,19 @@ build does.
 Check `scripts/purge-user.mjs` before dropping: it enumerates FKs to `users`, so
 removing tables changes what it reaches. Phase 1 learned twice that an FK to
 `users` is how an audit record gets destroyed by an unrelated offboarding.
+
+## Re-count (2026-08-26)
+
+Re-ran the ratchet rather than trusting the earlier number. It passes, and the
+register still holds **26** readers: 13 under `party/` — the seam itself, which
+is deleted along with the tables — and 13 under `finance/` (11) and
+`accounting/` (2). Unchanged since the last count, so the accounting rewrite
+that owns those 13 has not landed yet and this ticket is still one migration
+behind it. Nothing regressed either: the ratchet fails on a *new* reader as well
+as a departed one, so the count moving in neither direction is the honest state.
+
+Checked the other thing that could make the `DROP` unsafe: `src/scripts/purge-user.mjs`
+enumerates foreign keys from `pg_constraint` at runtime rather than naming
+tables, so removing `leads`, `clients`, `contacts` and `crm_organizations` does
+not strand it. That is one fewer reason to hesitate when the finance half is
+ready; it is not permission to drop them now.
