@@ -4,7 +4,7 @@
 
 **Blocked by:** None — can start immediately
 
-**Status:** in-progress — standard and broken-scan rule recorded; dead-code CI wired (backend); cycle CI missing from frontend; retention marker still absent
+**Status:** done — standard and broken-scan rule recorded; dead-code CI wired in both repos; frontend cycle CI gating; retention marker present
 
 **Audit note (2026-08-26):** Three of five acceptance criteria are already satisfied at source. Two remain genuinely open.
 

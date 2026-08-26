@@ -4,7 +4,11 @@
 
 **Blocked by:** c16-04 — Invoice line items are queryable; c17-06 — Dunning history is queryable
 
-**Status:** ready-for-agent — BLOCKED on c16-04 (still ready-for-agent); c17-06 is in-progress with dunning code migrated but JSONB key cleanup (this ticket's job) pending
+**Status:** BLOCKED on the operator — both upstream tickets are themselves migration-gated, so this is two levels away from actionable
+
+**Correction (2026-08-26).** The blocker is not that c16-04 and c17-06 are "not started". Both are blocked on unapplied migrations: c16-04 on `0477` (backfill) and `0478` (column drop), c17-06 on `0491` (`migrate_dunning_to_table`). All three are written; none has been applied, because nothing in this program has touched a database. Naming the upstream *tickets* as the blocker made this look like schedulable work. It is not — it unblocks only when an operator runs `architecture-refactor/APPLY-MIGRATIONS.md`, and then only after the backfills are reconciled.
+
+Removing either column before its backfill is verified is data loss. That is why this ticket is last, and why it must not be pulled forward to look productive.
 
 **Audit note (2026-08-26):** Blocker states verified at source. c16-04 is "ready-for-agent" — no invoice line-item normalization has happened; no `lineItems` JSONB array column found in `backend/src/db/schema/accounting/`. c17-06 is "in-progress": `dunning_attempts` table exists and is populated (`0491_migrate_dunning_to_table.sql` backfills it; `cron-billing.service.ts:261-310` writes to the table; `DunningMeta.dunningAttempts` JSONB field removed from the interface). The residual JSONB key `metadata.dunningAttempts` still exists in `subscriptions` rows and requires the one-migration cleanup documented in c17-06's ticket before this criterion can be ticked. Nothing in this ticket can proceed until c16-04 closes.
 
