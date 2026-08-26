@@ -8,9 +8,9 @@ PRD: [`prd.md`](prd.md) · Program: [`../README.md`](../README.md)
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 01 | [A read budget is data, not a script](issues/01-a-read-budget-is-data-not-a-script.md) | — | ready-for-agent |
-| 02 | [Budgets cover the paths users wait on](issues/02-budgets-cover-the-paths-users-wait-on.md) | 01 | ready-for-agent |
-| 03 | [A breach fails the build](issues/03-a-breach-fails-the-build.md) | 01 | ready-for-agent |
+| 01 | [A read budget is data, not a script](issues/01-a-read-budget-is-data-not-a-script.md) | — | done |
+| 02 | [Budgets cover the paths users wait on](issues/02-budgets-cover-the-paths-users-wait-on.md) | 01 | done |
+| 03 | [A breach fails the build](issues/03-a-breach-fails-the-build.md) | 01 | done |
 
 ## Working these
 

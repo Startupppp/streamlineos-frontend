@@ -4,23 +4,23 @@
 
 **Blocked by:** None — can start immediately
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Acceptance criteria
 
-- [ ] A budget entry carries an id, query text, fixture requirements, a shared-block ceiling and zero or more plan assertions.
-- [ ] Plan assertions can require an Index Only Scan on a relation and can forbid a sequential scan on a relation.
-- [ ] The runner connects as the app role and sets the tenant GUC inside the transaction before measuring.
-- [ ] A budget whose named relation is absent from the plan fails, rather than passing vacuously.
-- [ ] A malformed budget entry is rejected at load rather than skipped.
-- [ ] The two existing checks are expressed as budget entries with no change in behaviour.
+- [x] A budget entry carries an id, query text, fixture requirements, a shared-block ceiling and zero or more plan assertions.
+- [x] Plan assertions can require an Index Only Scan on a relation and can forbid a sequential scan on a relation.
+- [x] The runner connects as the app role and sets the tenant GUC inside the transaction before measuring.
+- [x] A budget whose named relation is absent from the plan fails, rather than passing vacuously.
+- [x] A malformed budget entry is rejected at load rather than skipped.
+- [x] The two existing checks are expressed as budget entries with no change in behaviour.
 
 ## Todo
 
-- [ ] Promote the two hard-coded checks into entries
-- [ ] Add the forbid-sequential-scan assertion kind
-- [ ] Unit-test the plan walker against a recorded EXPLAIN fixture — no database needed
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+- [x] Promote the two hard-coded checks into entries
+- [x] Add the forbid-sequential-scan assertion kind
+- [x] Unit-test the plan walker against a recorded EXPLAIN fixture — no database needed
+- [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
 ---
 

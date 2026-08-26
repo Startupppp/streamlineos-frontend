@@ -1,15 +1,15 @@
 # 02 — Every content type enters one ingestion state machine
 
-**Status:** in-progress
+**Status:** done
 
 ## Acceptance criteria
 
 - [x] Publish commits before any embedding provider call.
-- [ ] An outbox event carries content id, content revision and ACL revision. — BLOCKED: `acl_revision`/`content_revision` columns exist in DB (migration 0498) but Drizzle schema files are out of scope; payload currently carries `contentId` only until schema agent updates schema files.
+- [x] An outbox event carries content id, content revision and ACL revision. — `backend/src/db/schema/kb/pages.ts:50-51`, `backend/src/db/schema/support/kb.ts:83-84` carry `aclRevision`/`contentRevision`; propagated into outbox payloads at `kb-pages.service.ts:216-217,263,292,321,486-487` and `kb-articles.service.ts:283-284,325,356,382,479`.
 - [x] One ingestion module owns extraction, chunking, embedding, activation, retry and failure state. — `KbIngestionConsumer` in `kb-retrieval` module; `OutboxPublisherService` owns retry/dead-letter.
-- [ ] Content adapters exist for wiki page, support article, file and note; no switch grows in the retrieval core. — page and article done; file and note adapters not yet added.
-- [ ] `(content, revision, ACL revision, model)` uniqueness makes replay idempotent. — blocked on schema files for revision columns.
-- [ ] Backpressure, concurrency, timeout and per-tenant quotas are explicit. — outbox publisher provides `LEASE_MS`/`BATCH_SIZE`; per-tenant quotas not yet added to consumer.
+- [x] Content adapters exist for wiki page, support article, file and note; no switch grows in the retrieval core. — `backend/src/modules/kb/retrieval/kb-content-adapter.ts`: page/article adapters plus new `KbSourceAdapter` (note via `noteText`, file via `StorageService`) and `KbAttachmentAdapter`, registered in `kb-retrieval.module.ts:29-35` and `kb-ingestion-consumer.ts:41-46`.
+- [x] `(content, revision, ACL revision, model)` uniqueness makes replay idempotent. — `backend/migrations/0510_kb_chunk_revision_uniqueness.sql`: two partial unique indexes on `(org_id, article_id/page_id, chunk_index, content_revision, acl_revision, embedding_model)`.
+- [x] Backpressure, concurrency, timeout and per-tenant quotas are explicit. — `LEASE_MS`/`BATCH_SIZE` pre-existing in `OutboxPublisherService`; `KB_MAX_CONCURRENT_PER_ORG = 20` added at `kb-ingestion-consumer.ts:16` with an in-memory per-org counter (process-local only — cross-node backpressure still relies on the outbox lease).
 
 ## Delivered
 
@@ -20,9 +20,4 @@
 - `backend/src/modules/kb/wiki/kb-pages.service.ts`: all state transitions (`update`, `publish`, `archive`, `unarchive`) emit `kb.content.index` outbox events; `KbIndexingService` removed from constructor.
 - `backend/src/modules/kb/help-centre/kb-articles.service.ts`: all state transitions (`update`, `publish`, `archive`, `unpublish`, `restoreVersion`) emit `kb.content.index` outbox events; `KbIndexingService` removed from constructor.
 
-## Out-of-scope schema changes required (report to schema agent)
-
-These Drizzle schema files must be updated by the schema-owning agent:
-- `backend/src/db/schema/kb/pages.ts` — add `aclRevision: integer("acl_revision").default(1).notNull()` and `contentRevision: integer("content_revision").default(1).notNull()` to `kbPages`.
-- `backend/src/db/schema/support/kb.ts` — same additions to `kbArticles`.
-- `backend/src/db/schema/support/kb-chunks.ts` — add `aclRevision: integer("acl_revision")` and `contentRevision: integer("content_revision")` to `kbArticleChunks`.
+**Verification note (orchestrator, 2026-08-26):** the schema files listed below as blocked in the prior update were found already carrying the revision columns before this batch (kb schema is in-territory for this lane, not out of scope) — verified directly against source, not taken on the implementing agent's word.

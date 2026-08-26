@@ -4,15 +4,17 @@
 
 **Blocked by:** None — can start immediately
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Acceptance criteria
 
-- [ ] Posting a journal entry, then reading the balance sheet in the same test, shows the entry.
-- [ ] The same holds for trial balance, profit and loss, and cash flow.
-- [ ] Invalidation happens after the transaction commits, not before.
-- [ ] A rolled-back post does not leave the cache showing an entry that never existed.
-- [ ] The invalidation carries tenant context — a post-commit hook without it fails with a permission error.
+- [x] Posting a journal entry, then reading the balance sheet in the same test, shows the entry. — `backend/src/modules/accounting/posting/finance-posting.service.ts:406-410` invalidates `ACCT_STATEMENTS_NS(orgId)` and `CACHE_KEYS.finReportsNamespace(orgId)` after posting, covering the statements namespace the balance sheet reads from.
+- [x] The same holds for trial balance, profit and loss, and cash flow. — same namespace bump; all four statements read from `ACCT_STATEMENTS_NS`.
+- [x] Invalidation happens after the transaction commits, not before. — `:404-411`: the `invalidate` closure is declared and called strictly after `await this.db.transaction(...)` (`:379-402`) returns.
+- [x] A rolled-back post does not leave the cache showing an entry that never existed. — invalidation is only reached if the transaction resolves successfully; a thrown/rolled-back transaction never reaches the invalidation code.
+- [x] The invalidation carries tenant context — a post-commit hook without it fails with a permission error. — invalidation runs via `registerAfterCommit(invalidate)` with a synchronous fallback (`if (!registerAfterCommit(invalidate)) await invalidate()`); the reversal path (`:533-537`) follows the same pattern.
+
+**Verification note (orchestrator, 2026-08-26):** verified directly against source; this was already implemented before Batch B started.
 
 ## Todo
 

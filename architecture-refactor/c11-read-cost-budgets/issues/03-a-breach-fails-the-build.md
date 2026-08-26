@@ -4,22 +4,22 @@
 
 **Blocked by:** 01 — A read budget is data, not a script
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Acceptance criteria
 
-- [ ] The budget run is part of CI against a database rebuilt from empty and seeded.
-- [ ] A breach exits non-zero and names the query, the measured cost and the budgeted ceiling.
-- [ ] A deliberately impossible ceiling makes the run fail — proving the guard can fail at all.
-- [ ] A developer can run the same check locally with one command.
-- [ ] Raising a ceiling is a visible diff in review.
+- [x] The budget run is part of CI against a database rebuilt from empty and seeded.
+- [x] A breach exits non-zero and names the query, the measured cost and the budgeted ceiling.
+- [x] A deliberately impossible ceiling makes the run fail — proving the guard can fail at all.
+- [x] A developer can run the same check locally with one command.
+- [x] Raising a ceiling is a visible diff in review.
 
 ## Todo
 
-- [ ] Wire into CI after the seed step
-- [ ] Add the self-test that a breach is detected
-- [ ] Document the local command beside the existing database scripts
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+- [x] Wire into CI after the seed step
+- [x] Add the self-test that a breach is detected
+- [x] Document the local command beside the existing database scripts
+- [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
 ---
 

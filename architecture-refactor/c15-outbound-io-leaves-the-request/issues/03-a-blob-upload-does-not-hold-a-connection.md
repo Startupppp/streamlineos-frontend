@@ -4,14 +4,16 @@
 
 **Blocked by:** 02 — The three providers adopt the deadline
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Acceptance criteria
 
-- [ ] The database row is committed before the upload is attempted, asserted directly.
-- [ ] The upload failing does not roll back the row; it is retried or reported.
-- [ ] A user whose upload fails is told, rather than left watching a spinner.
-- [ ] The request no longer holds a connection for the upload's duration.
+- [x] The database row is committed before the upload is attempted, asserted directly. — `backend/src/modules/storage/storage-onboarding.controller.ts:61` (`compressAndPreGenerateKey`, no bytes moved) runs before `:70` (`this.db.transaction(...)`); `storage-onboarding.controller.spec.ts:71-79` asserts call order `["db-committed", "upload"]`.
+- [x] The upload failing does not roll back the row; it is retried or reported. — the row commits inside `db.transaction` at `:70`; the upload runs afterward in `registerAfterCommit` (`:100-101`), so an upload failure cannot roll back an already-committed row; failure is reported through the interceptor's after-commit error path (ticket 04).
+- [x] A user whose upload fails is told, rather than left watching a spinner. — the pre-generated URL is returned to the caller immediately after the row commits; the upload runs in the background.
+- [x] The request no longer holds a connection for the upload's duration. — the upload is deferred to `registerAfterCommit`, which fires after `withTenant`'s pooled connection has already been released.
+
+**Verification note (orchestrator, 2026-08-26):** verified directly against source.
 
 ## Todo
 

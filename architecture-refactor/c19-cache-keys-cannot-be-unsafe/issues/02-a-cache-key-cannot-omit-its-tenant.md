@@ -4,16 +4,18 @@
 
 **Blocked by:** None — can start immediately
 
-**Status:** ready-for-agent
+**Status:** in-progress — tenant-required wrapper, jitter and both plain/versioned forms shipped; distinct-key stampede spreading not independently proven
 
 ## Acceptance criteria
 
-- [ ] The organisation is a required parameter — a call without it does not typecheck.
-- [ ] Both the plain and namespace-versioned forms have a tenant-aware wrapper.
-- [ ] Expiry carries jitter, applied inside the wrapper rather than by each caller.
-- [ ] Two organisations with identical local keys never read each other's entries.
-- [ ] Two users with different scopes on the same query do not share an entry.
-- [ ] Many concurrent misses on distinct keys are spread rather than firing together — the fill lease dedupes per key and does not help here.
+- [x] The organisation is a required parameter — a call without it does not typecheck. — `backend/src/common/cache/cache.service.ts:167` (`cachedForOrg(orgId: string, ...)`) and `:176` (`cachedVersionedForOrg`) — `orgId` is a required positional parameter.
+- [x] Both the plain and namespace-versioned forms have a tenant-aware wrapper. — `cachedForOrg`/`invalidateForOrg` (plain) and `cachedVersionedForOrg`/`invalidateNamespaceForOrg` (versioned) at `:167,176,191,195`.
+- [x] Expiry carries jitter, applied inside the wrapper rather than by each caller. — `applyJitter` (`:163-165`, `baseTtl * (0.85 + Math.random() * 0.3)`) called inside `cachedForOrg`/`cachedVersionedForOrg`, not left to the caller.
+- [x] Two organisations with identical local keys never read each other's entries. — the wrapper prefixes `${orgId}:${localKey}` (`:168-169`), so two orgs with the same `localKey` produce distinct Redis keys.
+- [x] Two users with different scopes on the same query do not share an entry. — the `localKey`/scope segment is caller-supplied and orthogonal to the tenant prefix; existing call sites (e.g. `leaves.service.ts:216`, `` `${scope}:${year}` ``) already include scope in the local key.
+- [ ] Many concurrent misses on distinct keys are spread rather than firing together. — not independently verified; the wrapper's jitter affects TTL (staggering future expiry), not the initial concurrent-miss case explicitly. Left open pending a targeted test.
+
+**Verification note (orchestrator, 2026-08-26):** verified directly against source. The primitive (`cache.service.ts`'s existing single-flight fill / distributed lease) was correctly left unmodified, per instruction.
 
 ## Todo
 

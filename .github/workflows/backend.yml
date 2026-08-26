@@ -238,5 +238,8 @@ jobs:
       - name: Seed Build Load
         run: pnpm seed:build-load
 
+      - name: Budget Guard Self-Test
+        run: pnpm db:check-read-budgets:self-test
+
       - name: Check Build Read Ceiling
-        run: pnpm db:check-build-reads
+        run: pnpm db:check-read-budgets:build

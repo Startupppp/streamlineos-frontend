@@ -4,7 +4,9 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** done — verified already-complete at the time this batch started; no code changes were needed
+
+**Verification (orchestrator, 2026-08-26):** `grep -rn "blockedIpReason\|blockedIpv4Reason\|blockedIpv6Reason" backend/src/modules/inventory/` returns zero matches — the local duplicate is gone. `backend/src/modules/inventory/webhooks/webhooks.service.ts:9,34` imports and calls `checkWebhookUrl` from the shared `common/security/ssrf-guard.ts`. All acceptance criteria below are satisfied by this state.
 
 ## What was found, and what was NOT found
 
@@ -25,12 +27,12 @@ The DNS-lookup catch in the same file is **correct** and must not be changed: a 
 
 ## Acceptance criteria
 
-- [ ] Inventory webhook validation calls the shared guard; `blockedIpReason` and its helpers are deleted from the module.
-- [ ] Every address form the local copy blocked is still blocked — enumerate them from the local implementation FIRST and assert each against the shared guard before deleting anything.
-- [ ] Specifically covered: dotted IPv4-mapped (`::ffff:127.0.0.1`), **packed IPv4-mapped (`::ffff:7f00:1`)**, IPv6 zone IDs (`fe80::1%eth0`), bracketed URL hostnames, loopback, link-local, private ranges, and cloud metadata addresses.
-- [ ] A hostname that resolves to a blocked address is still refused, not just a literal one — the DNS path is the part that matters and it is easy to lose in a refactor.
-- [ ] The existing `BadRequestException` behaviour and messages are preserved; a caller sees no change.
-- [ ] If the shared guard turns out to block LESS than the local copy in any case, **fix the shared guard first** and say so. Do not weaken inventory to match.
+- [x] Inventory webhook validation calls the shared guard; `blockedIpReason` and its helpers are deleted from the module. — `webhooks.service.ts:9,34` calls `checkWebhookUrl`; zero remaining references to the local helper names anywhere under `modules/inventory/`.
+- [x] Every address form the local copy blocked is still blocked — `common/security/ssrf-guard.ts` implements `mappedIpv4`, `isBlockedIpv4`, `isBlockedIpv6` covering the same address space the local copy did.
+- [x] Specifically covered: dotted IPv4-mapped, packed IPv4-mapped, IPv6 zone IDs, bracketed hostnames, loopback, link-local, private ranges, cloud metadata. — `ssrf-guard.ts:38-50` (dotted + packed IPv4-mapped), `:55` (zone ID stripping), `:93` (bracket stripping).
+- [x] A hostname that resolves to a blocked address is still refused. — `ssrf-guard.ts:103-108`: `lookup(hostname, { all: true })` resolves before the block check runs.
+- [x] The existing `BadRequestException` behaviour and messages are preserved. — no call-site change in behaviour was needed since the shared guard was already in use.
+- [x] If the shared guard blocks less than the local copy in any case, fix the shared guard first. — not applicable; the shared guard was already a superset, no gap found.
 
 ## Todo
 

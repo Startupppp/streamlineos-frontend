@@ -1,13 +1,15 @@
 # 04 — Chatbot retrieval is permissioned and bounded
 
-**Status:** ready-for-agent
+**Status:** in-progress — core security predicates, caps and article/page citation re-resolution verified; prompt-injection test coverage and full source-citation re-resolution remain open
 
 ## Acceptance criteria
 
-- [ ] Tenant, actor, space and record ACL predicates run before candidates reach the model.
-- [ ] The model never receives permission tables, role names or grant history.
-- [ ] Hybrid retrieval has hard caps on candidates, chunks, bytes and tokens.
-- [ ] No eligible content short-circuits before embedding or generation.
-- [ ] Citations re-resolve through direct-read visibility before response.
-- [ ] Prompt-injection tests cannot widen retrieval.
-- [ ] Cost, latency, tokens and model are recorded through the AI gateway.
+- [x] Tenant, actor, space and record ACL predicates run before candidates reach the model. — pre-existing `visibleTo`/`pageVisibleTo`/`chunkVisibleTo` predicates plus the new ACL-revision join (`kb-search.service.ts:293,364`) all run inside the retrieval SQL query, before any text reaches `kb-ask.service.ts`'s prompt assembly.
+- [x] The model never receives permission tables, role names or grant history. — `kb-ask.service.ts:22-28` (`ASK_SYSTEM_PROMPT`) instructs the model to answer only from provided context; no permission/role data is included in `context`/`fullContext` construction (`:78-119`), which is built solely from `contentText`/`snippet` fields.
+- [x] Hybrid retrieval has hard caps on candidates, chunks, bytes and tokens. — `MAX_CONTEXT_ARTICLES = 6`, `MAX_CONTEXT_CHARS = 1500`, `MAX_TOTAL_CONTEXT_BYTES = 32_000`, `MAX_PROMPT_INPUT_TOKENS = 8_000` (`kb-ask.service.ts:17-20`), enforced during context assembly (`:83,105`) and pre-gateway truncation (`:117-119`).
+- [ ] No eligible content short-circuits before embedding or generation. — not independently verified in this batch; not regressed either (no change to the empty-result branch at `:63-76`).
+- [x] Citations re-resolve through direct-read visibility before response — for articles and pages. `resolveCitations` (`:154-183`) re-queries `kbArticles`/`kbPages` with the live space-access and published/non-archived predicates (`resolveVisibleArticles` `:185-198`, `resolveVisiblePages` `:200-213`) after the AI call, not from the candidate list. **Gap:** `kind: "source"` citations (`:179-181`, uploaded documents via `retrieveTopSources`) are NOT re-resolved post-response — they rely solely on the access-space filter applied at retrieval time (`kb-search.service.ts:499-505`), so there is a same-request race window (access narrows between retrieval and response) that articles/pages close but sources do not. Narrow risk (single request, sub-second window) but a real gap against the stated criterion.
+- [ ] Prompt-injection tests cannot widen retrieval. — not built in this batch; the system prompt includes a defensive instruction (line 28) but no adversarial test exists to prove it holds.
+- [x] Cost, latency, tokens and model are recorded through the AI gateway. — `kb-ask.service.ts:121-131` calls `aiGateway.invokeTextWithUsage(...)` (the `*WithUsage` gateway variant per house convention) and returns `aiUsage` in the response (`:151`).
+
+**Verification note (orchestrator, 2026-08-26):** verified directly against source. The source-citation re-resolution gap and the missing prompt-injection tests are real open items, not agent overclaims — the agent's own report was accurate about what it built and explicitly listed these as lower-priority/deferred.
