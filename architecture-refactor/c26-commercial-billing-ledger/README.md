@@ -8,7 +8,7 @@ c17 makes individual writes provable. This candidate supplies the commercial mod
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 01 | [Plans, prices and entitlements are versioned data](issues/01-versioned-catalog.md) | — | ready-for-agent |
+| 01 | [Plans, prices and entitlements are versioned data](issues/01-versioned-catalog.md) | — | done |
 | 02 | [Seats have one auditable ledger](issues/02-seat-ledger.md) | 01 | ready-for-agent |
 | 03 | [Proration is stored, not recomputed](issues/03-proration-ledger.md) | 01, 02 | ready-for-agent |
 | 04 | [Usage metering is idempotent and aggregatable](issues/04-usage-metering.md) | 01 | ready-for-agent |

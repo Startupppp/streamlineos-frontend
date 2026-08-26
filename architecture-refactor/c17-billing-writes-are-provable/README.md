@@ -8,12 +8,12 @@ The adapter shipped with c5 and the architecture is right. What is missing is pr
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 01 | A provider event is recorded before it is acted on | — | ✅ **done** — event recorded before any business logic, deduped on (provider, event id). The insert runs in an explicit tenant transaction: the route is @Public() so no GUC is set, and the new table has RLS |
-| 02 | A webhook acknowledges only durable work | 01 | ✅ **done** — fire-and-forget credit grant replaced by ExternalEffectLedger; a failed grant returns 503 so the provider retries instead of the payment being lost silently |
-| 03 | A coupon can be used once | — | ✅ **done** — already shipped in 0473; verified, not rebuilt |
-| 04 | A quota that cannot be computed refuses the write | — | ✅ **done** — an unresolvable plan limit now denies instead of letting the write through |
-| 05 | Revenue reporting reads what the system writes | 01 | ✅ **done** — the write path was made canonical (analytics kept, not deleted); new_subscription recorded on activation |
-| 06 | [Dunning history is queryable](issues/06-dunning-history-is-queryable.md) | — | in-progress — table write on PAST_DUE transition done; cron JSONB write needs out-of-scope update |
+| 01 | A provider event is recorded before it is acted on | — | needs re-verification |
+| 02 | A webhook acknowledges only durable work | 01 | needs re-verification |
+| 03 | A coupon can be used once | — | needs re-verification |
+| 04 | A quota that cannot be computed refuses the write | — | needs re-verification |
+| 05 | Revenue reporting reads what the system writes | 01 | needs re-verification |
+| 06 | [Dunning history is queryable](issues/06-dunning-history-is-queryable.md) | — | needs re-verification |
 | 07 | An issued invoice cannot change | — | done |
 
 ## Working these

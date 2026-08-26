@@ -8,11 +8,11 @@ Structured JSON logging, redaction, correlation context and the two error-report
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 01 | Errors reach a person | — | ✅ **done** — `LogErrorReporter` + `LogSpanExporter` installed in `main.ts`; the port was routing nowhere, and two call sites (`workflow-runner`, `import-pump`) report without logging, so workflow and import failures reached nobody |
-| 02 | The browser reports its own errors | 01 | ✅ **done** — `instrumentation-client.ts` installs `consoleReporter`; route + release stamped, `redact()` applied, chunk-load errors stay recoverable |
+| 01 | Errors reach a person | — | needs re-verification |
+| 02 | The browser reports its own errors | 01 | needs re-verification |
 | 03 | A request can be followed end to end | 01 | ✅ **done** — correlation id flows through `ObservabilityContext` into every log line |
 | 04 | No failure is swallowed | 01 | ✅ **done** — crm/finance/build/payroll swept (4 payroll sites were remapping *any* error to a duplicate-key 409); the four fixed sites now carry unit specs asserting both the log-and-rethrow path and the genuine-23505 path |
-| 05 | Four alerts reach someone | 03, 04 | ✅ **done** — all four predicates; `setSpanExporter(new LogSpanExporter())` is wired at `backend/src/main.ts:69`, so p95 per route is computable from `"SPAN"` log lines |
+| 05 | Four alerts reach someone | 03, 04 | needs re-verification |
 
 ## Working these
 

@@ -26,11 +26,11 @@ What the passes found was not systemic decay. It was concentrated correctness an
 |---|---|---|---|
 | [c12 — Route text search through the id probe that already exists](c12-text-search-id-probe/README.md) | 3 | 2 | **1** |
 | [c13 — One contract for every list](c13-one-list-contract/README.md) | 6 | 0 | **6** |
-| [c15 — Outbound I/O leaves the request transaction](c15-outbound-io-leaves-the-request/README.md) | 6 | 5 | **1** |
-| [c17 — Every billing write is provable](c17-billing-writes-are-provable/README.md) | 7 | 6 | **1** |
+| [c15 — Outbound I/O leaves the request transaction](c15-outbound-io-leaves-the-request/README.md) | 6 | 3 | **3** |
+| [c17 — Every billing write is provable](c17-billing-writes-are-provable/README.md) | 7 | 1 | **6** |
 | [c19 — A cache key cannot be unsafe, and a write invalidates what it changed](c19-cache-keys-cannot-be-unsafe/README.md) | 5 | 0 | **5** |
-| [c20 — A failure in production is visible](c20-failures-are-visible/README.md) | 5 | 5 | **0** |
-| | **32** | **18** | **14** |
+| [c20 — A failure in production is visible](c20-failures-are-visible/README.md) | 5 | 2 | **3** |
+| | **32** | **8** | **24** |
 
 **c20-01 is done, and it was the right thing to do first.** The reporter port had no adapter, so `reportError` discarded everything — and two of its five call sites (`workflow-runner`, `import-pump`) report *without* also logging, so every workflow-run and import failure was reaching nobody. That is now a structured log record, no vendor.
 
@@ -41,20 +41,20 @@ What the passes found was not systemic decay. It was concentrated correctness an
 | [c11 — Make "this query is fast" a thing CI proves](c11-read-cost-budgets/README.md) | 3 | 3 | **0** |
 | [c14 — Background sweeps operate on sets, not on rows](c14-set-based-sweeps/README.md) | 3 | 3 | **0** |
 | [c21 — Right models, right throughput — fan-out, retention and polling](c21-fanout-retention-and-polling/README.md) | 7 | 4 | **3** |
-| [c22 — Scheduled work runs once, and a deploy sheds no requests](c22-scheduled-work-and-deploy-safety/README.md) | 4 | 3 | **1** |
+| [c22 — Scheduled work runs once, and a deploy sheds no requests](c22-scheduled-work-and-deploy-safety/README.md) | 4 | 4 | **0** |
 | [c25 — Authorization cannot be omitted](c25-authorization-cannot-be-omitted/README.md) | 4 | 0 | **4** |
-| [c26 — Commercial billing is a versioned ledger](c26-commercial-billing-ledger/README.md) | 6 | 1 | **5** |
-| [c27 — Indexed knowledge obeys the same visibility as direct reads](c27-permissioned-knowledge-index/README.md) | 5 | 1 | **4** |
-| | **32** | **15** | **17** |
+| [c26 — Commercial billing is a versioned ledger](c26-commercial-billing-ledger/README.md) | 6 | 2 | **4** |
+| [c27 — Indexed knowledge obeys the same visibility as direct reads](c27-permissioned-knowledge-index/README.md) | 5 | 2 | **3** |
+| | **32** | **18** | **14** |
 
 ## Wave 2 — mechanical, parallelisable
 
 | Candidate | Tickets | Done | Open |
 |---|---|---|---|
 | [c16 — The schema says what it means](c16-schema-says-what-it-means/README.md) | 9 | 4 | **5** |
-| [c18 — Removals are proved, not grepped](c18-removals-are-proved/README.md) | 4 | 0 | **4** |
+| [c18 — Removals are proved, not grepped](c18-removals-are-proved/README.md) | 4 | 1 | **3** |
 | [c23 — A tenant extends the product without a deploy](c23-tenant-extensibility-without-migrations/README.md) | 5 | 1 | **4** |
-| [c24 — The design system is the only way to build a screen](c24-frontend-consistency-and-access/README.md) | 5 | 5 | **0** |
+| [c24 — The design system is the only way to build a screen](c24-frontend-consistency-and-access/README.md) | 5 | 4 | **1** |
 | | **23** | **10** | **13** |
 
 ## Wave 3 — the read side
@@ -64,7 +64,11 @@ What the passes found was not systemic decay. It was concentrated correctness an
 | [c10 — Make module-level standing answerable](c10-module-role-standing/README.md) | 5 | 5 | **0** |
 | | **5** | **5** | **0** |
 
-**44 tickets open, 48 retired.** A retired ticket has every box verified against source and its file deleted; its row in the candidate index is the surviving record.
+**92 tickets: 41 complete, 51 with open boxes.** Counted from the ticket files themselves — a ticket is complete when it has no `- [ ]` left.
+
+**Tickets are no longer deleted on completion.** The earlier convention retired a finished ticket by deleting its file and leaving its index row as the record. Those files have since been restored — but restored from *pre-completion* content, so their ticks were lost while their index rows still said `done`. 21 rows now read **`needs re-verification`**: the index claimed done, the file has open boxes, and only checking source can say which is right. Two things got mixed together there — genuinely finished work whose ticks were lost (`c20-01`'s reporter adapter is committed and real), and rows my de-link pass marked `done` simply because the file was momentarily absent, when the ticket was actually *blocked* (`c18-02/03/04`). Re-verify before rebuilding: this program's repeated finding is that "open" tickets are often already done.
+
+A false `done` hides a defect; a false `open` costs only a re-check, and the 2026-08-26 audit showed re-checking is fast. That is why the reconciliation went in this direction.
 
 **The index under-reports what is built.** c10 shipped in `191f4817` and c11's read budgets exist, yet both read as untouched — the tickets were never retired. Three of c12's four probes landed in `0475`. Before starting a candidate, check source first: several "open" tickets are verification, not construction. See [`BATCHES.md`](BATCHES.md) for how the remaining work partitions into lanes that can run at once.
 
