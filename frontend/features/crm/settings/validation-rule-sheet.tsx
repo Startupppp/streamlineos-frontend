@@ -1,43 +1,92 @@
 "use client";
 
-import { useCallback } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { ruleSchema, type RuleFormValues } from "./validation-rule-sheet-schema";
+import { useMemo } from "react";
+import { useWatch } from "react-hook-form";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
+import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import {
-  Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetBody,
+  Sheet,
+  SheetBody,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
 } from "@/components/ui/sheet";
-import {
-  Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
-} from "@/components/ui/form";
-import { LoadingButton } from "@/components/ui/loading-button";
-import { useCrmMetadata } from "@/hooks/api/crm";
 import { CrmOptionSelect, CrmStageSelect } from "@/features/crm/shared/metadata";
-import type { CrmValidationRule, CrmValidationEntityType, CrmValidationRuleType } from "@/types/crm/metadata";
+import {
+  RecordForm,
+  type RecordFieldControl,
+  type RecordFormValues,
+} from "@/features/renderer";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import {
+  useCreateValidationRule,
+  useCrmMetadata,
+  useUpdateValidationRule,
+} from "@/hooks/api/crm";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { VALIDATION_RULE_LAYOUT } from "@/lib/renderer/crm/settings/validation-rule-layout";
+import type {
+  CrmValidationEntityType,
+  CrmValidationRule,
+  CrmValidationRuleType,
+} from "@/types/crm/metadata";
+import { flagOr, numberOrOmit, requiredText, textOrOmit } from "./shared/record-payload";
 
-const RULE_TYPE_GROUPS: { label: string; types: CrmValidationRuleType[] }[] = [
-  { label: "Presence", types: ["required", "unique"] },
-  { label: "Format", types: ["email", "phone", "url", "regex"] },
-  { label: "Numeric", types: ["numeric_min", "numeric_max", "currency_min", "currency_max"] },
-  { label: "Date", types: ["date_not_past", "date_not_future"] },
-  { label: "Conditional", types: ["conditional_required", "stage_required", "source_required"] },
+/**
+ * Create and edit a validation rule, rendered from the description.
+ *
+ * The five-branch form this replaces is gone: which config fields a rule has is
+ * declared by `visibleWhen` on `ruleType`, so the engine renders the arm the
+ * rule is on, validates only that arm, and submits only that arm. Nothing here
+ * decides what to show.
+ *
+ * What is left is what a description cannot supply — three pickers whose
+ * contents belong to the tenant rather than to the record's shape. Two of them
+ * are ordinary. The stage picker is not: which stages exist depends on which
+ * pipeline the form currently holds, and `visibleWhen` compares against a small
+ * set of known values rather than asking whether a sibling is filled in. So the
+ * control reads its sibling from react-hook-form's own context, which the engine
+ * already establishes — a control being clever about the tenant, not a
+ * conditional smuggled into the description.
+ */
+
+const RULE_TYPES: readonly CrmValidationRuleType[] = [
+  "required",
+  "unique",
+  "email",
+  "phone",
+  "url",
+  "regex",
+  "numeric_min",
+  "numeric_max",
+  "currency_min",
+  "currency_max",
+  "date_not_past",
+  "date_not_future",
+  "conditional_required",
+  "stage_required",
+  "source_required",
 ];
 
-const ENTITY_TABS: { value: CrmValidationEntityType; label: string }[] = [
-  { value: "lead", label: "Lead" },
-  { value: "deal", label: "Deal" },
-  { value: "contact", label: "Contact" },
-  { value: "company", label: "Company" },
-  { value: "quote", label: "Quote" },
+const ENTITY_TYPES: readonly CrmValidationEntityType[] = [
+  "lead",
+  "deal",
+  "contact",
+  "company",
+  "quote",
 ];
 
-const ENTITY_FIELDS: Record<CrmValidationEntityType, string[]> = {
+/** The fields each entity is known to carry, offered as suggestions only. */
+const ENTITY_FIELDS: Record<CrmValidationEntityType, readonly string[]> = {
   lead: ["name", "email", "phone", "company", "source", "status", "priority", "potentialValue"],
   deal: ["name", "value", "closeDate", "probability", "source", "status"],
   contact: ["firstName", "lastName", "email", "phone", "title", "company"],
@@ -45,364 +94,272 @@ const ENTITY_FIELDS: Record<CrmValidationEntityType, string[]> = {
   quote: ["title", "value", "expiryDate", "status"],
 };
 
-export { ruleSchema, type RuleFormValues };
+const NUMERIC_RULES: readonly CrmValidationRuleType[] = [
+  "numeric_min",
+  "numeric_max",
+  "currency_min",
+  "currency_max",
+];
 
-export function buildRuleConfig(data: RuleFormValues): Record<string, unknown> | null {
-  if (data.ruleType === "regex" && data.configPattern) return { pattern: data.configPattern };
-  if (["numeric_min", "numeric_max", "currency_min", "currency_max"].includes(data.ruleType) && data.configValue !== undefined) {
-    return { value: Number(data.configValue) };
+function toRuleType(value: string | undefined): CrmValidationRuleType | undefined {
+  return RULE_TYPES.find((candidate) => candidate === value);
+}
+
+function toEntityType(value: string | undefined): CrmValidationEntityType | undefined {
+  return ENTITY_TYPES.find((candidate) => candidate === value);
+}
+
+/**
+ * The stored `config` blob, built from the arm the rule is on.
+ *
+ * The engine has already dropped every value belonging to another arm, so this
+ * only has to say which shape each arm stores. A rule with no configuration
+ * stores `null` rather than `{}` — an empty object reads as "configured with
+ * nothing", which is a different claim.
+ */
+function configFor(
+  ruleType: CrmValidationRuleType,
+  values: RecordFormValues,
+): Record<string, unknown> | null {
+  if (ruleType === "regex") {
+    const pattern = textOrOmit(values, "configPattern");
+    return pattern ? { pattern } : null;
   }
-  if (data.ruleType === "conditional_required") {
-    return { condition_field: data.configConditionField ?? "", condition_value: data.configConditionValue ?? "" };
+
+  if (NUMERIC_RULES.includes(ruleType)) {
+    const value = numberOrOmit(values, "configValue");
+    return value === undefined ? null : { value };
   }
+
+  if (ruleType === "conditional_required")
+    return {
+      condition_field: textOrOmit(values, "configConditionField") ?? "",
+      condition_value: textOrOmit(values, "configConditionValue") ?? "",
+    };
+
   return null;
 }
 
-export function ruleFormDefaults(rule: CrmValidationRule): RuleFormValues {
-  const c = rule.config;
+/** The rule as the form's flat fields, with `config` spread back out. */
+function initialValues(rule: CrmValidationRule, pipelineName: string): Record<string, unknown> {
+  const config = rule.config ?? {};
   return {
     entityType: rule.entityType,
     field: rule.field,
     ruleType: rule.ruleType,
-    configPattern: typeof c?.pattern === "string" ? c.pattern : undefined,
-    configValue: c?.value !== undefined ? String(c.value) : undefined,
-    configConditionField: typeof c?.condition_field === "string" ? c.condition_field : undefined,
-    configConditionValue: typeof c?.condition_value === "string" ? c.condition_value : undefined,
-    pipelineId: rule.pipelineId,
-    stageKey: rule.stageKey,
-    sourceKey: rule.sourceKey,
-    errorMessage: rule.errorMessage,
+    configPattern: typeof config.pattern === "string" ? config.pattern : "",
+    configValue: config.value === undefined ? "" : String(config.value),
+    configConditionField:
+      typeof config.condition_field === "string" ? config.condition_field : "",
+    configConditionValue:
+      typeof config.condition_value === "string" ? config.condition_value : "",
+    pipelineId: rule.pipelineId ?? "",
+    pipelineName,
+    stageKey: rule.stageKey ?? "",
+    sourceKey: rule.sourceKey ?? "",
+    errorMessage: rule.errorMessage ?? "",
     isActive: rule.isActive,
+    sortOrder: rule.sortOrder,
   };
 }
 
-interface RuleSheetProps {
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-  editing: CrmValidationRule | null;
-  entityType: CrmValidationEntityType;
-  rulesCount: number;
-  onSubmit: (data: RuleFormValues, isEdit: boolean) => void;
-  isPending: boolean;
+function RuleFieldControl({
+  control,
+  fallbackEntity,
+}: {
+  control: RecordFieldControl;
+  fallbackEntity: CrmValidationEntityType;
+}) {
+  const watched = useWatch({ name: "entityType" });
+  const entity = toEntityType(typeof watched === "string" ? watched : undefined) ?? fallbackEntity;
+  const listId = `validation-fields-${entity}`;
+
+  return (
+    <>
+      <Input
+        list={listId}
+        value={control.value}
+        disabled={control.disabled}
+        placeholder="email"
+        onChange={(event) => control.onChange(event.target.value)}
+      />
+      <datalist id={listId}>
+        {ENTITY_FIELDS[entity].map((name) => (
+          <option key={name} value={name} />
+        ))}
+      </datalist>
+    </>
+  );
 }
 
-export function RuleSheet({ open, onOpenChange, editing, entityType, rulesCount, onSubmit, isPending }: RuleSheetProps) {
+/**
+ * Which stages exist depends on the pipeline the form currently holds, which is
+ * why this reads its sibling rather than taking it as a prop.
+ */
+function RuleStageControl({ control }: { control: RecordFieldControl }) {
+  const watched = useWatch({ name: "pipelineId" });
+  const pipelineId = typeof watched === "string" ? watched : "";
+
+  if (!pipelineId)
+    return (
+      <Input
+        value={control.value}
+        disabled
+        placeholder="Choose a pipeline first"
+        readOnly
+      />
+    );
+
+  return (
+    <CrmStageSelect
+      pipelineIdOrType={pipelineId}
+      value={control.value}
+      onChange={control.onChange}
+      placeholder="Any stage"
+    />
+  );
+}
+
+interface ValidationRuleSheetProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  entityType: CrmValidationEntityType;
+  rule: CrmValidationRule | null;
+  sortOrder: number;
+}
+
+export function ValidationRuleSheet({
+  open,
+  onOpenChange,
+  entityType,
+  rule,
+  sortOrder,
+}: ValidationRuleSheetProps) {
+  const layout = useTenantLayout(VALIDATION_RULE_LAYOUT);
   const { data: metadata } = useCrmMetadata();
-  const pipelines = metadata?.pipelines ?? [];
+  const createRule = useCreateValidationRule();
+  const updateRule = useUpdateValidationRule();
+  const isEditing = rule !== null;
+  const isPending = createRule.isPending || updateRule.isPending;
 
-  const form = useForm<RuleFormValues>({
-    resolver: zodResolver(ruleSchema),
-    defaultValues: editing
-      ? ruleFormDefaults(editing)
-      : {
-          entityType,
-          field: "",
-          ruleType: "required",
-          pipelineId: null,
-          stageKey: null,
-          sourceKey: null,
-          errorMessage: null,
-          isActive: true,
+  const pipelines = useMemo(() => metadata?.pipelines ?? [], [metadata]);
+  const pipelineName = useMemo(
+    () => pipelines.find((pipeline) => pipeline.id === rule?.pipelineId)?.name ?? "",
+    [pipelines, rule],
+  );
+
+  const fallbackEntity = rule?.entityType ?? entityType;
+
+  const controls = useMemo(
+    () => ({
+      field: (control: RecordFieldControl) => (
+        <RuleFieldControl control={control} fallbackEntity={fallbackEntity} />
+      ),
+      pipelineId: (control: RecordFieldControl) => (
+        <Select
+          value={control.value}
+          onValueChange={control.onChange}
+          disabled={control.disabled}
+        >
+          <SelectTrigger aria-label="Pipeline">
+            <SelectValue placeholder="Any pipeline" />
+          </SelectTrigger>
+          <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
+            {pipelines.map((pipeline) => (
+              <SelectItem key={pipeline.id} value={pipeline.id}>
+                {pipeline.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ),
+      stageKey: (control: RecordFieldControl) => <RuleStageControl control={control} />,
+      sourceKey: (control: RecordFieldControl) => (
+        <CrmOptionSelect
+          type="source"
+          value={control.value}
+          onChange={control.onChange}
+          placeholder="Any source"
+        />
+      ),
+    }),
+    [pipelines, fallbackEntity],
+  );
+
+  function handleClose() {
+    onOpenChange(false);
+  }
+
+  function handleSubmit(values: RecordFormValues) {
+    const ruleType = toRuleType(values.ruleType) ?? rule?.ruleType ?? "required";
+    const body = {
+      field: requiredText(values, "field"),
+      ruleType,
+      config: configFor(ruleType, values),
+      pipelineId: textOrOmit(values, "pipelineId") ?? null,
+      stageKey: textOrOmit(values, "stageKey") ?? null,
+      sourceKey: textOrOmit(values, "sourceKey") ?? null,
+      errorMessage: textOrOmit(values, "errorMessage") ?? null,
+      isActive: flagOr(values, "isActive", true),
+    };
+
+    if (rule) {
+      updateRule.mutate(
+        { id: rule.id, ...body },
+        {
+          onSuccess: () => {
+            toast.success("Rule updated");
+            onOpenChange(false);
+          },
+          onError: (error) => toast.error(getErrorMessage(error)),
         },
-  });
+      );
+      return;
+    }
 
-  const watchedRuleType = form.watch("ruleType");
-  const watchedPipelineId = form.watch("pipelineId");
-  const showNumericConfig = ["numeric_min", "numeric_max", "currency_min", "currency_max"].includes(watchedRuleType);
-  const fields = ENTITY_FIELDS[editing?.entityType ?? entityType] ?? [];
-
-  const handlePipelineChange = useCallback((v: string) => {
-    form.setValue("pipelineId", v || null);
-    form.setValue("stageKey", null);
-  }, [form]);
-
-  const handleFormSubmit = useCallback((data: RuleFormValues) => {
-    onSubmit(data, !!editing);
-  }, [editing, onSubmit]);
+    createRule.mutate(
+      {
+        ...body,
+        entityType: toEntityType(values.entityType) ?? entityType,
+        sortOrder,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Rule created");
+          onOpenChange(false);
+        },
+        onError: (error) => toast.error(getErrorMessage(error)),
+      },
+    );
+  }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="flex w-[420px] flex-col gap-0 overflow-hidden p-0 sm:w-[480px] sm:max-w-none">
-        <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
-          <SheetTitle>{editing ? "Edit Rule" : "Validation Rule"}</SheetTitle>
+      <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-lg">
+        <SheetHeader className="shrink-0 border-b px-6 py-4">
+          <SheetTitle>{isEditing ? "Edit validation rule" : "New validation rule"}</SheetTitle>
           <SheetDescription>
-            {editing ? "Update this validation rule." : `Define a new validation rule. ${rulesCount} rules exist.`}
+            A rule refuses a record that would otherwise be saved half-filled.
           </SheetDescription>
         </SheetHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="flex min-h-0 flex-1 flex-col">
-            <SheetBody className="space-y-5 px-6 py-5">
-            <div className="space-y-3">
-              <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Scope</p>
-              <FormField
-                control={form.control}
-                name="entityType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs">Entity Type</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange} disabled={!!editing}>
-                      <FormControl>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {ENTITY_TABS.map((e) => (
-                          <SelectItem key={e.value} value={e.value} className="text-xs">{e.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="field"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs">Field <span className="text-destructive">*</span></FormLabel>
-                    <FormControl>
-                      <>
-                        <Input {...field} list="crm-fields-datalist" placeholder="e.g. email" className="text-xs" />
-                        <datalist id="crm-fields-datalist">
-                          {fields.map((f) => <option key={f} value={f} />)}
-                        </datalist>
-                      </>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
 
-            <Separator />
-
-            <div className="space-y-3">
-              <p className="text-micro uppercase tracking-wider font-semibold text-muted-foreground">Rule</p>
-              <FormField
-                control={form.control}
-                name="ruleType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs">Rule Type</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {RULE_TYPE_GROUPS.map((group) => (
-                          <div key={group.label}>
-                            <div className="px-2 py-1 text-micro uppercase tracking-wider text-muted-foreground font-semibold">{group.label}</div>
-                            {group.types.map((rt) => (
-                              <SelectItem key={rt} value={rt} className="text-xs pl-4">{rt}</SelectItem>
-                            ))}
-                          </div>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <Separator />
-
-            <div className="space-y-3">
-              <p className="text-micro uppercase tracking-wider font-semibold text-muted-foreground">Config</p>
-
-              {watchedRuleType === "regex" && (
-                <FormField
-                  control={form.control}
-                  name="configPattern"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs">Regex Pattern</FormLabel>
-                      <FormControl>
-                        <Input {...field} value={field.value ?? ""} placeholder="^[A-Z]{3}$" className="text-xs" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-
-              {showNumericConfig && (
-                <FormField
-                  control={form.control}
-                  name="configValue"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs">{watchedRuleType.includes("min") ? "Minimum value" : "Maximum value"}</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="number" value={field.value ?? ""} placeholder="0" className="text-xs" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-
-              {watchedRuleType === "conditional_required" && (
-                <div className="grid grid-cols-2 gap-3">
-                  <FormField
-                    control={form.control}
-                    name="configConditionField"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">Condition Field</FormLabel>
-                        <FormControl>
-                          <Input {...field} value={field.value ?? ""} placeholder="status" className="text-xs" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="configConditionValue"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">Condition Value</FormLabel>
-                        <FormControl>
-                          <Input {...field} value={field.value ?? ""} placeholder="qualified" className="text-xs" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              )}
-
-              {watchedRuleType === "stage_required" && (
-                <FormItem>
-                  <FormLabel className="text-xs">Pipeline</FormLabel>
-                  <Select value={watchedPipelineId ?? ""} onValueChange={handlePipelineChange}>
-                    <SelectTrigger><SelectValue placeholder="Select pipeline…" /></SelectTrigger>
-                    <SelectContent>
-                      {pipelines.map((p) => (
-                        <SelectItem key={p.id} value={p.id} className="text-xs">{p.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-
-              {watchedRuleType === "stage_required" && watchedPipelineId && (
-                <FormField
-                  control={form.control}
-                  name="stageKey"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs">Stage</FormLabel>
-                      <CrmStageSelect pipelineIdOrType={watchedPipelineId} value={field.value ?? ""} onChange={field.onChange} />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-
-              {watchedRuleType === "source_required" && (
-                <FormField
-                  control={form.control}
-                  name="sourceKey"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs">Source</FormLabel>
-                      <CrmOptionSelect type="source" value={field.value ?? ""} onChange={field.onChange} />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-
-              {watchedRuleType !== "stage_required" && (
-                <FormField
-                  control={form.control}
-                  name="pipelineId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs">Pipeline scope (optional)</FormLabel>
-                      <Select value={field.value ?? ""} onValueChange={(v) => { field.onChange(v || null); form.setValue("stageKey", null); }}>
-                        <FormControl>
-                          <SelectTrigger><SelectValue placeholder="Any pipeline" /></SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="" className="text-xs">Any pipeline</SelectItem>
-                          {pipelines.map((p) => (
-                            <SelectItem key={p.id} value={p.id} className="text-xs">{p.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-
-              {watchedRuleType !== "stage_required" && watchedPipelineId && (
-                <FormField
-                  control={form.control}
-                  name="stageKey"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs">Stage scope (optional)</FormLabel>
-                      <CrmStageSelect pipelineIdOrType={watchedPipelineId} value={field.value ?? ""} onChange={field.onChange} />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-
-              {watchedRuleType !== "source_required" && (
-                <FormField
-                  control={form.control}
-                  name="sourceKey"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs">Source scope (optional)</FormLabel>
-                      <CrmOptionSelect type="source" value={field.value ?? ""} onChange={field.onChange} />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-
-              <FormField
-                control={form.control}
-                name="errorMessage"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs">Custom error message (optional)</FormLabel>
-                    <FormControl>
-                      <Input {...field} value={field.value ?? ""} placeholder="This field is required" className="text-xs" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="isActive"
-                render={({ field }) => (
-                  <FormItem className="flex items-center justify-between rounded-lg border px-3 py-2">
-                    <FormLabel className="text-xs cursor-pointer">Active</FormLabel>
-                    <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            </div>
-            </SheetBody>
-
-            <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
-              <LoadingButton type="submit" isPending={isPending} loadingText="Saving…" size="sm" className="w-full">
-                {editing ? "Save Changes" : "Create Rule"}
-              </LoadingButton>
-            </SheetFooter>
-          </form>
-        </Form>
+        <SheetBody className="px-6 py-5">
+          <RecordForm
+            key={rule?.id ?? "new"}
+            layout={layout}
+            mode={isEditing ? "edit" : "create"}
+            initial={
+              rule
+                ? initialValues(rule, pipelineName)
+                : { entityType, ruleType: "required", isActive: "true" }
+            }
+            controls={controls}
+            onSubmit={handleSubmit}
+            onCancel={handleClose}
+            isSubmitting={isPending}
+            submitLabel={isEditing ? "Save changes" : "Create rule"}
+          />
+        </SheetBody>
       </SheetContent>
     </Sheet>
   );

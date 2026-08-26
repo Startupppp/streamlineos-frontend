@@ -15,16 +15,12 @@ import { RecordList, asRecordValues } from "@/features/renderer";
 import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
 import { RecordRowActions } from "@/features/crm/settings/shared/record-row-actions";
 import { QuoteTemplateSheet } from "@/features/crm/settings/quotes/quote-template-sheet";
-import {
-  QuoteSettingsForm,
-  type QuoteSettingsFormValues,
-} from "@/features/crm/settings/quotes/quote-settings-form";
+import { QuoteSettingsForm } from "@/features/crm/settings/quotes/quote-settings-form";
 import { useCan } from "@/hooks/api/access";
 import {
   useDeleteQuoteTemplate,
   useQuoteSettings,
   useQuoteTemplates,
-  useUpdateQuoteSettings,
 } from "@/hooks/api/crm/pricebooks";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { QUOTE_TEMPLATE_LAYOUT } from "@/lib/renderer/crm/settings/quote-template-layout";
@@ -33,10 +29,10 @@ import type { QuoteTemplate } from "@/types/crm/pricebooks";
 /**
  * Quoting rules, and the documents quotes are rendered into.
  *
- * The template list is generated. The settings form above it is not, and cannot
- * be: quote settings are a singleton, and a `RecordLayout` has to declare list
- * columns with a primary among them. There is no list of one settings record, so
- * describing it would mean inventing a table nobody will ever see.
+ * Both halves are generated. The template list comes from a description with
+ * columns; the rules above it come from a singleton description with none —
+ * there is one settings record per tenant and no list of it, which is a shape
+ * the vocabulary admits rather than one it has to be lied to about.
  */
 export default function QuoteSettingsPage() {
   const layout = useTenantLayout(QUOTE_TEMPLATE_LAYOUT);
@@ -47,7 +43,6 @@ export default function QuoteSettingsPage() {
   const [deleteTarget, setDeleteTarget] = useState<QuoteTemplate | null>(null);
 
   const settings = useQuoteSettings();
-  const updateSettings = useUpdateQuoteSettings();
   const {
     data,
     isLoading: templatesLoading,
@@ -57,24 +52,6 @@ export default function QuoteSettingsPage() {
   const deleteTemplate = useDeleteQuoteTemplate();
 
   const templates = useMemo(() => data ?? [], [data]);
-
-  const handleSettingsSubmit = useCallback(
-    (values: QuoteSettingsFormValues) => {
-      updateSettings.mutate(
-        {
-          maxDiscountPercent: values.maxDiscountPercent ?? null,
-          requirePricebookPrice: values.requirePricebookPrice,
-          defaultExpiryDays: values.defaultExpiryDays,
-          allowPriceOverride: values.allowPriceOverride,
-        },
-        {
-          onSuccess: () => toast.success("Quote settings saved"),
-          onError: (error) => toast.error(getErrorMessage(error)),
-        },
-      );
-    },
-    [updateSettings],
-  );
 
   const handleOpenCreate = useCallback(() => {
     setEditTarget(null);
@@ -154,7 +131,7 @@ export default function QuoteSettingsPage() {
       ) : (
         <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-gap-section">
           <section className={`${CONTENT_PANEL_SOLID} shrink-0 p-card-pad`}>
-            <h2 className="mb-3 text-sm font-semibold">Rules</h2>
+            <h2 className="mb-3 text-sm font-semibold">Quoting rules</h2>
             {settings.isLoading ? (
               <div className="flex flex-col gap-gap-toolbar">
                 <Skeleton className="h-9 w-full" />
@@ -169,11 +146,7 @@ export default function QuoteSettingsPage() {
                 onRetry={() => void settings.refetch()}
               />
             ) : (
-              <QuoteSettingsForm
-                settings={settings.data}
-                onSubmit={handleSettingsSubmit}
-                isPending={updateSettings.isPending}
-              />
+              <QuoteSettingsForm settings={settings.data} />
             )}
           </section>
 

@@ -9,11 +9,8 @@ import type { RecordLayout } from "../../layout";
  * nothing edits is a column that renders nothing. It is left to whatever builds
  * branding when something does.
  *
- * The quote *settings* beside this on the page — default expiry, maximum
- * discount, whether a price may be overridden — are not described at all, and
- * cannot be: a `RecordLayout` must declare list columns with a primary among
- * them, and a singleton settings record has no list to declare. `validateLayout`
- * rejects a description without one, correctly. That form stays hand-written.
+ * The quote *settings* beside this on the page are described separately, as a
+ * singleton — see `QUOTE_SETTINGS_LAYOUT` below.
  */
 export const QUOTE_TEMPLATE_LAYOUT: RecordLayout = {
   key: "crm:settings:quote-template",
@@ -59,6 +56,94 @@ export const QUOTE_TEMPLATE_LAYOUT: RecordLayout = {
     sections: [
       { title: "Template", fields: ["name", "isDefault"] },
       { title: "Terms", fields: ["terms"] },
+    ],
+  },
+};
+
+/**
+ * How quoting behaves across the organisation — one record, never listed.
+ *
+ * A singleton, and the reason `validateLayout` stopped insisting on a primary
+ * column: there is exactly one of these per tenant, reached from a settings
+ * page, so `list.columns` is empty rather than inventing a table nobody will
+ * see. An empty list is a real shape; a list with columns and no primary one is
+ * still an error, because that renders a mobile card with no title.
+ *
+ * `titleField` is the one thing a singleton still has to name and has no answer
+ * for — nothing here titles the record, because the record is the settings. It
+ * points at the figure a reader would recognise the page by, and nothing renders
+ * it: there is no list, and the surface renders a form rather than a detail
+ * view.
+ *
+ * `maxDiscountPercent` is nullable and means "no ceiling" when empty, which is
+ * why the surface sends `null` for a blank rather than omitting it. The other
+ * three are required, so a blank would be a form that fails on submit.
+ */
+/**
+ * Deliberately NOT in `registry.ts`.
+ *
+ * Registration was tried and the registry's own tests refused it, correctly. A
+ * registered record type must survive a tenant reversing its column order and
+ * must have a name a screen can put on a button — and quote settings is a
+ * singleton: one row per tenant, no list, nothing to arrange, nothing to name in
+ * the plural. It points `titleField` at `defaultExpiryDays` only because
+ * `validateLayout` insists on one, and nothing renders it.
+ *
+ * The layout is still a description and `quote-settings-form` still renders it
+ * through `RecordForm`; it simply is not a record *type*. Relaxing two registry
+ * guards for one layout would have cost more than it bought. If more singletons
+ * arrive, the answer is a singleton shape the registry understands, not an
+ * exemption per layout — and `titleField` is the first thing that will need it.
+ */
+export const QUOTE_SETTINGS_LAYOUT: RecordLayout = {
+  key: "crm:settings:quote-settings",
+  singular: "Quoting rules",
+  plural: "Quoting rules",
+  titleField: "defaultExpiryDays",
+  fields: [
+    {
+      name: "defaultExpiryDays",
+      label: "Quotes expire after (days)",
+      kind: "number",
+      required: true,
+      hint: "How long a quote stands before it lapses, unless the sender says otherwise.",
+    },
+    {
+      name: "maxDiscountPercent",
+      label: "Maximum discount",
+      kind: "percent",
+      hint: "Leave empty for no ceiling.",
+    },
+    {
+      name: "requirePricebookPrice",
+      label: "Prices must come from a pricebook",
+      kind: "boolean",
+      hint: "A line whose product is in no pricebook cannot be quoted.",
+    },
+    {
+      name: "allowPriceOverride",
+      label: "A seller may type their own price",
+      kind: "boolean",
+    },
+  ],
+  list: { searchPlaceholder: "", columns: [] },
+  detail: {
+    sections: [
+      {
+        title: "Quoting rules",
+        fields: [
+          "defaultExpiryDays",
+          "maxDiscountPercent",
+          "requirePricebookPrice",
+          "allowPriceOverride",
+        ],
+      },
+    ],
+  },
+  form: {
+    sections: [
+      { title: "Standing", fields: ["defaultExpiryDays", "maxDiscountPercent"] },
+      { title: "Pricing", fields: ["requirePricebookPrice", "allowPriceOverride"] },
     ],
   },
 };

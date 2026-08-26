@@ -19,19 +19,20 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { VALIDATION_RULE_LAYOUT } from "@/lib/renderer/crm/settings/validation-rule-layout";
 import type { CrmValidationEntityType, CrmValidationRule } from "@/types/crm/metadata";
 import { RecordRowActions } from "./shared/record-row-actions";
-import { RuleSheet, buildRuleConfig, type RuleFormValues } from "./validation-rule-sheet";
+import { ValidationRuleSheet } from "./validation-rule-sheet";
 import { ValidationRuleTestPanel } from "./validation-rule-test-panel";
 
 /**
  * The rules for one entity type.
  *
- * The table is generated. The sheet is not, and that is deliberate: which config
- * fields a validation rule has depends on the value of its `ruleType`, and a
- * `FieldSpec` cannot say "only when". See `VALIDATION_RULE_LAYOUT` for the full
- * account of what is missing.
+ * Both halves are generated now. The sheet used to be hand-written because a
+ * rule's config fields depend on its `ruleType` and a `FieldSpec` could not say
+ * "only when"; `visibleWhen` closed that, so what is left here is the list, the
+ * one-click activate switch, and confirming a delete.
  *
- * The pipeline column shows the pipeline's name, resolved here from metadata the
- * page has already loaded. The record carries an id; a visible id is a bug.
+ * The pipeline column is a `reference` whose name the description points at, so
+ * the row shows the pipeline rather than its identifier without this file
+ * formatting anything.
  */
 
 interface ValidationRuleListProps {
@@ -62,6 +63,7 @@ export function ValidationRuleList({ entityType, canManage }: ValidationRuleList
         id: rule.id,
         field: rule.field,
         ruleType: rule.ruleType,
+        pipelineId: rule.pipelineId ?? "",
         pipelineName: rule.pipelineId ? (pipelineNames.get(rule.pipelineId) ?? "") : "",
         stageKey: rule.stageKey ?? "",
         sourceKey: rule.sourceKey ?? "",
@@ -107,34 +109,6 @@ export function ValidationRuleList({ entityType, canManage }: ValidationRuleList
     });
   }, [deleteRule, deleteTarget]);
 
-  const handleEditSubmit = useCallback(
-    (values: RuleFormValues) => {
-      if (!editTarget) return;
-      updateRule.mutate(
-        {
-          id: editTarget.id,
-          entityType: values.entityType,
-          field: values.field,
-          ruleType: values.ruleType,
-          config: buildRuleConfig(values),
-          pipelineId: values.pipelineId ?? null,
-          stageKey: values.stageKey ?? null,
-          sourceKey: values.sourceKey ?? null,
-          errorMessage: values.errorMessage ?? null,
-          isActive: values.isActive,
-        },
-        {
-          onSuccess: () => {
-            toast.success("Rule updated");
-            setEditTarget(null);
-          },
-          onError: (error) => toast.error(getErrorMessage(error)),
-        },
-      );
-    },
-    [editTarget, updateRule],
-  );
-
   const rowActions = useCallback(
     (row: Record<string, unknown>) => {
       const rule = rules.find((candidate) => candidate.id === row.id);
@@ -147,7 +121,7 @@ export function ValidationRuleList({ entityType, canManage }: ValidationRuleList
             <Switch
               checked={rule.isActive}
               onCheckedChange={() => handleToggle(rule)}
-              aria-label={rule.isActive ? `Pause this rule` : `Activate this rule`}
+              aria-label={rule.isActive ? "Pause this rule" : "Activate this rule"}
             />
           }
           onEdit={() => setEditTarget(rule)}
@@ -192,14 +166,12 @@ export function ValidationRuleList({ entityType, canManage }: ValidationRuleList
       <ValidationRuleTestPanel entityType={entityType} />
 
       {editTarget ? (
-        <RuleSheet
+        <ValidationRuleSheet
           open
           onOpenChange={handleEditOpenChange}
-          editing={editTarget}
           entityType={entityType}
-          rulesCount={rules.length}
-          onSubmit={handleEditSubmit}
-          isPending={updateRule.isPending}
+          rule={editTarget}
+          sortOrder={rules.length}
         />
       ) : null}
 

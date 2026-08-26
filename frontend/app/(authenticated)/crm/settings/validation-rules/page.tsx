@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { toast } from "sonner";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { NoPermissionState } from "@/components/shared";
@@ -15,14 +14,9 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { ValidationRuleList } from "@/features/crm/settings/validation-rule-list";
-import {
-  RuleSheet,
-  buildRuleConfig,
-  type RuleFormValues,
-} from "@/features/crm/settings/validation-rule-sheet";
+import { ValidationRuleSheet } from "@/features/crm/settings/validation-rule-sheet";
 import { useCan } from "@/hooks/api/access";
-import { useCreateValidationRule, useValidationRules } from "@/hooks/api/crm";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { useValidationRules } from "@/hooks/api/crm";
 import type { CrmValidationEntityType } from "@/types/crm/metadata";
 
 const ENTITY_TABS: { value: CrmValidationEntityType; label: string }[] = [
@@ -40,9 +34,10 @@ function isEntityType(value: string): value is CrmValidationEntityType {
 /**
  * Validation rules, one entity type at a time.
  *
- * Each tab's table is generated from `VALIDATION_RULE_LAYOUT`; the create and
- * edit sheet is not, because a rule's config fields depend on the value of its
- * rule type and the vocabulary has no way to say "only when".
+ * Table and form are both generated now. A rule's configuration depends on its
+ * type, which `visibleWhen` says in the description — so this page has no idea
+ * that a regex rule has a pattern and a numeric one has a limit, and neither
+ * does the sheet it opens.
  */
 export default function ValidationRulesPage() {
   const canManage = useCan("crm:settings:manage");
@@ -50,7 +45,6 @@ export default function ValidationRulesPage() {
   const [activeTab, setActiveTab] = useState<CrmValidationEntityType>("lead");
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const createRule = useCreateValidationRule();
   const { data: rules } = useValidationRules({ entity: activeTab });
 
   const handleOpenNew = useCallback(() => setSheetOpen(true), []);
@@ -58,33 +52,6 @@ export default function ValidationRulesPage() {
   const handleTabChange = useCallback((value: string) => {
     if (isEntityType(value)) setActiveTab(value);
   }, []);
-
-  const handleCreate = useCallback(
-    (values: RuleFormValues) => {
-      createRule.mutate(
-        {
-          entityType: values.entityType,
-          field: values.field,
-          ruleType: values.ruleType,
-          config: buildRuleConfig(values),
-          pipelineId: values.pipelineId ?? null,
-          stageKey: values.stageKey ?? null,
-          sourceKey: values.sourceKey ?? null,
-          errorMessage: values.errorMessage ?? null,
-          isActive: values.isActive,
-          sortOrder: rules?.length ?? 0,
-        },
-        {
-          onSuccess: () => {
-            toast.success("Rule created");
-            setSheetOpen(false);
-          },
-          onError: (error) => toast.error(getErrorMessage(error)),
-        },
-      );
-    },
-    [createRule, rules?.length],
-  );
 
   return (
     <PageWrapper
@@ -132,14 +99,12 @@ export default function ValidationRulesPage() {
       )}
 
       {sheetOpen ? (
-        <RuleSheet
+        <ValidationRuleSheet
           open={sheetOpen}
           onOpenChange={handleSheetOpenChange}
-          editing={null}
           entityType={activeTab}
-          rulesCount={rules?.length ?? 0}
-          onSubmit={handleCreate}
-          isPending={createRule.isPending}
+          rule={null}
+          sortOrder={rules?.length ?? 0}
         />
       ) : null}
     </PageWrapper>

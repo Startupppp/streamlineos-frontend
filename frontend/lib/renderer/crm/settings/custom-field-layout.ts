@@ -1,29 +1,31 @@
 import type { RecordLayout } from "../../layout";
 
 /**
- * A tenant's own field on a lead, deal or contact — described, for the list.
+ * A tenant's own field on a lead, deal or contact.
  *
- * The list is the whole of what this description drives, and `form` is empty on
- * purpose. Two things stop the form being generated, and both are the
- * vocabulary's rather than this screen's:
+ * Two pieces of vocabulary carry this one, and without either it could not be
+ * described at all.
  *
- * A `select` field carries `options`, a list of `{ value, label }` pairs, and
- * `FieldSpec` has no array kind — nor should it grow one for a list of pairs a
- * chip control cannot express, because a chip holds one string and an option is
- * two. And the editor for it must appear only when `fieldType` is `select`; a
- * description cannot say "only when", and `RecordFieldControl` hands a supplied
- * control its own value and nothing else, so a control cannot decide from a
- * sibling field either.
+ * `fieldType` is `createOnly`. What kind a field is gets decided once and then
+ * fixed — the update endpoint ignores it, because records already carry values
+ * in that shape — so an edit form must not offer it. The old sheet rendered the
+ * control disabled instead, which reads as broken rather than as settled.
  *
- * There is a third, smaller gap worth naming: `fieldType` is accepted on create
- * and refused on update — a field's type cannot change once records carry
- * values in it. `editOnly` says the opposite of that and there is no
- * create-only marker, so it is described here as read-only, which is true of
- * every form the engine would generate but not of the create form.
+ * `options` applies only to a choice field, said by `visibleWhen`. It is not
+ * hidden on a date field, it is not part of one: not rendered, not validated,
+ * and not submitted, so a text field is never stored a list of choices left over
+ * from a type somebody tried and changed their mind about.
+ *
+ * The pairs themselves are still not a `FieldSpec` kind, and should not become
+ * one — a chip holds one string and a choice is two, `{ value, label }`. The
+ * description says the field is text and the surface supplies the pair editor
+ * through `controls`, the same escape hatch a person picker uses; what the
+ * engine carries is one string, which is what lets the generated schema, the
+ * defaults and `visibleWhen` go on working without knowing the control exists.
  *
  * `optionCount` is resolved by the surface from the options the record already
- * carries, the same way a pipeline name is: it is a fact about the record shown
- * as a column, and nothing writes it.
+ * carries, the same way a pipeline name is: a fact about the record shown as a
+ * column, which nothing writes.
  */
 export const CUSTOM_FIELD_LAYOUT: RecordLayout = {
   key: "crm:settings:custom-field",
@@ -37,7 +39,8 @@ export const CUSTOM_FIELD_LAYOUT: RecordLayout = {
       name: "fieldType",
       label: "Type",
       kind: "badge",
-      readOnly: true,
+      required: true,
+      createOnly: true,
       options: [
         { value: "text", label: "Text", tone: "neutral" },
         { value: "number", label: "Number", tone: "info" },
@@ -47,6 +50,13 @@ export const CUSTOM_FIELD_LAYOUT: RecordLayout = {
       ],
     },
     { name: "optionCount", label: "Choices", kind: "number", readOnly: true },
+    {
+      name: "options",
+      label: "Choices to pick from",
+      kind: "longText",
+      hint: "What a person may pick, and the value each choice stores.",
+      visibleWhen: { field: "fieldType", equals: ["select"] },
+    },
     {
       name: "isRequired",
       label: "Required",
@@ -75,5 +85,11 @@ export const CUSTOM_FIELD_LAYOUT: RecordLayout = {
       { title: "Behaviour", fields: ["isRequired", "isActive", "sortOrder"] },
     ],
   },
-  form: { sections: [] },
+  form: {
+    sections: [
+      { title: "Field", fields: ["label", "fieldType"] },
+      { title: "Behaviour", fields: ["isRequired"] },
+      { title: "Choices", fields: ["options"] },
+    ],
+  },
 };

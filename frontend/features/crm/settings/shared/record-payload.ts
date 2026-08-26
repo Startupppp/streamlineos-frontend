@@ -54,6 +54,22 @@ export function numberOrOmit(values: RecordFormValues, name: string): number | u
   return Number.isFinite(amount) ? amount : undefined;
 }
 
+/**
+ * A number, `null` when the field was rendered and left blank.
+ *
+ * The numeric twin of `textOrNull`, for a nullable limit: a maximum discount
+ * with nothing in it is "no ceiling", which the API stores as `null` and is a
+ * different fact from "leave whatever is there alone".
+ */
+export function numberOrNull(values: RecordFormValues, name: string): number | null | undefined {
+  const raw = values[name];
+  if (raw === undefined) return undefined;
+  const text = raw.trim();
+  if (text === "") return null;
+  const amount = Number(text);
+  return Number.isFinite(amount) ? amount : null;
+}
+
 /** A number with a fallback, for a field the API requires. */
 export function numberOr(values: RecordFormValues, name: string, fallback: number): number {
   return numberOrOmit(values, name) ?? fallback;

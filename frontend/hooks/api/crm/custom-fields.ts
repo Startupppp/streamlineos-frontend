@@ -1,9 +1,9 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useGatedQuery } from "@/hooks/api/gated-query";
+import { useCan } from "@/hooks/api/access";
 
 export interface CustomFieldDefinition {
   id: number;
@@ -30,7 +30,7 @@ export interface CreateCustomFieldInput {
   sortOrder?: number;
 }
 
-interface UpdateCustomFieldInput {
+export interface UpdateCustomFieldInput {
   id: number;
   entityType: "lead" | "deal" | "contact";
   label?: string;
@@ -41,13 +41,15 @@ interface UpdateCustomFieldInput {
 }
 
 export function useCustomFields(entityType: "lead" | "deal" | "contact") {
-  return useGatedQuery("settings:custom-fields:manage", {
+  const canManage = useCan("settings:custom-fields:manage");
+  return useQuery({
     queryKey: queryKeys.settings.customFields(entityType),
     queryFn: () =>
       apiClient.get<{ fields: CustomFieldDefinition[] }>(
         `/settings/custom-fields?entityType=${entityType}`
       ),
     staleTime: 2 * 60_000,
+    enabled: canManage,
   });
 }
 
