@@ -29,7 +29,8 @@ export type FieldKind =
   | "badge"
   | "boolean"
   | "longText"
-  | "reference";
+  | "reference"
+  | "lines";
 
 /** Maps onto the status tokens from the design layer, never a raw colour. */
 export type FieldTone = "success" | "warning" | "danger" | "info" | "neutral";
@@ -196,6 +197,53 @@ export interface FieldSpec {
    * that did not save.
    */
   readonly createOnly?: boolean;
+  /**
+   * The shape of one row, when the field holds a repeating group.
+   *
+   * Four migrations stopped at the same wall independently — an assignment
+   * rule's conditions, a subject type's declared fields, a quote's line items,
+   * and the line-item grid rendered beside them. Each is a list of small
+   * records that belong to the record being edited and have no page of their
+   * own, and none of them could be described: `FieldSpec` could say a field
+   * holds text or a number or a pointer, and had no way to say it holds several
+   * of something. So each of the four was written by hand, with its own add
+   * button, its own remove button and its own idea of what an empty row is.
+   *
+   * That is the vocabulary gap this closes, once. A `lines` field is a field
+   * whose value is rows, and the rows are described with the same `FieldSpec`
+   * every other part of a layout uses — so a column in a line is validated,
+   * formatted, toned and aligned by exactly the code that handles a column
+   * anywhere else, rather than by a second engine for small tables.
+   *
+   * Deliberately one level deep. `validateLayout` reports a line field that is
+   * itself `lines`, because a description that can nest arbitrarily is a tree
+   * with no bound, and a form that renders one is a program rather than a
+   * screen. The four surfaces that needed this needed exactly one level.
+   *
+   * Line fields are also not conditional and not mode-scoped: `visibleWhen`,
+   * `editOnly` and `createOnly` are reported here rather than silently ignored.
+   * A row of a repeating group is the same shape on every row, which is what
+   * lets one header stand over all of them.
+   */
+  readonly lineFields?: readonly FieldSpec[];
+  /**
+   * What one row is called, for the add control and the empty state.
+   *
+   * Falls back to the field's own label, which reads acceptably ("Add
+   * Conditions") and is why this is optional rather than required — a
+   * description that forgot it still renders a working form.
+   */
+  readonly lineLabel?: string;
+  /**
+   * How many rows the record cannot go below.
+   *
+   * A rule with no conditions matches everything and a quote with no lines has
+   * no price; both are records the API rejects, and finding that out on submit
+   * is a form that wasted the person's time. One is the common case, so the
+   * engine keeps the last row rather than offering a remove control that
+   * produces an invalid record.
+   */
+  readonly minLines?: number;
   /**
    * The field is only part of the record while a sibling holds one of these
    * values.
@@ -388,6 +436,62 @@ export function validateLayout(layout: RecordLayout): LayoutProblem[] {
           message: "no values, so the field would never apply",
         });
     }
+
+    if (field.kind === "lines" && (field.lineFields ?? []).length === 0)
+      problems.push({
+        where: `fields (${field.name})`,
+        message: "a lines field with no lineFields has no row to render",
+      });
+
+    if (field.lineFields !== undefined && field.kind !== "lines")
+      problems.push({
+        where: `fields (${field.name})`,
+        message: `lineFields on a ${field.kind} field, which holds one value rather than rows`,
+      });
+
+    if (field.minLines !== undefined && field.kind !== "lines")
+      problems.push({
+        where: `fields (${field.name})`,
+        message: `minLines on a ${field.kind} field, which has no rows to count`,
+      });
+
+    if (field.minLines !== undefined && (!Number.isInteger(field.minLines) || field.minLines < 0))
+      problems.push({
+        where: `fields (${field.name}).minLines`,
+        message: `minLines ${field.minLines} is not a row count`,
+      });
+
+    for (const line of field.lineFields ?? []) {
+      const where = `fields (${field.name}).lineFields (${line.name})`;
+
+      if (line.kind === "lines")
+        problems.push({ where, message: "a line cannot itself hold rows" });
+
+      /*
+        A row is the same shape on every row. A conditional, create-only or
+        edit-only column would make one row's header wrong for the next, and
+        the engine renders one header over the whole group.
+      */
+      if (line.visibleWhen !== undefined)
+        problems.push({ where, message: "visibleWhen on a line, which every row shares" });
+      if (line.editOnly || line.createOnly)
+        problems.push({ where, message: "editOnly/createOnly on a line, which every row shares" });
+
+      if (line.sign !== undefined && !isNumericField(line))
+        problems.push({
+          where,
+          message: `sign "${line.sign}" on a ${line.kind} line, which has no sign to read`,
+        });
+    }
+
+    const lineNames = (field.lineFields ?? []).map((line) => line.name);
+    for (const name of new Set(
+      lineNames.filter((name, index) => lineNames.indexOf(name) !== index),
+    ))
+      problems.push({
+        where: `fields (${field.name}).lineFields`,
+        message: `duplicate line "${name}"`,
+      });
 
     if (field.referenceToField !== undefined) {
       if (field.kind !== "reference")
