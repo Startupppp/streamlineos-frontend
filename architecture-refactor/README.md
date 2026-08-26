@@ -25,12 +25,12 @@ What the passes found was not systemic decay. It was concentrated correctness an
 | Candidate | Tickets | Done | Open |
 |---|---|---|---|
 | [c12 — Route text search through the id probe that already exists](c12-text-search-id-probe/README.md) | 3 | 2 | **1** |
-| [c13 — One contract for every list](c13-one-list-contract/README.md) | 6 | 0 | **6** |
+| [c13 — One contract for every list](c13-one-list-contract/README.md) | 6 | 1 | **5** |
 | [c15 — Outbound I/O leaves the request transaction](c15-outbound-io-leaves-the-request/README.md) | 6 | 3 | **3** |
 | [c17 — Every billing write is provable](c17-billing-writes-are-provable/README.md) | 7 | 1 | **6** |
-| [c19 — A cache key cannot be unsafe, and a write invalidates what it changed](c19-cache-keys-cannot-be-unsafe/README.md) | 5 | 2 | **3** |
+| [c19 — A cache key cannot be unsafe, and a write invalidates what it changed](c19-cache-keys-cannot-be-unsafe/README.md) | 5 | 5 | **0** |
 | [c20 — A failure in production is visible](c20-failures-are-visible/README.md) | 5 | 2 | **3** |
-| | **32** | **10** | **22** |
+| | **32** | **14** | **18** |
 
 **c20-01 is done, and it was the right thing to do first.** The reporter port had no adapter, so `reportError` discarded everything — and two of its five call sites (`workflow-runner`, `import-pump`) report *without* also logging, so every workflow-run and import failure was reaching nobody. That is now a structured log record, no vendor.
 
@@ -64,7 +64,7 @@ What the passes found was not systemic decay. It was concentrated correctness an
 | [c10 — Make module-level standing answerable](c10-module-role-standing/README.md) | 5 | 5 | **0** |
 | | **5** | **5** | **0** |
 
-**92 tickets: 43 complete, 49 with open boxes.** Counted from the ticket files themselves — a ticket is complete when it has no `- [ ]` left.
+**92 tickets: 56 complete, 36 with open boxes.** Counted from the ticket files themselves — a ticket is complete when it has no `- [ ]` left. Recounted 2026-08-26 while five lanes were running, so treat it as a snapshot: re-run the count rather than trusting this line.
 
 **Tickets are no longer deleted on completion.** The earlier convention retired a finished ticket by deleting its file and leaving its index row as the record. Those files have since been restored — but restored from *pre-completion* content, so their ticks were lost while their index rows still said `done`. 21 rows now read **`needs re-verification`**: the index claimed done, the file has open boxes, and only checking source can say which is right. Two things got mixed together there — genuinely finished work whose ticks were lost (`c20-01`'s reporter adapter is committed and real), and rows my de-link pass marked `done` simply because the file was momentarily absent, when the ticket was actually *blocked* (`c18-02/03/04`). Re-verify before rebuilding: this program's repeated finding is that "open" tickets are often already done.
 
@@ -85,6 +85,9 @@ Every unticked box across all open tickets was checked against source. **Some de
 | c20-05 | `setSpanExporter(new LogSpanExporter())` is still unwired | Present at `main.ts:69`. |
 | c15-06 | Enumerate every case the local SSRF guard blocks, then run that table against the shared one | The local `blockedIpReason` helper was already gone. Nothing to enumerate. |
 | c24-01 | 13 pages are missing the page wrapper | Zero. An independent walk of all 553 authenticated pages found no violation — the same artefact as the 487 icon buttons that were 2. |
+| c13-06 | "The 16 duplicated local copies of the pagination schema" | **204 copies across 135 files.** The estimate was low by an order of magnitude, which is the opposite of this program's usual direction. 16 of those files happen to sit in one lane's territory, which is probably where the number came from. |
+| c13-03 | 241 count queries run as a separate sequential await | **1 confirmed** on a normal list path (`payroll/setup/components.service.ts:51-54`). Three more look sequential but are empty-page fallbacks behind a `count(*) OVER ()`. 83 files remain unclassified and need a per-method audit — a per-file one is systematically wrong. |
+| c13-03 | Zero — then "exactly three" — TypeScript files use a `count(*) OVER ()` window | **20 files.** Three were added for c13; the other seventeen already did it and nobody had counted. |
 
 **A ticket's premise is evidence, not instruction.** Re-verify it before building against it; it may describe a state the codebase has already left. Where a criterion is genuinely unmeetable right now it is marked `**BLOCKED:**` with the specific dependency rather than left ambiguous — most often the unapplied migrations, which gate 4 of c16, all of c21-04/05 and c25-04.
 
@@ -98,7 +101,11 @@ Every unticked box across all open tickets was checked against source. **Some de
 | ~~c17-02~~ | ✅ **done.** A customer could pay and not be credited with nothing knowing to retry; the grant is now ledgered and a failure returns 503. |
 | [c25-01](c25-authorization-cannot-be-omitted/issues/01-every-route-declares-exposure.md) | Guard built and wired, **enforcement deliberately off**: 93 controllers sit on a class-level `JwtAuthGuard` and some handlers are universal by design, so deny-by-absence would 403 platform core. Boot report first, flip after. |
 | [c25-04](c25-authorization-cannot-be-omitted/issues/04-rls-coverage-is-a-release-invariant.md) | Verifier now exits non-zero and runs in CI. The gap count is still unknown — it needs a live database. |
-| [c13-05](c13-one-list-contract/issues/05-scrolled-lists-page-by-cursor.md) | Chat cursor verified fixed; multi-account inbox now advances only over rows it returned. Remaining: the equivalence test. |
+| [c13-05](c13-one-list-contract/issues/05-scrolled-lists-page-by-cursor.md) | 8 of 9 criteria met. The property tests exist and found a **second** inbox defect: an exhausted account was marked done with `undefined`, which `JSON.stringify` drops, so the next page restarted that mailbox from row zero and replayed every message. Fixed with a distinct `null`. The inbox cursor is now HMAC-signed and bound to the reader. Remaining: notifications and the ticket list, both outside that lane's territory. |
+| ~~c19-01~~ | ✅ **done.** Read-after-write now runs through a real `CacheService` over an in-memory Redis, with two negative controls — a cache that never caches would otherwise pass every such test vacuously. |
+| ~~c19-04~~ | ✅ **done.** All 36 event-invalidated namespaces carry a read-after-write test driven from `CACHE_INVALIDATION_MATRIX` itself, so a new entry is covered the moment it is added. |
+| ~~c13-02~~ | ✅ **done.** The board projection drops `description` and `board-projection.spec.ts` fails if it is re-added. One frontend type still says `string | null`; recorded in `lane-requests/lane-3.md`. |
+| [c16-04](c16-schema-says-what-it-means/issues/04-invoice-line-items-are-queryable.md) | Worse than recorded: `0478_invoice_line_items_column_drop.sql` is **absent from `_journal.json`**, so the column drop would never run and `db:migrate` would still report success. `0477` is in the journal. Exact entry to append is in `lane-requests/lane-3.md`. |
 | ~~c26-06~~ | ✅ **done.** The shadow table had **zero writers**, so platform administration was reading an always-empty table and every customer showed as unsubscribed. Reads hit `subscriptions`, the customer list is keyset-paged at 100, and 18 contract tests pin paid, trial, cancelled, missing and concurrent-webhook states. |
 | ~~c16-03~~ | ✅ **done.** `rrule` 2.8.1 now expands series through the one seam free/busy and conflicts already share. Expansion runs in the event's IANA zone, so a weekly 09:00 meeting stays 09:00 across a DST boundary, and `calendar_event_exceptions` makes one occurrence editable without touching its siblings. |
 | ~~c27-02~~ | ✅ **done** in a concurrent Batch B session — `kb-ingestion-consumer.ts`. |

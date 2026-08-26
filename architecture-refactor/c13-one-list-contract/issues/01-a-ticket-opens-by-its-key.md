@@ -20,8 +20,17 @@
 - [x] Add the by-key read authorized identically to the existing ticket read
 - [x] Remove the board-array resolution from the detail page
 - [x] Controller e2e for the allow/deny matrix — `backend/src/modules/build/core/projects-tickets-key.e2e-spec.ts`: owner→200, member without permission→403, unknown key→404, unauthenticated→401; runs under `pnpm test:e2e` only
-- [ ] Verify a deep link to an old ticket in a booted app — **BLOCKED:** requires a booted app against real data
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+- [ ] Verify a deep link to an old ticket in a booted app — **BLOCKED:** requires a booted app against real data. This is the last box, and it is the kind that has caught real defects here before ("typecheck + build + 165 mocked tests green while nothing worked"), so it is not waved through.
+- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md) — held open by the box above, per the rule that Status only moves at zero open boxes.
+
+---
+
+**Lane 3 note (2026-08-26):** the audit note below is out of date on its main point. It says the regression test and the controller e2e matrix do not exist in any spec under `build/core/`. Both exist and both are on disk now:
+
+- `backend/src/modules/build/core/ticket-by-key.spec.ts` — 3 tests, all pass (verified this run). Asserts `findFirst` is called exactly once and `findMany` never for ticket numbers 101 and 250, and that an unknown key throws.
+- `backend/src/modules/build/core/projects-tickets-key.e2e-spec.ts` — the allow/deny matrix. Runs only under `pnpm test:e2e`; **not run in this lane** and reported as not run, never as passing.
+
+Every acceptance criterion is satisfied. The only thing keeping this ticket open is the booted-app check.
 
 ---
 

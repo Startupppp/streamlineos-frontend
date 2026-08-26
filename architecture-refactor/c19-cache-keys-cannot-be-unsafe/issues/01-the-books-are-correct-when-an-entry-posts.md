@@ -20,7 +20,15 @@
 
 - [x] Invalidate the statement namespace from the posting path — `backend/src/modules/accounting/posting/finance-posting.service.ts:406-411`
 - [x] Use the post-commit mechanism that opens its own tenant context — `registerAfterCommit(invalidate)` at `:411`; synchronous fallback `await invalidate()` when hook is unavailable.
-- [ ] Assert read-after-write, never that an invalidation was called — **Discrepancy noted:** existing unit tests at `backend/src/modules/accounting/posting/finance-posting.service.spec.ts:313-327` assert `mockCache.invalidateNamespace.mock.calls` (i.e., that the invalidation was called), not a read-after-write. The implementation is correct, but the test approach contradicts this Todo's guidance. A true read-after-write assertion would require an integration or e2e test against a real cache, which does not yet exist. Leaving open for a test improvement; does not block the "done" status given all acceptance criteria are ticked.
+- [x] Assert read-after-write, never that an invalidation was called — `backend/src/modules/accounting/posting/finance-posting-read-after-write.spec.ts`, 7 tests, 7 pass. It posts a journal entry through the real `FinancePostingService` and then reads the statement back through the real `AccountingStatementsService`, over a real `CacheService` whose Redis is an in-memory double, so `cachedVersioned` and `invalidateNamespace` both actually run. No assertion in the file inspects a mock's call list.
+
+  The earlier note said this needed an integration test against a real cache. It did not: `CacheService` takes its Redis through `@Inject(REDIS)` and a ~25-line in-memory double satisfies every method it uses (`get`, `set` with `nx`/`ex`, `incr`, `eval`, `del`).
+
+  **Two negative controls, because a cache that never caches passes every read-after-write vacuously.** `serves a stale statement when nothing invalidates (the cache is real)` mutates the ledger with no invalidation and asserts the *stale* value is still served. `stays stale when the namespace bump is lost — what the invalidation buys` runs the whole post with the double's `incr` neutered and asserts the balance sheet does not move. Independently confirmed by temporarily removing `registerAfterCommit(invalidate)` from `finance-posting.service.ts`, which turned 4 of the 6 tests red; reverted.
+
+  Coverage: balance sheet, trial balance and profit-and-loss each get their own read-after-write. Cash flow is not covered — `computeCashFlow` issues several differently-shaped queries and one aggregate double cannot answer them all; it reads the same `ACCT_STATEMENTS_NS` namespace through the same `cachedVersioned` call (`accounting-statements.service.ts:260`), so the bump that frees the other three frees it too.
+
+  Ordering is covered too: `does not invalidate before the transaction returns` reads the balance sheet from *inside* the transaction callback and asserts it is still the pre-post value, and `a rolled-back post leaves the statement showing no entry` asserts a thrown transaction moves nothing.
 - [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md) — README row shows `done`. — `architecture-refactor/c19-cache-keys-cannot-be-unsafe/README.md:11`
 
 ---

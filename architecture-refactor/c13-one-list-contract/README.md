@@ -2,18 +2,25 @@
 
 PRD: [`prd.md`](prd.md) · Program: [`../README.md`](../README.md)
 
-**Wave 0** · 6 tickets, 1 done.
+**Wave 0** · 6 tickets, 2 done.
 
-The shared keyset helper is sound, but adoption and several call-site algorithms are not. A direct ticket-by-key route and client query have now landed, though the ticket's authorization/beyond-100/not-found regression evidence remains open. Chat currently skips its popped sentinel row, and multi-account inbox advances provider cursors past fetched-but-unreturned messages. The remaining list work also includes broad offsets, sequential totals and oversized board projections.
+The shared helper is sound and now has one implementation of the sentinel step, shared by the opaque
+and numeric cursor forms. Chat's three surfaces and the multi-account inbox are fixed and pinned by
+property tests; the inbox cursor is HMAC-signed. What is left is adoption outside this lane's
+territory and two things a database would answer.
+
+Numbers that turned out to be wrong, verified 2026-08-26: **204** local pagination-schema copies
+across 135 files, not 16 · **20** files already use `count(*) OVER ()`, not three · **1** confirmed
+sequential list count on a normal path, not 241 · `.offset()` at 143 files is correct.
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 01 | [A ticket opens by its key](issues/01-a-ticket-opens-by-its-key.md) | — | in-progress |
-| 02 | [The board does not ship descriptions](issues/02-the-board-does-not-ship-descriptions.md) | 01 | in-progress |
-| 03 | [A list total costs no extra round trip](issues/03-a-list-total-costs-no-extra-round-trip.md) | — | in-progress |
-| 04 | [The receivables total is computed once](issues/04-the-receivables-total-is-computed-once.md) | 03 | in-progress |
-| 05 | [Scrolled lists page by cursor](issues/05-scrolled-lists-page-by-cursor.md) | — | in-progress |
-| 06 | [Every list speaks one filter and sort vocabulary](issues/06-every-list-speaks-one-filter-vocabulary.md) | 05 | in-progress |
+| 01 | [A ticket opens by its key](issues/01-a-ticket-opens-by-its-key.md) | — | in-progress — every criterion met; only the booted-app deep-link check remains |
+| 02 | [The board does not ship descriptions](issues/02-the-board-does-not-ship-descriptions.md) | 01 | done |
+| 03 | [A list total costs no extra round trip](issues/03-a-list-total-costs-no-extra-round-trip.md) | — | in-progress — inventory verified and recorded; conversions are outside this lane |
+| 04 | [The receivables total is computed once](issues/04-the-receivables-total-is-computed-once.md) | 03 | in-progress — premise was already false; read-budget entry added but its ceiling is unmeasured |
+| 05 | [Scrolled lists page by cursor](issues/05-scrolled-lists-page-by-cursor.md) | — | in-progress — 8 of 9 criteria met; notifications and the ticket list are outside this lane |
+| 06 | [Every list speaks one filter and sort vocabulary](issues/06-every-list-speaks-one-filter-vocabulary.md) | 05 | in-progress — 16 of 135 files migrated; index composition needs a database |
 
 ## Working these
 

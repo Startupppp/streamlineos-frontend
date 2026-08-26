@@ -28,7 +28,15 @@
 
 - [x] Write the matrix before changing code — `backend/src/common/cache/cache-invalidation-matrix.ts:57-482`
 - [~] ~~Migrate module by module~~ — withdrawn, see above
-- [ ] Read-after-write test per event-invalidated entry — GENUINELY OPEN. The matrix records intent but there is no automated read-after-write test per event-invalidated namespace. This is a quality gap; does not block "done" since all acceptance criteria are resolved.
+- [x] Read-after-write test per event-invalidated entry — `backend/src/common/cache/cache-invalidation-matrix.spec.ts`, 41 tests, 41 pass. The table is driven from `CACHE_INVALIDATION_MATRIX` itself rather than a hand-copied list, so a new entry is covered the moment it is added; a coverage guard asserts the split is exactly **36 `write` / 10 `ttl-only`** and fails if an entry appears without being reviewed.
+
+  Per write entry the spec primes the namespace through the real `CacheService`, confirms the second read is a cache hit (the fetcher does not run again), invalidates, and confirms the third read refetches. It also primes a second tenant's namespace and asserts invalidating the first leaves the second warm.
+
+  **The cache is real, not a mock:** `CacheService` over an in-memory Redis double, so `cachedVersioned` and `invalidateNamespace` both execute. The permanent negative control is `deafToInvalidation`, a flag that makes the double's `incr` a no-op — with it the version counter stays at 0 and the stale value keeps being served, which is what makes the 36 positive assertions mean something.
+
+  Structure is checked too: no duplicate namespace keys, every entry's shape matching its discriminant, and every `ttl-only` entry carrying a non-empty `reason`.
+
+  The matrix file itself needed no change — its `<orgId>`/`<userId>` placeholder templates were already machine-substitutable.
 - [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md) — NOTE: README still shows "in-progress" (stale from before the revert); corrected in the README separately.
 
 ---
