@@ -1,6 +1,6 @@
 # 12 — The marketing site
 
-**Status:** backend done — the site already existed; two gaps closed.
+**Status:** done — the page quotes the live price in the visitor's currency and says where the data rests, both verified rendering against the running service.
 **Track:** D — funnel
 **Blocked by:** — (can start immediately)
 
@@ -42,3 +42,52 @@ else, and a review that has to email us to find out is a review that stalls.
 
 **Still open:** wiring the pricing page to the endpoint, and a residency section
 in the UI. Both are frontend work against a contract that now exists.
+
+---
+
+## Notes
+
+The site already existed — landing, about, pricing, contact, waitlist, legal —
+so the gaps were narrower than the ticket implied and both were about honesty
+rather than absence.
+
+**Prices were a hand-maintained copy.** `lib/pricing.ts` mirrored the plan
+catalogue and a test kept it honest, which catches drift in CI: the wrong place,
+because by then somebody has had to notice. The page now reads
+`GET /public/pricing`, which needs no session. The static table stays as the
+fallback — a marketing page that renders nothing because an API is slow costs
+more than a fortnight-old price.
+
+**Everything was in rupees.** A prospect in Berlin was quoted INR, or a bare
+number they discovered at checkout. `?currency=` now resolves through the same
+`plan-pricing.ts` the charge path uses, and an unsupported currency is named
+rather than silently substituted.
+
+**Residency was never stated.** The first question from any European buyer, and
+the site did not answer it. Not answering does not avoid the question; it moves
+it to a sales call.
+
+### Two bugs only the running service found
+
+Both would have passed any fixture, because the fixture was written from the
+type rather than from a response:
+
+- **`annualMinor` is the whole year, not a month of it.** Read as the per-month
+  figure the table quotes, it showed twelve times the price — €182.40 beside
+  €19.00, entirely plausible-looking. It is `annualMinor / 12`.
+- **Residency options carry `examples`, not a `label`.** The card rendered
+  `undefined` as its heading.
+
+There is also a layering fix worth keeping: the first version read
+`NEXT_PUBLIC_API_URL` directly. The repo already has `lib/backend-url.ts`, which
+prefers `API_INTERNAL_URL` — and in any deployment where the frontend and API
+are separate services, the public URL is not reachable from inside the network.
+Reading the public one works on a laptop and silently serves stale prices in
+production.
+
+### Left alone
+
+The FAQ and savings calculator still quote INR competitor comparisons. Those are
+India-market claims rather than our prices, and rewriting market comparisons per
+locale is a copy exercise, not this ticket. The landing page was not touched;
+`CLAUDE.md` names it immutable.
