@@ -6,11 +6,22 @@ import { FileUp, Undo2, Upload } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { useCommitImport, usePreviewImport, useRevertImport } from "@/hooks/api/crm/import";
+import { useSubjectTypes } from "@/hooks/api/party/subjects";
+import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
-import type { ImportPreview, ImportProgress } from "@/types/crm/import";
+import type { ImportPreview, ImportProgress, PlannedEntity } from "@/types/crm/import";
+import { PLANNED_ENTITIES, needsSubjectType, plannedEntity } from "./planned-entities";
 import { ColumnMappingReview } from "./column-mapping-review";
 import {
   IMPORT_FILE_ACCEPT,
@@ -24,14 +35,22 @@ import {
 const MAX_ROWS = 5_000;
 
 /**
- * Bringing companies and people in, planned on the server.
+ * Bringing a file in, planned on the server.
  *
  * The one import on this page with a plan behind it: the server decides what
  * every row would do before anything is written, the commit runs as a durable
- * job, and the whole thing can be taken back afterwards. Leads, contacts and
- * deals have none of that and go through `bulk-import-section.tsx`.
+ * job, and the whole thing can be taken back afterwards.
+ *
+ * The entity is chosen here rather than guessed from the file. A deals export
+ * and a contacts export share most of their headers — `Name`, `Owner`, `Stage`
+ * against `Name`, `Owner`, `Status` — so inferring the target from the columns
+ * gets it wrong on exactly the files people actually have, and gets it wrong
+ * silently: the preview would look reasonable and land a thousand opportunities
+ * as companies. Asking is one click and cannot be misread.
  */
-export function PartyImportSection() {
+export function PlannedImportSection() {
+  const [entity, setEntity] = useState<PlannedEntity>("party");
+  const [subjectTypeId, setSubjectTypeId] = useState<string>("");
   const [parsed, setParsed] = useState<ImportFileContents | null>(null);
   const [overrides, setOverrides] = useState<Record<string, string>>({});
   const [preview, setPreview] = useState<ImportPreview | null>(null);
@@ -56,6 +75,25 @@ export function PartyImportSection() {
    * indistinguishable from one that has hung.
    */
   const [progress, setProgress] = useState<{ done: number; remaining: number } | null>(null);
+
+  /*
+    An entity nobody may write is not offered. The server checks the same key on
+    top of `crm:imports:manage`, so a control left visible here would fail there.
+  */
+  const canParty = useCan("party:parties:create");
+  const canSubject = useCan("party:subjects:manage");
+  const canPipeline = useCan("crm:deals:create");
+  const canActivity = useCan("crm:activities:manage");
+  const allowed: Record<PlannedEntity, boolean> = {
+    party: canParty,
+    subject: canSubject,
+    pipeline: canPipeline,
+    activity: canActivity,
+  };
+  const offered = PLANNED_ENTITIES.filter((option) => allowed[option.id]);
+
+  const subjectTypes = useSubjectTypes({ enabled: needsSubjectType(entity) });
+  const subjectTypeList = subjectTypes.data?.data ?? [];
 
   const previewImport = usePreviewImport();
   const commitImport = useCommitImport();
@@ -124,6 +162,29 @@ export function PartyImportSection() {
     [openFile],
   );
 
+  /**
+   * Changing the target throws the plan away.
+   *
+   * A plan is built for one entity: its column mapping, its duplicate matching
+   * and its per-row verdicts are all that entity's. Left on screen after the
+   * target changed, the commit button would still be live and would send a
+   * `crmImportId` the server planned as something else.
+   */
+  const handleEntityChange = useCallback((value: string) => {
+    setEntity(value as PlannedEntity);
+    setPreview(null);
+    setPreviewOverrides({});
+    setOverrides({});
+    setCommitted(null);
+  }, []);
+
+  const handleSubjectTypeChange = useCallback((value: string) => {
+    setSubjectTypeId(value);
+    setPreview(null);
+    setPreviewOverrides({});
+    setCommitted(null);
+  }, []);
+
   const handleOverride = useCallback(
     (header: string, field: string) =>
       setOverrides((current) => ({ ...current, [header]: field })),
@@ -138,6 +199,8 @@ export function PartyImportSection() {
     previewImport.mutate(
       {
         filename: parsed.filename,
+        entity,
+        subjectTypeId: needsSubjectType(entity) ? subjectTypeId : undefined,
         headers: parsed.headers,
         rows: parsed.rows,
         overrides: Object.keys(sent).length > 0 ? sent : undefined,
@@ -150,7 +213,7 @@ export function PartyImportSection() {
         onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
-  }, [parsed, overrides, previewImport]);
+  }, [parsed, overrides, previewImport, entity, subjectTypeId]);
 
   const handleCommit = useCallback(() => {
     if (!preview || choicesChanged) return;
@@ -212,6 +275,55 @@ export function PartyImportSection() {
         </CardHeader>
 
         <CardContent className="flex flex-col gap-gap-toolbar">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+              <Label htmlFor="import-entity" className="text-label font-medium">
+                What is in this file?
+              </Label>
+              <Select value={entity} onValueChange={handleEntityChange}>
+                <SelectTrigger id="import-entity" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
+                  {offered.map((option) => (
+                    <SelectItem key={option.id} value={option.id}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {needsSubjectType(entity) ? (
+              <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                <Label htmlFor="import-subject-type" className="text-label font-medium">
+                  Which kind of subject?
+                </Label>
+                <Select value={subjectTypeId} onValueChange={handleSubjectTypeChange}>
+                  <SelectTrigger id="import-subject-type" className="w-full">
+                    <SelectValue placeholder="Choose a type" />
+                  </SelectTrigger>
+                  <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
+                    {subjectTypeList.map((type) => (
+                      <SelectItem key={type.subjectTypeId} value={type.subjectTypeId}>
+                        {type.plural}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : null}
+          </div>
+
+          <p className="text-micro text-muted-foreground">{plannedEntity(entity).hint}</p>
+
+          {needsSubjectType(entity) && subjectTypeList.length === 0 && !subjectTypes.isLoading ? (
+            <p role="alert" className={cn("text-label", statusToneClasses("warning").ink)}>
+              Your organisation has not declared a subject type yet, so there is nothing to import
+              these rows as.
+            </p>
+          ) : null}
+
           <div
             onDragOver={handleDragOver}
             onDrop={handleDrop}
@@ -253,6 +365,7 @@ export function PartyImportSection() {
               type="button"
               className="self-start"
               isPending={previewImport.isPending}
+              disabled={needsSubjectType(entity) && !subjectTypeId}
               onClick={handlePreview}
             >
               <Upload className="mr-1.5 size-4" aria-hidden />

@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BULK_ENTITIES } from "./bulk-import-entities";
 import { BulkImportSection } from "./bulk-import-section";
 import { ExportCard } from "./export-card";
-import { PartyImportSection } from "./party-import-section";
+import { PlannedImportSection } from "./planned-import-section";
 import { useImportAccess } from "./use-import-access";
 
 /** The party importer's tab. The bulk entities name their own. */
@@ -85,7 +85,7 @@ export function CrmImportPage() {
             // Unmounting would throw away exactly the work principle 4 says a
             // person should not be able to lose by accident.
             <TabsContent key={PARTIES} value={PARTIES} forceMount>
-              <PartyImportSection />
+              <PlannedImportSection />
             </TabsContent>
           ) : null}
 
