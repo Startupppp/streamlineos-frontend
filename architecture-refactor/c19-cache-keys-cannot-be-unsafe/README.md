@@ -12,7 +12,7 @@ The cache primitive is genuinely deep — single-flight, a distributed fill leas
 |---|---|---|---|
 | 01 | [The books are correct the moment an entry posts](issues/01-the-books-are-correct-when-an-entry-posts.md) | — | needs re-verification |
 | 02 | [A cache key cannot omit its tenant](issues/02-a-cache-key-cannot-omit-its-tenant.md) | — | **done** |
-| 03 | [Filtered views refresh](issues/03-filtered-views-refresh.md) | 02 | needs re-verification |
+| 03 | [Filtered views refresh](issues/03-filtered-views-refresh.md) | 02 | **done** — re-verified 2026-08-26; its last open box (a filtered read-after-write test) is now `hr/time/__tests__/leave-analytics-filtered-refresh.spec.ts`, 4 passing |
 | 04 | [Every namespace declares its invalidation](issues/04-every-namespace-declares-its-invalidation.md) | 02 | needs re-verification |
 | 05 | [Redis has a budget and an eviction policy](issues/05-redis-has-a-budget-and-an-eviction-policy.md) | — | **done** — tombstones are now eviction-proof (no TTL) with an explicit prune sweep, rather than depending on a read-side fallback |
 
