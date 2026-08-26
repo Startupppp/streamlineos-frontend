@@ -6,8 +6,18 @@ import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 // Moved 2026-08-24 by the CRM autonomy review route ("What the system did",
 // /crm/autonomy, gated on crm:autonomy:view). The digest exists so a route or
 // its permission cannot change without somebody saying why.
+/**
+ * Updated 2026-08-26, for two changes that both belong in the graph:
+ *
+ *  - **Record Layouts** joined CRM settings (ticket 20's per-tenant layouts).
+ *  - Its `requiredPermission` was `settings:manage` -- a platform-wide key on a
+ *    CRM page, where every sibling uses a `crm:` one -- while the page itself
+ *    gates on `crm:settings:view`. The nav therefore hid the entry from people
+ *    the page would have admitted, and offered it to people it would refuse.
+ *    Aligned to the page.
+ */
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "b155de28994c03a8785e90318238ac82c74267ed4a5de0755ffffe9eb293db96";
+  "0810f4047b9d1fde69b7d4f5fe56c58545c0b1e0103e99d9f884872738254902";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {

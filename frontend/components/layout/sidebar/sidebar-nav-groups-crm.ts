@@ -231,7 +231,12 @@ export const CRM_NAV_GROUPS: NavGroup[] = [
             label: "Record Layouts",
             icon: Rows3,
             href: "/crm/settings/layouts",
-            requiredPermission: "settings:manage",
+            // Matches the page's own `requirePermission("crm:settings:view")`.
+            // It read `settings:manage` -- a platform-wide key on a CRM page,
+            // which every sibling here avoids -- so the nav hid the entry from
+            // people the page would have let in, and showed it to people it
+            // would not.
+            requiredPermission: "crm:settings:view",
           },
           {
             label: "Automations",
