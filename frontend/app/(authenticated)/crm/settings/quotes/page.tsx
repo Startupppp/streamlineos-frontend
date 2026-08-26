@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,6 +29,7 @@ import {
   useDeleteQuoteTemplate,
 } from "@/hooks/api/crm/pricebooks";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
 import {
   QuoteSettingsForm,
   type QuoteSettingsFormValues,
@@ -62,6 +65,7 @@ function SettingsSkeleton() {
 }
 
 export default function QuoteSettingsPage() {
+  const canManageTemplates = useCan("crm:pricebooks:manage");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<QuoteTemplate | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
@@ -69,10 +73,17 @@ export default function QuoteSettingsPage() {
   const { data: settings, isLoading: settingsLoading } = useQuoteSettings();
   const updateSettings = useUpdateQuoteSettings();
 
-  const { data: templates, isLoading: templatesLoading } = useQuoteTemplates();
+  const {
+    data: templates,
+    isLoading: templatesLoading,
+    isError: templatesError,
+    refetch: refetchTemplates,
+  } = useQuoteTemplates();
   const createTemplate = useCreateQuoteTemplate();
   const updateTemplate = useUpdateQuoteTemplate();
   const deleteTemplate = useDeleteQuoteTemplate();
+
+  const handleRetryTemplates = useCallback(() => { void refetchTemplates(); }, [refetchTemplates]);
 
   const handleSettingsSubmit = useCallback(
     (values: QuoteSettingsFormValues) => {
@@ -300,24 +311,29 @@ export default function QuoteSettingsPage() {
               Add Template
             </Button>
           </div>
-          <DataTable
-            data={allTemplates}
-            columns={columns}
-            getRowKey={(t) => t.id}
-            isLoading={templatesLoading}
-            emptyState={
-              <div className="flex flex-col items-center justify-center py-10 text-center">
-                <p className="text-sm font-medium text-foreground">No templates yet</p>
-                <p className="text-xs text-muted-foreground mt-1 mb-3">
-                  Create a template to use when generating quote documents.
-                </p>
-                <Button size="sm" variant="outline" onClick={handleOpenCreate}>
-                  <Plus className="h-4 w-4 mr-1.5" />
-                  Add Template
-                </Button>
-              </div>
-            }
-          />
+          {templatesError ? (
+            <ErrorState
+              compact
+              title="Couldn't load quote templates"
+              description="The template list didn't load. Check your connection and try again."
+              onRetry={handleRetryTemplates}
+            />
+          ) : (
+            <DataTable
+              data={allTemplates}
+              columns={columns}
+              getRowKey={(t) => t.id}
+              isLoading={templatesLoading}
+              emptyState={
+                <EmptyState
+                  compact
+                  title="No templates yet"
+                  description="A template is the document a quote is rendered into — your letterhead, terms and layout. Add one to send quotes that look like yours."
+                  action={canManageTemplates ? { label: "Add template", onClick: handleOpenCreate } : undefined}
+                />
+              }
+            />
+          )}
         </div>
       </PageWrapper>
     </>

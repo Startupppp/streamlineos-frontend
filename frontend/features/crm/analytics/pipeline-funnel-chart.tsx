@@ -3,7 +3,7 @@
 import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { CHART_TOOLTIP_STYLE, AXIS_TICK } from "@/features/crm/shared/constants";
 import { AnalyticsChartCard } from "./analytics-chart-card";
-import { EmptyChart } from "./empty-chart";
+import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 
 interface PipelineFunnelChartProps {
   data: Array<{ name: string; value: number; fill: string }>;
@@ -13,7 +13,7 @@ export function PipelineFunnelChart({ data }: PipelineFunnelChartProps) {
   return (
     <AnalyticsChartCard title="Pipeline Funnel" data={data} filename="pipeline-funnel">
       {data.length === 0 ? (
-        <EmptyChart message="No leads in the pipeline for this period" />
+        <ChartEmptyState message="No leads in the pipeline for this period" />
       ) : (
         <ResponsiveContainer width="100%" height={280}>
           <BarChart data={data} layout="vertical">

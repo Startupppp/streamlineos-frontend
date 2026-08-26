@@ -1,29 +1,45 @@
 "use client";
 
+import { useCallback } from "react";
 import { TrendingUp } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useClientTimeline } from "@/hooks/api/crm/clients";
 import { formatDateTime } from "./utils";
 import type { ClientTimelineEvent } from "@/types/crm";
 
 export function ClientTimelineTab({ clientId }: { clientId: number }) {
-  const { data, isLoading } = useClientTimeline(clientId);
+  const { data, isLoading, isError, refetch } = useClientTimeline(clientId);
+
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   if (isLoading) {
     return (
-      <div className="space-y-2 py-2">
+      <div className="space-y-2 py-2" aria-busy="true">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-14 rounded-md bg-muted/40 animate-pulse" />
+          <Skeleton key={i} className="h-14 w-full rounded-md" />
         ))}
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        compact
+        title="Couldn't load the timeline"
+        description="This client's activity didn't load. Check your connection and try again."
+        onRetry={handleRetry}
+      />
     );
   }
 
   if (!data?.events.length) {
     return (
       <EmptyState
-        title="No timeline events"
-        description="Activity for this client will appear here."
+        title="Nothing has happened yet"
+        description="Calls, emails, meetings and renewals on this account appear here as they happen."
         compact
         className="py-10"
       />

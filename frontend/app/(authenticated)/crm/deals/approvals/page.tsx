@@ -194,6 +194,9 @@ export default function DealApprovalsPage() {
 
   const handleClearFilter = useCallback(() => handleFilterChange("all"), [handleFilterChange]);
 
+  const isFiltered = statusFilter !== "all";
+  const statusFilterLabel = STATUS_BADGE[statusFilter]?.label ?? statusFilter;
+
   const columns = useMemo<DataTableColumn<ApprovalRow>[]>(
     () => [
       {
@@ -301,13 +304,23 @@ export default function DealApprovalsPage() {
           getRowKey={(r) => r.id}
           isLoading={isLoading}
           emptyState={
-            <EmptyState
-              illustration={<EmptyApprovalIllustration />}
-              title="No approvals found"
-              description="There are no deal approvals matching the current filter."
-              action={{ label: "Clear filter", onClick: handleClearFilter }}
-              className="border-0 bg-transparent flex-1"
-            />
+            isFiltered ? (
+              <EmptyState
+                illustration={<EmptyApprovalIllustration />}
+                title="No approvals match this filter"
+                description={`Showing ${statusFilterLabel.toLowerCase()} approvals only. Clear the filter to see every request.`}
+                action={{ label: "Clear filter", onClick: handleClearFilter }}
+                actionVariant="outline"
+                className="border-0 bg-transparent flex-1"
+              />
+            ) : (
+              <EmptyState
+                illustration={<EmptyApprovalIllustration />}
+                title="Nothing waiting on you"
+                description="Deals that need sign-off before they can move — a discount past your threshold, say — land here."
+                className="border-0 bg-transparent flex-1"
+              />
+            )
           }
           minWidth="720px"
           className="flex-1 min-h-0"

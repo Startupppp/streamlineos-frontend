@@ -176,12 +176,30 @@ export default function LeadDistributionPage() {
     refetch();
   }, [refetch]);
 
-  const emptyAction = useMemo(
-    () =>
-      statusFilter !== "all" || debouncedInput
-        ? { label: "Clear filters", onClick: handleClearFilters }
-        : undefined,
-    [statusFilter, debouncedInput, handleClearFilters],
+  const activeFilterLabels = useMemo(() => {
+    const labels: string[] = [];
+    if (debouncedInput.trim()) labels.push(`search "${debouncedInput.trim()}"`);
+    if (statusFilter !== "all") labels.push(`status ${statusFilter.toLowerCase()}`);
+    return labels;
+  }, [debouncedInput, statusFilter]);
+
+  const emptyState = activeFilterLabels.length > 0 ? (
+    <EmptyState
+      illustration={<EmptyLeadsIllustration />}
+      title="No leads match these filters"
+      description={`Filtering by ${activeFilterLabels.join(", ")}. Clear the filters to see every lead.`}
+      action={{ label: "Clear filters", onClick: handleClearFilters }}
+      actionVariant="outline"
+      className="border-0 bg-transparent"
+    />
+  ) : (
+    <EmptyState
+      illustration={<EmptyLeadsIllustration />}
+      title="No leads to distribute"
+      description="Distribution hands unassigned leads out to your reps. Import a list, or add leads, and they show up here."
+      action={canCreateLead ? { label: "Import leads", href: "/crm/import?entity=leads" } : undefined}
+      className="border-0 bg-transparent"
+    />
   );
 
   return (
@@ -268,19 +286,7 @@ export default function LeadDistributionPage() {
             }}
             pagination={{ pageSize: 50 }}
             minWidth="640px"
-            emptyState={
-              <EmptyState
-                illustration={<EmptyLeadsIllustration />}
-                title="No leads found"
-                description={
-                  statusFilter !== "all" || debouncedInput
-                    ? "No leads match your filters."
-                    : "Upload leads or adjust your search to get started."
-                }
-                action={emptyAction}
-                className="border-0 bg-transparent"
-              />
-            }
+            emptyState={emptyState}
           />
         )}
       </div>

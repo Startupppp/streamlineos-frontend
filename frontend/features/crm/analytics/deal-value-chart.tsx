@@ -3,7 +3,7 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { CHART_TOOLTIP_STYLE, AXIS_TICK } from "@/features/crm/shared/constants";
 import { AnalyticsChartCard } from "./analytics-chart-card";
-import { EmptyChart } from "./empty-chart";
+import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 
 interface DealValueChartProps {
   data: Array<{ stage: string; value: number }>;
@@ -13,7 +13,7 @@ export function DealValueChart({ data }: DealValueChartProps) {
   return (
     <AnalyticsChartCard title="Deal Value by Stage" data={data} filename="deal-value-by-stage">
       {data.length === 0 ? (
-        <EmptyChart message="No open deals to value in this period" />
+        <ChartEmptyState message="No open deals to value in this period" />
       ) : (
         <ResponsiveContainer width="100%" height={280}>
           <BarChart data={data}>

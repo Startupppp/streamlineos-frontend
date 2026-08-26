@@ -11,6 +11,7 @@ import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/st
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import {
   useCampaigns,
@@ -209,9 +210,11 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
               getRowKey={(row) => String(row.id ?? row._idx)}
               isLoading={leadsLoading}
               emptyState={
-                <div className="flex items-center justify-center h-24 text-sm text-muted-foreground">
-                  No leads tracked for this campaign
-                </div>
+                <EmptyState
+                  compact
+                  title="No leads from this campaign yet"
+                  description="Leads tagged with this campaign appear here, so you can see what the spend returned."
+                />
               }
               pagination={{
                 mode: "server",

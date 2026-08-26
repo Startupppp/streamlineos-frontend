@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
 import { EmptyActivityIllustration } from "@/components/illustrations";
 import { TaskTypeIcon } from "@/features/crm/tasks/task-type-icon";
 import { useTasks } from "@/hooks/api/tasks";
@@ -27,13 +28,15 @@ interface ContactTimelineProps {
 }
 
 export function ContactTimeline({ contactId, onLogActivity }: ContactTimelineProps) {
-  const { data, isLoading } = useTasks({
+  const { data, isLoading, isError, refetch } = useTasks({
     entityType: "CONTACT",
     entityId: contactId,
     limit: 20,
   });
 
   const handleLogActivity = useCallback(() => onLogActivity(), [onLogActivity]);
+
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   if (isLoading) {
     return (
@@ -45,6 +48,24 @@ export function ContactTimeline({ contactId, onLogActivity }: ContactTimelinePro
           {[1, 2, 3].map((i) => (
             <Skeleton key={i} className="h-12" />
           ))}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Card className="shadow-sm">
+        <CardHeader className="px-4 py-3 border-b">
+          <CardTitle className="text-sm font-medium">Activity Timeline</CardTitle>
+        </CardHeader>
+        <CardContent className="px-4 py-3">
+          <ErrorState
+            compact
+            title="Couldn't load the timeline"
+            description="This contact's activity didn't load. Check your connection and try again."
+            onRetry={handleRetry}
+          />
         </CardContent>
       </Card>
     );

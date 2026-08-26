@@ -14,8 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
-import { EmptyTargetIllustration } from "@/components/illustrations";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -344,11 +344,10 @@ export default function ScoringRulesPage() {
             <Skeleton className="h-32 w-full" />
           </div>
         ) : isError ? (
-          <EmptyState
-            illustration={<EmptyTargetIllustration />}
-            title="Failed to load scoring rules"
-            description="Something went wrong. Please try again."
-            action={{ label: "Retry", onClick: handleRetry }}
+          <ErrorState
+            title="Couldn't load scoring rules"
+            description="The rule list didn't load. Check your connection and try again."
+            onRetry={handleRetry}
             className={CONTENT_FILL_PANEL}
           />
         ) : (
