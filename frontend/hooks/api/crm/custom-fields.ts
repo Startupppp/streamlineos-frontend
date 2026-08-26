@@ -30,7 +30,7 @@ export interface CreateCustomFieldInput {
   sortOrder?: number;
 }
 
-interface UpdateCustomFieldInput {
+export interface UpdateCustomFieldInput {
   id: number;
   entityType: "lead" | "deal" | "contact";
   label?: string;

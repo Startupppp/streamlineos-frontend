@@ -5,7 +5,6 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type {
-  AccountLedgerWindow,
   AgingParams,
   AgingReport,
   BalanceSheetParams,
@@ -124,24 +123,6 @@ export function useTaxSummaryReport(
     staleTime: REPORT_STALE,
     ...options,
     enabled: canRead && !!params.from && !!params.to && (options?.enabled ?? true),
-  });
-}
-
-export function useAccountLedgerWindow(
-  accountId: string,
-  params: { from: string; to: string },
-  options?: QueryOpts<AccountLedgerWindow>,
-) {
-  const canRead = useCan("accounting:general-ledger:read");
-  const search = reportParams(params);
-  return useQuery<AccountLedgerWindow, Error>({
-    queryKey: queryKeys.accountingLedger.accountLedger(accountId, search),
-    queryFn: () =>
-      apiClient.get<AccountLedgerWindow>(`/accounting/accounts/${accountId}/ledger`, search),
-    staleTime: REPORT_STALE,
-    ...options,
-    enabled:
-      canRead && !!accountId && !!params.from && !!params.to && (options?.enabled ?? true),
   });
 }
 

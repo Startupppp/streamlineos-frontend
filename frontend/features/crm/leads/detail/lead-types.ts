@@ -1,4 +1,3 @@
-import { z } from "zod";
 import { StickyNote, ListTodo, Mail, Phone } from "lucide-react";
 
 export const STATUS_PIPELINE = [
@@ -41,45 +40,6 @@ export const TIMELINE_ICONS: Record<
 };
 
 export type QuickAction = "call" | "email" | "note" | "task" | "draft" | null;
-
-export const noteSchema = z.object({
-  body: z.string().min(1, "Note cannot be empty"),
-});
-export type NoteForm = z.infer<typeof noteSchema>;
-
-export const taskSchema = z.object({
-  title: z.string().min(1, "Title is required").max(200),
-  dueDate: z.string().optional(),
-});
-export type TaskForm = z.infer<typeof taskSchema>;
-
-export const emailSchema = z.object({
-  to: z.string().email("Valid email required"),
-  subject: z.string().min(1, "Subject required"),
-  body: z.string().min(1, "Body required"),
-});
-export type EmailForm = z.infer<typeof emailSchema>;
-
-export const callSchema = z.object({
-  subject: z.string().optional(),
-  duration: z.string().optional(),
-  outcome: z.string().optional(),
-  notes: z.string().optional(),
-});
-export type CallForm = z.infer<typeof callSchema>;
-
-export const editSchema = z.object({
-  name: z.string().min(1),
-  email: z.string().email().optional().or(z.literal("")),
-  phone: z.string().optional(),
-  company: z.string().optional(),
-  city: z.string().optional(),
-  priority: z.enum(["HOT", "WARM", "COLD"]).optional(),
-  potentialValue: z.string().optional(),
-  investmentInterest: z.string().optional(),
-  notes: z.string().optional(),
-});
-export type EditForm = z.infer<typeof editSchema>;
 
 export function getScoreBadge(score: number | null | undefined) {
   const s = score ?? 0;

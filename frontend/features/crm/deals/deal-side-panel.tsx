@@ -17,7 +17,8 @@ import {
 } from "@/hooks/api/crm";
 import { ActivityTimeline as UnifiedTimeline } from "@/features/crm/timeline/activity-timeline";
 import { DealStageHistory } from "./detail/deal-stage-history";
-import { DealEditForm, type EditFormValues } from "./detail/deal-edit-form";
+import { DealEditForm } from "./detail/deal-edit-form";
+import { toUpdateInput, type DealSubmission } from "./deal-form";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -44,28 +45,12 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
   const stage = deal ? dealStages.find((s) => s.key === deal.stage) ?? null : null;
 
   const handleSave = useCallback(
-    (values: EditFormValues) => {
+    (submission: DealSubmission) => {
       if (!dealId) return;
-      updateDeal.mutate(
-        {
-          id: dealId,
-          name: values.name,
-          value: values.value ? values.value : undefined,
-          probability: values.probability
-            ? Number(values.probability)
-            : undefined,
-          stage: values.stage,
-          expectedCloseDate: values.expectedCloseDate ?? null,
-          contactPerson: values.contactPerson,
-          notes: values.notes,
-          partyId: values.partyId || null,
-          subjectId: values.subjectId || null,
-        },
-        {
-          onSuccess: () => toast.success("Deal updated"),
-          onError: (err) => toast.error(getErrorMessage(err)),
-        },
-      );
+      updateDeal.mutate(toUpdateInput(submission, dealId), {
+        onSuccess: () => toast.success("Deal updated"),
+        onError: (err) => toast.error(getErrorMessage(err)),
+      });
     },
     [dealId, updateDeal],
   );

@@ -1,53 +1,17 @@
 "use client";
 
 import { useCallback } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { callLogSchema, type CallLogFormValues } from "./call-log-dialog-schema";
+import { AppDialog } from "@/components/shared/app-dialog";
+import { RecordForm, type RecordFormValues } from "@/features/renderer";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import {
+  CALL_DIRECTION_LABELS,
+  CALL_LOG_LAYOUT,
+  CALL_OUTCOME_LABELS,
+} from "@/lib/renderer/crm/call-log-layout";
 import { getErrorMessage } from "@/lib/get-error-message";
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { EntityFormDialog } from "@/components/shared/entity-form-dialog";
-import { useCreateTask } from "@/hooks/api/tasks";
-import type { TaskEntityType } from "@/hooks/api/tasks";
-
-const DIRECTION_LABELS: Record<CallLogFormValues["direction"], string> = {
-  INBOUND: "Inbound",
-  OUTBOUND: "Outbound",
-};
-
-const OUTCOME_LABELS: Record<CallLogFormValues["outcome"], string> = {
-  CONNECTED: "Connected",
-  NO_ANSWER: "No Answer",
-  VOICEMAIL: "Voicemail",
-  BUSY: "Busy",
-  WRONG_NUMBER: "Wrong Number",
-};
-
-function formatNotes(values: CallLogFormValues): string {
-  const parts: string[] = [
-    `Direction: ${DIRECTION_LABELS[values.direction]}`,
-    `Outcome: ${OUTCOME_LABELS[values.outcome]}`,
-  ];
-  if (values.durationMinutes) parts.push(`Duration: ${values.durationMinutes} min`);
-  if (values.calledAt) parts.push(`Called at: ${values.calledAt}`);
-  if (values.notes) parts.push(`\nNotes:\n${values.notes}`);
-  return parts.join("\n");
-}
+import { useCreateTask, type TaskEntityType } from "@/hooks/api/tasks";
 
 interface CallLogDialogProps {
   open: boolean;
@@ -56,23 +20,31 @@ interface CallLogDialogProps {
   entityId: number;
 }
 
-export function CallLogDialog({
-  open,
-  onOpenChange,
-  entityType,
-  entityId,
-}: CallLogDialogProps) {
+function summarise(values: RecordFormValues): string {
+  const parts = [
+    `Direction: ${CALL_DIRECTION_LABELS[values.direction] ?? values.direction}`,
+    `Outcome: ${CALL_OUTCOME_LABELS[values.outcome] ?? values.outcome}`,
+  ];
+  if (values.durationMinutes) parts.push(`Duration: ${values.durationMinutes} min`);
+  if (values.calledAt) parts.push(`Called at: ${values.calledAt}`);
+  if (values.notes) parts.push(`\nNotes:\n${values.notes}`);
+  return parts.join("\n");
+}
+
+export function CallLogDialog({ open, onOpenChange, entityType, entityId }: CallLogDialogProps) {
+  const layout = useTenantLayout(CALL_LOG_LAYOUT);
   const createTask = useCreateTask();
 
-  const defaultCalledAt = new Date().toISOString().slice(0, 16);
-
   const handleSubmit = useCallback(
-    (values: CallLogFormValues) => {
+    (values: RecordFormValues) => {
+      const direction = CALL_DIRECTION_LABELS[values.direction] ?? values.direction;
+      const outcome = CALL_OUTCOME_LABELS[values.outcome] ?? values.outcome;
+
       createTask.mutate(
         {
-          title: `Call: ${DIRECTION_LABELS[values.direction]} – ${OUTCOME_LABELS[values.outcome]}`,
+          title: `Call: ${direction} – ${outcome}`,
           type: "CALL",
-          notes: formatNotes(values),
+          notes: summarise(values),
           entityType,
           entityId,
         },
@@ -82,123 +54,33 @@ export function CallLogDialog({
             onOpenChange(false);
           },
           onError: (err) => toast.error(getErrorMessage(err)),
-        }
+        },
       );
     },
-    [createTask, entityType, entityId, onOpenChange]
+    [createTask, entityType, entityId, onOpenChange],
   );
 
   return (
-    <EntityFormDialog<CallLogFormValues>
+    <AppDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Log Call"
+      title="Log call"
       description="Record details of a completed or attempted call."
-      resolver={zodResolver(callLogSchema)}
-      defaultValues={{
-        direction: "OUTBOUND",
-        outcome: "CONNECTED",
-        durationMinutes: "",
-        notes: "",
-        calledAt: defaultCalledAt,
-      }}
-      onSubmit={handleSubmit}
-      isSubmitting={createTask.isPending}
-      submitLabel="Log Call"
-      resetOnOpen
     >
-      {(form) => (
-        <>
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="direction"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Direction</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="OUTBOUND">Outbound</SelectItem>
-                      <SelectItem value="INBOUND">Inbound</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="outcome"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Outcome</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="CONNECTED">Connected</SelectItem>
-                      <SelectItem value="NO_ANSWER">No Answer</SelectItem>
-                      <SelectItem value="VOICEMAIL">Voicemail</SelectItem>
-                      <SelectItem value="BUSY">Busy</SelectItem>
-                      <SelectItem value="WRONG_NUMBER">Wrong Number</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="durationMinutes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Duration (min)</FormLabel>
-                  <FormControl>
-                    <Input {...field} type="number" min={0} placeholder="e.g. 5" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="calledAt"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Called At</FormLabel>
-                  <FormControl>
-                    <Input {...field} type="datetime-local" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          <FormField
-            control={form.control}
-            name="notes"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Notes</FormLabel>
-                <FormControl>
-                  <Textarea {...field} rows={3} placeholder="What was discussed?" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </>
-      )}
-    </EntityFormDialog>
+      <RecordForm
+        key={String(open)}
+        layout={layout}
+        mode="create"
+        initial={{
+          direction: "OUTBOUND",
+          outcome: "CONNECTED",
+          calledAt: new Date().toISOString().slice(0, 16),
+        }}
+        onSubmit={handleSubmit}
+        onCancel={() => onOpenChange(false)}
+        isSubmitting={createTask.isPending}
+        submitLabel="Log call"
+      />
+    </AppDialog>
   );
 }

@@ -1,135 +1,136 @@
 "use client";
 
+import { useCallback } from "react";
 import Link from "next/link";
-import { TrendingUp, DollarSign, Calendar, Plus } from "lucide-react";
-import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { useRouter } from "next/navigation";
+import { Plus } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
+import { RecordList, asRecordValue, type RecordValue } from "@/features/renderer";
+import { useDensity } from "@/features/renderer/density-toggle";
+import { useDealLayout } from "@/features/crm/deals/use-deal-layout";
+import { dealRecordFields } from "@/lib/renderer/crm/deal-layout";
+import { withColumns } from "@/lib/renderer/layout-adjustment";
+import { useCan } from "@/hooks/api/access";
 import { useDealDetail } from "@/hooks/api/crm/deals";
-import { formatCurrency } from "@/lib/format-utils";
-import { TruncatedText } from "@/components/ui/truncated-text";
-import { cn } from "@/lib/utils";
+import { useOrgDisplay } from "@/hooks/api/org-display";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { fadeUp, fadeIn } from "@/lib/motion-variants";
 import type { Contact } from "@/types/crm";
 
-const STAGE_CONFIG: Record<string, { label: string; className: string }> = {
-  LEAD: { label: "Lead", className: "bg-status-info-surface text-status-info-ink" },
-  CONTACTED: { label: "Contacted", className: "bg-status-info-surface text-status-info-ink" },
-  PROPOSAL: { label: "Proposal", className: "bg-status-info-surface text-status-info-ink" },
-  NEGOTIATION: { label: "Negotiation", className: "bg-status-warning-surface text-status-warning-ink" },
-  WON: { label: "Won", className: "bg-status-success-surface text-status-success-ink" },
-  LOST: { label: "Lost", className: "bg-muted text-muted-foreground" },
-};
+/**
+ * The four columns a deal is worth inside somebody else's record.
+ *
+ * The deals list shows eight, which is right on a page that is about deals. In a
+ * panel on a contact the question is narrower — which deal, where is it, how big
+ * and when does it land — and the rest is width spent on a question nobody asked
+ * here. Narrowing rather than describing a second, smaller deal is the point:
+ * these are `DEAL_LAYOUT`'s own columns, so a stage renamed by an administrator
+ * is renamed here too.
+ */
+const RELATED_DEAL_COLUMNS = ["name", "stage", "value", "expectedCloseDate"] as const;
 
 interface ContactRelatedDealsProps {
   contact: Contact;
 }
 
-function DealRow({ dealId }: { dealId: number }) {
-  const { data: deal, isLoading } = useDealDetail(dealId);
-
-  if (isLoading) {
-    return (
-      <tr className="border-b border-border/50">
-        <td className="px-4 py-3" colSpan={4}>
-          <Skeleton className="h-4 w-full" />
-        </td>
-      </tr>
-    );
-  }
-
-  if (!deal) return null;
-
-  const stageConfig = STAGE_CONFIG[deal.stage] ?? STAGE_CONFIG.LEAD;
-
-  return (
-    <tr className="border-b border-border/50 last:border-0 hover:bg-accent/40 transition-colors">
-      <td className="px-4 py-2.5">
-        <div className="flex items-center gap-2">
-          <div className="h-6 w-6 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
-            <TrendingUp className="h-3 w-3 text-primary" />
-          </div>
-          <Link
-            href={`/crm/deals/${deal.id}`}
-            className="text-xs font-medium text-primary hover:underline max-w-[180px]"
-          >
-            <TruncatedText text={deal.name} />
-          </Link>
-        </div>
-      </td>
-      <td className="px-4 py-2.5">
-        <Badge
-          className={cn("text-micro border-0 capitalize", stageConfig.className)}
-        >
-          {stageConfig.label}
-        </Badge>
-      </td>
-      <td className="px-4 py-2.5">
-        <div className="flex items-center gap-1 text-xs text-foreground">
-          <DollarSign className="h-3 w-3 text-muted-foreground" />
-          {deal.value ? formatCurrency(parseFloat(deal.value)) : "—"}
-        </div>
-      </td>
-      <td className="px-4 py-2.5">
-        {deal.expectedCloseDate ? (
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Calendar className="h-3 w-3" />
-            {new Date(deal.expectedCloseDate).toLocaleDateString()}
-          </div>
-        ) : (
-          <span className="text-xs text-muted-foreground">—</span>
-        )}
-      </td>
-    </tr>
-  );
-}
-
+/**
+ * The deals this contact is attached to.
+ *
+ * This was a raw `<table>` with its own `<thead>`, its own row hover and its own
+ * stage map — a second table beside the one the platform has, four columns wide,
+ * showing a deal's stage in labels and colours the deals list did not share. It
+ * now renders from `DEAL_LAYOUT` through `useDealLayout`, narrowed to four
+ * columns, so a deal here reads as the same record it is on `/crm/deals` — the
+ * same labels, the same alignment, and stage names that come from the tenant's
+ * own pipeline rather than from a hardcoded map that went stale the moment an
+ * administrator renamed a stage. The value renders in the organisation's own
+ * currency instead of the INR-hardcoded `formatCurrency`.
+ *
+ * The panel self-gates on the deals read permission and renders nothing without
+ * it. Falling through to "no related deals" would have told someone who cannot
+ * see deals that this contact has none, which is a different statement and a
+ * false one.
+ */
 export function ContactRelatedDeals({ contact }: ContactRelatedDealsProps) {
+  const router = useRouter();
+  // Narrowed after the tenant's arrangement, never before: a column somebody
+  // hid on the deals list must not reappear through a panel.
+  const layout = withColumns(useDealLayout(), RELATED_DEAL_COLUMNS);
+  const money = useOrgDisplay();
+  const [density] = useDensity();
+  const shouldReduceMotion = useReducedMotion();
+  const canReadDeals = useCan("crm:deals:read");
+
+  const { data: deal, isLoading, isError, error, refetch } = useDealDetail(contact.dealId ?? 0);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  const handleRowClick = useCallback(
+    (row: RecordValue) => router.push(`/crm/deals/${String(row.id)}`),
+    [router],
+  );
+
+  if (!canReadDeals) return null;
+
   const hasLinkedDeal = contact.dealId != null;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.22, ease: "easeOut", delay: 0.12 }}
+      variants={shouldReduceMotion ? fadeIn : fadeUp}
+      initial="hidden"
+      animate="visible"
     >
-      <Card className="shadow-sm overflow-hidden">
-        <CardHeader className="px-4 py-3 border-b flex-row items-center justify-between space-y-0">
-          <CardTitle className="text-sm font-medium">Related Deals</CardTitle>
-          <Button size="sm" variant="outline" className="gap-1.5 text-xs h-7" asChild>
+      <Card className="overflow-hidden shadow-sm">
+        <CardHeader className="flex-row items-center justify-between space-y-0 border-b px-4 py-3">
+          <CardTitle className="text-sm font-medium">Related deals</CardTitle>
+          <Button size="sm" variant="outline" className="h-7 gap-1.5 text-xs" asChild>
             <Link href="/crm/deals">
               <Plus className="h-3 w-3" />
-              New Deal
+              New deal
             </Link>
           </Button>
         </CardHeader>
         <CardContent className="p-0">
           {!hasLinkedDeal ? (
-            <div className="px-4 py-6">
-              <EmptyState
-                title="No related deals"
-                description="Link this contact to a deal to track opportunities."
-                compact
-              />
-            </div>
+            <EmptyState
+              compact
+              className="py-10"
+              title="No related deals"
+              description="Link this contact to a deal and it shows up here, with its stage, value and close date."
+            />
+          ) : isLoading ? (
+            <DataTableSkeleton rows={2} columns={layout.list.columns.length} />
+          ) : isError ? (
+            <ErrorState
+              compact
+              title="Couldn't load this contact's deals"
+              description={getErrorMessage(error)}
+              onRetry={handleRetry}
+            />
+          ) : !deal ? (
+            <EmptyState
+              compact
+              className="py-10"
+              title="Deal unavailable"
+              description="The deal linked to this contact could not be found. It may have been deleted."
+            />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border bg-muted/40">
-                    <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Deal</th>
-                    <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Stage</th>
-                    <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Value</th>
-                    <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Close Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {contact.dealId && <DealRow dealId={contact.dealId} />}
-                </tbody>
-              </table>
-            </div>
+            <RecordList
+              layout={layout}
+              rows={[asRecordValue(dealRecordFields(deal))]}
+              getRowKey={(row) => String(row.id)}
+              onRowClick={handleRowClick}
+              density={density}
+              money={money}
+              minWidth="640px"
+            />
           )}
         </CardContent>
       </Card>

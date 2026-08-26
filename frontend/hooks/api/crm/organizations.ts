@@ -9,6 +9,7 @@ import type {
   CrmOrganizationFilters,
   PaginatedCrmOrganizations,
   CreateCrmOrganizationInput,
+  UpdateCrmOrganizationInput,
   OrgHierarchyNode,
   OrgRollup,
   OrgTimelineEvent,
@@ -73,7 +74,7 @@ export function useUpdateCrmOrganization() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["crmOrganizations", "update"] as const,
-    mutationFn: ({ id, ...input }: Partial<CreateCrmOrganizationInput> & { id: number; parentId?: number | null; notes?: string | null; healthScore?: number | null }) =>
+    mutationFn: ({ id, ...input }: UpdateCrmOrganizationInput & { id: number }) =>
       apiClient.patch<CrmOrganization>(`/crm/organizations/${id}`, input),
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.crmOrganizations.all });
@@ -144,12 +145,20 @@ export function useCrmPeopleSlugs() {
   });
 }
 
+export interface MergeOrgsResult {
+  success: boolean;
+  survivorId: number;
+  mergedId: number;
+  partyMergeId: string;
+  conflicts: Record<string, { kept: unknown; discarded: unknown }>;
+}
+
 export function useMergeCrmOrganizations() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["crmOrganizations", "merge"] as const,
     mutationFn: (input: MergeOrgsInput) =>
-      apiClient.post<{ success: boolean; primaryId: number; mergedId: number }>("/crm/organizations/merge", input),
+      apiClient.post<MergeOrgsResult>("/crm/organizations/merge", input),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.crmOrganizations.all });
       void qc.invalidateQueries({ queryKey: queryKeys.crmOrganizations.duplicates() });

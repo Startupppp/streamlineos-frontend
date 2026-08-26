@@ -10,6 +10,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type {
+  AccountLedger,
   AccountNode,
   AccountingBook,
   AccountingPeriod,
@@ -318,6 +319,38 @@ export function useTrialBalance(asOf: string, options?: QueryOpts<TrialBalanceRe
     staleTime: ENTITY_STALE,
     ...options,
     enabled: canRead && !!asOf && (options?.enabled ?? true),
+  });
+}
+
+export interface AccountLedgerParams {
+  from: string;
+  to: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export function useAccountLedger(
+  accountId: string,
+  params: AccountLedgerParams,
+  options?: QueryOpts<AccountLedger>,
+) {
+  const canRead = useCan("accounting:general-ledger:read");
+  const search: Record<string, string | number> = {
+    from: params.from,
+    to: params.to,
+    ...(params.page ? { page: params.page } : {}),
+    ...(params.pageSize ? { pageSize: params.pageSize } : {}),
+  };
+  return useQuery<AccountLedger, Error>({
+    queryKey: queryKeys.accountingLedger.accountLedger(accountId, search),
+    // Params are the SECOND positional argument; `{ params }` would serialise to
+    // `?params=[object Object]` and every accounting endpoint is `.strict()`.
+    queryFn: () =>
+      apiClient.get<AccountLedger>(`/accounting/accounts/${accountId}/ledger`, search),
+    staleTime: ENTITY_STALE,
+    ...options,
+    enabled:
+      canRead && !!accountId && !!params.from && !!params.to && (options?.enabled ?? true),
   });
 }
 

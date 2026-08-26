@@ -71,7 +71,7 @@ interface ReorderAssignmentRulesInput {
   ruleIds: number[];
 }
 
-interface ScoringRule {
+export interface ScoringRule {
   id: number;
   orgId: string;
   field: string;
@@ -81,14 +81,14 @@ interface ScoringRule {
   createdAt: string | null;
 }
 
-interface CreateScoringRuleInput {
+export interface CreateScoringRuleInput {
   field: string;
   operator: string;
   value: string;
   points: number;
 }
 
-interface UpdateScoringRuleInput {
+export interface UpdateScoringRuleInput {
   id: number;
   field?: string;
   operator?: string;
@@ -165,7 +165,7 @@ export function useReorderAssignmentRules() {
   });
 }
 
-interface EmailTemplate {
+export interface EmailTemplate {
   id: number;
   orgId: string;
   name: string;
@@ -175,13 +175,13 @@ interface EmailTemplate {
   updatedAt: string | null;
 }
 
-interface CreateEmailTemplateInput {
+export interface CreateEmailTemplateInput {
   name: string;
   subject: string;
   body: string;
 }
 
-interface UpdateEmailTemplateInput {
+export interface UpdateEmailTemplateInput {
   id: number;
   name?: string;
   subject?: string;
@@ -289,7 +289,7 @@ export function useDeleteScoringRule() {
   });
 }
 
-interface SlaPolicy {
+export interface SlaPolicy {
   id: number;
   orgId: string;
   name: string;
@@ -301,21 +301,21 @@ interface SlaPolicy {
   updatedAt: string | null;
 }
 
-interface SlaReport {
+export interface SlaReport {
   total: number;
   compliant: number;
   breached: number;
   complianceRate: number;
 }
 
-interface SlaBreachedLead {
+export interface SlaBreachedLead {
   id: number;
   name: string;
   status: string;
   slaDeadline: string | null;
 }
 
-interface CreateSlaPolicyInput {
+export interface CreateSlaPolicyInput {
   name: string;
   appliesTo: "lead" | "deal" | "both";
   priority: "low" | "medium" | "high" | "urgent";
@@ -323,7 +323,7 @@ interface CreateSlaPolicyInput {
   resolutionHours: number;
 }
 
-interface UpdateSlaPolicyInput {
+export interface UpdateSlaPolicyInput {
   id: number;
   name?: string;
   appliesTo?: "lead" | "deal" | "both";

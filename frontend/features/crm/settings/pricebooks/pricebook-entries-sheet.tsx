@@ -1,46 +1,51 @@
 "use client";
 
-import { useMemo } from "react";
-import { useForm } from "react-hook-form";
-import { entrySchema, type EntryFormValues } from "./pricebook-entries-sheet-schema";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Trash2 } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Combobox } from "@/components/ui/combobox";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
+import { DataTableSkeleton } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Sheet,
+  SheetBody,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetDescription,
-  SheetBody,
 } from "@/components/ui/sheet";
-import { LoadingButton } from "@/components/ui/loading-button";
+import { ErrorState } from "@/components/shared";
 import {
+  RecordForm,
+  RecordList,
+  type RecordFieldControl,
+  type RecordFormValues,
+} from "@/features/renderer";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { useOrgDisplay } from "@/hooks/api/org-display";
+import { useProducts } from "@/hooks/api/crm/products";
+import {
+  useDeletePricebookEntry,
   usePricebookEntries,
   useUpsertPricebookEntry,
-  useDeletePricebookEntry,
 } from "@/hooks/api/crm/pricebooks";
-import { useProducts } from "@/hooks/api/crm/products";
-import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { PRICEBOOK_ENTRY_LAYOUT } from "@/lib/renderer/crm/settings/pricebook-layout";
 import type { Pricebook } from "@/types/crm/pricebooks";
+import { numberOr, numberOrOmit } from "../shared/record-payload";
+import { RecordRowActions } from "../shared/record-row-actions";
 
-const defaultEntryValues: EntryFormValues = {
-  productId: "",
-  unitPriceCents: "",
-  minQuantity: "1",
-};
+/**
+ * The prices inside one pricebook.
+ *
+ * A pricebook entry is a record type, not a nested blob, so it gets a
+ * description of its own and the sheet renders a list and a form from it rather
+ * than hand-drawing both. The product picker is supplied through `controls`
+ * because who may be priced depends on the tenant's catalogue, which is a screen
+ * concern — the description names the domain and stops there.
+ *
+ * Prices are typed and shown as money. The API stores minor units; converting on
+ * the boundary is what stops one screen showing "1000" beside "₹10.00".
+ */
 
 interface PricebookEntriesSheetProps {
   open: boolean;
@@ -53,194 +58,159 @@ export function PricebookEntriesSheet({
   onOpenChange,
   pricebook,
 }: PricebookEntriesSheetProps) {
+  const layout = useTenantLayout(PRICEBOOK_ENTRY_LAYOUT);
+  const money = useOrgDisplay();
   const pricebookId = pricebook?.id ?? "";
 
-  const { data: entries, isLoading } = usePricebookEntries(pricebookId);
+  const { data: entries, isLoading, isError, refetch } = usePricebookEntries(pricebookId);
+  const { data: productsData } = useProducts();
   const upsertEntry = useUpsertPricebookEntry();
   const deleteEntry = useDeletePricebookEntry();
-  const { data: productsData } = useProducts();
+  const [formGeneration, setFormGeneration] = useState(0);
+
   const productOptions = useMemo(
     () =>
-      (productsData?.products ?? []).map((p) => ({
-        value: String(p.id),
-        label: p.name,
-        sublabel: p.sku ?? undefined,
+      (productsData?.products ?? []).map((product) => ({
+        value: String(product.id),
+        label: product.name,
+        sublabel: product.sku ?? undefined,
       })),
     [productsData],
   );
 
-  const form = useForm<EntryFormValues>({
-    resolver: zodResolver(entrySchema),
-    defaultValues: defaultEntryValues,
-  });
+  const rows = useMemo(
+    () =>
+      (entries ?? []).map((entry) => ({
+        id: entry.id,
+        productId: entry.productId,
+        productName: entry.productName ?? `Product ${entry.productId}`,
+        productSku: entry.productSku ?? "",
+        productCurrency: entry.productCurrency ?? pricebook?.currency ?? "",
+        unitPrice: entry.unitPriceCents / 100,
+        minQuantity: entry.minQuantity,
+      })),
+    [entries, pricebook],
+  );
 
-  function handleAddEntry(values: EntryFormValues) {
+  const handleDelete = useCallback(
+    (entryId: string) => {
+      if (!pricebookId) return;
+      deleteEntry.mutate(
+        { pricebookId, entryId },
+        {
+          onSuccess: () => toast.success("Price removed"),
+          onError: (error) => toast.error(getErrorMessage(error)),
+        },
+      );
+    },
+    [deleteEntry, pricebookId],
+  );
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  const rowActions = useCallback(
+    (row: Record<string, unknown>) => (
+      <RecordRowActions
+        deleteLabel={`Remove ${String(row.productName)}`}
+        onDelete={() => handleDelete(String(row.id))}
+      />
+    ),
+    [handleDelete],
+  );
+
+  const controls = useMemo(
+    () => ({
+      productId: (control: RecordFieldControl) => (
+        <Combobox
+          options={productOptions}
+          value={control.value}
+          onChange={control.onChange}
+          placeholder="Choose a product…"
+          searchPlaceholder="Search by name or SKU"
+          emptyText="No products found"
+        />
+      ),
+    }),
+    [productOptions],
+  );
+
+  function handleSubmit(values: RecordFormValues) {
     if (!pricebookId) return;
-    const productId = Number(values.productId);
-    const unitPriceCents = Number(values.unitPriceCents);
-    const minQuantity = Number(values.minQuantity) || 1;
-    if (!productId || productId <= 0) return;
+    const productId = numberOrOmit(values, "productId");
+    const unitPrice = numberOrOmit(values, "unitPrice");
+    if (productId === undefined || productId <= 0 || unitPrice === undefined) return;
+
     upsertEntry.mutate(
-      { pricebookId, productId, unitPriceCents, minQuantity },
+      {
+        pricebookId,
+        productId,
+        unitPriceCents: Math.round(unitPrice * 100),
+        minQuantity: numberOr(values, "minQuantity", 1),
+      },
       {
         onSuccess: () => {
-          toast.success("Entry added");
-          form.reset(defaultEntryValues);
+          toast.success("Price saved");
+          setFormGeneration((generation) => generation + 1);
         },
-        onError: (err) => toast.error(getErrorMessage(err)),
+        onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
   }
-
-  function handleDeleteEntry(entryId: string) {
-    if (!pricebookId) return;
-    deleteEntry.mutate(
-      { pricebookId, entryId },
-      {
-        onSuccess: () => toast.success("Entry removed"),
-        onError: (err) => toast.error(getErrorMessage(err)),
-      },
-    );
-  }
-
-  function handleClose() {
-    onOpenChange(false);
-  }
-
-  const entryList = entries ?? [];
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="p-0 flex flex-col overflow-hidden sm:max-w-xl">
-        <SheetHeader className="shrink-0 px-6 py-4 border-b">
-          <SheetTitle>
-            {pricebook ? `Entries — ${pricebook.name}` : "Pricebook Entries"}
-          </SheetTitle>
+      <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-xl">
+        <SheetHeader className="shrink-0 border-b px-6 py-4">
+          <SheetTitle>{pricebook ? `Prices — ${pricebook.name}` : "Prices"}</SheetTitle>
           <SheetDescription>
-            Manage product prices for this pricebook.
+            What each product costs in this book, and the smallest order that earns the price.
           </SheetDescription>
         </SheetHeader>
 
-        <SheetBody className="space-y-4 px-6 py-4">
+        <SheetBody className="flex flex-col gap-gap-section px-6 py-5">
           {isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading entries...</p>
-          ) : entryList.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No entries yet. Add one below.</p>
+            <DataTableSkeleton rows={6} columns={layout.list.columns.length} />
+          ) : isError ? (
+            <ErrorState
+              title="Couldn't load these prices"
+              description="The pricebook's entries didn't load. Check your connection and try again."
+              onRetry={handleRetry}
+            />
+          ) : rows.length === 0 ? (
+            <EmptyState
+              compact
+              illustrationPreset="documents"
+              title="No prices in this book yet"
+              description="Add the first product below and it becomes available to quotes using this book."
+            />
           ) : (
-            <div className="divide-y divide-border rounded-lg border">
-              {entryList.map((entry) => (
-                <div
-                  key={entry.id}
-                  className="flex items-center justify-between gap-3 px-4 py-2.5"
-                >
-                  <div className="min-w-0 flex-1">
-                    <TruncatedText
-                      text={entry.productName ?? `Product #${entry.productId}`}
-                      className="text-sm font-medium"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Qty &ge; {entry.minQuantity} &nbsp;&middot;&nbsp;{" "}
-                      {(entry.unitPriceCents / 100).toLocaleString()}{" "}
-                      {entry.productCurrency ?? pricebook?.currency ?? ""}
-                    </p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-destructive hover:text-destructive shrink-0"
-                    onClick={() => handleDeleteEntry(entry.id)}
-                    aria-label="Remove entry"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              ))}
-            </div>
+            <RecordList
+              layout={layout}
+              rows={rows}
+              getRowKey={(row) => String(row.id)}
+              actions={rowActions}
+              density="compact"
+              money={money}
+              minWidth="480px"
+              pagination={{ pageSize: 10 }}
+            />
           )}
 
-          <div className="rounded-lg border p-4 space-y-3">
-            <p className="text-sm font-medium">Add Entry</p>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleAddEntry)} className="space-y-3">
-                <div className="grid grid-cols-3 gap-2">
-                  <FormField
-                    control={form.control}
-                    name="productId"
-                    render={({ field }) => (
-                      <FormItem className="col-span-3">
-                        <FormLabel className="text-xs">Product <span className="text-destructive">*</span></FormLabel>
-                        <FormControl>
-                          <Combobox
-                            options={productOptions}
-                            value={field.value}
-                            onChange={field.onChange}
-                            placeholder="Search products…"
-                            searchPlaceholder="Search by name or SKU"
-                            emptyText="No products found"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="unitPriceCents"
-                    render={({ field }) => (
-                      <FormItem className="col-span-2">
-                        <FormLabel className="text-xs">Price (cents) <span className="text-destructive">*</span></FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="number"
-                            min="0"
-                            placeholder="1000"
-                            className="text-xs"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="minQuantity"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">Min Qty</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="number"
-                            min="1"
-                            placeholder="1"
-                            className="text-xs"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <LoadingButton
-                  type="submit"
-                  size="sm"
-                  isPending={upsertEntry.isPending}
-                  loadingText="Adding..."
-                  className="text-xs"
-                >
-                  Add Entry
-                </LoadingButton>
-              </form>
-            </Form>
+          <div className="rounded-xl border border-border bg-card p-card-pad">
+            <RecordForm
+              key={formGeneration}
+              layout={layout}
+              mode="create"
+              initial={{ minQuantity: "1" }}
+              controls={controls}
+              onSubmit={handleSubmit}
+              isSubmitting={upsertEntry.isPending}
+              submitLabel="Add price"
+            />
           </div>
         </SheetBody>
-
-        <div className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
-          <Button variant="outline" className="w-full" onClick={handleClose}>
-            Close
-          </Button>
-        </div>
       </SheetContent>
     </Sheet>
   );
