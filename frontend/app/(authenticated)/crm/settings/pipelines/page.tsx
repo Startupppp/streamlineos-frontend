@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, Gated } from "@/components/shared";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -155,7 +155,17 @@ export default function PipelinesPage() {
         }
       >
         <div className="flex min-h-0 flex-1 flex-col">
-        {isLoading ? (
+        {/*
+          * Ticket 26. A disabled query reports `isLoading: false` with no data,
+          * which is indistinguishable from a loaded-and-empty one -- so the
+          * ternary this replaced told a caller without the permission that there
+          * was nothing here, rather than that they were not allowed to look.
+          */}
+        <Gated
+          permission="crm:leads:view"
+          isLoading={isLoading}
+          isError={isError}
+          loading={
           <div className="flex gap-4 flex-1 min-h-0">
             <div className="w-[280px] shrink-0 space-y-2">
               {[0, 1, 2].map((i) => <Skeleton key={i} className="h-14 w-full rounded-lg" />)}
@@ -164,14 +174,16 @@ export default function PipelinesPage() {
               {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}
             </div>
           </div>
-        ) : isError ? (
+          }
+          error={
           <ErrorState
             title="Couldn't load pipelines"
             description="The pipeline list didn't load. Check your connection and try again."
             onRetry={handleRetry}
             className={CONTENT_FILL_PANEL}
           />
-        ) : (
+          }
+        >
           <div className="flex min-h-0 flex-1 gap-0 border border-border rounded-xl overflow-hidden bg-card shadow-sm">
             <div className="w-[280px] shrink-0 border-r border-border flex flex-col min-h-0">
               <div className="shrink-0 px-3 py-2.5 border-b border-border">
@@ -280,7 +292,7 @@ export default function PipelinesPage() {
               )}
             </div>
           </div>
-        )}
+        </Gated>
         </div>
       </PageWrapper>
     </>

@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Switch } from "@/components/ui/switch";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, Gated } from "@/components/shared";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { EmptyTargetIllustration } from "@/components/illustrations";
@@ -367,21 +367,33 @@ export default function AssignmentRulesPage() {
           </Button>
         }
       >
-        {isLoading ? (
+        {/*
+          * Ticket 26. A disabled query reports `isLoading: false` with no data,
+          * which is indistinguishable from a loaded-and-empty one -- so the
+          * ternary this replaced told a caller without the permission that there
+          * was nothing here, rather than that they were not allowed to look.
+          */}
+        <Gated
+          permission="crm:assignment-rules:manage"
+          isLoading={isLoading}
+          isError={isError}
+          loading={
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4">
             <div className="space-y-3">
               {[0, 1, 2].map((i) => <Skeleton key={i} className="h-16 w-full" />)}
             </div>
             <Skeleton className="h-80 w-full" />
           </div>
-        ) : isError ? (
+          }
+          error={
           <ErrorState
             title="Couldn't load assignment rules"
             description="The rule list didn't load. Check your connection and try again."
             onRetry={handleRetry}
             className={CONTENT_FILL_PANEL}
           />
-        ) : (
+          }
+        >
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4">
             <div>
               {rules && rules.length > 0 ? (
@@ -421,7 +433,7 @@ export default function AssignmentRulesPage() {
             </div>
             <PreviewPanel />
           </div>
-        )}
+        </Gated>
       </PageWrapper>
     </>
   );
