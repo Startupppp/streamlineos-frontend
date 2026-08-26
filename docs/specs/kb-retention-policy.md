@@ -55,6 +55,10 @@ A full re-index of an org therefore works today by calling `POST /support/kb/rei
 
 All three non-chunk legs are vacuous as of the current codebase: no KB search cache exists to bust, no export artifact file is ever persisted, and no provider-side vector store is used. The erasure propagation criterion is fully satisfied by the chunk sweep alone.
 
+**Export pruning is vacuous today, not by design.** `kb_export_jobs` already declares `fileKey` and `expiresAt` (`db/schema/kb/governance.ts:94-95`) — the table is shaped for a stored artifact and simply never populates it. There is exactly one writer, `kb-import-export.service.ts:59`, and it omits `fileKey`, so the column is always NULL. HR shows the populated form: `hr-export-file.service.ts:96` writes `fileKey: uploaded.key` and `:108` carries the matching `delete(orgId, fileKey)`.
+
+**The first KB path that sets `fileKey` re-opens this leg** — a bulk `scopeType: "all"` export is the likely one, since returning a whole space inline is not viable. Whoever writes it owns deleting the object on erasure and honouring `expiresAt`, and owns re-opening c27-05's erasure criterion. Recorded here because a criterion ticked as "nothing to erase" rots silently the moment there is something to erase.
+
 ## Milestone snapshots
 
 No measurement of storage overhead from full snapshots has been done. The optimization is not justified (YAGNI) until a concrete measurement shows it is warranted.
