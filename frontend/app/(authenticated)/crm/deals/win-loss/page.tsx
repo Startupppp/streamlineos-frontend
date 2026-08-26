@@ -36,7 +36,7 @@ const REASON_COLORS = [
 
 export default function WinLossAnalysisPage() {
   const shouldReduceMotion = useReducedMotion();
-  const { data, isLoading, isError, refetch } = useWinLossAnalysis();
+  const { data, isLoading, isError, refetch, access } = useWinLossAnalysis();
 
   const maxReasonCount = useMemo(
     () => Math.max(1, ...(data?.lostByReason.map((r) => r.count) ?? [])),
@@ -105,6 +105,7 @@ export default function WinLossAnalysisPage() {
         subtitle="Deal outcome breakdown and lost reason attribution"
       >
         <EmptyState
+          access={access}
           illustration={<EmptyDealsIllustration />}
           title="No closed deals yet"
           description="Win/loss data will appear once deals are marked as won or lost."

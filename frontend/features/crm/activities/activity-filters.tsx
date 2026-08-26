@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
@@ -14,6 +14,7 @@ import {
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import { useCrmOptions } from "@/hooks/api/crm/metadata";
+import { activityTypeOptions } from "@/lib/renderer/crm/activity-layout";
 import type {
   CrmActivityType,
   CrmActivityEntityType,
@@ -22,6 +23,14 @@ import type {
 
 function isCrmActivityType(v: string): v is CrmActivityType {
   return v === "CALL" || v === "EMAIL" || v === "MEETING" || v === "CUSTOM";
+}
+
+function isCrmEntityType(v: string): v is CrmActivityEntityType {
+  return v === "LEAD" || v === "DEAL" || v === "CONTACT";
+}
+
+function isCrmActivityStatus(v: string): v is CrmActivityStatus {
+  return v === "pending" || v === "completed" || v === "cancelled";
 }
 
 const ENTITY_TYPES: Array<{ value: CrmActivityEntityType; label: string }> = [
@@ -47,6 +56,8 @@ interface ActivityFiltersProps {
   onStatusChange: (v: CrmActivityStatus | "") => void;
   onClear: () => void;
   hasActiveFilters: boolean;
+  /** Controls that belong in the filter row but are not filters — the density toggle. */
+  trailing?: ReactNode;
 }
 
 export function ActivityFilters({
@@ -60,19 +71,16 @@ export function ActivityFilters({
   onStatusChange,
   onClear,
   hasActiveFilters,
+  trailing,
 }: ActivityFiltersProps) {
-  const { data: activityTypeOptions } = useCrmOptions("activity_type");
+  const { data: declaredTypes } = useCrmOptions("activity_type");
 
-  const activityTypes = useMemo<Array<{ value: CrmActivityType; label: string }>>(() => {
-    if (!activityTypeOptions) return [];
-    const matched: Array<{ value: CrmActivityType; label: string }> = [];
-    for (const o of activityTypeOptions) {
-      if (isCrmActivityType(o.key)) {
-        matched.push({ value: o.key, label: o.label });
-      }
-    }
-    return matched;
-  }, [activityTypeOptions]);
+  /*
+    The same options the list and the log dialog read. Filtering by a type the
+    dropdown does not offer is not possible, so an empty dropdown while the
+    tenant's options load meant the filter silently did not exist.
+  */
+  const activityTypes = useMemo(() => activityTypeOptions(declaredTypes), [declaredTypes]);
 
   const handleSearchChange = useCallback(
     (value: string) => onSearchChange(value),
@@ -80,26 +88,26 @@ export function ActivityFilters({
   );
 
   const handleTypeChange = useCallback(
-    (v: string) => onTypeChange(v === "all" ? "" : isCrmActivityType(v) ? v : ""),
+    (v: string) => onTypeChange(isCrmActivityType(v) ? v : ""),
     [onTypeChange],
   );
 
   const handleEntityTypeChange = useCallback(
-    (v: string) => onEntityTypeChange(v === "all" ? "" : (v as CrmActivityEntityType)),
+    (v: string) => onEntityTypeChange(isCrmEntityType(v) ? v : ""),
     [onEntityTypeChange],
   );
 
   const handleStatusChange = useCallback(
-    (v: string) => onStatusChange(v === "all" ? "" : (v as CrmActivityStatus)),
+    (v: string) => onStatusChange(isCrmActivityStatus(v) ? v : ""),
     [onStatusChange],
   );
 
   return (
     <div className={FILTER_TOOLBAR_ROW}>
-        <SearchInput placeholder="Search activities..." value={search} onValueChange={handleSearchChange} />
+      <SearchInput placeholder="Search activities..." value={search} onValueChange={handleSearchChange} />
 
       <Select value={typeFilter || "all"} onValueChange={handleTypeChange}>
-        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[120px]")}>
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[120px]")} aria-label="Activity type">
           <SelectValue placeholder="All Types" />
         </SelectTrigger>
         <SelectContent>
@@ -113,7 +121,7 @@ export function ActivityFilters({
       </Select>
 
       <Select value={entityTypeFilter || "all"} onValueChange={handleEntityTypeChange}>
-        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[120px]")}>
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[120px]")} aria-label="Related record">
           <SelectValue placeholder="All Entities" />
         </SelectTrigger>
         <SelectContent>
@@ -127,7 +135,7 @@ export function ActivityFilters({
       </Select>
 
       <Select value={statusFilter || "all"} onValueChange={handleStatusChange}>
-        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[120px]")}>
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[120px]")} aria-label="Status">
           <SelectValue placeholder="All Status" />
         </SelectTrigger>
         <SelectContent>
@@ -151,6 +159,8 @@ export function ActivityFilters({
           Clear
         </Button>
       )}
+
+      {trailing ? <div className="ml-auto flex shrink-0 items-center gap-2">{trailing}</div> : null}
     </div>
   );
 }

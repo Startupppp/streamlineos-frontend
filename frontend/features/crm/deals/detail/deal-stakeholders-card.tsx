@@ -30,6 +30,7 @@ import {
 import { useContacts } from "@/hooks/api/crm/contacts";
 
 const SELECT_NONE = "__none__";
+import { NoPermissionState } from "@/components/shared";
 
 interface StakeholderRowProps {
   id: string;
@@ -95,7 +96,7 @@ interface DealStakeholdersCardProps {
 }
 
 export function DealStakeholdersCard({ dealId }: DealStakeholdersCardProps) {
-  const { data: stakeholders = [], isLoading: stakeholdersLoading } =
+  const { data: stakeholders = [], isLoading: stakeholdersLoading, access } =
     useStakeholders(dealId);
   const createStakeholder = useCreateStakeholder(dealId);
   const deleteStakeholder = useDeleteStakeholder(dealId);
@@ -256,7 +257,9 @@ export function DealStakeholdersCard({ dealId }: DealStakeholdersCardProps) {
             </div>
           </div>
         )}
-        {stakeholdersLoading ? (
+        {access.denied ? (
+          <NoPermissionState permission={access.permission} compact />
+        ) : stakeholdersLoading ? (
           <div className="space-y-3" aria-busy="true">
             {[0, 1, 2].map((i) => (
               <div key={i} className="space-y-1.5">

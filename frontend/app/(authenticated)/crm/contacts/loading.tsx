@@ -7,22 +7,22 @@ export default function ContactsLoading() {
   return (
     <PageWrapper
       title="Contacts"
-      subtitle="People directory"
+      subtitle="The people you deal with at each company"
       actions={
         <div className="flex items-center gap-2">
-          <Skeleton className="h-9 w-[64px] rounded-md" />
-          <Skeleton className="h-9 w-28 rounded-md" />
-          <Skeleton className="h-9 w-28 rounded-md" />
+          <Skeleton className="h-9 w-24 rounded-md" />
+          <Skeleton className="h-9 w-32 rounded-md" />
         </div>
       }
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
-          <Skeleton className="h-9 flex-1 max-w-md rounded-md" />
-          <Skeleton className="h-9 w-[120px] rounded-md" />
+          <Skeleton className="h-9 max-w-md flex-1 rounded-md" />
+          <Skeleton className="h-9 w-32 rounded-md" />
+          <Skeleton className="ml-auto h-9 w-24 rounded-md" />
         </div>
       }
     >
-      <DataTableSkeleton rows={12} columns={7} className="flex-1" />
+      <DataTableSkeleton rows={12} columns={6} className="flex-1" />
     </PageWrapper>
   );
 }

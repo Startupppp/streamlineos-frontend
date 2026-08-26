@@ -14,13 +14,17 @@ import {
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { EmptyTasksIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { type RecordValue } from "@/features/renderer";
+import { useDensity } from "@/features/renderer/density-toggle";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { TASK_LAYOUT, taskRecordFields } from "@/lib/renderer/crm/task-layout";
 import {
   useTasks,
   useCompleteTask,
@@ -69,6 +73,21 @@ function isTaskEntityType(v: string): v is TaskEntityType {
   return entityTypes.includes(v);
 }
 
+/**
+ * The follow-up queue.
+ *
+ * No row is drawn here. The columns, the type and status badges, the urgency
+ * verdict, the assignee's name and the mobile card all come from `TASK_LAYOUT`;
+ * the buckets stay because they are the queue's own structure — a task list
+ * sorted by date is a list, a task list split at "overdue" and "today" is a
+ * plan — and each non-empty one holds its own `RecordList`.
+ *
+ * Two things the description deliberately does not carry ride beside it: the
+ * tick that closes a task, in `leading`, because closing one is what this
+ * screen is *for* and putting it behind a menu would put the point of the
+ * screen last; and the edit/delete menu, in `actions`, because what a row can
+ * do depends on the caller rather than on what a task is.
+ */
 function CrmTasksContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -86,6 +105,9 @@ function CrmTasksContent() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editTask, setEditTask] = useState<Task | null>(null);
   const [optimisticCompletedIds, setOptimisticCompletedIds] = useState<Set<number>>(new Set());
+  const [density, setDensity] = useDensity();
+
+  const layout = useTenantLayout(TASK_LAYOUT);
 
   const updateFilter = useCallback(
     (key: string, value: string) => {
@@ -135,13 +157,25 @@ function CrmTasksContent() {
   const completeTaskMutation = useCompleteTask();
   const deleteTaskMutation = useDeleteTask();
 
-  const groupedTasks = useMemo(() => {
+  const memberNames = useMemo(() => {
+    const names = new Map<string, string | null>();
+    for (const member of members) names.set(member.id, member.name);
+    return names;
+  }, [members]);
+
+  /*
+    A pending completion is folded into the projection rather than tracked by
+    the row, so the tick, the status badge and the urgency verdict all move
+    together the moment somebody closes a task.
+  */
+  const bucketRows = useMemo(() => {
     const allTasks = data?.tasks ?? [];
-    const filtered = search
-      ? allTasks.filter((t) => t.title.toLowerCase().includes(search.toLowerCase()))
+    const term = search.trim().toLowerCase();
+    const filtered = term
+      ? allTasks.filter((task) => task.title.toLowerCase().includes(term))
       : allTasks;
 
-    const groups: Record<TaskBucket, Task[]> = {
+    const groups: Record<TaskBucket, RecordValue[]> = {
       OVERDUE: [],
       TODAY: [],
       THIS_WEEK: [],
@@ -150,23 +184,28 @@ function CrmTasksContent() {
     };
 
     for (const task of filtered) {
-      const bucket = getTaskBucket(task.dueDate);
-      groups[bucket].push(task);
+      const status = optimisticCompletedIds.has(task.id) ? "completed" : task.status;
+      groups[getTaskBucket(task.dueDate)].push(
+        taskRecordFields(
+          { ...task, status },
+          task.assigneeId ? memberNames.get(task.assigneeId) : null,
+        ),
+      );
     }
 
     return groups;
-  }, [data?.tasks, search]);
+  }, [data?.tasks, search, optimisticCompletedIds, memberNames]);
 
   const stats = useMemo(() => {
     const allTasks = data?.tasks ?? [];
     return {
       total: allTasks.length,
-      overdue: groupedTasks.OVERDUE.length,
-      today: groupedTasks.TODAY.length,
-      thisWeek: groupedTasks.THIS_WEEK.length,
-      completed: allTasks.filter((t) => t.status === "completed").length,
+      overdue: bucketRows.OVERDUE.length,
+      today: bucketRows.TODAY.length,
+      thisWeek: bucketRows.THIS_WEEK.length,
+      completed: allTasks.filter((task) => task.status === "completed").length,
     };
-  }, [data?.tasks, groupedTasks]);
+  }, [data?.tasks, bucketRows]);
 
   const handleComplete = useCallback(
     (taskId: number) => {
@@ -206,7 +245,13 @@ function CrmTasksContent() {
     [deleteTaskMutation],
   );
 
-  const handleEdit = useCallback((task: Task) => setEditTask(task), []);
+  const handleEdit = useCallback(
+    (taskId: number) => {
+      const found = (data?.tasks ?? []).find((task) => task.id === taskId);
+      if (found) setEditTask(found);
+    },
+    [data?.tasks],
+  );
   const handleEditClose = useCallback((open: boolean) => {
     if (!open) setEditTask(null);
   }, []);
@@ -214,47 +259,12 @@ function CrmTasksContent() {
   const handleCreateOpen = useCallback(() => setCreateOpen(true), []);
   const handleCreateOpenChange = useCallback((open: boolean) => setCreateOpen(open), []);
 
-  const hasAnyTasks = BUCKET_ORDER.some((b) => groupedTasks[b].length > 0);
-
-  if (isLoading) {
-    return (
-      <PageWrapper title="Tasks" subtitle="Follow-ups and action items">
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-4">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <Skeleton key={i} className="h-[52px] rounded-lg" />
-          ))}
-        </div>
-        <div className="space-y-3">
-          {Array.from({ length: 2 }).map((_, i) => (
-            <div key={i} className="rounded-md border border-border overflow-hidden">
-              <div className="flex items-center gap-3 px-4 py-3 bg-muted/30">
-                <Skeleton className="h-4 w-4" />
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-5 w-8 rounded-full" />
-              </div>
-              <div className="divide-y divide-border/50">
-                {Array.from({ length: 8 }).map((_, j) => (
-                  <div key={j} className="flex items-center gap-3 px-4 py-3">
-                    <Skeleton className="h-4 w-4 rounded" />
-                    <Skeleton className="h-4 w-4 rounded" />
-                    <Skeleton className="h-4 flex-1 max-w-xs" />
-                    <Skeleton className="h-3 w-16 ml-auto" />
-                    <Skeleton className="h-6 w-6 rounded-full" />
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </PageWrapper>
-    );
-  }
+  const hasAnyTasks = BUCKET_ORDER.some((bucket) => bucketRows[bucket].length > 0);
 
   return (
     <PageWrapper
       title="Tasks"
-      subtitle={data ? `${stats.total} tasks` : undefined}
-      badge={data ? String(stats.total) : undefined}
+      subtitle="Follow-ups and action items"
       actions={
         <Button onClick={handleCreateOpen}>
           <Plus className="h-3.5 w-3.5" />
@@ -274,20 +284,28 @@ function CrmTasksContent() {
           assigneeFilter={assigneeFilter}
           onAssigneeFilterChange={handleAssigneeFilterChange}
           members={members.map((m) => ({ id: m.id, name: m.name }))}
+          density={density}
+          onDensityChange={setDensity}
           onClearFilters={handleClearFilters}
         />
       }
     >
-      <div className="flex flex-1 min-h-0 flex-col space-y-4">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
         <StatCardGrid cols={5}>
-          <StatCard label="Total" value={stats.total} icon={CheckSquare} tone="default" />
-          <StatCard label="Overdue" value={stats.overdue} icon={AlertCircle} tone="red" />
-          <StatCard label="Due Today" value={stats.today} icon={Clock} tone="blue" />
-          <StatCard label="This Week" value={stats.thisWeek} icon={CalendarDays} tone="amber" />
-          <StatCard label="Completed" value={stats.completed} icon={CheckCheck} tone="emerald" />
+          <StatCard label="Total" value={stats.total} icon={CheckSquare} tone="default" isLoading={isLoading} />
+          <StatCard label="Overdue" value={stats.overdue} icon={AlertCircle} tone="red" isLoading={isLoading} />
+          <StatCard label="Due Today" value={stats.today} icon={Clock} tone="blue" isLoading={isLoading} />
+          <StatCard label="This Week" value={stats.thisWeek} icon={CalendarDays} tone="amber" isLoading={isLoading} />
+          <StatCard label="Completed" value={stats.completed} icon={CheckCheck} tone="emerald" isLoading={isLoading} />
         </StatCardGrid>
 
-        {isError ? (
+        {isLoading ? (
+          <DataTableSkeleton
+            rows={12}
+            columns={layout.list.columns.length + 2}
+            className="flex-1"
+          />
+        ) : isError ? (
           <ErrorState
             title="Failed to load tasks"
             description="Could not load tasks. Please try again."
@@ -298,14 +316,15 @@ function CrmTasksContent() {
           <div className="space-y-3">
             <AnimatePresence>
               {BUCKET_ORDER.map((bucket) => {
-                const tasks = groupedTasks[bucket];
-                if (tasks.length === 0) return null;
+                const rows = bucketRows[bucket];
+                if (rows.length === 0) return null;
                 return (
                   <TaskBucketSection
                     key={bucket}
                     bucket={bucket}
-                    tasks={tasks}
-                    optimisticCompletedIds={optimisticCompletedIds}
+                    layout={layout}
+                    rows={rows}
+                    density={density}
                     onComplete={handleComplete}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
@@ -345,11 +364,11 @@ export default function CrmTasksPage() {
     <Suspense
       fallback={
         <PageWrapper title="Tasks" subtitle="Follow-ups and action items">
-          <div className="space-y-3">
-            {Array.from({ length: 10 }).map((_, i) => (
-              <Skeleton key={i} className="h-[52px] rounded-lg" />
-            ))}
-          </div>
+          <DataTableSkeleton
+            rows={12}
+            columns={TASK_LAYOUT.list.columns.length + 2}
+            className="flex-1"
+          />
         </PageWrapper>
       }
     >

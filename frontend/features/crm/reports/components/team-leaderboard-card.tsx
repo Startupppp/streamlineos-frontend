@@ -1,113 +1,57 @@
-import { useMemo } from "react";
+"use client";
+
+import { useCallback, useMemo } from "react";
 import { Trophy } from "lucide-react";
-import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { TruncatedText } from "@/components/ui/truncated-text";
-import { cn } from "@/lib/utils";
+import { DataTableSkeleton } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
+import { RecordList } from "@/features/renderer";
+import { useDensity } from "@/features/renderer/density-toggle";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { TEAM_LEADERBOARD_LAYOUT } from "@/lib/renderer/crm/reports/team-leaderboard-layout";
+import { repPerformanceFields } from "@/lib/renderer/crm/reports/rep-performance-layout";
+import { useOrgDisplay } from "@/hooks/api/org-display";
+import { useSalesLeaderboard } from "@/hooks/api/leads";
 import type { SalesLeaderboardEntry } from "@/types/leads";
-import { formatCurrency } from "../lib/types";
+
+/**
+ * The team leaderboard.
+ *
+ * `TEAM_LEADERBOARD_LAYOUT` describes the table. Revenue is the engine's `money`
+ * kind read through `useOrgDisplay` rather than a helper that printed ₹ at every
+ * tenant; the conversion rate is computed once in the description instead of
+ * being re-derived in a cell; and the rank's medal tinting is gone because it
+ * gave first and third the same amber and second the same grey as tenth, which
+ * is decoration dressed as a status.
+ *
+ * Rows and the loading flag come from the page. Whether the request failed is
+ * asked of the same leaderboard query — identical key, answered from cache — so
+ * a failure reads as a failure rather than as a team that has done nothing.
+ */
 
 interface TeamLeaderboardCardProps {
   leaderboard: SalesLeaderboardEntry[] | undefined;
   isLoading: boolean;
 }
 
-type RankedEntry = SalesLeaderboardEntry & { rank: number };
-
-const columns: DataTableColumn<RankedEntry>[] = [
-  {
-    key: "rank",
-    header: "Rank",
-    headerClassName: "w-10",
-    cell: (row) => (
-      <span
-        className={cn(
-          "inline-flex h-5 w-5 items-center justify-center rounded-full text-micro font-bold",
-          row.rank === 1 && "bg-status-warning-surface text-status-warning-ink",
-          row.rank === 2 && "bg-muted text-muted-foreground",
-          row.rank === 3 && "bg-status-warning-surface text-status-warning-ink",
-          row.rank > 3 && "text-muted-foreground",
-        )}
-      >
-        {row.rank}
-      </span>
-    ),
-  },
-  {
-    key: "name",
-    header: "Name",
-    sortable: true,
-    sortValue: (row) => row.name,
-    cell: (row) => <TruncatedText text={row.name} className="text-dense font-medium max-w-[120px]" />,
-  },
-  {
-    key: "leadsAssigned",
-    header: "Leads",
-    headerClassName: "text-right",
-    className: "text-right",
-    cell: (row) => (
-      <span className="text-dense font-mono tabular-nums">{row.leadsAssigned}</span>
-    ),
-  },
-  {
-    key: "leadsConverted",
-    header: "Converted",
-    headerClassName: "text-right",
-    className: "text-right",
-    cell: (row) => (
-      <span className="text-dense font-mono tabular-nums text-status-success-ink">
-        {row.leadsConverted}
-      </span>
-    ),
-  },
-  {
-    key: "totalRevenue",
-    header: "Revenue",
-    headerClassName: "text-right",
-    className: "text-right",
-    cell: (row) => (
-      <span className="text-dense font-mono tabular-nums">
-        {formatCurrency(row.totalRevenue)}
-      </span>
-    ),
-  },
-  {
-    key: "convRate",
-    header: "Conv. Rate",
-    headerClassName: "text-right",
-    className: "text-right",
-    cell: (row) => {
-      const convRate =
-        row.leadsAssigned > 0
-          ? ((row.leadsConverted / row.leadsAssigned) * 100).toFixed(1)
-          : "0.0";
-      return (
-        <span
-          className={cn(
-            "text-dense font-medium",
-            Number(convRate) >= 50
-              ? "text-status-success-ink"
-              : Number(convRate) >= 25
-                ? "text-status-warning-ink"
-                : "text-muted-foreground",
-          )}
-        >
-          {convRate}%
-        </span>
-      );
-    },
-  },
-];
-
 export function TeamLeaderboardCard({
   leaderboard,
   isLoading,
 }: TeamLeaderboardCardProps) {
-  const rankedLeaderboard = useMemo(
-    () => (leaderboard ?? []).map((rep, i) => ({ ...rep, rank: i + 1 })),
+  const layout = useTenantLayout(TEAM_LEADERBOARD_LAYOUT);
+  const money = useOrgDisplay();
+  const [density] = useDensity();
+  const { isError, refetch } = useSalesLeaderboard();
+
+  const rows = useMemo(
+    () => (leaderboard ?? []).map((rep, index) => repPerformanceFields(rep, index)),
     [leaderboard],
   );
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   return (
     <Card className="rounded-lg border border-border">
@@ -117,15 +61,31 @@ export function TeamLeaderboardCard({
           Team Leaderboard
         </CardTitle>
       </CardHeader>
-      <DataTable
-        data={rankedLeaderboard}
-        columns={columns}
-        getRowKey={(row) => row.userId}
-        isLoading={isLoading}
-        emptyState={
-          <ChartEmptyState message="No rep has worked a lead yet" compact className="py-10 px-4" />
-        }
-      />
+      {isLoading ? (
+        <DataTableSkeleton rows={6} columns={layout.list.columns.length} className="border-0" />
+      ) : isError ? (
+        <ErrorState
+          compact
+          title="Couldn't load the leaderboard"
+          description="The leaderboard didn't load. Check your connection and try again."
+          onRetry={handleRetry}
+        />
+      ) : rows.length === 0 ? (
+        <EmptyState
+          compact
+          title="No rep has worked a lead yet"
+          description="Assign a lead to somebody and they take their place here."
+        />
+      ) : (
+        <RecordList
+          layout={layout}
+          rows={rows}
+          getRowKey={(row) => String(row.userId)}
+          density={density}
+          money={money}
+          minWidth="720px"
+        />
+      )}
     </Card>
   );
 }

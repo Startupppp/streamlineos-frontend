@@ -2,9 +2,19 @@
 
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { PageWrapper } from "@/components/ui/page-wrapper";
+import { ArrowRight, FileSpreadsheet, Users } from "lucide-react";
+import { EmptyLeadsIllustration } from "@/components/illustrations";
+import { ErrorState } from "@/components/shared/error-state";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import {
+  CONTENT_FILL_PANEL,
+  FILTER_SELECT_TRIGGER,
+  FILTER_TOOLBAR_ROW,
+} from "@/components/ui/content-fill-panel";
+import { DataTableSkeleton } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
   SelectContent,
@@ -12,94 +22,71 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SearchInput } from "@/components/ui/search-input";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { EmptyState } from "@/components/ui/empty-state";
-import { EmptyLeadsIllustration } from "@/components/illustrations";
-import { ErrorState } from "@/components/shared/error-state";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ImportLinkButton } from "@/features/crm/import/import-link-button";
 import { LeadDistributionDialog } from "@/features/crm/leads/lead-distribution-dialog";
-import { Users, ArrowRight, FileSpreadsheet } from "lucide-react";
-import { useLeads } from "@/hooks/api/leads";
+import { toLeadRecords } from "@/features/crm/leads/lead-record";
+import { useLeadLayout } from "@/features/crm/leads/use-lead-layout";
+import { RecordList } from "@/features/renderer";
+import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
 import { useCan } from "@/hooks/api/access";
-import { useQueryClient } from "@tanstack/react-query";
+import { useLeads } from "@/hooks/api/leads";
+import { useOrgDisplay } from "@/hooks/api/org-display";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import { queryKeys } from "@/lib/query-keys";
-import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
-import type { Lead, PipelineStatus } from "@/types/leads";
+import { queryKeys } from "@/lib/query-keys";
+import { withColumns } from "@/lib/renderer/layout-adjustment";
+import { fieldByName } from "@/lib/renderer/layout";
+import { cn } from "@/lib/utils";
+import { useQueryClient } from "@tanstack/react-query";
+import type { PipelineStatus } from "@/types/leads";
 
-const STATUS_BADGE: Record<string, string> = {
-  NEW: "bg-status-info-surface text-status-info-ink border-status-info-rule",
-  CONTACTED: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
-  INTERESTED: "bg-status-info-surface text-status-info-ink border-status-info-rule",
-  QUALIFIED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
-  CONVERTED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
-  LOST: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
-};
+/**
+ * Handing unassigned leads out to the people who will work them.
+ *
+ * No columns are written here. The table this replaced carried its own
+ * `DataTableColumn<Lead>[]` and its own `STATUS_BADGE` map painting the six
+ * pipeline statuses — the third copy of a colour table `LEAD_LAYOUT` already
+ * held, and one that had already drifted: it painted CONTACTED amber where the
+ * lead list painted it blue, so the same lead wore two different colours on two
+ * screens of the same product.
+ *
+ * The columns come from the shared description, narrowed to the six this job
+ * needs. Distribution is an identification task — you are deciding who should
+ * own this person — so it asks for the name, how to reach them, where they came
+ * from and who has them, and none of the pipeline's value or score columns.
+ */
 
-const LEAD_COLUMNS: DataTableColumn<Lead>[] = [
-  {
-    key: "name",
-    header: "Name",
-    cell: (lead) => <span className="font-medium">{lead.name}</span>,
-    sortable: true,
-    sortValue: (lead) => lead.name,
-  },
-  {
-    key: "email",
-    header: "Email",
-    cell: (lead) => (
-      <span className="text-muted-foreground">{lead.email ?? "—"}</span>
-    ),
-  },
-  {
-    key: "phone",
-    header: "Phone",
-    className: "font-mono",
-    cell: (lead) => (
-      <span className="text-muted-foreground">{lead.phone ?? "—"}</span>
-    ),
-  },
-  {
-    key: "source",
-    header: "Source",
-    cell: (lead) => (
-      <Badge variant="outline" className="text-micro px-1.5 py-0 h-4">
-        {lead.source ?? "—"}
-      </Badge>
-    ),
-  },
-  {
-    key: "status",
-    header: "Status",
-    cell: (lead) => (
-      <Badge
-        variant="outline"
-        className={cn("text-micro px-1.5 py-0 h-4", STATUS_BADGE[lead.status] ?? "")}
-      >
-        {lead.status}
-      </Badge>
-    ),
-  },
-  {
-    key: "assignedTo",
-    header: "Assigned To",
-    cell: (lead) => (
-      <span className={lead.assignedTo?.name ? "" : "text-muted-foreground"}>
-        {lead.assignedTo?.name ?? "Unassigned"}
-      </span>
-    ),
-  },
-];
+/**
+ * The two endings, which are not worth distributing.
+ *
+ * A converted or lost lead is finished, and handing one to a rep is work nobody
+ * will do. Every other status — including one this tenant invented — is offered,
+ * because the filter reads the description's options rather than a list retyped
+ * here.
+ */
+const TERMINAL_STATUSES = new Set(["CONVERTED", "LOST"]);
+
+const COLUMNS = ["name", "email", "phone", "source", "status", "assignedToName"] as const;
+
+const PAGE_SIZE = 50;
 
 export default function LeadDistributionPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const qc = useQueryClient();
   const canCreateLead = useCan("crm:leads:create");
+
+  const leadLayout = useLeadLayout();
+  const layout = useMemo(() => withColumns(leadLayout, COLUMNS), [leadLayout]);
+  const statusOptions = useMemo(
+    () => (fieldByName(leadLayout, "status")?.options ?? []).filter(
+      (option) => !TERMINAL_STATUSES.has(option.value),
+    ),
+    [leadLayout],
+  );
+  const money = useOrgDisplay();
+  const [density, setDensity] = useDensity();
 
   const [inputValue, setInputValue] = useState(searchParams.get("q") ?? "");
   const [statusFilter, setStatusFilter] = useState(searchParams.get("status") ?? "all");
@@ -129,18 +116,27 @@ export default function LeadDistributionPage() {
     void qc.invalidateQueries({ queryKey: queryKeys.leads.all });
   }, [qc]);
 
-  const filteredLeads = useMemo(() => data?.leads ?? [], [data]);
+  const leads = useMemo(() => data?.leads ?? [], [data]);
+  const rows = useMemo(() => toLeadRecords(leads), [leads]);
 
   const unassignedCount = useMemo(
-    () => filteredLeads.filter((l) => !l.assignedTo?.id).length,
-    [filteredLeads],
+    () => leads.filter((lead) => !lead.assignedTo?.id).length,
+    [leads],
   );
 
-  const handleSearchChange = useCallback((value: string) => {
-    setInputValue(value);
-    },
-    [],
+  /**
+   * The table addresses rows by the string key `getRowKey` produced; the
+   * distribute endpoint addresses them by their numeric id.
+   */
+  const selection = useMemo(
+    () => ({
+      selected: new Set<string | number>([...selectedIds].map(String)),
+      onChange: (next: Set<string | number>) => setSelectedIds(new Set([...next].map(Number))),
+    }),
+    [selectedIds],
   );
+
+  const handleSearchChange = useCallback((value: string) => setInputValue(value), []);
 
   const handleStatusChange = useCallback(
     (value: string) => {
@@ -152,13 +148,6 @@ export default function LeadDistributionPage() {
       router.replace(`?${params.toString()}`);
     },
     [searchParams, router],
-  );
-
-  const handleSelectionChange = useCallback(
-    (sel: Set<string | number>) => {
-      setSelectedIds(new Set([...sel].map(Number)));
-    },
-    [],
   );
 
   const handleClearSelection = useCallback(() => setSelectedIds(new Set()), []);
@@ -179,74 +168,62 @@ export default function LeadDistributionPage() {
   const activeFilterLabels = useMemo(() => {
     const labels: string[] = [];
     if (debouncedInput.trim()) labels.push(`search "${debouncedInput.trim()}"`);
-    if (statusFilter !== "all") labels.push(`status ${statusFilter.toLowerCase()}`);
+    if (statusFilter !== "all") {
+      const label = statusOptions.find((option) => option.value === statusFilter)?.label;
+      labels.push(`status ${(label ?? statusFilter).toLowerCase()}`);
+    }
     return labels;
-  }, [debouncedInput, statusFilter]);
+  }, [debouncedInput, statusFilter, statusOptions]);
 
-  const emptyState = activeFilterLabels.length > 0 ? (
-    <EmptyState
-      illustration={<EmptyLeadsIllustration />}
-      title="No leads match these filters"
-      description={`Filtering by ${activeFilterLabels.join(", ")}. Clear the filters to see every lead.`}
-      action={{ label: "Clear filters", onClick: handleClearFilters }}
-      actionVariant="outline"
-      className="border-0 bg-transparent"
-    />
-  ) : (
-    <EmptyState
-      illustration={<EmptyLeadsIllustration />}
-      title="No leads to distribute"
-      description="Distribution hands unassigned leads out to your reps. Import a list, or add leads, and they show up here."
-      action={canCreateLead ? { label: "Import leads", href: "/crm/import?entity=leads" } : undefined}
-      className="border-0 bg-transparent"
-    />
-  );
+  const isFiltered = activeFilterLabels.length > 0;
 
   return (
     <PageWrapper
-      title="Lead Distribution"
+      title="Lead distribution"
       subtitle={isLoading ? undefined : `${data?.totalCount ?? 0} leads`}
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
-          <SearchInput placeholder="Search leads..." value={inputValue} onValueChange={handleSearchChange} />
+          <SearchInput
+            placeholder={layout.list.searchPlaceholder}
+            value={inputValue}
+            onValueChange={handleSearchChange}
+          />
           <Select value={statusFilter} onValueChange={handleStatusChange}>
-            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[140px]")}>
+            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-36")} aria-label="Status">
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all" className="text-xs">All statuses</SelectItem>
-              <SelectItem value="NEW" className="text-xs">New</SelectItem>
-              <SelectItem value="CONTACTED" className="text-xs">Contacted</SelectItem>
-              <SelectItem value="INTERESTED" className="text-xs">Interested</SelectItem>
-              <SelectItem value="QUALIFIED" className="text-xs">Qualified</SelectItem>
+              {/* The sentinel removes the filter rather than sending "all". */}
+              <SelectItem value="all">All statuses</SelectItem>
+              {statusOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
-          {selectedIds.size > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs"
-              onClick={handleClearSelection}
-            >
+          {selectedIds.size > 0 ? (
+            <Button variant="ghost" size="sm" onClick={handleClearSelection}>
               Clear selection
             </Button>
-          )}
+          ) : null}
+          <DensityToggle density={density} onChange={setDensity} />
         </div>
       }
       actions={
         <>
-          {canCreateLead ? <ImportLinkButton entity="leads" label="Import Leads" /> : null}
+          {canCreateLead ? <ImportLinkButton entity="leads" label="Import leads" /> : null}
           <Button disabled={selectedIds.size === 0} onClick={handleShowDistribute}>
-            <Users className="h-3.5 w-3.5 mr-1.5" />
+            <Users className="mr-1.5 h-3.5 w-3.5" />
             Distribute ({selectedIds.size})
           </Button>
         </>
       }
     >
-      <div className="flex flex-1 min-h-0 flex-col space-y-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-4">
         <StatCardGrid cols={3}>
           <StatCard
-            label="Total Leads"
+            label="Total leads"
             value={data?.totalCount ?? 0}
             icon={FileSpreadsheet}
             tone="blue"
@@ -259,34 +236,48 @@ export default function LeadDistributionPage() {
             tone="amber"
             isLoading={isLoading}
           />
-          <StatCard
-            label="Selected"
-            value={selectedIds.size}
-            icon={ArrowRight}
-            tone="default"
-          />
+          <StatCard label="Selected" value={selectedIds.size} icon={ArrowRight} tone="default" />
         </StatCardGrid>
 
-        {isError ? (
+        {isLoading ? (
+          <DataTableSkeleton rows={12} columns={layout.list.columns.length} className="flex-1" />
+        ) : isError ? (
           <ErrorState
+            title="Couldn't load leads"
             description={getErrorMessage(error)}
             onRetry={refetch}
-            className="flex-1"
+            className={CONTENT_FILL_PANEL}
+          />
+        ) : leads.length === 0 ? (
+          <EmptyState
+            illustration={<EmptyLeadsIllustration />}
+            title={isFiltered ? "No leads match these filters" : "No leads to distribute"}
+            description={
+              isFiltered
+                ? `Filtering by ${activeFilterLabels.join(", ")}. Clear the filters to see every lead.`
+                : "Distribution hands unassigned leads out to your reps. Import a list, or add leads, and they show up here."
+            }
+            action={
+              isFiltered
+                ? { label: "Clear filters", onClick: handleClearFilters }
+                : canCreateLead
+                  ? { label: "Import leads", href: "/crm/import?entity=leads" }
+                  : undefined
+            }
+            actionVariant={isFiltered ? "outline" : undefined}
+            className={CONTENT_FILL_PANEL}
           />
         ) : (
-          <DataTable
-            data={filteredLeads}
-            columns={LEAD_COLUMNS}
-            getRowKey={(lead) => lead.id}
-            isLoading={isLoading}
-            className="flex-1 min-h-0"
-            selection={{
-              selected: new Set<string | number>([...selectedIds]),
-              onChange: handleSelectionChange,
-            }}
-            pagination={{ pageSize: 50 }}
-            minWidth="640px"
-            emptyState={emptyState}
+          <RecordList
+            layout={layout}
+            rows={rows}
+            getRowKey={(row) => String(row.id)}
+            selection={selection}
+            density={density}
+            money={money}
+            minWidth="900px"
+            className={CONTENT_FILL_PANEL}
+            pagination={{ pageSize: PAGE_SIZE }}
           />
         )}
       </div>

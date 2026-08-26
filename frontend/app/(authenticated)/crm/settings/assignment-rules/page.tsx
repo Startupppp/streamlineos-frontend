@@ -232,7 +232,7 @@ function PreviewPanel() {
 
 export default function AssignmentRulesPage() {
   const qc = useQueryClient();
-  const { data: rules, isLoading, isError, refetch } = useAssignmentRules();
+  const { data: rules, isLoading, isError, refetch, access } = useAssignmentRules();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<AssignmentRule | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
@@ -411,6 +411,7 @@ export default function AssignmentRulesPage() {
                 </DragDropContext>
               ) : (
                 <EmptyState
+                  access={access}
                   illustration={<EmptyTargetIllustration />}
                   title="No assignment rules"
                   description="Create rules to automatically assign incoming leads to the right people."

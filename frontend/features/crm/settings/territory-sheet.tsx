@@ -1,379 +1,191 @@
 "use client";
 
-import { useCallback, useRef, useState, KeyboardEvent } from "react";
-import { useForm, useController, type Control } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { territorySchema, type TerritoryFormValues } from "./territory-sheet-schema";
-import { X } from "lucide-react";
+import { useMemo, type ReactNode } from "react";
+import { toast } from "sonner";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetBody,
+  Sheet,
+  SheetBody,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
 } from "@/components/ui/sheet";
 import {
-  Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { LoadingButton } from "@/components/ui/loading-button";
-import { cn } from "@/lib/utils";
-import type { Territory, TerritoryCriteria } from "@/hooks/api/crm-settings";
+  RecordForm,
+  type RecordFieldControl,
+  type RecordFormValues,
+} from "@/features/renderer";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import {
+  useCreateTerritory,
+  useUpdateTerritory,
+  type Territory,
+  type TerritoryCriteria,
+} from "@/hooks/api/crm-settings";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { TERRITORY_LAYOUT } from "@/lib/renderer/crm/settings/territory-layout";
+import { ChipControl } from "./shared/chip-control";
+import {
+  flagOr,
+  flagOrOmit,
+  listValue,
+  numberOr,
+  numberOrOmit,
+  requiredText,
+  textOrNull,
+  textOrOmit,
+} from "./shared/record-payload";
 
-export type { TerritoryFormValues };
+/**
+ * Create and edit a territory, rendered from the description.
+ *
+ * Eight chip editors are supplied through `controls`; nothing else about this
+ * form is written here. What the sheet still owns is the one thing a description
+ * cannot express — that `criteria` is a single stored object, so an update has
+ * to overlay the fields the form rendered onto the ones it did not. Sending a
+ * criteria object built only from what was on screen would silently drop the
+ * postal codes of anyone who had hidden that field.
+ */
 
-function criteriaFromForm(form: TerritoryFormValues): TerritoryCriteria {
-  return {
-    countries: form.countries.length > 0 ? form.countries : undefined,
-    states: form.states.length > 0 ? form.states : undefined,
-    cities: form.cities.length > 0 ? form.cities : undefined,
-    postalCodes: form.postalCodes.length > 0 ? form.postalCodes : undefined,
-    industries: form.industries.length > 0 ? form.industries : undefined,
-    companySizes: form.companySizes.length > 0 ? form.companySizes : undefined,
-    productKeys: form.productKeys.length > 0 ? form.productKeys : undefined,
-    accountTypes: form.accountTypes.length > 0 ? form.accountTypes : undefined,
-  };
-}
+const CRITERIA_PLACEHOLDERS: Record<string, string> = {
+  countries: "India, Singapore… press Enter",
+  states: "Maharashtra, Karnataka…",
+  cities: "Mumbai, Bengaluru…",
+  postalCodes: "400001, 560001…",
+  industries: "Technology, Finance…",
+  companySizes: "1-10, 11-50…",
+  productKeys: "CRM, ERP…",
+  accountTypes: "enterprise, smb…",
+};
 
-function formFromTerritory(t: Territory): TerritoryFormValues {
-  return {
-    name: t.name,
-    description: t.description ?? "",
-    priority: String(t.priority),
-    isActive: t.isActive,
-    countries: t.criteria.countries ?? [],
-    states: t.criteria.states ?? t.states ?? [],
-    cities: t.criteria.cities ?? t.cities ?? [],
-    postalCodes: t.criteria.postalCodes ?? [],
-    industries: t.criteria.industries ?? [],
-    companySizes: t.criteria.companySizes ?? [],
-    productKeys: t.criteria.productKeys ?? [],
-    accountTypes: t.criteria.accountTypes ?? [],
-  };
-}
-
-export function buildTerritoryPayload(data: TerritoryFormValues) {
-  return {
-    name: data.name,
-    description: data.description || undefined,
-    priority: Number(data.priority),
-    isActive: data.isActive,
-    criteria: criteriaFromForm(data),
-  };
-}
-
-interface ChipBadgeProps {
-  chip: string;
-  onRemove: (chip: string) => void;
-}
-
-function ChipBadge({ chip, onRemove }: ChipBadgeProps) {
-  const handleClick = useCallback(
-    (e: React.MouseEvent) => { e.stopPropagation(); onRemove(chip); },
-    [chip, onRemove]
-  );
-  return (
-    <Badge variant="secondary" className="h-5 px-1.5 text-micro gap-0.5 shrink-0">
-      {chip}
-      <button
-        type="button"
-        aria-label={`Remove ${chip}`}
-        onClick={handleClick}
-        className="ml-0.5 rounded-full hover:bg-muted-foreground/20 p-0.5"
-      >
-        <X className="h-2.5 w-2.5" />
-      </button>
-    </Badge>
-  );
-}
-
-interface ChipInputProps {
-  value: string[];
-  onChange: (v: string[]) => void;
-  placeholder?: string;
-  className?: string;
-}
-
-function ChipInput({ value, onChange, placeholder, className }: ChipInputProps) {
-  const [inputVal, setInputVal] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const addChip = useCallback(
-    (raw: string) => {
-      const trimmed = raw.trim();
-      if (trimmed && !value.includes(trimmed)) {
-        onChange([...value, trimmed]);
-      }
-      setInputVal("");
-    },
-    [value, onChange]
-  );
-
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter" || e.key === ",") {
-        e.preventDefault();
-        addChip(inputVal);
-      } else if (e.key === "Backspace" && inputVal === "" && value.length > 0) {
-        onChange(value.slice(0, -1));
-      }
-    },
-    [inputVal, addChip, value, onChange]
-  );
-
-  const handleBlur = useCallback(() => {
-    if (inputVal.trim()) addChip(inputVal);
-  }, [inputVal, addChip]);
-
-  const handleContainerClick = useCallback(() => {
-    inputRef.current?.focus();
-  }, []);
-
-  const handleRemove = useCallback(
-    (chip: string) => {
-      onChange(value.filter((v) => v !== chip));
-    },
-    [value, onChange]
-  );
-
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setInputVal(e.target.value),
-    []
-  );
-
-  return (
-    <div
-      onClick={handleContainerClick}
-      className={cn(
-        "flex flex-wrap gap-1 min-h-9 w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm ring-offset-background",
-        "focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 cursor-text",
-        className
-      )}
-    >
-      {value.map((chip) => (
-        <ChipBadge key={chip} chip={chip} onRemove={handleRemove} />
-      ))}
-      <input
-        ref={inputRef}
-        value={inputVal}
-        onChange={handleInputChange}
-        onKeyDown={handleKeyDown}
-        onBlur={handleBlur}
-        placeholder={value.length === 0 ? placeholder : undefined}
-        className="flex-1 min-w-[80px] bg-transparent outline-none text-xs placeholder:text-muted-foreground"
-      />
-    </div>
-  );
-}
-
-type CriteriaFieldName = "countries" | "states" | "cities" | "postalCodes" | "industries" | "companySizes" | "productKeys" | "accountTypes";
-
-interface ChipFieldProps {
-  name: CriteriaFieldName;
-  label: string;
-  placeholder: string;
-  control: Control<TerritoryFormValues>;
-}
-
-function ChipField({ name, label, placeholder, control }: ChipFieldProps) {
-  const { field } = useController({ name, control });
-  const chips: string[] = field.value ?? [];
-
-  const handleChange = useCallback(
-    (v: string[]) => field.onChange(v),
-    [field]
-  );
-
-  return (
-    <FormField
-      control={control}
-      name={name}
-      render={() => (
-        <FormItem>
-          <FormLabel className="text-xs">{label}</FormLabel>
-          <FormControl>
-            <ChipInput
-              value={chips}
-              onChange={handleChange}
-              placeholder={placeholder}
-            />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-  );
-}
+const CRITERIA_FIELDS = Object.keys(CRITERIA_PLACEHOLDERS);
 
 interface TerritorySheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  editing: Territory | null;
-  isPending: boolean;
-  onSubmit: (data: TerritoryFormValues) => void;
+  territory: Territory | null;
 }
 
-const EMPTY_DEFAULTS: TerritoryFormValues = {
-  name: "",
-  description: "",
-  priority: "0",
-  isActive: true,
-  countries: [],
-  states: [],
-  cities: [],
-  postalCodes: [],
-  industries: [],
-  companySizes: [],
-  productKeys: [],
-  accountTypes: [],
-};
+function initialValues(territory: Territory): Record<string, unknown> {
+  const criteria = territory.criteria;
+  return {
+    name: territory.name,
+    description: territory.description ?? "",
+    priority: territory.priority,
+    isActive: territory.isActive,
+    countries: criteria.countries ?? [],
+    states: criteria.states ?? territory.states,
+    cities: criteria.cities ?? territory.cities,
+    postalCodes: criteria.postalCodes ?? [],
+    industries: criteria.industries ?? [],
+    companySizes: criteria.companySizes ?? [],
+    productKeys: criteria.productKeys ?? [],
+    accountTypes: criteria.accountTypes ?? [],
+  };
+}
 
-const CRITERIA_FIELDS: Array<{
-  name: CriteriaFieldName;
-  label: string;
-  placeholder: string;
-}> = [
-  { name: "countries", label: "Countries", placeholder: "India, US… press Enter" },
-  { name: "states", label: "States", placeholder: "Maharashtra, California…" },
-  { name: "cities", label: "Cities", placeholder: "Mumbai, San Francisco…" },
-  { name: "postalCodes", label: "Postal Codes", placeholder: "400001, 94102…" },
-  { name: "industries", label: "Industries", placeholder: "Technology, Finance…" },
-  { name: "companySizes", label: "Company Sizes", placeholder: "1-10, 11-50…" },
-  { name: "productKeys", label: "Products", placeholder: "CRM, ERP…" },
-  { name: "accountTypes", label: "Account Types", placeholder: "enterprise, smb…" },
-];
+/** Only the criteria the form actually rendered, overlaid on what is stored. */
+function criteriaFrom(values: RecordFormValues, stored?: TerritoryCriteria): TerritoryCriteria {
+  const next: TerritoryCriteria = { ...stored };
+  for (const name of CRITERIA_FIELDS) {
+    const entries = listValue(values, name);
+    if (entries === undefined) continue;
+    Object.assign(next, { [name]: entries.length > 0 ? entries : undefined });
+  }
+  return next;
+}
 
-export function TerritorySheet({
-  open,
-  onOpenChange,
-  editing,
-  isPending,
-  onSubmit,
-}: TerritorySheetProps) {
-  const form = useForm<TerritoryFormValues>({
-    resolver: zodResolver(territorySchema),
-    defaultValues: editing ? formFromTerritory(editing) : EMPTY_DEFAULTS,
-  });
+export function TerritorySheet({ open, onOpenChange, territory }: TerritorySheetProps) {
+  const layout = useTenantLayout(TERRITORY_LAYOUT);
+  const createTerritory = useCreateTerritory();
+  const updateTerritory = useUpdateTerritory();
+  const isEditing = territory !== null;
+  const isPending = createTerritory.isPending || updateTerritory.isPending;
 
-  const handleOpenChange = useCallback(
-    (next: boolean) => {
-      if (!next) form.reset(editing ? formFromTerritory(editing) : EMPTY_DEFAULTS);
-      onOpenChange(next);
-    },
-    [form, editing, onOpenChange]
-  );
+  const controls = useMemo(() => {
+    const map: Record<string, (control: RecordFieldControl) => ReactNode> = {};
+    for (const name of CRITERIA_FIELDS)
+      map[name] = (control: RecordFieldControl) => (
+        <ChipControl
+          value={control.value}
+          onChange={control.onChange}
+          disabled={control.disabled}
+          placeholder={CRITERIA_PLACEHOLDERS[name]}
+        />
+      );
+    return map;
+  }, []);
 
-  const handleSubmit = useCallback(
-    (data: TerritoryFormValues) => {
-      onSubmit(data);
-    },
-    [onSubmit]
-  );
+  function handleClose() {
+    onOpenChange(false);
+  }
 
-  const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
+  function handleSubmit(values: RecordFormValues) {
+    const criteria = criteriaFrom(values, territory?.criteria);
+
+    if (territory) {
+      updateTerritory.mutate(
+        {
+          id: territory.id,
+          name: textOrOmit(values, "name"),
+          description: textOrNull(values, "description"),
+          priority: numberOrOmit(values, "priority"),
+          isActive: flagOrOmit(values, "isActive"),
+          criteria,
+        },
+        {
+          onSuccess: () => {
+            toast.success("Territory updated");
+            onOpenChange(false);
+          },
+          onError: (error) => toast.error(getErrorMessage(error)),
+        },
+      );
+      return;
+    }
+
+    createTerritory.mutate(
+      {
+        name: requiredText(values, "name"),
+        description: textOrOmit(values, "description"),
+        priority: numberOr(values, "priority", 0),
+        isActive: flagOr(values, "isActive", true),
+        criteria,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Territory created");
+          onOpenChange(false);
+        },
+        onError: (error) => toast.error(getErrorMessage(error)),
+      },
+    );
+  }
 
   return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
-        <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
-          <SheetTitle>{editing ? "Edit Territory" : "New Territory"}</SheetTitle>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-lg">
+        <SheetHeader className="shrink-0 border-b px-6 py-4">
+          <SheetTitle>{isEditing ? "Edit territory" : "New territory"}</SheetTitle>
+          <SheetDescription>
+            A territory routes a lead to the reps who cover it. Type a value and press Enter or
+            comma to add it.
+          </SheetDescription>
         </SheetHeader>
+
         <SheetBody className="px-6 py-5">
-          <Form {...form}>
-            <form id="territory-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name <span className="text-destructive">*</span></FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="e.g. West India" className="" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        placeholder="Optional description"
-                        className="resize-none min-h-[72px]"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="priority"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Priority</FormLabel>
-                      <FormControl>
-                        <Input type="number" min={0} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="isActive"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col justify-end pb-1">
-                      <FormLabel>Active</FormLabel>
-                      <FormControl>
-                        <Switch checked={field.value} onCheckedChange={field.onChange} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div>
-                <p className="text-sm font-medium mb-3">Criteria</p>
-                <p className="text-xs text-muted-foreground mb-3">
-                  Type a value and press Enter or comma to add. Click × to remove.
-                </p>
-                <div className="space-y-3">
-                  {CRITERIA_FIELDS.map((cf) => (
-                    <ChipField
-                      key={cf.name}
-                      name={cf.name}
-                      label={cf.label}
-                      placeholder={cf.placeholder}
-                      control={form.control}
-                    />
-                  ))}
-                </div>
-              </div>
-            </form>
-          </Form>
+          <RecordForm
+            key={territory?.id ?? "new"}
+            layout={layout}
+            mode={isEditing ? "edit" : "create"}
+            initial={territory ? initialValues(territory) : { priority: "0", isActive: "true" }}
+            controls={controls}
+            onSubmit={handleSubmit}
+            onCancel={handleClose}
+            isSubmitting={isPending}
+            submitLabel={isEditing ? "Save changes" : "Create territory"}
+          />
         </SheetBody>
-        <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
-          <div className="grid w-full grid-cols-2 gap-2">
-            <Button type="button" variant="outline" onClick={handleCancel}>
-              Cancel
-            </Button>
-            <LoadingButton
-              type="submit"
-              form="territory-form"
-              isPending={isPending}
-              loadingText="Saving..."
-            >
-              {editing ? "Save Changes" : "Create Territory"}
-            </LoadingButton>
-          </div>
-        </SheetFooter>
       </SheetContent>
     </Sheet>
   );

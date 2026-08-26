@@ -5,6 +5,8 @@ import { cn } from "../../lib/utils";
 import { Button } from "./button";
 import Link from "next/link";
 import { StateIllustration, type StateIllustrationPreset } from "@/components/illustrations/state-illustration";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
+import type { PermissionGate } from "@/lib/rbac/permission-gate";
 
 interface ActionProps {
   label: string;
@@ -24,6 +26,17 @@ interface EmptyStateProps {
   actionVariant?: "default" | "outline";
   className?: string;
   compact?: boolean;
+  /**
+   * The gate on the read this emptiness is claimed from.
+   *
+   * A refused read holds no rows for the same reason a finished one can hold
+   * none, and a disabled TanStack query reports `isLoading: false` — so a
+   * screen reaches its empty branch either way and asserts the stronger of the
+   * two facts. Given the gate, an empty state refuses to make a claim it cannot
+   * evidence and states the refusal instead. The four meanings are unchanged;
+   * denial simply preempts them.
+   */
+  access?: PermissionGate;
 }
 
 function ActionButton({
@@ -72,7 +85,18 @@ export function EmptyState({
   actionVariant,
   className,
   compact = false,
+  access,
 }: EmptyStateProps) {
+  if (access?.denied) {
+    return (
+      <NoPermissionState
+        permission={access.permission}
+        className={className}
+        compact={compact}
+      />
+    );
+  }
+
   const size = illustrationSize ?? (compact ? "sm" : "md");
 
   // Always show an illustration — use explicit prop, preset, or a sensible default SVG

@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Briefcase, Clock, FileText, Handshake, Contact2, BarChart3, UserCheck, ShieldCheck, Star, TrendingUp, Package, Share2, MailOpen, Zap, History, BarChart2, Inbox, Building2, SlidersHorizontal, Brain, Copy, Search, Sliders, CheckSquare, Key, Activity, Megaphone, Bot, ArrowLeftRight, AlertTriangle } from "lucide-react";
+import { LayoutDashboard, Users, Briefcase, Clock, FileText, Handshake, Contact2, BarChart3, UserCheck, ShieldCheck, Star, TrendingUp, Package, Share2, MailOpen, Zap, History, BarChart2, Inbox, Building2, SlidersHorizontal, Brain, Copy, Search, Sliders, CheckSquare, Key, Activity, Megaphone, Bot, ArrowLeftRight, AlertTriangle, Rows3 } from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
 export const CRM_NAV_GROUPS: NavGroup[] = [
@@ -226,6 +226,12 @@ export const CRM_NAV_GROUPS: NavGroup[] = [
             icon: Sliders,
             href: "/crm/settings/custom-fields",
             requiredPermission: "crm:settings:manage",
+          },
+          {
+            label: "Record Layouts",
+            icon: Rows3,
+            href: "/crm/settings/layouts",
+            requiredPermission: "crm:settings:view",
           },
           {
             label: "Automations",

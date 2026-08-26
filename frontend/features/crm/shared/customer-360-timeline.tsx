@@ -13,6 +13,7 @@ const TYPE_LABELS: Record<string, string> = {
   deal_created: "Deal created",
   lead_linked: "Lead linked",
 };
+import { NoPermissionState } from "@/components/shared";
 
 function TimelineEventRow({ event }: { event: TimelineEvent }) {
   return (
@@ -41,7 +42,7 @@ interface Customer360TimelineProps {
 }
 
 export function Customer360Timeline({ companyId }: Customer360TimelineProps) {
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, access } =
     useCompany360Timeline(companyId);
 
   const allEvents = data?.pages.flatMap((p) => p.items) ?? [];
@@ -69,7 +70,9 @@ export function Customer360Timeline({ companyId }: Customer360TimelineProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="px-4 py-3">
-        {allEvents.length === 0 ? (
+        {access.denied ? (
+          <NoPermissionState permission={access.permission} compact />
+        ) : allEvents.length === 0 ? (
           <p className="text-xs text-muted-foreground py-2">No activity recorded yet.</p>
         ) : (
           <>

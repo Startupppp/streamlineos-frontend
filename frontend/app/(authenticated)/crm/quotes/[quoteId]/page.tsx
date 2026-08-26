@@ -223,12 +223,6 @@ export default function QuoteDetailPage({
     );
   }
 
-  const lineItems = quote.lineItems ?? [];
-  const subtotal = lineItems.reduce(
-    (sum, item) => sum + parseFloat(item.amount || "0"),
-    0,
-  );
-
   return (
     <>
       <PageWrapper
@@ -288,7 +282,7 @@ export default function QuoteDetailPage({
           </motion.div>
 
           <motion.div variants={sectionVariants}>
-            <QuoteDetailContent quote={quote} subtotal={subtotal} />
+            <QuoteDetailContent quote={quote} />
           </motion.div>
         </motion.div>
       </PageWrapper>

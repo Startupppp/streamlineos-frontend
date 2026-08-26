@@ -1,348 +1,135 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
-import { useForm, type UseFormReturn } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Pencil, Zap } from "lucide-react";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { Trash2Icon, PlusIcon } from "@animateicons/react/lucide";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
-import { PageWrapper } from "@/components/ui/page-wrapper";
-import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import {
-  Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
-} from "@/components/ui/form";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
-import { cn } from "@/lib/utils";
-import {
-  useScoringRules, useCreateScoringRule, useUpdateScoringRule, useDeleteScoringRule,
-} from "@/hooks/api/crm-settings";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DataTableSkeleton } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState, NoPermissionState } from "@/components/shared";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { RecordList, asRecordValues } from "@/features/renderer";
+import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordRowActions } from "@/features/crm/settings/shared/record-row-actions";
+import { ScoringRuleSheet } from "@/features/crm/settings/scoring-rules/scoring-rule-sheet";
+import { ScoringRulePreviewPanel } from "@/features/crm/settings/scoring-rules/scoring-rule-preview-panel";
+import { useCan } from "@/hooks/api/access";
+import {
+  useDeleteScoringRule,
+  useScoringRules,
+  type ScoringRule,
+} from "@/hooks/api/crm-settings";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { SCORING_RULE_LAYOUT } from "@/lib/renderer/crm/settings/scoring-rule-layout";
 
-const FIELDS = [
-  { value: "source", label: "Source" },
-  { value: "priority", label: "Priority" },
-  { value: "status", label: "Status" },
-  { value: "company", label: "Company" },
-  { value: "city", label: "City" },
-  { value: "potentialValue", label: "Potential Value" },
-  { value: "investmentInterest", label: "Investment Interest" },
-];
-
-const OPERATORS = [
-  { value: "eq", label: "Equals" },
-  { value: "gt", label: "Greater than" },
-  { value: "lt", label: "Less than" },
-  { value: "contains", label: "Contains" },
-  { value: "in", label: "In (comma-sep)" },
-];
-
-const ruleSchema = z.object({
-  field: z.string().min(1, "Select a field"),
-  operator: z.enum(["eq", "gt", "lt", "contains", "in"]),
-  value: z.string().min(1, "Value required"),
-  points: z
-    .string()
-    .min(1, "Points required")
-    .refine((v) => !isNaN(Number(v)), "Must be a number")
-    .refine((v) => Number.isInteger(Number(v)), "Must be an integer")
-    .refine((v) => Number(v) >= -1000 && Number(v) <= 1000, "Must be between -1000 and 1000"),
-});
-type RuleForm = z.infer<typeof ruleSchema>;
-
-const SAMPLE_LEAD = {
-  name: "Rahul Sharma",
-  email: "rahul@example.com",
-  phone: "+919876543210",
-  source: "referral",
-  priority: "HOT",
-  status: "INTERESTED",
-  company: "TechCorp India",
-  city: "Mumbai",
-  potentialValue: "5000000",
-  investmentInterest: "3000000",
-};
-
-type ScoringRuleData = { id: number; field: string; operator: string; value: string; points: number };
-
-interface ScoringRuleRowProps {
-  rule: ScoringRuleData;
-  isEditing: boolean;
-  editForm: UseFormReturn<RuleForm>;
-  onEditSubmit: (data: RuleForm) => void;
-  onEdit: (rule: ScoringRuleData) => void;
-  onDeleteRequest: (id: number) => void;
-  onCancelEdit: () => void;
-  updatePending: boolean;
-}
-
-function ScoringRuleRow({ rule, isEditing, editForm, onEditSubmit, onEdit, onDeleteRequest, onCancelEdit, updatePending }: ScoringRuleRowProps) {
-  const handleEdit = useCallback(() => onEdit(rule), [rule, onEdit]);
-  const handleDeleteRequest = useCallback(() => onDeleteRequest(rule.id), [rule.id, onDeleteRequest]);
-
-  return (
-    <TableRow className="">
-      {isEditing ? (
-        <>
-          <TableCell colSpan={4} className="px-2 py-1">
-            <Form {...editForm}>
-              <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="flex items-end gap-2">
-                <FormField control={editForm.control} name="field" render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger className="w-28 text-xs"><SelectValue /></SelectTrigger>
-                    <SelectContent>{FIELDS.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}</SelectContent>
-                  </Select>
-                )} />
-                <FormField control={editForm.control} name="operator" render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger className="w-28 text-xs"><SelectValue /></SelectTrigger>
-                    <SelectContent>{OPERATORS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
-                  </Select>
-                )} />
-                <FormField control={editForm.control} name="value" render={({ field }) => (
-                  <Input {...field} className="w-24 text-xs" />
-                )} />
-                <FormField control={editForm.control} name="points" render={({ field }) => (
-                  <Input type="number" {...field} className="w-16 text-xs" />
-                )} />
-                <Button type="submit" size="sm" className="text-xs" disabled={updatePending}>Save</Button>
-                <Button type="button" variant="outline" size="sm" className="text-xs" onClick={onCancelEdit}>Cancel</Button>
-              </form>
-            </Form>
-          </TableCell>
-          <TableCell className="px-2 py-1" />
-        </>
-      ) : (
-        <>
-          <TableCell className="text-dense px-2 py-1 capitalize">{FIELDS.find(f => f.value === rule.field)?.label ?? rule.field}</TableCell>
-          <TableCell className="text-dense px-2 py-1">{OPERATORS.find(o => o.value === rule.operator)?.label ?? rule.operator}</TableCell>
-          <TableCell className="text-dense px-2 py-1">{rule.value}</TableCell>
-          <TableCell className="text-dense px-2 py-1 text-right">
-            <Badge
-              variant="outline"
-              className={cn(
-                "text-micro h-4 px-1.5 py-0 font-mono tabular-nums",
-                rule.points >= 0
-                  ? "bg-status-success-surface text-status-success-ink border-status-success-rule"
-                  : "bg-status-danger-surface text-status-danger-ink border-status-danger-rule"
-              )}
-            >
-              {rule.points > 0 ? "+" : ""}{rule.points}
-            </Badge>
-          </TableCell>
-          <TableCell className="text-dense px-2 py-1 text-right">
-            <div className="flex items-center justify-end gap-1">
-              <Button variant="ghost" size="icon" className="w-7" onClick={handleEdit} aria-label="Edit">
-                <Pencil className="h-3.5 w-3.5" />
-              </Button>
-              <AnimatedIconButton icon={Trash2Icon} iconSize={14} variant="ghost" size="icon" className="w-7 text-destructive" onClick={handleDeleteRequest} aria-label="Delete" />
-            </div>
-          </TableCell>
-        </>
-      )}
-    </TableRow>
-  );
-}
-
+/**
+ * Lead scoring rules.
+ *
+ * The table is the platform's one `DataTable`, driven by the description — the
+ * screen this replaces rendered a raw shadcn `<Table>` with its own header
+ * classes, because one of its rows could turn into a form and a `DataTable` cell
+ * cannot. Editing moved to a sheet, and the table went back to being a table.
+ */
 export default function ScoringRulesPage() {
-  const { data: rules, isLoading, isError, refetch } = useScoringRules();
-  const [createOpen, setCreateOpen] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const layout = useTenantLayout(SCORING_RULE_LAYOUT);
+  const [density, setDensity] = useDensity();
+  const canManage = useCan("crm:scoring-rules:manage");
 
-  const createRule = useCreateScoringRule();
-  const updateRule = useUpdateScoringRule();
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<ScoringRule | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ScoringRule | null>(null);
+
+  const { data, isLoading, isError, refetch } = useScoringRules();
   const deleteRule = useDeleteScoringRule();
 
-  const form = useForm<RuleForm>({
-    resolver: zodResolver(ruleSchema),
-    defaultValues: { field: "", operator: "eq", value: "", points: "0" },
-  });
+  const rules = useMemo(() => data ?? [], [data]);
 
-  const editForm = useForm<RuleForm>({
-    resolver: zodResolver(ruleSchema),
-  });
+  const handleOpenCreate = useCallback(() => {
+    setEditTarget(null);
+    setSheetOpen(true);
+  }, []);
 
-  const onCreateSubmit = useCallback((data: RuleForm) => {
-    createRule.mutate(
-      { ...data, points: Number(data.points) },
-      {
-        onSuccess: () => { toast.success("Rule created"); setCreateOpen(false); form.reset(); },
-        onError: (err) => toast.error(getErrorMessage(err)),
-      }
-    );
-  }, [createRule, form]);
+  const handleSheetOpenChange = useCallback((open: boolean) => {
+    setSheetOpen(open);
+    if (!open) setEditTarget(null);
+  }, []);
 
-  const onEditSubmit = useCallback((data: RuleForm) => {
-    if (editingId === null) return;
-    updateRule.mutate(
-      { id: editingId, ...data, points: Number(data.points) },
-      {
-        onSuccess: () => { toast.success("Rule updated"); setEditingId(null); },
-        onError: (err) => toast.error(getErrorMessage(err)),
-      }
-    );
-  }, [editingId, updateRule]);
+  const handleDeleteOpenChange = useCallback((open: boolean) => {
+    if (!open) setDeleteTarget(null);
+  }, []);
 
-  const handleStartEdit = useCallback((rule: ScoringRuleData) => {
-    setEditingId(rule.id);
-    editForm.reset({
-      field: rule.field,
-      operator: rule.operator as RuleForm["operator"],
-      value: rule.value,
-      points: String(rule.points),
-    });
-  }, [editForm]);
-
-  const handleCancelEdit = useCallback(() => setEditingId(null), []);
-  const handleDeleteRequest = useCallback((id: number) => setDeleteTargetId(id), []);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const handleDeleteConfirm = useCallback(() => {
-    if (deleteTargetId === null) return;
-    deleteRule.mutate(deleteTargetId, {
-      onSuccess: () => { toast.success("Rule deleted"); setDeleteTargetId(null); },
-      onError: (err) => { toast.error(getErrorMessage(err)); setDeleteTargetId(null); },
+    if (!deleteTarget) return;
+    deleteRule.mutate(deleteTarget.id, {
+      onSuccess: () => {
+        toast.success("Rule deleted");
+        setDeleteTarget(null);
+      },
+      onError: (error) => {
+        toast.error(getErrorMessage(error));
+        setDeleteTarget(null);
+      },
     });
-  }, [deleteRule, deleteTargetId]);
+  }, [deleteRule, deleteTarget]);
 
-  const handleDeleteCancel = useCallback(() => setDeleteTargetId(null), []);
-  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-  const handleAlertOpenChange = useCallback((open: boolean) => { if (!open) handleDeleteCancel(); }, [handleDeleteCancel]);
-
-  const sampleScore = useMemo(() => {
-    if (!rules) return 0;
-    let score = 0;
-    const record = SAMPLE_LEAD as Record<string, string>;
-    for (const rule of rules) {
-      const fieldVal = record[rule.field] ?? "";
-      let match = false;
-      switch (rule.operator) {
-        case "eq": match = fieldVal === rule.value; break;
-        case "gt": match = Number(fieldVal) > Number(rule.value); break;
-        case "lt": match = Number(fieldVal) < Number(rule.value); break;
-        case "contains": match = fieldVal.toLowerCase().includes(rule.value.toLowerCase()); break;
-        case "in": match = rule.value.split(",").map(v => v.trim()).includes(fieldVal); break;
-      }
-      if (match) score += rule.points;
-    }
-    return score;
-  }, [rules]);
-
-  const count = rules?.length ?? 0;
+  const rowActions = useCallback(
+    (row: Record<string, unknown>) => {
+      const rule = rules.find((candidate) => candidate.id === row.id);
+      if (!rule || !canManage) return null;
+      return (
+        <RecordRowActions
+          editLabel="Edit this rule"
+          deleteLabel="Delete this rule"
+          onEdit={() => {
+            setEditTarget(rule);
+            setSheetOpen(true);
+          }}
+          onDelete={() => setDeleteTarget(rule)}
+        />
+      );
+    },
+    [rules, canManage],
+  );
 
   return (
-    <>
-      <AlertDialog open={deleteTargetId !== null} onOpenChange={handleAlertOpenChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Scoring Rule</AlertDialogTitle>
-            <AlertDialogDescription>
-              This rule will be permanently deleted. Lead scores will no longer be affected by it.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleDeleteCancel}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleDeleteConfirm}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <PageWrapper
-        title="Lead Scoring Rules"
-        subtitle={isLoading ? undefined : `${count} rule${count !== 1 ? "s" : ""}`}
-        actions={
-          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-            <DialogTrigger asChild>
-              <AnimatedIconButton icon={PlusIcon} iconSize={16}>New Rule</AnimatedIconButton>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-lg">
-              <DialogHeader>
-                <DialogTitle>Create Scoring Rule</DialogTitle>
-              </DialogHeader>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onCreateSubmit)} className="space-y-4">
-                  <FormField control={form.control} name="field" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Field</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger><SelectValue placeholder="Pick a field" /></SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {FIELDS.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="operator" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Operator</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {OPERATORS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="value" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Value</FormLabel>
-                      <FormControl><Input {...field} placeholder="e.g. HOT or 1000000" /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="points" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Points (-1000 to 1000)</FormLabel>
-                      <FormControl><Input type="number" min={-1000} max={1000} {...field} placeholder="e.g. 20" /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <Button type="submit" className="w-full" disabled={createRule.isPending}>
-                    {createRule.isPending ? "Creating..." : "Create Rule"}
-                  </Button>
-                </form>
-              </Form>
-            </DialogContent>
-          </Dialog>
-        }
-      >
-        {isLoading ? (
-          <div className="space-y-4">
-            <Skeleton className="h-64 w-full" />
-            <Skeleton className="h-32 w-full" />
-          </div>
+    <PageWrapper
+      title="Lead scoring"
+      subtitle="What makes a lead worth calling first."
+      filters={
+        <div className={FILTER_TOOLBAR_ROW}>
+          <DensityToggle density={density} onChange={setDensity} />
+        </div>
+      }
+      actions={
+        canManage ? (
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={16}
+            iconClassName="mr-1.5"
+            size="sm"
+            onClick={handleOpenCreate}
+          >
+            New rule
+          </AnimatedIconButton>
+        ) : undefined
+      }
+    >
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-gap-section">
+        {!canManage ? (
+          <NoPermissionState
+            permission="crm:scoring-rules:manage"
+            className={CONTENT_FILL_PANEL}
+            description="Lead scoring is set by your sales operations team."
+          />
+        ) : isLoading ? (
+          <DataTableSkeleton rows={10} columns={layout.list.columns.length} className="flex-1" />
         ) : isError ? (
           <ErrorState
             title="Couldn't load scoring rules"
@@ -350,89 +137,50 @@ export default function ScoringRulesPage() {
             onRetry={handleRetry}
             className={CONTENT_FILL_PANEL}
           />
+        ) : rules.length === 0 ? (
+          <EmptyState
+            illustrationPreset="automations"
+            title="No scoring rules yet"
+            description="A rule adds or subtracts points when a lead matches it — a referral is worth more than a cold form fill, and the score says so."
+            action={{ label: "New rule", onClick: handleOpenCreate }}
+            className={CONTENT_FILL_PANEL}
+          />
         ) : (
-          <div className="flex flex-1 min-h-0 flex-col gap-4">
-            <Card className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
-              <CardHeader className="px-4 py-3">
-                <CardTitle className="text-sm font-semibold">Rules</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                {rules && rules.length > 0 ? (
-                  <Table>
-                    <TableHeader className="sticky top-0 z-10 bg-muted/80">
-                      <TableRow className="border-b-2 border-border hover:bg-transparent">
-                        <TableHead className="text-micro uppercase tracking-wider font-bold px-2 py-1.5">Field</TableHead>
-                        <TableHead className="text-micro uppercase tracking-wider font-bold px-2 py-1.5">Operator</TableHead>
-                        <TableHead className="text-micro uppercase tracking-wider font-bold px-2 py-1.5">Value</TableHead>
-                        <TableHead className="text-micro uppercase tracking-wider font-bold px-2 py-1.5 text-right">Points</TableHead>
-                        <TableHead className="text-micro uppercase tracking-wider font-bold px-2 py-1.5 text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {rules.map(rule => (
-                        <ScoringRuleRow
-                          key={rule.id}
-                          rule={rule}
-                          isEditing={editingId === rule.id}
-                          editForm={editForm}
-                          onEditSubmit={onEditSubmit}
-                          onEdit={handleStartEdit}
-                          onDeleteRequest={handleDeleteRequest}
-                          onCancelEdit={handleCancelEdit}
-                          updatePending={updateRule.isPending}
-                        />
-                      ))}
-                    </TableBody>
-                  </Table>
-                ) : (
-                  <div className="py-14 px-4">
-                    <EmptyState
-                      illustrationPreset="automations"
-                      title="No scoring rules defined"
-                      description="Create your first rule to start scoring leads automatically."
-                      action={{ label: "New Rule", onClick: handleOpenCreate }}
-                      className={cn(CONTENT_FILL_PANEL, "border-0 bg-transparent")}
-                    />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card className="bg-card rounded-lg border border-border shadow-sm">
-              <CardHeader className="px-4 py-3">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <Zap className="h-4 w-4 text-primary" />
-                  Live Preview — Sample Lead
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-4 pb-4">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-                  {Object.entries(SAMPLE_LEAD).map(([key, value]) => (
-                    <div key={key}>
-                      <span className="text-muted-foreground capitalize">{key}: </span>
-                      <span className="font-medium">{value}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-4 p-4 rounded-lg bg-muted/30 border border-border flex items-center justify-between">
-                  <span className="text-sm font-medium">Calculated Score</span>
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      "text-base px-4 py-1 font-bold tabular-nums font-mono",
-                      sampleScore <= 30 ? "bg-status-danger-surface text-status-danger-ink border-status-danger-rule" :
-                      sampleScore <= 60 ? "bg-status-warning-surface text-status-warning-ink border-status-warning-rule" :
-                      "bg-status-success-surface text-status-success-ink border-status-success-rule"
-                    )}
-                  >
-                    {sampleScore} pts
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <>
+            <RecordList
+              layout={layout}
+              rows={asRecordValues(rules)}
+              getRowKey={(row) => String(row.id)}
+              actions={rowActions}
+              density={density}
+              minWidth="720px"
+              className={CONTENT_FILL_PANEL}
+            />
+            <ScoringRulePreviewPanel rules={rules} />
+          </>
         )}
-      </PageWrapper>
-    </>
+      </div>
+
+      <ScoringRuleSheet
+        open={sheetOpen}
+        onOpenChange={handleSheetOpenChange}
+        rule={editTarget}
+      />
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={handleDeleteOpenChange}
+        title="Delete this rule?"
+        description={
+          deleteTarget
+            ? `Leads will stop earning ${deleteTarget.points} points for this condition. Existing scores are recalculated. This cannot be undone.`
+            : ""
+        }
+        confirmLabel="Delete rule"
+        destructive
+        isPending={deleteRule.isPending}
+        onConfirm={handleDeleteConfirm}
+      />
+    </PageWrapper>
   );
 }

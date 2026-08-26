@@ -1,105 +1,63 @@
 "use client";
 
-import { useState, useCallback, useTransition, useEffect } from "react";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { Pencil, Plus, Trash2, List } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { SearchInput } from "@/components/ui/search-input";
-import { Badge } from "@/components/ui/badge";
-import { PageWrapper } from "@/components/ui/page-wrapper";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyProductsIllustration } from "@/components/illustrations";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { ErrorState } from "@/components/shared";
-import {
-  usePricebooks,
-  useCreatePricebook,
-  useUpdatePricebook,
-  useDeletePricebook,
-} from "@/hooks/api/crm/pricebooks";
-import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import {
-  PricebookFormSheet,
-  type PricebookFormValues,
-  pricebookValuesFromPricebook,
-  defaultPricebookValues,
-} from "@/features/crm/settings/pricebooks/pricebook-form";
+import { ErrorState, NoPermissionState } from "@/components/shared";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { SearchInput } from "@/components/ui/search-input";
+import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { RecordList, asRecordValues } from "@/features/renderer";
+import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordRowActions } from "@/features/crm/settings/shared/record-row-actions";
+import { PricebookSheet } from "@/features/crm/settings/pricebooks/pricebook-sheet";
 import { PricebookEntriesSheet } from "@/features/crm/settings/pricebooks/pricebook-entries-sheet";
+import { useCan } from "@/hooks/api/access";
+import { useOrgDisplay } from "@/hooks/api/org-display";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { useDeletePricebook, usePricebooks } from "@/hooks/api/crm/pricebooks";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { PRICEBOOK_LAYOUT } from "@/lib/renderer/crm/settings/pricebook-layout";
 import type { Pricebook } from "@/types/crm/pricebooks";
 
+/**
+ * Pricebooks.
+ *
+ * Opening a row opens its prices, which is the reason anyone comes here — the
+ * old table carried a "Manage Entries" button in its own column, which is a
+ * destination dressed as a cell. Editing the book itself and deleting it stay in
+ * the row's action column, where the rest of the product puts them.
+ */
 export default function PricebooksPage() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
-  const [, startTransition] = useTransition();
+  const layout = useTenantLayout(PRICEBOOK_LAYOUT);
+  const money = useOrgDisplay();
+  const [density, setDensity] = useDensity();
+  const canManage = useCan("crm:pricebooks:manage");
 
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Pricebook | null>(null);
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [entriesTarget, setEntriesTarget] = useState<Pricebook | null>(null);
-  const [entriesOpen, setEntriesOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Pricebook | null>(null);
 
-  const [search, setSearch] = useState(searchParams.get("q") ?? "");
-  const debouncedSearch = useDebouncedValue(search, 300);
-
-  const updateParams = useCallback(
-    (updates: Record<string, string | null>) => {
-      const params = new URLSearchParams(searchParams.toString());
-      for (const [key, value] of Object.entries(updates)) {
-        if (value === null || value === "") params.delete(key);
-        else params.set(key, value);
-      }
-      startTransition(() => {
-        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-      });
-    },
-    [searchParams, router, pathname],
-  );
-
-  useEffect(() => {
-    const current = searchParams.get("q") ?? "";
-    if (debouncedSearch === current) return;
-    updateParams({ q: debouncedSearch || null });
-  }, [debouncedSearch, searchParams, updateParams]);
-
-  const { data: pricebooks, isLoading, isError, refetch } = usePricebooks();
-  const createPricebook = useCreatePricebook();
-  const updatePricebook = useUpdatePricebook();
+  const { data, isLoading, isError, refetch } = usePricebooks();
   const deletePricebook = useDeletePricebook();
 
-  const allPricebooks = pricebooks ?? [];
-  const filtered = debouncedSearch
-    ? allPricebooks.filter((pb) =>
-        pb.name.toLowerCase().includes(debouncedSearch.toLowerCase()),
-      )
-    : allPricebooks;
-
-  const handleSearchChange = useCallback((value: string) => {
-    setSearch(value);
-    },
-    [],
-  );
+  const query = debouncedSearch.trim().toLowerCase();
+  const pricebooks = useMemo(() => {
+    const all = data ?? [];
+    return query ? all.filter((book) => book.name.toLowerCase().includes(query)) : all;
+  }, [data, query]);
 
   const handleOpenCreate = useCallback(() => {
     setEditTarget(null);
-    setSheetOpen(true);
-  }, []);
-
-  const handleOpenEdit = useCallback((pb: Pricebook) => {
-    setEditTarget(pb);
     setSheetOpen(true);
   }, []);
 
@@ -108,244 +66,162 @@ export default function PricebooksPage() {
     if (!open) setEditTarget(null);
   }, []);
 
-  const handleDeleteRequest = useCallback((id: string) => setDeleteTargetId(id), []);
-  const handleDeleteCancel = useCallback(() => setDeleteTargetId(null), []);
-
-  const handleAlertOpenChange = useCallback((open: boolean) => {
-    if (!open) setDeleteTargetId(null);
+  const handleEntriesOpenChange = useCallback((open: boolean) => {
+    if (!open) setEntriesTarget(null);
   }, []);
 
-  const handleDeleteConfirm = useCallback(() => {
-    if (deleteTargetId === null) return;
-    deletePricebook.mutate(deleteTargetId, {
-      onSuccess: () => {
-        toast.success("Pricebook deleted");
-        setDeleteTargetId(null);
-      },
-      onError: (err) => {
-        toast.error(getErrorMessage(err));
-        setDeleteTargetId(null);
-      },
-    });
-  }, [deletePricebook, deleteTargetId]);
+  const handleDeleteOpenChange = useCallback((open: boolean) => {
+    if (!open) setDeleteTarget(null);
+  }, []);
 
+  const handleClearSearch = useCallback(() => setSearch(""), []);
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
 
-  const handleOpenEntries = useCallback((pb: Pricebook) => {
-    setEntriesTarget(pb);
-    setEntriesOpen(true);
-  }, []);
+  const handleDeleteConfirm = useCallback(() => {
+    if (!deleteTarget) return;
+    deletePricebook.mutate(deleteTarget.id, {
+      onSuccess: () => {
+        toast.success("Pricebook deleted");
+        setDeleteTarget(null);
+      },
+      onError: (error) => {
+        toast.error(getErrorMessage(error));
+        setDeleteTarget(null);
+      },
+    });
+  }, [deletePricebook, deleteTarget]);
 
-  const handleEntriesOpenChange = useCallback((open: boolean) => {
-    setEntriesOpen(open);
-    if (!open) setEntriesTarget(null);
-  }, []);
-
-  const onFormSubmit = useCallback(
-    (formData: PricebookFormValues) => {
-      if (editTarget) {
-        updatePricebook.mutate(
-          { id: editTarget.id, ...formData },
-          {
-            onSuccess: () => {
-              toast.success("Pricebook updated");
-              setSheetOpen(false);
-              setEditTarget(null);
-            },
-            onError: (err) => toast.error(getErrorMessage(err)),
-          },
-        );
-      } else {
-        createPricebook.mutate(formData, {
-          onSuccess: () => {
-            toast.success("Pricebook created");
-            setSheetOpen(false);
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        });
-      }
+  const handleRowClick = useCallback(
+    (row: Record<string, unknown>) => {
+      const book = pricebooks.find((candidate) => candidate.id === row.id);
+      if (book) setEntriesTarget(book);
     },
-    [editTarget, updatePricebook, createPricebook],
+    [pricebooks],
   );
 
-  const handleEditRow = useCallback((pb: Pricebook) => handleOpenEdit(pb), [handleOpenEdit]);
-  const handleDeleteRow = useCallback((id: string) => handleDeleteRequest(id), [handleDeleteRequest]);
-  const handleEntriesRow = useCallback((pb: Pricebook) => handleOpenEntries(pb), [handleOpenEntries]);
-
-  const columns: DataTableColumn<Pricebook>[] = [
-    {
-      key: "name",
-      header: "Name",
-      sortable: true,
-      sortValue: (pb) => pb.name,
-      cell: (pb) => (
-        <div>
-          <p className="font-medium text-sm">{pb.name}</p>
-          {pb.description && (
-            <p className="text-xs text-muted-foreground truncate max-w-[220px]">{pb.description}</p>
-          )}
-        </div>
-      ),
+  const rowActions = useCallback(
+    (row: Record<string, unknown>) => {
+      const book = pricebooks.find((candidate) => candidate.id === row.id);
+      if (!book) return null;
+      return (
+        <RecordRowActions
+          editLabel={`Edit ${book.name}`}
+          deleteLabel={`Delete ${book.name}`}
+          onEdit={() => {
+            setEditTarget(book);
+            setSheetOpen(true);
+          }}
+          onDelete={() => setDeleteTarget(book)}
+        />
+      );
     },
-    {
-      key: "currency",
-      header: "Currency",
-      cell: (pb) => <span className="font-mono text-xs">{pb.currency}</span>,
-    },
-    {
-      key: "isDefault",
-      header: "Default",
-      cell: (pb) =>
-        pb.isDefault ? (
-          <Badge variant="outline" className="bg-primary/10 text-foreground border-primary/30">
-            Default
-          </Badge>
-        ) : (
-          <span className="text-muted-foreground text-xs">—</span>
-        ),
-    },
-    {
-      key: "isActive",
-      header: "Status",
-      cell: (pb) =>
-        pb.isActive ? (
-          <Badge variant="outline" className="bg-status-success-surface text-status-success-ink border-status-success-rule">
-            Active
-          </Badge>
-        ) : (
-          <Badge variant="outline" className="bg-muted text-muted-foreground border-border">
-            Inactive
-          </Badge>
-        ),
-    },
-    {
-      key: "entries",
-      header: "Entries",
-      cell: (pb) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-xs gap-1.5"
-          onClick={() => handleEntriesRow(pb)}
-        >
-          <List className="h-3.5 w-3.5" />
-          Manage Entries
-        </Button>
-      ),
-    },
-    {
-      key: "actions",
-      header: "Actions",
-      headerClassName: "text-right",
-      className: "text-right",
-      cell: (pb) => (
-        <div className="flex items-center justify-end gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleEditRow(pb)}
-            aria-label="Edit pricebook"
-          >
-            <Pencil className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleDeleteRow(pb.id)}
-            className="text-destructive hover:text-destructive"
-            aria-label="Delete pricebook"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      ),
-    },
-  ];
-
-  const isPending = createPricebook.isPending || updatePricebook.isPending;
-  const formInitialValues = editTarget
-    ? pricebookValuesFromPricebook(editTarget)
-    : defaultPricebookValues;
+    [pricebooks],
+  );
 
   return (
-    <>
-      <AlertDialog open={deleteTargetId !== null} onOpenChange={handleAlertOpenChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Pricebook</AlertDialogTitle>
-            <AlertDialogDescription>
-              This pricebook will be permanently deleted along with all its pricing entries.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleDeleteCancel}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleDeleteConfirm}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+    <PageWrapper
+      title="Pricebooks"
+      subtitle="One set of prices per segment, region or reseller tier."
+      filters={
+        <div className={FILTER_TOOLBAR_ROW}>
+          <SearchInput
+            placeholder={layout.list.searchPlaceholder}
+            value={search}
+            onValueChange={setSearch}
+          />
+          <DensityToggle density={density} onChange={setDensity} />
+        </div>
+      }
+      actions={
+        canManage ? (
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={16}
+            iconClassName="mr-1.5"
+            size="sm"
+            onClick={handleOpenCreate}
+          >
+            New pricebook
+          </AnimatedIconButton>
+        ) : undefined
+      }
+    >
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        {!canManage ? (
+          <NoPermissionState
+            permission="crm:pricebooks:manage"
+            className={CONTENT_FILL_PANEL}
+            description="Pricebooks are managed by whoever sets your pricing."
+          />
+        ) : isLoading ? (
+          <DataTableSkeleton rows={10} columns={layout.list.columns.length} className="flex-1" />
+        ) : isError ? (
+          <ErrorState
+            title="Couldn't load pricebooks"
+            description="The pricebook list didn't load. Check your connection and try again."
+            onRetry={handleRetry}
+            className={CONTENT_FILL_PANEL}
+          />
+        ) : pricebooks.length === 0 ? (
+          <EmptyState
+            illustration={<EmptyProductsIllustration />}
+            title={query ? "No pricebooks match that search" : "No pricebooks yet"}
+            description={
+              query
+                ? `Nothing matches “${debouncedSearch.trim()}”. Clear the search to see every book.`
+                : "A pricebook holds one set of prices, so a reseller and a direct customer can be quoted different figures for the same product."
+            }
+            action={
+              query
+                ? { label: "Clear search", onClick: handleClearSearch }
+                : { label: "New pricebook", onClick: handleOpenCreate }
+            }
+            actionVariant={query ? "outline" : undefined}
+            className={CONTENT_FILL_PANEL}
+          />
+        ) : (
+          <RecordList
+            layout={layout}
+            rows={asRecordValues(pricebooks)}
+            getRowKey={(row) => String(row.id)}
+            onRowClick={handleRowClick}
+            actions={rowActions}
+            density={density}
+            money={money}
+            minWidth="760px"
+            className={CONTENT_FILL_PANEL}
+          />
+        )}
+      </div>
 
-      <PricebookFormSheet
+      <PricebookSheet
         open={sheetOpen}
         onOpenChange={handleSheetOpenChange}
-        editTarget={editTarget}
-        onSubmit={onFormSubmit}
-        isPending={isPending}
-        initialValues={formInitialValues}
+        pricebook={editTarget}
       />
 
       <PricebookEntriesSheet
-        open={entriesOpen}
+        open={entriesTarget !== null}
         onOpenChange={handleEntriesOpenChange}
         pricebook={entriesTarget}
       />
 
-      <PageWrapper
-        title="Price Books"
-        subtitle="Manage pricebooks and product pricing tiers"
-        actions={
-          <Button onClick={handleOpenCreate}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Pricebook
-          </Button>
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={handleDeleteOpenChange}
+        title="Delete this pricebook?"
+        description={
+          deleteTarget
+            ? `${deleteTarget.name} and every price in it will be permanently deleted. This cannot be undone.`
+            : ""
         }
-        filters={
-          <div className={FILTER_TOOLBAR_ROW}>
-            <SearchInput placeholder="Search pricebooks..." value={search} onValueChange={handleSearchChange} />
-          </div>
-        }
-      >
-        {isError ? (
-          <ErrorState title="Failed to load pricebooks" onRetry={handleRetry} className="flex-1" />
-        ) : (
-          <DataTable
-            data={filtered}
-            columns={columns}
-            getRowKey={(pb) => pb.id}
-            isLoading={isLoading}
-            className="flex-1 min-h-0"
-            emptyState={
-              <EmptyState
-                className="flex-1 border-0 bg-transparent"
-                illustration={<EmptyProductsIllustration />}
-                title={debouncedSearch ? "No pricebooks match your search" : "No pricebooks yet"}
-                description={
-                  debouncedSearch
-                    ? "Try a different search term."
-                    : "Create pricebooks to manage product pricing tiers for different customer segments."
-                }
-                action={debouncedSearch ? undefined : { label: "Add Pricebook", onClick: handleOpenCreate }}
-              />
-            }
-          />
-        )}
-      </PageWrapper>
-    </>
+        confirmLabel="Delete pricebook"
+        destructive
+        isPending={deletePricebook.isPending}
+        onConfirm={handleDeleteConfirm}
+      />
+    </PageWrapper>
   );
 }

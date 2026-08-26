@@ -1,42 +1,34 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { AppDialog } from "@/components/shared/app-dialog";
+import { RecordForm, type RecordFormValues } from "@/features/renderer";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
 import {
-  logActivitySchema,
-  ENTITY_TYPE_VALUES,
-  type EntityTypeFieldValue,
-  type LogActivityValues,
-} from "./log-activity-dialog-schema";
-import { EntityFormDialog } from "@/components/shared";
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { DatePicker } from "@/components/ui/date-picker";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  activityLayoutWithTypes,
+  activityTypeOptions,
+} from "@/lib/renderer/crm/activity-layout";
 import { useCrmOptions } from "@/hooks/api/crm/metadata";
-import type { LogCrmActivityInput, CrmActivityType, CrmActivityEntityType } from "@/hooks/api/crm/crm-activities";
+import type {
+  CrmActivityEntityType,
+  CrmActivityType,
+  LogCrmActivityInput,
+} from "@/hooks/api/crm/crm-activities";
 
-function isCrmActivityType(v: string): v is CrmActivityType {
-  return v === "CALL" || v === "EMAIL" || v === "MEETING" || v === "CUSTOM";
+const ACTIVITY_TYPES: readonly CrmActivityType[] = ["CALL", "EMAIL", "MEETING", "CUSTOM"];
+const ENTITY_TYPES: readonly CrmActivityEntityType[] = ["LEAD", "DEAL", "CONTACT"];
+
+function asActivityType(value: string | undefined): CrmActivityType {
+  return ACTIVITY_TYPES.find((candidate) => candidate === value) ?? "CALL";
 }
 
-const NO_ENTITY_TYPE = "none";
+function asEntityType(value: string | undefined): CrmActivityEntityType | undefined {
+  return ENTITY_TYPES.find((candidate) => candidate === value);
+}
 
-function isCrmEntityType(v: string): v is CrmActivityEntityType {
-  return v === "LEAD" || v === "DEAL" || v === "CONTACT";
+function asEntityId(value: string | undefined): number | undefined {
+  const parsed = Number(value?.trim());
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : undefined;
 }
 
 interface LogActivityDialogProps {
@@ -46,199 +38,53 @@ interface LogActivityDialogProps {
   isPending: boolean;
 }
 
-export function LogActivityDialog({
-  open,
-  onClose,
-  onSubmit,
-  isPending,
-}: LogActivityDialogProps) {
-  const { data: activityTypeOptions, isLoading: typesLoading } = useCrmOptions("activity_type");
+export function LogActivityDialog({ open, onClose, onSubmit, isPending }: LogActivityDialogProps) {
+  const { data: options } = useCrmOptions("activity_type");
 
-  const activityTypes = useMemo<Array<{ value: CrmActivityType; label: string }>>(() => {
-    if (!activityTypeOptions) return [];
-    const matched: Array<{ value: CrmActivityType; label: string }> = [];
-    for (const o of activityTypeOptions) {
-      if (isCrmActivityType(o.key)) {
-        matched.push({ value: o.key, label: o.label });
-      }
-    }
-    return matched;
-  }, [activityTypeOptions]);
+  const types = useMemo(() => activityTypeOptions(options), [options]);
+
+  const description = useMemo(() => activityLayoutWithTypes(types), [types]);
+  const layout = useTenantLayout(description);
 
   const handleOpenChange = useCallback(
-    (v: boolean) => { if (!v) onClose(); },
+    (next: boolean) => {
+      if (!next) onClose();
+    },
     [onClose],
   );
 
   const handleSubmit = useCallback(
-    (data: LogActivityValues) => {
-      const rawEntityId = data.entityId?.trim();
-      const entityIdNum = rawEntityId ? parseInt(rawEntityId, 10) : undefined;
-      const entityTypeRaw: EntityTypeFieldValue = data.entityType ?? "";
-      const entityType = isCrmEntityType(entityTypeRaw) ? entityTypeRaw : undefined;
-
-      let dueDateIso: string | undefined;
-      if (data.dueDate) {
-        dueDateIso = `${data.dueDate}T00:00:00.000Z`;
-      }
-
+    (values: RecordFormValues) => {
+      const day = values.dueDate?.trim();
       onSubmit({
-        type: data.type,
-        title: data.title.trim(),
-        notes: data.notes?.trim() || undefined,
-        entityType,
-        entityId: entityIdNum !== undefined && !isNaN(entityIdNum) ? entityIdNum : undefined,
-        dueDate: dueDateIso,
+        type: asActivityType(values.type),
+        title: values.title?.trim() ?? "",
+        notes: values.notes?.trim() || undefined,
+        entityType: asEntityType(values.entityType),
+        entityId: asEntityId(values.entityId),
+        dueDate: day ? `${day}T00:00:00.000Z` : undefined,
       });
     },
     [onSubmit],
   );
 
   return (
-    <EntityFormDialog<LogActivityValues>
+    <AppDialog
       open={open}
       onOpenChange={handleOpenChange}
-      title="Log Activity"
-      description="Record a call, email, meeting, or task"
-      resolver={zodResolver(logActivitySchema)}
-      defaultValues={{
-        type: "CALL",
-        title: "",
-        notes: "",
-        entityType: NO_ENTITY_TYPE,
-        entityId: "",
-        dueDate: "",
-      }}
-      onSubmit={handleSubmit}
-      isSubmitting={isPending}
-      resetOnOpen
-      submitLabel="Log Activity"
+      title="Log activity"
+      description="Record a call, email, meeting or task."
     >
-      {(form) => (
-        <div className="space-y-4">
-          <FormField
-            control={form.control}
-            name="type"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Activity Type</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange} disabled={typesLoading}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {activityTypes.map((t) => (
-                      <SelectItem key={t.value} value={t.value}>
-                        {t.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="title"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Title <span className="text-destructive">*</span></FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="e.g. Called John about the proposal"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <div className="grid grid-cols-2 gap-3">
-            <FormField
-              control={form.control}
-              name="entityType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Related To</FormLabel>
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="None" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value={NO_ENTITY_TYPE}>None</SelectItem>
-                      <SelectItem value="LEAD">Lead</SelectItem>
-                      <SelectItem value="DEAL">Deal</SelectItem>
-                      <SelectItem value="CONTACT">Contact</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="entityId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Entity ID</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="e.g. 42"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <FormField
-            control={form.control}
-            name="dueDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Due Date</FormLabel>
-                <FormControl>
-                  <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="text-sm" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="notes"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Notes</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="What happened or what needs to be done..."
-                    rows={3}
-                    className="resize-none"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-      )}
-    </EntityFormDialog>
+      <RecordForm
+        key={String(open)}
+        layout={layout}
+        mode="create"
+        initial={{ type: types[0]?.value ?? "CALL" }}
+        onSubmit={handleSubmit}
+        onCancel={onClose}
+        isSubmitting={isPending}
+        submitLabel="Log activity"
+      />
+    </AppDialog>
   );
 }

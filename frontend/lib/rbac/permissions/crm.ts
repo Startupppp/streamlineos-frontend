@@ -106,6 +106,7 @@ export const CRM_PERMISSIONS: Permission[] = [
   { name: "crm:deals:approve", resource: "crm:deals", action: "approve", description: "Approve or reject deal stage transitions" },
   { name: "crm:deals:forecast", resource: "crm:deals", action: "forecast", description: "Capture and view forecast snapshots" },
   { name: "crm:deals:manage", resource: "crm:deals", action: "manage", description: "Manage deal forecasts and overrides" },
+  { name: "crm:pricebooks:manage", resource: "crm:pricebooks", action: "manage", description: "Manage price books and quote settings" },
   { name: "crm:quotes:read", resource: "crm:quotes", action: "read", description: "View CRM quotes" },
   { name: "crm:quotes:create", resource: "crm:quotes", action: "create", description: "Create CRM quotes" },
   { name: "crm:quotes:update", resource: "crm:quotes", action: "update", description: "Update CRM quotes" },

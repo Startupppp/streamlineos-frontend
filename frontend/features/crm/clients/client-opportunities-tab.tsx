@@ -1,113 +1,78 @@
 "use client";
 
 import { useCallback } from "react";
-import { Badge } from "@/components/ui/badge";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { TruncatedText } from "@/components/ui/truncated-text";
-import { cn } from "@/lib/utils";
+import { RecordList, asRecordValues } from "@/features/renderer";
+import { useDensity } from "@/features/renderer/density-toggle";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { CLIENT_OPPORTUNITY_LAYOUT } from "@/lib/renderer/crm/client-opportunity-layout";
 import { useClientOpportunities } from "@/hooks/api/crm/clients";
-import { formatAmount, formatDate } from "./utils";
-import type { ClientOpportunity } from "@/types/crm";
-import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
+import { useOrgDisplay } from "@/hooks/api/org-display";
+import { getErrorMessage } from "@/lib/get-error-message";
 
-const OPP_STAGE_LABELS: Record<ClientOpportunity["stage"], string> = {
-  identified: "Identified",
-  proposed: "Proposed",
-  negotiating: "Negotiating",
-  won: "Won",
-  lost: "Lost",
-};
+const PAGE_SIZE = 20;
 
-const OPP_STAGE_BADGE_CLASSES: Record<ClientOpportunity["stage"], string> = {
-  identified: "bg-status-info-surface text-status-info-ink border-status-info-rule",
-  proposed: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
-  negotiating: "bg-muted text-muted-foreground border-border",
-  won: "bg-status-success-surface text-status-success-ink border-status-success-rule",
-  lost: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
-};
-
-const columns: DataTableColumn<ClientOpportunity>[] = [
-  {
-    key: "title",
-    header: "Title",
-    className: TABLE_TITLE_CELL,
-    cell: (row) => (
-      <TruncatedText text={row.title} className="text-dense font-medium" />
-    ),
-  },
-  {
-    key: "type",
-    header: "Type",
-    cell: (row) => (
-      <Badge
-        variant="outline"
-        className="text-micro px-1.5 py-0 h-4 bg-muted text-muted-foreground border-border capitalize"
-      >
-        {row.type === "cross_sell" ? "Cross-sell" : "Upsell"}
-      </Badge>
-    ),
-  },
-  {
-    key: "stage",
-    header: "Stage",
-    cell: (row) => (
-      <Badge
-        variant="outline"
-        className={cn("text-micro px-1.5 py-0 h-4", OPP_STAGE_BADGE_CLASSES[row.stage])}
-      >
-        {OPP_STAGE_LABELS[row.stage]}
-      </Badge>
-    ),
-  },
-  {
-    key: "value",
-    header: "Value",
-    cell: (row) => (
-      <span className="text-dense tabular-nums">{formatAmount(row.value)}</span>
-    ),
-  },
-  {
-    key: "expectedCloseDate",
-    header: "Expected Close",
-    cell: (row) => (
-      <span className="text-dense text-muted-foreground">
-        {formatDate(row.expectedCloseDate)}
-      </span>
-    ),
-  },
-];
-
+/**
+ * The upsell and cross-sell opportunities on one client.
+ *
+ * The columns, their labels, the stage tones and the mobile card come from
+ * `CLIENT_OPPORTUNITY_LAYOUT`. What this replaces is a hand-written column list
+ * carrying two label maps and a badge-class map of its own, plus an
+ * `en-IN`/`INR` money formatter that showed rupees to every tenant whatever
+ * currency they trade in — `money` now renders in the organisation's own.
+ *
+ * It also had no loading signal: the table's skeleton covered the rows, but a
+ * failed load fell through to the empty state and read as "no opportunities
+ * logged". A failure dressed as emptiness is the one thing principle 2 rules
+ * out, so the error branch is tested first and says the load failed.
+ */
 export function ClientOpportunitiesTab({ clientId }: { clientId: number }) {
-  const { data, isLoading, isError, refetch } = useClientOpportunities(clientId);
+  const layout = useTenantLayout(CLIENT_OPPORTUNITY_LAYOUT);
+  const money = useOrgDisplay();
+  const [density] = useDensity();
 
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const { data, isLoading, isError, error, refetch } = useClientOpportunities(clientId);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  if (isLoading)
+    return <DataTableSkeleton rows={6} columns={layout.list.columns.length} />;
 
   if (isError)
     return (
       <ErrorState
         compact
         title="Couldn't load opportunities"
-        description="The opportunity list didn't load. Check your connection and try again."
+        description={getErrorMessage(error)}
         onRetry={handleRetry}
       />
     );
 
+  const opportunities = data ?? [];
+
+  if (opportunities.length === 0)
+    return (
+      <EmptyState
+        compact
+        className="py-10"
+        title="No opportunities logged"
+        description="Track an upsell or cross-sell here so renewals and expansion don't live only in someone's head."
+      />
+    );
+
   return (
-    <DataTable
-      data={data ?? []}
-      columns={columns}
-      getRowKey={(row) => row.id}
-      isLoading={isLoading}
-      emptyState={
-        <EmptyState
-          title="No opportunities logged"
-          description="Track an upsell or cross-sell here so renewals and expansion don't live only in someone's head."
-          compact
-          className="py-10"
-        />
-      }
+    <RecordList
+      layout={layout}
+      rows={asRecordValues(opportunities)}
+      getRowKey={(row) => String(row.id)}
+      density={density}
+      money={money}
+      minWidth="720px"
+      pagination={{ pageSize: PAGE_SIZE }}
     />
   );
 }

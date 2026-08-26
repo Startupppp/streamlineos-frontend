@@ -1,10 +1,18 @@
 "use client";
 
-import { memo } from "react";
+import { useCallback } from "react";
+import { toast } from "sonner";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody,
+  Sheet,
+  SheetBody,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
 } from "@/components/ui/sheet";
-import { CreateDealForm } from "@/features/crm/deals/create-deal-form";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { useCreateDeal } from "@/hooks/api/crm";
+import { DealForm, toCreateInput, type DealSubmission } from "./deal-form";
 
 interface DealsCreateSheetProps {
   open: boolean;
@@ -13,22 +21,51 @@ interface DealsCreateSheetProps {
   onSuccess: () => void;
 }
 
-export const DealsCreateSheet = memo(function DealsCreateSheet({
+export function DealsCreateSheet({
   open,
   onOpenChange,
   employees,
   onSuccess,
 }: DealsCreateSheetProps) {
+  const createDeal = useCreateDeal();
+
+  const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
+
+  const handleSubmit = useCallback(
+    (submission: DealSubmission) => {
+      createDeal.mutate(toCreateInput(submission), {
+        onSuccess: () => {
+          toast.success("Deal created");
+          onSuccess();
+        },
+        onError: (error) => toast.error(getErrorMessage(error)),
+      });
+    },
+    [createDeal, onSuccess],
+  );
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-lg p-0 flex flex-col gap-0 overflow-hidden">
+      <SheetContent side="right" className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
         <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
-          <SheetTitle>Create New Deal</SheetTitle>
+          <SheetTitle>New deal</SheetTitle>
+          <SheetDescription>
+            A deal tracks one opportunity through your pipeline — its value, its stage
+            and when you expect it to close.
+          </SheetDescription>
         </SheetHeader>
+
         <SheetBody className="px-6 py-4">
-          <CreateDealForm employees={employees} onSuccess={onSuccess} />
+          <DealForm
+            mode="create"
+            employees={employees}
+            isSubmitting={createDeal.isPending}
+            submitLabel="Create deal"
+            onSubmit={handleSubmit}
+            onCancel={handleCancel}
+          />
         </SheetBody>
       </SheetContent>
     </Sheet>
   );
-});
+}

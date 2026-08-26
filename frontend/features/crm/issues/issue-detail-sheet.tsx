@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { RecordDetail } from "@/features/renderer";
 import { useIssue } from "@/hooks/api/crm/issues";
 import { formatRelativeTime, formatShortDate } from "@/lib/date-utils";
@@ -86,7 +87,7 @@ export function IssueDetailSheet({
   canManage,
   canEscalate,
 }: IssueDetailSheetProps) {
-  const { data, isLoading, isError, refetch } = useIssue(issueRecordId);
+  const { data, isLoading, isError, refetch, access } = useIssue(issueRecordId);
 
   function handleRetry() {
     void refetch();
@@ -117,7 +118,9 @@ export function IssueDetailSheet({
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-6 py-4">
-          {isLoading ? (
+          {access.denied ? (
+            <NoPermissionState permission={access.permission} />
+          ) : isLoading ? (
             <div className="flex flex-col gap-3">
               <Skeleton className="h-6 w-1/2" />
               <Skeleton className="h-32 w-full" />

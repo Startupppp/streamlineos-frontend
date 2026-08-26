@@ -1,418 +1,266 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import type { ReactNode } from "react";
-import Link from "next/link";
-import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
-import { Shield, CheckCircle2, XCircle, Clock, AlertTriangle, Pencil } from "lucide-react";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { PageWrapper } from "@/components/ui/page-wrapper";
-import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
-import { LoadingButton } from "@/components/ui/loading-button";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { cn } from "@/lib/utils";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import {
-  useSlaPolicies, useSlaReport, useSlaBreachedLeads,
-  useCreateSlaPolicy, useUpdateSlaPolicy, useDeleteSlaPolicy,
-} from "@/hooks/api/crm-settings";
-import {
-  SlaPolicySheet, buildSlaPolicyPayload,
-  type SlaPolicyItem, type SlaPolicyFormValues,
-} from "@/features/crm/settings/sla-policy-sheet";
+import { useCallback, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { CheckCircle2, Clock, Shield, XCircle } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DataTableSkeleton } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState, NoPermissionState } from "@/components/shared";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
+import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { RecordList, asRecordValues } from "@/features/renderer";
+import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordRowActions } from "@/features/crm/settings/shared/record-row-actions";
+import { SlaPolicySheet } from "@/features/crm/settings/sla-policy-sheet";
+import { useCan } from "@/hooks/api/access";
+import {
+  useDeleteSlaPolicy,
+  useSlaBreachedLeads,
+  useSlaPolicies,
+  useSlaReport,
+  type SlaPolicy,
+} from "@/hooks/api/crm-settings";
+import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  SLA_BREACH_LAYOUT,
+  SLA_POLICY_LAYOUT,
+} from "@/lib/renderer/crm/settings/sla-policy-layout";
 
-const PRIORITY_BADGE: Record<string, string> = {
-  low: "bg-status-info-surface text-status-info-ink border-status-info-rule",
-  medium: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
-  // A four-step ladder needs four steps. `high` was orange before the
-  // migration and there is no orange status, so it collapsed onto `medium`'s
-  // amber; the categorical orange restores the rung. The other three keep
-  // status tokens, because there the meaning *is* the status.
-  high: "bg-category-orange-surface text-category-orange-ink border-category-orange-rule",
-  urgent: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
-};
-
-interface PolicyRowActionsProps {
-  policy: SlaPolicyItem;
-  onEdit: (policy: SlaPolicyItem) => void;
-  onDeleteRequest: (id: number) => void;
-}
-
-function PolicyRowActions({ policy, onEdit, onDeleteRequest }: PolicyRowActionsProps) {
-  const deleteIcon = useAnimatedIcon();
-
-  const handleEdit = useCallback(() => onEdit(policy), [policy, onEdit]);
-  const handleDeleteRequest = useCallback(() => onDeleteRequest(policy.id), [policy.id, onDeleteRequest]);
-
-  return (
-    <div className="flex items-center justify-end gap-1">
-      <Button
-        variant="ghost"
-        size="icon"
-        className="w-7"
-        onClick={handleEdit}
-        aria-label="Edit"
-      >
-        <Pencil className="h-3.5 w-3.5" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="w-7 text-destructive"
-        onClick={handleDeleteRequest}
-        aria-label="Delete"
-        {...deleteIcon.hoverHandlers}
-      >
-        <Trash2Icon ref={deleteIcon.iconRef} size={14} />
-      </Button>
-    </div>
-  );
-}
-
-type BreachedLead = { id: number; name: string; status: string; slaDeadline: string | null };
-
-function buildBreachedColumns(): DataTableColumn<BreachedLead>[] {
-  return [
-    {
-      key: "lead",
-      header: "Lead",
-      cell: (row): ReactNode => (
-        <Link href={`/crm/leads/${row.id}`} className="text-dense font-medium hover:underline text-foreground">
-          {row.name}
-        </Link>
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      cell: (row): ReactNode => (
-        <Badge variant="outline" className="text-micro h-4 px-1.5 py-0 bg-muted text-muted-foreground border-border">
-          {row.status}
-        </Badge>
-      ),
-    },
-    {
-      key: "breachedAt",
-      header: "Breached At",
-      headerClassName: "text-right",
-      className: "text-right",
-      cell: (row): ReactNode => (
-        <span className="text-dense text-status-danger-ink font-mono tabular-nums">
-          {row.slaDeadline ? new Date(row.slaDeadline).toLocaleDateString() : "N/A"}
-        </span>
-      ),
-    },
-  ];
-}
-
-function BreachedLeadsTable({ leads }: { leads: BreachedLead[] }) {
-  const getKey = useCallback((row: BreachedLead) => String(row.id), []);
-  const columns = buildBreachedColumns();
-
-  return (
-    <Card className="bg-card rounded-xl border border-border shadow-sm">
-      <CardHeader className="px-4 py-3">
-        <CardTitle className="text-sm font-semibold flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4 text-status-danger-ink" />
-          Recent SLA Breaches ({leads.length})
-        </CardTitle>
-      </CardHeader>
-      <DataTable data={leads} columns={columns} getRowKey={getKey} />
-    </Card>
-  );
-}
-
-function buildPolicyColumns(
-  onEdit: (policy: SlaPolicyItem) => void,
-  onDeleteRequest: (id: number) => void,
-): DataTableColumn<SlaPolicyItem>[] {
-  return [
-    {
-      key: "name",
-      header: "Name",
-      cell: (row): ReactNode => (
-        <span className="text-dense font-medium">{row.name}</span>
-      ),
-    },
-    {
-      key: "appliesTo",
-      header: "Applies To",
-      cell: (row): ReactNode => (
-        <Badge variant="outline" className="text-micro h-4 px-1.5 py-0 bg-muted text-muted-foreground border-border capitalize">
-          {row.appliesTo}
-        </Badge>
-      ),
-    },
-    {
-      key: "priority",
-      header: "Priority",
-      cell: (row): ReactNode => (
-        <Badge
-          variant="outline"
-          className={cn("text-micro h-4 px-1.5 py-0 capitalize", PRIORITY_BADGE[row.priority] ?? PRIORITY_BADGE["medium"])}
-        >
-          {row.priority}
-        </Badge>
-      ),
-    },
-    {
-      key: "firstResponse",
-      header: "First Response",
-      headerClassName: "text-right",
-      className: "text-right",
-      cell: (row): ReactNode => (
-        <span className="text-dense font-mono tabular-nums">{row.firstResponseHours}h</span>
-      ),
-    },
-    {
-      key: "resolution",
-      header: "Resolution",
-      headerClassName: "text-right",
-      className: "text-right",
-      cell: (row): ReactNode => (
-        <span className="text-dense font-mono tabular-nums">{row.resolutionHours}h</span>
-      ),
-    },
-    {
-      key: "actions",
-      header: "Actions",
-      headerClassName: "text-right",
-      className: "text-right",
-      cell: (row): ReactNode => (
-        <PolicyRowActions policy={row} onEdit={onEdit} onDeleteRequest={onDeleteRequest} />
-      ),
-    },
-  ];
-}
-
+/**
+ * SLA policies, and what they are costing.
+ *
+ * Two generated lists: the policies themselves, and the leads that missed one.
+ * The breach list used to be a second hand-written `DataTableColumn[]` with its
+ * own date formatting and its own red; described as a record type it is the same
+ * renderer as everything else, and clicking a row goes to the lead rather than
+ * relying on one cell happening to be a link.
+ */
 export default function SlaPage() {
-  const { data: policies, isLoading, isError, refetch } = useSlaPolicies();
-  const { data: slaReport, isLoading: reportLoading } = useSlaReport();
-  const { data: breachedLeads, isLoading: breachesLoading } = useSlaBreachedLeads({ limit: 10 });
+  const router = useRouter();
+  const policyLayout = useTenantLayout(SLA_POLICY_LAYOUT);
+  const breachLayout = useTenantLayout(SLA_BREACH_LAYOUT);
+  const [density, setDensity] = useDensity();
+  const canManage = useCan("crm:sla:manage");
 
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [editingPolicy, setEditingPolicy] = useState<SlaPolicyItem | null>(null);
-  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [editTarget, setEditTarget] = useState<SlaPolicy | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<SlaPolicy | null>(null);
 
-  const createPolicy = useCreateSlaPolicy();
-  const updatePolicy = useUpdateSlaPolicy();
+  const { data, isLoading, isError, refetch } = useSlaPolicies();
+  const report = useSlaReport();
+  const breaches = useSlaBreachedLeads({ limit: 10 });
   const deletePolicy = useDeleteSlaPolicy();
 
-  const handleOpenNew = useCallback(() => {
-    setEditingPolicy(null);
+  const policies = useMemo(() => data ?? [], [data]);
+  const breachedLeads = useMemo(() => breaches.data ?? [], [breaches.data]);
+
+  const handleOpenCreate = useCallback(() => {
+    setEditTarget(null);
     setSheetOpen(true);
   }, []);
 
-  const handleStartEdit = useCallback((policy: SlaPolicyItem) => {
-    setEditingPolicy(policy);
-    setSheetOpen(true);
+  const handleSheetOpenChange = useCallback((open: boolean) => {
+    setSheetOpen(open);
+    if (!open) setEditTarget(null);
   }, []);
 
-  const handleSheetSubmit = useCallback(
-    (data: SlaPolicyFormValues) => {
-      const payload = buildSlaPolicyPayload(data);
-      if (editingPolicy) {
-        updatePolicy.mutate(
-          { id: editingPolicy.id, ...payload },
-          {
-            onSuccess: () => {
-              toast.success("Policy updated");
-              setSheetOpen(false);
-            },
-            onError: (err) => toast.error(getErrorMessage(err)),
-          }
-        );
-      } else {
-        createPolicy.mutate(payload, {
-          onSuccess: () => {
-            toast.success("SLA policy created");
-            setSheetOpen(false);
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        });
-      }
-    },
-    [editingPolicy, updatePolicy, createPolicy]
-  );
+  const handleDeleteOpenChange = useCallback((open: boolean) => {
+    if (!open) setDeleteTarget(null);
+  }, []);
 
-  const handleDeleteRequest = useCallback((id: number) => setDeleteTargetId(id), []);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const handleDeleteConfirm = useCallback(() => {
-    if (deleteTargetId === null) return;
-    deletePolicy.mutate(deleteTargetId, {
+    if (!deleteTarget) return;
+    deletePolicy.mutate(deleteTarget.id, {
       onSuccess: () => {
         toast.success("Policy deleted");
-        setDeleteTargetId(null);
+        setDeleteTarget(null);
       },
-      onError: (err) => {
-        toast.error(getErrorMessage(err));
-        setDeleteTargetId(null);
+      onError: (error) => {
+        toast.error(getErrorMessage(error));
+        setDeleteTarget(null);
       },
     });
-  }, [deletePolicy, deleteTargetId]);
+  }, [deletePolicy, deleteTarget]);
 
-  const handleDeleteCancel = useCallback(() => setDeleteTargetId(null), []);
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-  const handleAlertOpenChange = useCallback(
-    (open: boolean) => { if (!open) handleDeleteCancel(); },
-    [handleDeleteCancel]
+  const handleBreachClick = useCallback(
+    (row: Record<string, unknown>) => router.push(`/crm/leads/${String(row.id)}`),
+    [router],
   );
 
-  const getPolicyKey = useCallback((p: SlaPolicyItem) => String(p.id), []);
-
-  const newPolicyIcon = useAnimatedIcon();
-  const isPending = createPolicy.isPending || updatePolicy.isPending;
-  const pageLoading = isLoading || reportLoading;
-
-  const columns = buildPolicyColumns(handleStartEdit, handleDeleteRequest);
-
-  const policyEmptyState = (
-    <div className="py-14 px-4">
-      <EmptyState
-        illustrationPreset="security"
-        title="No SLA policies defined"
-        description="Create a policy to track response and resolution time commitments."
-        action={{ label: "New Policy", onClick: handleOpenNew }}
-        className="border-0 bg-transparent"
-      />
-    </div>
+  const rowActions = useCallback(
+    (row: Record<string, unknown>) => {
+      const policy = policies.find((candidate) => candidate.id === row.id);
+      if (!policy || !canManage) return null;
+      return (
+        <RecordRowActions
+          editLabel={`Edit ${policy.name}`}
+          deleteLabel={`Delete ${policy.name}`}
+          onEdit={() => {
+            setEditTarget(policy);
+            setSheetOpen(true);
+          }}
+          onDelete={() => setDeleteTarget(policy)}
+        />
+      );
+    },
+    [policies, canManage],
   );
+
+  const complianceRate = report.data?.complianceRate ?? 0;
 
   return (
-    <>
-      <AlertDialog open={deleteTargetId !== null} onOpenChange={handleAlertOpenChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete SLA Policy</AlertDialogTitle>
-            <AlertDialogDescription>
-              This policy will be permanently deleted. Leads and deals will no longer be tracked against it.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleDeleteCancel}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleDeleteConfirm}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <SlaPolicySheet
-        open={sheetOpen}
-        onOpenChange={setSheetOpen}
-        editing={editingPolicy}
-        isPending={isPending}
-        onSubmit={handleSheetSubmit}
-      />
-
-      <PageWrapper
-        title="SLA Policies"
-        subtitle="Define response and resolution time commitments for leads and deals"
-        actions={
-          <LoadingButton
-            isPending={false}
-            onClick={handleOpenNew}
-            {...newPolicyIcon.hoverHandlers}
+    <PageWrapper
+      title="Service levels"
+      subtitle="How fast the team promises to answer, and whether it did."
+      filters={
+        <div className={FILTER_TOOLBAR_ROW}>
+          <DensityToggle density={density} onChange={setDensity} />
+        </div>
+      }
+      actions={
+        canManage ? (
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={16}
+            iconClassName="mr-1.5"
+            size="sm"
+            onClick={handleOpenCreate}
           >
-            <PlusIcon ref={newPolicyIcon.iconRef} size={14} className="mr-1.5" />
-            New Policy
-          </LoadingButton>
-        }
-      >
-        {pageLoading ? (
-          <div className="space-y-4">
-            <div className="grid gap-2 grid-cols-2 lg:grid-cols-4">
-              {[0, 1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-20 rounded-xl" />
-              ))}
-            </div>
-            <Skeleton className="h-64 w-full rounded-xl" />
-          </div>
-        ) : isError ? (
-          <ErrorState
-            title="Couldn't load SLA policies"
-            description="The policy list didn't load. Check your connection and try again."
-            onRetry={handleRetry}
+            New policy
+          </AnimatedIconButton>
+        ) : undefined
+      }
+    >
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-gap-section">
+        {!canManage ? (
+          <NoPermissionState
+            permission="crm:sla:manage"
             className={CONTENT_FILL_PANEL}
+            description="Response-time commitments are set by your sales operations team."
           />
         ) : (
-          <div className="flex flex-1 min-h-0 flex-col gap-4">
-            {slaReport && (
+          <>
+            {report.isLoading ? (
+              <StatCardGridSkeleton count={4} />
+            ) : report.data ? (
               <StatCardGrid cols={4}>
+                <StatCard label="Policies" value={policies.length} icon={Shield} tone="blue" />
                 <StatCard
-                  label="Active Policies"
-                  value={policies?.length ?? 0}
-                  icon={Shield}
-                  tone="blue"
-                />
-                <StatCard
-                  label="Compliant"
-                  value={slaReport.compliant}
+                  label="Met"
+                  value={report.data.compliant}
                   icon={CheckCircle2}
                   tone="emerald"
                 />
                 <StatCard
                   label="Breached (30d)"
-                  value={slaReport.breached}
+                  value={report.data.breached}
                   icon={XCircle}
                   tone="red"
                 />
                 <StatCard
-                  label="Compliance Rate"
-                  value={`${slaReport.complianceRate}%`}
+                  label="Compliance"
+                  value={`${complianceRate}%`}
                   icon={Clock}
-                  tone={
-                    slaReport.complianceRate >= 80
-                      ? "emerald"
-                      : slaReport.complianceRate >= 50
-                      ? "amber"
-                      : "red"
-                  }
+                  tone={complianceRate >= 80 ? "emerald" : complianceRate >= 50 ? "amber" : "red"}
                 />
               </StatCardGrid>
+            ) : null}
+
+            {isLoading ? (
+              <DataTableSkeleton
+                rows={8}
+                columns={policyLayout.list.columns.length}
+                className="flex-1"
+              />
+            ) : isError ? (
+              <ErrorState
+                title="Couldn't load SLA policies"
+                description="The policy list didn't load. Check your connection and try again."
+                onRetry={handleRetry}
+                className={CONTENT_FILL_PANEL}
+              />
+            ) : policies.length === 0 ? (
+              <EmptyState
+                illustrationPreset="security"
+                title="No service levels set"
+                description="A policy puts a clock on a lead: how long the team has to answer it, and how long to finish it."
+                action={{ label: "New policy", onClick: handleOpenCreate }}
+                className={CONTENT_FILL_PANEL}
+              />
+            ) : (
+              <RecordList
+                layout={policyLayout}
+                rows={asRecordValues(policies)}
+                getRowKey={(row) => String(row.id)}
+                actions={rowActions}
+                density={density}
+                minWidth="820px"
+                className={CONTENT_FILL_PANEL}
+              />
             )}
 
-            <DataTable
-              data={policies ?? []}
-              columns={columns}
-              getRowKey={getPolicyKey}
-              isLoading={isLoading}
-              emptyState={policyEmptyState}
-            />
-
-            {breachesLoading ? (
-              <Skeleton className="h-40 w-full rounded-xl" />
-            ) : breachedLeads && breachedLeads.length > 0 ? (
-              <BreachedLeadsTable leads={breachedLeads} />
-            ) : (
-              <Card className="bg-card rounded-xl border border-border shadow-sm">
+            <section className="flex shrink-0 flex-col gap-gap-toolbar">
+              <h2 className="text-sm font-semibold">Missed in the last 30 days</h2>
+              {breaches.isLoading ? (
+                <DataTableSkeleton rows={4} columns={breachLayout.list.columns.length} />
+              ) : breaches.isError ? (
+                <ErrorState
+                  title="Couldn't load recent breaches"
+                  description="The breach list didn't load. Check your connection and try again."
+                  onRetry={() => void breaches.refetch()}
+                />
+              ) : breachedLeads.length === 0 ? (
                 <EmptyState
                   compact
                   illustrationPreset="security"
-                  title="No breaches in the last 30 days"
+                  title="Nothing was missed"
                   description="Every lead was answered and resolved inside its policy window."
-                  className="py-6"
                 />
-              </Card>
-            )}
-          </div>
+              ) : (
+                <RecordList
+                  layout={breachLayout}
+                  rows={asRecordValues(breachedLeads)}
+                  getRowKey={(row) => String(row.id)}
+                  onRowClick={handleBreachClick}
+                  density={density}
+                  minWidth="520px"
+                />
+              )}
+            </section>
+          </>
         )}
-      </PageWrapper>
-    </>
+      </div>
+
+      <SlaPolicySheet
+        open={sheetOpen}
+        onOpenChange={handleSheetOpenChange}
+        policy={editTarget}
+      />
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={handleDeleteOpenChange}
+        title="Delete this policy?"
+        description={
+          deleteTarget
+            ? `${deleteTarget.name} will be deleted and leads and deals will stop being measured against it. This cannot be undone.`
+            : ""
+        }
+        confirmLabel="Delete policy"
+        destructive
+        isPending={deletePolicy.isPending}
+        onConfirm={handleDeleteConfirm}
+      />
+    </PageWrapper>
   );
 }

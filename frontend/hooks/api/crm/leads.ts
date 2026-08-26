@@ -1,9 +1,9 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useCan } from "@/hooks/api/access";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 interface LeadSourceStat {
   source: string;
@@ -19,12 +19,10 @@ interface LeadSourceReport {
 }
 
 export function useLeadSourceReport() {
-  const canView = useCan("crm:leads:view");
-  return useQuery({
+  return useGatedQuery("crm:leads:view", {
     queryKey: queryKeys.leads.sourceReport(),
     queryFn: () => apiClient.get<LeadSourceReport>("/leads/source-report"),
     staleTime: 2 * 60_000,
-    enabled: canView,
   });
 }
 
@@ -46,12 +44,10 @@ export interface DuplicateGroup {
 }
 
 export function useDuplicateLeads() {
-  const canView = useCan("crm:leads:view");
-  return useQuery({
+  return useGatedQuery("crm:leads:view", {
     queryKey: queryKeys.leads.duplicates(),
     queryFn: () => apiClient.get<{ groups: DuplicateGroup[]; total: number }>("/leads/duplicates"),
     staleTime: 2 * 60 * 1000,
-    enabled: canView,
   });
 }
 

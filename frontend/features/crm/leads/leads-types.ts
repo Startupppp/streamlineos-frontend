@@ -1,4 +1,21 @@
-export type LeadStatus = "NEW" | "CONTACTED" | "INTERESTED" | "QUALIFIED" | "CONVERTED" | "LOST";
+/** The board's columns, in pipeline order. `LeadStatus` is derived from it so
+ * the two cannot drift. */
+export const LEAD_STATUSES = [
+  "NEW",
+  "CONTACTED",
+  "INTERESTED",
+  "QUALIFIED",
+  "CONVERTED",
+  "LOST",
+] as const;
+
+export type LeadStatus = (typeof LEAD_STATUSES)[number];
+
+export interface TeamMember {
+  id: string;
+  name: string | null;
+  image?: string | null;
+}
 
 export interface BoardLead {
   id: number;

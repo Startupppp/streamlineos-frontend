@@ -41,8 +41,9 @@ in each ticket's `Status:` line.
 
 | | Tickets |
 |---|---|
-| Done | 01–07, 09–18, 21–25 |
-| In progress | 08 (contract), 19 (records on the engine), 20 (tenant layout) |
+| Done | 01–07, 09–19, 21–25 |
+| In progress | 08 (contract) |
+| Blocked on the backend | 20 (tenant layout) — the client is complete and tested; the four `/renderer/layouts/*` routes do not exist yet |
 | Deliberately not done | 26 |
 
 **The identity migration went 71 → 36 readers**, and 12 of the 36 are the seam

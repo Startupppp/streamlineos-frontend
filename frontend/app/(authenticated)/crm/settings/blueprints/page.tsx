@@ -23,7 +23,7 @@ import { CreateBlueprintDialog } from "@/features/crm/settings/blueprints/create
 import { TransitionMatrix } from "@/features/crm/settings/blueprints/transition-matrix";
 
 export default function BlueprintsPage() {
-  const { data: blueprints, isLoading, isError, refetch } = useBlueprints();
+  const { data: blueprints, isLoading, isError, refetch, access } = useBlueprints();
   const { data: metadata } = useCrmMetadata();
   const updateBlueprint = useUpdateBlueprint();
 
@@ -96,6 +96,7 @@ export default function BlueprintsPage() {
           />
         ) : !blueprints || blueprints.length === 0 ? (
           <EmptyState
+            access={access}
             title="No blueprints"
             description="Blueprints define which stage transitions are allowed and what requirements must be met."
             action={{ label: "New Blueprint", onClick: handleOpenDialog }}

@@ -1,145 +1,129 @@
 "use client";
 
-import { useCallback } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useMemo } from "react";
 import { toast } from "sonner";
-import { createBlueprintSchema, type CreateBlueprintFormValues } from "./create-blueprint-dialog-schema";
-
-import { LoadingButton } from "@/components/ui/loading-button";
-import { Input } from "@/components/ui/input";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
+import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import {
-  Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
-} from "@/components/ui/form";
-
+  RecordForm,
+  type RecordFieldControl,
+  type RecordFormValues,
+} from "@/features/renderer";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
 import { useCreateBlueprint, useCrmMetadata } from "@/hooks/api/crm";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { BLUEPRINT_LAYOUT } from "@/lib/renderer/crm/settings/blueprint-layout";
+import { flagOr, requiredText, textOrNull } from "../shared/record-payload";
+
+/**
+ * Create a blueprint, rendered from the description.
+ *
+ * A dialog rather than a sheet, and correctly: three fields, one decision,
+ * nothing to lose by pressing Escape. The overlay ladder says take the lowest
+ * rung that fits, and this fits.
+ *
+ * The pipeline picker is supplied through `controls` because which pipelines
+ * exist is the tenant's business, not the blueprint's shape.
+ */
+
+interface CreateBlueprintDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onCreated: (id: string) => void;
+}
 
 export function CreateBlueprintDialog({
   open,
   onOpenChange,
   onCreated,
-}: {
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-  onCreated: (id: string) => void;
-}) {
+}: CreateBlueprintDialogProps) {
+  const layout = useTenantLayout(BLUEPRINT_LAYOUT);
   const { data: metadata } = useCrmMetadata();
   const createBlueprint = useCreateBlueprint();
 
-  const form = useForm<CreateBlueprintFormValues>({
-    resolver: zodResolver(createBlueprintSchema),
-    defaultValues: { name: "", description: "", pipelineId: "" },
-  });
+  const pipelines = useMemo(() => metadata?.pipelines ?? [], [metadata]);
 
-  const handleSubmit = useCallback(
-    (values: CreateBlueprintFormValues) => {
-      createBlueprint.mutate(
-        {
-          name: values.name,
-          description: values.description ?? null,
-          pipelineId: values.pipelineId,
-          isActive: true,
+  const controls = useMemo(
+    () => ({
+      pipelineId: (control: RecordFieldControl) => (
+        <Select
+          value={control.value}
+          onValueChange={control.onChange}
+          disabled={control.disabled}
+        >
+          <SelectTrigger aria-label="Pipeline">
+            <SelectValue placeholder="Choose a pipeline" />
+          </SelectTrigger>
+          <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
+            {pipelines.map((pipeline) => (
+              <SelectItem key={pipeline.id} value={pipeline.id}>
+                {pipeline.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ),
+    }),
+    [pipelines],
+  );
+
+  function handleClose() {
+    onOpenChange(false);
+  }
+
+  function handleSubmit(values: RecordFormValues) {
+    createBlueprint.mutate(
+      {
+        name: requiredText(values, "name"),
+        description: textOrNull(values, "description") ?? null,
+        pipelineId: requiredText(values, "pipelineId"),
+        isActive: flagOr(values, "isActive", true),
+      },
+      {
+        onSuccess: (created) => {
+          toast.success("Blueprint created");
+          onOpenChange(false);
+          onCreated(created.id);
         },
-        {
-          onSuccess: (created) => {
-            toast.success("Blueprint created");
-            form.reset();
-            onOpenChange(false);
-            onCreated(created.id);
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        }
-      );
-    },
-    [createBlueprint, form, onOpenChange, onCreated]
-  );
-
-  const handleOpenChange = useCallback(
-    (v: boolean) => {
-      if (!v) form.reset();
-      onOpenChange(v);
-    },
-    [form, onOpenChange]
-  );
-
-  const pipelines = metadata?.pipelines ?? [];
+        onError: (error) => toast.error(getErrorMessage(error)),
+      },
+    );
+  }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>New Blueprint</DialogTitle>
+          <DialogTitle>New blueprint</DialogTitle>
+          <DialogDescription>
+            A blueprint decides which stage may follow which, on one pipeline.
+          </DialogDescription>
         </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name <span className="text-destructive">*</span></FormLabel>
-                  <FormControl>
-                    <Input placeholder="Blueprint name" className="text-sm" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description (optional)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Brief description" className="text-sm" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="pipelineId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Pipeline <span className="text-destructive">*</span></FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger className="text-sm">
-                        <SelectValue placeholder="Select pipeline" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {pipelines.map((p) => (
-                        <SelectItem key={p.id} value={p.id} className="text-sm">
-                          {p.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <DialogFooter>
-              <LoadingButton
-                type="submit"
-                isPending={createBlueprint.isPending}
-                loadingText="Creating…"
-              >
-                Create Blueprint
-              </LoadingButton>
-            </DialogFooter>
-          </form>
-        </Form>
+
+        <RecordForm
+          key={open ? "open" : "closed"}
+          layout={layout}
+          mode="create"
+          initial={{ isActive: "true" }}
+          controls={controls}
+          onSubmit={handleSubmit}
+          onCancel={handleClose}
+          isSubmitting={createBlueprint.isPending}
+          submitLabel="Create blueprint"
+        />
       </DialogContent>
     </Dialog>
   );

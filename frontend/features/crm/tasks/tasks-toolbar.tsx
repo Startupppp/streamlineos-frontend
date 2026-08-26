@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { DensityToggle } from "@/features/renderer/density-toggle";
+import type { DensityMode } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 
 interface TasksToolbarProps {
@@ -20,6 +22,8 @@ interface TasksToolbarProps {
   assigneeFilter: string;
   onAssigneeFilterChange: (v: string) => void;
   members: Array<{ id: string; name: string | null }>;
+  density: DensityMode;
+  onDensityChange: (mode: DensityMode) => void;
   onClearFilters: () => void;
 }
 
@@ -35,6 +39,8 @@ export function TasksToolbar({
   assigneeFilter,
   onAssigneeFilterChange,
   members,
+  density,
+  onDensityChange,
   onClearFilters,
 }: TasksToolbarProps) {
   const handleSearchChange = useCallback(
@@ -114,6 +120,8 @@ export function TasksToolbar({
           ))}
         </SelectContent>
       </Select>
+
+      <DensityToggle density={density} onChange={onDensityChange} className="shrink-0" />
 
       {hasFilters && (
         <Button variant="ghost" size="sm" className="text-dense px-2" onClick={onClearFilters}>

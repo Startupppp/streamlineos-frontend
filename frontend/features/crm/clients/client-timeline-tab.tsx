@@ -10,7 +10,7 @@ import { formatDateTime } from "./utils";
 import type { ClientTimelineEvent } from "@/types/crm";
 
 export function ClientTimelineTab({ clientId }: { clientId: number }) {
-  const { data, isLoading, isError, refetch } = useClientTimeline(clientId);
+  const { data, isLoading, isError, refetch, access } = useClientTimeline(clientId);
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
@@ -38,6 +38,7 @@ export function ClientTimelineTab({ clientId }: { clientId: number }) {
   if (!data?.events.length) {
     return (
       <EmptyState
+        access={access}
         title="Nothing has happened yet"
         description="Calls, emails, meetings and renewals on this account appear here as they happen."
         compact

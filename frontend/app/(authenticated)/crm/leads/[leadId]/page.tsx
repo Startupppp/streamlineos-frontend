@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState } from "@/components/shared";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { useLeadDetail, useLeadTimeline, useUpdateLead, useUpdateLeadStatus, useLogLeadActivity } from "@/hooks/api/leads";
+import { useLeadDetail, useLeadTimeline, useUpdateLeadStatus, useLogLeadActivity } from "@/hooks/api/leads";
 import { useCreateTask } from "@/hooks/api/tasks";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -24,14 +24,12 @@ import {
   taskSchema,
   emailSchema,
   callSchema,
-  editSchema,
   type QuickAction,
   type PipelineStatus,
   type NoteForm,
   type TaskForm,
   type EmailForm,
   type CallForm,
-  type EditForm,
 } from "@/features/crm/leads/detail/lead-types";
 
 export default function LeadDetailPage({
@@ -53,27 +51,9 @@ export default function LeadDetailPage({
   const [isEditing, setIsEditing] = useState(false);
   const [activeAction, setActiveAction] = useState<QuickAction>(null);
 
-  const updateLeadMutation = useUpdateLead();
   const updateStatusMutation = useUpdateLeadStatus();
   const logActivityMutation = useLogLeadActivity();
   const createTaskMutation = useCreateTask();
-
-  const editForm = useForm<EditForm>({
-    resolver: zodResolver(editSchema),
-    values: lead
-      ? {
-          name: lead.name,
-          email: lead.email ?? "",
-          phone: lead.phone ?? "",
-          company: lead.company ?? "",
-          city: lead.city ?? "",
-          priority: lead.priority ?? "WARM",
-          potentialValue: lead.potentialValue ?? "",
-          investmentInterest: lead.investmentInterest ?? "",
-          notes: lead.notes ?? "",
-        }
-      : undefined,
-  });
 
   const noteForm = useForm<NoteForm>({ resolver: zodResolver(noteSchema) });
   const taskForm = useForm<TaskForm>({ resolver: zodResolver(taskSchema) });
@@ -97,22 +77,6 @@ export default function LeadDetailPage({
       });
     },
     [leadId, updateStatusMutation, lead],
-  );
-
-  const onEditSubmit = useCallback(
-    (data: EditForm) => {
-      updateLeadMutation.mutate(
-        { id: leadId, ...data },
-        {
-          onSuccess: () => {
-            toast.success("Lead updated");
-            setIsEditing(false);
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        },
-      );
-    },
-    [leadId, updateLeadMutation],
   );
 
   const onNoteSubmit = useCallback(
@@ -304,10 +268,7 @@ export default function LeadDetailPage({
               lead={lead}
               entityId={leadId}
               isEditing={isEditing}
-              editForm={editForm}
-              isUpdatePending={updateLeadMutation.isPending}
-              onEditSubmit={onEditSubmit}
-              onCancelEdit={handleCancelEdit}
+              onEditingDone={handleCancelEdit}
             />
 
             <LeadQuickActions

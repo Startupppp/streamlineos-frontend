@@ -1,231 +1,137 @@
 "use client";
 
-import { useCallback } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { slaPolicySchema, type SlaPolicyFormValues } from "./sla-policy-sheet-schema";
+import { toast } from "sonner";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetBody,
+  Sheet,
+  SheetBody,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
 } from "@/components/ui/sheet";
+import { RecordForm, asRecordValue, type RecordFormValues } from "@/features/renderer";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
 import {
-  Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
-} from "@/components/ui/form";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
+  useCreateSlaPolicy,
+  useUpdateSlaPolicy,
+  type CreateSlaPolicyInput,
+  type SlaPolicy,
+  type UpdateSlaPolicyInput,
+} from "@/hooks/api/crm-settings";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { SLA_POLICY_LAYOUT } from "@/lib/renderer/crm/settings/sla-policy-layout";
+import { numberOr, numberOrOmit, requiredText, textOrOmit } from "./shared/record-payload";
 
-export interface SlaPolicyItem {
-  id: number;
-  name: string;
-  appliesTo: "lead" | "deal" | "both";
-  priority: "low" | "medium" | "high" | "urgent";
-  firstResponseHours: number;
-  resolutionHours: number;
+/**
+ * Create and edit an SLA policy, rendered from the description.
+ *
+ * The two union fields are narrowed by looking the submitted string up in the
+ * list of values the API accepts, rather than asserted into place. A value that
+ * is not on the list is dropped instead of being sent, because the alternative
+ * is a cast that makes a wrong value compile.
+ */
+
+const APPLIES_TO = ["lead", "deal", "both"] as const;
+const PRIORITIES = ["low", "medium", "high", "urgent"] as const;
+
+function toAppliesTo(value: string | undefined): (typeof APPLIES_TO)[number] | undefined {
+  return APPLIES_TO.find((candidate) => candidate === value);
 }
 
-export type { SlaPolicyFormValues };
-
-function defaultValues(editing: SlaPolicyItem | null): SlaPolicyFormValues {
-  if (editing) {
-    return {
-      name: editing.name,
-      appliesTo: editing.appliesTo,
-      priority: editing.priority,
-      firstResponseHours: String(editing.firstResponseHours),
-      resolutionHours: String(editing.resolutionHours),
-      businessHours: false,
-    };
-  }
-  return {
-    name: "",
-    appliesTo: "both",
-    priority: "medium",
-    firstResponseHours: "4",
-    resolutionHours: "24",
-    businessHours: false,
-  };
-}
-
-export function buildSlaPolicyPayload(data: SlaPolicyFormValues) {
-  return {
-    name: data.name,
-    appliesTo: data.appliesTo,
-    priority: data.priority,
-    firstResponseHours: Number(data.firstResponseHours),
-    resolutionHours: Number(data.resolutionHours),
-  };
+function toPriority(value: string | undefined): (typeof PRIORITIES)[number] | undefined {
+  return PRIORITIES.find((candidate) => candidate === value);
 }
 
 interface SlaPolicySheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  editing: SlaPolicyItem | null;
-  isPending: boolean;
-  onSubmit: (data: SlaPolicyFormValues) => void;
+  policy: SlaPolicy | null;
 }
 
-export function SlaPolicySheet({
-  open,
-  onOpenChange,
-  editing,
-  isPending,
-  onSubmit,
-}: SlaPolicySheetProps) {
-  const form = useForm<SlaPolicyFormValues>({
-    resolver: zodResolver(slaPolicySchema),
-    defaultValues: defaultValues(editing),
-  });
+export function SlaPolicySheet({ open, onOpenChange, policy }: SlaPolicySheetProps) {
+  const layout = useTenantLayout(SLA_POLICY_LAYOUT);
+  const createPolicy = useCreateSlaPolicy();
+  const updatePolicy = useUpdateSlaPolicy();
+  const isEditing = policy !== null;
+  const isPending = createPolicy.isPending || updatePolicy.isPending;
 
-  const handleOpenChange = useCallback(
-    (next: boolean) => {
-      if (!next) form.reset(defaultValues(null));
-      onOpenChange(next);
-    },
-    [form, onOpenChange]
-  );
+  function handleClose() {
+    onOpenChange(false);
+  }
 
-  const handleSubmit = useCallback(
-    (data: SlaPolicyFormValues) => {
-      onSubmit(data);
-    },
-    [onSubmit]
-  );
+  function handleSubmit(values: RecordFormValues) {
+    if (policy) {
+      const patch: UpdateSlaPolicyInput = { id: policy.id };
+      const name = textOrOmit(values, "name");
+      if (name !== undefined) patch.name = name;
+      const appliesTo = toAppliesTo(values.appliesTo);
+      if (appliesTo !== undefined) patch.appliesTo = appliesTo;
+      const priority = toPriority(values.priority);
+      if (priority !== undefined) patch.priority = priority;
+      const firstResponseHours = numberOrOmit(values, "firstResponseHours");
+      if (firstResponseHours !== undefined) patch.firstResponseHours = firstResponseHours;
+      const resolutionHours = numberOrOmit(values, "resolutionHours");
+      if (resolutionHours !== undefined) patch.resolutionHours = resolutionHours;
+
+      updatePolicy.mutate(patch, {
+        onSuccess: () => {
+          toast.success("Policy updated");
+          onOpenChange(false);
+        },
+        onError: (error) => toast.error(getErrorMessage(error)),
+      });
+      return;
+    }
+
+    const payload: CreateSlaPolicyInput = {
+      name: requiredText(values, "name"),
+      appliesTo: toAppliesTo(values.appliesTo) ?? "both",
+      priority: toPriority(values.priority) ?? "medium",
+      firstResponseHours: numberOr(values, "firstResponseHours", 4),
+      resolutionHours: numberOr(values, "resolutionHours", 24),
+    };
+
+    createPolicy.mutate(payload, {
+      onSuccess: () => {
+        toast.success("Policy created");
+        onOpenChange(false);
+      },
+      onError: (error) => toast.error(getErrorMessage(error)),
+    });
+  }
 
   return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
-        <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
-          <SheetTitle>{editing ? "Edit SLA Policy" : "New SLA Policy"}</SheetTitle>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-lg">
+        <SheetHeader className="shrink-0 border-b px-6 py-4">
+          <SheetTitle>{isEditing ? "Edit SLA policy" : "New SLA policy"}</SheetTitle>
+          <SheetDescription>
+            A policy is a promise with a clock on it — how fast the team answers, and how fast it
+            finishes.
+          </SheetDescription>
         </SheetHeader>
+
         <SheetBody className="px-6 py-5">
-          <Form {...form}>
-            <form id="sla-policy-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Policy Name <span className="text-destructive">*</span></FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="e.g. Hot Lead SLA" className="" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="appliesTo"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Applies To</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="lead">Lead</SelectItem>
-                          <SelectItem value="deal">Deal</SelectItem>
-                          <SelectItem value="both">Both</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="priority"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Priority</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="low">Low</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                          <SelectItem value="urgent">Urgent</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="firstResponseHours"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>First Response (hrs)</FormLabel>
-                      <FormControl>
-                        <Input type="number" min={1} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="resolutionHours"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Resolution (hrs)</FormLabel>
-                      <FormControl>
-                        <Input type="number" min={1} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="businessHours"
-                render={({ field }) => (
-                  <FormItem className="flex items-center gap-3">
-                    <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                    <FormLabel className="cursor-pointer">Business Hours Only</FormLabel>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </form>
-          </Form>
+          <RecordForm
+            key={policy?.id ?? "new"}
+            layout={layout}
+            mode={isEditing ? "edit" : "create"}
+            initial={
+              policy
+                ? asRecordValue(policy)
+                : {
+                    appliesTo: "both",
+                    priority: "medium",
+                    firstResponseHours: "4",
+                    resolutionHours: "24",
+                  }
+            }
+            onSubmit={handleSubmit}
+            onCancel={handleClose}
+            isSubmitting={isPending}
+            submitLabel={isEditing ? "Save changes" : "Create policy"}
+          />
         </SheetBody>
-        <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
-          <div className="grid w-full grid-cols-2 gap-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <LoadingButton
-              type="submit"
-              form="sla-policy-form"
-              isPending={isPending}
-              loadingText="Saving..."
-            >
-              {editing ? "Save Changes" : "Create Policy"}
-            </LoadingButton>
-          </div>
-        </SheetFooter>
       </SheetContent>
     </Sheet>
   );

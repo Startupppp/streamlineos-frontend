@@ -2,7 +2,7 @@
 
 import { useMemo, type ReactNode } from "react";
 import { DataTable, type DataTableColumn, type DataTableProps } from "@/components/ui/data-table";
-import { isNumericField, type RecordLayout } from "@/lib/renderer/layout";
+import { isNumericField, moneyDisplayFor, type RecordLayout } from "@/lib/renderer/layout";
 import { cn } from "@/lib/utils";
 import { formatFieldText, renderFieldValue, resolveField, type RecordValue } from "./format-value";
 import { densityAttribute, type DensityMode } from "@/lib/design-tokens";
@@ -10,7 +10,20 @@ import { DEFAULT_MONEY_DISPLAY, type MoneyDisplay } from "@/lib/format-utils";
 
 type BorrowedProps = Pick<
   DataTableProps<RecordValue>,
-  "isLoading" | "emptyState" | "pagination" | "onRowClick" | "minWidth" | "className"
+  | "isLoading"
+  | "emptyState"
+  | "pagination"
+  | "onRowClick"
+  | "minWidth"
+  | "className"
+  /*
+    Selection is borrowed rather than described. Which rows a person may pick,
+    and what picking them does, depends on the caller's permissions and on the
+    action being staged — a screen concern, like the row actions beside it. The
+    table already owns the checkbox column and select-all; forwarding is what
+    stops every list growing its own.
+  */
+  | "selection"
 >;
 
 export interface RecordListProps extends BorrowedProps {
@@ -23,6 +36,19 @@ export interface RecordListProps extends BorrowedProps {
    * concern rather than a shape one.
    */
   actions?: (row: RecordValue) => ReactNode;
+  /**
+   * A leading column for the one control a row is *about*.
+   *
+   * Symmetric with `actions` and separate from `selection` on purpose. Selection
+   * stages a bulk action and brings a select-all header with it; this is a
+   * per-row control that changes the record on the spot — ticking a task done is
+   * the example it exists for, and putting that on the right of the row, behind
+   * a menu, is putting the point of the screen last.
+   *
+   * Not part of the description, for the same reason `actions` is not: what a
+   * row can do depends on the caller's permissions.
+   */
+  leading?: (row: RecordValue) => ReactNode;
   /**
    * Set by the surface so the toggle can live in its toolbar. Omitted, the list
    * renders comfortable and shows no control — a screen with no room for one
@@ -58,10 +84,12 @@ export function RecordList({
   rows,
   getRowKey,
   actions,
+  leading,
   isLoading,
   emptyState,
   pagination,
   onRowClick,
+  selection,
   minWidth,
   className,
   density = "comfortable",
@@ -88,11 +116,16 @@ export function RecordList({
           className: cn(numeric && "text-right font-mono tabular-nums", column.width),
           headerClassName: numeric ? "text-right" : undefined,
           cell: (row) => {
-            const value = renderFieldValue(field, row[column.field], money);
+            const display = moneyDisplayFor(field, row, money);
+            const value = renderFieldValue(field, row[column.field], display, row);
             if (!column.subtitle) return value;
 
             const subtitle = resolveField(layout, column.subtitle);
-            const subtitleText = formatFieldText(subtitle, row[column.subtitle], money);
+            const subtitleText = formatFieldText(
+              subtitle,
+              row[column.subtitle],
+              moneyDisplayFor(subtitle, row, money),
+            );
 
             return (
               <div className="flex min-w-0 flex-col gap-0.5">
@@ -111,11 +144,19 @@ export function RecordList({
   );
 
   const allColumns = useMemo<DataTableColumn<RecordValue>[]>(
-    () =>
-      actions
-        ? [...columns, { key: "actions", header: "", className: "w-10", cell: actions }]
-        : columns,
-    [columns, actions],
+    () => {
+      const withLeading = leading
+        ? [
+            { key: "leading", header: "", className: "w-10", cell: leading },
+            ...columns,
+          ]
+        : columns;
+
+      return actions
+        ? [...withLeading, { key: "actions", header: "", className: "w-10", cell: actions }]
+        : withLeading;
+    },
+    [columns, actions, leading],
   );
 
   const primary = layout.list.columns.find((column) => column.primary) ?? layout.list.columns[0];
@@ -123,25 +164,42 @@ export function RecordList({
   const mobileCard = (row: RecordValue): ReactNode => {
     const primaryField = resolveField(layout, primary?.field ?? layout.titleField);
 
+    /*
+      The row's controls come to the phone too.
+
+      They did not, at first, and that was a defect rather than a decision: below
+      the breakpoint the table is replaced by these cards, so a list whose card
+      dropped `leading` and `actions` left a task that could not be ticked done
+      and a row that could not be opened — on the device where ticking something
+      done is most of what anybody wants. Principle 5 names those jobs
+      explicitly. What the card still drops is columns, not capability.
+    */
     return (
-      <div className="flex min-h-11 min-w-0 flex-col gap-gap-inline p-card-pad">
-        <span className="truncate text-sm font-medium">
-          {renderFieldValue(primaryField, row[primaryField.name], money)}
-        </span>
-        <span className="flex flex-wrap items-center gap-gap-field">
-          {layout.list.columns
-            .filter((column) => column.field !== primaryField.name)
-            .map((column) => {
-              const field = resolveField(layout, column.field);
-              const text = formatFieldText(field, row[column.field], money);
-              if (!text) return null;
-              return (
-                <span key={column.field} className="text-dense text-muted-foreground">
-                  {renderFieldValue(field, row[column.field], money)}
-                </span>
-              );
-            })}
-        </span>
+      <div className="flex min-h-11 min-w-0 items-start gap-gap-field p-card-pad">
+        {leading ? <span className="shrink-0 pt-0.5">{leading(row)}</span> : null}
+
+        <div className="flex min-w-0 flex-1 flex-col gap-gap-inline">
+          <span className="truncate text-sm font-medium">
+            {renderFieldValue(primaryField, row[primaryField.name], moneyDisplayFor(primaryField, row, money), row)}
+          </span>
+          <span className="flex flex-wrap items-center gap-gap-field">
+            {layout.list.columns
+              .filter((column) => column.field !== primaryField.name)
+              .map((column) => {
+                const field = resolveField(layout, column.field);
+                const display = moneyDisplayFor(field, row, money);
+                const text = formatFieldText(field, row[column.field], display);
+                if (!text) return null;
+                return (
+                  <span key={column.field} className="text-dense text-muted-foreground">
+                    {renderFieldValue(field, row[column.field], display, row)}
+                  </span>
+                );
+              })}
+          </span>
+        </div>
+
+        {actions ? <span className="shrink-0">{actions(row)}</span> : null}
       </div>
     );
   };
@@ -162,6 +220,7 @@ export function RecordList({
         emptyState={emptyState}
         pagination={pagination}
         onRowClick={onRowClick}
+        selection={selection}
         minWidth={minWidth}
         mobileCard={mobileCard}
         className={className}

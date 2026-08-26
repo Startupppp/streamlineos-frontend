@@ -68,19 +68,6 @@ export const callSchema = z.object({
 });
 export type CallForm = z.infer<typeof callSchema>;
 
-export const editSchema = z.object({
-  name: z.string().min(1),
-  email: z.string().email().optional().or(z.literal("")),
-  phone: z.string().optional(),
-  company: z.string().optional(),
-  city: z.string().optional(),
-  priority: z.enum(["HOT", "WARM", "COLD"]).optional(),
-  potentialValue: z.string().optional(),
-  investmentInterest: z.string().optional(),
-  notes: z.string().optional(),
-});
-export type EditForm = z.infer<typeof editSchema>;
-
 export function getScoreBadge(score: number | null | undefined) {
   const s = score ?? 0;
   if (s <= 30) return { label: "Low",    color: "text-white", bg: "bg-category-rose-fill border border-status-danger-rule"    };

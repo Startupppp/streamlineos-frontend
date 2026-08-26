@@ -116,6 +116,23 @@ export const platformCoreQueryKeys = {
       [...base, "payments", "audit", providerKey ?? "all"] as const,
   },
 
+  /**
+   * A tenant's arrangement of a record type.
+   *
+   * The tenant is part of the key rather than implied by the bearer token, and
+   * that is the whole of the client-side isolation story: one browser signs into
+   * two organisations with one cache, and a key naming only the record type
+   * would serve the second tenant the first one's arrangement out of memory —
+   * quietly, because a rearranged screen still looks like a working screen.
+   */
+  recordLayouts: {
+    all: [...base, "record-layouts"] as const,
+    adjustment: (orgId: string | null | undefined, layoutKey: string) =>
+      [...base, "record-layouts", orgId ?? "no-tenant", layoutKey] as const,
+    usage: (orgId: string | null | undefined, layoutKey: string) =>
+      [...base, "record-layouts", orgId ?? "no-tenant", layoutKey, "usage"] as const,
+  },
+
   access: {
     all: [...base, "access"] as const,
     me: (orgId?: string | null, userId?: string | null) =>

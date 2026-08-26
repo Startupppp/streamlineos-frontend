@@ -252,6 +252,7 @@ export function IssuesPage() {
           />
         ) : rows.length === 0 ? (
           <EmptyState
+            access={records.access}
             className={CONTENT_FILL_PANEL}
             title={isFiltered ? `No matching ${plural}` : `No ${plural} yet`}
             description={

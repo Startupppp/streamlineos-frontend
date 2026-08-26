@@ -1,287 +1,223 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import type { ReactNode } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Play, Pause, Trash2, History } from "lucide-react";
-import { EllipsisIcon } from "@animateicons/react/lucide";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
-import { PageWrapper } from "@/components/ui/page-wrapper";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { AutomationsIllustration } from "@/components/illustrations";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { ErrorState, NoPermissionState } from "@/components/shared";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Switch } from "@/components/ui/switch";
+import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { RecordList } from "@/features/renderer";
+import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordRowActions } from "@/features/crm/settings/shared/record-row-actions";
+import { useCan } from "@/hooks/api/access";
 import {
-  useCrmAutomationRules,
-  useEnableCrmAutomationRule,
-  useDisableCrmAutomationRule,
-  useDeleteCrmAutomationRule,
   useAutomationEvents,
+  useCrmAutomationRules,
+  useDeleteCrmAutomationRule,
+  useDisableCrmAutomationRule,
+  useEnableCrmAutomationRule,
 } from "@/hooks/api/crm";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { AUTOMATION_LAYOUT } from "@/lib/renderer/crm/settings/automation-layout";
 import type { CrmAutomationRule } from "@/types/crm";
-import { cn } from "@/lib/utils";
 
-function buildColumns(
-  eventMap: Record<string, string>,
-  onToggle: (rule: CrmAutomationRule) => void,
-  onOpenBuilder: (id: number) => void,
-  onDeleteRequest: (id: number) => void,
-): DataTableColumn<CrmAutomationRule>[] {
-  return [
-    {
-      key: "name",
-      header: "Name",
-      cell: (row): ReactNode => (
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="font-medium text-foreground">{row.name}</span>
-            {row.isDraft && (
-              <Badge variant="outline" className="text-micro h-4 px-1.5 text-status-warning-ink border-status-warning-rule">
-                Draft
-              </Badge>
-            )}
-          </div>
-          <div className="text-dense text-muted-foreground mt-0.5">v{row.version}</div>
-        </div>
-      ),
-    },
-    {
-      key: "trigger",
-      header: "Trigger",
-      cell: (row): ReactNode => (
-        <span className={cn(
-          "inline-flex items-center rounded-full px-2 py-0.5 text-dense font-medium",
-          "bg-primary/10 text-foreground border border-primary/30",
-        )}>
-          {eventMap[row.trigger] ?? row.trigger}
-        </span>
-      ),
-    },
-    {
-      key: "runs",
-      header: "Runs",
-      className: "hidden md:table-cell",
-      headerClassName: "hidden md:table-cell",
-      cell: (row): ReactNode => (
-        <span className="text-xs text-muted-foreground">{row.executionCount}</span>
-      ),
-    },
-    {
-      key: "lastRun",
-      header: "Last Run",
-      className: "hidden lg:table-cell",
-      headerClassName: "hidden lg:table-cell",
-      cell: (row): ReactNode => (
-        <span className="text-xs text-muted-foreground">
-          {row.lastRunAt
-            ? new Date(row.lastRunAt).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
-            : "—"
-          }
-        </span>
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      cell: (row): ReactNode => {
-        const handleToggleClick = (e: React.MouseEvent) => { e.stopPropagation(); onToggle(row); };
-        return (
-          <div onClick={handleToggleClick}>
-            <Switch
-              checked={row.isActive}
-              onCheckedChange={() => onToggle(row)}
-              aria-label={row.isActive ? "Disable automation" : "Enable automation"}
-            />
-          </div>
-        );
-      },
-    },
-    {
-      key: "actions",
-      header: "",
-      cell: (row): ReactNode => {
-        const handleActionsClick = (e: React.MouseEvent) => { e.stopPropagation(); };
-        const handleEdit = () => onOpenBuilder(row.id);
-        const handleToggleItem = () => onToggle(row);
-        const handleDelete = () => onDeleteRequest(row.id);
-        return (
-          <div onClick={handleActionsClick}>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <AnimatedIconButton icon={EllipsisIcon} variant="ghost" size="icon" className="w-7 text-muted-foreground hover:text-foreground" aria-label="Rule actions" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
-                <DropdownMenuItem onClick={handleEdit}>
-                  <Play className="h-3.5 w-3.5 mr-2" />
-                  Open Builder
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleEdit}>
-                  <History className="h-3.5 w-3.5 mr-2" />
-                  Run History
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleToggleItem}>
-                  {row.isActive ? (
-                    <><Pause className="h-3.5 w-3.5 mr-2" />Disable</>
-                  ) : (
-                    <><Play className="h-3.5 w-3.5 mr-2" />Enable</>
-                  )}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="text-destructive focus:text-destructive"
-                  onClick={handleDelete}
-                >
-                  <Trash2 className="h-3.5 w-3.5 mr-2" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        );
-      },
-    },
-  ];
-}
-
+/**
+ * Automations.
+ *
+ * The list is generated; the builder it opens is not, and is not going to be —
+ * an automation is a graph of nodes and branches, which no field vocabulary
+ * describes. What moved onto the engine is the part that was a table pretending
+ * not to be one.
+ *
+ * A row's state is one badge instead of three separate signals — a "Draft" chip
+ * beside the name, a version line under it and a switch in its own column all
+ * said something about whether the rule was running.
+ */
 export default function AutomationsPage() {
   const router = useRouter();
+  const layout = useTenantLayout(AUTOMATION_LAYOUT);
+  const [density, setDensity] = useDensity();
+  const canManage = useCan("crm:settings:manage");
+
   const { data, isLoading, isError, refetch } = useCrmAutomationRules();
   const { data: eventsData } = useAutomationEvents();
   const enableRule = useEnableCrmAutomationRule();
   const disableRule = useDisableCrmAutomationRule();
   const deleteRule = useDeleteCrmAutomationRule();
 
-  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<CrmAutomationRule | null>(null);
 
-  const rules = data?.rules ?? [];
-  const eventMap = Object.fromEntries(
-    (eventsData?.events ?? []).map((e) => [e.key, e.label]),
+  const rules = useMemo(() => data?.rules ?? [], [data]);
+
+  const eventLabels = useMemo(
+    () => new Map((eventsData?.events ?? []).map((event) => [event.key, event.label])),
+    [eventsData],
   );
+
+  const rows = useMemo(
+    () =>
+      rules.map((rule) => ({
+        id: rule.id,
+        name: rule.name,
+        triggerLabel: eventLabels.get(rule.trigger) ?? rule.trigger,
+        state: rule.isDraft ? "draft" : rule.isActive ? "live" : "paused",
+        version: rule.version,
+        executionCount: rule.executionCount,
+        lastRunAt: rule.lastRunAt,
+        cooldownMinutes: rule.cooldownMinutes,
+      })),
+    [rules, eventLabels],
+  );
+
+  const handleCreate = useCallback(
+    () => router.push("/crm/settings/automations/new"),
+    [router],
+  );
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  const handleDeleteOpenChange = useCallback((open: boolean) => {
+    if (!open) setDeleteTarget(null);
+  }, []);
 
   const handleToggle = useCallback(
     (rule: CrmAutomationRule) => {
-      if (rule.isActive) {
-        disableRule.mutate(rule.id, {
-          onSuccess: () => toast.success("Automation disabled"),
-          onError: (err) => toast.error(getErrorMessage(err)),
-        });
-      } else {
-        enableRule.mutate(rule.id, {
-          onSuccess: () => toast.success("Automation enabled"),
-          onError: (err) => toast.error(getErrorMessage(err)),
-        });
-      }
+      const mutation = rule.isActive ? disableRule : enableRule;
+      mutation.mutate(rule.id, {
+        onSuccess: () => toast.success(rule.isActive ? "Automation paused" : "Automation live"),
+        onError: (error) => toast.error(getErrorMessage(error)),
+      });
     },
     [enableRule, disableRule],
   );
 
-  const handleDeleteRequest = useCallback((id: number) => setDeleteTargetId(id), []);
-  const handleDeleteCancel = useCallback(() => setDeleteTargetId(null), []);
-  const handleAlertOpenChange = useCallback((open: boolean) => { if (!open) setDeleteTargetId(null); }, []);
-
   const handleDeleteConfirm = useCallback(() => {
-    if (deleteTargetId === null) return;
-    deleteRule.mutate(deleteTargetId, {
+    if (!deleteTarget) return;
+    deleteRule.mutate(deleteTarget.id, {
       onSuccess: () => {
         toast.success("Automation deleted");
-        setDeleteTargetId(null);
+        setDeleteTarget(null);
       },
-      onError: (err) => {
-        toast.error(getErrorMessage(err));
-        setDeleteTargetId(null);
+      onError: (error) => {
+        toast.error(getErrorMessage(error));
+        setDeleteTarget(null);
       },
     });
-  }, [deleteRule, deleteTargetId]);
+  }, [deleteRule, deleteTarget]);
 
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-  const handleCreate = useCallback(() => router.push("/crm/settings/automations/new"), [router]);
-  const handleOpenBuilder = useCallback((id: number) => router.push(`/crm/settings/automations/${id}`), [router]);
-  const handleRowClick = useCallback((rule: CrmAutomationRule) => handleOpenBuilder(rule.id), [handleOpenBuilder]);
-  const getRuleKey = useCallback((rule: CrmAutomationRule) => String(rule.id), []);
+  const handleRowClick = useCallback(
+    (row: Record<string, unknown>) => router.push(`/crm/settings/automations/${String(row.id)}`),
+    [router],
+  );
 
-  const columns = buildColumns(eventMap, handleToggle, handleOpenBuilder, handleDeleteRequest);
+  const rowActions = useCallback(
+    (row: Record<string, unknown>) => {
+      const rule = rules.find((candidate) => candidate.id === row.id);
+      if (!rule || !canManage) return null;
+      return (
+        <RecordRowActions
+          editLabel={`Open ${rule.name} in the builder`}
+          deleteLabel={`Delete ${rule.name}`}
+          leading={
+            <Switch
+              checked={rule.isActive}
+              onCheckedChange={() => handleToggle(rule)}
+              aria-label={rule.isActive ? `Pause ${rule.name}` : `Start ${rule.name}`}
+            />
+          }
+          onEdit={() => router.push(`/crm/settings/automations/${rule.id}`)}
+          onDelete={() => setDeleteTarget(rule)}
+        />
+      );
+    },
+    [rules, canManage, handleToggle, router],
+  );
 
   return (
-    <>
-      <AlertDialog open={deleteTargetId !== null} onOpenChange={handleAlertOpenChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Automation</AlertDialogTitle>
-            <AlertDialogDescription>
-              This automation will be permanently deleted and will no longer run on future triggers.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleDeleteCancel}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleDeleteConfirm}
-              disabled={deleteRule.isPending}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <PageWrapper
-        title="Automations"
-        subtitle="Trigger actions automatically based on CRM events"
-        actions={
-          <Button onClick={handleCreate} className="text-xs px-3">
-            <Plus className="h-3.5 w-3.5 mr-1.5" />
-            New Automation
-          </Button>
-        }
-      >
-        {isError ? (
+    <PageWrapper
+      title="Automations"
+      subtitle="What the system does on its own when something happens in the CRM."
+      filters={
+        <div className={FILTER_TOOLBAR_ROW}>
+          <DensityToggle density={density} onChange={setDensity} />
+        </div>
+      }
+      actions={
+        canManage ? (
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={16}
+            iconClassName="mr-1.5"
+            size="sm"
+            onClick={handleCreate}
+          >
+            New automation
+          </AnimatedIconButton>
+        ) : undefined
+      }
+    >
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        {!canManage ? (
+          <NoPermissionState
+            permission="crm:settings:manage"
+            className={CONTENT_FILL_PANEL}
+            description="Automations are managed by your sales operations team."
+          />
+        ) : isLoading ? (
+          <DataTableSkeleton rows={10} columns={layout.list.columns.length} className="flex-1" />
+        ) : isError ? (
           <ErrorState
             title="Couldn't load automations"
-            description="The automation rules didn't load. Check your connection and try again."
+            description="The automation list didn't load. Check your connection and try again."
             onRetry={handleRetry}
             className={CONTENT_FILL_PANEL}
           />
-        ) : rules.length === 0 && !isLoading ? (
+        ) : rows.length === 0 ? (
           <EmptyState
-            className={CONTENT_FILL_PANEL}
             illustration={<AutomationsIllustration />}
             title="No automations yet"
-            description="Create your first automation to trigger actions on CRM events automatically."
-            action={{ label: "New Automation", onClick: handleCreate }}
+            description="An automation watches for something — a lead arriving, a deal moving — and does the next thing without anybody asking."
+            action={{ label: "New automation", onClick: handleCreate }}
+            className={CONTENT_FILL_PANEL}
           />
         ) : (
-          <DataTable
-            data={rules}
-            columns={columns}
-            getRowKey={getRuleKey}
+          <RecordList
+            layout={layout}
+            rows={rows}
+            getRowKey={(row) => String(row.id)}
             onRowClick={handleRowClick}
-            isLoading={isLoading}
-            rowClassName={() => "cursor-pointer"}
-            className="flex-1 min-h-0"
+            actions={rowActions}
+            density={density}
+            minWidth="880px"
+            className={CONTENT_FILL_PANEL}
           />
         )}
-      </PageWrapper>
-    </>
+      </div>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={handleDeleteOpenChange}
+        title="Delete this automation?"
+        description={
+          deleteTarget
+            ? `${deleteTarget.name} will be permanently deleted and will stop running on future triggers. Its run history goes with it. This cannot be undone.`
+            : ""
+        }
+        confirmLabel="Delete automation"
+        destructive
+        isPending={deleteRule.isPending}
+        onConfirm={handleDeleteConfirm}
+      />
+    </PageWrapper>
   );
 }

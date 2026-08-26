@@ -1,9 +1,10 @@
 "use client";
 
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useCan } from "@/hooks/api/access";
+import { usePermissionGate } from "@/hooks/api/access";
+import { gated, useGatedQuery } from "@/hooks/api/gated-query";
 import type {
   ActivityParticipant,
   CreateActivityInput,
@@ -30,57 +31,61 @@ function anchorParams(anchor: TimelineAnchor): Record<string, string> {
  * offset page-2 request after three new emails arrive silently repeats rows.
  */
 export function useActivityTimeline(anchor: TimelineAnchor | null, limit = 25) {
-  const canView = useCan("crm:activities:view");
+  const access = usePermissionGate("crm:activities:view");
   const params = anchor ? anchorParams(anchor) : {};
 
-  return useInfiniteQuery({
-    queryKey: queryKeys.crm.activityTimeline({ ...params, limit }),
-    queryFn: ({ pageParam }: { pageParam: string | undefined }) =>
-      apiClient.get<TimelinePage>(
-        `/crm/activities/timeline?${new URLSearchParams({
-          ...params,
-          limit: String(limit),
-          ...(pageParam ? { cursor: pageParam } : {}),
-        }).toString()}`,
-      ),
-    getNextPageParam: (lastPage: TimelinePage) => lastPage.pagination.nextCursor ?? undefined,
-    initialPageParam: undefined as string | undefined,
-    staleTime: 30_000,
-    enabled: canView && !!anchor,
-  });
+  return gated(
+    useInfiniteQuery({
+      queryKey: queryKeys.crm.activityTimeline({ ...params, limit }),
+      queryFn: ({ pageParam }: { pageParam: string | undefined }) =>
+        apiClient.get<TimelinePage>(
+          `/crm/activities/timeline?${new URLSearchParams({
+            ...params,
+            limit: String(limit),
+            ...(pageParam ? { cursor: pageParam } : {}),
+          }).toString()}`,
+        ),
+      getNextPageParam: (lastPage: TimelinePage) => lastPage.pagination.nextCursor ?? undefined,
+      initialPageParam: undefined as string | undefined,
+      staleTime: 30_000,
+      enabled: access.allowed && !!anchor,
+    }),
+    access,
+  );
 }
 
 export function useMyActivityTasks(includeCompleted = false, limit = 25) {
-  const canView = useCan("crm:activities:view");
+  const access = usePermissionGate("crm:activities:view");
 
-  return useInfiniteQuery({
-    queryKey: queryKeys.crm.myActivityTasks({ includeCompleted, limit }),
-    queryFn: ({ pageParam }: { pageParam: string | undefined }) =>
-      apiClient.get<TimelinePage>(
-        `/crm/activities/my-tasks?${new URLSearchParams({
-          includeCompleted: String(includeCompleted),
-          limit: String(limit),
-          ...(pageParam ? { cursor: pageParam } : {}),
-        }).toString()}`,
-      ),
-    getNextPageParam: (lastPage: TimelinePage) => lastPage.pagination.nextCursor ?? undefined,
-    initialPageParam: undefined as string | undefined,
-    staleTime: 30_000,
-    enabled: canView,
-  });
+  return gated(
+    useInfiniteQuery({
+      queryKey: queryKeys.crm.myActivityTasks({ includeCompleted, limit }),
+      queryFn: ({ pageParam }: { pageParam: string | undefined }) =>
+        apiClient.get<TimelinePage>(
+          `/crm/activities/my-tasks?${new URLSearchParams({
+            includeCompleted: String(includeCompleted),
+            limit: String(limit),
+            ...(pageParam ? { cursor: pageParam } : {}),
+          }).toString()}`,
+        ),
+      getNextPageParam: (lastPage: TimelinePage) => lastPage.pagination.nextCursor ?? undefined,
+      initialPageParam: undefined as string | undefined,
+      staleTime: 30_000,
+      enabled: access.allowed,
+    }),
+    access,
+  );
 }
 
 export function useActivityParticipants(activityId: string | null) {
-  const canView = useCan("crm:activities:view");
-
-  return useQuery({
+  return useGatedQuery("crm:activities:view", {
     queryKey: queryKeys.crm.activityParticipants(activityId ?? ""),
     queryFn: () =>
       apiClient.get<{ data: ActivityParticipant[] }>(
         `/crm/activities/${activityId}/participants`,
       ),
     staleTime: 60_000,
-    enabled: canView && !!activityId,
+    enabled: !!activityId,
   });
 }
 

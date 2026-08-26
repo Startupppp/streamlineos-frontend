@@ -14,13 +14,14 @@ import {
 } from "@/hooks/api/crm";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
+import { NoPermissionState } from "@/components/shared";
 
 interface DealCompetitorsCardProps {
   dealId: number;
 }
 
 export function DealCompetitorsCard({ dealId }: DealCompetitorsCardProps) {
-  const { data: competitors = [] } = useDealCompetitors(dealId);
+  const { data: competitors = [], access } = useDealCompetitors(dealId);
   const addCompetitor = useAddDealCompetitor(dealId);
   const deleteCompetitor = useDeleteDealCompetitor(dealId);
   const [adding, setAdding] = useState(false);
@@ -89,7 +90,9 @@ export function DealCompetitorsCard({ dealId }: DealCompetitorsCardProps) {
             </LoadingButton>
           </div>
         )}
-        {competitors.length === 0 && !adding ? (
+        {access.denied ? (
+          <NoPermissionState permission={access.permission} compact />
+        ) : competitors.length === 0 && !adding ? (
           <p className="text-xs text-muted-foreground">No competitors tracked.</p>
         ) : (
           competitors.map((c) => (
