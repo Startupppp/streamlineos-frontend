@@ -9,7 +9,7 @@ The measured discipline is unusually good — zero arbitrary colour classes acro
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
 | 01 | Icon-only buttons are triaged and labelled | — | done |
-| 02 | A missing accessible label fails a check | 01 | needs re-verification |
+| 02 | [A missing accessible label fails a check](issues/02-a-missing-accessible-label-fails-a-check.md) | 01 | done — rule at `error`, 4 real labels added |
 | 03 | Shared components pass accessibility assertions | — | done |
 | 04 | The canonical component wins | — | done |
 | 05 | The measured properties are asserted in CI | — | done |
