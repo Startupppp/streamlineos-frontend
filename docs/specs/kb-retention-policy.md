@@ -49,11 +49,11 @@ A full re-index of an org therefore works today by calling `POST /support/kb/rei
 | Chunks — page deleted | Yes | `ON DELETE CASCADE` on `kb_article_chunks.page_id` |
 | Chunks — org purged | Yes | `purge-user.mjs` deletes all rows with `org_id = ANY(orgIds)` from every table; `kb_article_chunks` has `org_id` and is covered |
 | Chunks — stale lifecycle sweep | Yes | `CronKbChunkRetentionService` (see table above) |
-| Cache invalidation | No | `KbIndexingService` does not invalidate any Redis cache after chunk writes or deletes; cached search results may be stale until TTL |
-| Export pruning | No | No KB export pruning is wired to article/page deletion |
-| Provider-side files | N/A | Vectors are stored in Postgres (`vector` columns), not an external vector database; no provider-side erasure is required |
+| Cache invalidation | N/A (vacuous) | `KbSearchService` (`kb-search.service.ts`) holds no `CacheService` injection and caches no search results — queries always hit the DB. The only KB Redis cache is `kb:acc-spaces:${orgId}` (`kb-access.service.ts:55`), which caches accessible space IDs derived from space membership and grants, not from chunk rows. Chunk deletion leaves no stale cache entry. |
+| Export pruning | N/A (vacuous) | `KbImportExportService.exportPage` (`kb-import-export.service.ts:37–80`) serializes page content to markdown or HTML and returns it in the HTTP response body. The only persisted record is a `kbExportJobs` row (`kb-import-export.service.ts:58–69`), which is an audit record of the export event, not a stored artifact file. Nothing is written to S3 or any external store. There is no stored export artifact to erase. |
+| Provider-side files | N/A (vacuous) | Vectors are stored in Postgres `vector` columns in `kb_article_chunks`. `KbIndexingService` calls `StorageService.getFileStream` at `kb-indexing.service.ts:438` only to read attachment blobs for text extraction; no chunk data is written to S3 or any external provider. No provider-side erasure is required. |
 
-Cache invalidation is the only actionable gap within normal operations. The smallest fix: call `CacheService.invalidatePattern` (or `invalidateNamespace`) on the org's search cache key after chunk deletions in `KbIndexingService.removeArticleChunks` / `removePageChunks`.
+All three non-chunk legs are vacuous as of the current codebase: no KB search cache exists to bust, no export artifact file is ever persisted, and no provider-side vector store is used. The erasure propagation criterion is fully satisfied by the chunk sweep alone.
 
 ## Milestone snapshots
 
