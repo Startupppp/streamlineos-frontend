@@ -8,11 +8,11 @@ Structured JSON logging, redaction, correlation context and the two error-report
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 01 | Errors reach a person | — | needs re-verification |
-| 02 | The browser reports its own errors | 01 | needs re-verification |
+| 01 | [Errors reach a person](issues/01-errors-reach-a-person.md) | — | ✅ **done** — log adapter wired; SQLSTATE lifted so a 42501 is distinguishable; fingerprint + release recover grouping without a tracker |
+| 02 | [The browser reports its own errors](issues/02-the-browser-reports-its-own-errors.md) | 01 | ✅ **done** — scrub list re-synced with the backend mirror; 19 unwired boundaries now report; chunk-load stays recoverable instead of being dropped |
 | 03 | A request can be followed end to end | 01 | ✅ **done** — correlation id flows through `ObservabilityContext` into every log line |
 | 04 | No failure is swallowed | 01 | ✅ **done** — crm/finance/build/payroll swept (4 payroll sites were remapping *any* error to a duplicate-key 409); the four fixed sites now carry unit specs asserting both the log-and-rethrow path and the genuine-23505 path |
-| 05 | Four alerts reach someone | 03, 04 | needs re-verification |
+| 05 | [Four alerts reach someone](issues/05-four-alerts-reach-someone.md) | 03, 04 | ✅ **done** — all four built; the tenant-context predicate could never fire against a real incident and now does; p95 no longer deferred |
 
 ## Working these
 

@@ -101,7 +101,7 @@ occurrences is the only acceptable steady state.
 **Destination:** pipe stderr logs into the script in your cron/alerting harness; wire exit-code 1
 to your oncall system.
 
-### 4. p95 on the ten hottest endpoints — DEFERRED
+### 4. p95 on the ten hottest endpoints — `pnpm alert:p95` (BUILT — the deferral below is superseded)
 
 **Why it cannot be built now:** the structured log lines carry `timestamp`, `level`, `message`,
 `correlationId`, `orgId`, `route` and `method` — but no `latencyMs` or `durationMs`. Without a
@@ -123,28 +123,60 @@ finished span with `name`, `latencyMs` (= `durationMs`), `traceId`, `spanId`, `p
 `status`, and the W3C attributes including `org.id` and `http.route`. It is exported from the
 observability barrel.
 
-**One wire remains outside this agent's scope:** `backend/src/main.ts` needs one call added
-after bootstrap:
-```typescript
-import { LogSpanExporter, setSpanExporter } from "./common/observability";
-setSpanExporter(new LogSpanExporter());
-```
-Add it immediately before `app.listen(...)`. Once wired, p95 per route is computable by
-grouping log lines where `message === "SPAN"` by `name` and reading the 95th percentile of
-`latencyMs`.
+**That wire is present** at `backend/src/main.ts:69` — `setSpanExporter(new LogSpanExporter())`,
+beside `setErrorReporter(new LogErrorReporter())` at `:68`. The "outside this agent's scope" note
+was written before the orchestrator applied it and is stale.
+
+**The consumer now exists too:** `backend/src/scripts/alert-p95.mjs` (`pnpm alert:p95`). See
+"Alert 4 — p95, as built" below for what it does and why the span name has to be normalised first.
 
 ## Acceptance criteria
 
 - [x] Each alert has a threshold and a named recipient — an alert nobody receives is not coverage.
-- [x] Given a dead outbox row, a signature failure and a burst of tenant-context errors, each predicate evaluates true.
-- [ ] p95 is available for the ten hottest endpoints, so a regression is detectable. **PARTIALLY DONE** — `LogSpanExporter` implemented and exported; one wire needed in `backend/src/main.ts` (outside this agent's scope): `setSpanExporter(new LogSpanExporter())` before `app.listen`.
-- [x] A noisy alert is tuned or removed rather than tolerated. (git webhook threshold is 5/hr, not 1.)
+- [x] Given a dead outbox row, a signature failure and a burst of tenant-context errors, each predicate evaluates true. — **but see the correction below: the tenant-context predicate did NOT evaluate true against a real incident when this was first ticked.** It does now.
+- [x] p95 is available for the ten hottest endpoints, so a regression is detectable. — `backend/src/scripts/alert-p95.mjs`, run as `pnpm alert:p95`. The exporter wire is present at `backend/src/main.ts:69` (`setSpanExporter(new LogSpanExporter())`), so `message="SPAN"` lines with `latencyMs` already flow. Verified end to end, not just on fixtures: real `LogSpanExporter` output was piped through the script and produced p50/p95/p99 per endpoint. `pnpm alert:p95:self-test` → pass.
+- [x] A noisy alert is tuned or removed rather than tolerated. (git webhook threshold is 5/hr, not 1.) — p95 follows the same discipline: it **reports** by default and only becomes an alert when given an explicit `--threshold-ms`, so nobody wires a paging threshold nobody derived.
 - [x] Full APM, tracing, a metrics database and log analytics are explicitly deferred and recorded as such.
+
+## Correction — the tenant-context predicate could never fire (Lane 2, 2026-08-26)
+
+Alert 3 matches `level === "error"` AND the raw line containing `"42501"`. **No log line ever
+contained that string.** postgres-js builds `PostgresError` with `super(x.message)`, so the message
+is the server's text alone (`permission denied for table notifications`) and the SQLSTATE goes onto
+`.code` via `Object.assign` — which Drizzle then buries one or two `.cause` links down. Neither
+`AllExceptionsFilter.describeUnhandled` nor `LogErrorReporter.describe` emitted `code`.
+
+The self-test passed only because its fixture hand-wrote `"42501 insufficient_privilege: …"` into a
+message field the application never produces — a predicate tested against a string the real
+extractor could not emit.
+
+Fixed under [`01`](01-errors-reach-a-person.md): `common/observability/error-classification.ts`
+walks the cause chain for a SQLSTATE-shaped `code`; `LogErrorReporter` emits `sqlstate` and
+`errorClass: "tenant-context"`; `AllExceptionsFilter` lifts the same field onto its log line. The
+self-test now uses the shape the application actually emits and additionally rejects a `42P01`
+lookalike carrying the same prose. `pnpm alert:tenant-ctx-errors:self-test` → 2 matches, pass.
+
+## Alert 4 — p95, as built
+
+`pnpm alert:p95` reads `message="SPAN"` lines from stdin or `--log=`, and reports `requests`,
+`errors`, `p50Ms`, `p95Ms`, `p99Ms`, `maxMs` per endpoint, ranked by request count.
+
+**The span name is normalised first.** `correlation-id.middleware.ts:69` names the span
+`${req.method} ${req.path}` — the *concrete* URL, not the route template. Left alone, every record
+id becomes its own endpoint (`GET /deals/<uuid>` appears once per deal) and a "hottest endpoints"
+ranking degenerates into single-request paths with meaningless percentiles. Identifier-shaped
+segments (UUID, long hex, digits, opaque ids) fold to `:id`.
+
+Percentiles are nearest-rank, not interpolated: with a handful of requests an interpolated
+percentile invents a latency nobody observed.
+
+Exit codes: `0` clear, `1` an endpoint in the top N exceeded `--threshold-ms`, `2` **no span lines
+found** — which is the specific, actionable signal that the exporter has come unwired.
 
 ## Todo
 
-- [x] Test the predicates, not the delivery
-- [ ] Use the existing health surface for p95; do not add a metrics stack — **`LogSpanExporter` is done; wiring `setSpanExporter(new LogSpanExporter())` in `backend/src/main.ts` is the one remaining step (outside this agent's scope)**
+- [x] Test the predicates, not the delivery — all four self-tests pass, and the two that were testing unreachable fixtures were rewritten against real emitted shapes.
+- [x] Use the existing health surface for p95; do not add a metrics stack — no metrics stack was added. p95 is derived from the log stream the platform already collects, via the span port that was already there.
 - [x] Record the deferral so it is not re-raised as an omission
 - [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
