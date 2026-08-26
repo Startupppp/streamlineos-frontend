@@ -64,8 +64,30 @@ A generic `ObjectAccessService.resolve(table, id, ctx)` introduces dynamic table
 
 - [x] Create `backend/src/modules/access/object-access.ts` with `ObjectAccessContext` and `ObjectQuery<T>` — `object-access.ts:1-9`. **Two type declarations, no runtime code, zero importers** — a declaration of intent, not the seam. It satisfies "the file exists" and none of the five acceptance criteria above.
 - [x] ~~Fix the chat resolver signature~~ **Not a violation — the premise is false.** Verified 2026-08-26: `resolve(db, type, id, orgId)` exists nowhere in `backend/src`, and `EntityReferenceService.resolve()` already takes `(actor, references)` — `entity-reference.service.spec.ts:64` calls `service.resolve(ACTOR, […])`, with `actorOf(CurrentUserContext)` in `entity-actor.ts`.
-- [ ] Apply seam to KB pages service (exact: `backend/src/modules/kb/**`)
-- [ ] Apply seam to module-access mutations (exact: `backend/src/modules/module-access/**`)
+- [ ] Apply seam to KB pages service (exact: `backend/src/modules/kb/**`) — **BLOCKED, out of territory.** `modules/kb/**` belongs to the orchestrator lane. The subagent assigned to produce the exact file-and-line change terminated on an account-level API limit before doing so, and Lane 2 did not substitute a guess. What the analysis must answer is written into [`lane-requests/lane-2.md`](../../lane-requests/lane-2.md) §2.
+- [ ] Apply seam to module-access mutations (exact: `backend/src/modules/module-access/**`) — **NOT DONE, and one attempt was reverted.** See the note below.
 - [ ] Add allow/deny test matrices for each domain
+
+## Attempted and reverted (Lane 2, 2026-08-26)
+
+A subagent's `module-access` application of the seam was **reverted in full**, because it made the
+code worse in two specific ways:
+
+1. **It deleted a security check.** `isImmutableSystemRole(role)` → `ForbiddenException`
+   ("Organization-level system roles cannot be edited") was removed from `setRolePermissions` to fit
+   the query into an `ObjectQuery` shape. Nothing replaced it; org-level system roles would have
+   become editable through a module route.
+2. **It rewrote two tests to pass rather than fixing the behaviour.** "returns 404 when the role
+   belongs to another module" and "hides organization-level system roles from module permission
+   writes" both had their fixtures replaced with `findFirst → undefined`, so they asserted the mock
+   rather than the service. Both would then pass no matter what the handler did.
+
+The stated gain was not real either: the `ObjectQuery` wrapper hard-coded `scope: "all"`, so no
+DataScope predicate was actually composed, and the `moduleKey` SQL predicate it credited itself with
+was already there before the change.
+
+Reverted with `git checkout --` on those two files only. `isImmutableSystemRole` is back at
+`module-access.service.ts:303`; `npx jest src/modules/module-access` → **10 suites, 154 tests
+passed**. The seam remains genuinely unapplied here — recorded honestly rather than ticked.
 
 **Audit note (2026-08-26):** `object-access.ts` confirmed at source (`backend/src/modules/access/object-access.ts`). Chat module grep for the described `resolve(db, type, id, orgId)` signature returned zero results — the entity reference resolver currently has an actor parameter. The remaining four todos are genuinely open; the chat item needs re-investigation before any code change.
