@@ -10,13 +10,13 @@
 
 - [x] Dunning attempts live in their table and are queryable.
 - [x] The existing array is migrated with no history lost.
-- [ ] The array column is removed only after migration.
+- [ ] The array column is removed only after migration. — **BLOCKED:** migration `0491_migrate_dunning_to_table` is journalled but unapplied; c18-04 cannot run until an operator applies it to the target database and verifies `\d dunning_attempts` plus row count.
 - [x] Collection performance is reportable.
 
 ## Todo
 
 - [x] Migrate, verify, then drop
-- [ ] Coordinate with c18-04, which removes the column
+- [ ] Coordinate with c18-04, which removes the column — **BLOCKED:** same dependency; c18-04 spec is written in this ticket's body but cannot execute until 0491 is applied.
 - [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
 **c18-04 spec — what must be true first and what to do:**
@@ -47,5 +47,7 @@ This removes the dead JSONB key row-by-row. After it runs, `The array column is 
 - The `metadata.dunningAttempts` JSONB key is now dead. Coordinate with c18-04 which will drop the column and clean up the metadata field.
 
 ---
+
+**Audit note (2026-08-26):** Both remaining open items are blocked on migration 0491 being applied to the target database. The c18-04 spec written in this ticket's body is correct and complete (confirmed no code reads `metadata.dunningAttempts` at `cron-billing.service.ts:26-31`). The Todo `[x] Set Status to done` was ticked prematurely — status must remain `in-progress` until the column is dropped.
 
 PRD: [`c17 — Every billing write is provable`](../prd.md) · Candidate index: [`../README.md`](../README.md)

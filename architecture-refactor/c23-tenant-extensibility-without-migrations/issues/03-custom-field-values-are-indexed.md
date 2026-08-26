@@ -6,6 +6,8 @@
 
 **Status:** ready-for-agent
 
+**Audit note (2026-08-26):** All criteria genuinely open — no JSONB column migration found on entity tables; custom field values still live in sidecar tables. No containment indexes found. Implementation not started.
+
 ## Acceptance criteria
 
 - [ ] The definition registry is unchanged — it stays the schema and validation source.

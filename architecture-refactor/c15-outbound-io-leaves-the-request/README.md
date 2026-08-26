@@ -10,10 +10,10 @@ Only two of 363 explicit transaction blocks contain a network call — the code 
 |---|---|---|---|
 | 01 | An outbound call cannot be untimed | — | **done** |
 | 02 | The three providers adopt the deadline | 01 | **done** |
-| 03 | [A blob upload does not hold a database connection](issues/03-a-blob-upload-does-not-hold-a-connection.md) | 02 | **done** |
+| 03 | A blob upload does not hold a database connection | 02 | **done** |
 | 04 | [Post-commit work carries tenant context](issues/04-post-commit-work-carries-tenant-context.md) | — | **done** — this was a live production incident |
-| 05 | [The API surface is not published in production](issues/05-the-api-surface-is-not-published.md) | — | **done** |
-| 06 | [One SSRF guard, not two](issues/06-one-ssrf-guard-not-two.md) | — | **done** |
+| 05 | The API surface is not published in production | — | **done** |
+| 06 | One SSRF guard, not two | — | **done** |
 
 ## Working these
 

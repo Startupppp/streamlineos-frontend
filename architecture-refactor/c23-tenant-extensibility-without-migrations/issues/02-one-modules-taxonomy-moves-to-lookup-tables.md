@@ -2,9 +2,11 @@
 
 **What to build:** A tenant administrator adds a status to one module's taxonomy themselves, defines which status may follow which, and marks a transition as needing approval — without waiting on a release. This proves the propagation on one module before it spreads.
 
-**Blocked by:** 01 — The 306 taxonomies are classified
+**Blocked by:** 01 — done; classification deliverable is `../enum-classification.md`; the 54 tenant-taxonomy enums are the candidate set for this ticket
 
 **Status:** ready-for-agent
+
+**Audit note (2026-08-26):** All criteria genuinely open — no lookup tables, migration, or transition enforcement code found in source. The blocking dependency (c23-01) is resolved.
 
 ## Acceptance criteria
 

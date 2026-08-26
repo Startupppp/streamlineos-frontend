@@ -15,11 +15,13 @@
 
 **Verification note (orchestrator, 2026-08-26):** two-pass review caught a real problem — my own first-pass instruction to the implementing agent ("fall back to DB on null") was itself wrong, and the agent implemented it correctly and reported it as done. A second read against the actual request-volume implications (global guard, 5s cache) caught the regression before it reached a commit. Do NOT re-attempt the null-fallback approach without first solving the no-TTL-plus-sweep design — it looks like a one-line fix and isn't.
 
+**Audit note (2026-08-26):** Budget and eviction policy verified at `backend/src/common/cache/cache-invalidation-matrix.ts:7-44`. Session-revocation risk is correctly documented in that file at lines 22-44. The null-fallback approach was tried and reverted — do NOT re-attempt without solving the no-TTL-plus-sweep design first.
+
 ## Todo
 
-- [ ] Size against the stated arithmetic
-- [ ] Re-verify the session-revocation fallback still holds
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+- [x] Size against the stated arithmetic — budget documented at `backend/src/common/cache/cache-invalidation-matrix.ts:7-14`; arithmetic is: permissions ~5GB, RBAC ~1GB, dashboards/KPIs ~5GB, inventory/reports ~10GB, finance ~3GB, misc ~11GB, total ~35GB.
+- [ ] Re-verify the session-revocation fallback still holds — GENUINELY OPEN. Verified at source: `jwt-auth.guard.ts` falls back to DB only on a Redis *error*, not on a null result. A LRU-evicted tombstone returns null (same as a non-revoked session), so an evicted revocation is not caught. The null-fallback approach was implemented and reverted (see matrix `:23-44`); the structurally correct fix (no-TTL tombstones + scheduled sweep) is documented but not implemented.
+- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md) — **BLOCKED:** session-revocation fallback gap not fixed.
 
 ---
 

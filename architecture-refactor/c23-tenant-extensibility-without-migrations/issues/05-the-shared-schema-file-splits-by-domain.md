@@ -6,6 +6,8 @@
 
 **Status:** ready-for-agent
 
+**Audit note (2026-08-26):** All criteria genuinely open. `backend/src/db/schema/common/shared.ts` is 480 lines and still contains all seven domains: notifications, broadcasts, push subscriptions, calendar events/attendees, webhooks, subscriptions/payments/coupons, and ai_usage_logs. No split has been performed.
+
 ## Acceptance criteria
 
 - [ ] The file splits along its seven domain lines.

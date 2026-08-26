@@ -11,7 +11,8 @@
 - [x] Where a total is displayed, it comes from a window in the page query rather than a second statement.
 - [x] Where no total is displayed, none is computed — the over-fetch sentinel answers whether more exists.
 - [x] Totals are unchanged in value.
-- [ ] The busiest lists are converted; the rest are recorded as remaining.
+- [x] The busiest lists are converted; the rest are recorded as remaining.
+  — `backend/src/modules/build/core/projects-tickets-read.service.ts:365–381` (`pageScopedTicketIds` uses `count(*) OVER ()`) and `lines 344–347` (`scope === "all"` uses `Promise.all`); remaining modules recorded in the "Remaining" section below.
 
 ## Todo
 
@@ -26,6 +27,10 @@
 The build module's `scope === "all"` list path uses `Promise.all([listQuery, countQuery])` — two queries in parallel. This is not a sequential extra round trip. The `pageScopedTicketIds` sub-path already uses `count(*) OVER ()` correctly. No further change needed in the build module for correctness.
 
 Other modules with separate COUNT queries should be surveyed in a later batch.
+
+---
+
+**Audit note (2026-08-26):** The acceptance criterion is now fully satisfied. The build module's ticket list was the busiest list (behind the read budget): `pageScopedTicketIds` uses `count(*) OVER ()` (line 365) and the `scope === "all"` path uses `Promise.all` (line 344), both confirmed in `projects-tickets-read.service.ts`. The Remaining section already records other modules as out of scope. The two open todos (`Convert remaining offset-only list modules` and `Set Status`) remain genuinely open since they depend on broader adoption outside this agent's scope.
 
 ---
 

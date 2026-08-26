@@ -15,11 +15,13 @@
 
 **Verification note (orchestrator, 2026-08-26):** verified directly against source, including re-checking that ticket 02's new wrapper (added in this same batch) didn't regress this ticket's mechanism — it didn't, since this code path uses the pre-existing `cachedVersioned`/`invalidateNamespace` methods directly with an already-tenant-scoped namespace string, not the new `*ForOrg` wrappers.
 
+**Audit note (2026-08-26):** Verified acceptance criteria against source. Leaves analytics uses namespace-version invalidation (`CACHE_KEYS.leaveAnalyticsNamespace`) so the key construction is single-sourced; the write side never reconstructs a filter-specific key. See verification note above.
+
 ## Todo
 
-- [ ] Single-source the key construction
-- [ ] Test the filtered read-after-write specifically
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+- [x] Single-source the key construction — `backend/src/modules/hr/time/leaves.service.ts:215-217` reads via `cachedVersioned(CACHE_KEYS.leaveAnalyticsNamespace(u.orgId), ...)`. `backend/src/modules/hr/time/leaves-write.service.ts:56-57` and `backend/src/modules/hr/time/leave-decision-effects.service.ts:112` both call `invalidateNamespace(CACHE_KEYS.leaveAnalyticsNamespace(orgId))`. The invalidator never reconstructs a filter key; a single namespace reference is the only key in play.
+- [ ] Test the filtered read-after-write specifically — GENUINELY OPEN. No dedicated test for the filtered read-after-write case exists in `backend/src/modules/hr/time/`; the `__tests__` folder contains `leaves-projection.spec.ts` (unrelated) and the write approver spec, but nothing asserts analytics-namespace invalidation followed by a filtered read. Implementation is correct by construction; the test is a quality gap on a "done" ticket.
+- [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md) — README row 03 shows `done`. — `architecture-refactor/c19-cache-keys-cannot-be-unsafe/README.md:13`
 
 ---
 

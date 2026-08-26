@@ -25,4 +25,8 @@
 
 ---
 
+**Audit note (2026-08-26):** Implementation verified. `TICKET_LIST_COLUMNS` at `backend/src/modules/build/core/projects-tickets-read.service.ts:58–86` enumerates 25 explicit columns with no `description` entry; it is the projection used by `queryTickets` (line 104). Two genuinely open items remain: the field-absence test and the `Set Status` todo. The out-of-scope frontend type change (`frontend/types/projects/tasks.ts:80`) is correctly recorded as a dependency outside this agent's scope.
+
+---
+
 PRD: [`c13 — One contract for every list`](../prd.md) · Candidate index: [`../README.md`](../README.md)

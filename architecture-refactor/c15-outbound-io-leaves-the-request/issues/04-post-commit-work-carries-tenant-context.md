@@ -21,7 +21,7 @@
 
 - [x] Route hooks through the mechanism that opens its own tenant context
 - [x] Check the streaming handler's commit point against its stream lifetime
-- [ ] Verify by running the app and watching a real delivery — not done; no live environment available in this session
+- [ ] Verify by running the app and watching a real delivery — not done; no live environment available in this session — **BLOCKED:** no live environment or real database access in this program; unit/mock tests are the limit of available verification
 - [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
 ---

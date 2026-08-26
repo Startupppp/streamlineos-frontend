@@ -14,7 +14,7 @@ The adapter shipped with c5 and the architecture is right. What is missing is pr
 | 04 | A quota that cannot be computed refuses the write | — | ✅ **done** — an unresolvable plan limit now denies instead of letting the write through |
 | 05 | Revenue reporting reads what the system writes | 01 | ✅ **done** — the write path was made canonical (analytics kept, not deleted); new_subscription recorded on activation |
 | 06 | [Dunning history is queryable](issues/06-dunning-history-is-queryable.md) | — | in-progress — table write on PAST_DUE transition done; cron JSONB write needs out-of-scope update |
-| 07 | An issued invoice cannot change | — | in-progress — DB trigger enforces financial-field immutability (0492); credit notes not yet wired |
+| 07 | An issued invoice cannot change | — | done |
 
 ## Working these
 

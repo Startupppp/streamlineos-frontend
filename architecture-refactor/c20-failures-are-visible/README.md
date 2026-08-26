@@ -2,7 +2,7 @@
 
 PRD: [`prd.md`](prd.md) · Program: [`../README.md`](../README.md)
 
-**Wave 0** · 5 tickets, 3 retired.
+**Wave 0** · 5 tickets, 5 retired.
 
 Structured JSON logging, redaction, correlation context and the two error-reporter ports exist on both sides, and **both now have a production adapter installed** — structured logs, no vendor, per the operator decision.
 
@@ -11,8 +11,8 @@ Structured JSON logging, redaction, correlation context and the two error-report
 | 01 | Errors reach a person | — | ✅ **done** — `LogErrorReporter` + `LogSpanExporter` installed in `main.ts`; the port was routing nowhere, and two call sites (`workflow-runner`, `import-pump`) report without logging, so workflow and import failures reached nobody |
 | 02 | The browser reports its own errors | 01 | ✅ **done** — `instrumentation-client.ts` installs `consoleReporter`; route + release stamped, `redact()` applied, chunk-load errors stay recoverable |
 | 03 | A request can be followed end to end | 01 | ✅ **done** — correlation id flows through `ObservabilityContext` into every log line |
-| 04 | [No failure is swallowed](issues/04-no-failure-is-swallowed.md) | 01 | **in-progress** — crm/finance/build/payroll swept; 4 payroll sites were remapping *any* error to a duplicate-key 409 |
-| 05 | [Four alerts reach someone](issues/05-four-alerts-reach-someone.md) | 03, 04 | **in-progress** — 3 of 4 built; p95 now computable from `LogSpanExporter` spans |
+| 04 | No failure is swallowed | 01 | ✅ **done** — crm/finance/build/payroll swept (4 payroll sites were remapping *any* error to a duplicate-key 409); the four fixed sites now carry unit specs asserting both the log-and-rethrow path and the genuine-23505 path |
+| 05 | Four alerts reach someone | 03, 04 | ✅ **done** — all four predicates; `setSpanExporter(new LogSpanExporter())` is wired at `backend/src/main.ts:69`, so p95 per route is computable from `"SPAN"` log lines |
 
 ## Working these
 

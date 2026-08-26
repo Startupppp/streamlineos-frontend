@@ -2,16 +2,16 @@
 
 PRD: [`prd.md`](prd.md) · Program: [`../README.md`](../README.md)
 
-**Wave 2** · 4 tickets, 0 retired.
+**Wave 2** · 4 tickets, 0 done, 0 retired.
 
 The honest answer is that there is very little to delete: zero unused frontend files across 4,429, and the backend's only 11 are a deliberate spec-guarded arrangement. This exists mostly to record **how** deletion is proved here, because a route scan reported 1,074 dead endpoints when the true figure was approximately one.
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 01 | [The standard of proof is written down](issues/01-the-standard-of-proof-is-written-down.md) | — | ready-for-agent |
-| 02 | [Six overlapping route groups become one each](issues/02-overlapping-route-groups-become-one-each.md) | 01 | ready-for-agent |
-| 03 | [The confirmed dead controller is removed](issues/03-the-dead-controller-is-removed.md) | 01 | ready-for-agent |
-| 04 | [The downstream schema removals](issues/04-the-downstream-schema-removals.md) | c16-04, c17-06 | ready-for-agent |
+| 01 | [The standard of proof is written down](issues/01-the-standard-of-proof-is-written-down.md) | — | in-progress — standard recorded; backend CI wired; retention marker + frontend cycle CI still open |
+| 02 | [Six overlapping route groups become one each](issues/02-overlapping-route-groups-become-one-each.md) | 01 | ready-for-agent — BLOCKED on c18-01 |
+| 03 | [The confirmed dead controller is removed](issues/03-the-dead-controller-is-removed.md) | 01 | ready-for-agent — BLOCKED on c18-01 |
+| 04 | [The downstream schema removals](issues/04-the-downstream-schema-removals.md) | c16-04, c17-06 | ready-for-agent — BLOCKED on c16-04 (not started) and c17-06 (in-progress) |
 
 ## Working these
 

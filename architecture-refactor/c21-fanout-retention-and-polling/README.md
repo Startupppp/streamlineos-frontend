@@ -9,7 +9,7 @@ The models are correct: the realtime capability is per-channel with active revoc
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
 | 01 | Polling stops when realtime is live | — | **done** |
-| 02 | [An announcement to everyone completes](issues/02-an-announcement-to-everyone-completes.md) | — | ready-for-agent |
+| 02 | An announcement to everyone completes | — | done |
 | 03 | Notifications page correctly, and mark-all-read is constant work | — | done |
 | 04 | [Three growing tables are partitioned](issues/04-three-growing-tables-are-partitioned.md) | — | ready-for-agent |
 | 05 | [Retention detaches rather than deletes](issues/05-retention-detaches-rather-than-deletes.md) | 04 | ready-for-agent |

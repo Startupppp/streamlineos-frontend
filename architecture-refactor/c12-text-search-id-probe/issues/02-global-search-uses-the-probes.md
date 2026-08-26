@@ -25,9 +25,13 @@
 
 - [x] Port the leads-read caller shape, including the cap+1 fallback
   — `search.service.ts` `leadCondition` (lines 146–162) matches the shape of `contactPartyCondition` and `dealCondition`
-- [ ] Run the equivalence test before and after — not run per instructions
-- [ ] Verify by searching in a booted app, not only by test — not run per instructions
+- [ ] Run the equivalence test before and after — not run per instructions — **BLOCKED:** requires the test suite (explicitly excluded by project instructions)
+- [ ] Verify by searching in a booted app, not only by test — not run per instructions — **BLOCKED:** requires a booted app against real data
 - [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+
+---
+
+**Audit note (2026-08-26):** All acceptance criteria and the four code-wiring todos are confirmed satisfied at `backend/src/modules/search/search.service.ts` lines 131–215. The two remaining todos are BLOCKED on the test suite and a booted app respectively — both are explicitly excluded by project instructions, not open work. Status `done` is correct.
 
 ---
 

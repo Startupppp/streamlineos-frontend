@@ -6,19 +6,21 @@
 
 **Status:** ready-for-agent
 
+**Audit note (2026-08-26):** Two criteria already satisfied in `backend/CLAUDE.md` §1. Payroll folder consolidation at the schema level is NOT done: `db/schema/hr/` still holds 6 payroll-related files (`payroll.ts`, `payroll-inputs.ts`, `payroll-payout.ts`, `payroll-policies.ts`, `payroll-runs.ts`, `payroll-workforce.ts`) alongside the standalone `db/schema/payroll/` folder. Build and import criteria blocked on that folder move.
+
 ## Acceptance criteria
 
-- [ ] A stated rule: no new HR table without removing one.
-- [ ] New HR state routes onto existing lifecycle columns or the custom-field engine.
-- [ ] The two payroll folders are consolidated — they are disjoint with zero overlapping table names, so this is a folder move with no data migration.
-- [ ] Imports are updated and both repos build.
+- [x] A stated rule: no new HR table without removing one. — `backend/CLAUDE.md` §1 ("HR's table count is frozen")
+- [x] New HR state routes onto existing lifecycle columns or the custom-field engine. — `backend/CLAUDE.md` §1 ("New HR state goes onto existing lifecycle columns or the custom-field engine")
+- [ ] The two payroll folders are consolidated — they are disjoint with zero overlapping table names, so this is a folder move with no data migration. — **GENUINELY OPEN:** `db/schema/hr/` contains 6 `payroll-*.ts` files; `db/schema/payroll/` is a separate top-level folder; consolidation not done
+- [ ] Imports are updated and both repos build. — **BLOCKED:** on the payroll schema folder consolidation above
 - [ ] No table is refactored away in this ticket.
 
 ## Todo
 
-- [ ] Record the rule where module work starts
+- [x] Record the rule where module work starts — `backend/CLAUDE.md` §1
 - [ ] Move the folder, update imports, build
-- [ ] Confirm zero table-name overlap before moving
+- [ ] Confirm zero table-name overlap before moving — check `db/schema/hr/payroll-*.ts` tables against `db/schema/payroll/*.ts` tables before touching files
 - [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
 ---

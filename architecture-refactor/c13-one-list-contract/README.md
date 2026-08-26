@@ -11,7 +11,7 @@ The shared keyset helper is sound, but adoption and several call-site algorithms
 | 01 | [A ticket opens by its key](issues/01-a-ticket-opens-by-its-key.md) | — | in-progress |
 | 02 | [The board does not ship descriptions](issues/02-the-board-does-not-ship-descriptions.md) | 01 | in-progress |
 | 03 | [A list total costs no extra round trip](issues/03-a-list-total-costs-no-extra-round-trip.md) | — | in-progress |
-| 04 | [The receivables total is computed once](issues/04-the-receivables-total-is-computed-once.md) | 03 | ready-for-agent |
+| 04 | [The receivables total is computed once](issues/04-the-receivables-total-is-computed-once.md) | 03 | in-progress |
 | 05 | [Scrolled lists page by cursor](issues/05-scrolled-lists-page-by-cursor.md) | — | in-progress |
 | 06 | [Every list speaks one filter and sort vocabulary](issues/06-every-list-speaks-one-filter-vocabulary.md) | 05 | in-progress |
 

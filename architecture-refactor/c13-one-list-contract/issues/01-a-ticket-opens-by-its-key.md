@@ -20,8 +20,12 @@
 - [x] Add the by-key read authorized identically to the existing ticket read
 - [x] Remove the board-array resolution from the detail page
 - [ ] Controller e2e for the allow/deny matrix
-- [ ] Verify a deep link to an old ticket in a booted app
+- [ ] Verify a deep link to an old ticket in a booted app — **BLOCKED:** requires a booted app against real data
 - [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+
+---
+
+**Audit note (2026-08-26):** The backend implementation is confirmed complete. `GET :projectId/tickets/key/:ticketNumber` exists at `backend/src/modules/build/core/projects-tickets.controller.ts:151`; the service method at `projects-tickets-read.service.ts:384` queries directly by `(orgId, projectId, ticketNumber)` — no board-array resolution, any position works. Cross-tenant requests return not-found because `orgId` is in the `WHERE` clause and `ProjectsTicketNotFoundException` fires on null. Authorization path is identical to `getTicket` (same `resolveTicketsScope` check). Two genuinely open items remain: the regression test (`A ticket beyond the first hundred opens`) and the controller e2e matrix — neither exists in any spec under `build/core/`. The `Verify deep link` todo is BLOCKED on a booted app.
 
 ---
 

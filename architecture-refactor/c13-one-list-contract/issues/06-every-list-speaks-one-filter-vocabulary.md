@@ -27,4 +27,8 @@ The build module's `ticket.schemas.ts` still has its own `page` + `limit` block.
 
 ---
 
+**Audit note (2026-08-26):** The ticked items are confirmed. `backend/src/common/pagination/list-query.schema.ts` exports `baseListQuerySchema` (page clamped at 100 via `transform`) and `withSortField` factory — the shared schema exists. The build module's `ticket.schemas.ts` still has four inline `page`/`limit` blocks (lines 33–34, 77–78, 126, 131) without using `baseListQuerySchema`. The two open ACs are genuinely open: (1) "Sorting composes with the tenant-led indexes" cannot be verified without EXPLAIN ANALYZE as `streamline_app` with the tenant GUC set; (2) "The 16 duplicated local copies are deleted" — the build module alone has 4; remaining 12+ copies are in other modules outside this agent's scope and the build module's own copies are not yet migrated.
+
+---
+
 PRD: [`c13 — One contract for every list`](../prd.md) · Candidate index: [`../README.md`](../README.md)
