@@ -26,11 +26,11 @@ What the passes found was not systemic decay. It was concentrated correctness an
 |---|---|---|---|
 | [c12 — Route text search through the id probe that already exists](c12-text-search-id-probe/README.md) | 3 | 2 | **1** |
 | [c13 — One contract for every list](c13-one-list-contract/README.md) | 6 | 1 | **5** |
-| [c15 — Outbound I/O leaves the request transaction](c15-outbound-io-leaves-the-request/README.md) | 6 | 3 | **3** |
+| [c15 — Outbound I/O leaves the request transaction](c15-outbound-io-leaves-the-request/README.md) | 6 | 5 | **1** |
 | [c17 — Every billing write is provable](c17-billing-writes-are-provable/README.md) | 7 | 1 | **6** |
 | [c19 — A cache key cannot be unsafe, and a write invalidates what it changed](c19-cache-keys-cannot-be-unsafe/README.md) | 5 | 5 | **0** |
-| [c20 — A failure in production is visible](c20-failures-are-visible/README.md) | 5 | 2 | **3** |
-| | **32** | **14** | **18** |
+| [c20 — A failure in production is visible](c20-failures-are-visible/README.md) | 5 | 5 | **0** |
+| | **32** | **19** | **13** |
 
 **c20-01 is done, and it was the right thing to do first.** The reporter port had no adapter, so `reportError` discarded everything — and two of its five call sites (`workflow-runner`, `import-pump`) report *without* also logging, so every workflow-run and import failure was reaching nobody. That is now a structured log record, no vendor.
 
@@ -83,7 +83,7 @@ Every unticked box across all open tickets was checked against source. **Some de
 | c25-02 | The resolver signature `resolve(db, type, id, orgId)` omits the actor, so the access check cannot be written | That signature does not exist anywhere. `EntityReferenceService.resolve()` takes `(actor, references)`. |
 | c13-04 | The receivables total is computed twice; replace the subquery with a window | `accounting-receivables.service.ts:84` already uses `count(*) OVER ()` on the same single query. |
 | c20-05 | `setSpanExporter(new LogSpanExporter())` is still unwired | Present at `main.ts:69`. |
-| c15-06 | Enumerate every case the local SSRF guard blocks, then run that table against the shared one | The local `blockedIpReason` helper was already gone. Nothing to enumerate. |
+| c15-06 | Enumerate every case the local SSRF guard blocks, then run that table against the shared one | ⚠️ **This entry was itself wrong, and hid a real gap.** The local helper was gone, but "nothing to enumerate" does not follow — the retired copy is recoverable from `git show a9166e06^`. Doing the diff found the shared *sync* guard matched `localhost` exactly where the local one matched the `.localhost` suffix, so `http://api.localhost/` passed at two live call sites. Fixed; the case table is now executable in `ssrf-guard.spec.ts`. |
 | c24-01 | 13 pages are missing the page wrapper | Zero. An independent walk of all 553 authenticated pages found no violation — the same artefact as the 487 icon buttons that were 2. |
 | c13-06 | "The 16 duplicated local copies of the pagination schema" | **204 copies across 135 files.** The estimate was low by an order of magnitude, which is the opposite of this program's usual direction. 16 of those files happen to sit in one lane's territory, which is probably where the number came from. |
 | c13-03 | 241 count queries run as a separate sequential await | **1 confirmed** on a normal list path (`payroll/setup/components.service.ts:51-54`). Three more look sequential but are empty-page fallbacks behind a `count(*) OVER ()`. 83 files remain unclassified and need a per-method audit — a per-file one is systematically wrong. |
@@ -99,7 +99,7 @@ Every unticked box across all open tickets was checked against source. **Some de
 |---|---|
 | ~~c20-01~~ | ✅ **done.** The port had no adapter at all, and two call sites report without logging — workflow and import failures reached nobody. |
 | ~~c17-02~~ | ✅ **done.** A customer could pay and not be credited with nothing knowing to retry; the grant is now ledgered and a failure returns 503. |
-| [c25-01](c25-authorization-cannot-be-omitted/issues/01-every-route-declares-exposure.md) | Guard built and wired, **enforcement deliberately off**: 93 controllers sit on a class-level `JwtAuthGuard` and some handlers are universal by design, so deny-by-absence would 403 platform core. Boot report first, flip after. |
+| [c25-01](c25-authorization-cannot-be-omitted/issues/01-every-route-declares-exposure.md) | Guard built and wired, **enforcement still deliberately off**. The report now exists (`pnpm check:route-classification`): **141** undeclared handlers, not the 12 the ticket guessed. 34 classified in Lane 2 territory, 107 itemised in `lane-requests/lane-2.md`. Do not flip the flag until that is zero — the largest group is `/me/*`, calendar, notifications and logout. |
 | [c25-04](c25-authorization-cannot-be-omitted/issues/04-rls-coverage-is-a-release-invariant.md) | Verifier now exits non-zero and runs in CI. The gap count is still unknown — it needs a live database. |
 | [c13-05](c13-one-list-contract/issues/05-scrolled-lists-page-by-cursor.md) | 8 of 9 criteria met. The property tests exist and found a **second** inbox defect: an exhausted account was marked done with `undefined`, which `JSON.stringify` drops, so the next page restarted that mailbox from row zero and replayed every message. Fixed with a distinct `null`. The inbox cursor is now HMAC-signed and bound to the reader. Remaining: notifications and the ticket list, both outside that lane's territory. |
 | ~~c19-01~~ | ✅ **done.** Read-after-write now runs through a real `CacheService` over an in-memory Redis, with two negative controls — a cache that never caches would otherwise pass every such test vacuously. |

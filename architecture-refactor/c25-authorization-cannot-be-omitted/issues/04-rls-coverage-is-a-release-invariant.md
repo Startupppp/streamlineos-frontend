@@ -6,14 +6,14 @@
 
 **Status:** in-progress
 
-**Audit note (2026-08-26):** Four ticked criteria verified at source. `db-verify-rls.mjs` exits non-zero at line 307 (`process.exit(failures === 0 ? 0 : 1)`); CI runs it at `.github/workflows/ci.yml:87` (`pnpm db:verify-rls`); `PLATFORM_GLOBAL_TABLES` at line 43-48 requires per-entry rationale. The RLS gap count for real tables requires a live database (migrations 0473–0530 unapplied) and is blocked by definition. Fixture migration item blocked on infra.
+**Audit note (2026-08-26):** Four ticked criteria verified at source. `db-verify-rls.mjs` exits non-zero at line 307 (`process.exit(failures === 0 ? 0 : 1)`); CI runs it at `.github/workflows/ci.yml:90` (`pnpm db:verify-rls`); `PLATFORM_GLOBAL_TABLES` at line 43-48 requires per-entry rationale. The RLS gap count for real tables requires a live database (migrations 0473–0530 unapplied) and is blocked by definition. Fixture migration item blocked on infra.
 
 ## Acceptance criteria
 
 - [x] The verifier exits non-zero when any organisation-owned table lacks enabled and forced RLS or the expected tenant predicate. — `backend/src/scripts/db-verify-rls.mjs:307`
 - [x] Verification runs as the non-bypass application role and proves a cross-tenant read and write are rejected. — `db-verify-rls.mjs` creates a probe role and asserts cross-tenant rejection
 - [x] Explicit platform-global tables use an allowlisted classification with an owner and rationale; absence is not treated as global. — `db-verify-rls.mjs:36-48`; `PLATFORM_GLOBAL_TABLES` with embedded rationale comments; missing = gap, not global
-- [x] The backend CI workflow runs the verifier against the rebuilt migration chain. — `backend/.github/workflows/ci.yml:87`
+- [x] The backend CI workflow runs the verifier against the rebuilt migration chain. — `backend/.github/workflows/ci.yml:90`
 - [ ] A fixture migration containing one unprotected tenant table makes CI fail. — **BLOCKED:** requires a live ephemeral DB wired into CI; separate infra task; the verifier's gap-detection logic handles this once connected to a real DB
 - [x] Existing tenant transaction behavior remains unchanged and its cross-org nesting refusal remains covered.
 
@@ -23,6 +23,16 @@
 - [x] Verify policy shape as well as the enabled flag
 - [x] Wire the package script into backend CI after migration rebuild
 - [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md) — **BLOCKED:** on the fixture migration infra task above
+
+**Lane 2 confirmation (2026-08-26):** re-verified, and the blocker is unchanged and genuine. The
+verifier's gap-detection logic is complete and asserted; what it lacks is a database to run against.
+Proving that "a fixture migration containing one unprotected tenant table makes CI fail" requires
+actually applying that migration to an ephemeral Postgres in CI and observing the non-zero exit. **No
+database has been touched in this entire program**, so this cannot be demonstrated here, only
+asserted — and asserting it is exactly what this candidate exists to stop. Left open with the
+dependency named: **provision an ephemeral Postgres service in `backend/.github/workflows/ci.yml`,
+run `db:migrate` against it, then `db:verify-rls`.** Line reference corrected from `:87` to `:90`
+(a new CI step shifted it).
 
 ---
 

@@ -2,7 +2,7 @@
 
 PRD: [`prd.md`](prd.md) · Program: [`../README.md`](../README.md)
 
-**Wave 0** · 6 tickets, 6 done.
+**Wave 0** · 6 tickets, 5 with every box ticked. `04` is marked `done` and its mechanism is built, but one criterion — watching a real delivery on a booted app — has no environment in this program and stays open.
 
 Only two of 363 explicit transaction blocks contain a network call — the code is careful. But `withTenant` wraps **the entire request handler** in a transaction so the tenant GUC can be set, which means every outbound call anywhere in a handler holds a pooled connection for its full duration. Razorpay, R2 and Resend are all called with no timeout, so the worst case is unbounded.
 
