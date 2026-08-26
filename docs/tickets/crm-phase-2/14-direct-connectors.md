@@ -1,6 +1,6 @@
 # 14 — Direct connectors for the big four
 
-**Status:** not started
+**Status:** done — direct connectors for the big four (`crm-import/connectors/`).
 **Track:** C — importer
 **Blocked by:** 13
 

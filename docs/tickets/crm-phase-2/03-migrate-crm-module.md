@@ -1,6 +1,6 @@
 # 03 — Migrate batch: the CRM module itself
 
-**Status:** not started
+**Status:** done — CRM module reads resolve through `crm-party-reads.ts`.
 **Track:** A — identity convergence
 **Blocks:** 08
 **Blocked by:** 02

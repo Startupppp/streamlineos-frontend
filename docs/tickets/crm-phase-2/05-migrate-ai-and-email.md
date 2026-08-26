@@ -1,6 +1,6 @@
 # 05 — Migrate batch: AI and email
 
-**Status:** not started
+**Status:** done — AI and email batches.
 **Track:** A — identity convergence
 **Blocks:** 08
 **Blocked by:** 02

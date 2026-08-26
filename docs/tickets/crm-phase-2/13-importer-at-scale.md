@@ -1,6 +1,6 @@
 # 13 — The universal importer, resumable and reversible
 
-**Status:** not started
+**Status:** done — the import survives the request that started it.
 **Track:** C — importer
 **Blocked by:** 02
 

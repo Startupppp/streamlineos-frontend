@@ -1,6 +1,6 @@
 # 01 — Expand: Party absorbs the legacy fields, and a resolver maps old ids to it
 
-**Status:** done — see notes
+**Status:** done — `business_parties` expanded, resolver and the four maps in 0240/0241.
 **Track:** A — identity convergence
 **Blocks:** 02-08
 **Blocked by:** —

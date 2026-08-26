@@ -1,6 +1,6 @@
 # 26 — A user who cannot see a list is told it is empty
 
-**Status:** not started
+**Status:** not started — deliberately. It wants someone who can run the app and watch a denied surface render as an empty one; this cannot be shown by a unit test, and claiming it done from a fixture would be the exact failure the ticket describes.
 **Track:** E — discovered by the empty-state pass
 **Blocked by:** —
 

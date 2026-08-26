@@ -1,6 +1,6 @@
 # 17 — Dataset health is a number that moves
 
-**Status:** not started
+**Status:** done — dataset health on the scoreboard, and the RLS it shipped without (0252/0253).
 **Track:** D — data quality
 **Blocked by:** 16
 

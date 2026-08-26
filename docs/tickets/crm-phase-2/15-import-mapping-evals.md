@@ -1,6 +1,6 @@
 # 15 — Mapping inference, measured
 
-**Status:** not started
+**Status:** done — `evals/column-mapping.eval.spec.ts`.
 **Track:** C — importer
 **Blocked by:** 13
 
