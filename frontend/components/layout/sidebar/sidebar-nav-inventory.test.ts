@@ -15,9 +15,16 @@ import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
  *    gates on `crm:settings:view`. The nav therefore hid the entry from people
  *    the page would have admitted, and offered it to people it would refuse.
  *    Aligned to the page.
+ *
+ * Updated 2026-08-27, for the same class of mismatch one row further down:
+ * "What customers owe us" (/accounting/aged-receivables) was gated in the nav on
+ * `accounting:reports:read` while the page calls
+ * `requirePermission("accounting:receivables:read")`. Anyone holding reports but
+ * not receivables was shown a link that answered 403. Aligned to the page, which
+ * narrows what is displayed rather than widening what is reachable.
  */
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "0810f4047b9d1fde69b7d4f5fe56c58545c0b1e0103e99d9f884872738254902";
+  "f05a5814be1af0ed6f071cd0ecae133f4cef0668ffb416624c7deeac6a45c51d";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {
