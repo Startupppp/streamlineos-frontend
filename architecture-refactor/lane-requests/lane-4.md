@@ -83,9 +83,22 @@ when Lane 4 measured, and other lanes are adding entries concurrently — do not
 
 **c23-03's three migrations are already journalled — thank you.** Verified by reading the file:
 `0540_hr_employments_custom_field_jsonb_column` idx 298, `0541_hr_employments_custom_field_backfill`
-idx 299, `0542_hr_employments_custom_field_gin_index` idx 300. Nothing further needed for those.
-c23-02's migrations are listed in the final lane report. Beyond those, one **pre-existing** migration
-needs a decision:
+idx 299, `0542_hr_employments_custom_field_gin_index` idx 300.
+
+**Still needed — c23-02's two, in this exact order** (`0544` widens the column and MUST NOT run before
+`0543` has seeded the lookup and passed its guard). Last entry was idx 300 when Lane 4 measured; take
+the next free indices rather than hardcoding these, and keep `when` monotonically increasing:
+
+```json
+{ "idx": 301, "version": "7", "when": 1787830373441, "tag": "0543_hr_position_taxonomy",        "breakpoints": true }
+{ "idx": 302, "version": "7", "when": 1787830374441, "tag": "0544_hr_position_status_to_text",  "breakpoints": true }
+```
+
+⚠ **`0544` rewrites `hr_positions`** (`ALTER COLUMN … TYPE text`). Run `VACUUM ANALYZE hr_positions;`
+immediately afterwards — a rewrite discards statistics *and* empties the visibility map, and only
+VACUUM (not ANALYZE alone) restores the latter. The operator note is in the migration header.
+
+Beyond those, one **pre-existing** migration needs a decision:
 
 | Migration | Why it is not journalled | Recommendation |
 |---|---|---|
