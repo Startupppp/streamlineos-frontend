@@ -149,6 +149,25 @@ export interface CreateCrmOrganizationInput {
   description?: string;
 }
 
+/**
+ * Mirrors `organizationUpdateSchema` exactly, nullables included: the PATCH
+ * endpoint reads `null` as "clear this column" and omission as "leave it alone".
+ * Typed as `Partial<CreateCrmOrganizationInput>` the two were indistinguishable,
+ * so no field could be emptied once set.
+ */
+export interface UpdateCrmOrganizationInput {
+  name?: string;
+  domain?: string | null;
+  industry?: string | null;
+  size?: OrgSize | null;
+  website?: string | null;
+  linkedinUrl?: string | null;
+  description?: string | null;
+  healthScore?: number | null;
+  parentId?: number | null;
+  notes?: string | null;
+}
+
 import type { StatWithTrend } from "./deals";
 
 export interface SupportDashboardStats {

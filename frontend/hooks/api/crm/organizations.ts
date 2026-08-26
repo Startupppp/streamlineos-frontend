@@ -9,6 +9,7 @@ import type {
   CrmOrganizationFilters,
   PaginatedCrmOrganizations,
   CreateCrmOrganizationInput,
+  UpdateCrmOrganizationInput,
   OrgHierarchyNode,
   OrgRollup,
   OrgTimelineEvent,
@@ -73,7 +74,7 @@ export function useUpdateCrmOrganization() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["crmOrganizations", "update"] as const,
-    mutationFn: ({ id, ...input }: Partial<CreateCrmOrganizationInput> & { id: number; parentId?: number | null; notes?: string | null; healthScore?: number | null }) =>
+    mutationFn: ({ id, ...input }: UpdateCrmOrganizationInput & { id: number }) =>
       apiClient.patch<CrmOrganization>(`/crm/organizations/${id}`, input),
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.crmOrganizations.all });

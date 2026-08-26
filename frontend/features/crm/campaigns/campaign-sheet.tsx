@@ -1,51 +1,35 @@
 "use client";
 
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { campaignSchema, type CampaignFormValues } from "./campaign-sheet-schema";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetDescription,
-  SheetFooter,
   SheetBody,
 } from "@/components/ui/sheet";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
+import { RecordForm, asRecordValue, type RecordFormValues } from "@/features/renderer";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { CAMPAIGN_LAYOUT } from "@/lib/renderer/crm/campaign-layout";
+import { patchForUpdate } from "@/lib/renderer/layout-schema";
 import { useCreateCampaign, useUpdateCampaign } from "@/hooks/api/crm/campaigns";
 import type { CrmCampaign } from "@/types/crm/campaigns";
 
-const CAMPAIGN_CHANNELS = [
-  { value: "email", label: "Email" },
-  { value: "social", label: "Social Media" },
-  { value: "search", label: "Search / SEO" },
-  { value: "paid", label: "Paid Ads" },
-  { value: "referral", label: "Referral" },
-  { value: "event", label: "Event" },
-  { value: "other", label: "Other" },
-];
+/**
+ * Create and edit a campaign, rendered from the description.
+ *
+ * There is no form here and no schema beside it. The controls, their types and
+ * their validation come from `CAMPAIGN_LAYOUT`, which is the same description
+ * the list renders — so the two cannot disagree about what a campaign is, and a
+ * field added to one appears in the other without this file being touched.
+ *
+ * `status`, `spend`, `leads` and `roi` never appear, and not because this file
+ * omits them: the description marks them read-only because neither create nor
+ * update accepts them. A control whose value the API silently drops is a form
+ * that appears to work and does not.
+ */
 
 interface CampaignSheetProps {
   open: boolean;
@@ -53,228 +37,92 @@ interface CampaignSheetProps {
   campaign?: CrmCampaign;
 }
 
+/** Empty means "not supplied" on create and "clear it" on edit. */
+function orNull(value: string | undefined): string | null {
+  const text = value?.trim();
+  return text ? text : null;
+}
+
 export function CampaignSheet({ open, onOpenChange, campaign }: CampaignSheetProps) {
+  const layout = useTenantLayout(CAMPAIGN_LAYOUT);
   const isEditing = !!campaign;
   const createMutation = useCreateCampaign();
   const updateMutation = useUpdateCampaign();
   const isPending = createMutation.isPending || updateMutation.isPending;
 
-  const form = useForm<CampaignFormValues>({
-    resolver: zodResolver(campaignSchema),
-    defaultValues: {
-      name: "",
-      channel: "",
-      utmCampaignKey: "",
-      budgetAllocated: "",
-      startDate: "",
-      endDate: "",
-      description: "",
-      targetAudience: "",
-    },
-  });
+  function handleClose() {
+    onOpenChange(false);
+  }
 
-  useEffect(() => {
-    if (open && campaign) {
-      form.reset({
-        name: campaign.name,
-        channel: campaign.channel ?? "",
-        utmCampaignKey: campaign.utmCampaignKey ?? "",
-        budgetAllocated: campaign.budgetAllocated ?? "",
-        startDate: campaign.startDate ?? "",
-        endDate: campaign.endDate ?? "",
-        description: campaign.description ?? "",
-        targetAudience: campaign.targetAudience ?? "",
-      });
-    } else if (!open) {
-      form.reset();
-    }
-  }, [open, campaign, form]);
-
-  function handleSubmit(values: CampaignFormValues) {
-    const payload = {
-      name: values.name,
-      channel: values.channel || null,
-      utmCampaignKey: values.utmCampaignKey || null,
-      budgetAllocated: values.budgetAllocated || null,
-      startDate: values.startDate || null,
-      endDate: values.endDate || null,
-      description: values.description || null,
-      targetAudience: values.targetAudience || null,
-      ownerId: null,
-    };
-
+  function handleSubmit(values: RecordFormValues) {
     if (isEditing && campaign) {
+      /*
+        Built from the layout rather than from a list of keys written out here.
+        A field the tenant hid is not rendered, so `values` has no entry for it;
+        naming the keys would read undefined, send null, and clear a column
+        nobody touched. Absent means "leave alone" — which is what hiding meant.
+      */
+      const patch = patchForUpdate(layout, values);
       updateMutation.mutate(
-        { id: campaign.id, ...payload },
+        { id: campaign.id, ...patch } as Parameters<typeof updateMutation.mutate>[0],
         {
           onSuccess: () => {
             toast.success("Campaign updated");
             onOpenChange(false);
           },
-          onError: (err) => toast.error(getErrorMessage(err)),
+          onError: (error) => toast.error(getErrorMessage(error)),
         },
       );
-    } else {
-      createMutation.mutate(payload, {
+      return;
+    }
+
+    // Nothing exists yet, so a blank field has nothing to clear and the create
+    // DTO wants every key.
+    createMutation.mutate(
+      {
+        name: values.name?.trim() ?? "",
+        channel: orNull(values.channel),
+        utmCampaignKey: orNull(values.utmCampaignKey),
+        budgetAllocated: orNull(values.budgetAllocated),
+        startDate: orNull(values.startDate),
+        endDate: orNull(values.endDate),
+        description: orNull(values.description),
+        targetAudience: orNull(values.targetAudience),
+        ownerId: null,
+      },
+      {
         onSuccess: () => {
           toast.success("Campaign created");
           onOpenChange(false);
         },
-        onError: (err) => toast.error(getErrorMessage(err)),
-      });
-    }
+        onError: (error) => toast.error(getErrorMessage(error)),
+      },
+    );
   }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg flex flex-col gap-0 p-0">
-        <SheetHeader className="px-6 py-4 border-b shrink-0">
-          <SheetTitle>{isEditing ? "Edit Campaign" : "New Campaign"}</SheetTitle>
+      <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-lg">
+        <SheetHeader className="shrink-0 border-b px-6 py-4">
+          <SheetTitle>{isEditing ? "Edit campaign" : "New campaign"}</SheetTitle>
           <SheetDescription>
-            {isEditing ? "Update campaign details." : "Create a new marketing campaign."}
+            {isEditing
+              ? "Update the campaign's details."
+              : "A campaign groups the leads that came from one push, so you can see what it returned."}
           </SheetDescription>
         </SheetHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex min-h-0 flex-1 flex-col">
-            <SheetBody className="space-y-4 px-6 py-5">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name <span className="text-destructive">*</span></FormLabel>
-                    <FormControl>
-                      <Input placeholder="Summer Email Blast" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="channel"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Channel</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select channel" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {CAMPAIGN_CHANNELS.map((c) => (
-                          <SelectItem key={c.value} value={c.value}>
-                            {c.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="utmCampaignKey"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>UTM Campaign Key</FormLabel>
-                    <FormControl>
-                      <Input placeholder="summer_2024_email" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="budgetAllocated"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Budget (₹)</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="50000" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="startDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Start Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="endDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>End Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="targetAudience"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Target Audience</FormLabel>
-                    <FormControl>
-                      <Input placeholder="SMB decision-makers" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Campaign objectives and notes..." rows={3} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </SheetBody>
-
-            <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
-              <div className="grid w-full grid-cols-2 gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={isPending}>
-                  Cancel
-                </Button>
-                <LoadingButton type="submit" size="sm" isPending={isPending} loadingText="Saving...">
-                  {isEditing ? "Save Changes" : "Create Campaign"}
-                </LoadingButton>
-              </div>
-            </SheetFooter>
-          </form>
-        </Form>
+        <SheetBody className="px-6 py-5">
+          <RecordForm
+            layout={layout}
+            mode={isEditing ? "edit" : "create"}
+            initial={campaign ? asRecordValue(campaign) : undefined}
+            onSubmit={handleSubmit}
+            onCancel={handleClose}
+            isSubmitting={isPending}
+            submitLabel={isEditing ? "Save changes" : "Create campaign"}
+          />
+        </SheetBody>
       </SheetContent>
     </Sheet>
   );

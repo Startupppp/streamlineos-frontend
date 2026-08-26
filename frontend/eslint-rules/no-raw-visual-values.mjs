@@ -74,16 +74,36 @@ export default {
   meta: {
     type: "problem",
     docs: { description: "Visual decisions read the token layer, not raw values." },
-    schema: [],
+    schema: [
+      {
+        type: "object",
+        properties: {
+          /**
+           * Kinds this surface is not held to. Named rather than achieved by
+           * dropping the file into `ignores`, which switches the whole rule off
+           * — including the colour check, which is the one that silently breaks
+           * dark mode. Relaxing one kind should not cost the others.
+           */
+          skip: {
+            type: "array",
+            items: { enum: ["palette", "type", "colour", "shadow", "radius", "spacing"] },
+          },
+        },
+        additionalProperties: false,
+      },
+    ],
     messages: {
       raw: "This {{kind}} value is hardcoded: `{{value}}`. It {{advice}}",
     },
   },
 
   create(context) {
+    const skipped = new Set(context.options[0]?.skip ?? []);
+    const active = CHECKS.filter(([, kind]) => !skipped.has(kind));
+
     /** Only the literal text of a class string; ignores identifiers and logic. */
     function check(node, text) {
-      for (const [pattern, kind, advice] of CHECKS) {
+      for (const [pattern, kind, advice] of active) {
         const match = pattern.exec(text);
         if (!match) continue;
         context.report({ node, messageId: "raw", data: { kind, value: match[0], advice } });

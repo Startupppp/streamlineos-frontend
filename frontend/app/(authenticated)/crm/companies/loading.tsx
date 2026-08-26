@@ -12,10 +12,11 @@ export default function CompaniesLoading() {
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
           <Skeleton className="h-9 flex-1 max-w-md rounded-md" />
+          <Skeleton className="h-9 w-28 shrink-0 rounded-md" />
         </div>
       }
     >
-      <DataTableSkeleton rows={12} columns={7} className="flex-1" />
+      <DataTableSkeleton rows={12} columns={6} className="flex-1" />
     </PageWrapper>
   );
 }

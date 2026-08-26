@@ -3,16 +3,14 @@
 import { useState, useMemo, useCallback, useTransition, useEffect } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
-import { Plus, Download, LayoutGrid, TableIcon } from "lucide-react";
+import { Plus } from "lucide-react";
 import { ConfettiOverlay } from "@/components/celebration/confetti-overlay";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { SearchInput } from "@/components/ui/search-input";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DealTableView } from "@/features/crm/deals/deal-table-view";
+import { DealList } from "@/features/crm/deals/deal-list";
+import { DealsFilterBar } from "@/features/crm/deals/deals-filter-bar";
+import { useDensity } from "@/features/renderer/density-toggle";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { DragDropContext, type DropResult } from "@hello-pangea/dnd";
@@ -34,12 +32,12 @@ import { StageSkipDialog } from "@/features/crm/deals/stage-skip-dialog";
 import { useDealsExport } from "@/features/crm/deals/use-deals-export";
 import { ImportLinkButton } from "@/features/crm/import/import-link-button";
 import { ErrorState } from "@/components/shared/error-state";
-import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
-import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
 
 export default function DealsPage() {
   const canCreateDeal = useCan("crm:deals:create");
+  const canUpdateDeal = useCan("crm:deals:update");
+  const [density, setDensity] = useDensity();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -48,10 +46,6 @@ export default function DealsPage() {
 
   const rawView = searchParams.get("view");
   const view: "table" | "kanban" = rawView === "kanban" ? "kanban" : "table";
-  const dealSortCol = searchParams.get("sort") || "createdAt";
-  const rawDir = searchParams.get("dir");
-  const dealSortDir: "asc" | "desc" = rawDir === "asc" ? "asc" : "desc";
-
   const [searchInput, setSearchInput] = useState(searchParams.get("q") ?? "");
   const debouncedSearchInput = useDebouncedValue(searchInput, 300);
 
@@ -129,17 +123,6 @@ export default function DealsPage() {
   const handleAssigneeFilterChange = useCallback((value: string) => {
     updateParams({ assignee: value === "all" ? null : value });
   }, [updateParams]);
-
-  const handleDealSort = useCallback(
-    (col: string) => {
-      if (dealSortCol === col) {
-        updateParams({ sort: col, dir: dealSortDir === "asc" ? "desc" : "asc" });
-      } else {
-        updateParams({ sort: col, dir: "desc" });
-      }
-    },
-    [dealSortCol, dealSortDir, updateParams],
-  );
 
   const handleViewTable = useCallback(() => updateParams({ view: null }), [updateParams]);
   const handleViewKanban = useCallback(() => updateParams({ view: "kanban" }), [updateParams]);
@@ -310,6 +293,10 @@ export default function DealsPage() {
     updateParams({ q: null, stage: null, assignee: null });
   }, [updateParams]);
 
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   const containerVariants = shouldReduceMotion
     ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
     : staggerContainer;
@@ -317,82 +304,43 @@ export default function DealsPage() {
     ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
     : fadeUp;
 
-  if (isLoading) return <DealsLoadingSkeleton />;
+  if (view === "kanban" && isLoading) return <DealsLoadingSkeleton />;
 
-  if (isError) {
+  if (view === "kanban" && isError) {
     return (
       <PageWrapper title="Deals Pipeline" subtitle="Manage your deals">
         <ErrorState
           title="Failed to load deals"
           description="We couldn't load your deals. Please try again."
-          onRetry={() => void refetch()}
+          onRetry={handleRetry}
           className="flex-1"
         />
       </PageWrapper>
     );
   }
 
-  const subtitle = `${allDeals?.length ?? 0} deal${(allDeals?.length ?? 0) !== 1 ? "s" : ""}`;
+  const subtitle = allDeals
+    ? `${allDeals.length} deal${allDeals.length !== 1 ? "s" : ""}`
+    : "Opportunities moving through your pipeline";
 
   const filterBar = (
-    <div className={FILTER_TOOLBAR_ROW}>
-      <SearchInput value={searchInput} onValueChange={handleSearchChange} placeholder="Search deals..." aria-label="Search deals" />
-      <Select value={stageFromUrl ?? "all"} onValueChange={handleStageFilterChange}>
-        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[140px]")}>
-          <SelectValue placeholder="All stages" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All stages</SelectItem>
-          {dealStages.map((s) => (
-            <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      {assigneeOptions.length > 0 && (
-        <Select value={assigneeFilter ?? "all"} onValueChange={handleAssigneeFilterChange}>
-          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[140px]")}>
-            <SelectValue placeholder="All assignees" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All assignees</SelectItem>
-            {assigneeOptions.map((a) => (
-              <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      )}
-      <div className="ml-auto flex items-center gap-px border border-border rounded-md shrink-0">
-        <Button
-          variant={view === "table" ? "secondary" : "ghost"}
-          size="icon"
-          className="h-9 w-9 rounded-r-none border-r border-border"
-          onClick={handleViewTable}
-          aria-label="Table view"
-        >
-          <TableIcon className="h-3.5 w-3.5" />
-        </Button>
-        <Button
-          variant={view === "kanban" ? "secondary" : "ghost"}
-          size="icon"
-          className="h-9 w-9 rounded-l-none"
-          onClick={handleViewKanban}
-          aria-label="Kanban view"
-        >
-          <LayoutGrid className="h-3.5 w-3.5" />
-        </Button>
-      </div>
-      <Button
-        variant="outline"
-        size="sm"
-        className="text-xs shrink-0"
-        onClick={handleExport}
-        disabled={!allDeals || allDeals.length === 0}
-        title={!allDeals || allDeals.length === 0 ? "No deals to export" : undefined}
-      >
-        <Download className="h-3.5 w-3.5 mr-1.5" />
-        Export
-      </Button>
-    </div>
+    <DealsFilterBar
+      search={searchInput}
+      onSearchChange={handleSearchChange}
+      stage={stageFromUrl ?? "all"}
+      stages={dealStages}
+      onStageChange={handleStageFilterChange}
+      assignee={assigneeFilter ?? "all"}
+      assigneeOptions={assigneeOptions}
+      onAssigneeChange={handleAssigneeFilterChange}
+      view={view}
+      onViewTable={handleViewTable}
+      onViewKanban={handleViewKanban}
+      density={density}
+      onDensityChange={setDensity}
+      canExport={!!allDeals && allDeals.length > 0}
+      onExport={handleExport}
+    />
   );
 
   return (
@@ -424,27 +372,32 @@ export default function DealsPage() {
           initial="hidden"
           animate="visible"
         >
-          <motion.div variants={itemVariants} className="sticky top-0 z-10 shrink-0 border-b border-border bg-muted/40 pb-2 backdrop-blur-sm">
-            <DealsStatsBar {...stats} />
-          </motion.div>
+          {allDeals ? (
+            <>
+              <motion.div variants={itemVariants} className="sticky top-0 z-10 shrink-0 border-b border-border bg-muted/40 pb-2 backdrop-blur-sm">
+                <DealsStatsBar {...stats} />
+              </motion.div>
 
-          <motion.div variants={itemVariants} className="shrink-0">
-            <DealForecastWidget deals={filteredDeals} />
-          </motion.div>
+              <motion.div variants={itemVariants} className="shrink-0">
+                <DealForecastWidget deals={filteredDeals} />
+              </motion.div>
+            </>
+          ) : null}
 
           {view === "table" && (
             <motion.div variants={itemVariants} className="flex flex-1 min-h-0 flex-col">
-              <DealTableView
+              <DealList
                 deals={filteredDeals}
-                sortColumn={dealSortCol}
-                sortDirection={dealSortDir}
-                onSort={handleDealSort}
-                onStageChange={handleStageChange}
                 isLoading={isLoading}
+                isError={isError}
+                density={density}
                 canCreate={canCreateDeal}
+                canUpdate={canUpdateDeal}
                 activeFilterLabels={activeFilterLabels}
+                onRetry={handleRetry}
                 onClearFilters={handleClearDealFilters}
                 onCreateDeal={handleOpenCreate}
+                onStageChange={handleStageChange}
               />
             </motion.div>
           )}

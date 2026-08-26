@@ -52,6 +52,7 @@ function schemaForField(field: FieldSpec): z.ZodType<string, string> {
         break;
       case "number":
       case "money":
+      case "percent":
         if (!NUMERIC.test(value)) reject("Enter a number");
         break;
       case "select":
@@ -111,4 +112,56 @@ export function defaultValuesForLayout(
     values[field.name] = value === null || value === undefined ? "" : String(value);
   }
   return values;
+}
+
+/**
+ * The body a form's values describe, over exactly the fields it rendered.
+ *
+ * This exists because of hiding. A tenant who hides a field has asked to stop
+ * looking at it, and the engine honours that by leaving the field out of the
+ * form — so the submitted values have no key for it at all. A caller that then
+ * builds its payload by naming keys, as every hand-written sheet did, reads
+ * `undefined` for the hidden field and sends `null`. The API dutifully clears a
+ * column the tenant never touched, and hiding has quietly become deleting.
+ *
+ * Absent is therefore the only correct treatment of a field the form did not
+ * render: on a PATCH, absent means "leave this alone" and `null` means "clear
+ * it", and the two must not be confused. Building the body from the layout
+ * rather than from a hand-written list of keys is what makes that automatic.
+ */
+export function patchForUpdate(
+  layout: RecordLayout,
+  values: RecordFormShape,
+): Record<string, string | null> {
+  const patch: Record<string, string | null> = {};
+
+  for (const field of formFields(layout, "edit")) {
+    const raw = values[field.name];
+    if (raw === undefined) continue;
+    const text = raw.trim();
+    patch[field.name] = text === "" ? null : text;
+  }
+
+  return patch;
+}
+
+/**
+ * The same, for a record that does not exist yet.
+ *
+ * An empty field on create is "not supplied" rather than "clear it", so it is
+ * omitted instead of being sent as `null` — a create DTO that rejects nulls
+ * would otherwise fail on every optional field the user left blank.
+ */
+export function payloadForCreate(
+  layout: RecordLayout,
+  values: RecordFormShape,
+): Record<string, string> {
+  const payload: Record<string, string> = {};
+
+  for (const field of formFields(layout, "create")) {
+    const text = values[field.name]?.trim();
+    if (text) payload[field.name] = text;
+  }
+
+  return payload;
 }

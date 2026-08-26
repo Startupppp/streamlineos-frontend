@@ -500,3 +500,168 @@ describe("the engine, driven by a description it has never seen", () => {
     expect(screen.getByRole("button", { name: /save specimen/i })).toBeInTheDocument();
   });
 });
+
+/**
+ * The vocabulary the remaining record types needed.
+ *
+ * Each of these was found the same way the campaign surface found `sign`: a
+ * hand-written screen did something a description could not say, so migrating it
+ * would have lost the behaviour. They are asserted against a description the
+ * engine has never seen, not against the screens that motivated them.
+ */
+const OWN_CURRENCY: RecordLayout = {
+  key: "test:own-currency",
+  singular: "Order",
+  plural: "Orders",
+  titleField: "reference",
+  fields: [
+    { name: "reference", label: "Reference", kind: "text", required: true },
+    { name: "currency", label: "Currency", kind: "text", readOnly: true },
+    { name: "net", label: "Net", kind: "money", readOnly: true, currencyField: "currency" },
+    { name: "fee", label: "Fee", kind: "money", readOnly: true },
+    { name: "due", label: "Due", kind: "dateTime" },
+    { name: "ownerId", label: "Owner", kind: "reference", referenceTo: "member" },
+  ],
+  list: {
+    searchPlaceholder: "Search orders…",
+    columns: [
+      { field: "reference", primary: true },
+      { field: "net" },
+      { field: "fee" },
+    ],
+  },
+  detail: { sections: [{ title: "Money", fields: ["net", "fee"] }] },
+  form: { sections: [{ title: "Order", fields: ["reference", "due", "ownerId"] }] },
+};
+
+const order = { orderId: "o-1", reference: "SO-1", currency: "USD", net: 1200, fee: 50, due: "2026-09-01T15:30:00.000Z", ownerId: "u-9" };
+const orderKey = (row: Record<string, unknown>) => String(row.orderId);
+
+describe("a record that carries its own currency", () => {
+  it("accepts the description", () => {
+    expect(validateLayout(OWN_CURRENCY)).toEqual([]);
+  });
+
+  it("renders the amount in the record's currency, not the organisation's", () => {
+    render(
+      <RecordList
+        layout={OWN_CURRENCY}
+        rows={[order]}
+        getRowKey={orderKey}
+        money={{ currency: "INR", locale: "en-IN" }}
+      />,
+    );
+    // What matters is that it is dollars and not the tenant's rupees.
+    const shown = screen.getAllByText((text) => text.includes("1,200.00"));
+    expect(shown.length).toBeGreaterThan(0);
+    expect(shown.some((node) => node.textContent?.includes("₹"))).toBe(false);
+  });
+
+  it("leaves a money field with no declared currency on the organisation's own", () => {
+    render(
+      <RecordList
+        layout={OWN_CURRENCY}
+        rows={[order]}
+        getRowKey={orderKey}
+        money={{ currency: "GBP", locale: "en-GB" }}
+      />,
+    );
+    expect(screen.getAllByText("£50.00").length).toBeGreaterThan(0);
+  });
+
+  it("falls back to the organisation's currency when the record's is not a code", () => {
+    render(
+      <RecordDetail
+        layout={OWN_CURRENCY}
+        record={{ ...order, currency: "" }}
+        money={{ currency: "GBP", locale: "en-GB" }}
+      />,
+    );
+    expect(screen.getByText("£1,200.00")).toBeInTheDocument();
+  });
+
+  it("reports a currencyField that names nothing, rather than rendering the wrong symbol", () => {
+    const broken: RecordLayout = {
+      ...OWN_CURRENCY,
+      fields: OWN_CURRENCY.fields.map((field) =>
+        field.name === "net" ? { ...field, currencyField: "notAField" } : field,
+      ),
+    };
+    expect(validateLayout(broken)).toContainEqual(
+      expect.objectContaining({ where: "fields (net).currencyField" }),
+    );
+  });
+
+  it("reports a currencyField on a field that carries no amount", () => {
+    const broken: RecordLayout = {
+      ...OWN_CURRENCY,
+      fields: OWN_CURRENCY.fields.map((field) =>
+        field.name === "reference" ? { ...field, currencyField: "currency" } : field,
+      ),
+    };
+    expect(validateLayout(broken)).toContainEqual(
+      expect.objectContaining({ where: "fields (reference)" }),
+    );
+  });
+});
+
+describe("a moment rather than a day", () => {
+  it("renders a dateTime with its time, which a date field would drop", () => {
+    const due = OWN_CURRENCY.fields.find((field) => field.name === "due");
+    expect(due).toBeDefined();
+    if (due) expect(formatFieldText(due, order.due)).toMatch(/\d{1,2}:\d{2}/);
+  });
+
+  it("gives the form a control that can carry a time", () => {
+    const { container } = render(<RecordForm layout={OWN_CURRENCY} onSubmit={jest.fn()} />);
+    expect(container.querySelector('input[type="datetime-local"]')).not.toBeNull();
+  });
+});
+
+describe("a field that points at another record", () => {
+  it("renders the control the surface supplies rather than a box for an id", () => {
+    render(
+      <RecordForm
+        layout={OWN_CURRENCY}
+        onSubmit={jest.fn()}
+        controls={{
+          ownerId: ({ value }) => <button type="button">Pick owner ({value || "none"})</button>,
+        }}
+      />,
+    );
+    expect(screen.getByRole("button", { name: /pick owner/i })).toBeInTheDocument();
+  });
+
+  it("hands the supplied control the field's value and a way to change it", async () => {
+    const onSubmit = jest.fn();
+    render(
+      <RecordForm
+        layout={OWN_CURRENCY}
+        initial={{ reference: "SO-1" }}
+        onSubmit={onSubmit}
+        controls={{
+          ownerId: ({ onChange }) => (
+            <button type="button" onClick={() => onChange("u-42")}>
+              Choose
+            </button>
+          ),
+        }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /choose/i }));
+    fireEvent.click(screen.getByRole("button", { name: /save order/i }));
+
+    await waitFor(() =>
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({ ownerId: "u-42" }),
+        expect.anything(),
+      ),
+    );
+  });
+
+  it("degrades to a text input when no control is supplied, rather than dropping the field", () => {
+    render(<RecordForm layout={OWN_CURRENCY} onSubmit={jest.fn()} />);
+    expect(screen.getByLabelText("Owner")).toBeInTheDocument();
+  });
+});

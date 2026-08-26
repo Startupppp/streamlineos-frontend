@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
+import type { ReactNode } from "react";
 import type { FieldSpec, RecordLayout } from "@/lib/renderer/layout";
 import {
   defaultValuesForLayout,
@@ -34,6 +35,12 @@ import { cn } from "@/lib/utils";
 
 export type RecordFormValues = Record<string, string>;
 
+export interface RecordFieldControl {
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+}
+
 export interface RecordFormProps {
   layout: RecordLayout;
   initial?: Record<string, unknown>;
@@ -44,6 +51,13 @@ export interface RecordFormProps {
   className?: string;
   /** Creating drops `editOnly` fields; editing keeps them. */
   mode?: FormMode;
+  /**
+   * A control for a field the platform's primitives cannot render on their own —
+   * a person picker, a record picker. Keyed by field name, and supplied by the
+   * surface because who may be picked depends on the caller rather than on the
+   * record's shape.
+   */
+  controls?: Record<string, (control: RecordFieldControl) => ReactNode>;
 }
 
 function controlType(kind: FieldSpec["kind"]): string {
@@ -56,9 +70,12 @@ function controlType(kind: FieldSpec["kind"]): string {
       return "url";
     case "number":
     case "money":
+    case "percent":
       return "number";
     case "date":
       return "date";
+    case "dateTime":
+      return "datetime-local";
     default:
       return "text";
   }
@@ -82,6 +99,7 @@ export function RecordForm({
   submitLabel,
   className,
   mode = "edit",
+  controls,
 }: RecordFormProps) {
   const schema = useMemo(() => schemaForLayout(layout, mode), [layout, mode]);
   const fields = useMemo(() => formFields(layout, mode), [layout, mode]);
@@ -123,7 +141,17 @@ export function RecordForm({
                           {field.required ? <span aria-hidden="true"> *</span> : null}
                         </FormLabel>
 
-                        {field.kind === "select" || field.kind === "badge" ? (
+                        {controls?.[field.name] ? (
+                          <FormControl>
+                            <div>
+                              {controls[field.name]({
+                                value: control.value,
+                                onChange: control.onChange,
+                                disabled: isSubmitting,
+                              })}
+                            </div>
+                          </FormControl>
+                        ) : field.kind === "select" || field.kind === "badge" ? (
                           <Select value={control.value} onValueChange={control.onChange}>
                             {/*
                               FormControl wraps the TRIGGER, not the Select root.

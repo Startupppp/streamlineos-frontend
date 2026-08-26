@@ -37,8 +37,12 @@ import { AIScoreButton } from "./ai-score-button";
 import { AIEmailDialog } from "./ai-email-dialog";
 import { AINextActionButton } from "./ai-next-action-button";
 import { AIEnrichLeadButton } from "./ai-enrich-lead-button";
+import { RecordDetail } from "@/features/renderer";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { useOrgDisplay } from "@/hooks/api/org-display";
+import { LEAD_LAYOUT } from "@/lib/renderer/crm/lead-layout";
 import { LeadActivityTab } from "./lead-activity-tab";
-import { LeadInfoTab } from "./lead-info-tab";
+import { toLeadRecord } from "./lead-record";
 import { LeadFollowupTab } from "./lead-followup-tab";
 
 interface LeadDetailSheetProps {
@@ -93,6 +97,8 @@ export function LeadDetailSheet({
   canUpdate,
 }: LeadDetailSheetProps) {
   const router = useRouter();
+  const leadLayout = useTenantLayout(LEAD_LAYOUT);
+  const money = useOrgDisplay();
   const { data: lead, isLoading } = useLeadDetail(leadId ?? 0);
   const { data: statusOptions = [] } = useCrmOptions("lead_status");
   const { data: activityTypeOptions = [] } = useCrmOptions("activity_type");
@@ -395,11 +401,11 @@ export function LeadDetailSheet({
                   </TabsList>
 
                   <TabsContent value="details" className="mt-5">
-                    <LeadInfoTab
-                      createdAt={lead.createdAt}
-                      assignedAt={lead.assignedAt}
-                      convertedAt={lead.convertedAt}
-                      campaign={lead.campaign}
+                    <RecordDetail
+                      layout={leadLayout}
+                      record={toLeadRecord(lead)}
+                      money={money}
+                      showTitle={false}
                     />
                   </TabsContent>
 

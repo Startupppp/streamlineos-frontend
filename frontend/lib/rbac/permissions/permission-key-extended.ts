@@ -25,6 +25,8 @@ export type ExtendedPermissionKey =
   | "accounting:banking:manage"
   | "accounting:banking:import"
   | "accounting:banking:reconcile"
+  | "accounting:attachments:read"
+  | "accounting:attachments:manage"
   | "accounting:taxes:read"
   | "accounting:taxes:manage"
   | "accounting:taxes:pay"

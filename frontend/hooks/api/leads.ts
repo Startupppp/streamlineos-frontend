@@ -23,8 +23,6 @@ import type {
   LogActivityInput,
   BulkUpdateLeadsInput,
   BulkDeleteLeadsInput,
-  BulkImportLeadsInput,
-  BulkImportResult,
   DistributeLeadsInput,
   DistributeResult,
 } from "@/types/leads";
@@ -212,18 +210,6 @@ export function useBulkDeleteLeads() {
     mutationKey: ["leads", "bulkDelete"] as const,
     mutationFn: (input: BulkDeleteLeadsInput) =>
       apiClient.delete<{ deleted: number }>("/leads/bulk", input),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.leads.all });
-    },
-  });
-}
-
-export function useBulkImportLeads() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["leads", "import"] as const,
-    mutationFn: (input: BulkImportLeadsInput) =>
-      apiClient.post<BulkImportResult>("/leads/import", input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.leads.all });
     },

@@ -1,20 +1,20 @@
 "use client";
 
-import { useCallback } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useCallback, useMemo } from "react";
 import { toast } from "sonner";
-import { taskSchema, type TaskFormValues } from "./create-task-dialog-schema";
+import { AppDialog } from "@/components/shared/app-dialog";
+import { MemberPicker } from "@/components/shared";
+import { RecordForm, type RecordFormValues } from "@/features/renderer";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { TASK_LAYOUT, taskLayoutWithLinkedEntity } from "@/lib/renderer/crm/task-layout";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { EntityFormDialog, MemberPicker } from "@/components/shared";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   useCreateTask,
   useUpdateTask,
-  type Task,
   type CreateTaskInput,
+  type Task,
+  type TaskEntityType,
+  type TaskType,
 } from "@/hooks/api/tasks";
 
 type CrmEntityType = "LEAD" | "DEAL" | "CONTACT";
@@ -27,7 +27,37 @@ interface CreateTaskDialogProps {
   defaultEntityId?: number;
 }
 
-export function CreateTaskDialog({ open, onOpenChange, task, defaultEntityType, defaultEntityId }: CreateTaskDialogProps) {
+const ENTITY_TYPES: readonly TaskEntityType[] = ["LEAD", "DEAL", "CONTACT"];
+const TASK_TYPES: readonly TaskType[] = [
+  "CALL",
+  "EMAIL",
+  "MEETING",
+  "DEMO",
+  "FOLLOW_UP",
+  "REMINDER",
+  "CUSTOM",
+];
+
+function asEntityType(value: string | undefined): TaskEntityType | undefined {
+  return ENTITY_TYPES.find((candidate) => candidate === value);
+}
+
+function asTaskType(value: string | undefined): TaskType | undefined {
+  return TASK_TYPES.find((candidate) => candidate === value);
+}
+
+function asEntityId(value: string | undefined): number | undefined {
+  const parsed = Number(value?.trim());
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : undefined;
+}
+
+export function CreateTaskDialog({
+  open,
+  onOpenChange,
+  task,
+  defaultEntityType,
+  defaultEntityId,
+}: CreateTaskDialogProps) {
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
 
@@ -35,35 +65,68 @@ export function CreateTaskDialog({ open, onOpenChange, task, defaultEntityType, 
   const isSubmitting = createTask.isPending || updateTask.isPending;
   const hasPrefilledEntity = !!defaultEntityType && defaultEntityId != null;
 
-  const defaultValues: TaskFormValues = {
-    title: task?.title ?? "",
-    type: task?.type ?? "CUSTOM",
-    notes: task?.notes ?? "",
-    entityType: (task?.entityType as TaskFormValues["entityType"]) ?? defaultEntityType ?? undefined,
-    entityIdRaw: task?.entityId != null ? String(task.entityId) : defaultEntityId != null ? String(defaultEntityId) : "",
-    assigneeId: task?.assigneeId ?? "",
-    dueDate: task?.dueDate ?? "",
-  };
+  const declared = useMemo(
+    () => (hasPrefilledEntity ? taskLayoutWithLinkedEntity() : TASK_LAYOUT),
+    [hasPrefilledEntity],
+  );
+  const layout = useTenantLayout(declared);
+
+  const initial = useMemo(
+    () => ({
+      title: task?.title ?? "",
+      type: task?.type ?? "CUSTOM",
+      notes: task?.notes ?? "",
+      entityType: task?.entityType ?? defaultEntityType ?? "",
+      entityId: task?.entityId ?? defaultEntityId ?? "",
+      assigneeId: task?.assigneeId ?? "",
+      dueDate: task?.dueDate ?? "",
+    }),
+    [task, defaultEntityType, defaultEntityId],
+  );
+
+  const controls = useMemo(
+    () => ({
+      assigneeId: ({ value, onChange, disabled }: { value: string; onChange: (next: string) => void; disabled?: boolean }) => (
+        <MemberPicker
+          mode="single"
+          value={value || undefined}
+          onChange={(id) => onChange(id ?? "")}
+          allowUnassigned
+          placeholder="Unassigned"
+          disabled={disabled}
+        />
+      ),
+    }),
+    [],
+  );
 
   const handleSubmit = useCallback(
-    (values: TaskFormValues) => {
-      const entityId = values.entityIdRaw ? parseInt(values.entityIdRaw, 10) : undefined;
-      const entityType = values.entityType;
+    (values: RecordFormValues) => {
+      /*
+        The linked record is read from the prefill when the form did not offer
+        the fields, never from an absent value: hiding a field is a decision to
+        stop asking, not a decision to unlink the task.
+      */
+      const entityType = hasPrefilledEntity
+        ? asEntityType(defaultEntityType)
+        : asEntityType(values.entityType);
+      const entityId = hasPrefilledEntity
+        ? defaultEntityId
+        : asEntityId(values.entityId);
+
+      const input: CreateTaskInput = {
+        title: values.title?.trim() ?? "",
+        type: asTaskType(values.type),
+        notes: values.notes?.trim() || undefined,
+        entityType,
+        entityId,
+        assigneeId: values.assigneeId?.trim() || undefined,
+        dueDate: values.dueDate?.trim() || undefined,
+      };
 
       if (isEditing && task) {
         updateTask.mutate(
-          {
-            taskId: task.id,
-            input: {
-              title: values.title,
-              type: values.type,
-              notes: values.notes || undefined,
-              entityType,
-              entityId: !isNaN(entityId ?? NaN) ? entityId : undefined,
-              assigneeId: values.assigneeId || undefined,
-              dueDate: values.dueDate || undefined,
-            },
-          },
+          { taskId: task.id, input },
           {
             onSuccess: () => {
               toast.success("Task updated");
@@ -72,178 +135,46 @@ export function CreateTaskDialog({ open, onOpenChange, task, defaultEntityType, 
             onError: (err) => toast.error(getErrorMessage(err)),
           },
         );
-      } else {
-        const input: CreateTaskInput = {
-          title: values.title,
-          type: values.type,
-          notes: values.notes || undefined,
-          entityType,
-          entityId: !isNaN(entityId ?? NaN) ? entityId : undefined,
-          assigneeId: values.assigneeId || undefined,
-          dueDate: values.dueDate || undefined,
-        };
-        createTask.mutate(input, {
-          onSuccess: () => {
-            toast.success("Task created");
-            onOpenChange(false);
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        });
+        return;
       }
+
+      createTask.mutate(input, {
+        onSuccess: () => {
+          toast.success("Task created");
+          onOpenChange(false);
+        },
+        onError: (err) => toast.error(getErrorMessage(err)),
+      });
     },
-    [isEditing, task, createTask, updateTask, onOpenChange],
+    [
+      createTask,
+      updateTask,
+      isEditing,
+      task,
+      onOpenChange,
+      hasPrefilledEntity,
+      defaultEntityType,
+      defaultEntityId,
+    ],
   );
 
   return (
-    <EntityFormDialog<TaskFormValues>
+    <AppDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={isEditing ? "Edit Task" : "New Task"}
-      resolver={zodResolver(taskSchema)}
-      defaultValues={defaultValues}
-      onSubmit={handleSubmit}
-      isSubmitting={isSubmitting}
-      submitLabel={isEditing ? "Save Changes" : "Create Task"}
-      resetOnOpen
+      title={isEditing ? "Edit task" : "New task"}
     >
-      {(form) => (
-        <>
-          <FormField
-            control={form.control}
-            name="title"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Title <span className="text-destructive">*</span></FormLabel>
-                <FormControl>
-                  <Input placeholder="Task title" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="type"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Type</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="CALL">Call</SelectItem>
-                    <SelectItem value="EMAIL">Email</SelectItem>
-                    <SelectItem value="MEETING">Meeting</SelectItem>
-                    <SelectItem value="DEMO">Demo</SelectItem>
-                    <SelectItem value="FOLLOW_UP">Follow-up</SelectItem>
-                    <SelectItem value="REMINDER">Reminder</SelectItem>
-                    <SelectItem value="CUSTOM">Custom</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {!hasPrefilledEntity && (
-            <>
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="entityType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Related To</FormLabel>
-                      <Select value={field.value ?? ""} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Entity type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="LEAD">Lead</SelectItem>
-                          <SelectItem value="DEAL">Deal</SelectItem>
-                          <SelectItem value="CONTACT">Contact</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="entityIdRaw"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Entity ID</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. 42" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Leave blank to create a standalone task
-              </p>
-            </>
-          )}
-
-          <FormField
-            control={form.control}
-            name="assigneeId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Assignee</FormLabel>
-                <FormControl>
-                  <MemberPicker
-                    mode="single"
-                    value={field.value || undefined}
-                    onChange={(id) => field.onChange(id ?? "")}
-                    allowUnassigned
-                    placeholder="Unassigned"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="dueDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Due Date</FormLabel>
-                <FormControl>
-                  <Input type="datetime-local" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="notes"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Notes</FormLabel>
-                <FormControl>
-                  <Textarea placeholder="Add notes..." rows={3} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </>
-      )}
-    </EntityFormDialog>
+      <RecordForm
+        key={`${task?.id ?? "new"}:${String(open)}`}
+        layout={layout}
+        mode={isEditing ? "edit" : "create"}
+        initial={initial}
+        controls={controls}
+        onSubmit={handleSubmit}
+        onCancel={() => onOpenChange(false)}
+        isSubmitting={isSubmitting}
+        submitLabel={isEditing ? "Save changes" : "Create task"}
+      />
+    </AppDialog>
   );
 }

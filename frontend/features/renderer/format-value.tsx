@@ -1,7 +1,12 @@
 import type { ReactNode } from "react";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { DEFAULT_MONEY_DISPLAY, formatMoney, type MoneyDisplay } from "@/lib/format-utils";
-import { fieldByName, type FieldSpec, type RecordLayout } from "@/lib/renderer/layout";
+import {
+  fieldByName,
+  toneForSignedValue,
+  type FieldSpec,
+  type RecordLayout,
+} from "@/lib/renderer/layout";
 
 export type RecordValue = Record<string, unknown>;
 
@@ -40,13 +45,48 @@ function formatMoneyField(value: unknown, display: MoneyDisplay): string {
   return Number.isFinite(Number(text)) ? formatMoney(text, display) : text;
 }
 
+/**
+ * A percentage as the API stores it: 12.4 means 12.4%.
+ *
+ * Not `Intl`'s `style: "percent"`, which divides by a hundred — every CRM
+ * endpoint here sends the figure already scaled, and the two conventions
+ * silently differ by two orders of magnitude. There is no minimum fraction
+ * digit, so a round sixty reads "60%" rather than "60.0%"; a table of figures
+ * padded with decimals nobody asked for is density spent on nothing.
+ */
+function formatPercentField(value: unknown, display: MoneyDisplay): string {
+  const text = asText(value);
+  if (!text) return "";
+  const amount = Number(text);
+  if (!Number.isFinite(amount)) return text;
+  return `${new Intl.NumberFormat(display.locale, { maximumFractionDigits: 1 }).format(amount)}%`;
+}
+
+/** A moment, not a day — a task due at 4pm is not a task due on Tuesday. */
+function formatDateTime(value: unknown): string {
+  const text = asText(value);
+  if (!text) return "";
+  const parsed = new Date(text);
+  return Number.isNaN(parsed.getTime())
+    ? text
+    : parsed.toLocaleString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      });
+}
+
 export function formatFieldText(
   field: FieldSpec,
   value: unknown,
   display: MoneyDisplay = DEFAULT_MONEY_DISPLAY,
 ): string {
   if (field.kind === "date") return formatDate(value);
+  if (field.kind === "dateTime") return formatDateTime(value);
   if (field.kind === "money") return formatMoneyField(value, display);
+  if (field.kind === "percent") return formatPercentField(value, display);
 
   if (field.kind === "select" || field.kind === "badge") {
     const option = field.options?.find((candidate) => candidate.value === asText(value));
@@ -71,6 +111,20 @@ export function renderFieldValue(
 ): ReactNode {
   const text = formatFieldText(field, value, display);
   if (!text) return <span className="text-muted-foreground">—</span>;
+
+  /*
+    A signed figure is toned from the same status tokens a badge uses, so ROI
+    green and "active" green are the same green in both themes. The description
+    said which direction is good news; nothing here knows what a campaign is.
+
+    Weight rather than a second colour carries the emphasis, and the minus sign
+    is still there — colour is never the only thing distinguishing the two cases.
+  */
+  const signTone = toneForSignedValue(field, value);
+  if (signTone) {
+    const tone = statusToneClasses(signTone);
+    return <span className={`font-medium ${tone.inkStrong}`}>{text}</span>;
+  }
 
   if (field.kind === "badge" || field.kind === "select") {
     const option = field.options?.find((candidate) => candidate.value === asText(value));
@@ -122,4 +176,21 @@ export function resolveField(layout: RecordLayout, name: string): FieldSpec {
       kind: "text",
     }
   );
+}
+
+/**
+ * A typed record as the engine's row shape.
+ *
+ * An interface is not assignable to `Record<string, unknown>` — TypeScript gives
+ * an implicit index signature to type aliases and withholds it from interfaces —
+ * so every surface handing the engine its rows would otherwise carry a double
+ * cast. Copying the own enumerable properties produces the index signature
+ * honestly, in one place, instead of asserting it at forty call sites.
+ */
+export function asRecordValue<T extends object>(row: T): RecordValue {
+  return Object.fromEntries(Object.entries(row));
+}
+
+export function asRecordValues<T extends object>(rows: readonly T[]): RecordValue[] {
+  return rows.map(asRecordValue);
 }

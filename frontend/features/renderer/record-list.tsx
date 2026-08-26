@@ -2,7 +2,7 @@
 
 import { useMemo, type ReactNode } from "react";
 import { DataTable, type DataTableColumn, type DataTableProps } from "@/components/ui/data-table";
-import { isNumericField, type RecordLayout } from "@/lib/renderer/layout";
+import { isNumericField, moneyDisplayFor, type RecordLayout } from "@/lib/renderer/layout";
 import { cn } from "@/lib/utils";
 import { formatFieldText, renderFieldValue, resolveField, type RecordValue } from "./format-value";
 import { densityAttribute, type DensityMode } from "@/lib/design-tokens";
@@ -10,7 +10,20 @@ import { DEFAULT_MONEY_DISPLAY, type MoneyDisplay } from "@/lib/format-utils";
 
 type BorrowedProps = Pick<
   DataTableProps<RecordValue>,
-  "isLoading" | "emptyState" | "pagination" | "onRowClick" | "minWidth" | "className"
+  | "isLoading"
+  | "emptyState"
+  | "pagination"
+  | "onRowClick"
+  | "minWidth"
+  | "className"
+  /*
+    Selection is borrowed rather than described. Which rows a person may pick,
+    and what picking them does, depends on the caller's permissions and on the
+    action being staged — a screen concern, like the row actions beside it. The
+    table already owns the checkbox column and select-all; forwarding is what
+    stops every list growing its own.
+  */
+  | "selection"
 >;
 
 export interface RecordListProps extends BorrowedProps {
@@ -62,6 +75,7 @@ export function RecordList({
   emptyState,
   pagination,
   onRowClick,
+  selection,
   minWidth,
   className,
   density = "comfortable",
@@ -88,11 +102,16 @@ export function RecordList({
           className: cn(numeric && "text-right font-mono tabular-nums", column.width),
           headerClassName: numeric ? "text-right" : undefined,
           cell: (row) => {
-            const value = renderFieldValue(field, row[column.field], money);
+            const display = moneyDisplayFor(field, row, money);
+            const value = renderFieldValue(field, row[column.field], display);
             if (!column.subtitle) return value;
 
             const subtitle = resolveField(layout, column.subtitle);
-            const subtitleText = formatFieldText(subtitle, row[column.subtitle], money);
+            const subtitleText = formatFieldText(
+              subtitle,
+              row[column.subtitle],
+              moneyDisplayFor(subtitle, row, money),
+            );
 
             return (
               <div className="flex min-w-0 flex-col gap-0.5">
@@ -126,18 +145,19 @@ export function RecordList({
     return (
       <div className="flex min-h-11 min-w-0 flex-col gap-gap-inline p-card-pad">
         <span className="truncate text-sm font-medium">
-          {renderFieldValue(primaryField, row[primaryField.name], money)}
+          {renderFieldValue(primaryField, row[primaryField.name], moneyDisplayFor(primaryField, row, money))}
         </span>
         <span className="flex flex-wrap items-center gap-gap-field">
           {layout.list.columns
             .filter((column) => column.field !== primaryField.name)
             .map((column) => {
               const field = resolveField(layout, column.field);
-              const text = formatFieldText(field, row[column.field], money);
+              const display = moneyDisplayFor(field, row, money);
+              const text = formatFieldText(field, row[column.field], display);
               if (!text) return null;
               return (
                 <span key={column.field} className="text-dense text-muted-foreground">
-                  {renderFieldValue(field, row[column.field], money)}
+                  {renderFieldValue(field, row[column.field], display)}
                 </span>
               );
             })}
@@ -162,6 +182,7 @@ export function RecordList({
         emptyState={emptyState}
         pagination={pagination}
         onRowClick={onRowClick}
+        selection={selection}
         minWidth={minWidth}
         mobileCard={mobileCard}
         className={className}

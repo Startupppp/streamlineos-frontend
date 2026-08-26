@@ -17,7 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { useMergeCrmOrganizations } from "@/hooks/api/crm";
+import { useMergeCrmOrganizations, type MergeOrgsResult } from "@/hooks/api/crm";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { DuplicateOrgPair } from "@/types/crm";
@@ -30,9 +30,25 @@ export interface CompanyMergeDialogProps {
   onMergeComplete?: () => void;
 }
 
+/**
+ * A merge that discarded something is not a plain success.
+ *
+ * The backend returns the fields where the two records disagreed and says which
+ * value it kept. Reporting "merged successfully" over that dresses one outcome
+ * as another: the person chose a primary, not which of eleven differing fields
+ * survived, and they cannot see afterwards that a phone number went. So the
+ * dialog stays open on a conflicting merge and says what happened. A clean merge
+ * closes and gets a toast, because there is nothing to read.
+ */
+function describeValue(value: unknown): string {
+  if (value === null || value === undefined || value === "") return "empty";
+  return String(value);
+}
+
 export function CompanyMergeDialog({ pair, currentOrgId, open, onOpenChange, onMergeComplete }: CompanyMergeDialogProps) {
   const [primaryId, setPrimaryId] = useState<number>(currentOrgId);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [outcome, setOutcome] = useState<MergeOrgsResult | null>(null);
   const mergeOrgs = useMergeCrmOrganizations();
 
   const duplicateId = primaryId === pair.org1.id ? pair.org2.id : pair.org1.id;
@@ -41,18 +57,30 @@ export function CompanyMergeDialog({ pair, currentOrgId, open, onOpenChange, onM
     mergeOrgs.mutate(
       { primaryId, duplicateId },
       {
-        onSuccess: () => {
-          toast.success("Companies merged successfully");
+        onSuccess: (result) => {
           setConfirmOpen(false);
-          onOpenChange(false);
-          onMergeComplete?.();
+          const discarded = Object.keys(result.conflicts ?? {});
+          if (discarded.length === 0) {
+            toast.success("Companies merged");
+            onOpenChange(false);
+            onMergeComplete?.();
+            return;
+          }
+          setOutcome(result);
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }, [mergeOrgs, primaryId, duplicateId, onOpenChange, onMergeComplete]);
 
+  const handleAcknowledge = useCallback(() => {
+    setOutcome(null);
+    onOpenChange(false);
+    onMergeComplete?.();
+  }, [onOpenChange, onMergeComplete]);
+
   const orgs = [pair.org1, pair.org2];
+  const conflicts = Object.entries(outcome?.conflicts ?? {});
 
   return (
     <>
@@ -61,9 +89,35 @@ export function CompanyMergeDialog({ pair, currentOrgId, open, onOpenChange, onM
           <DialogHeader>
             <DialogTitle className="text-sm font-semibold flex items-center gap-2">
               <GitMerge className="h-4 w-4" />
-              Merge Duplicate Companies
+              {outcome ? "Companies merged" : "Merge Duplicate Companies"}
             </DialogTitle>
           </DialogHeader>
+          {outcome ? (
+            <div className="space-y-4">
+              <p className="text-xs text-muted-foreground">
+                The companies are merged. {conflicts.length} field
+                {conflicts.length === 1 ? "" : "s"} differed, and the primary
+                company&apos;s value was kept. Reversing the merge restores what was
+                discarded.
+              </p>
+              <dl className="divide-y divide-border rounded-lg border border-border">
+                {conflicts.map(([field, values]) => (
+                  <div key={field} className="grid grid-cols-3 gap-2 px-3 py-2">
+                    <dt className="truncate text-micro font-medium text-muted-foreground">{field}</dt>
+                    <dd className="truncate text-xs">{describeValue(values.kept)}</dd>
+                    <dd className="truncate text-xs text-muted-foreground line-through">
+                      {describeValue(values.discarded)}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+              <div className="flex justify-end">
+                <Button size="sm" className="text-xs" onClick={handleAcknowledge}>
+                  Done
+                </Button>
+              </div>
+            </div>
+          ) : (
           <div className="space-y-4">
             <p className="text-xs text-muted-foreground">
               Matched by <Badge variant="outline" className="text-micro px-1.5 py-0 h-4">{pair.matchReason}</Badge>. Select the primary company. The duplicate will be soft-deleted and all contacts/deals re-pointed.
@@ -107,6 +161,7 @@ export function CompanyMergeDialog({ pair, currentOrgId, open, onOpenChange, onM
               </Button>
             </div>
           </div>
+          )}
         </DialogContent>
       </Dialog>
 

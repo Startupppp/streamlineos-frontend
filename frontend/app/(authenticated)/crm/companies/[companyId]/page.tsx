@@ -4,13 +4,9 @@ import { useState, use, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  Building2,
-  Globe,
   Users,
-  Link2,
   TrendingUp,
   BarChart2,
-  UserCircle,
   GitBranch,
   Pencil,
   Trash2,
@@ -41,6 +37,12 @@ import { HierarchyTree } from "@/features/crm/companies/detail/hierarchy-tree";
 import { AccountTimeline } from "@/features/crm/companies/detail/account-timeline";
 import { AccountNotes } from "@/features/crm/companies/detail/account-notes";
 import { LinkParentDialog } from "@/features/crm/companies/detail/link-parent-dialog";
+import { CompanySheet } from "@/features/crm/companies/company-sheet";
+import { RecordDetail, asRecordValue } from "@/features/renderer";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { COMPANY_LAYOUT } from "@/lib/renderer/crm/company-layout";
+import { useCan } from "@/hooks/api/access";
+import { useOrgDisplay } from "@/hooks/api/org-display";
 import { Customer360Section } from "@/features/crm/shared/customer-360-section";
 import { Customer360Timeline } from "@/features/crm/shared/customer-360-timeline";
 import { CrmOptionBadge } from "@/features/crm/shared/metadata";
@@ -49,26 +51,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState } from "@/components/shared";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { RelatedLead } from "@/types/crm";
-
-function InfoRow({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: React.ReactNode;
-}) {
-  return (
-    <div className="flex items-start gap-2.5 py-2 border-b border-border/50 last:border-0">
-      <Icon className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
-      <div className="min-w-0 flex-1 flex items-start justify-between gap-3">
-        <span className="text-xs text-muted-foreground shrink-0">{label}</span>
-        <span className="text-xs text-foreground text-right min-w-0 truncate">{value}</span>
-      </div>
-    </div>
-  );
-}
 
 function DetailPageSkeleton() {
   return (
@@ -118,6 +100,11 @@ export default function CompanyDetailPage({
 
   const [linkParentOpen, setLinkParentOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+
+  const layout = useTenantLayout(COMPANY_LAYOUT);
+  const money = useOrgDisplay();
+  const canManage = useCan("crm:organizations:manage");
 
   const { data: org, isLoading: orgLoading, isError: orgError, error: orgDetailError, refetch: refetchOrg } = useCrmOrganizationDetail(id);
   const { data: rollup } = useCrmOrgRollup(id);
@@ -183,6 +170,8 @@ export default function CompanyDetailPage({
   const handleLinkParentOpenChange = useCallback((open: boolean) => setLinkParentOpen(open), []);
   const handleOpenDelete = useCallback(() => setDeleteOpen(true), []);
   const handleDeleteOpenChange = useCallback((open: boolean) => setDeleteOpen(open), []);
+  const handleOpenEdit = useCallback(() => setEditOpen(true), []);
+  const handleEditOpenChange = useCallback((open: boolean) => setEditOpen(open), []);
 
   const handleConfirmDelete = useCallback(() => {
     deleteMutation.mutate(id, {
@@ -235,25 +224,27 @@ export default function CompanyDetailPage({
       actions={
         <>
           <AccountHealthBadge healthScore={displayScore} />
-          <Button variant="outline" onClick={handleOpenLinkParent}>
-            <GitBranch className="h-3.5 w-3.5" />
-            {org.parentId ? "Change Parent" : "Link Parent"}
-          </Button>
-          <Button variant="default" asChild>
-            <Link href={`/crm/companies/${id}/edit`}>
-              <Pencil className="h-3.5 w-3.5" />
-              Edit
-            </Link>
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-destructive hover:text-destructive hover:bg-destructive/10"
-            onClick={handleOpenDelete}
-            aria-label="Delete company"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+          {canManage ? (
+            <>
+              <Button variant="outline" onClick={handleOpenLinkParent}>
+                <GitBranch className="h-3.5 w-3.5" />
+                {org.parentId ? "Change Parent" : "Link Parent"}
+              </Button>
+              <Button variant="default" onClick={handleOpenEdit}>
+                <Pencil className="h-3.5 w-3.5" />
+                Edit
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                onClick={handleOpenDelete}
+                aria-label="Delete company"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </>
+          ) : null}
         </>
       }
     >
@@ -287,61 +278,19 @@ export default function CompanyDetailPage({
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="space-y-4">
-            <Card className="shadow-sm">
-              <CardHeader className="px-4 py-3 border-b">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Building2 className="h-4 w-4 text-muted-foreground" />
-                  Company Info
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-4 py-3">
-                {org.industry && (
-                  <InfoRow icon={BarChart2} label="Industry" value={org.industry} />
-                )}
-                {org.size && (
-                  <InfoRow icon={Users} label="Company Size" value={`${org.size} employees`} />
-                )}
-                {org.domain && (
-                  <InfoRow icon={Globe} label="Domain" value={org.domain} />
-                )}
-                {org.website && (
-                  <InfoRow
-                    icon={Link2}
-                    label="Website"
-                    value={
-                      <a href={org.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 hover:underline break-all">
-                        {org.website}
-                      </a>
-                    }
-                  />
-                )}
-                {org.linkedinUrl && (
-                  <InfoRow
-                    icon={UserCircle}
-                    label="LinkedIn"
-                    value={
-                      <a href={org.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 hover:underline">
-                        View profile
-                      </a>
-                    }
-                  />
-                )}
-                {org.parentId && (
-                  <InfoRow
-                    icon={GitBranch}
-                    label="Parent Account"
-                    value={
-                      <Link href={`/crm/companies/${org.parentId}`} className="text-primary hover:text-primary/80 hover:underline">
-                        View parent
-                      </Link>
-                    }
-                  />
-                )}
-                {!org.industry && !org.size && !org.domain && !org.website && !org.linkedinUrl && !org.parentId && (
-                  <p className="text-xs text-muted-foreground py-2">No details recorded.</p>
-                )}
-              </CardContent>
-            </Card>
+            <RecordDetail layout={layout} record={asRecordValue(org)} money={money} showTitle={false} />
+
+            {org.parentId ? (
+              <p className="text-sm">
+                <span className="text-muted-foreground">Parent company: </span>
+                <Link
+                  href={`/crm/companies/${org.parentId}`}
+                  className="text-primary hover:underline"
+                >
+                  View parent
+                </Link>
+              </p>
+            ) : null}
 
             {hierarchy && (
               <Card className="shadow-sm">
@@ -419,6 +368,8 @@ export default function CompanyDetailPage({
           <Customer360Timeline companyId={id} />
         </PageSection>
       </div>
+
+      <CompanySheet open={editOpen} onOpenChange={handleEditOpenChange} company={org} />
 
       <LinkParentDialog
         open={linkParentOpen}

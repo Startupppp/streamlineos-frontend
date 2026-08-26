@@ -3,9 +3,18 @@ import * as path from "path";
 import { PERMISSIONS } from "../roles";
 import { MODULE_ACCESS_PERMISSIONS } from "../module-access";
 
+/**
+ * The backend is a sibling repository, not a subdirectory.
+ *
+ * This resolved to `streamlineos-frontend/backend/...` for the whole of Phase 1
+ * — a directory that has never existed — so `backendAvailable` was always false
+ * and every cross-repo assertion below returned before asserting anything. The
+ * "no phantom keys" test that this file exists to provide was answering nothing.
+ * The first test below now fails loudly if that regresses.
+ */
 const BACKEND_PERMS_DIR = path.resolve(
   __dirname,
-  "../../../../../backend/src/modules/rbac/permissions",
+  "../../../../../../streamlineos-backend/src/modules/rbac/permissions",
 );
 
 const EXCLUDED_BACKEND_FILES = new Set([
@@ -62,6 +71,13 @@ describe("permission catalog sync", () => {
     }
   });
 
+  it("can reach the backend catalog — the cross-repo checks below assert nothing without it", () => {
+    expect({ backendAvailable, dir: BACKEND_PERMS_DIR }).toEqual({
+      backendAvailable: true,
+      dir: BACKEND_PERMS_DIR,
+    });
+  });
+
   it("has no duplicate permission names in the frontend catalog", () => {
     const frontendNames = PERMISSIONS.map((p) => p.name);
     expect(new Set(frontendNames).size).toBe(frontendNames.length);
@@ -104,6 +120,26 @@ describe("permission catalog sync", () => {
         (name) => !backendNames.has(name) && !/^[a-z0-9-]+:access:(view|manage)$/.test(name),
       );
     expect(ghosts).toEqual([]);
+  });
+
+  /**
+   * The direction no test covered, and the one the 13 `party:*` keys fell
+   * through: a key can exist on the backend and in the frontend union — so it
+   * type-checks and `useCan` answers it — while being in no catalog file, which
+   * is what the role editor renders. Nobody can grant what it cannot list.
+   *
+   * Scoped to the CRM namespaces rather than asserted platform-wide: several
+   * older modules (`timesheets:*`, `surveys:*` among them) carry the same gap,
+   * and closing those is their own work. This holds the line where it was just
+   * repaired instead of pinning debt it is not fixing.
+   */
+  it("every CRM-namespace backend permission is grantable in the role editor", () => {
+    if (!backendAvailable) return;
+    const catalogNames = new Set(PERMISSIONS.map((p) => p.name));
+    const ungrantable = [...backendNames]
+      .filter((name) => name.startsWith("party:") || name.startsWith("crm:"))
+      .filter((name) => !catalogNames.has(name));
+    expect(ungrantable).toEqual([]);
   });
 
   it("every key parses into a module segment plus at least one more", () => {
