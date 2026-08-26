@@ -15,7 +15,7 @@ import { useCreateInvoiceDraft } from "@/hooks/api/timesheets-core/billing";
 import { AiActionsMenu, type AiAction } from "@/components/ai/ai-actions-menu";
 import { generateBillingNarrative } from "@/hooks/api/timesheets-core/ai";
 import { useCan } from "@/hooks/api/access";
-import { formatMoney } from "./lib/format-money";
+import { formatCurrencyForBilling } from "@/lib/format-utils";
 import type { BillingGroup } from "@/features/timesheets/types";
 
 interface InvoiceDraftDialogProps {
@@ -115,7 +115,7 @@ export function InvoiceDraftDialog({
               </div>
               <div className="flex items-center justify-between text-xs border-t border-border pt-2">
                 <span className="text-muted-foreground font-medium">Total amount</span>
-                <span className="font-mono font-semibold tabular-nums">{formatMoney(totalAmount, currency)}</span>
+                <span className="font-mono font-semibold tabular-nums">{formatCurrencyForBilling(totalAmount, currency)}</span>
               </div>
             </div>
           )}

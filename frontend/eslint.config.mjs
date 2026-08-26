@@ -2,10 +2,21 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import noRawVisualValues from "./eslint-rules/no-raw-visual-values.mjs";
+import noUnlabelledIconButton from "./eslint-rules/no-unlabelled-icon-button.mjs";
 
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  {
+    plugins: {
+      streamline: {
+        rules: {
+          "no-raw-visual-values": noRawVisualValues,
+          "no-unlabelled-icon-button": noUnlabelledIconButton,
+        },
+      },
+    },
+  },
   {
     rules: {
       "react-hooks/preserve-manual-memoization": "off",
@@ -20,6 +31,12 @@ const eslintConfig = defineConfig([
         "warn",
         { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_", "caughtErrorsIgnorePattern": "^_" },
       ],
+    },
+  },
+  {
+    files: ["features/**/*.{ts,tsx}", "components/**/*.{ts,tsx}", "app/**/*.{ts,tsx}", "hooks/**/*.{ts,tsx}", "lib/**/*.{ts,tsx}"],
+    rules: {
+      "streamline/no-unlabelled-icon-button": "error",
     },
   },
   {
@@ -61,8 +78,9 @@ const eslintConfig = defineConfig([
       "features/employee-onboarding/components/brand-column.tsx",
       "features/employee-onboarding/components/profile-preview.tsx",
     ],
-    plugins: { streamline: { rules: { "no-raw-visual-values": noRawVisualValues } } },
-    rules: { "streamline/no-raw-visual-values": "error" },
+    rules: {
+      "streamline/no-raw-visual-values": "error",
+    },
   },
   globalIgnores([
     ".next/**",

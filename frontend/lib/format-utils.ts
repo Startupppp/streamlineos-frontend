@@ -4,6 +4,14 @@ export function formatCurrency(value: number): string {
   return formatINRCompact(value);
 }
 
+export function formatCurrencyForBilling(amount: number, currency: string): string {
+  return new Intl.NumberFormat("en", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 2,
+  }).format(amount);
+}
+
 export function formatCurrencyFull(
   amount: number | string,
   currency: string = "INR",
