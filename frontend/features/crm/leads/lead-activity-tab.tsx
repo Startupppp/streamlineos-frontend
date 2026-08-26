@@ -32,7 +32,14 @@ interface LeadActivityTabProps {
 
 export function LeadActivityTab({ activities }: LeadActivityTabProps) {
   if (activities.length === 0) {
-    return <EmptyState illustration={<EmptyActivityIllustration />} title="No activities yet" compact />;
+    return (
+      <EmptyState
+        illustration={<EmptyActivityIllustration />}
+        title="No activities yet"
+        description="Calls, emails, WhatsApp messages and meetings with this lead appear here once they are logged."
+        compact
+      />
+    );
   }
 
   return (

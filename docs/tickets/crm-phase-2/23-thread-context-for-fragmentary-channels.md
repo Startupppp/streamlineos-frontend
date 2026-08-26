@@ -1,6 +1,6 @@
 # 23 — The extractor sees one message at a time, and two channels are not one message
 
-**Status:** not started
+**Status:** done — the extractor sees a thread.
 **Track:** B — channels (discovered by ticket 12's evals)
 **Blocked by:** —
 **Related:** 22 (the other below-seam finding)

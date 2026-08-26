@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, Plus, Trash2, Video, ExternalLink } from "lucide-react";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
@@ -42,6 +43,8 @@ interface MeetingsCardProps {
   onAddMeeting: () => void;
   onDeleteMeeting: (id: number) => void;
   isLoading?: boolean;
+  isError?: boolean;
+  onRetry?: () => void;
 }
 
 export function MeetingsCard({
@@ -49,6 +52,8 @@ export function MeetingsCard({
   onAddMeeting,
   onDeleteMeeting,
   isLoading = false,
+  isError = false,
+  onRetry,
 }: MeetingsCardProps) {
   return (
     <Card className="shadow-noir">
@@ -72,8 +77,21 @@ export function MeetingsCard({
               </div>
             ))}
           </div>
+        ) : isError ? (
+          <ErrorState
+            compact
+            title="Couldn't load meetings"
+            description="The meetings on this deal didn't load. Check your connection and try again."
+            onRetry={onRetry}
+          />
         ) : !meetings?.length ? (
-          <EmptyState illustration={<EmptyCalendarIllustration />} title="No meetings scheduled" compact />
+          <EmptyState
+            illustration={<EmptyCalendarIllustration />}
+            title="No meetings scheduled"
+            description="Book a call or demo here so it shows on the deal and in the calendar."
+            action={{ label: "Add meeting", onClick: onAddMeeting }}
+            compact
+          />
         ) : (
           <div className="space-y-3">
             {meetings.map((m) => (

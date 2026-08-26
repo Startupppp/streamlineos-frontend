@@ -3,7 +3,7 @@
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { CHART_TOOLTIP_STYLE } from "@/features/crm/shared/constants";
 import { AnalyticsChartCard } from "./analytics-chart-card";
-import { EmptyChart } from "./empty-chart";
+import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 
 interface ConversionChartProps {
   data: Array<{ name: string; value: number }>;
@@ -13,7 +13,7 @@ export function ConversionChart({ data }: ConversionChartProps) {
   return (
     <AnalyticsChartCard title="Won vs Lost" data={data} filename="won-vs-lost">
       {data.length === 0 ? (
-        <EmptyChart message="No deals closed in this period" />
+        <ChartEmptyState message="No deals closed in this period" />
       ) : (
         <ResponsiveContainer width="100%" height={280}>
           <PieChart>

@@ -16,6 +16,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyLeadsIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
 import { cn } from "@/lib/utils";
@@ -145,11 +146,24 @@ export default function LeadSourceReportPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {!data?.sources || data.sources.length === 0 ? (
+                {isLoading ? (
+                  <div className="space-y-5" aria-busy="true">
+                    {[0, 1, 2, 3, 4].map((i) => (
+                      <div key={i} className="space-y-2">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <Skeleton className="h-5 w-28 rounded-full" />
+                          <Skeleton className="h-4 w-40" />
+                        </div>
+                        <Skeleton className="h-2.5 w-full rounded-full" />
+                      </div>
+                    ))}
+                  </div>
+                ) : !data?.sources || data.sources.length === 0 ? (
                   <EmptyState
                     illustration={<EmptyLeadsIllustration />}
-                    title="No source data"
-                    description="No lead source data is available yet."
+                    title="No leads have a source yet"
+                    description="Attribution needs a source on each lead — set one when you create or import them, and this report fills in."
+                    action={{ label: "Go to leads", href: "/crm/leads" }}
                     className="min-h-[300px] border-0 bg-transparent"
                   />
                 ) : (

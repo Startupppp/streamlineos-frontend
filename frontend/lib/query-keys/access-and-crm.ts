@@ -64,6 +64,22 @@ export const accessAndCrmQueryKeys = {
     autonomyReviewQueue: () => [...base, "crm", "autonomy", "review-queue"] as const,
     autonomySettings: () => [...base, "crm", "autonomy", "settings"] as const,
     autonomyHolds: () => [...base, "crm", "autonomy", "holds"] as const,
+    /**
+     * The prefix every issue key extends, so one invalidation reaches the list
+     * and the open record together. A transition changes the stage on both, and
+     * refreshing only one leaves the other showing a stage the ledger has moved
+     * past.
+     */
+    issuesRoot: () => [...base, "crm", "issues"] as const,
+    /**
+     * The three layout descriptions. Keyed without arguments because there is
+     * one answer per tenant, and it changes only when the platform ships one.
+     */
+    issueRecordTypes: () => [...base, "crm", "issues", "record-types"] as const,
+    issues: (params: Record<string, unknown>) =>
+      [...base, "crm", "issues", "list", params] as const,
+    issue: (issueRecordId: string) =>
+      [...base, "crm", "issues", issueRecordId] as const,
     crmImport: (crmImportId: string) =>
       [...base, "crm", "imports", crmImportId] as const,
     salesDashboard: () => [...base, "crm", "salesDashboard"] as const,

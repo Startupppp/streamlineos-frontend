@@ -6,14 +6,18 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { CheckSquare, Square } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useClientOnboardingItems, useToggleOnboardingItem } from "@/hooks/api/crm/clients";
 import { formatDate } from "./utils";
 import type { OnboardingItem } from "@/types/crm";
 
 export function ClientOnboardingTab({ clientId }: { clientId: number }) {
-  const { data, isLoading } = useClientOnboardingItems(clientId);
+  const { data, isLoading, isError, refetch } = useClientOnboardingItems(clientId);
   const toggleMutation = useToggleOnboardingItem();
+
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const handleToggle = useCallback(
     (item: OnboardingItem) => {
@@ -28,19 +32,30 @@ export function ClientOnboardingTab({ clientId }: { clientId: number }) {
 
   if (isLoading) {
     return (
-      <div className="space-y-2 py-2">
+      <div className="space-y-2 py-2" aria-busy="true">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-12 rounded-md bg-muted/40 animate-pulse" />
+          <Skeleton key={i} className="h-12 w-full rounded-md" />
         ))}
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        compact
+        title="Couldn't load the onboarding checklist"
+        description="The checklist didn't load. Check your connection and try again."
+        onRetry={handleRetry}
+      />
     );
   }
 
   if (!data?.length) {
     return (
       <EmptyState
-        title="No onboarding items"
-        description="Onboarding checklist items will appear here once added."
+        title="No onboarding steps yet"
+        description="An onboarding checklist tracks what this client still needs from you before they are live."
         compact
         className="py-10"
       />

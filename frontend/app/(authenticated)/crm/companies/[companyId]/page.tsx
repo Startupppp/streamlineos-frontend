@@ -123,8 +123,12 @@ export default function CompanyDetailPage({
   const { data: rollup } = useCrmOrgRollup(id);
   const { data: hierarchy } = useCrmOrgHierarchy(id);
   const { data: timeline, isLoading: timelineLoading } = useCrmOrgTimeline(id);
-  const { data: relatedLeads, isLoading: relatedLeadsLoading } =
-    useCrmOrgRelatedLeads(id);
+  const {
+    data: relatedLeads,
+    isLoading: relatedLeadsLoading,
+    isError: relatedLeadsError,
+    refetch: refetchRelatedLeads,
+  } = useCrmOrgRelatedLeads(id);
   const { data: company360, isLoading: company360Loading } = useCompany360(id);
   const { data: leadStatusOptions = [] } = useCrmOptions("lead_status");
   const { data: priorityOptions = [] } = useCrmOptions("priority");
@@ -191,6 +195,8 @@ export default function CompanyDetailPage({
   }, [id, deleteMutation, router]);
 
   const handleRefetchOrg = useCallback(() => { void refetchOrg(); }, [refetchOrg]);
+
+  const handleRetryRelatedLeads = useCallback(() => { void refetchRelatedLeads(); }, [refetchRelatedLeads]);
 
   if (orgLoading) return <DetailPageSkeleton />;
 
@@ -380,20 +386,29 @@ export default function CompanyDetailPage({
         </div>
 
         <PageSection title="Related Leads">
-          <DataTable
-            data={relatedLeads ?? []}
-            columns={relatedLeadsColumns}
-            getRowKey={(lead) => lead.id}
-            isLoading={relatedLeadsLoading}
-            emptyState={
-              <EmptyState
-                title="No related leads"
-                description="Leads linked to this company will appear here."
-                compact
-              />
-            }
-            minWidth="400px"
-          />
+          {relatedLeadsError ? (
+            <ErrorState
+              compact
+              title="Couldn't load related leads"
+              description="The leads on this company didn't load. Check your connection and try again."
+              onRetry={handleRetryRelatedLeads}
+            />
+          ) : (
+            <DataTable
+              data={relatedLeads ?? []}
+              columns={relatedLeadsColumns}
+              getRowKey={(lead) => lead.id}
+              isLoading={relatedLeadsLoading}
+              emptyState={
+                <EmptyState
+                  title="No leads from this company"
+                  description="Set this company on a lead and it shows up here, alongside its deals and contacts."
+                  compact
+                />
+              }
+              minWidth="400px"
+            />
+          )}
         </PageSection>
 
         <PageSection title="Customer 360">

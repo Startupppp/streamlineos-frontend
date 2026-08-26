@@ -1,6 +1,6 @@
 # 02 — Party becomes the truth, and legacy tables become a mirror
 
-**Status:** not started
+**Status:** done — Party is written first and the legacy tables are a derived mirror (`party-legacy-writer.ts`).
 **Track:** A — identity convergence
 **Blocks:** 03-08
 **Blocked by:** 01

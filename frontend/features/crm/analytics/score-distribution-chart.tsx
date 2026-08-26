@@ -17,7 +17,7 @@ import {
 
 const SCORE_COLORS = ["#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe", "#dbeafe"];
 import { AnalyticsChartCard } from "./analytics-chart-card";
-import { EmptyChart } from "./empty-chart";
+import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import type { ScoreDistributionEntry } from "./use-analytics-data";
 
 interface ScoreDistributionChartProps {
@@ -34,7 +34,7 @@ export function ScoreDistributionChart({ data }: ScoreDistributionChartProps) {
       filename="score-distribution"
     >
       {isEmpty ? (
-        <EmptyChart message="No scored leads yet" />
+        <ChartEmptyState message="No scored leads yet" />
       ) : (
         <ResponsiveContainer width="100%" height={280}>
           <BarChart data={data}>

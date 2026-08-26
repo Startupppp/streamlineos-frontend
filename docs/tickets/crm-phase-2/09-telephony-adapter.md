@@ -1,6 +1,6 @@
 # 09 — Telephony arrives through the ingress seam
 
-**Status:** done — and it produced the phase's finding
+**Status:** done — and it produced the phase's finding.
 **Track:** B — channels
 **Blocked by:** — (Phase 1 ingress seam)
 

@@ -1,6 +1,6 @@
 # 04 — Migrate batch: the leads module
 
-**Status:** not started
+**Status:** done — leads batch; the ratchet fell from 71 readers to the register it holds now.
 **Track:** A — identity convergence
 **Blocks:** 08
 **Blocked by:** 02

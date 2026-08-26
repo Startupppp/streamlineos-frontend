@@ -1,6 +1,6 @@
 # 21 — Every new surface is reachable
 
-**Status:** not started
+**Status:** done — checked against the database, not the catalogue (`crm-permissions-reach-somebody.db.spec.ts`), plus `gated-keys-are-catalogued.spec.ts` for the reverse direction.
 **Track:** F — access
 **Blocked by:** every ticket that adds a surface
 

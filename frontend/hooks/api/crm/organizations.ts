@@ -144,12 +144,20 @@ export function useCrmPeopleSlugs() {
   });
 }
 
+export interface MergeOrgsResult {
+  success: boolean;
+  survivorId: number;
+  mergedId: number;
+  partyMergeId: string;
+  conflicts: Record<string, { kept: unknown; discarded: unknown }>;
+}
+
 export function useMergeCrmOrganizations() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["crmOrganizations", "merge"] as const,
     mutationFn: (input: MergeOrgsInput) =>
-      apiClient.post<{ success: boolean; primaryId: number; mergedId: number }>("/crm/organizations/merge", input),
+      apiClient.post<MergeOrgsResult>("/crm/organizations/merge", input),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.crmOrganizations.all });
       void qc.invalidateQueries({ queryKey: queryKeys.crmOrganizations.duplicates() });

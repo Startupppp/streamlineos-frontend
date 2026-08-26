@@ -1,6 +1,6 @@
 # 20 — Layout is data a tenant can adjust
 
-**Status:** not started
+**Status:** in progress — needs a backend home for per-tenant layouts; see the ticket.
 **Track:** E — records and renderer
 **Blocked by:** 19
 
