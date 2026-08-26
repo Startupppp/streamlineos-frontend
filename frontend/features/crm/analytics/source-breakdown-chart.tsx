@@ -5,7 +5,7 @@ import { CHART_TOOLTIP_STYLE } from "@/features/crm/shared/constants";
 
 const SOURCE_COLORS = ["#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe", "#2563eb", "#f59e0b", "#10b981"];
 import { AnalyticsChartCard } from "./analytics-chart-card";
-import { EmptyChart } from "./empty-chart";
+import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 
 interface SourceBreakdownChartProps {
   data: Array<{ name: string; value: number }>;
@@ -15,7 +15,7 @@ export function SourceBreakdownChart({ data }: SourceBreakdownChartProps) {
   return (
     <AnalyticsChartCard title="Lead Source Breakdown" data={data} filename="lead-sources">
       {data.length === 0 ? (
-        <EmptyChart message="No leads with a recorded source in this period" />
+        <ChartEmptyState message="No leads with a recorded source in this period" />
       ) : (
         <ResponsiveContainer width="100%" height={280}>
           <PieChart>

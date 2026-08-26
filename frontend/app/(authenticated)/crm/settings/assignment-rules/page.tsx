@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Switch } from "@/components/ui/switch";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { EmptyTargetIllustration } from "@/components/illustrations";
@@ -374,11 +375,10 @@ export default function AssignmentRulesPage() {
             <Skeleton className="h-80 w-full" />
           </div>
         ) : isError ? (
-          <EmptyState
-            illustration={<EmptyTargetIllustration />}
-            title="Failed to load assignment rules"
-            description="Something went wrong. Please try again."
-            action={{ label: "Retry", onClick: handleRetry }}
+          <ErrorState
+            title="Couldn't load assignment rules"
+            description="The rule list didn't load. Check your connection and try again."
+            onRetry={handleRetry}
             className={CONTENT_FILL_PANEL}
           />
         ) : (

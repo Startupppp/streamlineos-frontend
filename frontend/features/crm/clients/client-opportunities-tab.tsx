@@ -1,7 +1,9 @@
 "use client";
 
+import { useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
@@ -78,7 +80,19 @@ const columns: DataTableColumn<ClientOpportunity>[] = [
 ];
 
 export function ClientOpportunitiesTab({ clientId }: { clientId: number }) {
-  const { data, isLoading } = useClientOpportunities(clientId);
+  const { data, isLoading, isError, refetch } = useClientOpportunities(clientId);
+
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
+  if (isError)
+    return (
+      <ErrorState
+        compact
+        title="Couldn't load opportunities"
+        description="The opportunity list didn't load. Check your connection and try again."
+        onRetry={handleRetry}
+      />
+    );
 
   return (
     <DataTable
@@ -88,8 +102,8 @@ export function ClientOpportunitiesTab({ clientId }: { clientId: number }) {
       isLoading={isLoading}
       emptyState={
         <EmptyState
-          title="No opportunities"
-          description="Upsell and cross-sell opportunities will appear here."
+          title="No opportunities logged"
+          description="Track an upsell or cross-sell here so renewals and expansion don't live only in someone's head."
           compact
           className="py-10"
         />

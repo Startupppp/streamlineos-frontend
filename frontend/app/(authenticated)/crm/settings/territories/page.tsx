@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { EmptyTargetIllustration } from "@/components/illustrations";
 import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
@@ -332,11 +333,10 @@ export default function TerritoriesPage() {
             <DataTableSkeleton rows={12} columns={5} />
           </div>
         ) : isError ? (
-          <EmptyState
-            illustration={<EmptyTargetIllustration />}
-            title="Failed to load territories"
-            description="Something went wrong. Please try again."
-            action={{ label: "Retry", onClick: handleRetry }}
+          <ErrorState
+            title="Couldn't load territories"
+            description="The territory list didn't load. Check your connection and try again."
+            onRetry={handleRetry}
             className={CONTENT_FILL_PANEL}
           />
         ) : (

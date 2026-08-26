@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { EmptyMailIllustration } from "@/components/illustrations";
 import {
@@ -326,11 +327,10 @@ export default function EmailTemplatesPage() {
             {[0, 1, 2].map(i => <Skeleton key={i} className="h-40" />)}
           </div>
         ) : isError ? (
-          <EmptyState
-            illustration={<EmptyMailIllustration />}
-            title="Failed to load email templates"
-            description="Something went wrong. Please try again."
-            action={{ label: "Retry", onClick: handleRetry }}
+          <ErrorState
+            title="Couldn't load email templates"
+            description="The template list didn't load. Check your connection and try again."
+            onRetry={handleRetry}
             className={CONTENT_FILL_PANEL}
           />
         ) : (

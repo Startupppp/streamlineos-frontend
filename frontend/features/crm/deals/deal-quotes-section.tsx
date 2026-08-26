@@ -19,6 +19,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
+import { useCan } from "@/hooks/api/access";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -204,6 +206,7 @@ interface DealQuotesSectionProps {
 export function DealQuotesSection({ dealId }: DealQuotesSectionProps) {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const { data, isLoading, isError, refetch } = useDealQuotes(dealId);
+  const canCreateQuote = useCan("crm:quotes:create");
   const createQuote = useCreateQuote();
   const deleteQuote = useDeleteQuote();
 
@@ -284,15 +287,18 @@ export function DealQuotesSection({ dealId }: DealQuotesSectionProps) {
               <Skeleton className="h-14 w-full rounded-xl" />
             </div>
           ) : isError ? (
-            <div className="flex flex-col items-center justify-center py-6 text-center border border-dashed border-border rounded-xl bg-muted/30 gap-2">
-              <p className="text-sm text-muted-foreground">Failed to load quotes</p>
-              <Button variant="outline" size="sm" onClick={handleRetry}>Retry</Button>
-            </div>
+            <ErrorState
+              compact
+              title="Couldn't load quotes"
+              description="The quotes on this deal didn't load. Check your connection and try again."
+              onRetry={handleRetry}
+            />
           ) : quotes.length === 0 ? (
             <EmptyState
               compact
               title="No quotes yet"
-              description="Create a quote to send to the client"
+              description="A quote prices this deal for the client, line by line. Create one to send it out."
+              action={canCreateQuote ? { label: "New quote", onClick: handleCreateQuote } : undefined}
             />
           ) : (
             <div className="space-y-2">

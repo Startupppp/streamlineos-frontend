@@ -12,8 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
-import { EmptyTimeIllustration } from "@/components/illustrations";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -344,11 +344,10 @@ export default function SlaPage() {
             <Skeleton className="h-64 w-full rounded-xl" />
           </div>
         ) : isError ? (
-          <EmptyState
-            illustration={<EmptyTimeIllustration />}
-            title="Failed to load SLA policies"
-            description="Something went wrong. Please try again."
-            action={{ label: "Retry", onClick: handleRetry }}
+          <ErrorState
+            title="Couldn't load SLA policies"
+            description="The policy list didn't load. Check your connection and try again."
+            onRetry={handleRetry}
             className={CONTENT_FILL_PANEL}
           />
         ) : (
@@ -402,9 +401,13 @@ export default function SlaPage() {
               <BreachedLeadsTable leads={breachedLeads} />
             ) : (
               <Card className="bg-card rounded-xl border border-border shadow-sm">
-                <div className="py-4 px-4 text-center">
-                  <p className="text-sm text-muted-foreground">No SLA breaches in the last 30 days.</p>
-                </div>
+                <EmptyState
+                  compact
+                  illustrationPreset="security"
+                  title="No breaches in the last 30 days"
+                  description="Every lead was answered and resolved inside its policy window."
+                  className="py-6"
+                />
               </Card>
             )}
           </div>

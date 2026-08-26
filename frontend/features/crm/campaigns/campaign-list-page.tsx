@@ -22,7 +22,9 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { staggerContainer } from "@/lib/motion-variants";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
 import { useCampaigns } from "@/hooks/api/crm/campaigns";
+import { useCan } from "@/hooks/api/access";
 import { formatCurrency } from "@/features/crm/reports/lib/types";
 import { CampaignSheet } from "./campaign-sheet";
 import type { CrmCampaign } from "@/types/crm/campaigns";
@@ -144,9 +146,10 @@ function buildColumns(onRowClick: (id: number) => void): DataTableColumn<CrmCamp
 export function CampaignListPage() {
   const router = useRouter();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const canManageCampaigns = useCan("crm:campaigns:manage");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  const { data, isLoading } = useCampaigns({
+  const { data, isLoading, isError, refetch } = useCampaigns({
     status: statusFilter === "all" ? undefined : statusFilter,
     limit: 50,
   });
@@ -171,6 +174,8 @@ export function CampaignListPage() {
   const handleClearFilters = useCallback(() => setStatusFilter("all"), []);
 
   const statusFilterLabel = STATUS_OPTIONS.find((o) => o.value === statusFilter)?.label ?? statusFilter;
+
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   if (isLoading) {
     return (
@@ -217,7 +222,14 @@ export function CampaignListPage() {
         animate="visible"
         className="flex flex-1 min-h-0 flex-col space-y-4"
       >
-        {campaigns.length === 0 ? (
+        {isError ? (
+          <ErrorState
+            title="Couldn't load campaigns"
+            description="The campaign list didn't load. Check your connection and try again."
+            onRetry={handleRetry}
+            className="flex-1"
+          />
+        ) : campaigns.length === 0 ? (
           statusFilter !== "all" ? (
             <EmptyState
               illustration={<EmptyReportIllustration />}
@@ -232,7 +244,7 @@ export function CampaignListPage() {
               illustration={<EmptyReportIllustration />}
               title="No campaigns yet"
               description="A campaign groups the leads that came from one push — an ad, an event, an email blast — so you can see what it returned."
-              action={{ label: "Create campaign", onClick: handleOpenSheet }}
+              action={canManageCampaigns ? { label: "Create campaign", onClick: handleOpenSheet } : undefined}
               className="flex-1"
             />
           )

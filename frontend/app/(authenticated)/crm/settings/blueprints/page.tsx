@@ -173,9 +173,12 @@ export default function BlueprintsPage() {
                         stages={selectedStages}
                       />
                     ) : (
-                      <div className="text-xs text-muted-foreground py-4 text-center">
-                        No stages found for this pipeline.
-                      </div>
+                      <EmptyState
+                        compact
+                        title="This pipeline has no stages"
+                        description="A blueprint governs moves between stages, so add stages to the pipeline first."
+                        action={{ label: "Edit pipeline", href: "/crm/settings/pipelines" }}
+                      />
                     )}
                   </CardContent>
                 </Card>

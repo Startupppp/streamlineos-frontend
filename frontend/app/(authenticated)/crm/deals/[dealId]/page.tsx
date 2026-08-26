@@ -79,7 +79,12 @@ export default function DealDetailPage({
   const [isCreatingProject, setIsCreatingProject] = useState(false);
 
   const updateDeal = useUpdateDeal();
-  const { data: meetings, isLoading: meetingsLoading } = useDealMeetings(dealId);
+  const {
+    data: meetings,
+    isLoading: meetingsLoading,
+    isError: meetingsError,
+    refetch: refetchMeetings,
+  } = useDealMeetings(dealId);
   const logActivity = useLogDealActivity();
   const createMeeting = useCreateDealMeeting(dealId);
   const deleteMeeting = useDeleteDealMeeting(dealId);
@@ -153,6 +158,7 @@ export default function DealDetailPage({
     [dealId, updateDeal],
   );
 
+  const handleRetryMeetings = useCallback(() => { void refetchMeetings(); }, [refetchMeetings]);
   const handleToggleEdit = useCallback(() => setIsEditing((v) => !v), []);
   const handleCancelEdit = useCallback(() => setIsEditing(false), []);
   const handleMarkWon = useCallback(() => handleStageChange(wonStage), [handleStageChange, wonStage]);
@@ -467,6 +473,8 @@ export default function DealDetailPage({
               keyDates={keyDates}
               meetings={meetings}
               meetingsLoading={meetingsLoading}
+              meetingsError={meetingsError}
+              onRetryMeetings={handleRetryMeetings}
               onQuickActionClick={handleQuickActionClick}
               onAddMeeting={handleOpenMeetingDialog}
               onDeleteMeeting={handleDeleteMeeting}
