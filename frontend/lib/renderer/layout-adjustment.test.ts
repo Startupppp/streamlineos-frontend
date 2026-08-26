@@ -4,9 +4,10 @@ import {
   hidableFields,
   UNGROUPED_SECTION_TITLE,
   validateAdjustment,
+  withColumns,
   type LayoutAdjustment,
 } from "./layout-adjustment";
-import { proposeAdjustment, MIN_SAMPLE } from "./layout-proposal";
+import { proposeFromFill, MIN_SAMPLE } from "./layout-proposal";
 import { formFields, patchForUpdate, payloadForCreate } from "./layout-schema";
 
 /**
@@ -245,59 +246,93 @@ describe("hiding a field is display and nothing else", () => {
 });
 
 describe("a layout proposed from what the tenant fills in", () => {
-  const filled = (over: Record<string, unknown>) => ({
-    label: "S-1",
-    owner: "",
-    site: "Bay 4",
-    collectedAt: "2026-08-01",
-    mass: 12,
-    notes: "",
+  /**
+   * Fill counts as the server would send them: how many of the sampled records
+   * carry a value for each field. The counting itself is deliberately not done
+   * here — a proposal built from the page of rows a list happens to have loaded
+   * is a proposal about page one — so what is tested is the judgement made from
+   * the counts, which is the part that lives on the client.
+   */
+  const ALL = MIN_SAMPLE;
+  const counts = (over: Record<string, number> = {}) => ({
+    label: ALL,
+    owner: 0,
+    site: ALL,
+    collectedAt: ALL,
+    mass: ALL,
+    notes: 0,
     ...over,
   });
 
   it("offers nothing from a sample too small to mean anything", () => {
-    expect(proposeAdjustment(LAYOUT, Array.from({ length: MIN_SAMPLE - 1 }, () => filled({})))).toBeNull();
+    expect(proposeFromFill(LAYOUT, MIN_SAMPLE - 1, counts())).toBeNull();
   });
 
   it("proposes hiding a field no record has ever carried a value for", () => {
-    const rows = Array.from({ length: MIN_SAMPLE }, () => filled({}));
-    const proposal = proposeAdjustment(LAYOUT, rows);
-    expect(proposal?.hiding).toEqual(expect.arrayContaining(["owner", "notes"]));
+    expect(proposeFromFill(LAYOUT, ALL, counts())?.hiding).toEqual(
+      expect.arrayContaining(["owner", "notes"]),
+    );
   });
 
   it("leaves a field alone that one record in the sample uses", () => {
-    const rows = Array.from({ length: MIN_SAMPLE }, (_, index) =>
-      filled(index === 0 ? { owner: "Priya" } : {}),
-    );
-    expect(proposeAdjustment(LAYOUT, rows)?.hiding).not.toContain("owner");
+    // Not a threshold: one in twenty is used, and hiding it would cost that one
+    // record its data being visible.
+    expect(proposeFromFill(LAYOUT, ALL, counts({ owner: 1 }))?.hiding).not.toContain("owner");
   });
 
   it("never proposes hiding the title field, however empty the sample looks", () => {
-    const rows = Array.from({ length: MIN_SAMPLE }, () => filled({ label: "" }));
-    expect(proposeAdjustment(LAYOUT, rows)?.hiding).not.toContain("label");
+    expect(proposeFromFill(LAYOUT, ALL, counts({ label: 0 }))?.hiding).not.toContain("label");
   });
 
   it("puts the title first and then orders by how often a field is filled", () => {
-    const rows = Array.from({ length: MIN_SAMPLE }, (_, index) =>
-      filled({ mass: index < 5 ? 12 : null, site: "Bay 4" }),
-    );
-    const order = proposeAdjustment(LAYOUT, rows)?.adjustment.order ?? [];
+    const order = proposeFromFill(LAYOUT, ALL, counts({ mass: 5 }))?.adjustment.order ?? [];
     expect(order[0]).toBe("label");
     expect(order.indexOf("site")).toBeLessThan(order.indexOf("mass"));
   });
 
+  it("treats a field the counts do not mention as never filled", () => {
+    const proposal = proposeFromFill(LAYOUT, ALL, { label: ALL });
+    expect(proposal?.hiding).toEqual(expect.arrayContaining(["owner", "site", "mass", "notes"]));
+  });
+
   it("shows the evidence it argued from rather than only the conclusion", () => {
-    const rows = Array.from({ length: MIN_SAMPLE }, () => filled({}));
-    const proposal = proposeAdjustment(LAYOUT, rows);
-    expect(proposal?.sample).toBe(MIN_SAMPLE);
+    const proposal = proposeFromFill(LAYOUT, ALL, counts());
+    expect(proposal?.sample).toBe(ALL);
     expect(proposal?.usage.find((entry) => entry.field === "site")?.rate).toBe(1);
     expect(proposal?.usage.find((entry) => entry.field === "owner")?.filled).toBe(0);
   });
 
   it("proposes an arrangement the engine accepts", () => {
-    const rows = Array.from({ length: MIN_SAMPLE }, () => filled({}));
-    const proposal = proposeAdjustment(LAYOUT, rows);
-    expect(validateAdjustment(LAYOUT, proposal!.adjustment)).toEqual([]);
-    expect(validateLayout(applyAdjustment(LAYOUT, proposal!.adjustment))).toEqual([]);
+    const proposal = proposeFromFill(LAYOUT, ALL, counts())!;
+    expect(validateAdjustment(LAYOUT, proposal.adjustment)).toEqual([]);
+    expect(validateLayout(applyAdjustment(LAYOUT, proposal.adjustment))).toEqual([]);
+  });
+});
+
+describe("a description narrowed for a related-records panel", () => {
+  it("keeps only the named columns, in the order the panel asked for", () => {
+    const panel = withColumns(LAYOUT, ["mass", "label"]);
+    expect(names(panel)).toEqual(["mass", "label"]);
+  });
+
+  it("moves the mobile card's title onto the column that now comes first", () => {
+    const panel = withColumns(LAYOUT, ["mass", "label"]);
+    expect(panel.list.columns[0]).toEqual(expect.objectContaining({ field: "mass", primary: true }));
+    expect(validateLayout(panel)).toEqual([]);
+  });
+
+  it("cannot bring back a column the tenant hid, because it narrows what it is given", () => {
+    const adjusted = applyAdjustment(LAYOUT, { layoutKey: "specimen", hidden: ["owner"] });
+    expect(names(withColumns(adjusted, ["owner", "label"]))).toEqual(["label"]);
+  });
+
+  it("leaves the description alone rather than producing a list with no columns", () => {
+    expect(withColumns(LAYOUT, ["nothingCalledThis"])).toBe(LAYOUT);
+  });
+
+  it("does not touch the detail view or the form, which the panel is not rendering", () => {
+    const panel = withColumns(LAYOUT, ["mass"]);
+    expect(panel.detail).toBe(LAYOUT.detail);
+    expect(panel.form).toBe(LAYOUT.form);
   });
 });

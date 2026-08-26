@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { FieldSpec, RecordLayout } from "./layout";
+import { BOOLEAN_VALUES, type FieldSpec, type RecordLayout } from "./layout";
 
 /**
  * Derives a Zod schema from a layout description.
@@ -55,6 +55,12 @@ function schemaForField(field: FieldSpec): z.ZodType<string, string> {
       case "percent":
         if (!NUMERIC.test(value)) reject("Enter a number");
         break;
+      case "boolean":
+        // A control that hands back anything but these two is a control that is
+        // not a switch, and the API would receive a string where a flag belongs.
+        if (!BOOLEAN_VALUES.includes(value as (typeof BOOLEAN_VALUES)[number]))
+          reject(`${field.label} must be yes or no`);
+        break;
       case "select":
       case "badge": {
         const allowed = (field.options ?? []).map((option) => option.value);
@@ -109,6 +115,18 @@ export function defaultValuesForLayout(
   const values: RecordFormShape = {};
   for (const field of formFields(layout, mode)) {
     const value = initial?.[field.name];
+
+    /*
+      A switch has no third position. An absent boolean therefore defaults to
+      "false" rather than to the empty string every other kind uses, because an
+      empty string would render the switch off and then fail its own validation
+      on submit — a form that looks complete and refuses to save.
+    */
+    if (field.kind === "boolean") {
+      values[field.name] = String(value === true || value === "true" || value === 1);
+      continue;
+    }
+
     values[field.name] = value === null || value === undefined ? "" : String(value);
   }
   return values;

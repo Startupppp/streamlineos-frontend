@@ -27,11 +27,33 @@ export type FieldKind =
   | "dateTime"
   | "select"
   | "badge"
+  | "boolean"
   | "longText"
   | "reference";
 
 /** Maps onto the status tokens from the design layer, never a raw colour. */
 export type FieldTone = "success" | "warning" | "danger" | "info" | "neutral";
+
+/**
+ * The two values a `boolean` field can hold, as the strings a form carries.
+ *
+ * A boolean is a `select` whose options are fixed, which is why it reuses
+ * `options` for its labels and tones rather than growing a vocabulary of its
+ * own: "Active / Inactive" and "Required / Optional" are the same shape as any
+ * other two-option field, and a description that said `trueLabel` would be a
+ * second way to say something the layout can already say.
+ *
+ * Strings because every control in the engine hands back a string and the
+ * generated resolver matches the form's own values without a cast. The surface
+ * converts at the boundary, in the same place it converts a date to an instant.
+ */
+export const BOOLEAN_VALUES = ["true", "false"] as const;
+
+/** What a `boolean` field renders when the description names no options. */
+export const DEFAULT_BOOLEAN_OPTIONS: readonly SelectOption[] = [
+  { value: "true", label: "Yes" },
+  { value: "false", label: "No" },
+];
 
 /**
  * What a number's sign tells the person reading it.
@@ -100,6 +122,19 @@ export interface FieldSpec {
    * not a field that stopped existing.
    */
   readonly referenceTo?: string;
+  /**
+   * The sibling field carrying this pointer's human name.
+   *
+   * A reference stores an identifier, and "42" is not what anybody is looking
+   * for. Most reads already send the name beside the id — `dealTitle` next to
+   * `dealId` — so the description says which field that is rather than the
+   * engine guessing at a suffix or a second call being made to find out.
+   *
+   * Absent, the identifier renders. That is honest rather than pretty: a
+   * pointer with no name available is a pointer, and inventing a label for it
+   * would be the engine claiming to know something it does not.
+   */
+  readonly referenceLabel?: string;
   /**
    * The field carrying this amount's own currency.
    *

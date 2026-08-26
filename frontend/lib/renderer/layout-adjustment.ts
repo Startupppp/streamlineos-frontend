@@ -1,5 +1,6 @@
 import {
   fieldByName,
+  type ColumnSpec,
   type LayoutProblem,
   type RecordLayout,
   type SectionSpec,
@@ -179,6 +180,46 @@ export function applyAdjustment(
     list: { ...layout.list, columns: withPrimary },
     detail: { sections: arrange(layout.detail.sections) },
     form: { sections: arrange(layout.form.sections) },
+  };
+}
+
+/**
+ * The same description, narrowed to a few columns.
+ *
+ * A record type is often embedded in another record's page — the leads a
+ * campaign brought in, the deals against a contact — and the embedded list wants
+ * four columns rather than eleven. Without this every such panel forks the
+ * description into a second one, and the fork is where the two quietly stop
+ * agreeing about what a lead is.
+ *
+ * Not a `LayoutAdjustment`, and deliberately: an adjustment is what a tenant
+ * wants, this is how one screen frames a related list, and storing a screen's
+ * framing against a tenant would mean the panel's four columns followed them
+ * onto the full list. Applied *after* `useTenantLayout`, so it can only narrow
+ * what the tenant already sees — a column they hid does not come back through a
+ * panel.
+ *
+ * An empty result returns the layout untouched. A panel showing every column is
+ * a worse outcome than one showing none is a broken one.
+ */
+export function withColumns(layout: RecordLayout, fields: readonly string[]): RecordLayout {
+  const kept = fields
+    .map((name) => layout.list.columns.find((column) => column.field === name))
+    .filter((column): column is ColumnSpec => column !== undefined);
+
+  if (kept.length === 0) return layout;
+
+  return {
+    ...layout,
+    list: {
+      ...layout.list,
+      // The subtitle survives narrowing: it is a second line under a value
+      // rather than a column of its own, so it costs no width.
+      columns: kept.map((column, index) => ({
+        ...column,
+        primary: index === 0 ? true : undefined,
+      })),
+    },
   };
 }
 

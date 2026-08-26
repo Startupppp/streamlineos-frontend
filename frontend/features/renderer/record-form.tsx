@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -150,6 +151,22 @@ export function RecordForm({
                                 disabled: isSubmitting,
                               })}
                             </div>
+                          </FormControl>
+                        ) : field.kind === "boolean" ? (
+                          /*
+                            A switch rather than a two-item dropdown. The value
+                            stays a string like every other control's, so the
+                            generated resolver still matches the form's own
+                            values without a cast, and the surface converts at
+                            the boundary the same way it converts a date.
+                          */
+                          <FormControl>
+                            <Switch
+                              checked={control.value === "true"}
+                              disabled={isSubmitting}
+                              onCheckedChange={(next) => control.onChange(String(next))}
+                              aria-label={field.label}
+                            />
                           </FormControl>
                         ) : field.kind === "select" || field.kind === "badge" ? (
                           <Select value={control.value} onValueChange={control.onChange}>
