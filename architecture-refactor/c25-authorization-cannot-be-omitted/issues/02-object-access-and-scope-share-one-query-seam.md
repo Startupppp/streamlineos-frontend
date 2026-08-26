@@ -68,6 +68,29 @@ A generic `ObjectAccessService.resolve(table, id, ctx)` introduces dynamic table
 - [ ] Apply seam to module-access mutations (exact: `backend/src/modules/module-access/**`) — **NOT DONE, and one attempt was reverted.** See the note below.
 - [ ] Add allow/deny test matrices for each domain
 
+## A confirmed live instance of this exact defect (Lane 2, 2026-08-26)
+
+Found by Lane 4, routed via the orchestrator, **verified at source by Lane 2**:
+
+`LeavesService.analytics` (`backend/src/modules/hr/time/leaves.service.ts:211-221`) resolves the
+caller's DataScope, **refuses only `none`**, and then calls `this.queryAnalytics(u.orgId, year)` —
+whose signature is `(orgId: string, year: number)` (`:223`). It takes no scope and aggregates the
+whole organisation. So a user whose `hr:leaves:approve` resolves to `own` or `team` receives
+**org-wide leave analytics broken down by department**.
+
+This is the ticket's problem statement almost verbatim: the guard-side check passes, the scope-side
+check is skipped, and the `resolveLeavesViewScope` call reads as though it protects something. It is
+worse than a missing check, because the resolve is decorative — a reviewer sees scope handling and
+stops looking.
+
+Not a cache bug: the key already includes the scope (`${scope}:${year}`, `:217`), so the cache is
+merely finer-grained than the data it stores. c19-03 is unaffected.
+
+**Not fixed here — `modules/hr/**` is Lane 4's territory.** The change is to thread the scope into
+`queryAnalytics` and apply it as a SQL predicate (`applyScope(scope, u.userId, cols)`), not to filter
+after aggregating. What an `own`-scoped approver *should* see is a genuine product question; that the
+endpoint must honour the scope it just resolved is not.
+
 ## Attempted and reverted (Lane 2, 2026-08-26)
 
 A subagent's `module-access` application of the seam was **reverted in full**, because it made the
