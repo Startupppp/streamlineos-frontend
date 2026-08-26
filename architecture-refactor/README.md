@@ -28,9 +28,9 @@ What the passes found was not systemic decay. It was concentrated correctness an
 | [c13 — One contract for every list](c13-one-list-contract/README.md) | 6 | 0 | **6** |
 | [c15 — Outbound I/O leaves the request transaction](c15-outbound-io-leaves-the-request/README.md) | 6 | 3 | **3** |
 | [c17 — Every billing write is provable](c17-billing-writes-are-provable/README.md) | 7 | 1 | **6** |
-| [c19 — A cache key cannot be unsafe, and a write invalidates what it changed](c19-cache-keys-cannot-be-unsafe/README.md) | 5 | 0 | **5** |
+| [c19 — A cache key cannot be unsafe, and a write invalidates what it changed](c19-cache-keys-cannot-be-unsafe/README.md) | 5 | 2 | **3** |
 | [c20 — A failure in production is visible](c20-failures-are-visible/README.md) | 5 | 2 | **3** |
-| | **32** | **8** | **24** |
+| | **32** | **10** | **22** |
 
 **c20-01 is done, and it was the right thing to do first.** The reporter port had no adapter, so `reportError` discarded everything — and two of its five call sites (`workflow-runner`, `import-pump`) report *without* also logging, so every workflow-run and import failure was reaching nobody. That is now a structured log record, no vendor.
 
@@ -64,7 +64,7 @@ What the passes found was not systemic decay. It was concentrated correctness an
 | [c10 — Make module-level standing answerable](c10-module-role-standing/README.md) | 5 | 5 | **0** |
 | | **5** | **5** | **0** |
 
-**92 tickets: 41 complete, 51 with open boxes.** Counted from the ticket files themselves — a ticket is complete when it has no `- [ ]` left.
+**92 tickets: 43 complete, 49 with open boxes.** Counted from the ticket files themselves — a ticket is complete when it has no `- [ ]` left.
 
 **Tickets are no longer deleted on completion.** The earlier convention retired a finished ticket by deleting its file and leaving its index row as the record. Those files have since been restored — but restored from *pre-completion* content, so their ticks were lost while their index rows still said `done`. 21 rows now read **`needs re-verification`**: the index claimed done, the file has open boxes, and only checking source can say which is right. Two things got mixed together there — genuinely finished work whose ticks were lost (`c20-01`'s reporter adapter is committed and real), and rows my de-link pass marked `done` simply because the file was momentarily absent, when the ticket was actually *blocked* (`c18-02/03/04`). Re-verify before rebuilding: this program's repeated finding is that "open" tickets are often already done.
 
