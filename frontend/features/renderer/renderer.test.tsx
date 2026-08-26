@@ -1051,8 +1051,10 @@ describe("the row controls a description does not own", () => {
         actions={() => <button type="button">More</button>}
       />,
     );
-    expect(screen.getAllByLabelText("Done")).toHaveLength(rows.length);
-    expect(screen.getAllByRole("button", { name: "More" })).toHaveLength(rows.length);
+    // Twice per row: the table row and the card that replaces it below the
+    // breakpoint, which carries the same controls.
+    expect(screen.getAllByLabelText("Done")).toHaveLength(rows.length * 2);
+    expect(screen.getAllByRole("button", { name: "More" })).toHaveLength(rows.length * 2);
     expect(screen.getByRole("columnheader", { name: "Name" })).toBeInTheDocument();
   });
 });
@@ -1079,6 +1081,320 @@ describe("a description that names a reference badly", () => {
     };
     expect(validateLayout(broken)).toContainEqual(
       expect.objectContaining({ where: "fields (title)" }),
+    );
+  });
+});
+
+/**
+ * One record shape with several arms.
+ *
+ * A validation rule's configuration depends on its type; a custom field's
+ * options only exist when it is a select. Written by hand each of those is a
+ * form with five branches; described without `visibleWhen`, the alternative is
+ * rendering every arm's fields at once, which is a worse form than the one it
+ * replaces. The distinction the vocabulary makes is that an inapplicable field
+ * is not *hidden* — it is not part of this record — so it is not validated and
+ * not submitted.
+ */
+const CONDITIONAL: RecordLayout = {
+  key: "test:conditional",
+  singular: "Rule",
+  plural: "Rules",
+  titleField: "name",
+  fields: [
+    { name: "name", label: "Name", kind: "text", required: true },
+    {
+      name: "ruleType",
+      label: "Type",
+      kind: "select",
+      required: true,
+      createOnly: true,
+      options: [
+        { value: "regex", label: "Pattern" },
+        { value: "range", label: "Range" },
+      ],
+    },
+    {
+      name: "pattern",
+      label: "Pattern",
+      kind: "text",
+      required: true,
+      visibleWhen: { field: "ruleType", equals: ["regex"] },
+    },
+    {
+      name: "maximum",
+      label: "Maximum",
+      kind: "number",
+      required: true,
+      visibleWhen: { field: "ruleType", equals: ["range"] },
+    },
+  ],
+  list: {
+    searchPlaceholder: "Search rules…",
+    columns: [
+      { field: "name", primary: true },
+      { field: "ruleType" },
+    ],
+  },
+  detail: { sections: [{ title: "Rule", fields: ["name", "ruleType", "pattern", "maximum"] }] },
+  form: { sections: [{ title: "Rule", fields: ["name", "ruleType", "pattern", "maximum"] }] },
+};
+
+describe("a field that only applies on one arm of the record", () => {
+  it("is a valid description", () => {
+    expect(validateLayout(CONDITIONAL)).toEqual([]);
+  });
+
+  it("reports a condition on a field the description does not declare", () => {
+    const broken: RecordLayout = {
+      ...CONDITIONAL,
+      fields: CONDITIONAL.fields.map((field) =>
+        field.name === "pattern"
+          ? { ...field, visibleWhen: { field: "notAField", equals: ["x"] } }
+          : field,
+      ),
+    };
+    expect(validateLayout(broken)).toContainEqual(
+      expect.objectContaining({ where: "fields (pattern).visibleWhen" }),
+    );
+  });
+
+  it("reports a condition with no values, which would never apply", () => {
+    const broken: RecordLayout = {
+      ...CONDITIONAL,
+      fields: CONDITIONAL.fields.map((field) =>
+        field.name === "pattern"
+          ? { ...field, visibleWhen: { field: "ruleType", equals: [] } }
+          : field,
+      ),
+    };
+    expect(validateLayout(broken)).toContainEqual(
+      expect.objectContaining({ message: "no values, so the field would never apply" }),
+    );
+  });
+
+  it("renders only the arm the record is currently on", () => {
+    render(
+      <RecordForm layout={CONDITIONAL} initial={{ ruleType: "regex" }} onSubmit={jest.fn()} />,
+    );
+    expect(screen.getByLabelText(/Pattern/)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Maximum/)).toBeNull();
+  });
+
+  it("swaps arms when the controlling field changes", async () => {
+    render(
+      <RecordForm layout={CONDITIONAL} initial={{ ruleType: "range" }} onSubmit={jest.fn()} />,
+    );
+    expect(screen.getByLabelText(/Maximum/)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Pattern/)).toBeNull();
+  });
+
+  it("does not let an inapplicable required field block a submit", async () => {
+    const onSubmit = jest.fn();
+    render(
+      <RecordForm
+        layout={CONDITIONAL}
+        initial={{ name: "One", ruleType: "regex", pattern: "^a" }}
+        onSubmit={onSubmit}
+      />,
+    );
+    fireEvent.submit(screen.getByRole("button", { name: /save rule/i }));
+    // `maximum` is required and empty, and belongs to the other arm.
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+  });
+
+  it("still enforces a required field on the arm the record is on", async () => {
+    const onSubmit = jest.fn();
+    render(
+      <RecordForm
+        layout={CONDITIONAL}
+        initial={{ name: "One", ruleType: "regex" }}
+        onSubmit={onSubmit}
+      />,
+    );
+    fireEvent.submit(screen.getByRole("button", { name: /save rule/i }));
+    expect(await screen.findByText("Pattern is required")).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("submits only the fields the record is actually on", async () => {
+    const onSubmit = jest.fn();
+    render(
+      <RecordForm
+        layout={CONDITIONAL}
+        initial={{ name: "One", ruleType: "regex", pattern: "^a" }}
+        onSubmit={onSubmit}
+      />,
+    );
+    fireEvent.submit(screen.getByRole("button", { name: /save rule/i }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    const submitted = onSubmit.mock.calls[0][0];
+    expect(submitted.pattern).toBe("^a");
+    expect("maximum" in submitted).toBe(false);
+  });
+});
+
+describe("a field decided once and then fixed", () => {
+  it("appears on a create form", () => {
+    render(<RecordForm layout={CONDITIONAL} mode="create" onSubmit={jest.fn()} />);
+    expect(screen.getByLabelText(/Type/)).toBeInTheDocument();
+  });
+
+  it("is absent when editing, because the API would drop it silently", () => {
+    render(
+      <RecordForm
+        layout={CONDITIONAL}
+        mode="edit"
+        initial={{ ruleType: "regex" }}
+        onSubmit={jest.fn()}
+      />,
+    );
+    expect(screen.queryByLabelText(/^Type/)).toBeNull();
+  });
+});
+
+describe("a record with no list at all", () => {
+  it("is a valid description, because a singleton is a real shape", () => {
+    const singleton: RecordLayout = {
+      key: "test:singleton",
+      singular: "Setting",
+      plural: "Settings",
+      titleField: "name",
+      fields: [{ name: "name", label: "Name", kind: "text", required: true }],
+      list: { searchPlaceholder: "", columns: [] },
+      detail: { sections: [{ title: "Settings", fields: ["name"] }] },
+      form: { sections: [{ title: "Settings", fields: ["name"] }] },
+    };
+    expect(validateLayout(singleton)).toEqual([]);
+  });
+});
+
+describe("the mobile card", () => {
+  it("carries the row's leading control, so a phone can still act on a row", () => {
+    render(
+      <RecordList
+        layout={PARTY_LAYOUT}
+        rows={[rows[0]]}
+        getRowKey={key}
+        leading={() => <input type="checkbox" aria-label="Done" />}
+      />,
+    );
+    // Twice: once in the table row, once in the card that replaces it below the
+    // breakpoint. A card that dropped it left a task nobody could tick off.
+    expect(screen.getAllByLabelText("Done")).toHaveLength(2);
+  });
+
+  it("carries the row's actions too", () => {
+    render(
+      <RecordList
+        layout={PARTY_LAYOUT}
+        rows={[rows[0]]}
+        getRowKey={key}
+        actions={() => <button type="button">More</button>}
+      />,
+    );
+    expect(screen.getAllByRole("button", { name: "More" })).toHaveLength(2);
+  });
+
+  it("still titles itself from the primary column", () => {
+    render(
+      <RecordList
+        layout={PARTY_LAYOUT}
+        rows={[rows[0]]}
+        getRowKey={key}
+        leading={() => <input type="checkbox" aria-label="Done" />}
+      />,
+    );
+    expect(screen.getAllByText("Acme Trading").length).toBeGreaterThan(0);
+  });
+});
+
+/**
+ * A pointer whose domain changes row by row.
+ *
+ * A task links to a lead on this row and a deal on the next; a contact role
+ * attaches to a deal or a company depending on a sibling field. `referenceTo`
+ * names one domain for the whole column, so two migrations stopped here rather
+ * than describe a lie. `referenceToField` is the per-row half, the same way
+ * `referenceLabel` is the per-row half of a pointer's name.
+ */
+const POLYMORPHIC: RecordLayout = {
+  key: "test:polymorphic",
+  singular: "Job",
+  plural: "Jobs",
+  titleField: "title",
+  fields: [
+    { name: "title", label: "Title", kind: "text", required: true },
+    { name: "entityType", label: "Attached to", kind: "text" },
+    {
+      name: "entityId",
+      label: "Record",
+      kind: "reference",
+      referenceToField: "entityType",
+      referenceTo: "lead",
+      referenceLabel: "entityName",
+    },
+    { name: "entityName", label: "Record name", kind: "text", readOnly: true },
+  ],
+  list: {
+    searchPlaceholder: "Search jobs…",
+    columns: [
+      { field: "title", primary: true },
+      { field: "entityId" },
+    ],
+  },
+  detail: { sections: [{ title: "Job", fields: ["title", "entityId"] }] },
+  form: { sections: [{ title: "Job", fields: ["title"] }] },
+};
+
+describe("a pointer whose domain the row decides", () => {
+  it("is a valid description", () => {
+    expect(validateLayout(POLYMORPHIC)).toEqual([]);
+  });
+
+  it("links each row at whatever the row says it points at", () => {
+    render(
+      <RecordDetail
+        layout={POLYMORPHIC}
+        record={{ title: "One", entityType: "DEAL", entityId: 7, entityName: "Acme renewal" }}
+      />,
+    );
+    expect(screen.getByRole("link", { name: "Acme renewal" })).toHaveAttribute(
+      "href",
+      "/crm/deals/7",
+    );
+  });
+
+  it("falls back to the field's own domain when the row carries none", () => {
+    render(
+      <RecordDetail
+        layout={POLYMORPHIC}
+        record={{ title: "One", entityId: 7, entityName: "A lead" }}
+      />,
+    );
+    expect(screen.getByRole("link", { name: "A lead" })).toHaveAttribute("href", "/crm/leads/7");
+  });
+
+  it("renders text rather than a link when the row names a domain with no page", () => {
+    render(
+      <RecordDetail
+        layout={POLYMORPHIC}
+        record={{ title: "One", entityType: "PROJECT", entityId: 7, entityName: "A project" }}
+      />,
+    );
+    expect(screen.getByText("A project")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "A project" })).toBeNull();
+  });
+
+  it("reports a domain field the description does not declare", () => {
+    const broken: RecordLayout = {
+      ...POLYMORPHIC,
+      fields: POLYMORPHIC.fields.map((field) =>
+        field.name === "entityId" ? { ...field, referenceToField: "notAField" } : field,
+      ),
+    };
+    expect(validateLayout(broken)).toContainEqual(
+      expect.objectContaining({ where: "fields (entityId).referenceToField" }),
     );
   });
 });

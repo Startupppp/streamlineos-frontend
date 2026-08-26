@@ -22,6 +22,7 @@ import { SOURCE_ATTRIBUTION_LAYOUT } from "./crm/reports/source-attribution-layo
 import { TEAM_LEADERBOARD_LAYOUT } from "./crm/reports/team-leaderboard-layout";
 import { AUDIT_ENTRY_LAYOUT } from "./crm/settings/audit-entry-layout";
 import { AUTOMATION_LAYOUT } from "./crm/settings/automation-layout";
+import { BLUEPRINT_LAYOUT } from "./crm/settings/blueprint-layout";
 import { CUSTOM_FIELD_LAYOUT } from "./crm/settings/custom-field-layout";
 import { EMAIL_TEMPLATE_LAYOUT } from "./crm/settings/email-template-layout";
 import { QUOTE_TEMPLATE_LAYOUT } from "./crm/settings/quote-template-layout";
@@ -172,6 +173,7 @@ export const LAYOUT_REGISTRY: readonly RegisteredLayout[] = [
     viewPermission: "crm:settings:manage",
   },
   { layout: AUTOMATION_LAYOUT, section: "CRM settings", viewPermission: "crm:automations:manage" },
+  { layout: BLUEPRINT_LAYOUT, section: "CRM settings", viewPermission: "crm:settings:manage" },
   {
     layout: SCORING_RULE_LAYOUT,
     section: "CRM settings",

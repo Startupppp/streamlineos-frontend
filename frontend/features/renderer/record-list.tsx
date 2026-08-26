@@ -164,26 +164,42 @@ export function RecordList({
   const mobileCard = (row: RecordValue): ReactNode => {
     const primaryField = resolveField(layout, primary?.field ?? layout.titleField);
 
+    /*
+      The row's controls come to the phone too.
+
+      They did not, at first, and that was a defect rather than a decision: below
+      the breakpoint the table is replaced by these cards, so a list whose card
+      dropped `leading` and `actions` left a task that could not be ticked done
+      and a row that could not be opened — on the device where ticking something
+      done is most of what anybody wants. Principle 5 names those jobs
+      explicitly. What the card still drops is columns, not capability.
+    */
     return (
-      <div className="flex min-h-11 min-w-0 flex-col gap-gap-inline p-card-pad">
-        <span className="truncate text-sm font-medium">
-          {renderFieldValue(primaryField, row[primaryField.name], moneyDisplayFor(primaryField, row, money), row)}
-        </span>
-        <span className="flex flex-wrap items-center gap-gap-field">
-          {layout.list.columns
-            .filter((column) => column.field !== primaryField.name)
-            .map((column) => {
-              const field = resolveField(layout, column.field);
-              const display = moneyDisplayFor(field, row, money);
-              const text = formatFieldText(field, row[column.field], display);
-              if (!text) return null;
-              return (
-                <span key={column.field} className="text-dense text-muted-foreground">
-                  {renderFieldValue(field, row[column.field], display, row)}
-                </span>
-              );
-            })}
-        </span>
+      <div className="flex min-h-11 min-w-0 items-start gap-gap-field p-card-pad">
+        {leading ? <span className="shrink-0 pt-0.5">{leading(row)}</span> : null}
+
+        <div className="flex min-w-0 flex-1 flex-col gap-gap-inline">
+          <span className="truncate text-sm font-medium">
+            {renderFieldValue(primaryField, row[primaryField.name], moneyDisplayFor(primaryField, row, money), row)}
+          </span>
+          <span className="flex flex-wrap items-center gap-gap-field">
+            {layout.list.columns
+              .filter((column) => column.field !== primaryField.name)
+              .map((column) => {
+                const field = resolveField(layout, column.field);
+                const display = moneyDisplayFor(field, row, money);
+                const text = formatFieldText(field, row[column.field], display);
+                if (!text) return null;
+                return (
+                  <span key={column.field} className="text-dense text-muted-foreground">
+                    {renderFieldValue(field, row[column.field], display, row)}
+                  </span>
+                );
+              })}
+          </span>
+        </div>
+
+        {actions ? <span className="shrink-0">{actions(row)}</span> : null}
       </div>
     );
   };

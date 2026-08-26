@@ -144,7 +144,17 @@ export function renderFieldValue(
     if (!id) return <span className="text-muted-foreground">—</span>;
 
     const label = field.referenceLabel ? asText(record?.[field.referenceLabel]) : "";
-    const href = referenceHref(field.referenceTo, id);
+
+    /*
+      The row's own domain wins over the field's, because a polymorphic pointer
+      has no single one. Falls back to `referenceTo` when the row carries
+      nothing — a lead list whose rows all point at leads should not need the
+      column repeated on every record.
+    */
+    const domain = field.referenceToField
+      ? asText(record?.[field.referenceToField]).toLowerCase() || field.referenceTo
+      : field.referenceTo;
+    const href = referenceHref(domain, id);
     const shown = label || id;
 
     /*

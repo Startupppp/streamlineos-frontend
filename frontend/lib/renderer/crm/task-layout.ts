@@ -58,17 +58,17 @@ const LINKED_LABELS: Readonly<Record<string, string>> = {
  * What the task is attached to, as one line.
  *
  * `entityType` and `entityId` are two fields because that is how the record
- * stores the link and how the form asks for it. A column per half would spend
- * two columns saying one thing, so the list reads a third field that says it
- * once — the same shape as `severity` on the aging report: the API does not
- * send it, the projection derives it, the description names it.
+ * stores the link and how the form asks for it, but a reader wants one thing:
+ * which record. The projection derives the name — the same shape as `severity`
+ * on the aging report — and `entityId` names it as its `referenceLabel`, which
+ * is what turns a stored "42" into "Lead #42".
  *
- * Text rather than `reference`, and that is a limitation rather than a
- * preference. `referenceTo` names one domain for the whole field, and a task's
- * link is polymorphic: this row points at a lead, the next at a deal. The
- * vocabulary has `referenceLabel` for the per-row half of a pointer's *name*
- * and nothing for the per-row half of its *domain*, so where a row goes stays a
- * screen concern and rides in the row menu beside the other per-row controls.
+ * This is the name, never the route. Where the row goes comes from
+ * `referenceToField: "entityType"`, so the pointer resolves per row: this one
+ * to a lead, the next to a deal. A domain the product has no page for renders
+ * as plain text rather than linking nowhere — which is what a task raised
+ * against a project does, and is the honest result: `/build/all/:id` has no
+ * dynamic segment, so the link this surface used to draw was a 404.
  */
 export function linkedRecordText(
   entityType: string | null | undefined,
@@ -87,6 +87,10 @@ export function linkedRecordText(
  * organisation, which is a screen concern rather than a shape one. `member` is
  * not in the route map, so the list renders the name rather than a link;
  * `referenceLabel` is what turns the stored id into that name.
+ *
+ * `entityId` is a polymorphic reference: `referenceToField` points at
+ * `entityType`, so each row resolves its own domain rather than the field
+ * declaring one for all of them.
  *
  * Three fields the API never sends are declared here and filled by
  * `taskRecordFields`: `linkedRecord`, `assigneeName` and `urgency`. All three
@@ -125,7 +129,13 @@ export const TASK_LAYOUT: RecordLayout = {
         { value: "CONTACT", label: "Contact" },
       ],
     },
-    { name: "entityId", label: "Record", kind: "text" },
+    {
+      name: "entityId",
+      label: "Linked record",
+      kind: "reference",
+      referenceToField: "entityType",
+      referenceLabel: "linkedRecord",
+    },
     { name: "linkedRecord", label: "Linked to", kind: "text", readOnly: true },
     {
       name: "assigneeId",
@@ -161,8 +171,9 @@ export const TASK_LAYOUT: RecordLayout = {
   list: {
     searchPlaceholder: "Search tasks…",
     columns: [
-      { field: "title", primary: true, sortable: true, subtitle: "linkedRecord" },
+      { field: "title", primary: true, sortable: true },
       { field: "type", width: "w-32 shrink-0" },
+      { field: "entityId", width: "w-36 shrink-0" },
       { field: "status", width: "w-28 shrink-0" },
       { field: "urgency", width: "w-28 shrink-0" },
       { field: "dueDate", sortable: true, width: "w-44 shrink-0" },

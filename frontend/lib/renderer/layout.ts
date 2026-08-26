@@ -91,6 +91,12 @@ export const DEFAULT_BOOLEAN_OPTIONS: readonly SelectOption[] = [
  */
 export type SignMeaning = "gain" | "cost";
 
+/** A sibling field holding one of a small set of values. See `visibleWhen`. */
+export interface FieldCondition {
+  readonly field: string;
+  readonly equals: readonly string[];
+}
+
 export interface SelectOption {
   readonly value: string;
   readonly label: string;
@@ -131,6 +137,21 @@ export interface FieldSpec {
    */
   readonly referenceTo?: string;
   /**
+   * The sibling field carrying the domain, when the pointer is polymorphic.
+   *
+   * `referenceTo` names one domain for every row of the field, and some pointers
+   * genuinely do not have one: a task links to a lead on this row and a deal on
+   * the next; a contact role attaches to a deal or a company depending on a
+   * sibling. Two migrations hit this independently and both stopped rather than
+   * describing a lie.
+   *
+   * The pair works the way `referenceLabel` does — the description says which
+   * field carries the per-row half, and the engine reads it. `referenceTo`
+   * remains the fallback for a row whose domain field is empty or names a domain
+   * the product has no page for, and a pointer with neither renders as text.
+   */
+  readonly referenceToField?: string;
+  /**
    * The sibling field carrying this pointer's human name.
    *
    * A reference stores an identifier, and "42" is not what anybody is looking
@@ -165,6 +186,40 @@ export interface FieldSpec {
    * value the API will reject or ignore, which is a form that fails on submit.
    */
   readonly editOnly?: boolean;
+  /**
+   * Present when creating, absent when editing. The mirror of `editOnly`.
+   *
+   * Some fields are decided once and then fixed: what kind a custom field is,
+   * which entity a validation rule governs. The API accepts them on create and
+   * ignores them afterwards, so offering them on an edit form is a control whose
+   * value is silently dropped — which reads to the person using it as a change
+   * that did not save.
+   */
+  readonly createOnly?: boolean;
+  /**
+   * The field is only part of the record while a sibling holds one of these
+   * values.
+   *
+   * Several CRM settings records are one shape with several arms: a validation
+   * rule's configuration depends on its `ruleType`, a custom field's options
+   * only exist when its `fieldType` is a select, an assignment rule's controls
+   * depend on how it assigns. Written by hand each of those is a form with five
+   * branches in it; described without this, the alternative is rendering all
+   * eight config fields at once, which is a worse form than the one it replaces.
+   *
+   * It is domain rather than presentation, which is why it belongs here: a
+   * pattern is not *hidden* when the rule is numeric, it does not *apply*. That
+   * distinction is what makes the rest follow — an inapplicable field is not
+   * validated, so a required one cannot block a submit it has nothing to do
+   * with, and it is not submitted, so the API is never sent a leftover from an
+   * arm the record is not on.
+   *
+   * Compared as strings, because that is what every control in the engine hands
+   * back. Deliberately equality against a small set and nothing more: an
+   * expression language here would be a program in the description, and a
+   * description that can compute is no longer data a tenant can be shown.
+   */
+  readonly visibleWhen?: FieldCondition;
 }
 
 export interface ColumnSpec {
@@ -284,7 +339,13 @@ export function validateLayout(layout: RecordLayout): LayoutProblem[] {
     });
   }
 
-  if (!layout.list.columns.some((column) => column.primary))
+  /*
+    A description with no columns at all is a singleton — organisation-wide quote
+    settings, say: one record, reached from a settings page, never listed. That
+    is a real shape, so it is not an error; what is an error is a list that has
+    columns and no primary one, which renders a mobile card with no title.
+  */
+  if (layout.list.columns.length > 0 && !layout.list.columns.some((column) => column.primary))
     problems.push({
       where: "list.columns",
       message: "no primary column, so the mobile card would have no title",
@@ -307,6 +368,37 @@ export function validateLayout(layout: RecordLayout): LayoutProblem[] {
         problems.push({
           where: `fields (${field.name}).currencyField`,
           message: `unknown field "${field.currencyField}"`,
+        });
+    }
+
+    if (field.visibleWhen !== undefined) {
+      if (!known.has(field.visibleWhen.field))
+        problems.push({
+          where: `fields (${field.name}).visibleWhen`,
+          message: `unknown field "${field.visibleWhen.field}"`,
+        });
+      if (field.visibleWhen.field === field.name)
+        problems.push({
+          where: `fields (${field.name}).visibleWhen`,
+          message: "a field cannot depend on itself",
+        });
+      if (field.visibleWhen.equals.length === 0)
+        problems.push({
+          where: `fields (${field.name}).visibleWhen`,
+          message: "no values, so the field would never apply",
+        });
+    }
+
+    if (field.referenceToField !== undefined) {
+      if (field.kind !== "reference")
+        problems.push({
+          where: `fields (${field.name})`,
+          message: `referenceToField on a ${field.kind} field, which points at nothing`,
+        });
+      if (!known.has(field.referenceToField))
+        problems.push({
+          where: `fields (${field.name}).referenceToField`,
+          message: `unknown field "${field.referenceToField}"`,
         });
     }
 

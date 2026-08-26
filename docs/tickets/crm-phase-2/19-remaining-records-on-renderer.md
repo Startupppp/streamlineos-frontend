@@ -49,8 +49,43 @@ could not move without it:
   page, so a quote's deal and client had to stay a hand-written card.
 - `RecordList`'s `leading` slot — a per-row control the row is *about*, as
   opposed to `actions` (a trailing menu) or `selection` (a bulk stage).
+- `visibleWhen` — a field that only applies while a sibling holds one of a small
+  set of values. Several settings records are one shape with several arms (a
+  validation rule's configuration depends on its type), and the alternative was
+  rendering every arm at once, which is a worse form than the one it replaces.
+  It is domain rather than presentation: a pattern is not *hidden* when the rule
+  is numeric, it does not *apply* — so it is not validated, and a required field
+  on another arm cannot block a submit it has nothing to do with, and it is not
+  submitted, so the API is never sent a leftover. Equality against a small set
+  and nothing more: an expression language would be a program in the
+  description, and a description that can compute is no longer data a tenant can
+  be shown.
+- `createOnly` — the mirror of `editOnly`, for a field decided once and then
+  fixed. Offering one on an edit form is a control whose value the API drops,
+  which reads to the person using it as a change that did not save.
+- A **singleton** description — no list columns at all — is valid. One record,
+  reached from a settings page, never listed.
+- `referenceToField` — the sibling carrying a *polymorphic* pointer's domain,
+  the way `referenceLabel` carries its name. Two migrations hit this
+  independently and both stopped rather than describe a lie.
 
-And one gap was found and **deliberately not** closed: a signed number is not the
+One defect was found the same way and fixed rather than declared: the mobile
+card rendered neither `leading` nor `actions`, so below the breakpoint a task
+could not be ticked done and a row could not be opened — on the device where
+principle 5 says those are most of the job. The card drops columns; it does not
+drop capability.
+
+Two gaps were found and **deliberately not** closed, because closing them would
+have put behaviour into the description:
+
+- **Drag-to-reorder** on assignment rules, where priority order *is* the record's
+  meaning. Row reordering belongs to the one platform table, not to the layout
+  vocabulary, and adding it for a single surface is a table change wearing a
+  vocabulary change's clothes. That page stays hand-written.
+- **Cross-field derivation** — a pipeline's key derived from its name as you
+  type. A description that computes values is a program.
+
+And one distinction was found and **deliberately not** collapsed: a signed number is not the
 same as a threshold. `daysInStage` is never negative, so `sign: "cost"` would
 paint every aging row red and say nothing. `DEAL_AGING_LAYOUT` derives a
 `severity` badge instead — a word that survives greyscale, with the thresholds
