@@ -6,7 +6,7 @@
 
 ## Acceptance criteria
 
-- [x] Each usage event has tenant, meter key, subject, quantity, occurred time and unique source key. — `db/schema/billing/usage-events.ts:17-35` (`orgId`, `meterKey`, `subjectId`, `quantity`, `occurredAt`, `sourceKey`). Schema only, no migration.
+- [x] Each usage event has tenant, meter key, subject, quantity, occurred time and unique source key. — `db/schema/billing/usage-events.ts:17-35` (`orgId`, `meterKey`, `subjectId`, `quantity`, `occurredAt`, `sourceKey`). Schema + migration `0523_billing_usage_events.sql`.
 - [x] Duplicate and out-of-order events do not double-count. — `usage-events.ts:30` unique index `uq_billing_usage_events_org_meter_src` on `(orgId, meterKey, sourceKey)` makes duplicate ingestion a no-op (`ON CONFLICT` or caught as `23505`). Schema only.
 - [x] Raw events are append-only; hourly/daily rollups are rebuildable projections. — `billing_usage_events` (append-only; no UPDATE path) + `billing_usage_rollups` at `usage-events.ts:37-54` (separate table with `granularity`, `periodStart`, `periodEnd`, `rebuiltAt`; unique index allows idempotent rebuild). Schema only.
 - [ ] Quota enforcement uses an atomic reservation where the action spends money. — `billing_usage_reservations` at `usage-events.ts:57-80` defines the schema (ACTIVE/settled, idempotencyKey, expiresAt, settledQuantity), but no service atomically acquires a reservation before a chargeable action. Genuinely open.

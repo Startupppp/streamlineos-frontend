@@ -7,7 +7,7 @@
 ## Acceptance criteria
 
 - [ ] Upgrade, downgrade and seat-quantity changes produce immutable proration line items. — `billing_proration_lines` table exists (`db/schema/billing/proration-ledger.ts:17-47`) but no service inserts into it on plan-change events. Genuinely open.
-- [x] Each line names old/new price version, effective interval, quantity, currency and rounding. — `proration-ledger.ts:24-32` (`oldPriceVersionId`, `newPriceVersionId`, `effectiveFrom`, `effectiveUntil`, `quantity`, `currency`, `amountMinor`, `roundingRule`). Schema only, no migration.
+- [x] Each line names old/new price version, effective interval, quantity, currency and rounding. — `proration-ledger.ts:24-32` (`oldPriceVersionId`, `newPriceVersionId`, `effectiveFrom`, `effectiveUntil`, `quantity`, `currency`, `amountMinor`, `roundingRule`). Schema + migration `0522_billing_proration_ledger.sql`.
 - [x] Provider-calculated proration is stored and reconciled; it is not blindly trusted. — `proration-ledger.ts:33-36` (`providerAmountMinor`, `providerRef`, `reconciledAt`). Schema only.
 - [x] Retry with the same idempotency key returns the same result. — `proration-ledger.ts:40` unique index `uq_billing_proration_org_idem` on `(orgId, idempotencyKey)` prevents a second insert; a service must also implement the replay-return path. Schema constraint present, service absent.
 - [x] Negative adjustments become credits, never mutation of an issued invoice. — `db/schema/billing/invoice-snapshot.ts:104-127` (`billing_credit_notes` with `originalSnapshotId` FK and `onDelete: "restrict"`) and `:129-150` (`billing_credit_note_lines`). Schema only; immutability trigger 0492 is unapplied.

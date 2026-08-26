@@ -178,3 +178,90 @@ keeps assuming the old tuple width.
 ## Also pending, not mine
 
 `0472_outbox_inbox_aggregate_fence` is on disk and **not journalled**, so `db:migrate` will skip it entirely. It belongs to concurrent work; whoever owns it needs to add its journal entry or it will never apply.
+
+---
+
+## c26 commercial billing ledger — 0520 … 0524
+
+Five migrations, all on disk, **none journalled**. Journal them in order and apply together:
+
+```
+0520_commercial_billing_catalog.sql
+0521_billing_seat_ledger.sql
+0522_billing_proration_ledger.sql
+0523_billing_usage_events.sql
+0524_billing_invoice_snapshots.sql
+```
+
+### What each creates
+
+| Migration | Tables |
+|---|---|
+| 0520 | `billing_products`, `billing_plans`, `billing_price_versions`, `billing_plan_entitlements` (global catalog, no RLS); `org_entitlement_overrides`, `subscription_items` (tenant, RLS) |
+| 0521 | `billing_seat_events` (tenant, RLS) |
+| 0522 | `billing_proration_lines` (tenant, RLS) |
+| 0523 | `billing_usage_events`, `billing_usage_rollups`, `billing_usage_reservations` (tenant, RLS) |
+| 0524 | `billing_invoice_number_sequences`, `billing_invoice_snapshots`, `billing_invoice_line_snapshots`, `billing_credit_notes`, `billing_credit_note_lines` (tenant, RLS) |
+
+### Operator notes
+
+**Indexes:** every `CREATE INDEX` in these migrations runs inside the migration transaction — `CONCURRENTLY` is not permitted inside a transaction block. Each migration's comment block carries the exact `CONCURRENTLY` forms to run by hand **before** applying on a live table with existing data. The `IF NOT EXISTS` guards make the in-transaction statements a no-op if the indexes are already present.
+
+**Sequence-dependent FKs:** all FK constraints use `ADD CONSTRAINT … NOT VALID` → `VALIDATE CONSTRAINT` to avoid a long `ACCESS EXCLUSIVE` lock on the referenced table. On a busy database, run the VALIDATE statements during a low-traffic window.
+
+**RLS fail-closed check:** after applying, confirm each tenant table fails closed with no GUC set:
+
+```sql
+-- run as streamline_app, outside a transaction that sets the GUC
+SET app.organization_id TO '';
+SELECT * FROM org_entitlement_overrides LIMIT 1;
+-- must raise 42501, not return zero rows
+```
+
+**Global catalog tables** (`billing_products`, `billing_plans`, `billing_price_versions`, `billing_plan_entitlements`) have no `org_id` and no RLS policy by design — they are platform-wide data. Access is controlled by `REVOKE ALL … FROM PUBLIC` + `GRANT … TO streamline_app`.
+
+**idx_billing_usage_res_expires** does not lead with `org_id` — it exists for the background expiry sweep job that scans across all orgs. That job must set the tenant GUC before processing each reservation row. Tenant-scoped queries use `idx_billing_usage_res_org_meter_active` instead.
+
+**idx_billing_inv_lines_snapshot** and **idx_billing_credit_note_lines_note** index only `snapshot_id` / `credit_note_id` without `org_id`. They serve parent → child FK navigation where the parent row is already RLS-filtered; tenant-scoped list queries use `idx_billing_inv_lines_org` and `idx_billing_credit_note_lines_org`.
+
+### Verify after applying
+
+```sql
+SELECT relname AS table,
+       to_regclass(relname::text) IS NOT NULL AS present
+FROM (VALUES
+  ('billing_products'),
+  ('billing_plans'),
+  ('billing_price_versions'),
+  ('billing_plan_entitlements'),
+  ('org_entitlement_overrides'),
+  ('subscription_items'),
+  ('billing_seat_events'),
+  ('billing_proration_lines'),
+  ('billing_usage_events'),
+  ('billing_usage_rollups'),
+  ('billing_usage_reservations'),
+  ('billing_invoice_number_sequences'),
+  ('billing_invoice_snapshots'),
+  ('billing_invoice_line_snapshots'),
+  ('billing_credit_notes'),
+  ('billing_credit_note_lines')
+) AS t(relname);
+```
+
+Every row must be `true`. Also confirm RLS is enabled on the twelve tenant tables:
+
+```sql
+SELECT relname, relrowsecurity
+FROM pg_class
+WHERE relname IN (
+  'org_entitlement_overrides', 'subscription_items',
+  'billing_seat_events', 'billing_proration_lines',
+  'billing_usage_events', 'billing_usage_rollups', 'billing_usage_reservations',
+  'billing_invoice_number_sequences', 'billing_invoice_snapshots',
+  'billing_invoice_line_snapshots', 'billing_credit_notes', 'billing_credit_note_lines'
+)
+ORDER BY relname;
+```
+
+`relrowsecurity` must be `true` for every row.

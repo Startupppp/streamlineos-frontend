@@ -37,9 +37,13 @@ jobs:
         run: pnpm lint
         continue-on-error: false
 
-      - name: Check for circular imports
+      - name: Import cycles
         run: pnpm check:cycles
         continue-on-error: false
+
+      - name: Dead-code report
+        run: pnpm exec knip --no-progress
+        continue-on-error: true
 
       - name: Build application
         run: pnpm build

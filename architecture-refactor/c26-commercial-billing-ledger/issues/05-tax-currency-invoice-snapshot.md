@@ -12,7 +12,7 @@
 - [x] FX conversions store rate, source and timestamp; historical invoices never use a new rate. — `invoice-snapshot.ts:52-54` (`fxRateMicro`, `fxRateSource`, `fxRateCapturedAt` snapshotted at issue time). Schema only.
 - [x] Rounding is deterministic at line and document level. — `invoice-snapshot.ts:58` (`roundingRule` on snapshot header) and `:89` (`taxRateBps` integer basis points on each line). Schema only.
 - [x] Corrections use credit/debit notes and preserve the original. — `invoice-snapshot.ts:104-127` (`billing_credit_notes` with `originalSnapshotId` FK `onDelete: "restrict"`, `noteType`, `reason`); original snapshot cannot be deleted. Schema only.
-- [x] Invoice numbering is transactionally serialized and auditable. — `invoice-snapshot.ts:19-33` (`billing_invoice_number_sequences` with unique index `uq_billing_inv_num_seq_org_prefix_year` on `(orgId, prefix, year)`, `lastNumber` incremented under a per-org lock). Schema only, no service writes to this table yet.
+- [x] Invoice numbering is transactionally serialized and auditable. — `invoice-snapshot.ts:19-33` (`billing_invoice_number_sequences` with unique index `uq_billing_inv_num_seq_org_prefix_year` on `(orgId, prefix, year)`, `lastNumber` incremented under a per-org lock). Schema + migration `0524_billing_invoice_snapshots.sql`; no service writes to this table yet.
 
 **Audit note (2026-08-26):** All seven schema tables/structures verified. No migration exists for any of these tables. The single hard blocker is the immutability trigger (migration 0492, journalled but unapplied) — without it criterion 1 is not enforced. All other criteria are satisfied structurally at schema level.
 
