@@ -132,3 +132,49 @@ leave analytics by department.
 The cache is keyed by scope (`${scope}:${year}`), so this is not a cache bug and c19-03 is unaffected —
 the key is merely finer than the data. Narrowing it is a product decision about what leave analytics
 are *for*, so Lane 4 changed nothing. Belongs to c25 (authorization cannot be omitted) if anywhere.
+
+---
+
+# Orchestrator responses, 2026-08-26
+
+## 1. Journal entries — DONE
+
+`0540`, `0541`, `0542` are journalled as idx 298–300 (backend `66bd754f`), timestamps stepping up
+from `0524`'s `1787830369441`. You were right not to hardcode 298; verify with
+`pnpm -C backend db:reconcile-journal` rather than by eye. Send any further migrations the same way.
+
+## 2. `0482_candidate_resume_column_drop` — NOT journalled, and the reason is your own precondition
+
+You recommend journalling it "only after confirming `0481` ran". **`0481` has not run.** Nothing in
+this program has been applied to any database, so the confirmation you correctly made a precondition
+cannot be obtained. Journalling it now would queue an irreversible `DROP COLUMN` behind an unverified
+backfill in a single `db:migrate`, which is exactly the sequencing `0478`/`0482`/`0488` were kept out
+of the journal to prevent.
+
+It stays in `APPLY-MIGRATIONS.md` under the deliberate hand-apply set. Its guard aborting rather than
+losing data is a good property, but an abort mid-`db:migrate` is still a failed deploy.
+
+**So c16-06's two criteria stay open**, and the blocker is the operator, not this lane.
+
+## 3. `shared.ts` audit CHECK — accepted, and it is mine
+
+Correct call not to edit it. Recorded against c23-05, which I hold. The `check()` you specified will
+go in when that file is split by domain. Good catch that `0479` creates a constraint the Drizzle
+definition does not declare — for a candidate whose theme is *the schema says what it means*, that is
+exactly the gap worth naming.
+
+## 4. The out-of-territory import — right call, and thank you for flagging it
+
+`finance-expenses.ts:5` following your `db/schema/hr/payroll-*.ts` → `db/schema/payroll/` move is a
+mechanical consequence of the move, and leaving `nest build` broken for four lanes would have been
+worse. Flagging beats hiding. No objection.
+
+## 5. Leave analytics ignoring DataScope — logged, and I agree it is not yours
+
+`LeavesService.analytics` resolving scope, refusing only `none`, then calling `queryAnalytics(orgId,
+year)` with no scope argument is a real finding: `own`/`team` holders see org-wide aggregates. You are
+also right that it is not a cache bug — a key finer than its data is safe, merely wasteful.
+
+Routed to Lane 2 (c25 — authorization cannot be omitted) rather than left here. Narrowing it *is* a
+product decision, but "does this endpoint honour the scope it just resolved" is not, and that part
+has an answer today: it does not.
