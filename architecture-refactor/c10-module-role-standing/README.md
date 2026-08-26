@@ -8,11 +8,11 @@ The engine is built — `MODULE_REGISTRY`, a real `ROLE_RANK` ladder, a `SCOPE_R
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 01 | [A module's roster is readable](issues/01-a-modules-roster-is-readable.md) | — | done |
-| 02 | [An actor knows what they may grant, before they try](issues/02-an-actor-knows-what-they-may-grant.md) | 01 | done |
-| 03 | [The read and the write share one predicate](issues/03-the-read-and-the-write-share-one-predicate.md) | 02 | done |
-| 04 | [Standing can be granted and revoked](issues/04-standing-can-be-granted-and-revoked.md) | 03 | done |
-| 05 | [Module ownership transfers in one operation](issues/05-module-ownership-transfers-in-one-operation.md) | 04 | done |
+| 01 | A module's roster is readable | — | done |
+| 02 | An actor knows what they may grant, before they try | 01 | done |
+| 03 | The read and the write share one predicate | 02 | done |
+| 04 | Standing can be granted and revoked | 03 | done |
+| 05 | Module ownership transfers in one operation | 04 | done |
 
 ## Working these
 

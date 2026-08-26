@@ -8,12 +8,12 @@ The models are correct: the realtime capability is per-channel with active revoc
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 01 | [Polling stops when realtime is live](issues/01-polling-stops-when-realtime-is-live.md) | — | **done** |
+| 01 | Polling stops when realtime is live | — | **done** |
 | 02 | [An announcement to everyone completes](issues/02-an-announcement-to-everyone-completes.md) | — | ready-for-agent |
-| 03 | [Notifications page correctly, and mark-all-read is constant work](issues/03-notifications-page-correctly-and-mark-all-read-is-constant.md) | — | ready-for-agent |
+| 03 | Notifications page correctly, and mark-all-read is constant work | — | done |
 | 04 | [Three growing tables are partitioned](issues/04-three-growing-tables-are-partitioned.md) | — | ready-for-agent |
 | 05 | [Retention detaches rather than deletes](issues/05-retention-detaches-rather-than-deletes.md) | 04 | ready-for-agent |
-| 06 | [The inbox renders from cached metadata](issues/06-the-inbox-renders-from-cached-metadata.md) | — | ready-for-agent |
+| 06 | The inbox renders from cached metadata | — | done |
 | 07 | [One delivery policy governs email, in-app, push and alerts](issues/07-one-delivery-policy.md) | — | ready-for-agent |
 
 ## Working these

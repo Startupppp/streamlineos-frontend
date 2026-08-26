@@ -8,10 +8,10 @@ The measured discipline is unusually good — zero arbitrary colour classes acro
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 01 | [Icon-only buttons are triaged and labelled](issues/01-icon-only-buttons-are-triaged-and-labelled.md) | — | ready-for-agent |
-| 02 | [A missing accessible label fails a check](issues/02-a-missing-accessible-label-fails-a-check.md) | 01 | ready-for-agent |
-| 03 | [Shared components pass accessibility assertions](issues/03-shared-components-pass-accessibility-assertions.md) | — | ready-for-agent |
-| 04 | [The canonical component wins](issues/04-the-canonical-component-wins.md) | — | ready-for-agent |
+| 01 | [Icon-only buttons are triaged and labelled](issues/01-icon-only-buttons-are-triaged-and-labelled.md) | — | **partial** |
+| 02 | A missing accessible label fails a check | 01 | done |
+| 03 | [Shared components pass accessibility assertions](issues/03-shared-components-pass-accessibility-assertions.md) | — | **partial** |
+| 04 | [The canonical component wins](issues/04-the-canonical-component-wins.md) | — | **partial** |
 | 05 | The measured properties are asserted in CI | — | done |
 
 ## Working these

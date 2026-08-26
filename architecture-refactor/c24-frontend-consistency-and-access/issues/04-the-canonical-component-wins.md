@@ -8,18 +8,18 @@
 
 ## Acceptance criteria
 
-- [ ] Currency formatting is single-sourced, asserted across locales and for zero, negative and large values.
-- [ ] A lint rule catches a second formatter appearing.
-- [ ] Empty, loading and error states render from the shared primitives, with a working retry from the error state.
+- [x] Currency formatting is single-sourced, asserted across locales and for zero, negative and large values.
+- [x] A lint rule catches a second formatter appearing.
+- [x] Empty, loading and error states render from the shared primitives, with a working retry from the error state.
 - [ ] Local duplicates are deleted as their last caller migrates.
-- [ ] Adoption happens when a file is touched — this is explicitly not a sweep.
-- [ ] A new hand-rolled empty state is caught in review.
+- [x] Adoption happens when a file is touched — this is explicitly not a sweep.
+- [x] A new hand-rolled empty state is caught in review.
 
 ## Todo
 
-- [ ] Make the canonical component the easiest option, then adopt on touch
-- [ ] Do not replace 91 empty states in one change — large diff, no user-visible benefit, real regression risk
-- [ ] Delete duplicates only when unused
+- [x] Make the canonical component the easiest option, then adopt on touch
+- [x] Do not replace 91 empty states in one change — large diff, no user-visible benefit, real regression risk
+- [x] Delete duplicates only when unused
 - [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
 ---

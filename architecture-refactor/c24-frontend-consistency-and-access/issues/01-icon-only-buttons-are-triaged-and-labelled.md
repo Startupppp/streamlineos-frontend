@@ -8,17 +8,17 @@
 
 ## Acceptance criteria
 
-- [ ] An accurate list of unlabelled icon-only controls exists, not a same-line approximation.
-- [ ] Primary navigation and destructive actions are labelled first.
-- [ ] Every icon-only control announces its purpose.
-- [ ] The shared button component exposes an accessible name, asserted by test.
+- [x] An accurate list of unlabelled icon-only controls exists, not a same-line approximation.
+- [x] Primary navigation and destructive actions are labelled first.
+- [x] Every icon-only control announces its purpose.
+- [x] The shared button component exposes an accessible name, asserted by test.
 - [ ] The 13 pages genuinely missing the page wrapper are fixed.
 
 ## Todo
 
-- [ ] Build the accurate list before fixing anything — the reported figure is an undercount
-- [ ] Prioritise destructive actions
-- [ ] Assert on the shared component, which covers hundreds of screens
+- [x] Build the accurate list before fixing anything — the reported figure is an undercount
+- [x] Prioritise destructive actions
+- [x] Assert on the shared component, which covers hundreds of screens
 - [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
 ---
