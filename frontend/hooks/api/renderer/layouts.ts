@@ -86,13 +86,11 @@ export function useLayoutAdjustment(layoutKey: string) {
  * already publishes — so every user needs to read their tenant's in order to
  * render anything at all. Rearranging it is administration, and is gated.
  *
- * `settings:manage` is the key in force because it is the one that exists in
- * both catalogues today. A dedicated `settings:record-layouts:manage` is the
- * right key and needs adding on the backend first; the catalogue-sync test
- * fails a frontend-only key, and rightly.
+ * Its own key rather than `settings:manage`, so arranging a record type can be
+ * delegated to whoever runs the CRM without also handing them the organisation.
  */
 export function useCanAdjustLayouts(): boolean {
-  return useCan("settings:manage");
+  return useCan("settings:record-layouts:manage");
 }
 
 export function useSaveLayoutAdjustment(layoutKey: string) {
