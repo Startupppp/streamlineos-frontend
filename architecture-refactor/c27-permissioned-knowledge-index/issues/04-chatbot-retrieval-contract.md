@@ -1,6 +1,6 @@
 # 04 — Chatbot retrieval is permissioned and bounded
 
-**Status:** in-progress — no-eligible-content short-circuit is present but fires after embedding, not before; one criterion genuinely open
+**Status:** done — the short-circuit now fires before any embedding spend; all seven criteria satisfied
 
 **Audit note (2026-08-26):** Six of seven criteria verified at named lines. The remaining item is a real gap: `kb-ask.service.ts:56-62` calls both retrieval methods unconditionally (embedding the query), then checks at `:63-76` if the results are empty. The CLAUDE.md requirement is to short-circuit BEFORE spending embedding credits when the org has no eligible content. Fix: add a count query against `kb_article_chunks` (and/or `kb_sources`) filtered by the caller's access before calling `retrieveTopArticles`.
 
