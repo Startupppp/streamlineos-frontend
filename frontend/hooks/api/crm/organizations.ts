@@ -1,9 +1,9 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useCan } from "@/hooks/api/access";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import type {
   CrmOrganization,
   CrmOrganizationFilters,
@@ -18,8 +18,7 @@ import type {
 } from "@/types/crm";
 
 export function useCrmOrganizations(filters?: CrmOrganizationFilters) {
-  const canView = useCan("crm:organizations:view");
-  return useQuery({
+  return useGatedQuery("crm:organizations:view", {
     queryKey: queryKeys.crmOrganizations.list(filters as Record<string, unknown>),
     queryFn: () =>
       apiClient.get<PaginatedCrmOrganizations>(
@@ -28,13 +27,11 @@ export function useCrmOrganizations(filters?: CrmOrganizationFilters) {
       ),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
-    enabled: canView,
   });
 }
 
 export function useCrmOrganizationsForPicker(search?: string) {
-  const canView = useCan("crm:organizations:view");
-  return useQuery({
+  return useGatedQuery("crm:organizations:view", {
     queryKey: queryKeys.crmOrganizations.list({ picker: true, search: search ?? "" }),
     queryFn: () =>
       apiClient.get<PaginatedCrmOrganizations>("/crm/organizations", {
@@ -44,17 +41,15 @@ export function useCrmOrganizationsForPicker(search?: string) {
       }),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
-    enabled: canView,
   });
 }
 
 export function useCrmOrganizationDetail(id: number) {
-  const canView = useCan("crm:organizations:view");
-  return useQuery({
+  return useGatedQuery("crm:organizations:view", {
     queryKey: queryKeys.crmOrganizations.detail(id),
     queryFn: () => apiClient.get<CrmOrganization>(`/crm/organizations/${id}`),
     staleTime: 2 * 60_000,
-    enabled: canView && id > 0,
+    enabled: id > 0,
   });
 }
 
@@ -96,52 +91,46 @@ export function useDeleteCrmOrganization() {
 }
 
 export function useCrmOrgHierarchy(id: number) {
-  const canView = useCan("crm:organizations:view");
-  return useQuery({
+  return useGatedQuery("crm:organizations:view", {
     queryKey: queryKeys.crmOrganizations.hierarchy(id),
     queryFn: () => apiClient.get<OrgHierarchyNode>(`/crm/organizations/${id}/hierarchy`),
     staleTime: 2 * 60_000,
-    enabled: canView && id > 0,
+    enabled: id > 0,
   });
 }
 
 export function useCrmOrgRollup(id: number) {
-  const canView = useCan("crm:organizations:view");
-  return useQuery({
+  return useGatedQuery("crm:organizations:view", {
     queryKey: queryKeys.crmOrganizations.rollup(id),
     queryFn: () => apiClient.get<OrgRollup>(`/crm/organizations/${id}/roll-up`),
     staleTime: 2 * 60_000,
-    enabled: canView && id > 0,
+    enabled: id > 0,
   });
 }
 
 export function useCrmOrgTimeline(id: number) {
-  const canView = useCan("crm:organizations:view");
-  return useQuery({
+  return useGatedQuery("crm:organizations:view", {
     queryKey: queryKeys.crmOrganizations.timeline(id),
     queryFn: () => apiClient.get<OrgTimelineEvent[]>(`/crm/organizations/${id}/timeline`),
     staleTime: 2 * 60_000,
-    enabled: canView && id > 0,
+    enabled: id > 0,
   });
 }
 
 export function useCrmOrgRelatedLeads(id: number) {
-  const canView = useCan("crm:organizations:view");
-  return useQuery({
+  return useGatedQuery("crm:organizations:view", {
     queryKey: queryKeys.crmOrganizations.relatedLeads(id),
     queryFn: () => apiClient.get<RelatedLead[]>(`/crm/organizations/${id}/related-leads`),
     staleTime: 2 * 60_000,
-    enabled: canView && id > 0,
+    enabled: id > 0,
   });
 }
 
 export function useCrmPeopleSlugs() {
-  const canView = useCan("crm:contacts:view");
-  return useQuery({
+  return useGatedQuery("crm:contacts:view", {
     queryKey: queryKeys.crm.peopleSlugs(),
     queryFn: () => apiClient.get<Record<string, string>>("/crm/people-slugs"),
     staleTime: 2 * 60_000,
-    enabled: canView,
   });
 }
 

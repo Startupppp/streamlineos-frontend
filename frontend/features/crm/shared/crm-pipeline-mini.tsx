@@ -15,7 +15,7 @@ interface CrmPipelineMiniProps {
 
 export function CrmPipelineMini({ byStatus, total }: CrmPipelineMiniProps) {
   const prefersReducedMotion = useReducedMotion();
-  const { data: statusOptions = [] } = useCrmOptions("lead_status");
+  const { data: statusOptions = [], access } = useCrmOptions("lead_status");
   const stages = statusOptions.filter((o) => o.key !== "LOST");
   const maxCount = Math.max(1, ...Object.values(byStatus));
   const isEmpty = total === 0 || stages.length === 0;
@@ -30,6 +30,7 @@ export function CrmPipelineMini({ byStatus, total }: CrmPipelineMiniProps) {
       <CardContent className="space-y-2 px-3 pb-3">
         {isEmpty ? (
           <EmptyState
+            access={access}
             illustration={<EmptyChartIllustration className="h-20 w-20" />}
             title="No pipeline data"
             description="Add leads to see your conversion funnel."

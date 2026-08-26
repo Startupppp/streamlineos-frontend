@@ -35,6 +35,7 @@ import { useProducts } from "@/hooks/api/crm/products";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { Pricebook } from "@/types/crm/pricebooks";
+import { NoPermissionState } from "@/components/shared";
 
 const defaultEntryValues: EntryFormValues = {
   productId: "",
@@ -55,7 +56,7 @@ export function PricebookEntriesSheet({
 }: PricebookEntriesSheetProps) {
   const pricebookId = pricebook?.id ?? "";
 
-  const { data: entries, isLoading } = usePricebookEntries(pricebookId);
+  const { data: entries, isLoading, access } = usePricebookEntries(pricebookId);
   const upsertEntry = useUpsertPricebookEntry();
   const deleteEntry = useDeletePricebookEntry();
   const { data: productsData } = useProducts();
@@ -122,7 +123,9 @@ export function PricebookEntriesSheet({
         </SheetHeader>
 
         <SheetBody className="space-y-4 px-6 py-4">
-          {isLoading ? (
+          {access.denied ? (
+            <NoPermissionState permission={access.permission} compact />
+          ) : isLoading ? (
             <p className="text-sm text-muted-foreground">Loading entries...</p>
           ) : entryList.length === 0 ? (
             <p className="text-sm text-muted-foreground">No entries yet. Add one below.</p>

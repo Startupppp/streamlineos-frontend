@@ -68,7 +68,7 @@ export default function ProductCatalogPage() {
     updateParams({ q: debouncedSearch || null });
   }, [debouncedSearch, searchParams, updateParams]);
 
-  const { data, isLoading, isError, refetch } = useProducts(debouncedSearch.trim() || undefined);
+  const { data, isLoading, isError, refetch, access } = useProducts(debouncedSearch.trim() || undefined);
   const createProduct = useCreateProduct();
   const updateProduct = useUpdateProduct();
   const deleteProduct = useDeleteProduct();
@@ -279,6 +279,7 @@ export default function ProductCatalogPage() {
             className="flex-1 min-h-0"
             emptyState={
               <EmptyState
+                access={access}
                 className="flex-1 border-0 bg-transparent"
                 illustration={<EmptyProductsIllustration />}
                 title={debouncedSearch ? "No products match your search" : "No products yet"}

@@ -1,9 +1,9 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import {  } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useCan } from "@/hooks/api/access";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export interface DataQualityOffender {
   id: number | string;
@@ -28,11 +28,9 @@ export interface DataQualityReport {
 }
 
 export function useCrmDataQuality() {
-  const canView = useCan("crm:data-quality:view");
-  return useQuery({
+  return useGatedQuery("crm:data-quality:view", {
     queryKey: queryKeys.crmDataQuality.report(),
     queryFn: () => apiClient.get<DataQualityReport>("/crm/data-quality"),
     staleTime: 60_000,
-    enabled: canView,
   });
 }

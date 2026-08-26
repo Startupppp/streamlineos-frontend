@@ -174,7 +174,7 @@ interface EntityRulesTabProps {
 }
 
 function EntityRulesTab({ entityType, onNewRule }: EntityRulesTabProps) {
-  const { data: rules, isLoading, isError, refetch } = useValidationRules({ entity: entityType });
+  const { data: rules, isLoading, isError, refetch, access } = useValidationRules({ entity: entityType });
   const { data: metadata } = useCrmMetadata();
   const updateRule = useUpdateValidationRule();
   const deleteRule = useDeleteValidationRule();
@@ -313,6 +313,7 @@ function EntityRulesTab({ entityType, onNewRule }: EntityRulesTabProps) {
 
   const emptyState = (
     <EmptyState
+      access={access}
       compact
       title="No rules for this entity"
       description="Add validation rules to enforce data quality on this entity type."

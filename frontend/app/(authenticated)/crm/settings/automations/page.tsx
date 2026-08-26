@@ -166,7 +166,7 @@ function buildColumns(
 
 export default function AutomationsPage() {
   const router = useRouter();
-  const { data, isLoading, isError, refetch } = useCrmAutomationRules();
+  const { data, isLoading, isError, refetch, access } = useCrmAutomationRules();
   const { data: eventsData } = useAutomationEvents();
   const enableRule = useEnableCrmAutomationRule();
   const disableRule = useDisableCrmAutomationRule();
@@ -264,6 +264,7 @@ export default function AutomationsPage() {
           />
         ) : rules.length === 0 && !isLoading ? (
           <EmptyState
+            access={access}
             className={CONTENT_FILL_PANEL}
             illustration={<AutomationsIllustration />}
             title="No automations yet"

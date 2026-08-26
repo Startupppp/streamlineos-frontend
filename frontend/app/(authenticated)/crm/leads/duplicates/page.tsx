@@ -221,7 +221,7 @@ function DuplicatesSkeleton() {
 }
 
 export default function DuplicateLeadsPage() {
-  const { data, isLoading, isFetching, isError, refetch } = useDuplicateLeads();
+  const { data, isLoading, isFetching, isError, refetch, access } = useDuplicateLeads();
   const { mutate: mergeLead, isPending: isMerging } = useMergeLead();
 
   const [pendingMerge, setPendingMerge] = useState<MergeTarget | null>(null);
@@ -298,6 +298,7 @@ export default function DuplicateLeadsPage() {
 
           {!data?.groups.length ? (
             <EmptyState
+              access={access}
               illustration={<EmptyLeadsIllustration />}
               title="No Duplicates Found"
               description="Great news — no potential duplicate leads were detected across your pipeline."

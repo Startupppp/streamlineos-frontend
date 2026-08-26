@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAutonomyScoreboard } from "@/hooks/api/crm/autonomy";
+import { NoPermissionState } from "@/components/shared";
 import { statusToneClasses, type StatusTone } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 import { KIND_LABELS, type ScoreboardKindRow } from "@/types/crm/autonomy";
@@ -93,7 +94,7 @@ function KindRow({ row }: { row: ScoreboardKindRow }) {
  */
 export function AutonomyScoreboard() {
   const [days, setDays] = useState(30);
-  const { data, isLoading, isError } = useAutonomyScoreboard(days);
+  const { data, isLoading, isError, access } = useAutonomyScoreboard(days);
 
   return (
     <Card>
@@ -118,7 +119,9 @@ export function AutonomyScoreboard() {
       </CardHeader>
 
       <CardContent>
-        {isLoading ? (
+        {access.denied ? (
+          <NoPermissionState permission={access.permission} compact />
+        ) : isLoading ? (
           <div className="flex flex-col gap-gap-field" aria-busy="true">
             {[0, 1, 2].map((i) => (
               <Skeleton key={i} className="h-12 w-full" />

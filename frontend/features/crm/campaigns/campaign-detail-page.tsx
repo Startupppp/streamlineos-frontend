@@ -91,7 +91,7 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
   const campaign = listData?.items.find((c) => c.id === campaignId);
 
   const { data: roi, isLoading: roiLoading } = useCampaignRoi(campaignId);
-  const { data: leadsData, isLoading: leadsLoading } = useCampaignLeads(campaignId, {
+  const { data: leadsData, isLoading: leadsLoading, access: leadsAccess } = useCampaignLeads(campaignId, {
     page: leadsPage,
     limit: 20,
   });
@@ -211,6 +211,7 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
               isLoading={leadsLoading}
               emptyState={
                 <EmptyState
+                  access={leadsAccess}
                   compact
                   title="No leads from this campaign yet"
                   description="Leads tagged with this campaign appear here, so you can see what the spend returned."

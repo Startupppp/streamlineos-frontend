@@ -106,11 +106,12 @@ export default function CompanyDetailPage({
   const money = useOrgDisplay();
   const canManage = useCan("crm:organizations:manage");
 
-  const { data: org, isLoading: orgLoading, isError: orgError, error: orgDetailError, refetch: refetchOrg } = useCrmOrganizationDetail(id);
+  const { data: org, isLoading: orgLoading, isError: orgError, error: orgDetailError, refetch: refetchOrg, access: orgAccess } = useCrmOrganizationDetail(id);
   const { data: rollup } = useCrmOrgRollup(id);
   const { data: hierarchy } = useCrmOrgHierarchy(id);
   const { data: timeline, isLoading: timelineLoading } = useCrmOrgTimeline(id);
   const {
+    access: relatedLeadsAccess,
     data: relatedLeads,
     isLoading: relatedLeadsLoading,
     isError: relatedLeadsError,
@@ -205,6 +206,7 @@ export default function CompanyDetailPage({
     return (
       <PageWrapper title="Not Found" subtitle="" backHref="/crm/companies">
         <EmptyState
+          access={orgAccess}
           title="Company not found"
           description="This company may have been deleted or you don't have access."
           action={{ label: "Back to Companies", href: "/crm/companies" }}
@@ -350,6 +352,7 @@ export default function CompanyDetailPage({
               isLoading={relatedLeadsLoading}
               emptyState={
                 <EmptyState
+                  access={relatedLeadsAccess}
                   title="No leads from this company"
                   description="Set this company on a lead and it shows up here, alongside its deals and contacts."
                   compact

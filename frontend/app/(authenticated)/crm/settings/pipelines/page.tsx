@@ -35,7 +35,7 @@ import { StageCard } from "@/features/crm/settings/pipelines/stage-card";
 import { getPipelineTypeMeta } from "@/features/crm/settings/pipelines/pipeline-constants";
 
 export default function PipelinesPage() {
-  const { data, isLoading, isError, refetch } = useCrmMetadata();
+  const { data, isLoading, isError, refetch, access } = useCrmMetadata();
   const qc = useQueryClient();
   const updatePipeline = useUpdatePipeline();
   const deleteStage = useDeleteStage();
@@ -228,6 +228,7 @@ export default function PipelinesPage() {
             <div className="flex-1 flex flex-col min-h-0 min-w-0">
               {!selectedPipeline ? (
                 <EmptyState
+                  access={access}
                   title="Select a pipeline"
                   description="Choose a pipeline from the left to manage its stages."
                   className={cn(CONTENT_FILL_PANEL, "border-0 bg-transparent")}

@@ -47,6 +47,7 @@ const STEP_TYPE_LABELS: Record<SequenceStepType, string> = {
   whatsapp_task: "WhatsApp Task",
   wait: "Wait",
 };
+import { NoPermissionState } from "@/components/shared";
 
 const ENROLLMENT_STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   active: "default",
@@ -67,7 +68,7 @@ interface AddStepFormValues {
 }
 
 function StepsTab({ sequenceId }: { sequenceId: string }) {
-  const { data, isLoading } = useCrmSequenceSteps(sequenceId);
+  const { data, isLoading, access } = useCrmSequenceSteps(sequenceId);
   const createStep = useCreateCrmSequenceStep(sequenceId);
   const deleteStep = useDeleteCrmSequenceStep(sequenceId);
   const [addingStep, setAddingStep] = useState(false);
@@ -114,9 +115,11 @@ function StepsTab({ sequenceId }: { sequenceId: string }) {
 
   return (
     <div className="space-y-3">
-      {steps.length === 0 && !addingStep && (
+      {access.denied ? (
+        <NoPermissionState permission={access.permission} compact />
+      ) : steps.length === 0 && !addingStep ? (
         <p className="text-sm text-muted-foreground text-center py-6">No steps yet.</p>
-      )}
+      ) : null}
       {steps
         .slice()
         .sort((a, b) => a.sortOrder - b.sortOrder)
@@ -207,7 +210,7 @@ function StepsTab({ sequenceId }: { sequenceId: string }) {
 }
 
 function EnrollmentsTab({ sequenceId }: { sequenceId: string }) {
-  const { data, isLoading } = useCrmSequenceEnrollments(sequenceId, 1);
+  const { data, isLoading, access } = useCrmSequenceEnrollments(sequenceId, 1);
   const stopEnrollment = useStopEnrollment(sequenceId);
 
   const handleStop = useCallback(
@@ -221,6 +224,8 @@ function EnrollmentsTab({ sequenceId }: { sequenceId: string }) {
   );
 
   const enrollments = data?.enrollments ?? [];
+
+  if (access.denied) return <NoPermissionState permission={access.permission} compact />;
 
   if (isLoading) return <DataTableSkeleton rows={8} columns={4} />;
 

@@ -264,7 +264,7 @@ export default function CrmOptionsPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
-  const { data, isLoading, isError, refetch } = useCrmMetadata();
+  const { data, isLoading, isError, refetch, access } = useCrmMetadata();
   const deleteOption = useDeleteOption();
 
   const options = data?.options[selectedType] ?? [];
@@ -408,6 +408,7 @@ export default function CrmOptionsPage() {
 
               {sortedOptions.length === 0 && !showAdd ? (
                 <EmptyState
+                  access={access}
                   title={`No ${selectedLabel.toLowerCase()} options`}
                   description="Add options to populate this dropdown in CRM records."
                   action={{ label: "Add Option", onClick: handleShowAdd }}

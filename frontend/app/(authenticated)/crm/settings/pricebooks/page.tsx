@@ -75,7 +75,7 @@ export default function PricebooksPage() {
     updateParams({ q: debouncedSearch || null });
   }, [debouncedSearch, searchParams, updateParams]);
 
-  const { data: pricebooks, isLoading, isError, refetch } = usePricebooks();
+  const { data: pricebooks, isLoading, isError, refetch, access } = usePricebooks();
   const createPricebook = useCreatePricebook();
   const updatePricebook = useUpdatePricebook();
   const deletePricebook = useDeletePricebook();
@@ -332,6 +332,7 @@ export default function PricebooksPage() {
             className="flex-1 min-h-0"
             emptyState={
               <EmptyState
+                access={access}
                 className="flex-1 border-0 bg-transparent"
                 illustration={<EmptyProductsIllustration />}
                 title={debouncedSearch ? "No pricebooks match your search" : "No pricebooks yet"}

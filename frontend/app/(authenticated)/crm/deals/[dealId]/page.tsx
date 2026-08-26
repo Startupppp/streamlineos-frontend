@@ -63,7 +63,7 @@ export default function DealDetailPage({
   const layout = useDealLayout();
   const money = useOrgDisplay();
 
-  const { data: deal, isLoading, isError, error, refetch } = useDealDetail(dealId);
+  const { data: deal, isLoading, isError, error, refetch, access } = useDealDetail(dealId);
   const [isEditing, setIsEditing] = useState(false);
   const [pendingAction, setPendingAction] = useState<{
     type: "call" | "note" | "email" | "meeting";
@@ -286,6 +286,7 @@ export default function DealDetailPage({
     return (
       <PageWrapper title="Deal Not Found" backHref="/crm/deals">
         <EmptyState
+          access={access}
           title="Deal not found"
           description="This deal may have been deleted or you may not have access."
           action={{ label: "Back to Deals", href: "/crm/deals" }}

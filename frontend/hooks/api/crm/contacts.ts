@@ -1,9 +1,9 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useCan } from "@/hooks/api/access";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import type {
   Contact,
   PaginatedContacts,
@@ -17,24 +17,21 @@ import type {
 } from "@/types/crm";
 
 export function useContacts(filters?: ContactFilters) {
-  const canView = useCan("crm:contacts:view");
-  return useQuery({
+  return useGatedQuery("crm:contacts:view", {
     queryKey: queryKeys.contacts.list(filters as Record<string, unknown>),
     queryFn: () =>
       apiClient.get<PaginatedContacts>("/contacts", filters as Record<string, unknown>),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
-    enabled: canView,
   });
 }
 
 export function useContactDetail(id: number) {
-  const canView = useCan("crm:contacts:view");
-  return useQuery({
+  return useGatedQuery("crm:contacts:view", {
     queryKey: queryKeys.contacts.detail(id),
     queryFn: () => apiClient.get<Contact>(`/contacts/${id}`),
     staleTime: 2 * 60_000,
-    enabled: canView && id > 0,
+    enabled: id > 0,
   });
 }
 
@@ -78,13 +75,12 @@ export function useDeleteContact() {
 }
 
 export function useContactRoles(contactId: number, params?: { entityType?: string; entityId?: number }) {
-  const canView = useCan("crm:contacts:view");
-  return useQuery({
+  return useGatedQuery("crm:contacts:view", {
     queryKey: queryKeys.contactRoles.list(contactId, params as Record<string, unknown>),
     queryFn: () =>
       apiClient.get<ContactRole[]>(`/contacts/${contactId}/roles`, params as Record<string, unknown>),
     staleTime: 2 * 60_000,
-    enabled: canView && contactId > 0,
+    enabled: contactId > 0,
   });
 }
 
@@ -113,13 +109,11 @@ export function useRemoveContactRole() {
 }
 
 export function useContactDuplicates(params?: { page?: number; limit?: number }) {
-  const canView = useCan("crm:contacts:view");
-  return useQuery({
+  return useGatedQuery("crm:contacts:view", {
     queryKey: queryKeys.contactDuplicates.list(params as Record<string, unknown>),
     queryFn: () =>
       apiClient.get<DuplicateContactPair[]>("/contacts/duplicates", params as Record<string, unknown>),
     staleTime: 5 * 60_000,
-    enabled: canView,
   });
 }
 

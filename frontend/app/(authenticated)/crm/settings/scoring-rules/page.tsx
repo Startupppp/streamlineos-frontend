@@ -165,7 +165,7 @@ function ScoringRuleRow({ rule, isEditing, editForm, onEditSubmit, onEdit, onDel
 }
 
 export default function ScoringRulesPage() {
-  const { data: rules, isLoading, isError, refetch } = useScoringRules();
+  const { data: rules, isLoading, isError, refetch, access } = useScoringRules();
   const [createOpen, setCreateOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
@@ -387,6 +387,7 @@ export default function ScoringRulesPage() {
                 ) : (
                   <div className="py-14 px-4">
                     <EmptyState
+                      access={access}
                       illustrationPreset="automations"
                       title="No scoring rules defined"
                       description="Create your first rule to start scoring leads automatically."

@@ -14,7 +14,7 @@ import { formatDate } from "./utils";
 import type { OnboardingItem } from "@/types/crm";
 
 export function ClientOnboardingTab({ clientId }: { clientId: number }) {
-  const { data, isLoading, isError, refetch } = useClientOnboardingItems(clientId);
+  const { data, isLoading, isError, refetch, access } = useClientOnboardingItems(clientId);
   const toggleMutation = useToggleOnboardingItem();
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
@@ -54,6 +54,7 @@ export function ClientOnboardingTab({ clientId }: { clientId: number }) {
   if (!data?.length) {
     return (
       <EmptyState
+        access={access}
         title="No onboarding steps yet"
         description="An onboarding checklist tracks what this client still needs from you before they are live."
         compact

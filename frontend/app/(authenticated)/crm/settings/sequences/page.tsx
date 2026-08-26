@@ -27,7 +27,7 @@ import { SequenceSheet } from "@/features/crm/settings/sequences/sequence-sheet"
 import type { CrmSequence } from "@/types/crm";
 
 export default function SequencesPage() {
-  const { data, isLoading, isError, refetch } = useCrmSequences();
+  const { data, isLoading, isError, refetch, access } = useCrmSequences();
   const deleteSequence = useDeleteCrmSequence();
   const updateSequence = useUpdateCrmSequence();
 
@@ -212,6 +212,7 @@ export default function SequencesPage() {
             className="flex-1 min-h-0"
             emptyState={
               <EmptyState
+                access={access}
                 className="flex-1 border-0 bg-transparent"
                 illustration={<AutomationsIllustration />}
                 title="No sequences yet"

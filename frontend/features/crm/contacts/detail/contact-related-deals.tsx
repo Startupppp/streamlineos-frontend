@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useDealDetail } from "@/hooks/api/crm/deals";
+import { NoPermissionState } from "@/components/shared";
 import { formatCurrency } from "@/lib/format-utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
@@ -28,7 +29,17 @@ interface ContactRelatedDealsProps {
 }
 
 function DealRow({ dealId }: { dealId: number }) {
-  const { data: deal, isLoading } = useDealDetail(dealId);
+  const { data: deal, isLoading, access } = useDealDetail(dealId);
+
+  if (access.denied) {
+    return (
+      <tr className="border-b border-border/50">
+        <td className="px-4 py-3" colSpan={4}>
+          <NoPermissionState permission={access.permission} compact />
+        </td>
+      </tr>
+    );
+  }
 
   if (isLoading) {
     return (

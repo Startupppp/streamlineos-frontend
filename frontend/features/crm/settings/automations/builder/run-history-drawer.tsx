@@ -15,6 +15,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useCrmAutomationRuns } from "@/hooks/api/crm";
 import { cn } from "@/lib/utils";
 import type { AutomationRunStatus } from "@/types/crm";
+import { NoPermissionState } from "@/components/shared";
 
 interface RunHistoryDrawerProps {
   ruleId: number;
@@ -31,7 +32,7 @@ const statusConfig: Record<AutomationRunStatus, { label: string; icon: React.Com
 };
 
 export const RunHistoryDrawer = memo(function RunHistoryDrawer({ ruleId, open, onOpenChange }: RunHistoryDrawerProps) {
-  const { data, isLoading, error } = useCrmAutomationRuns(ruleId, 1);
+  const { data, isLoading, error, access } = useCrmAutomationRuns(ruleId, 1);
   const runs = data?.runs ?? [];
 
   return (
@@ -47,6 +48,8 @@ export const RunHistoryDrawer = memo(function RunHistoryDrawer({ ruleId, open, o
             Array.from({ length: 5 }).map((_, i) => (
               <Skeleton key={i} className="h-16 w-full rounded-lg" />
             ))
+          ) : access.denied ? (
+            <NoPermissionState permission={access.permission} compact />
           ) : runs.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">No runs yet.</p>
           ) : (

@@ -3,7 +3,7 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { LoadingState } from "@/components/shared/loading-state";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
-import { useAccess, useCan } from "@/hooks/api/access";
+import { usePermissionGate } from "@/hooks/api/access";
 import { AutonomyReviewFeed } from "@/features/crm/autonomy/autonomy-review-feed";
 import { AutonomySwitchesPanel } from "@/features/crm/autonomy/autonomy-switches-panel";
 import { AutonomyScoreboard } from "@/features/crm/autonomy/autonomy-scoreboard";
@@ -16,19 +16,18 @@ import { PendingSendsPanel } from "@/features/crm/autonomy/pending-sends-panel";
  * organisation, why, and a one-click undo for anything still reversible.
  */
 export default function AutonomyReviewPage() {
-  const { isPending } = useAccess();
-  const canView = useCan("crm:autonomy:view");
+  const access = usePermissionGate("crm:autonomy:view");
 
   return (
     <PageWrapper
       title="What the system did"
       subtitle="Every action taken without being asked, and what it was based on."
     >
-      {isPending ? (
+      {access.pending ? (
         <LoadingState variant="page" />
-      ) : !canView ? (
+      ) : access.denied ? (
         <NoPermissionState
-          permission="crm:autonomy:view"
+          permission={access.permission}
           description="You don’t have permission to review what the system decided."
         />
       ) : (

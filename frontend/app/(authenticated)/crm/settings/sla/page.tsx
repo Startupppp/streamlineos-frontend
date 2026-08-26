@@ -198,9 +198,9 @@ function buildPolicyColumns(
 }
 
 export default function SlaPage() {
-  const { data: policies, isLoading, isError, refetch } = useSlaPolicies();
+  const { data: policies, isLoading, isError, refetch, access } = useSlaPolicies();
   const { data: slaReport, isLoading: reportLoading } = useSlaReport();
-  const { data: breachedLeads, isLoading: breachesLoading } = useSlaBreachedLeads({ limit: 10 });
+  const { data: breachedLeads, isLoading: breachesLoading, access: breachesAccess } = useSlaBreachedLeads({ limit: 10 });
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingPolicy, setEditingPolicy] = useState<SlaPolicyItem | null>(null);
@@ -281,6 +281,7 @@ export default function SlaPage() {
   const policyEmptyState = (
     <div className="py-14 px-4">
       <EmptyState
+        access={access}
         illustrationPreset="security"
         title="No SLA policies defined"
         description="Create a policy to track response and resolution time commitments."
@@ -402,6 +403,7 @@ export default function SlaPage() {
             ) : (
               <Card className="bg-card rounded-xl border border-border shadow-sm">
                 <EmptyState
+                  access={breachesAccess}
                   compact
                   illustrationPreset="security"
                   title="No breaches in the last 30 days"

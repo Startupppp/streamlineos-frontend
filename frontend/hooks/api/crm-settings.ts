@@ -1,9 +1,9 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useCan } from "@/hooks/api/access";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export type AssignmentType =
   | "assign_user"
@@ -97,12 +97,10 @@ interface UpdateScoringRuleInput {
 }
 
 export function useAssignmentRules() {
-  const canManage = useCan("crm:assignment-rules:manage");
-  return useQuery({
+  return useGatedQuery("crm:assignment-rules:manage", {
     queryKey: queryKeys.crmSettings.assignmentRules(),
     queryFn: () => apiClient.get<AssignmentRule[]>("/crm/assignment-rules"),
     staleTime: 2 * 60_000,
-    enabled: canManage,
   });
 }
 
@@ -192,8 +190,7 @@ export function useEmailTemplates(params?: {
   limit?: number;
   offset?: number;
 }) {
-  const canManage = useCan("crm:email-templates:manage");
-  return useQuery({
+  return useGatedQuery("crm:email-templates:manage", {
     queryKey: queryKeys.crmSettings.emailTemplates(
       params as Record<string, unknown>,
     ),
@@ -203,7 +200,6 @@ export function useEmailTemplates(params?: {
         params as Record<string, unknown>,
       ),
     staleTime: 2 * 60_000,
-    enabled: canManage,
   });
 }
 
@@ -244,12 +240,10 @@ export function useDeleteEmailTemplate() {
 }
 
 export function useScoringRules() {
-  const canManage = useCan("crm:scoring-rules:manage");
-  return useQuery({
+  return useGatedQuery("crm:scoring-rules:manage", {
     queryKey: queryKeys.crmSettings.scoringRules(),
     queryFn: () => apiClient.get<ScoringRule[]>("/crm/scoring-rules"),
     staleTime: 2 * 60_000,
-    enabled: canManage,
   });
 }
 
@@ -333,28 +327,23 @@ interface UpdateSlaPolicyInput {
 }
 
 export function useSlaPolicies() {
-  const canManage = useCan("crm:sla:manage");
-  return useQuery({
+  return useGatedQuery("crm:sla:manage", {
     queryKey: queryKeys.crmSettings.slaPolicies(),
     queryFn: () => apiClient.get<SlaPolicy[]>("/crm/sla/policies"),
     staleTime: 2 * 60_000,
-    enabled: canManage,
   });
 }
 
 export function useSlaReport() {
-  const canManage = useCan("crm:sla:manage");
-  return useQuery({
+  return useGatedQuery("crm:sla:manage", {
     queryKey: queryKeys.crmSettings.slaReport(),
     queryFn: () => apiClient.get<SlaReport>("/crm/sla/report"),
     staleTime: 2 * 60_000,
-    enabled: canManage,
   });
 }
 
 export function useSlaBreachedLeads(params?: { limit?: number }) {
-  const canManage = useCan("crm:sla:manage");
-  return useQuery({
+  return useGatedQuery("crm:sla:manage", {
     queryKey: queryKeys.crmSettings.slaBreachedLeads(
       params as Record<string, unknown>,
     ),
@@ -364,7 +353,6 @@ export function useSlaBreachedLeads(params?: { limit?: number }) {
         params as Record<string, unknown>,
       ),
     staleTime: 2 * 60_000,
-    enabled: canManage,
   });
 }
 
@@ -457,12 +445,10 @@ export interface TerritoryPreviewResult {
 }
 
 export function useTerritories() {
-  const canManage = useCan("crm:territories:manage");
-  return useQuery({
+  return useGatedQuery("crm:territories:manage", {
     queryKey: queryKeys.crmSettings.territories(),
     queryFn: () => apiClient.get<Territory[]>("/crm/territories"),
     staleTime: 2 * 60_000,
-    enabled: canManage,
   });
 }
 

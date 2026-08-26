@@ -32,6 +32,7 @@ import { StageSkipDialog } from "@/features/crm/deals/stage-skip-dialog";
 import { useDealsExport } from "@/features/crm/deals/use-deals-export";
 import { ImportLinkButton } from "@/features/crm/import/import-link-button";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { useCan } from "@/hooks/api/access";
 
 export default function DealsPage() {
@@ -89,7 +90,7 @@ export default function DealsPage() {
     return Object.keys(filters).length > 0 ? filters : undefined;
   }, [assigneeFilter, stageFilter]);
 
-  const { data: allDeals, isLoading, isError, refetch } = useDeals(dealFilters);
+  const { data: allDeals, isLoading, isError, refetch, access } = useDeals(dealFilters);
   const { data: rawEmployees } = useHrEmployees();
   const employees = Array.isArray(rawEmployees) ? rawEmployees : (rawEmployees?.data ?? []);
 
@@ -304,6 +305,14 @@ export default function DealsPage() {
     ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
     : fadeUp;
 
+  if (view === "kanban" && access.denied) {
+    return (
+      <PageWrapper title="Deals Pipeline" subtitle="Manage your deals">
+        <NoPermissionState permission={access.permission} />
+      </PageWrapper>
+    );
+  }
+
   if (view === "kanban" && isLoading) return <DealsLoadingSkeleton />;
 
   if (view === "kanban" && isError) {
@@ -390,6 +399,7 @@ export default function DealsPage() {
                 deals={filteredDeals}
                 isLoading={isLoading}
                 isError={isError}
+                access={access}
                 density={density}
                 canCreate={canCreateDeal}
                 canUpdate={canUpdateDeal}

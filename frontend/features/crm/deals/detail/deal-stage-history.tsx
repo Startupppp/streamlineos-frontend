@@ -62,7 +62,7 @@ export function DealStageHistory({ dealId, card }: DealStageHistoryProps) {
 }
 
 function StageHistoryBody({ dealId }: { dealId: number | null }) {
-  const { data, isLoading, isError, error, refetch } = useDealStageTransitions(dealId);
+  const { data, isLoading, isError, error, refetch, access } = useDealStageTransitions(dealId);
   const transitions = data?.data ?? [];
 
   if (isLoading)
@@ -86,6 +86,7 @@ function StageHistoryBody({ dealId }: { dealId: number | null }) {
   if (transitions.length === 0)
     return (
       <EmptyState
+        access={access}
         title="No stage changes yet"
         description="Every move through the pipeline is recorded here, with who or what made it."
         compact

@@ -208,7 +208,7 @@ function buildColumns(
 }
 
 export default function TerritoriesPage() {
-  const { data: territories, isLoading, isError, refetch } = useTerritories();
+  const { data: territories, isLoading, isError, refetch, access } = useTerritories();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingTerritory, setEditingTerritory] = useState<Territory | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
@@ -283,6 +283,7 @@ export default function TerritoriesPage() {
 
   const emptyState = (
     <EmptyState
+      access={access}
       illustration={<EmptyTargetIllustration />}
       title="No territories"
       description="Define geographic or segment-based territories to automatically route leads to the right reps."

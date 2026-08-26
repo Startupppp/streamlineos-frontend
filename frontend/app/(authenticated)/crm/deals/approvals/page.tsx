@@ -115,7 +115,7 @@ export default function DealApprovalsPage() {
   } | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
 
-  const { data, isLoading, isError, refetch } = useDealApprovals({
+  const { data, isLoading, isError, refetch, access } = useDealApprovals({
     status: statusFilter === "all" ? undefined : statusFilter,
   });
   const resolve = useResolveDealApproval();
@@ -306,6 +306,7 @@ export default function DealApprovalsPage() {
           emptyState={
             isFiltered ? (
               <EmptyState
+                access={access}
                 illustration={<EmptyApprovalIllustration />}
                 title="No approvals match this filter"
                 description={`Showing ${statusFilterLabel.toLowerCase()} approvals only. Clear the filter to see every request.`}
@@ -315,6 +316,7 @@ export default function DealApprovalsPage() {
               />
             ) : (
               <EmptyState
+                access={access}
                 illustration={<EmptyApprovalIllustration />}
                 title="Nothing waiting on you"
                 description="Deals that need sign-off before they can move — a discount past your threshold, say — land here."

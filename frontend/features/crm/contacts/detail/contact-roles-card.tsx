@@ -24,6 +24,7 @@ import { useContactRoles, useAddContactRole, useRemoveContactRole, useDeals, use
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { CONTACT_ROLE_DEFAULTS } from "@/types/crm";
+import { NoPermissionState } from "@/components/shared";
 
 interface ContactRolesCardProps {
   contactId: number;
@@ -34,7 +35,7 @@ function formatRoleKey(key: string): string {
 }
 
 export function ContactRolesCard({ contactId }: ContactRolesCardProps) {
-  const { data: roles, isLoading } = useContactRoles(contactId);
+  const { data: roles, isLoading, access } = useContactRoles(contactId);
   const addRole = useAddContactRole();
   const removeRole = useRemoveContactRole();
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -174,7 +175,9 @@ export function ContactRolesCard({ contactId }: ContactRolesCardProps) {
         </Popover>
       </CardHeader>
       <CardContent className="px-4 py-3">
-        {isLoading ? (
+        {access.denied ? (
+          <NoPermissionState permission={access.permission} compact />
+        ) : isLoading ? (
           <div className="space-y-2">
             {[1, 2].map((i) => <Skeleton key={i} className="h-6 w-full" />)}
           </div>

@@ -167,7 +167,7 @@ function VariableButton({ variable, formType, onInsert }: VariableButtonProps) {
 }
 
 export default function EmailTemplatesPage() {
-  const { data: templates, isLoading, isError, refetch } = useEmailTemplates({ limit: 50, offset: 0 });
+  const { data: templates, isLoading, isError, refetch, access } = useEmailTemplates({ limit: 50, offset: 0 });
   const [createOpen, setCreateOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [previewId, setPreviewId] = useState<number | null>(null);
@@ -349,6 +349,7 @@ export default function EmailTemplatesPage() {
               ) : (
                 <div className="col-span-full">
                   <EmptyState
+                    access={access}
                     illustration={<EmptyMailIllustration />}
                     title="No email templates"
                     description="Create reusable templates with dynamic variables to speed up outreach."

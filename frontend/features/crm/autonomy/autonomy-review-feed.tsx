@@ -141,6 +141,7 @@ export function AutonomyReviewFeed() {
         </div>
       ) : decisions.length === 0 ? (
         <EmptyState
+          access={feed.access}
           illustrationPreset="report"
           title="Nothing to review"
           description={

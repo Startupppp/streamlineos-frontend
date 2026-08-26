@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
 import {
@@ -55,7 +55,7 @@ export default function QuoteDetailPage({
   const [signedDialogOpen, setSignedDialogOpen] = useState(false);
   const [signedDocRef, setSignedDocRef] = useState("");
 
-  const { data, isLoading, isError, refetch } = useQuoteDetail(quoteId);
+  const { data, isLoading, isError, refetch, access } = useQuoteDetail(quoteId);
   const { data: settings } = useQuoteSettings();
   const { data: pricebooks } = usePricebooks();
   const { data: templates } = useQuoteTemplates();
@@ -207,6 +207,14 @@ export default function QuoteDetailPage({
           onRetry={handleRetry}
           className="flex-1"
         />
+      </PageWrapper>
+    );
+  }
+
+  if (access.denied) {
+    return (
+      <PageWrapper title="Quote" backHref="/crm/quotes">
+        <NoPermissionState permission={access.permission} />
       </PageWrapper>
     );
   }

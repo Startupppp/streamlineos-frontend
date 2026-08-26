@@ -88,7 +88,7 @@ export function CompanyListPage() {
     updateParams({ q: debouncedSearch || null, page: null });
   }, [debouncedSearch, searchParams, updateParams]);
 
-  const { data, isLoading, isError, error, refetch } = useCrmOrganizations({
+  const { data, isLoading, isError, error, refetch, access } = useCrmOrganizations({
     search: debouncedSearch.trim() || undefined,
     limit: PAGE_SIZE,
     page,
@@ -231,6 +231,7 @@ export function CompanyListPage() {
           />
         ) : companies.length === 0 ? (
           <EmptyState
+            access={access}
             illustration={<EmptyCompaniesIllustration />}
             title={isFiltered ? "No companies match this search" : "No companies yet"}
             description={

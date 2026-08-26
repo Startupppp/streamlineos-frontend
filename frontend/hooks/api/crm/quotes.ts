@@ -1,9 +1,9 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useCan } from "@/hooks/api/access";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import type {
   Quote,
   QuoteListItem,
@@ -19,8 +19,7 @@ export interface QuoteListResponse {
 }
 
 export function useQuotes(filters?: QuoteFilters) {
-  const canRead = useCan("crm:quotes:read");
-  return useQuery({
+  return useGatedQuery("crm:quotes:read", {
     queryKey: queryKeys.crmQuotes.list(filters as Record<string, unknown>),
     queryFn: () => {
       const params: Record<string, string | number> = {};
@@ -33,27 +32,24 @@ export function useQuotes(filters?: QuoteFilters) {
     },
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
-    enabled: canRead,
   });
 }
 
 export function useQuoteDetail(id: number) {
-  const canRead = useCan("crm:quotes:read");
-  return useQuery({
+  return useGatedQuery("crm:quotes:read", {
     queryKey: queryKeys.crmQuotes.detail(id),
     queryFn: () => apiClient.get<Quote>(`/quotes/${id}`),
     staleTime: 2 * 60_000,
-    enabled: canRead && id > 0,
+    enabled: id > 0,
   });
 }
 
 export function useDealQuotes(dealId: number) {
-  const canRead = useCan("crm:quotes:read");
-  return useQuery({
+  return useGatedQuery("crm:quotes:read", {
     queryKey: queryKeys.crmQuotes.byDeal(dealId),
     queryFn: () => apiClient.get<QuoteListResponse>("/quotes", { dealId, pageSize: 100 }),
     staleTime: 2 * 60_000,
-    enabled: canRead && dealId > 0,
+    enabled: dealId > 0,
   });
 }
 

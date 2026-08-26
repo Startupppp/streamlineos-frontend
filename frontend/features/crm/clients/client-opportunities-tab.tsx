@@ -80,7 +80,7 @@ const columns: DataTableColumn<ClientOpportunity>[] = [
 ];
 
 export function ClientOpportunitiesTab({ clientId }: { clientId: number }) {
-  const { data, isLoading, isError, refetch } = useClientOpportunities(clientId);
+  const { data, isLoading, isError, refetch, access } = useClientOpportunities(clientId);
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
@@ -102,6 +102,7 @@ export function ClientOpportunitiesTab({ clientId }: { clientId: number }) {
       isLoading={isLoading}
       emptyState={
         <EmptyState
+          access={access}
           title="No opportunities logged"
           description="Track an upsell or cross-sell here so renewals and expansion don't live only in someone's head."
           compact

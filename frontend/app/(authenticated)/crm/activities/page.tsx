@@ -98,7 +98,7 @@ function ActivitiesContent() {
     router.replace("?", { scroll: false });
   }, [router]);
 
-  const { data, isLoading, isError, refetch } = useCrmActivities({
+  const { data, isLoading, isError, refetch, access } = useCrmActivities({
     type:       typeFilter       || undefined,
     entityType: entityTypeFilter || undefined,
     status:     statusFilter     || undefined,
@@ -223,6 +223,7 @@ function ActivitiesContent() {
 
         {!isLoading && !isError && filteredActivities.length === 0 && (
           <EmptyState
+            access={access}
             illustration={<EmptyActivityIllustration />}
             title={hasActiveFilters ? "No results found" : "No activities yet"}
             description={

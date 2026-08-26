@@ -78,6 +78,7 @@ export default function QuoteSettingsPage() {
     isLoading: templatesLoading,
     isError: templatesError,
     refetch: refetchTemplates,
+    access: templatesAccess,
   } = useQuoteTemplates();
   const createTemplate = useCreateQuoteTemplate();
   const updateTemplate = useUpdateQuoteTemplate();
@@ -326,6 +327,7 @@ export default function QuoteSettingsPage() {
               isLoading={templatesLoading}
               emptyState={
                 <EmptyState
+                  access={templatesAccess}
                   compact
                   title="No templates yet"
                   description="A template is the document a quote is rendered into — your letterhead, terms and layout. Add one to send quotes that look like yours."

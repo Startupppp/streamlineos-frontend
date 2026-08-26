@@ -146,7 +146,7 @@ const COLUMNS: DataTableColumn<AgingDealRow>[] = [
 ];
 
 export default function DealAgingPage() {
-  const { data, isLoading, isError, refetch } = useDealAging();
+  const { data, isLoading, isError, refetch, access } = useDealAging();
 
   const sortedDeals = useMemo(() => {
     if (!data?.deals) return [];
@@ -223,6 +223,7 @@ export default function DealAgingPage() {
             isLoading={isLoading}
             emptyState={
               <EmptyState
+                access={access}
                 illustration={<EmptyDealsIllustration />}
                 title="All deals are moving smoothly"
                 description="No deals are currently stuck in any pipeline stage."

@@ -76,7 +76,7 @@ export default function CustomFieldsPage() {
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const shouldReduceMotion = useReducedMotion();
 
-  const { data, isLoading, isError, refetch } = useCustomFields(entityType);
+  const { data, isLoading, isError, refetch, access } = useCustomFields(entityType);
   const fields = data?.fields ?? [];
 
   const createField = useCreateCustomField();
@@ -421,6 +421,7 @@ export default function CustomFieldsPage() {
               ))
             ) : (
               <EmptyState
+                access={access}
                 illustration={<EmptyDocumentsIllustration />}
                 className={CONTENT_FILL_PANEL}
                 title={`No custom fields for ${entityLabel} yet`}
