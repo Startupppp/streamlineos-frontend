@@ -25,9 +25,13 @@
 
   Three of the four are destructive or cancelling actions announced to a screen reader as nothing but "button". That is the defect this ticket exists for, and the reason the rule was worth narrowing rather than deleting.
 - [x] Flip both `eslint.config.mjs` blocks to `"error"` — done at `:58` and `:101`, after the count reached zero-by-fixing rather than zero-by-narrowing. Each of the four files was re-linted individually at `error` severity and is clean.
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md) — held until the confirming whole-repo run finishes; see below.
+- [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md) — done, after the exhaustive re-check returned zero.
 
-**Audit note (2026-08-27):** All four acceptance criteria met. One honest caveat on the evidence: the count of 3 came from a full-repo run *before* the fixes, and each fix was verified individually afterwards, but the confirming full-repo run at `"error"` was still executing when this was written — the machine was carrying three other lanes' test suites and the run exceeded 20 minutes. If it returns anything, it will be a control added by a concurrent lane since the count, which is the rule doing its job rather than a defect in this work. Re-run `npx eslint --format json -o report.json .` in `frontend/` to confirm.
+**Audit note (2026-08-27):** All four acceptance criteria met, and the confirming run is done: **357 files, zero violations.**
+
+The whole-repo `eslint` run twice exceeded 25 minutes and was killed — the machine was carrying three other lanes' test suites. Rather than claim a pass that never completed, the check was made exhaustive a cheaper way. The rule fires only on `JSXOpeningElement` where the name is the lowercase literal `button`, so a file with no `<button` cannot trigger it: linting every `.tsx` containing `<button` covers the rule completely. That is 357 files across `app`, `components`, `features`, `hooks` and `lib`, linted in batches of 60 (a single `eslint` invocation with 356 paths exits 1 on Windows without writing its report — argument-length, not a lint failure).
+
+Restricting the search to `app components features` found 356 and missed one in `lib/` — checked and clean. Worth recording because the near-miss is the whole risk of a scoped verification.
 
 **On the narrowing.** Tightening a rule until it stops reporting is a standard way to fake this ticket, so it is worth stating what happened: the rule went from 101 findings to 4 by reading all 101 and removing three classes of false positive (`{...props}` spreads, lowercase HTML children, PascalCase non-icon children like `<TruncatedText>`), and the narrowed rule still caught four real defects that the original had buried in noise. No existing control was edited to satisfy it, and no call site was suppressed.
 
