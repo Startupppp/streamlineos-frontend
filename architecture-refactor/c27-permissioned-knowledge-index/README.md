@@ -2,7 +2,7 @@
 
 PRD: [`prd.md`](prd.md) · Program: [`../README.md`](../README.md)
 
-**Wave 1** · 5 tickets, 3 done, 2 in-progress.
+**Wave 1** · 5 tickets, 4 done, 1 in-progress.
 
 The direct-read/search visibility seam shipped in c1 and is correct. Remaining work is performance, lifecycle and ingestion parity.
 
@@ -10,7 +10,7 @@ The direct-read/search visibility seam shipped in c1 and is correct. Remaining w
 |---|---|---|---|
 | 01 | [Wiki text search uses a bounded id probe](issues/01-wiki-search-id-probe.md) | — | needs re-verification |
 | 02 | [Every content type enters one ingestion state machine](issues/02-one-ingestion-state-machine.md) | — | **done** |
-| 03 | [ACL revisions reindex before stale chunks win](issues/03-acl-revision-reindex.md) | 02 | in-progress — widening-queues-refresh needs a product decision; narrowing (the security-critical direction) is immediate and verified |
+| 03 | [ACL revisions reindex before stale chunks win](issues/03-acl-revision-reindex.md) | 02 | **done** — widening resolved against the PRD (no queue needed); a separate finding is recorded: the revision gate is inert until existing chunks are re-indexed |
 | 04 | [Chatbot retrieval is permissioned and bounded](issues/04-chatbot-retrieval-contract.md) | 01, 02, 03 | **done** — an unseeded KB now spends nothing per question |
 | 05 | [Revision and chunk retention are explicit](issues/05-revision-and-chunk-retention.md) | 02 | in-progress — policy documented and sweep live; erasure legs open, snapshot optimisation deliberately unbuilt pending measurement |
 

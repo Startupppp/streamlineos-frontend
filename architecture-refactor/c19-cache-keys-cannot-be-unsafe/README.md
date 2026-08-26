@@ -2,7 +2,7 @@
 
 PRD: [`prd.md`](prd.md) · Program: [`../README.md`](../README.md)
 
-**Wave 0** · 5 tickets, 3 done, 2 in-progress.
+**Wave 0** · 5 tickets, 2 done, 3 pending re-verification by the audit pass.
 
 The cache primitive is genuinely deep — single-flight, a distributed fill lease, O(1) namespace versioning, no scanning on the request path. **Keep it entirely.** The gaps are in what callers are free to do around it: nothing pairs a write with an invalidation, and there is no TTL jitter anywhere.
 
@@ -11,10 +11,10 @@ The cache primitive is genuinely deep — single-flight, a distributed fill leas
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
 | 01 | [The books are correct the moment an entry posts](issues/01-the-books-are-correct-when-an-entry-posts.md) | — | needs re-verification |
-| 02 | [A cache key cannot omit its tenant](issues/02-a-cache-key-cannot-omit-its-tenant.md) | — | in-progress — wrappers + jitter shipped; one criterion open: concurrent distinct-key misses not independently proven |
+| 02 | [A cache key cannot omit its tenant](issues/02-a-cache-key-cannot-omit-its-tenant.md) | — | **done** |
 | 03 | [Filtered views refresh](issues/03-filtered-views-refresh.md) | 02 | needs re-verification |
 | 04 | [Every namespace declares its invalidation](issues/04-every-namespace-declares-its-invalidation.md) | 02 | needs re-verification |
-| 05 | [Redis has a budget and an eviction policy](issues/05-redis-has-a-budget-and-an-eviction-policy.md) | — | in-progress — budget + policy documented; session-revocation eviction gap is real, and the naive fix was tried and reverted |
+| 05 | [Redis has a budget and an eviction policy](issues/05-redis-has-a-budget-and-an-eviction-policy.md) | — | **done** — tombstones are now eviction-proof (no TTL) with an explicit prune sweep, rather than depending on a read-side fallback |
 
 ## Working these
 
