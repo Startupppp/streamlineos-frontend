@@ -81,8 +81,11 @@ A migration absent from `_journal.json` **never runs, and `db:migrate` still rep
 in this order, taking `idx` from whatever is last at the time (idx 297 = `0524_billing_invoice_snapshots`
 when Lane 4 measured, and other lanes are adding entries concurrently — do not hardcode 298).
 
-Lane 4's own migrations are listed in the c23-02 and c23-03 sections of the final lane report, with
-their exact entry JSON. Beyond those, one **pre-existing** migration needs a decision:
+**c23-03's three migrations are already journalled — thank you.** Verified by reading the file:
+`0540_hr_employments_custom_field_jsonb_column` idx 298, `0541_hr_employments_custom_field_backfill`
+idx 299, `0542_hr_employments_custom_field_gin_index` idx 300. Nothing further needed for those.
+c23-02's migrations are listed in the final lane report. Beyond those, one **pre-existing** migration
+needs a decision:
 
 | Migration | Why it is not journalled | Recommendation |
 |---|---|---|
