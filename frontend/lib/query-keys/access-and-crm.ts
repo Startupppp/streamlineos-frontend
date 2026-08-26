@@ -79,7 +79,7 @@ export const accessAndCrmQueryKeys = {
     issues: (params: Record<string, unknown>) =>
       [...base, "crm", "issues", "list", params] as const,
     issue: (issueRecordId: string) =>
-      [...base, "crm", "issues", issueRecordId] as const,
+      [...base, "crm", "issues", "detail", issueRecordId] as const,
     crmImport: (crmImportId: string) =>
       [...base, "crm", "imports", crmImportId] as const,
     salesDashboard: () => [...base, "crm", "salesDashboard"] as const,
@@ -96,12 +96,6 @@ export const accessAndCrmQueryKeys = {
       [...base, "crm", "customerExecutiveDashboard"] as const,
     person: (slug: string) => [...base, "crm", "person", slug] as const,
     peopleSlugs: () => [...base, "crm", "peopleSlugs"] as const,
-    issuesRoot: () => [...base, "crm", "issues"] as const,
-    issueRecordTypes: () => [...base, "crm", "issues", "record-types"] as const,
-    issues: (params: Record<string, unknown>) =>
-      [...base, "crm", "issues", "list", params] as const,
-    issue: (issueRecordId: string) =>
-      [...base, "crm", "issues", "detail", issueRecordId] as const,
   },
 
   crmSettings: {

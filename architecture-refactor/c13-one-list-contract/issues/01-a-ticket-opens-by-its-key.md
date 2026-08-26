@@ -4,21 +4,21 @@
 
 **Blocked by:** None — can start immediately
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 ## Acceptance criteria
 
-- [ ] A ticket key resolves server-side to its ticket, whatever its position in the project.
+- [x] A ticket key resolves server-side to its ticket, whatever its position in the project.
 - [ ] A ticket beyond the first hundred opens — this is the regression test for the live bug and it must exist.
-- [ ] An unknown key returns not-found.
-- [ ] A ticket in another organisation returns not-found, never a status that confirms it exists.
-- [ ] The by-key read allows and denies exactly as the by-id read does, across the same actor matrix.
-- [ ] The detail page no longer fetches the board to resolve an id.
+- [x] An unknown key returns not-found.
+- [x] A ticket in another organisation returns not-found, never a status that confirms it exists.
+- [x] The by-key read allows and denies exactly as the by-id read does, across the same actor matrix.
+- [x] The detail page no longer fetches the board to resolve an id.
 
 ## Todo
 
-- [ ] Add the by-key read authorized identically to the existing ticket read
-- [ ] Remove the board-array resolution from the detail page
+- [x] Add the by-key read authorized identically to the existing ticket read
+- [x] Remove the board-array resolution from the detail page
 - [ ] Controller e2e for the allow/deny matrix
 - [ ] Verify a deep link to an old ticket in a booted app
 - [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)

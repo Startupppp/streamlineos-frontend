@@ -8,10 +8,10 @@ The permission resolver is deep and the SQL scope predicates are sound. The exte
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 01 | [Every route declares its exposure](issues/01-every-route-declares-exposure.md) | — | ready-for-agent |
-| 02 | [Object access and DataScope share one query seam](issues/02-object-access-and-scope-share-one-query-seam.md) | 01 | ready-for-agent |
-| 03 | [The authorization matrix fails closed in CI](issues/03-authorization-matrix-fails-closed.md) | 01, 02 | ready-for-agent |
-| 04 | [RLS coverage is a release invariant](issues/04-rls-coverage-is-a-release-invariant.md) | — | ready-for-agent |
+| 01 | [Every route declares its exposure](issues/01-every-route-declares-exposure.md) | — | in-progress — guard + decorator created; `app.module.ts` wiring + controller classification pending |
+| 02 | [Object access and DataScope share one query seam](issues/02-object-access-and-scope-share-one-query-seam.md) | 01 | in-progress — precise plan written; chat resolver defect identified |
+| 03 | [The authorization matrix fails closed in CI](issues/03-authorization-matrix-fails-closed.md) | 01, 02 | in-progress — unknown-key tests added; CI check deferred on 01 wiring |
+| 04 | [RLS coverage is a release invariant](issues/04-rls-coverage-is-a-release-invariant.md) | — | in-progress — verifier asserts gaps + policy shape; CI wired; fixture migration deferred |
 
 ## Working these
 

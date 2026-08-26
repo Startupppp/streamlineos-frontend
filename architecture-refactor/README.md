@@ -26,36 +26,36 @@ What the passes found was not systemic decay. It was concentrated correctness an
 |---|---|---|---|
 | [c12 — Route text search through the id probe that already exists](c12-text-search-id-probe/README.md) | 3 | 0 | **3** |
 | [c13 — One contract for every list](c13-one-list-contract/README.md) | 6 | 0 | **6** |
-| [c15 — Outbound I/O leaves the request transaction](c15-outbound-io-leaves-the-request/README.md) | 5 | 1 | **4** |
-| [c17 — Every billing write is provable](c17-billing-writes-are-provable/README.md) | 7 | 0 | **7** |
+| [c15 — Outbound I/O leaves the request transaction](c15-outbound-io-leaves-the-request/README.md) | 6 | 2 | **4** |
+| [c17 — Every billing write is provable](c17-billing-writes-are-provable/README.md) | 7 | 5 | **2** |
 | [c19 — A cache key cannot be unsafe, and a write invalidates what it changed](c19-cache-keys-cannot-be-unsafe/README.md) | 5 | 0 | **5** |
-| [c20 — A failure in production is visible](c20-failures-are-visible/README.md) | 5 | 0 | **5** |
-| | **31** | **1** | **30** |
+| [c20 — A failure in production is visible](c20-failures-are-visible/README.md) | 5 | 3 | **2** |
+| | **31** | **10** | **21** |
 
-Start with **c20-01**. It is an afternoon, and it surfaces every other Wave 0 item as it happens — without it, each fix below is verified by hope.
+**c20-01 is done, and it was the right thing to do first.** The reporter port had no adapter, so `reportError` discarded everything — and two of its five call sites (`workflow-runner`, `import-pump`) report *without* also logging, so every workflow-run and import failure was reaching nobody. That is now a structured log record, no vendor.
 
 ## Wave 1 — stops recurrence, or removes the largest costs
 
 | Candidate | Tickets | Done | Open |
 |---|---|---|---|
 | [c11 — Make "this query is fast" a thing CI proves](c11-read-cost-budgets/README.md) | 3 | 0 | **3** |
-| [c14 — Background sweeps operate on sets, not on rows](c14-set-based-sweeps/README.md) | 3 | 0 | **3** |
+| [c14 — Background sweeps operate on sets, not on rows](c14-set-based-sweeps/README.md) | 3 | 1 | **2** |
 | [c21 — Right models, right throughput — fan-out, retention and polling](c21-fanout-retention-and-polling/README.md) | 7 | 0 | **7** |
-| [c22 — Scheduled work runs once, and a deploy sheds no requests](c22-scheduled-work-and-deploy-safety/README.md) | 4 | 2 | **2** |
+| [c22 — Scheduled work runs once, and a deploy sheds no requests](c22-scheduled-work-and-deploy-safety/README.md) | 4 | 3 | **1** |
 | [c25 — Authorization cannot be omitted](c25-authorization-cannot-be-omitted/README.md) | 4 | 0 | **4** |
 | [c26 — Commercial billing is a versioned ledger](c26-commercial-billing-ledger/README.md) | 6 | 0 | **6** |
 | [c27 — Indexed knowledge obeys the same visibility as direct reads](c27-permissioned-knowledge-index/README.md) | 5 | 0 | **5** |
-| | **32** | **2** | **30** |
+| | **32** | **4** | **28** |
 
 ## Wave 2 — mechanical, parallelisable
 
 | Candidate | Tickets | Done | Open |
 |---|---|---|---|
-| [c16 — The schema says what it means](c16-schema-says-what-it-means/README.md) | 8 | 0 | **8** |
+| [c16 — The schema says what it means](c16-schema-says-what-it-means/README.md) | 9 | 0 | **9** |
 | [c18 — Removals are proved, not grepped](c18-removals-are-proved/README.md) | 4 | 0 | **4** |
 | [c23 — A tenant extends the product without a deploy](c23-tenant-extensibility-without-migrations/README.md) | 5 | 0 | **5** |
-| [c24 — The design system is the only way to build a screen](c24-frontend-consistency-and-access/README.md) | 5 | 0 | **5** |
-| | **22** | **0** | **22** |
+| [c24 — The design system is the only way to build a screen](c24-frontend-consistency-and-access/README.md) | 5 | 1 | **4** |
+| | **22** | **1** | **21** |
 
 ## Wave 3 — the read side
 
@@ -64,17 +64,17 @@ Start with **c20-01**. It is an afternoon, and it surfaces every other Wave 0 it
 | [c10 — Make module-level standing answerable](c10-module-role-standing/README.md) | 5 | 0 | **5** |
 | | **5** | **0** | **5** |
 
-**90 tickets → 3 done, 87 open.**
+**90 tickets → 13 retired, 77 open.** A retired ticket has every box verified against source and its file deleted; its row in the candidate index is the surviving record.
 
 ## The eight that matter most now
 
 | Ticket | Why it is first |
 |---|---|
-| [c20-01](c20-failures-are-visible/issues/01-errors-reach-a-person.md) | The structured/redacted reporter seam exists, but both production adapters are no-op; failures still do not reach a person. |
-| [c17-02](c17-billing-writes-are-provable/issues/02-a-webhook-acknowledges-only-durable-work.md) | A customer can pay and not be credited, and nothing knows to retry. |
-| [c25-01](c25-authorization-cannot-be-omitted/issues/01-every-route-declares-exposure.md) | A new authenticated route can omit permission metadata and still ship; runtime classification must deny absence. |
-| [c25-04](c25-authorization-cannot-be-omitted/issues/04-rls-coverage-is-a-release-invariant.md) | The RLS verifier prints missing coverage but never fails, and CI does not run it. |
-| [c13-05](c13-one-list-contract/issues/05-scrolled-lists-page-by-cursor.md) | Chat skips one row per full page and multi-account inbox advances past rows it never returned. |
+| ~~c20-01~~ | ✅ **done.** The port had no adapter at all, and two call sites report without logging — workflow and import failures reached nobody. |
+| ~~c17-02~~ | ✅ **done.** A customer could pay and not be credited with nothing knowing to retry; the grant is now ledgered and a failure returns 503. |
+| [c25-01](c25-authorization-cannot-be-omitted/issues/01-every-route-declares-exposure.md) | Guard built and wired, **enforcement deliberately off**: 93 controllers sit on a class-level `JwtAuthGuard` and some handlers are universal by design, so deny-by-absence would 403 platform core. Boot report first, flip after. |
+| [c25-04](c25-authorization-cannot-be-omitted/issues/04-rls-coverage-is-a-release-invariant.md) | Verifier now exits non-zero and runs in CI. The gap count is still unknown — it needs a live database. |
+| [c13-05](c13-one-list-contract/issues/05-scrolled-lists-page-by-cursor.md) | Chat cursor verified fixed; multi-account inbox now advances only over rows it returned. Remaining: the equivalence test. |
 | [c26-06](c26-commercial-billing-ledger/issues/06-one-subscription-truth.md) | Platform administration reads an unwritten shadow subscription table and an unbounded customer query. |
 | [c16-03](c16-schema-says-what-it-means/issues/03-a-recurring-event-recurs.md) | Recurrence columns are persisted but never expanded; calendar correctness is not implemented. |
 | [c27-02](c27-permissioned-knowledge-index/issues/02-one-ingestion-state-machine.md) | Article embedding holds request/transaction resources while page indexing is detached but not durable. |

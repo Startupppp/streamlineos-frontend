@@ -9,9 +9,9 @@ Every item here is a **missing guarantee on a sound design**. Crons as secret-gu
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
 | 01 | [A scheduled job runs once](issues/01-a-scheduled-job-runs-once.md) | — | **done** |
-| 02 | [A deploy sheds no requests](issues/02-a-deploy-sheds-no-requests.md) | — | **done** |
-| 03 | [Invoice numbering is race-free](issues/03-invoice-numbering-is-race-free.md) | — | **done** |
-| 04 | [Stock adjustments serialize](issues/04-stock-adjustments-serialize.md) | — | **done** |
+| 02 | A deploy sheds no requests | — | **done** |
+| 03 | Invoice numbering is race-free | — | **done** |
+| 04 | Stock adjustments serialize | — | **done** |
 
 ## Working these
 

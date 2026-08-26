@@ -9,7 +9,7 @@ PRD: [`prd.md`](prd.md) · Program: [`../README.md`](../README.md)
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
 | 01 | [Leave accrual is set-based](issues/01-leave-accrual-is-set-based.md) | — | ready-for-agent |
-| 02 | [The remaining tenant-growing sweeps are set-based](issues/02-the-remaining-tenant-growing-sweeps.md) | 01 | done |
+| 02 | The remaining tenant-growing sweeps are set-based | 01 | done |
 | 03 | [A sweep reports what it did](issues/03-a-sweep-reports-what-it-did.md) | 02 | ready-for-agent |
 
 ## Working these

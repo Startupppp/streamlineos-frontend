@@ -12,7 +12,7 @@ The measured discipline is unusually good — zero arbitrary colour classes acro
 | 02 | [A missing accessible label fails a check](issues/02-a-missing-accessible-label-fails-a-check.md) | 01 | ready-for-agent |
 | 03 | [Shared components pass accessibility assertions](issues/03-shared-components-pass-accessibility-assertions.md) | — | ready-for-agent |
 | 04 | [The canonical component wins](issues/04-the-canonical-component-wins.md) | — | ready-for-agent |
-| 05 | [The measured properties are asserted in CI](issues/05-the-measured-properties-are-asserted-in-ci.md) | — | done |
+| 05 | The measured properties are asserted in CI | — | done |
 
 ## Working these
 

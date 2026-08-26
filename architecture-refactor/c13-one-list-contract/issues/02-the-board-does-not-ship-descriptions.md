@@ -4,21 +4,24 @@
 
 **Blocked by:** 01 — A ticket opens by its key
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 ## Acceptance criteria
 
-- [ ] The board list response carries no description field.
+- [x] The board list response carries no description field.
 - [ ] A field-presence assertion fails if it is re-added.
-- [ ] The board renders unchanged.
-- [ ] The ticket detail view still shows the description, fetched where it is needed.
+- [x] The board renders unchanged.
+- [x] The ticket detail view still shows the description, fetched where it is needed.
 
 ## Todo
 
-- [ ] Remove the column from the list projection
-- [ ] Check no consumer read it from the list response
+- [x] Remove the column from the list projection
+- [x] Check no consumer read it from the list response — `epic-story-row.tsx` consumed it; updated to handle absence gracefully (read-only description preview removed, edit path uses `?? null`)
 - [ ] Add the field-absence test
 - [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+
+### Out-of-scope dependency
+`frontend/types/projects/tasks.ts` line 80: `description: string | null` should become `description?: string | null` to match the narrowed projection. This file is outside the agent's scope and must be updated separately.
 
 ---
 

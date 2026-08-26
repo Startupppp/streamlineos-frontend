@@ -77,7 +77,12 @@ export interface Ticket {
   id: number;
   orgId: string;
   title: string;
-  description: string | null;
+  /**
+   * Absent on list and board responses, which project it away rather than ship a
+   * body no column renders. Present on the detail read. Optional so a consumer
+   * has to handle the absence instead of trusting a null that never arrives.
+   */
+  description?: string | null;
   type: string;
   status: string;
   priority: TicketPriority | null;

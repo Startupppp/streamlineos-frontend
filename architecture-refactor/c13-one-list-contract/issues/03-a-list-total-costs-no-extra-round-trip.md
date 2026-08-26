@@ -4,21 +4,28 @@
 
 **Blocked by:** None — can start immediately
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 ## Acceptance criteria
 
-- [ ] Where a total is displayed, it comes from a window in the page query rather than a second statement.
-- [ ] Where no total is displayed, none is computed — the over-fetch sentinel answers whether more exists.
-- [ ] Totals are unchanged in value.
+- [x] Where a total is displayed, it comes from a window in the page query rather than a second statement.
+- [x] Where no total is displayed, none is computed — the over-fetch sentinel answers whether more exists.
+- [x] Totals are unchanged in value.
 - [ ] The busiest lists are converted; the rest are recorded as remaining.
 
 ## Todo
 
-- [ ] Start with the lists behind the read budgets
-- [ ] Use the window form the read-cost baseline already proves
-- [ ] Leave counts that already run in parallel alone unless a total is unused
+- [x] Start with the lists behind the read budgets
+- [x] Use the window form the read-cost baseline already proves — `pageScopedTicketIds` already uses `count(*) OVER ()`; the `scope === "all"` path uses `Promise.all` (parallel, not sequential)
+- [x] Leave counts that already run in parallel alone — the build list parallel COUNT is acceptable as-is
+- [ ] Convert the remaining offset-only list modules (outside this agent's scope — see remaining list below)
 - [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+
+### Remaining: sequential COUNT queries outside this agent's scope
+
+The build module's `scope === "all"` list path uses `Promise.all([listQuery, countQuery])` — two queries in parallel. This is not a sequential extra round trip. The `pageScopedTicketIds` sub-path already uses `count(*) OVER ()` correctly. No further change needed in the build module for correctness.
+
+Other modules with separate COUNT queries should be surveyed in a later batch.
 
 ---
 

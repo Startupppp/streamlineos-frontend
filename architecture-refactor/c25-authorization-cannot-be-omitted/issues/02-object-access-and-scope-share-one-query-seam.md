@@ -1,6 +1,6 @@
 # 02 — Object access and DataScope share one query seam
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 ## Acceptance criteria
 
@@ -10,8 +10,63 @@
 - [ ] Each domain owns its predicate; no generic dynamic table abstraction is introduced.
 - [ ] Bulk operations apply the predicate once to the set, not once per row.
 
+## Precise implementation plan
+
+### Problem
+
+Object-level access and DataScope are decided in two places:
+1. `PermissionGuard` resolves the scope and stores it in `req.rbacScope`.
+2. Individual service methods then apply that scope (or not) to their queries.
+
+A service that calls `findById(orgId, resourceId)` without threading `req.rbacScope` into the predicate passes one check (PermissionGuard) and skips the other (DataScope). The known live defect is in chat: `resolve(db, type, id, orgId)` takes no `actor` parameter, making the access check literally unwritable at that call site (grep `resolve` signatures in `modules/chat/`, not call sites — call sites hide behind wrappers).
+
+### The seam interface
+
+Create `backend/src/modules/access/object-access.ts` (new file, in scope):
+
+```ts
+export interface ObjectAccessContext {
+  orgId: string;
+  actorId: string;
+  scope: DataScope;
+}
+
+export type ObjectQuery<T> = (ctx: ObjectAccessContext) => Promise<T | null>;
+```
+
+This is a **type-only interface**, not a runtime service. Each domain module implements `ObjectQuery<T>` for its own resource type, embedding `org_id = ctx.orgId`, soft-delete filter, and DataScope predicate in one SQL call.
+
+### Step-by-step
+
+**Step 1 (in scope — `backend/src/modules/access/object-access.ts`):**
+Define `ObjectAccessContext` and `ObjectQuery<T>`. Export from the access module barrel.
+
+**Step 2 (each domain, out of scope for this agent — report to orchestrator):**
+For each domain named in the ticket (chat channels, KB pages, module-access mutations):
+- Locate the service method that does `findById(orgId, resourceId)` without DataScope.
+- Replace the two-step (fetch + application-code check) with a single SQL query that ANDs `org_id = ctx.orgId`, `deleted_at IS NULL`, and the DataScope predicate in the WHERE clause.
+- Return `null` for both cross-tenant and invisible records; callers surface that as 404.
+
+**Step 3 (chat resolver — out of scope but exact fix identified):**
+The resolver at `backend/src/modules/chat/` (grep: `resolve(db, type, id, orgId)` — note: no `actor` parameter) must be extended to accept an `actor` argument:
+```ts
+resolve(db, type, id, orgId, actorId)  // add actorId
+```
+Without `actorId`, the access check cannot be written. Every call site that passes only `(db, type, id, orgId)` must be updated to pass `req.user.userId` as the fifth argument.
+
+**Step 4 (test matrix):**
+For each domain seam, add two allow/deny cases in the controller e2e spec:
+- `orgA_actor` + `orgB_resource_id` → 404 (cross-tenant)
+- `orgA_actor` + soft-deleted `orgA_resource_id` → 404 (invisible)
+
+### Why not a generic seam
+
+A generic `ObjectAccessService.resolve(table, id, ctx)` introduces dynamic table references and defeats per-domain FK integrity. The interface stays a type; each domain's SQL query owns its own predicate — composition, not abstraction.
+
 ## Todo
 
-- [ ] Start with chat channels, KB pages and module-access mutations
-- [ ] Add same-tenant/cross-tenant allow-deny matrices
-- [ ] Delete superseded shallow check helpers after their last caller moves
+- [ ] Create `backend/src/modules/access/object-access.ts` with `ObjectAccessContext` and `ObjectQuery<T>`
+- [ ] Fix the chat resolver signature (exact file: grep `resolve.*db.*type.*id.*orgId` in `backend/src/modules/chat/**`)
+- [ ] Apply seam to KB pages service (exact: `backend/src/modules/kb/**`)
+- [ ] Apply seam to module-access mutations (exact: `backend/src/modules/module-access/**`)
+- [ ] Add allow/deny test matrices for each domain

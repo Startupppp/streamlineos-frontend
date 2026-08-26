@@ -173,24 +173,13 @@ export const EpicStoryRow = memo(function EpicStoryRow({
           </div>
         </div>
 
-        {canUpdate || story.description ? (
+        {canUpdate ? (
           <div className="ml-4 min-w-0">
-            {canUpdate ? (
-              <InlineDescription
-                ticketId={story.id}
-                projectId={projectId}
-                currentDescription={story.description}
-              />
-            ) : (
-              <p
-                className={cn(
-                  TEXT_ONE_LINE,
-                  "text-dense text-muted-foreground",
-                )}
-              >
-                {story.description}
-              </p>
-            )}
+            <InlineDescription
+              ticketId={story.id}
+              projectId={projectId}
+              currentDescription={story.description ?? null}
+            />
           </div>
         ) : null}
       </div>
