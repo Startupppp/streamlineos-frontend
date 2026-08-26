@@ -153,11 +153,11 @@ The first acceptance criterion names surfaces beyond this lane's territory. Chat
 
 ---
 
-## 5. Frontend type drift left by c13-02
+## 5. ~~Frontend type drift left by c13-02~~ — nothing to do
 
-`frontend/types/projects/tasks.ts` types the board ticket's `description` as `string | null`
-(non-optional), but the backend list projection no longer returns the column — `TICKET_LIST_COLUMNS`
-in `backend/src/modules/build/core/projects-tickets-read.service.ts` has no `description` entry, and
-`backend/src/modules/build/core/board-projection.spec.ts` now fails if it is re-added. The field
-should become `description?: string | null`. Recorded rather than changed: the frontend lane owns
-that file.
+Checked and already correct. `frontend/types/projects/tasks.ts:85` reads
+`description?: string | null` and documents why. All three frontend consumers guard the
+absence (`features/build/triage/triage-row.tsx:70`,
+`hooks/api/build/ticket-mutations.ts:45`, `features/build/ai/ticket-detail-ai.tsx:56`).
+Left here as a record that it was verified, not assumed — c13-02's own ticket text still
+described it as open.

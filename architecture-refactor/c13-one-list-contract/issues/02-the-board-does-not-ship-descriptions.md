@@ -23,7 +23,7 @@
 ### Out-of-scope dependency
 `frontend/types/projects/tasks.ts` line 80: `description: string | null` should become `description?: string | null` to match the narrowed projection. This file is outside the agent's scope and must be updated separately.
 
-**Lane 3 (2026-08-26):** still open, still out of territory — the frontend lane owns that file. Recorded for the orchestrator in `architecture-refactor/lane-requests/lane-3.md` §5. It is a type-level drift, not a runtime break: the field is absent from the list response either way, and the type merely fails to say so. Kept out of the acceptance criteria rather than blocking them.
+**Lane 3 (2026-08-26): resolved — this dependency is closed.** `frontend/types/projects/tasks.ts:85` now reads `description?: string | null`, with a comment stating why: "Absent on list and board responses, which project it away rather than ship a body no column renders. Present on the detail read. Optional so a consumer has to handle the absence instead of trusting a null that never arrives." All three frontend consumers were checked and each guards the absence — `features/build/triage/triage-row.tsx:70` is conditional, `hooks/api/build/ticket-mutations.ts:45` checks `!== undefined` before writing, and `features/build/ai/ticket-detail-ai.tsx:56` passes it to a helper typed `string | null | undefined`. Nothing to do.
 
 ---
 
