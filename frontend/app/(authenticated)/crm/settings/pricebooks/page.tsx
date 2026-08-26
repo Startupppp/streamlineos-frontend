@@ -47,7 +47,7 @@ export default function PricebooksPage() {
   const [entriesTarget, setEntriesTarget] = useState<Pricebook | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Pricebook | null>(null);
 
-  const { data, isLoading, isError, refetch } = usePricebooks();
+  const { data, isLoading, isError, refetch, access} = usePricebooks();
   const deletePricebook = useDeletePricebook();
 
   const query = debouncedSearch.trim().toLowerCase();
@@ -166,6 +166,7 @@ export default function PricebooksPage() {
           />
         ) : pricebooks.length === 0 ? (
           <EmptyState
+            access={access}
             illustration={<EmptyProductsIllustration />}
             title={query ? "No pricebooks match that search" : "No pricebooks yet"}
             description={

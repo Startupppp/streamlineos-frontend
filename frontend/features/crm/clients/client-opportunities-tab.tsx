@@ -33,7 +33,7 @@ export function ClientOpportunitiesTab({ clientId }: { clientId: number }) {
   const money = useOrgDisplay();
   const [density] = useDensity();
 
-  const { data, isLoading, isError, error, refetch } = useClientOpportunities(clientId);
+  const { data, isLoading, isError, error, refetch, access} = useClientOpportunities(clientId);
 
   const handleRetry = useCallback(() => {
     void refetch();
@@ -57,6 +57,7 @@ export function ClientOpportunitiesTab({ clientId }: { clientId: number }) {
   if (opportunities.length === 0)
     return (
       <EmptyState
+            access={access}
         compact
         className="py-10"
         title="No opportunities logged"

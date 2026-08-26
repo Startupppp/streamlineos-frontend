@@ -116,7 +116,7 @@ export default function CompanyDetailPage({
     isError: relatedLeadsError,
     refetch: refetchRelatedLeads,
   } = useCrmOrgRelatedLeads(id);
-  const { data: company360, isLoading: company360Loading } = useCompany360(id);
+  const { data: company360, isLoading: company360Loading, access} = useCompany360(id);
   const deleteMutation = useDeleteCrmOrganization();
 
   /*
@@ -175,6 +175,7 @@ export default function CompanyDetailPage({
     return (
       <PageWrapper title="Not Found" subtitle="" backHref="/crm/companies">
         <EmptyState
+            access={access}
           title="Company not found"
           description="This company may have been deleted or you don't have access."
           action={{ label: "Back to Companies", href: "/crm/companies" }}

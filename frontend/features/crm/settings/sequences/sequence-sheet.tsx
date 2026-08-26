@@ -271,7 +271,7 @@ function SequenceSteps({ sequenceId }: { sequenceId: string }) {
 
 function SequenceEnrolments({ sequenceId }: { sequenceId: string }) {
   const layout = useTenantLayout(SEQUENCE_ENROLLMENT_LAYOUT);
-  const { data, isLoading, isError, refetch } = useCrmSequenceEnrollments(sequenceId, 1);
+  const { data, isLoading, isError, refetch, access } = useCrmSequenceEnrollments(sequenceId, 1);
   const stopEnrollment = useStopEnrollment(sequenceId);
 
   const enrolments = data?.enrollments ?? [];
@@ -316,6 +316,7 @@ function SequenceEnrolments({ sequenceId }: { sequenceId: string }) {
   if (enrolments.length === 0)
     return (
       <EmptyState
+          access={access}
         compact
         illustrationPreset="team"
         title="Nobody is enrolled"

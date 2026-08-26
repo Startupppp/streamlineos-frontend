@@ -134,7 +134,7 @@ export default function DealApprovalsPage() {
   const { data: stages } = useCrmStages("deal");
   const layout = useMemo(() => withDealStages(tenantLayout, stages ?? []), [tenantLayout, stages]);
 
-  const { data, isLoading, isError, refetch } = useDealApprovals({
+  const { data, isLoading, isError, refetch, access} = useDealApprovals({
     status: statusFilter === "all" ? undefined : statusFilter,
   });
   const resolve = useResolveDealApproval();
@@ -238,6 +238,7 @@ export default function DealApprovalsPage() {
           />
         ) : rows.length === 0 ? (
           <EmptyState
+            access={access}
             illustration={<EmptyApprovalIllustration />}
             title={isFiltered ? "No approvals match this filter" : "Nothing waiting on you"}
             description={
