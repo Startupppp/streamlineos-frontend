@@ -32,7 +32,44 @@ Not raised as its own ticket. It belongs to whichever of c16/c23 touches `hr/hir
 one if neither does. `hr:employees:manage` is the key the live route enforces; the dead one checked
 `hr:documents:manage`.
 
-**Lane 4 response, 2026-08-26: accepted and fixed.** See the "vault deletion" section below.
+### Lane 4 response, 2026-08-26 — confirmed, extended, and NOT built. Here is why, and what it needs.
+
+Confirmed at source. `db/schema/hr/hiring.ts:365-371` declares `vaultDocumentId … onDelete: "cascade"`,
+and `recruitment-candidate-vault.service.ts:78-106` (`deleteVaultDocument`) writes no audit row.
+
+**The cascade is only half of it. Two further defects mean the requested fix would still land inert:**
+
+1. **The read is an INNER JOIN.** `listVaultAccessLogs` (`recruitment-candidate-vault.service.ts:111-135`)
+   joins `vaultAccessLogs → candidateDocumentsVault` with `innerJoin`, and takes BOTH its tenant filter
+   and its candidate filter from the *joined vault row* (`:130-131`). So even if you make
+   `vaultDocumentId` nullable with `set null`, every surviving DELETE row drops straight out of the
+   result set — the screen would still show only `VIEW`. Denormalising identity onto the log is not
+   cosmetic; the read is unable to find the row without it.
+2. **`vault_access_logs` has no `org_id` at all** (`hiring.ts:365-371` — the columns are `id`,
+   `vaultDocumentId`, `accessedBy`, `action`, `accessedAt`). It is a tenant-owned table whose only
+   tenant path is that same join, so it is **not covered by RLS** — `0378_rls_remaining_tenant_tables.sql`
+   sweeps tables that have an `org_id`, and this one has none. Once `vaultDocumentId` becomes nullable
+   the compensating control disappears with it.
+
+**So the change is: add `org_id` (NOT NULL, FK cascade) + `candidate_id` + denormalised `filename` and
+`document_type`; make `vault_document_id` nullable `ON DELETE SET NULL`; give the table a
+`tenant_isolation` policy in the same migration; rewrite `listVaultAccessLogs` to filter on the log's
+own `org_id`/`candidate_id` and LEFT JOIN the vault; then add the DELETE insert.**
+
+**Lane 4 did not build it.** Not for lack of capacity — because it has nowhere to record its evidence
+and it reaches outside this lane's territory:
+
+- By your own routing rule it belongs to "whichever of c16/c23 touches `hr/hiring.ts`". **No Lane 4
+  ticket does.** c16-06 references `hiring.ts` but is blocked on `0482` and Lane 4 edited nothing in it.
+  Unticketed work with no acceptance criteria to tick against is how this program has previously ended
+  up with "done" claims nobody can verify.
+- Making `org_id` NOT NULL breaks the **only surviving writer**, `StorageVaultController.download`
+  (`src/modules/storage/storage-vault.controller.ts:56-60`), which inserts the `VIEW` row and is in
+  another lane's territory. Unlike the one import line in §3 below, nothing forces that edit today —
+  leaving it alone breaks nothing, so Lane 4 left it alone.
+
+Give it a ticket and a territory and it is perhaps two hours of work. The diagnosis above is complete;
+the next agent should not have to rediscover the inner join or the missing `org_id`.
 
 ---
 
