@@ -8,7 +8,7 @@ Structured JSON logging, redaction, correlation context and backend/frontend err
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 01 | [Errors reach a person](issues/01-errors-reach-a-person.md) | — | port built · needs DSN |
+| 01 | [Errors reach a person](issues/01-errors-reach-a-person.md) | — | **closed — logs only** |
 | 02 | [The browser reports its own errors](issues/02-the-browser-reports-its-own-errors.md) | 01 | ready-for-agent |
 | 03 | [A request can be followed end to end](issues/03-a-request-can-be-followed-end-to-end.md) | 01 | ready-for-agent |
 | 04 | [No failure is swallowed](issues/04-no-failure-is-swallowed.md) | 01 | ready-for-agent |

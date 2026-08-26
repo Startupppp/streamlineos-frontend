@@ -4,7 +4,7 @@
 
 **Blocked by:** None — can start immediately
 
-**Status:** port built, adapter missing — blocked on a DSN
+**Status:** DECIDED 2026-08-26 — structured logs only. No error tracker.
 
 > **Update, verified at source 2026-08-26.** Most of this ticket has been built, by a concurrent
 > session, and built better than this ticket specced it. `backend/src/common/observability/`
@@ -23,10 +23,20 @@
 > **This ticket originally said "Sentry in both repos". That was the wrong shape** — it named a
 > vendor where a port belongs. Take the port as built.
 >
-> **What actually remains is small:** `setErrorReporter` is never called anywhere in `src/`, so
-> the default noop is still active and nothing leaves the process. Write one adapter that
-> satisfies `ErrorReporter`, install it at boot behind an env flag, and the whole ticket closes.
-> That needs a DSN, which is why this is blocked on the operator rather than on work.
+> **Decision (operator): structured logs only — do NOT add an error tracker.**
+>
+> The noop reporter stays the default and `setErrorReporter` stays uncalled. Visibility comes from
+> **c20-03** instead: JSON logs carrying the existing correlation id, shipped to whatever
+> aggregator is already in use.
+>
+> The port stays because it costs nothing to keep and it is already consumed by the tenant
+> interceptor — but it deliberately routes nowhere. **This makes c20-03 the load-bearing ticket in
+> this candidate**, not a follow-up to this one.
+>
+> What is knowingly given up: error grouping (one incident will be N log lines, not one alert),
+> release markers, and alert-on-new-error-type. c20-05's four alerts must therefore be built on
+> log queries rather than on tracker events — re-read that ticket before starting it, because it
+> assumed a tracker existed.
 
 ## Acceptance criteria
 

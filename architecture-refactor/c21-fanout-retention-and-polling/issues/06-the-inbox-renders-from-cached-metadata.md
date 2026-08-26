@@ -4,7 +4,19 @@
 
 **Blocked by:** None — can start immediately
 
-**Status:** ready-for-agent
+**Status:** DECIDED 2026-08-26 — cache metadata only. Ready to build.
+
+> **Decision (operator).** The inbox caches **metadata only** — subject, sender, date, thread id,
+> read state, labels — populated by provider push webhooks. **Message bodies and attachments are
+> never persisted**; they are fetched on demand.
+>
+> This was a genuine fork, not a defect, and the alternative was defensible: persisting nothing
+> keeps the product out of mail hosting entirely and holds no per-user mail data. It was rejected
+> because it makes search and threading impossible and bills a provider call per render.
+>
+> The cost accepted with this choice: a sync path to maintain, webhook plumbing, and per-user mail
+> metadata now living in the database — which makes the per-user isolation test in the criteria
+> below load-bearing rather than routine.
 
 ## Acceptance criteria
 
