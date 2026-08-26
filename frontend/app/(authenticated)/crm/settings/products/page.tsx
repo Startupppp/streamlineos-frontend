@@ -1,94 +1,77 @@
 "use client";
 
-import { useState, useCallback, useTransition, useEffect } from "react";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { Pencil, Plus, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { SearchInput } from "@/components/ui/search-input";
-import { Badge } from "@/components/ui/badge";
-import { PageWrapper } from "@/components/ui/page-wrapper";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyProductsIllustration } from "@/components/illustrations";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { ErrorState } from "@/components/shared";
-import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct } from "@/hooks/api/crm/products";
+import { ErrorState, NoPermissionState } from "@/components/shared";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { SearchInput } from "@/components/ui/search-input";
+import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { RecordList, asRecordValues } from "@/features/renderer";
+import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordRowActions } from "@/features/crm/settings/shared/record-row-actions";
+import { ProductSheet } from "@/features/crm/settings/products/product-sheet";
+import { useCan } from "@/hooks/api/access";
+import { useOrgDisplay } from "@/hooks/api/org-display";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import {
-  ProductFormSheet,
-  type ProductFormValues,
-  productValuesFromProduct,
-  parseProductPayload,
-  defaultProductValues,
-} from "@/features/crm/settings/products/product-form";
-import { toast } from "sonner";
+import { useDeleteProduct, useProducts } from "@/hooks/api/crm/products";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { PRODUCT_LAYOUT } from "@/lib/renderer/crm/settings/product-layout";
+import { toast } from "sonner";
 import type { Product } from "@/types/crm/products";
 
+/**
+ * The product catalogue.
+ *
+ * No columns are written here. Their labels, their alignment, the currency each
+ * price renders in and the mobile card all come from `PRODUCT_LAYOUT` — the same
+ * description the create and edit sheet validates against, so the table cannot
+ * claim a product has a field the form has never heard of.
+ *
+ * What is left is what a description cannot say: the one filter this domain has,
+ * who may add a product, and that deleting one is irreversible.
+ */
 export default function ProductCatalogPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const [, startTransition] = useTransition();
 
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<Product | null>(null);
-  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const layout = useTenantLayout(PRODUCT_LAYOUT);
+  const money = useOrgDisplay();
+  const [density, setDensity] = useDensity();
+  const canManage = useCan("crm:products:manage");
 
   const [search, setSearch] = useState(searchParams.get("q") ?? "");
   const debouncedSearch = useDebouncedValue(search, 300);
-
-  const updateParams = useCallback(
-    (updates: Record<string, string | null>) => {
-      const params = new URLSearchParams(searchParams.toString());
-      for (const [key, value] of Object.entries(updates)) {
-        if (value === null || value === "") params.delete(key);
-        else params.set(key, value);
-      }
-      startTransition(() => {
-        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-      });
-    },
-    [searchParams, router, pathname],
-  );
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<Product | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
 
   useEffect(() => {
     const current = searchParams.get("q") ?? "";
     if (debouncedSearch === current) return;
-    updateParams({ q: debouncedSearch || null });
-  }, [debouncedSearch, searchParams, updateParams]);
+    const params = new URLSearchParams(searchParams.toString());
+    if (debouncedSearch) params.set("q", debouncedSearch);
+    else params.delete("q");
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [debouncedSearch, searchParams, router, pathname]);
 
-  const { data, isLoading, isError, refetch } = useProducts(debouncedSearch.trim() || undefined);
-  const createProduct = useCreateProduct();
-  const updateProduct = useUpdateProduct();
+  const query = debouncedSearch.trim();
+  const { data, isLoading, isError, refetch } = useProducts(query || undefined);
   const deleteProduct = useDeleteProduct();
 
-  const allProducts = data?.products ?? [];
-  const total = data?.total ?? allProducts.length;
-
-  const handleSearchChange = useCallback((value: string) => {
-    setSearch(value);
-    },
-    [],
-  );
+  // Memoised because a row renderer depends on it; a fresh [] each render
+  // would rebuild every row of the catalogue on every keystroke of the search.
+  const products = useMemo(() => data?.products ?? [], [data?.products]);
 
   const handleOpenCreate = useCallback(() => {
     setEditTarget(null);
-    setSheetOpen(true);
-  }, []);
-
-  const handleOpenEdit = useCallback((product: Product) => {
-    setEditTarget(product);
     setSheetOpen(true);
   }, []);
 
@@ -97,202 +80,145 @@ export default function ProductCatalogPage() {
     if (!open) setEditTarget(null);
   }, []);
 
-  const handleDeleteRequest = useCallback((id: number) => setDeleteTargetId(id), []);
-  const handleDeleteCancel = useCallback(() => setDeleteTargetId(null), []);
-  const handleAlertOpenChange = useCallback((open: boolean) => { if (!open) setDeleteTargetId(null); }, []);
+  const handleDeleteOpenChange = useCallback((open: boolean) => {
+    if (!open) setDeleteTarget(null);
+  }, []);
+
+  const handleClearSearch = useCallback(() => setSearch(""), []);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const handleDeleteConfirm = useCallback(() => {
-    if (deleteTargetId === null) return;
-    deleteProduct.mutate(deleteTargetId, {
-      onSuccess: () => { toast.success("Product deleted"); setDeleteTargetId(null); },
-      onError: (err) => { toast.error(getErrorMessage(err)); setDeleteTargetId(null); },
+    if (!deleteTarget) return;
+    deleteProduct.mutate(deleteTarget.id, {
+      onSuccess: () => {
+        toast.success("Product deleted");
+        setDeleteTarget(null);
+      },
+      onError: (error) => {
+        toast.error(getErrorMessage(error));
+        setDeleteTarget(null);
+      },
     });
-  }, [deleteProduct, deleteTargetId]);
+  }, [deleteProduct, deleteTarget]);
 
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-
-  const onFormSubmit = useCallback(
-    (formData: ProductFormValues) => {
-      const payload = parseProductPayload(formData);
-      if (editTarget) {
-        updateProduct.mutate(
-          { id: editTarget.id, ...payload },
-          {
-            onSuccess: () => { toast.success("Product updated"); setSheetOpen(false); setEditTarget(null); },
-            onError: (err) => toast.error(getErrorMessage(err)),
-          },
-        );
-      } else {
-        createProduct.mutate(payload, {
-          onSuccess: () => { toast.success("Product created"); setSheetOpen(false); },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        });
-      }
+  const rowActions = useCallback(
+    (row: Record<string, unknown>) => {
+      const product = products.find((candidate) => candidate.id === row.id);
+      if (!product || !canManage) return null;
+      return (
+        <RecordRowActions
+          editLabel={`Edit ${product.name}`}
+          deleteLabel={`Delete ${product.name}`}
+          onEdit={() => {
+            setEditTarget(product);
+            setSheetOpen(true);
+          }}
+          onDelete={() => setDeleteTarget(product)}
+        />
+      );
     },
-    [editTarget, updateProduct, createProduct],
+    [products, canManage],
   );
 
-  const handleEditRow = useCallback((product: Product) => handleOpenEdit(product), [handleOpenEdit]);
-  const handleDeleteRow = useCallback((id: number) => handleDeleteRequest(id), [handleDeleteRequest]);
-
-  const columns: DataTableColumn<Product>[] = [
-    {
-      key: "name",
-      header: "Name",
-      sortable: true,
-      sortValue: (p) => p.name,
-      cell: (p) => (
-        <div>
-          <p className="font-medium text-sm">{p.name}</p>
-          {p.description && (
-            <p className="text-xs text-muted-foreground truncate max-w-[200px]">{p.description}</p>
-          )}
-        </div>
-      ),
-    },
-    {
-      key: "sku",
-      header: "SKU",
-      cell: (p) =>
-        p.sku ? (
-          <span className="font-mono text-xs">{p.sku}</span>
-        ) : (
-          <span className="text-muted-foreground text-xs">—</span>
-        ),
-    },
-    {
-      key: "category",
-      header: "Category",
-      cell: (p) => <span className="text-sm">{p.category ?? "—"}</span>,
-    },
-    {
-      key: "unitPrice",
-      header: "Unit Price",
-      sortable: true,
-      sortValue: (p) => p.unitPrice,
-      cell: (p) => (
-        <span className="text-sm">
-          {p.currency} {p.unitPrice.toLocaleString()}
-        </span>
-      ),
-    },
-    {
-      key: "taxRate",
-      header: "Tax Rate",
-      cell: (p) => <span className="text-sm">{p.taxRate}%</span>,
-    },
-    {
-      key: "isActive",
-      header: "Status",
-      cell: (p) =>
-        p.isActive ? (
-          <Badge variant="outline" className="bg-status-success-surface text-status-success-ink border-status-success-rule">
-            Active
-          </Badge>
-        ) : (
-          <Badge variant="outline" className="bg-muted text-muted-foreground border-border">
-            Inactive
-          </Badge>
-        ),
-    },
-    {
-      key: "actions",
-      header: "Actions",
-      headerClassName: "text-right",
-      className: "text-right",
-      cell: (p) => (
-        <div className="flex items-center justify-end gap-1">
-          <Button variant="ghost" size="sm" onClick={() => handleEditRow(p)} aria-label="Edit product">
-            <Pencil className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleDeleteRow(p.id)}
-            className="text-destructive hover:text-destructive"
-            aria-label="Delete product"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      ),
-    },
-  ];
-
-  const isPending = createProduct.isPending || updateProduct.isPending;
-  const formInitialValues = editTarget ? productValuesFromProduct(editTarget) : defaultProductValues;
-
   return (
-    <>
-      <AlertDialog open={deleteTargetId !== null} onOpenChange={handleAlertOpenChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Product</AlertDialogTitle>
-            <AlertDialogDescription>
-              This product will be permanently deleted and removed from all quotes and deals.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleDeleteCancel}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleDeleteConfirm}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <ProductFormSheet
-        open={sheetOpen}
-        onOpenChange={handleSheetOpenChange}
-        editTarget={editTarget}
-        onSubmit={onFormSubmit}
-        isPending={isPending}
-        initialValues={formInitialValues}
-      />
-
-      <PageWrapper
-        title="Product Catalog"
-        subtitle={isLoading ? "Loading..." : `${total} product${total !== 1 ? "s" : ""}`}
-        actions={
-          <Button onClick={handleOpenCreate}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Product
-          </Button>
-        }
-        filters={
-          <div className={FILTER_TOOLBAR_ROW}>
-            <SearchInput placeholder="Search products..." value={search} onValueChange={handleSearchChange} />
-          </div>
-        }
-      >
-        {isError ? (
-          <ErrorState title="Failed to load products" onRetry={handleRetry} className="flex-1" />
-        ) : (
-          <DataTable
-            data={allProducts}
-            columns={columns}
-            getRowKey={(p) => p.id}
-            isLoading={isLoading}
-            className="flex-1 min-h-0"
-            emptyState={
-              <EmptyState
-                className="flex-1 border-0 bg-transparent"
-                illustration={<EmptyProductsIllustration />}
-                title={debouncedSearch ? "No products match your search" : "No products yet"}
-                description={
-                  debouncedSearch
-                    ? "Try a different search term."
-                    : "Add products and services to use in your quotes and deals."
-                }
-                action={debouncedSearch ? undefined : { label: "Add Product", onClick: handleOpenCreate }}
-              />
+    <PageWrapper
+      title="Product catalogue"
+      subtitle="What you sell, what it costs and how it is taxed."
+      filters={
+        <div className={FILTER_TOOLBAR_ROW}>
+          <SearchInput
+            placeholder={layout.list.searchPlaceholder}
+            value={search}
+            onValueChange={setSearch}
+          />
+          <DensityToggle density={density} onChange={setDensity} />
+        </div>
+      }
+      actions={
+        canManage ? (
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={16}
+            iconClassName="mr-1.5"
+            size="sm"
+            onClick={handleOpenCreate}
+          >
+            New product
+          </AnimatedIconButton>
+        ) : undefined
+      }
+    >
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        {!canManage ? (
+          <NoPermissionState
+            permission="crm:products:manage"
+            className={CONTENT_FILL_PANEL}
+            description="The product catalogue is managed by whoever sets your pricing."
+          />
+        ) : isLoading ? (
+          <DataTableSkeleton rows={12} columns={layout.list.columns.length} className="flex-1" />
+        ) : isError ? (
+          <ErrorState
+            title="Couldn't load the catalogue"
+            description="The product list didn't load. Check your connection and try again."
+            onRetry={handleRetry}
+            className={CONTENT_FILL_PANEL}
+          />
+        ) : products.length === 0 ? (
+          <EmptyState
+            illustration={<EmptyProductsIllustration />}
+            title={query ? "No products match that search" : "No products yet"}
+            description={
+              query
+                ? `Nothing in the catalogue matches “${query}”. Clear the search to see everything.`
+                : "A product is a line you can put on a quote — its price, its tax and the currency it sells in."
             }
+            action={
+              query
+                ? { label: "Clear search", onClick: handleClearSearch }
+                : canManage
+                  ? { label: "New product", onClick: handleOpenCreate }
+                  : undefined
+            }
+            actionVariant={query ? "outline" : undefined}
+            className={CONTENT_FILL_PANEL}
+          />
+        ) : (
+          <RecordList
+            layout={layout}
+            rows={asRecordValues(products)}
+            getRowKey={(row) => String(row.id)}
+            actions={canManage ? rowActions : undefined}
+            density={density}
+            money={money}
+            minWidth="900px"
+            className={CONTENT_FILL_PANEL}
           />
         )}
-      </PageWrapper>
-    </>
+      </div>
+
+      <ProductSheet
+        open={sheetOpen}
+        onOpenChange={handleSheetOpenChange}
+        product={editTarget}
+      />
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={handleDeleteOpenChange}
+        title="Delete this product?"
+        description={
+          deleteTarget
+            ? `${deleteTarget.name} will be removed from the catalogue and from every quote and deal that lists it. This cannot be undone.`
+            : ""
+        }
+        confirmLabel="Delete product"
+        destructive
+        isPending={deleteProduct.isPending}
+        onConfirm={handleDeleteConfirm}
+      />
+    </PageWrapper>
   );
 }

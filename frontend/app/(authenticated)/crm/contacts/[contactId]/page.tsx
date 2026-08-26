@@ -1,20 +1,23 @@
 "use client";
 
-import { useState, use, useCallback } from "react";
+import { use, useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ErrorState } from "@/components/shared";
+import { RecordDetail, asRecordValue } from "@/features/renderer";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { CONTACT_LAYOUT } from "@/lib/renderer/crm/contact-layout";
 import { useContactDetail, useDeleteContact } from "@/hooks/api/crm";
-import { EditContactSheet } from "@/features/crm/contacts/edit-contact-sheet";
+import { ContactSheet } from "@/features/crm/contacts/contact-sheet";
 import { EmailComposeDialog } from "@/features/crm/shared/email-compose-dialog";
 import { CallLogDialog } from "@/features/crm/shared/call-log-dialog";
-import { ContactInfoCard } from "@/features/crm/contacts/detail/contact-info-card";
+import { ContactQuickActions } from "@/features/crm/contacts/detail/contact-quick-actions";
 import { ContactStatsBar } from "@/features/crm/contacts/detail/contact-stats-bar";
 import { ContactTimeline } from "@/features/crm/contacts/detail/contact-timeline";
 import { ContactRelatedDeals } from "@/features/crm/contacts/detail/contact-related-deals";
@@ -22,29 +25,24 @@ import { ContactNotes } from "@/features/crm/contacts/detail/contact-notes";
 import { ContactRolesCard } from "@/features/crm/contacts/detail/contact-roles-card";
 import { ContactDuplicateBanner } from "@/features/crm/contacts/detail/contact-merge-dialog";
 import { CreateTaskDialog } from "@/features/crm/tasks/create-task-dialog";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { ErrorState } from "@/components/shared";
 import { ContactInlineAiMenu } from "@/features/crm/shared/crm-inline-ai-menu";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 function ContactDetailSkeleton() {
   return (
-    <PageWrapper title="Contact" subtitle="Loading..." backHref="/crm/contacts">
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="space-y-4">
-            <Skeleton className="h-72 rounded-lg" />
-            <div className="grid grid-cols-3 gap-3">
-              <Skeleton className="h-20 rounded-lg" />
-              <Skeleton className="h-20 rounded-lg" />
-              <Skeleton className="h-20 rounded-lg" />
-            </div>
+    <PageWrapper title="Contact" backHref="/crm/contacts">
+      <div className="flex flex-col gap-gap-toolbar">
+        <Skeleton className="h-56 rounded-xl" />
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="flex flex-col gap-gap-toolbar">
+            <Skeleton className="h-32 rounded-xl" />
+            <Skeleton className="h-20 rounded-xl" />
           </div>
-          <div className="lg:col-span-2 space-y-4">
-            <Skeleton className="h-64 rounded-lg" />
-            <Skeleton className="h-40 rounded-lg" />
+          <div className="flex flex-col gap-gap-toolbar lg:col-span-2">
+            <Skeleton className="h-64 rounded-xl" />
+            <Skeleton className="h-40 rounded-xl" />
           </div>
         </div>
-        <Skeleton className="h-48 rounded-lg" />
       </div>
     </PageWrapper>
   );
@@ -58,6 +56,7 @@ export default function ContactDetailPage({
   const { contactId } = use(params);
   const id = Number(contactId);
   const router = useRouter();
+  const layout = useTenantLayout(CONTACT_LAYOUT);
 
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -69,13 +68,13 @@ export default function ContactDetailPage({
   const deleteMutation = useDeleteContact();
 
   const handleOpenEdit = useCallback(() => setEditOpen(true), []);
-  const handleEditOpenChange = useCallback((open: boolean) => setEditOpen(open), []);
   const handleOpenDelete = useCallback(() => setDeleteOpen(true), []);
-  const handleDeleteOpenChange = useCallback((open: boolean) => setDeleteOpen(open), []);
   const handleOpenLogActivity = useCallback(() => setLogActivityOpen(true), []);
-  const handleLogActivityOpenChange = useCallback((open: boolean) => setLogActivityOpen(open), []);
   const handleSendEmail = useCallback(() => setEmailOpen(true), []);
   const handleLogCall = useCallback(() => setCallOpen(true), []);
+  const handleRefetch = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const handleConfirmDelete = useCallback(() => {
     deleteMutation.mutate(id, {
@@ -87,123 +86,103 @@ export default function ContactDetailPage({
     });
   }, [id, deleteMutation, router]);
 
-  const handleRefetch = useCallback(() => { void refetch(); }, [refetch]);
-
   if (isLoading) return <ContactDetailSkeleton />;
 
-  if (isError) {
+  if (isError)
     return (
-      <PageWrapper title="Contact" subtitle="" backHref="/crm/contacts">
+      <PageWrapper title="Contact" backHref="/crm/contacts">
         <ErrorState
+          title="Couldn't load this contact"
           description={getErrorMessage(error)}
           onRetry={handleRefetch}
           className="flex-1"
         />
       </PageWrapper>
     );
-  }
 
-  if (!contact) {
+  if (!contact)
     return (
-      <PageWrapper title="Not Found" subtitle="" backHref="/crm/contacts">
+      <PageWrapper title="Not found" backHref="/crm/contacts">
         <EmptyState
           title="Contact not found"
-          description="This contact may have been deleted or you don't have access."
-          action={{ label: "Back to Contacts", href: "/crm/contacts" }}
+          description="This contact may have been deleted, or you don't have access to it."
+          action={{ label: "Back to contacts", href: "/crm/contacts" }}
           className="flex-1"
         />
       </PageWrapper>
     );
-  }
 
-  const openDealsCount = contact.dealId != null ? 1 : 0;
+  const record = asRecordValue({
+    ...contact,
+    tags: contact.tags.join(", "),
+    organizationName: contact.crmOrganization?.name ?? null,
+  });
 
   return (
-    <>
-      <PageWrapper
-        title={contact.name}
-        subtitle={[contact.title, contact.company].filter(Boolean).join(" · ") || undefined}
-        backHref="/crm/contacts"
-        actions={
-          <div className="flex items-center gap-2">
-            <ContactInlineAiMenu
-              contactId={id}
-              contactName={contact.name}
-              contactEmail={contact.email}
-            />
-            <Button size="sm" onClick={handleOpenLogActivity}>
-              <Plus className="h-3.5 w-3.5 mr-1.5" />
-              Log Activity
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5 text-xs"
-              onClick={handleOpenEdit}
-            >
-              <Pencil className="h-3.5 w-3.5" />
-              Edit
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-              onClick={handleOpenDelete}
-              aria-label="Delete contact"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
-          </div>
-        }
-      >
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={id}
-            className="space-y-5"
-            initial={{ opacity: 0, x: 24 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -24 }}
-            transition={{ duration: 0.22, ease: "easeOut" }}
+    <PageWrapper
+      title={contact.name}
+      subtitle={[contact.title, contact.company].filter(Boolean).join(" · ") || undefined}
+      backHref="/crm/contacts"
+      actions={
+        <div className="flex items-center gap-gap-field">
+          <ContactInlineAiMenu
+            contactId={id}
+            contactName={contact.name}
+            contactEmail={contact.email}
+          />
+          <Button size="sm" onClick={handleOpenLogActivity}>
+            <Plus className="mr-1.5 h-3.5 w-3.5" />
+            Log activity
+          </Button>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={handleOpenEdit}>
+            <Pencil className="h-3.5 w-3.5" />
+            Edit
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+            onClick={handleOpenDelete}
+            aria-label="Delete contact"
           >
-            <ContactDuplicateBanner contactId={id} />
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      }
+    >
+      <div className="flex min-w-0 flex-col gap-gap-section">
+        <ContactDuplicateBanner contactId={id} />
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <div className="space-y-4">
-                <ContactInfoCard
-                  contact={contact}
-                  onEdit={handleOpenEdit}
-                  onSendEmail={handleSendEmail}
-                  onLogCall={handleLogCall}
-                  entityId={id}
-                />
-                <ContactStatsBar contactId={id} openDealsCount={openDealsCount} />
-                <ContactRolesCard contactId={id} />
-              </div>
+        <RecordDetail layout={layout} record={record} showTitle={false} />
 
-              <div className="lg:col-span-2 space-y-4">
-                <ContactTimeline contactId={id} onLogActivity={handleOpenLogActivity} />
-                <ContactNotes contactId={id} initialNotes={contact.notes} />
-              </div>
-            </div>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="flex min-w-0 flex-col gap-gap-toolbar">
+            <ContactQuickActions
+              contact={contact}
+              onSendEmail={handleSendEmail}
+              onLogCall={handleLogCall}
+            />
+            <ContactStatsBar contactId={id} openDealsCount={contact.dealId != null ? 1 : 0} />
+            <ContactRolesCard contactId={id} />
+          </div>
 
-            <ContactRelatedDeals contact={contact} />
-          </motion.div>
-        </AnimatePresence>
-      </PageWrapper>
+          <div className="flex min-w-0 flex-col gap-gap-toolbar lg:col-span-2">
+            <ContactTimeline contactId={id} onLogActivity={handleOpenLogActivity} />
+            <ContactNotes contactId={id} initialNotes={contact.notes} />
+          </div>
+        </div>
 
-      {editOpen && (
-        <EditContactSheet
-          key={contact.id}
-          contact={contact}
-          open={editOpen}
-          onOpenChange={handleEditOpenChange}
-        />
-      )}
+        <ContactRelatedDeals contact={contact} />
+      </div>
+
+      {editOpen ? (
+        <ContactSheet open onOpenChange={setEditOpen} contact={contact} />
+      ) : null}
 
       <EmailComposeDialog
         open={emailOpen}
         onOpenChange={setEmailOpen}
-        toEmail={contact?.email}
+        toEmail={contact.email}
         entityType="CONTACT"
         entityId={id}
       />
@@ -217,21 +196,21 @@ export default function ContactDetailPage({
 
       <CreateTaskDialog
         open={logActivityOpen}
-        onOpenChange={handleLogActivityOpenChange}
+        onOpenChange={setLogActivityOpen}
         defaultEntityType="CONTACT"
         defaultEntityId={id}
       />
 
       <ConfirmDialog
         open={deleteOpen}
-        onOpenChange={handleDeleteOpenChange}
+        onOpenChange={setDeleteOpen}
         title="Delete contact"
-        description={`Are you sure you want to delete "${contact.name}"? This action cannot be undone.`}
+        description={`Delete “${contact.name}”? This cannot be undone.`}
         confirmLabel="Delete"
         destructive
         isPending={deleteMutation.isPending}
         onConfirm={handleConfirmDelete}
       />
-    </>
+    </PageWrapper>
   );
 }

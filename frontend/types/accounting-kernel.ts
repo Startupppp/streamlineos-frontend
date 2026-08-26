@@ -196,6 +196,45 @@ export interface TrialBalanceReport {
   balanced: boolean;
 }
 
+export interface AccountBalance {
+  debitMinor: number;
+  creditMinor: number;
+  balanceMinor: number;
+}
+
+export interface AccountLedgerEntry {
+  lineId: string;
+  lineNo: number;
+  journalId: string;
+  journalNumber: string;
+  journalDate: string;
+  memo: string | null;
+  description: string | null;
+  debitMinor: number;
+  creditMinor: number;
+  runningBalanceMinor: number;
+  sourceType: GlJournalSource;
+  sourceId: string | null;
+}
+
+export interface AccountLedger {
+  accountId: string;
+  code: string;
+  name: string;
+  accountType: GlAccountType;
+  currency: string;
+  from: string;
+  to: string;
+  opening: AccountBalance;
+  periodDebitMinor: number;
+  periodCreditMinor: number;
+  closingBalanceMinor: number;
+  entries: AccountLedgerEntry[];
+  page: number;
+  pageSize: number;
+  total: number;
+}
+
 export interface Currency {
   code: string;
   name: string;

@@ -2,14 +2,11 @@
 
 import { use, useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState } from "@/components/shared";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { useLeadDetail, useLeadTimeline, useUpdateLead, useUpdateLeadStatus, useLogLeadActivity } from "@/hooks/api/leads";
-import { useCreateTask } from "@/hooks/api/tasks";
+import { useLeadDetail, useLeadTimeline, useUpdateLeadStatus } from "@/hooks/api/leads";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -20,19 +17,11 @@ import { LeadQuickActions } from "@/features/crm/leads/detail/lead-quick-actions
 import { LeadSidebar } from "@/features/crm/leads/detail/lead-sidebar";
 import { LeadQualificationPanel } from "@/features/crm/leads/detail/lead-qualification-panel";
 import {
-  noteSchema,
-  taskSchema,
-  emailSchema,
-  callSchema,
-  editSchema,
   type QuickAction,
   type PipelineStatus,
-  type NoteForm,
-  type TaskForm,
-  type EmailForm,
-  type CallForm,
-  type EditForm,
 } from "@/features/crm/leads/detail/lead-types";
+
+const NO_DRAFT = { subject: "", body: "" };
 
 export default function LeadDetailPage({
   params,
@@ -52,36 +41,9 @@ export default function LeadDetailPage({
 
   const [isEditing, setIsEditing] = useState(false);
   const [activeAction, setActiveAction] = useState<QuickAction>(null);
+  const [emailDraft, setEmailDraft] = useState(NO_DRAFT);
 
-  const updateLeadMutation = useUpdateLead();
   const updateStatusMutation = useUpdateLeadStatus();
-  const logActivityMutation = useLogLeadActivity();
-  const createTaskMutation = useCreateTask();
-
-  const editForm = useForm<EditForm>({
-    resolver: zodResolver(editSchema),
-    values: lead
-      ? {
-          name: lead.name,
-          email: lead.email ?? "",
-          phone: lead.phone ?? "",
-          company: lead.company ?? "",
-          city: lead.city ?? "",
-          priority: lead.priority ?? "WARM",
-          potentialValue: lead.potentialValue ?? "",
-          investmentInterest: lead.investmentInterest ?? "",
-          notes: lead.notes ?? "",
-        }
-      : undefined,
-  });
-
-  const noteForm = useForm<NoteForm>({ resolver: zodResolver(noteSchema) });
-  const taskForm = useForm<TaskForm>({ resolver: zodResolver(taskSchema) });
-  const emailForm = useForm<EmailForm>({
-    resolver: zodResolver(emailSchema),
-    defaultValues: { to: lead?.email ?? "" },
-  });
-  const callForm = useForm<CallForm>({ resolver: zodResolver(callSchema) });
 
   const handleStatusChange = useCallback(
     (status: PipelineStatus) => {
@@ -99,130 +61,13 @@ export default function LeadDetailPage({
     [leadId, updateStatusMutation, lead],
   );
 
-  const onEditSubmit = useCallback(
-    (data: EditForm) => {
-      updateLeadMutation.mutate(
-        { id: leadId, ...data },
-        {
-          onSuccess: () => {
-            toast.success("Lead updated");
-            setIsEditing(false);
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        },
-      );
-    },
-    [leadId, updateLeadMutation],
-  );
-
-  const onNoteSubmit = useCallback(
-    (data: NoteForm) => {
-      logActivityMutation.mutate(
-        {
-          leadId,
-          type: "note",
-          date: new Date().toISOString(),
-          notes: data.body,
-        },
-        {
-          onSuccess: () => {
-            toast.success("Note added");
-            setActiveAction(null);
-            noteForm.reset();
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        },
-      );
-    },
-    [leadId, logActivityMutation, noteForm],
-  );
-
-  const onTaskSubmit = useCallback(
-    (data: TaskForm) => {
-      const dueDate = data.dueDate
-        ? new Date(`${data.dueDate}T09:00:00`).toISOString()
-        : undefined;
-
-      createTaskMutation.mutate(
-        {
-          title: data.title,
-          type: "CUSTOM",
-          entityType: "LEAD",
-          entityId: leadId,
-          dueDate,
-        },
-        {
-          onSuccess: () => {
-            toast.success("Task created");
-            setActiveAction(null);
-            taskForm.reset();
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        },
-      );
-    },
-    [leadId, createTaskMutation, taskForm],
-  );
-
-  const onEmailSubmit = useCallback(
-    (data: EmailForm) => {
-      logActivityMutation.mutate(
-        {
-          leadId,
-          type: "email",
-          date: new Date().toISOString(),
-          subject: data.subject,
-          notes: `To: ${data.to}\n\n${data.body}`,
-        },
-        {
-          onSuccess: () => {
-            toast.success("Email sent");
-            setActiveAction(null);
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        },
-      );
-    },
-    [leadId, logActivityMutation],
-  );
-
   const handleToggleEdit = useCallback(() => setIsEditing((prev) => !prev), []);
   const handleCancelEdit = useCallback(() => setIsEditing(false), []);
 
-  const handleDraftEmail = useCallback(
-    (subject: string, body: string) => {
-      emailForm.setValue("subject", subject);
-      emailForm.setValue("body", body);
-      emailForm.setValue("to", lead?.email ?? "");
-      setActiveAction("email");
-    },
-    [emailForm, lead?.email],
-  );
-
-  const onCallSubmit = useCallback(
-    (data: CallForm) => {
-      logActivityMutation.mutate(
-        {
-          leadId,
-          type: "call",
-          date: new Date().toISOString(),
-          subject: data.subject || undefined,
-          duration: data.duration ? Number(data.duration) : undefined,
-          outcome: data.outcome || undefined,
-          notes: data.notes || undefined,
-        },
-        {
-          onSuccess: () => {
-            toast.success("Call logged");
-            setActiveAction(null);
-            callForm.reset();
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        },
-      );
-    },
-    [leadId, logActivityMutation, callForm],
-  );
+  const handleDraftEmail = useCallback((subject: string, body: string) => {
+    setEmailDraft({ subject, body });
+    setActiveAction("email");
+  }, []);
 
   if (isLoading) {
     return (
@@ -304,32 +149,20 @@ export default function LeadDetailPage({
               lead={lead}
               entityId={leadId}
               isEditing={isEditing}
-              editForm={editForm}
-              isUpdatePending={updateLeadMutation.isPending}
-              onEditSubmit={onEditSubmit}
-              onCancelEdit={handleCancelEdit}
+              onEditingDone={handleCancelEdit}
             />
 
             <LeadQuickActions
+              leadId={leadId}
               activeAction={activeAction}
               onSetActiveAction={setActiveAction}
-              noteForm={noteForm}
-              taskForm={taskForm}
-              emailForm={emailForm}
-              callForm={callForm}
-              onNoteSubmit={onNoteSubmit}
-              onTaskSubmit={onTaskSubmit}
-              onEmailSubmit={onEmailSubmit}
-              onCallSubmit={onCallSubmit}
-              isNotePending={logActivityMutation.isPending}
-              isTaskPending={createTaskMutation.isPending}
-              isEmailPending={logActivityMutation.isPending}
-              isCallPending={logActivityMutation.isPending}
               leadName={lead.name}
               leadEmail={lead.email ?? ""}
               leadContext={[lead.status, lead.priority, lead.potentialValue]
                 .filter(Boolean)
                 .join(", ")}
+              emailDraftSubject={emailDraft.subject}
+              emailDraftBody={emailDraft.body}
               onDraftEmail={handleDraftEmail}
             />
           </div>

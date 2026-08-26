@@ -1,225 +1,215 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2 } from "lucide-react";
-import { PageWrapper } from "@/components/ui/page-wrapper";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
-import { ErrorState } from "@/components/shared";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { AutomationsIllustration } from "@/components/illustrations";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { useCrmSequences, useDeleteCrmSequence, useUpdateCrmSequence } from "@/hooks/api/crm";
+import { ErrorState, NoPermissionState } from "@/components/shared";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Switch } from "@/components/ui/switch";
+import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { RecordList, asRecordValues } from "@/features/renderer";
+import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordRowActions } from "@/features/crm/settings/shared/record-row-actions";
 import { SequenceSheet } from "@/features/crm/settings/sequences/sequence-sheet";
+import { useCan } from "@/hooks/api/access";
+import { useCrmSequences, useDeleteCrmSequence, useUpdateCrmSequence } from "@/hooks/api/crm";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { SEQUENCE_LAYOUT } from "@/lib/renderer/crm/settings/sequence-layout";
 import type { CrmSequence } from "@/types/crm";
 
+/**
+ * Sequences.
+ *
+ * Opening a row opens the sequence — its details, its steps and who is enrolled
+ * — because that is what somebody came here to do. Pausing one stays a switch in
+ * the row: one field on a record already on screen needs no overlay at all.
+ */
 export default function SequencesPage() {
-  const { data, isLoading, isError, refetch } = useCrmSequences();
-  const deleteSequence = useDeleteCrmSequence();
-  const updateSequence = useUpdateCrmSequence();
+  const layout = useTenantLayout(SEQUENCE_LAYOUT);
+  const [density, setDensity] = useDensity();
+  const canManage = useCan("crm:sequences:manage");
 
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<CrmSequence | null>(null);
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [openTarget, setOpenTarget] = useState<CrmSequence | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<CrmSequence | null>(null);
 
-  const sequences = data?.sequences ?? [];
+  const { data, isLoading, isError, refetch } = useCrmSequences();
+  const updateSequence = useUpdateCrmSequence();
+  const deleteSequence = useDeleteCrmSequence();
+
+  const sequences = useMemo(() => data?.sequences ?? [], [data]);
 
   const handleOpenCreate = useCallback(() => {
-    setEditTarget(null);
-    setSheetOpen(true);
-  }, []);
-
-  const handleOpenEdit = useCallback((seq: CrmSequence) => {
-    setEditTarget(seq);
+    setOpenTarget(null);
     setSheetOpen(true);
   }, []);
 
   const handleSheetOpenChange = useCallback((open: boolean) => {
     setSheetOpen(open);
-    if (!open) setEditTarget(null);
+    if (!open) setOpenTarget(null);
   }, []);
 
+  const handleDeleteOpenChange = useCallback((open: boolean) => {
+    if (!open) setDeleteTarget(null);
+  }, []);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   const handleToggleActive = useCallback(
-    (seq: CrmSequence) => {
+    (sequence: CrmSequence) => {
       updateSequence.mutate(
-        { id: seq.id, isActive: !seq.isActive },
+        { id: sequence.id, isActive: !sequence.isActive },
         {
-          onSuccess: () => toast.success(seq.isActive ? "Sequence disabled" : "Sequence enabled"),
-          onError: (err) => toast.error(getErrorMessage(err)),
+          onSuccess: () =>
+            toast.success(sequence.isActive ? "Sequence paused" : "Sequence running"),
+          onError: (error) => toast.error(getErrorMessage(error)),
         },
       );
     },
     [updateSequence],
   );
 
-  const handleDeleteRequest = useCallback((id: string) => setDeleteTargetId(id), []);
-
   const handleDeleteConfirm = useCallback(() => {
-    if (!deleteTargetId) return;
-    deleteSequence.mutate(deleteTargetId, {
+    if (!deleteTarget) return;
+    deleteSequence.mutate(deleteTarget.id, {
       onSuccess: () => {
         toast.success("Sequence deleted");
-        setDeleteTargetId(null);
+        setDeleteTarget(null);
       },
-      onError: (err) => {
-        toast.error(getErrorMessage(err));
-        setDeleteTargetId(null);
+      onError: (error) => {
+        toast.error(getErrorMessage(error));
+        setDeleteTarget(null);
       },
     });
-  }, [deleteSequence, deleteTargetId]);
+  }, [deleteSequence, deleteTarget]);
 
-  const handleDeleteCancel = useCallback(() => setDeleteTargetId(null), []);
-  const handleAlertOpenChange = useCallback((open: boolean) => { if (!open) setDeleteTargetId(null); }, []);
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleRowClick = useCallback(
+    (row: Record<string, unknown>) => {
+      const sequence = sequences.find((candidate) => candidate.id === row.id);
+      if (!sequence) return;
+      setOpenTarget(sequence);
+      setSheetOpen(true);
+    },
+    [sequences],
+  );
 
-  const columns = useMemo<DataTableColumn<CrmSequence>[]>(() => [
-    {
-      key: "name",
-      header: "Name",
-      cell: (seq) => (
-        <div>
-          <div className="font-medium text-foreground">{seq.name}</div>
-          {seq.description && (
-            <div className="text-xs text-muted-foreground truncate max-w-xs mt-0.5">
-              {seq.description}
-            </div>
-          )}
-        </div>
-      ),
-    },
-    {
-      key: "entityType",
-      header: "Entity",
-      cell: (seq) => (
-        <Badge variant="outline" className="text-dense capitalize">
-          {seq.entityType}
-        </Badge>
-      ),
-    },
-    {
-      key: "isActive",
-      header: "Status",
-      cell: (seq) => (
-        <Switch
-          checked={seq.isActive}
-          onCheckedChange={() => handleToggleActive(seq)}
-          aria-label={seq.isActive ? "Disable sequence" : "Enable sequence"}
+  const rowActions = useCallback(
+    (row: Record<string, unknown>) => {
+      const sequence = sequences.find((candidate) => candidate.id === row.id);
+      if (!sequence || !canManage) return null;
+      return (
+        <RecordRowActions
+          editLabel={`Open ${sequence.name}`}
+          deleteLabel={`Delete ${sequence.name}`}
+          leading={
+            <Switch
+              checked={sequence.isActive}
+              onCheckedChange={() => handleToggleActive(sequence)}
+              aria-label={
+                sequence.isActive ? `Pause ${sequence.name}` : `Start ${sequence.name}`
+              }
+            />
+          }
+          onEdit={() => {
+            setOpenTarget(sequence);
+            setSheetOpen(true);
+          }}
+          onDelete={() => setDeleteTarget(sequence)}
         />
-      ),
+      );
     },
-    {
-      key: "createdAt",
-      header: "Created",
-      sortable: true,
-      sortValue: (seq) => new Date(seq.createdAt).getTime(),
-      cell: (seq) => (
-        <span className="text-xs text-muted-foreground">
-          {new Date(seq.createdAt).toLocaleDateString()}
-        </span>
-      ),
-    },
-    {
-      key: "actions",
-      header: "",
-      cell: (seq) => (
-        <div className="flex items-center justify-end gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="w-7 text-muted-foreground hover:text-foreground"
-            onClick={() => handleOpenEdit(seq)}
-          >
-            <Pencil className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="w-7 text-muted-foreground hover:text-destructive"
-            onClick={() => handleDeleteRequest(seq.id)}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      ),
-      headerClassName: "w-20",
-    },
-  ], [handleToggleActive, handleOpenEdit, handleDeleteRequest]);
+    [sequences, canManage, handleToggleActive],
+  );
 
   return (
-    <>
-      <AlertDialog open={deleteTargetId !== null} onOpenChange={handleAlertOpenChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Sequence</AlertDialogTitle>
-            <AlertDialogDescription>
-              This sequence will be permanently deleted and any active enrollments will be stopped.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleDeleteCancel}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleDeleteConfirm}
-              disabled={deleteSequence.isPending}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <SequenceSheet
-        sequence={editTarget}
-        open={sheetOpen}
-        onOpenChange={handleSheetOpenChange}
-      />
-
-      <PageWrapper
-        title="Sequences"
-        subtitle="Automated multi-step outreach sequences for leads, deals, and contacts"
-        actions={
-          <Button onClick={handleOpenCreate}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Sequence
-          </Button>
-        }
-      >
-        {isError ? (
-          <ErrorState title="Failed to load sequences" onRetry={handleRetry} className="flex-1" />
+    <PageWrapper
+      title="Sequences"
+      subtitle="A run of touches every enrolled lead, deal or contact receives."
+      filters={
+        <div className={FILTER_TOOLBAR_ROW}>
+          <DensityToggle density={density} onChange={setDensity} />
+        </div>
+      }
+      actions={
+        canManage ? (
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={16}
+            iconClassName="mr-1.5"
+            size="sm"
+            onClick={handleOpenCreate}
+          >
+            New sequence
+          </AnimatedIconButton>
+        ) : undefined
+      }
+    >
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        {!canManage ? (
+          <NoPermissionState
+            permission="crm:sequences:manage"
+            className={CONTENT_FILL_PANEL}
+            description="Outreach sequences are managed by your sales operations team."
+          />
         ) : isLoading ? (
-          <DataTableSkeleton rows={12} columns={5} className="flex-1" />
+          <DataTableSkeleton rows={10} columns={layout.list.columns.length} className="flex-1" />
+        ) : isError ? (
+          <ErrorState
+            title="Couldn't load sequences"
+            description="The sequence list didn't load. Check your connection and try again."
+            onRetry={handleRetry}
+            className={CONTENT_FILL_PANEL}
+          />
+        ) : sequences.length === 0 ? (
+          <EmptyState
+            illustration={<AutomationsIllustration />}
+            title="No sequences yet"
+            description="A sequence is a run of touches — an email, a call task, a wait — that every enrolled record receives in order."
+            action={{ label: "New sequence", onClick: handleOpenCreate }}
+            className={CONTENT_FILL_PANEL}
+          />
         ) : (
-          <DataTable
-            data={sequences}
-            columns={columns}
-            getRowKey={(seq) => seq.id}
-            isLoading={false}
-            className="flex-1 min-h-0"
-            emptyState={
-              <EmptyState
-                className="flex-1 border-0 bg-transparent"
-                illustration={<AutomationsIllustration />}
-                title="No sequences yet"
-                description="Create your first sequence to automate multi-step outreach across leads, deals, and contacts."
-                action={{ label: "New Sequence", onClick: handleOpenCreate }}
-              />
-            }
+          <RecordList
+            layout={layout}
+            rows={asRecordValues(sequences)}
+            getRowKey={(row) => String(row.id)}
+            onRowClick={handleRowClick}
+            actions={rowActions}
+            density={density}
+            minWidth="820px"
+            className={CONTENT_FILL_PANEL}
           />
         )}
-      </PageWrapper>
-    </>
+      </div>
+
+      <SequenceSheet
+        open={sheetOpen}
+        onOpenChange={handleSheetOpenChange}
+        sequence={openTarget}
+      />
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={handleDeleteOpenChange}
+        title="Delete this sequence?"
+        description={
+          deleteTarget
+            ? `${deleteTarget.name} will be deleted and every enrolment still running will stop. This cannot be undone.`
+            : ""
+        }
+        confirmLabel="Delete sequence"
+        destructive
+        isPending={deleteSequence.isPending}
+        onConfirm={handleDeleteConfirm}
+      />
+    </PageWrapper>
   );
 }

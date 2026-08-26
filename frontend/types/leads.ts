@@ -304,40 +304,6 @@ export interface DistributeLeadsInput {
   skipAbsent?: boolean;
 }
 
-export interface BulkImportLeadRow {
-  name: string;
-  email?: string;
-  phone?: string;
-  company?: string;
-  source?: LeadSource;
-  notes?: string;
-  city?: string;
-  designation?: string;
-  referredBy?: string;
-  potentialValue?: string;
-  investmentInterest?: string;
-  whatsappNumber?: string;
-  website?: string;
-  priority?: LeadPriority;
-  tags?: string[];
-}
-
-export interface BulkImportLeadsInput {
-  leads: BulkImportLeadRow[];
-  duplicateAction?: "skip" | "update" | "import";
-  autoDistribute?: boolean;
-}
-
-export interface BulkImportResult {
-  imported: number;
-  skipped: number;
-  updated: number;
-  errors: { row: number; message: string }[];
-  duplicatesFound: number;
-  distributed: number;
-  salesPeopleCount: number;
-}
-
 export interface DistributeResult {
   distributed: number;
   salesPeople: number;

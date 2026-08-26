@@ -2,26 +2,16 @@
 
 import { useState, useMemo, useCallback } from "react";
 import type { DropResult } from "@hello-pangea/dnd";
+import { Plus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { ErrorState } from "@/components/shared";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { ImportLinkButton } from "@/features/crm/import/import-link-button";
-import { LeadTableView } from "@/features/crm/leads/lead-table-view";
 import { LeadExportDialog } from "@/features/crm/leads/lead-export-dialog";
-import {
-  useLeadBoard,
-  useLeadStats,
-  useCreateLead,
-  useUpdateLeadStatus,
-  useLeads,
-  useSalesTeamCapacity,
-  useUpdateLead,
-  useAssignLead,
-  useBulkUpdateLeads,
-  useBulkDeleteLeads,
-} from "@/hooks/api/leads";
-import { useCreateDeal } from "@/hooks/api/crm";
+import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
+import { useLeadBoard, useLeadStats, useUpdateLeadStatus, useLeads } from "@/hooks/api/leads";
 import { useCrmOptions, resolveOption } from "@/hooks/api/crm/metadata";
 import { useLeadsFilters } from "@/hooks/common/use-leads-filters";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
@@ -33,9 +23,58 @@ import { LeadsToolbar } from "@/features/crm/leads/leads-toolbar";
 import { LeadsKanban } from "@/features/crm/leads/leads-kanban";
 import { LeadsFunnelView } from "@/features/crm/leads/leads-funnel-view";
 import { LeadDetailSheet } from "@/features/crm/leads/lead-detail-sheet";
+import { LeadListView } from "@/features/crm/leads/lead-list-view";
 import { CreateLeadSheet } from "@/features/crm/leads/create-lead-sheet";
-import type { CreateLeadFormValues } from "@/features/crm/leads/create-lead-sheet";
-import type { BoardLead, LeadStatus } from "@/features/crm/leads/leads-types";
+import { LEAD_STATUSES, type BoardLead } from "@/features/crm/leads/leads-types";
+import type { LeadFilters } from "@/types/leads";
+
+/**
+ * The lead pipeline.
+ *
+ * Three views over the same leads, and only one of them is a record list: the
+ * table is `RecordList` over `LEAD_LAYOUT`, and nothing about its columns is
+ * written here. The board and the funnel stay hand-built on purpose — a pipeline
+ * board is a set of ordered buckets you drag between, and a funnel is a shape
+ * that reads stage-to-stage fall-off. Neither is a list of records with columns,
+ * so neither is something a layout description can produce.
+ */
+
+const SORT_FIELDS: readonly NonNullable<LeadFilters["sortBy"]>[] = [
+  "name",
+  "email",
+  "company",
+  "status",
+  "priority",
+  "source",
+  "score",
+  "potentialValue",
+  "createdAt",
+];
+
+const STATUSES: readonly NonNullable<LeadFilters["status"]>[] = [
+  "NEW",
+  "CONTACTED",
+  "INTERESTED",
+  "QUALIFIED",
+  "CONVERTED",
+  "LOST",
+];
+
+const PRIORITIES: readonly NonNullable<LeadFilters["priority"]>[] = ["HOT", "WARM", "COLD"];
+
+const SOURCES: readonly NonNullable<LeadFilters["source"]>[] = [
+  "referral",
+  "campaign",
+  "cold_call",
+  "website",
+  "social_media",
+  "walk_in",
+  "other",
+];
+
+function pick<T extends string>(allowed: readonly T[], value: string | undefined): T | undefined {
+  return allowed.find((candidate) => candidate === value);
+}
 
 export default function LeadsPipelinePage() {
   const canCreate = useCan("crm:leads:create");
@@ -43,10 +82,17 @@ export default function LeadsPipelinePage() {
   const canAssign = useCan("crm:leads:assign");
   const canDelete = useCan("crm:leads:delete");
   const canCreateDeal = useCan("crm:deals:create");
-  const { data: board, isLoading: boardLoading, isError: boardError, refetch: refetchBoard } = useLeadBoard();
+
+  const {
+    data: board,
+    isLoading: boardLoading,
+    isError: boardError,
+    refetch: refetchBoard,
+  } = useLeadBoard();
   const { data: stats, isLoading: statsLoading, isError: statsError } = useLeadStats();
   const { open: createOpen, onOpenChange: setCreateOpen } = useQueryParamOpen("create");
   const [selectedLeadId, setSelectedLeadId] = useState<number | null>(null);
+  const [density, setDensity] = useDensity();
 
   const {
     view,
@@ -63,21 +109,25 @@ export default function LeadsPipelinePage() {
     setStatusFilter,
     setPriorityFilter,
     setSourceFilter,
-    setSort,
     setTablePage,
     setPageSize,
     clearFilters,
   } = useLeadsFilters();
 
-  const { data: tableData, isLoading: tableLoading } = useLeads({
+  const {
+    data: tableData,
+    isLoading: tableLoading,
+    isError: tableError,
+    refetch: refetchTable,
+  } = useLeads({
     search: searchQuery.trim() || undefined,
-    sortBy: sortColumn as "name" | "email" | "company" | "status" | "priority" | "source" | "score" | "potentialValue" | "createdAt",
+    sortBy: pick(SORT_FIELDS, sortColumn),
     sortOrder: sortDirection,
     page: tablePage,
     limit: pageSize,
-    status: statusFilter as "NEW" | "CONTACTED" | "INTERESTED" | "QUALIFIED" | "CONVERTED" | "LOST" | undefined,
-    priority: priorityFilter as "HOT" | "WARM" | "COLD" | undefined,
-    source: sourceFilter as "referral" | "campaign" | "cold_call" | "website" | "social_media" | "walk_in" | "other" | undefined,
+    status: pick(STATUSES, statusFilter),
+    priority: pick(PRIORITIES, priorityFilter),
+    source: pick(SOURCES, sourceFilter),
   });
 
   const { data: leadStatusOptions = [] } = useCrmOptions("lead_status");
@@ -88,12 +138,10 @@ export default function LeadsPipelinePage() {
     const labels: string[] = [];
     const trimmed = searchQuery.trim();
     if (trimmed) labels.push(`search "${trimmed}"`);
-    if (statusFilter)
-      labels.push(`status ${resolveOption(leadStatusOptions, statusFilter).label}`);
+    if (statusFilter) labels.push(`status ${resolveOption(leadStatusOptions, statusFilter).label}`);
     if (priorityFilter)
       labels.push(`priority ${resolveOption(leadPriorityOptions, priorityFilter).label}`);
-    if (sourceFilter)
-      labels.push(`source ${resolveOption(leadSourceOptions, sourceFilter).label}`);
+    if (sourceFilter) labels.push(`source ${resolveOption(leadSourceOptions, sourceFilter).label}`);
     return labels;
   }, [
     searchQuery,
@@ -105,103 +153,54 @@ export default function LeadsPipelinePage() {
     leadSourceOptions,
   ]);
 
-  const handleOpenCreateLead = useCallback(() => setCreateOpen(true), [setCreateOpen]);
-
-  const { data: teamCapacity } = useSalesTeamCapacity();
-  const teamMembers = useMemo(
-    () =>
-      (teamCapacity || []).map((m) => ({
-        id: m.id,
-        name: m.name,
-        image: m.image,
-      })),
-    [teamCapacity],
-  );
-
-  const updateLeadMutation = useUpdateLead();
-  const assignLeadMutation = useAssignLead();
-  const createDealMutation = useCreateDeal();
-  const bulkUpdateMutation = useBulkUpdateLeads();
-  const bulkDeleteMutation = useBulkDeleteLeads();
-
-  const createLead = useCreateLead();
   const updateStatus = useUpdateLeadStatus();
 
+  const handleOpenCreateLead = useCallback(() => setCreateOpen(true), [setCreateOpen]);
   const handleCloseDetail = useCallback(() => setSelectedLeadId(null), []);
-
-  const handleSort = useCallback(
-    (col: string) => {
-      const newDir =
-        sortColumn === col
-          ? sortDirection === "asc"
-            ? "desc"
-            : "asc"
-          : "desc";
-      setSort(col, newDir);
-    },
-    [sortColumn, sortDirection, setSort],
-  );
+  const handleRetryTable = useCallback(() => void refetchTable(), [refetchTable]);
+  const handleRetryBoard = useCallback(() => void refetchBoard(), [refetchBoard]);
 
   const handleViewChange = useCallback(
-    (v: "table" | "kanban" | "funnel") => {
-      setView(v);
-    },
+    (next: "table" | "kanban" | "funnel") => setView(next),
     [setView],
   );
 
   const filteredBoard = useMemo<Record<string, BoardLead[]> | null>(() => {
     if (!board) return null;
     const result: Record<string, BoardLead[]> = {};
-    const trimmed = searchQuery.trim();
-    if (!trimmed) {
-      for (const [status, col] of Object.entries(board)) {
-        result[status] = col.leads as BoardLead[];
-      }
-      return result;
-    }
-    const q = trimmed.toLowerCase();
-    for (const [status, col] of Object.entries(board)) {
-      result[status] = (col.leads as BoardLead[]).filter(
-        (l: BoardLead) =>
-          l.name.toLowerCase().includes(q) ||
-          l.email?.toLowerCase().includes(q) ||
-          l.phone?.includes(q) ||
-          l.company?.toLowerCase().includes(q),
-      );
+    const q = searchQuery.trim().toLowerCase();
+
+    /*
+      Walked by the statuses the board type declares rather than by
+      `Object.entries`, which hands back `any` for an interface and would let a
+      renamed column through unnoticed.
+    */
+    for (const status of LEAD_STATUSES) {
+      const leads = board[status].leads;
+      result[status] = q
+        ? leads.filter(
+            (lead) =>
+              lead.name.toLowerCase().includes(q) ||
+              lead.email?.toLowerCase().includes(q) ||
+              lead.phone?.includes(q) ||
+              lead.company?.toLowerCase().includes(q),
+          )
+        : leads;
     }
     return result;
   }, [board, searchQuery]);
 
-  const handleCreateLead = useCallback(
-    async (values: CreateLeadFormValues) => {
-      try {
-        await createLead.mutateAsync({
-          name: values.name,
-          email: values.email,
-          phone: values.phone,
-          company: values.company,
-          city: values.city,
-          source: (values.source || "other") as "referral" | "campaign" | "cold_call" | "website" | "social_media" | "walk_in" | "other",
-          potentialValue: values.potentialValue !== undefined ? String(values.potentialValue) : undefined,
-          investmentInterest: values.investmentInterest !== undefined ? String(values.investmentInterest) : undefined,
-          priority: (values.priority || "WARM") as "HOT" | "WARM" | "COLD",
-          notes: values.notes,
-          referredBy: values.referredBy,
-        });
-        toast.success("Lead created successfully");
-        setCreateOpen(false);
-      } catch (err) {
-        toast.error(getErrorMessage(err));
-      }
-    },
-    [createLead, setCreateOpen],
-  );
-
   const handleMoveStatus = useCallback(
     async (leadId: number, status: string, expectedStatus?: string) => {
+      const next = pick(STATUSES, status);
+      if (!next) return;
       try {
-        await updateStatus.mutateAsync({ leadId, status: status as LeadStatus, expectedStatus: expectedStatus as LeadStatus | undefined });
-        toast.success(`Lead moved to ${status}`);
+        await updateStatus.mutateAsync({
+          leadId,
+          status: next,
+          expectedStatus: pick(STATUSES, expectedStatus),
+        });
+        toast.success(`Lead moved to ${next}`);
       } catch (err: unknown) {
         toast.error(getErrorMessage(err));
       }
@@ -213,161 +212,13 @@ export default function LeadsPipelinePage() {
     (result: DropResult) => {
       const { destination, source, draggableId } = result;
       if (!destination) return;
-      if (
-        destination.droppableId === source.droppableId &&
-        destination.index === source.index
-      )
+      if (destination.droppableId === source.droppableId && destination.index === source.index)
         return;
+      if (source.droppableId === destination.droppableId) return;
 
-      const leadId = parseInt(draggableId);
-      const newStatus = destination.droppableId as LeadStatus;
-      if (source.droppableId !== destination.droppableId) {
-        void handleMoveStatus(
-          leadId,
-          newStatus,
-          source.droppableId as LeadStatus,
-        );
-      }
+      void handleMoveStatus(Number(draggableId), destination.droppableId, source.droppableId);
     },
     [handleMoveStatus],
-  );
-
-  const handleStatusChange = useCallback(
-    (
-      id: number,
-      status: string,
-      extra?: {
-        conversionNotes?: string;
-        lostReason?: string;
-        estimatedAmount?: string;
-        investmentInterest?: string;
-        createDeal?: boolean;
-        dealName?: string;
-      },
-    ) => {
-      if (status === "CONVERTED" && extra) {
-        updateStatus.mutate(
-          {
-            leadId: id,
-            status: "CONVERTED",
-            estimatedInvestment:
-              extra.estimatedAmount || extra.investmentInterest || undefined,
-            conversionNotes: extra.conversionNotes,
-          },
-          {
-            onSuccess: () =>
-              toast.success("Lead converted — client account created"),
-            onError: (err) => toast.error(getErrorMessage(err)),
-          },
-        );
-
-        if (extra.createDeal && extra.dealName) {
-          createDealMutation.mutate(
-            {
-              name: extra.dealName,
-              value: extra.estimatedAmount || undefined,
-              stage: "LEAD",
-              notes: extra.conversionNotes,
-              leadId: id,
-            },
-            {
-              onSuccess: () =>
-                toast.success("Deal created from converted lead"),
-              onError: (err) =>
-                toast.error(getErrorMessage(err)),
-            },
-          );
-        }
-      } else if (status === "LOST" && extra) {
-        updateStatus.mutate(
-          { leadId: id, status: "LOST", lostReason: extra.lostReason },
-          {
-            onSuccess: () => toast.success("Lead marked as lost"),
-            onError: (err) => toast.error(getErrorMessage(err)),
-          }
-        );
-      } else {
-        updateStatus.mutate(
-          { leadId: id, status: status as LeadStatus },
-          {
-            onSuccess: () => toast.success("Status updated"),
-            onError: (err) => toast.error(getErrorMessage(err)),
-          }
-        );
-      }
-    },
-    [updateStatus, createDealMutation],
-  );
-
-  const handlePriorityChange = useCallback(
-    (id: number, priority: string) => {
-      updateLeadMutation.mutate(
-        { id, priority: priority as "HOT" | "WARM" | "COLD" },
-        {
-          onSuccess: () => toast.success("Priority updated"),
-          onError: (err) => toast.error(getErrorMessage(err)),
-        }
-      );
-    },
-    [updateLeadMutation],
-  );
-
-  const handleAssign = useCallback(
-    (id: number, userId: string) => {
-      assignLeadMutation.mutate(
-        { leadId: id, assignedToId: userId },
-        {
-          onSuccess: () => toast.success("Lead assigned"),
-          onError: (err) => toast.error(getErrorMessage(err)),
-        },
-      );
-    },
-    [assignLeadMutation],
-  );
-
-  const handleBulkUpdate = useCallback(
-    (
-      ids: number[],
-      update: { status?: string; priority?: string; assignedToId?: string },
-    ) => {
-      bulkUpdateMutation.mutate(
-        {
-          leadIds: ids,
-          update: update as {
-            status?:
-              | "NEW"
-              | "CONTACTED"
-              | "INTERESTED"
-              | "QUALIFIED"
-              | "CONVERTED"
-              | "LOST";
-            priority?: "HOT" | "WARM" | "COLD";
-            assignedToId?: string;
-          },
-        },
-        {
-          onSuccess: (data) => toast.success(`${data.updated} leads updated`),
-          onError: (err) => toast.error(getErrorMessage(err)),
-        },
-      );
-    },
-    [bulkUpdateMutation],
-  );
-
-  const handleBulkDelete = useCallback(
-    (ids: number[]) => {
-      bulkDeleteMutation.mutate(
-        { leadIds: ids },
-        {
-          onSuccess: (data) => {
-            toast.success(`${data.deleted} leads deleted`);
-            if (tablePage > 1) setTablePage(1);
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        },
-      );
-    },
-    [bulkDeleteMutation, tablePage, setTablePage],
   );
 
   if (boardLoading || statsLoading) {
@@ -391,7 +242,7 @@ export default function LeadsPipelinePage() {
         <ErrorState
           title="Failed to load leads"
           description="There was an error loading the lead pipeline. Please try again."
-          onRetry={() => void refetchBoard()}
+          onRetry={handleRetryBoard}
           className="flex-1"
         />
       </PageWrapper>
@@ -402,40 +253,43 @@ export default function LeadsPipelinePage() {
     <PageWrapper
       title="Lead Pipeline"
       subtitle={stats ? `${stats.total} leads` : undefined}
-      badge={
-        view === "table" && tableData ? String(tableData.totalCount) : undefined
-      }
+      badge={view === "table" && tableData ? String(tableData.totalCount) : undefined}
       noInternalScroll
       actions={
         <div className="flex items-center gap-2">
           <LeadExportDialog />
-          {canCreate && (
+          {canCreate ? (
             <>
               <ImportLinkButton entity="leads" label="Import Leads" />
-              <CreateLeadSheet
-                open={createOpen}
-                onOpenChange={setCreateOpen}
-                onSubmit={handleCreateLead}
-                isPending={createLead.isPending}
-              />
+              <LoadingButton size="sm" onClick={handleOpenCreateLead}>
+                <Plus className="mr-1.5 h-3.5 w-3.5" />
+                New lead
+              </LoadingButton>
             </>
-          )}
+          ) : null}
         </div>
       }
       filters={
-        <LeadsToolbar
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          view={view}
-          onViewChange={handleViewChange}
-          statusFilter={statusFilter}
-          priorityFilter={priorityFilter}
-          sourceFilter={sourceFilter}
-          onStatusFilterChange={setStatusFilter}
-          onPriorityFilterChange={setPriorityFilter}
-          onSourceFilterChange={setSourceFilter}
-          onClearFilters={clearFilters}
-        />
+        <div className="flex w-full min-w-0 items-center gap-2">
+          <div className="min-w-0 flex-1">
+            <LeadsToolbar
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              view={view}
+              onViewChange={handleViewChange}
+              statusFilter={statusFilter}
+              priorityFilter={priorityFilter}
+              sourceFilter={sourceFilter}
+              onStatusFilterChange={setStatusFilter}
+              onPriorityFilterChange={setPriorityFilter}
+              onSourceFilterChange={setSourceFilter}
+              onClearFilters={clearFilters}
+            />
+          </div>
+          {view === "table" ? (
+            <DensityToggle density={density} onChange={setDensity} className="shrink-0" />
+          ) : null}
+        </div>
       }
     >
       <div className="flex flex-col flex-1 min-h-0">
@@ -446,29 +300,23 @@ export default function LeadsPipelinePage() {
         )}
 
         {view === "table" && (
-          <div className="flex-1 min-h-0 mt-2">
-            <LeadTableView
-              leads={tableData?.leads || []}
-              totalCount={tableData?.totalCount || 0}
-              page={tableData?.page || 1}
+          <div className="mt-2 flex min-h-0 min-w-0 flex-1 flex-col">
+            <LeadListView
+              leads={tableData?.leads ?? []}
+              totalCount={tableData?.totalCount ?? 0}
+              page={tableData?.page ?? tablePage}
               pageSize={pageSize}
-              sortColumn={sortColumn}
-              sortDirection={sortDirection}
-              onSort={handleSort}
               onPageChange={setTablePage}
               onPageSizeChange={setPageSize}
-              onStatusChange={handleStatusChange}
-              onPriorityChange={handlePriorityChange}
-              onAssign={handleAssign}
-              onBulkUpdate={handleBulkUpdate}
-              onBulkDelete={handleBulkDelete}
-              teamMembers={teamMembers}
               isLoading={tableLoading}
+              isError={tableError}
+              onRetry={handleRetryTable}
+              density={density}
+              canCreate={canCreate}
               canUpdate={canUpdate}
               canAssign={canAssign}
               canDelete={canDelete}
               canCreateDeal={canCreateDeal}
-              canCreate={canCreate}
               activeFilterLabels={activeFilterLabels}
               onClearFilters={clearFilters}
               onCreateLead={handleOpenCreateLead}
@@ -508,6 +356,8 @@ export default function LeadsPipelinePage() {
           canUpdate={canUpdate}
         />
       </div>
+
+      <CreateLeadSheet open={createOpen} onOpenChange={setCreateOpen} />
     </PageWrapper>
   );
 }

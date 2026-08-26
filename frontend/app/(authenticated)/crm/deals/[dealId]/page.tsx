@@ -29,19 +29,20 @@ import {
   useCloneDeal,
   useCrmStages,
 } from "@/hooks/api/crm";
-import { formatDealId } from "@/lib/format-utils";
+import { formatDealId, formatMoneyCompact } from "@/lib/format-utils";
+import { useOrgDisplay } from "@/hooks/api/org-display";
+import { RecordDetail, asRecordValue } from "@/features/renderer";
+import { dealRecordFields } from "@/lib/renderer/crm/deal-layout";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
-import {
-  DealEditForm,
-  type EditFormValues,
-} from "@/features/crm/deals/detail/deal-edit-form";
+import { DealEditForm } from "@/features/crm/deals/detail/deal-edit-form";
+import { toUpdateInput, type DealSubmission } from "@/features/crm/deals/deal-form";
+import { useDealLayout } from "@/features/crm/deals/use-deal-layout";
 import { LogActivityDialog } from "@/features/crm/deals/detail/log-activity-dialog";
 import {
   MeetingDialog,
   CreateProjectDialog,
 } from "@/features/crm/deals/detail/deal-dialogs";
-import { DealInfoCard } from "@/features/crm/deals/detail/deal-info-card";
 import { DealSidebarCards } from "@/features/crm/deals/detail/deal-sidebar-cards";
 import { DealLinkedRecordsCard } from "@/features/crm/deals/detail/deal-linked-records-card";
 import { DealStageHistory } from "@/features/crm/deals/detail/deal-stage-history";
@@ -49,14 +50,6 @@ import { DealQuotesSection } from "@/features/crm/deals/deal-quotes-section";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState } from "@/components/shared";
 import { DealInlineAiMenu } from "@/features/crm/shared/crm-inline-ai-menu";
-
-
-function formatINR(v: number) {
-  if (v >= 10000000) return `₹${(v / 10000000).toFixed(1)}Cr`;
-  if (v >= 100000) return `₹${(v / 100000).toFixed(1)}L`;
-  if (v >= 1000) return `₹${(v / 1000).toFixed(0)}K`;
-  return `₹${v.toLocaleString("en-IN")}`;
-}
 
 export default function DealDetailPage({
   params,
@@ -67,6 +60,8 @@ export default function DealDetailPage({
   const dealId = Number(dealIdStr);
   const router = useRouter();
   const shouldReduceMotion = useReducedMotion();
+  const layout = useDealLayout();
+  const money = useOrgDisplay();
 
   const { data: deal, isLoading, isError, error, refetch } = useDealDetail(dealId);
   const [isEditing, setIsEditing] = useState(false);
@@ -129,31 +124,14 @@ export default function DealDetailPage({
   );
 
   const onEditSubmit = useCallback(
-    (data: EditFormValues) => {
-      updateDeal.mutate(
-        {
-          id: dealId,
-          name: data.name,
-          value: data.value || "0",
-          stage: data.stage,
-          probability: data.probability ? Number(data.probability) : undefined,
-          contactPerson: data.contactPerson || undefined,
-          contactEmail: data.contactEmail || undefined,
-          contactPhone: data.contactPhone || undefined,
-          expectedCloseDate: data.expectedCloseDate || undefined,
-          notes: data.notes || undefined,
-          lostReason: data.lostReason || undefined,
-          partyId: data.partyId || null,
-          subjectId: data.subjectId || null,
+    (submission: DealSubmission) => {
+      updateDeal.mutate(toUpdateInput(submission, dealId), {
+        onSuccess: () => {
+          toast.success("Deal updated");
+          setIsEditing(false);
         },
-        {
-          onSuccess: () => {
-            toast.success("Deal updated");
-            setIsEditing(false);
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        },
-      );
+        onError: (err) => toast.error(getErrorMessage(err)),
+      });
     },
     [dealId, updateDeal],
   );
@@ -338,7 +316,7 @@ export default function DealDetailPage({
           <span className="font-mono text-xs bg-muted px-2 py-0.5 rounded select-all">
             {formatDealId(dealId)}
           </span>
-          <span className="tabular-nums">{formatINR(dealValue)}</span>
+          <span className="tabular-nums">{formatMoneyCompact(dealValue, money)}</span>
         </span>
       }
       badge={
@@ -448,7 +426,12 @@ export default function DealDetailPage({
               />
             ) : (
               <>
-                <DealInfoCard deal={deal} />
+                <RecordDetail
+                  layout={layout}
+                  record={asRecordValue(dealRecordFields(deal))}
+                  money={money}
+                  showTitle={false}
+                />
                 <Button
                   variant="outline"
                   size="sm"

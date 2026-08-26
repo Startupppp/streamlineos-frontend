@@ -292,13 +292,6 @@ export interface TaxSummaryReport {
   notes: string[];
 }
 
-export interface AccountLedgerWindow {
-  accountId: string;
-  from: string;
-  to: string;
-  opening: { debitMinor: number; creditMinor: number; balanceMinor: number };
-}
-
 export type ReportKey =
   | "trial-balance"
   | "pnl"
