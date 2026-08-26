@@ -1,6 +1,6 @@
 # 19 — Every remaining CRM record type on the engine
 
-**Status:** done, with three surfaces deliberately left and named below.
+**Status:** done — 39 registered descriptions, and measured on `main` with comments stripped: **0** hand-built CRM tables outside the import plan's two files, **1** raw `<table>` (the blueprint transition matrix), **0** hand-rolled forms. The 14 settings surfaces this ticket originally left behind are migrated.
 **Track:** E — records and renderer
 **Blocked by:** 03
 
