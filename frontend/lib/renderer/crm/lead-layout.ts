@@ -1,5 +1,6 @@
+import type { CrmOption } from "@/types/crm/metadata";
 import type { LeadPriority, LeadSource, PipelineStatus } from "@/types/leads";
-import type { RecordLayout, SelectOption } from "../layout";
+import type { FieldTone, RecordLayout, SelectOption } from "../layout";
 
 /**
  * Leads, as data.
@@ -109,6 +110,17 @@ export const LEAD_LAYOUT: RecordLayout = {
       { field: "priority", width: "w-24 shrink-0" },
       { field: "source", width: "w-28 shrink-0" },
       { field: "phone", width: "w-36 shrink-0" },
+      /*
+        Email is a column rather than only a field, because three lead surfaces
+        are about working out *which person this is* — distribution, the
+        duplicate scan and natural-language search all showed it — and an
+        adjustment can only hide or reorder the columns a description declares,
+        never add one. Without it here those screens would each have had to fork
+        the description to get an address back, which is the fork this file
+        exists to prevent. A tenant who does not scan by email hides it once and
+        it leaves every lead surface at the same time.
+      */
+      { field: "email", width: "w-52 shrink-0" },
       { field: "city", width: "w-28 shrink-0" },
       { field: "potentialValue", sortable: true, width: "w-32 shrink-0" },
       { field: "investmentInterest", width: "w-32 shrink-0" },
@@ -143,3 +155,81 @@ export const LEAD_LAYOUT: RecordLayout = {
     ],
   },
 };
+
+/**
+ * The tenant's own word for a status, a priority or a source.
+ *
+ * The three option sets above are what the API ships with, but an administrator
+ * can rename them and add their own — a pipeline whose "Interested" is called
+ * "Site visit booked". Rendering the compiled label to that tenant is not a
+ * cosmetic mismatch: it is a screen naming a state their team does not use, and
+ * the surfaces this replaced got it right by reaching for `useCrmMetadata` on
+ * every badge. This is the same fact supplied once, to the description, so the
+ * list, the form and the detail view cannot disagree about what a status is
+ * called.
+ *
+ * Returns the field untouched when nothing has loaded. An empty option list
+ * still renders the stored key, which is the honest thing to show while the
+ * metadata is in flight; replacing it with an invented list would offer values
+ * this tenant does not have.
+ */
+const OPTION_TONES: Record<string, FieldTone> = {
+  emerald: "success",
+  amber: "warning",
+  orange: "warning",
+  red: "danger",
+  slate: "neutral",
+};
+
+/**
+ * A tenant colour as a status tone.
+ *
+ * Lossy on purpose, and worth stating: the metadata colours are a ten-hue
+ * categorical scale an administrator picks from, and `FieldTone` is a five-value
+ * status scale that means good, caution, bad, informational, inert. Emerald,
+ * amber, orange and red carry a verdict and map onto one; the remaining hues —
+ * blue, sky, cyan, violet, pink — are choices of hue rather than of meaning, so
+ * they all read as informational and two of them on one list will look alike.
+ *
+ * The alternative was to give them no tone, which renders them as plain text
+ * beside their toned neighbours — a badge that lost its badge. Informational is
+ * the weaker failure.
+ */
+function toneForOptionColor(color: string): FieldTone {
+  return OPTION_TONES[color] ?? "info";
+}
+
+function optionsFor(options: readonly CrmOption[]): SelectOption[] {
+  return options.map((option) => ({
+    value: option.key,
+    label: option.label,
+    tone: toneForOptionColor(option.color),
+  }));
+}
+
+export interface LeadMetadataOptions {
+  readonly status?: readonly CrmOption[];
+  readonly priority?: readonly CrmOption[];
+  readonly source?: readonly CrmOption[];
+}
+
+/** The description with this organisation's own status, priority and source vocabulary. */
+export function withLeadOptions(
+  layout: RecordLayout,
+  metadata: LeadMetadataOptions,
+): RecordLayout {
+  const byField: Record<string, readonly CrmOption[] | undefined> = {
+    status: metadata.status,
+    priority: metadata.priority,
+    source: metadata.source,
+  };
+
+  return {
+    ...layout,
+    fields: layout.fields.map((field) => {
+      const options = byField[field.name];
+      if (!options || options.length === 0) return field;
+      return { ...field, options: optionsFor(options) };
+    }),
+  };
+}

@@ -19,22 +19,3 @@ export const STATUS_BADGE_CLASSES: Record<QuoteStatus, string> = {
 export function isQuoteStatus(value: string): value is QuoteStatus {
   return value in STATUS_LABELS;
 }
-
-export function formatCurrency(amount: string, currency: string): string {
-  const num = parseFloat(amount);
-  if (isNaN(num)) return "—";
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: currency || "INR",
-    maximumFractionDigits: 2,
-  }).format(num);
-}
-
-export function formatDate(date: string | null | undefined): string {
-  if (!date) return "—";
-  return new Date(date).toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}

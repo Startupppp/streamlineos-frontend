@@ -64,7 +64,7 @@ export default function ContactDetailPage({
   const [emailOpen, setEmailOpen] = useState(false);
   const [callOpen, setCallOpen] = useState(false);
 
-  const { data: contact, isLoading, isError, error, refetch, access } = useContactDetail(id);
+  const { data: contact, isLoading, isError, error, refetch } = useContactDetail(id);
   const deleteMutation = useDeleteContact();
 
   const handleOpenEdit = useCallback(() => setEditOpen(true), []);
@@ -104,7 +104,6 @@ export default function ContactDetailPage({
     return (
       <PageWrapper title="Not found" backHref="/crm/contacts">
         <EmptyState
-          access={access}
           title="Contact not found"
           description="This contact may have been deleted, or you don't have access to it."
           action={{ label: "Back to contacts", href: "/crm/contacts" }}

@@ -1,13 +1,17 @@
 "use client";
 
-import { useCallback, useTransition, useMemo } from "react";
+import { useCallback, useMemo, useTransition } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { CONTENT_FILL_PANEL, FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import {
+  CONTENT_FILL_PANEL,
+  FILTER_SELECT_TRIGGER,
+  FILTER_TOOLBAR_ROW,
+} from "@/components/ui/content-fill-panel";
 import { EmptyActivityIllustration } from "@/components/illustrations";
 import {
   Select,
@@ -16,29 +20,76 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ErrorState } from "@/components/shared";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { ErrorState, NoPermissionState } from "@/components/shared";
+import { RecordList } from "@/features/renderer";
+import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
 import {
-  type AuditEntityType,
-  type AuditAction,
-  type AuditFilters,
-  useAuditLogs,
-  AuditEntryRow,
-  AuditLogSkeleton,
-} from "@/features/crm/settings/audit-log/audit-entry-row";
+  AUDIT_ENTRY_LAYOUT,
+  auditEntryFields,
+} from "@/lib/renderer/crm/settings/audit-entry-layout";
+import { useAuditLogs } from "@/hooks/api/audit-log";
+import { useCan } from "@/hooks/api/access";
+
+/**
+ * The CRM audit log.
+ *
+ * A record list, which is what it always was. The surface this replaces drew a
+ * timeline — avatar bubbles joined by a vertical rule, one card per entry, the
+ * action and the entity restated in prose under badges that already said them —
+ * and a timeline is read downward about one thing. An audit log is read across
+ * about many: who, what, which record, when. Those are columns, and columns are
+ * what `AUDIT_ENTRY_LAYOUT` describes.
+ *
+ * Fifty entries used to fill four screens. They now fill one, which matters
+ * because the reason anybody opens this page is to find one entry among
+ * thousands.
+ *
+ * The page also stops pretending a query in flight is an empty log: the loading
+ * branch is a skeleton shaped like the table, and the empty branch says whether
+ * the filters hid everything or nothing has happened yet.
+ */
+
+const PAGE_SIZE = 50;
+
+const ENTITY_FILTERS = [
+  { value: "all", label: "All Entities" },
+  { value: "lead", label: "Leads" },
+  { value: "contact", label: "Contacts" },
+  { value: "company", label: "Companies" },
+  { value: "deal", label: "Deals" },
+  { value: "task", label: "Tasks" },
+  { value: "settings", label: "Settings" },
+];
+
+const ACTION_FILTERS = [
+  { value: "all", label: "All Actions" },
+  { value: "created", label: "Created" },
+  { value: "updated", label: "Updated" },
+  { value: "deleted", label: "Deleted" },
+  { value: "assigned", label: "Assigned" },
+  { value: "status_changed", label: "Status Changed" },
+  { value: "stage_changed", label: "Stage Changed" },
+  { value: "converted", label: "Converted" },
+  { value: "merged", label: "Merged" },
+];
 
 export default function CrmAuditLogPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
   const [, startTransition] = useTransition();
-  const shouldReduceMotion = useReducedMotion();
+  const [density, setDensity] = useDensity();
 
-  const entityType = (searchParams.get("entityType") ?? "all") as AuditEntityType | "all";
-  const action = (searchParams.get("action") ?? "all") as AuditAction | "all";
+  const layout = useTenantLayout(AUDIT_ENTRY_LAYOUT);
+  const canViewAuditLog = useCan("audit-log:read");
+
+  const entityType = searchParams.get("entityType") ?? "all";
+  const action = searchParams.get("action") ?? "all";
   const fromDate = searchParams.get("from") ?? "";
   const toDate = searchParams.get("to") ?? "";
-  const page = parseInt(searchParams.get("page") ?? "1", 10);
+  const rawPage = parseInt(searchParams.get("page") ?? "1", 10);
+  const page = isNaN(rawPage) || rawPage < 1 ? 1 : rawPage;
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -54,14 +105,14 @@ export default function CrmAuditLogPage() {
     [searchParams, router, pathname],
   );
 
-  const filters = useMemo<AuditFilters>(
+  const filters = useMemo(
     () => ({
       targetType: entityType !== "all" ? entityType : undefined,
       action: action !== "all" ? action : undefined,
       dateFrom: fromDate || undefined,
       dateTo: toDate || undefined,
       page,
-      pageSize: 50,
+      pageSize: PAGE_SIZE,
     }),
     [entityType, action, fromDate, toDate, page],
   );
@@ -95,67 +146,61 @@ export default function CrmAuditLogPage() {
     [updateParams],
   );
 
-  const handlePrev = useCallback(
-    () => updateParams({ page: page > 2 ? String(page - 1) : null }),
-    [updateParams, page],
-  );
-
-  const handleNext = useCallback(
-    () => updateParams({ page: String(page + 1) }),
-    [updateParams, page],
+  const handlePageChange = useCallback(
+    (next: number) => updateParams({ page: next > 1 ? String(next) : null }),
+    [updateParams],
   );
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
-  const entries = data?.logs ?? [];
-  const total = data?.total ?? 0;
-  const totalPages = data?.totalPages ?? 1;
-
-  const listVariants = shouldReduceMotion ? { hidden: { opacity: 0 }, visible: { opacity: 1 } } : staggerContainer;
-  const itemVariants = shouldReduceMotion ? { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0.15 } } } : fadeUp;
+  const rows = useMemo(() => (data?.logs ?? []).map(auditEntryFields), [data?.logs]);
 
   return (
     <PageWrapper
       title="Audit Log"
-      subtitle={isLoading ? "Loading..." : `${total.toLocaleString()} entr${total !== 1 ? "ies" : "y"}`}
+      subtitle="Every change made to a CRM record, and who made it"
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
           <Select value={entityType} onValueChange={handleEntityTypeChange}>
-            <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-36`}>
+            <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-36`} aria-label="Entity type">
               <SelectValue placeholder="Entity Type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Entities</SelectItem>
-              <SelectItem value="lead">Leads</SelectItem>
-              <SelectItem value="contact">Contacts</SelectItem>
-              <SelectItem value="company">Companies</SelectItem>
-              <SelectItem value="deal">Deals</SelectItem>
-              <SelectItem value="task">Tasks</SelectItem>
-              <SelectItem value="settings">Settings</SelectItem>
+              {ENTITY_FILTERS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
 
           <Select value={action} onValueChange={handleActionChange}>
-            <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-36`}>
+            <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-36`} aria-label="Action">
               <SelectValue placeholder="Action" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Actions</SelectItem>
-              <SelectItem value="created">Created</SelectItem>
-              <SelectItem value="updated">Updated</SelectItem>
-              <SelectItem value="deleted">Deleted</SelectItem>
-              <SelectItem value="assigned">Assigned</SelectItem>
-              <SelectItem value="status_changed">Status Changed</SelectItem>
-              <SelectItem value="stage_changed">Stage Changed</SelectItem>
-              <SelectItem value="converted">Converted</SelectItem>
-              <SelectItem value="merged">Merged</SelectItem>
+              {ACTION_FILTERS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
 
-          <div className="flex items-center gap-1.5">
-            <DatePicker value={fromDate ?? ""} onChange={handleFromDateChange} placeholder="Pick a date" className="w-36 text-xs" />
+          <div className="flex shrink-0 items-center gap-1.5">
+            <DatePicker
+              value={fromDate}
+              onChange={handleFromDateChange}
+              placeholder="Pick a date"
+              className="w-36 text-xs"
+            />
             <span className="text-xs text-muted-foreground">to</span>
-            <DatePicker value={toDate ?? ""} onChange={handleToDateChange} placeholder="Pick a date" className="w-36 text-xs" />
+            <DatePicker
+              value={toDate}
+              onChange={handleToDateChange}
+              placeholder="Pick a date"
+              className="w-36 text-xs"
+            />
           </div>
 
           {hasActiveFilters && (
@@ -163,60 +208,60 @@ export default function CrmAuditLogPage() {
               Clear filters
             </Button>
           )}
+
+          <div className="ml-auto flex shrink-0 items-center gap-2">
+            <DensityToggle density={density} onChange={setDensity} />
+          </div>
         </div>
       }
     >
-      <AnimatePresence mode="wait">
-        {isLoading ? (
-          <motion.div key="loading" variants={itemVariants} initial="hidden" animate="visible" exit={{ opacity: 0 }}>
-            <AuditLogSkeleton />
-          </motion.div>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        {!canViewAuditLog ? (
+          <NoPermissionState permission="audit-log:read" className="flex-1" />
+        ) : isLoading ? (
+          <DataTableSkeleton rows={12} columns={layout.list.columns.length} className="flex-1" />
         ) : isError ? (
-          <motion.div key="error" variants={itemVariants} initial="hidden" animate="visible" exit={{ opacity: 0 }}>
-            <ErrorState title="Failed to load audit log" onRetry={handleRetry} />
-          </motion.div>
-        ) : entries.length === 0 ? (
-          <motion.div key="empty" variants={itemVariants} initial="hidden" animate="visible" exit={{ opacity: 0 }}>
-            <EmptyState
-              className={CONTENT_FILL_PANEL}
-              illustration={<EmptyActivityIllustration />}
-              title="No audit entries found"
-              description={
-                hasActiveFilters
-                  ? "No entries match the current filters."
-                  : "All CRM changes will appear here."
-              }
-              action={hasActiveFilters ? { label: "Clear filters", onClick: handleClearFilters } : undefined}
-            />
-          </motion.div>
+          <ErrorState
+            title="Couldn't load the audit log"
+            description="The audit log didn't load. Check your connection and try again."
+            onRetry={handleRetry}
+            className={CONTENT_FILL_PANEL}
+          />
+        ) : rows.length === 0 ? (
+          <EmptyState
+            illustration={<EmptyActivityIllustration />}
+            title={hasActiveFilters ? "No entries match these filters" : "Nothing has been logged yet"}
+            description={
+              hasActiveFilters
+                ? "Nothing was recorded that matches what you have filtered to. Clear the filters to see the whole log."
+                : "Every create, edit, assignment and deletion in the CRM is recorded here as it happens."
+            }
+            action={
+              hasActiveFilters
+                ? { label: "Clear filters", onClick: handleClearFilters }
+                : undefined
+            }
+            actionVariant={hasActiveFilters ? "outline" : undefined}
+            className={CONTENT_FILL_PANEL}
+          />
         ) : (
-          <motion.div
-            key="list"
-            className="space-y-0"
-            variants={listVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            {entries.map((entry, idx) => (
-              <AuditEntryRow key={entry.id} entry={entry} isLast={idx === entries.length - 1} />
-            ))}
-
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between pt-4">
-                <Button variant="outline" size="sm" onClick={handlePrev} disabled={page === 1}>
-                  Previous
-                </Button>
-                <span className="text-xs text-muted-foreground">
-                  Page {page} of {totalPages}
-                </span>
-                <Button variant="outline" size="sm" onClick={handleNext} disabled={page >= totalPages}>
-                  Next
-                </Button>
-              </div>
-            )}
-          </motion.div>
+          <RecordList
+            layout={layout}
+            rows={rows}
+            getRowKey={(row) => String(row.id)}
+            density={density}
+            minWidth="1000px"
+            className={CONTENT_FILL_PANEL}
+            pagination={{
+              mode: "server",
+              page,
+              pageSize: PAGE_SIZE,
+              total: data?.total ?? 0,
+              onPageChange: handlePageChange,
+            }}
+          />
         )}
-      </AnimatePresence>
+      </div>
     </PageWrapper>
   );
 }

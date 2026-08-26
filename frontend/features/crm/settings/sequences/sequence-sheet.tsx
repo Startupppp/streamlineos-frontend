@@ -1,448 +1,336 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { sequenceSchema, type SequenceFormValues } from "./sequence-sheet-schema";
-import { Plus, Trash2 } from "lucide-react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { LoadingButton } from "@/components/ui/loading-button";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import { DataTableSkeleton } from "@/components/ui/data-table";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { EmptyState } from "@/components/ui/empty-state";
+import { LoadingButton } from "@/components/ui/loading-button";
+import {
+  Sheet,
+  SheetBody,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ErrorState } from "@/components/shared";
+import { RecordForm, RecordList, asRecordValues, type RecordFormValues } from "@/features/renderer";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
 import {
   useCreateCrmSequence,
-  useUpdateCrmSequence,
-  useCrmSequenceSteps,
   useCreateCrmSequenceStep,
-  useDeleteCrmSequenceStep,
   useCrmSequenceEnrollments,
+  useCrmSequenceSteps,
+  useDeleteCrmSequenceStep,
   useStopEnrollment,
+  useUpdateCrmSequence,
 } from "@/hooks/api/crm";
+import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  SEQUENCE_ENROLLMENT_LAYOUT,
+  SEQUENCE_LAYOUT,
+  SEQUENCE_STEP_LAYOUT,
+} from "@/lib/renderer/crm/settings/sequence-layout";
 import type { CrmSequence, SequenceStepType } from "@/types/crm";
+import { RecordRowActions } from "../shared/record-row-actions";
+import {
+  flagOrOmit,
+  numberOrOmit,
+  requiredText,
+  textOrNull,
+  textOrOmit,
+} from "../shared/record-payload";
 
-const STEP_TYPE_LABELS: Record<SequenceStepType, string> = {
-  email: "Send Email",
-  call_task: "Call Task",
-  whatsapp_task: "WhatsApp Task",
-  wait: "Wait",
-};
-import { NoPermissionState } from "@/components/shared";
+/**
+ * A sequence: what it is, what it does, and who it is doing it to.
+ *
+ * Three generated surfaces in three tabs rather than three hand-written ones.
+ * Tabs, not steps — nothing here has a next button and nothing is lost by
+ * closing the sheet, so a sheet is the right rung rather than a page.
+ */
 
-const ENROLLMENT_STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  active: "default",
-  completed: "secondary",
-  stopped: "outline",
-  failed: "destructive",
-};
+const STEP_TYPES: readonly SequenceStepType[] = ["email", "call_task", "whatsapp_task", "wait"];
 
-interface Props {
-  sequence: CrmSequence | null;
+function toStepType(value: string | undefined): SequenceStepType | undefined {
+  return STEP_TYPES.find((candidate) => candidate === value);
+}
+
+interface SequenceSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  sequence: CrmSequence | null;
 }
 
-interface AddStepFormValues {
-  stepType: SequenceStepType;
-  waitHours: string;
-}
+export function SequenceSheet({ open, onOpenChange, sequence }: SequenceSheetProps) {
+  const layout = useTenantLayout(SEQUENCE_LAYOUT);
+  const createSequence = useCreateCrmSequence();
+  const updateSequence = useUpdateCrmSequence();
+  const isEditing = sequence !== null;
+  const isPending = createSequence.isPending || updateSequence.isPending;
 
-function StepsTab({ sequenceId }: { sequenceId: string }) {
-  const { data, isLoading, access } = useCrmSequenceSteps(sequenceId);
-  const createStep = useCreateCrmSequenceStep(sequenceId);
-  const deleteStep = useDeleteCrmSequenceStep(sequenceId);
-  const [addingStep, setAddingStep] = useState(false);
-  const [stepForm, setStepForm] = useState<AddStepFormValues>({ stepType: "email", waitHours: "" });
+  function handleClose() {
+    onOpenChange(false);
+  }
 
-  const handleAddStep = useCallback(() => {
-    const waitHours = stepForm.waitHours ? parseInt(stepForm.waitHours, 10) : undefined;
-    createStep.mutate(
-      { stepType: stepForm.stepType, waitHours },
+  function handleSubmit(values: RecordFormValues) {
+    if (sequence) {
+      updateSequence.mutate(
+        {
+          id: sequence.id,
+          name: textOrOmit(values, "name"),
+          description: textOrNull(values, "description"),
+          entityType: textOrOmit(values, "entityType"),
+          isActive: flagOrOmit(values, "isActive"),
+        },
+        {
+          onSuccess: () => {
+            toast.success("Sequence updated");
+            onOpenChange(false);
+          },
+          onError: (error) => toast.error(getErrorMessage(error)),
+        },
+      );
+      return;
+    }
+
+    createSequence.mutate(
+      {
+        name: requiredText(values, "name"),
+        description: textOrOmit(values, "description"),
+        entityType: values.entityType?.trim() || "lead",
+        isActive: flagOrOmit(values, "isActive"),
+      },
       {
         onSuccess: () => {
-          toast.success("Step added");
-          setAddingStep(false);
-          setStepForm({ stepType: "email", waitHours: "" });
+          toast.success("Sequence created");
+          onOpenChange(false);
         },
-        onError: (err) => toast.error(getErrorMessage(err)),
+        onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
-  }, [createStep, stepForm]);
+  }
 
-  const handleDeleteStep = useCallback(
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-xl">
+        <SheetHeader className="shrink-0 border-b px-6 py-4">
+          <SheetTitle>{isEditing ? sequence.name : "New sequence"}</SheetTitle>
+          <SheetDescription>
+            A sequence sends the same run of touches to every record enrolled in it.
+          </SheetDescription>
+        </SheetHeader>
+
+        {isEditing ? (
+          <Tabs defaultValue="details" className="flex min-h-0 flex-1 flex-col">
+            <div className="shrink-0 border-b px-6 py-2">
+              <TabsList>
+                <TabsTrigger value="details">Details</TabsTrigger>
+                <TabsTrigger value="steps">Steps</TabsTrigger>
+                <TabsTrigger value="enrolments">Enrolments</TabsTrigger>
+              </TabsList>
+            </div>
+
+            <TabsContent value="details" className="mt-0 flex min-h-0 flex-1 flex-col">
+              <SheetBody className="px-6 py-5">
+                <RecordForm
+                  key={sequence.id}
+                  layout={layout}
+                  mode="edit"
+                  initial={{
+                    name: sequence.name,
+                    description: sequence.description ?? "",
+                    entityType: sequence.entityType,
+                    isActive: sequence.isActive,
+                  }}
+                  onSubmit={handleSubmit}
+                  onCancel={handleClose}
+                  isSubmitting={isPending}
+                  submitLabel="Save changes"
+                />
+              </SheetBody>
+            </TabsContent>
+
+            <TabsContent value="steps" className="mt-0 flex min-h-0 flex-1 flex-col">
+              <SheetBody className="px-6 py-5">
+                <SequenceSteps sequenceId={sequence.id} />
+              </SheetBody>
+            </TabsContent>
+
+            <TabsContent value="enrolments" className="mt-0 flex min-h-0 flex-1 flex-col">
+              <SheetBody className="px-6 py-5">
+                <SequenceEnrolments sequenceId={sequence.id} />
+              </SheetBody>
+            </TabsContent>
+          </Tabs>
+        ) : (
+          <SheetBody className="px-6 py-5">
+            <RecordForm
+              key="new"
+              layout={layout}
+              mode="create"
+              initial={{ entityType: "lead", isActive: "false" }}
+              onSubmit={handleSubmit}
+              onCancel={handleClose}
+              isSubmitting={isPending}
+              submitLabel="Create sequence"
+            />
+          </SheetBody>
+        )}
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+function SequenceSteps({ sequenceId }: { sequenceId: string }) {
+  const layout = useTenantLayout(SEQUENCE_STEP_LAYOUT);
+  const { data, isLoading, isError, refetch } = useCrmSequenceSteps(sequenceId);
+  const createStep = useCreateCrmSequenceStep(sequenceId);
+  const deleteStep = useDeleteCrmSequenceStep(sequenceId);
+  const [formGeneration, setFormGeneration] = useState(0);
+
+  const steps = [...(data?.steps ?? [])].sort((a, b) => a.sortOrder - b.sortOrder);
+
+  const handleDelete = useCallback(
     (stepId: string) => {
       deleteStep.mutate(stepId, {
-        onSuccess: () => toast.success("Step deleted"),
-        onError: (err) => toast.error(getErrorMessage(err)),
+        onSuccess: () => toast.success("Step removed"),
+        onError: (error) => toast.error(getErrorMessage(error)),
       });
     },
     [deleteStep],
   );
 
-  const handleStepTypeChange = useCallback((value: string) => {
-    setStepForm((prev) => ({ ...prev, stepType: value as SequenceStepType }));
-  }, []);
+  const rowActions = useCallback(
+    (row: Record<string, unknown>) => (
+      <RecordRowActions
+        deleteLabel="Remove step"
+        onDelete={() => handleDelete(String(row.id))}
+      />
+    ),
+    [handleDelete],
+  );
 
-  const handleWaitHoursChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setStepForm((prev) => ({ ...prev, waitHours: e.target.value }));
-  }, []);
-
-  const handleToggleAdding = useCallback(() => setAddingStep((v) => !v), []);
-
-  const steps = data?.steps ?? [];
-
-  if (isLoading) return <DataTableSkeleton rows={8} columns={3} />;
+  function handleAddStep(values: RecordFormValues) {
+    const stepType = toStepType(values.stepType);
+    if (!stepType) return;
+    createStep.mutate(
+      { stepType, waitHours: numberOrOmit(values, "waitHours") },
+      {
+        onSuccess: () => {
+          toast.success("Step added");
+          setFormGeneration((generation) => generation + 1);
+        },
+        onError: (error) => toast.error(getErrorMessage(error)),
+      },
+    );
+  }
 
   return (
-    <div className="space-y-3">
-      {access.denied ? (
-        <NoPermissionState permission={access.permission} compact />
-      ) : steps.length === 0 && !addingStep ? (
-        <p className="text-sm text-muted-foreground text-center py-6">No steps yet.</p>
-      ) : null}
-      {steps
-        .slice()
-        .sort((a, b) => a.sortOrder - b.sortOrder)
-        .map((step) => (
-          <div
-            key={step.id}
-            className="flex items-center justify-between rounded-lg border border-border p-3 bg-muted/20"
-          >
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="text-xs font-medium text-muted-foreground w-5 shrink-0">
-                {step.sortOrder}.
-              </span>
-              <Badge variant="secondary" className="text-dense shrink-0">
-                {STEP_TYPE_LABELS[step.stepType]}
-              </Badge>
-              {step.waitHours != null && (
-                <span className="text-xs text-muted-foreground">
-                  Wait {step.waitHours}h
-                </span>
-              )}
-            </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="w-7 shrink-0 text-muted-foreground hover:text-destructive"
-              aria-label="Delete step"
-              onClick={() => handleDeleteStep(step.id)}
-              disabled={deleteStep.isPending}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
-          </div>
-        ))}
-      {addingStep && (
-        <div className="rounded-lg border border-dashed border-border p-3 space-y-3">
-          <div className="flex gap-2">
-            <Select value={stepForm.stepType} onValueChange={handleStepTypeChange}>
-              <SelectTrigger className="flex-1">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {(Object.keys(STEP_TYPE_LABELS) as SequenceStepType[]).map((key) => (
-                  <SelectItem key={key} value={key}>
-                    {STEP_TYPE_LABELS[key]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Input
-              type="number"
-              placeholder="Wait hours"
-              value={stepForm.waitHours}
-              onChange={handleWaitHoursChange}
-              className="w-28"
-            />
-          </div>
-          <div className="flex gap-2">
-            <LoadingButton
-              type="button"
-              size="sm"
-              className="text-xs h-7"
-              isPending={createStep.isPending}
-              onClick={handleAddStep}
-            >
-              Add
-            </LoadingButton>
-            <Button type="button" variant="ghost" size="sm" className="text-xs h-7" onClick={handleToggleAdding}>
-              Cancel
-            </Button>
-          </div>
-        </div>
+    <div className="flex flex-col gap-gap-section">
+      {isLoading ? (
+        <DataTableSkeleton rows={5} columns={layout.list.columns.length} />
+      ) : isError ? (
+        <ErrorState
+          title="Couldn't load the steps"
+          description="This sequence's steps didn't load. Check your connection and try again."
+          onRetry={() => void refetch()}
+        />
+      ) : steps.length === 0 ? (
+        <EmptyState
+          compact
+          illustrationPreset="automations"
+          title="No steps yet"
+          description="Add the first touch below and every record enrolled will receive it."
+        />
+      ) : (
+        <RecordList
+          layout={layout}
+          rows={asRecordValues(steps)}
+          getRowKey={(row) => String(row.id)}
+          actions={rowActions}
+          density="compact"
+          minWidth="420px"
+        />
       )}
-      {!addingStep && (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="w-full text-xs h-8 border-dashed"
-          onClick={handleToggleAdding}
-        >
-          <Plus className="h-3.5 w-3.5 mr-1.5" />
-          Add Step
-        </Button>
-      )}
+
+      <div className="rounded-xl border border-border bg-card p-card-pad">
+        <RecordForm
+          key={formGeneration}
+          layout={layout}
+          mode="create"
+          initial={{ stepType: "email" }}
+          onSubmit={handleAddStep}
+          isSubmitting={createStep.isPending}
+          submitLabel="Add step"
+        />
+      </div>
     </div>
   );
 }
 
-function EnrollmentsTab({ sequenceId }: { sequenceId: string }) {
-  const { data, isLoading, access } = useCrmSequenceEnrollments(sequenceId, 1);
+function SequenceEnrolments({ sequenceId }: { sequenceId: string }) {
+  const layout = useTenantLayout(SEQUENCE_ENROLLMENT_LAYOUT);
+  const { data, isLoading, isError, refetch } = useCrmSequenceEnrollments(sequenceId, 1);
   const stopEnrollment = useStopEnrollment(sequenceId);
+
+  const enrolments = data?.enrollments ?? [];
 
   const handleStop = useCallback(
     (enrollmentId: string) => {
       stopEnrollment.mutate(enrollmentId, {
-        onSuccess: () => toast.success("Enrollment stopped"),
-        onError: (err) => toast.error(getErrorMessage(err)),
+        onSuccess: () => toast.success("Enrolment stopped"),
+        onError: (error) => toast.error(getErrorMessage(error)),
       });
     },
     [stopEnrollment],
   );
 
-  const enrollments = data?.enrollments ?? [];
-
-  if (access.denied) return <NoPermissionState permission={access.permission} compact />;
-
-  if (isLoading) return <DataTableSkeleton rows={8} columns={4} />;
-
-  if (enrollments.length === 0) {
-    return <p className="text-sm text-muted-foreground text-center py-6">No enrollments yet.</p>;
-  }
-
-  return (
-    <div className="space-y-2">
-      {enrollments.map((e) => (
-        <div
-          key={e.id}
-          className="flex items-center justify-between rounded-lg border border-border p-3 bg-muted/20 gap-3"
+  const rowActions = useCallback(
+    (row: Record<string, unknown>) =>
+      row.status === "active" ? (
+        <LoadingButton
+          type="button"
+          variant="outline"
+          size="sm"
+          isPending={stopEnrollment.isPending}
+          onClick={() => handleStop(String(row.id))}
         >
-          <div className="min-w-0 flex-1 space-y-0.5">
-            <p className="text-xs font-medium truncate">{e.entityName ?? e.entityId}</p>
-            <div className="flex items-center gap-2">
-              <Badge
-                variant={ENROLLMENT_STATUS_VARIANTS[e.status] ?? "outline"}
-                className="text-micro"
-              >
-                {e.status}
-              </Badge>
-              <span className="text-dense text-muted-foreground">Step {e.currentStep}</span>
-              {e.nextRunAt && (
-                <span className="text-dense text-muted-foreground">
-                  Next: {new Date(e.nextRunAt).toLocaleDateString()}
-                </span>
-              )}
-            </div>
-          </div>
-          {e.status === "active" && (
-            <LoadingButton
-              type="button"
-              variant="outline"
-              size="sm"
-              className="text-xs h-7 shrink-0"
-              onClick={() => handleStop(e.id)}
-              isPending={stopEnrollment.isPending}
-            >
-              Stop
-            </LoadingButton>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-export function SequenceSheet({ sequence, open, onOpenChange }: Props) {
-  const isEdit = sequence !== null;
-  const createSequence = useCreateCrmSequence();
-  const updateSequence = useUpdateCrmSequence();
-
-  const form = useForm<SequenceFormValues>({
-    resolver: zodResolver(sequenceSchema),
-    defaultValues: {
-      name: "",
-      description: "",
-      entityType: "lead",
-      isActive: false,
-    },
-  });
-
-  useEffect(() => {
-    if (sequence) {
-      form.reset({
-        name: sequence.name,
-        description: sequence.description ?? "",
-        entityType: sequence.entityType as "lead" | "deal" | "contact",
-        isActive: sequence.isActive,
-      });
-    } else {
-      form.reset({ name: "", description: "", entityType: "lead", isActive: false });
-    }
-  }, [sequence, form]);
-
-  const onSubmit = useCallback(
-    (values: SequenceFormValues) => {
-      if (isEdit && sequence) {
-        updateSequence.mutate(
-          { id: sequence.id, ...values },
-          {
-            onSuccess: () => {
-              toast.success("Sequence updated");
-              onOpenChange(false);
-            },
-            onError: (err) => toast.error(getErrorMessage(err)),
-          },
-        );
-      } else {
-        createSequence.mutate(values, {
-          onSuccess: () => {
-            toast.success("Sequence created");
-            onOpenChange(false);
-            form.reset();
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        });
-      }
-    },
-    [isEdit, sequence, createSequence, updateSequence, onOpenChange, form],
+          Stop
+        </LoadingButton>
+      ) : null,
+    [handleStop, stopEnrollment.isPending],
   );
 
-  const isPending = createSequence.isPending || updateSequence.isPending;
+  if (isLoading) return <DataTableSkeleton rows={6} columns={layout.list.columns.length} />;
+
+  if (isError)
+    return (
+      <ErrorState
+        title="Couldn't load enrolments"
+        description="The enrolment list didn't load. Check your connection and try again."
+        onRetry={() => void refetch()}
+      />
+    );
+
+  if (enrolments.length === 0)
+    return (
+      <EmptyState
+        compact
+        illustrationPreset="team"
+        title="Nobody is enrolled"
+        description="Records join a sequence from a lead or deal, or from an automation that enrols them."
+      />
+    );
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="p-0 flex flex-col overflow-hidden sm:max-w-lg">
-        <SheetHeader className="shrink-0 px-6 py-4 border-b">
-          <SheetTitle>{isEdit ? "Edit Sequence" : "New Sequence"}</SheetTitle>
-        </SheetHeader>
-        <Tabs defaultValue="details" className="flex flex-col flex-1 min-h-0">
-          <div className="shrink-0 border-b px-6 py-2">
-            <TabsList>
-              <TabsTrigger value="details">Details</TabsTrigger>
-              {isEdit && (
-                <>
-                  <TabsTrigger value="steps">Steps</TabsTrigger>
-                  <TabsTrigger value="enrollments">Enrollments</TabsTrigger>
-                </>
-              )}
-            </TabsList>
-          </div>
-
-          <TabsContent value="details" className="flex flex-col flex-1 min-h-0 mt-0 overflow-hidden">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-                <SheetBody className="px-6 py-4 space-y-5">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Name <span className="text-destructive">*</span></FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="e.g. New Lead Outreach" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Description</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="Optional description" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="entityType"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Entity Type</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="lead">Lead</SelectItem>
-                            <SelectItem value="deal">Deal</SelectItem>
-                            <SelectItem value="contact">Contact</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="isActive"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex items-center gap-3 rounded-lg border border-border p-3 bg-muted/30">
-                          <FormControl>
-                            <Switch checked={field.value} onCheckedChange={field.onChange} />
-                          </FormControl>
-                          <FormLabel className="!mt-0 cursor-pointer">Active</FormLabel>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                </SheetBody>
-                <SheetFooter className="shrink-0 px-6 py-4 border-t">
-                  <LoadingButton type="submit" isPending={isPending} className="w-full">
-                    {isEdit ? "Save Changes" : "Create Sequence"}
-                  </LoadingButton>
-                </SheetFooter>
-              </form>
-            </Form>
-          </TabsContent>
-
-          {isEdit && sequence && (
-            <>
-              <TabsContent value="steps" className="flex flex-col flex-1 min-h-0 mt-0 overflow-hidden">
-                <SheetBody className="px-6 py-4">
-                  <StepsTab sequenceId={sequence.id} />
-                </SheetBody>
-              </TabsContent>
-              <TabsContent value="enrollments" className="flex flex-col flex-1 min-h-0 mt-0 overflow-hidden">
-                <SheetBody className="px-6 py-4">
-                  <EnrollmentsTab sequenceId={sequence.id} />
-                </SheetBody>
-              </TabsContent>
-            </>
-          )}
-        </Tabs>
-      </SheetContent>
-    </Sheet>
+    <RecordList
+      layout={layout}
+      rows={asRecordValues(enrolments)}
+      getRowKey={(row) => String(row.id)}
+      actions={rowActions}
+      density="compact"
+      minWidth="520px"
+    />
   );
 }

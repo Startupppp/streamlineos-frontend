@@ -36,33 +36,18 @@ import {
 import { RecordList, type RecordValue } from "@/features/renderer";
 import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
 import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
-import { QUOTE_LAYOUT } from "@/lib/renderer/crm/quote-layout";
+import { QUOTE_LAYOUT, quoteListRecordFields } from "@/lib/renderer/crm/quote-layout";
 import { useQuotes, useUpdateQuoteStatus, useDeleteQuote } from "@/hooks/api/crm";
 import { downloadQuotesCsv } from "@/hooks/api/crm/quotes";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { QuoteListItem, QuoteStatus } from "@/types/crm/quotes";
+import type { QuoteStatus } from "@/types/crm/quotes";
 import { QuoteRowActions } from "@/features/crm/quotes/components/quote-row-actions";
 import { STATUS_LABELS, isQuoteStatus } from "@/features/crm/quotes/lib/quote-utils";
 
 const PAGE_SIZE = 20;
-
-/**
- * The deal and the client arrive nested; a description names fields, not paths.
- *
- * Flattening here rather than teaching the engine to walk a path: a layout that
- * could address `deal.name` would be a layout that knows what a quote is joined
- * to, and every list would then carry its own little query language.
- */
-function toRow(quote: QuoteListItem): RecordValue {
-  return {
-    ...quote,
-    dealName: quote.deal?.name ?? "",
-    clientName: quote.client?.clientName ?? "",
-  };
-}
 
 export default function QuotesPage() {
   const searchParams = useSearchParams();
@@ -107,7 +92,7 @@ export default function QuotesPage() {
     updateParams({ q: debouncedSearch || null, page: null });
   }, [debouncedSearch, searchParams, updateParams]);
 
-  const { data, isLoading, error, refetch, access } = useQuotes({
+  const { data, isLoading, error, refetch } = useQuotes({
     search: apiSearch || undefined,
     status: isQuoteStatus(statusFilter) ? statusFilter : undefined,
     page,
@@ -115,7 +100,7 @@ export default function QuotesPage() {
   });
 
   const total = data?.total ?? 0;
-  const quotes = useMemo(() => (data?.quotes ?? []).map(toRow), [data?.quotes]);
+  const quotes = useMemo(() => (data?.quotes ?? []).map(quoteListRecordFields), [data?.quotes]);
   const byId = useMemo(
     () => new Map((data?.quotes ?? []).map((quote) => [quote.id, quote])),
     [data?.quotes],
@@ -267,7 +252,6 @@ export default function QuotesPage() {
             />
           ) : quotes.length === 0 ? (
             <EmptyState
-              access={access}
               illustration={<EmptyDocumentsIllustration />}
               title={hasActiveFilters ? "No quotes match this search" : "No quotes yet"}
               description={
@@ -292,7 +276,7 @@ export default function QuotesPage() {
               actions={rowActions}
               density={density}
               money={money}
-              minWidth="800px"
+              minWidth="950px"
               className={CONTENT_FILL_PANEL}
               pagination={{
                 mode: "server",

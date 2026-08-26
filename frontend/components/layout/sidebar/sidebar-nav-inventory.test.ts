@@ -7,7 +7,7 @@ import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 // /crm/autonomy, gated on crm:autonomy:view). The digest exists so a route or
 // its permission cannot change without somebody saying why.
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "d85e77a8b7e5a9b3e605b3bb1e47a72362d2b1b9384bc92a9a5e4900048d1a1b";
+  "c12d59d5c1d3d86419707e2f7e80e1df2467b6cf2c4e6c52670b7c8770d4a27a";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {

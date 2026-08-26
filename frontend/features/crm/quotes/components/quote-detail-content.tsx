@@ -1,205 +1,63 @@
-import Link from "next/link";
-import { TruncatedText } from "@/components/ui/truncated-text";
-import {
-  Send,
-  CheckCircle2,
-  XCircle,
-  FileText,
-  Calendar,
-  User,
-  Building2,
-} from "lucide-react";
+"use client";
+
+import { FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { QuoteLineItemsTable } from "./quote-line-items-table";
-import { formatCurrency, formatDate } from "../lib/quote-utils";
+import { RecordDetail } from "@/features/renderer";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { QUOTE_LAYOUT, quoteRecordFields } from "@/lib/renderer/crm/quote-layout";
+import { useOrgDisplay } from "@/hooks/api/org-display";
 import type { Quote } from "@/types/crm/quotes";
+import { QuoteLineItemsTable } from "./quote-line-items-table";
+
+/**
+ * A quote, rendered from the same description that produced its list.
+ *
+ * Everything except the line items is now `QUOTE_LAYOUT`: the totals, the dates,
+ * the terms, the notes, and — since the engine learned to resolve a reference to
+ * a route — the deal and the client. Five hand-rolled cards became one
+ * `RecordDetail`, so a field added to the quote appears here and in the list
+ * without this file being touched, and the money follows the quote's own
+ * currency instead of a `formatCurrency(amount, currency)` call per line.
+ *
+ * The totals under the line items are gone, and the arithmetic with them. They
+ * summed the line amounts on the client to produce a subtotal the server had
+ * already computed and stored as `totalAmount`; two arithmetics over one quote
+ * is one of them eventually disagreeing. The Value section states the stored
+ * figures, which are the ones on the document the customer received.
+ *
+ * The two-column grid went with the cards. It existed to park a sidebar beside
+ * the line items, and a grid whose second column is empty is a layout describing
+ * a screen that no longer exists.
+ */
 
 interface QuoteDetailContentProps {
   quote: Quote;
-  subtotal: number;
 }
 
-export function QuoteDetailContent({ quote, subtotal }: QuoteDetailContentProps) {
-  const lineItems = quote.lineItems ?? [];
+export function QuoteDetailContent({ quote }: QuoteDetailContentProps) {
+  const layout = useTenantLayout(QUOTE_LAYOUT);
+  const money = useOrgDisplay();
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      <div className="lg:col-span-2 space-y-4">
-        <Card className="shadow-sm">
-          <CardHeader className="px-4 py-3 border-b">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <FileText className="h-4 w-4 text-muted-foreground" />
-              Line Items
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4">
-            <QuoteLineItemsTable lineItems={lineItems} currency={quote.currency} />
-            <div className="mt-4 space-y-1.5 max-w-xs ml-auto">
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Subtotal</span>
-                <span className="tabular-nums">
-                  {formatCurrency(String(subtotal), quote.currency)}
-                </span>
-              </div>
-              {parseFloat(quote.taxAmount) > 0 && (
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Tax</span>
-                  <span className="tabular-nums">
-                    {formatCurrency(quote.taxAmount, quote.currency)}
-                  </span>
-                </div>
-              )}
-              {parseFloat(quote.discountAmount) > 0 && (
-                <div className="flex justify-between text-xs text-status-success-ink">
-                  <span>Discount</span>
-                  <span className="tabular-nums">
-                    −{formatCurrency(quote.discountAmount, quote.currency)}
-                  </span>
-                </div>
-              )}
-              <Separator />
-              <div className="flex justify-between text-sm font-semibold">
-                <span>Net Total</span>
-                <span className="tabular-nums">
-                  {formatCurrency(quote.netAmount, quote.currency)}
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+    <div className="flex min-w-0 flex-col gap-4">
+      <Card className="gap-0 overflow-hidden py-0 shadow-sm">
+        <CardHeader className="border-b px-4 py-3">
+          <CardTitle className="flex items-center gap-2 text-sm font-medium">
+            <FileText className="h-4 w-4 text-muted-foreground" />
+            Line items
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="overflow-x-auto p-0">
+          <QuoteLineItemsTable lineItems={quote.lineItems ?? []} currency={quote.currency} />
+        </CardContent>
+      </Card>
 
-        {quote.termsAndConditions && (
-          <Card className="shadow-sm">
-            <CardHeader className="px-4 py-3 border-b">
-              <CardTitle className="text-sm font-medium">
-                Terms &amp; Conditions
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-4 py-3">
-              <p className="text-xs text-muted-foreground whitespace-pre-wrap">
-                {quote.termsAndConditions}
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
-        {quote.notes && (
-          <Card className="shadow-sm">
-            <CardHeader className="px-4 py-3 border-b">
-              <CardTitle className="text-sm font-medium">Notes</CardTitle>
-            </CardHeader>
-            <CardContent className="px-4 py-3">
-              <p className="text-xs text-muted-foreground whitespace-pre-wrap">
-                {quote.notes}
-              </p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      <div className="space-y-4">
-        <Card className="shadow-sm">
-          <CardHeader className="px-4 py-3 border-b">
-            <CardTitle className="text-sm font-medium">Details</CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 py-3 space-y-3">
-            {quote.deal && (
-              <div className="flex items-start gap-2.5">
-                <Building2 className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-micro text-muted-foreground">Deal</p>
-                  <Link
-                    href={`/crm/deals/${quote.deal.id}`}
-                    className="text-xs font-medium text-primary hover:underline block"
-                  >
-                    <TruncatedText text={quote.deal.name} />
-                  </Link>
-                </div>
-              </div>
-            )}
-            {quote.client && (
-              <div className="flex items-start gap-2.5">
-                <User className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-micro text-muted-foreground">Client</p>
-                  <Link
-                    href={`/crm/clients/${quote.client.id}`}
-                    className="text-xs font-medium text-primary hover:underline block"
-                  >
-                    <TruncatedText text={quote.client.clientName} />
-                  </Link>
-                </div>
-              </div>
-            )}
-            <div className="flex items-start gap-2.5">
-              <Calendar className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
-              <div>
-                <p className="text-micro text-muted-foreground">Valid Until</p>
-                <p className="text-xs font-medium">{formatDate(quote.validUntil)}</p>
-              </div>
-            </div>
-            {quote.createdBy && (
-              <div className="flex items-start gap-2.5">
-                <User className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-micro text-muted-foreground">Created By</p>
-                  <p className="text-xs font-medium">{quote.createdBy.name ?? "—"}</p>
-                </div>
-              </div>
-            )}
-            <div className="flex items-start gap-2.5">
-              <Calendar className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
-              <div>
-                <p className="text-micro text-muted-foreground">Created</p>
-                <p className="text-xs">{formatDate(quote.createdAt)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {(quote.sentAt ?? quote.acceptedAt ?? quote.rejectedAt) && (
-          <Card className="shadow-sm">
-            <CardHeader className="px-4 py-3 border-b">
-              <CardTitle className="text-sm font-medium">History</CardTitle>
-            </CardHeader>
-            <CardContent className="px-4 py-3 space-y-2">
-              {quote.sentAt && (
-                <div className="flex items-center gap-2">
-                  <Send className="h-3 w-3 text-primary shrink-0" />
-                  <div>
-                    <p className="text-micro text-muted-foreground">Sent</p>
-                    <p className="text-xs">{formatDate(quote.sentAt)}</p>
-                  </div>
-                </div>
-              )}
-              {quote.acceptedAt && (
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-3 w-3 text-status-success-ink shrink-0" />
-                  <div>
-                    <p className="text-micro text-muted-foreground">Accepted</p>
-                    <p className="text-xs">{formatDate(quote.acceptedAt)}</p>
-                  </div>
-                </div>
-              )}
-              {quote.rejectedAt && (
-                <div className="flex items-center gap-2">
-                  <XCircle className="h-3 w-3 text-status-danger-ink shrink-0" />
-                  <div>
-                    <p className="text-micro text-muted-foreground">Rejected</p>
-                    <p className="text-xs">{formatDate(quote.rejectedAt)}</p>
-                    {quote.rejectionReason && (
-                      <p className="text-micro text-muted-foreground mt-0.5">
-                        {quote.rejectionReason}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-      </div>
+      <RecordDetail
+        layout={layout}
+        record={quoteRecordFields(quote)}
+        money={money}
+        showTitle={false}
+      />
     </div>
   );
 }

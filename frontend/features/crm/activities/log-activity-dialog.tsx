@@ -4,8 +4,10 @@ import { useCallback, useMemo } from "react";
 import { AppDialog } from "@/components/shared/app-dialog";
 import { RecordForm, type RecordFormValues } from "@/features/renderer";
 import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
-import { activityLayoutWithTypes } from "@/lib/renderer/crm/activity-layout";
-import type { SelectOption } from "@/lib/renderer/layout";
+import {
+  activityLayoutWithTypes,
+  activityTypeOptions,
+} from "@/lib/renderer/crm/activity-layout";
 import { useCrmOptions } from "@/hooks/api/crm/metadata";
 import type {
   CrmActivityEntityType,
@@ -39,15 +41,7 @@ interface LogActivityDialogProps {
 export function LogActivityDialog({ open, onClose, onSubmit, isPending }: LogActivityDialogProps) {
   const { data: options } = useCrmOptions("activity_type");
 
-  const types = useMemo<SelectOption[]>(() => {
-    const declared = (options ?? []).filter((option) =>
-      ACTIVITY_TYPES.some((candidate) => candidate === option.key),
-    );
-    // A tenant that has declared none still needs to be able to log a call.
-    if (declared.length === 0)
-      return ACTIVITY_TYPES.map((value) => ({ value, label: value.toLowerCase() }));
-    return declared.map((option) => ({ value: option.key, label: option.label }));
-  }, [options]);
+  const types = useMemo(() => activityTypeOptions(options), [options]);
 
   const description = useMemo(() => activityLayoutWithTypes(types), [types]);
   const layout = useTenantLayout(description);

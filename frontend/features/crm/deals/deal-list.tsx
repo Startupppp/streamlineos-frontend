@@ -23,7 +23,6 @@ import { useCrmStages } from "@/hooks/api/crm/metadata";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import type { CrmPipelineStage } from "@/types/crm/metadata";
 import type { Deal } from "@/types/crm";
-import type { PermissionGate } from "@/lib/rbac/permission-gate";
 import type { DensityMode } from "@/lib/design-tokens";
 import { AIPredictDealButton } from "./ai-predict-deal-button";
 import { useDealLayout } from "./use-deal-layout";
@@ -100,8 +99,6 @@ export interface DealListProps {
   deals: Deal[];
   isLoading: boolean;
   isError: boolean;
-  /** The gate on the read that produced `deals`, so an empty list is not mistaken for a refused one. */
-  access: PermissionGate;
   density: DensityMode;
   canCreate: boolean;
   canUpdate: boolean;
@@ -116,7 +113,6 @@ export function DealList({
   deals,
   isLoading,
   isError,
-  access,
   density,
   canCreate,
   canUpdate,
@@ -168,7 +164,6 @@ export function DealList({
   if (rows.length === 0)
     return (
       <EmptyState
-        access={access}
         illustration={<EmptyDealsIllustration />}
         title={isFiltered ? "No deals match these filters" : "No deals yet"}
         description={

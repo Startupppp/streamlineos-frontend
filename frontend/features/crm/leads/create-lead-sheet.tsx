@@ -10,10 +10,9 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { RecordForm, type RecordFormValues } from "@/features/renderer";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { useLeadLayout } from "./use-lead-layout";
 import { useCreateLead } from "@/hooks/api/leads";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { LEAD_LAYOUT } from "@/lib/renderer/crm/lead-layout";
 import type { CreateLeadInput, LeadPriority, LeadSource } from "@/types/leads";
 
 /**
@@ -61,7 +60,7 @@ interface CreateLeadSheetProps {
 }
 
 export function CreateLeadSheet({ open, onOpenChange }: CreateLeadSheetProps) {
-  const layout = useTenantLayout(LEAD_LAYOUT);
+  const layout = useLeadLayout();
   const createLead = useCreateLead();
 
   function handleClose() {

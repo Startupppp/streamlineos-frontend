@@ -71,7 +71,7 @@ export function RecordDetail({
                       field.kind === "longText" ? "whitespace-pre-wrap" : "truncate",
                     )}
                   >
-                    {renderFieldValue(field, record[name], moneyDisplayFor(field, record, money))}
+                    {renderFieldValue(field, record[name], moneyDisplayFor(field, record, money), record)}
                   </dd>
                 </div>
               ))}

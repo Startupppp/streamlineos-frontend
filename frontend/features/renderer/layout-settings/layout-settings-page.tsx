@@ -10,17 +10,21 @@ import { ErrorState } from "@/components/shared/error-state";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   FILTER_SELECT_TRIGGER,
   FILTER_TOOLBAR_ROW,
 } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { RECORD_LAYOUTS } from "@/lib/renderer/registry";
+import { LAYOUT_REGISTRY, type RegisteredLayout } from "@/lib/renderer/registry";
+import { useAccess } from "@/hooks/api/access";
 import { validateAdjustment, type LayoutAdjustment } from "@/lib/renderer/layout-adjustment";
 import {
   useCanAdjustLayouts,
@@ -48,11 +52,40 @@ import { LayoutProposalPanel } from "./layout-proposal-panel";
  */
 export function LayoutSettingsPage() {
   const canAdjust = useCanAdjustLayouts();
-  const [layoutKey, setLayoutKey] = useState(RECORD_LAYOUTS[0]?.key ?? "");
+  const access = useAccess();
+  const [layoutKey, setLayoutKey] = useState<string | null>(null);
+
+  /*
+    Only the record types this account may read.
+
+    Arranging a record type you cannot see is not a job anybody has, and the
+    picker would otherwise name the fields of modules a tenant has not bought.
+    It is the same read gate each surface already uses — an arrangement neither
+    grants access nor needs more of it than looking at the list does.
+  */
+  const allowed = useMemo<RegisteredLayout[]>(() => {
+    const scopes = access.data;
+    if (!scopes) return [];
+    return LAYOUT_REGISTRY.filter(
+      (entry) => scopes.isOrgOwner || entry.viewPermission in scopes.scopes,
+    );
+  }, [access.data]);
+
+  const sections = useMemo(() => {
+    const grouped = new Map<string, RegisteredLayout[]>();
+    for (const entry of allowed) {
+      const list = grouped.get(entry.section) ?? [];
+      list.push(entry);
+      grouped.set(entry.section, list);
+    }
+    return [...grouped.entries()];
+  }, [allowed]);
 
   const layout = useMemo(
-    () => RECORD_LAYOUTS.find((candidate) => candidate.key === layoutKey) ?? RECORD_LAYOUTS[0],
-    [layoutKey],
+    () =>
+      allowed.find((entry) => entry.layout.key === layoutKey)?.layout ??
+      allowed[0]?.layout,
+    [allowed, layoutKey],
   );
 
   const stored = useLayoutAdjustment(layout?.key ?? "");
@@ -83,10 +116,46 @@ export function LayoutSettingsPage() {
     [layout?.key, saved],
   );
 
+  /*
+    A permission check in flight is not an empty result. Showing "no record
+    types" to somebody whose scopes have not arrived yet is the failure this
+    product has already made thirty times over — a loading query dressed as
+    emptiness — and it is worse here, because the honest answer a second later
+    is the opposite one.
+  */
+  if (access.isLoading)
+    return (
+      <PageWrapper title="Record layouts">
+        <div className="flex flex-1 flex-col gap-gap-inline">
+          {[0, 1, 2, 3, 4, 5, 6, 7].map((index) => (
+            <Skeleton key={index} className="h-11 w-full" />
+          ))}
+        </div>
+      </PageWrapper>
+    );
+
+  if (access.isError)
+    return (
+      <PageWrapper title="Record layouts">
+        <ErrorState
+          title="Couldn't check what you may see"
+          description="Which record types you can arrange depends on what you can read, and that check didn't load."
+          onRetry={() => void access.refetch()}
+        />
+      </PageWrapper>
+    );
+
   if (!layout)
     return (
       <PageWrapper title="Record layouts">
-        <ErrorState title="No record types are declared" />
+        {/*
+          A denial, said as one. There are record types; this account may not
+          read any of them.
+        */}
+        <EmptyState
+          title="No record types you can arrange"
+          description="Arranging a record type needs permission to read it. Ask an administrator for access to the records you want to lay out."
+        />
       </PageWrapper>
     );
 
@@ -142,10 +211,15 @@ export function LayoutSettingsPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {RECORD_LAYOUTS.map((candidate) => (
-                <SelectItem key={candidate.key} value={candidate.key}>
-                  {candidate.plural}
-                </SelectItem>
+              {sections.map(([section, entries]) => (
+                <SelectGroup key={section}>
+                  <SelectLabel>{section}</SelectLabel>
+                  {entries.map((entry) => (
+                    <SelectItem key={entry.layout.key} value={entry.layout.key}>
+                      {entry.layout.plural}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
               ))}
             </SelectContent>
           </Select>

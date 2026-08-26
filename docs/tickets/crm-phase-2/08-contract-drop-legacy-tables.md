@@ -1,6 +1,6 @@
 # 08 — Contract: drop the legacy tables, and make regression impossible
 
-**Status:** done, as far as this phase can take it — every CRM-owned reader is off the legacy tables; 26 remain, 13 the seam itself and 13 in `finance`/`accounting`, which another workstream is rewriting. The `DROP` is one migration behind that landing.
+**Status:** in progress — 36 readers left, 12 of them the seam itself. 13 more are in `finance/`+`accounting/`, which another workstream is rewriting and this phase may not touch, so the drop cannot land until that does. See the note below.
 **Track:** A — identity convergence
 **Blocked by:** 03, 04, 05, 06, 07
 

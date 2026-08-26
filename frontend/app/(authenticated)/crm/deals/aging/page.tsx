@@ -1,240 +1,157 @@
 "use client";
 
 import { useMemo, useCallback } from "react";
-import Link from "next/link";
-import {
-  Clock,
-  AlertTriangle,
-  TrendingDown,
-  IndianRupee,
-  ExternalLink,
-} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { AlertTriangle, Banknote, Clock, TrendingDown } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { ErrorState } from "@/components/shared/error-state";
-import { useDealAging } from "@/hooks/api/crm";
-import { formatINR } from "@/lib/format-utils";
-import { TruncatedText } from "@/components/ui/truncated-text";
+import { DataTableSkeleton } from "@/components/ui/data-table";
+import { ErrorState } from "@/components/shared";
 import { EmptyDealsIllustration } from "@/components/illustrations";
+import {
+  CONTENT_FILL_PANEL,
+  FILTER_TOOLBAR_ROW,
+} from "@/components/ui/content-fill-panel";
+import { RecordList, asRecordValues, type RecordValue } from "@/features/renderer";
+import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import {
+  DEAL_AGING_LAYOUT,
+  dealAgingRecordFields,
+} from "@/lib/renderer/crm/deal-aging-layout";
+import { withDealStages } from "@/lib/renderer/crm/deal-layout";
+import { useDealAging } from "@/hooks/api/crm";
+import { useCrmStages } from "@/hooks/api/crm/metadata";
+import { useOrgDisplay } from "@/hooks/api/org-display";
+import { formatMoneyCompact } from "@/lib/format-utils";
 
-type AgingDealRow = NonNullable<ReturnType<typeof useDealAging>["data"]>["deals"][number];
-
-function StageBadge({ stage }: { stage: string }) {
-  return (
-    <Badge variant="outline" className="text-micro h-4 px-1.5 py-0 bg-muted text-muted-foreground border-border">
-      {stage}
-    </Badge>
-  );
-}
-
-function SeverityBadge({ days }: { days: number }) {
-  if (days > 30) {
-    return (
-      <Badge variant="outline" className="text-micro h-4 px-1.5 py-0 bg-status-danger-surface text-status-danger-ink border-status-danger-rule">
-        Critical
-      </Badge>
-    );
-  }
-  if (days >= 15) {
-    return (
-      <Badge variant="outline" className="text-micro h-4 px-1.5 py-0 bg-status-warning-surface text-status-warning-ink border-status-warning-rule">
-        Warning
-      </Badge>
-    );
-  }
-  return (
-    <Badge variant="outline" className="text-micro h-4 px-1.5 py-0 bg-status-success-surface text-status-success-ink border-status-success-rule">
-      Healthy
-    </Badge>
-  );
-}
-
-function getDayClassName(days: number) {
-  if (days > 30) return "text-destructive font-semibold";
-  if (days >= 15) return "text-status-warning-ink font-medium";
-  return "text-muted-foreground";
-}
-
-const COLUMNS: DataTableColumn<AgingDealRow>[] = [
-  {
-    key: "name",
-    header: "Deal Name",
-    sortable: true,
-    sortValue: (r) => r.name,
-    cell: (r) => (
-      <Link
-        href={`/crm/deals/${r.id}`}
-        className="text-primary hover:text-primary/80 hover:underline transition-colors block max-w-[200px]"
-      >
-        <TruncatedText text={r.name} />
-      </Link>
-    ),
-  },
-  {
-    key: "stage",
-    header: "Stage",
-    cell: (r) => <StageBadge stage={r.stage} />,
-  },
-  {
-    key: "assigneeName",
-    header: "Assignee",
-    cell: (r) =>
-      r.assigneeName ?? (
-        <span className="italic text-muted-foreground/60">Unassigned</span>
-      ),
-  },
-  {
-    key: "daysInStage",
-    header: "Days in Stage",
-    headerClassName: "text-right",
-    className: "text-right font-mono tabular-nums",
-    sortable: true,
-    sortValue: (r) => r.daysInStage,
-    cell: (r) => (
-      <span className={getDayClassName(r.daysInStage)}>{r.daysInStage}d</span>
-    ),
-  },
-  {
-    key: "severity",
-    header: "Severity",
-    cell: (r) => <SeverityBadge days={r.daysInStage} />,
-  },
-  {
-    key: "value",
-    header: "Deal Value",
-    headerClassName: "text-right",
-    className: "text-right font-mono tabular-nums",
-    sortable: true,
-    sortValue: (r) => Number(r.value ?? 0),
-    cell: (r) =>
-      r.value ? (
-        formatINR(r.value)
-      ) : (
-        <span className="text-muted-foreground/60">—</span>
-      ),
-  },
-  {
-    key: "createdAt",
-    header: "Created",
-    className: "font-mono tabular-nums",
-    cell: (r) =>
-      r.createdAt
-        ? new Date(r.createdAt).toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          })
-        : "—",
-  },
-  {
-    key: "actions",
-    header: "",
-    headerClassName: "w-24",
-    cell: (r) => (
-      <Button variant="ghost" size="sm" className="text-xs" asChild>
-        <Link href={`/crm/deals/${r.id}`}>
-          <ExternalLink className="h-3.5 w-3.5 mr-1" />
-          View
-        </Link>
-      </Button>
-    ),
-  },
-];
-
+/**
+ * Deals that have stopped moving.
+ *
+ * No table is written here. The columns, their alignment, the stage badge, the
+ * severity badge and the mobile card all come from `DEAL_AGING_LAYOUT`; what is
+ * left is the four figures at the top and where a row goes when you click it.
+ *
+ * The severity verdict is a badge the description carries rather than the
+ * `getDayClassName` helper this screen used to hold, which tinted the day count
+ * red past thirty and amber past fifteen. Two things follow: the judgement now
+ * has a word in it, so it survives greyscale and a screen reader, and the
+ * thresholds live once beside the field they define instead of once per screen
+ * that shows a day count.
+ */
 export default function DealAgingPage() {
-  const { data, isLoading, isError, refetch, access } = useDealAging();
+  const router = useRouter();
+  const money = useOrgDisplay();
+  const [density, setDensity] = useDensity();
 
-  const sortedDeals = useMemo(() => {
-    if (!data?.deals) return [];
-    return [...data.deals].sort((a, b) => b.daysInStage - a.daysInStage);
+  const tenantLayout = useTenantLayout(DEAL_AGING_LAYOUT);
+  const { data: stages } = useCrmStages("deal");
+  const layout = useMemo(() => withDealStages(tenantLayout, stages ?? []), [tenantLayout, stages]);
+
+  const { data, isLoading, isError, refetch } = useDealAging();
+
+  const rows = useMemo(() => {
+    const deals = data?.deals ?? [];
+    return asRecordValues(
+      [...deals].sort((a, b) => b.daysInStage - a.daysInStage).map(dealAgingRecordFields),
+    );
   }, [data?.deals]);
 
   const stats = useMemo(() => {
-    if (!data) return { totalStale: 0, avgDays: 0, oldestDays: 0, totalValue: 0 };
-    const deals = data.deals;
-    const stale = deals.filter((d) => d.daysInStage > 14);
-    const totalValue = deals.reduce((sum, d) => sum + Number(d.value ?? 0), 0);
-    const avgDays =
-      deals.length > 0
-        ? Math.round(deals.reduce((sum, d) => sum + d.daysInStage, 0) / deals.length)
-        : 0;
-    const oldestDays = deals.length > 0 ? Math.max(...deals.map((d) => d.daysInStage)) : 0;
-    return { totalStale: stale.length, avgDays, oldestDays, totalValue };
-  }, [data]);
+    const deals = data?.deals ?? [];
+    if (deals.length === 0) return { totalStale: 0, avgDays: 0, oldestDays: 0, totalValue: 0 };
+    return {
+      totalStale: deals.filter((deal) => deal.daysInStage > 14).length,
+      avgDays: Math.round(
+        deals.reduce((sum, deal) => sum + deal.daysInStage, 0) / deals.length,
+      ),
+      oldestDays: Math.max(...deals.map((deal) => deal.daysInStage)),
+      totalValue: deals.reduce((sum, deal) => sum + Number(deal.value ?? 0), 0),
+    };
+  }, [data?.deals]);
 
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
 
+  const handleRowClick = useCallback(
+    (row: RecordValue) => router.push(`/crm/deals/${String(row.id)}`),
+    [router],
+  );
+
   return (
     <PageWrapper
-      title="Deal Aging"
-      subtitle="Deals stuck in pipeline stages"
+      title="Deal aging"
+      subtitle="Deals that have stopped moving through the pipeline"
       backHref="/crm/deals"
-    >
-      {isError ? (
-        <ErrorState
-          title="Failed to load aging data"
-          description="An error occurred while loading the deal aging report."
-          onRetry={handleRetry}
-          className="flex-1"
-        />
-      ) : (
-        <div className="flex flex-1 min-h-0 flex-col space-y-4">
-          <StatCardGrid cols={4}>
-            <StatCard
-              label="Total Stale Deals"
-              value={stats.totalStale}
-              icon={AlertTriangle}
-              tone="red"
-              isLoading={isLoading}
-            />
-            <StatCard
-              label="Avg Days Stuck"
-              value={`${stats.avgDays}d`}
-              icon={Clock}
-              tone="amber"
-              isLoading={isLoading}
-            />
-            <StatCard
-              label="Oldest Deal"
-              value={`${stats.oldestDays}d`}
-              icon={TrendingDown}
-              tone="blue"
-              isLoading={isLoading}
-            />
-            <StatCard
-              label="Total Value at Risk"
-              value={formatINR(stats.totalValue)}
-              icon={IndianRupee}
-              tone="blue"
-              isLoading={isLoading}
-            />
-          </StatCardGrid>
-
-          <DataTable
-            data={sortedDeals}
-            columns={COLUMNS}
-            getRowKey={(r) => r.id}
-            isLoading={isLoading}
-            emptyState={
-              <EmptyState
-                access={access}
-                illustration={<EmptyDealsIllustration />}
-                title="All deals are moving smoothly"
-                description="No deals are currently stuck in any pipeline stage."
-                className="border-0 bg-transparent min-h-[40dvh]"
-              />
-            }
-            minWidth="780px"
-            className="flex-1 min-h-0"
-          />
+      filters={
+        <div className={FILTER_TOOLBAR_ROW}>
+          <DensityToggle density={density} onChange={setDensity} />
         </div>
-      )}
+      }
+    >
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
+        <StatCardGrid cols={4}>
+          <StatCard
+            label="Stalled deals"
+            value={stats.totalStale}
+            icon={AlertTriangle}
+            tone="red"
+            isLoading={isLoading}
+          />
+          <StatCard
+            label="Average days stuck"
+            value={`${stats.avgDays}d`}
+            icon={Clock}
+            tone="amber"
+            isLoading={isLoading}
+          />
+          <StatCard
+            label="Oldest deal"
+            value={`${stats.oldestDays}d`}
+            icon={TrendingDown}
+            tone="blue"
+            isLoading={isLoading}
+          />
+          <StatCard
+            label="Value at risk"
+            value={formatMoneyCompact(stats.totalValue, money)}
+            icon={Banknote}
+            tone="blue"
+            isLoading={isLoading}
+          />
+        </StatCardGrid>
+
+        {isLoading ? (
+          <DataTableSkeleton rows={12} columns={layout.list.columns.length} className="flex-1" />
+        ) : isError ? (
+          <ErrorState
+            title="Couldn't load the aging report"
+            description="The report didn't load. Check your connection and try again."
+            onRetry={handleRetry}
+            className={CONTENT_FILL_PANEL}
+          />
+        ) : rows.length === 0 ? (
+          <EmptyState
+            illustration={<EmptyDealsIllustration />}
+            title="Every deal is moving"
+            description="Nothing has been sitting in one stage long enough to worry about. Deals that stall will show up here with how long they have been stuck."
+            className={CONTENT_FILL_PANEL}
+          />
+        ) : (
+          <RecordList
+            layout={layout}
+            rows={rows}
+            getRowKey={(row) => String(row.id)}
+            onRowClick={handleRowClick}
+            density={density}
+            money={money}
+            minWidth="900px"
+            className={CONTENT_FILL_PANEL}
+          />
+        )}
+      </div>
     </PageWrapper>
   );
 }

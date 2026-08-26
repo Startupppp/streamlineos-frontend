@@ -1,6 +1,10 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { PARTY_LAYOUT } from "@/lib/renderer/party-layout";
-import { validateLayout, type RecordLayout } from "@/lib/renderer/layout";
+import {
+  toneForSignedValue,
+  validateLayout,
+  type RecordLayout,
+} from "@/lib/renderer/layout";
 import { formatFieldText } from "./format-value";
 import { RecordDetail } from "./record-detail";
 import { RecordForm } from "./record-form";
@@ -663,5 +667,392 @@ describe("a field that points at another record", () => {
   it("degrades to a text input when no control is supplied, rather than dropping the field", () => {
     render(<RecordForm layout={OWN_CURRENCY} onSubmit={jest.fn()} />);
     expect(screen.getByLabelText("Owner")).toBeInTheDocument();
+  });
+});
+
+/**
+ * Sign-dependent tone, asserted on the engine rather than on a campaign.
+ *
+ * This is the vocabulary that unblocked the surfaces Phase 1 could not move: a
+ * hand-written screen painted ROI green above zero and red below with its own
+ * colour helper, and no description could say it, so migrating the screen would
+ * have lost the colour. The description now states which direction is good news
+ * and the engine decides what good news looks like — so the rule is tested once,
+ * here, against a layout no screen uses.
+ */
+const SIGNED: RecordLayout = {
+  key: "test:signed",
+  singular: "Result",
+  plural: "Results",
+  titleField: "name",
+  fields: [
+    { name: "name", label: "Name", kind: "text", required: true },
+    { name: "roi", label: "ROI", kind: "percent", sign: "gain" },
+    { name: "variance", label: "Variance", kind: "money", sign: "gain" },
+    { name: "daysLate", label: "Days late", kind: "number", sign: "cost" },
+    { name: "quantity", label: "Quantity", kind: "number" },
+  ],
+  list: {
+    searchPlaceholder: "Search results…",
+    columns: [
+      { field: "name", primary: true },
+      { field: "roi" },
+      { field: "variance" },
+      { field: "daysLate" },
+      { field: "quantity" },
+    ],
+  },
+  detail: { sections: [{ title: "Return", fields: ["roi", "daysLate"] }] },
+  form: { sections: [{ title: "Return", fields: ["name", "roi", "quantity"] }] },
+};
+
+const signedKey = (row: Record<string, unknown>) => String(row.name);
+
+/**
+ * Every class on every span carrying exactly this text.
+ *
+ * Joined rather than taken from the first match, because a list renders each
+ * value twice — once in the table row and once in the mobile card — and the
+ * card wraps the toned value in a quieter span of its own. Asserting on the
+ * first span found would be asserting on whichever of the two the table happens
+ * to emit first.
+ */
+function toneOf(container: HTMLElement, text: string): string {
+  return [...container.querySelectorAll("span")]
+    .filter((candidate) => candidate.textContent === text)
+    .map((candidate) => candidate.className)
+    .join(" ");
+}
+
+describe("a description that says which direction is good news", () => {
+  it("is accepted, because sign sits on numeric kinds", () => {
+    expect(validateLayout(SIGNED)).toEqual([]);
+  });
+
+  it("reports a sign on a field that has no sign to read", () => {
+    const broken: RecordLayout = {
+      ...SIGNED,
+      fields: SIGNED.fields.map((field) =>
+        field.name === "name" ? { ...field, sign: "gain" as const } : field,
+      ),
+    };
+    expect(validateLayout(broken)).toContainEqual(
+      expect.objectContaining({ where: "fields (name)" }),
+    );
+  });
+
+  it("resolves the tone from the description alone, with nothing rendered", () => {
+    const gain = SIGNED.fields.find((field) => field.name === "roi")!;
+    const cost = SIGNED.fields.find((field) => field.name === "daysLate")!;
+    const plain = SIGNED.fields.find((field) => field.name === "quantity")!;
+
+    expect(toneForSignedValue(gain, 12.4)).toBe("success");
+    expect(toneForSignedValue(gain, -3)).toBe("danger");
+    expect(toneForSignedValue(gain, 0)).toBe("neutral");
+    expect(toneForSignedValue(cost, 4)).toBe("danger");
+    expect(toneForSignedValue(cost, -4)).toBe("success");
+    // A number that is arithmetic rather than a verdict earns no tone at all.
+    expect(toneForSignedValue(plain, -99)).toBeUndefined();
+  });
+
+  it("refuses a tone for a value it could not read, rather than colouring a guess", () => {
+    const gain = SIGNED.fields.find((field) => field.name === "roi")!;
+    expect(toneForSignedValue(gain, "n/a")).toBeUndefined();
+    expect(toneForSignedValue(gain, "")).toBeUndefined();
+    expect(toneForSignedValue(gain, null)).toBeUndefined();
+  });
+
+  it("paints a favourable figure from the success token and an unfavourable one from danger", () => {
+    const { container } = render(
+      <RecordList
+        layout={SIGNED}
+        rows={[{ name: "Up", roi: 12.4, variance: 500, daysLate: 3, quantity: -9 }]}
+        getRowKey={signedKey}
+      />,
+    );
+    expect(toneOf(container, "12.4%")).toContain("status-success");
+    expect(toneOf(container, "3")).toContain("status-danger");
+  });
+
+  it("inverts the tone for a field whose sign is a cost rather than a gain", () => {
+    const { container } = render(
+      <RecordList
+        layout={SIGNED}
+        rows={[{ name: "Early", roi: -8, daysLate: -2, quantity: 1 }]}
+        getRowKey={signedKey}
+      />,
+    );
+    expect(toneOf(container, "-8%")).toContain("status-danger");
+    expect(toneOf(container, "-2")).toContain("status-success");
+  });
+
+  it("leaves a number the description did not call a verdict untinted", () => {
+    const { container } = render(
+      <RecordList
+        layout={SIGNED}
+        rows={[{ name: "Plain", roi: 1, quantity: -9 }]}
+        getRowKey={signedKey}
+      />,
+    );
+    expect(toneOf(container, "-9")).not.toContain("status-");
+  });
+
+  it("keeps the minus sign, so colour is never the only thing telling the two apart", () => {
+    render(
+      <RecordList layout={SIGNED} rows={[{ name: "Down", roi: -12.5 }]} getRowKey={signedKey} />,
+    );
+    expect(screen.getAllByText("-12.5%").length).toBeGreaterThan(0);
+  });
+
+  it("tones the detail view from the same description that toned the list", () => {
+    const { container } = render(
+      <RecordDetail layout={SIGNED} record={{ name: "Up", roi: 4, daysLate: 2 }} />,
+    );
+    expect(toneOf(container, "4%")).toContain("status-success");
+    expect(toneOf(container, "2")).toContain("status-danger");
+  });
+
+  it("formats a percent as the API stores it, without inventing decimals", () => {
+    const roi = SIGNED.fields.find((field) => field.name === "roi")!;
+    expect(formatFieldText(roi, 12.4)).toBe("12.4%");
+    // Not Intl's `style: "percent"`, which would render this as 6,000%.
+    expect(formatFieldText(roi, 60)).toBe("60%");
+    expect(formatFieldText(roi, "n/a")).toBe("n/a");
+    expect(formatFieldText(roi, null)).toBe("");
+  });
+
+  it("right-aligns a percent because the kind is numeric, without the description asking", () => {
+    const { container } = render(
+      <RecordList layout={SIGNED} rows={[{ name: "Up", roi: 4 }]} getRowKey={signedKey} />,
+    );
+    expect(container.querySelector(".tabular-nums")).not.toBeNull();
+  });
+
+  it("renders a percent as a number control on the generated form", () => {
+    render(<RecordForm layout={SIGNED} onSubmit={jest.fn()} />);
+    expect(screen.getByLabelText(/ROI/)).toHaveAttribute("type", "number");
+  });
+});
+
+/**
+ * A flag, which is a two-option field with a switch instead of a dropdown.
+ *
+ * `isActive`, `isPrimary`, `isDefault`, `isRequired` — the CRM settings records
+ * are full of them, and their absence from the vocabulary is what stopped
+ * several of those forms moving onto the engine. It reuses `options` rather than
+ * growing a `trueLabel`, because "Active / Inactive" is the same shape as any
+ * other pair of options and a second way to say it would be a second thing to
+ * keep in step.
+ */
+const FLAGGED: RecordLayout = {
+  key: "test:flagged",
+  singular: "Rule",
+  plural: "Rules",
+  titleField: "name",
+  fields: [
+    { name: "name", label: "Name", kind: "text", required: true },
+    {
+      name: "isActive",
+      label: "Active",
+      kind: "boolean",
+      options: [
+        { value: "true", label: "Active", tone: "success" },
+        { value: "false", label: "Inactive", tone: "neutral" },
+      ],
+    },
+    { name: "isDefault", label: "Default", kind: "boolean" },
+  ],
+  list: {
+    searchPlaceholder: "Search rules…",
+    columns: [
+      { field: "name", primary: true },
+      { field: "isActive" },
+      { field: "isDefault" },
+    ],
+  },
+  detail: { sections: [{ title: "Rule", fields: ["name", "isActive", "isDefault"] }] },
+  form: { sections: [{ title: "Rule", fields: ["name", "isActive", "isDefault"] }] },
+};
+
+const flagKey = (row: Record<string, unknown>) => String(row.name);
+
+describe("a boolean field", () => {
+  it("is a valid description", () => {
+    expect(validateLayout(FLAGGED)).toEqual([]);
+  });
+
+  it("renders the description's own words rather than true and false", () => {
+    const active = FLAGGED.fields.find((field) => field.name === "isActive")!;
+    expect(formatFieldText(active, true)).toBe("Active");
+    expect(formatFieldText(active, false)).toBe("Inactive");
+  });
+
+  it("falls back to yes and no when the description names no options", () => {
+    const fallback = FLAGGED.fields.find((field) => field.name === "isDefault")!;
+    expect(formatFieldText(fallback, true)).toBe("Yes");
+    expect(formatFieldText(fallback, false)).toBe("No");
+  });
+
+  it("treats false as a value and only null as nothing", () => {
+    const fallback = FLAGGED.fields.find((field) => field.name === "isDefault")!;
+    expect(formatFieldText(fallback, false)).toBe("No");
+    expect(formatFieldText(fallback, null)).toBe("");
+    expect(formatFieldText(fallback, undefined)).toBe("");
+  });
+
+  it("shows a dash for an unknown flag rather than claiming it is off", () => {
+    render(
+      <RecordList layout={FLAGGED} rows={[{ name: "One", isDefault: null }]} getRowKey={flagKey} />,
+    );
+    expect(screen.getAllByText("—").length).toBeGreaterThan(0);
+  });
+
+  it("paints a toned flag from the status tokens, like any other two-option field", () => {
+    const { container } = render(
+      <RecordList
+        layout={FLAGGED}
+        rows={[{ name: "One", isActive: true, isDefault: false }]}
+        getRowKey={flagKey}
+      />,
+    );
+    expect(toneOf(container, "Active")).toContain("status-success");
+  });
+
+  it("gives the form a switch rather than a two-item dropdown", () => {
+    render(<RecordForm layout={FLAGGED} onSubmit={jest.fn()} />);
+    expect(screen.getByRole("switch", { name: "Active" })).toBeInTheDocument();
+  });
+
+  it("defaults an absent flag to off rather than to a value its own schema rejects", async () => {
+    const onSubmit = jest.fn();
+    render(<RecordForm layout={FLAGGED} initial={{ name: "One" }} onSubmit={onSubmit} />);
+    fireEvent.submit(screen.getByRole("button", { name: /save rule/i }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({ isActive: "false", isDefault: "false" });
+  });
+
+  it("carries the switch's state back as the string every other control uses", async () => {
+    const onSubmit = jest.fn();
+    render(<RecordForm layout={FLAGGED} initial={{ name: "One" }} onSubmit={onSubmit} />);
+    fireEvent.click(screen.getByRole("switch", { name: "Active" }));
+    fireEvent.submit(screen.getByRole("button", { name: /save rule/i }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({ isActive: "true" });
+  });
+
+  it("prefills from an existing record", () => {
+    render(
+      <RecordForm layout={FLAGGED} initial={{ name: "One", isActive: true }} onSubmit={jest.fn()} />,
+    );
+    expect(screen.getByRole("switch", { name: "Active" })).toBeChecked();
+  });
+});
+
+/**
+ * A pointer at another record, rendered as a way to get there.
+ *
+ * `referenceTo` reached the form long before it reached the page: a surface
+ * supplied a picker, and the rendered value stayed an identifier. So a quote's
+ * deal and its client had to be a hand-written card beside the generated detail
+ * view — describing them would have silently cost the navigation, which is the
+ * kind of forced migration that loses a capability.
+ */
+const POINTING: RecordLayout = {
+  key: "test:pointing",
+  singular: "Note",
+  plural: "Notes",
+  titleField: "title",
+  fields: [
+    { name: "title", label: "Title", kind: "text", required: true },
+    { name: "dealId", label: "Deal", kind: "reference", referenceTo: "deal", referenceLabel: "dealTitle" },
+    { name: "dealTitle", label: "Deal name", kind: "text", readOnly: true },
+    { name: "ownerId", label: "Owner", kind: "reference", referenceTo: "member" },
+    { name: "plainId", label: "Plain", kind: "reference", referenceTo: "deal" },
+  ],
+  list: {
+    searchPlaceholder: "Search notes…",
+    columns: [
+      { field: "title", primary: true },
+      { field: "dealId" },
+      { field: "ownerId" },
+    ],
+  },
+  detail: { sections: [{ title: "Note", fields: ["title", "dealId", "ownerId", "plainId"] }] },
+  form: { sections: [{ title: "Note", fields: ["title", "dealId"] }] },
+};
+
+const pointingKey = (row: Record<string, unknown>) => String(row.title);
+
+describe("a reference on a rendered surface", () => {
+  it("is a valid description", () => {
+    expect(validateLayout(POINTING)).toEqual([]);
+  });
+
+  it("links to the record it points at, named by the sibling the description nominates", () => {
+    render(
+      <RecordDetail
+        layout={POINTING}
+        record={{ title: "One", dealId: 42, dealTitle: "Acme renewal" }}
+      />,
+    );
+    const link = screen.getByRole("link", { name: "Acme renewal" });
+    expect(link).toHaveAttribute("href", "/crm/deals/42");
+  });
+
+  it("shows the identifier when the read sent no name for it", () => {
+    render(<RecordDetail layout={POINTING} record={{ title: "One", plainId: 7 }} />);
+    expect(screen.getByRole("link", { name: "7" })).toHaveAttribute("href", "/crm/deals/7");
+  });
+
+  it("renders a domain the product has no page for as plain text, not a link to nowhere", () => {
+    render(<RecordDetail layout={POINTING} record={{ title: "One", ownerId: "u-1" }} />);
+    expect(screen.getByText("u-1")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "u-1" })).toBeNull();
+  });
+
+  it("links from a list cell as well as a detail view", () => {
+    render(
+      <RecordList
+        layout={POINTING}
+        rows={[{ title: "One", dealId: 42, dealTitle: "Acme renewal" }]}
+        getRowKey={pointingKey}
+      />,
+    );
+    expect(screen.getAllByRole("link", { name: "Acme renewal" }).length).toBeGreaterThan(0);
+  });
+
+  it("shows a dash for an absent pointer rather than a link with no target", () => {
+    render(<RecordDetail layout={POINTING} record={{ title: "One", dealId: null }} />);
+    expect(screen.queryByRole("link")).toBeNull();
+  });
+});
+
+describe("the row controls a description does not own", () => {
+  it("puts a screen-supplied leading control before the described columns", () => {
+    const { container } = render(
+      <RecordList
+        layout={PARTY_LAYOUT}
+        rows={rows}
+        getRowKey={key}
+        leading={() => <input type="checkbox" aria-label="Done" />}
+      />,
+    );
+    const firstCell = container.querySelector("tbody tr td");
+    expect(firstCell?.querySelector("input[type=checkbox]")).not.toBeNull();
+  });
+
+  it("keeps a leading control and a trailing action on the same row without either displacing a column", () => {
+    render(
+      <RecordList
+        layout={PARTY_LAYOUT}
+        rows={rows}
+        getRowKey={key}
+        leading={() => <input type="checkbox" aria-label="Done" />}
+        actions={() => <button type="button">More</button>}
+      />,
+    );
+    expect(screen.getAllByLabelText("Done")).toHaveLength(rows.length);
+    expect(screen.getAllByRole("button", { name: "More" })).toHaveLength(rows.length);
+    expect(screen.getByRole("columnheader", { name: "Name" })).toBeInTheDocument();
   });
 });

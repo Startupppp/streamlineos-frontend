@@ -1,26 +1,15 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  FileText,
-  Plus,
-  Trash2,
-  Send,
-  CheckCircle,
-  XCircle,
-  Clock,
-} from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { FileText, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared";
-import { useCan } from "@/hooks/api/access";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,160 +26,99 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { RecordList, asRecordValues, type RecordValue } from "@/features/renderer";
+import { useDensity } from "@/features/renderer/density-toggle";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { withColumns } from "@/lib/renderer/layout-adjustment";
+import { QUOTE_LAYOUT, quoteListRecordFields } from "@/lib/renderer/crm/quote-layout";
+import { useCan } from "@/hooks/api/access";
 import {
-  useDealQuotes,
   useCreateQuote,
-  useUpdateQuoteStatus,
+  useDealQuotes,
   useDeleteQuote,
+  useUpdateQuoteStatus,
 } from "@/hooks/api/crm/quotes";
-import type { QuoteListItem, QuoteStatus } from "@/types/crm/quotes";
+import { useOrgDisplay } from "@/hooks/api/org-display";
+import { getErrorMessage } from "@/lib/get-error-message";
+import type { QuoteStatus } from "@/types/crm/quotes";
 
-const STATUS_CONFIG: Record<
-  QuoteStatus,
-  { label: string; className: string; icon: typeof FileText }
-> = {
-  DRAFT: {
-    label: "Draft",
-    className: "bg-muted text-muted-foreground border-border",
-    icon: FileText,
-  },
-  SENT: {
-    label: "Sent",
-    className: "bg-status-info-surface text-status-info-ink border-status-info-rule",
-    icon: Send,
-  },
-  ACCEPTED: {
-    label: "Accepted",
-    className: "bg-status-success-surface text-status-success-ink border-status-success-rule",
-    icon: CheckCircle,
-  },
-  REJECTED: {
-    label: "Rejected",
-    className: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
-    icon: XCircle,
-  },
-  EXPIRED: {
-    label: "Expired",
-    className: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
-    icon: Clock,
-  },
-};
+/**
+ * The quotes on a deal, rendered from the quote description.
+ *
+ * This was a second implementation of the quotes list: its own row card, its own
+ * `STATUS_CONFIG` mapping five statuses to five tone classes, and its own
+ * `formatAmount(amount, currency = "USD")` fixed to `en-US` — so a quote written
+ * in rupees was grouped in thousands on the deal page and in lakhs on the quotes
+ * page, and a quote with no currency was priced in dollars. None of that was a
+ * decision anybody made; it is what happens when one record has two lists.
+ *
+ * It is now the same description, narrowed to the four columns that fit beside a
+ * deal. `withColumns` narrows what the tenant already sees rather than declaring
+ * a second, smaller layout — so a column a tenant hid on the quotes page cannot
+ * reappear here, and the status tones come from the one place that names them.
+ */
 
-function formatAmount(amount: string, currency = "USD") {
-  const num = Number(amount);
-  if (Number.isNaN(num)) return amount;
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 0,
-  }).format(num);
-}
+const EMBEDDED_COLUMNS = ["quoteNumber", "status", "netAmount", "validUntil"] as const;
 
-function QuoteStatusBadge({ status }: { status: QuoteStatus }) {
-  const config = STATUS_CONFIG[status];
-  const Icon = config.icon;
-  return (
-    <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${config.className}`}
-    >
-      <Icon className="h-3 w-3" />
-      {config.label}
-    </span>
-  );
-}
+/** The quote a fresh row starts as, until somebody opens it and prices it. */
+const QUOTE_VALID_DAYS = 30;
 
-interface QuoteRowProps {
-  quote: QuoteListItem;
+interface QuoteRowActionsProps {
+  quote: RecordValue;
   dealId: number;
   onDeleteRequest: (id: number) => void;
 }
 
-function QuoteRow({ quote, dealId, onDeleteRequest }: QuoteRowProps) {
+function QuoteRowActions({ quote, dealId, onDeleteRequest }: QuoteRowActionsProps) {
   const updateStatus = useUpdateQuoteStatus();
+  const id = Number(quote.id);
+  const status = typeof quote.status === "string" ? quote.status : "";
+  const quoteNumber = typeof quote.quoteNumber === "string" ? quote.quoteNumber : "this quote";
 
-  const handleStatusChange = useCallback(
-    (status: QuoteStatus) => {
+  const changeStatus = useCallback(
+    (next: QuoteStatus) => {
       updateStatus.mutate(
-        { id: quote.id, status, dealId },
+        { id, status: next, dealId },
         {
-          onSuccess: () =>
-            toast.success(`Quote marked as ${STATUS_CONFIG[status].label}`),
-          onError: (err) => toast.error(getErrorMessage(err)),
+          onSuccess: () => toast.success("Quote updated"),
+          onError: (error) => toast.error(getErrorMessage(error)),
         },
       );
     },
-    [quote.id, dealId, updateStatus],
+    [id, dealId, updateStatus],
   );
 
-  const handleDeleteRequest = useCallback(() => {
-    onDeleteRequest(quote.id);
-  }, [quote.id, onDeleteRequest]);
+  const handleMarkSent = useCallback(() => changeStatus("SENT"), [changeStatus]);
+  const handleMarkAccepted = useCallback(() => changeStatus("ACCEPTED"), [changeStatus]);
+  const handleMarkRejected = useCallback(() => changeStatus("REJECTED"), [changeStatus]);
+  const handleDeleteRequest = useCallback(() => onDeleteRequest(id), [id, onDeleteRequest]);
 
-  const handleMarkSent = useCallback(
-    () => handleStatusChange("SENT"),
-    [handleStatusChange],
-  );
-  const handleMarkAccepted = useCallback(
-    () => handleStatusChange("ACCEPTED"),
-    [handleStatusChange],
-  );
-  const handleMarkRejected = useCallback(
-    () => handleStatusChange("REJECTED"),
-    [handleStatusChange],
-  );
   return (
-    <div className="flex items-center gap-3 p-3 bg-card border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-medium text-foreground font-mono truncate">
-            {quote.quoteNumber}
-          </span>
-          <QuoteStatusBadge status={quote.status} />
-        </div>
-        <p className="text-xs text-muted-foreground mt-0.5 truncate">
-          {quote.subject}
-          {" · "}
-          {formatAmount(quote.totalAmount, quote.currency)}
-          {quote.validUntil && (
-            <>
-              {" · Valid until "}
-              {new Date(quote.validUntil).toLocaleDateString()}
-            </>
-          )}
-        </p>
-      </div>
-
+    <div className="flex items-center justify-end">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
             size="sm"
-            className="px-2 text-xs shrink-0"
+            className="shrink-0 px-2 text-xs"
             disabled={updateStatus.isPending}
+            aria-label={`Actions for ${quoteNumber}`}
           >
             Actions
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-44">
-          {quote.status === "DRAFT" && (
-            <DropdownMenuItem onClick={handleMarkSent}>
-              Mark as Sent
-            </DropdownMenuItem>
-          )}
-          {quote.status === "SENT" && (
+          {status === "DRAFT" ? (
+            <DropdownMenuItem onClick={handleMarkSent}>Mark as sent</DropdownMenuItem>
+          ) : null}
+          {status === "SENT" ? (
             <>
-              <DropdownMenuItem onClick={handleMarkAccepted}>
-                Mark Accepted
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleMarkRejected}>
-                Mark Rejected
-              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleMarkAccepted}>Mark accepted</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleMarkRejected}>Mark rejected</DropdownMenuItem>
             </>
-          )}
-          <DropdownMenuItem variant="destructive"
-            onClick={handleDeleteRequest}
-          >
-            <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+          ) : null}
+          <DropdownMenuItem variant="destructive" onClick={handleDeleteRequest}>
+            <Trash2 className="mr-1.5 h-3.5 w-3.5" />
             Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -205,36 +133,44 @@ interface DealQuotesSectionProps {
 
 export function DealQuotesSection({ dealId }: DealQuotesSectionProps) {
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const { data, isLoading, isError, refetch, access } = useDealQuotes(dealId);
+  const { data, isLoading, isError, refetch } = useDealQuotes(dealId);
   const canCreateQuote = useCan("crm:quotes:create");
   const createQuote = useCreateQuote();
   const deleteQuote = useDeleteQuote();
+  const money = useOrgDisplay();
+  const [density] = useDensity();
 
-  const quotes = data?.quotes ?? [];
+  const tenantLayout = useTenantLayout(QUOTE_LAYOUT);
+  const layout = useMemo(() => withColumns(tenantLayout, EMBEDDED_COLUMNS), [tenantLayout]);
+
+  const rows = useMemo(
+    () => asRecordValues((data?.quotes ?? []).map(quoteListRecordFields)),
+    [data?.quotes],
+  );
 
   const handleCreateQuote = useCallback(() => {
-    const thirtyDaysFromNow = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+    const validUntil = new Date(Date.now() + QUOTE_VALID_DAYS * 24 * 60 * 60 * 1000)
       .toISOString()
       .split("T")[0];
     createQuote.mutate(
       {
         dealId,
         subject: "New Quote",
-        validUntil: thirtyDaysFromNow,
+        validUntil,
         lineItems: [{ description: "Service", quantity: 1, unitPrice: 0 }],
       },
       {
         onSuccess: () => toast.success("Quote created"),
-        onError: (err) => toast.error(getErrorMessage(err)),
+        onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
   }, [dealId, createQuote]);
 
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
-  const handleDeleteRequest = useCallback((id: number) => {
-    setDeleteId(id);
-  }, []);
+  const handleDeleteRequest = useCallback((id: number) => setDeleteId(id), []);
 
   const handleDeleteConfirm = useCallback(() => {
     if (deleteId === null) return;
@@ -245,7 +181,7 @@ export function DealQuotesSection({ dealId }: DealQuotesSectionProps) {
           toast.success("Quote deleted");
           setDeleteId(null);
         },
-        onError: (err) => toast.error(getErrorMessage(err)),
+        onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
   }, [deleteId, dealId, deleteQuote]);
@@ -254,38 +190,41 @@ export function DealQuotesSection({ dealId }: DealQuotesSectionProps) {
     if (!open) setDeleteId(null);
   }, []);
 
+  const renderActions = useCallback(
+    (row: RecordValue) => (
+      <QuoteRowActions quote={row} dealId={dealId} onDeleteRequest={handleDeleteRequest} />
+    ),
+    [dealId, handleDeleteRequest],
+  );
+
   return (
     <>
-      <Card className="bg-card border border-border rounded-xl shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between pb-3 pt-4 px-4">
+      <Card className="shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between px-4 pt-4 pb-3">
           <div className="flex items-center gap-2">
             <FileText className="h-4 w-4 text-muted-foreground" />
             <h3 className="text-sm font-semibold">Quotes</h3>
-            {quotes.length > 0 && (
+            {rows.length > 0 ? (
               <Badge variant="secondary" className="text-micro h-4 px-1.5">
-                {quotes.length}
+                {rows.length}
               </Badge>
-            )}
+            ) : null}
           </div>
-          <motion.div whileTap={{ scale: 0.97 }}>
+          {canCreateQuote ? (
             <LoadingButton
               size="sm"
               onClick={handleCreateQuote}
               isPending={createQuote.isPending}
-              loadingText="Creating..."
-              className="text-xs"
+              loadingText="Creating…"
             >
-              <Plus className="h-3 w-3 mr-1" />
-              New Quote
+              <Plus className="mr-1 h-3 w-3" />
+              New quote
             </LoadingButton>
-          </motion.div>
+          ) : null}
         </CardHeader>
         <CardContent className="px-4 pb-4">
           {isLoading ? (
-            <div className="space-y-3">
-              <Skeleton className="h-14 w-full rounded-xl" />
-              <Skeleton className="h-14 w-full rounded-xl" />
-            </div>
+            <DataTableSkeleton rows={3} columns={EMBEDDED_COLUMNS.length} />
           ) : isError ? (
             <ErrorState
               compact
@@ -293,34 +232,25 @@ export function DealQuotesSection({ dealId }: DealQuotesSectionProps) {
               description="The quotes on this deal didn't load. Check your connection and try again."
               onRetry={handleRetry}
             />
-          ) : quotes.length === 0 ? (
+          ) : rows.length === 0 ? (
             <EmptyState
-              access={access}
               compact
               title="No quotes yet"
               description="A quote prices this deal for the client, line by line. Create one to send it out."
-              action={canCreateQuote ? { label: "New quote", onClick: handleCreateQuote } : undefined}
+              action={
+                canCreateQuote ? { label: "New quote", onClick: handleCreateQuote } : undefined
+              }
             />
           ) : (
-            <div className="space-y-2">
-              <AnimatePresence>
-                {quotes.map((quote: QuoteListItem, idx: number) => (
-                  <motion.div
-                    key={quote.id}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ delay: idx * 0.05 }}
-                  >
-                    <QuoteRow
-                      quote={quote}
-                      dealId={dealId}
-                      onDeleteRequest={handleDeleteRequest}
-                    />
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
+            <RecordList
+              layout={layout}
+              rows={rows}
+              getRowKey={(row) => String(row.id)}
+              actions={renderActions}
+              density={density}
+              money={money}
+              minWidth="520px"
+            />
           )}
         </CardContent>
       </Card>
@@ -328,18 +258,14 @@ export function DealQuotesSection({ dealId }: DealQuotesSectionProps) {
       <AlertDialog open={deleteId !== null} onOpenChange={handleDeleteOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Quote</AlertDialogTitle>
+            <AlertDialogTitle>Delete quote?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the quote. This action cannot be
-              undone.
+              This permanently deletes the quote. It cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              variant="destructive"
-            >
+            <AlertDialogAction onClick={handleDeleteConfirm} variant="destructive">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

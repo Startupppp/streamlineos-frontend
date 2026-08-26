@@ -1,52 +1,51 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { RefreshCw, Users, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
-import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { EmptyState } from "@/components/ui/empty-state";
+import { useCallback, useMemo, useState } from "react";
+import { AlertTriangle, ChevronDown, ChevronUp, RefreshCw, Users } from "lucide-react";
 import { EmptyLeadsIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import {
-  useDuplicateLeads,
-  useMergeLead,
-  type DuplicateGroup,
-} from "@/hooks/api/crm/leads";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Skeleton } from "@/components/ui/skeleton";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { useLeadLayout } from "@/features/crm/leads/use-lead-layout";
+import { RecordList, asRecordValues, type RecordValue } from "@/features/renderer";
+import { useDuplicateLeads, useMergeLead, type DuplicateGroup } from "@/hooks/api/crm/leads";
+import { useOrgDisplay } from "@/hooks/api/org-display";
+import { statusToneClasses } from "@/lib/design-tokens";
+import { withColumns } from "@/lib/renderer/layout-adjustment";
+import type { RecordLayout } from "@/lib/renderer/layout";
 import { cn } from "@/lib/utils";
-import { TruncatedText } from "@/components/ui/truncated-text";
 
-function scoreToTone(score: number): string {
-  if (score >= 80) return "bg-status-danger-surface text-status-danger-ink border-status-danger-rule";
-  if (score >= 60) return "bg-status-warning-surface text-status-warning-ink border-status-warning-rule";
-  return "bg-status-warning-surface text-status-warning-ink border-status-warning-rule";
+/**
+ * Two lead records that look like the same person.
+ *
+ * Each group renders the shared lead description rather than a table written
+ * here, which matters more on this screen than on most: the whole judgement a
+ * user makes is "are these the same person", and they make it by comparing
+ * fields side by side. When the comparison table was hand-written it showed six
+ * fields chosen once and never revisited, painted statuses from its own colour
+ * map, and formatted dates with its own `en-IN` call — so the same lead read
+ * differently here than on the list it came from, which is precisely the
+ * confusion a duplicate scan is supposed to remove.
+ *
+ * The group card, the match reasons and the merge itself stay hand-written.
+ * A description describes one record; that two of them are suspected to be the
+ * same person is not a fact about a lead.
+ */
+
+/** The scan's confidence that two records are one person. */
+function scoreTone(score: number): "danger" | "warning" | "neutral" {
+  if (score >= 80) return "danger";
+  if (score >= 60) return "warning";
+  return "neutral";
 }
 
-function formatDate(val: string | null): string {
-  if (!val) return "—";
-  return new Date(val).toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-function statusBadgeClass(status: string): string {
-  const map: Record<string, string> = {
-    NEW: "bg-status-info-surface text-status-info-ink border-status-info-rule",
-    CONTACTED: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
-    INTERESTED: "bg-status-info-surface text-status-info-ink border-status-info-rule",
-    QUALIFIED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
-    CONVERTED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
-    LOST: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
-  };
-  return map[status] ?? "bg-muted text-muted-foreground border-border";
-}
+const COLUMNS = ["name", "email", "phone", "source", "status", "createdAt"] as const;
 
 interface MergeTarget {
   keepLeadId: number;
@@ -57,15 +56,18 @@ interface MergeTarget {
 function DuplicateGroupCard({
   group,
   index,
+  layout,
   onMerge,
 }: {
   group: DuplicateGroup;
   index: number;
+  layout: RecordLayout;
   onMerge: (target: MergeTarget) => void;
 }) {
   const [expanded, setExpanded] = useState(true);
+  const money = useOrgDisplay();
 
-  const handleToggle = useCallback(() => setExpanded((p) => !p), []);
+  const handleToggle = useCallback(() => setExpanded((previous) => !previous), []);
 
   const leadA = group.leads[0];
   const leadB = group.leads[1];
@@ -75,145 +77,107 @@ function DuplicateGroupCard({
     onMerge({ keepLeadId: leadA.id, mergeLeadId: leadB.id, mergeName: leadB.name });
   }, [onMerge, leadA, leadB]);
 
-  if (!leadA || !leadB) return null;
+  const rows = useMemo(
+    () => (leadA && leadB ? asRecordValues([leadA, leadB]) : []),
+    [leadA, leadB],
+  );
 
-  type DuplicateLead = DuplicateGroup["leads"][number] & { _isKeep: boolean };
-
-  const tableData: DuplicateLead[] = [
-    { ...leadA, _isKeep: true },
-    { ...leadB, _isKeep: false },
-  ];
-
-  const columns: DataTableColumn<DuplicateLead>[] = [
-    {
-      key: "name",
-      header: "Name",
-      cell: (row) => <TruncatedText text={row.name} className="text-dense font-medium max-w-[120px]" />,
-    },
-    {
-      key: "email",
-      header: "Email",
-      cell: (row) => <span className="text-dense text-muted-foreground break-all">{row.email ?? "—"}</span>,
-    },
-    {
-      key: "phone",
-      header: "Phone",
-      headerClassName: "hidden md:table-cell",
-      className: "hidden md:table-cell",
-      cell: (row) => <span className="text-dense text-muted-foreground">{row.phone ?? "—"}</span>,
-    },
-    {
-      key: "company",
-      header: "Company",
-      headerClassName: "hidden md:table-cell",
-      className: "hidden md:table-cell",
-      cell: (row) => <span className="text-dense text-muted-foreground">{row.company ?? "—"}</span>,
-    },
-    {
-      key: "status",
-      header: "Status",
-      cell: (row) => (
-        <Badge
-          variant="outline"
-          className={cn("text-micro px-1.5 py-0 h-4", statusBadgeClass(row.status))}
-        >
-          {row.status}
-        </Badge>
-      ),
-    },
-    {
-      key: "createdAt",
-      header: "Created",
-      headerClassName: "hidden md:table-cell",
-      className: "hidden md:table-cell",
-      cell: (row) => <span className="text-dense text-muted-foreground">{formatDate(row.createdAt)}</span>,
-    },
-    {
-      key: "action",
-      header: "Action",
-      headerClassName: "text-right",
-      className: "text-right",
-      cell: (row) => row._isKeep ? (
-        <Badge
-          variant="outline"
-          className="text-micro px-1.5 py-0 h-4 bg-status-success-surface text-status-success-ink border-status-success-rule"
-        >
-          Keep
-        </Badge>
-      ) : (
+  /**
+   * Which of the two survives, in the slot the engine leaves for a row's own
+   * controls. Not a column in the description: that one of two records is the
+   * keeper is a fact about this comparison, not about a lead.
+   */
+  const renderActions = useCallback(
+    (row: RecordValue) => {
+      if (!leadA) return null;
+      if (Number(row.id) === leadA.id) {
+        const tone = statusToneClasses("success");
+        return (
+          <Badge
+            variant="outline"
+            className={cn("h-4 px-1.5 py-0 text-micro", tone.surface, tone.inkStrong, tone.rule)}
+          >
+            Keep
+          </Badge>
+        );
+      }
+      return (
         <Button
           size="sm"
           variant="destructive"
-          className="h-6 text-micro px-2"
+          className="h-6 px-2 text-micro"
           onClick={handleMergeClick}
         >
-          Remove Duplicate
+          Remove duplicate
         </Button>
-      ),
+      );
     },
-  ];
+    [leadA, handleMergeClick],
+  );
+
+  if (!leadA || !leadB) return null;
+
+  const tone = statusToneClasses(scoreTone(group.score));
 
   return (
     <Card className="overflow-hidden">
       <CardHeader className="pb-3">
         <div className="flex flex-wrap items-center gap-3">
-          <span className="text-dense font-medium text-muted-foreground">
-            Group #{index + 1}
-          </span>
+          <span className="text-dense font-medium text-muted-foreground">Group #{index + 1}</span>
           <Badge
             variant="outline"
-            className={cn("text-micro px-1.5 py-0 h-4", scoreToTone(group.score))}
+            className={cn("h-4 px-1.5 py-0 text-micro", tone.surface, tone.inkStrong, tone.rule)}
           >
             Score: {group.score}
           </Badge>
           {group.matchReason.map((reason) => (
-            <Badge
-              key={reason}
-              variant="outline"
-              className="text-micro px-1.5 py-0 h-4"
-            >
+            <Badge key={reason} variant="outline" className="h-4 px-1.5 py-0 text-micro">
               {reason}
             </Badge>
           ))}
           <button
             type="button"
             onClick={handleToggle}
-            className="ml-auto text-muted-foreground hover:text-foreground transition-colors"
+            className="ml-auto text-muted-foreground transition-colors hover:text-foreground"
             aria-label={expanded ? "Collapse group" : "Expand group"}
           >
-            {expanded ? (
-              <ChevronUp className="h-4 w-4" />
-            ) : (
-              <ChevronDown className="h-4 w-4" />
-            )}
+            {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </button>
         </div>
       </CardHeader>
 
-      {expanded && (
-        <CardContent className="pt-0 overflow-x-auto p-0">
-          <DataTable
-            data={tableData}
-            columns={columns}
-            getRowKey={(row) => row.id}
-            minWidth="640px"
+      {expanded ? (
+        <CardContent className="p-0 pt-0">
+          <RecordList
+            layout={layout}
+            rows={rows}
+            getRowKey={(row) => String(row.id)}
+            actions={renderActions}
+            /*
+              Compact, like every other table in the product. A two-row
+              comparison is exactly where a spacious row hurts: the fields you
+              are comparing should sit close enough to read across.
+            */
+            density="compact"
+            money={money}
+            minWidth="820px"
           />
         </CardContent>
-      )}
+      ) : null}
     </Card>
   );
 }
 
 function DuplicatesSkeleton() {
   return (
-    <div className="flex flex-col flex-1 min-h-0 space-y-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       <StatCardGrid cols={2}>
-        <StatCard label="Duplicate Groups Found" value={0} tone="red" icon={AlertTriangle} isLoading />
-        <StatCard label="Leads at Risk" value={0} tone="amber" icon={Users} isLoading />
+        <StatCard label="Duplicate groups found" value={0} tone="red" icon={AlertTriangle} isLoading />
+        <StatCard label="Leads at risk" value={0} tone="amber" icon={Users} isLoading />
       </StatCardGrid>
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-32 rounded-lg" />
+      <div className="flex flex-col gap-4">
+        {[1, 2, 3].map((row) => (
+          <Skeleton key={row} className="h-32 rounded-lg" />
         ))}
       </div>
     </div>
@@ -221,8 +185,11 @@ function DuplicatesSkeleton() {
 }
 
 export default function DuplicateLeadsPage() {
-  const { data, isLoading, isFetching, isError, refetch, access } = useDuplicateLeads();
+  const { data, isLoading, isFetching, isError, refetch } = useDuplicateLeads();
   const { mutate: mergeLead, isPending: isMerging } = useMergeLead();
+
+  const leadLayout = useLeadLayout();
+  const layout = useMemo(() => withColumns(leadLayout, COLUMNS), [leadLayout]);
 
   const [pendingMerge, setPendingMerge] = useState<MergeTarget | null>(null);
 
@@ -234,9 +201,7 @@ export default function DuplicateLeadsPage() {
     if (!open) setPendingMerge(null);
   }, []);
 
-  const handleMerge = useCallback((target: MergeTarget) => {
-    setPendingMerge(target);
-  }, []);
+  const handleMerge = useCallback((target: MergeTarget) => setPendingMerge(target), []);
 
   const confirmMerge = useCallback(() => {
     if (!pendingMerge) return;
@@ -246,71 +211,75 @@ export default function DuplicateLeadsPage() {
     );
   }, [mergeLead, pendingMerge]);
 
-  const totalLeadsAtRisk = (data?.groups ?? []).reduce((acc, g) => {
-    g.leads.forEach((l) => acc.add(l.id));
-    return acc;
-  }, new Set<number>()).size;
+  const groups = useMemo(() => data?.groups ?? [], [data]);
 
-  const refreshButton = (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={handleRetry}
-      disabled={isFetching}
-      aria-label="Refresh duplicate scan"
-    >
-      <RefreshCw className={cn("h-4 w-4 mr-2", isFetching && "animate-spin")} />
-      {isFetching ? "Scanning…" : "Refresh Scan"}
-    </Button>
+  const totalLeadsAtRisk = useMemo(
+    () =>
+      groups.reduce((accumulator, group) => {
+        group.leads.forEach((lead) => accumulator.add(lead.id));
+        return accumulator;
+      }, new Set<number>()).size,
+    [groups],
   );
 
   return (
     <PageWrapper
-      title="Duplicate Leads"
-      subtitle="Fuzzy matching to find potential duplicate leads across name, email, phone, and company"
-      actions={refreshButton}
+      title="Duplicate leads"
+      subtitle="Fuzzy matching across name, email, phone and company"
+      actions={
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRetry}
+          disabled={isFetching}
+          aria-label="Refresh duplicate scan"
+        >
+          <RefreshCw className={cn("mr-2 h-4 w-4", isFetching && "animate-spin")} />
+          {isFetching ? "Scanning…" : "Refresh scan"}
+        </Button>
+      }
     >
       {isLoading ? (
         <DuplicatesSkeleton />
       ) : isError ? (
         <ErrorState
           title="Scan failed"
-          description="Failed to scan for duplicate leads. Please try again."
+          description="The duplicate scan didn't finish. Check your connection and try again."
           onRetry={handleRetry}
           className="flex-1"
         />
       ) : (
-        <div className="flex flex-col flex-1 min-h-0 space-y-4">
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
           <StatCardGrid cols={2}>
             <StatCard
-              label="Duplicate Groups Found"
+              label="Duplicate groups found"
               value={data?.total ?? 0}
               tone="red"
               icon={AlertTriangle}
             />
-            <StatCard
-              label="Leads at Risk"
-              value={totalLeadsAtRisk}
-              tone="amber"
-              icon={Users}
-            />
+            <StatCard label="Leads at risk" value={totalLeadsAtRisk} tone="amber" icon={Users} />
           </StatCardGrid>
 
-          {!data?.groups.length ? (
+          {groups.length === 0 ? (
+            /*
+              The "done" state rather than the "nothing here yet" one: the scan
+              ran and found nothing, which is good news and should read as good
+              news rather than as an empty container.
+            */
             <EmptyState
-              access={access}
               illustration={<EmptyLeadsIllustration />}
-              title="No Duplicates Found"
-              description="Great news — no potential duplicate leads were detected across your pipeline."
+              title="No duplicates found"
+              description="Every lead in your pipeline looks like a distinct person. The scan runs against name, email, phone and company."
               className="flex-1"
             />
           ) : (
-            <div className="space-y-4">
-              {data.groups.map((group, index) => (
+            <div className="flex flex-col gap-4">
+              {groups.map((group, index) => (
                 <DuplicateGroupCard
                   key={`${group.leads[0]?.id}-${group.leads[1]?.id}`}
                   group={group}
                   index={index}
+                  layout={layout}
                   onMerge={handleMerge}
                 />
               ))}
@@ -322,9 +291,9 @@ export default function DuplicateLeadsPage() {
       <ConfirmDialog
         open={!!pendingMerge}
         onOpenChange={handleMergeDialogOpenChange}
-        title="Remove Duplicate Lead"
+        title="Remove duplicate lead"
         description={`This will merge "${pendingMerge?.mergeName}" into the primary lead and soft-delete it. All activities and notes will be preserved. This action cannot be undone.`}
-        confirmLabel={isMerging ? "Merging…" : "Merge & Remove"}
+        confirmLabel={isMerging ? "Merging…" : "Merge & remove"}
         destructive
         onConfirm={confirmMerge}
       />

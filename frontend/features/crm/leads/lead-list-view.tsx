@@ -8,12 +8,11 @@ import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { RecordList } from "@/features/renderer";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { useLeadLayout } from "./use-lead-layout";
 import { useSalesTeamCapacity } from "@/hooks/api/leads";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import type { DensityMode } from "@/lib/design-tokens";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
-import { LEAD_LAYOUT } from "@/lib/renderer/crm/lead-layout";
 import type { Lead, LeadPriority, PipelineStatus } from "@/types/leads";
 import { BulkActionsBar, ConversionModal, LostModal } from "./lead-actions";
 import { toLeadRecords } from "./lead-record";
@@ -81,7 +80,7 @@ export function LeadListView({
   onCreateLead,
 }: LeadListViewProps) {
   const router = useRouter();
-  const layout = useTenantLayout(LEAD_LAYOUT);
+  const layout = useLeadLayout();
   const money = useOrgDisplay();
   const mutations = useLeadMutations();
 

@@ -38,9 +38,8 @@ import { AIEmailDialog } from "./ai-email-dialog";
 import { AINextActionButton } from "./ai-next-action-button";
 import { AIEnrichLeadButton } from "./ai-enrich-lead-button";
 import { RecordDetail } from "@/features/renderer";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { useLeadLayout } from "./use-lead-layout";
 import { useOrgDisplay } from "@/hooks/api/org-display";
-import { LEAD_LAYOUT } from "@/lib/renderer/crm/lead-layout";
 import { LeadActivityTab } from "./lead-activity-tab";
 import { toLeadRecord } from "./lead-record";
 import { LeadFollowupTab } from "./lead-followup-tab";
@@ -97,7 +96,7 @@ export function LeadDetailSheet({
   canUpdate,
 }: LeadDetailSheetProps) {
   const router = useRouter();
-  const leadLayout = useTenantLayout(LEAD_LAYOUT);
+  const leadLayout = useLeadLayout();
   const money = useOrgDisplay();
   const { data: lead, isLoading } = useLeadDetail(leadId ?? 0);
   const { data: statusOptions = [] } = useCrmOptions("lead_status");

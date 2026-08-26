@@ -37,6 +37,19 @@ export interface RecordListProps extends BorrowedProps {
    */
   actions?: (row: RecordValue) => ReactNode;
   /**
+   * A leading column for the one control a row is *about*.
+   *
+   * Symmetric with `actions` and separate from `selection` on purpose. Selection
+   * stages a bulk action and brings a select-all header with it; this is a
+   * per-row control that changes the record on the spot — ticking a task done is
+   * the example it exists for, and putting that on the right of the row, behind
+   * a menu, is putting the point of the screen last.
+   *
+   * Not part of the description, for the same reason `actions` is not: what a
+   * row can do depends on the caller's permissions.
+   */
+  leading?: (row: RecordValue) => ReactNode;
+  /**
    * Set by the surface so the toggle can live in its toolbar. Omitted, the list
    * renders comfortable and shows no control — a screen with no room for one
    * should not grow a floating button.
@@ -71,6 +84,7 @@ export function RecordList({
   rows,
   getRowKey,
   actions,
+  leading,
   isLoading,
   emptyState,
   pagination,
@@ -103,7 +117,7 @@ export function RecordList({
           headerClassName: numeric ? "text-right" : undefined,
           cell: (row) => {
             const display = moneyDisplayFor(field, row, money);
-            const value = renderFieldValue(field, row[column.field], display);
+            const value = renderFieldValue(field, row[column.field], display, row);
             if (!column.subtitle) return value;
 
             const subtitle = resolveField(layout, column.subtitle);
@@ -130,11 +144,19 @@ export function RecordList({
   );
 
   const allColumns = useMemo<DataTableColumn<RecordValue>[]>(
-    () =>
-      actions
-        ? [...columns, { key: "actions", header: "", className: "w-10", cell: actions }]
-        : columns,
-    [columns, actions],
+    () => {
+      const withLeading = leading
+        ? [
+            { key: "leading", header: "", className: "w-10", cell: leading },
+            ...columns,
+          ]
+        : columns;
+
+      return actions
+        ? [...withLeading, { key: "actions", header: "", className: "w-10", cell: actions }]
+        : withLeading;
+    },
+    [columns, actions, leading],
   );
 
   const primary = layout.list.columns.find((column) => column.primary) ?? layout.list.columns[0];
@@ -145,7 +167,7 @@ export function RecordList({
     return (
       <div className="flex min-h-11 min-w-0 flex-col gap-gap-inline p-card-pad">
         <span className="truncate text-sm font-medium">
-          {renderFieldValue(primaryField, row[primaryField.name], moneyDisplayFor(primaryField, row, money))}
+          {renderFieldValue(primaryField, row[primaryField.name], moneyDisplayFor(primaryField, row, money), row)}
         </span>
         <span className="flex flex-wrap items-center gap-gap-field">
           {layout.list.columns
@@ -157,7 +179,7 @@ export function RecordList({
               if (!text) return null;
               return (
                 <span key={column.field} className="text-dense text-muted-foreground">
-                  {renderFieldValue(field, row[column.field], display)}
+                  {renderFieldValue(field, row[column.field], display, row)}
                 </span>
               );
             })}

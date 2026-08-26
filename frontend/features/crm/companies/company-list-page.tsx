@@ -37,9 +37,12 @@ import type { DuplicateOrgPair } from "@/types/crm";
  * to a row.
  *
  * Merge selection sits in the row-actions column rather than in a leading
- * checkbox column, because `RecordList` does not forward `DataTable`'s
- * `selection`. The pair-merge flow predates the engine and is the only way into
- * `CompanyMergeDialog`, so it is carried across rather than dropped.
+ * checkbox column. `RecordList` does forward `DataTable`'s `selection`, but that
+ * column comes with a select-all header, and merge takes exactly two records —
+ * an affordance offering the whole page to an action that accepts two is an
+ * affordance that mostly refuses. The pair-merge flow predates the engine and is
+ * the only way into `CompanyMergeDialog`, so it is carried across rather than
+ * dropped.
  */
 
 const PAGE_SIZE = 20;
@@ -88,7 +91,7 @@ export function CompanyListPage() {
     updateParams({ q: debouncedSearch || null, page: null });
   }, [debouncedSearch, searchParams, updateParams]);
 
-  const { data, isLoading, isError, error, refetch, access } = useCrmOrganizations({
+  const { data, isLoading, isError, error, refetch } = useCrmOrganizations({
     search: debouncedSearch.trim() || undefined,
     limit: PAGE_SIZE,
     page,
@@ -231,7 +234,6 @@ export function CompanyListPage() {
           />
         ) : companies.length === 0 ? (
           <EmptyState
-            access={access}
             illustration={<EmptyCompaniesIllustration />}
             title={isFiltered ? "No companies match this search" : "No companies yet"}
             description={

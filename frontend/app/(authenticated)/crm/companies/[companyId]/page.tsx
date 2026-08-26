@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, use, useCallback } from "react";
+import { useState, use, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -21,7 +21,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   useCrmOrganizationDetail,
   useCrmOrgHierarchy,
@@ -31,26 +30,27 @@ import {
   useDeleteCrmOrganization,
   useCompany360,
 } from "@/hooks/api/crm";
-import { useCrmOptions, resolveOption } from "@/hooks/api/crm/metadata";
 import { AccountHealthBadge, computeHealthScore } from "@/features/crm/companies/detail/account-health-badge";
 import { HierarchyTree } from "@/features/crm/companies/detail/hierarchy-tree";
 import { AccountTimeline } from "@/features/crm/companies/detail/account-timeline";
 import { AccountNotes } from "@/features/crm/companies/detail/account-notes";
 import { LinkParentDialog } from "@/features/crm/companies/detail/link-parent-dialog";
 import { CompanySheet } from "@/features/crm/companies/company-sheet";
-import { RecordDetail, asRecordValue } from "@/features/renderer";
+import { RecordDetail, RecordList, asRecordValue, asRecordValues } from "@/features/renderer";
 import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
 import { COMPANY_LAYOUT } from "@/lib/renderer/crm/company-layout";
+import { withColumns } from "@/lib/renderer/layout-adjustment";
+import { useLeadLayout } from "@/features/crm/leads/use-lead-layout";
 import { useCan } from "@/hooks/api/access";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { Customer360Section } from "@/features/crm/shared/customer-360-section";
 import { Customer360Timeline } from "@/features/crm/shared/customer-360-timeline";
-import { CrmOptionBadge } from "@/features/crm/shared/metadata";
 import { formatCurrency } from "@/lib/format-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState } from "@/components/shared";
-import { TruncatedText } from "@/components/ui/truncated-text";
-import type { RelatedLead } from "@/types/crm";
+
+/** How this panel frames a lead: who they are, where they are, and how they arrived. */
+const RELATED_LEAD_COLUMNS = ["name", "email", "status", "priority", "source"] as const;
 
 function DetailPageSkeleton() {
   return (
@@ -106,66 +106,35 @@ export default function CompanyDetailPage({
   const money = useOrgDisplay();
   const canManage = useCan("crm:organizations:manage");
 
-  const { data: org, isLoading: orgLoading, isError: orgError, error: orgDetailError, refetch: refetchOrg, access: orgAccess } = useCrmOrganizationDetail(id);
+  const { data: org, isLoading: orgLoading, isError: orgError, error: orgDetailError, refetch: refetchOrg } = useCrmOrganizationDetail(id);
   const { data: rollup } = useCrmOrgRollup(id);
   const { data: hierarchy } = useCrmOrgHierarchy(id);
   const { data: timeline, isLoading: timelineLoading } = useCrmOrgTimeline(id);
   const {
-    access: relatedLeadsAccess,
     data: relatedLeads,
     isLoading: relatedLeadsLoading,
     isError: relatedLeadsError,
     refetch: refetchRelatedLeads,
   } = useCrmOrgRelatedLeads(id);
   const { data: company360, isLoading: company360Loading } = useCompany360(id);
-  const { data: leadStatusOptions = [] } = useCrmOptions("lead_status");
-  const { data: priorityOptions = [] } = useCrmOptions("priority");
   const deleteMutation = useDeleteCrmOrganization();
 
-  const relatedLeadsColumns: DataTableColumn<RelatedLead>[] = [
-    {
-      key: "name",
-      header: "Name",
-      cell: (lead) => (
-        <div className="flex items-center gap-2">
-          <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center text-micro font-semibold text-primary shrink-0">
-            {(lead.name ?? "?")[0]?.toUpperCase()}
-          </div>
-          <div className="min-w-0">
-            {lead.name
-              ? <TruncatedText text={lead.name} className="font-medium" />
-              : <span className="font-medium">—</span>}
-            {lead.email && (
-              <TruncatedText text={lead.email} className="text-micro text-muted-foreground" />
-            )}
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      cell: (lead) => (
-        <CrmOptionBadge option={resolveOption(leadStatusOptions, lead.status)} />
-      ),
-    },
-    {
-      key: "priority",
-      header: "Priority",
-      cell: (lead) => (
-        <CrmOptionBadge option={resolveOption(priorityOptions, lead.priority)} />
-      ),
-    },
-    {
-      key: "source",
-      header: "Source",
-      cell: (lead) => (
-        <span className="capitalize text-muted-foreground">
-          {lead.source?.toLowerCase().replace(/_/g, " ") ?? "—"}
-        </span>
-      ),
-    },
-  ];
+  /*
+    The leads on this company are leads, so they are described by the lead
+    description rather than by a fourth column array written on a company page.
+    `useLeadLayout` carries the tenant's own status and priority vocabulary,
+    which is what the two `CrmOptionBadge` calls here used to fetch for
+    themselves — the same fact, now read once for every lead surface.
+  */
+  const leadLayout = useLeadLayout();
+  const relatedLeadsLayout = useMemo(
+    () => withColumns(leadLayout, RELATED_LEAD_COLUMNS),
+    [leadLayout],
+  );
+  const relatedLeadRows = useMemo(
+    () => asRecordValues(relatedLeads ?? []),
+    [relatedLeads],
+  );
 
   const handleOpenLinkParent = useCallback(() => setLinkParentOpen(true), []);
   const handleLinkParentOpenChange = useCallback((open: boolean) => setLinkParentOpen(open), []);
@@ -206,7 +175,6 @@ export default function CompanyDetailPage({
     return (
       <PageWrapper title="Not Found" subtitle="" backHref="/crm/companies">
         <EmptyState
-          access={orgAccess}
           title="Company not found"
           description="This company may have been deleted or you don't have access."
           action={{ label: "Back to Companies", href: "/crm/companies" }}
@@ -345,20 +313,21 @@ export default function CompanyDetailPage({
               onRetry={handleRetryRelatedLeads}
             />
           ) : (
-            <DataTable
-              data={relatedLeads ?? []}
-              columns={relatedLeadsColumns}
-              getRowKey={(lead) => lead.id}
+            <RecordList
+              layout={relatedLeadsLayout}
+              rows={relatedLeadRows}
+              getRowKey={(row) => String(row.id)}
               isLoading={relatedLeadsLoading}
+              density="compact"
+              money={money}
               emptyState={
                 <EmptyState
-                  access={relatedLeadsAccess}
                   title="No leads from this company"
                   description="Set this company on a lead and it shows up here, alongside its deals and contacts."
                   compact
                 />
               }
-              minWidth="400px"
+              minWidth="560px"
             />
           )}
         </PageSection>

@@ -2,7 +2,7 @@ import { RECORD_LAYOUTS, layoutByKey } from "./registry";
 import { validateLayout } from "./layout";
 import { applyAdjustment, hidableFields } from "./layout-adjustment";
 import { formFields, schemaForLayout } from "./layout-schema";
-import { proposeAdjustment } from "./layout-proposal";
+import { proposeFromFill } from "./layout-proposal";
 
 /**
  * Every description in the product, held to the engine's rules.
@@ -58,10 +58,11 @@ describe("every registered record layout", () => {
   it.each(RECORD_LAYOUTS.map((layout) => [layout.key, layout] as const))(
     "%s accepts an arrangement proposed from its own records",
     (_key, layout) => {
-      const rows = Array.from({ length: 25 }, () =>
-        Object.fromEntries(layout.fields.map((field) => [field.name, "x"])),
-      );
-      const proposal = proposeAdjustment(layout, rows);
+      // Every field filled in every record: the proposal then hides nothing and
+      // only reorders, which is the case that has to stay valid for a tenant who
+      // accepts one on a record type nobody has left blank.
+      const filled = Object.fromEntries(layout.fields.map((field) => [field.name, 25]));
+      const proposal = proposeFromFill(layout, 25, filled);
       expect(proposal).not.toBeNull();
       if (proposal) expect(validateLayout(applyAdjustment(layout, proposal.adjustment))).toEqual([]);
     },

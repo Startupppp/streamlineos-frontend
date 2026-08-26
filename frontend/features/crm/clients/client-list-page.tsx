@@ -135,7 +135,7 @@ export function ClientListPage() {
     updateParams({ q: debouncedSearch || null, page: null });
   }, [debouncedSearch, searchParams, updateParams]);
 
-  const { data, isLoading, isError, error, refetch, access } = useClientAccounts({
+  const { data, isLoading, isError, error, refetch } = useClientAccounts({
     search: debouncedSearch.trim() || undefined,
     status,
     page,
@@ -221,7 +221,6 @@ export function ClientListPage() {
           />
         ) : accounts.length === 0 ? (
           <EmptyState
-            access={access}
             illustration={<EmptyClientsIllustration />}
             title={isFiltered ? "No clients match these filters" : "No clients yet"}
             description={

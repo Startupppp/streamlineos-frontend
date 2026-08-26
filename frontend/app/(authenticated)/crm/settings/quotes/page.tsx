@@ -1,90 +1,62 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-  useQuoteSettings,
-  useUpdateQuoteSettings,
-  useQuoteTemplates,
-  useCreateQuoteTemplate,
-  useUpdateQuoteTemplate,
-  useDeleteQuoteTemplate,
-} from "@/hooks/api/crm/pricebooks";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { useCan } from "@/hooks/api/access";
+import { ErrorState, NoPermissionState } from "@/components/shared";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Skeleton } from "@/components/ui/skeleton";
+import { CONTENT_PANEL_SOLID } from "@/components/ui/content-fill-panel";
+import { RecordList, asRecordValues } from "@/features/renderer";
+import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { RecordRowActions } from "@/features/crm/settings/shared/record-row-actions";
+import { QuoteTemplateSheet } from "@/features/crm/settings/quotes/quote-template-sheet";
 import {
   QuoteSettingsForm,
   type QuoteSettingsFormValues,
 } from "@/features/crm/settings/quotes/quote-settings-form";
+import { useCan } from "@/hooks/api/access";
 import {
-  QuoteTemplateFormSheet,
-  type QuoteTemplateFormValues,
-  defaultTemplateValues,
-  templateValuesFromTemplate,
-} from "@/features/crm/settings/quotes/quote-template-form";
+  useDeleteQuoteTemplate,
+  useQuoteSettings,
+  useQuoteTemplates,
+  useUpdateQuoteSettings,
+} from "@/hooks/api/crm/pricebooks";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { QUOTE_TEMPLATE_LAYOUT } from "@/lib/renderer/crm/settings/quote-template-layout";
 import type { QuoteTemplate } from "@/types/crm/pricebooks";
 
-function SettingsSkeleton() {
-  return (
-    <div className="space-y-5">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-40" />
-          <Skeleton className="h-9 w-full" />
-        </div>
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-28" />
-          <Skeleton className="h-9 w-full" />
-        </div>
-      </div>
-      <Skeleton className="h-16 w-full rounded-lg" />
-      <Skeleton className="h-16 w-full rounded-lg" />
-      <div className="flex justify-end">
-        <Skeleton className="h-9 w-28" />
-      </div>
-    </div>
-  );
-}
-
+/**
+ * Quoting rules, and the documents quotes are rendered into.
+ *
+ * The template list is generated. The settings form above it is not, and cannot
+ * be: quote settings are a singleton, and a `RecordLayout` has to declare list
+ * columns with a primary among them. There is no list of one settings record, so
+ * describing it would mean inventing a table nobody will ever see.
+ */
 export default function QuoteSettingsPage() {
-  const canManageTemplates = useCan("crm:pricebooks:manage");
+  const layout = useTenantLayout(QUOTE_TEMPLATE_LAYOUT);
+  const canManage = useCan("crm:pricebooks:manage");
+
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<QuoteTemplate | null>(null);
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<QuoteTemplate | null>(null);
 
-  const { data: settings, isLoading: settingsLoading } = useQuoteSettings();
+  const settings = useQuoteSettings();
   const updateSettings = useUpdateQuoteSettings();
-
   const {
-    data: templates,
+    data,
     isLoading: templatesLoading,
     isError: templatesError,
-    refetch: refetchTemplates,
-    access: templatesAccess,
+    refetch,
   } = useQuoteTemplates();
-  const createTemplate = useCreateQuoteTemplate();
-  const updateTemplate = useUpdateQuoteTemplate();
   const deleteTemplate = useDeleteQuoteTemplate();
 
-  const handleRetryTemplates = useCallback(() => { void refetchTemplates(); }, [refetchTemplates]);
+  const templates = useMemo(() => data ?? [], [data]);
 
   const handleSettingsSubmit = useCallback(
     (values: QuoteSettingsFormValues) => {
@@ -97,7 +69,7 @@ export default function QuoteSettingsPage() {
         },
         {
           onSuccess: () => toast.success("Quote settings saved"),
-          onError: (err) => toast.error(getErrorMessage(err)),
+          onError: (error) => toast.error(getErrorMessage(error)),
         },
       );
     },
@@ -109,235 +81,161 @@ export default function QuoteSettingsPage() {
     setSheetOpen(true);
   }, []);
 
-  const handleOpenEdit = useCallback((template: QuoteTemplate) => {
-    setEditTarget(template);
-    setSheetOpen(true);
-  }, []);
-
   const handleSheetOpenChange = useCallback((open: boolean) => {
     setSheetOpen(open);
     if (!open) setEditTarget(null);
   }, []);
 
-  const handleTemplateSubmit = useCallback(
-    (values: QuoteTemplateFormValues) => {
-      const payload = {
-        name: values.name,
-        isDefault: values.isDefault,
-        terms: values.terms || undefined,
-      };
-
-      if (editTarget) {
-        updateTemplate.mutate(
-          { id: editTarget.id, ...payload },
-          {
-            onSuccess: () => {
-              toast.success("Template updated");
-              setSheetOpen(false);
-              setEditTarget(null);
-            },
-            onError: (err) => toast.error(getErrorMessage(err)),
-          },
-        );
-      } else {
-        createTemplate.mutate(payload, {
-          onSuccess: () => {
-            toast.success("Template created");
-            setSheetOpen(false);
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        });
-      }
-    },
-    [editTarget, updateTemplate, createTemplate],
-  );
-
-  const handleDeleteRequest = useCallback((id: string) => setDeleteTargetId(id), []);
-  const handleDeleteCancel = useCallback(() => setDeleteTargetId(null), []);
-
-  const handleAlertOpenChange = useCallback((open: boolean) => {
-    if (!open) setDeleteTargetId(null);
+  const handleDeleteOpenChange = useCallback((open: boolean) => {
+    if (!open) setDeleteTarget(null);
   }, []);
 
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   const handleDeleteConfirm = useCallback(() => {
-    if (deleteTargetId === null) return;
-    deleteTemplate.mutate(deleteTargetId, {
+    if (!deleteTarget) return;
+    deleteTemplate.mutate(deleteTarget.id, {
       onSuccess: () => {
         toast.success("Template deleted");
-        setDeleteTargetId(null);
+        setDeleteTarget(null);
       },
-      onError: (err) => {
-        toast.error(getErrorMessage(err));
-        setDeleteTargetId(null);
+      onError: (error) => {
+        toast.error(getErrorMessage(error));
+        setDeleteTarget(null);
       },
     });
-  }, [deleteTemplate, deleteTargetId]);
+  }, [deleteTemplate, deleteTarget]);
 
-  const handleEditRow = useCallback(
-    (template: QuoteTemplate) => handleOpenEdit(template),
-    [handleOpenEdit],
+  const rowActions = useCallback(
+    (row: Record<string, unknown>) => {
+      const template = templates.find((candidate) => candidate.id === row.id);
+      if (!template || !canManage) return null;
+      return (
+        <RecordRowActions
+          editLabel={`Edit ${template.name}`}
+          deleteLabel={`Delete ${template.name}`}
+          onEdit={() => {
+            setEditTarget(template);
+            setSheetOpen(true);
+          }}
+          onDelete={() => setDeleteTarget(template)}
+        />
+      );
+    },
+    [templates, canManage],
   );
-
-  const handleDeleteRow = useCallback(
-    (id: string) => handleDeleteRequest(id),
-    [handleDeleteRequest],
-  );
-
-  const allTemplates = templates ?? [];
-  const templateFormValues = editTarget
-    ? templateValuesFromTemplate(editTarget)
-    : defaultTemplateValues;
-
-  const columns: DataTableColumn<QuoteTemplate>[] = [
-    {
-      key: "name",
-      header: "Name",
-      sortable: true,
-      sortValue: (t) => t.name,
-      cell: (t) => <span className="font-medium text-sm">{t.name}</span>,
-    },
-    {
-      key: "isDefault",
-      header: "Default",
-      cell: (t) =>
-        t.isDefault ? (
-          <Badge variant="outline" className="bg-primary/10 text-foreground border-primary/30">
-            Default
-          </Badge>
-        ) : (
-          <span className="text-muted-foreground text-xs">—</span>
-        ),
-    },
-    {
-      key: "terms",
-      header: "Terms & Conditions",
-      cell: (t) =>
-        t.terms ? (
-          <span className="text-xs text-muted-foreground truncate max-w-[300px] block">
-            {t.terms}
-          </span>
-        ) : (
-          <span className="text-muted-foreground text-xs">—</span>
-        ),
-    },
-    {
-      key: "actions",
-      header: "Actions",
-      headerClassName: "text-right",
-      className: "text-right",
-      cell: (t) => (
-        <div className="flex items-center justify-end gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleEditRow(t)}
-            aria-label="Edit template"
-          >
-            <Pencil className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleDeleteRow(t.id)}
-            className="text-destructive hover:text-destructive"
-            aria-label="Delete template"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      ),
-    },
-  ];
-
-  const isTemplatePending = createTemplate.isPending || updateTemplate.isPending;
 
   return (
-    <>
-      <AlertDialog open={deleteTargetId !== null} onOpenChange={handleAlertOpenChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Template</AlertDialogTitle>
-            <AlertDialogDescription>
-              This template will be permanently deleted and cannot be recovered.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleDeleteCancel}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleDeleteConfirm}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+    <PageWrapper
+      title="Quoting"
+      subtitle="How long a quote stands, how far a price may bend, and what the document looks like."
+      actions={
+        canManage ? (
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={16}
+            iconClassName="mr-1.5"
+            size="sm"
+            onClick={handleOpenCreate}
+          >
+            New template
+          </AnimatedIconButton>
+        ) : undefined
+      }
+    >
+      {!canManage ? (
+        <NoPermissionState
+          permission="crm:pricebooks:manage"
+          className="flex-1"
+          description="Quoting rules are set by your sales operations team."
+        />
+      ) : (
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-gap-section">
+          <section className={`${CONTENT_PANEL_SOLID} shrink-0 p-card-pad`}>
+            <h2 className="mb-3 text-sm font-semibold">Rules</h2>
+            {settings.isLoading ? (
+              <div className="flex flex-col gap-gap-toolbar">
+                <Skeleton className="h-9 w-full" />
+                <Skeleton className="h-16 w-full rounded-xl" />
+                <Skeleton className="h-16 w-full rounded-xl" />
+              </div>
+            ) : settings.isError ? (
+              <ErrorState
+                compact
+                title="Couldn't load quote settings"
+                description="The settings didn't load. Check your connection and try again."
+                onRetry={() => void settings.refetch()}
+              />
+            ) : (
+              <QuoteSettingsForm
+                settings={settings.data}
+                onSubmit={handleSettingsSubmit}
+                isPending={updateSettings.isPending}
+              />
+            )}
+          </section>
 
-      <QuoteTemplateFormSheet
+          <section className="flex min-h-0 flex-1 flex-col gap-gap-toolbar">
+            <h2 className="shrink-0 text-sm font-semibold">Templates</h2>
+            {templatesLoading ? (
+              <DataTableSkeleton
+                rows={6}
+                columns={layout.list.columns.length}
+                className="flex-1"
+              />
+            ) : templatesError ? (
+              <ErrorState
+                title="Couldn't load quote templates"
+                description="The template list didn't load. Check your connection and try again."
+                onRetry={handleRetry}
+                className="flex-1"
+              />
+            ) : templates.length === 0 ? (
+              <EmptyState
+                compact
+                illustrationPreset="documents"
+                title="No templates yet"
+                description="A template is the document a quote is rendered into — your letterhead, your terms, your layout."
+                action={{ label: "New template", onClick: handleOpenCreate }}
+                className="flex-1"
+              />
+            ) : (
+              <RecordList
+                layout={layout}
+                rows={asRecordValues(templates)}
+                getRowKey={(row) => String(row.id)}
+                actions={rowActions}
+                density="compact"
+                minWidth="720px"
+                className="flex-1 min-h-0"
+              />
+            )}
+          </section>
+        </div>
+      )}
+
+      <QuoteTemplateSheet
         open={sheetOpen}
         onOpenChange={handleSheetOpenChange}
-        editTarget={editTarget}
-        onSubmit={handleTemplateSubmit}
-        isPending={isTemplatePending}
-        initialValues={templateFormValues}
+        template={editTarget}
       />
 
-      <PageWrapper
-        title="Quote Settings"
-        subtitle="Configure quoting behavior and document templates"
-      >
-        <div className="bg-card border border-border rounded-xl p-4 mb-4">
-          <h2 className="text-sm font-semibold text-foreground mb-4">General Settings</h2>
-          {settingsLoading ? (
-            <SettingsSkeleton />
-          ) : (
-            <QuoteSettingsForm
-              settings={settings}
-              onSubmit={handleSettingsSubmit}
-              isPending={updateSettings.isPending}
-            />
-          )}
-        </div>
-
-        <div className="bg-card border border-border rounded-xl p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <h2 className="text-sm font-semibold text-foreground">Quote Templates</h2>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Reusable document templates for generating quotes
-              </p>
-            </div>
-            <Button size="sm" onClick={handleOpenCreate}>
-              <Plus className="h-4 w-4 mr-1.5" />
-              Add Template
-            </Button>
-          </div>
-          {templatesError ? (
-            <ErrorState
-              compact
-              title="Couldn't load quote templates"
-              description="The template list didn't load. Check your connection and try again."
-              onRetry={handleRetryTemplates}
-            />
-          ) : (
-            <DataTable
-              data={allTemplates}
-              columns={columns}
-              getRowKey={(t) => t.id}
-              isLoading={templatesLoading}
-              emptyState={
-                <EmptyState
-                  access={templatesAccess}
-                  compact
-                  title="No templates yet"
-                  description="A template is the document a quote is rendered into — your letterhead, terms and layout. Add one to send quotes that look like yours."
-                  action={canManageTemplates ? { label: "Add template", onClick: handleOpenCreate } : undefined}
-                />
-              }
-            />
-          )}
-        </div>
-      </PageWrapper>
-    </>
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={handleDeleteOpenChange}
+        title="Delete this template?"
+        description={
+          deleteTarget
+            ? `${deleteTarget.name} will be permanently deleted. Quotes already made from it keep the document they were rendered into. This cannot be undone.`
+            : ""
+        }
+        confirmLabel="Delete template"
+        destructive
+        isPending={deleteTemplate.isPending}
+        onConfirm={handleDeleteConfirm}
+      />
+    </PageWrapper>
   );
 }

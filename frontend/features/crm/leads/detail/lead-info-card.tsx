@@ -6,11 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CustomFieldsSection } from "@/features/crm/shared/custom-fields-section";
 import { MessagingPanel } from "@/features/crm/shared/messaging-panel";
 import { RecordDetail, RecordForm, type RecordFormValues } from "@/features/renderer";
-import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
+import { useLeadLayout } from "../use-lead-layout";
 import { useUpdateLead } from "@/hooks/api/leads";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { LEAD_LAYOUT } from "@/lib/renderer/crm/lead-layout";
 import type { Lead, LeadPriority, LeadSource, UpdateLeadInput } from "@/types/leads";
 import { toLeadRecord } from "../lead-record";
 
@@ -62,7 +61,7 @@ interface LeadInfoCardProps {
 }
 
 export function LeadInfoCard({ lead, entityId, isEditing, onEditingDone }: LeadInfoCardProps) {
-  const layout = useTenantLayout(LEAD_LAYOUT);
+  const layout = useLeadLayout();
   const money = useOrgDisplay();
   const updateLead = useUpdateLead();
   const record = useMemo(() => toLeadRecord(lead), [lead]);

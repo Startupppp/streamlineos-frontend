@@ -1,18 +1,40 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
-import Link from "next/link";
-import { Sparkles, ArrowRight } from "lucide-react";
-import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
-import { SearchInput } from "@/components/ui/search-input";
-import { Badge } from "@/components/ui/badge";
-import { EmptyState } from "@/components/ui/empty-state";
+import { useState, useCallback, useMemo, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { EmptyLeadsIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { DataTableSkeleton } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { SearchInput } from "@/components/ui/search-input";
+import { useLeadLayout } from "@/features/crm/leads/use-lead-layout";
+import { RecordList, asRecordValues, type RecordValue } from "@/features/renderer";
+import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
 import { useNLSearch, type NLSearchLead } from "@/hooks/api/ai";
+import { useOrgDisplay } from "@/hooks/api/org-display";
+import { formatMoney, type MoneyDisplay } from "@/lib/format-utils";
+import { withColumns } from "@/lib/renderer/layout-adjustment";
+import { cn } from "@/lib/utils";
+
+/**
+ * Leads, asked for in a sentence.
+ *
+ * The table this replaced was a third hand-written `DataTableColumn[]` over the
+ * same record, with its own `STATUS_BADGE` and `PRIORITY_BADGE` maps and its own
+ * `formatValue` that printed a hardcoded rupee sign in lakhs and crores — so an
+ * organisation billing in dirhams was told its pipeline was worth ₹4.2L. The
+ * columns, the badges and the currency now come from the shared description and
+ * the organisation's own display settings.
+ *
+ * What is genuinely this screen's own is the query box, the worked examples and
+ * the read-back of how the sentence was interpreted, which is the part that
+ * makes a natural-language search trustworthy rather than magic.
+ */
 
 const EXAMPLE_QUERIES = [
   "Hot leads not yet contacted",
@@ -21,163 +43,105 @@ const EXAMPLE_QUERIES = [
   "Cold leads from Mumbai",
 ];
 
-const STATUS_BADGE: Record<string, string> = {
-  NEW: "bg-status-info-surface text-status-info-ink border-status-info-rule",
-  CONTACTED: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
-  INTERESTED: "bg-status-info-surface text-status-info-ink border-status-info-rule",
-  QUALIFIED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
-  CONVERTED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
-  LOST: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
+const COLUMNS = [
+  "name",
+  "email",
+  "status",
+  "priority",
+  "potentialValue",
+  "source",
+  "city",
+] as const;
+
+const FILTER_LABELS: Record<string, string> = {
+  status: "Status",
+  priority: "Priority",
+  source: "Source",
+  city: "City",
+  minValue: "Min value",
+  maxValue: "Max value",
+  company: "Company",
+  nameSearch: "Name",
+  assignedToName: "Assigned to",
 };
 
-const PRIORITY_BADGE: Record<string, string> = {
-  HOT: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
-  WARM: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
-  COLD: "bg-status-info-surface text-status-info-ink border-status-info-rule",
-};
-
-function formatValue(val: number | null) {
-  if (val === null) return "—";
-  if (val >= 1_00_00_000) return `₹${(val / 1_00_00_000).toFixed(1)}Cr`;
-  if (val >= 1_00_000) return `₹${(val / 1_00_000).toFixed(1)}L`;
-  return `₹${val.toLocaleString("en-IN")}`;
+/**
+ * The search result in the shape the description names.
+ *
+ * The endpoint calls the money `value` and sends the owner as a flat `assignedTo`
+ * string; `LEAD_LAYOUT` calls them `potentialValue` and `assignedToName`,
+ * because that is what the lead endpoint sends everywhere else. Renaming them
+ * here is what lets one description drive this table too, instead of a second
+ * one that agrees with it until somebody edits one of them.
+ */
+function toSearchRecords(leads: readonly NLSearchLead[]): RecordValue[] {
+  return asRecordValues(
+    leads.map((lead) => ({
+      id: lead.id,
+      name: lead.name,
+      email: lead.email,
+      company: lead.company,
+      status: lead.status,
+      priority: lead.priority,
+      source: lead.source,
+      city: lead.city,
+      potentialValue: lead.value,
+      assignedToName: lead.assignedTo,
+    })),
+  );
 }
 
-function capitalize(s: string | null) {
-  if (!s) return "—";
-  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase().replace(/_/g, " ");
-}
-
-function FilterBadges({ filters }: { filters: Record<string, unknown> }) {
-  const entries = Object.entries(filters).filter(([, v]) => {
-    if (v === null || v === undefined) return false;
-    if (Array.isArray(v)) return v.length > 0;
+function FilterBadges({
+  filters,
+  money,
+}: {
+  filters: Record<string, unknown>;
+  money: MoneyDisplay;
+}) {
+  const entries = Object.entries(filters).filter(([, value]) => {
+    if (value === null || value === undefined) return false;
+    if (Array.isArray(value)) return value.length > 0;
     return true;
   });
 
-  if (!entries.length) return null;
+  if (entries.length === 0) return null;
 
-  const labelMap: Record<string, string> = {
-    status: "Status",
-    priority: "Priority",
-    source: "Source",
-    city: "City",
-    minValue: "Min Value",
-    maxValue: "Max Value",
-    company: "Company",
-    nameSearch: "Name",
-    assignedToName: "Assigned To",
-  };
-
-  const format = (key: string, val: unknown): string => {
-    if (key === "minValue" || key === "maxValue") return formatValue(Number(val));
-    if (Array.isArray(val)) return (val as unknown[]).join(", ");
-    return String(val);
+  const format = (key: string, value: unknown): string => {
+    if (key === "minValue" || key === "maxValue") return formatMoney(Number(value), money);
+    if (Array.isArray(value)) return (value as unknown[]).join(", ");
+    return String(value);
   };
 
   return (
     <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-      <span className="text-dense text-muted-foreground font-medium">Interpreted as:</span>
-      {entries.map(([key, val]) => (
-        <Badge key={key} variant="outline" className="text-micro gap-1 h-5 px-2">
-          <span className="text-muted-foreground">{labelMap[key] ?? key}:</span>
-          <span className="font-medium">{format(key, val)}</span>
+      <span className="text-dense font-medium text-muted-foreground">Interpreted as:</span>
+      {entries.map(([key, value]) => (
+        <Badge key={key} variant="outline" className="h-5 gap-1 px-2 text-micro">
+          <span className="text-muted-foreground">{FILTER_LABELS[key] ?? key}:</span>
+          <span className="font-medium">{format(key, value)}</span>
         </Badge>
       ))}
     </div>
   );
 }
 
-const COLUMNS: DataTableColumn<NLSearchLead>[] = [
-  {
-    key: "name",
-    header: "Name",
-    cell: (lead) => (
-      <div className="min-w-0">
-        <Link
-          href={`/crm/leads/${lead.id}`}
-          className="font-medium text-primary hover:underline transition-colors block truncate max-w-[160px]"
-        >
-          {lead.name}
-        </Link>
-        {lead.email && (
-          <p className="text-micro text-muted-foreground mt-0.5 break-all">{lead.email}</p>
-        )}
-      </div>
-    ),
-    sortable: true,
-    sortValue: (lead) => lead.name,
-  },
-  {
-    key: "company",
-    header: "Company",
-    cell: (lead) => (
-      <span className="text-muted-foreground block truncate max-w-[120px]">{lead.company ?? "—"}</span>
-    ),
-  },
-  {
-    key: "status",
-    header: "Status",
-    cell: (lead) => (
-      <Badge
-        variant="outline"
-        className={cn("text-micro px-1.5 py-0 h-4", STATUS_BADGE[lead.status] ?? "")}
-      >
-        {capitalize(lead.status)}
-      </Badge>
-    ),
-  },
-  {
-    key: "priority",
-    header: "Priority",
-    cell: (lead) =>
-      lead.priority ? (
-        <Badge
-          variant="outline"
-          className={cn("text-micro px-1.5 py-0 h-4", PRIORITY_BADGE[lead.priority] ?? "")}
-        >
-          {capitalize(lead.priority)}
-        </Badge>
-      ) : (
-        <span className="text-muted-foreground">—</span>
-      ),
-  },
-  {
-    key: "value",
-    header: "Value",
-    headerClassName: "text-right",
-    className: "text-right font-mono tabular-nums",
-    cell: (lead) => formatValue(lead.value),
-    sortable: true,
-    sortValue: (lead) => lead.value ?? 0,
-  },
-  {
-    key: "source",
-    header: "Source",
-    cell: (lead) => (
-      <span className="text-muted-foreground capitalize">
-        {lead.source ? lead.source.replace(/_/g, " ") : "—"}
-      </span>
-    ),
-  },
-  {
-    key: "city",
-    header: "City",
-    cell: (lead) => (
-      <span className="text-muted-foreground">{lead.city ?? "—"}</span>
-    ),
-  },
-];
-
 export default function SmartLeadSearchPage() {
+  const router = useRouter();
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const { mutate, data, isPending, isError, reset } = useNLSearch();
 
+  const leadLayout = useLeadLayout();
+  const layout = useMemo(() => withColumns(leadLayout, COLUMNS), [leadLayout]);
+  const money = useOrgDisplay();
+  const [density, setDensity] = useDensity();
+
+  const rows = useMemo(() => toSearchRecords(data?.leads ?? []), [data]);
+
   const handleSearch = useCallback(() => {
-    const q = inputValue.trim();
-    if (!q) return;
-    mutate(q);
+    const query = inputValue.trim();
+    if (!query) return;
+    mutate(query);
   }, [inputValue, mutate]);
 
   const handleChipClick = useCallback(
@@ -189,9 +153,9 @@ export default function SmartLeadSearchPage() {
   );
 
   const handleChipButtonClick = useCallback(
-    (e: React.MouseEvent<HTMLButtonElement>) => {
-      const q = e.currentTarget.dataset.query;
-      if (q) handleChipClick(q);
+    (event: React.MouseEvent<HTMLButtonElement>) => {
+      const query = event.currentTarget.dataset.query;
+      if (query) handleChipClick(query);
     },
     [handleChipClick],
   );
@@ -202,37 +166,36 @@ export default function SmartLeadSearchPage() {
     inputRef.current?.focus();
   }, [reset]);
 
-  const handleInputChange = useCallback((value: string) => {
-    setInputValue(value);
-  }, []);
+  const handleInputChange = useCallback((value: string) => setInputValue(value), []);
 
   const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter") handleSearch();
+    (event: React.KeyboardEvent<HTMLInputElement>) => {
+      if (event.key === "Enter") handleSearch();
     },
     [handleSearch],
   );
 
-  const handleRetry = useCallback(() => {
-    handleSearch();
-  }, [handleSearch]);
+  const handleRowClick = useCallback(
+    (row: RecordValue) => router.push(`/crm/leads/${String(row.id)}`),
+    [router],
+  );
 
   const hasResult = !!data;
 
   return (
     <PageWrapper
-      title="Smart Lead Search"
+      title="Smart lead search"
       subtitle='Search leads using natural language — "hot leads from Mumbai above 5L"'
       badge={
         <Badge variant="outline" className="gap-1.5 text-xs">
           <Sparkles className="h-3 w-3 text-primary" />
-          AI-Powered
+          AI-powered
         </Badge>
       }
     >
-      <div className="flex flex-1 min-h-0 flex-col space-y-4">
-        <div className="space-y-3 rounded-lg bg-muted/40 p-3">
-          <div className="flex flex-col sm:flex-row gap-2">
+      <div className="flex min-h-0 flex-1 flex-col gap-4">
+        <div className="flex flex-col gap-3 rounded-lg bg-muted/40 p-3">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <SearchInput
               ref={inputRef}
               className="flex-1"
@@ -246,12 +209,12 @@ export default function SmartLeadSearchPage() {
             <Button
               onClick={handleSearch}
               disabled={!inputValue.trim() || isPending}
-              className="gap-1.5 w-full sm:w-auto"
+              className="w-full gap-1.5 sm:w-auto"
             >
               {isPending ? (
                 <>
-                  <span className="h-3 w-3 rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground animate-spin" />
-                  Searching...
+                  <span className="h-3 w-3 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" />
+                  Searching…
                 </>
               ) : (
                 <>
@@ -260,23 +223,24 @@ export default function SmartLeadSearchPage() {
                 </>
               )}
             </Button>
+            {hasResult ? <DensityToggle density={density} onChange={setDensity} /> : null}
           </div>
 
           <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-            {EXAMPLE_QUERIES.map((q) => (
+            {EXAMPLE_QUERIES.map((query) => (
               <button
-                key={q}
+                key={query}
                 type="button"
-                data-query={q}
+                data-query={query}
                 onClick={handleChipButtonClick}
                 className={cn(
                   "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-colors",
-                  "border-border text-muted-foreground hover:border-primary hover:text-primary hover:bg-primary/5",
-                  inputValue === q && "border-primary text-primary bg-primary/5",
+                  "border-border text-muted-foreground hover:border-primary hover:bg-primary/5 hover:text-primary",
+                  inputValue === query && "border-primary bg-primary/5 text-primary",
                 )}
               >
                 <ArrowRight className="h-3 w-3" />
-                {q}
+                {query}
               </button>
             ))}
           </div>
@@ -285,67 +249,71 @@ export default function SmartLeadSearchPage() {
         {isError ? (
           <ErrorState
             title="Search failed"
-            description="Failed to complete the search. Please try again."
-            onRetry={handleRetry}
-            className="flex-1"
+            description="The search didn't complete. Check your connection and try again."
+            onRetry={handleSearch}
+            className={CONTENT_FILL_PANEL}
           />
         ) : isPending ? (
-          <DataTable
-            data={[]}
-            columns={COLUMNS}
-            getRowKey={(lead) => lead.id}
-            isLoading={true}
-            minWidth="700px"
-            className="flex-1 min-h-0"
-          />
-        ) : hasResult ? (
-          <div className="flex flex-1 min-h-0 flex-col space-y-4">
-            <FilterBadges filters={data.parsedFilters} />
-            <p className="text-dense text-muted-foreground">
-              <span className="font-semibold text-foreground tabular-nums">{data.total}</span>{" "}
-              {data.total === 1 ? "result" : "results"} found
-            </p>
-            <DataTable
-              data={data.leads}
-              columns={COLUMNS}
-              getRowKey={(lead) => lead.id}
-              minWidth="700px"
-              className="flex-1 min-h-0"
-              emptyState={
-                <EmptyState
-                  illustration={<EmptyLeadsIllustration />}
-                  title="No leads match your search"
-                  description="Try adjusting your query or use different keywords."
-                  className="border-0 bg-transparent"
-                />
-              }
-            />
-          </div>
-        ) : (
-          <div className="flex flex-1 flex-col items-center justify-center text-center gap-4">
+          <DataTableSkeleton rows={10} columns={layout.list.columns.length} className="flex-1" />
+        ) : !hasResult ? (
+          /*
+            Not one of the four empty states, and deliberately not dressed as
+            one: nothing is missing and nothing failed — no question has been
+            asked yet. Telling somebody "no leads found" before they have
+            searched would be the product answering a question nobody put to it.
+          */
+          <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
             <div className="rounded-full bg-muted p-5">
               <Sparkles className="h-10 w-10 text-muted-foreground" />
             </div>
-            <div className="space-y-1">
-              <h3 className="font-semibold text-base">Ask anything about your leads</h3>
-              <p className="text-muted-foreground text-sm max-w-sm">
-                Use plain English to search leads by status, priority, city, value, source, and more.
+            <div className="flex flex-col gap-1">
+              <h3 className="text-base font-semibold">Ask anything about your leads</h3>
+              <p className="max-w-sm text-sm text-muted-foreground">
+                Use plain English to search leads by status, priority, city, value, source, and
+                more.
               </p>
             </div>
-            <div className="flex flex-col gap-2 items-start mt-2">
-              {EXAMPLE_QUERIES.map((q) => (
+            <div className="mt-2 flex flex-col items-start gap-2">
+              {EXAMPLE_QUERIES.map((query) => (
                 <button
-                  key={q}
+                  key={query}
                   type="button"
-                  data-query={q}
+                  data-query={query}
                   onClick={handleChipButtonClick}
-                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors group"
+                  className="group flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary"
                 >
-                  <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
-                  {q}
+                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                  {query}
                 </button>
               ))}
             </div>
+          </div>
+        ) : rows.length === 0 ? (
+          <EmptyState
+            illustration={<EmptyLeadsIllustration />}
+            title="No leads match your search"
+            description={`Nothing came back for "${data.query}". Try describing the lead differently, or widen the range.`}
+            action={{ label: "Clear search", onClick: handleClear }}
+            actionVariant="outline"
+            className={CONTENT_FILL_PANEL}
+          />
+        ) : (
+          <div className="flex min-h-0 flex-1 flex-col gap-4">
+            <FilterBadges filters={data.parsedFilters} money={money} />
+            <p className="text-dense text-muted-foreground">
+              <span className="font-semibold tabular-nums text-foreground">{data.total}</span>{" "}
+              {data.total === 1 ? "result" : "results"} found
+            </p>
+            <RecordList
+              layout={layout}
+              rows={rows}
+              getRowKey={(row) => String(row.id)}
+              onRowClick={handleRowClick}
+              density={density}
+              money={money}
+              minWidth="960px"
+              className={CONTENT_FILL_PANEL}
+            />
           </div>
         )}
       </div>

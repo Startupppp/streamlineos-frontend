@@ -71,7 +71,7 @@ interface ReorderAssignmentRulesInput {
   ruleIds: number[];
 }
 
-interface ScoringRule {
+export interface ScoringRule {
   id: number;
   orgId: string;
   field: string;
@@ -88,7 +88,7 @@ interface CreateScoringRuleInput {
   points: number;
 }
 
-interface UpdateScoringRuleInput {
+export interface UpdateScoringRuleInput {
   id: number;
   field?: string;
   operator?: string;
@@ -163,7 +163,7 @@ export function useReorderAssignmentRules() {
   });
 }
 
-interface EmailTemplate {
+export interface EmailTemplate {
   id: number;
   orgId: string;
   name: string;
@@ -179,7 +179,7 @@ interface CreateEmailTemplateInput {
   body: string;
 }
 
-interface UpdateEmailTemplateInput {
+export interface UpdateEmailTemplateInput {
   id: number;
   name?: string;
   subject?: string;
@@ -283,7 +283,7 @@ export function useDeleteScoringRule() {
   });
 }
 
-interface SlaPolicy {
+export interface SlaPolicy {
   id: number;
   orgId: string;
   name: string;
@@ -309,7 +309,7 @@ interface SlaBreachedLead {
   slaDeadline: string | null;
 }
 
-interface CreateSlaPolicyInput {
+export interface CreateSlaPolicyInput {
   name: string;
   appliesTo: "lead" | "deal" | "both";
   priority: "low" | "medium" | "high" | "urgent";
@@ -317,7 +317,7 @@ interface CreateSlaPolicyInput {
   resolutionHours: number;
 }
 
-interface UpdateSlaPolicyInput {
+export interface UpdateSlaPolicyInput {
   id: number;
   name?: string;
   appliesTo?: "lead" | "deal" | "both";

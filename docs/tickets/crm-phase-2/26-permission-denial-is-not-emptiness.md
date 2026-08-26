@@ -1,6 +1,6 @@
 # 26 — A user who cannot see a list is told it is empty
 
-**Status:** done — `usePermissionGate` carries the verdict with the read, `EmptyState` renders the refusal, 89 hooks across 22 files (7 more than the ticket measured).
+**Status:** not started — deliberately. It wants someone who can run the app and watch a denied surface render as an empty one; this cannot be shown by a unit test, and claiming it done from a fixture would be the exact failure the ticket describes.
 **Track:** E — discovered by the empty-state pass
 **Blocked by:** —
 

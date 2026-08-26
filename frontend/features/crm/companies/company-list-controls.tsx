@@ -11,8 +11,9 @@ import { Checkbox } from "@/components/ui/checkbox";
  *
  * They live outside the description because what a row may do depends on the
  * caller's permissions, which is a property of the person rather than of the
- * record. The merge checkbox sits in the trailing actions cell because
- * `RecordList` does not forward `DataTable`'s leading `selection` column.
+ * record. The merge checkbox sits in the trailing actions cell rather than in
+ * `DataTable`'s leading `selection` column — which `RecordList` does forward —
+ * because that column carries a select-all header and merge takes exactly two.
  */
 
 export interface CompanyRowActionsProps {

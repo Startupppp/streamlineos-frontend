@@ -231,7 +231,7 @@ export const CRM_NAV_GROUPS: NavGroup[] = [
             label: "Record Layouts",
             icon: Rows3,
             href: "/crm/settings/layouts",
-            requiredPermission: "settings:manage",
+            requiredPermission: "crm:settings:view",
           },
           {
             label: "Automations",

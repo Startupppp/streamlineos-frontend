@@ -38,27 +38,6 @@ export interface LayoutProposal {
   readonly hiding: readonly string[];
 }
 
-function isFilled(value: unknown): boolean {
-  if (value === null || value === undefined) return false;
-  if (typeof value === "string") return value.trim() !== "";
-  if (Array.isArray(value)) return value.length > 0;
-  return true;
-}
-
-/**
- * Reads the sample and proposes an arrangement, or nothing.
- *
- * Two rules, both deliberately blunt:
- *
- * A field **no record has ever carried a value for** is proposed hidden. Not a
- * threshold — a field used in one record in a hundred is used, and hiding it
- * would cost that one record its data being visible. "Nobody has ever put
- * anything here" is the only signal strong enough to act on without asking.
- *
- * The rest are ordered by how often they are filled, with the title field pinned
- * first. A list whose first column is not the record's name reads as a
- * spreadsheet, and no amount of evidence about fill rates changes that.
- */
 /**
  * Reads how often each field is filled and proposes an arrangement, or nothing.
  *
@@ -118,19 +97,4 @@ export function proposeFromFill(
     usage: ranked,
     hiding,
   };
-}
-
-/** The same rules, counted here, for a sample already in hand. */
-export function proposeAdjustment(
-  layout: RecordLayout,
-  rows: readonly Record<string, unknown>[],
-): LayoutProposal | null {
-  const filledByField: Record<string, number> = {};
-  for (const field of layout.fields)
-    filledByField[field.name] = rows.reduce(
-      (count, row) => (isFilled(row[field.name]) ? count + 1 : count),
-      0,
-    );
-
-  return proposeFromFill(layout, rows.length, filledByField);
 }

@@ -1,16 +1,19 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
-import { TruncatedText } from "@/components/ui/truncated-text";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { RecordList } from "@/features/renderer";
+import { useLeadLayout } from "@/features/crm/leads/use-lead-layout";
+import { withColumns } from "@/lib/renderer/layout-adjustment";
+import { CAMPAIGN_LAYOUT } from "@/lib/renderer/crm/campaign-layout";
+import { useOrgDisplay } from "@/hooks/api/org-display";
 import { EmptyState } from "@/components/ui/empty-state";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import {
@@ -20,64 +23,25 @@ import {
   useFirstTouchAttribution,
   useLastTouchAttribution,
 } from "@/hooks/api/crm/campaigns";
-import { formatCurrency } from "@/features/crm/reports/lib/types";
+import { formatMoney } from "@/lib/format-utils";
+import { type FieldTone, fieldByName, toneForSignedValue } from "@/lib/renderer/layout";
+import type { StatTone } from "@/components/ui/stat-card";
 
 const AttributionChart = dynamic(
   () => import("./attribution-chart").then((m) => ({ default: m.AttributionChart })),
   { ssr: false, loading: () => <Skeleton className="h-[280px] w-full" /> },
 );
 
-interface CampaignLeadItem {
-  id?: string | number;
-  name?: string;
-  clientName?: string;
-  status?: string;
-  source?: string;
-}
-
-function getString(val: unknown): string {
-  return typeof val === "string" ? val : typeof val === "number" ? String(val) : "—";
-}
-
-function toCampaignLeadItem(raw: unknown): CampaignLeadItem {
-  if (typeof raw !== "object" || raw === null) return {};
-  const r = raw as Record<string, unknown>;
-  return {
-    id: typeof r.id === "string" || typeof r.id === "number" ? r.id : undefined,
-    name: typeof r.name === "string" ? r.name : undefined,
-    clientName: typeof r.clientName === "string" ? r.clientName : undefined,
-    status: typeof r.status === "string" ? r.status : undefined,
-    source: typeof r.source === "string" ? r.source : undefined,
-  };
-}
-
-const leadColumns: DataTableColumn<CampaignLeadItem & { _idx: number }>[] = [
-  {
-    key: "name",
-    header: "Name",
-    cell: (row) => (
-      <TruncatedText text={getString(row.name ?? row.clientName)} className="text-dense font-medium max-w-[140px]" />
-    ),
-  },
-  {
-    key: "status",
-    header: "Status",
-    cell: (row) => (
-      <span className="text-dense capitalize text-muted-foreground">
-        {getString(row.status).toLowerCase()}
-      </span>
-    ),
-  },
-  {
-    key: "source",
-    header: "Source",
-    cell: (row) => (
-      <span className="text-dense capitalize text-muted-foreground">
-        {getString(row.source).replace(/_/g, " ")}
-      </span>
-    ),
-  },
-];
+/**
+ * The columns this panel shows of a lead.
+ *
+ * A narrowing of the lead description rather than a second one. The endpoint
+ * sends a whole lead — `getCampaignLeads` projects sixteen fields — and the old
+ * table declared three of them by hand, which is how an embedded panel and its
+ * own record type drift apart. `withColumns` keeps one description and frames
+ * it; a status the leads list starts toning is toned here on the same day.
+ */
+const PANEL_COLUMNS = ["name", "status", "source", "potentialValue"] as const;
 
 interface CampaignDetailPageProps {
   campaignId: number;
@@ -87,11 +51,18 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
   const [leadsPage, setLeadsPage] = useState(1);
   const [attributionTab, setAttributionTab] = useState<"first-touch" | "last-touch">("first-touch");
 
+  const money = useOrgDisplay();
+  const leadLayout = useLeadLayout();
+  const leadPanelLayout = useMemo(
+    () => withColumns(leadLayout, PANEL_COLUMNS),
+    [leadLayout],
+  );
+
   const { data: listData, isLoading: listLoading } = useCampaigns({ limit: 200 });
   const campaign = listData?.items.find((c) => c.id === campaignId);
 
   const { data: roi, isLoading: roiLoading } = useCampaignRoi(campaignId);
-  const { data: leadsData, isLoading: leadsLoading, access: leadsAccess } = useCampaignLeads(campaignId, {
+  const { data: leadsData, isLoading: leadsLoading } = useCampaignLeads(campaignId, {
     page: leadsPage,
     limit: 20,
   });
@@ -121,15 +92,26 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
   const roiValue = roi?.roi ?? parseFloat(campaign?.roi ?? "0");
   const roiDisplay = isNaN(roiValue) ? "—" : `${roiValue.toFixed(1)}%`;
 
+  /*
+    The tile's tone comes from the campaign description saying ROI is a gain,
+    not from a comparison written here. The hand-written version of this line
+    was one of two colour rules on this screen that disagreed about zero.
+  */
+  const roiToneByFieldTone: Record<FieldTone, StatTone> = {
+    success: "emerald",
+    danger: "red",
+    neutral: "default",
+    warning: "amber",
+    info: "blue",
+  };
+  const roiTone: StatTone =
+    roiToneByFieldTone[toneForSignedValue(fieldByName(CAMPAIGN_LAYOUT, "roi")!, roiValue) ?? "neutral"];
+
   const attributionData = attributionTab === "first-touch" ? (firstTouch ?? []) : (lastTouch ?? []);
   const attributionLoading = attributionTab === "first-touch" ? firstLoading : lastLoading;
 
   const totalLeads = leadsData?.total ?? 0;
-
-  const indexedLeads = (leadsData?.items ?? []).map((raw, i) => ({
-    ...toCampaignLeadItem(raw),
-    _idx: i,
-  }));
+  const leadRows = (leadsData?.items ?? []) as Record<string, unknown>[];
 
   return (
     <PageWrapper
@@ -160,14 +142,10 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
                 <StatCard label="Converted" value={roi?.converted ?? "—"} tone="emerald" />
                 <StatCard
                   label="Revenue"
-                  value={roi?.revenueCents ? formatCurrency(Math.round(roi.revenueCents / 100)) : "—"}
+                  value={roi?.revenueCents ? formatMoney(roi.revenueCents / 100, money) : "—"}
                   tone="amber"
                 />
-                <StatCard
-                  label="ROI"
-                  value={roiDisplay}
-                  tone={roiValue > 0 ? "emerald" : roiValue < 0 ? "red" : "default"}
-                />
+                <StatCard label="ROI" value={roiDisplay} tone={roiTone} />
               </>
             )}
           </StatCardGrid>
@@ -204,14 +182,14 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
                 <span className="text-xs text-muted-foreground">{totalLeads} total</span>
               </div>
             </CardHeader>
-            <DataTable
-              data={indexedLeads}
-              columns={leadColumns}
-              getRowKey={(row) => String(row.id ?? row._idx)}
+            <RecordList
+              layout={leadPanelLayout}
+              rows={leadRows}
+              getRowKey={(row, index) => String(row.id ?? index)}
               isLoading={leadsLoading}
+              money={money}
               emptyState={
                 <EmptyState
-                  access={leadsAccess}
                   compact
                   title="No leads from this campaign yet"
                   description="Leads tagged with this campaign appear here, so you can see what the spend returned."
