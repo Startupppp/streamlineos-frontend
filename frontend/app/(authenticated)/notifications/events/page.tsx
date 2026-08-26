@@ -437,7 +437,7 @@ function EventRow({
               className="w-7 opacity-0 group-hover:opacity-100 transition-opacity"
               onClick={handleSendTestClick}
               disabled={sending}
-              title="Send test to me"
+              aria-label="Send test to me"
               {...sendAnim.hoverHandlers}
             >
               <SendIcon

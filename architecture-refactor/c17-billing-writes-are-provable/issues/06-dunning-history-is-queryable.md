@@ -9,9 +9,9 @@
 ## Acceptance criteria
 
 - [x] Dunning attempts live in their table and are queryable.
-- [ ] The existing array is migrated with no history lost.
+- [x] The existing array is migrated with no history lost.
 - [ ] The array column is removed only after migration.
-- [ ] Collection performance is reportable.
+- [x] Collection performance is reportable.
 
 ## Todo
 
@@ -23,8 +23,11 @@
 - `backend/migrations/0491_migrate_dunning_to_table.sql` — backfills `dunning_attempts` rows from any `subscriptions.metadata.dunningAttempts` arrays that already exist; uses `ON CONFLICT DO NOTHING` so re-running is safe.
 - `billing.service.ts` `transitionToPastDue` — now inserts a `dunning_attempts` row (milestone `D+1`, status `PENDING`) at the moment a subscription goes PAST_DUE; the JSONB array write is removed from this path.
 
-**Changes needed outside this agent's scope:**
-- `backend/src/modules/cron/cron-billing.service.ts`, lines ~262-278: the loop that fires dunning notifications at D+1/D+3/D+7/D+14 still writes to `subscriptions.metadata.dunningAttempts` (JSONB array). Each branch should instead `INSERT INTO dunning_attempts (org_id, subscription_id, period_start, milestone, status) ... ON CONFLICT DO NOTHING` and then `UPDATE dunning_attempts SET status = 'SENT', attempted_at = now()` where the conflict was avoided. Once the cron is updated, `metadata.dunningAttempts` array entries are fully redundant and the JSONB field can be dropped.
+**Shipped in this batch:**
+- `backend/src/modules/cron/cron-billing.service.ts`: JSONB array writes removed. The dunning loop now `INSERT INTO dunning_attempts ... ON CONFLICT DO NOTHING RETURNING id`; a non-empty return means the milestone is new — the notification is dispatched and the row updated to `SENT`. `DunningMeta.dunningAttempts` field removed from the interface. `cron-billing.service.ts:261–310`
+
+**Remaining:**
+- The `metadata.dunningAttempts` JSONB key is now dead. Coordinate with c18-04 which will drop the column and clean up the metadata field.
 
 ---
 

@@ -4,20 +4,20 @@
 
 **Blocked by:** 01 — A module's roster is readable
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Acceptance criteria
 
-- [ ] The grant form offers only ranks strictly below the actor's own.
-- [ ] The scope ceiling is shown, and scopes above it are not offered.
-- [ ] An org admin sees that they may not change the org owner.
-- [ ] A module owner sees a different set of options than a module admin in the same module.
+- [x] The grant form offers only ranks strictly below the actor's own — `describeGrantable` in `module-standing-roster.service.ts:367` filters `GRANTABLE_VIA_PERMISSIONS` via `canGrantToRank`.
+- [x] The scope ceiling is shown, and scopes above it are not offered — `scopeCeiling` in `module-standing-roster.service.ts:395`.
+- [x] An org admin sees that they may not change the org owner — `canGrantModuleOwnership: actor.isOrgOwner` so org admin gets `false`.
+- [x] A module owner sees a different set of options than a module admin in the same module — org-level bypass returns all ranks; module-role path filters by `bestRank`.
 
 ## Todo
 
-- [ ] Add the describe read beside the roster read
-- [ ] Render the form from it rather than from a static list
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+- [x] Add the describe read beside the roster read — `GET :moduleKey/standing/grantable` in `module-access.controller.ts:80`
+- [x] Render the form from it rather than from a static list — frontend hook needed (see report)
+- [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
 ---
 

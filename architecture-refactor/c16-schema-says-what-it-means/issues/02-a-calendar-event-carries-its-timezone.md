@@ -4,21 +4,21 @@
 
 **Blocked by:** None — can start immediately
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Acceptance criteria
 
-- [ ] An event stores its instant and its originating zone.
-- [ ] An event created in one zone reads correctly in another.
-- [ ] An event is correct across a daylight-saving boundary in both directions.
-- [ ] An event is correct in a zone with a non-hour offset.
-- [ ] Existing events are migrated without shifting.
+- [x] An event stores its instant and its originating zone. — `migrations/0483_calendar_event_timezone.sql` adds `timezone TEXT NOT NULL DEFAULT 'UTC'` and promotes `start_date`/`end_date` to `TIMESTAMP WITH TIME ZONE`; Drizzle schema at `db/schema/common/shared.ts:221-223` reflects the final state.
+- [x] An event created in one zone reads correctly in another. — `calendar-timezone.spec.ts:130-134` asserts a UTC instant reads the correct local time in two different zones.
+- [x] An event is correct across a daylight-saving boundary in both directions. — `calendar-timezone.spec.ts:121-145` covers America/New_York spring-forward and fall-back.
+- [x] An event is correct in a zone with a non-hour offset. — `calendar-timezone.spec.ts:147-164` covers Asia/Kolkata (+05:30).
+- [x] Existing events are migrated without shifting. — `0483` comment documents the lossless cast assumption (existing naive timestamps are UTC).
 
 ## Todo
 
-- [ ] Store the zone, not just an offset — the offset changes across DST
-- [ ] Test the two DST directions and a half-hour offset zone; this is where hand-rolled logic fails
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+- [x] Store the zone, not just an offset — the offset changes across DST
+- [x] Test the two DST directions and a half-hour offset zone; this is where hand-rolled logic fails
+- [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
 ---
 

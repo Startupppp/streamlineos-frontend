@@ -8,9 +8,9 @@ Five `SECURITY DEFINER` id probes exist, each with one caller and the bounded fa
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 01 | [The three missing probes exist](issues/01-the-three-missing-probes-exist.md) | — | ready-for-agent |
-| 02 | [Global search uses the probes](issues/02-global-search-uses-the-probes.md) | 01 | ready-for-agent |
-| 03 | [The comment that says otherwise is corrected](issues/03-the-comment-that-says-otherwise-is-corrected.md) | 02 | ready-for-agent |
+| 01 | [The three missing probes exist](issues/01-the-three-missing-probes-exist.md) | — | done |
+| 02 | [Global search uses the probes](issues/02-global-search-uses-the-probes.md) | 01 | done |
+| 03 | [The comment that says otherwise is corrected](issues/03-the-comment-that-says-otherwise-is-corrected.md) | 02 | done |
 
 ## Working these
 

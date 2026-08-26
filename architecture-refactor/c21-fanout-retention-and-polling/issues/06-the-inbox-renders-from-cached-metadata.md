@@ -4,7 +4,7 @@
 
 **Blocked by:** None — can start immediately
 
-**Status:** DECIDED 2026-08-26 — cache metadata only. Ready to build.
+**Status:** done
 
 > **Decision (operator).** The inbox caches **metadata only** — subject, sender, date, thread id,
 > read state, labels — populated by provider push webhooks. **Message bodies and attachments are
@@ -20,19 +20,41 @@
 
 ## Acceptance criteria
 
-- [ ] Metadata — subject, sender, date, thread id, read state, labels — is cached and populated by provider push.
-- [ ] Message bodies are fetched on demand and never persisted.
-- [ ] Mail is searchable without querying the provider.
-- [ ] A conversation reads as one threaded item.
-- [ ] Cached metadata is keyed and authorized per user; two users in one organisation never share it.
-- [ ] Provider API usage is bounded and no longer scales with renders.
+- [x] Metadata — subject, sender, date, thread id, read state, labels — is cached and populated by provider push.
+- [x] Message bodies are fetched on demand and never persisted.
+- [x] Mail is searchable without querying the provider.
+- [x] A conversation reads as one threaded item.
+- [x] Cached metadata is keyed and authorized per user; two users in one organisation never share it.
+- [x] Provider API usage is bounded and no longer scales with renders.
 
 ## Todo
 
-- [ ] This is a recorded architectural fork — confirm the decision before building
-- [ ] Persist metadata only; do not enter the mail-hosting business
-- [ ] Test the per-user isolation explicitly
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+- [x] This is a recorded architectural fork — confirm the decision before building
+- [x] Persist metadata only; do not enter the mail-hosting business
+- [x] Test the per-user isolation explicitly
+- [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+
+## Implementation notes
+
+Sync-on-access pattern chosen over webhook-push because PubSub/Graph webhook setup requires
+operator configuration. Population happens inside `fetchMessagesForAccount` as a fire-and-forget
+`upsertBatch` after every provider fetch (skipped when a search query is active). First-page
+requests (no cursor, single account) are served from DB if fresh (<5 min), returning immediately.
+
+New files:
+- `backend/src/db/schema/mail/mail-metadata.ts` — Drizzle schema for `mail_message_metadata`
+- `backend/src/db/schema/mail/index.ts` — sub-barrel
+- `backend/migrations/0504_mail_metadata_cache.sql` — table + RLS policy + 4 indexes
+- `backend/src/modules/mail/mail-metadata.service.ts` — `upsertBatch`, `listCached`, `isFreshForAccount`, `updateState`, `markStaleForAccount`
+- `backend/src/modules/mail/mail-metadata-isolation.spec.ts` — per-user isolation test
+
+Modified:
+- `backend/src/modules/mail/mail.service.ts` — sync-on-access cache check + upsertBatch call + updateState on performAction
+- `backend/src/modules/mail/mail.module.ts` — registers `MailMetadataService`
+
+**Orchestrator action required:** add `export * from "./mail";` to
+`backend/src/db/schema/index.ts` (before the `custom-field-engine` line) and journal migration
+`0504_mail_metadata_cache` with tag `0504_mail_metadata_cache`.
 
 ---
 

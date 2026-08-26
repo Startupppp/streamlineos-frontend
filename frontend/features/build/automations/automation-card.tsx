@@ -130,6 +130,7 @@ export function AutomationCard({ automation, onToggle, onDelete, onEdit }: Autom
             size="icon"
             className="w-7"
             onClick={handleEdit}
+            aria-label="Edit automation"
             {...editHoverHandlers}
           >
             <ChevronRightIcon ref={editIconRef} size={14} />

@@ -206,6 +206,7 @@ function buildColumns(
                 type="button"
                 className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
                 onClick={handleToggle}
+                aria-label={isExpanded ? "Collapse" : "Expand"}
               >
                 <ChevronRight
                   className={cn("h-3.5 w-3.5 transition-transform duration-150", isExpanded && "rotate-90")}

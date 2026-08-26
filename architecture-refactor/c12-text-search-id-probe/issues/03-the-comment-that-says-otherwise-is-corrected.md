@@ -4,20 +4,26 @@
 
 **Blocked by:** 02 — Global search uses the probes
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Acceptance criteria
 
-- [ ] The service comment states what is actually true and points at the migration that explains why.
-- [ ] No other comment in the module contradicts the migration.
-- [ ] Search is registered under a read budget so this cannot silently regress again.
+- [x] The service comment states what is actually true and points at the migration that explains why.
+  — `backend/src/modules/search/search.service.ts` lines 31–41: comment names migrations 0275, 0425, 0475 and explains the SECURITY DEFINER escape
+- [x] No other comment in the module contradicts the migration.
+  — verified by grep across `backend/src/modules/search/**`; no other claim that ILIKE lands on the GIN index
+- [x] Search is registered under a read budget so this cannot silently regress again.
+  — `backend/src/scripts/read-cost-budgets.mjs`: four new budget entries (`search-lead-party-sdf`, `search-deal-sdf`, `search-contact-party-sdf`, `search-client-party-sdf`) plus the existing `search-tickets-sdf`
 
 ## Todo
 
-- [ ] Rewrite the comment
-- [ ] Grep the module for the same claim elsewhere
-- [ ] Add the budget entry once c11-01 lands
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+- [x] Rewrite the comment
+  — `backend/src/modules/search/search.service.ts` lines 31–41
+- [x] Grep the module for the same claim elsewhere
+  — no contradicting comment found in `backend/src/modules/search/**`
+- [x] Add the budget entry once c11-01 lands
+  — `backend/src/scripts/read-cost-budgets.mjs` (c11 already landed; four probe budget entries added)
+- [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
 ---
 

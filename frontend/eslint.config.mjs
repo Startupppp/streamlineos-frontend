@@ -2,6 +2,7 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import noRawVisualValues from "./eslint-rules/no-raw-visual-values.mjs";
+import noUnlabelledIconButton from "./eslint-rules/no-unlabelled-icon-button.mjs";
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -44,8 +45,18 @@ const eslintConfig = defineConfig([
       "features/employee-onboarding/components/brand-column.tsx",
       "features/employee-onboarding/components/profile-preview.tsx",
     ],
-    plugins: { streamline: { rules: { "no-raw-visual-values": noRawVisualValues } } },
-    rules: { "streamline/no-raw-visual-values": "error" },
+    plugins: {
+      streamline: {
+        rules: {
+          "no-raw-visual-values": noRawVisualValues,
+          "no-unlabelled-icon-button": noUnlabelledIconButton,
+        },
+      },
+    },
+    rules: {
+      "streamline/no-raw-visual-values": "error",
+      "streamline/no-unlabelled-icon-button": "warn",
+    },
   },
   {
     /**
@@ -77,9 +88,17 @@ const eslintConfig = defineConfig([
       "features/employee-onboarding/components/brand-column.tsx",
       "features/employee-onboarding/components/profile-preview.tsx",
     ],
-    plugins: { streamline: { rules: { "no-raw-visual-values": noRawVisualValues } } },
+    plugins: {
+      streamline: {
+        rules: {
+          "no-raw-visual-values": noRawVisualValues,
+          "no-unlabelled-icon-button": noUnlabelledIconButton,
+        },
+      },
+    },
     rules: {
       "streamline/no-raw-visual-values": ["error", { skip: ["type", "shadow", "radius"] }],
+      "streamline/no-unlabelled-icon-button": "warn",
     },
   },
   globalIgnores([

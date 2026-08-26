@@ -4,21 +4,21 @@
 
 **Blocked by:** 02 — An actor knows what they may grant
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Acceptance criteria
 
-- [ ] The rank and scope comparison exists in exactly one place, consumed by both the read and the write path.
-- [ ] For a matrix of actor ranks and scopes, every grant the read offers is accepted by the writer.
-- [ ] For the same matrix, every grant the read omits is refused by the writer.
-- [ ] The existing write-side refusals are unchanged in behaviour.
+- [x] The rank and scope comparison exists in exactly one place, consumed by both the read and the write path — `canGrantToRank` in `common/rbac/grantability.ts:59`, imported by both `describeGrantable` and `grantAdminStanding`.
+- [x] For a matrix of actor ranks and scopes, every grant the read offers is accepted by the writer — `standing-grantability-agreement.spec.ts` tests the full matrix.
+- [x] For the same matrix, every grant the read omits is refused by the writer — same spec asserts `toThrow(ForbiddenException)` for every omitted rank.
+- [x] The existing write-side refusals are unchanged in behaviour — `assertPermissionsGrantable` in `grantability.ts` is untouched.
 
 ## Todo
 
-- [ ] Extract the comparison the grant path already performs
-- [ ] Point both sides at it
-- [ ] Write the agreement test across the full matrix — this is the ticket's real deliverable
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+- [x] Extract the comparison the grant path already performs — `canGrantToRank` at `grantability.ts:59`
+- [x] Point both sides at it — `module-standing-roster.service.ts:401` and `module-standing-mutations.service.ts:80` both import `canGrantToRank`
+- [x] Write the agreement test across the full matrix — `standing-grantability-agreement.spec.ts`
+- [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
 ---
 
