@@ -102,6 +102,33 @@ COMMIT;
 
 Expect an index scan on `idx_deals_name_trgm`. If you see a sequential scan, the probe is not doing its job and I want to know.
 
+## 0483 rewrites `calendar_events` — read this before running it
+
+`ALTER COLUMN … TYPE TIMESTAMP WITH TIME ZONE` is not a metadata change. It takes an **ACCESS
+EXCLUSIVE lock and rewrites every row**, blocking reads and writes for the duration. `lock_timeout`
+is set to 5s so it fails fast rather than queueing behind a long reader — on a busy or large
+`calendar_events` expect to retry, possibly in a maintenance window.
+
+**Immediately after it applies:**
+
+```sql
+VACUUM ANALYZE calendar_events;
+```
+
+A rewrite invalidates the planner statistics **and** empties the visibility map. This has already
+been measured in this codebase: a rewritten table went from 53 to 201,875 blocks until `ANALYZE`,
+and a count stayed wrong until `VACUUM`. Skip this and the table looks slow for reasons unrelated to
+any query.
+
+**The assumption 0483 bakes in:** every existing naive timestamp is treated as UTC, and every
+existing row gets `timezone = 'UTC'`. That is correct if the server timezone has always been UTC —
+which is Neon's default and what the ORM writes. **If any events were ever written under a different
+server timezone, they will shift.** Check before applying:
+
+```sql
+SHOW timezone;   -- expect UTC
+```
+
 ## The two DROP migrations are deliberately NOT journalled
 
 `0478_invoice_line_items_column_drop.sql` and `0482_candidate_resume_column_drop.sql` exist on disk
