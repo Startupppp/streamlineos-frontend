@@ -1,13 +1,13 @@
 "use client";
 
-import { RouteErrorBoundary } from "@/components/ui/route-error-boundary";
+import { ReportingRouteErrorBoundary } from "@/lib/observability/reporting-route-error-boundary";
 
 export default function LegalHoldsError(props: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
   return (
-    <RouteErrorBoundary
+    <ReportingRouteErrorBoundary
       {...props}
       title="Legal Holds Error"
       fallbackMessage="Failed to load legal holds. Please try again."

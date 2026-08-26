@@ -8,14 +8,10 @@ import {
   Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetDescription, SheetBody,
 } from "@/components/ui/sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatINR } from "@/lib/format-utils";
 import { useApproveOffer, useRejectOfferApproval } from "@/hooks/api/hr/recruitment";
 import type { CandidateOffer } from "@/hooks/api/hr/recruitment";
 import { toast } from "sonner";
-
-function formatINR(val: string | null) {
-  if (!val) return "—";
-  return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Number(val));
-}
 
 interface ApprovalSheetProps {
   offer: CandidateOffer;
@@ -64,7 +60,7 @@ export function ApprovalSheet({ offer, action, candidateId, onClose }: ApprovalS
           <div className="rounded-lg border px-4 py-3 space-y-1 bg-muted/40">
             <p className="text-xs text-muted-foreground">Offer for</p>
             <p className="text-sm font-medium">{offer.offeredDesignation ?? "—"}</p>
-            <p className="text-xs text-muted-foreground">{formatINR(offer.offeredSalary)}</p>
+            <p className="text-xs text-muted-foreground">{offer.offeredSalary ? formatINR(offer.offeredSalary) : "—"}</p>
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Remarks (optional)</label>

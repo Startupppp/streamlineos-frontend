@@ -1,10 +1,10 @@
 "use client";
 
-import { RouteErrorBoundary } from "@/components/ui/route-error-boundary";
+import { ReportingRouteErrorBoundary } from "@/lib/observability/reporting-route-error-boundary";
 
 export default function SignError(props: { error: Error & { digest?: string }; reset: () => void }) {
   return (
-    <RouteErrorBoundary
+    <ReportingRouteErrorBoundary
       {...props}
       title="SignOS Error"
       fallbackMessage="Failed to load SignOS. Please try again."

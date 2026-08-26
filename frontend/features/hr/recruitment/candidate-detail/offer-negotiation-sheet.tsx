@@ -14,17 +14,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatINR } from "@/lib/format-utils";
 import {
   useOfferVersions,
   useOfferNegotiations,
   useRespondToNegotiation,
   type CandidateOffer,
 } from "@/hooks/api/hr/recruitment/offers";
-
-function formatINR(val: string | null) {
-  if (!val) return "—";
-  return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Number(val));
-}
 
 interface Props {
   candidateId: number;
@@ -72,7 +68,7 @@ export function OfferNegotiationSheet({ candidateId, offer, onClose }: Props) {
         <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>Negotiation &amp; Version History</SheetTitle>
           <SheetDescription>
-            {offer.offeredDesignation ?? "Offer"} · Currently {formatINR(offer.offeredSalary)}
+            {offer.offeredDesignation ?? "Offer"} · Currently {offer.offeredSalary ? formatINR(offer.offeredSalary) : "—"}
           </SheetDescription>
         </SheetHeader>
         <SheetBody className="space-y-6 px-6 py-4">
@@ -136,7 +132,7 @@ export function OfferNegotiationSheet({ candidateId, offer, onClose }: Props) {
                       <span className="text-xs font-medium">v{v.versionNumber}</span>
                       <span className="text-dense text-muted-foreground">{format(new Date(v.createdAt), "MMM d, yyyy")}</span>
                     </div>
-                    <p className="text-sm">{formatINR(v.offeredSalary)} · {v.offeredDesignation ?? "—"}</p>
+                    <p className="text-sm">{v.offeredSalary ? formatINR(v.offeredSalary) : "—"} · {v.offeredDesignation ?? "—"}</p>
                     {v.changeReason && <p className="text-dense text-muted-foreground">{v.changeReason}</p>}
                   </div>
                 ))}

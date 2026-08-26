@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
-import { IllustrationImage } from "@/components/illustrations/illustration-image";
+import { EmptyState } from "@/components/ui/empty-state";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useDuplicateSignTemplate, useSignTemplates, useUpdateSignTemplate } from "@/hooks/api/sign/templates";
@@ -128,15 +128,12 @@ export function TemplateList() {
       ) : isError ? (
         <ErrorState title="Failed to load templates" onRetry={() => void refetch()} />
       ) : !templates || templates.length === 0 ? (
-        <div className="flex flex-1 h-full flex-col items-center justify-center gap-4 text-center">
-          <IllustrationImage name="empty-documents" className="h-40 w-40" />
-          <div>
-            <p className="font-medium text-foreground">No templates yet</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Open any envelope and choose &quot;Save as template&quot; to reuse its layout later.
-            </p>
-          </div>
-        </div>
+        <EmptyState
+          illustrationPreset="documents"
+          title="No templates yet"
+          description='Open any envelope and choose "Save as template" to reuse its layout later.'
+          className="border-0 bg-transparent"
+        />
       ) : (
         <div className="space-y-3">
           {templates.map((template) => (
