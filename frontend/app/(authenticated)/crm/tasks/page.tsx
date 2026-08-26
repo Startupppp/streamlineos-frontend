@@ -37,6 +37,7 @@ import {
   type TasksFilters,
 } from "@/hooks/api/tasks";
 import { useCalendarOrgMembers } from "@/hooks/api/calendar";
+import { MyTasksPanel } from "@/features/crm/timeline/my-tasks-panel";
 import { TaskBucketSection } from "@/features/crm/tasks/task-bucket-section";
 import { CreateTaskDialog } from "@/features/crm/tasks/create-task-dialog";
 import { TasksToolbar } from "@/features/crm/tasks/tasks-toolbar";
@@ -291,6 +292,9 @@ function CrmTasksContent() {
       }
     >
       <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
+        {/* Tasks logged on a customer, deal or subject timeline — same rows, read by assignee. */}
+        <MyTasksPanel />
+
         <StatCardGrid cols={5}>
           <StatCard label="Total" value={stats.total} icon={CheckSquare} tone="default" isLoading={isLoading} />
           <StatCard label="Overdue" value={stats.overdue} icon={AlertCircle} tone="red" isLoading={isLoading} />

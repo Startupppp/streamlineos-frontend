@@ -8,6 +8,7 @@ import { gated, useGatedQuery } from "@/hooks/api/gated-query";
 import type {
   ActivityParticipant,
   CreateActivityInput,
+  TaskPage,
   TimelineAnchor,
   TimelinePage,
 } from "@/types/crm/activities";
@@ -54,6 +55,10 @@ export function useActivityTimeline(anchor: TimelineAnchor | null, limit = 25) {
   );
 }
 
+/**
+ * The same rows the timeline shows, read by assignee — and read soonest-first,
+ * because a task list answers a different question from a timeline.
+ */
 export function useMyActivityTasks(includeCompleted = false, limit = 25) {
   const access = usePermissionGate("crm:activities:view");
 
@@ -61,14 +66,14 @@ export function useMyActivityTasks(includeCompleted = false, limit = 25) {
     useInfiniteQuery({
       queryKey: queryKeys.crm.myActivityTasks({ includeCompleted, limit }),
       queryFn: ({ pageParam }: { pageParam: string | undefined }) =>
-        apiClient.get<TimelinePage>(
+        apiClient.get<TaskPage>(
           `/crm/activities/my-tasks?${new URLSearchParams({
             includeCompleted: String(includeCompleted),
             limit: String(limit),
             ...(pageParam ? { cursor: pageParam } : {}),
           }).toString()}`,
         ),
-      getNextPageParam: (lastPage: TimelinePage) => lastPage.pagination.nextCursor ?? undefined,
+      getNextPageParam: (lastPage: TaskPage) => lastPage.pagination.nextCursor ?? undefined,
       initialPageParam: undefined as string | undefined,
       staleTime: 30_000,
       enabled: access.allowed,

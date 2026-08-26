@@ -1,12 +1,15 @@
 "use client";
 
+import Link from "next/link";
 import { Phone, Mail, CalendarDays, StickyNote, CheckSquare, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { statusToneClasses, type StatusTone } from "@/lib/design-tokens";
 import { formatTime } from "@/lib/format-utils";
+import { formatShortDate } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
-import type { ActivityKind, TimelineEntry } from "@/types/crm/activities";
+import type { ActivityKind, TaskAnchorRef, TimelineEntry } from "@/types/crm/activities";
+import { taskAnchorHref, taskAnchorLabel } from "./task-anchor";
 
 /** Surface, ink and rule together — the tone's three halves are always used as one. */
 function tone(name: StatusTone): string {
@@ -48,6 +51,23 @@ function actorText(entry: TimelineEntry): string {
 
 export interface TimelineEntryRowProps {
   entry: TimelineEntry;
+  /**
+   * What the entry is about, on a surface that is not already about it.
+   *
+   * A timeline is read from the record it is anchored to, so it passes nothing;
+   * a person's own task list is read by assignee and every row belongs to
+   * something different, so it does.
+   */
+  anchor?: TaskAnchorRef | null;
+  /**
+   * Whether a timestamp needs its date.
+   *
+   * A timeline groups rows under a day heading, so the date is already on the
+   * screen and repeating it on every row is noise. A task list is ordered by
+   * due date with no headings, where "Due 09:00" is the one thing a reader
+   * cannot work out.
+   */
+  withDates?: boolean;
   onComplete?: (activityId: string) => void;
   isCompleting?: boolean;
 }
@@ -59,7 +79,15 @@ export interface TimelineEntryRowProps {
  * reader to see plainly which fields the system set, and a wall of highlighted
  * rows communicates less than a quiet, consistent mark on the ones that are.
  */
-export function TimelineEntryRow({ entry, onComplete, isCompleting = false }: TimelineEntryRowProps) {
+export function TimelineEntryRow({
+  entry,
+  anchor = null,
+  withDates = false,
+  onComplete,
+  isCompleting = false,
+}: TimelineEntryRowProps) {
+  const stamp = (value: string): string =>
+    withDates ? `${formatShortDate(value)}, ${formatTime(value)}` : formatTime(value);
   const Icon = entry.actorKind === "system" ? Sparkles : KIND_ICON[entry.kind];
   const overdue = isOverdue(entry);
   const done = entry.kind === "task" && !!entry.completedAt;
@@ -120,13 +148,26 @@ export function TimelineEntryRow({ entry, onComplete, isCompleting = false }: Ti
         ) : null}
 
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-dense text-muted-foreground">
-          <span className="tabular-nums">{formatTime(entry.occurredAt)}</span>
+          {anchor ? (
+            <>
+              <Link
+                href={taskAnchorHref(anchor)}
+                className="min-w-0 break-words font-medium text-foreground hover:underline"
+              >
+                {taskAnchorLabel(anchor)}
+              </Link>
+              <span aria-hidden="true">·</span>
+            </>
+          ) : null}
+          <span className="tabular-nums">{stamp(entry.occurredAt)}</span>
           <span aria-hidden="true">·</span>
           <span className="min-w-0 break-words">{actorText(entry)}</span>
           {entry.dueAt && !done ? (
             <>
               <span aria-hidden="true">·</span>
-              <span className="tabular-nums">Due {formatTime(entry.dueAt)}</span>
+              <span className={cn("tabular-nums", overdue && "font-medium text-foreground")}>
+                Due {stamp(entry.dueAt)}
+              </span>
             </>
           ) : null}
         </div>

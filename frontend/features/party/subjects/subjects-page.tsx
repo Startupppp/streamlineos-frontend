@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCan } from "@/hooks/api/access";
 import { useSubjectTypes, useSubjects } from "@/hooks/api/party/subjects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -57,7 +58,23 @@ export function SubjectsPage() {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
   const [cursor, setCursor] = useState<string | undefined>(undefined);
-  const [openSubjectId, setOpenSubjectId] = useState<string | null>(null);
+  // The open record lives in the URL so a task assigned on a subject's timeline
+  // lands on the subject itself, not merely on the list.
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const openSubjectId = searchParams.get("subjectId");
+
+  const setOpenSubjectId = useCallback(
+    (subjectId: string | null) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (subjectId) params.set("subjectId", subjectId);
+      else params.delete("subjectId");
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<RenderableSubject | null>(null);
 
