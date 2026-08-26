@@ -1,5 +1,14 @@
 /** Bringing a CRM export in, and taking everything back out. */
 
+/**
+ * What a planned import lands a file on.
+ *
+ * Here rather than beside the descriptors in `features/crm/import` because the
+ * shared Query hook needs it, and a shared module may not import from a
+ * feature — see root CLAUDE.md §9.
+ */
+export type PlannedEntity = "party" | "subject" | "pipeline" | "activity";
+
 export type RowAction = "create" | "update" | "merge" | "review" | "skip";
 
 export type ColumnMapping =
@@ -19,7 +28,12 @@ export interface PlannedRow {
   reason: string;
   values: Record<string, string>;
   customFields: Record<string, string>;
-  matchedPartyId?: string;
+  /**
+   * The record this row matched, whatever kind of record the import targets.
+   *
+   * Was `matchedPartyId` while an import could only ever write parties.
+   */
+  matchedRecordId?: string;
   duplicateOfRow?: number;
   /** Why the planner thinks this row is a near-match, when it does. */
   match?: { score: number; signals: string[]; candidateName?: string };

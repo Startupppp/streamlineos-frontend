@@ -6,6 +6,7 @@ import { queryKeys } from "@/lib/query-keys";
 import type {
   ImportProgress,
   ImportPreview,
+  PlannedEntity,
 } from "@/types/crm/import";
 
 /**
@@ -20,6 +21,10 @@ export function usePreviewImport() {
     mutationKey: ["crm", "imports", "preview"],
     mutationFn: (input: {
       filename?: string;
+      /** Which of the four the file lands on. The server plans and writes per entity. */
+      entity: PlannedEntity;
+      /** Required for a subject import and meaningless for the other three. */
+      subjectTypeId?: string;
       headers: string[];
       rows: string[][];
       overrides?: Record<string, string>;
