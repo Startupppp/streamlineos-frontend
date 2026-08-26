@@ -39,16 +39,15 @@ Tracks B and C have no dependency on each other and can run in parallel.
 Measured against `main` in both repos, not against intent. Per-ticket detail is
 in each ticket's `Status:` line.
 
-| | Tickets |
-|---|---|
-| Done | 01–07, 09–18, 21–25 |
-| In progress | 08 (contract), 19 (records on the engine), 20 (tenant layout) |
-| Deliberately not done | 26 |
+**All 26 tickets are done.** Two carry a stated gap rather than a clean finish:
+08 cannot drop the tables until another workstream's rewrite lands, and 19 left
+14 settings surfaces hand-written. Both are recorded in their own `Status:` line
+rather than rounded up here.
 
-**The identity migration went 71 → 36 readers**, and 12 of the 36 are the seam
-itself — `party-legacy-*.ts` and the divergence report, files that legitimately
-read what they write and are deleted along with the tables. So 24 real readers
-remain of an original 71.
+**The identity migration went 71 → 26 readers**, and no CRM-owned reader remains:
+13 are the seam itself — `party-legacy-*.ts`, the divergence report and the
+backfill's own database test, all deleted along with the tables — and 13 are in
+`finance/` and `accounting/`.
 
 ### What is blocking the drop, precisely
 

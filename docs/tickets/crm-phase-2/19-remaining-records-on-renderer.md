@@ -1,6 +1,6 @@
 # 19 — Every remaining CRM record type on the engine
 
-**Status:** in progress
+**Status:** done, with one gap stated — twelve record types on the engine and ~24 hand-written files deleted, but 14 CRM settings surfaces still hand-write their tables. Products and pricebooks are genuinely catalogue records and that classification is the weakest call in the phase.
 **Track:** E — records and renderer
 **Blocked by:** 03
 

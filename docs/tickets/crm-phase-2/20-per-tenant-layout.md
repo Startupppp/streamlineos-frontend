@@ -1,6 +1,6 @@
 # 20 — Layout is data a tenant can adjust
 
-**Status:** in progress — needs a backend home for per-tenant layouts; see the ticket.
+**Status:** done — `record_layout_adjustments` behind four routes, its own permission key on both sides, and a cross-tenant test that puts two tenants through one QueryClient.
 **Track:** E — records and renderer
 **Blocked by:** 19
 
