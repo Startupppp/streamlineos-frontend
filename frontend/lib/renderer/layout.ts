@@ -80,6 +80,14 @@ export const DEFAULT_BOOLEAN_OPTIONS: readonly SelectOption[] = [
  *
  * Colour is never the only signal: a negative value carries its minus sign, so
  * the two cases remain distinguishable without seeing the tone at all.
+ *
+ * **Only for a value that can actually be negative.** A sign pivots on zero, so
+ * declaring one on a quantity that never crosses it — a conversion rate, a day
+ * count, a headcount — paints every non-zero row the same colour and reserves
+ * neutral for the empty case. What such a column invites is a *threshold*
+ * judgement, and a threshold is not a sign: it belongs in a derived badge with a
+ * word in it, which survives greyscale and states where the line is.
+ * `crm/deal-aging-layout.ts` is the worked example.
  */
 export type SignMeaning = "gain" | "cost";
 
@@ -299,6 +307,21 @@ export function validateLayout(layout: RecordLayout): LayoutProblem[] {
         problems.push({
           where: `fields (${field.name}).currencyField`,
           message: `unknown field "${field.currencyField}"`,
+        });
+    }
+
+    if (field.referenceLabel !== undefined) {
+      if (field.kind !== "reference")
+        problems.push({
+          where: `fields (${field.name})`,
+          message: `referenceLabel on a ${field.kind} field, which points at nothing`,
+        });
+      // A label naming a field the record does not carry renders the raw
+      // identifier on every row — visible, but wrong, and silently so.
+      if (!known.has(field.referenceLabel))
+        problems.push({
+          where: `fields (${field.name}).referenceLabel`,
+          message: `unknown field "${field.referenceLabel}"`,
         });
     }
   }

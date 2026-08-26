@@ -3,8 +3,8 @@
 import type { ReactNode } from "react";
 import { Pencil } from "lucide-react";
 import { Trash2Icon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 
 /**
  * Edit and delete, for a row of a generated settings list.
@@ -15,9 +15,10 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
  * two controls, so they live here once instead of being redrawn in eleven files
  * with eleven slightly different icon sizes.
  *
- * A component rather than an inline fragment because `useAnimatedIcon` is a
- * hook, and a `DataTable` cell callback is not a component — a hook called there
- * runs in the wrong place or not at all.
+ * The delete icon animates through `AnimatedIconButton` rather than through a
+ * local `useAnimatedIcon`. Both reach the same place, but wiring the hook by
+ * hand reads the ref during render — which `react-hooks/refs` reports, and
+ * rightly. The button exists so that one component owns the wiring.
  */
 
 interface RecordRowActionsProps {
@@ -37,8 +38,6 @@ export function RecordRowActions({
   editLabel = "Edit",
   deleteLabel = "Delete",
 }: RecordRowActionsProps) {
-  const deleteIcon = useAnimatedIcon();
-
   return (
     <div className="flex items-center justify-end gap-gap-inline">
       {leading}
@@ -54,16 +53,15 @@ export function RecordRowActions({
         </Button>
       ) : null}
       {onDelete ? (
-        <Button
+        <AnimatedIconButton
+          icon={Trash2Icon}
+          iconSize={14}
           variant="ghost"
           size="icon"
           className="h-7 w-7 text-destructive"
           onClick={onDelete}
           aria-label={deleteLabel}
-          {...deleteIcon.hoverHandlers}
-        >
-          <Trash2Icon ref={deleteIcon.iconRef} size={14} />
-        </Button>
+        />
       ) : null}
     </div>
   );

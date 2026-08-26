@@ -90,7 +90,14 @@ export const SALES_REP_FIELDS: readonly FieldSpec[] = [
     label: "Conv. rate",
     kind: "percent",
     readOnly: true,
-    sign: "gain",
+    /*
+      No `sign`. A sign pivots on zero, and a conversion rate never crosses it —
+      declaring it a gain paints 3% the same green as 90% and reserves neutral
+      for nobody-converted-anything, which tells a reader less than plain text
+      does. What this column actually invites is a threshold judgement, and
+      `deal-aging-layout.ts` records why a threshold is not a sign: it belongs in
+      a derived badge with a word in it, not in a tinted number.
+    */
   },
   { name: "totalCalls", label: "Calls", kind: "number", readOnly: true },
   { name: "totalMeetings", label: "Meetings", kind: "number", readOnly: true },

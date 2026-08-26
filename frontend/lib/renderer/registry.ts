@@ -21,6 +21,11 @@ import { REP_PERFORMANCE_LAYOUT } from "./crm/reports/rep-performance-layout";
 import { SOURCE_ATTRIBUTION_LAYOUT } from "./crm/reports/source-attribution-layout";
 import { TEAM_LEADERBOARD_LAYOUT } from "./crm/reports/team-leaderboard-layout";
 import { AUDIT_ENTRY_LAYOUT } from "./crm/settings/audit-entry-layout";
+import { AUTOMATION_LAYOUT } from "./crm/settings/automation-layout";
+import { CUSTOM_FIELD_LAYOUT } from "./crm/settings/custom-field-layout";
+import { EMAIL_TEMPLATE_LAYOUT } from "./crm/settings/email-template-layout";
+import { QUOTE_TEMPLATE_LAYOUT } from "./crm/settings/quote-template-layout";
+import { SCORING_RULE_LAYOUT } from "./crm/settings/scoring-rule-layout";
 import { PRICEBOOK_ENTRY_LAYOUT, PRICEBOOK_LAYOUT } from "./crm/settings/pricebook-layout";
 import { PRODUCT_LAYOUT } from "./crm/settings/product-layout";
 import {
@@ -165,6 +170,30 @@ export const LAYOUT_REGISTRY: readonly RegisteredLayout[] = [
     layout: VALIDATION_RULE_LAYOUT,
     section: "CRM settings",
     viewPermission: "crm:settings:manage",
+  },
+  { layout: AUTOMATION_LAYOUT, section: "CRM settings", viewPermission: "crm:automations:manage" },
+  {
+    layout: SCORING_RULE_LAYOUT,
+    section: "CRM settings",
+    viewPermission: "crm:scoring-rules:manage",
+  },
+  {
+    layout: EMAIL_TEMPLATE_LAYOUT,
+    section: "CRM settings",
+    viewPermission: "crm:email-templates:manage",
+  },
+  {
+    layout: QUOTE_TEMPLATE_LAYOUT,
+    section: "CRM settings",
+    viewPermission: "crm:settings:manage",
+  },
+  {
+    layout: CUSTOM_FIELD_LAYOUT,
+    section: "CRM settings",
+    // The key that already governs custom fields, rather than the CRM one: a
+    // custom field is a platform setting a CRM administrator happens to reach
+    // from here.
+    viewPermission: "settings:custom-fields:manage",
   },
 ];
 

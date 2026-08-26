@@ -1056,3 +1056,29 @@ describe("the row controls a description does not own", () => {
     expect(screen.getByRole("columnheader", { name: "Name" })).toBeInTheDocument();
   });
 });
+
+describe("a description that names a reference badly", () => {
+  it("reports a referenceLabel naming a field the record does not carry", () => {
+    const broken: RecordLayout = {
+      ...POINTING,
+      fields: POINTING.fields.map((field) =>
+        field.name === "dealId" ? { ...field, referenceLabel: "notAField" } : field,
+      ),
+    };
+    expect(validateLayout(broken)).toContainEqual(
+      expect.objectContaining({ where: "fields (dealId).referenceLabel" }),
+    );
+  });
+
+  it("reports a referenceLabel on a field that points at nothing", () => {
+    const broken: RecordLayout = {
+      ...POINTING,
+      fields: POINTING.fields.map((field) =>
+        field.name === "title" ? { ...field, referenceLabel: "dealTitle" } : field,
+      ),
+    };
+    expect(validateLayout(broken)).toContainEqual(
+      expect.objectContaining({ where: "fields (title)" }),
+    );
+  });
+});
