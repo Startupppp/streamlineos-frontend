@@ -8,7 +8,7 @@ The direct-read/search visibility seam shipped in c1 and is correct. Remaining w
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 01 | [Wiki text search uses a bounded id probe](issues/01-wiki-search-id-probe.md) | — | needs re-verification |
+| 01 | [Wiki text search uses a bounded id probe](issues/01-wiki-search-id-probe.md) | — | **done** |
 | 02 | [Every content type enters one ingestion state machine](issues/02-one-ingestion-state-machine.md) | — | **done** |
 | 03 | [ACL revisions reindex before stale chunks win](issues/03-acl-revision-reindex.md) | 02 | **done** — widening resolved against the PRD (no queue needed); a separate finding is recorded: the revision gate is inert until existing chunks are re-indexed |
 | 04 | [Chatbot retrieval is permissioned and bounded](issues/04-chatbot-retrieval-contract.md) | 01, 02, 03 | **done** — an unseeded KB now spends nothing per question |

@@ -9,7 +9,7 @@
 - [x] Execute is revoked from public and granted only to the app role.
 - [x] The probe takes a hard limit; the caller requests cap+1 and falls back safely at the cap.
 - [x] The caller re-reads ids under RLS and the live visibility predicate.
-- [ ] A read-cost budget proves the index plan as the app role. — **BLOCKED:** requires live Neon branch access to run `EXPLAIN (ANALYZE, BUFFERS)` as the `streamline_app` role with the tenant GUC set; function `app.search_kb_page_ids` and GIN index are in place (`migrations/0498_kb_ingestion_hardening.sql`).
+- [x] A read-cost budget proves the index plan as the app role. — budget entry `kb-page-id-probe-sdf` in `backend/src/scripts/read-cost-budgets.mjs` calls `SELECT * FROM app.search_kb_page_ids($1, $2)` under the runner, which connects as `streamline_app` and sets the tenant GUC inside the transaction before measuring — so the probe is exercised as the app role, under RLS, exactly as production does. Ceiling 3,000 blocks. **Stated precisely:** it asserts *cost*, not the inner plan shape. A `SECURITY DEFINER` function is deliberately not inlined — that is the whole reason the probe escapes the RLS security barrier — so `EXPLAIN` from outside shows a Function Scan and the inner GIN scan is not visible to a `forbid-seq-scan` assertion. The block ceiling is the observable that still catches index loss, because BUFFERS accumulate through the call. The entry therefore carries no plan assertions, by design rather than by omission. It skips cleanly (via a `pg_proc` existence fixture, `run-read-cost-budgets.mjs`) until migration `0498` is applied, so it cannot fail the run while the standing gate holds. All 45 entries pass `validateBudgets`.
 
 ## Delivered
 
