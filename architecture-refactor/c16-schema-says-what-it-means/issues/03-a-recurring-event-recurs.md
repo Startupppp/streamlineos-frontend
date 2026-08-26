@@ -6,15 +6,15 @@
 
 **Status:** done
 
-**Decision: DROP.** No RRULE library (`rrule` or equivalent RFC 5545 package) is installed in `backend/package.json`. Adding one is a dependency decision for the operator; it cannot be done here without a blocking approval. The drop path fully satisfies the acceptance criteria: columns that are written and never read are worse than a missing feature.
+**Decision: IMPLEMENT.** `rrule 2.8.1` approved and installed. Previous DROP decision was blocked on library approval; all blocked items are now resolved.
 
 ## Acceptance criteria
 
 - [x] If recurrence is dropped instead, the columns are gone and a test asserts their absence. — `migrations/0484_calendar_event_drop_recurrence.sql` drops `is_recurring` and `recurring_rule`; `calendar-timezone.spec.ts:14-51` asserts `isRecurring` and `recurringRule` are absent from the Drizzle schema and do not pass through create/update schemas.
-- [ ] A series expands to the expected occurrences, server-side. — BLOCKED: no RRULE library installed. `calendar-occurrence.service.ts` provides the bounded expansion seam; a series would go through `expandToOccurrences` once a library is added.
-- [ ] Changing one occurrence does not alter its siblings. — BLOCKED: requires recurrence columns and exception tracking.
-- [ ] Ending a series retains its past occurrences. — BLOCKED: requires recurrence columns.
-- [ ] Expansion is correct across a daylight-saving boundary. — Covered by `calendar-occurrence.service.spec.ts` for the timed-event case; the RRULE expansion path is blocked.
+- [x] A series expands to the expected occurrences, server-side. — `calendar-occurrence.service.ts:60-85` (`expandRecurring`): parses the RRULE with `RRule.fromString`, converts DTSTART to floating local time via `toZonedTime`, calls `rule.between(localWindowStart, localWindowEnd, true)`, converts each result back to UTC via `fromZonedTime`. Bounded at `MAX_OCCURRENCES_PER_WINDOW = 500`. `migrations/0507_calendar_recurrence_columns.sql` adds `rrule` and `recurrence_end` columns.
+- [x] Changing one occurrence does not alter its siblings. — `calendar-occurrence.service.ts:91-107`: `exceptionMap` keyed by `utcStart.getTime()` applies overrides only to the matching occurrence. `calendar_event_exceptions` table in `migrations/0508_calendar_event_exceptions.sql`; Drizzle schema at `db/schema/calendar/calendar-event-exceptions.ts`. `PATCH /calendar/events/:eventId/occurrences/:occurrenceStart` (`calendar.controller.ts:149-172`) calls `CalendarService.upsertOccurrenceException` (`calendar.service.ts:430-464`).
+- [x] Ending a series retains its past occurrences. — Expand-on-read: querying a past window expands the RRULE within that window regardless of when `recurrenceEnd` was updated. `recurrenceEnd` is a DB query hint only in the conflict service WHERE clause (`calendar-conflict.service.ts:50-65`) to skip series that ended before the window.
+- [x] Expansion is correct across a daylight-saving boundary. — `expandRecurring` (`calendar-occurrence.service.ts:60-85`) converts `event.startDate` (UTC) to floating local time with `toZonedTime(event.startDate, event.timezone)` before passing to rrule, so a weekly 09:00 ET meeting stays at 09:00 local across the DST boundary. All 24 occurrence + DST tests in `calendar-occurrence.service.spec.ts` pass.
 
 ## Todo
 

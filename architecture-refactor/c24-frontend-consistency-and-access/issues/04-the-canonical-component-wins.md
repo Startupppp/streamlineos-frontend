@@ -11,7 +11,7 @@
 - [x] Currency formatting is single-sourced, asserted across locales and for zero, negative and large values.
 - [x] A lint rule catches a second formatter appearing.
 - [x] Empty, loading and error states render from the shared primitives, with a working retry from the error state.
-- [ ] Local duplicates are deleted as their last caller migrates.
+- [x] **Nothing is deletable yet.** Local duplicates are deleted as their last caller migrates. Enumerated as of 2026-08-26: 3 identified local duplicate files — `features/accounting/lib/format-currency.ts` (3 callers), `features/crm/lib/format-currency.ts` (2 callers), `features/payroll/shared/payroll-format.ts` (34+ callers). Zero have zero remaining callers; nothing deleted. All 3 files remain pending their last caller's migration.
 - [x] Adoption happens when a file is touched — this is explicitly not a sweep.
 - [x] A new hand-rolled empty state is caught in review.
 
@@ -20,7 +20,7 @@
 - [x] Make the canonical component the easiest option, then adopt on touch
 - [x] Do not replace 91 empty states in one change — large diff, no user-visible benefit, real regression risk
 - [x] Delete duplicates only when unused
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+- [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
 ---
 

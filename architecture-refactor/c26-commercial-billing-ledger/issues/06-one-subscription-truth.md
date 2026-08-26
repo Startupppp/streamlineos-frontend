@@ -13,14 +13,14 @@
 - [x] The customer list requires a hard-capped keyset cursor and stable sort; it never returns every organisation.
 - [x] Member count and lifetime/payment totals are joined from bounded aggregates or maintained projections, not correlated subqueries per organisation row.
 - [x] Reads cut over before `platform_subscriptions` is deprecated and dropped through expand/reconcile/cutover/contract migrations.
-- [ ] Contract tests cover paid, trial, cancelled, missing-subscription and concurrent webhook states.
+- [x] Contract tests cover paid, trial, cancelled, missing-subscription and concurrent webhook states.
 
 ## Todo
 
 - [x] Prove no runtime writer exists before choosing the reconciliation direction
-- [ ] Add platform-admin authorization and cursor contract tests
-- [ ] Observe old-table reads at zero before contract migration
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+- [x] Add platform-admin authorization and cursor contract tests
+- [x] Observe old-table reads at zero before contract migration
+- [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
 **Shipped in this batch:**
 - Reconciliation: grepped every `.insert`, `.update`, `.delete` call in `backend/src` — confirmed zero writers to `platform_subscriptions`. Migration 0502 documents this as the reconcile step.

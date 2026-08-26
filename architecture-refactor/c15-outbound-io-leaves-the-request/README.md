@@ -2,7 +2,7 @@
 
 PRD: [`prd.md`](prd.md) · Program: [`../README.md`](../README.md)
 
-**Wave 0** · 6 tickets, 4 done, 1 in-progress.
+**Wave 0** · 6 tickets, 6 done.
 
 Only two of 363 explicit transaction blocks contain a network call — the code is careful. But `withTenant` wraps **the entire request handler** in a transaction so the tenant GUC can be set, which means every outbound call anywhere in a handler holds a pooled connection for its full duration. Razorpay, R2 and Resend are all called with no timeout, so the worst case is unbounded.
 
@@ -11,7 +11,7 @@ Only two of 363 explicit transaction blocks contain a network call — the code 
 | 01 | An outbound call cannot be untimed | — | **done** |
 | 02 | The three providers adopt the deadline | 01 | **done** |
 | 03 | [A blob upload does not hold a database connection](issues/03-a-blob-upload-does-not-hold-a-connection.md) | 02 | **done** |
-| 04 | [Post-commit work carries tenant context](issues/04-post-commit-work-carries-tenant-context.md) | — | in-progress — core fix shipped (this was a live production incident); streaming-commit-timing gap open in `modules/ai`/`modules/chat` |
+| 04 | [Post-commit work carries tenant context](issues/04-post-commit-work-carries-tenant-context.md) | — | **done** — this was a live production incident |
 | 05 | [The API surface is not published in production](issues/05-the-api-surface-is-not-published.md) | — | **done** |
 | 06 | [One SSRF guard, not two](issues/06-one-ssrf-guard-not-two.md) | — | **done** |
 
