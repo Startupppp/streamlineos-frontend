@@ -102,6 +102,45 @@ COMMIT;
 
 Expect an index scan on `idx_deals_name_trgm`. If you see a sequential scan, the probe is not doing its job and I want to know.
 
+## The two DROP migrations are deliberately NOT journalled
+
+`0478_invoice_line_items_column_drop.sql` and `0482_candidate_resume_column_drop.sql` exist on disk
+but have **no journal entry**, so `db:migrate` will skip them. That is intentional, not the bug
+described above.
+
+`DROP COLUMN` is irreversible. Journalled in sequence, the backfill and the drop would run
+back-to-back in a single command, with no opportunity to check that the backfill actually worked —
+which defeats the point of writing them as separate migrations.
+
+**Run the backfills, verify, and only then apply the drops by hand:**
+
+```sql
+-- after 0477: every invoice with line items must now have rows
+SELECT count(*) AS unmigrated
+FROM invoices i
+WHERE i.line_items IS NOT NULL AND jsonb_array_length(i.line_items) > 0
+  AND NOT EXISTS (SELECT 1 FROM invoice_items ii WHERE ii.invoice_id = i.id);
+
+-- after 0481: every candidate with résumé text must now have a sidecar row
+SELECT count(*) AS unmigrated
+FROM candidates c
+WHERE c.resume_text IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM candidate_resumes cr WHERE cr.candidate_id = c.id);
+```
+
+**Both must return 0.** Then apply each drop file directly and add its journal entry afterwards so
+the history stays accurate.
+
+> **A hole I found and closed in `0478`.** Its reconciliation guard originally checked only invoices
+> that *have* `invoice_items` rows — so an invoice whose JSONB held line items but whose backfill
+> produced **zero** rows was excluded from the check by its own `EXISTS` clause. It would have
+> passed, the column would have dropped, and those lines would be gone with no error. The guard now
+> asserts nothing is left behind *before* it reconciles what was moved. `0482` did not have this
+> gap; its guard was already the nothing-left-behind form.
+
+After each drop: `VACUUM ANALYZE` the table. A column drop leaves stale statistics and the planner
+keeps assuming the old tuple width.
+
 ## If something is wrong
 
 - **A function is missing** → 0475 partially executed. Re-run just that file; the `CREATE OR REPLACE` statements are idempotent.

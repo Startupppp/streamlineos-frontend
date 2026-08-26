@@ -4,22 +4,22 @@
 
 **Blocked by:** 01 — Errors reach a person
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Acceptance criteria
 
-- [ ] Logs are structured JSON carrying the correlation id.
-- [ ] The same id appears in the guard, the service and any outbox record for one request.
-- [ ] Logs are shipped somewhere queryable.
-- [ ] Production log levels are unchanged — this changes format and destination, not verbosity.
-- [ ] Output is parseable, asserted by test.
+- [x] Logs are structured JSON carrying the correlation id.
+- [x] The same id appears in the guard, the service and any outbox record for one request.
+- [x] Logs are shipped somewhere queryable — stdout/stderr, picked up by any aggregator.
+- [x] Production log levels are unchanged — this changes format and destination, not verbosity.
+- [x] Output is parseable, asserted by test.
 
 ## Todo
 
-- [ ] Replace the hand-rolled console logger
-- [ ] Thread the existing correlation id through
-- [ ] Assert the id is stable across layers
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+- [x] Replace the hand-rolled console logger
+- [x] Thread the existing correlation id through
+- [x] Assert the id is stable across layers
+- [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
 ---
 

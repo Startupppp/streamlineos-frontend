@@ -13,6 +13,7 @@ Only two of 363 explicit transaction blocks contain a network call — the code 
 | 03 | [A blob upload does not hold a database connection](issues/03-a-blob-upload-does-not-hold-a-connection.md) | 02 | ready-for-agent |
 | 04 | [Post-commit work carries tenant context](issues/04-post-commit-work-carries-tenant-context.md) | — | ready-for-agent |
 | 05 | [The API surface is not published in production](issues/05-the-api-surface-is-not-published.md) | — | **done** |
+| 06 | [One SSRF guard, not two](issues/06-one-ssrf-guard-not-two.md) | — | ready-for-agent |
 
 ## Working these
 

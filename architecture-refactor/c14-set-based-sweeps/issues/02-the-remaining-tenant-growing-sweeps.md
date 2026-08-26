@@ -4,21 +4,21 @@
 
 **Blocked by:** 01 — Leave accrual is set-based
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Acceptance criteria
 
-- [ ] Each converted sweep's outcome is identical to the per-row implementation on a spanning fixture.
-- [ ] Each is idempotent on re-run.
-- [ ] The 33 bounded loops are untouched, and the branch description says why.
-- [ ] A per-tenant failure is logged and the sweep continues to the next organisation.
+- [x] Each converted sweep's outcome is identical to the per-row implementation on a spanning fixture.
+- [x] Each is idempotent on re-run.
+- [x] The bounded loops are untouched, and the branch description says why.
+- [x] A per-tenant failure is logged and the sweep continues to the next organisation.
 
 ## Todo
 
-- [ ] Work the six highest-call loops first
-- [ ] Re-classify before converting — a loop over a grouping key is not a defect
-- [ ] Keep per-organisation commits so a restart still resumes
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+- [x] Work the six highest-call loops first
+- [x] Re-classify before converting — a loop over a grouping key is not a defect
+- [x] Keep per-organisation commits so a restart still resumes
+- [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
 ---
 

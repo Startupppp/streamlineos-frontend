@@ -12,7 +12,7 @@ The shared keyset helper is sound, but adoption and several call-site algorithms
 | 02 | [The board does not ship descriptions](issues/02-the-board-does-not-ship-descriptions.md) | 01 | ready-for-agent |
 | 03 | [A list total costs no extra round trip](issues/03-a-list-total-costs-no-extra-round-trip.md) | — | ready-for-agent |
 | 04 | [The receivables total is computed once](issues/04-the-receivables-total-is-computed-once.md) | 03 | ready-for-agent |
-| 05 | [Scrolled lists page by cursor](issues/05-scrolled-lists-page-by-cursor.md) | — | ready-for-agent |
+| 05 | [Scrolled lists page by cursor](issues/05-scrolled-lists-page-by-cursor.md) | — | **done** |
 | 06 | [Every list speaks one filter and sort vocabulary](issues/06-every-list-speaks-one-filter-vocabulary.md) | 05 | ready-for-agent |
 
 ## Working these
