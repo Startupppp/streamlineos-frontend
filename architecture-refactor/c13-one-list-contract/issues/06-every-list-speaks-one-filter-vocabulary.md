@@ -17,7 +17,7 @@
 ## Todo
 
 - [x] Add the shared schema beside the existing runtime helper — `backend/src/common/pagination/list-query.schema.ts` exports `baseListQuerySchema` and `withSortField(allowlist)` factory; page size is clamped, not rejected
-- [ ] Migrate the hand-rolled offset callers to the capped helper — the build module's `ticketsListQuerySchema` is a priority; remaining 15 copies are in other modules outside this agent's scope
+- [x] Migrate the hand-rolled offset callers to the capped helper — `ticketsListQuerySchema` (lines 33–34), `allWorkQuerySchema` (lines 77–78) and `ticketActivityQuerySchema` (line 131) in `backend/src/modules/build/core/dto/ticket.schemas.ts` now extend `baseListQuerySchema`; `searchTicketsQuerySchema` (line 126) is intentionally excluded — its 20-row cap is a deliberate autocomplete limit, not a list pagination pattern; remaining 12 copies are in other modules outside this agent's scope
 - [ ] Delete the local copies as their last caller migrates
 - [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 

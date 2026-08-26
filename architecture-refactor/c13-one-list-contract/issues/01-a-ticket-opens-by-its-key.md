@@ -9,7 +9,7 @@
 ## Acceptance criteria
 
 - [x] A ticket key resolves server-side to its ticket, whatever its position in the project.
-- [ ] A ticket beyond the first hundred opens — this is the regression test for the live bug and it must exist.
+- [x] A ticket beyond the first hundred opens — `backend/src/modules/build/core/ticket-by-key.spec.ts` asserts `findFirst` is called exactly once and `findMany` is never called for ticketNumbers 101 and 250; `backend/src/modules/build/core/projects-tickets-key.e2e-spec.ts` inserts 101 tickets and asserts ticket #101 returns 200 (runs under `pnpm test:e2e`)
 - [x] An unknown key returns not-found.
 - [x] A ticket in another organisation returns not-found, never a status that confirms it exists.
 - [x] The by-key read allows and denies exactly as the by-id read does, across the same actor matrix.
@@ -19,7 +19,7 @@
 
 - [x] Add the by-key read authorized identically to the existing ticket read
 - [x] Remove the board-array resolution from the detail page
-- [ ] Controller e2e for the allow/deny matrix
+- [x] Controller e2e for the allow/deny matrix — `backend/src/modules/build/core/projects-tickets-key.e2e-spec.ts`: owner→200, member without permission→403, unknown key→404, unauthenticated→401; runs under `pnpm test:e2e` only
 - [ ] Verify a deep link to an old ticket in a booted app — **BLOCKED:** requires a booted app against real data
 - [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 

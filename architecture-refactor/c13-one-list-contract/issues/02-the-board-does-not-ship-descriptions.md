@@ -17,7 +17,7 @@
 
 - [x] Remove the column from the list projection
 - [x] Check no consumer read it from the list response — `epic-story-row.tsx` consumed it; updated to handle absence gracefully (read-only description preview removed, edit path uses `?? null`)
-- [ ] Add the field-absence test
+- [x] Add the field-absence test — `backend/src/modules/build/core/board-projection.spec.ts` spies on `db.query.tickets.findMany`, captures the `columns` argument, and asserts `description` is absent; 1 test, passes under `pnpm test`
 - [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
 ### Out-of-scope dependency
