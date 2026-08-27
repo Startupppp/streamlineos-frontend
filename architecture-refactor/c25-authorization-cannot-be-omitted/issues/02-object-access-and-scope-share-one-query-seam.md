@@ -4,11 +4,11 @@
 
 ## Acceptance criteria
 
-- [ ] Record-by-id reads and writes compose `org_id`, soft-delete, DataScope and domain ACL in SQL.
-- [ ] No protected row is fetched and then rejected in application code.
-- [ ] Cross-tenant and invisible records both return not-found.
-- [ ] Each domain owns its predicate; no generic dynamic table abstraction is introduced.
-- [ ] Bulk operations apply the predicate once to the set, not once per row.
+- [ ] Record-by-id reads and writes compose `org_id`, soft-delete, DataScope and domain ACL in SQL. — **OPEN codebase-wide; the DataScope half is now measured rather than assumed.** `pnpm check:scope-application` (`backend/src/scripts/check-scope-application.mjs`) finds every handler that resolves a `DataScope` and never spends it: **119 resolutions, 117 applied, 2 that are not.** Both are out of territory and named in [`lane-requests/s3.md`](../../lane-requests/s3.md) §3. In this session's own territory the criterion holds and was checked by hand — `module-access` and `rbac` compose `orgId` and `moduleKey` in the `where` of every by-id lookup (`module-access.service.ts:293`, `principal-groups.service.ts:50`, `roles.service.ts:264`, `role-member.service.ts:61`) — but there is **no DataScope to compose here at all**, which is the finding below, so this cannot be ticked on that evidence.
+- [ ] No protected row is fetched and then rejected in application code. — **OPEN, and one part is deliberately staying.** The scope half is now machine-checked (above). The row half is not: distinguishing "fetched then rejected" from a legitimate 403 needs the intent, not the shape. Worked example in territory: `setRolePermissions` fetches a role and then throws on `isImmutableSystemRole` (`module-access.service.ts:303`). That is **correct and must stay** — the caller is inside the right tenant and may see the role, they simply may not edit it, so it is a 403, and folding it into the predicate would turn it into a 404 and destroy the distinction `backend/CLAUDE.md` §4 requires. It is also exactly the check the reverted attempt deleted.
+- [ ] Cross-tenant and invisible records both return not-found. — **OPEN codebase-wide.** Holds in territory: every by-id lookup listed above ANDs `orgId` in SQL and raises `NotFoundException` on a miss, never `ForbiddenException`. `roles` has no `deleted_at`, so there is no soft-delete arm to compose there. Not ticked because the criterion is about every domain and no check proves it yet.
+- [x] Each domain owns its predicate; no generic dynamic table abstraction is introduced. — `ScopedRead` (`backend/src/modules/access/object-access.ts`) takes the domain's own `ScopeColumns` and returns SQL; no table name is ever passed as a value, and each domain still writes its own query. `object-access.spec.ts` — **9 tests, passing.**
+- [x] Bulk operations apply the predicate once to the set, not once per row. — Verified in territory and one site fixed. The authorization predicate was already applied once to the whole set at both bulk sites (`module-access-groups.service.ts:1260` and `:1348`, both `inArray` over the id set, then a count comparison). The **write** was not: `addMember` looped an `INSERT … ON CONFLICT DO NOTHING` per group, up to 50 sequential round trips holding a pooled connection inside one transaction — while `updateMemberGroups`, three methods down the same file, already wrote the set in one statement. Now one statement, driven by a test written first (`module-access-new-capabilities.spec.ts`, "writes every group assignment in one statement, not one per group"; red at 3 inserts, green at 1). `npx jest src/modules/module-access` → **10 suites, 155 tests passing.**
 
 ## Precise implementation plan
 
@@ -62,11 +62,13 @@ A generic `ObjectAccessService.resolve(table, id, ctx)` introduces dynamic table
 
 ## Todo
 
-- [x] Create `backend/src/modules/access/object-access.ts` with `ObjectAccessContext` and `ObjectQuery<T>` — `object-access.ts:1-9`. **Two type declarations, no runtime code, zero importers** — a declaration of intent, not the seam. It satisfies "the file exists" and none of the five acceptance criteria above.
+- [x] Create `backend/src/modules/access/object-access.ts` with `ObjectAccessContext` and `ObjectQuery<T>` — **it was two type declarations with no runtime code and zero importers, a declaration of intent rather than a seam. It is now a working one.** `ScopedRead` holds a resolved scope with **no accessor that yields it**: `predicate(cols)` is the only exit and returns SQL, so the value cannot be carried anywhere but into a `WHERE`. Two properties follow, and both are the point. **Forgetting to refuse `none` stops being possible** — `applyScope` already renders `none` as `false`, so a caller who uses the predicate is denied by the predicate, whereas today the `=== "none"` guard is the only thing most call sites do and it is the half that does not matter. And **a cache key can no longer masquerade as a filter**: `discriminator` is named for what it is.
+
+  The scope is a `#` field, not `private`. A test asserted no accessor yields the bare scope and **failed** — TypeScript's `private` is erased, so `scope` was still an own property that any spread would expose, and the guarantee held only until someone wrote one. `object-access.spec.ts` — **9 tests, passing**, including that a mistyped permission key resolves to `none` and renders `false`, so the failure mode of a typo is an empty result set rather than an unfiltered one.
 - [x] ~~Fix the chat resolver signature~~ **Not a violation — the premise is false.** Verified 2026-08-26: `resolve(db, type, id, orgId)` exists nowhere in `backend/src`, and `EntityReferenceService.resolve()` already takes `(actor, references)` — `entity-reference.service.spec.ts:64` calls `service.resolve(ACTOR, […])`, with `actorOf(CurrentUserContext)` in `entity-actor.ts`.
-- [ ] Apply seam to KB pages service (exact: `backend/src/modules/kb/**`) — **BLOCKED, out of territory.** `modules/kb/**` belongs to the orchestrator lane. The subagent assigned to produce the exact file-and-line change terminated on an account-level API limit before doing so, and Lane 2 did not substitute a guess. What the analysis must answer is written into [`lane-requests/lane-2.md`](../../lane-requests/lane-2.md) §2.
-- [ ] Apply seam to module-access mutations (exact: `backend/src/modules/module-access/**`) — **NOT DONE, and one attempt was reverted.** See the note below.
-- [ ] Add allow/deny test matrices for each domain
+- [ ] Apply seam to KB pages service (exact: `backend/src/modules/kb/**`) — **BLOCKED, out of territory.** `modules/kb/**` belongs to the orchestrator lane. `pnpm check:scope-application` reports **no unspent scope anywhere in `modules/kb/**`**, so the specific defect this ticket is about is not present there; what the analysis still owes is the space/audience ACL half, written into [`lane-requests/lane-2.md`](../../lane-requests/lane-2.md) §2 and unchanged.
+- [x] Apply seam to module-access mutations (exact: `backend/src/modules/module-access/**`) — **The honest answer is that there is nothing here to apply it to, and that is a finding rather than an omission.** Module-access is authorized by *standing* (`assertModuleAccessPolicy`), which is why its routes carry `@AuthorizedInService` and not a permission key — and standing has no `DataScope`. `check:scope-application` confirms it: **zero scope resolutions in `modules/module-access/**`, `modules/rbac/**` and `modules/access/**` combined.** This is also the real reason the earlier attempt was reverted: it hard-coded `scope: "all"` into an `ObjectQuery` wrapper, which composed no predicate at all, because there was no scope to compose. The seam's application sites are all in domain modules; the checker names them.
+- [ ] Add allow/deny test matrices for each domain — **OPEN, out of territory.** Each matrix belongs to the domain's own controller e2e spec, and `*.e2e-spec.ts` is in `testPathIgnorePatterns` — those files are not executed coverage, so adding them there would produce four ticks and zero running assertions. The in-territory half is done and does run: `object-access.spec.ts` asserts the deny arms (`none` → `false`, unheld key → `none`, mistyped key → `none`).
 
 ## A confirmed live instance of this exact defect (Lane 2, 2026-08-26)
 
@@ -90,6 +92,24 @@ merely finer-grained than the data it stores. c19-03 is unaffected.
 `queryAnalytics` and apply it as a SQL predicate (`applyScope(scope, u.userId, cols)`), not to filter
 after aggregating. What an `own`-scoped approver *should* see is a genuine product question; that the
 endpoint must honour the scope it just resolved is not.
+
+**It has a twin, found 2026-08-27 by making the defect machine-checkable.**
+`DashboardLeaveService.getPendingApprovals` (`modules/dashboard/dashboard-leave.service.ts:80-96`)
+resolves `resolveLeavesDashboardScope`, refuses only `"none"`, then counts `leaveRequests` on `orgId`
+and `status = 'PENDING'` alone — so an `own`-scoped member's dashboard shows the organisation's
+pending-leave count. The `isApprover` boolean beside it selects resignation statuses, not leave
+scope. Both are written up with the exact change in [`lane-requests/s3.md`](../../lane-requests/s3.md)
+§3, and they should be fixed together, because they answer the same question on two surfaces.
+
+**How it was found, and why the finder nearly cleared it.** `pnpm check:scope-application` reports
+every handler that resolves a `DataScope` and never spends it. Its first version cleared
+`analytics` — it asked whether the line mentioning the scope also mentioned "cache", and the real
+code writes `` `${scope}:${year}` `` on its own argument line, which mentions nothing. The rule that
+works is not a heuristic about neighbouring words: a `DataScope` is one of four words, so
+interpolating it into a plain string produces a label and a label filters nothing, while a `sql`
+template can. Its first version also reported three false positives, all the same shape — a guard
+against `"none"` sharing a line with a use that survives it (`manageScope === "none" ? "own" :
+manageScope`). Every one of those five shapes is now pinned in the self-test.
 
 ## Attempted and reverted (Lane 2, 2026-08-26)
 

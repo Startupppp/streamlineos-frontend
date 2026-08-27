@@ -15,10 +15,16 @@
 
 ## Unknown-key closes
 
-`authorize()` fails closed on an unknown key without any special handling: `scopeFor` returns `"none"` for any key not in the resolved map, which maps to `{ allow: false, scope: "none", reason: "FORBIDDEN" }`. For a key whose module is not in `MODULE_CATALOG` (and therefore not `core`), the check in `moduleAvailability` returns `available: false` → `NO_MODULE` before `scopeFor` is even called. Two new tests in `authorize.spec.ts` prove this:
+`authorize()` fails closed on an unknown key without any special handling: `scopeFor` returns `"none"` for any key not in the resolved map, which maps to `{ allow: false, scope: "none", reason: "FORBIDDEN" }`.
 
-- [x] `"fails closed on a completely unknown key that appears in no module catalog"` — org owner gets `NO_MODULE`. (`backend/src/modules/access/authorize.spec.ts:103`)
-- [x] `"fails closed on a malformed key with no module segment"` — `moduleOf("bare-key")` returns `"bare-key"` as a module name; that module is not enabled → denied. (`backend/src/modules/access/authorize.spec.ts:110`)
+- [x] `"fails closed on a completely unknown key that appears in no module catalog"` — a member gets `FORBIDDEN`. (`backend/src/modules/access/authorize.spec.ts:103`)
+- [x] `"fails closed on a malformed key with no module segment"` — same path. (`backend/src/modules/access/authorize.spec.ts:110`)
+
+**Correction, 2026-08-27: the mechanism described here was wrong, and the two tests citing it had never passed.** This section used to claim the deny came from `moduleAvailability` returning `NO_MODULE` "before `scopeFor` is even called", and both tests asked an **org owner** and asserted `NO_MODULE`. Neither is true. `isCoreModuleKey` treats an *unknown* module as core (`module-registry.ts:170` — `definition === undefined || !definition.planGated`), so availability answers yes; and an org owner's `scopeFor` returns `"all"` for every key (`access.service.ts:655`), so an org owner is **allowed**. Unknown-module-is-core is deliberate: the registry lists what is *plan gated*, not what exists, so treating an absent entry as gated would 402 `settings`, `tasks` and every other ungated namespace — which is `backend/CLAUDE.md` §5's warning about `MODULE_CATALOG` read from the other side.
+
+The guarantee is real, it is just a different one: **`FORBIDDEN` from `scopeFor`, for everyone who is not an org owner.** The tests now assert that, plus two new cases pinning the owner path — that an owner is allowed by design, and that an owner restricted by `tokenScopes` is still denied — so the wrong assertion is not reintroduced as a bug report.
+
+The dates settle that this was never a regression: `76ae7053` (2026-08-25) introduced unknown-module-is-core, and `77e20610` (2026-08-26) added these two tests **afterwards**. They were written red and ticked without being run. `authorize.spec.ts` is an ordinary spec, not `*.e2e-spec.ts`, so it is executed coverage — nobody ran it. `npx jest src/modules/access/authorize.spec.ts` → **25 tests passing.**
 
 **Audit note (2026-08-26):** Ticked "permission mutations" (verified bumpPermissionsVersion call sites) and "report names exceptions" (verified PLATFORM_GLOBAL_TABLES per-entry rationale). Stale blocker removed from "wire CI check" — app.module.ts wiring is done.
 
