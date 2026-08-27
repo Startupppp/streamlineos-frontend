@@ -31,6 +31,7 @@ import {
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { RecentMovementsTable } from "./inventory-recent-movements";
 import { DashboardInsightsPanel } from "./dashboard-insights-panel";
+import { InventoryAiBriefCard } from "./inventory-ai-brief-card";
 
 function AddProductLink() {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -348,6 +349,8 @@ export function InventoryDashboardClient() {
             )}
           </div>
         )}
+
+        <InventoryAiBriefCard />
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
           <Card className="lg:col-span-3">
