@@ -19,72 +19,74 @@ Four facts, verified 2026-08-28, that shaped the tickets rather than being resta
 
 Work the frontier — any ticket whose blockers are all done. A ticket marked `—` can start immediately.
 
+The **S** column is the execution session that owns the ticket. The split was chosen so that **every blocking edge is inside one session**: S1–S5 can run fully in parallel, and S6 is the only one sequenced after another (S3). Session briefs are in [`sessions/`](sessions/README.md).
+
 ### Prefactor
 
-| # | Ticket | Blocked by | Status |
-|---|---|---|---|
-| 01 | [The request knows which membership it is](issues/01-the-request-knows-its-membership.md) | — | ready-for-agent |
-| 02 | [A principal declares what kind of thing it is](issues/02-a-principal-declares-what-it-is.md) | 01 | ready-for-agent |
+| # | S | Ticket | Blocked by | Status |
+|---|---|---|---|---|
+| 01 | S1 | [The request knows which membership it is](issues/01-the-request-knows-its-membership.md) | — | ready-for-agent |
+| 02 | S1 | [A principal declares what kind of thing it is](issues/02-a-principal-declares-what-it-is.md) | 01 | ready-for-agent |
 
 ### Phase 0 — authorization
 
-| # | Ticket | Blocked by | Status |
-|---|---|---|---|
-| 03 | [A permission snapshot cannot outlive its grant](issues/03-a-snapshot-cannot-outlive-its-grant.md) | 01 | ready-for-agent |
-| 04 | [Delegations and module overrides are keyed to the membership](issues/04-delegations-and-overrides-are-membership-keyed.md) | 01 | ready-for-agent |
-| 05 | [A machine credential is membership-keyed and bounded by a ceiling](issues/05-a-machine-credential-has-a-ceiling.md) | 02, 04 | ready-for-agent |
-| 06 | [Removing a membership removes everything derived from it](issues/06-removing-a-membership-removes-its-authority.md) | 04, 05 | ready-for-agent |
-| 07 | [Owner-only operations are enumerated, not implied](issues/07-owner-only-operations-are-enumerated.md) | — | ready-for-agent |
-| 08 | [A module transfer records its initiator and its expected current owner separately](issues/08-a-module-transfer-records-both-parties.md) | 07 | ready-for-agent |
+| # | S | Ticket | Blocked by | Status |
+|---|---|---|---|---|
+| 03 | S1 | [A permission snapshot cannot outlive its grant](issues/03-a-snapshot-cannot-outlive-its-grant.md) | 01 | ready-for-agent |
+| 04 | S1 | [Delegations and module overrides are keyed to the membership](issues/04-delegations-and-overrides-are-membership-keyed.md) | 01 | ready-for-agent |
+| 05 | S1 | [A machine credential is membership-keyed and bounded by a ceiling](issues/05-a-machine-credential-has-a-ceiling.md) | 02, 04 | ready-for-agent |
+| 06 | S1 | [Removing a membership removes everything derived from it](issues/06-removing-a-membership-removes-its-authority.md) | 04, 05 | ready-for-agent |
+| 07 | S1 | [Owner-only operations are enumerated, not implied](issues/07-owner-only-operations-are-enumerated.md) | — | ready-for-agent |
+| 08 | S1 | [A module transfer records its initiator and its expected current owner separately](issues/08-a-module-transfer-records-both-parties.md) | 07 | ready-for-agent |
 
 ### Phase 0 — the users table (expand → migrate → contract)
 
-| # | Ticket | Blocked by | Status |
-|---|---|---|---|
-| 09 | [Employment truth is backfilled into the organization-owned tables](issues/09-employment-truth-is-backfilled.md) | — | ready-for-agent |
-| 10 | [One accessor dual-reads employment, and shouts when the two disagree](issues/10-one-accessor-dual-reads-employment.md) | 09 | ready-for-agent |
-| 11 | [HR, directory and onboarding read the accessor](issues/11-hr-directory-and-onboarding-read-the-accessor.md) | 10 | ready-for-agent |
-| 12 | [Payroll, finance and compensation read the accessor](issues/12-payroll-and-finance-read-the-accessor.md) | 10 | ready-for-agent |
-| 13 | [The remaining readers migrate](issues/13-the-last-readers-migrate.md) | 10 | ready-for-agent |
-| 14 | [`users` holds authentication identity only](issues/14-users-holds-authentication-only.md) | 11, 12, 13 | ready-for-agent |
+| # | S | Ticket | Blocked by | Status |
+|---|---|---|---|---|
+| 09 | S2 | [Employment truth is backfilled into the organization-owned tables](issues/09-employment-truth-is-backfilled.md) | — | ready-for-agent |
+| 10 | S2 | [One accessor dual-reads employment, and shouts when the two disagree](issues/10-one-accessor-dual-reads-employment.md) | 09 | ready-for-agent |
+| 11 | S2 | [HR, directory and onboarding read the accessor](issues/11-hr-directory-and-onboarding-read-the-accessor.md) | 10 | ready-for-agent |
+| 12 | S2 | [Payroll, finance and compensation read the accessor](issues/12-payroll-and-finance-read-the-accessor.md) | 10 | ready-for-agent |
+| 13 | S2 | [The remaining readers migrate](issues/13-the-last-readers-migrate.md) | 10 | ready-for-agent |
+| 14 | S2 | [`users` holds authentication identity only](issues/14-users-holds-authentication-only.md) | 11, 12, 13 | ready-for-agent |
 
 ### Phase 0 — carried work and client contracts
 
-| # | Ticket | Blocked by | Status |
-|---|---|---|---|
-| 15 | [Every open item in `OPEN-FINDINGS.md` is closed or carries a dated reason](issues/15-the-open-findings-are-closed.md) | — | ready-for-agent |
-| 16 | [Every latency seam is instrumented and alerted below its SLO budget](issues/16-latency-seams-are-alerted-below-slo.md) | — | ready-for-agent |
-| 17 | [The query key carries the tenant](issues/17-the-query-key-carries-the-tenant.md) | — | ready-for-agent |
-| 18 | [The API surface is versioned and its contract is generated in CI](issues/18-the-api-surface-is-versioned.md) | — | ready-for-agent |
-| 19 | [Every module is registered through one versioned manifest](issues/19-every-module-has-one-manifest.md) | — | ready-for-agent |
+| # | S | Ticket | Blocked by | Status |
+|---|---|---|---|---|
+| 15 | S4 | [Every open item in `OPEN-FINDINGS.md` is closed or carries a dated reason](issues/15-the-open-findings-are-closed.md) | — | ready-for-agent |
+| 16 | S4 | [Every latency seam is instrumented and alerted below its SLO budget](issues/16-latency-seams-are-alerted-below-slo.md) | — | ready-for-agent |
+| 17 | S5 | [The query key carries the tenant](issues/17-the-query-key-carries-the-tenant.md) | — | ready-for-agent |
+| 18 | S5 | [The API surface is versioned and its contract is generated in CI](issues/18-the-api-surface-is-versioned.md) | — | ready-for-agent |
+| 19 | S5 | [Every module is registered through one versioned manifest](issues/19-every-module-has-one-manifest.md) | — | ready-for-agent |
 
 ### Phase 1 — placement without moving data
 
-| # | Ticket | Blocked by | Status |
-|---|---|---|---|
-| 20 | [Placement is a record, not a column](issues/20-placement-is-a-record.md) | — | ready-for-agent |
-| 21 | [A signed placement cache survives a control-plane outage](issues/21-placement-survives-a-control-plane-outage.md) | 20 | ready-for-agent |
-| 22 | [Every write carries its placement version and dies without the fence](issues/22-a-write-carries-its-placement-version.md) | 20 | ready-for-agent |
-| 23 | [No organization-owned query bypasses placement](issues/23-no-query-bypasses-placement.md) | 20 | ready-for-agent |
-| 24 | [An organization switch is revalidated in the target cell](issues/24-an-org-switch-is-revalidated-in-the-target-cell.md) | 01, 20 | ready-for-agent |
-| 25 | [Creating an organization is an idempotent, resumable saga](issues/25-creating-an-org-is-a-resumable-saga.md) | 20 | ready-for-agent |
+| # | S | Ticket | Blocked by | Status |
+|---|---|---|---|---|
+| 20 | S3 | [Placement is a record, not a column](issues/20-placement-is-a-record.md) | — | ready-for-agent |
+| 21 | S3 | [A signed placement cache survives a control-plane outage](issues/21-placement-survives-a-control-plane-outage.md) | 20 | ready-for-agent |
+| 22 | S3 | [Every write carries its placement version and dies without the fence](issues/22-a-write-carries-its-placement-version.md) | 20 | ready-for-agent |
+| 23 | S3 | [No organization-owned query bypasses placement](issues/23-no-query-bypasses-placement.md) | 20 | ready-for-agent |
+| 24 | S3 | [An organization switch is revalidated in the target cell](issues/24-an-org-switch-is-revalidated-in-the-target-cell.md) | 20 | ready-for-agent |
+| 25 | S3 | [Creating an organization is an idempotent, resumable saga](issues/25-creating-an-org-is-a-resumable-saga.md) | 20 | ready-for-agent |
 
 ### Phases 2–4 — cells
 
-| # | Ticket | Blocked by | Status |
-|---|---|---|---|
-| 26 | [A second cell exists and is proved from cold](issues/26-a-second-cell-is-proved-cold.md) | 20–25 | ready-for-agent · needs infrastructure |
-| 27 | [A cell has a measured capacity budget and an admission threshold](issues/27-a-cell-has-a-capacity-budget.md) | 26 | ready-for-agent · needs infrastructure |
-| 28 | [An organization moves between cells, and can roll back until the flip](issues/28-an-organization-moves-between-cells.md) | 22, 26 | ready-for-agent · needs infrastructure |
-| 29 | [Placement is automated and a noisy neighbour is relocated](issues/29-placement-is-automated.md) | 27, 28 | ready-for-agent · needs infrastructure |
+| # | S | Ticket | Blocked by | Status |
+|---|---|---|---|---|
+| 26 | S6 | [A second cell exists and is proved from cold](issues/26-a-second-cell-is-proved-cold.md) | 20–25 | ready-for-agent · needs infrastructure |
+| 27 | S6 | [A cell has a measured capacity budget and an admission threshold](issues/27-a-cell-has-a-capacity-budget.md) | 26 | ready-for-agent · needs infrastructure |
+| 28 | S6 | [An organization moves between cells, and can roll back until the flip](issues/28-an-organization-moves-between-cells.md) | 22, 26 | ready-for-agent · needs infrastructure |
+| 29 | S6 | [Placement is automated and a noisy neighbour is relocated](issues/29-placement-is-automated.md) | 27, 28 | ready-for-agent · needs infrastructure |
 
 ### Acceptance
 
-| # | Ticket | Blocked by | Status |
-|---|---|---|---|
-| 30 | [The workload envelope is a runnable load profile](issues/30-the-workload-envelope-is-runnable.md) | 26 | ready-for-agent · needs seed data |
-| 31 | [Declared degradation is tested, not described](issues/31-declared-degradation-is-tested.md) | 20 | ready-for-agent |
-| 32 | [Unit cost per cell is tracked and forecast](issues/32-unit-cost-per-cell-is-forecast.md) | 27 | ready-for-agent · needs infrastructure |
+| # | S | Ticket | Blocked by | Status |
+|---|---|---|---|---|
+| 30 | S6 | [The workload envelope is a runnable load profile](issues/30-the-workload-envelope-is-runnable.md) | 26 | ready-for-agent · needs seed data |
+| 31 | S4 | [Declared degradation is tested, not described](issues/31-declared-degradation-is-tested.md) | — | ready-for-agent |
+| 32 | S6 | [Unit cost per cell is tracked and forecast](issues/32-unit-cost-per-cell-is-forecast.md) | 27 | ready-for-agent · needs infrastructure |
 
 ## Deliberately not ticketed
 

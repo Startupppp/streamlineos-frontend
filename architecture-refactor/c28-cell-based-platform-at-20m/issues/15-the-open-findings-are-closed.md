@@ -14,9 +14,9 @@
 | 4 | `streamline_app`'s password is repaired in `.env`, not in Neon | Neon's control plane restores the previous password when the branch suspends. `ALTER ROLE` does not stick; it has to be set in the console. Operator action. |
 | 5 | `db:verify-rls` and `backend/CLAUDE.md` §4 contradict each other | Missing policies are at 0; the verifier still reports 907 `RLS is enabled but not forced`. §4 says never blanket-force. One of the two has to change. |
 | 6a | `DashboardLeaveService.getPendingApprovals` counts resignations org-wide | The leave count is scoped; the resignation count beside it filters only on `orgId` and `status`. Not a predicate swap — `resignations` has no pre-assignment approver column, so it needs a real answer for who a pending resignation's approver *would be*. |
-| 6 | `verify-permission-catalog.mjs` duplicates `check-permission-keys.mjs` | Two implementations of one security predicate. Delete it and repoint `verify:permissions`. |
+| 6 | ~~`verify-permission-catalog.mjs` duplicates `check-permission-keys.mjs`~~ | **Already resolved — verified 2026-08-28.** The file does not exist anywhere in the repo. `backend/package.json:43` already points `verify:permissions` at the canonical `src/scripts/check-permission-keys.mjs`. Strike it from `OPEN-FINDINGS.md`; do not go looking for it. |
 | 6 | `unregistered-injectables.mjs` reports 0 and can become a spec | Promote it beside `app-route-uniqueness.spec.ts`. |
-| 6 | `recurring-journals.controller.ts` holds its list schema inline | `CLAUDE.md` §6 puts it in `dto/`. |
+| 6 | ~~`recurring-journals.controller.ts` holds its list schema inline~~ | **Already resolved — verified 2026-08-28.** `modules/accounting/gl/recurring-journals.controller.ts:10-17` imports `createRecurringJournalSchema`, `listRecurringJournalsQuerySchema` and `updateRecurringJournalSchema` from `./dto/recurring-journals.schemas`. No inline schema remains. Strike it. |
 | 6 | 29 hand-rolled page fields remain | Nine deliberately exceed the 100/page cap and need a **product ruling**, not a mechanical swap. |
 | 6 | `INVITE_EXPIRED` is never written to the seat ledger | Expiry is evaluated by predicate, so the seat maths is right and no event is recorded. A future expiry sweep should emit one. |
 

@@ -2,9 +2,11 @@
 
 **What to build:** When a dependency fails, the platform does the thing the PRD says it does — and there is a test that proves it. When it is overloaded, it sheds optional work in the declared order while authentication, revocation, ownership, the billing ledger, payroll posting, audit and mandatory security delivery keep their reserved capacity.
 
-**Blocked by:** [20 — Placement is a record, not a column](20-placement-is-a-record.md)
+**Blocked by:** None — can start immediately
 
 **Status:** ready-for-agent
+
+**Not blocked by 20 (revised 2026-08-28).** This ticket originally listed 20 as a blocker for the control-plane row alone. It does not need it. That row has two halves and they belong to different tickets: *"refuse unknown or stale placement"* is **already true today** — `RegionRegistry.regionForOrg` raises for an unplaced organization and for one placed in a region this deployment does not serve — so this ticket asserts it against whatever placement resolution exists at the time. *"Serve valid signed placement cache"* is ticket 21's own acceptance criterion and is proved there, not here. The other seven dependency rows and the entire shed order have nothing to do with placement.
 
 **The declared behaviour, from the PRD:**
 

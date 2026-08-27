@@ -6,7 +6,13 @@
 
 **Status:** ready-for-agent
 
-**Grounding (2026-08-28, evidence not instruction — re-read at source):** PRD mistake #21 — *"Development-only OpenAPI and a base frontend query key without organization identity make compatibility and cross-org cache safety depend on convention."* Ticket 17 is the cache half; this is the contract half. Root `CLAUDE.md` §5 already requires client types to mirror the backend Zod schema exactly *because* drift silently strips fields into no-ops — this ticket makes that requirement checkable rather than reviewable. The error envelope is already standardised (`lib/api-client.ts` parses `message` as string or string array, `{ success, data }`, `204` → `undefined`); the version and the generation are what is missing.
+**Grounding (2026-08-28, evidence not instruction — re-read at source):** PRD mistake #21 — *"Development-only OpenAPI and a base frontend query key without organization identity make compatibility and cross-org cache safety depend on convention."* Ticket 17 is the cache half; this is the contract half. Root `CLAUDE.md` §5 already requires client types to mirror the backend Zod schema exactly *because* drift silently strips fields into no-ops — this ticket makes that requirement checkable rather than reviewable. The error envelope is already standardised (`lib/api-client.ts` parses `message` as string or string array, `{ success, data }`, `204` → `undefined`).
+
+Three facts verified 2026-08-28 that narrow this ticket considerably:
+
+- **Swagger exists but is development-only.** `backend/src/main.ts:97-110` builds the document and calls `SwaggerModule.setup` inside `if (isDevelopment)`. Production never builds it or exposes `api/docs`. The `recordRouteClassification` call that stamps `x-exposure` onto operations is inside that same block — so moving generation into CI must keep that stamping.
+- **No versioning exists at all.** `enableVersioning`, `VersioningType` and `@Version(` produce zero matches in `backend/src`.
+- **⚠️ Idempotency is already built — adopt it, do not rebuild it.** `common/idempotency/idempotency.interceptor.ts` is a full `NestInterceptor` claiming against a `commandFences` table with `IN_FLIGHT` / `COMPLETED` / `FAILED` states, handling replay, 409-while-in-flight and parameter mismatch. Schema at `db/schema/common/idempotency.ts`. This ticket's idempotency criterion is *enumerating which retryable commands opt in*, not writing a mechanism.
 
 ## Acceptance criteria
 
