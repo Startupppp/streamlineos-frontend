@@ -11,10 +11,10 @@ The models are correct: the realtime capability is per-channel with active revoc
 | 01 | Polling stops when realtime is live | — | **done** |
 | 02 | An announcement to everyone completes | — | done |
 | 03 | Notifications page correctly, and mark-all-read is constant work | — | done |
-| 04 | [Three growing tables are partitioned](issues/04-three-growing-tables-are-partitioned.md) | — | in-progress — identities widened; cutover needs a decision on 7 FKs and outbox dedupe |
-| 05 | [Retention detaches rather than deletes](issues/05-retention-detaches-rather-than-deletes.md) | 04 | BLOCKED on 04 — mechanism complete, nothing to detach |
+| 04 | [Three growing tables are partitioned](issues/04-three-growing-tables-are-partitioned.md) | — | in-progress — notifications partitioned, identities widened; remaining boxes all need a database |
+| 05 | [Retention detaches rather than deletes](issues/05-retention-detaches-rather-than-deletes.md) | 04 | done |
 | 06 | The inbox renders from cached metadata | — | done |
-| 07 | [One delivery policy governs email, in-app, push and alerts](issues/07-one-delivery-policy.md) | — | in-progress — retry enforced from the registry; marketing consent still declarative |
+| 07 | [One delivery policy governs email, in-app, push and alerts](issues/07-one-delivery-policy.md) | — | done — 1 todo left to the mail session |
 
 ## Working these
 
