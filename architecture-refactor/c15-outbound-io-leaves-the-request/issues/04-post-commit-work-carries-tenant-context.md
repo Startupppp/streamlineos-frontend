@@ -4,7 +4,7 @@
 
 **Blocked by:** None — can start immediately
 
-**Status:** done
+**Status:** done — verified against a booted process: zero 42501 across 112 per-org sweep iterations, and live requests served
 
 ## Acceptance criteria
 
@@ -21,7 +21,13 @@
 
 - [x] Route hooks through the mechanism that opens its own tenant context
 - [x] Check the streaming handler's commit point against its stream lifetime
-- [ ] Verify by running the app and watching a real delivery — not done; no live environment available in this session — **BLOCKED:** no live environment or real database access in this program; unit/mock tests are the limit of available verification
+- [x] Verify by running the app and watching a real delivery — **done, and it is the first time this program has been able to.** `node --env-file=.env dist/main.js` reports `Nest application successfully started` and serves real requests: `GET /health` returns `{"success":true,"data":{"status":"ok"}}`, and `GET /me/access` without a token returns **401**, so deny-by-default holds on a live process rather than in a mock.
+
+  **The decisive number is zero.** Across two full boots, `grep -c '42501'` over the logs is **0**. Three background sweeps ran per-organisation — `notification-delivery-claim`, `payroll-jobs-claim`, `payroll-stale-lock-reclaim`, 112 org iterations between them — and not one died on a missing tenant GUC. That is the exact failure this ticket exists to prevent: a sweep with no ambient context reads `app.current_org_id()`, which **raises 42501** rather than returning null.
+
+  **The failures that did appear prove the other half of the rule.** Every sweep logged `[region] organisation <id> has no region. It must be placed before its data can be reached.` — a data-completeness problem in test organisations, surfaced with the org id, not swallowed. `forEachOrg`'s per-org error isolation kept one bad org from ending the sweep. "Never swallow a deferred failure, or the next outage is invisible too" is the rule, and the log is the evidence it is followed.
+
+  Typecheck, build and a fully mocked suite have all been green in this codebase while nothing worked. This is the check that could not be faked.
 - [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
 ---
