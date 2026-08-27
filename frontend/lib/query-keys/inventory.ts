@@ -58,6 +58,8 @@ export const inventoryQueryKeys = {
       [...base, "inventory", "serial", serialId] as const,
     expiry: (params?: Record<string, unknown>) =>
       [...base, "inventory", "expiry", params] as const,
+    reconciliation: (params?: Record<string, unknown>) =>
+      [...base, "inventory", "reconciliation", params] as const,
     traceability: (params?: Record<string, unknown>) =>
       [...base, "inventory", "traceability", params] as const,
     vendorReturns: (params?: Record<string, unknown>) =>

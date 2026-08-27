@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileText, BarChart3, ClipboardList, ShieldCheck, TrendingUp, Package, Globe, ClipboardCheck, RefreshCcw, History, BarChart2, Building2, SlidersHorizontal, Calculator, Tag, Warehouse, ArrowLeftRight, ShoppingCart, Truck, Activity, Layers, TrendingDown, Scan, Boxes, CalendarClock, Container, Upload, RotateCcw, PackageCheck, DollarSign } from "lucide-react";
+import { LayoutDashboard, FileText, BarChart3, ClipboardList, ShieldCheck, TrendingUp, Package, Globe, ClipboardCheck, RefreshCcw, History, BarChart2, Building2, SlidersHorizontal, Calculator, Tag, Warehouse, ArrowLeftRight, ShoppingCart, Truck, Activity, Layers, TrendingDown, Scan, Boxes, CalendarClock, Container, Upload, RotateCcw, PackageCheck, DollarSign, Scale } from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
 export const INVENTORY_NAV_GROUPS: NavGroup[] = [
@@ -234,6 +234,12 @@ export const INVENTORY_NAV_GROUPS: NavGroup[] = [
             icon: Calculator,
             href: "/inventory/costing",
             requiredPermission: "inventory:reports:read",
+          },
+          {
+            label: "Reconciliation",
+            icon: Scale,
+            href: "/inventory/reconciliation",
+            requiredPermission: "inventory:stock:reconcile",
           },
         ],
       },
