@@ -1,6 +1,6 @@
 # c7 · Turn the chat send path into a fan-out module
 
-**Status: implemented on the durable transactional outbox.** Re-audited at source 2026-08-27. Migration `0474_external_effect_ledger` is deployed and the fan-out has an injectable outbox-backed provider seam, deterministic idempotency context for realtime/push/notifications, tenant-scoped lease fencing, transactional retry, replay protection, and no-double-dispatch tests. The current ledger report has zero effect rows, so live fault-injection evidence and provider-enforced exactly-once remain open.
+**Status: implemented on the durable transactional outbox.** Re-audited at source 2026-08-27. Migration `0474_external_effect_ledger` is deployed and the fan-out has an injectable outbox-backed provider seam, deterministic idempotency context for realtime/push/notifications, tenant-scoped lease fencing, transactional retry, replay protection, and no-double-dispatch tests. Focused tests now also prove malformed persisted payloads and realtime/deferred provider failures become durable retry outcomes. The current ledger report has zero effect rows, so live fault-injection evidence and provider-enforced exactly-once remain open.
 
 ## Problem Statement
 

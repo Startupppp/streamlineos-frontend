@@ -1,6 +1,6 @@
 # c9 transactional outbox decision
 
-Verified 2026-08-26 against the current backend implementation.
+Verified 2026-08-27 against the current backend implementation. Focused fault-injection tests cover retry, dead-letter, lease fencing, inbox duplicate suppression, malformed chat payloads, and external-effect replay suppression. These are local deterministic proofs; production backlog draining and provider-side exactly-once remain runtime gates.
 
 ## Decision
 
