@@ -2,7 +2,7 @@
 
 **Status: implemented with strict boundary follow-up.** Re-audited at source 2026-08-27. Billing resolves an organisation-configured provider through `PaymentProviderResolver`; concrete adapters own credential handling, and the legacy Razorpay compatibility route delegates through the provider-neutral webhook seam. Focused adapter, substitution, forged-signature, and replay tests pass. Live provider delivery/replay and provider-side duplicate-suppression evidence remain operational gates.
 
-**Current audit (2026-08-27):** Billing resolves an organisation-configured provider through `PaymentProviderResolver`, keeps provider credentials out of `BillingService`, routes the legacy Razorpay compatibility boundary through provider-neutral handling, and has provider substitution/webhook failure coverage. The remaining strict evidence is live provider delivery, replay, and downstream acknowledgement behavior; repository tests cannot prove provider-side duplicate suppression.
+**Current audit (2026-08-27):** Billing resolves an organisation-configured provider through `PaymentProviderResolver`, keeps provider credentials out of `BillingService`, routes the legacy Razorpay compatibility boundary through provider-neutral handling, and has provider substitution/webhook failure coverage. One code-level boundary remains: the billing webhook domain schema still consumes the normalized `payment.entity` shape typed as `RazorpayPayment`; a genuinely differently shaped provider needs an explicit neutral-domain mapping. The strict operational evidence also remains live provider delivery, replay, and downstream acknowledgement behavior; repository tests cannot prove provider-side duplicate suppression.
 
 ## Problem Statement
 
