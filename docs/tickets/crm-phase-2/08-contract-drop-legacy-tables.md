@@ -1,6 +1,6 @@
 # 08 — Contract: drop the legacy tables, and make regression impossible
 
-**Status:** expand complete — every blocking `client_id` now carries a populated party beside it, kept in step by a trigger. Two of four readers cleared. **The contract (dropping `client_id`, then the tables) is the remaining ticket.**
+**Status:** expand complete and every production reader migrated. **The contract is blocked on something the ticket never scoped: these tables own the CRM's public integer identifiers.** Dropping them is a URL and API change, not a migration.
 **Track:** A — identity convergence
 **Blocked by:** 03, 04, 05, 06, 07
 
@@ -256,3 +256,66 @@ being guessed at.
    pass covered `clients`, which was the largest of the four.
 3. **The contract**: drop `client_id`, drop the triggers, drop the tables. That
    is the destructive half and it should be its own ticket with its own review.
+
+
+---
+
+## Why the contract stops here (2026-08-27)
+
+Asked to take ticket 08 to 100%. Everything up to the drop is done; the drop
+itself runs into something the ticket did not anticipate, and it is worth
+recording precisely rather than as a caution.
+
+### What is finished
+
+| | |
+|---|---|
+| Blocking columns with a party beside them | **31 of 31** |
+| Dual-write triggers | **31**, one generic function, verified live |
+| Production readers of the legacy tables | **0** |
+| Still on the register | the seam's own 14 files, and one spec fixture |
+
+`leads`, `clients`, `contacts` and `crm_organizations` are no longer read by any
+service. `leadViewFrom` already builds a whole lead out of a Party row through
+`LEAD_MIRROR.derive` — the modules speak the legacy *vocabulary* but read Party.
+
+### The wall
+
+**These tables own the CRM's public identifiers.**
+
+`leads.id`, `clients.id` and `contacts.id` are serial integers, and they are not
+an internal detail:
+
+- `GET /leads/:leadId` parses them with `ParseIntPipe` — 4 in the leads
+  controller, 5 in contacts, 11 in clients.
+- The frontend routes on them: `/crm/leads/[leadId]`, and every hook is typed
+  `leadId: number`.
+- The 31 columns just expanded still hold them.
+
+Party's identifier is a UUID. So dropping these tables does not just remove a
+mirror — **it changes what a lead *is called*, everywhere**: every API path,
+every stored link, every bookmark a customer has, and every route param in the
+frontend. That is a public interface migration with a redirect story, not a
+schema change, and it is a materially different piece of work from "drop the
+legacy tables and make regression impossible".
+
+An attempt was made to land the type seam that would precede it —
+`legacy-shapes.ts`, moving `LeadRow` and its siblings off `typeof
+leads.$inferSelect`. **The reader ratchet rejected it**, correctly: the file
+imports the legacy tables, and the register's own rule is that it may only
+shrink. It was removed rather than exempted. An invariant that gets waived the
+first time it is inconvenient is not one, and in this case it was also telling
+the truth — the file is preparation for a drop that cannot proceed.
+
+### What closing this actually needs
+
+1. **A decision on identity.** Either the CRM's public ids become party UUIDs —
+   with redirects from every integer URL — or the integers are preserved
+   independently of the legacy tables, e.g. a `party_legacy_id` that survives
+   them. The second keeps every existing link working and is almost certainly
+   the right answer, but it is a decision, not an implementation detail.
+2. The type seam, once (1) is settled.
+3. The destructive migration: drop 31 columns, 31 triggers, 4 tables.
+
+Steps 2 and 3 are a day's work once step 1 exists. Step 1 is the ticket that was
+never written.
