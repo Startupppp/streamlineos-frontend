@@ -19,7 +19,7 @@ This is the recommended architecture for 20M+ **registered users** because capac
 
 ## Product intent
 
-StreamlineOS is one organization workspace containing Home, Knowledge Base, Chat, Mail, Calendar, Notifications, HRMS, Payroll, Build, CRM, Inventory, Accounting, Support, Surveys, Sign, automation, and future modules. A person owns one global login and may hold a separate membership in many organizations. Each organization owns its operational data, module enablement, people, access assignments, files, indexes, integrations, audit history, and billing relationship.
+StreamlineOS is one organization workspace containing Home, Knowledge Base, Chat, Mail, Calendar, Notifications, Directory, HRMS, Payroll, Timesheets, Build, CRM, Inventory, Accounting/Finance, Billing, Support, Surveys, Sign, Blog/Publishing, Workflows/Automation, Integrations, AI, portal surfaces, and future modules. A person owns one global login and may hold a separate membership in many organizations. Each organization owns its operational data, module enablement, people, access assignments, files, indexes, integrations, audit history, and billing relationship.
 
 The architecture must make these properties structural:
 
@@ -52,6 +52,10 @@ The first capacity program must test at least the following planning envelope. T
 
 Every cell receives its own measured capacity budget. Placement stops before a cell reaches 60% of its proven limiting resource so one failure, deploy, or traffic burst does not consume all headroom.
 
+This PRD was grounded against the repository's region/tenant transaction path, organization lifecycle and switching, route classification, fixed-standing permission catalog, portal principals, Composio adapter, frontend cache rules, migrations, c10–c27 reviews, and `OPEN-FINDINGS.md`. A requirement is marked KEEP when that implementation is sound; target changes name the failure they prevent.
+
+**Repository verdicts:** KEEP and deepen the NestJS modular monolith, `RegionRegistry`/`withTenant` routing, explicit organization lifecycle, deny-by-default route classification, six structural standings with platform capabilities, application-role RLS model, outbox/idempotency primitives, and Composio seam. REPAIR the membership integrity, temporal authorization cache, query-key tenancy, migration/RLS verification, lifecycle propagation, and worker/retention findings. REPLACE only global identity fields that hold organization employment/payroll facts, synthetic-owner machine authority, and any request-path outbound/fanout implementation that cannot be durably recovered.
+
 ## Architecture
 
 ```text
@@ -77,7 +81,7 @@ Every cell receives its own measured capacity budget. Placement stops before a c
         │ object storage adapter │  │ object storage adapter │
         │ realtime adapter       │  │ realtime adapter       │
         └──────────────┬─────────┘  └──────────────┬─────────┘
-                       └──── durable event backbone ┘
+             isolated cell queues; sanitized control events only cross cells
 ```
 
 ### Control plane
@@ -86,6 +90,7 @@ The control plane owns only global coordination:
 
 - authentication account and credential identity;
 - organization directory and verified domains;
+- a derived account-to-organization discovery index for organization switching;
 - organization placement and placement version;
 - region/cell inventory and health;
 - global plan, meter, feature, and permission catalogs;
@@ -93,7 +98,7 @@ The control plane owns only global coordination:
 - organization migration state;
 - platform administration and global audit events.
 
-It does not own HR, CRM, chat, knowledge, payroll, project, inventory, or organization audit records. Existing sessions cache a signed placement result so a control-plane outage does not stop traffic for already placed organizations.
+It does not own membership authority, HR, CRM, chat, knowledge, payroll, project, inventory, or organization audit records. The discovery index is a projection, never authorization truth: a switch is revalidated against the target cell before a session is issued. The control plane is multi-region and strongly consistent only where global serialization is required: placement, slug/domain reservations, and migration fences. Invite, event, and provider-receipt IDs are globally unique by construction and remain cell-owned. Existing sessions cache a signed, expiring placement result so an outage does not stop traffic for already placed organizations.
 
 The placement record is explicit:
 
@@ -106,6 +111,8 @@ organization_placement
   object_storage_region
   search_cluster
   placement_version
+  write_fence_token
+  lease_expires_at
   status              ACTIVE | MOVING | READ_ONLY | FAILED
   updated_at
 ```
@@ -151,6 +158,8 @@ src/
 
 Each domain owns its schema, permission namespace, queries, mutations, events, background work, cache invalidation, retention, and operational budgets. A domain exposes a small interface; its storage and orchestration remain implementation details. Synchronous calls cross an in-process interface only when the caller needs the answer to commit. Everything else uses durable events.
 
+Every module is registered through one versioned manifest: module ID, product route, standing ladder, permission namespaces, entitlement, schema owner, data classification, events, cache namespaces, retention, search ACL strategy, SLO/budget, migrations, navigation, and public/portal exposure. A future module cannot ship until tenant isolation, permission catalog, route classification, navigation visibility, cold migration, restore, and removal checks pass. This deep manifest replaces parallel registries; it does not become a generic runtime framework.
+
 Microservices are not the default. Extract a deployment only when measurements show an independent scaling, reliability, security, or release requirement. Chat fanout, notification delivery, search ingestion, and billing webhooks are likely first candidates; HR, CRM, settings, and inventory may remain in the modular monolith much longer.
 
 ## Organization and identity model
@@ -169,6 +178,8 @@ Microservices are not the default. Extract a deployment only when measurements s
 | Customer/contact identity | organization party/contact |
 
 Every organization relationship references the membership or organization person, not the global account. Removing a membership cannot leave a live organization credential, delegation, module override, group edge, record grant, provider connection, or realtime capability behind.
+
+Organization creation is an idempotent saga: reserve global ID/slug/domain and placement, bootstrap the cell organization and owner membership, then activate the directory projection. Each step records state and can resume or compensate. Archive, restore, export, ownership transfer, scheduled purge, purge cancellation, legal hold, and terminal deletion use equally explicit state machines. Purge completion includes database rows, objects, cache, search/vector documents, analytics copies, provider mirrors, backups after expiry, and auditable evidence.
 
 ## Authorization model
 
@@ -199,11 +210,11 @@ active membership
   + MFA/device/risk conditions
 ```
 
-Organization owner and active organization admin share the normal product catalog. Organization ownership transfer, organization deletion, and explicitly owner-only lifecycle operations still require the owner. Module owners manage their module. Module admins administer their module but cannot transfer ownership. Module members receive only attached capabilities.
+Organization owner and active organization admin receive the normal product capabilities in every enabled and entitled module. Organization ownership transfer, organization deletion, and explicitly owner-only lifecycle operations still require the owner. Module owners manage their module. Module admins administer their module but cannot transfer ownership. Module members receive only attached capabilities.
 
 All organization-scoped authorization edges use `(org_id, membership_id)` composite integrity. Permission snapshots are keyed by `(org_id, membership_id, access_version)` and carry `valid_until`, capped at the nearest role or delegation start/expiry. A shared cache can never extend authority beyond `valid_until`.
 
-Human membership, personal token, agent token, integration, public portal user, and system job are separate principal variants. Only a human membership can be an organization owner. Machine principals have an explicit audience, capability ceiling, expiry/rotation policy, and audit identity; no implementation may manufacture `isOrgOwner: true`.
+Human membership, personal token, agent token, integration, portal member, external signer/support guest, public-link token, and system job are separate principal variants. Only a human membership can be an organization owner. Machine and external principals have an explicit audience, organization/project/record scope, capability ceiling, expiry/rotation policy, and audit identity; no implementation may manufacture `isOrgOwner: true`. Platform support access is not organization ownership: it requires MFA, reason, approval, a short lease, immutable audit, and customer-visible evidence where policy allows.
 
 Frontend visibility derives from the same resolved snapshot used by backend authorization. Hiding navigation or a button is user experience, never enforcement. Tenant, lifecycle, scope, and record ACL enter the SQL/search predicate before retrieval.
 
@@ -214,7 +225,7 @@ Home is the universal employee surface defined by the constitution: dashboard, c
 - Reading one's own data derives the subject from the authenticated membership.
 - KB reads still enforce space, audience, project, page, and record ACLs.
 - Chat, mail, calendar, and notification administration remain capability-gated.
-- HR, payroll, finance, CRM, Build, inventory, and knowledge authoring remain module/capability-gated.
+- HR, payroll, finance, CRM, Build, inventory, and knowledge authoring remain module/capability-gated; inaccessible module navigation, routes, and actions are absent from the UI and denied by the backend.
 - A module deny cannot remove constitutionally universal self-service, but it can remove non-universal module work.
 
 ## Data architecture
@@ -222,6 +233,8 @@ Home is the universal employee surface defined by the constitution: dashboard, c
 ### Transactional data
 
 PostgreSQL remains authoritative. Every tenant-owned table has an explicit organization path, tenant-correlated foreign keys, and indexes beginning with `org_id` where the access pattern is organization-scoped. RLS is applied according to the verified matrix and tested as the non-bypass application role.
+
+Mutable records carry `created_at`, `updated_at`, actor attribution, and optimistic version where concurrent edits matter. Soft delete is used only when undo, retention, or referential continuity is a product requirement; immutable ledgers append corrections, ephemeral rows hard-delete, and legal hold overrides purge. Partial unique constraints exclude lifecycle-terminal rows only where reuse is explicitly allowed.
 
 Do not rewrite all identifiers. Preserve stable existing keys. New externally exposed/event identifiers should be globally unique and time-sortable where useful; local bigint keys remain appropriate for high-volume rows when every external reference also carries organization/cell context.
 
@@ -245,6 +258,8 @@ Files live in region-matched object storage. Database rows own metadata, organiz
 
 PostgreSQL is authoritative; a transactional outbox drives indexing. Every indexed document/chunk carries organization, lifecycle, source revision, ACL revision, visibility, and allowed principal/group identifiers. Search and vector candidate generation apply those restrictions inside the index. Fetching globally and filtering afterward is prohibited.
 
+Tenant-defined fields use platform-owned typed definitions plus bounded JSONB values or domain sidecar value tables according to queryability; never EAV for core fields and never per-tenant schemas. Indexed custom values receive explicit generated/sidecar indexes, validation, limits, and migration/version semantics.
+
 ### Analytics
 
 Operational dashboards use bounded transactional projections. Historical and cross-domain analytics flow asynchronously into a warehouse/lakehouse. Product requests never synchronously join across cells or scan event history to calculate a dashboard.
@@ -265,7 +280,7 @@ domain transaction
 
 Delivery is at least once. Consumers deduplicate with stable event/source keys. Exactly-once marketing claims are rejected; correctness comes from idempotent state transitions and database constraints.
 
-An event contains `event_id`, `org_id`, `cell_id`, `type`, `schema_version`, aggregate identity, occurrence time, correlation ID, causation ID, and trace context. Sensitive payloads carry references rather than unnecessary PII.
+An event contains `event_id`, `org_id`, `cell_id`, `type`, `schema_version`, aggregate identity, occurrence time, correlation ID, causation ID, and trace context. Sensitive payloads carry references rather than unnecessary PII. Each cell has isolated broker namespaces, queues, quotas, and dead letters; only allow-listed, minimized control-plane events cross cells, so a global broker cannot recreate a platform-wide blast radius.
 
 Separate worker pools and budgets exist for chat fanout, notification/email, search/indexing, imports/exports, billing, calendar sync, AI ingestion, and maintenance. One 100,000-recipient broadcast creates one logical job and bounded batches; it never performs recipient writes sequentially inside the request.
 
@@ -297,33 +312,48 @@ The correctness argument is simple: deleting all caches may reduce performance b
 - Read replicas serve stale-tolerant projections only. Authorization, ownership, billing, quotas, writes, and read-after-write use the primary.
 - Every critical query has a production-role buffer/read budget and a representative largest-tenant fixture.
 
+## Client and public interface delivery
+
+NestJS exposes a versioned REST interface with Zod validation, generated OpenAPI in CI, stable error envelopes, idempotency keys for retryable commands, cursor/filter/sort contracts, deprecation dates, usage telemetry, and a compatibility window for deployed web/mobile clients. Breaking changes use a new declared version; compatibility adapters are removed only after consumer evidence. Webhooks and events are independently versioned.
+
+Next.js public pages use server rendering/static generation, CDN caching, canonical metadata, sitemaps, structured data, and measured Core Web Vitals. The authenticated application uses server components where useful, route-level code splitting, virtualized large views, tenant-aware query/cache keys, and cache clearing during organization switch until every key is fixed. Shared design tokens and interaction patterns must meet WCAG 2.2 AA, keyboard/screen-reader use, responsive layouts, localization, timezone, currency, and reduced-motion requirements.
+
 ## Domain scale rules
 
 - **Chat:** channel authorization before message retrieval; partitioned messages; per-member/channel read watermark; bounded fanout; ordering guaranteed within a conversation, not globally.
 - **Mail/inbox:** provider cursors and sync state are durable; exhausted accounts stay exhausted; merging is cursor-based and bounded; provider calls leave requests.
 - **Notifications:** event catalog and preference routing are centralized; mandatory security/legal events cannot be suppressed; unread counts use projections/watermarks; delivery is asynchronous and retryable.
-- **Calendar:** RRULE library expansion in the event timezone; explicit exceptions; bounded occurrence windows; free/busy and conflict reads share recurrence semantics.
+- **Calendar:** a standards-tested RRULE library, never hand-rolled recurrence; IANA event timezone and DST-safe expansion; explicit moved/cancelled exceptions; bounded occurrence windows; free/busy and conflict reads share exactly the same recurrence semantics.
 - **Knowledge/Wiki/Chatbot:** immutable revisions, asynchronous idempotent ingestion, source-hash deduplication, ACL revision on every chunk, restricted candidate generation, and deletion/tombstone propagation.
-- **Billing:** immutable invoices and ledger events; webhook receipt before processing; idempotent/out-of-order transitions; versioned catalog; local entitlement projection so ordinary requests do not call a provider.
+- **Billing:** versioned plan/price/entitlement catalog; effective-dated seats and usage meters; proration previews plus immutable invoice/ledger/tax/currency snapshots; webhook receipt before idempotent out-of-order processing and replay; local entitlement projection so ordinary requests never call a provider.
 - **HR/Payroll:** organization-scoped employment truth, effective-dated assignments and compensation, encrypted sensitive profiles, approval/segregation controls, immutable posting/payout ledgers.
 - **CRM/Build/Inventory:** organization-leading indexes, bounded list projections, domain events rather than direct cross-domain writes, and record/team ACLs composed in queries.
+- **Directory/Party/Portal/Sign:** one organization-person/party identity seam; portal and signer principals are record/project scoped; public tokens are hashed, expiring, revocable, rate-limited, and never imply employee membership.
+- **Support/Surveys/Workflows:** bounded rule evaluation and recipient selection; immutable submission/execution history; idempotent resumable runs; automation executes under the initiator's captured capability ceiling, not owner authority.
+- **Integrations/Webhooks:** Composio is the provider adapter; StreamlineOS stores only its scoped connection mirror. Inbound receipts are persisted before processing, uniquely deduplicated, signature/timestamp verified, replayable, and converted to cell-local outbox work.
+- **AI:** retrieval is tenant/ACL constrained before model input; resist prompt injection and tool exfiltration; mutations require policy and human confirmation; model allowlists, redaction, retention, token budgets, provenance, and evaluation gates are mandatory.
 
 ## Reliability, security, and compliance
 
-Required objectives at the accepted workload:
+Required objectives at the accepted workload. Microseconds apply only inside one process; networked database/cache calls are millisecond budgets and browser-visible data is an end-to-end budget:
 
 | Objective | Target |
 |---|---:|
 | Authenticated interactive availability | 99.95% monthly per cell |
 | Cross-organization data exposure | zero tolerated |
-| p95 cached read | ≤ 300 ms at cell edge |
+| p99 in-process hot authorization/cache lookup | ≤ 100 µs without I/O |
+| p95 same-region Redis operation | ≤ 2 ms including network |
+| p95 simple indexed PostgreSQL execution | ≤ 20 ms; bounded complex read ≤ 50 ms |
+| p95 browser-visible cached read | ≤ 150 ms at the serving-region edge |
+| p75 first useful authenticated view | ≤ 1 second on the declared reference device/network |
 | p95 transactional write | ≤ 500 ms excluding declared async work |
 | Permission revocation | ≤ 5 seconds explicit; never past `valid_until` temporal |
 | Durable event loss after acknowledged commit | zero |
-| Database recovery point | ≤ 5 minutes; zero for committed ledger/outbox via WAL/PITR policy |
+| Ordinary node/process failure | acknowledged commits survive through synchronous database durability |
+| Regional-disaster recovery point | ≤ 5 minutes, proven by restore exercise |
 | Cell recovery time | ≤ 60 minutes, validated by exercise |
 
-Encryption is required in transit and at rest; sensitive payroll/identity fields use application-level envelope encryption with auditable key rotation. Logs, traces, analytics, events, and search documents minimize or redact PII. GDPR deletion, legal hold, retention, export, residency, consent, and audit requirements operate per organization and propagate to every adapter.
+Encryption is required in transit and at rest; sensitive payroll/identity fields use application-level envelope encryption with per-region/cell KMS keys and auditable rotation. Secrets never enter source, events, logs, or analytics; integration credentials remain in Composio. Logs, traces, analytics, events, and search documents minimize or redact PII. GDPR deletion, legal hold, retention, export, residency, consent, and audit requirements operate per organization and propagate to every adapter. Malware scanning, content limits, spam controls, and organization/user/IP/device rate limits protect uploads, chat, invitations, portals, and public links.
 
 Rate limits combine principal, organization, route cost, and provider limits. Large tenants receive quotas and workload isolation, not globally larger unbounded queries. Every critical alert must have an owner, threshold, runbook, paging destination, deduplication, and a test event that proves a human receives it.
 
@@ -352,7 +382,9 @@ Capacity is constrained by unit economics as well as throughput. Track cost per 
 
 Every deep platform module has one accountable owner, an interface contract, SLO, capacity budget, data classification, retention rule, runbook, dashboard, alert destination, and restore test. Architecture decisions that alter tenancy, authorization, placement, event semantics, encryption, or cell topology require an ADR and backward-compatible rollout plan.
 
-Schema, event, and interface changes are additive first. Readers tolerate old and new versions during rollout; writers emit one declared version; backfills are resumable and measured; destructive contraction waits until usage proves the old form is absent. A cell deploy uses canary traffic, automatic SLO rollback, compatibility checks against the oldest supported schema/event version, and no all-cell simultaneous release.
+Observability uses request, correlation, causation, event, cell, and sampled organization identifiers in logs/traces. Organization and user IDs are prohibited as unbounded metric labels. SLOs are measured per cell and user journey, and platform rollups cannot hide one unhealthy cell.
+
+Schema, event, and interface changes are additive first. A control-plane cell-schema registry records desired/current version and health. Readers tolerate old and new versions during rollout; writers emit one declared version; backfills are resumable and measured; destructive contraction waits until usage proves the old form is absent. A cell deploy uses canary cells/traffic, automatic SLO rollback, compatibility checks against the oldest supported schema/event version, and no all-cell simultaneous release.
 
 ## Mistakes in the current or earlier design
 
@@ -376,6 +408,9 @@ These are stated without blame; each is a concrete lesson the target architectur
 16. **Deletion evidence relied too much on text search.** A route, file, schema, or module is removable only after graph, runtime, migration, analytics, external consumer, and build evidence.
 17. **Domain breadth encouraged shallow proliferation.** Particularly in HR, many routes/tables/modules increase omission and migration risk. New implementation must deepen existing modules before adding parallel concepts.
 18. **Infrastructure extraction was considered before a measured seam.** A network deployment is justified only when independent scaling or reliability creates a real second adapter; otherwise it adds failure modes without leverage.
+19. **A sound region seam risked being redesigned twice.** The existing `RegionRegistry` and tenant transaction routing already provide leverage; replacing them would create competing placement truth instead of preventing a failure.
+20. **Recovery objectives conflated failure classes.** WAL durability protects ordinary committed writes, but a five-minute regional RPO cannot simultaneously promise zero regional data loss; each failure class needs an honest tested objective.
+21. **Client contracts and caches were not fully tenant/version structural.** Development-only OpenAPI and a base frontend query key without organization identity make compatibility and cross-org cache safety depend on convention.
 
 ## Migration plan
 
@@ -387,14 +422,19 @@ These are stated without blame; each is a concrete lesson the target architectur
 - Introduce discriminated human/machine principals and remove synthetic owner contexts.
 - Resolve organization-admin and module-transfer policy/implementation.
 - Complete fanout, retention, route-classification, RLS, migration-chain, and operational-alert findings already tracked in c10–c27.
+- Resolve every still-open item in `architecture-refactor/OPEN-FINDINGS.md`, including vault audit attribution, durable production app-role credentials, the FORCE-RLS policy/verifier contradiction, pagination duplication, and the missing invitation-expiry ledger event.
+- Make frontend query keys tenant-aware; retain full cache clearing on organization switch until that migration is complete.
+- Inventory routes, schemas, queries, validators, UI files, and exports with graph/runtime/build/migration/analytics/consumer evidence; delete duplicates or dead artifacts only through a reviewed migration/deprecation and rollback plan.
 - Make ownership/authorization tests and live application verification green.
 
 ### Phase 1 — introduce placement without moving data
 
-- Create the placement registry and deep placement interface.
+- KEEP the existing `RegionRegistry`, `withTenant` region resolution, region bindings, and region tests; deepen the placement interface from region-only lookup to `(region, cell, shard, placement_version, fence)` without a parallel registry.
 - Treat the existing production deployment as cell `legacy-1`.
 - Route every organization request through placement resolution.
 - Cache signed placement with versioning and fail closed on unknown/moving placement.
+- Add the derived multi-cell membership discovery index and revalidate membership in the target cell on every organization switch.
+- Run the idempotent organization-create saga and global uniqueness reservations through the control plane.
 - Prove no organization-owned query bypasses placement.
 
 ### Phase 2 — create a second cell
@@ -430,32 +470,16 @@ Writes carry placement version and are refused on stale routing. Copy is checksu
 
 ## Acceptance criteria
 
-- [ ] Every organization resolves to exactly one active placement and one writable cell.
-- [ ] An unknown, stale, or moving placement cannot write to the wrong cell.
-- [ ] Control-plane unavailability does not stop valid cached organizations, and cannot route a new/unknown organization by guess.
-- [ ] No organization-owned request performs a synchronous cross-cell join or transaction.
-- [ ] A cell failure affects only organizations assigned to that cell.
-- [ ] A 100,000-member organization passes authorization, list, broadcast, realtime, search, backup, and relocation scenarios within budgets.
-- [ ] The full planning workload passes sustained and burst tests with at least 40% headroom in every limiting cell resource.
-- [ ] Cross-organization isolation passes application-role database, cache, object-storage, realtime, search/vector, event, backup, and restore tests.
-- [ ] Permission revocation is visible across nodes within five seconds and temporal grants never survive `valid_until`.
-- [ ] Removing and re-inviting an account cannot restore old membership grants, delegations, denies, groups, tokens, provider connections, or realtime access.
-- [ ] No machine principal can obtain organization-owner authority or a capability outside its declared ceiling.
-- [ ] Every acknowledged correctness-critical mutation has its authoritative rows and outbox event committed atomically.
-- [ ] Duplicate, delayed, retried, and out-of-order events preserve correct state.
-- [ ] Cache deletion changes performance only, not authorization or durable correctness.
-- [ ] Search and vector retrieval apply ACLs before candidate return and match direct-read visibility.
-- [ ] Every unbounded list is cursor-paged with deterministic ordering and a hard cap.
-- [ ] Every critical read has an application-role buffer budget on production-shaped largest-tenant data.
-- [ ] Cold database creation, forward migration, rollback procedure, PITR restore, and cell restore are exercised in CI/staging.
-- [ ] Every critical alert reaches an owned paging destination during a scheduled test.
-- [ ] Organization relocation completes with checksummed data, objects, indexes, outbox offsets, audit history, and a tested rollback point.
-- [ ] A stale router and concurrent relocation cannot produce writes in two cells; placement fencing is proved under race.
-- [ ] Every external dependency failure follows its declared degraded behavior without tenant leakage or lost acknowledged work.
-- [ ] Admission control preserves reserved security, ownership, ledger, payroll, audit, and mandatory-delivery capacity under overload.
-- [ ] Unit-cost dashboards and per-cell forecasts stay inside approved budgets at the planning workload.
-- [ ] Every deep platform module has an accountable owner, SLO, budget, runbook, alert, data lifecycle, and tested restore path.
-- [ ] Capacity and SLO results are published; no “20M-ready” claim is made from typecheck or architecture review alone.
+- [ ] Placement proves exactly one writable cell, fail-closed unknown/stale/moving routes, cached outage operation, no cross-cell transaction, race-safe fencing, and cell-bounded failure.
+- [ ] The 100,000-member case and full sustained/burst envelope meet every latency budget with at least 40% headroom in every limiting cell resource.
+- [ ] Application-role database, cache, object, realtime, search/vector, event, backup, restore, and organization-switch tests prove cross-organization isolation.
+- [ ] Revocation converges within five seconds; temporal access ends at `valid_until`; remove/re-invite restores no old authority; machine principals stay below their ceilings.
+- [ ] Acknowledged mutations commit authoritative rows and outbox atomically; duplicate, delayed, retried, and out-of-order delivery remains correct.
+- [ ] Cache deletion changes only performance; search ACLs apply before candidates; every unbounded list is deterministic, cursor-paged, capped, and query-budgeted on largest-tenant data.
+- [ ] Cold creation, forward migration, compatibility, rollback, PITR/cell restore, and organization relocation are exercised with checksums, offsets, audit, and rollback evidence.
+- [ ] Every dependency and overload test follows declared degradation while reserved security, ownership, ledger, payroll, audit, and mandatory-delivery capacity survives.
+- [ ] Scheduled tests reach every owned alert destination; module owners maintain SLO, capacity/cost budget, runbook, data lifecycle, and restore evidence.
+- [ ] Unit-cost and per-cell forecasts remain approved; published workload/SLO results, not typecheck or review, are the only basis for a `20M-ready` claim.
 
 ## Non-goals
 
