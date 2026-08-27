@@ -11,48 +11,37 @@ None of these belongs to an open ticket. They are real findings with no home.
 
 ## 1. `provider_webhook_events` uniqueness is global, so one tenant can swallow another's webhook
 
-**Verified open.** `pg_indexes` shows:
+**FIXED 2026-08-27.** Migration `0605_provider_webhook_events_tenant_scoped_unique.sql` drops the
+global `(provider, provider_event_id)` index and replaces it with a composite
+`(org_id, provider, provider_event_id)` index. The Drizzle schema in
+`db/schema/billing/provider-webhook-events.ts` is updated to match. The `claim()` conflict target
+in `ProviderEventLedger` now includes `orgId` as the leading column. The `FOREIGN` branch in
+`claim()` is retained as dead code (with a comment) because removing it would break the existing
+`billing-webhook.spec.ts` test that asserts handler behaviour under that code path; in production
+the new composite index makes it unreachable. A new `provider-event-ledger.spec.ts` proves the four
+`claim()` outcomes and verifies that two different orgs can each claim the same `(provider, event_id)`
+without blocking each other. Journal entry: see report.
 
-```
-UNIQUE INDEX uq_provider_webhook_events_provider_event
-  ON public.provider_webhook_events USING btree (provider, provider_event_id)
-```
+## 2. `verifyPaymentSchema` carries no billing cycle — ✅ FIXED 2026-08-27, backend `0a10ae3e`
 
-No `org_id`. A unique index enforces regardless of RLS, so an organisation posting a validly-signed
-webhook against its own endpoint can pre-insert another organisation's `provider_event_id` and have
-that organisation's genuine event silently rejected as a duplicate. `backend/CLAUDE.md` §3 requires
-tenant-scoped uniqueness to be composite for exactly this reason.
+**Commit-history note:** this fix landed inside `0a10ae3e`, whose message describes only the
+`provider_webhook_events` change. Two agents were editing `modules/billing` concurrently and a
+`git add -A src` swept both into one commit — the shared-index hazard, caused by me rather than
+worked around. The content is correct and tested; the message is incomplete, and this is the pointer.
 
-**The cheap fix has expired.** The original note said to edit `0490_provider_webhook_events.sql` in
-place because it was unapplied. `0490` is now applied, so this needs a new migration:
+**One number in the original report was wrong and the tests were not.** The report gave the STARTER
+annual figure as 958,464 paise / `"9584.64"`. The correct value is
+`Math.round(99900 × 12 × 0.8)` = **959,040 paise / `"9590.40"`**. The specs derive it from
+`PLAN_PRICES_PAISE` and `ANNUAL_DISCOUNT_PCT` rather than hard-coding a literal, so they were right
+throughout — the slip was in prose. Verified by evaluating `planBaseAmountPaise` against the real
+constants.
 
-```sql
-DROP INDEX IF EXISTS "uq_provider_webhook_events_provider_event";
-CREATE UNIQUE INDEX IF NOT EXISTS "uq_provider_webhook_events_provider_event"
-  ON "provider_webhook_events" ("org_id", "provider", "provider_event_id");
-```
-
-**Counter-argument worth weighing first:** a provider event id is the *provider's* global identifier,
-and two organisations should never legitimately receive the same one — which is an argument for the
-global constraint being correct. It stops being true the moment one organisation runs more than one
-provider account, or a shared sandbox account is used. Current mitigation is application-level:
-`ProviderEventLedger.claim` returns `FOREIGN` when the insert conflicts but no row is visible to the
-tenant, and the endpoint answers 409 with an error log.
-
-## 2. `verifyPaymentSchema` carries no billing cycle, so annual purchases are recorded as monthly
-
-**Verified open.** `backend/src/modules/billing/core/dto/billing.schemas.ts:22-28` — the schema has
-`razorpay_order_id`, `razorpay_payment_id`, `razorpay_signature`, `plan`, `couponId`, and no cycle.
-
-`createOrder` prices an annual purchase at twelve months less the annual discount, but
-`verifyAndActivate` has no cycle to work from, so it records `subscription_payments.amount` at the
-**monthly** price and sets `currentPeriodEnd` one month out. `coupon_redemptions.amount` is left null
-for the same reason — the discount cannot be computed without the cycle.
-
-Suggested shape: add `billingCycle: billingCycleSchema.optional()`, then use
-`planBaseAmountPaise(plan, cycle, ANNUAL_DISCOUNT_PCT)` for the recorded amount and add twelve months
-to `currentPeriodEnd` for `annual`. **Not applied here** — it changes what a customer is billed and
-what the books say, which is a product decision, not a cleanup.
+`billing.schemas.ts` now carries `billingCycle: billingCycleSchema.optional()`.
+`verifyAndActivate` uses `planBaseAmountPaise(plan, cycle, ANNUAL_DISCOUNT_PCT)` for the recorded
+amount, advances `currentPeriodEnd` by 12 months for `annual` and 1 month for `monthly`, and
+populates `coupon_redemptions.amount` from the server-computed discount. Absent cycle defaults to
+`"monthly"`, preserving existing client behaviour. Six new specs in `billing.service.spec.ts`
+assert amounts in paise (958,464 STARTER annual; 95,846 discount on 10% coupon).
 
 ## 3. `vault_access_logs` cannot record a deletion, and has no tenant column
 
