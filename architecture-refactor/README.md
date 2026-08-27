@@ -15,8 +15,10 @@ their candidate folders are the only ones still on disk, alongside c28 which has
 | [c18-03](c18-removals-are-proved/issues/03-the-dead-controller-is-removed.md) | Needs a real deployment's access log before a dead controller can be proved safe to remove — cannot be produced locally |
 | [c21-04](c21-fanout-retention-and-polling/issues/04-three-growing-tables-are-partitioned.md) | Same read-budget/seed-data blocker as c16-06, on the partitioned notifications tables |
 
-**c28 has a PRD but no tickets yet** — it is a proposed target architecture (cell-based platform for
-20M+ users), not started. It is out of scope for the count above.
+**c28 now has 32 tickets, none started** (written 2026-08-28) — it is a proposed target architecture
+(cell-based platform for 20M+ users), not a repair. It is out of scope for the count above. Its
+breakdown, and the four repository facts that shaped it, are in
+[`c28-cell-based-platform-at-20m/README.md`](c28-cell-based-platform-at-20m/README.md).
 
 What remains on disk:
 
@@ -27,7 +29,7 @@ architecture-refactor/
   c16-schema-says-what-it-means/   1 open ticket (seed data)
   c18-removals-are-proved/         1 open ticket (operator access log)
   c21-fanout-retention-and-polling/  1 open ticket (seed data)
-  c28-cell-based-platform-at-20m/  PRD only, not started
+  c28-cell-based-platform-at-20m/  PRD + 32 tickets, not started
 ~~~
 
 The nine candidates from the 2026-08-23 review (c1–c9) are **all closed**; their specs stay in
@@ -54,7 +56,7 @@ see the archive below for which.
 | [c16 — The schema says what it means](c16-schema-says-what-it-means/README.md) | 9 | 8 closed, 1 open (seed data) |
 | [c18 — Removals are proved, not grepped](c18-removals-are-proved/README.md) | 4 | 3 closed, 1 open (operator access log) |
 | [c21 — Right models, right throughput — fan-out, retention and polling](c21-fanout-retention-and-polling/README.md) | 7 | 6 closed, 1 open (seed data) |
-| [c28 — Cell-based platform at 20M](c28-cell-based-platform-at-20m/prd.md) | 0 | not started (PRD only) |
+| [c28 — Cell-based platform at 20M](c28-cell-based-platform-at-20m/README.md) | 32 | not started — 0 closed |
 
 ## Closed candidates — archived 2026-08-27
 
