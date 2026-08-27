@@ -19,8 +19,17 @@
 - [x] Start with the lists behind the read budgets
 - [x] Use the window form the read-cost baseline already proves — `pageScopedTicketIds` already uses `count(*) OVER ()`; the `scope === "all"` path uses `Promise.all` (parallel, not sequential)
 - [x] Leave counts that already run in parallel alone — the build list parallel COUNT is acceptable as-is
-- [ ] Convert the remaining offset-only list modules — **NOT DONE, and deliberately not attempted.** The inventory is now verified and recorded below rather than estimated: 143 files, of which 19 are in this lane's territory and 124 are not. The premise this Todo rests on is also much smaller than the ticket claimed — exactly **one** confirmed sequential list count on a normal request path (`payroll/setup/components.service.ts:51-54`), not 241, and it is outside this lane. Nothing is ticked for the remainder.
+- [ ] Convert the remaining offset-only list modules — **this territory's share is now done and classified; the rest is not.** 143 files call `.offset()`; 20 of them are in S4's territory and every one of their 26 call sites was read **per method** on 2026-08-27, which is the audit the note below said was the remaining work. Result: 9 sites already carry `count(*) OVER ()`, 13 run their count inside `Promise.all`, 4 compute no total because none is displayed — and **2 were genuinely sequential and are now converted** (see the section below). The 123 files outside this territory stay unclassified and are listed by path in `architecture-refactor/lane-requests/s4.md` §5; nothing is ticked for them.
 - [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md) — held open by the Todo above.
+
+### The per-method audit found two sequential counts this lane owned (2026-08-27)
+
+A **file**-level scan cannot see either, which is why the 2026-08-26 pass reported one sequential count repo-wide. Both are fixed:
+
+- `backend/src/modules/crm/core/crm-automations.service.ts:141-155` — `getRuns` awaited the page, then awaited a second statement that was **not a `count()`**: `select({ count: crmAutomationRuns.id })` with no limit, taking `countResult.length`. A rule with fifty thousand runs transferred fifty thousand ids to render a page of twenty. Now `count(*) OVER ()` in the page query. Covered by `backend/src/modules/crm/core/automation-runs-list-total.spec.ts`, 5 tests, 5 pass — the double counts statements, so a regression shows up as a count rather than as a type error.
+- `backend/src/modules/accounting/gl/recurring-journals.service.ts:51-70` — `listTemplates` awaited the page, then awaited a plain sequential `count(*)`. Now windowed. Covered by `backend/src/modules/accounting/gl/recurring-journals-list-total.spec.ts`, 4 tests, 4 pass, including that the fallback fires **only** for an empty page past the end of the results.
+
+The shape both now use is `backend/src/common/pagination/window-count.ts` — `totalOverWindow`, `resolveWindowedTotal`, `withoutTotal` — which is what the nine in-territory sites listed in `lane-requests/s4.md` §8 had each written out inline. Covered by `backend/src/common/pagination/window-count.spec.ts`, 10 tests, 10 pass.
 
 ### Remaining: sequential COUNT queries outside this lane's territory
 
@@ -34,7 +43,7 @@ The build module's `scope === "all"` list path uses `Promise.all([listQuery, cou
 | files using `paginateOffset` | 34 | **32** (30 under `src/modules`, 2 in `src/common` = the helper + its spec) |
 | files using `common/pagination/cursor.ts` | 6 | **10** |
 | files using `count(*) OVER ()` | "exactly three" | **20** |
-| `count()` calls that are a sequential extra round trip | 241 | **1 confirmed** on a normal list path |
+| `count()` calls that are a sequential extra round trip | 241 | **3 confirmed** on a normal list path — 1 by the file scan, 2 more by the per-method read of this territory |
 
 `count()` appears 402 times across 172 files (the PRD's 166 + 241 = 407 is close on the raw total). The 166/241 split is **not verifiable by grep and should not be quoted**: the sequential-versus-parallel distinction needs the call site read, and many files use `Promise.all` in one method and a bare `await` in another, so a file-level classification is systematically wrong.
 
@@ -48,7 +57,9 @@ The build module's `scope === "all"` list path uses `Promise.all([listQuery, cou
 - `backend/src/modules/accounting/core/accounting-payables-query.service.ts:108,199,202` (window at `:94,:173`)
 - `backend/src/modules/build/execution/workspace.service.ts:126` (window at `:96`)
 
-**Not classified — 83 files** hold `.offset()`, `count()` and a `Promise.all` in the same file, but the `Promise.all` may be in a different method. Resolving them needs a per-method audit, not a per-file one. That audit is the remaining work and it spans hr, finance and inventory, none of which this lane may edit.
+**Not classified — 83 files** hold `.offset()`, `count()` and a `Promise.all` in the same file, but the `Promise.all` may be in a different method. Resolving them needs a per-method audit, not a per-file one.
+
+**That audit has now been done for this territory, and it moved the number.** Both sequential counts it found (`crm-automations.service.ts`, `recurring-journals.service.ts`) sat in files the scan above had classified as safe — one of them because the same file uses `Promise.all` elsewhere, the other because its second statement selects a column rather than calling `count()`, so no `count()` pattern matched it at all. Read that as a warning about the remaining 123 files, not as reassurance: the per-file classification does not merely lack detail, it reports the wrong answer. The remaining audit spans hr, finance, inventory and payroll, none of which this session may edit.
 
 **Already on `count(*) OVER ()` — 20 files:** accounting (`accounting-receivables.service.ts:84`, `accounting-payables-query.service.ts:94,173`, `accounting-ledger.service.ts:73,133`, `gl/general-ledger.service.ts:111`), build (`core/work-scope-union.ts:57`, `core/projects-tickets-read.service.ts:366`, `core/projects-query.service.ts:116`, `execution/workspace.service.ts:96`), finance (`ap/vendor-credits.service.ts:70`), inventory (`webhooks/webhooks.service.ts:211`, `import-export/import.service.ts:255`, `import-export/export.service.ts:161`), kb (`retrieval/kb-search.service.ts:85`, `help-centre/kb-articles.service.ts:112`), leads (`leads-board.service.ts:94`, `leads-read.service.ts:121`, `leads-reports.service.ts:365`), timesheets (`payroll/payroll-export.service.ts:236`, `core/timesheets-audit.service.ts:117`, `core/approvals.service.ts:167`).
 
@@ -72,7 +83,7 @@ The PRD's correction note said three files use the window because three were add
 | workflows · users · rbac · organization · module-access · billing · api-tokens | 2 each (14) | no |
 | audit-log · contacts · deals · delegations · leads · offer-fulfillment · ownership · party · portal · public · quotes · settings · storage · tasks · webhooks | 1 each (15) | quotes only |
 
-Full per-file paths are in `architecture-refactor/lane-requests/lane-3.md`.
+Full per-file paths for the 123 outside this territory are in `architecture-refactor/lane-requests/s4.md` §5. The 20 inside it are classified per method above.
 
 **Why the in-territory ones were not converted either.** Offset is not a defect on a page-numbered screen; the PRD says so explicitly ("offset is genuinely fine for a page-numbered admin table someone opens twice a week") and puts converting all 143 out of scope. The build ticket list is named in the PRD as a surface that *should* be cursor, but it is page-numbered in its published contract and on the frontend, so converting it is an API change that cannot be made safely while three other lanes are editing this checkout. Recorded as remaining rather than half-done.
 

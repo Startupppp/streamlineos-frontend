@@ -10,9 +10,9 @@
 
 - [x] One validated shape covers page size, cursor, sort field, sort direction and filters, living beside the feature per the schema convention. — `backend/src/common/pagination/list-query.schema.ts` now exports the shape *and* its parts: `PAGE_SIZE_CAP`, `pageNumberField`, `pageSizeField(defaultSize, maxSize?)`, with `baseListQuerySchema` rebuilt on top of them, so page and page size have exactly one definition. The cursor half is `backend/src/common/pagination/cursor.schema.ts` (`idCursorSchema`), added by c13-05.
 - [x] Sort fields are an allowlist per endpoint — an arbitrary sort column is refused. — `withSortField(allowlist)`, covered by `list-query.schema.spec.ts`.
-- [x] A page size above the cap is clamped rather than honoured or rejected. — `pageSizeField`'s `.transform(v => Math.min(v, ceiling))`. This is now true at the call sites too, not just in the helper: all sixteen migrated schemas previously used `.max(100)`, which **returned 400** for an over-large page. `backend/src/common/pagination/list-query.schema.spec.ts`, 120 tests, all pass.
-- [ ] Sorting composes with the tenant-led indexes rather than falling off them. — **BLOCKED:** needs `EXPLAIN (ANALYZE, BUFFERS)` run as `streamline_app` with the tenant GUC set. No database has been touched in this program, and measuring as the owner would prove nothing — `BYPASSRLS` hides exactly the effect being tested.
-- [ ] The 16 duplicated local copies of the pagination schema are deleted. — **The count is wrong and the criterion cannot be met as written.** Verified 2026-08-26: `page: z.coerce.number()` appears **204 times across 135 files**, not 16. Sixteen of those files are in this lane's territory and all sixteen are now migrated (26 occurrences → 0). The other **178 occurrences across 119 files** are in modules this lane may not edit; they are listed below by module and in `architecture-refactor/lane-requests/lane-3.md`, and nothing is ticked for them.
+- [x] A page size above the cap is clamped rather than honoured or rejected. — `pageSizeField`'s `.transform(v => Math.min(v, ceiling))`, and true at every call site in this territory: `backend/src/common/pagination/list-query.schema.spec.ts:177-200` (22 page-numbered schemas) and `:279-287` (the seven cursor and size-only ones S4 migrated). 154 tests, all pass.
+- [ ] Sorting composes with the tenant-led indexes rather than falling off them. — **BLOCKED on a credential, not on scope.** The Neon branch is alive: `DATABASE_URL` (`neondb_owner`) connects. `APP_DATABASE_URL` fails `28P01 password authentication failed for user 'streamline_app'` (probed 2026-08-27), and the owner has `BYPASSRLS`, so its plans hide exactly the effect being tested. Fix the password in the Neon console — `ALTER ROLE` does not survive a branch suspend — then `EXPLAIN (ANALYZE, BUFFERS)` as `streamline_app` with the tenant GUC set. Recorded in `architecture-refactor/lane-requests/s4.md` §1.
+- [ ] The 16 duplicated local copies of the pagination schema are deleted. — **The count is wrong and the criterion cannot be met as written.** Re-verified 2026-08-27, and it is larger again than the last count: hand-rolled `z.coerce.number()` page fields number **411 across 141 files** (`page` 177 · `limit` 183 · `pageSize` 51 · `perPage` 0). **Zero remain in this territory** — the previous lane migrated sixteen page-numbered schemas, S4 migrated the seven that were left, all of them size-only or cursor lists the `page:` pattern never matched. The other 141 files are in modules this session may not edit; they are listed by path in `architecture-refactor/lane-requests/s4.md` §4 and nothing is ticked for them.
 
 ## Todo
 
@@ -21,6 +21,9 @@
 - [x] Delete the local copies as their last caller migrates — done for all sixteen in this lane's territory:
   `build/core/dto/project-core.schemas.ts` · `build/core/dto/projects-customers.schemas.ts` · `build/core/dto/projects-workspace-members.schemas.ts` · `build/core/dto/roadmap.schemas.ts` (3 schemas) · `build/execution/dto/timesheets.schemas.ts` (2) · `build/managed-products/dto/managed-products.schemas.ts` · `build/pm-workspaces/dto/pm-workspaces.schemas.ts` (2) · `build/portfolios/dto/portfolios.schemas.ts` · `build/teams/dto/teams.schemas.ts` (2) · `accounting/core/dto/accounting.schemas.ts` (4) · `accounting/gl/dto/general-ledger.schemas.ts` · `accounting/gl/recurring-journals.controller.ts` · `invoices/dto/invoice.schemas.ts` · `quotes/dto/quote.schemas.ts` · `crm/core/dto/campaigns.schemas.ts` · `crm/core/dto/organizations.schemas.ts` (2).
   Query-key spelling was preserved per endpoint — some publish `limit`, some `pageSize` — and each endpoint's own default page size (9, 20, 25, 50) was carried through as `pageSizeField(n)`. Renaming `pageSize` to `limit` would be a silent client-contract break and is recorded below as remaining rather than done quietly.
+- [x] Migrate the seven that the `page:` search never found — the size-only and cursor lists, where the page-size half of the vocabulary is the same shape and the clamp rule applies identically. Each answered **400** for an over-large page before this:
+  `build/core/dto/ticket.schemas.ts:127` (`searchTicketsQuerySchema` → `pageSizeField(10, 20)`) · `build/execution/dto/workspace.schemas.ts:37` (`intakeListQuerySchema` → `pageSizeField(50)`) · `crm/core/dto/territories.schemas.ts:17` (`territoryListSchema` → `pageSizeField(50)`) · `chat/dto/chat.schemas.ts:101` (`listMessagesQuerySchema` → `pageSizeField(50)`) and `:111` (`searchQuerySchema` → `pageSizeField(20)`) · `mail/dto/mail-schemas.ts:18` (`pageSizeField(25, 50)`) · `search/dto/search.schemas.ts:7` (`pageSizeField(5, 10)`).
+  No ceiling widened: each endpoint's own tighter cap is carried by `pageSizeField`'s second argument. Covered by `backend/src/common/pagination/list-query.schema.spec.ts:279-317`, 35 tests over the seven.
 - [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md) — held open by the two acceptance criteria above.
 
 ### Judgement calls made during the migration
@@ -30,30 +33,26 @@
 - **`listJournalQuerySchema`** carries a `.refine(from <= to)`; only the page fields were replaced.
 - **`listProgramsQuerySchema`** (`portfolios.schemas.ts`) has no page or limit at all and was left alone.
 - **`searchTicketsQuerySchema`** (`build/core/dto/ticket.schemas.ts:126`) keeps its own `max(20)`. It is an autocomplete cap, not list pagination.
+  **Overridden by S4, 2026-08-27.** The stated reason for excluding it was the 20-row cap, and `pageSizeField(10, 20)` preserves that cap exactly — the second argument exists for this. What the exclusion left in place was the *other* half: `?limit=50` returned 400 on an endpoint the contract says must clamp. Migrated, ceiling unchanged.
 - **`recurring-journals.controller.ts`** holds its list schema inline in the controller body, which violates §6 ("schemas live in `*-schema.ts`"). The page fields were migrated in place; extracting it to `dto/` would have meant creating a file outside the migration's remit. Recorded as remaining.
 
 ### Correction to this ticket's own audit note
 
-The 2026-08-26 audit note says `ticket.schemas.ts` "still has four inline `page`/`limit` blocks (lines 33–34, 77–78, 126, 131)". That is stale. It extends `baseListQuerySchema` at `:33`, `:77` and `:131`; `:126` is `searchTicketsQuerySchema`'s deliberate autocomplete cap.
+The 2026-08-26 audit note says `ticket.schemas.ts` "still has four inline `page`/`limit` blocks (lines 33–34, 77–78, 126, 131)". That is stale. It extends `baseListQuerySchema` at `:33`, `:77` and `:131`; the fourth is `searchTicketsQuerySchema`, now `pageSizeField(10, 20)` at `:127`. The file holds no hand-rolled page field.
 
-### Remaining local copies outside this lane's territory
+### Remaining local copies outside this territory
 
-178 occurrences across 119 files. Nothing is ticked for these.
+**411 fields across 141 files** (re-counted 2026-08-27; the 2026-08-26 figure of 204/135 counted `page:` alone and undercounted even that). Nothing is ticked for these.
 
-- **hr** — 24 files, ~40 copies
-- **inventory** — 17 files, ~35 copies
-- **finance** — 14 files, 26 copies (`ar/dto/finance-ar.schemas.ts` alone has 6, `ap/dto/finance-ap.schemas.ts` 4)
-- **payroll** — 4 files, 9 copies
-- **timesheets** — 5 files, 5 copies
-- **surveys** — 4 files, 4 copies
-- **kb** — 3 files, 3 copies
-- **users** — 1 file, 4 copies · **module-access** — 1 file, 3 copies
-- **api-tokens · billing · rbac · webhooks · workflows · portal** — 2 files or 2 copies each
-- **audit-log · automation · clients · contacts · delegations · e-sign · expenses · feedbucket · goals · leads · offer-fulfillment · organization · ownership · party · public · settings · storage · support · tasks** — 1 copy each
+By module, files: **hr** 45 · **inventory** 18 · **finance** 14 · **timesheets** 6 · **surveys** 4 · **payroll** 4 · **notifications** 3 · **kb** 3 · **rbac · party · organization · leads · contacts · billing · api-tokens** 2 each · 29 modules with 1 each.
 
 `common/pipes/zod-validation.pipe.spec.ts` also matches, but it is an inline fixture inside a test, not a list endpoint. Leave it.
 
-Full per-file paths and counts are in `architecture-refactor/lane-requests/lane-3.md`.
+Every path with its count is in `architecture-refactor/lane-requests/s4.md` §4, with the grep that regenerates it.
+
+### The one field in this territory that was deliberately not migrated
+
+`intakeListQuerySchema.offset` (`build/execution/dto/workspace.schemas.ts:38`). The shared vocabulary pages by `page`, not `offset`; rewriting the field would be a silent client-contract break, and `offset` is not one of the five things this criterion names (page size, cursor, sort field, sort direction, filters). Its `limit` is migrated; the `offset` stays and is recorded rather than changed quietly.
 
 ---
 
