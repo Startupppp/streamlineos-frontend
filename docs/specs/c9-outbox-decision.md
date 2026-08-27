@@ -55,8 +55,9 @@ intents must not be emitted directly to `outbox_events`.
   metrics endpoint are the operational trigger, not an implicit omission.
 - Notification relay rows have their own lease, retry, dead-letter, and dedupe
   guarantees.
-- Migration `0474_external_effect_ledger.sql` must be deployed before chat
-  external-effect fencing is active in a runtime environment.
+- Migration `0474_external_effect_ledger.sql` is deployed in the audited runtime;
+  the current read-only report shows zero ledger rows, so live effect execution
+  and crash-window measurements remain unexercised.
 
 ## Migration rule
 

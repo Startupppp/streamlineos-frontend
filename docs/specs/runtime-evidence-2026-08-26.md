@@ -46,11 +46,10 @@ Command: `pnpm report:outbox-events`
 
 The report covers every active organization with no sweep failures. There are
 six pending rows and no dead rows; partitioning remains threshold-deferred and
-external provider deduplication remains an operational requirement. The new
-external-effect ledger is committed in code, but migration `0474` has not been
-deployed, so the report currently returns `externalEffects.deployed=false` and
-no live ledger counts are claimed. The migration is now registered for normal
-discovery and has passed a read-only dry-run.
+external provider deduplication remains an operational requirement. Migration
+`0474` is registered, deployed, and detected by the report. The external-effect
+ledger currently has zero rows across 44 organizations, so no live effect or
+crash-window counts are claimed yet.
 
 ## c9 re-audit — 2026-08-27
 
