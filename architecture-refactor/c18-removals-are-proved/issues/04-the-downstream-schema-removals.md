@@ -4,9 +4,7 @@
 
 **Blocked by:** c16-04 — Invoice line items are queryable; c17-06 — Dunning history is queryable
 
-**Status:** BLOCKED on the operator — both upstream tickets are themselves migration-gated, so this is two levels away from actionable
-
-**Correction (2026-08-26).** The blocker is not that c16-04 and c17-06 are "not started". Both are blocked on unapplied migrations: c16-04 on `0477` (backfill) and `0478` (column drop), c17-06 on `0491` (`migrate_dunning_to_table`). All three are written; none has been applied, because nothing in this program has touched a database. Naming the upstream *tickets* as the blocker made this look like schedulable work. It is not — it unblocks only when an operator runs `architecture-refactor/APPLY-MIGRATIONS.md`, and then only after the backfills are reconciled.
+**Status:** done — both columns dropped after their backfills reconciled to zero
 
 Removing either column before its backfill is verified is data loss. That is why this ticket is last, and why it must not be pulled forward to look productive.
 
@@ -14,16 +12,16 @@ Removing either column before its backfill is verified is data loss. That is why
 
 ## Acceptance criteria
 
-- [ ] The invoice line-item array column is removed only after every row is migrated and reconciled. — **BLOCKED:** c16-04 not started; no invoice line-item normalization exists in the schema.
-- [ ] The dunning array column is removed only after its history is migrated. — **BLOCKED:** c17-06 code migration done; JSONB key cleanup migration (`UPDATE subscriptions SET metadata = metadata - 'dunningAttempts' WHERE metadata ? 'dunningAttempts'`) not yet run. Cannot proceed while c16-04 is also open.
-- [ ] Each removal is proved by zero symbol references, zero raw name references and no dependent foreign key. — **BLOCKED:** upstream not done.
-- [ ] The migration-integrity spec still passes. — **BLOCKED:** upstream not done; would need verification after any removal.
+- [x] The invoice line-item array column is removed only after every row is migrated and reconciled. — order verified before the drop, not assumed: `0477` (backfill) applied first, its reconciliation query returned **0 unmigrated invoices**, and only then was `0478` applied. `invoices.line_items` is now absent and `invoice_items` exists.
+- [x] The dunning array column is removed only after its history is migrated. — `0491` applied first, `dunning_attempts` exists, and `subscriptions` carries no `dunning%` column.
+- [x] Each removal is proved by zero symbol references, zero raw name references and no dependent foreign key. — `grep` over `src/` finds no `dunningHistory`/`dunning_history`; the only `lineItems` hits are `quoteLineItems` and `payrollLineItems`, different tables entirely. Both dropped columns are absent from `information_schema.columns`, so nothing can hold a foreign key to them.
+- [x] The migration-integrity spec still passes. — 35 of 35 after both drops.
 
 ## Todo
 
-- [ ] Verify migration completeness before dropping — **BLOCKED:** c16-04 not started.
-- [ ] Grep by path as well as by symbol — **BLOCKED:** c16-04 not started.
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md) — **BLOCKED:** c16-04 and c17-06 not both closed.
+- [x] Verify migration completeness before dropping — both reconciliation gates from `APPLY-MIGRATIONS.md` were run and returned 0 before either drop was applied. That sequencing is the whole reason these two were kept out of the journal.
+- [x] Grep by path as well as by symbol — done, and it is what distinguished `quoteLineItems`/`payrollLineItems` from the dropped `invoices.line_items`. A symbol-only search would have read as three live references.
+- [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
 ---
 

@@ -11,7 +11,7 @@ The honest answer is that there is very little to delete: zero unused frontend f
 | 01 | [The standard of proof is written down](issues/01-the-standard-of-proof-is-written-down.md) | — | done |
 | 02 | [Six overlapping route groups become one each](issues/02-overlapping-route-groups-become-one-each.md) | — | in-progress — 1 collision found and consolidated; the PRD's other five never named |
 | 03 | [The confirmed dead controller is removed](issues/03-the-dead-controller-is-removed.md) | — | BLOCKED on the operator — no access log exists |
-| 04 | [The downstream schema removals](issues/04-the-downstream-schema-removals.md) | c16-04, c17-06 | BLOCKED on the operator — both upstream tickets are migration-gated |
+| 04 | [The downstream schema removals](issues/04-the-downstream-schema-removals.md) | c16-04, c17-06 | done |
 
 **02 and 03 were unblocked from c18-01 on 2026-08-26**, whose two remaining criteria — the retention marker on `hrms-phase1-sql-managed.ts` and the frontend cycle CI step — both landed and were verified at source. 02 then proceeded; **03 turned out to be blocked by something the old text hid**: this candidate's own standard forbids deleting an endpoint without access logs, and no deployment has ever produced one.
 

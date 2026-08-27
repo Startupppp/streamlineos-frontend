@@ -8,12 +8,12 @@ PRD: [`prd.md`](prd.md) · Program: [`../README.md`](../README.md)
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 01 | [One table owns a person's identity](issues/01-one-table-owns-a-persons-identity.md) | — | ready-for-agent |
+| 01 | [One table owns a person's identity](issues/01-one-table-owns-a-persons-identity.md) | — | BLOCKED — 0488 held: 13 call sites still read identity off hr_people |
 | 02 | A calendar event carries its timezone | — | done |
 | 03 | A recurring event recurs, or the columns go | 02 | done |
-| 04 | [Invoice line items are queryable](issues/04-invoice-line-items-are-queryable.md) | — | ready-for-agent |
+| 04 | [Invoice line items are queryable](issues/04-invoice-line-items-are-queryable.md) | — | done — 0477/0478 applied in order with the reconciliation gate between |
 | 05 | [Every audit row names its tenant](issues/05-every-audit-row-names-its-tenant.md) | — | ready-for-agent |
-| 06 | [Candidate résumé text leaves the row](issues/06-candidate-resume-text-leaves-the-row.md) | — | ready-for-agent |
+| 06 | [Candidate résumé text leaves the row](issues/06-candidate-resume-text-leaves-the-row.md) | — | in-progress — column dropped and vacuumed; budgets blocked on seed data |
 | 07 | Free/busy and conflict checks expand the same calendar series | 02, 03 | done |
 | 08 | Calendar sources obey one bounded overlap contract | 02, 03, 07 | done |
 | 09 | [A leave policy that says it restricts, does](issues/09-a-leave-policy-that-says-it-restricts-does.md) | — | done |

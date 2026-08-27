@@ -4,11 +4,15 @@
 
 **Blocked by:** None — can start immediately
 
-**Status:** ready-for-agent
+**Status:** in-progress — the foreign key is live and validated; the four remaining criteria all wait on `0488`, which is deliberately unapplied
 
 **Audit note (2026-08-26):** The FK from `hr_people` to `organization_people` EXISTS in the Drizzle schema code (`backend/src/db/schema/hr/core-people.ts:116-123`, constraint name `fk_hr_people_org_person`) but is in unapplied migration `0486_hr_people_org_person_link.sql` + `0487_hr_people_org_person_validate.sql`. The identity columns are duplicated in both tables (confirmed: `firstName`, `lastName`, `workEmail`, `personalEmail`, `phone`, `dateOfBirth`, `gender`, `address`, `emergencyContact` appear on both). The link column `organizationPersonId` is nullable — `hr_people` rows without an `organizationPersonId` still exist and cannot be constrained until 0486-0488 are applied. All criteria below are BLOCKED on unapplied migrations 0486-0488.
 
 **Lane 4 correction (2026-08-26): the audit note above is wrong about 0486 and 0487 — both ARE journalled.** Verified by reading `migrations/meta/_journal.json` directly: `0486_hr_people_org_person_link` at **idx 274**, `0487_hr_people_org_person_validate` at **idx 275**. The link is backfilled and the foreign key is added **and validated** by `db:migrate`. Only `0488_hr_people_drop_identity_cols` is absent from the journal — and that absence is **deliberate and documented in the migration file itself**, not an oversight.
+
+**Why the rest is held (2026-08-27).** `0488_hr_people_drop_identity_cols` is the only migration in the repository left unapplied on purpose. Its own header sets three preconditions; precondition 2 is measurably unmet — **13 live call sites across 7 files still read those columns off `hr_people`**: `hr-import-commit.service.ts` (workEmail), `experience-letter.service.ts` (firstName, lastName), `probation-review-reader.service.ts` (firstName, lastName, workEmail), `onboarding-details.service.ts` (address, dateOfBirth, gender, phone), `recruitment-handoff.service.ts` (workEmail), `payroll-run-payee.ts` (workEmail), `seed-enterprise-workspace.ts` (workEmail). Applying it drops 11 columns and breaks every one of them at runtime, irreversibly.
+
+The unblocking work is to move those 13 reads onto `organization_people` through the person seam, then apply `0488`. That is a code change, not an operator action.
 
 ## Acceptance criteria
 

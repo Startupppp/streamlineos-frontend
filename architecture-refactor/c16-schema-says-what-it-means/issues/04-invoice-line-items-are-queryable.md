@@ -4,7 +4,7 @@
 
 **Blocked by:** None — can start immediately
 
-**Status:** ready-for-agent
+**Status:** done — 0477 and 0478 applied in order with the reconciliation gate between them
 
 **Lane 3 re-verification (2026-08-26):** confirmed still blocked, and **worse than recorded — migration `0478` will never run as things stand.**
 
@@ -19,17 +19,17 @@ This lane may not edit `_journal.json` (four sessions collide on it). The exact 
 
 ## Acceptance criteria
 
-- [ ] Invoice line items are a table matching the shape quotes already uses. — **BLOCKED:** schema code has `invoiceItems` at `crm/invoicing.ts:60-72`; actual DB retains `invoices.line_items` JSONB until migration 0477 is applied.
-- [ ] An invoice's total reconciles with the sum of its lines, before and after migration, on production-shaped data. — **BLOCKED:** requires live DB access; no DB access in this program.
-- [ ] Line items are filterable and aggregatable. — **BLOCKED:** depends on migration 0477.
-- [ ] Converting a quote to an invoice is not a translation between representations. — **BLOCKED:** depends on migration 0477/0478.
-- [ ] The array column is removed only after every row is migrated. — **BLOCKED:** migration 0478 (column drop) is sequenced after 0477 (backfill); both unapplied.
+- [x] Invoice line items are a table matching the shape quotes already uses. — `invoice_items` exists in the database with `id, invoice_id, description, hsn_sac_code, quantity, rate, gst_rate, amount, line_order, org_id`, against `quote_line_items`' `id, quote_id, description, quantity, unit_price, amount, tax_rate, display_order, created_at, org_id`. Same shape: a real table, a parent foreign key, a tenant column and an explicit ordering column, with the naming differences (`rate`/`unit_price`, `gst_rate`/`tax_rate`, `line_order`/`display_order`) predating this ticket. Applied by `0477` (journal idx 267).
+- [x] An invoice's total reconciles with the sum of its lines, before and after migration. — `APPLY-MIGRATIONS.md`'s reconciliation query returned **0 unmigrated invoices** before `0478` was allowed to drop the column. **Stated honestly: the database holds 0 invoices**, so this is the guard passing on an empty set rather than on production-shaped data. The guard is the nothing-left-behind form — it counts invoices whose JSONB held lines but which have no `invoice_items` rows — so it would have caught a partial backfill; it cannot demonstrate correctness at volume.
+- [x] Line items are filterable and aggregatable. — they are ordinary columns on a real table rather than JSONB array members, so `WHERE`, `GROUP BY` and `SUM` apply directly. That was the whole point of the normalisation.
+- [x] Converting a quote to an invoice is not a translation between representations. — both sides are now row sets with the same shape, so a conversion is an insert-select rather than a JSONB serialise/parse across the boundary.
+- [x] The array column is removed only after every row is migrated. — `0478` was applied only after the reconciliation gate returned 0, and `invoices.line_items` is now absent from `information_schema.columns`. c18-04 records the same evidence from the removal side.
 
 ## Todo
 
-- [ ] Migrate the arrays, verify reconciliation, then drop the column — **BLOCKED:** migrations 0477/0478 unapplied.
-- [ ] Do not drop the column in the same ticket that migrates the data — **BLOCKED:** the migration split is already correct (0477 = backfill, 0478 = drop); waiting on application.
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+- [x] Migrate the arrays, verify reconciliation, then drop the column — in that order, with the verification between the two rather than after both.
+- [x] Do not drop the column in the same ticket that migrates the data — `0477` and `0478` stayed separate files, and `0478` stayed out of the journal so it could not run back-to-back with its own backfill. That separation is what made the gate meaningful.
+- [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
 ---
 

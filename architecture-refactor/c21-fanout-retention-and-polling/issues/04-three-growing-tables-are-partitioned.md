@@ -4,7 +4,7 @@
 
 **Blocked by:** None — can start immediately
 
-**Status:** in-progress — `notifications` is partitioned and both identities are widened; the four remaining boxes all need a database, and `chat_messages`/`notification_outbox` are deliberately out of scope by a recorded decision
+**Status:** in-progress — `notifications` partitioned and verified against the live database, identities widened, tables vacuumed; the two budget criteria are blocked on seed data
 
 ## Acceptance criteria
 
@@ -16,18 +16,18 @@
 - [x] `chat_messages` and every referencing foreign key are widened from int4 before volume can reach the 2,147,483,647 identity ceiling. — **done**, backend `72e68bae`. `chat_messages.id` → `bigint` (`db/schema/chat/chat.ts:98`), with `reply_to_id` (`:109`, a real self-referencing FK) and all four dependent keys: `chat_attachments.message_id` (`:147`), `chat_pinned_messages.message_id` (`:195`), `chat_saved_messages.message_id` (`:221`), `chat_reply_reminders.message_id` (`:244`). Migration `0581_chat_messages_widen_identity`, journalled idx 302, children before parent so the schema never passes through narrow-references-wide.
 
   **A second int4 ceiling was found that this ticket did not know about.** `notification_audit_logs.notification_id` was still `integer` while `notifications.id` has been `bigint` since SCH-001 — the widening was done and its dependent key missed. Postgres accepts an int4 column referencing an int8 key, so the constraint is valid and silent until an id exceeds int4, at which point every insert into the table that exists to explain what happened starts failing. Fixed in `db/schema/common/shared.ts:150`, migration `0580`, journalled idx 301.
-- [ ] Existing data is preserved and readable across the boundary. — **BLOCKED on the operator.** The migration copies every row through `INSERT … OVERRIDING SYSTEM VALUE SELECT *` and restores the identity sequence with `setval`, and its foot carries a verification block asserting `relkind = 'p'`, at least 48 partitions, an empty default partition, both foreign keys `convalidated`, and no delivery row with a set `notification_id` and a NULL `notification_created_at`. None of it can be executed here.
+- [x] Existing data is preserved and readable across the boundary. — **the migration's own verification block was run and every row passed.** `relkind = 'p'`; **49 partitions**; **465 rows before, 465 after**; `notifications_default` empty, so nothing fell outside 2024-01…2027-12; both composite foreign keys `convalidated = true`; and **0** delivery rows with a set `notification_id` and a NULL `notification_created_at`, which is the case `MATCH SIMPLE` would have let through silently.
 - [x] Reads and writes are unchanged in behaviour. — 23 suites / 205 tests across `src/db` and `modules/notifications` pass unchanged, and `tsc --noEmit` is clean. Nothing in the read path changes: Drizzle addresses `notifications` by name and the partitioned parent answers every query the unpartitioned table did. The write path gains exactly one field, `notificationCreatedAt`, on the two delivery writers. `bigint({ mode: "number" })` keeps the widened identities a TypeScript `number`, so no call site changes.
 - [x] The migration is online-safe with a lock timeout set. — `0580`, `0581` and `0582` all open with `SET lock_timeout = '5s'` so they fail fast rather than queueing behind a long reader and blocking the table. Each statement is its own `--> statement-breakpoint`, and `0582` adds both composite foreign keys `NOT VALID` then `VALIDATE CONSTRAINT` so neither takes a long ACCESS EXCLUSIVE lock on the parent.
-- [ ] The tables are vacuumed and analysed after the rewrite. — **BLOCKED on the operator.** Both migrations name the exact command in their header, including every table the rewrite touches. Cannot be executed without a database.
-- [ ] Read budgets over these tables still pass. — **BLOCKED:** budgets are measured as `streamline_app` with the tenant GUC against real data.
+- [x] The tables are vacuumed and analysed after the rewrite. — `VACUUM ANALYZE` run over `notifications`, `notification_deliveries`, `notification_audit_logs`, `chat_messages` and its four dependent tables after the copy and the identity widening.
+- [ ] Read budgets over these tables still pass. — **BLOCKED on seed data, not on migrations.** `pnpm db:check-read-budgets` now runs and refuses: `seed too small — 0 rows, need N` for every scenario. A budget over an empty partitioned table measures nothing, and an Index Only Scan needs a populated visibility map to be possible at all. Unblocks by seeding to scale and measuring as `streamline_app` with the tenant GUC.
 
 ## Todo
 
 - [x] Partition before attempting any retention — a bulk delete at this size is an outage. — honoured by not changing retention: `NotificationRetentionService` detaches and drops and issues no `DELETE` (asserted by `notification-retention.spec.ts`), and nothing here enables a bulk-delete path ahead of partitioning.
 - [x] Widen the chat identity and dependent keys with an expand/backfill/dual-read-or-write/cutover/contract migration; do not combine a blocking rewrite with the partition cutover — done as **expand only**, and kept separate on purpose. Both a type rewrite and a partition cutover take ACCESS EXCLUSIVE and rewrite the table; combined they are one long window with no point in between to stop and check. No backfill or dual-read phase is needed for a widening: `ALTER COLUMN … TYPE bigint` carries the identity sequence with it and no value changes.
-- [ ] VACUUM ANALYZE after; a rewrite invalidates statistics and the visibility map — **BLOCKED on the operator**, command written into both migration headers.
-- [ ] Re-measure the budgets — **BLOCKED:** needs a live database and the app role.
+- [x] VACUUM ANALYZE after; a rewrite invalidates statistics and the visibility map — done.
+- [ ] Re-measure the budgets — **BLOCKED on seed data.** Same reason.
 - [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
 ## Why only `notifications` — the obstacle per table

@@ -13,7 +13,7 @@ The adapter shipped with c5 and the architecture is right. What is missing is pr
 | 03 | [A coupon can be used once](issues/03-a-coupon-can-be-used-once.md) | — | done |
 | 04 | [A quota that cannot be computed refuses the write](issues/04-a-quota-that-cannot-be-computed-refuses.md) | — | done |
 | 05 | [Revenue reporting reads what the system writes](issues/05-revenue-reporting-reads-what-is-written.md) | 01 | done |
-| 06 | [Dunning history is queryable](issues/06-dunning-history-is-queryable.md) | — | needs re-verification |
+| 06 | [Dunning history is queryable](issues/06-dunning-history-is-queryable.md) | — | done |
 | 07 | An issued invoice cannot change | — | done |
 
 ## Working these

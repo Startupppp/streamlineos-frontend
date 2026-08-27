@@ -4,19 +4,19 @@
 
 **Blocked by:** None — can start immediately
 
-**Status:** in-progress
+**Status:** done — 0491 applied, dunning history is a queryable table, and the array column is gone
 
 ## Acceptance criteria
 
 - [x] Dunning attempts live in their table and are queryable.
 - [x] The existing array is migrated with no history lost.
-- [ ] The array column is removed only after migration. — **BLOCKED:** migration `0491_migrate_dunning_to_table` is journalled but unapplied; c18-04 cannot run until an operator applies it to the target database and verifies `\d dunning_attempts` plus row count.
+- [x] The array column is removed only after migration. — `0491_migrate_dunning_to_table` is applied (journal idx 277). `dunning_attempts` exists in the database, and `subscriptions` carries no `dunning%` column — verified by `information_schema`, not by reading the migration. The order held: the table was populated by 0491 before the column went.
 - [x] Collection performance is reportable.
 
 ## Todo
 
 - [x] Migrate, verify, then drop
-- [ ] Coordinate with c18-04, which removes the column — **BLOCKED:** same dependency; c18-04 spec is written in this ticket's body but cannot execute until 0491 is applied.
+- [x] Coordinate with c18-04, which removes the column — done, and c18-04 is now closed on the same evidence. Zero symbol and raw-name references to `dunningHistory` / `dunning_history` remain in `src/`.
 - [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
 **c18-04 spec — what must be true first and what to do:**
