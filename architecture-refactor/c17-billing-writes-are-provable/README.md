@@ -8,11 +8,11 @@ The adapter shipped with c5 and the architecture is right. What is missing is pr
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 01 | A provider event is recorded before it is acted on | — | needs re-verification |
-| 02 | A webhook acknowledges only durable work | 01 | needs re-verification |
-| 03 | A coupon can be used once | — | needs re-verification |
+| 01 | [A provider event is recorded before it is acted on](issues/01-a-provider-event-is-recorded-before-it-is-acted-on.md) | — | done |
+| 02 | [A webhook acknowledges only durable work](issues/02-a-webhook-acknowledges-only-durable-work.md) | 01 | done |
+| 03 | [A coupon can be used once](issues/03-a-coupon-can-be-used-once.md) | — | done |
 | 04 | [A quota that cannot be computed refuses the write](issues/04-a-quota-that-cannot-be-computed-refuses.md) | — | done |
-| 05 | Revenue reporting reads what the system writes | 01 | needs re-verification |
+| 05 | [Revenue reporting reads what the system writes](issues/05-revenue-reporting-reads-what-is-written.md) | 01 | in progress — `churn` blocked on `cron-billing.service.ts`, see [`lane-requests/s1.md`](../lane-requests/s1.md) §1 |
 | 06 | [Dunning history is queryable](issues/06-dunning-history-is-queryable.md) | — | needs re-verification |
 | 07 | An issued invoice cannot change | — | done |
 
