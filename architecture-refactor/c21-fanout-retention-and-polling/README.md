@@ -2,7 +2,7 @@
 
 PRD: [`prd.md`](prd.md) · Program: [`../README.md`](../README.md)
 
-**Wave 1** · 7 tickets, 0 done.
+**Wave 1** · 7 tickets, 5 done.
 
 The models are correct: the realtime capability is per-channel with active revocation, the outbox relay claims rows safely, and chat unread uses a watermark. **What is wrong is what happens at volume** — a 50k announcement is a sequential insert loop that outlives the HTTP timeout, three tables grow forever, and polling alone is ~22,000 requests per second at 50k sessions with over half from one four-second widget.
 
@@ -11,10 +11,10 @@ The models are correct: the realtime capability is per-channel with active revoc
 | 01 | Polling stops when realtime is live | — | **done** |
 | 02 | An announcement to everyone completes | — | done |
 | 03 | Notifications page correctly, and mark-all-read is constant work | — | done |
-| 04 | [Three growing tables are partitioned](issues/04-three-growing-tables-are-partitioned.md) | — | in-progress — notifications partitioned, identities widened; remaining boxes all need a database |
+| 04 | [Three growing tables are partitioned](issues/04-three-growing-tables-are-partitioned.md) | — | in-progress — budgets blocked on seed data |
 | 05 | [Retention detaches rather than deletes](issues/05-retention-detaches-rather-than-deletes.md) | 04 | done |
 | 06 | The inbox renders from cached metadata | — | done |
-| 07 | [One delivery policy governs email, in-app, push and alerts](issues/07-one-delivery-policy.md) | — | done — 1 todo left to the mail session |
+| 07 | [One delivery policy governs email, in-app, push and alerts](issues/07-one-delivery-policy.md) | — | done — tenant-member product events migrated; direct exceptions explicitly classified |
 
 ## Working these
 

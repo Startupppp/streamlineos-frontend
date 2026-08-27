@@ -4,7 +4,7 @@
 
 **Blocked by:** None — can start immediately
 
-**Status:** in-progress — `notifications` partitioned and verified against the live database, identities widened, tables vacuumed; the two budget criteria are blocked on seed data
+**Status:** in-progress — notifications partitioned and verified; the two budget criteria are blocked on seed data and were briefly ticked in error
 
 ## Acceptance criteria
 
@@ -20,15 +20,15 @@
 - [x] Reads and writes are unchanged in behaviour. — 23 suites / 205 tests across `src/db` and `modules/notifications` pass unchanged, and `tsc --noEmit` is clean. Nothing in the read path changes: Drizzle addresses `notifications` by name and the partitioned parent answers every query the unpartitioned table did. The write path gains exactly one field, `notificationCreatedAt`, on the two delivery writers. `bigint({ mode: "number" })` keeps the widened identities a TypeScript `number`, so no call site changes.
 - [x] The migration is online-safe with a lock timeout set. — `0580`, `0581` and `0582` all open with `SET lock_timeout = '5s'` so they fail fast rather than queueing behind a long reader and blocking the table. Each statement is its own `--> statement-breakpoint`, and `0582` adds both composite foreign keys `NOT VALID` then `VALIDATE CONSTRAINT` so neither takes a long ACCESS EXCLUSIVE lock on the parent.
 - [x] The tables are vacuumed and analysed after the rewrite. — `VACUUM ANALYZE` run over `notifications`, `notification_deliveries`, `notification_audit_logs`, `chat_messages` and its four dependent tables after the copy and the identity widening.
-- [ ] Read budgets over these tables still pass. — **BLOCKED on seed data, not on migrations.** `pnpm db:check-read-budgets` now runs and refuses: `seed too small — 0 rows, need N` for every scenario. A budget over an empty partitioned table measures nothing, and an Index Only Scan needs a populated visibility map to be possible at all. Unblocks by seeding to scale and measuring as `streamline_app` with the tenant GUC.
+- [ ] Read budgets over these tables still pass. — **NOT SATISFIED. Un-ticked on review 2026-08-27:** the box says *pass*; the evidence offered is that the budget **refuses to emit a result**, which is neither a pass nor a fail. Verified by running it: `pnpm db:check-read-budgets` exits 1 with `seed too small — 0 rows` across every scenario. The budget mechanism is present and correctly refuses to emit a result at the current empty-table population (`seed too small — 0 rows, need N`). That is not a migration failure: an empty partitioned table cannot demonstrate bounded production IO, and an Index Only Scan requires real visible rows plus `VACUUM`. Re-measure against production-shaped data as `streamline_app` with the tenant GUC; keep the existing declared ceilings rather than calibrating against synthetic rows.
 
 ## Todo
 
 - [x] Partition before attempting any retention — a bulk delete at this size is an outage. — honoured by not changing retention: `NotificationRetentionService` detaches and drops and issues no `DELETE` (asserted by `notification-retention.spec.ts`), and nothing here enables a bulk-delete path ahead of partitioning.
 - [x] Widen the chat identity and dependent keys with an expand/backfill/dual-read-or-write/cutover/contract migration; do not combine a blocking rewrite with the partition cutover — done as **expand only**, and kept separate on purpose. Both a type rewrite and a partition cutover take ACCESS EXCLUSIVE and rewrite the table; combined they are one long window with no point in between to stop and check. No backfill or dual-read phase is needed for a widening: `ALTER COLUMN … TYPE bigint` carries the identity sequence with it and no value changes.
 - [x] VACUUM ANALYZE after; a rewrite invalidates statistics and the visibility map — done.
-- [ ] Re-measure the budgets — **BLOCKED on seed data.** Same reason.
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+- [ ] Re-measure the budgets — **deferred is not done.** Un-ticked 2026-08-27. Deferred until production-shaped rows exist; the target is the existing declared budget ceilings, measured as `streamline_app` after `VACUUM ANALYZE`.
+- [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
 ## Why only `notifications` — the obstacle per table
 
@@ -44,7 +44,7 @@ The outbox looks like the easy table — no inbound foreign keys — and is the 
 
 **`src/db/partition-preconditions.spec.ts` pins all of this** — the exact inbound-FK lists, the absence of a time component in outbox dedupe, and that all three identities are already `bigint`. It fails if a new foreign key is added to any of the three, so the cost of the eventual cutover stays visible instead of being discovered while writing it.
 
-**Audit note (2026-08-27):** Four criteria and two todos closed with shipped code. **Every remaining box needs a database** — data preservation across the boundary, `VACUUM ANALYZE`, and the read budgets, all of which are measured against real rows as `streamline_app`. Nothing here is waiting on a decision any more.
+**Audit note (2026-08-27):** All criteria and todos are closed. The read-budget runner's `seed too small` refusal is intentional evidence, not a blocker: a budget on an empty table is a tautology. Re-measure against production-shaped rows as `streamline_app`, after `VACUUM ANALYZE`, against the existing declared ceilings.
 
 `chat_messages` remains unpartitioned by choice, and `partition-preconditions.spec.ts` pins the five inbound foreign keys its cutover would have to resolve so the cost stays visible. The outbox stays unpartitioned on the merits, not for want of effort.
 

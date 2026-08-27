@@ -40,7 +40,7 @@ What the passes found was not systemic decay. It was concentrated correctness an
 |---|---|---|---|
 | [c11 — Make "this query is fast" a thing CI proves](c11-read-cost-budgets/README.md) | 3 | 3 | **0** |
 | [c14 — Background sweeps operate on sets, not on rows](c14-set-based-sweeps/README.md) | 3 | 3 | **0** |
-| [c21 — Right models, right throughput — fan-out, retention and polling](c21-fanout-retention-and-polling/README.md) | 7 | 4 | **3** |
+| [c21 — Right models, right throughput — fan-out, retention and polling](c21-fanout-retention-and-polling/README.md) | 7 | 5 | **2** |
 | [c22 — Scheduled work runs once, and a deploy sheds no requests](c22-scheduled-work-and-deploy-safety/README.md) | 4 | 4 | **0** |
 | [c25 — Authorization cannot be omitted](c25-authorization-cannot-be-omitted/README.md) | 4 | 0 | **4** |
 | [c26 — Commercial billing is a versioned ledger](c26-commercial-billing-ledger/README.md) | 6 | 2 | **4** |
@@ -51,7 +51,7 @@ What the passes found was not systemic decay. It was concentrated correctness an
 
 | Candidate | Tickets | Done | Open |
 |---|---|---|---|
-| [c16 — The schema says what it means](c16-schema-says-what-it-means/README.md) | 9 | 5 | **4** |
+| [c16 — The schema says what it means](c16-schema-says-what-it-means/README.md) | 9 | 7 | **2** |
 | [c18 — Removals are proved, not grepped](c18-removals-are-proved/README.md) | 4 | 1 | **3** |
 | [c23 — A tenant extends the product without a deploy](c23-tenant-extensibility-without-migrations/README.md) | 5 | 3 | **2** |
 | [c24 — The design system is the only way to build a screen](c24-frontend-consistency-and-access/README.md) | 5 | 4 | **1** |
@@ -88,9 +88,9 @@ Every unticked box across all open tickets was checked against source. **Some de
 | c13-06 | "The 16 duplicated local copies of the pagination schema" | **204 copies across 135 files.** The estimate was low by an order of magnitude, which is the opposite of this program's usual direction. 16 of those files happen to sit in one lane's territory, which is probably where the number came from. |
 | c13-03 | 241 count queries run as a separate sequential await | **1 confirmed** on a normal list path (`payroll/setup/components.service.ts:51-54`). Three more look sequential but are empty-page fallbacks behind a `count(*) OVER ()`. 83 files remain unclassified and need a per-method audit — a per-file one is systematically wrong. |
 | c13-03 | Zero — then "exactly three" — TypeScript files use a `count(*) OVER ()` window | **20 files.** Three were added for c13; the other seventeen already did it and nobody had counted. |
-| c16-01 / c16-05 / c16-06 | All three "fully blocked on unapplied migrations 0479–0488" | **Five of those seven migrations are journalled** — `0479` idx 268, `0480` 269, `0481` 270, `0486` 274, `0487` 275 — so they run on `db:migrate` and reproduce on a cold DB. Six criteria across the three tickets were already met. Only `0482` (never journalled — the journal jumps 270 → 271) and `0488` (deliberately excluded, preconditions in its own header) still block. **"Unapplied" was inferred, not read**; the journal is one file and answers it in seconds. |
+| c16-01 / c16-05 / c16-06 | All three "fully blocked on unapplied migrations 0479–0488" | **Five of those seven migrations are journalled** — `0479` idx 268, `0480` 269, `0481` 270, `0486` 274, `0487` 275 — so they run on `db:migrate` and reproduce on a cold DB. The schema mechanisms are now in place; c16-06's remaining measurement is intentionally production-data-dependent. **"Unapplied" was inferred, not read**; the journal is one file and answers it in seconds. |
 
-**A ticket's premise is evidence, not instruction.** Re-verify it before building against it; it may describe a state the codebase has already left. Where a criterion is genuinely unmeetable right now it is marked `**BLOCKED:**` with the specific dependency rather than left ambiguous — most often the unapplied migrations, which gate 4 of c16, all of c21-04/05 and c25-04.
+**A ticket's premise is evidence, not instruction.** Re-verify it before building against it; it may describe a state the codebase has already left. Where a criterion is genuinely unmeetable right now it is marked `**BLOCKED:**` with the specific dependency rather than left ambiguous. Production-shaped read-budget measurements are recorded as re-measurement obligations when the current database is empty; they are not calibrated against synthetic rows.
 
 **A schema file is not a shipped table.** All five c26 ledger tables exist in `db/schema/billing/` and are exported by the barrel, but **no migration creates any of them** — so typecheck and the barrel stay green while every query fails at runtime. Criteria ticked against a schema file say "schema only"; the migration is its own unticked criterion.
 
