@@ -1,13 +1,16 @@
 import { createHash } from "node:crypto";
 import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 
+// Moved 2026-08-27 (c25-03): 55 finance gates, plus /crm/deals/approvals and
+// /hr/goals, named keys no route enforces — each now names the key its own
+// endpoints check. `pnpm -C backend check:navigation-permissions` proves it.
 // Moved 2026-08-25 by the CRM import/export route ("Import & export",
 // /crm/import, gated on party:parties:view because export is ungated by design).
 // Moved 2026-08-24 by the CRM autonomy review route ("What the system did",
 // /crm/autonomy, gated on crm:autonomy:view). The digest exists so a route or
 // its permission cannot change without somebody saying why.
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "c12d59d5c1d3d86419707e2f7e80e1df2467b6cf2c4e6c52670b7c8770d4a27a";
+  "38b4106d728dca202aed5a8dd918d4a78c9de52ceb16a68b00aa4c5245274ef1";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {
