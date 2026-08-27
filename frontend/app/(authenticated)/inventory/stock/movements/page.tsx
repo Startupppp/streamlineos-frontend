@@ -138,8 +138,22 @@ function renderQtyChangeCell(row: StockTransaction) {
   );
 }
 
+const BUCKET_LABEL: Record<StockTransaction["quantityBucket"], string> = {
+  ON_HAND: "On hand",
+  BLOCKED: "Blocked",
+  QUALITY_HOLD: "Quality hold",
+};
+
 function renderBalanceCell(row: StockTransaction) {
-  return <span className="font-mono tabular-nums font-medium">{Number(row.quantityAfter).toLocaleString()}</span>;
+  const bucket = row.quantityBucket;
+  return (
+    <span className="font-mono tabular-nums font-medium">
+      {Number(row.quantityAfter).toLocaleString()}
+      {bucket !== "ON_HAND" && (
+        <span className="ml-1 font-sans text-muted-foreground">{BUCKET_LABEL[bucket]}</span>
+      )}
+    </span>
+  );
 }
 
 function renderSourceCell(row: StockTransaction) {
@@ -209,6 +223,9 @@ const MOVEMENTS_COLUMNS: DataTableColumn<StockTransaction>[] = [
   {
     key: "quantityAfter",
     header: "Balance After",
+    // A quarantine or block movement leaves on-hand alone and moves goods
+    // between buckets, so the figure is that bucket's balance and the cell says
+    // which one.
     headerClassName: "text-right",
     className: "text-right",
     cell: renderBalanceCell,

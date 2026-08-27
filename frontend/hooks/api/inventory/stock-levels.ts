@@ -42,6 +42,13 @@ type StockLevelFilters = {
   limit?: number;
 };
 
+/**
+ * Which quantity a movement moved. A quarantine or block movement leaves on-hand
+ * untouched and moves goods between buckets, so its balance pair describes the
+ * bucket named here rather than on-hand.
+ */
+export type QuantityBucket = "ON_HAND" | "BLOCKED" | "QUALITY_HOLD";
+
 export type StockTransactionDirection = "in" | "out";
 
 export type StockTransactionFilters = {
@@ -97,6 +104,8 @@ export interface StockTransaction {
   quantityChange: number;
   quantityBefore: number;
   quantityAfter: number;
+  /** Which quantity moved. The balance pair describes this bucket, not on-hand. */
+  quantityBucket: QuantityBucket;
   createdAt: string;
   notes: string | null;
   referenceType: string | null;
@@ -150,6 +159,7 @@ interface RawTransaction {
   quantityChange: string;
   quantityBefore: string;
   quantityAfter: string;
+  quantityBucket: QuantityBucket | null;
   createdAt: string;
   notes: string | null;
   referenceType: string | null;
@@ -200,6 +210,7 @@ function toStockTransaction(r: RawTransaction): StockTransaction {
     quantityChange: Number(r.quantityChange),
     quantityBefore: Number(r.quantityBefore),
     quantityAfter: Number(r.quantityAfter),
+    quantityBucket: r.quantityBucket ?? "ON_HAND",
     createdAt: r.createdAt,
     notes: r.notes,
     referenceType: r.referenceType,
