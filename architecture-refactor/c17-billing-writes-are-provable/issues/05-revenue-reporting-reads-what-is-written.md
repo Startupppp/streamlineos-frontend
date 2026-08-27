@@ -36,7 +36,7 @@ instruction to close every box; the change is confined to emitting the two churn
 own commit, so a cron lane can revert it in isolation.
 
 Under RLS the reader is scoped to the caller's organisation, despite `billing:analytics:view` being
-described as "platform admin only". Raised in `lane-requests/s1.md` §5, not resolved here.
+described as "platform admin only". Raised in `architecture-refactor/OPEN-FINDINGS.md` §5, not resolved here.
 
 ---
 

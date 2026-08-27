@@ -23,11 +23,11 @@
 
   Fixed by `backend/migrations/0575_ticket_list_sort_indexes.sql` and declared in `backend/src/db/schema/build/ticket-core.ts:126-141` so `db:generate` cannot propose dropping them: one partial index per sortable column carrying the **whole** `ORDER BY` tuple `(org_id, project_id, <sort col>, created_at, id) WHERE deleted_at IS NULL`. A prefix is not enough — an index on `(org_id, project_id, updated_at, id)` was still ignored, because the query's third sort key `created_at` was not in it. `org_id` leads because the RLS qual is not leakproof, so without it the planner refuses an index-only scan outright.
 
-  **The migration is written but not journalled** — `_journal.json` is not this session's to edit; the entry to append is in `architecture-refactor/lane-requests/s4.md` §10. The indexes were created directly on the branch to take the measurement, so the numbers above are real and the migration reproduces them.
+  **The migration is written but not journalled** — `_journal.json` is not this session's to edit; the entry to append is in `architecture-refactor/OPEN-FINDINGS.md` §10. The indexes were created directly on the branch to take the measurement, so the numbers above are real and the migration reproduces them.
 - [ ] The 16 duplicated local copies of the pagination schema are deleted. — **383 of 411 are deleted; the last 28 are a boundary this session must not cross.** The figure of 16 was wrong by 25×: re-counted 2026-08-27 there were **411 hand-rolled fields across 141 files** (`page` 177 · `limit` 183 · `pageSize` 51). S4 migrated **382 of them across ~120 files** — every module no session had claimed: hr, finance, inventory, payroll, timesheets, surveys, kb, users, workflows, webhooks, party, organization, tasks, storage, settings and 25 more. Typecheck clean at every step.
 
   The remaining 28:
-  - **19 fields in 4 modules owned by sessions running right now** — `billing` (S1/S2), `module-access` and `rbac` (S3), `notifications` (S5). Their files changed underneath this session twice during the run; editing them would destroy work in flight. Exact paths in `lane-requests/s4.md` §4.
+  - **19 fields in 4 modules owned by sessions running right now** — `billing` (S1/S2), `module-access` and `rbac` (S3), `notifications` (S5). Their files changed underneath this session twice during the run; editing them would destroy work in flight. Exact paths in `architecture-refactor/OPEN-FINDINGS.md` §4.
   - **9 fields on endpoints whose ceiling deliberately exceeds the platform cap of 100** — csat 500, party 500, data-quality 200 and `MAX_BULK` 400, hr-interviews 200, tasks 200, issues `MAX_PAGE` 400. `pageSizeField` clamps to 100, so migrating them would silently halve or quarter what those endpoints return. That is a capability change this ticket did not ask for; they are recorded rather than done quietly, and whether they should honour the platform cap is a product decision, not a refactor.
 
   Two helpers were added so the 382 could migrate without changing a single call site's types: `optionalPageSizeField(maxSize)` and `optionalPageNumberField()` (`backend/src/common/pagination/list-query.schema.ts:30-44`). 66 fields were `.optional()` with the default written at the call site; a defaulted field would have changed `number | undefined` to `number` in 30+ services.
@@ -68,7 +68,7 @@ By module, files: **hr** 45 · **inventory** 18 · **finance** 14 · **timesheet
 
 `common/pipes/zod-validation.pipe.spec.ts` also matches, but it is an inline fixture inside a test, not a list endpoint. Leave it.
 
-Every path with its count is in `architecture-refactor/lane-requests/s4.md` §4, with the grep that regenerates it.
+Every path with its count is in `architecture-refactor/OPEN-FINDINGS.md` §4, with the grep that regenerates it.
 
 ### The one field in this territory that was deliberately not migrated
 

@@ -25,7 +25,7 @@
 - [ ] Measure before and after as the app role — **BLOCKED on seed data.** Same reason: 0 rows. The "before" state is also gone now that the column is dropped, so a true before/after needs a seeded branch rather than this database.
 - [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
-**Lane 4 note (2026-08-26):** `0482` is not merely un-run, it is **absent from the journal**, which is a different and quieter failure: `db:migrate` will keep reporting success while never applying it. Adding its entry is an operator action — `meta/_journal.json` is a file four concurrent lanes collide on, so Lane 4 must not edit it. The exact entry is recorded in [`../../lane-requests/lane-4.md`](../../lane-requests/lane-4.md). Note the ordering hazard: `0482` guards itself with a `DO` block that aborts if any candidate has `resume_text` but no `candidate_resumes` row, so it is safe to journal only after `0481` has demonstrably run.
+**Lane 4 note (2026-08-26):** `0482` is not merely un-run, it is **absent from the journal**, which is a different and quieter failure: `db:migrate` will keep reporting success while never applying it. Adding its entry is an operator action — `meta/_journal.json` is a file four concurrent lanes collide on, so Lane 4 must not edit it. The exact entry is recorded in [`../../`architecture-refactor/OPEN-FINDINGS.md`](../../`architecture-refactor/OPEN-FINDINGS.md`). Note the ordering hazard: `0482` guards itself with a `DO` block that aborts if any candidate has `resume_text` but no `candidate_resumes` row, so it is safe to journal only after `0481` has demonstrably run.
 
 ---
 

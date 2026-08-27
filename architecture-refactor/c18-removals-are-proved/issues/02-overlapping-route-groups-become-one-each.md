@@ -32,7 +32,7 @@ A first version of that scan reported **eleven** collisions. It read one `@Contr
 
 ## Finding handed to Lane 4
 
-A vault deletion can never be audited: `vault_access_logs.vaultDocumentId` cascades on delete (`db/schema/hr/hiring.ts:367`), so the shadowed handler's audit row was destroyed by the same transaction that wrote it — and the surviving handler writes none. `listVaultAccessLogs` is live and surfaced in the UI, so the screen can only ever show `VIEW`. Recorded in `architecture-refactor/lane-requests/lane-4.md` with the reason not to "fix" it by adding an insert that the cascade would discard.
+A vault deletion can never be audited: `vault_access_logs.vaultDocumentId` cascades on delete (`db/schema/hr/hiring.ts:367`), so the shadowed handler's audit row was destroyed by the same transaction that wrote it — and the surviving handler writes none. `listVaultAccessLogs` is live and surfaced in the UI, so the screen can only ever show `VIEW`. Recorded in `architecture-refactor/OPEN-FINDINGS.md` with the reason not to "fix" it by adding an insert that the cascade would discard.
 
 ---
 

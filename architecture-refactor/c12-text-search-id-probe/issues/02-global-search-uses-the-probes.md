@@ -41,7 +41,7 @@
 
 - [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
-**S4 note (2026-08-27).** This ticket carried `Status: done` with one box still open, which the rule does not allow. It is now genuinely at zero: the equivalence spec was executed (12/12) and the booted-app check was performed against the real branch. The blocker for the latter was a credential — `streamline_app`'s password had drifted from `.env`, so the API could not start; re-syncing it also unblocked the whole e2e suite. See `lane-requests/s4.md` §1.
+**S4 note (2026-08-27).** This ticket carried `Status: done` with one box still open, which the rule does not allow. It is now genuinely at zero: the equivalence spec was executed (12/12) and the booted-app check was performed against the real branch. The blocker for the latter was a credential — `streamline_app`'s password had drifted from `.env`, so the API could not start; re-syncing it also unblocked the whole e2e suite. See `architecture-refactor/OPEN-FINDINGS.md` §1.
 ---
 
 **Audit note (2026-08-26):** All acceptance criteria and the four code-wiring todos are confirmed satisfied at `backend/src/modules/search/search.service.ts` lines 131–215. The two remaining todos are BLOCKED on the test suite and a booted app respectively — both are explicitly excluded by project instructions, not open work. Status `done` is correct.

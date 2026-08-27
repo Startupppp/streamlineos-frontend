@@ -13,7 +13,7 @@
 - A `.sql` file absent from the journal never applies, and `db:migrate` still reports success — so the column drop would silently not happen even on a run that appeared to work.
 - No database has been touched in this program, so 0477 is unapplied too.
 
-This lane may not edit `_journal.json` (four sessions collide on it). The exact entry the orchestrator needs to append is written into `architecture-refactor/lane-requests/lane-3.md`. Nothing was built against this ticket.
+This lane may not edit `_journal.json` (four sessions collide on it). The exact entry the orchestrator needs to append is written into `architecture-refactor/OPEN-FINDINGS.md`. Nothing was built against this ticket.
 
 **Audit note (2026-08-26):** The ticket's premise is confirmed by migration evidence. Migration `0477_invoice_items_backfill.sql` (unapplied) runs `jsonb_array_elements(i.line_items)` — proving the actual DB still has a `line_items` JSONB column on `invoices`. The Drizzle schema code is already at the target state: `invoiceItems` table exists at `backend/src/db/schema/crm/invoicing.ts:60-72` with no JSONB column on `invoices`. The `quoteLineItems` table also exists at `crm/invoicing.ts:219-229`. All ACs are BLOCKED on migrations 0477/0478 being applied.
 

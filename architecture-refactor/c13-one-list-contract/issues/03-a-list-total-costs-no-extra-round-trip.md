@@ -32,7 +32,7 @@ A **file**-level scan cannot see either, which is why the 2026-08-26 pass report
 - `backend/src/modules/crm/core/crm-automations.service.ts:141-155` — `getRuns` awaited the page, then awaited a second statement that was **not a `count()`**: `select({ count: crmAutomationRuns.id })` with no limit, taking `countResult.length`. A rule with fifty thousand runs transferred fifty thousand ids to render a page of twenty. Now `count(*) OVER ()` in the page query. Covered by `backend/src/modules/crm/core/automation-runs-list-total.spec.ts`, 5 tests, 5 pass — the double counts statements, so a regression shows up as a count rather than as a type error.
 - `backend/src/modules/accounting/gl/recurring-journals.service.ts:51-70` — `listTemplates` awaited the page, then awaited a plain sequential `count(*)`. Now windowed. Covered by `backend/src/modules/accounting/gl/recurring-journals-list-total.spec.ts`, 4 tests, 4 pass, including that the fallback fires **only** for an empty page past the end of the results.
 
-The shape both now use is `backend/src/common/pagination/window-count.ts` — `totalOverWindow`, `resolveWindowedTotal`, `withoutTotal` — which is what the nine in-territory sites listed in `lane-requests/s4.md` §8 had each written out inline. Covered by `backend/src/common/pagination/window-count.spec.ts`, 10 tests, 10 pass.
+The shape both now use is `backend/src/common/pagination/window-count.ts` — `totalOverWindow`, `resolveWindowedTotal`, `withoutTotal` — which is what the nine in-territory sites listed in `architecture-refactor/OPEN-FINDINGS.md` §8 had each written out inline. Covered by `backend/src/common/pagination/window-count.spec.ts`, 10 tests, 10 pass.
 
 ### Remaining: sequential COUNT queries outside this lane's territory
 
@@ -70,7 +70,7 @@ The PRD's correction note said three files use the window because three were add
 
 ### Remaining: offset-only list modules outside this lane's territory
 
-143 files call `.offset()` directly. This lane owns build, accounting, invoices, quotes, crm, chat, mail and search; the rest are recorded here and in `architecture-refactor/lane-requests/lane-3.md`, and nothing is ticked for them.
+143 files call `.offset()` directly. This lane owns build, accounting, invoices, quotes, crm, chat, mail and search; the rest are recorded here and in `architecture-refactor/OPEN-FINDINGS.md`, and nothing is ticked for them.
 
 | Module | Files | In this lane's territory |
 |---|---|---|
@@ -86,7 +86,7 @@ The PRD's correction note said three files use the window because three were add
 | workflows · users · rbac · organization · module-access · billing · api-tokens | 2 each (14) | no |
 | audit-log · contacts · deals · delegations · leads · offer-fulfillment · ownership · party · portal · public · quotes · settings · storage · tasks · webhooks | 1 each (15) | quotes only |
 
-Full per-file paths for the 123 outside this territory are in `architecture-refactor/lane-requests/s4.md` §5. The 20 inside it are classified per method above.
+Full per-file paths for the 123 outside this territory are in `architecture-refactor/OPEN-FINDINGS.md` §5. The 20 inside it are classified per method above.
 
 **Why the in-territory ones were not converted either.** Offset is not a defect on a page-numbered screen; the PRD says so explicitly ("offset is genuinely fine for a page-numbered admin table someone opens twice a week") and puts converting all 143 out of scope. The build ticket list is named in the PRD as a surface that *should* be cursor, but it is page-numbered in its published contract and on the frontend, so converting it is an API change that cannot be made safely while three other lanes are editing this checkout. Recorded as remaining rather than half-done.
 

@@ -23,7 +23,7 @@
 - [x] Add the constraint NOT VALID then validate, so the migration is online-safe — same migration; `ADD CONSTRAINT … NOT VALID` then `VALIDATE CONSTRAINT`.
 - [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md) — held open by AC 1 only.
 
-**Lane 4 note (2026-08-26):** One gap found that no criterion covers, and Lane 4 could not fix it because `db/schema/common/shared.ts` is being split by domain in the orchestrator lane (c23-05) and Lane 4 was told not to restructure it. The CHECK constraint exists in SQL but is **not expressed in the Drizzle table definition** — `auditLogs` at `shared.ts:170-190` declares only `index()` entries, no `check()`. For a candidate whose whole theme is "the schema says what it means", the schema does not currently say this one. Requested in [`../../lane-requests/lane-4.md`](../../lane-requests/lane-4.md).
+**Lane 4 note (2026-08-26):** One gap found that no criterion covers, and Lane 4 could not fix it because `db/schema/common/shared.ts` is being split by domain in the orchestrator lane (c23-05) and Lane 4 was told not to restructure it. The CHECK constraint exists in SQL but is **not expressed in the Drizzle table definition** — `auditLogs` at `shared.ts:170-190` declares only `index()` entries, no `check()`. For a candidate whose whole theme is "the schema says what it means", the schema does not currently say this one. Requested in [`../../`architecture-refactor/OPEN-FINDINGS.md`](../../`architecture-refactor/OPEN-FINDINGS.md`).
 
 ---
 
