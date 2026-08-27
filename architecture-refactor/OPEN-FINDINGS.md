@@ -76,6 +76,28 @@ change, and it would alter nothing today: the application connects as `neondb_ow
 `BYPASSRLS` overrides `FORCE`. One of the two has to change so the check and the constitution stop
 disagreeing. Recorded against c25-04.
 
+## 6a. `DashboardLeaveService.getPendingApprovals` counts resignations org-wide regardless of scope
+
+**Verified open, 2026-08-27** while reconciling a dangling pointer left by a since-deleted ticket file.
+`getPendingApprovals` (`dashboard-leave.service.ts:81-129`) resolves a DataScope and correctly applies it
+to the leave-request count via `leaveApprovalScope(scope, orgId, u.userId)` (line 100) — but the
+resignation count right below it (lines 105-116) filters only by `orgId` and `status`, with **no scope
+predicate at all**. An approver whose DataScope is `own` or `team` still receives the
+**organization-wide** pending-resignation count. The leak is silent: the cache key already varies by
+scope (`dashboard:pending-approvals:${orgId}:${scope}:...`), so the response looks scope-correct — only
+the number inside it isn't.
+
+Not a trivial predicate swap. `leaveRequests` carries `approverId` for `leaveApprovalScope` to key off;
+`resignations` (`db/schema/hr/offboarding.ts:230-260`) has no equivalent pre-assignment column —
+`approvedBy` / `hrReviewedBy` / `finalReviewedBy` are populated only after action, not before. Scoping
+`team`/`own` here needs a real answer for who a pending resignation's approver *would be*, most likely
+via the same reporting-manager relation that presumably backs `leaveRequests.approverId`. Left as a
+finding rather than a guessed fix.
+
+This is the defect a deleted `c25-02` ticket file referred to as "written up in `OPEN-FINDINGS.md` §3" —
+that hand-off never happened (§3 is `vault_access_logs`, unrelated); this entry is the correction, found
+by verifying the pointer rather than trusting it forward.
+
 ## 6. Smaller, and genuinely optional
 
 - **`verify-permission-catalog.mjs` is redundant.** `backend/src/common/auth/verify-permission-catalog.mjs`

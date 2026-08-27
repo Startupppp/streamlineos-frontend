@@ -335,16 +335,16 @@ Next.js public pages use server rendering/static generation, CDN caching, canoni
 
 ## Reliability, security, and compliance
 
-Required objectives at the accepted workload. Microseconds apply only inside one process; networked database/cache calls are millisecond budgets and browser-visible data is an end-to-end budget:
+Required objectives at the accepted workload, measured under representative cold/warm cache mix, payload sizes, pool pressure, tenant sizes, geography, device, and network. Microseconds apply only inside one process; networked data is a millisecond budget:
 
 | Objective | Target |
 |---|---:|
 | Authenticated interactive availability | 99.95% monthly per cell |
 | Cross-organization data exposure | zero tolerated |
-| p99 in-process hot authorization/cache lookup | ≤ 100 µs without I/O |
+| p99 in-process hot authorization/cache decision | ≤ 100 µs CPU time without I/O; route budget still includes event-loop delay |
 | p95 same-region Redis operation | ≤ 2 ms including network |
-| p95 simple indexed PostgreSQL execution | ≤ 20 ms; bounded complex read ≤ 50 ms |
-| p95 browser-visible cached read | ≤ 150 ms at the serving-region edge |
+| p95 simple tenant PostgreSQL round trip | ≤ 20 ms including pool wait, network, GUC setup, and execution; bounded complex read ≤ 50 ms |
+| p95 browser-visible cached read | ≤ 150 ms on the declared same-region reference device/network |
 | p75 first useful authenticated view | ≤ 1 second on the declared reference device/network |
 | p95 transactional write | ≤ 500 ms excluding declared async work |
 | Permission revocation | ≤ 5 seconds explicit; never past `valid_until` temporal |
@@ -425,7 +425,7 @@ These are stated without blame; each is a concrete lesson the target architectur
 - Resolve every still-open item in `architecture-refactor/OPEN-FINDINGS.md`, including vault audit attribution, durable production app-role credentials, the FORCE-RLS policy/verifier contradiction, pagination duplication, and the missing invitation-expiry ledger event.
 - Make frontend query keys tenant-aware; retain full cache clearing on organization switch until that migration is complete.
 - Inventory routes, schemas, queries, validators, UI files, and exports with graph/runtime/build/migration/analytics/consumer evidence; delete duplicates or dead artifacts only through a reviewed migration/deprecation and rollback plan.
-- Make ownership/authorization tests and live application verification green.
+- Make ownership/authorization tests and live application verification green; instrument every latency seam and set pool/query/cache/route alerts below their SLO budgets rather than the current 250 ms slow-acquire default.
 
 ### Phase 1 — introduce placement without moving data
 
