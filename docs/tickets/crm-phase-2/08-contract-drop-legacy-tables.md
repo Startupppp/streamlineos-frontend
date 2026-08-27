@@ -1,6 +1,6 @@
 # 08 — Contract: drop the legacy tables, and make regression impossible
 
-**Status:** in progress — 18 readers left, 13 of them the seam. The five that remain are one identical one-line change each; the **drop itself is gated on 31 tables in six other modules**, not on CRM work.
+**Status:** expand complete — every blocking `client_id` now carries a populated party beside it, kept in step by a trigger. Two of four readers cleared. **The contract (dropping `client_id`, then the tables) is the remaining ticket.**
 **Track:** A — identity convergence
 **Blocked by:** 03, 04, 05, 06, 07
 
@@ -171,3 +171,88 @@ enumerates foreign keys from `pg_constraint` at runtime rather than naming
 tables, so removing `leads`, `clients`, `contacts` and `crm_organizations` does
 not strand it. That is one fewer reason to hesitate when the finance half is
 ready; it is not permission to drop them now.
+
+
+---
+
+## The migration, done (2026-08-26)
+
+Asked for directly, after the concern about colliding with the in-flight
+accounting and inventory rewrites was raised and overruled. Recorded so the
+sequencing is visible later.
+
+### Expand
+
+**Thirteen tables** gained a party column beside their legacy id —
+`invoices`, `purchase_bills`, `csat_surveys`, `support_tickets`,
+`support_vip_clients`, `inv_sales_orders`, `inv_vendors`,
+`inv_customer_returns`, `client_opportunities`, `client_onboarding_items`,
+`timesheet_rates` and `build.tickets`. Each carries a **composite** foreign key
+on `(org_id, party_id)`: a bare `REFERENCES business_parties(party_id)` would
+permit exactly the cross-tenant reference the identity model exists to prevent,
+and the database is the only place that can refuse it unconditionally.
+
+Named for the role rather than all being `party_id` —
+`purchase_bills.vendor_id` and `build.tickets.customer_id` point at the same
+table for different reasons, and one name would lose the only thing that says
+which.
+
+`node --env-file=.env src/scripts/legacy-identity-drop-cost.mjs` now reports
+**13 of 14 blocking columns carry a party**; the fourteenth is
+`client_party_map.client_id`, which is the seam and goes with the tables.
+
+### The dual write is a trigger
+
+Twelve insert sites in six modules, and they are not the only writers — the
+importer, background jobs and raw SQL reach these tables too. Dual-writing in
+application code covers the paths somebody remembered; **the thirteenth writer
+is the one that breaks it**, and the symptom is a row that silently keeps no
+party, invisible until the contract migration tries to make the column NOT NULL
+and finds years of holes.
+
+`set_org_id_from_parent` already establishes the pattern here. `0273` adds one
+generic function attached to each table, rather than eleven near-identical ones
+for one of them to differ subtly. Verified against the live database: an insert
+with a client fills the party, an insert without one leaves it null, an update
+that sets the client fills it, and a second table behaves identically. The
+cross-tenant case is refused one layer earlier by an existing composite key,
+which is a better place for it than a trigger.
+
+It is expand-phase scaffolding and the contract migration drops it.
+
+### What the invariant found that the catalogue could not
+
+`inv_customer_returns.client_id` declares `.references(() => clients.id)` in
+Drizzle and **the database has no such foreign key** — no migration ever created
+it. So the "sixty-five foreign keys" figure *understated* the problem: a column
+that points at `clients` in the application's mind but not the database's blocks
+the drop just as firmly while being invisible to the query that counts blockers.
+
+`party-column-invariant.spec.ts` is **table-scoped, not file-scoped**, and that
+distinction is not pedantic: the first version passed while two of the three
+tables in `crm/contacts.ts` were missing their column, because one
+`clientPartyId` anywhere in the file satisfied all three. An invariant that a
+neighbour can satisfy is not an invariant. Verified to fail by removing a column
+and watching it name the exact table.
+
+### Readers
+
+Four services read `clients` for one thing — a label. `partyNamesFor` gives them
+the name from Party, `client_id` is untouched and still returned as `client.id`,
+and **no response changed shape**.
+
+`csat` and `support_tickets` are off the register. `invoices` and
+`inv_sales_orders` keep one detail path each asking for `client: true` — the
+whole row — and that is where a mechanical migration stops: `gstin` maps to
+`tax_number`, `designation` to `job_title`, `account_manager_id` to
+`owner_user_id`, and `is_vendor` to nothing obvious. Each is a per-field
+decision about what a caller is entitled to see, so they stay listed rather than
+being guessed at.
+
+### What is left
+
+1. The two `client: true` detail paths, per field.
+2. The remaining `leads`, `contacts` and `crm_organizations` foreign keys — this
+   pass covered `clients`, which was the largest of the four.
+3. **The contract**: drop `client_id`, drop the triggers, drop the tables. That
+   is the destructive half and it should be its own ticket with its own review.
