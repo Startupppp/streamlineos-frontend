@@ -1,22 +1,23 @@
 # 01 — Every route declares its exposure
 
-**Status:** in-progress — 5 of 6 criteria met. The last one is 107 → 50 undeclared; every remaining route is in another session's territory (see `lane-requests/s3.md` §2)
+**Status:** done — 6 of 6 criteria met. **0 undeclared routes**, and enforcement is on.
 
 **Audit note (2026-08-26):** `RouteClassifierGuard` is fully wired as `APP_GUARD` in `app.module.ts:195` (before `JwtAuthGuard`). The "registration outside scope" note in the todo below is stale — it was written by the subagent that created the guard file; the orchestrator wired it. Boot-time test verified at `route-classifier.guard.spec.ts:72–102`.
 
 **Lane 2 update (2026-08-26):** the "12 JWT-only files" figure was wrong in the direction this
 program's estimates usually go — but *low*, not high. The real count was **141 undeclared handlers**
 across 32 controllers. It also did not need a booted app: `pnpm check:route-classification` reads the
-same four metadata keys the guard does. Two criteria remain open, both blocked on other lanes
-applying the classifications in `lane-requests/lane-2.md` §1.
+same four metadata keys the guard does.
 
 ## Acceptance criteria
 
-- [ ] Every route is exactly one of public, universal authenticated or permissioned. — **OPEN, but 107 → 50.** The criterion's own vocabulary turned out to be incomplete (see below): there are four, not three. **3,518 handlers: 202 public, 3,175 permissioned, 40 in-service, 51 universal, 50 undeclared.** S3 applied 57 — the 47 in modules no session owns plus the 10 that needed a decision, each recorded below. Every remaining one is in another session's territory: `notifications` ×29 (S5), `hr` ×13, `chat` ×4 (S4), `billing` ×3 (S1/S2), `search` ×1 (S4). **BLOCKED on those sessions**, listed in [`lane-requests/s3.md`](../../lane-requests/s3.md) §2.
+- [x] Every route is exactly one of public, universal authenticated or permissioned. — **107 → 0.** The criterion's own vocabulary turned out to be incomplete (see below): there are four, not three. All 107 are classified: 57 in the first pass (47 by rule, 10 by reading the code) and the last 50 with the user's authorisation to cross session territory — notifications ×29, hr ×13, chat ×4, billing ×3, search ×1.
+
+  **Final counts: 3,518 handlers — 202 public, 3,175 permissioned, 94 universal, 47 in-service, 0 undeclared.** `pnpm check:route-classification` is a required CI step and `RouteClassifierGuard` now **enforces by default**: absence denies at boot and at request time, and only a literal `REQUIRE_ROUTE_CLASSIFICATION=false` disables it, so a typo still enforces.
 - [x] A global guard denies a route with no classification or contradictory classifications. — `backend/src/common/auth/route-classifier.guard.ts:90-100`; wired `app.module.ts:195`
-- [x] Universal employee routes remain available and still derive the actor from authentication. — `backend/src/common/auth/universal.decorator.ts` (`@Universal()`); `RouteClassifierGuard` passes `IS_UNIVERSAL` routes. Enforcement stays off precisely so these keep working until the 107 are classified.
+- [x] Universal employee routes remain available and still derive the actor from authentication. — `backend/src/common/auth/universal.decorator.ts` (`@Universal()`); `RouteClassifierGuard` passes `IS_UNIVERSAL` routes. 94 handlers now carry it, every one deriving its subject from `@CurrentUser()`.
 - [x] The current JWT-only controller files are classified one by one; none is bulk-allowlisted. — `backend/src/scripts/route-classification-report.mjs` (`pnpm check:route-classification`) enumerates every handler statically and names each undeclared one by file and method. All 141 originally undeclared routes are classified individually with the rule that decides each: 34 applied in this lane's territory (`module-access` ×29, `storage` ×5), 107 itemised per handler in `lane-requests/lane-2.md` §1a–1d. No allowlist exists anywhere in the guard or the script.
-- [x] `backend/CLAUDE.md` describes the new runtime invariant after it exists. — `backend/CLAUDE.md` §2, "Every route declares its exposure, and there are exactly four ways to do it": the four declarations, why the fourth exists, the opt-in enforcement flag, and the current counts.
+- [x] `backend/CLAUDE.md` describes the new runtime invariant after it exists. — `backend/CLAUDE.md` §2, "Every route declares its exposure, and there are exactly four ways to do it": the four declarations, why the fourth exists, that enforcement is now on with `=false` as the only escape hatch, and the current counts.
 - [x] Swagger/OpenAPI generation records the classification without exposing production docs. — **The premise that blocked this was wrong.** It does not need an operation-level decorator on 3,518 handlers: the classification is already in Nest metadata, so `recordRouteClassification` (`backend/src/common/auth/record-route-classification.ts`) reads the same four keys `RouteClassifierGuard` reads and stamps each operation with `x-exposure`, plus `x-permission` / `x-authorized-in-service`, and appends a one-line "Exposure:" to the description. Deriving it from metadata means the document cannot drift from the guard. Wired at `backend/src/main.ts:106`, **inside** the existing `if (isDevelopment)` block, so production still builds no document at all. An undeclared route is stamped `undeclared` rather than skipped, and the boot log reports the count.
 
   **Proved against real Nest, not just mocks:** the stamping joins on `operationId`, a value our code never produces — Nest's `operationIdFactory` does. If that format were not `Controller_method`, every lookup would miss, `stamped` would be 0 and the feature would land inert while every unit test still passed. `record-route-classification.spec.ts` therefore builds a real `Test.createTestingModule`, calls the real `SwaggerModule.createDocument`, and asserts 3 stamped / 1 undeclared with the right modes. **11 tests, all passing.**
@@ -98,10 +99,8 @@ name so the report agrees with the guard on that too, and four self-test cases p
 - The process refuses to start until every route carries `@Public()`, `@Universal()`, `@RequirePermission()` or `@AuthorizedInService("…")`.
 - At request time, unclassified routes are denied with `ForbiddenException`.
 
-**Do not turn it on yet.** 50 routes are still undeclared. The platform-core group S3 could reach is
-now declared — `/me/*`, calendar, dashboard, sessions, logout, directory, announcements — but
-notifications (29 handlers, all own-inbox) is still undeclared and enforcing today would 403 it for
-every member.
+**Enforcement is on as of 2026-08-27**, the count having reached zero. `REQUIRE_ROUTE_CLASSIFICATION=false`
+is the escape hatch and is a deliberate line in a deployment config.
 
 The false-positive risk: `RouteClassifierGuard` checks only for the *presence* of any `REQUIRE_PERMISSION` metadata, not whether the key exists in the catalog. **That validation now exists** — `pnpm check:permission-keys` (ticket 03), wired at `backend/.github/workflows/ci.yml:61`.
 
