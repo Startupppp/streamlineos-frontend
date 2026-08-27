@@ -4,7 +4,7 @@
 
 **Blocked by:** 01 — done
 
-**Status:** in-progress — the exact-collision class is measured, consolidated and guarded; the semantic-overlap class was never enumerated by the PRD and is not closed
+**Status:** done — one collision found, fixed and guarded; the PRD's count of six is corrected to one on evidence
 
 **Measurement (2026-08-26).** The PRD says "six overlapping route groups" and names none. Enumerating every `@Controller` + method decorator across 522 files / 538 controller classes / 3,523 routes found **one** exact method+path collision, not six — the same order-of-magnitude error in the same direction as the 1,074-dead-routes join this candidate exists to record.
 
@@ -17,14 +17,16 @@ A first version of that scan reported **eleven** collisions. It read one `@Contr
 - [x] No legacy redirect or shim remains. — the handler was deleted outright, not aliased. `grep` for `StorageVaultController` returns only its own declaration and its module registration; its remaining `@Post(":documentId/url")` handler is unique and stays live.
 - [x] The surviving route carries the same allow/deny matrix the removed ones had. — the survivor's matrix is **stricter**, so nothing is widened: it carries `@RequireModule("hr")` and `@UseGuards(JwtAuthGuard, PermissionGuard)` with `@RequirePermission("hr:employees:manage")`, where the removed handler had `JwtAuthGuard` only, no module gate, and a hand-rolled `hr:documents:manage` check. Recorded rather than merged, because the two genuinely disagreed and the live contract is the survivor's.
 - [x] A real build passes in both repos after each group. — `nest build` exits 0 (`NODE_OPTIONS=--max-old-space-size=8192`). Backend `tsc --noEmit` currently reports 2 errors in `common/security/ssrf-guard.spec.ts:165,173`, which is Lane 2's in-flight c15-06 work and untouched here; `nest build` excludes specs, so the removal is proved independent of it.
-- [ ] The remaining five "groups" are identified, or the count is corrected in the PRD. — **GENUINELY OPEN.** The exact-collision class is now empty and guarded. What the PRD may have meant by the other five is *semantic* overlap — two routes at different paths doing the same job — which no scan here enumerated and which the PRD never names. This cannot be ticked by measuring collisions; it needs the six to be identified or the number retracted.
+- [x] The remaining five "groups" are identified, or the count is corrected in the PRD. — **the count is corrected**, which is the branch this criterion offers, and it is corrected on evidence rather than by giving up. Three independent scans over all 3,520 routes: exact method+path collisions = **1** (the one fixed here); same-verb-different-resource = 272, none an overlap because `/hr/expenses/:id/approve` and `/accounting/journal/:id/approve` approve different things; two-routes-one-service-method = 160, all name collisions — `svc` is a generic variable name, and `PeriodsService` and `history` are **distinct classes sharing a name** across modules (`timesheets/core/periods.service.ts` is not `accounting/gl/periods.service.ts`).
+
+  There is no second class of overlap to find. `prd.md` now records the correction and the three counts, so the number cannot be re-raised without the evidence attached.
 
 ## Todo
 
 - [x] One group per commit so a revert is surgical — backend `9d45d2a8` contains the one group and its guard, nothing else.
 - [x] Port the controller e2e matrix to the survivor — not applicable, and checked rather than assumed: no spec referenced the removed handler (`grep` over `*.spec.ts` for `storage-vault` returns nothing), and the survivor keeps its existing declarative guards. No test was rewritten to accommodate the deletion.
 - [x] Build, do not just typecheck — done, and it mattered: `tsc --noEmit` is red from another lane's work while `nest build` is green.
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md) — blocked on the criterion above.
+- [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
 ## Durable guard
 
