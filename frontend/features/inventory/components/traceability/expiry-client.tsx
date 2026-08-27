@@ -132,7 +132,7 @@ const EXPIRY_COLUMNS: DataTableColumn<ExpiryItem>[] = [
 export function ExpiryClient() {
   const [days, setDays] = useState("30");
 
-  const { data, isLoading, isError, refetch } = useExpiryItems({ days: Number(days) });
+  const { data, isLoading, isError, refetch } = useExpiryItems({ withinDays: Number(days) });
 
   const items = data ?? [];
 

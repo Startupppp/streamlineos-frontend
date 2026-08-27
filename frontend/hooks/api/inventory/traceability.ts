@@ -210,12 +210,12 @@ export function useSerial(id: number) {
   });
 }
 
-export function useExpiryItems(params?: { days?: number }) {
+export function useExpiryItems(params?: { withinDays?: number }) {
   const canView = useCan("inventory:stock:read");
   return useQuery<ExpiryItem[], Error>({
     queryKey: queryKeys.inventory.expiry(params),
     queryFn: () =>
-      apiClient.get<ExpiryItem[]>("/inventory/expiry", { days: params?.days }),
+      apiClient.get<ExpiryItem[]>("/inventory/expiry", { withinDays: params?.withinDays }),
     staleTime: 30_000,
     enabled: canView,
   });
