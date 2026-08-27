@@ -42,17 +42,20 @@ one call site — is removed. `recordEvent` no longer exists.
 | Renewal of the plan already held | *none* | — |
 | AI credit pack captured via webhook | `addon_purchase` | 0, `amount` = paid |
 | Payment refunded via webhook | `refund` | 0, `amount` = refunded |
-| Trial expiry sweep (`EXPIRED`) | `churn` | plan price |
-| Dunning suspension sweep (`CANCELLED`) | `churn` | plan price |
+| Trial expiry sweep (`TRIAL` → `EXPIRED`) | `churn` | 0 |
+| Dunning suspension sweep (`PAST_DUE` → `CANCELLED`) | `churn` | plan price |
+| Payment failure (`ACTIVE` → `PAST_DUE`) | *none* | — |
 
 `classifyPlanChange` (`billing/core/revenue-events.ts`) is the only place the
 first six rows are decided. MRR is always a non-negative magnitude; the type
 carries the sign.
 
-The last two rows are **not implemented**: both transitions live in
-`modules/cron/cron-billing.service.ts`, outside this lane's territory. The exact
-change is written up in `architecture-refactor/lane-requests/s1.md`. Until it
-lands, `churn` is never recorded and `churnRate` reads 0.
+**Churn is emitted exactly once per customer lost, at the terminal transition.**
+`ACTIVE → PAST_DUE` deliberately emits nothing: the customer may still recover,
+and a recovery already emits `reactivation`. Emitting churn there too would
+double-count every suspension. A lapsed trial carries `mrr: 0` because it never
+contributed any MRR — it is a lost customer, not lost revenue, and counting its
+plan price as churned MRR would show contraction that never happened.
 
 ## Reporting reconciles with subscription state
 
