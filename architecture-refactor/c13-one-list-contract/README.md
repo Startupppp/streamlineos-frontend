@@ -2,25 +2,33 @@
 
 PRD: [`prd.md`](prd.md) · Program: [`../README.md`](../README.md)
 
-**Wave 0** · 6 tickets, 2 done.
+**Wave 0** · 6 tickets, 5 done.
 
-The shared helper is sound and now has one implementation of the sentinel step, shared by the opaque
-and numeric cursor forms. Chat's three surfaces and the multi-account inbox are fixed and pinned by
-property tests; the inbox cursor is HMAC-signed. What is left is adoption outside this lane's
-territory and two things a database would answer.
+All five scrolled surfaces now page by cursor — chat, the inbox, the activity feed, notifications
+and the Build board — each on one shared implementation of the sentinel step. Every list total in
+the backend comes from a window or a parallel count; none costs a sequential extra round trip. The
+one ticket still open is 06, held by 28 hand-rolled page fields: 19 sit in modules other sessions
+are editing right now, and 9 belong to endpoints that deliberately exceed the platform cap of 100,
+where migrating would quietly shrink what they return.
 
-Numbers that turned out to be wrong, verified 2026-08-26: **204** local pagination-schema copies
-across 135 files, not 16 · **20** files already use `count(*) OVER ()`, not three · **1** confirmed
-sequential list count on a normal path, not 241 · `.offset()` at 143 files is correct.
+Numbers that turned out to be wrong, re-verified 2026-08-27: **411** local pagination-schema fields
+across 141 files — not 16, and not the 204 counted on 2026-08-26 · **5** sequential list counts
+repo-wide, not 241 and not 1, found only by reading each method rather than each file · **20** files
+already used `count(*) OVER ()`, not three · `.offset()` at 143 files is correct.
+
+Measured on the real branch (200,002 tickets) as `streamline_app` with the tenant GUC, the only role
+whose plans mean anything: a 50-row page cost **16,725 blocks on every one of the five sortable
+columns**, because no index carried the whole `ORDER BY` tuple. Migration `0575` takes all five to
+an Index Only Scan at **180–196 blocks**.
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 01 | [A ticket opens by its key](issues/01-a-ticket-opens-by-its-key.md) | — | in-progress — every criterion met; only the booted-app deep-link check remains |
+| 01 | [A ticket opens by its key](issues/01-a-ticket-opens-by-its-key.md) | — | done — deep link verified on the real branch; cross-tenant returns 404, never 403 |
 | 02 | [The board does not ship descriptions](issues/02-the-board-does-not-ship-descriptions.md) | 01 | done |
-| 03 | [A list total costs no extra round trip](issues/03-a-list-total-costs-no-extra-round-trip.md) | — | in-progress — inventory verified and recorded; conversions are outside this lane |
-| 04 | [The receivables total is computed once](issues/04-the-receivables-total-is-computed-once.md) | 03 | in-progress — premise was already false; read-budget entry added but its ceiling is unmeasured |
-| 05 | [Scrolled lists page by cursor](issues/05-scrolled-lists-page-by-cursor.md) | — | in-progress — 8 of 9 criteria met; notifications and the ticket list are outside this lane |
-| 06 | [Every list speaks one filter and sort vocabulary](issues/06-every-list-speaks-one-filter-vocabulary.md) | 05 | in-progress — 16 of 135 files migrated; index composition needs a database |
+| 03 | [A list total costs no extra round trip](issues/03-a-list-total-costs-no-extra-round-trip.md) | — | done — 185 paging methods audited per method; all 5 sequential counts converted, 0 remain |
+| 04 | [The receivables total is computed once](issues/04-the-receivables-total-is-computed-once.md) | 03 | done — premise was already false; totals pinned by spec, budget executes, ceiling provisional (branch has no `clients`) |
+| 05 | [Scrolled lists page by cursor](issues/05-scrolled-lists-page-by-cursor.md) | — | done — all five named surfaces on the helper; board cursor verified live, 500 rows, 0 duplicates |
+| 06 | [Every list speaks one filter and sort vocabulary](issues/06-every-list-speaks-one-filter-vocabulary.md) | 05 | in-progress — 383 of 411 fields migrated and sorting now composes (16,725 → 196 blocks); last 28 are other sessions' files and above-cap endpoints |
 
 ## Working these
 

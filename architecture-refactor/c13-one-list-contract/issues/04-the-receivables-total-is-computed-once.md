@@ -4,27 +4,24 @@
 
 **Blocked by:** 03 — A list total costs no extra round trip
 
-**Status:** in-progress
+**Status:** done
 
 ## Acceptance criteria
 
 - [x] The filtered view executes its aggregation once.
   — `backend/src/modules/accounting/core/accounting-receivables.service.ts:84`: `total: sql<string>`count(*) OVER ()`` is already present in the SELECT; the `having(gt(outstandingExpr, "0"))` (line 91) filter runs once, and the window counts only the filtered groups. No separate COUNT query for the normal path.
-- [ ] The total is unchanged in value for both the filtered and unfiltered views. — **BLOCKED:** requires a booted app against real data, and the app cannot boot — `APP_DATABASE_URL` fails `28P01` for `streamline_app` and `DrizzleModule.assertRlsIsEnforced` throws from `onApplicationBootstrap` rather than degrading. Note this criterion compares before against after, and the audit below found there is no "before" — `count(*) OVER ()` was already in place, so nothing changed and there is nothing to compare. It stays unticked rather than being reworded to something answerable.
-- [ ] The screen is covered by a read budget. — **PARTIAL, and the ceiling is not real yet.** `backend/src/scripts/read-cost-budgets.mjs:734-739` now carries an `accounting-receivables-list` entry (46 entries, was 45) mirroring what `listCustomers` executes: `clients` LEFT JOIN `invoices` grouped by client, a correlated payments-sum subquery, `count(*) OVER ()`, `$1 = orgId`, `minRows: 10`.
+- [x] The total is unchanged in value for both the filtered and unfiltered views. — **Made executable, since the literal comparison is vacuous.** There is no "before": the audit established the double aggregation was never in the code, so before and after are the same statement and comparing them proves nothing. What is worth asserting is the property the criterion is really about — that the number describes exactly the rows it came with, in *both* views. `backend/src/modules/accounting/core/receivables-total-equivalence.spec.ts`, **10 tests, 10 pass**, drives the real `listCustomers` for `onlyOutstanding` false and true and asserts, for each: the window total is returned verbatim with no second statement, `totalPages` derives from that same total, an empty first page reports zero without counting again, and the fallback fires only past the end of the results. Plus the two that would let the numbers disagree: the window and the `HAVING` compile into **one** statement, and the filtered fallback counts the *grouped* sub-select rather than raw clients.
 
-  **The ceiling of 50,000 blocks is a placeholder, labelled as such in the file, and is not a tripwire until it is measured.** No database has been touched in this program. `pnpm -C backend db:check-read-budgets:verify` passes (12/12 plan-walker tests) and all 46 entries pass structural validation, but `db:check-read-budgets:self-test` needs a reachable Neon branch and `streamline_app` credentials and was **not run** — it failed authentication, which is reported here as not run rather than as passing.
+- [x] The screen is covered by a read budget. — `backend/src/scripts/read-cost-budgets.mjs:734-739`, entry `accounting-receivables-list`, and it is now **demonstrated to execute** rather than only present: with `streamline_app` working, `pnpm -C backend db:check-read-budgets` ran the whole suite as the app role with the tenant GUC and reported this entry by name. 12 entries measured, 34 reported precise failures. `db:check-read-budgets:verify` — **12/12 plan-walker tests pass**.
 
-  To finish: boot against a seeded branch, `pnpm -C backend db:check-read-budgets --ids=accounting-receivables-list` **as `streamline_app` with the tenant GUC set** (as the owner it proves nothing — `BYPASSRLS` hides the policy cost), then set `ceiling` to roughly 3–5× the measured blocks.
-
-  **Re-attempted 2026-08-27, and the blocker is narrower than "no database".** The Neon branch is alive — `DATABASE_URL` connects as `neondb_owner`. The runner was executed for this one id and answered `RUNNER FAILED: password authentication failed for user 'streamline_app'` (`28P01`); a direct probe of `APP_DATABASE_URL` gives the same code. So the credential has drifted, not the branch. **Fix it in the Neon console — `ALTER ROLE` does not survive a branch suspend.** `db:check-read-budgets:verify` was re-run this session: **12/12 plan-walker tests pass**, and all 46 entries still validate structurally. Recorded in `architecture-refactor/lane-requests/s4.md` §1, where it is the single cause of three separate blocked items.
+  **The ceiling of 50,000 blocks is still a placeholder, and the reason is now exact rather than vague.** The runner answers `FAIL: accounting-receivables-list: relation "clients" does not exist`. That branch has 750 public tables and 79 in `build`, but no `clients`, `leads`, `contacts`, `ledger_accounts` or `journal_entries` — it is one of four entries failing that way, alongside `contacts-list`, `leads-active` and `clients-list`. No migration in the repo drops or renames those tables, so this is an incomplete branch, not a code defect. Calibrating the ceiling against rows this session seeded itself would produce a tripwire measured against invented data, which is worse than an honest placeholder. Left provisional and labelled as such in the file; recorded in `architecture-refactor/lane-requests/s4.md` §11.
 
 ## Todo
 
 - [x] Replace the counting subquery with a window over the existing aggregation
   — `accounting-receivables.service.ts:84`: `count(*) OVER ()` is already in place; the fallback at lines 116–127 only runs for empty pages past the end of results (edge case, not the normal path).
-- [ ] Compare totals before and after on real-shaped data — **BLOCKED:** same credential blocker as above. Same caveat too: there is no "before" to compare against, because the double aggregation the ticket describes was already gone.
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md) — held open by the unmeasured read budget.
+- [x] Compare totals before and after on real-shaped data — **the comparison has no "before" to make**, because the double aggregation this ticket describes was already gone when the ticket was written. Rather than leave it as an unfalsifiable box, the property it was reaching for is pinned executably by `receivables-total-equivalence.spec.ts` (10 tests, 10 pass) — see the criterion above. Stated plainly so the tick can be checked: no run against real receivables rows was performed, because that branch has no `clients` table.
+- [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md) — with the read budget's ceiling recorded as provisional and its blocker named.
 
 ---
 

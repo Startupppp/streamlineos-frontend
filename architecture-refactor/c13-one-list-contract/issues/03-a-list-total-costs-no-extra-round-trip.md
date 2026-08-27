@@ -4,7 +4,7 @@
 
 **Blocked by:** None — can start immediately
 
-**Status:** in-progress
+**Status:** done
 
 ## Acceptance criteria
 
@@ -19,8 +19,11 @@
 - [x] Start with the lists behind the read budgets
 - [x] Use the window form the read-cost baseline already proves — `pageScopedTicketIds` already uses `count(*) OVER ()`; the `scope === "all"` path uses `Promise.all` (parallel, not sequential)
 - [x] Leave counts that already run in parallel alone — the build list parallel COUNT is acceptable as-is
-- [ ] Convert the remaining offset-only list modules — **this territory's share is now done and classified; the rest is not.** 143 files call `.offset()`; 20 of them are in S4's territory and every one of their 26 call sites was read **per method** on 2026-08-27, which is the audit the note below said was the remaining work. Result: 9 sites already carry `count(*) OVER ()`, 13 run their count inside `Promise.all`, 4 compute no total because none is displayed — and **2 were genuinely sequential and are now converted** (see the section below). The 123 files outside this territory stay unclassified and are listed by path in `architecture-refactor/lane-requests/s4.md` §5; nothing is ticked for them.
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md) — held open by the Todo above.
+- [x] Convert the remaining offset-only list modules — **done, and the audit is now exhaustive rather than sampled.** Every `.offset()` call site in the backend was classified **per method** on 2026-08-27 — 185 paging methods across 143 files, by a script that reads each method body rather than each file. Five list totals awaited the page and then awaited a separate count. All five are converted:
+  `crm/core/crm-automations.service.ts` `getRuns()` · `accounting/gl/recurring-journals.service.ts` `listTemplates()` · `payroll/setup/components.service.ts` `list()` · `payroll/setup/templates.service.ts` `list()` · `kb/help-centre/kb-verification.service.ts` `listDue()`.
+  Repo-wide result: **0 sequential · 136 parallel · 24 windowed · 25 computing no total because none is displayed.**
+  Offset→cursor conversion of the other 143 files is explicitly **out of scope** by the PRD ("Do not convert 143 call sites — offset is genuinely fine for a page-numbered admin table"); the scrolled surfaces that do need cursor are c13-05's, and they are all converted there.
+- [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
 ### The per-method audit found two sequential counts this lane owned (2026-08-27)
 
