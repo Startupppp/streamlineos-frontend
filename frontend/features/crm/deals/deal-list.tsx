@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, type MouseEvent } from "react";
+import { useCanState } from "@/hooks/api/access";
 import { useRouter } from "next/navigation";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -16,7 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDealsIllustration } from "@/components/illustrations";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { RecordList, asRecordValues, type RecordValue } from "@/features/renderer";
 import { dealRecordFields } from "@/lib/renderer/crm/deal-layout";
 import { useCrmStages } from "@/hooks/api/crm/metadata";
@@ -145,6 +146,19 @@ export function DealList({
     ),
     [stages, canUpdate, onStageChange],
   );
+
+  /**
+   * Ticket 26. The read below disables itself without this permission, and a
+   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
+   * -- the same flags an empty result has. Without this guard the branches under
+   * it tell somebody their data does not exist, when the truth is that they are
+   * not allowed to see it.
+   *
+   * Checked before the loading branch on purpose: a query that was never allowed
+   * to run has no loading state worth waiting for.
+   */
+  if (useCanState("crm:leads:view") === "denied")
+    return <NoPermissionState permission="crm:leads:view" />;
 
   if (isLoading)
     return <DataTableSkeleton rows={12} columns={layout.list.columns.length} className="flex-1" />;

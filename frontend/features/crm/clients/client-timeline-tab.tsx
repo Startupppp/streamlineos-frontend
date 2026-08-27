@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback } from "react";
+import { useCanState } from "@/hooks/api/access";
 import { TrendingUp } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useClientTimeline } from "@/hooks/api/crm/clients";
 import { formatDateTime } from "./utils";
@@ -13,6 +14,20 @@ export function ClientTimelineTab({ clientId }: { clientId: number }) {
   const { data, isLoading, isError, refetch } = useClientTimeline(clientId);
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
+  /**
+   * Ticket 26. The read below disables itself without this permission, and a
+   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
+   * -- the same flags an empty result has. Without this guard the branches under
+   * it tell somebody their data does not exist, when the truth is that they are
+   * not allowed to see it.
+   *
+   * Placed after the last hook and before the first branch that can return:
+   * denial outranks loading, error and emptiness alike, and a hook below a
+   * conditional return would run in a different order on different renders.
+   */
+  if (useCanState("crm:clients:read") === "denied")
+    return <NoPermissionState permission="crm:clients:read" />;
 
   if (isLoading) {
     return (

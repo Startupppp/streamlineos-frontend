@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, Suspense } from "react";
+import { useCanState } from "@/hooks/api/access";
 import { useSearchParams, useRouter } from "next/navigation";
 import { AnimatePresence } from "framer-motion";
 import {
@@ -19,7 +20,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { EmptyTasksIllustration } from "@/components/illustrations";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { type RecordValue } from "@/features/renderer";
 import { useDensity } from "@/features/renderer/density-toggle";
@@ -360,6 +361,19 @@ function CrmTasksContent() {
 }
 
 export default function CrmTasksPage() {
+  /**
+   * Ticket 26. The read below disables itself without this permission, and a
+   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
+   * -- the same flags an empty result has. Without this guard the branches under
+   * it tell somebody their data does not exist, when the truth is that they are
+   * not allowed to see it.
+   *
+   * Checked before the loading branch on purpose: a query that was never allowed
+   * to run has no loading state worth waiting for.
+   */
+  if (useCanState("directory:people:view") === "denied")
+    return <NoPermissionState permission="directory:people:view" />;
+
   return (
     <Suspense
       fallback={

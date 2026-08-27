@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useCallback, useState } from "react";
+import { useCanState } from "@/hooks/api/access";
 import { useRouter } from "next/navigation";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -9,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { RecordDetail, asRecordValue } from "@/features/renderer";
 import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
 import { CONTACT_LAYOUT } from "@/lib/renderer/crm/contact-layout";
@@ -85,6 +86,19 @@ export default function ContactDetailPage({
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [id, deleteMutation, router]);
+
+  /**
+   * Ticket 26. The read below disables itself without this permission, and a
+   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
+   * -- the same flags an empty result has. Without this guard the branches under
+   * it tell somebody their data does not exist, when the truth is that they are
+   * not allowed to see it.
+   *
+   * Checked before the loading branch on purpose: a query that was never allowed
+   * to run has no loading state worth waiting for.
+   */
+  if (useCanState("crm:contacts:view") === "denied")
+    return <NoPermissionState permission="crm:contacts:view" />;
 
   if (isLoading) return <ContactDetailSkeleton />;
 

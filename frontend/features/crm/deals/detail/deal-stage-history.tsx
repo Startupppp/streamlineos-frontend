@@ -1,6 +1,8 @@
 "use client";
 
 import { ArrowRightLeft, Sparkles } from "lucide-react";
+import { NoPermissionState } from "@/components/shared";
+import { useCanState } from "@/hooks/api/access";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -48,6 +50,19 @@ function describe(transition: DealStageTransition): string {
  */
 export function DealStageHistory({ dealId, card }: DealStageHistoryProps) {
   const body = <StageHistoryBody dealId={dealId} />;
+
+  /**
+   * Ticket 26. The read below disables itself without this permission, and a
+   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
+   * -- the same flags an empty result has. Without this guard the branches under
+   * it tell somebody their data does not exist, when the truth is that they are
+   * not allowed to see it.
+   *
+   * Checked before the loading branch on purpose: a query that was never allowed
+   * to run has no loading state worth waiting for.
+   */
+  if (useCanState("crm:deals:read") === "denied")
+    return <NoPermissionState permission="crm:deals:read" />;
 
   if (!card) return body;
 

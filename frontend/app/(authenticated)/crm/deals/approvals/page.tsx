@@ -26,7 +26,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTableSkeleton } from "@/components/ui/data-table";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
 import {
   CONTENT_FILL_PANEL,
@@ -43,7 +43,7 @@ import {
 import { withDealStages } from "@/lib/renderer/crm/deal-layout";
 import { useDealApprovals, useResolveDealApproval } from "@/hooks/api/crm";
 import { useCrmStages } from "@/hooks/api/crm/metadata";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
@@ -203,6 +203,19 @@ export default function DealApprovalsPage() {
   const isFiltered = statusFilter !== "all";
   const statusFilterLabel =
     STATUS_OPTIONS.find((option) => option.value === statusFilter)?.label ?? statusFilter;
+
+  /**
+   * Ticket 26. The read below disables itself without this permission, and a
+   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
+   * -- the same flags an empty result has. Without this guard the branches under
+   * it tell somebody their data does not exist, when the truth is that they are
+   * not allowed to see it.
+   *
+   * Checked before the loading branch on purpose: a query that was never allowed
+   * to run has no loading state worth waiting for.
+   */
+  if (useCanState("crm:deals:read") === "denied")
+    return <NoPermissionState permission="crm:deals:read" />;
 
   return (
     <PageWrapper

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useTransition, useMemo, useEffect } from "react";
+import { useCanState } from "@/hooks/api/access";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Download } from "lucide-react";
 import {
@@ -16,7 +17,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -198,6 +199,19 @@ export default function QuotesPage() {
     },
     [byId, handleRequestDelete, handleStatusUpdate],
   );
+
+  /**
+   * Ticket 26. The read below disables itself without this permission, and a
+   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
+   * -- the same flags an empty result has. Without this guard the branches under
+   * it tell somebody their data does not exist, when the truth is that they are
+   * not allowed to see it.
+   *
+   * Checked before the loading branch on purpose: a query that was never allowed
+   * to run has no loading state worth waiting for.
+   */
+  if (useCanState("crm:quotes:read") === "denied")
+    return <NoPermissionState permission="crm:quotes:read" />;
 
   return (
     <>

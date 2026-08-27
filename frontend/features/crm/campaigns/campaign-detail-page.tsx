@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
+import { NoPermissionState } from "@/components/shared";
+import { useCanState } from "@/hooks/api/access";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -92,6 +94,20 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
   const handleLeadsPageChange = useCallback((page: number) => {
     setLeadsPage(page);
   }, []);
+
+  /**
+   * Ticket 26. The read below disables itself without this permission, and a
+   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
+   * -- the same flags an empty result has. Without this guard the branches under
+   * it tell somebody their data does not exist, when the truth is that they are
+   * not allowed to see it.
+   *
+   * Placed after the last hook and before the first branch that can return:
+   * denial outranks loading, error and emptiness alike, and a hook below a
+   * conditional return would run in a different order on different renders.
+   */
+  if (useCanState("crm:campaigns:view") === "denied")
+    return <NoPermissionState permission="crm:campaigns:view" />;
 
   if (listLoading) {
     return (
