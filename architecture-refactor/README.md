@@ -103,7 +103,11 @@ covered by a case table in `ssrf-guard.spec.ts`.
 (ledger + migration); a webhook only acknowledges durable work; a coupon is usable exactly once; a quota
 that can't be computed refuses rather than guessing; revenue reporting reads what's written; dunning
 history is queryable; an issued invoice can't change. Pointers preserved in `OPEN-FINDINGS.md` §§2-5 and
-downstream candidates c18-04, c26-03, c26-05.
+downstream candidates c18-04, c26-03, c26-05. The revenue-events question (write vs. delete
+`revenue_events`) was decided in favour of writing: `GET /billing/analytics` was already a shipped,
+permission-gated reader, not a stub, so producers now call `RevenueAnalyticsService.emit(tx, event)`
+inside the state-changing transaction, which enqueues an outbox event the same service consumes behind
+an `InboxConsumer` fence — a delivery failure retries and dead-letters rather than vanishing.
 
 **c19 — A cache key cannot be unsafe** (5/5). Books are correct when an entry posts; every cache key
 carries its tenant; filtered views refresh; all 36 invalidation namespaces carry a read-after-write test
