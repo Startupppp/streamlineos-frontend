@@ -21,6 +21,13 @@
 
 Every mobile/task route must work one-handed at narrow widths, preserve current StreamlineOS visual language, announce scan/validation results accessibly, and distinguish offline, queued, failed, denied, and completed states. A warehouse action cannot bypass the stock engine or mutate a projection directly.
 
+## Research-derived execution requirements
+
+- The scanner boundary accepts Zebra DataWedge or keyboard-wedge input on device, preserves raw scan data and parsed GS1 AIs when enabled, and emits an idempotent `scan.captured` fact before any stock command.
+- Kirana/retail workflows support loose and packed lines, weighing-scale quantity capture, barcode/alias search, fast bill recovery after power loss, and an explicit local outbox with `sync.outbox_accepted`, `sync.conflict`, and `sync.offline_batch_applied` outcomes.
+- Offline replay must be deterministic and duplicate-safe: it cannot silently last-write-wins a stock mutation, and every conflict has a visible resolution/reconciliation path.
+- Channel and payment adapters are inputs to normal inventory commands; Shopify/Amazon/Woo snapshots and payment events never directly overwrite the ledger.
+
 ## Tickets
 
 ### INV-201 — Receiving workbench with discrepancy handling

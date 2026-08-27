@@ -21,6 +21,14 @@
 
 Lot/serial, physical, available, blocked, quality-held, quarantined, scrapped, and in-transit quantities must be distinct. Financial records are exact and period-aware. AI may explain or draft but cannot post a stock write-off, journal, hold, release, or recall by itself.
 
+## Research-derived quality and compliance requirements
+
+- Medical/pharmacy mode makes batch-aware receiving, stock-by-location-and-lot, MRP/purchase-rate snapshots, near-expiry windows, FEFO at dispense, audited FEFO override, and hard expired/recalled/quarantined blocks testable behaviors.
+- When enabled, GS1 DataMatrix parsing preserves raw scan data plus GTIN, lot, expiry, serial, and FNC1 boundaries; duplicate serials are rejected at the correct tenant/SKU scope.
+- Recall must support hold plus bounded backward trace to receipt and forward trace to shipment/customer/authorized ward or patient reference. It must not claim DSCSA or national-registry compliance by default.
+- H1/controlled-substance registers, pharmacist/quality roles, restricted/high-alert/LASA flags, hospital formulary/ward/indent, implants/consignment, and cold-chain excursion holds are jurisdictional or extension-pack behaviors with explicit enablement and compliance review.
+- India GST/HSN/composition data and IRP/e-way results are adapter evidence; they never substitute for the underlying receipt, sale, shipment, or ledger fact.
+
 ## Tickets
 
 ### INV-401 — Lot and serial genealogy graph

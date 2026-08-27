@@ -5,7 +5,7 @@
 **Audience:** Claude Code, backend/frontend engineers, reviewers, QA, security, operations
 **System boundary:** Inventory management. CRM, sales pipeline, marketing, customer-success workflows, and general CRM redesign are out of scope.
 
-This document is the product and engineering contract for the complete inventory module. The phase ticket files break it into executable units, but a ticket is valid only when it agrees with this document, the current StreamlineOS code/tokens, and the backend schema audit.
+This document is the product and engineering contract for the complete inventory module. The [inventory research synthesis](./2026-08-27-inventory-research-synthesis.md) records how the attached research pack was interpreted; it is advisory evidence, not an instruction override or a vendor/regulatory contract. The phase ticket files break this PRD into executable units, but a ticket is valid only when it agrees with this document, the current StreamlineOS code/tokens, and the backend schema audit.
 
 ## 1. Product outcome
 
@@ -99,6 +99,17 @@ These rules apply to every inventory ticket, migration, endpoint, UI action, bac
 - No N+1 reads, unbounded JSONB scans, leading-wildcard search on high-volume lists, or request-path wildcard cache scans.
 - P95 list and dashboard reads under 500 ms on representative indexed fixtures; stock commands have measured lock/transaction budgets.
 - High-volume append-only tables have a documented partition decision before production-scale growth.
+
+### 2.7 Vertical packs and market boundaries
+
+InventoryOS has one core ledger and configurable vertical packs. The first product boundary is India-first inventory management across general warehouse, kirana/retail, and India pharmacy workflows; packs add policy, fields, validation, events, and views without forking the SKU model.
+
+- Kirana/retail adds loose-versus-packed UOM, weighing-scale edge capture, fast barcode/alias search, mixed-rate carts, offline bill outbox/sync conflict handling, UPI/payment status hooks, and store-scoped operations.
+- India GST support stores HSN/tax/document data and supports regular/composition policy modes. IRP/e-invoice, NIC e-way, and Tally are explicit request/response or accounting adapters; they are not the inventory ledger and their current legal thresholds/configuration require a compliance review before enablement.
+- Medical/pharmacy adds batch-aware receiving, MRP/purchase-rate snapshots, enforced FEFO with audited override, hard expired/recalled/quarantined blocks, near-expiry windows, GS1 scan parsing when enabled, pharmacist/quality roles, and reviewed H1/controlled-substance register behavior.
+- Hospital formulary/ward/indent, patient charging, consignment implants, UDI/EPCIS, cold-chain sensor automation, and US/EU DSCSA/NMVS/VRS are extension packs, not first-release requirements.
+- Channel webhooks are synchronization signals. The StreamlineOS ledger remains authoritative; adapters refetch current state, deduplicate deliveries, and preserve source evidence.
+- HMAC, at-least-once delivery, retry/dead-letter behavior, basic AI reorder, channel connectors, and low-stock notifications are reliability/table-stakes capabilities, not product differentiation claims.
 
 ## 3. Users, roles, and scopes
 
@@ -486,11 +497,18 @@ quality.hold.created/released
 recall.opened/closed
 count.posted
 reorder.proposed/approved
+stock.adjusted/reserved/committed/released
+lot.created/near_expiry/expired/quarantined
+allocation.completed
+scan.captured
+sync.outbox_accepted/conflict/offline_batch_applied
+einvoice.registered/cancelled
+ewaybill.generated
 ```
 
-Events are tenant-scoped, idempotent, auditable, and delivered through the existing outbox/webhook conventions. The old webhook JSON array remains only during compatibility migration; normalized subscriptions are the end state.
+Events are tenant-scoped, idempotent, auditable, versioned, and delivered through the existing outbox/webhook conventions. Stock events include the ledger/projection evidence needed to explain the change. Channel inbound webhooks are treated as change signals and reconciled by refetching current state; they are never used alone to reconstruct the ledger. Outbound deliveries use raw-body HMAC signing, timestamps, constant-time verification, at-least-once delivery, deduplication, fast acknowledgement, durable retry for at least 24 hours, dead-letter visibility, and an admin alert before a subscription is disabled. The old webhook JSON array remains only during compatibility migration; normalized subscriptions are the end state.
 
-External CRM/party, billing, accounting, deal fulfillment, AI, and cron integrations use explicit adapters. Inventory does not expand the CRM scope.
+External party, billing, accounting, deal fulfillment, AI, payment, GST/IRP, e-way, Tally, channel, scanner, and cron integrations use explicit adapters. Inventory does not expand the CRM scope. Payment events can commit or release an existing reservation, but payment providers are never treated as inventory systems of record.
 
 ## 6. Frontend contract
 
@@ -615,7 +633,7 @@ Health checks distinguish database unavailable, migration mismatch, queue/outbox
 
 ### Phase 1 — Trustworthy foundation and schema contract
 
-**Build:** live-vs-Drizzle catalog reconciliation; canonical inventory contract; identity/tenant/composite FKs; RLS coverage; catalog/UOM/barcodes/categories; warehouses/locations/scope; stock ledger/projection/invariants; idempotency; audit; imports/exports; baseline reports; dashboard facts; permission matrix; golden fixtures.
+**Build:** live-vs-Drizzle catalog reconciliation; canonical inventory contract; identity/tenant/composite FKs; RLS coverage; catalog/UOM/barcodes/categories; warehouse/location/scope foundations; vertical-pack flags; stock ledger/projection/invariants; idempotency; audit; imports/exports; baseline reports; dashboard facts; permission matrix; and golden fixtures. Establish exact/decimal quantity rules and the separation between valuation costing and physical allocation.
 
 **Required validation:** strict Zod payload tests; migration forward/rollback rehearsal; schema parity; RLS as application role; cross-tenant object tests; duplicate/retry tests; quantity property tests; projection rebuild/reconciliation; concurrency tests for adjustments/transfers/reservations; typecheck/lint/unit/e2e.
 
@@ -623,7 +641,7 @@ Health checks distinguish database unavailable, migration mismatch, queue/outbox
 
 ### Phase 2 — Warehouse execution
 
-**Build:** receiving, putaway, barcode scanning, lot/serial capture, quality-at-receipt, picking waves/tasks, short-pick/substitution exceptions, packing, shipments, loads, mobile/one-handed workflows, safe retry queue, offline-aware presentation, and warehouse operational metrics.
+**Build:** receiving, putaway, barcode/GS1 scanning, lot/serial capture, quality-at-receipt, weighing-scale/loose-UOM edge capture, picking waves/tasks, short-pick/substitution exceptions, packing, shipments, loads, mobile/one-handed workflows, safe retry queue, offline outbox/conflict handling, and warehouse operational metrics.
 
 **Required validation:** scan duplicate/replay tests; slow network and retry tests; lot/serial mismatch tests; partial receipt/pick/ship tests; mobile viewport/accessibility tests; warehouse scope tests; concurrent execution tests.
 
@@ -639,7 +657,7 @@ Health checks distinguish database unavailable, migration mismatch, queue/outbox
 
 ### Phase 4 — Quality, traceability, and financial control
 
-**Build:** quality inspections, holds, dispositions, expiry/FEFO, recalls, returns, cycle counts, physical audits, FIFO/weighted valuation, COGS linkage, reconciliation, period/posting controls, and reproducible audit exports.
+**Build:** quality inspections, holds, dispositions, expiry/FEFO, recalls, returns, cycle counts, physical audits, FIFO/weighted/standard valuation where supported, COGS linkage, reconciliation, period/posting controls, reproducible audit exports, and jurisdiction-configured medical controls. India pharmacy controls include hard expiry/recall/quarantine blocks, audited FEFO override, near-expiry windows, GS1 parsed identity where enabled, and reviewed H1/controlled-substance register exports. India GST/HSN/composition data and IRP/e-way adapter contracts are validated here; provider calls remain isolated adapters.
 
 **Required validation:** forward/backward trace tests; quarantine availability tests; recall boundedness; serial uniqueness; lot expiry; valuation-to-ledger; count variance; accounting integration adapter; correction/rollback evidence.
 
@@ -647,7 +665,7 @@ Health checks distinguish database unavailable, migration mismatch, queue/outbox
 
 ### Phase 5 — AI inventory control plane and integrations
 
-**Build:** evidence-backed command center brief, scoped copilot, anomaly explanations, scenario narration, proposal preparation, evidence drawer, feedback/correction capture, OpenRouter provider configuration through the gateway, model fallback, eval harness, integrations/adapters, and operational controls.
+**Build:** evidence-backed command center brief, scoped copilot, anomaly explanations, scenario narration, proposal preparation, evidence drawer, feedback/correction capture, OpenRouter provider configuration through the gateway, model fallback, eval harness, versioned outbound events, channel/payment/GST/e-way/Tally adapters, scanner sync contracts, and operational controls. Use partner translators for EDI/VAN requirements and keep hospital/DSCSA/cold-chain automation as separately approved extension packs.
 
 **Required validation:** strict structured-output tests; prompt-injection tests; grounding/arithmetic/refusal evals; credit/provider failure; stale evidence; duplicate confirmation; tenant/warehouse scope; audit completeness; latency/cost budgets.
 

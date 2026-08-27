@@ -30,6 +30,14 @@ deterministic query → access-filtered evidence → redaction/caps
 
 Malformed output, prompt injection in imported notes, missing data, provider outage, credit exhaustion, tenant switching, permission changes between proposal and confirmation, and stale evidence are mandatory test cases.
 
+## Research-derived integration requirements
+
+- Publish versioned `stock.*`, `lot.*`, `allocation.completed`, `scan.captured`, `sync.*`, `einvoice.*`, and `ewaybill.generated` events through the normalized outbox. Include a fat ledger/domain payload plus a thin delivery reference where appropriate.
+- Inbound Shopify, Amazon, WooCommerce, channel, payment, and partner events are deduplicated signals. Adapters re-fetch current state and invoke normal idempotent commands; they do not create synthetic ledger deltas from snapshots.
+- Webhook delivery verifies/signs the raw body with HMAC and timestamp, acknowledges quickly, retries durably for at least 24 hours, exposes dead letters, and alerts administrators before disabling a subscription.
+- GSTN/NIC IRP and e-way are request/response adapters; emit `einvoice.registered`, `einvoice.cancelled`, and `ewaybill.generated` only after a successful provider result. Tally uses a serialized XML/local-connector adapter. EDI/VAN uses a translator boundary rather than a native network.
+- OpenRouter is configured through the shared gateway only. No provider response, integration webhook, or AI proposal can bypass the same permission, scope, approval, transaction, idempotency, and audit rules as a human command.
+
 ## Tickets
 
 ### INV-501 — Grounded inventory copilot read queries

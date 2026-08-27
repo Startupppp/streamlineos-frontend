@@ -1,6 +1,6 @@
 # Inventory Phase 1 — Trustworthy foundation and schema contract
 
-**Goal:** reconcile the current live database and Drizzle model, then make catalog, tenant boundaries, stock, permissions, audit, and evidence dependable before warehouse automation is layered on.
+**Goal:** reconcile the current live database and Drizzle model, then make catalog, tenant boundaries, stock, permissions, audit, evidence, and vertical-pack configuration dependable before warehouse automation is layered on.
 
 **Dependency rule:** INV-101 may remain in progress as a read-only vertical slice, but no write-heavy ticket is complete until INV-103 and INV-104 establish the golden dataset and ledger invariants.
 
@@ -20,6 +20,14 @@
 ## Shared phase requirements
 
 Every ticket must include strict Zod boundary validation, tenant/object authorization, explicit projections, audit behavior, pagination/caps, tests, and a truthful handoff. Backend migration changes must reconcile the live 66-table catalog before generation. Frontend work must preserve current StreamlineOS tokens and implement loading, empty, error, denied, stale, and success states.
+
+## Research-derived foundation requirements
+
+- Keep one SKU/item model for kirana, pharmacy, and warehouse packs. Add tenant-scoped policy/configuration for pack enablement instead of forking tables.
+- Model separate financial valuation methods and physical allocation/removal strategies; a SKU may be weighted-average valued and FEFO allocated.
+- Support base UOM plus purchase/sales/stock UOM snapshots, loose-versus-packed flags, alternate barcodes, and catch-weight readiness without using floating-point arithmetic.
+- Store HSN/tax metadata as inventory/document inputs without turning this phase into an accounting or CRM replacement. Composition versus regular GST is a policy boundary for later adapter work.
+- Add fixtures for multi-store, mixed UOM, lot/expiry, and channel snapshot reconciliation so external quantities cannot become ledger truth.
 
 ## Tickets
 

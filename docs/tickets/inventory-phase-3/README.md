@@ -21,6 +21,12 @@
 
 All calculations are tenant/warehouse/category scoped, decimal-safe, reproducible, and versioned. Missing or sparse data produces an explicit insufficient-data state. Simulations never mutate inventory. A proposal becomes a normal permissioned/idempotent purchase or transfer command only after human approval.
 
+## Research-derived planning requirements
+
+- Wholesale/distribution policy must support effective-date price lists, MOQ/pack-size constraints, quantity/free-quantity schemes, multi-godown availability, and credit/hold signals without embedding a full accounting or CRM system.
+- Replenishment evidence must distinguish on-hand, reserved/committed, in-transit, on-order, quality-held, and channel-reported snapshot quantities.
+- The default medical allocation path is FEFO where the pack is enabled; general inventory may use FIFO, manual, or nearest-bin according to tenant policy. The planner must never conflate allocation with valuation.
+
 ## Tickets
 
 ### INV-301 — Demand baseline and backtest harness
