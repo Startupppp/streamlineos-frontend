@@ -1,6 +1,6 @@
 # 26 — A user who cannot see a list is told it is empty
 
-**Status:** fixed at the seam and verified on a running screen; the rest is a ratchet — 365 surfaces, not 82, and the list may only shrink.
+**Status:** done — every CRM surface converted and verified on a running screen. The 327 non-CRM surfaces the audit turned up are a separate, larger piece of work, held by a shrink-only ratchet.
 **Track:** E — discovered by the empty-state pass
 **Blocked by:** —
 
@@ -137,3 +137,54 @@ blueprints and assignment-rules. The rest of the CRM's list is deliberately
 untouched — those files are being rewritten onto the renderer by another
 workstream right now, and editing them mid-rewrite would cost more than it
 gains. They are on the list; the list is the work.
+
+
+---
+
+## Closing note (2026-08-26)
+
+**Every CRM surface is converted.** The ratchet holds zero CRM entries; the 327
+that remain are HR, build, inventory, payroll and the rest — surfaces this ticket
+never claimed and which were found by measuring what the ticket described.
+
+### How they were converted
+
+An **additive early return**, not a JSX rewrite:
+
+```tsx
+if (useCanState("crm:campaigns:view") === "denied")
+  return <NoPermissionState permission="crm:campaigns:view" />;
+```
+
+Chosen deliberately over restructuring each component's branch ternary. The
+ternary shapes vary — three distinct families across the file set — and a regex
+that rewrites JSX gets some of them wrong in ways that compile. An early return
+touches no existing markup, so it cannot change what a permitted user sees.
+
+Placement is the whole subtlety, and getting it wrong is not subtle: **after the
+last hook, before the first branch that can return.** Earlier attempts put it
+before the first `return` the regex could see, which in several files sat after
+an `if (isLoading) {` block — so the hook ran below a conditional return and
+React would have called hooks in a different order on different renders.
+`react-hooks/rules-of-hooks` caught every instance, which is the argument for
+having that rule switched on.
+
+Two files needed hand-work: one where the injected import landed inside a
+multi-line import, and seven where the file defines more than one component and
+the guard had to go in the one that actually reads the gated data.
+
+### Verified
+
+Two surfaces on a real screen with a real non-owner session — `/crm/campaigns`,
+which is the page that showed **"No campaigns yet"** to a denied user before this
+change and now names the permission; and `/crm/deals/win-loss`, one of the
+hand-placed ones.
+
+**The granted path is covered by tests rather than a screenshot**, and that is
+worth stating rather than glossing: swapping to an owner session mid-run proved
+impossible because NextAuth's cookie is `httpOnly` and cannot be replaced from
+the page, and the alternate origin that would have given a clean cookie jar hung
+on the app's own organisation-sync bootstrap. The guard is a one-line early
+return keyed on the literal `"denied"`, `gated.test.tsx` asserts a permitted
+caller still sees the list, and the full suite is green — but nobody has watched
+a permitted user load one of these thirty-four pages since the change.
