@@ -1,6 +1,6 @@
 # 08 — Contract: drop the legacy tables, and make regression impossible
 
-**Status:** in progress, and re-scoped — the finance/accounting blocker cleared today (23 readers, 12 of them the seam), but the readers were never the gate. **31 tables outside the seam still hold foreign keys to these four**, across accounting, inventory, support, build and timesheets. Measured, not estimated: `src/scripts/legacy-identity-drop-cost.mjs`.
+**Status:** in progress — 18 readers left, 13 of them the seam. The five that remain are one identical one-line change each; the **drop itself is gated on 31 tables in six other modules**, not on CRM work.
 **Track:** A — identity convergence
 **Blocked by:** 03, 04, 05, 06, 07
 
@@ -106,3 +106,53 @@ is derivable; `business_parties` already carries `status`, `owner_user_id`,
 Removing tables changes what it reaches, and Phase 1 learned twice that an FK to
 `users` is how an audit record gets destroyed by an unrelated offboarding. Re-run
 it against the new FK graph before and after.
+
+
+---
+
+## Re-measured 2026-08-26 (second pass)
+
+The reader ratchet is down to **18, and 13 of those are the seam itself** —
+`party-legacy-*.ts`, the divergence report and their specs, all of which are
+deleted along with the tables. Five real readers remain:
+
+| File | What it reads the legacy table for |
+|---|---|
+| `invoices/invoices.service.ts` | `client: { columns: { id: true, name: true } }` |
+| `csat/csat.service.ts` | the same, twice |
+| `inventory/sales-orders/so-core.service.ts` | the same |
+| `support/core/support-tickets.service.ts` | the same, twice |
+| `ai/core/crm-copilot.service.phase2.spec.ts` | a fixture |
+
+**All four production readers are the identical line.** Each is a Drizzle
+relational include pulling a client's `id` and `name` to put a label on a row —
+none of them reads anything Party does not already hold. Each becomes a join
+through `client_party_map` onto `business_parties`. That is worth stating
+precisely, because "five readers left" sounds like five investigations and it is
+one mechanical change repeated four times.
+
+### Why that still does not finish the ticket
+
+Clearing those readers does not let the tables be dropped. **The four modules
+holding them are also the modules holding the foreign keys** —
+`invoices.client_id`, `csat_surveys.client_id`, `inv_sales_orders.client_id`,
+`support_tickets.client_id` — and a foreign key is what a `DROP TABLE` actually
+refuses. `legacy-identity-drop-cost.mjs` still reports **65 foreign keys from 31
+tables outside the seam**, unchanged.
+
+So the remaining work is not the readers. It is turning every `client_id` in six
+modules into a `party_id`, which is an expand–contract per table across
+accounting, inventory, support, build and timesheets.
+
+### Why it was not started here
+
+Those are precisely the modules being rewritten by another workstream right now.
+An expand–contract on `invoices` while `invoices` is being rebuilt is two
+rewrites of one table in parallel, which is the situation that produces a merge
+nobody can review. The mirror costs nothing while it stands, and a wrong drop is
+not recoverable by a revert.
+
+**What would unblock it:** those modules migrating their own `client_id` columns
+as part of their rewrite, at which point the drop is one migration rather than a
+programme. Re-run the script rather than trusting this paragraph — the number
+moves.
