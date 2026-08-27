@@ -8,7 +8,7 @@ PRD: [`prd.md`](prd.md) · Program: [`../README.md`](../README.md)
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 01 | [One table owns a person's identity](issues/01-one-table-owns-a-persons-identity.md) | — | BLOCKED — 0488 held: 13 call sites still read identity off hr_people |
+| 01 | [One table owns a person's identity](issues/01-one-table-owns-a-persons-identity.md) | — | done — 0488 applied; identity lives on organization_people |
 | 02 | A calendar event carries its timezone | — | done |
 | 03 | A recurring event recurs, or the columns go | 02 | done |
 | 04 | [Invoice line items are queryable](issues/04-invoice-line-items-are-queryable.md) | — | done — 0477/0478 applied in order with the reconciliation gate between |
