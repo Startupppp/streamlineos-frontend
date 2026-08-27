@@ -12,7 +12,7 @@ PRD: [`prd.md`](prd.md) · Program: [`../README.md`](../README.md)
 | 02 | [One module's taxonomy moves to lookup tables](issues/02-one-modules-taxonomy-moves-to-lookup-tables.md) | 01 | done |
 | 03 | [Custom field values are indexed](issues/03-custom-field-values-are-indexed.md) | — | **done** |
 | 04 | [HR's table count is frozen and payroll is one folder](issues/04-hr-stops-growing-and-payroll-is-one-folder.md) | — | **done** |
-| 05 | [The shared schema file splits by domain](issues/05-the-shared-schema-file-splits-by-domain.md) | — | ready-for-agent |
+| 05 | [The shared schema file splits by domain](issues/05-the-shared-schema-file-splits-by-domain.md) | — | done — eight domain files, zero cycles |
 
 ## Working these
 
