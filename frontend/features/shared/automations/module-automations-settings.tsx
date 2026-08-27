@@ -146,7 +146,7 @@ function AutomationCard({
               <Button size="icon" variant="ghost" className="h-7 w-7" onClick={onViewRuns}>
                 <History className="h-3.5 w-3.5" />
               </Button>
-              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={onEdit}>
+              <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Edit automation" onClick={onEdit}>
                 <Pencil className="h-3.5 w-3.5" />
               </Button>
               <AnimatedIconButton
@@ -155,6 +155,7 @@ function AutomationCard({
                 size="icon"
                 variant="ghost"
                 className="h-7 w-7 text-destructive hover:text-destructive"
+                aria-label="Delete automation"
                 onClick={onDelete}
               />
             </div>

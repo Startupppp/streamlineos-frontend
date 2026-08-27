@@ -32,7 +32,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { useBillingUninvoiced } from "@/hooks/api/timesheets-core/billing";
 import { BillingExportDialog } from "./billing-export-dialog";
 import { InvoiceDraftDialog } from "./invoice-draft-dialog";
-import { formatMoney } from "./lib/format-money";
+import { formatCurrencyForBilling } from "@/lib/format-utils";
 import type { BillingGroup } from "@/features/timesheets/types";
 
 const now = new Date();
@@ -63,7 +63,7 @@ const BILLING_COLUMNS: DataTableColumn<BillingGroup>[] = [
     cell: (row) => (
       <span className="font-mono tabular-nums text-right block">
         {row.totalHours > 0 && row.billableAmount > 0
-          ? formatMoney(row.billableAmount / row.totalHours, row.currency)
+          ? formatCurrencyForBilling(row.billableAmount / row.totalHours, row.currency)
           : "—"}
       </span>
     ),
@@ -75,7 +75,7 @@ const BILLING_COLUMNS: DataTableColumn<BillingGroup>[] = [
     header: "Amount",
     cell: (row) => (
       <span className="font-mono tabular-nums text-right block font-semibold">
-        {formatMoney(row.billableAmount, row.currency)}
+        {formatCurrencyForBilling(row.billableAmount, row.currency)}
       </span>
     ),
     sortable: true,
@@ -174,13 +174,13 @@ export function BillingView() {
 
   const totalsAmountLabel = totals
     ? totals.mixed
-      ? totals.byCurrency.map((c) => formatMoney(c.amount, c.currency)).join(" + ")
-      : formatMoney(totals.amount ?? 0, totals.currency ?? "USD")
-    : formatMoney(0, "USD");
+      ? totals.byCurrency.map((c) => formatCurrencyForBilling(c.amount, c.currency)).join(" + ")
+      : formatCurrencyForBilling(totals.amount ?? 0, totals.currency ?? "USD")
+    : formatCurrencyForBilling(0, "USD");
 
   const convertedLabel =
     totals?.mixed && totals.converted
-      ? `≈ ${formatMoney(totals.converted.convertedTotal, totals.converted.baseCurrency)}`
+      ? `≈ ${formatCurrencyForBilling(totals.converted.convertedTotal, totals.converted.baseCurrency)}`
       : null;
 
   const subtitle = totals

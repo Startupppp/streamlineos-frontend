@@ -36,7 +36,7 @@ function ForecastSkeleton() {
 
 export default function DealForecastPage() {
   const shouldReduceMotion = useReducedMotion();
-  const { data: deals, isLoading, isError, error, refetch } = useDeals({ limit: 100 });
+  const { data: deals, isLoading, isError, error, refetch, access } = useDeals({ limit: 100 });
   const { data: snapshots = [] } = useForecastSnapshots({ limit: 10 });
   const captureForecast = useCaptureForecastSnapshot();
   const currentPeriod = new Date().toISOString().slice(0, 7);
@@ -116,6 +116,7 @@ export default function DealForecastPage() {
     >
       {openDeals.length === 0 ? (
         <EmptyState
+          access={access}
           illustration={<EmptyDealsIllustration />}
           title="No open deals to forecast"
           description="Create deals in your pipeline to see revenue forecasts here."

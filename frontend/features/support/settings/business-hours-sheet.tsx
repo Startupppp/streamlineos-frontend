@@ -192,7 +192,7 @@ export function BusinessHoursSheet({ open, onOpenChange, mode, form, onSubmit, i
                 </div>
                 <div className="flex items-center gap-2">
                   <DatePicker value={holidayInput ?? ""} onChange={handleHolidayInputChange} placeholder="Pick a date" className="h-9" />
-                  <AnimatedIconButton type="button" variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={handleAddHoliday} icon={PlusIcon} />
+                  <AnimatedIconButton type="button" variant="outline" size="icon" className="h-9 w-9 shrink-0" aria-label="Add holiday" onClick={handleAddHoliday} icon={PlusIcon} />
                 </div>
                 {holidays.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">

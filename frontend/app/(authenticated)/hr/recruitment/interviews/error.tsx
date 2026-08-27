@@ -1,13 +1,13 @@
 "use client";
 
-import { RouteErrorBoundary } from "@/components/ui/route-error-boundary";
+import { ReportingRouteErrorBoundary } from "@/lib/observability/reporting-route-error-boundary";
 
 export default function HrrecruitmentinterviewsError(props: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
   return (
-    <RouteErrorBoundary
+    <ReportingRouteErrorBoundary
       {...props}
       title="Interviews Error"
       fallbackMessage="Failed to load Interviews. Please try again."

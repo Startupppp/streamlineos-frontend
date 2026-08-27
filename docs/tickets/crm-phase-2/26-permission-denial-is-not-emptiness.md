@@ -1,6 +1,6 @@
 # 26 — A user who cannot see a list is told it is empty
 
-**Status:** done — every CRM surface converted and verified on a running screen. The 327 non-CRM surfaces the audit turned up are a separate, larger piece of work, held by a shrink-only ratchet.
+**Status:** done — every CRM surface converted and verified on a running screen. Two mechanisms landed and both survive: `useCanState`/`resolveGate` short-circuits the render on a denied read, and `usePermissionGate` carries the verdict with the read itself (via `useGatedQuery`) so `EmptyState` can render the refusal, across 89 hooks in 22 files. Canaried: disabling the short-circuit fails 2 of the 8 new tests, both on the denial claims. The 327 non-CRM surfaces the audit turned up are a separate, larger piece of work, held by a shrink-only ratchet.
 **Track:** E — discovered by the empty-state pass
 **Blocked by:** —
 

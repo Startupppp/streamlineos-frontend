@@ -1,13 +1,13 @@
 "use client";
 
-import { RouteErrorBoundary } from "@/components/ui/route-error-boundary";
+import { ReportingRouteErrorBoundary } from "@/lib/observability/reporting-route-error-boundary";
 
 export default function OnboardingError(props: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
   return (
-    <RouteErrorBoundary
+    <ReportingRouteErrorBoundary
       {...props}
       fallbackMessage="Failed to load onboarding. Please try again."
       layout="centered"

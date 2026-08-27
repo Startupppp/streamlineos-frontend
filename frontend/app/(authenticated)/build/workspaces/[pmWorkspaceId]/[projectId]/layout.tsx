@@ -1,7 +1,7 @@
 import { type ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { requireSession } from "@/lib/rbac/require-permission";
-import { serverApiClient } from "@/lib/api/server-client";
+import { serverGet } from "@/lib/server-fetch";
 import type { ProjectWithDetails } from "@/types/projects";
 import { RememberLastProject } from "@/features/build/sidebar/remember-last-project";
 
@@ -21,7 +21,7 @@ export default async function PmWorkspaceProjectLayout({
 
   let project: ProjectWithDetails | null = null;
   try {
-    project = await serverApiClient.get<ProjectWithDetails>(`/build/${numId}`);
+    project = await serverGet<ProjectWithDetails>(`/build/${numId}`);
   } catch {
     notFound();
   }

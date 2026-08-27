@@ -57,13 +57,13 @@ export function SectionCard({
           className="h-8 max-w-xs font-semibold"
         />
         <div className="ml-auto flex items-center gap-0.5">
-          <Button variant="ghost" size="icon" className="h-7 w-7" disabled={isFirst} onClick={() => onMoveSectionUp(section.id)}>
+          <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Move section up" disabled={isFirst} onClick={() => onMoveSectionUp(section.id)}>
             <ArrowUp className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7" disabled={isLast} onClick={() => onMoveSectionDown(section.id)}>
+          <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Move section down" disabled={isLast} onClick={() => onMoveSectionDown(section.id)}>
             <ArrowDown className="h-3.5 w-3.5" />
           </Button>
-          <AnimatedIconButton icon={Trash2Icon} iconSize={14} iconClassName="text-destructive" variant="ghost" size="icon" className="h-7 w-7" onClick={() => onDeleteSection(section.id)} />
+          <AnimatedIconButton icon={Trash2Icon} iconSize={14} iconClassName="text-destructive" variant="ghost" size="icon" className="h-7 w-7" aria-label="Delete section" onClick={() => onDeleteSection(section.id)} />
         </div>
       </CardHeader>
       <CardContent className="space-y-2">

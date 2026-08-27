@@ -14,13 +14,14 @@ import {
 } from "@/hooks/api/crm";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
+import { NoPermissionState } from "@/components/shared";
 
 interface DealCompetitorsCardProps {
   dealId: number;
 }
 
 export function DealCompetitorsCard({ dealId }: DealCompetitorsCardProps) {
-  const { data: competitors = [] } = useDealCompetitors(dealId);
+  const { data: competitors = [], access } = useDealCompetitors(dealId);
   const addCompetitor = useAddDealCompetitor(dealId);
   const deleteCompetitor = useDeleteDealCompetitor(dealId);
   const [adding, setAdding] = useState(false);
@@ -67,7 +68,7 @@ export function DealCompetitorsCard({ dealId }: DealCompetitorsCardProps) {
     <Card className="shadow-noir">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-base">Competitors</CardTitle>
-        <Button variant="ghost" size="icon" className="w-7" onClick={handleStartAdding}>
+        <Button variant="ghost" size="icon" className="w-7" aria-label="Add competitor" onClick={handleStartAdding}>
           <Plus className="h-3.5 w-3.5" />
         </Button>
       </CardHeader>
@@ -89,7 +90,9 @@ export function DealCompetitorsCard({ dealId }: DealCompetitorsCardProps) {
             </LoadingButton>
           </div>
         )}
-        {competitors.length === 0 && !adding ? (
+        {access.denied ? (
+          <NoPermissionState permission={access.permission} compact />
+        ) : competitors.length === 0 && !adding ? (
           <p className="text-xs text-muted-foreground">No competitors tracked.</p>
         ) : (
           competitors.map((c) => (

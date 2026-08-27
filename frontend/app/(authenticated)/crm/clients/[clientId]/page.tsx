@@ -18,7 +18,7 @@ import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
 import { useClientAccount } from "@/hooks/api/crm/clients";
 import { useClient360 } from "@/hooks/api/crm";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { ClientOverviewTab } from "@/features/crm/clients/client-overview-tab";
 import { ClientTimelineTab } from "@/features/crm/clients/client-timeline-tab";
 import { ClientOpportunitiesTab } from "@/features/crm/clients/client-opportunities-tab";
@@ -54,6 +54,7 @@ export default function ClientDetailPage({
     isLoading,
     isError,
     refetch,
+    access,
   } = useClientAccount(clientId);
 
   const { data: client360, isLoading: client360Loading } = useClient360(clientId);
@@ -101,6 +102,14 @@ export default function ClientDetailPage({
           onRetry={handleRetry}
           className="flex-1"
         />
+      </PageWrapper>
+    );
+  }
+
+  if (access.denied) {
+    return (
+      <PageWrapper title="Client" backHref="/crm/clients">
+        <NoPermissionState permission={access.permission} />
       </PageWrapper>
     );
   }

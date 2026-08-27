@@ -77,6 +77,7 @@ function RemoveLineButton({ index, onRemove }: RemoveLineButtonProps) {
       variant="ghost"
       size="sm"
       className="h-6 w-6 p-0 text-destructive"
+      aria-label="Remove return line"
       onClick={handleClick}
     />
   );

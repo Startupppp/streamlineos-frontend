@@ -89,6 +89,7 @@ export function IssueDetailSheet({
   canEscalate,
 }: IssueDetailSheetProps) {
   const { data, isLoading, isError, refetch } = useIssue(issueRecordId);
+  const viewAccess = useCanState("crm:issues:view");
 
   function handleRetry() {
     void refetch();
@@ -100,19 +101,6 @@ export function IssueDetailSheet({
 
   const singular = data?.layout.singular ?? "Record";
   const stage = typeof data?.record.stage === "string" ? data.record.stage : "";
-
-  /**
-   * Ticket 26. The read below disables itself without this permission, and a
-   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
-   * -- the same flags an empty result has. Without this guard the branches under
-   * it tell somebody their data does not exist, when the truth is that they are
-   * not allowed to see it.
-   *
-   * Checked before the loading branch on purpose: a query that was never allowed
-   * to run has no loading state worth waiting for.
-   */
-  if (useCanState("crm:issues:view") === "denied")
-    return <NoPermissionState permission="crm:issues:view" />;
 
   return (
     <Sheet open={!!issueRecordId} onOpenChange={onOpenChange}>
@@ -132,7 +120,22 @@ export function IssueDetailSheet({
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-6 py-4">
-          {isLoading ? (
+          {/*
+            Ticket 26. The read below disables itself without this permission,
+            and a disabled query in TanStack Query v5 reports `isLoading: false`
+            with no rows -- the same flags an empty result has. Without this
+            branch the ones under it tell somebody their data does not exist,
+            when the truth is that they are not allowed to see it.
+
+            Ahead of the loading branch on purpose: a query that was never
+            allowed to run has no loading state worth waiting for. Inside the
+            sheet rather than returned in its place, because the page mounts
+            this component unconditionally -- an early return would paint a
+            second permission panel into the list body behind it.
+          */}
+          {viewAccess === "denied" ? (
+            <NoPermissionState permission="crm:issues:view" />
+          ) : isLoading ? (
             <div className="flex flex-col gap-3">
               <Skeleton className="h-6 w-1/2" />
               <Skeleton className="h-32 w-full" />

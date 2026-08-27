@@ -176,8 +176,8 @@ function NotificationPanel({
               size="icon"
               className="h-6 w-6"
               disabled={isMarkingAllRead}
+              aria-label="Mark all notifications read"
               onClick={onMarkAllRead}
-              title="Mark all read"
               {...markAllReadHoverHandlers}
             >
               <CheckCheckIcon ref={markAllReadIconRef} size={14} />

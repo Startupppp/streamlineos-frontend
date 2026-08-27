@@ -1,9 +1,9 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useCan } from "@/hooks/api/access";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import type {
   CrmAutomationEvent,
   CrmAutomationAction,
@@ -45,37 +45,31 @@ type CreateRuleInput = {
 type UpdateRuleInput = { id: number } & Partial<CreateRuleInput>;
 
 export function useAutomationEvents() {
-  const canManage = useCan("crm:automations:manage");
-  return useQuery({
+  return useGatedQuery("crm:automations:manage", {
     queryKey: queryKeys.crmAutomations.events(),
     queryFn: () =>
       apiClient.get<{ events: CrmAutomationEvent[] }>("/crm/automation/events"),
     staleTime: 5 * 60_000,
-    enabled: canManage,
   });
 }
 
 export function useAutomationActions() {
-  const canManage = useCan("crm:automations:manage");
-  return useQuery({
+  return useGatedQuery("crm:automations:manage", {
     queryKey: queryKeys.crmAutomations.actions(),
     queryFn: () =>
       apiClient.get<{ actions: CrmAutomationAction[] }>(
         "/crm/automation/actions"
       ),
     staleTime: 5 * 60_000,
-    enabled: canManage,
   });
 }
 
 export function useCrmAutomationRules() {
-  const canManage = useCan("crm:automations:manage");
-  return useQuery({
+  return useGatedQuery("crm:automations:manage", {
     queryKey: queryKeys.crmAutomations.list(),
     queryFn: () =>
       apiClient.get<{ rules: CrmAutomationRule[] }>("/crm/automations"),
     staleTime: 30_000,
-    enabled: canManage,
   });
 }
 
@@ -156,8 +150,7 @@ export function useTestCrmAutomationRule() {
 }
 
 export function useCrmAutomationRuns(ruleId: number, page: number) {
-  const canManage = useCan("crm:automations:manage");
-  return useQuery({
+  return useGatedQuery("crm:automations:manage", {
     queryKey: queryKeys.crmAutomations.runs(ruleId, page),
     queryFn: () =>
       apiClient.get<AutomationRunsResponse>(
@@ -165,6 +158,5 @@ export function useCrmAutomationRuns(ruleId: number, page: number) {
         { page, limit: 20 }
       ),
     staleTime: 30_000,
-    enabled: canManage,
   });
 }

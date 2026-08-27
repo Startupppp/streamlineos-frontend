@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { requireSession } from "@/lib/rbac/require-permission";
 import { RequireModule } from "@/components/auth/require-module";
-import PageHistoryPage from "@/features/knowledge-base/components/page-history-page";
+import PageHistoryPage from "@/features/wiki/components/page-history-page";
 
 interface PageParams {
   pageId: string;

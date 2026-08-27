@@ -260,7 +260,7 @@ export function ExceptionsView() {
                       variant="ghost"
                       size="icon"
                       className="h-6 w-6 text-status-success-ink hover:text-status-success-ink"
-                      title="Resolve"
+                      aria-label="Resolve exception"
                       onClick={() => handleResolveRequest(row)}
                     />
                     <AnimatedIconButton
@@ -269,7 +269,7 @@ export function ExceptionsView() {
                       variant="ghost"
                       size="icon"
                       className="h-6 w-6 text-destructive hover:text-destructive"
-                      title="Dismiss"
+                      aria-label="Dismiss exception"
                       onClick={() => handleDismissRequest(row)}
                     />
                   </div>

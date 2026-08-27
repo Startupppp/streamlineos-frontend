@@ -107,6 +107,7 @@ export const TicketRow = memo(function TicketRow({
           variant="ghost"
           size="icon"
           className="text-destructive shrink-0 active:scale-[0.98]"
+          aria-label="Remove ticket from template"
           disabled={isOnlyTicket}
           onClick={handleRemove}
           {...trashHandlers}

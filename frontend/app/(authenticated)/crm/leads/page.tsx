@@ -15,7 +15,7 @@ import { useLeadBoard, useLeadStats, useUpdateLeadStatus, useLeads } from "@/hoo
 import { useCrmOptions, resolveOption } from "@/hooks/api/crm/metadata";
 import { useLeadsFilters } from "@/hooks/common/use-leads-filters";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useScope } from "@/hooks/api/access";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { LeadsStatsBar } from "@/features/crm/leads/leads-stats-bar";
@@ -78,6 +78,7 @@ function pick<T extends string>(allowed: readonly T[], value: string | undefined
 
 export default function LeadsPipelinePage() {
   const canCreate = useCan("crm:leads:create");
+  const scope = useScope("crm:leads:view");
   const canUpdate = useCan("crm:leads:update");
   const canAssign = useCan("crm:leads:assign");
   const canDelete = useCan("crm:leads:delete");
@@ -284,6 +285,7 @@ export default function LeadsPipelinePage() {
               onPriorityFilterChange={setPriorityFilter}
               onSourceFilterChange={setSourceFilter}
               onClearFilters={clearFilters}
+              scope={scope}
             />
           </div>
           {view === "table" ? (

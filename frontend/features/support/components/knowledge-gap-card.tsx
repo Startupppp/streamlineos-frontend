@@ -8,7 +8,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useCan } from "@/hooks/api/access";
 import type { KnowledgeGap } from "@/features/support/lib/knowledge-gap.types";
-import { pageHref } from "@/features/knowledge-base/lib/knowledge-routes";
+import { pageHref } from "@/features/wiki/lib/knowledge-routes";
 import { KnowledgeGapStatusBadge } from "./knowledge-gap-status-badge";
 
 interface KnowledgeGapCardProps {
@@ -124,6 +124,7 @@ export function KnowledgeGapCard({
             iconSize={12}
             size="sm"
             variant="ghost"
+            aria-label="Dismiss knowledge gap"
             onClick={handleDismiss}
             disabled={isDismissing}
             className="h-7 w-7 p-0 ml-auto text-muted-foreground hover:text-destructive"

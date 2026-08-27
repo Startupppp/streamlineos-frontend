@@ -21,7 +21,10 @@ module.exports = async () => {
   // with "Cannot use import statement outside a module" unless it (and
   // @auth/core) are spliced into the generated allowlists.
   jestConfig.transformIgnorePatterns = (jestConfig.transformIgnorePatterns ?? []).map(
-    (pattern) => pattern.replace(/\(geist/g, "(geist|next-auth|@auth|@auth\\+core"),
+    (pattern) => pattern.replace(
+      /\(geist/g,
+      "(geist|next-auth|@auth|@auth\\+core|htmlparser2|domhandler|domelementtype|dom-serializer|domutils|entities|nanoid",
+    ),
   );
   return jestConfig;
 };

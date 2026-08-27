@@ -42,14 +42,14 @@ export function QuestionRow({
         <Badge variant="outline" className="text-xs">Required</Badge>
       )}
       <div className="flex shrink-0 items-center gap-0.5 opacity-0 group-hover:opacity-100">
-        <Button variant="ghost" size="icon" className="h-7 w-7" disabled={isFirst} onClick={() => onMoveUp(question.id)}>
+        <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Move question up" disabled={isFirst} onClick={() => onMoveUp(question.id)}>
           <ArrowUp className="h-3.5 w-3.5" />
         </Button>
-        <Button variant="ghost" size="icon" className="h-7 w-7" disabled={isLast} onClick={() => onMoveDown(question.id)}>
+        <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Move question down" disabled={isLast} onClick={() => onMoveDown(question.id)}>
           <ArrowDown className="h-3.5 w-3.5" />
         </Button>
-        <AnimatedIconButton icon={CopyIcon} iconSize={14} variant="ghost" size="icon" className="h-7 w-7" onClick={() => onDuplicate(question.id)} />
-        <AnimatedIconButton icon={Trash2Icon} iconSize={14} iconClassName="text-destructive" variant="ghost" size="icon" className="h-7 w-7" onClick={() => onDelete(question.id)} />
+        <AnimatedIconButton icon={CopyIcon} iconSize={14} variant="ghost" size="icon" className="h-7 w-7" aria-label="Duplicate question" onClick={() => onDuplicate(question.id)} />
+        <AnimatedIconButton icon={Trash2Icon} iconSize={14} iconClassName="text-destructive" variant="ghost" size="icon" className="h-7 w-7" aria-label="Delete question" onClick={() => onDelete(question.id)} />
       </div>
     </div>
   );

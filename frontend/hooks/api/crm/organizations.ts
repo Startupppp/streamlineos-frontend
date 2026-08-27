@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useCan } from "@/hooks/api/access";
 import type {
   CrmOrganization,
@@ -18,8 +19,7 @@ import type {
 } from "@/types/crm";
 
 export function useCrmOrganizations(filters?: CrmOrganizationFilters) {
-  const canView = useCan("crm:organizations:view");
-  return useQuery({
+  return useGatedQuery<PaginatedCrmOrganizations>("crm:organizations:view", {
     queryKey: queryKeys.crmOrganizations.list(filters as Record<string, unknown>),
     queryFn: () =>
       apiClient.get<PaginatedCrmOrganizations>(
@@ -28,7 +28,6 @@ export function useCrmOrganizations(filters?: CrmOrganizationFilters) {
       ),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
-    enabled: canView,
   });
 }
 

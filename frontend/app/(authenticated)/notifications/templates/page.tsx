@@ -556,8 +556,8 @@ function TemplateRow({
           variant="ghost"
           size="icon"
           className="h-6 w-6"
+          aria-label="Preview template"
           onClick={handlePreviewClick}
-          title="Preview"
           {...previewAnim.hoverHandlers}
         >
           <EyeIcon
@@ -570,8 +570,8 @@ function TemplateRow({
           variant="ghost"
           size="icon"
           className="h-6 w-6"
+          aria-label="Edit template"
           onClick={handleEditClick}
-          title="Edit"
           {...editAnim.hoverHandlers}
         >
           <UserPenIcon
@@ -585,8 +585,8 @@ function TemplateRow({
             variant="ghost"
             size="icon"
             className="h-6 w-6"
+            aria-label="Submit for provider approval"
             onClick={handleApprovalClick}
-            title="Provider approval"
           >
             <BadgeCheck size={12} className="text-muted-foreground" />
           </Button>
@@ -595,8 +595,8 @@ function TemplateRow({
           variant="ghost"
           size="icon"
           className="h-6 w-6 hover:text-destructive"
+          aria-label="Delete template"
           onClick={handleDeleteClick}
-          title="Delete"
           {...deleteAnim.hoverHandlers}
         >
           <Trash2Icon

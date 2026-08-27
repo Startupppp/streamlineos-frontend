@@ -17,6 +17,16 @@ export interface FilterCategorySpec {
   params: readonly string[];
 }
 
+/**
+ * Offset pagination only: `pageParam` holds a page NUMBER in the URL.
+ *
+ * A cursor-paginated list cannot use this. `/directory/workers` is the first
+ * one to have tried and turned it down, for a good reason — its cursors are
+ * opaque server-assigned tokens that must not enter the URL at all, so its
+ * cursor history stays local while only its filters are shared. Supporting both
+ * means the spec declaring which pagination a list uses; until a second caller
+ * needs it, that is a guess rather than a requirement.
+ */
 export interface ListFilterSpec {
   categories: readonly FilterCategorySpec[];
   searchParam?: string;

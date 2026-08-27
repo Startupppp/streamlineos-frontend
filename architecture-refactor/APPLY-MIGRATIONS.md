@@ -1,0 +1,180 @@
+# Applying 0473, 0475, 0476 — operator hand-off
+
+Three migrations are **written and journalled but not applied**.
+
+**Deploy order is now safe in both directions.** The search service originally called the new
+`app.search_*` functions with no guard, so shipping the code before the migration would have made
+every search error with `42883`. That was a hazard I introduced and it is fixed: each branch now
+catches a missing-function error specifically, logs it, and falls back to the plain `ILIKE` path.
+Search is therefore **correct but unindexed** until 0475 runs — the old behaviour, not a break.
+
+Only `42883` is caught. Any other database error still propagates, so this cannot mask a real fault.
+
+What each one gives you:
+
+- **0475** — the actual performance fix. Until it runs, search still does the five sequential
+  scans this whole ticket exists to remove, and you will see one `search probe … is missing` log
+  line per branch per query. That log line disappearing is how you know it worked.
+- **0476** — the notification watermark table. The list read tolerates its absence (a missing
+  watermark row reads as zero), but mark-all-read stays O(n) until it exists.
+- **0473** — the coupon uniqueness constraint. Defensive; the enforcing application code is live
+  either way, but without it two simultaneous redemptions can still both win.
+
+Run them together.
+
+## 1. Apply
+
+```bash
+pnpm -C backend db:migrate
+```
+
+`drizzle-kit` exits 1 with the real error hidden behind its spinner, and it blocks on a TTY prompt. If it hangs or exits non-zero with no visible cause, that is the known behaviour — capture stderr rather than trusting the exit line.
+
+## 2. Verify — do not trust the journal
+
+A migration in this repo has already been recorded as applied with **half its statements unrun**. The journal says "done"; only the catalog knows. Run this as the **owner** role:
+
+```sql
+SELECT 'coupon constraint' AS object,
+       to_regclass('coupon_redemptions') IS NOT NULL
+       AND EXISTS (SELECT 1 FROM pg_constraint
+                   WHERE conname = 'uq_coupon_redemptions_coupon_org') AS present
+UNION ALL SELECT 'app.search_deal_ids',
+       EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+               WHERE n.nspname = 'app' AND p.proname = 'search_deal_ids')
+UNION ALL SELECT 'app.search_contact_party_ids',
+       EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+               WHERE n.nspname = 'app' AND p.proname = 'search_contact_party_ids')
+UNION ALL SELECT 'app.search_client_party_ids',
+       EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+               WHERE n.nspname = 'app' AND p.proname = 'search_client_party_ids')
+UNION ALL SELECT 'idx_deals_name_trgm',
+       to_regclass('idx_deals_name_trgm') IS NOT NULL
+UNION ALL SELECT 'idx_deals_contact_person_trgm',
+       to_regclass('idx_deals_contact_person_trgm') IS NOT NULL
+UNION ALL SELECT 'notification_read_watermarks',
+       to_regclass('notification_read_watermarks') IS NOT NULL
+UNION ALL SELECT 'idx_notifications_list_cursor',
+       to_regclass('idx_notifications_list_cursor') IS NOT NULL
+UNION ALL SELECT 'idx_notifications_unread_count',
+       to_regclass('idx_notifications_unread_count') IS NOT NULL
+UNION ALL SELECT 'idx_chat_messages_unread',
+       to_regclass('idx_chat_messages_unread') IS NOT NULL;
+```
+
+**Every row must be `true`.** Anything false means that statement did not run, regardless of what the journal says.
+
+## 3. Verify the probes are actually reachable
+
+The three new functions are `SECURITY DEFINER` and owned by the BYPASSRLS owner — the highest-privilege objects written this session. Two things must both hold:
+
+```sql
+-- EXECUTE granted to the app role, and revoked from PUBLIC
+SELECT p.proname,
+       has_function_privilege('streamline_app', p.oid, 'EXECUTE') AS app_can_execute,
+       has_function_privilege('public',         p.oid, 'EXECUTE') AS public_can_execute
+FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+WHERE n.nspname = 'app' AND p.proname LIKE 'search_%';
+```
+
+`app_can_execute` must be **true**, `public_can_execute` must be **false**, for every row.
+
+## 4. Prove it fails closed
+
+Each probe takes its organisation from `app.current_org_id()` and never from a parameter, so a caller with no tenant context must get an error rather than rows. Confirm as `streamline_app`, **outside** a transaction that sets the GUC:
+
+```sql
+SELECT app.search_deal_ids('test', 10);
+```
+
+**This must raise an error**, not return an empty set. An empty set would mean the org filter silently matched nothing, which is a very different failure.
+
+## 5. Then re-measure the thing this was for
+
+Search was five concurrent sequential scans per keystroke. Measure as **`streamline_app` with the GUC set** — never as the owner, which carries BYPASSRLS and produces plans the application will never get:
+
+```sql
+BEGIN;
+SELECT set_config('app.organization_id', '<a real org id>', true);
+EXPLAIN (ANALYZE, BUFFERS) SELECT app.search_deal_ids('ac', 501);
+COMMIT;
+```
+
+Expect an index scan on `idx_deals_name_trgm`. If you see a sequential scan, the probe is not doing its job and I want to know.
+
+## 0483 rewrites `calendar_events` — read this before running it
+
+`ALTER COLUMN … TYPE TIMESTAMP WITH TIME ZONE` is not a metadata change. It takes an **ACCESS
+EXCLUSIVE lock and rewrites every row**, blocking reads and writes for the duration. `lock_timeout`
+is set to 5s so it fails fast rather than queueing behind a long reader — on a busy or large
+`calendar_events` expect to retry, possibly in a maintenance window.
+
+**Immediately after it applies:**
+
+```sql
+VACUUM ANALYZE calendar_events;
+```
+
+A rewrite invalidates the planner statistics **and** empties the visibility map. This has already
+been measured in this codebase: a rewritten table went from 53 to 201,875 blocks until `ANALYZE`,
+and a count stayed wrong until `VACUUM`. Skip this and the table looks slow for reasons unrelated to
+any query.
+
+**The assumption 0483 bakes in:** every existing naive timestamp is treated as UTC, and every
+existing row gets `timezone = 'UTC'`. That is correct if the server timezone has always been UTC —
+which is Neon's default and what the ORM writes. **If any events were ever written under a different
+server timezone, they will shift.** Check before applying:
+
+```sql
+SHOW timezone;   -- expect UTC
+```
+
+## The two DROP migrations are deliberately NOT journalled
+
+`0478_invoice_line_items_column_drop.sql` and `0482_candidate_resume_column_drop.sql` exist on disk
+but have **no journal entry**, so `db:migrate` will skip them. That is intentional, not the bug
+described above.
+
+`DROP COLUMN` is irreversible. Journalled in sequence, the backfill and the drop would run
+back-to-back in a single command, with no opportunity to check that the backfill actually worked —
+which defeats the point of writing them as separate migrations.
+
+**Run the backfills, verify, and only then apply the drops by hand:**
+
+```sql
+-- after 0477: every invoice with line items must now have rows
+SELECT count(*) AS unmigrated
+FROM invoices i
+WHERE i.line_items IS NOT NULL AND jsonb_array_length(i.line_items) > 0
+  AND NOT EXISTS (SELECT 1 FROM invoice_items ii WHERE ii.invoice_id = i.id);
+
+-- after 0481: every candidate with résumé text must now have a sidecar row
+SELECT count(*) AS unmigrated
+FROM candidates c
+WHERE c.resume_text IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM candidate_resumes cr WHERE cr.candidate_id = c.id);
+```
+
+**Both must return 0.** Then apply each drop file directly and add its journal entry afterwards so
+the history stays accurate.
+
+> **A hole I found and closed in `0478`.** Its reconciliation guard originally checked only invoices
+> that *have* `invoice_items` rows — so an invoice whose JSONB held line items but whose backfill
+> produced **zero** rows was excluded from the check by its own `EXISTS` clause. It would have
+> passed, the column would have dropped, and those lines would be gone with no error. The guard now
+> asserts nothing is left behind *before* it reconciles what was moved. `0482` did not have this
+> gap; its guard was already the nothing-left-behind form.
+
+After each drop: `VACUUM ANALYZE` the table. A column drop leaves stale statistics and the planner
+keeps assuming the old tuple width.
+
+## If something is wrong
+
+- **A function is missing** → 0475 partially executed. Re-run just that file; the `CREATE OR REPLACE` statements are idempotent.
+- **`public_can_execute` is true** → the REVOKE did not run. That is a real privilege problem; fix before serving traffic.
+- **The fail-closed probe returns rows instead of erroring** → stop. The org filter is not doing what it should, and that is a cross-tenant risk.
+- **Search errors after applying** → the function signature and the call site disagree. Tell me and I will reconcile them.
+
+## Also pending, not mine
+
+`0472_outbox_inbox_aggregate_fence` is on disk and **not journalled**, so `db:migrate` will skip it entirely. It belongs to concurrent work; whoever owns it needs to add its journal entry or it will never apply.

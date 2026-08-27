@@ -176,6 +176,7 @@ const EditableLineRow = memo(function EditableLineRow({
         variant="ghost"
         size="icon"
         className="w-7 shrink-0"
+        aria-label="Remove item from package"
         onClick={handleRemove}
       />
     </div>

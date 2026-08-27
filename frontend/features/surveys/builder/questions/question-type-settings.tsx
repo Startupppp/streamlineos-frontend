@@ -71,7 +71,7 @@ export function QuestionTypeSettings({ type, settings, onChange }: QuestionTypeS
         {rows.map((row, index) => (
           <div key={index} className="flex items-center gap-2">
             <Input value={row} onChange={(e) => handleRowChange(index, e.target.value)} placeholder={`Row ${index + 1}`} className="h-8" />
-            <AnimatedIconButton icon={Trash2Icon} iconSize={14} iconClassName="text-muted-foreground" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => handleRemoveRow(index)} />
+            <AnimatedIconButton icon={Trash2Icon} iconSize={14} iconClassName="text-muted-foreground" variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label="Remove row" onClick={() => handleRemoveRow(index)} />
           </div>
         ))}
         <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" variant="outline" size="sm" onClick={handleAddRow}>

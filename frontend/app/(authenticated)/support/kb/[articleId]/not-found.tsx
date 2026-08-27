@@ -8,7 +8,7 @@ import { ArrowLeft } from "lucide-react";
 import {
   KbBookOpenTextIcon,
   KbSearchIcon,
-} from "@/features/knowledge-base/lib/kb-icons";
+} from "@/features/wiki/lib/kb-icons";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 
 export default function KbArticleNotFound() {

@@ -81,7 +81,7 @@ function BudgetCard({ budget, canManage, onEdit, onDelete }: BudgetCardProps) {
             )}
             {canManage && (
               <>
-                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleEdit}>
+                <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Edit budget" onClick={handleEdit}>
                   <Pencil className="h-3 w-3" />
                 </Button>
                 <AnimatedIconButton
@@ -90,6 +90,7 @@ function BudgetCard({ budget, canManage, onEdit, onDelete }: BudgetCardProps) {
                   variant="ghost"
                   size="icon"
                   className="h-6 w-6 text-destructive hover:text-destructive"
+                  aria-label="Delete budget"
                   onClick={handleDelete}
                 />
               </>

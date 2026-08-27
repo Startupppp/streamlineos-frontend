@@ -65,6 +65,7 @@ function RemoveMemberButton({ index, onRemove }: RemoveMemberButtonProps) {
       variant="ghost"
       size="icon"
       className="w-7 shrink-0"
+      aria-label="Remove from load"
       onClick={handleClick}
     />
   );

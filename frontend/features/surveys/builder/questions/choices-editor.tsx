@@ -75,7 +75,7 @@ export function ChoicesEditor({ choices, onChange, showCorrectAnswer, showScore 
               className="h-8 w-20"
             />
           )}
-          <AnimatedIconButton icon={Trash2Icon} iconSize={14} iconClassName="text-muted-foreground" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => handleRemove(index)} />
+          <AnimatedIconButton icon={Trash2Icon} iconSize={14} iconClassName="text-muted-foreground" variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label="Remove choice" onClick={() => handleRemove(index)} />
         </div>
       ))}
       <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" variant="outline" size="sm" onClick={handleAdd}>

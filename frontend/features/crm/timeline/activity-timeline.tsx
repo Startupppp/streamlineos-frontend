@@ -99,6 +99,7 @@ export function ActivityTimeline({ anchor, emptyDescription, className }: Activi
   if (entries.length === 0)
     return (
       <EmptyState
+        access={timeline.access}
         className={className}
         title="Nothing here yet"
         description={

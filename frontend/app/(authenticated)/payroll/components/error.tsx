@@ -1,6 +1,6 @@
 "use client";
 
-import { RouteErrorBoundary } from "@/components/ui/route-error-boundary";
+import { ReportingRouteErrorBoundary } from "@/lib/observability/reporting-route-error-boundary";
 
 export default function PayrollComponentsError({
   error,
@@ -10,7 +10,7 @@ export default function PayrollComponentsError({
   reset: () => void;
 }) {
   return (
-    <RouteErrorBoundary
+    <ReportingRouteErrorBoundary
       error={error}
       reset={reset}
       title="Payroll components error"

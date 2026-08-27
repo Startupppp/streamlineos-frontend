@@ -1,9 +1,9 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useCan } from "@/hooks/api/access";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import type { CrmCampaign, CampaignRoi, CampaignAttribution } from "@/types/crm/campaigns";
 
 interface CampaignListParams {
@@ -28,17 +28,15 @@ type CreateCampaignInput = Omit<CrmCampaign, "id" | "orgId" | "leads" | "spend" 
 type UpdateCampaignInput = { id: number } & Partial<CreateCampaignInput>;
 
 export function useCampaigns(params?: CampaignListParams) {
-  const canView = useCan("crm:campaigns:view");
   const p: Record<string, unknown> = {};
   if (params?.page !== undefined) p.page = params.page;
   if (params?.limit !== undefined) p.limit = params.limit;
   if (params?.status && params.status !== "all") p.status = params.status;
 
-  return useQuery({
+  return useGatedQuery("crm:campaigns:view", {
     queryKey: queryKeys.crmCampaigns.list(p),
     queryFn: () => apiClient.get<PaginatedCampaigns>("/crm/campaigns", p),
     staleTime: 2 * 60_000,
-    enabled: canView,
   });
 }
 
@@ -68,45 +66,37 @@ export function useUpdateCampaign() {
 }
 
 export function useCampaignRoi(campaignId: number) {
-  const canView = useCan("crm:campaigns:view");
-  return useQuery({
+  return useGatedQuery("crm:campaigns:view", {
     queryKey: queryKeys.crmCampaigns.roi(campaignId),
     queryFn: () => apiClient.get<CampaignRoi>(`/crm/campaigns/${campaignId}/roi`),
     staleTime: 2 * 60_000,
-    enabled: canView,
   });
 }
 
 export function useCampaignLeads(campaignId: number, params?: CampaignLeadsParams) {
-  const canView = useCan("crm:campaigns:view");
   const p: Record<string, unknown> = {};
   if (params?.page !== undefined) p.page = params.page;
   if (params?.limit !== undefined) p.limit = params.limit;
 
-  return useQuery({
+  return useGatedQuery("crm:campaigns:view", {
     queryKey: queryKeys.crmCampaigns.leads(campaignId, p),
     queryFn: () => apiClient.get<{ items: unknown[]; total: number; page: number; limit: number }>(`/crm/campaigns/${campaignId}/leads`, p),
     staleTime: 60_000,
-    enabled: canView,
   });
 }
 
 export function useFirstTouchAttribution() {
-  const canView = useCan("crm:reports:view");
-  return useQuery({
+  return useGatedQuery("crm:reports:view", {
     queryKey: queryKeys.crmCampaigns.attribution("first-touch"),
     queryFn: () => apiClient.get<CampaignAttribution[]>("/crm/campaigns/attribution/first-touch"),
     staleTime: 5 * 60_000,
-    enabled: canView,
   });
 }
 
 export function useLastTouchAttribution() {
-  const canView = useCan("crm:reports:view");
-  return useQuery({
+  return useGatedQuery("crm:reports:view", {
     queryKey: queryKeys.crmCampaigns.attribution("last-touch"),
     queryFn: () => apiClient.get<CampaignAttribution[]>("/crm/campaigns/attribution/last-touch"),
     staleTime: 5 * 60_000,
-    enabled: canView,
   });
 }

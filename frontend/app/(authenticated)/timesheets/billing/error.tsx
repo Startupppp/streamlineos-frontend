@@ -1,13 +1,13 @@
 "use client";
 
-import { RouteErrorBoundary } from "@/components/ui/route-error-boundary";
+import { ReportingRouteErrorBoundary } from "@/lib/observability/reporting-route-error-boundary";
 
 export default function TimesheetBillingError(props: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
   return (
-    <RouteErrorBoundary
+    <ReportingRouteErrorBoundary
       {...props}
       title="Billing Error"
       fallbackMessage="Failed to load billing data. Please try again."

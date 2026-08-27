@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ErrorState } from "@/components/shared/error-state";
-import { IllustrationImage } from "@/components/illustrations/illustration-image";
+import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
@@ -101,20 +101,24 @@ export function EnvelopeList() {
     }
   }
 
-  const emptyState = (
-    <div className="flex flex-1 h-full flex-col items-center justify-center gap-4 text-center">
-      <IllustrationImage name="empty-upload" className="h-40 w-40" />
-      <div>
-        <p className="font-medium text-foreground">No envelopes yet</p>
-        <p className="text-sm text-muted-foreground mt-1">
-          Upload a PDF and send it for signature to get started.
-        </p>
-      </div>
-      <Button onClick={handleCreateOpen}>
-        <Plus className="size-4" />
-        New envelope
-      </Button>
-    </div>
+  const activeFilter = STATUS_FILTERS.find((f) => f.value === status && status !== "all");
+
+  const emptyState = activeFilter ? (
+    <EmptyState
+      illustrationPreset="search"
+      title={`No ${activeFilter.label.toLowerCase()} envelopes`}
+      description="Try a different status filter or clear it to see all."
+      action={{ label: "Clear filter", onClick: () => setStatus("all") }}
+      className="border-0 bg-transparent min-h-[40vh]"
+    />
+  ) : (
+    <EmptyState
+      illustrationPreset="upload"
+      title="No envelopes yet"
+      description="Upload a PDF and send it for signature to get started."
+      action={canCreateEnvelope ? { label: "New envelope", onClick: handleCreateOpen } : undefined}
+      className="border-0 bg-transparent min-h-[40vh]"
+    />
   );
 
   const columns: DataTableColumn<SignEnvelope>[] = [

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { format } from "date-fns";
-import { serverPublicFetch } from "@/lib/api/server-client";
+import { publicGet } from "@/lib/public-fetch";
 
 type Props = { params: Promise<{ orgSlug: string }> };
 
@@ -43,7 +43,8 @@ const typeLabels: Record<string, string> = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { orgSlug } = await params;
   try {
-    const data = await serverPublicFetch.get<CareersPageData>(`/public/careers/${orgSlug}/jobs`);
+    const data = await publicGet<CareersPageData>(`/public/careers/${orgSlug}/jobs`);
+    if (!data) return { title: "Careers" };
     return { title: `${data.org.name} — Open Positions` };
   } catch {
     return { title: "Careers" };
@@ -55,7 +56,7 @@ export default async function CareersPage({ params }: Props) {
 
   let data: CareersPageData;
   try {
-    data = await serverPublicFetch.get<CareersPageData>(`/public/careers/${orgSlug}/jobs`);
+    data = (await publicGet<CareersPageData>(`/public/careers/${orgSlug}/jobs`)) ?? notFound();
   } catch {
     notFound();
   }

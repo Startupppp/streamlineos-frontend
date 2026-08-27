@@ -63,8 +63,8 @@ export function LandingTestimonials() {
       </div>
 
       <div className="relative hidden lg:block">
-        <div className="absolute inset-y-0 left-0 w-16 sm:w-32 lg:w-48 z-10 pointer-events-none bg-gradient-to-r from-[#f4f7fc] via-[#f4f7fc]/85 to-transparent" />
-        <div className="absolute inset-y-0 right-0 w-16 sm:w-32 lg:w-48 z-10 pointer-events-none bg-gradient-to-l from-[#f4f7fc] via-[#f4f7fc]/85 to-transparent" />
+        <div className="absolute inset-y-0 left-0 w-16 sm:w-32 lg:w-48 z-10 pointer-events-none bg-gradient-to-r from-surface-soft-base via-surface-soft-base/85 to-transparent" />
+        <div className="absolute inset-y-0 right-0 w-16 sm:w-32 lg:w-48 z-10 pointer-events-none bg-gradient-to-l from-surface-soft-base via-surface-soft-base/85 to-transparent" />
 
         <motion.div
           style={reduce ? undefined : { x }}

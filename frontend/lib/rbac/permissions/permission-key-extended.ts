@@ -227,6 +227,7 @@ export type ExtendedPermissionKey =
   | "settings:mfa"
   | "settings:onboarding:manage"
   | "settings:organization:manage"
+  | "settings:record-layouts:manage"
   | "settings:webhooks:manage"
   | "support:csat:manage"
   | "support:csat:view"

@@ -1,6 +1,6 @@
 "use client";
 
-import { RouteErrorBoundary } from "@/components/ui/route-error-boundary";
+import { ReportingRouteErrorBoundary } from "@/lib/observability/reporting-route-error-boundary";
 
 export default function MyTicketsError({
   error,
@@ -9,5 +9,5 @@ export default function MyTicketsError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <RouteErrorBoundary error={error} reset={reset} />;
+  return <ReportingRouteErrorBoundary error={error} reset={reset} />;
 }

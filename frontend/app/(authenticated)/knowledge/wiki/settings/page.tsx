@@ -1,6 +1,6 @@
 import { requireSession } from "@/lib/rbac/require-permission";
 import { RequireModule } from "@/components/auth/require-module";
-import KnowledgeSettingsPage from "@/features/knowledge-base/components/knowledge-settings-page";
+import KnowledgeSettingsPage from "@/features/wiki/components/knowledge-settings-page";
 
 export default async function KnowledgeBaseSettingsPage() {
   await requireSession();

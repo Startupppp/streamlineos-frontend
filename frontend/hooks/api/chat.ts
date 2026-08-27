@@ -13,6 +13,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { reauthorizeAblyClients } from "@/lib/ably";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { useRealtimePollInterval } from "@/hooks/common/use-realtime-poll-interval";
 import type {
   Channel,
   ChatNotificationPreference,
@@ -97,6 +98,7 @@ export function useChatPoll(
   since: string,
   enabled: boolean,
 ) {
+  const pollInterval = useRealtimePollInterval(30_000);
   return useQuery({
     queryKey: queryKeys.chat.poll(channelId, since),
     queryFn: () =>
@@ -105,7 +107,7 @@ export function useChatPoll(
       }),
     staleTime: 2 * 60_000,
     enabled: enabled && channelId > 0,
-    refetchInterval: enabled ? 30_000 : false,
+    refetchInterval: enabled ? pollInterval : false,
   });
 }
 

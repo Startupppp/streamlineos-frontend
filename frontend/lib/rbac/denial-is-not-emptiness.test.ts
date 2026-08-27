@@ -52,6 +52,13 @@ const ROOT = path.join(__dirname, "..", "..");
  * never add one. A new entry means a new instance of a bug we have already
  * decided is unacceptable.
  */
+/*
+ * Paths updated 2026-08-27, when `crm/phases-complete` merged in: it renamed
+ * `features/knowledge-base/components/` to `features/wiki/components/` and moved
+ * `kb-content-gaps` into `features/help-centre/`. Twenty entries here are those
+ * same surfaces at their new paths -- the debt did not grow, it moved. Two came
+ * off because they genuinely no longer have the problem.
+ */
 const NOT_YET_CONVERTED: readonly string[] = [
   "app/(authenticated)/build/[projectId]/analytics/page.tsx",
   "app/(authenticated)/build/[projectId]/backlog/page.tsx",
@@ -213,7 +220,6 @@ const NOT_YET_CONVERTED: readonly string[] = [
   "features/hr/attendance/daily-history-table.tsx",
   "features/hr/attendance/manage-holidays-card.tsx",
   "features/hr/attendance/team-attendance-card.tsx",
-  "features/hr/attendance/wfh-balances-card.tsx",
   "features/hr/background-verification/background-verification-page-client.tsx",
   "features/hr/biometric/biometric-devices-list.tsx",
   "features/hr/biometric/biometric-logs-list.tsx",
@@ -281,25 +287,25 @@ const NOT_YET_CONVERTED: readonly string[] = [
   "features/inventory/components/traceability/lots-client.tsx",
   "features/inventory/components/traceability/serials-client.tsx",
   "features/inventory/components/warehouse/warehouse-stock-tab.tsx",
-  "features/kb/components/kb-content-gaps.tsx",
-  "features/knowledge-base/components/export-jobs-card.tsx",
-  "features/knowledge-base/components/favorites-page.tsx",
-  "features/knowledge-base/components/import-page.tsx",
-  "features/knowledge-base/components/knowledge-analytics-page.tsx",
-  "features/knowledge-base/components/knowledge-settings-page.tsx",
-  "features/knowledge-base/components/page-comments-sheet.tsx",
-  "features/knowledge-base/components/page-document-toolbar.tsx",
-  "features/knowledge-base/components/page-history-page.tsx",
-  "features/knowledge-base/components/page-history-sheet.tsx",
-  "features/knowledge-base/components/private-page.tsx",
-  "features/knowledge-base/components/recent-page.tsx",
-  "features/knowledge-base/components/reviews-page.tsx",
-  "features/knowledge-base/components/shared-page.tsx",
-  "features/knowledge-base/components/space-detail-page.tsx",
-  "features/knowledge-base/components/spaces-page.tsx",
-  "features/knowledge-base/components/templates-page.tsx",
-  "features/knowledge-base/components/trash-page.tsx",
-  "features/knowledge-base/components/wiki-home-page.tsx",
+  "features/help-centre/components/kb-content-gaps.tsx",
+  "features/wiki/components/export-jobs-card.tsx",
+  "features/wiki/components/favorites-page.tsx",
+  "features/wiki/components/import-page.tsx",
+  "features/wiki/components/knowledge-analytics-page.tsx",
+  "features/wiki/components/knowledge-settings-page.tsx",
+  "features/wiki/components/page-comments-sheet.tsx",
+  "features/wiki/components/page-document-toolbar.tsx",
+  "features/wiki/components/page-history-page.tsx",
+  "features/wiki/components/page-history-sheet.tsx",
+  "features/wiki/components/private-page.tsx",
+  "features/wiki/components/recent-page.tsx",
+  "features/wiki/components/reviews-page.tsx",
+  "features/wiki/components/shared-page.tsx",
+  "features/wiki/components/space-detail-page.tsx",
+  "features/wiki/components/spaces-page.tsx",
+  "features/wiki/components/templates-page.tsx",
+  "features/wiki/components/trash-page.tsx",
+  "features/wiki/components/wiki-home-page.tsx",
   "features/party/parties/parties-page.tsx",
   "features/party/parties/party-detail-sheet.tsx",
   "features/party/subject-types/subject-types-page.tsx",
@@ -364,7 +370,6 @@ const NOT_YET_CONVERTED: readonly string[] = [
   "features/settings/webhooks/webhook-delivery-log.tsx",
   "features/settings/webhooks/webhooks-page.tsx",
   "features/shared/automations/module-automations-settings.tsx",
-  "features/support/settings/vip-clients-card.tsx",
   "features/timesheets/approvals/approvals-tab-panel.tsx",
   "features/timesheets/approvals/approvals-view.tsx",
   "features/timesheets/billing/billing-view.tsx",

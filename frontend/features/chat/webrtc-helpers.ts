@@ -1,3 +1,4 @@
+import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 export const MAX_QUEUED_CANDIDATES = 64;
@@ -28,22 +29,15 @@ export interface IncomingSignalData {
   };
 }
 
-export function getIceServers(): RTCIceServer[] {
-  const servers: RTCIceServer[] = [
-    { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] },
-  ];
-  const turnUrls = (process.env.NEXT_PUBLIC_TURN_URL ?? "")
-    .split(",")
-    .map((url) => url.trim())
-    .filter(Boolean);
-  if (turnUrls.length > 0) {
-    servers.push({
-      urls: turnUrls,
-      username: process.env.NEXT_PUBLIC_TURN_USERNAME ?? "",
-      credential: process.env.NEXT_PUBLIC_TURN_CREDENTIAL ?? "",
-    });
-  }
-  return servers;
+export const FALLBACK_ICE_SERVERS: RTCIceServer[] = [
+  { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] },
+];
+
+export async function fetchIceServers(): Promise<RTCIceServer[]> {
+  const { iceServers } = await apiClient.get<{ iceServers: RTCIceServer[] }>(
+    "/realtime/ice-servers",
+  );
+  return iceServers.length > 0 ? iceServers : FALLBACK_ICE_SERVERS;
 }
 
 export interface SignalHandlerDeps {

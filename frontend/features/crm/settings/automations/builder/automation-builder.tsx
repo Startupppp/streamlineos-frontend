@@ -419,6 +419,7 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
                     variant="ghost"
                     size="icon"
                     className="h-6 w-6"
+                    aria-label="Close test panel"
                     onClick={handleToggleTestPanel}
                   >
                     <ChevronLeft className="h-3.5 w-3.5" />

@@ -1,6 +1,6 @@
 # 13 — Self-serve signup provisions a working tenant
 
-**Status:** done as **admission**, not self-serve — the waitlist now has a path out of it, verified end to end in a browser. The 25 August decision was not overridden.
+**Status:** provisioning half done — the front door is deliberately a waitlist, and what exists is **admission** rather than self-serve: an operator admits one named person, and that person creates their workspace, verified end to end in a browser. The 25 August decision was not overridden. Two criteria remain open — no demo dataset, and provisioning takes over a minute; both are stated below rather than hidden.
 **Track:** D — funnel
 **Blocked by:** 08, 09
 

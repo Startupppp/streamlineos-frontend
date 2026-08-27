@@ -1,6 +1,8 @@
 # 20 — Layout is data a tenant can adjust
 
-**Status:** done — the four endpoints exist and the gate is its own key.
+**Status:** done — the four `/renderer/layouts/*` routes, `record_layout_adjustments` with RLS, `settings:record-layouts:manage` in both catalogues with a backfill, and a cross-tenant test putting two orgs through one QueryClient.
+exist. Everything below is built, wired and tested against the contract, and
+none of it does anything for a tenant until the server answers.
 **Track:** E — records and renderer
 **Blocked by:** 19
 

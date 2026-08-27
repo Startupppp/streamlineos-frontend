@@ -331,6 +331,7 @@ export function TestCaseSheet({
                         variant="ghost"
                         size="icon"
                         className="w-7 text-muted-foreground hover:text-destructive"
+                        aria-label="Remove step"
                         onClick={() => remove(idx)}
                         icon={Trash2Icon}
                         iconSize={12}

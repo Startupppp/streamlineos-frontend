@@ -19,7 +19,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useBillingExport } from "@/hooks/api/timesheets-core/billing";
 import { downloadBillingFile } from "./lib/build-billing-file";
-import { formatMoney } from "./lib/format-money";
+import { formatCurrencyForBilling } from "@/lib/format-utils";
 import type { BillingGroup } from "@/features/timesheets/types";
 
 const exportSchema = z.object({ format: z.enum(["CSV", "XLSX"]) });
@@ -55,7 +55,7 @@ const billingPreviewColumns: DataTableColumn<BillingGroup>[] = [
     header: "Amount",
     headerClassName: "text-micro py-1 px-2 font-bold uppercase tracking-wider text-right",
     className: "text-dense py-1 px-2 font-mono text-right",
-    cell: (row) => formatMoney(row.billableAmount, row.currency),
+    cell: (row) => formatCurrencyForBilling(row.billableAmount, row.currency),
   },
 ];
 
@@ -107,7 +107,7 @@ export function BillingExportDialog({
           const filename = `billing-export_${startDate}_${endDate}.${values.format.toLowerCase()}`;
           void downloadBillingFile(values.format, filename, groups);
           toast.success(
-            `Exported ${result.entryCount} entries · ${result.totalHours.toFixed(1)} h · ${formatMoney(result.totalAmount, fallbackCurrency)}`,
+            `Exported ${result.entryCount} entries · ${result.totalHours.toFixed(1)} h · ${formatCurrencyForBilling(result.totalAmount, fallbackCurrency)}`,
           );
           handleClose();
         },

@@ -18,14 +18,13 @@ import { isApiError, getApiErrorCode } from "@/lib/api-client";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useProject } from "@/hooks/api";
-import { useProjectBoardTickets } from "@/hooks/api/build";
+import { useTicketByKey } from "@/hooks/api/build";
 import { formatTicketKey, parseTicketKey } from "@/features/build/shared/format-ticket-key";
 import { TicketDetailMainSection } from "./ticket-detail-main-section";
 import { TicketDetailRightPanel } from "./ticket-detail-right-panel";
 import { TicketDetailActions, TicketDetailDeleteDialog, TicketDetailDeleteMenuItem } from "./ticket-detail-actions";
 import { TicketParentControl } from "./ticket-parent-control";
 import { useTicketDetail } from "./use-ticket-detail";
-import { resolveTicketId } from "./resolve-ticket-id";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { useCan } from "@/hooks/api/access";
 
@@ -74,13 +73,11 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
 
   const parsed = useMemo(() => parseTicketKey(ticketKey), [ticketKey]);
   const { data: projectData, isLoading: projectLoading } = useProject(projectId);
-  const { data: boardTickets, isLoading: boardLoading } = useProjectBoardTickets(projectId);
-
-  const ticketId = useMemo(() => {
-    if (!parsed) return null;
-    const tickets = boardTickets?.map((t) => ({ id: t.id, ticketNumber: t.ticketNumber }));
-    return resolveTicketId(parsed, projectData?.key, tickets);
-  }, [parsed, projectData?.key, boardTickets]);
+  const { data: byKeyTicket, isLoading: byKeyLoading, error: byKeyError } = useTicketByKey(
+    projectId,
+    parsed?.ticketNumber ?? null,
+  );
+  const ticketId = byKeyTicket?.id ?? null;
 
   const handleDeleted = () => {
     router.push(`/build/${projectId}`);
@@ -138,16 +135,34 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
 
   if (!parsed) return notFound();
 
-  if (projectLoading || boardLoading || (ticketId === null && projectData && boardTickets && !isLoading)) {
-    if (!projectLoading && !boardLoading && projectData && boardTickets && ticketId === null) {
-      return notFound();
-    }
+  if (projectLoading || byKeyLoading) {
     return (
       <PageWrapper title="Loading..." backHref={`/build/${projectId}`} noInternalScroll className="h-full">
         <DetailSkeleton />
       </PageWrapper>
     );
   }
+
+  if (byKeyError) {
+    if (isApiError(byKeyError) && getApiErrorCode(byKeyError) === "PROJECTS_FORBIDDEN_TICKET") {
+      return (
+        <PageWrapper title={displayKey} backHref={`/build/${projectId}`}>
+          <div className="px-4 py-16 text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+              <AlertCircle className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <p className="mb-1 font-medium text-foreground">Restricted Access</p>
+            <p className="text-sm text-muted-foreground">
+              You can only view details of tickets assigned to you.
+            </p>
+          </div>
+        </PageWrapper>
+      );
+    }
+    return notFound();
+  }
+
+  if (!byKeyTicket) return notFound();
 
   if (isLoading) {
     return (

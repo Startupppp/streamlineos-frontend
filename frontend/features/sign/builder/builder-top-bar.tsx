@@ -106,7 +106,7 @@ export function BuilderTopBar({ envelope, onShowAudit }: { envelope: SignEnvelop
   return (
     <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between gap-3">
       <div className="flex items-center gap-3 min-w-0">
-        <Button variant="ghost" size="icon" className="size-8" onClick={() => router.push("/sign/envelopes")}>
+        <Button variant="ghost" size="icon" className="size-8" aria-label="Back to envelopes" onClick={() => router.push("/sign/envelopes")}>
           <ArrowLeft className="size-4" />
         </Button>
         <div className="min-w-0">

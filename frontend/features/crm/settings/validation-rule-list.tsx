@@ -43,7 +43,7 @@ interface ValidationRuleListProps {
 
 export function ValidationRuleList({ entityType, canManage }: ValidationRuleListProps) {
   const layout = useTenantLayout(VALIDATION_RULE_LAYOUT);
-  const { data, isLoading, isError, refetch } = useValidationRules({ entity: entityType });
+  const { data, isLoading, isError, refetch, access } = useValidationRules({ entity: entityType });
   const { data: metadata } = useCrmMetadata();
   const updateRule = useUpdateValidationRule();
   const deleteRule = useDeleteValidationRule();
@@ -159,6 +159,7 @@ export function ValidationRuleList({ entityType, canManage }: ValidationRuleList
         />
       ) : rows.length === 0 ? (
         <EmptyState
+          access={access}
           compact
           illustrationPreset="settings"
           title={`No rules on ${entityType}s yet`}

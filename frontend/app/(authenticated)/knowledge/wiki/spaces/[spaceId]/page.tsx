@@ -1,6 +1,6 @@
 import { requireSession } from "@/lib/rbac/require-permission";
 import { RequireModule } from "@/components/auth/require-module";
-import SpaceDetailPage from "@/features/knowledge-base/components/space-detail-page";
+import SpaceDetailPage from "@/features/wiki/components/space-detail-page";
 
 interface Props {
   params: Promise<{ spaceId: string }>;

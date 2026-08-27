@@ -68,6 +68,7 @@ export function RecipientsPanel({ envelopeId, recipients, editable }: Recipients
                   icon={Trash2Icon}
                   iconSize={14}
                   className="size-7 shrink-0"
+                  aria-label="Remove recipient"
                   onClick={(e) => handleDelete(recipient.id, e)}
                 />
               )}

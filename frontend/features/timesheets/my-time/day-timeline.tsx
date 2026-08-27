@@ -73,7 +73,7 @@ const EntryRow = memo(function EntryRow({ entry, onEdit, onVoid }: EntryRowProps
       </div>
       {!isLocked && (
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleEdit}>
+          <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Edit time entry" onClick={handleEdit}>
             <Edit2 className="h-3 w-3" />
           </Button>
           <AnimatedIconButton
@@ -82,6 +82,7 @@ const EntryRow = memo(function EntryRow({ entry, onEdit, onVoid }: EntryRowProps
             variant="ghost"
             size="icon"
             className="h-6 w-6 text-destructive hover:text-destructive"
+            aria-label="Void time entry"
             onClick={handleVoid}
           />
         </div>

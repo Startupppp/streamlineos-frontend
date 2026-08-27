@@ -5,6 +5,10 @@ import {
   isNavRouteActive,
 } from "./sidebar-nav-items";
 
+function scopesOf(keys: readonly string[]): Record<string, "all"> {
+  return Object.fromEntries(keys.map((key) => [key, "all" as const]));
+}
+
 const EMPLOYEE_PERMISSIONS = [
   "mail:inbox:view",
   "calendar:read",
@@ -22,12 +26,12 @@ const EMPLOYEE_PERMISSIONS = [
 
 describe("Home employee navigation", () => {
   it("keeps HR self-service hidden without its module entitlement and permission", () => {
-    const homeRoutes = getNavGroupsForProduct("home", "MEMBER", [], ["build"])
+    const homeRoutes = getNavGroupsForProduct("home", "MEMBER", scopesOf([]), ["build"])
       .flatMap((group) => flattenNavRoutes(group.routes));
     const knowledgeRoutes = getNavGroupsForProduct(
       "documents",
       "MEMBER",
-      [],
+      scopesOf([]),
       ["build"],
     ).flatMap((group) => flattenNavRoutes(group.routes));
 
@@ -43,7 +47,7 @@ describe("Home employee navigation", () => {
     const groups = getNavGroupsForProduct(
       "home",
       "MEMBER",
-      EMPLOYEE_PERMISSIONS,
+      scopesOf(EMPLOYEE_PERMISSIONS),
       ["hr", "payroll", "build"],
     );
     const routes = groups.flatMap((group) => flattenNavRoutes(group.routes));
@@ -84,7 +88,7 @@ describe("Administration information architecture", () => {
     const groups = getNavGroupsForProduct(
       "administration",
       "OWNER",
-      [],
+      scopesOf([]),
       ["hr"],
     );
     const routes = groups.flatMap((group) => flattenNavRoutes(group.routes));
@@ -123,7 +127,7 @@ describe("Administration information architecture", () => {
     const groups = getNavGroupsForProduct(
       "administration",
       "OWNER",
-      [],
+      scopesOf([]),
       ["hr"],
     );
     const organization = groups.find((group) => group.label === "Organization");
@@ -145,7 +149,7 @@ describe("Administration information architecture", () => {
     const groups = getNavGroupsForProduct(
       "administration",
       "OWNER",
-      [],
+      scopesOf([]),
       ["build"],
     );
     const hrefs = groups.flatMap((group) => flattenNavRoutes(group.routes)).map((route) => route.href);
@@ -161,7 +165,7 @@ describe("Administration information architecture", () => {
     const groups = getNavGroupsForProduct(
       "home",
       "OWNER",
-      [],
+      scopesOf([]),
       ["payroll"],
     );
     const hrefs = groups.flatMap((group) => flattenNavRoutes(group.routes)).map((route) => route.href);
@@ -174,7 +178,7 @@ describe("Administration information architecture", () => {
     const groups = getNavGroupsForProduct(
       "administration",
       "MEMBER",
-      ["billing:ai-credits:view"],
+      scopesOf(["billing:ai-credits:view"]),
       [],
     );
     const hrefs = groups
@@ -189,7 +193,7 @@ describe("Administration information architecture", () => {
     const groups = getNavGroupsForProduct(
       "crm",
       "MEMBER",
-      ["party:parties:view"],
+      scopesOf(["party:parties:view"]),
       ["crm"],
     );
     const hrefs = groups.flatMap((group) => flattenNavRoutes(group.routes)).map((route) => route.href);

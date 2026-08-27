@@ -1,9 +1,9 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useCan } from "@/hooks/api/access";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import type {
   CreateIssueInput,
   IssueDetailResponse,
@@ -34,13 +34,10 @@ const BASE = "/crm/issues";
  * same bytes on every keystroke of a filter.
  */
 export function useIssueRecordTypes() {
-  const canView = useCan("crm:issues:view");
-
-  return useQuery({
+  return useGatedQuery("crm:issues:view", {
     queryKey: queryKeys.crm.issueRecordTypes(),
     queryFn: () => apiClient.get<IssueRecordTypesResponse>(`${BASE}/record-types`),
     staleTime: 30 * 60_000,
-    enabled: canView,
   });
 }
 
@@ -51,10 +48,9 @@ export interface UseIssuesParams extends IssueFilters {
 }
 
 export function useIssues(params: UseIssuesParams) {
-  const canView = useCan("crm:issues:view");
   const { recordType, limit = 25, cursor, ...filters } = params;
 
-  return useQuery({
+  return useGatedQuery("crm:issues:view", {
     queryKey: queryKeys.crm.issues({ recordType, limit, cursor, ...filters }),
     queryFn: () => {
       const search = new URLSearchParams({ recordType, limit: String(limit) });
@@ -64,17 +60,14 @@ export function useIssues(params: UseIssuesParams) {
       return apiClient.get<IssuePage>(`${BASE}?${search.toString()}`);
     },
     staleTime: 30_000,
-    enabled: canView,
   });
 }
 
 export function useIssue(issueRecordId: string | null) {
-  const canView = useCan("crm:issues:view");
-
-  return useQuery({
+  return useGatedQuery("crm:issues:view", {
     queryKey: queryKeys.crm.issue(issueRecordId ?? ""),
     queryFn: () => apiClient.get<IssueDetailResponse>(`${BASE}/${issueRecordId}`),
-    enabled: canView && !!issueRecordId,
+    enabled: !!issueRecordId,
   });
 }
 

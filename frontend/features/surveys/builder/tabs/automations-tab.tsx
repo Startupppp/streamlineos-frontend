@@ -107,7 +107,7 @@ export function AutomationsTab({ survey }: { survey: SurveyForm }) {
               <span className="text-muted-foreground"> + follow-up task</span>
             )}
           </span>
-          <AnimatedIconButton icon={Trash2Icon} iconSize={14} iconClassName="text-destructive" variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => handleDelete(rule.id)} />
+          <AnimatedIconButton icon={Trash2Icon} iconSize={14} iconClassName="text-destructive" variant="ghost" size="icon" className="h-7 w-7 shrink-0" aria-label="Delete automation rule" onClick={() => handleDelete(rule.id)} />
         </div>
       ))}
 

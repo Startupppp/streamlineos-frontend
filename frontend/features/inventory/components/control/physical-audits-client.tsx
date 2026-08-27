@@ -47,7 +47,7 @@ import { cn } from "@/lib/utils";
 function ViewAuditButton({ href }: { href: string }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <Button variant="ghost" size="icon" className="w-7" asChild>
+    <Button variant="ghost" size="icon" className="w-7" aria-label="View audit" asChild>
       <Link href={href} {...hoverHandlers}>
         <EyeIcon ref={iconRef} size={14} aria-hidden="true" />
       </Link>

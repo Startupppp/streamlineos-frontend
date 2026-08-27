@@ -48,13 +48,14 @@ export const RoadmapItemCard = memo(function RoadmapItemCard({
         <div className="flex min-w-0 items-start justify-between gap-2">
           <TruncatedText text={item.title} lines={2} className="text-sm font-medium leading-snug" />
           <div className="flex shrink-0 items-center gap-0.5 opacity-70 transition-opacity group-hover:opacity-100">
-            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleEdit}>
+            <Button size="icon" variant="ghost" className="h-6 w-6" aria-label="Edit roadmap item" onClick={handleEdit}>
               <Pencil className="h-3 w-3" />
             </Button>
             <AnimatedIconButton
               size="icon"
               variant="ghost"
               className="h-6 w-6 text-destructive hover:text-destructive"
+              aria-label="Delete roadmap item"
               onClick={handleDelete}
               icon={Trash2Icon}
               iconSize={12}

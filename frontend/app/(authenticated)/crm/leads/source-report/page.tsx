@@ -55,7 +55,7 @@ function getSourceColor(index: number) {
 
 export default function LeadSourceReportPage() {
   const shouldReduceMotion = useReducedMotion();
-  const { data, isLoading, isError, refetch } = useLeadSourceReport();
+  const { data, isLoading, isError, refetch, access } = useLeadSourceReport();
 
   const maxCount = useMemo(
     () => Math.max(1, ...(data?.sources.map((s) => s.count) ?? [])),
@@ -175,6 +175,7 @@ export default function LeadSourceReportPage() {
                   </div>
                 ) : !data?.sources || data.sources.length === 0 ? (
                   <EmptyState
+                    access={access}
                     illustration={<EmptyLeadsIllustration />}
                     title="No leads have a source yet"
                     description="Attribution needs a source on each lead — set one when you create or import them, and this report fills in."

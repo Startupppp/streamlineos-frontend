@@ -156,3 +156,18 @@ not recoverable by a revert.
 as part of their rewrite, at which point the drop is one migration rather than a
 programme. Re-run the script rather than trusting this paragraph — the number
 moves.
+## Re-count (2026-08-26)
+
+Re-ran the ratchet rather than trusting the earlier number. It passes, and the
+register still holds **26** readers: 13 under `party/` — the seam itself, which
+is deleted along with the tables — and 13 under `finance/` (11) and
+`accounting/` (2). Unchanged since the last count, so the accounting rewrite
+that owns those 13 has not landed yet and this ticket is still one migration
+behind it. Nothing regressed either: the ratchet fails on a *new* reader as well
+as a departed one, so the count moving in neither direction is the honest state.
+
+Checked the other thing that could make the `DROP` unsafe: `src/scripts/purge-user.mjs`
+enumerates foreign keys from `pg_constraint` at runtime rather than naming
+tables, so removing `leads`, `clients`, `contacts` and `crm_organizations` does
+not strand it. That is one fewer reason to hesitate when the finance half is
+ready; it is not permission to drop them now.

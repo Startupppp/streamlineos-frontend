@@ -8,6 +8,7 @@ interface NoPermissionStateProps {
   title?: string;
   description?: string;
   className?: string;
+  compact?: boolean;
 }
 
 export function NoPermissionState({
@@ -15,27 +16,42 @@ export function NoPermissionState({
   title = "Access Restricted",
   description,
   className,
+  compact = false,
 }: NoPermissionStateProps) {
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center flex-1 py-24 text-center px-6",
+        "flex flex-col items-center justify-center text-center",
+        compact ? "py-6 px-4" : "flex-1 py-24 px-6",
         className,
       )}
+      role="status"
     >
-      <div className="h-14 w-14 rounded-2xl bg-destructive/10 flex items-center justify-center mb-4">
-        <ShieldAlert className="w-7 text-destructive" />
+      <div
+        className={cn(
+          "rounded-2xl bg-destructive/10 flex items-center justify-center mb-4",
+          compact ? "h-10 w-10" : "h-14 w-14",
+        )}
+      >
+        <ShieldAlert className={cn("text-destructive", compact ? "w-5" : "w-7")} />
       </div>
-      <h3 className="text-base font-semibold mb-1">{title}</h3>
-      <p className="text-sm text-muted-foreground max-w-sm mb-2">
+      <h3 className={cn("font-semibold mb-1", compact ? "text-sm" : "text-base")}>{title}</h3>
+      <p
+        className={cn(
+          "text-muted-foreground max-w-sm mb-2",
+          compact ? "text-xs" : "text-sm",
+        )}
+      >
         {description ?? "You don’t have the required permission for this section."}
       </p>
       <p className="text-xs text-muted-foreground/60 font-mono bg-muted px-2 py-1 rounded">
         {permission}
       </p>
-      <p className="text-xs text-muted-foreground mt-3">
-        Contact your administrator to request access.
-      </p>
+      {compact ? null : (
+        <p className="text-xs text-muted-foreground mt-3">
+          Contact your administrator to request access.
+        </p>
+      )}
     </div>
   );
 }

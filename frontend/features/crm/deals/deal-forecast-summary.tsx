@@ -96,11 +96,11 @@ function SnapshotOverrideRow({ snapshotId, period, totalWeighted, overrideAmount
             placeholder="Note"
             className="h-6 w-20 text-xs"
           />
-          <AnimatedIconButton icon={CheckIcon} iconSize={12} size="icon" variant="ghost" className="h-6 w-6" onClick={handleSave} disabled={overrideForecast.isPending} />
-          <AnimatedIconButton icon={XIcon} iconSize={12} size="icon" variant="ghost" className="h-6 w-6" onClick={handleCancel} />
+          <AnimatedIconButton icon={CheckIcon} iconSize={12} size="icon" variant="ghost" className="h-6 w-6" aria-label="Save forecast override" onClick={handleSave} disabled={overrideForecast.isPending} />
+          <AnimatedIconButton icon={XIcon} iconSize={12} size="icon" variant="ghost" className="h-6 w-6" aria-label="Cancel forecast edit" onClick={handleCancel} />
         </div>
       ) : (
-        <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleStartEdit}>
+        <Button size="icon" variant="ghost" className="h-6 w-6" aria-label="Edit forecast amount" onClick={handleStartEdit}>
           <Pencil className="h-3 w-3" />
         </Button>
       )}

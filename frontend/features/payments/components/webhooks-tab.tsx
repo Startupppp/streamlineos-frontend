@@ -116,7 +116,7 @@ export function WebhooksTab({ providerKey, environment }: { providerKey: string;
             <code className="flex-1 truncate text-dense bg-background border border-border rounded px-2 py-1.5 font-mono">
               {generatedUrl}
             </code>
-            <AnimatedIconButton icon={CopyIcon} iconSize={12} size="icon" variant="outline" className="w-7 shrink-0" onClick={handleCopyUrl} />
+            <AnimatedIconButton icon={CopyIcon} iconSize={12} size="icon" variant="outline" className="w-7 shrink-0" aria-label="Copy webhook URL" onClick={handleCopyUrl} />
           </div>
         ) : (
           <p className="text-dense text-muted-foreground">

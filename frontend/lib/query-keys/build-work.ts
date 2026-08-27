@@ -17,6 +17,8 @@ export const buildWorkQueryKeys = {
       [...base, "projects", "tickets", params] as const,
     ticket: (ticketId: number) =>
       [...base, "projects", "tickets", "detail", ticketId] as const,
+    ticketByKey: (projectId: number, ticketNumber: number) =>
+      [...base, "projects", "tickets", "by-key", projectId, ticketNumber] as const,
     ticketRelations: (ticketId: number) =>
       [...base, "projects", "tickets", "detail", ticketId, "relations"] as const,
     subtasks: (ticketId: number) =>

@@ -1,6 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import type { DatasetHealthTrend, Scoreboard } from "@/types/crm/autonomy";
+import { permissionGate } from "@/lib/rbac/permission-gate";
 import { AutonomyScoreboard } from "./autonomy-scoreboard";
+
+const allowed = permissionGate("crm:autonomy:view", true, true);
 
 const mockUseScoreboard = jest.fn();
 jest.mock("@/hooks/api/crm/autonomy", () => ({
@@ -60,7 +63,7 @@ const dataset = (over: Partial<DatasetHealthTrend> = {}): DatasetHealthTrend => 
 
 describe("AutonomyScoreboard", () => {
   beforeEach(() => {
-    mockUseScoreboard.mockReturnValue({ data: board(), isLoading: false });
+    mockUseScoreboard.mockReturnValue({ access: allowed, data: board(), isLoading: false });
   });
 
   it("shows the correction rate per action type", () => {
@@ -77,6 +80,7 @@ describe("AutonomyScoreboard", () => {
    */
   it("shows the denominator while the sample is small", () => {
     mockUseScoreboard.mockReturnValue({
+      access: allowed,
       data: board({
         perKind: [
           {
@@ -126,7 +130,7 @@ describe("when the numbers cannot be read", () => {
    * "nothing to correct" is exactly the reassuring lie worth avoiding.
    */
   it("says so, rather than rendering an empty card", () => {
-    mockUseScoreboard.mockReturnValue({ data: undefined, isLoading: false, isError: true });
+    mockUseScoreboard.mockReturnValue({ access: allowed, data: undefined, isLoading: false, isError: true });
     render(<AutonomyScoreboard />);
 
     const alert = screen.getByRole("alert");
@@ -136,7 +140,7 @@ describe("when the numbers cannot be read", () => {
   });
 
   it("does not show a rate of any kind while it cannot read one", () => {
-    mockUseScoreboard.mockReturnValue({ data: undefined, isLoading: false, isError: true });
+    mockUseScoreboard.mockReturnValue({ access: allowed, data: undefined, isLoading: false, isError: true });
     render(<AutonomyScoreboard />);
     expect(screen.queryByText("0%")).not.toBeInTheDocument();
   });
@@ -148,7 +152,7 @@ describe("when the numbers cannot be read", () => {
  */
 describe("the dataset behind the numbers", () => {
   beforeEach(() => {
-    mockUseScoreboard.mockReturnValue({ data: board(), isLoading: false });
+    mockUseScoreboard.mockReturnValue({ access: allowed, data: board(), isLoading: false });
   });
 
   it("shows the composite with the raw count beside it", () => {
@@ -178,6 +182,7 @@ describe("the dataset behind the numbers", () => {
    */
   it("does not invent a direction before there is history", () => {
     mockUseScoreboard.mockReturnValue({
+      access: allowed,
       data: board({ dataset: dataset({ series: [], baseline: null, delta: null, direction: null }) }),
       isLoading: false,
     });
@@ -189,6 +194,7 @@ describe("the dataset behind the numbers", () => {
 
   it("draws no line from a single point", () => {
     mockUseScoreboard.mockReturnValue({
+      access: allowed,
       data: board({
         dataset: dataset({
           series: [{ capturedOn: "2026-08-24", composite: 24, openTotal: 8 }],
@@ -203,6 +209,7 @@ describe("the dataset behind the numbers", () => {
 
   it("says nothing is open rather than showing a bare zero", () => {
     mockUseScoreboard.mockReturnValue({
+      access: allowed,
       data: board({
         dataset: dataset({
           current: {

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { isApiError, getApiErrorCode } from "@/lib/api-client";
 import { useProject } from "@/hooks/api";
-import { useProjectBoardTickets } from "@/hooks/api/build";
+import { useTicketByKey } from "@/hooks/api/build";
 import {
   formatTicketKey,
   parseTicketKey,
@@ -17,7 +17,6 @@ import { TicketDetailMainSection } from "@/features/build/ticket-details/ticket-
 import { TicketDetailRightPanel } from "@/features/build/ticket-details/ticket-detail-right-panel";
 import { TicketParentLink } from "@/features/build/ticket-details/ticket-parent-link";
 import { useTicketDetail } from "@/features/build/ticket-details/use-ticket-detail";
-import { resolveTicketId } from "@/features/build/ticket-details/resolve-ticket-id";
 import type { InboxTicketLinkTarget } from "./parse-inbox-ticket-link";
 
 const RIGHT_PANEL_COLLAPSED_KEY =
@@ -102,23 +101,23 @@ export function InboxTicketPreview({
     handleRightPanelOpenChange(true);
   }, [handleRightPanelOpenChange]);
 
-  const { data: projectData, isLoading: projectLoading } = useProject(
+  const { data: projectData } = useProject(target.projectId);
+
+  const parsedTargetKey = useMemo(() => {
+    if (target.ticketId != null) return null;
+    if (!target.ticketKey) return null;
+    return parseTicketKey(target.ticketKey);
+  }, [target.ticketId, target.ticketKey]);
+
+  const { data: byKeyTicket, isLoading: byKeyLoading } = useTicketByKey(
     target.projectId,
+    parsedTargetKey?.ticketNumber ?? null,
   );
-  const { data: boardTickets, isLoading: boardLoading } =
-    useProjectBoardTickets(target.ticketId == null ? target.projectId : 0);
 
   const resolvedTicketId = useMemo(() => {
     if (target.ticketId != null) return target.ticketId;
-    if (!target.ticketKey) return null;
-    const parsed = parseTicketKey(target.ticketKey);
-    if (!parsed) return null;
-    const tickets = boardTickets?.map((t) => ({
-      id: t.id,
-      ticketNumber: t.ticketNumber,
-    }));
-    return resolveTicketId(parsed, projectData?.key, tickets);
-  }, [target.ticketId, target.ticketKey, boardTickets, projectData?.key]);
+    return byKeyTicket?.id ?? null;
+  }, [target.ticketId, byKeyTicket?.id]);
 
   const {
     ticket,
@@ -146,7 +145,7 @@ export function InboxTicketPreview({
     [autoSave],
   );
 
-  const resolving = target.ticketId == null && (projectLoading || boardLoading);
+  const resolving = target.ticketId == null && byKeyLoading;
   const isLoading = resolving || (resolvedTicketId != null && ticketLoading);
   const displayKey = formatTicketKey(
     detailProject?.key ?? projectData?.key,

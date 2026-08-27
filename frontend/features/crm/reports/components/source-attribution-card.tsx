@@ -47,7 +47,7 @@ export function SourceAttributionCard({
   const layout = useTenantLayout(SOURCE_ATTRIBUTION_LAYOUT);
   const money = useOrgDisplay();
   const [density] = useDensity();
-  const { isError, refetch } = useLeadSourceReport();
+  const { isError, refetch, access } = useLeadSourceReport();
 
   const rows = useMemo(
     () => (sourceReport?.sources ?? []).map(sourceAttributionFields),
@@ -90,6 +90,7 @@ export function SourceAttributionCard({
         />
       ) : rows.length === 0 ? (
         <EmptyState
+          access={access}
           compact
           title="No leads carry a source yet"
           description="Set a source when a lead is created, or map one on import, and this report fills itself in."

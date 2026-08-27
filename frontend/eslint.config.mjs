@@ -2,6 +2,7 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import noRawVisualValues from "./eslint-rules/no-raw-visual-values.mjs";
+import noUnlabelledIconButton from "./eslint-rules/no-unlabelled-icon-button.mjs";
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -44,8 +45,61 @@ const eslintConfig = defineConfig([
       "features/employee-onboarding/components/brand-column.tsx",
       "features/employee-onboarding/components/profile-preview.tsx",
     ],
-    plugins: { streamline: { rules: { "no-raw-visual-values": noRawVisualValues } } },
-    rules: { "streamline/no-raw-visual-values": "error" },
+    plugins: {
+      streamline: {
+        rules: {
+          "no-raw-visual-values": noRawVisualValues,
+          "no-unlabelled-icon-button": noUnlabelledIconButton,
+        },
+      },
+    },
+    rules: {
+      "streamline/no-raw-visual-values": "error",
+      "streamline/no-unlabelled-icon-button": "warn",
+    },
+  },
+  {
+    /**
+     * Marketing and display surfaces, held to colour but not to the scales.
+     *
+     * A landing hero is set at 2.75rem, a pricing headline at 1.35rem, and both
+     * carry hand-tuned shadows and radii — sizes and elevations that exist to be
+     * looked at rather than read in a table. Forcing them onto the product scale
+     * would flatten the page; adding a token for each would put marketing
+     * one-offs into the system every product screen reads from.
+     *
+     * These were previously listed in the block above's `ignores`, which turned
+     * the WHOLE rule off for them — colour included — while the comment claimed
+     * colour was still enforced. It was not, and `included-apps-grid.tsx` had
+     * drifted to `hover:border-slate-300 hover:bg-white` as a result. Naming the
+     * relaxed kinds keeps the colour check, which is the one whose absence
+     * silently breaks dark mode.
+     */
+    files: [
+      "features/landing/**",
+      "app/(public)/**",
+      "features/legal/**",
+      "features/org-setup/**",
+      "components/brand/**",
+      "app/(auth)/**",
+      "components/entitlement-gate.tsx",
+      "components/ui/page-wrapper.tsx",
+      "features/auth/**",
+      "features/employee-onboarding/components/brand-column.tsx",
+      "features/employee-onboarding/components/profile-preview.tsx",
+    ],
+    plugins: {
+      streamline: {
+        rules: {
+          "no-raw-visual-values": noRawVisualValues,
+          "no-unlabelled-icon-button": noUnlabelledIconButton,
+        },
+      },
+    },
+    rules: {
+      "streamline/no-raw-visual-values": ["error", { skip: ["type", "shadow", "radius"] }],
+      "streamline/no-unlabelled-icon-button": "warn",
+    },
   },
   {
     /**

@@ -1,9 +1,10 @@
 "use client";
 
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useCan } from "@/hooks/api/access";
+import { usePermissionGate } from "@/hooks/api/access";
+import { gated, useGatedQuery } from "@/hooks/api/gated-query";
 import type {
   AutonomySettings,
   DecisionFilters,
@@ -36,18 +37,21 @@ function toParams(filters: DecisionFilters, limit: number, cursor?: string): str
  * repeats rows or skips them.
  */
 export function useAutonomyDecisions(filters: DecisionFilters = {}, limit = 25) {
-  const canView = useCan("crm:autonomy:view");
+  const access = usePermissionGate("crm:autonomy:view");
 
-  return useInfiniteQuery({
-    queryKey: queryKeys.crm.autonomyDecisions({ ...filters, limit }),
-    queryFn: ({ pageParam }: { pageParam: string | undefined }) =>
-      apiClient.get<DecisionPage>(`/crm/autonomy/decisions?${toParams(filters, limit, pageParam)}`),
-    getNextPageParam: (lastPage: DecisionPage) => lastPage.pagination.nextCursor ?? undefined,
-    initialPageParam: undefined as string | undefined,
-    // Short, because a manager watching the feed wants to see the system act.
-    staleTime: 15_000,
-    enabled: canView,
-  });
+  return gated(
+    useInfiniteQuery({
+      queryKey: queryKeys.crm.autonomyDecisions({ ...filters, limit }),
+      queryFn: ({ pageParam }: { pageParam: string | undefined }) =>
+        apiClient.get<DecisionPage>(`/crm/autonomy/decisions?${toParams(filters, limit, pageParam)}`),
+      getNextPageParam: (lastPage: DecisionPage) => lastPage.pagination.nextCursor ?? undefined,
+      initialPageParam: undefined as string | undefined,
+      // Short, because a manager watching the feed wants to see the system act.
+      staleTime: 15_000,
+      enabled: access.allowed,
+    }),
+    access,
+  );
 }
 
 /**
@@ -82,13 +86,10 @@ export function useReverseDecision() {
 }
 
 export function useAutonomySwitches() {
-  const canView = useCan("crm:autonomy:view");
-
-  return useQuery({
+  return useGatedQuery("crm:autonomy:view", {
     queryKey: queryKeys.crm.autonomySwitches(),
     queryFn: () => apiClient.get<SwitchesResponse>("/crm/autonomy/switches"),
     staleTime: 30_000,
-    enabled: canView,
   });
 }
 
@@ -114,25 +115,19 @@ export function useSetAutonomySwitch() {
 
 /** How often the system was right, per action type, over a window. */
 export function useAutonomyScoreboard(days = 30) {
-  const canView = useCan("crm:autonomy:view");
-
-  return useQuery({
+  return useGatedQuery("crm:autonomy:view", {
     queryKey: queryKeys.crm.autonomyScoreboard(days),
     queryFn: () => apiClient.get<Scoreboard>(`/crm/autonomy/scoreboard?days=${days}`),
     staleTime: 60_000,
-    enabled: canView,
   });
 }
 
 /** What a second pass disagreed with and nobody has looked at. */
 export function useAutonomyReviewQueue() {
-  const canView = useCan("crm:autonomy:view");
-
-  return useQuery({
+  return useGatedQuery("crm:autonomy:view", {
     queryKey: queryKeys.crm.autonomyReviewQueue(),
     queryFn: () => apiClient.get<ReviewQueueItem[]>("/crm/autonomy/review-queue"),
     staleTime: 30_000,
-    enabled: canView,
   });
 }
 
@@ -153,13 +148,10 @@ export function useMarkReviewed() {
 }
 
 export function useAutonomySettings() {
-  const canView = useCan("crm:autonomy:view");
-
-  return useQuery({
+  return useGatedQuery("crm:autonomy:view", {
     queryKey: queryKeys.crm.autonomySettings(),
     queryFn: () => apiClient.get<AutonomySettings>("/crm/autonomy/settings"),
     staleTime: 60_000,
-    enabled: canView,
   });
 }
 
@@ -184,14 +176,11 @@ export function useUpdateAutonomySettings() {
  * showing a send that already went is worse than showing nothing.
  */
 export function useLiveHolds() {
-  const canView = useCan("crm:autonomy:view");
-
-  return useQuery({
+  return useGatedQuery("crm:autonomy:view", {
     queryKey: queryKeys.crm.autonomyHolds(),
     queryFn: () => apiClient.get<LiveHold[]>("/crm/autonomy/holds"),
-    refetchInterval: canView ? 10_000 : false,
+    refetchInterval: 10_000,
     staleTime: 0,
-    enabled: canView,
   });
 }
 

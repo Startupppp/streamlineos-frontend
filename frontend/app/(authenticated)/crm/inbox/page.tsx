@@ -53,7 +53,7 @@ function InboxSkeleton() {
 
 function InboxContent() {
   const shouldReduceMotion = useReducedMotion();
-  const { data: inboxData, isLoading: inboxLoading, isError: inboxError, refetch } = useInbox();
+  const { data: inboxData, isLoading: inboxLoading, isError: inboxError, refetch, access: inboxAccess } = useInbox();
   const { data: counts, isLoading: countsLoading } = useInboxCounts();
   const snoozeTask = useSnoozeCrmTask();
   const completeTask = useCompleteCrmTask();
@@ -113,6 +113,7 @@ function InboxContent() {
 
         {isInboxZero && (
           <EmptyState
+            access={inboxAccess}
             illustration={<EmptyInboxIllustration />}
             title="You're all caught up"
             description="Nothing needs your attention right now."

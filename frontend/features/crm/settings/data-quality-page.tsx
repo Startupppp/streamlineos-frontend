@@ -173,7 +173,7 @@ const CARD_CONFIGS: CardConfig[] = [
 ];
 
 export function DataQualityPage() {
-  const { data, isLoading, error, refetch } = useCrmDataQuality();
+  const { data, isLoading, error, refetch, access } = useCrmDataQuality();
 
   const handleRetry = useCallback(() => {
     void refetch();
@@ -224,6 +224,7 @@ export function DataQualityPage() {
     return (
       <PageWrapper title="Data Quality" subtitle="CRM data health overview">
         <EmptyState
+          access={access}
           illustration={<EmptyChartIllustration />}
           title="Your CRM data is clean"
           description="Every check passed — no missing emails or phone numbers, no duplicates, no stale or unassigned records."

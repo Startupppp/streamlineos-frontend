@@ -4,7 +4,7 @@ import React, { useRef, useState } from 'react';
 import { Image as ImageIcon, Film, Music, FileUp, Link2 } from 'lucide-react';
 import { useEditorRef } from 'platejs/react';
 import type { TElement } from 'platejs';
-import type { UploadedKbMedia } from '@/features/knowledge-base/lib/upload-kb-media';
+import type { UploadedKbMedia } from '@/features/wiki/lib/upload-kb-media';
 import { uploadEditorMedia } from '../upload-media';
 import type { EditorMediaType } from '../upload-media';
 import {

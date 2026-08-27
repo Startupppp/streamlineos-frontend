@@ -90,7 +90,7 @@ export function CollectorsCard({ surveyId }: { surveyId: number }) {
               </div>
               <div className="mt-2 flex items-center gap-2">
                 <Input readOnly value={publicLinkFor(collector.token)} className="flex-1" />
-                <AnimatedIconButton icon={CopyIcon} iconSize={14} variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => handleCopyLink(collector.token)} />
+                <AnimatedIconButton icon={CopyIcon} iconSize={14} variant="outline" size="icon" className="h-8 w-8 shrink-0" aria-label="Copy survey link" onClick={() => handleCopyLink(collector.token)} />
                 <Button variant="outline" size="sm" onClick={() => handleToggleStatus(collector.id, collector.status)}>
                   {collector.status === "active" ? "Pause" : "Activate"}
                 </Button>

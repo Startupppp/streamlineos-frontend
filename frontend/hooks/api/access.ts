@@ -14,6 +14,9 @@ import type {
 import type { Permission, PermissionKey } from "@/lib/rbac/permissions";
 import { normalizeOrgModuleKey } from "@/lib/module-vocabulary";
 import { accessState, type AccessState } from "@/lib/rbac/gate";
+import { permissionGate, type PermissionGate } from "@/lib/rbac/permission-gate";
+
+export type { PermissionGate };
 
 export const useAccess = (
   options?: Omit<
@@ -38,11 +41,14 @@ export const useAccess = (
   });
 };
 
-export function useCan(permissionKey: PermissionKey): boolean {
+export function usePermissionGate(permission: PermissionKey): PermissionGate {
   const { data } = useAccess();
-  if (!data) return false;
-  if (data.isOrgOwner) return true;
-  return permissionKey in data.scopes;
+  const allowed = data ? data.isOrgOwner || permission in data.scopes : false;
+  return permissionGate(permission, allowed, data !== undefined);
+}
+
+export function useCan(permissionKey: PermissionKey): boolean {
+  return usePermissionGate(permissionKey).allowed;
 }
 
 /**
@@ -91,7 +97,7 @@ export function useCanManageOrganizationMembership(): boolean {
  */
 export function useModuleEnabled(moduleKey: string): boolean {
   const { data } = useAccess();
-  if (!data) return false;
+  if (!data) return true;
   return data.modules[normalizeOrgModuleKey(moduleKey)] === true;
 }
 

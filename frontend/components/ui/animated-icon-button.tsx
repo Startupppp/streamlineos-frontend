@@ -11,11 +11,20 @@ type AnimatedIconComponent = React.ComponentType<{
   className?: string;
 }>;
 
-interface AnimatedIconButtonProps extends React.ComponentProps<typeof Button> {
+type BaseAnimatedIconButtonProps = Omit<
+  React.ComponentProps<typeof Button>,
+  "aria-label" | "children"
+> & {
   icon: AnimatedIconComponent;
   iconSize?: number;
   iconClassName?: string;
-}
+};
+
+type AnimatedIconButtonProps = BaseAnimatedIconButtonProps &
+  (
+    | { "aria-label": string; children?: React.ReactNode }
+    | { "aria-label"?: string; children: React.ReactNode }
+  );
 
 export const AnimatedIconButton = React.forwardRef<
   HTMLButtonElement,
