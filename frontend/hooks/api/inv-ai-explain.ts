@@ -72,6 +72,34 @@ export interface SupplierDelayBriefing {
   generatedAt: string;
 }
 
+export interface InventoryDigestGroup {
+  insightType: string;
+  count: number;
+  severityCounts: Record<string, number>;
+  samples: Array<{ id: number; title: string; body: string; severity: string }>;
+}
+
+export interface InventoryDigest {
+  groups: InventoryDigestGroup[];
+  totalNew: number;
+  narration?: string;
+}
+
+/**
+ * The brief is deliberately disabled until the operator asks for it. The
+ * endpoint may invoke a metered model, so loading it as part of the dashboard
+ * query would make a page visit spend AI credits unexpectedly.
+ */
+export function useInventoryDigest() {
+  return useQuery<InventoryDigest, Error>({
+    queryKey: queryKeys.inventory.aiDigest(true),
+    queryFn: () => apiClient.get<InventoryDigest>("/inventory/ai/digest", { narrate: "true" }),
+    staleTime: 10 * 60_000,
+    // This is an explicit operator action because the endpoint may spend AI credits.
+    enabled: false,
+  });
+}
+
 export function useReorderProposal() {
   return useMutation<ReorderProposalResponse, Error, { variantId: string; warehouseId?: string }>({
     mutationKey: ["inventory", "ai", "reorder-proposal"],
