@@ -75,6 +75,10 @@ export const CRM_PERMISSIONS: Permission[] = [
   { name: "crm:autonomy:view", resource: "crm:autonomy", action: "view", description: "Review what the CRM decided and did on its own", baselineScope: "all" },
   { name: "crm:autonomy:reverse", resource: "crm:autonomy", action: "reverse", description: "Reverse an autonomous CRM action" },
   { name: "crm:autonomy:manage", resource: "crm:autonomy", action: "manage", description: "Turn autonomous CRM action types on or off for the organisation" },
+  // Separate from `:manage`, which governs whether an action type runs at all.
+  // This one governs whether the system may change stored customer data with
+  // nobody watching, and that is a different thing to hand somebody.
+  { name: "crm:autonomy:repair", resource: "crm:autonomy", action: "repair", description: "Choose which classes of data problem the CRM may repair unattended, and run the repair loop" },
   { name: "crm:imports:manage", resource: "crm:imports", action: "manage", description: "Bring a CRM export into StreamlineOS, and take an import back out" },
   { name: "crm:activities:view", resource: "crm:activities", action: "view", description: "Read the unified timeline of calls, emails, meetings, notes and tasks" },
   { name: "crm:activities:manage", resource: "crm:activities", action: "manage", description: "Log, edit, complete and remove activities on the timeline" },

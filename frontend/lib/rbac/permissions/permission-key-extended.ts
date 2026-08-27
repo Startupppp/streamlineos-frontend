@@ -178,6 +178,7 @@ export type ExtendedPermissionKey =
   | "crm:autonomy:view"
   | "crm:autonomy:reverse"
   | "crm:autonomy:manage"
+  | "crm:autonomy:repair"
   | "crm:imports:manage"
   | "crm:activities:view"
   | "crm:activities:manage"

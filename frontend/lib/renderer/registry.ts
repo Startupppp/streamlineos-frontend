@@ -20,6 +20,7 @@ import { TASK_LAYOUT } from "./crm/task-layout";
 import { REP_PERFORMANCE_LAYOUT } from "./crm/reports/rep-performance-layout";
 import { SOURCE_ATTRIBUTION_LAYOUT } from "./crm/reports/source-attribution-layout";
 import { TEAM_LEADERBOARD_LAYOUT } from "./crm/reports/team-leaderboard-layout";
+import { ASSIGNMENT_RULE_LAYOUT } from "./crm/settings/assignment-rule-layout";
 import { AUDIT_ENTRY_LAYOUT } from "./crm/settings/audit-entry-layout";
 import { AUTOMATION_LAYOUT } from "./crm/settings/automation-layout";
 import { BLUEPRINT_LAYOUT } from "./crm/settings/blueprint-layout";
@@ -154,6 +155,11 @@ export const LAYOUT_REGISTRY: readonly RegisteredLayout[] = [
     derived: true,
   },
 
+  {
+    layout: ASSIGNMENT_RULE_LAYOUT,
+    section: "CRM settings",
+    viewPermission: "crm:assignment-rules:manage",
+  },
   { layout: PRODUCT_LAYOUT, section: "CRM settings", viewPermission: "crm:products:manage" },
   { layout: PRICEBOOK_LAYOUT, section: "CRM settings", viewPermission: "crm:pricebooks:manage" },
   {

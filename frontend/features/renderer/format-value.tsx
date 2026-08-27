@@ -99,11 +99,31 @@ function booleanOption(field: FieldSpec, value: unknown): SelectOption | undefin
   return options.find((option) => option.value === String(truthy));
 }
 
+/**
+ * A repeating group, read at a glance.
+ *
+ * A list cell has room for a fact about the rows, not the rows: the screen this
+ * replaced printed "2 conditions" and it was the right amount. The count is
+ * derived rather than stored, so it cannot drift from the rows the form edits —
+ * the hand-written rule row read `rule.conditions.length` and the layout reads
+ * the same array.
+ *
+ * Zero is said out loud rather than left as an em dash. A rule with no
+ * conditions matches everything, which is a fact worth seeing in a table.
+ */
+function formatLines(field: FieldSpec, value: unknown): string {
+  if (!Array.isArray(value)) return "";
+  const noun = (field.lineLabel ?? field.label).toLowerCase();
+  const plural = value.length === 1 ? noun : `${noun}s`;
+  return `${value.length} ${plural}`;
+}
+
 export function formatFieldText(
   field: FieldSpec,
   value: unknown,
   display: MoneyDisplay = DEFAULT_MONEY_DISPLAY,
 ): string {
+  if (field.kind === "lines") return formatLines(field, value);
   if (field.kind === "date") return formatDate(value);
   if (field.kind === "dateTime") return formatDateTime(value);
   if (field.kind === "money") return formatMoneyField(value, display);
