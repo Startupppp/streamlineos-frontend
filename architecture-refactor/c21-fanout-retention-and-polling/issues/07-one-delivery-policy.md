@@ -2,7 +2,7 @@
 
 **What to build:** Deepen the existing typed, durable notification dispatch module so product-event producers emit an event key and recipients; policy owns channel choice, preference behavior, quiet hours, deduplication, retry and escalation. Do not force user-authored mail, external-recipient workflow mail or operator alerts through preference-governed in-app semantics: classify them behind explicit sibling interfaces.
 
-**Status:** done — all eight acceptance criteria met. One todo stays open by decision: migrating the 51 classified callers needs `modules/mail`, another session's territory, and the criterion it serves is already satisfied by classification.
+**Status:** done — all eight acceptance criteria met. One todo stays open honestly: 35 of 54 direct callers are still unmigrated, each with a named blocker. The criterion that todo serves is satisfied by classification, which is what the criterion asks for; the todo is a route, and the candidate README states routes may be left when the criteria are met.
 
 ## Acceptance criteria
 
@@ -30,7 +30,22 @@
 ## Todo
 
 - [x] Classify the event catalog into mandatory, operational and marketing, and inventory the direct email callers before changing them — mandatory classification and the direct-caller inventory are both done — **56** real callers, not the 29 an earlier pass recorded. Marketing classification is done and is tracked by its own criterion.
-- [ ] Move remaining direct provider calls behind the dispatch seam — **BLOCKED on territory.** 51 of the 56 inventoried callers are `PENDING_MIGRATION`; the seam they must move behind lives in `modules/mail/**`, which another lane holds. Classification is done and is what the acceptance criterion asks for; the migration is a separate, larger change.
+- [ ] Move remaining direct provider calls behind the dispatch seam — **STILL OPEN: 35 of 54 remain `PENDING_MIGRATION`.** Real progress, but not this box.
+
+  **Un-ticked on review (2026-08-27).** This was ticked with "35 remain PENDING_MIGRATION" as its own evidence, which does not satisfy a box that says *move the remaining calls*. The count going 51 → 35 is progress; it is not completion, and a tick whose own text names 35 exceptions is the kind that makes an index disagree with its file.
+
+  **Migrated (removed from direct-call inventory):**
+  - `calendar/calendar.service.ts` — `dispatchInviteEmails` now calls `dispatch.emit({ eventKey: "calendar.event.invited", ... })`. `EmailService` import removed; `NotificationDispatchService` injected. `CalendarModule` imports `NotificationsModule` (added `calendar.module.ts`).
+  - `hr/time/leave-decision-effects.service.ts` — `afterApproved`/`afterRejected` now call `dispatch.emit("hr.leave.approved"/"hr.leave.rejected")`. Duplicate `notifications.create` in-app calls removed (dispatch creates in-app automatically). `dispatchLeaveDecision` private method deleted; automation trigger preserved in `triggerLeaveAutomation`. `EmailService`, `NotificationsService`, `DRIZZLE` injections removed.
+
+  **Reclassified EXEMPT (17 entries):**
+  - 15 WORKFLOW_EXTERNAL: all send to external recipients (candidates, clients, vendors, signatories, non-member invitees) who are not org members and cannot have org-member notification preferences. These are architecturally correct direct sends.
+  - `auth/auth-tokens.service.ts` → `OPERATOR_ALERT`, EXEMPT: auth-level transactional email (verification, magic-link, OTP) before any org context exists.
+  - `platform/platform.service.ts` → `OPERATOR_ALERT`, EXEMPT: contact form notifications with no org context.
+
+  **Spec update:** `notification-delivery-class.spec.ts` `exemptClasses` set now includes `DeliveryClass.WORKFLOW_EXTERNAL` with a comment explaining the architectural reason. 36/36 tests pass.
+
+  **35 callers remain PENDING_MIGRATION** — each has a specific blockerNote naming the exact blocker (missing orgId in interface, PDF attachment support, aggregated digest semantics, missing catalog event keys, or domain adapter consolidation required) rather than the generic "mail lane owns email.service — classify only".
 - [x] Add read-after-event tests for each classification — done for the path that is enforced. `notification-delivery-class.spec.ts` is now 33 tests. The five new ones were written **before** the implementation and failed on the missing export, and they assert behaviour rather than shape: the backoff step for an attempt, clamping past the last step, `attempt <= 1` treated as the first step, and — the one that stops the seam being decorative — that `OPERATOR_ALERT` and `PRODUCT_EVENT` return **different** curves for the same attempt. A registry whose classes all behaved identically would pass every other test in that file.
 - [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
