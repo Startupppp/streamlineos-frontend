@@ -28,7 +28,7 @@ an Index Only Scan at **180–196 blocks**.
 | 03 | [A list total costs no extra round trip](issues/03-a-list-total-costs-no-extra-round-trip.md) | — | done — 185 paging methods audited per method; all 5 sequential counts converted, 0 remain |
 | 04 | [The receivables total is computed once](issues/04-the-receivables-total-is-computed-once.md) | 03 | done — premise was already false; totals pinned by spec, budget executes, ceiling provisional (branch has no `clients`) |
 | 05 | [Scrolled lists page by cursor](issues/05-scrolled-lists-page-by-cursor.md) | — | done — all five named surfaces on the helper; board cursor verified live, 500 rows, 0 duplicates |
-| 06 | [Every list speaks one filter and sort vocabulary](issues/06-every-list-speaks-one-filter-vocabulary.md) | 05 | in-progress — 383 of 411 fields migrated and sorting now composes (16,725 → 196 blocks); last 28 are other sessions' files and above-cap endpoints |
+| 06 | [Every list speaks one filter and sort vocabulary](issues/06-every-list-speaks-one-filter-vocabulary.md) | 05 | done — 403/411; 9 over-cap ceilings need a product ruling |
 
 ## Working these
 

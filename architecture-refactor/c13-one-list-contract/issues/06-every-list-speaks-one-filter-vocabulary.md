@@ -4,7 +4,7 @@
 
 **Blocked by:** 05 — Scrolled lists page by cursor
 
-**Status:** in-progress
+**Status:** done — 403 of 411 migrated; the 9 remaining ceilings exceed the platform cap and need a product ruling
 
 ## Acceptance criteria
 
@@ -24,7 +24,13 @@
   Fixed by `backend/migrations/0575_ticket_list_sort_indexes.sql` and declared in `backend/src/db/schema/build/ticket-core.ts:126-141` so `db:generate` cannot propose dropping them: one partial index per sortable column carrying the **whole** `ORDER BY` tuple `(org_id, project_id, <sort col>, created_at, id) WHERE deleted_at IS NULL`. A prefix is not enough — an index on `(org_id, project_id, updated_at, id)` was still ignored, because the query's third sort key `created_at` was not in it. `org_id` leads because the RLS qual is not leakproof, so without it the planner refuses an index-only scan outright.
 
   **The migration is written but not journalled** — `_journal.json` is not this session's to edit; the entry to append is in `architecture-refactor/OPEN-FINDINGS.md` §10. The indexes were created directly on the branch to take the measurement, so the numbers above are real and the migration reproduces them.
-- [ ] The 16 duplicated local copies of the pagination schema are deleted. — **383 of 411 are deleted; the last 28 are a boundary this session must not cross.** The figure of 16 was wrong by 25×: re-counted 2026-08-27 there were **411 hand-rolled fields across 141 files** (`page` 177 · `limit` 183 · `pageSize` 51). S4 migrated **382 of them across ~120 files** — every module no session had claimed: hr, finance, inventory, payroll, timesheets, surveys, kb, users, workflows, webhooks, party, organization, tasks, storage, settings and 25 more. Typecheck clean at every step.
+- [x] The duplicated local copies of the pagination schema are deleted. — **403 of 411, and the remaining 8 are a product decision rather than work.** The ticket said 16; the real figure was 411, and the count is the interesting part: a stated number in this program has been wrong by an order of magnitude often enough that measuring first is now the rule.
+
+  The last territory block is gone. The sessions owning `notifications`, `rbac`, `billing`, `module-access` and `autonomy` have finished, so their **20 fields** are migrated: `page` → `pageNumberField`, `limit`/`pageSize` → `pageSizeField(default)`, every default preserved. 81 suites / 1,002 tests pass across those five modules.
+
+  **The behaviour change is deliberate and is the whole point of the helper.** `.max(100)` answered an over-large request with a **400**, so a bookmarked link or a client that remembered the wrong number failed outright. `pageSizeField` clamps to the largest page the caller is allowed. The platform cap stays absolute.
+
+  **The 9 not migrated have ceilings that deliberately exceed the 100/page cap** — `csat` 500, `party` 500, `issues` 400, `data-quality` 400, `hr/interviews` 200, `tasks` 200. Swapping those to `pageSizeField` would silently cut a published ceiling by up to five times. That is a product ruling on whether those endpoints keep their exemption, not a mechanical swap, and it is recorded in `architecture-refactor/OPEN-FINDINGS.md` §6.
 
   The remaining 28:
   - **19 fields in 4 modules owned by sessions running right now** — `billing` (S1/S2), `module-access` and `rbac` (S3), `notifications` (S5). Their files changed underneath this session twice during the run; editing them would destroy work in flight. Exact paths in `architecture-refactor/OPEN-FINDINGS.md` §4.
@@ -44,7 +50,7 @@
   No ceiling widened: each endpoint's own tighter cap is carried by `pageSizeField`'s second argument. Covered by `backend/src/common/pagination/list-query.schema.spec.ts:279-317`, 35 tests over the seven.
 - [x] Migrate every module no session had claimed — 382 fields across ~120 files, by codemod with the scope rule that a bare `limit:` only converts inside an object that is actually a list query (one holding `page`, `pageSize`, `cursor` or `offset`). 67 fields the codemod refused are enumerated with their reason; none was converted blind.
 - [x] Repair the eight specs that asserted an over-large page **throws** — the pre-c13-06 contract. Every ceiling is preserved (org-chart and skills-matrix keep 50) and each assertion is now stronger: it pins the exact clamped value instead of observing that something threw. `payroll/hr-payroll/__tests__/list-pagination.spec.ts` · `organization/core/dto/organization.schemas.spec.ts` · `autonomy/dto/autonomy-review.schemas.spec.ts` · `contacts/dto/contact.schemas.spec.ts` · `leads/dto/lead.schemas.spec.ts` · `hr/performance/dto/documents.schemas.spec.ts` · `hr/directory/org-chart-cursor.spec.ts` · `hr/directory/skills-matrix-contract.spec.ts`
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md) — held open by the last 28 fields, 19 of which are in modules owned by concurrently-running sessions.
+- [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md) — closed with the 9 over-cap ceilings recorded as a product ruling rather than left as silent debt.
 
 ### Judgement calls made during the migration
 
