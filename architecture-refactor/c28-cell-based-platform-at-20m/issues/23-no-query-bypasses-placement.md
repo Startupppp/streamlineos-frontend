@@ -104,6 +104,31 @@ exit=1
 
 This is the third time in this program a CI check under-reported on its first run. The lesson held.
 
+## Known limits of this guard (red-teamed 2026-08-28)
+
+A red-team was pointed at the check and told to break it. It did. These are recorded rather than hidden, because the criterion says *"every path"* and that claim is currently stronger than the implementation. Each was demonstrated with a real file and an exit code of 0.
+
+**Text-scanner evasions — fixable, not yet fixed:**
+
+| Evasion | Why it slips through |
+|---|---|
+| `const db = this.db; db.select()` | the regex requires the literal `this.db` prefix |
+| `const { db } = this;` | same |
+| `this.db?.select()` | the regex requires a bare `.`, not `?.` |
+| `this.db["select"]()` | dot access only |
+| `import { withIdentity as wi }` | the scanner searches for the literal string `withIdentity(` |
+| `@NoTenantTransaction( )` with a space, or an aliased decorator | exact-string `includes()` |
+| a cron-like service outside `src/modules/cron/**` | `isCron` is a path literal |
+| **`forEachOrg(this.db, "(", …)`** | `balanced()` is not string-aware, so a `(` inside a string argument inflates the depth counter and the "guarded region" swallows code that is actually outside the guard — **the most dangerous of these** |
+
+**Not fixable by text scanning at all — documented, not attempted:**
+- `registerAfterCommit(() => this.doDbWork())` where the database access lives in a *called method*. Needs call-graph analysis.
+- a closure defined inside a guard block but invoked later (`process.nextTick(fn)`) — textually inside, executes outside.
+
+**False positives** in the same family: an annotation inside a mid-line comment or a string literal is flagged, because no scanner here is string- or comment-aware.
+
+The honest summary: this guard is materially stronger than the one it replaced — 40 → 74 enumerated sites, and it now catches the partial-guard shape that hid 31 real cron sites — but it is a **text scanner**, and the list above is what that costs. It raises the floor; it is not a proof. Hardening it (string-aware `balanced()`, alias resolution, `@Cron(` detection) is the next increment and is the single highest-value follow-up on this ticket.
+
 ## Todo
 
 - [x] Written against known-bad cases and shown failing before being run clean.
