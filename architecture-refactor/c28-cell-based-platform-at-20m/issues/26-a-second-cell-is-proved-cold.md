@@ -14,31 +14,43 @@
 
 - [ ] The second cell has its own database, Redis, worker pools, object-storage prefix, search index, monitoring and secrets — nothing shared with `legacy-1` except the control plane.
 
-  **Open.** The database is genuinely its own; six other resources are not. `pnpm -C backend cell:isolation` enumerates every one and names what would isolate it:
+  **Open on the word "nothing", and it cannot close from inside this repository** — a second
+  Upstash instance, R2 bucket, Ably application and search cluster are accounts, not code.
+  Decision taken 2026-08-28: build the per-cell configuration seams and namespace isolation, and
+  name the difference rather than blur it.
+
+  `cell:isolation` now reports **`NAMESPACED` as a first-class verdict, distinct from
+  `ISOLATED`**, and every row using it must say what it does not protect against. With `CELL_ID`
+  and the `REGION_<KEY>_*` prefixes set, five rows move:
+
+  | Resource | Before | With the seams configured |
+  |---|---|---|
+  | cache (Redis) | SHARED | **NAMESPACED** — every key for an org in this cell is cell-prefixed |
+  | object storage bucket | SHARED | **NAMESPACED** — every object key is cell-prefixed |
+  | object storage endpoint | SHARED | **NAMESPACED** |
+  | worker pools | UNPROVED | **NAMESPACED** — `cron:lease:<cell>:<job>`, so two cells cannot take each other's slots |
+  | monitoring | UNPROVED | **NAMESPACED** — every log line carries `cellId`, and `read-cell-logs.mjs` reads it back |
+
+  With nothing configured the script still reports `SHARED`:
 
   ```
-  ISOLATED  database identity                          cell=cell2 control-plane=neondb as streamline_app
-  ISOLATED  application role privilege                 streamline_app bypassrls=false in cell2
-  ISOLATED  control-plane rows visible from the cell   rows visible in cell2: 0
-  ISOLATED  cell rows visible from the control plane   rows visible in neondb: 0
-  ISOLATED  cross-database bridge                      neither dblink nor postgres_fdw is installed in the cell
-  ISOLATED  foreign servers                            0 foreign server(s) defined in cell2
-  ISOLATED  row-level security in the cell             870 tables have row-level security enabled in cell2
-  ISOLATED  queues and dead letters                    outbox and delivery tables live in the cell's own database
-  SHARED    cache (Redis)                              one Upstash instance, no per-cell override
-  SHARED    object storage bucket / endpoint           one R2 bucket
-  SHARED    realtime broker                            one Ably application
-  SHARED    search index                               no search cluster is deployed for any cell
-  SHARED    secrets                                    the cell reuses the control plane's credentials
-  UNPROVED  worker pools                               cron and the outbox relay run in the control-plane process
-  UNPROVED  monitoring                                 no cell dimension is readable back from logs or metrics
-
-  RESULT: DATA ISOLATION PROVED cell=cell-2 isolated=8 shared=6 unproved=2
+  RESULT: DATA ISOLATION PROVED cell=cell-2 isolated=8 namespaced=0 shared=7 unproved=1
   ```
 
-  **What would close it:** a Redis instance, R2 bucket, Ably application, search cluster, worker deployment and credential set per cell, plus a `cellId` label on every log line and metric. `RegionStorageConfig` already carries a per-region bucket and endpoint, so object storage is configuration; the rest needs provisioning this repository cannot do.
+  The seams do not claim what the environment has not been given, which is why the run above is
+  the honest one for this machine today.
 
-  **Attempted and not delivered.** A lane was dispatched to build the per-cell configuration seams and close the two `UNPROVED` rows, which are code rather than provisioning — a worker deployment bound to a cell, and a `cellId` dimension readable back from logs and metrics. It terminated on the account's weekly API limit before its first tool call. The verdicts above are unchanged from the previous session; only the probe-table leak was fixed (`verify-cell-isolation.mjs` dropped its rows but never its table, so it left `cell_isolation_probe` behind in both databases and the schema diff counted it).
+  **Two limits recorded rather than glossed:**
+  1. **Namespace isolation is not instance isolation.** An attacker holding the shared instance's
+     master credential — the Upstash token, the R2 access key, the Ably API key — still reads
+     every cell. Namespacing prevents collision and accident, not compromise.
+  2. **`forEachOrg` does not filter by cell.** A worker started with `CELL_ID=cell-2` takes only
+     its own lease, but the job body would still iterate every organization. Binding the *work*
+     to the cell, not just the lease, is the remaining piece.
+
+  **What would close it:** a Redis instance, R2 bucket, Ably application, search cluster and
+  credential set per cell — each already has its `REGION_<KEY>_*` variable, so it is an
+  environment change with no code change — plus org-scoped job filtering.
 
 - [x] Cold bootstrap is exercised: the cell is built from an empty database through the migration chain, with no manual step that is not scripted.
 

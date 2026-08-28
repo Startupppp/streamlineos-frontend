@@ -69,7 +69,34 @@
 
   **Open.** The forecast exists, is per cell, is stored as a history and is exercised — but every honest run of it in this session either refused for too few samples or produced a number the cadence makes meaningless. The one non-refusing result was `database-size 0 day(s) until 60% threshold`, produced because the three samples were minutes apart while ticket 30's fixture load was running, so the fitted slope was the load rate rather than the growth rate.
 
-  **What would close it:** at least three measurements taken at a realistic cadence — daily — with no bulk load in progress. `pnpm -C backend cell:capacity:record` takes one sample and exits, which is the form a daily schedule needs; the forecast turns from `REFUSED` into a number once `backend/.cell-capacity-history.json` holds three well-spaced points per resource. This cannot close inside a session: it needs three days of wall-clock, not more work.
+  **The cadence is now real, and the pending state is legible.** A GitHub Actions workflow
+  (`.github/workflows/cell-daily-samples.yml`, `cron: "0 2 * * *"`) records one capacity and one
+  cost sample daily, restoring and saving the history through the Actions cache.
+  `node src/scripts/cell-forecast-status.mjs` says exactly where each metric stands:
+
+  ```
+  Capacity resources  (source: .cell-capacity-history.json)
+    connections            1/3 — next after 2026-08-29 05:24:04 UTC
+    database-size          1/3 — next after 2026-08-29 05:24:04 UTC
+    table-bloat            1/3 — next after 2026-08-29 05:24:04 UTC
+    index-size-vs-buffers  1/3 — next after 2026-08-29 05:24:04 UTC
+    outbox-queue-depth     1/3 — next after 2026-08-29 05:24:04 UTC
+
+    3 total, 0 bulk-load flagged, 0 too-close flagged.
+  ```
+
+  Three real samples exist and **exactly one counts**, because they were taken minutes apart. The
+  earliest a third well-spaced sample can exist is 48 hours after the first scheduled run. This
+  criterion closes on elapsed time, not on more work.
+
+  **Two defects found while wiring it.** `forecastSaturation` did not exclude entries flagged
+  `duringBulkLoad`, so a sample taken under load would have corrupted the slope it exists to
+  measure. And both history files were being written **four levels above `src/scripts`, outside
+  the repository altogether** — the real samples already taken there were moved in rather than
+  discarded. A too-close sample is now recorded and flagged, never dropped and never silently
+  counted, and `MIN_SAMPLE_SPACING_MS` stays at 24 hours.
+
+  **What would close it:** three daily runs. `pnpm -C backend cell:capacity:record` takes one sample and exits; the forecast turns from `REFUSED` into a number once `backend/.cell-capacity-history.json` holds three well-spaced points per resource. This cannot close inside a session: it needs three days of wall-clock, not more work.
 
   **The mechanism was wrong as well as the cadence, and that is now fixed.** `MIN_SAMPLE_SPACING_MS` (24 hours) and `filterWellSpacedSamples` are declared alongside the budgets, the refusal names how many well-spaced samples exist and how many are needed, and a sample taken while a bulk load is running is flagged. The bug underneath: `forecastSaturation` mapped its history to `{ t, ratio }` and *then* called a filter that reads `.ts`, so **the spacing filter always returned exactly one sample** — every "trend" it had ever produced was fitted to a single point, which is why the one non-refusing run in the previous session reported `0 day(s) until 60% threshold`. Pinned by `filterWellSpacedSamples keeps only entries ≥ MIN_SAMPLE_SPACING_MS apart` and `forecastSaturation refuses when only closely-spaced samples exist`; `node src/scripts/__tests__/cell-capacity.test.mjs` → 29 tests, all pass.
 
