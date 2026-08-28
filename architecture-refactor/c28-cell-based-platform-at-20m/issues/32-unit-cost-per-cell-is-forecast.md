@@ -47,6 +47,16 @@
   | Cloudflare R2 | `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` (**absent**) | storage bytes, object count, class A/B operations |
   | Resend | `RESEND_API_KEY` (**already present**) | key presence only — Resend's public API exposes no cost or delivery-total endpoint |
 
+  **`per 1,000 requests` now has a measured quantity.** Ticket 30's load driver was built and
+  writes `backend/.load-driver-results.json`; the unit reads it:
+
+  ```
+  per 1,000 requests    5,092 requests over 80s (load driver)
+  ```
+
+  That is a denominator, not a cost — the numerator still needs the cell's invoice. Seven of the
+  nine units are now in that state: a real measured quantity waiting on a price.
+
   `R2_ACCESS_KEY_ID`/`R2_SECRET_ACCESS_KEY` are S3-compatibility keys and cannot query Cloudflare's billing API; a separate API token is required. Neon returns consumption, not dollars, so the dollar derivation needs rate variables (`NEON_COMPUTE_RATE_USD_PER_HOUR` and siblings) set **from the invoice** — they are deliberately left unset rather than filled with list prices, which is what the criterion forbids. `per 1,000 requests` reads `backend/.load-driver-results.json` when it exists and continues to report `UNMEASURED` when it does not; that file is written by ticket 30's load driver, which was not built (see that ticket).
 
 - [ ] Each cell has a monthly cost forecast and a saturation forecast, and the two are reported together — a cell that is cheap because it is empty is not a finding.
