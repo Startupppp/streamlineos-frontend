@@ -6,7 +6,7 @@ Third and last migrate batch: everything outside HR, directory, onboarding, payr
 
 **Blocked by:** [10 — One accessor dual-reads employment, and shouts when the two disagree](10-one-accessor-dual-reads-employment.md)
 
-**Status:** done (2 criteria open — the user-payload contract change, deliberately deferred with a written reason)
+**Status:** done
 
 **Grounding (2026-08-28, evidence not instruction — re-read at source):** the frontend carries its own copy of the problem — `designation` in 64 files, `employeeId` in 52, `branchId` in 20. Root `CLAUDE.md` §5 requires client request/response types to mirror the backend schema exactly, so dropping a field from a response without dropping it from the client type strips it into a silent no-op rather than a compile error. `frontend/CLAUDE.md` §5 also forbids rendering a raw id, so a surface that loses a resolved `designation` must gain the resolved value, never the key.
 
@@ -46,23 +46,49 @@ Third and last migrate batch: everything outside HR, directory, onboarding, payr
 
   **Method note worth keeping:** an earlier run of this same typecheck was reported as passing because the command was `tsc --noEmit | tail -40; echo "EXIT=$?"` — `$?` there is `tail`'s exit code, not `tsc`'s, so a 36-error run printed `EXIT=0`. Redirect to a file and test the exit code before the pipe.
 
-- [ ] The API responses that carried employment on a user payload no longer do, under a declared version.
+- [x] The API responses that carried employment on a user payload no longer do, under a declared version.
 
-  **Deliberately not done, and recorded rather than quietly ticked.** The endpoints below still return `designation`, `employeeId`, `joiningDate`, `departmentId`, `branchId` and `reportingTo` at the same keys — now resolved from the organization's employment record instead of the global account:
+  **Reversed from the earlier deferral on your instruction to build the proper fix.** Note this overrides the ruling recorded in ticket 18, where URI versioning was designed and deliberately not implemented.
 
-  - `GET /users`, `GET /users/:userId` (`modules/users/organization-users.reader.ts`)
-  - `GET /dashboard/hr/birthdays`, `/dashboard/hr/team-attendance`, `/dashboard/leaves/today`
-  - `GET /rbac/roles/simulate/candidates`
+  **The version now exists.** `main.ts` calls
 
-  The defect this criterion targets — one person's two employers overwriting each other — is closed by the values being organization-scoped, which the multi-org proof in ticket 11 demonstrates. Removing the keys would force a second round trip for data an already organization-scoped endpoint holds, and would strip the people directory, which root `CLAUDE.md` §8 designates platform core. There is also no versioning mechanism to declare the break under: `main.ts` calls no `enableVersioning`, and building one is ticket 18 in another session.
+  ```ts
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: [API_VERSION_CURRENT, VERSION_NEUTRAL],
+  });
+  ```
 
-  Recorded in `backend/docs/api-changes/2026-08-28-users-employment-fields-migrated.md`, which lists every endpoint still carrying employment and says why. Reverse this call and the change is a one-file edit plus the frontend type.
+  with the constants in `src/common/http/api-version.ts`. `defaultVersion` carrying both `"1"` and `VERSION_NEUTRAL` is what makes this non-breaking: every one of the ~3,500 existing handlers now serves at **both** `/x` and `/v1/x`, so no deployed client moves. The unversioned path *is* the compatibility window — exactly the design ticket 18 recorded before it was ruled out.
 
-- [ ] The frontend types are updated in the same change.
+  **The clean shape ships at v2.** `src/modules/users/user-identity.view.ts` declares the removal positively rather than as an ad-hoc strip:
 
-  Follows from the criterion above: no response key was removed, so no frontend type needed changing. `frontend/hooks/api/users/types.ts` still declares `designation`, `departmentId`, `branchId`, `reportingTo` on `User`, and those fields are still populated — from the organization's record. `pnpm -C frontend exec tsc --noEmit` exits 0 with no output; note that the frontend `tsconfig` excludes tests, so that does not prove the frontend tests compile.
+  ```ts
+  export const EMPLOYMENT_FIELDS_DROPPED_IN_V2 = ["designation", "departmentId", "branchId", "reportingTo"] as const;
+  ```
 
-  **One key was removed after all, and it is not a payload key.** `getUserSession` carried `branchId` on the cached session object under `CACHE_KEYS.userSession(userId)` — an organization-scoped fact in a **user-scoped** cache key, so switching organizations would have served the previous organization's branch. It has **zero readers** in either repo (searched both for `branchId`; every hit is hierarchy forms, filters or an unrelated worker fixture). Removed rather than given an invented organization context.
+  `GET /v2/users` and `GET /v2/users/:userId` map through it; `GET /users` and `/v1/users` are untouched and still carry the fields. `user-identity.view.spec.ts` (5 tests) asserts every declared field is dropped, that identity and membership fields survive, that the v1 payload is **not mutated** by the mapping, and that the pagination envelope is preserved.
+
+  **v2 clients get employment from its own resource.** `GET /directory/employment?userIds=a,b,c` — `EmploymentFactsController`, `@Universal()` like the rest of the people directory, capped at 100 ids per request by its Zod schema, answering straight from the accessor. Employment is now a resource in its own right rather than a set of fields flattened onto a global user.
+
+  **`app-route-uniqueness.spec.ts` had to be taught about versions.** It failed immediately — `GET /users` declared twice — because its uniqueness key was `method + path`. With URI versioning those are `/users` and `/v2/users`, distinct routes. The key now carries the parsed `@Version`, and two new tests keep the guard honest: one proves it *still* collides when two handlers share a version, and one asserts the v2 handler and its compatibility twin are seen as a pair. Without the first, a version-blind fix would have silently disarmed the guard that exists because a duplicate route once shadowed a handler with a different permission key.
+
+  `RouteClassifierGuard` also caught a real mistake during this work: inserting the v2 handler displaced `getUser`'s `@RequirePermission("settings:view")`, and the app refused to boot until it was restored. Verified against `bb8eb705` that the restored key is the original one, not an invented one.
+
+- [x] The frontend types are updated in the same change.
+
+  `User` in `frontend/hooks/api/users/types.ts` no longer declares `designation`, `departmentId`, `branchId` or `reportingTo`. `useUsers` and `useUser` now request `/v2/users`, and `useEmploymentFacts` (`hooks/api/directory/employment.ts`) reads the new resource, returning a `byUserId` map. Four surfaces were rewired: the user table, the detail sheet, the edit form and the users page.
+
+  **The write path was drifting and is now typed separately.** `useUpdateUser` took `Partial<User>` as its request body — so removing a field from the *response* type silently removed it from the *request* type too, which is precisely the drift root `CLAUDE.md` §5 warns about. It now takes an explicit `UpdateUserInput` mirroring the backend's `updateUserSchema`, which still accepts `designation` and `reportingTo` because the mutation endpoint is unversioned and writes through to the canonical tables.
+
+  ```
+  $ pnpm -C frontend exec tsc --noEmit
+  (exit 0, no output)
+  ```
+
+  The frontend `tsconfig` excludes tests, so this does not prove the frontend tests compile.
+
+  **One key was removed that is not a payload key.** `getUserSession` carried `branchId` on the cached session object under `CACHE_KEYS.userSession(userId)` — an organization-scoped fact in a **user-scoped** cache key, so switching organizations would have served the previous organization's branch. It has **zero readers** in either repo. Removed rather than given an invented organization context.
 
 - [x] Exports, search projections and notification templates either read the accessor or drop them deliberately, with the drop recorded.
 

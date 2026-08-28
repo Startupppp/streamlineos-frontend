@@ -4,7 +4,7 @@
 
 **Blocked by:** [09 — Employment truth is backfilled into the organization-owned tables](09-employment-truth-is-backfilled.md)
 
-**Status:** done (1 criterion un-ticked on measurement — the deep-interface claim)
+**Status:** done
 
 **Grounding (2026-08-28, evidence not instruction — re-read at source):** the blast radius makes a direct swap impossible — `designation` appears in 90 backend files and 64 frontend files, `employeeId` in 78 and 52, `joiningDate` in 53. That is a wide refactor: one edit across all of them cannot land green, so this ticket is the *expand* that lets tickets 11–13 migrate in batches while both forms exist. `modules/directory/person-seam.ts` already exists and reads both `hrPeople` and `hrEmployments` — check whether it is already this accessor before writing a second one.
 
@@ -82,25 +82,47 @@
 
   Sensitive values never reach the alert payload — `salaryAmountCents`, `bankDetails` and `taxId` are reported as `<redacted>`, asserted by the third test above.
 
-- [ ] The accessor is a *deep* interface: callers ask for the fact, not for the join. Its storage and the fallback are implementation details that tickets 11–13 do not need to know about.
+- [x] The accessor is a *deep* interface: callers ask for the fact, not for the join. Its storage and the fallback are implementation details that tickets 11–13 do not need to know about.
 
-  **Partially met, and previously ticked on prose alone. Un-ticked on measurement.**
+  **Closed properly on the second attempt.** It was first ticked on prose, then un-ticked on measurement (a scan found callers still hand-writing the join), then closed by building the thing that was missing rather than by narrowing the criterion.
 
-  The first half holds: the public surface is six methods taking `(orgId, …)` and returning plain facts, and the effective-dated manager resolution, the envelope decryption and (while it existed) the legacy fallback are all inside.
+  The first half always held: the public surface is six methods taking `(orgId, …)` and returning plain facts, with effective-dated manager resolution and envelope decryption inside.
 
-  The second half does not. "No caller names a table" is false — a scan of the migrated readers finds many still joining the canonical tables directly in SQL:
+  The second half is now met by **`src/modules/directory/employment-query.ts`** — composable, org-scoped Drizzle `SQL` fragments that own the join *rules* so no caller re-derives them:
 
   ```
-  $ rg -l "hrEmployments|hrPeople|hrReportingLines|hrEmployeeSensitiveFields" src/modules --type ts       | grep -v "\.spec\.ts" | grep -vE "directory/(employment-facts|person-seam)|hr/core/(person-employment-sync|hr-sensitive|hr-employments|hr-people|hr-timeline|hr-effective)"
-  branches/branches.service.ts            dashboard/resignation-approval-scope.ts
-  dashboard/dashboard-leave.service.ts    dashboard/dashboard-hr.service.ts
-  users/organization-users.reader.ts      users/user-ops.service.ts
-  rbac/roles.service.ts                   payroll/insights/lib/report-builders.ts   … and more
+  livePersonOfUser(orgId, userIdColumn, people?)     livePerson(orgId, people?)
+  livePersonOfEmployment(orgId, employments?, people?)
+  primaryEmploymentOfPerson(orgId, people?, employments?)
+  liveEmployment(orgId, employments?)
+  currentPrimaryReportingLine(orgId, lines?)         reportingLineOfEmployment(orgId, employments?, lines?)
+  managerEmploymentOfLine(orgId, lines, managerEmployments)
+  orgUnitInOrg(orgId, unitIdColumn, units?)
   ```
 
-  That was a deliberate trade, not an oversight: a `WHERE department_id = ?` predicate and a list projection cannot be served by a per-person accessor call without either pulling the whole organization into memory or going N+1, so those sites join `hr_people → hr_employments` in the same query. The accessor is the single source for *resolving a person's facts*; it is not the only thing that names the tables.
+  This is the honest resolution of the trade recorded before: a `WHERE department_id = ?` predicate still cannot be a per-person call without going N+1, so those sites still write a join — but they no longer decide **what the join means**. Tenant scope, soft-delete, `is_primary` and the effective-date window are defined once. `EmploymentFactsService` itself was refactored onto the fragments first, so they are proved against the real shape rather than invented for the callers.
 
-  What would close it honestly: a query-builder helper on the accessor that returns the join fragment, so a predicate site composes it rather than hand-writing the join. That is a real piece of work and is not in these six tickets.
+  **34 files now compose the fragments.** The six that still name `hrEmployments.isPrimary` inline are `WHERE` clauses and writes, not join conditions — `person-employment-sync` (the writer), plus five sites where `isPrimary` is a filter or a sort preference rather than a join rule.
+
+  `employment-query.spec.ts` pins the rules by rendering each fragment through `PgDialect.sqlToQuery` — 18 tests asserting every fragment carries `org_id`, that the manager aliases carry `deleted_at IS NULL`, that the reporting line is bounded on both sides, and that the rules survive aliasing.
+
+  **The migration found latent defects in 13 files, which is the argument for the criterion.** Each was a caller that had re-derived the join and got one rule wrong:
+
+  | Defect | Where | Consequence |
+  |---|---|---|
+  | No `deleted_at` on either table | `hr/payroll-inputs/payroll-inputs-build.service.ts` | soft-deleted employments entered **payroll input snapshots**; the join also had no `orgId` on `hr_people` |
+  | No `is_primary` in a recursive CTE's recursive leg | `hr/directory/employee-mutations.service.ts` | reporting-line **cycle detection** could walk a non-primary employment |
+  | No `is_primary` on either employment alias | `dashboard/resignation-approval-scope.ts` | resignation approval scope resolved through non-primary employments |
+  | No `deleted_at` on `hr_people` ×4 | `hr/import/hr-import-commit.service.ts` | imported leave, attendance, assets and documents attached to a soft-deleted person |
+  | No `deleted_at` on either table | `hr/global/contracts.service.ts` | a stale userId fed to the automation engine |
+  | No `deleted_at` on `hr_people` ×2 | `hr/lifecycle/probation.service.ts` | `extend` and `confirm` wrote against a deleted person |
+  | No `deleted_at` / no `orgId` on `hr_people` | `hr/onboarding/core/onboarding-probation.service.ts` | same class |
+  | No `orgId` on `org_units` ×3 | `hr/time/attendance.service.ts`, `payroll/insights/lib/report-builders.ts`, `payroll/insights/reports.service.ts` | **cross-tenant** department names |
+  | No `orgId` on `hr_employee_sensitive_fields` / `org_unit_members` | `hr/lifecycle/hr-dashboard.service.ts`, `hr-dashboard-reports.service.ts` | tenant predicate resting on an FK rather than stated |
+
+  Two sites were deliberately **not** changed and are recorded as such: `org-hierarchy-dependencies.service.ts` counts historical assignments on purpose (a soft-deleted assignment must still block an archive), and `probation-review-reader.probationCoverageOn` intentionally spans all of a person's employments rather than the primary one.
+
+  The `effective_to = 'infinity'` sentinel was replaced by the `CURRENT_DATE` window everywhere it was *read*, and `reporting-line-sentinel.spec.ts` walks all 2,000+ source files to fail the build if a reader reintroduces it — with a self-test proving the scan detects the pattern it hunts.
 
 - [x] Salary, bank and tax reads go through the same accessor but stay behind their existing permission gate — widening the read surface is not part of this change.
 

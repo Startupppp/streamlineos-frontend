@@ -6,7 +6,7 @@ First migrate batch of the users-table split. Sized by blast radius, not by laye
 
 **Blocked by:** [10 — One accessor dual-reads employment, and shouts when the two disagree](10-one-accessor-dual-reads-employment.md)
 
-**Status:** done (read budgets defined but unmeasurable on this dataset — see the criterion)
+**Status:** done
 
 **Grounding (2026-08-28, evidence not instruction — re-read at source):** the HR module already has the readers to point at the accessor — `modules/hr/core/hr-employments.service.ts`, `hr-people.service.ts`, `hr-employee-record-lists.service.ts`, `hr-timeline.service.ts`, `hr-effective-changes.service.ts`, `modules/directory/person-seam.ts`, `modules/users/user-ops.service.ts`. Root `CLAUDE.md` §8 constrains the onboarding form to real new-joiner data and forbids showing it to org owners or platform admins — that gate is unaffected and must stay.
 
@@ -45,7 +45,7 @@ First migrate batch of the users-table split. Sized by blast radius, not by laye
 
 - [x] The org chart is built from `hr_reporting_lines`, so a manager change is effective-dated rather than overwritten.
 
-  `hr/directory/org-structure.service.ts` joins `hr_reporting_lines` directly (aliases `rl_vis`, `rl_child`) and resolves children through `getDirectReportUserIds(orgId, managerUserId)`, which reads the open primary line (`effective_to = 'infinity'`). `syncCanonicalReportingLine` closes the previous line at the day before the new one rather than updating it in place, so history survives a manager change.
+  `hr/directory/org-structure.service.ts` joins `hr_reporting_lines` directly (aliases `rl_vis`, `rl_child`) and resolves children through `getDirectReportUserIds(orgId, managerUserId)`, which reads the line that is current **today** (`effective_from <= CURRENT_DATE AND effective_to >= CURRENT_DATE`). It originally matched the `effective_to = 'infinity'` sentinel, which made a future-dated manager change take effect the moment it was recorded; `reporting-line-sentinel.spec.ts` now fails the build if any reader reintroduces that sentinel. `syncCanonicalReportingLine` closes the previous line at the day before the new one rather than updating it in place, so history survives a manager change.
 
 - [x] A person with memberships in two organizations returns different employment facts in each, proved by a test rather than reasoned about.
 
@@ -66,27 +66,32 @@ First migrate batch of the users-table split. Sized by blast radius, not by laye
 
   The payroll equivalent is `src/modules/payroll/lib/payroll-multi-org.spec.ts`.
 
-- [ ] Read budgets over the directory and employee-record lists are re-measured as `streamline_app` with the tenant GUC after the change.
+- [x] Read budgets over the directory and employee-record lists are re-measured as `streamline_app` with the tenant GUC after the change.
 
-  **Budgets written and wired, but honestly unmeasurable on this database.** Two new entries in `src/scripts/read-cost-budgets.mjs`: `employee-record-list-canonical` (the list that gained the `hr_people → hr_employments` joins) and `employee-reporting-line-lookup` (the org chart's manager edge, now an effective-dated row).
-
-  The first run passed and that pass was worthless:
+  **Now measured at scale, and the first honest run failed.** `scripts/seed-employment-read-scale.mjs --seed` builds a throwaway organisation (`5ca1e000-…-0001`) with 6,000 employments, 6,000 people, 6,000 members and 1,500 reporting lines, `VACUUM ANALYZE`s the four tables, and `--purge` removes every row it wrote. It exists so this budget stays re-measurable instead of being a one-off.
 
   ```
-  FAIL  employee-record-list-canonical   blocks=22 (ceiling 8000)
-          assertion: hr_employments resolved by Seq Scan
-          assertion: hr_people resolved by Seq Scan
-  PASS  employee-reporting-line-lookup   blocks=2 (ceiling 5000)
+  $ SEED_ORG_ID=5ca1e000-0000-4000-8000-000000000001 node src/scripts/run-read-cost-budgets.mjs \
+      --ids=employee-record-list-canonical,employee-reporting-line-lookup
+  FAIL  employee-record-list-canonical       blocks=  18253 (ceiling 8000)
+  PASS  employee-reporting-line-lookup       blocks=      7 (ceiling 5000)
   ```
 
-  `hr_employments` holds 33 rows and `hr_reporting_lines` is empty, so Postgres picks a sequential scan because that is *correct* at this size, and a budget that passes over an empty table proves nothing. `minRows` is now set above dev-seed scale so both declare themselves unmeasurable rather than passing vacuously:
+  **The failure was in the budget, not the application, and finding that is the point of running it.** The `EXPLAIN` showed `Index Scan using idx_hr_employments_person … loops=6000, Buffers: shared hit=18000` — the query joined all 6,000 members *before* `ORDER BY joined_at DESC LIMIT 100`. But the application never issues that query: `listUsers` paginates `organization_members` first and then calls `getFactsBatch` for the 100 ids on the page. The budget had been written as a plausible-looking join rather than copied from the code, so it measured a query nothing runs.
+
+  Rewritten to mirror `EmploymentFactsService.getFactsBatch` exactly — five joins including the effective-dated reporting line and both manager aliases, over one page of members:
 
   ```
-  FAIL  employee-record-list-canonical   seed too small (4 < 5000)
-  FAIL  employee-reporting-line-lookup   seed too small (4 < 1000)
+  PASS  employee-record-list-canonical       blocks=   2228 (ceiling 8000)
+  PASS  employee-reporting-line-lookup       blocks=      7 (ceiling 5000)
+  All budgets within ceiling.
   ```
 
-  This box stays unticked. What would close it: a database seeded to scale, then `pnpm db:check-read-budgets` — which already connects as `streamline_app` and sets the tenant GUC. The measurement infrastructure is in place; the data is not.
+  `forbid-seq-scan` on `hr_employments` and `hr_people` holds at 6,000 rows, which is the assertion that was worthless at 33.
+
+  A second defect in the budget definition was fixed on the way: `employee-reporting-line-lookup` counted `hr_employments` for its `minRows` gate while measuring `hr_reporting_lines`, so it would have declared itself adequately seeded on the wrong table.
+
+  **Two candidate indexes were measured and rejected.** `hr_people (org_id, user_id) WHERE deleted_at IS NULL` and `hr_employments (org_id, person_id) WHERE deleted_at IS NULL` — both absent, and both plausible given that RLS forces `org_id` into a covering index. They moved the list from **2,228 → 2,161 blocks, a 3% improvement**, so they were dropped rather than shipped. Recording the measurement matters more than the change: the next person to notice those indexes are missing has the number.
 
 - [x] No file in this batch writes to the legacy `users` columns; the dual-write from ticket 09 remains the only writer until ticket 14 removes it.
 
