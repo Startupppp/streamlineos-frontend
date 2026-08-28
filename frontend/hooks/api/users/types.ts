@@ -75,6 +75,23 @@ export interface User {
   teams?: string[];
 }
 
+export interface UpdateUserInput {
+  firstName?: string;
+  lastName?: string;
+  designation?: string;
+  phone?: string;
+  departmentId?: string;
+  role?: string;
+  bio?: string;
+  linkedinUrl?: string;
+  twitterUrl?: string;
+  githubUrl?: string;
+  websiteUrl?: string;
+  reportingTo?: string;
+  teamId?: string | null;
+  emergencyContact?: EmergencyContact | null;
+}
+
 export interface UsersResponse {
   data: User[];
   pagination: {

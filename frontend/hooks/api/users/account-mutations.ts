@@ -3,11 +3,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import type { User, UserPreferences } from "./types";
+import type { UpdateUserInput, User, UserPreferences } from "./types";
 
 export const useUpdateUser = () => {
   const queryClient = useQueryClient();
-  return useMutation<User, Error, { userId: string; data: Partial<User> }>({
+  return useMutation<User, Error, { userId: string; data: UpdateUserInput }>({
     mutationKey: ["update", "user"],
     mutationFn: ({ userId, data }) => apiClient.patch<User>(`/users/${userId}`, data),
     onSuccess: (_, { userId }) => {
