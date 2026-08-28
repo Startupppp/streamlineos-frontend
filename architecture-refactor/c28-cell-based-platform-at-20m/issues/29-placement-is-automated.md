@@ -88,7 +88,7 @@
 
   **Open.** The decision function is written and its rollback is deliberately provoked in test — `√ deliberately regresses a canary and confirms rollback fires`, `√ rolls back the canary when SLO regresses — the canary, not the next cell`, `√ rolls back cell-2 if it regresses, not cell-3 or beyond`, `√ includes cells that were deployed in the rollback list`, `√ excludes cells that were not yet deployed` — but **nothing has ever been deployed**. There is one application process, no per-cell deployment and no per-cell SLO feed, so the rollout has never run and the rollback has never fired against a real cell.
 
-  **What would close it:** a deployment per cell, a per-cell SLO feed, and a deliberately regressed canary. Ticket 26 reports both worker pools and monitoring as `UNPROVED` for the same reason.
+  **What would close it:** a deployment per cell, a per-cell SLO feed, and a deliberately regressed canary. Ticket 26 reports both worker pools and monitoring as `UNPROVED` for the same reason, and the lane dispatched this session to close those two rows died on the account's weekly API limit. The SLO feed would have come from ticket 30's load driver, which was not built either — so this criterion is now blocked on two things that were both attempted and neither delivered.
 
 - [x] Platform SLO rollups cannot hide one unhealthy cell — per-cell measurement is the reported unit.
 

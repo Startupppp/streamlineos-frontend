@@ -78,7 +78,13 @@ ACTIVE_SOURCE → SNAPSHOT → CATCH_UP → READ_ONLY_SOURCE
 
   But **the rollback has never run against a real organization**, because no relocation has run against a real organization. A rollback path exercised only against its own unit tests is still a hypothesis about the data, however well the machine is pinned.
 
-  **What would close it:** a real move. `node src/scripts/relocate-org.mjs --org=<id> --to=cell-2 --advance` through `CATCH_UP`, then `--rollback`, then a checksum comparison proving the source is intact. The blocker is criterion 6 of ticket 26: a cell whose schema differs from the control plane by 3,243 catalog objects cannot receive a copy, so there is nothing to move an organization into.
+  **What would close it:** a real move. `node src/scripts/relocate-org.mjs --org=<id> --to=cell-2 --advance` through `CATCH_UP`, then `--rollback`, then a checksum comparison proving the source is intact.
+
+  **The blocker changed, and it is worth being exact about.** It was ticket 26: a cell 3,243 catalog objects away from the control plane could not receive a copy. That is gone — the cell now reports `SCHEMAS IDENTICAL, differences=0`, so there is somewhere to move an organization to.
+
+  The blocker is now **that nothing copies the data**. `relocate-org.mjs advanceState` updates `current_state` on `organization_relocations` and nothing else; no row is transferred, so driving the machine to `ACTIVE_TARGET` today would move an organization's *routing* while its data stayed in the source cell. The machine, the checksums and the offset reconciliation are all real and tested; the mover is not written. `cell-backup.mjs` already solves the hard parts for whole tables — `COPY TO/FROM STDIN` for byte-exactness, a foreign-key topological order, dropping and rebuilding cycle-internal constraints from `pg_get_constraintdef`, and verification by re-reading digests — so the honest next step is an org-scoped form of that, not a new mechanism.
+
+  A lane was dispatched this session to make the plan-coverage gate real and to gate `RETIRE_SOURCE` on measured target traffic. It terminated on the account's weekly API limit before its first tool call, so neither landed.
 
 - [x] The organization's identifiers and user-facing URLs are unchanged after the move.
 
@@ -88,7 +94,7 @@ ACTIVE_SOURCE → SNAPSHOT → CATCH_UP → READ_ONLY_SOURCE
 
   **Half met.** `RETIRE_SOURCE` is its own state, is terminal, follows `ACTIVE_TARGET`, and no edge reaches it earlier — `√ refuses a FAIL event from a terminal state` and the transition table pin it. The ordering constraint "after the target has served real traffic" is **not** enforced: nothing measures traffic, so advancing from `ACTIVE_TARGET` to `RETIRE_SOURCE` is an operator decision the machine does not gate.
 
-  **What would close it:** a per-cell request counter for the organization, checked before the `RETIRE_SOURCE` edge is offered. That needs the per-cell monitoring listed as `UNPROVED` in ticket 26.
+  **What would close it:** a per-cell request counter for the organization, checked before the `RETIRE_SOURCE` edge is offered. That needs the per-cell monitoring listed as `UNPROVED` in ticket 26. Dispatched this session and not delivered — the lane died on the account's weekly API limit.
 
 ## Todo
 

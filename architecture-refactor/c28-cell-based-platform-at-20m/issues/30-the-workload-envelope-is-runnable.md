@@ -44,6 +44,8 @@
 
   **What would close it:** a load driver generating the declared traffic against a running application with a declared cold/warm cache mix, reference device and network. This repository has no load driver and one application process. A buffer-count check cannot stand in for a latency measurement, and reporting one as the other is what this program has already un-ticked boxes for.
 
+  **Dispatched this session and not delivered.** A lane was given the whole job — drive a real authenticated API, declare the run conditions as data, report p50/p75/p95/p99 per objective, mark anything undrivable as `NOT DRIVEN` with a reason rather than dropping it, sample connections and queue depth for headroom, run the burst shape, and write `.load-driver-results.json` for tickets 29 and 32 to consume. It terminated on the account's weekly API limit before its first tool call. Nothing in this criterion changed.
+
 - [ ] At least 40% headroom remains in every limiting cell resource at the sustained target, and the burst target is survived.
 
   **Open, and the runner refuses rather than guessing:**

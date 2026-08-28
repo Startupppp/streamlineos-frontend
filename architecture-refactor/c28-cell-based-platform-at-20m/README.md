@@ -2,9 +2,11 @@
 
 PRD: [`prd.md`](prd.md) · Program: [`../README.md`](../README.md)
 
-**33 tickets, 27 marked done** (some with a single criterion left open and a written reason — read the row). Ticket 33 was raised by the work itself and is not started. Phases 0 and 1 are landed. Phases 2–4 have started: a second cell (`cell-2`) exists, serves organizations and survives a control-plane outage, and placement is automated. **The cold bootstrap fails**, and that is the most important thing this program now knows — see ticket 26. This is a proposed target architecture, not a repair of a broken one — the PRD's own verdict is that the current implementation is sound *inside one cell* and has not yet proved it can serve 20 million users.
+**33 tickets, 27 marked done** (some with a single criterion left open and a written reason — read the row). Ticket 33 was raised by the work itself and is now partly done. Phases 0 and 1 are landed. Phases 2–4 have started: a second cell (`cell-2`) exists, serves organizations, survives a control-plane outage, is **reproducible from an empty database** (`SCHEMAS IDENTICAL, differences=0`, down from 3,243), and placement is automated. This is a proposed target architecture, not a repair of a broken one — the PRD's own verdict is that the current implementation is sound *inside one cell* and has not yet proved it can serve 20 million users.
 
-**Being "done" here does not mean 20M-ready.** The release rule below is unchanged and unmet: a second cell exists but is not independently resourced and cannot be rebuilt from the committed migration chain, no relocation has been exercised, and the acceptance workload has not been run — there is no load driver, so not one latency objective in the PRD's reliability table has been measured.
+**Being "done" here does not mean 20M-ready.** The release rule below is unchanged and unmet: the second cell is not independently resourced, no relocation has been exercised, and the acceptance workload has not been run — there is no load driver, so not one latency objective in the PRD's reliability table has been measured.
+
+**What repairing the chain found.** `0320_recon_phase_a_orgid.sql` adds the denormalised tenant column by sweeping `pg_catalog` rather than naming its tables, so its outcome depends on the shape of the database at the moment it runs — 66 tables in the control plane, 69 in a cold cell. Five tables fell through that gap. Four ended up with no tenant column at all and so could carry no RLS policy (`credit_note_items`, `fin_payment_run_items`, `vendor_credit_items`, `candidate_resumes`), and **`db:verify-rls` could not report any of them**, because both its checks require the org column to exist — a table that lost its tenant column entirely passed *by being more broken rather than less*. A third check now applies 0320's own predicate and failed on all four before the fix. One row of live data did not survive the composite tenant foreign key the chain intends: `contact_party_map` holds a mapping whose `organization_id` names a different organization from the contact it points at.
 
 The release rule is in the PRD and is the whole point of the ticket set: the architecture may be called **20M-ready** only when Phase 0 is complete, at least two cells are operating, relocation and recovery have been exercised, and the acceptance workload passes with published headroom. Until then the accurate statement is that the design has a credible horizontal path and the implementation has not proved the capacity.
 
@@ -77,7 +79,7 @@ The **S** column is the execution session that owns the ticket. The split was ch
 
 | # | S | Ticket | Blocked by | Status |
 |---|---|---|---|---|
-| 26 | S6 | [A second cell exists and is proved from cold](issues/26-a-second-cell-is-proved-cold.md) | 20–25 | **partial** · `cell-2` exists and serves orgs; cold bootstrap FAILS — the chain misses 65 tables the running DB has |
+| 26 | S6 | [A second cell exists and is proved from cold](issues/26-a-second-cell-is-proved-cold.md) | 20–25 | **partial** · cold bootstrap now reaches `SCHEMAS IDENTICAL` (3,243 → 0) and closed 5 tenant-isolation gaps; resources still shared, broker not per-cell |
 | 27 | S6 | [A cell has a measured capacity budget and an admission threshold](issues/27-a-cell-has-a-capacity-budget.md) | 26 | **done** · 1 criterion open (forecast needs 3 daily samples); limiting resource measured = database-size 42.1% |
 | 28 | S6 | [An organization moves between cells, and can roll back until the flip](issues/28-an-organization-moves-between-cells.md) | 22, 26 | **partial** · machine + checksums + offsets built, 80 tests; no org has been moved |
 | 29 | S6 | [Placement is automated and a noisy neighbour is relocated](issues/29-placement-is-automated.md) | 27, 28 | **partial** · placement is automated and LIVE on all 3 creation paths; canary rollback never rolled |
@@ -94,7 +96,7 @@ The **S** column is the execution session that owns the ticket. The split was ch
 
 | # | S | Ticket | Blocked by | Status |
 |---|---|---|---|---|
-| 33 | S7 | [The migration chain rebuilds the database it claims to describe](issues/33-the-chain-rebuilds-the-database.md) | — | ready-for-agent |
+| 33 | S7 | [The migration chain rebuilds the database it claims to describe](issues/33-the-chain-rebuilds-the-database.md) | — | **partial** · `differences=0` proved from cold; `chain_gaps` still 124, CI guard and 4 unjournalled migrations open |
 | 34 | S7 | [Where you land after signing in comes from the index](issues/34-where-you-land-comes-from-the-index.md) | — | ready-for-agent · independent of 33, lower priority |
 
 Ticket 26 found it and could not fix it inside its own scope: a database built from empty through the

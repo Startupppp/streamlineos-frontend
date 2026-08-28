@@ -38,6 +38,17 @@
 
   **What would close it:** the cell's monthly Neon invoice (compute-hours and GB-months), the R2 and Resend invoices, an APM or log-derived request count, and the Ably channel-minutes figure. Each is named per unit in `cell-unit-costs.mjs` as the exact input required. Reusing the existing milli-credit ledger rather than building a second accounting path is why the AI unit needed no new plumbing.
 
+  **The seam to fetch each one is now built, so this is an operator step rather than an engineering one.** `src/scripts/cell-cost/vendor-costs.mjs` holds a fetcher per vendor, each refusing loudly when its credential is absent and never substituting a list price:
+
+  | Vendor | Required environment | What it fetches |
+  |---|---|---|
+  | Neon | `NEON_API_KEY` + `NEON_PROJECT_ID` | compute-seconds, storage byte-hours, data transfer — real consumption |
+  | Ably | `ABLY_API_KEY` (**already present**) | `channelMean × intervalMinutes` = channel-minutes |
+  | Cloudflare R2 | `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` (**absent**) | storage bytes, object count, class A/B operations |
+  | Resend | `RESEND_API_KEY` (**already present**) | key presence only — Resend's public API exposes no cost or delivery-total endpoint |
+
+  `R2_ACCESS_KEY_ID`/`R2_SECRET_ACCESS_KEY` are S3-compatibility keys and cannot query Cloudflare's billing API; a separate API token is required. Neon returns consumption, not dollars, so the dollar derivation needs rate variables (`NEON_COMPUTE_RATE_USD_PER_HOUR` and siblings) set **from the invoice** — they are deliberately left unset rather than filled with list prices, which is what the criterion forbids. `per 1,000 requests` reads `backend/.load-driver-results.json` when it exists and continues to report `UNMEASURED` when it does not; that file is written by ticket 30's load driver, which was not built (see that ticket).
+
 - [ ] Each cell has a monthly cost forecast and a saturation forecast, and the two are reported together — a cell that is cheap because it is empty is not a finding.
 
   **Open on the numbers, met on the shape.** They are reported together, and the runner says plainly why the number is small:
