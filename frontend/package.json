@@ -21,6 +21,8 @@
     "check:icon-labels": "node scripts/check-no-unlabeled-icon-buttons.mjs",
     "check:query-scope": "node scripts/check-query-scope.mjs",
     "check:query-scope:self-test": "node scripts/check-query-scope.mjs --self-test",
+    "check:dead-code": "node scripts/check-dead-code.mjs",
+    "check:dead-code:self-test": "node scripts/check-dead-code.mjs --self-test",
     "check:contract-drift": "node scripts/check-contract-drift.mjs",
     "check:contract-drift:self-test": "node scripts/check-contract-drift.mjs --self-test",
     "check:module-manifest": "node scripts/check-module-manifest.mjs",
