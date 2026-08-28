@@ -31,11 +31,11 @@ Sessions S1-S6 may be opened in parallel. Every session must complete the openin
 | Session | Tickets | Status |
 |---:|---|---|
 | S1 | 01, 02, 03, 05, 06, 12 | ready-for-agent |
-| S2 | 07, 08, 17, 18, 21, 25 | ready-for-agent |
+| S2 | 07, 08, 17, 18, 21, 25 | 17, 18, 25 done · 07, 08, 21 in progress |
 | S3 | 09, 13-16, 24, 30-32 | ready-for-agent |
 | S4 | 04, 10, 19, 20, 23, 33, 38 | ready-for-agent |
 | S5 | 26-29, 34-36 | ready-for-agent |
-| S6 | 22, 37, 39-41 | ready-for-agent |
+| S6 | 22, 37, 39-41 | 22 done · 39, 40, 41 partial (blocked criteria named in each ticket) · 37 blocked on 30-33 |
 | S7 | 11, 42-45 and existing c28-34 | ready-for-agent |
 
 Read `sessions/PROTOCOL.md` before any session brief. Use `sessions/CROSS-SESSION.md` for requests outside a session's territory.

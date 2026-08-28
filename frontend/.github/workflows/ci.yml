@@ -45,6 +45,21 @@ jobs:
         run: pnpm exec knip --no-progress
         continue-on-error: true
 
+      # Classifies knip's candidates against a module graph so a side-effect import, a dynamic
+      # import, a re-export chain or a Next.js convention file is never mistaken for dead code.
+      # Reported, not enforced, until tickets 30-33 land and the four confirmed dead files are
+      # actually deleted — the count is above baseline today for reasons no single commit can fix.
+      - name: Dead-code classification (reported)
+        run: pnpm check:dead-code:self-test && pnpm check:dead-code
+        continue-on-error: true
+
+      # frontend/contracts/openapi.json is a hand-vendored copy of backend/openapi.json, so the
+      # Timesheets drift check below can silently run against a stale contract. This fails when
+      # the two diverge. It needs both repos checked out; skipped when the backend copy is absent.
+      - name: Contract vendor copy is current
+        run: pnpm check:contract-vendor:self-test && pnpm check:contract-vendor
+        continue-on-error: true
+
       - name: Build application
         run: pnpm build
         env:

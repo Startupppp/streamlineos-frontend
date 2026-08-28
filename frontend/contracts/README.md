@@ -15,6 +15,13 @@ cp backend/openapi.json frontend/contracts/openapi.json
 
 The check fails with a clear actionable message if this file is absent.
 
+**Vendor-copy freshness gate** (`scripts/check-contract-vendor.mjs`) verifies that `frontend/contracts/openapi.json` is byte-identical to `backend/openapi.json`. This gate must pass before any frontend CI run that also runs the drift check, to ensure the drift check compares against the current backend, not a stale copy. In a frontend-only CI checkout (no `backend/` present), skip the vendor check and rely on the committed artifact.
+
+```bash
+node scripts/check-contract-vendor.mjs             # verify copy is current
+node scripts/check-contract-vendor.mjs --self-test # smoke-test the hash comparison
+```
+
 ## __fixtures__/
 
 `timesheets-fixture.json` — a hand-crafted subset of real timesheets operations (derived from `backend/src/modules/timesheets/**/*.controller.ts` and their `dto/*.schemas.ts`). Used by `--use-fixture` to demonstrate drift rules against request body schemas. It is a partial contract — not all paths are present — so running against it produces path violations and may produce stale-baseline warnings for entries that only appear in the real contract.
