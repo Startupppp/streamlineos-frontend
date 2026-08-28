@@ -32,8 +32,9 @@ export const humanResourcesQueryKeys = {
     documents: (params?: Record<string, unknown>) =>
       [...base, "hr", "documents", params] as const,
     documentsAll: [...base, "hr", "documents"] as const,
-    performanceReviews: (userId?: string) =>
-      [...base, "hr", "performanceReviews", userId] as const,
+    performanceReviews: (params?: Record<string, unknown>) =>
+      [...base, "hr", "performanceReviews", params] as const,
+    performanceReviewsAll: [...base, "hr", "performanceReviews"] as const,
     goals: (userId?: string) => [...base, "hr", "goals", userId] as const,
     workLogs: (params?: Record<string, unknown>) =>
       [...base, "hr", "workLogs", params] as const,
