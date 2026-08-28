@@ -22,22 +22,16 @@ const SIDEBAR_PRODUCTS = join(
 );
 const MANIFEST_LOADER = join(ROOT, "lib", "module-manifest.ts");
 
-// Products whose href intentionally differs from the manifest route.
-// Duplicated from sidebar-products.ts so this script has no runtime dependency
-// on TS compilation.
 const PRODUCT_HREF_EXCEPTIONS = {
   administration: "/settings",
   documents: "/knowledge/chat",
 };
 
-// Products with no manifest module counterpart.
 const PRODUCT_KEY_EXCEPTIONS = new Set(["administration"]);
 
 function readJson(path) {
   return JSON.parse(readFileSync(path, "utf8"));
 }
-
-// ─── Registry parser ──────────────────────────────────────────────────────────
 
 function parseRegistryVersion(content) {
   const match = /MODULE_MANIFEST_VERSION\s*=\s*(\d+)/.exec(content);
@@ -84,8 +78,6 @@ function parseRegistryModules(content) {
   return modules;
 }
 
-// ─── Sidebar-products parser ──────────────────────────────────────────────────
-
 function parseSidebarProductKeys(content) {
   const keys = [];
   const re = /\bkey:\s*"([^"]+)"/g;
@@ -94,51 +86,10 @@ function parseSidebarProductKeys(content) {
   return keys;
 }
 
-function parseSidebarProductHrefs(content) {
-  const pairs = {};
-  const blockRe =
-    /\bkey:\s*"([^"]+)"[^}]*?href:\s*resolveProductHref\s*\(\s*"[^"]+"\s*\)/gs;
-  const simpleHrefRe = /\bhref:\s*"([^"]+)"/;
-  const keyRe = /\bkey:\s*"([^"]+)"/;
-
-  const innerText = (() => {
-    const start = content.indexOf("PRODUCT_DEFINITIONS");
-    const end = content.indexOf("];", start);
-    return start !== -1 && end !== -1 ? content.slice(start, end) : "";
-  })();
-
-  // Each product object is between { and }
-  let depth = 0;
-  let objStart = -1;
-  for (let i = 0; i < innerText.length; i++) {
-    if (innerText[i] === "{") {
-      if (depth === 0) objStart = i;
-      depth++;
-    } else if (innerText[i] === "}") {
-      depth--;
-      if (depth === 0 && objStart !== -1) {
-        const obj = innerText.slice(objStart, i + 1);
-        const km = keyRe.exec(obj);
-        if (km) {
-          // href is derived — we cannot extract it here statically.
-          // The check script resolves it separately via the manifest.
-          pairs[km[1]] = null;
-        }
-        objStart = -1;
-      }
-    }
-  }
-  return pairs;
-}
-
-// ─── Loader version parser ────────────────────────────────────────────────────
-
 function parseLoaderExpectedVersion(content) {
   const match = /EXPECTED_MANIFEST_VERSION\s*=\s*(\d+)/.exec(content);
   return match ? Number(match[1]) : null;
 }
-
-// ─── Detection functions (also used by --self-test) ──────────────────────────
 
 function checkRegistryAgreement(manifest, registryContent) {
   const violations = [];
@@ -268,8 +219,6 @@ function checkLoaderVersion(manifest, loaderContent) {
   return violations;
 }
 
-// ─── Self-test ────────────────────────────────────────────────────────────────
-
 function runSelfTest() {
   console.log("Running self-test with deliberately broken fixtures...\n");
   let passed = 0;
@@ -293,7 +242,6 @@ function runSelfTest() {
     ],
   };
 
-  // Rule 1: version mismatch
   {
     const brokenRegistry = `
       export const MODULE_MANIFEST_VERSION = 2;
@@ -306,7 +254,6 @@ function runSelfTest() {
     assert("rule-1 fires on version mismatch", v.some((s) => s.includes("rule-1")));
   }
 
-  // Rule 1: missing module in manifest
   {
     const brokenRegistry = `
       export const MODULE_MANIFEST_VERSION = 1;
@@ -323,7 +270,6 @@ function runSelfTest() {
     );
   }
 
-  // Rule 1: extra module in manifest
   {
     const brokenRegistry = `
       export const MODULE_MANIFEST_VERSION = 1;
@@ -338,7 +284,6 @@ function runSelfTest() {
     );
   }
 
-  // Rule 1: productKey drift
   {
     const brokenRegistry = `
       export const MODULE_MANIFEST_VERSION = 1;
@@ -354,7 +299,6 @@ function runSelfTest() {
     );
   }
 
-  // Rule 1: route drift
   {
     const brokenRegistry = `
       export const MODULE_MANIFEST_VERSION = 1;
@@ -370,7 +314,6 @@ function runSelfTest() {
     );
   }
 
-  // Rule 2: unknown product key
   {
     const brokenSidebar = `
       export const PRODUCT_DEFINITIONS = [
@@ -385,7 +328,6 @@ function runSelfTest() {
     );
   }
 
-  // Rule 2: exception key does not fire
   {
     const sidebarWithException = `
       export const PRODUCT_DEFINITIONS = [
@@ -400,7 +342,34 @@ function runSelfTest() {
     );
   }
 
-  // Rule 4: loader version mismatch
+  {
+    const brokenSidebar = `
+      export const PRODUCT_DEFINITIONS = [
+        { key: "hrms", label: "HRMS", href: resolveProductHref("hrms"), icon: X },
+        { key: "orphan", label: "Orphan", href: resolveProductHref("orphan"), icon: X },
+      ];
+    `;
+    const v = checkProductHrefs(validManifest, brokenSidebar);
+    assert(
+      "rule-3 fires when sidebar key has no manifest route",
+      v.some((s) => s.includes("orphan") && s.includes("rule-3")),
+    );
+  }
+
+  {
+    const goodSidebar = `
+      export const PRODUCT_DEFINITIONS = [
+        { key: "hrms", label: "HRMS", href: resolveProductHref("hrms"), icon: X },
+        { key: "build", label: "Build", href: resolveProductHref("build"), icon: X },
+      ];
+    `;
+    const v = checkProductHrefs(validManifest, goodSidebar);
+    assert(
+      "rule-3 does not fire when all sidebar keys have manifest routes",
+      v.length === 0,
+    );
+  }
+
   {
     const brokenLoader = `export const EXPECTED_MANIFEST_VERSION = 99;`;
     const v = checkLoaderVersion(validManifest, brokenLoader);
@@ -410,7 +379,6 @@ function runSelfTest() {
     );
   }
 
-  // Rule 4: loader version matches
   {
     const goodLoader = `export const EXPECTED_MANIFEST_VERSION = 1;`;
     const v = checkLoaderVersion(validManifest, goodLoader);
@@ -424,8 +392,6 @@ function runSelfTest() {
   if (failed > 0) process.exit(1);
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
-
 if (process.argv.includes("--self-test")) {
   runSelfTest();
   process.exit(0);
@@ -435,7 +401,6 @@ const violations = [];
 
 const manifest = readJson(FRONTEND_MANIFEST);
 
-// Rule 1: backend registry agreement
 if (!existsSync(BACKEND_REGISTRY)) {
   console.warn(
     "  [NOTICE] backend/ is absent from the working tree — rule-1 (registry agreement) is SKIPPED.",
@@ -448,12 +413,18 @@ if (!existsSync(BACKEND_REGISTRY)) {
   violations.push(...checkRegistryAgreement(manifest, registryContent));
 }
 
-// Rules 2 & 3: sidebar-products agreement
+if (!existsSync(SIDEBAR_PRODUCTS)) {
+  console.error(`  [ERROR] Missing required file: ${SIDEBAR_PRODUCTS}`);
+  process.exit(1);
+}
 const sidebarContent = readFileSync(SIDEBAR_PRODUCTS, "utf8");
 violations.push(...checkProductKeySet(manifest, sidebarContent));
 violations.push(...checkProductHrefs(manifest, sidebarContent));
 
-// Rule 4: loader version
+if (!existsSync(MANIFEST_LOADER)) {
+  console.error(`  [ERROR] Missing required file: ${MANIFEST_LOADER}`);
+  process.exit(1);
+}
 const loaderContent = readFileSync(MANIFEST_LOADER, "utf8");
 violations.push(...checkLoaderVersion(manifest, loaderContent));
 

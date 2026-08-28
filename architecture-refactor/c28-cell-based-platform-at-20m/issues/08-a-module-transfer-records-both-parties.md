@@ -39,3 +39,33 @@ fk_ownership_transfers_initiator   ownership_transfers   ondelete=r
 ---
 
 PRD: [`c28 — Organization-routed cells for 20M+ users`](../prd.md) · Candidate index: [`../README.md`](../README.md)
+
+## Post-close verification (2026-08-28) — one defect this ticket widened, left open
+
+`fk_ownership_transfers_initiator` is `ON DELETE RESTRICT`, matching its two pre-existing siblings
+`fk_ownership_transfers_from_member` and `fk_ownership_transfers_to_member`. Nothing anywhere deletes an
+`ownership_transfers` row — `grep -rn "delete(ownershipTransfers)" src/` returns nothing — and both
+`removeMember` and `leaveOrganization` only set `status = 'CANCELLED'` on PENDING rows before
+hard-deleting the `organization_members` row.
+
+So a membership that ever took part in a transfer can never be hard-deleted. Proved against the dev
+database in a rolled-back transaction, using a membership that was **only** an initiator, never
+`from`/`to`:
+
+```
+inserted a CANCELLED transfer initiated by that membership
+RESULT: deleting the initiator FAILED  code=23001  constraint=fk_ownership_transfers_initiator
+        update or delete on table "organization_members" violates RESTRICT setting of
+        foreign key constraint "fk_ownership_transfers_initiator" on table "ownership_transfers"
+```
+
+The pre-existing half needs none of this ticket's work: a member who **declines** a transfer keeps a
+`to_membership_id` reference forever and is then unremovable. What this ticket widened is the third-party
+case — criterion 3 exists precisely so an org owner can initiate a transfer for a module they do not own,
+which pins a membership that `from`/`to` would not have pinned.
+
+**Left open deliberately.** The fix is a product decision, not a code one: `CASCADE` discards the
+transfer's audit trail with the member, `RESTRICT` blocks the removal. The rest of this refactor chose
+`CASCADE` (`agent_tokens`, `user_delegations`, `user_module_access`), but those are live grants and this
+is a historical record. Raised in `CROSS-SESSION.md` for whoever owns member removal. It surfaces as a
+`500` on member removal, not as an authorization hole, so it blocks nothing here.

@@ -25,6 +25,11 @@ const USER = "user-1";
 
 let capturedClient: QueryClient | null = null;
 
+function requireCapturedClient(): QueryClient {
+  if (!capturedClient) throw new Error("QueryProvider did not expose a QueryClient");
+  return capturedClient;
+}
+
 function ClientCapture() {
   capturedClient = useQueryClient();
   return null;
@@ -51,7 +56,7 @@ describe("QueryProvider scope isolation on org switch", () => {
         <ClientCapture />
       </QueryProvider>,
     );
-    const orgAClient = capturedClient!;
+    const orgAClient = requireCapturedClient();
 
     setSession(ORG_B, USER);
     rerender(
@@ -59,7 +64,7 @@ describe("QueryProvider scope isolation on org switch", () => {
         <ClientCapture />
       </QueryProvider>,
     );
-    const orgBClient = capturedClient!;
+    const orgBClient = requireCapturedClient();
 
     expect(orgBClient).not.toBe(orgAClient);
   });
@@ -79,7 +84,7 @@ describe("QueryProvider scope isolation on org switch", () => {
       </QueryProvider>,
     );
 
-    const orgAClient = capturedClient!;
+    const orgAClient = requireCapturedClient();
     for (const key of keys) {
       orgAClient.setQueryData(key, DATA);
     }
@@ -94,7 +99,7 @@ describe("QueryProvider scope isolation on org switch", () => {
       </QueryProvider>,
     );
 
-    const orgBClient = capturedClient!;
+    const orgBClient = requireCapturedClient();
     expect(orgBClient).not.toBe(orgAClient);
 
     for (const key of keys) {

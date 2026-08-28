@@ -20,8 +20,25 @@ The rest of the ~40 hits are specs and fixtures. `agent_tokens` (`db/schema/comm
   `isOrgOwner` exists only on `human-session` and `personal-token`. `principal.spec.ts` asserts `"isOrgOwner" in p === false` at runtime for `agent-token` and `system-job` — the type guarantee rendered observable.
 - [x] Each of the four fabrication sites runs under an explicit system principal with a named, enumerated capability ceiling covering only what that job does; a payroll payout job cannot read CRM.
   `common/auth/system-jobs.ts` holds nine named jobs, each with a `reason` and a `ceiling`. The two payroll sites take `accounting:journal:create` + `:post` only. **Correction to the grounding:** `module-standing.ts:166` was NOT a fabrication — it was a derived local struct, and the grep that flagged it was a false positive. `resolveModuleAuthority` and `authoritySource` were collapsed into one `resolveAuthoritySource` returning the standing source directly, which removes both the literal and the intermediate type. Ten further synthetic-actor sites were found beyond the four; five were **reconstructed human contexts**, not jobs, and were given `humanSessionPrincipal(membershipId, isOwner)` from a real membership row — converting those to a system job would have denied them everything.
-- [x] A system principal is auditable: the audit row names the job, not a person, and never attributes work to an owner who did not do it.
-  `principalAuditIdentity(principal)` returns `{ actorKind, actorRef }`; for a job `actorRef` is the job id, and `systemActor()` sets `sessionId: "system:<jobId>"` and `isOrgOwner: false` by construction.
+- [ ] A system principal is auditable: the audit row names the job, not a person, and never attributes work to an owner who did not do it.
+  **Half met — un-ticked on re-audit 2026-08-28, having first been ticked on evidence that overstated it.**
+  The second clause holds and is enforced: `systemActor()` sets `isOrgOwner: false` by construction, and
+  `pnpm check:owner-authority` fails the build on any `isOrgOwner: true` literal anywhere in `src/`
+  (currently `production files scanned 3054`, zero fabrications). No job can attribute work to an owner.
+
+  The first clause does not hold. `systemActor()` puts the job id in `sessionId` (`system:<jobId>`), but
+  `AuditEntry` (`common/audit/audit.service.ts:13`) has **no `sessionId`, `actorKind` or `actorRef`
+  field**, so the job id is never persisted — the audit row records `userId`, which is the literal
+  `"system"` for a job with no delegating human and that human's id for the five sites that pass one.
+  `principalAuditIdentity(principal)` exists and returns `{ actorKind, actorRef }` with the job id as
+  `actorRef`, but **nothing calls it** — `grep -rn "principalAuditIdentity" src/` returns only its own
+  definition, and `knip` lists it as an unused export.
+
+  What would close it: add `actorKind`/`actorRef` to `AuditEntry`, persist them, and populate them from
+  the request principal. That needs the principal on `TenantContext`
+  (`common/tenant/tenant-context.ts:9` carries only `orgId`, `audience`, `tx`, `afterCommit`), and
+  `common/tenant` is explicitly not this session's territory. Raised in `CROSS-SESSION.md`. The helper is
+  left in place as the ready-made piece for whoever closes it rather than deleted and rebuilt.
 - [x] A test asserts that a system principal denied a capability outside its ceiling fails, and that removing the ceiling entry breaks the test — the guard bites.
   `common/auth/system-actor.spec.ts` and `principal.spec.ts` -> `Test Suites: 2 passed - Tests: 80 passed`. `systemJobCovers` is asserted false for a key outside the ceiling, and every ceiling entry is asserted to be a member of `ALL_PERMISSION_NAMES`, so a typo'd or removed key fails the suite. `AccessService.scopeFor`'s `system-job` arm returns `all` only for a key in the ceiling and `none` otherwise.
 - [x] `grep` for `isOrgOwner: true` outside specs returns zero, and a CI check keeps it there.

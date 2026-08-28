@@ -74,6 +74,36 @@
 
   `pnpm` fails a step on a non-zero exit, and the check exits 1 on a violation and 2 on a broken pattern.
 
+## Adversarial review round (2026-08-28) — the check was under-reporting
+
+An independent verifier caught this ticket's own guard failing its central claim.
+
+**The cron rule matched whole files, not sites.** `isCronBypass(src)` was `/\bthis\.db\b/.test(src) && !/forEachOrg|runIn(?:New)?TenantTransaction/.test(src)` — so a single guarded sweep anywhere in a file excused **every** bare `this.db` in it. Any cron service that guards some work and not the rest was invisible.
+
+I had even watched this happen and misread it: when I wrapped the purge worker's legal-hold read in `runInNewTenantTransaction`, the reported `cron direct db` count went **1 → 0**, and I recorded that as an improvement. It was the rule going blind.
+
+Rewritten to locate each `this.db.<method>` site and judge it by the block it sits in, using the `balanced()` scanner already in the file. The result:
+
+```
+                     before   after
+Bypass sites found       40      71
+  cron direct db          0      31
+```
+
+**31 sites in five files were invisible** — `cron-leave` (16), `cron-hr-engines` (4), `cron-recruitment` (3), `cron-notification-retention` (2), `cron-billing` (2). All five mix `forEachOrg` sweeps with bare `this.db.transaction` blocks. They belong to other sessions, so they are allowlisted as `PRE-EXISTING, UNAUDITED` with the site count and an instruction to migrate or justify — **not** asserted safe. Handed to their owners in [`CROSS-SESSION.md`](../sessions/CROSS-SESSION.md).
+
+The purge worker's allowlist entry was **dead code** until now: the file-level rule never flagged the file, so the entry was never consulted. It now does real work.
+
+New self-test case `cronBypassFoundWhenOnlySomeWorkIsGuarded` pins the exact blind spot, and a fresh failing run against that shape:
+
+```
+FAIL  [cron-bypass]  .../src/modules/cron/cron-new.service.ts:6
+FAIL — 1 of 1 bypass site(s) not on the allowlist.
+exit=1
+```
+
+This is the third time in this program a CI check under-reported on its first run. The lesson held.
+
 ## Todo
 
 - [x] Written against known-bad cases and shown failing before being run clean.

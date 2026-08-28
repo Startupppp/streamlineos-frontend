@@ -44,7 +44,7 @@
     √ refuses the switch when the target org placement is READ_ONLY
     √ reads inside the identity transaction, because a pool read returns nothing under RLS
     √ writes inside the identity transaction, because a pool write dies 42501 under RLS
-  Tests: 16 passed (switch) + 9 passed (index)
+  Tests: 10 passed (switch) + 9 passed (index)
   ```
 
   The target-cell test installs two bindings whose fake connections record which one opened a transaction, and asserts the primary's is never used.

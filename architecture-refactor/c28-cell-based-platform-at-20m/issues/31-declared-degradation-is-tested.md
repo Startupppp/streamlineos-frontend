@@ -143,15 +143,27 @@ PASS: oversized body returns 413 WITH its CORS header — a browser sees 413, no
 
 ```
 $ node ./node_modules/jest/bin/jest.js src/degradation
-Test Suites: 1 skipped, 9 passed, 9 of 10 total
-Tests:       13 skipped, 78 passed, 91 total
+Test Suites: 10 passed, 10 total
+Tests:       9 skipped, 89 passed, 98 total
 
-$ node ./node_modules/jest/bin/jest.js src/common/admission src/degradation
-Test Suites: 1 skipped, 14 passed, 14 of 15 total
-Tests:       13 skipped, 175 passed, 188 total
+$ node ./node_modules/jest/bin/jest.js src/common/admission
+Test Suites: 5 passed, 5 total
+Tests:       97 passed, 97 total
 ```
 
-The 13 skips are declared, not silent: 2 read-replica (no replica exists) and 11 that need a real seeded Postgres, real S3 or real Ably. Each carries its reason in the test name.
+**The skips were re-examined rather than accepted, and this went one round too far before it went right.** They started at 13, each claiming to need "a real seeded Postgres", "real S3" or "real Ably" — and since a real PostgreSQL *is* available, several of those premises were false. Un-skipping produced 13 → 4.
+
+**Reviewing the result showed five of the newly-live tests were worthless and had to be reverted.** The ai-provider and email-provider "integration" tests inserted a row, hand-wrote the state transition with raw `UPDATE`s, and then asserted the values they had just written — proving that Postgres stores what it is told, and exercising no application code at all. Deleting `OutboxPublisherService.handleFailure` or `AiCreditsReservationService.release` outright would not have failed a single one of them. That is the "asserts on a hand-written fixture rather than real behaviour" trap, and false coverage is worse than an honest skip because it *looks* like proof. They are skips again, now naming the real blocker: those services open their own transactions through `runInNewTenantTransaction`, so they cannot be driven inside a rollback on a database shared with five concurrent sessions.
+
+Nine skips remain, each naming its specific blocker. What survived review is genuine: the realtime test points a **real** `AblyService` at a fault server returning 503 and asserts `publishChatMessage` rejects while the durable event remains; the search tests assert real planner and real error-code behaviour.
+
+Those surviving database-backed tests are gated the way this repo already gates its isolation suite — `describe.skip` when the credentials are absent, so they **skip loudly in the default run and execute in CI's `tenant-isolation` job**, rather than passing vacuously. The most valuable of them proves the search row's core claim at the plan level, as `streamline_app` rather than the owner:
+
+- it first asserts the connecting role has `rolbypassrls = false`, because the owner bypasses RLS and would make every subsequent assertion meaningless;
+- `EXPLAIN (FORMAT JSON)` on the degraded ILIKE fallback shows the tenant predicate resolved **in the plan** (an Index Scan carrying `org_id`), not applied after the fetch;
+- and the same query without the tenant GUC **fails closed**.
+
+The whole probe runs inside a transaction that is deliberately rolled back, so nothing is left behind in a database shared with five concurrent sessions.
 
 ## Files changed
 

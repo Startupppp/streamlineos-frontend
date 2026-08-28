@@ -1,17 +1,11 @@
 import { MANIFEST } from "./module-manifest";
 
-// Modules where historical stored data used the productKey uppercase (not the
-// module id uppercase). This is not derivable from the manifest — it depends on
-// data that predates the current storedModuleKey convention.
 const LEGACY_STORED_AS_PRODUCT_KEY = new Set(["accounting", "support"]);
 
-// Retired module names that have no manifest field and must be mapped explicitly.
 const RETIRED_CANONICAL: Readonly<Record<string, string>> = {
   projects: "build",
 };
 
-// All modules from the manifest that have a user-facing sidebar product,
-// keyed by their canonical id.
 export const ORG_MODULE_NAME: Readonly<Record<string, string>> = Object.fromEntries(
   MANIFEST.modules
     .filter((m) => m.productKey !== null && m.administrable)

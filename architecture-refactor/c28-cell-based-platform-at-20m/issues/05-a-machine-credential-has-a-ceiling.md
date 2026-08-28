@@ -25,7 +25,7 @@ fk_agent_tokens_issuer_membership   agent_tokens   ondelete=c
 - [x] Expiry and rotation are enforced at the guard, not merely stored — a token past `expiresAt` is denied before any handler runs.
   `AgentTokenGuard.resolveToken` filters on `isNull(revokedAt)` and `or(isNull(expiresAt), gt(expiresAt, now))` in the lookup itself, so an expired or revoked token never resolves a principal and the guard throws `UnauthorizedException` before any handler.
 - [x] Audit records the token's own identity and its issuer, so a machine action is traceable to the person accountable for it.
-  `agent_token.issued` and `agent_token.revoked` audit rows carry `tokenId`, `tokenPrefix`, `issuerMembershipId` and the granted `scopes`. At request time `principalAuditIdentity` returns the token id as `actorRef`, and `accountableMembershipId` returns the **issuer's** membership — the one place it differs from `actingMembershipId`.
+  `agent_token.issued` and `agent_token.revoked` audit rows carry `tokenId`, `tokenPrefix`, `issuerMembershipId` and the granted `scopes` — written explicitly into `metadata` at `agent-tokens.service.ts:131` and `:186`, which is what satisfies this criterion. `accountableMembershipId` returns the **issuer's** membership, the one place it differs from `actingMembershipId`. **Correction (2026-08-28):** an earlier version of this line also claimed `principalAuditIdentity` returns the token id as `actorRef` *at request time*. It does not — nothing calls it. See ticket 02, whose audit criterion is un-ticked for that reason.
 
 ## Todo
 
@@ -47,3 +47,32 @@ PRD: [`c28 — Organization-routed cells for 20M+ users`](../prd.md) · Candidat
 ## What `tokenScopes === null` meant, answered from the code
 
 `agent_tokens` had **no scopes column at all**. `AgentTokenGuard` set `tokenScopes: null` and `isOrgOwner: member.isOwner`, and `AccessService.scopeFor` skipped the scope filter entirely when `tokenScopes` was null, returning `all` outright for an owner issuer. So null did not mean *no token* — it meant **every agent token inherited its issuer's full capability, unbounded**. The dev database holds 0 `agent_tokens` rows, so the backfill to the `agent/v1` surface ceiling (`build:view`, `build:create`, `build:tickets:view`, `build:tickets:create`, `build:tickets:update`) is a no-op here and a safety net elsewhere. After this ticket, an empty `scopes` array denies.
+
+## Post-close verification (2026-08-28)
+
+A review flagged an asymmetry in `scopeFor`: `personal-token` and `agent-token` both pass their key
+through `withinCeiling`, which applies `isPersonalTokenPermissionDelegable` and bars the `billing:`,
+`ownership:` and `settings:` namespaces — but `system-job` calls `principal.ceiling.includes(key)` raw.
+Nothing is exploitable today: every declared ceiling holds only `accounting:*` and `build:tickets:*` keys,
+and a system job's ceiling is a source constant, not user input.
+
+It is left as a raw `includes` on purpose. A system job has no membership to intersect against, so its
+ceiling **is** its grant; routing it through `withinCeiling` would make a mis-declared ceiling fail
+*silently* as `none` at request time instead of loudly at authoring time. The guard therefore sits at
+authoring time: new `src/common/auth/system-jobs.spec.ts` asserts no ceiling contains an interactive-only
+key, that every key exists in the permission catalog, and that ceilings are duplicate-free and
+non-empty.
+
+The first version of that spec read `permission.key`, but the catalog field is `name` — so it reported
+all 21 ceiling keys as unknown. Everything-is-broken is the signature of a broken scan, and it was:
+`ts-jest` is transpile-only, so the bad property access never failed to compile. Now reads
+`ALL_PERMISSION_NAMES` and asserts the catalog itself is non-trivial before trusting it.
+
+The guard is proved to bite against a synthetic ceiling rather than by planting a key in `SYSTEM_JOBS` —
+a concurrent session would have staged that sabotage:
+
+```
+√ never puts an interactive-only key in a ceiling
+√ catches an interactive-only key when one is present
+Tests: 9 passed, 9 total
+```

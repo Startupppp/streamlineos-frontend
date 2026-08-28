@@ -35,3 +35,25 @@
 ---
 
 PRD: [`c28 — Organization-routed cells for 20M+ users`](../prd.md) · Candidate index: [`../README.md`](../README.md)
+
+## Post-close verification (2026-08-28)
+
+`check:owner-authority` existed in `backend/package.json` but ran in **no CI workflow** —
+`grep -rhoE "check:[a-z-]+" .github/workflows/` returned only `check:placement-bypass`,
+`check:module-manifest`, `check:contract-drift` and `check:query-scope`. There are no husky hooks in
+either repo. So the invariant held only when somebody remembered to run it by hand, which is the same
+decorative-guard defect this ticket raised against `organization.legal-hold`.
+
+Wired into `.github/workflows/backend.yml` after the placement-bypass steps, mirroring that guard's
+self-test-then-check shape:
+
+```yaml
+      - name: Owner Authority Guard Self-Test
+        run: pnpm check:owner-authority:self-test
+
+      - name: Owner Authority Guard
+        run: pnpm check:owner-authority
+```
+
+Both commands pass at the time of writing — `SELF-TEST OK`, then `production files scanned 3054`,
+`owner-only operations 9 declared, 8 enforced`, exit 0.

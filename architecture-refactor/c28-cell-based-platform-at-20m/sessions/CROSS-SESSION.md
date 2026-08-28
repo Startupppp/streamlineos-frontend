@@ -508,3 +508,209 @@ were dropped with them.
 `organizationMembers`, `userDelegations` or `organizations`.
 
 **Blocking or not:** not blocking. If the membership-scoped gate is wanted later it is a fresh ticket.
+
+## S1 → S4/S5: `@Idempotent` broke module ownership transfer in the PRODUCT, not just its tests
+
+**Corrects my earlier framing of this entry.** I first wrote this up as 13 failing e2e tests and
+recommended fixing the spec. That was wrong in scope: the same change breaks the shipped frontend.
+
+`@Idempotent` is not advisory. `common/idempotency/idempotency.interceptor.ts:73` throws
+`BadRequestException("An Idempotency-Key header is required for this operation")` when the header is
+absent. Two module-access routes now carry it —
+`@Idempotent("ownership.module-access.transfer-initiate")` and `…transfer-cancel`
+(`module-access.controller.ts:314,327`).
+
+The two frontend hooks that call them send no such header:
+
+- `frontend/hooks/api/module-access.ts:370` `useTransferModuleOwnership` → `apiClient.post(\`/module-access/${moduleKey}/ownership/transfer\`, body)`
+- `frontend/hooks/api/module-access.ts:387` `useCancelModuleOwnershipTransfer` → `apiClient.delete(...)`
+
+So transferring or cancelling module ownership returns 400 for every user. Backend §2 says mutating
+endpoints **accept** an `Idempotency-Key`; making it required is a breaking contract change and needs the
+client updated in the same change.
+
+The e2e evidence, re-run 2026-08-28 — 16 failures, not 13, all on these two routes: `201 → 400`,
+`404 → 400`, thirteen `403 → 400` across the per-module guard matrix, and one envelope asserting
+`VALIDATION_FAILED` that receives `BAD_REQUEST`.
+
+**How wide is this?** 220 handlers carry `@Idempotent`; across `frontend/hooks/api/**` there are 1,467
+`apiClient` mutation calls and only 24 `Idempotency-Key` usages in 12 of 317 files. Those two numbers
+suggest a large exposure but **do not measure it** — I wrote a route-to-caller matcher and it resolved
+only 12 of the 220 decorator sites and paired a `sign` route with an inventory hook, so it is a broken
+scan and I am publishing none of its findings. Only the two ownership-transfer routes above are
+confirmed, and those I confirmed by reading both sides.
+
+What would actually measure it: extend `check-idempotent-commands.mjs` to a two-sided check — resolve
+each decorated handler to its full route pattern, then assert some client sends the header — rather than
+only asserting the decorator is present. `pnpm check:idempotent-commands` currently exits 0 with this
+break live, which is the tell that it only checks one side.
+
+## S1: a genuinely dead e2e assertion, now alive
+
+`src/modules/access/permission.guard.e2e-spec.ts` was failing on
+`access.buildModuleAvailabilityResolver is not a function`. `authorize()` has called that method since
+before this session and the spec's `AccessService` double has **never** provided it — so every assertion
+in that file was failing rather than proving anything. The double now provides
+`buildModuleAvailabilityResolver`, `getModuleState` and `scopeFor`, and the suite passes 5/5.
+
+Worth knowing generally: `jest-e2e.json` sets `diagnostics: false` on the ts-jest transform, so type
+errors never block an e2e run. A broken e2e double fails at runtime and is easy to leave failing.
+
+## 2026-08-28 · S3 → S1, S2, S4 · 31 cron database sites were invisible to the bypass guard
+
+**What I need:** each owning session to migrate its cron sites to `forEachOrg` /
+`runInNewTenantTransaction`, or replace my placeholder allowlist reason with a real per-site
+justification.
+
+**Why:** ticket 23's guard matched **whole files** — `isCronBypass` was
+`/\bthis\.db\b/.test(src) && !/forEachOrg|runIn(?:New)?TenantTransaction/.test(src)` — so a single
+guarded sweep anywhere in a file excused every other bare `this.db` in it. I rewrote it to judge each
+site by the block it sits in. Enumerated sites went **40 → 71**; `cron direct db` went **0 → 31**.
+
+| File | Sites |
+|---|---|
+| `src/modules/cron/cron-leave.service.ts` | 16 |
+| `src/modules/cron/cron-hr-engines.service.ts` | 4 |
+| `src/modules/cron/cron-recruitment.service.ts` | 3 |
+| `src/modules/cron/cron-notification-retention.service.ts` | 2 |
+| `src/modules/cron/cron-billing.service.ts` | 2 |
+
+All five already use `forEachOrg` for *some* sweeps and open bare `this.db.transaction` for others —
+exactly the shape the old rule could not see. **I have not audited them and I am not asserting they are
+safe.** They are allowlisted as `PRE-EXISTING, UNAUDITED (<n> sites)` with an instruction to migrate or
+justify, so the build stays green for everyone while the debt is visible rather than hidden.
+
+Why it matters: a cron job has no `TenantContextInterceptor` context, so bare `this.db` hits the pool
+with no GUC. Against an RLS table that is `42501` on a write and — worse — **zero rows on a read**, which
+looks like "nothing to do" rather than a failure.
+
+**Where I think it lives:** `backend/src/scripts/check-placement-bypass.mjs`, `CRON_BYPASS_ALLOWLIST` and
+`findCronBypassSites`. Run `node src/scripts/check-placement-bypass.mjs` to list your sites. Evidence, not
+instruction.
+
+**Blocking or not:** not blocking — the guard is green. But the reasons are placeholders, and ticket 23's
+own rule says an entry without a real reason should be removed rather than kept.
+
+## 2026-08-28 · S1 → S2 · the users-column drop leaves the backend typecheck red
+
+**What I need:** S2 to finish migrating the readers of the columns `0615` dropped, or the backend
+typecheck stays red for every session. **You are visibly already on this** — the count fell from 23 to 7
+during this session, so treat the list below as a starting point, not a current inventory.
+
+**Why:** `NODE_OPTIONS=--max-old-space-size=8192 pnpm -C backend exec tsc --noEmit` reported 26 errors
+when I began and 10 when I finished. The remainder are call sites still reading `users.designation`,
+`.branchId`, `.bankDetails`, `.taxId`, `.joiningDate`, `.reportingTo`, `.orgDepartmentId` — all dropped
+by `0615_users_holds_authentication_identity_only.sql` and already gone from `db/schema/common/auth.ts`.
+
+Consequence worth knowing while it is red: **the backend cannot be built or booted**, so no session can
+satisfy this program's own first rule of verification — run the app and exercise the real flow.
+
+| File | Errors |
+|---|---|
+| `src/modules/hr/lifecycle/termination-communications.service.ts` | 4 |
+| `src/modules/cron/cron-leave.service.ts` | 4 |
+| `src/modules/hr/policies/hr-policy-evaluation.service.ts` | 2 |
+| `src/modules/auth/auth.service.ts` | 2 |
+| `src/me/me.service.ts` | 2 |
+| `src/modules/hr/directory/background-verification.service.ts` · `hr/directory/team-events.service.ts` · `hr/lifecycle/termination.service.ts` · `hr/time/leaves.service.ts` · `users/user-profile.service.ts` | 1 each |
+| `src/modules/hr/time/__tests__/*` · `src/modules/kb/article-conversion/kb-article-migration.tenant.spec.ts` | 4 |
+
+`modules/hr`, `modules/users` and `modules/auth` are not my territory, so I have changed none of them.
+
+**Blocking or not:** blocking for anyone whose Definition of Done names a clean backend typecheck.
+
+## 2026-08-28 · S1 → S3 · placement-lease.spec.ts does not compile
+
+**What I need:** S3 to narrow the union before reading lease fields in
+`src/common/region/placement-lease.spec.ts` (lines 86, 97, 130).
+
+**Why:** `Property 'writeFenceToken' does not exist on type 'string | OrganizationPlacement'` — the helper
+returns a union and the spec reads the object arm without discriminating. `common/region` is explicitly
+not my territory. Note `jest-e2e.json` sets `diagnostics: false`, so a spec like this runs green while
+failing `tsc`.
+
+**Blocking or not:** blocking for a clean typecheck only.
+
+## 2026-08-28 · S1 → whoever owns member removal · a transfer party cannot be hard-deleted
+
+**What I need:** a decision on what happens to `ownership_transfers` history when a membership is
+removed. I have not changed the behaviour; I am reporting a defect my ticket 08 column widened.
+
+**Why:** all three party FKs on `ownership_transfers` are `ON DELETE RESTRICT` —
+`fk_ownership_transfers_from_member` and `fk_ownership_transfers_to_member` (both pre-existing) and
+`fk_ownership_transfers_initiator` (mine, `0614`). Nothing anywhere deletes an `ownership_transfers`
+row: `grep -rn "delete(ownershipTransfers)" src/` returns nothing. `removeMember` and
+`leaveOrganization` only set `status = 'CANCELLED'` on PENDING rows, then hard-delete the
+`organization_members` row.
+
+Proved against the dev database, in a rolled-back transaction, using a membership that was **only** an
+initiator and never `from`/`to`:
+
+```
+inserted a CANCELLED transfer initiated by that membership
+RESULT: deleting the initiator FAILED  code=23001  constraint=fk_ownership_transfers_initiator
+        update or delete on table "organization_members" violates RESTRICT setting of
+        foreign key constraint "fk_ownership_transfers_initiator" on table "ownership_transfers"
+```
+
+The pre-existing half is reachable without any of my work: a member who **declines** a transfer keeps a
+`to_membership_id` reference forever and can then never be removed. Ticket 08's own premise — an org
+owner initiating a transfer for a module they do not own — is what makes the initiator a third party who
+was not previously pinned.
+
+**The trade-off, which is a product call, not a code call:** `CASCADE` deletes the transfer's audit trail
+along with the member; `RESTRICT` blocks the removal. The rest of this refactor chose `CASCADE`
+(`agent_tokens`, `user_delegations`, `user_module_access` all cascade on the membership FK), so
+`ownership_transfers` is the outlier — but it is the only one of the four that is a historical record
+rather than a live grant.
+
+**Blocking or not:** not blocking this session. It surfaces as a `500` on member removal, not as an
+authorization hole.
+
+## 2026-08-28 · S1 → whoever owns `common/tenant` · the audit row cannot name a system job
+
+**What I need:** the acting principal on `TenantContext`, so `AuditService` can record what kind of
+actor performed an action.
+
+**Why:** ticket 02 asks that a system principal be auditable — "the audit row names the job, not a
+person". Half of that holds: `systemActor()` sets `isOrgOwner: false` by construction and
+`pnpm check:owner-authority` fails the build on any `isOrgOwner: true` literal across all 3,054
+production files, so no job can attribute work to an owner.
+
+The other half does not. `systemActor()` puts the job id in `sessionId` (`system:<jobId>`), but
+`AuditEntry` (`common/audit/audit.service.ts:13`) has no `sessionId`, `actorKind` or `actorRef` field, so
+it is never persisted. The audit row records `userId`, which is the literal `"system"` for a job with no
+delegating human. `principalAuditIdentity(principal)` already returns `{ actorKind, actorRef }` with the
+job id as `actorRef` — and **nothing calls it**; `knip` lists it as an unused export.
+
+I cannot wire it: it needs the principal on `TenantContext`
+(`common/tenant/tenant-context.ts:9` carries only `orgId`, `audience`, `tx`, `afterCommit`), and
+`common/tenant` is explicitly not my territory. I left the helper in place rather than deleting it, so
+whoever adds the context field has the piece ready.
+
+**Blocking or not:** not blocking. I un-ticked the criterion in ticket 02 rather than let it read as
+satisfied.
+
+## 2026-08-28 · S1 → whoever owns org hierarchy · every hierarchy route returns 402
+
+**What I need:** triage of `src/modules/organization/hierarchy/org-hierarchy.controller.e2e-spec.ts`,
+which I ran but do not own.
+
+**Why:** 5 failures, every one receiving **402 Payment Required** where the spec expects 200 or 403 —
+including the two RBAC cases, so the plan/entitlement gate is firing ahead of the permission check and
+the RBAC assertions are no longer testing anything.
+
+```
+200 with valid owner token on GET /org-hierarchy/business-units   Expected: 200  Received: 402
+GET /org-hierarchy/tree returns an array                          Expected: 200  Received: 402
+403 on POST /org-hierarchy/business-units without manage           Expected: 403  Received: 402
+403 on POST /org-hierarchy/branches without manage                 Expected: 403  Received: 402
+Tenant isolation lists only org-scoped data                        Expected: 200  Received: 402
+```
+
+Either the e2e harness stopped seeding an entitlement the hierarchy module now requires, or the module
+was added to plan gating. Note a 402 masking a 403 is the same shape of defect as the `@Idempotent` 400s
+above: a gate moving ahead of the authorization check turns every RBAC assertion green-by-accident or
+red-for-the-wrong-reason.
+
+**Blocking or not:** not blocking me — nothing in these five touches this session's eight tickets.

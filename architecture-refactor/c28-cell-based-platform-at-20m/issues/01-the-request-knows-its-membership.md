@@ -39,3 +39,17 @@ This is the prefactor the rest of Phase 0 stands on. Every authorization edge in
 ---
 
 PRD: [`c28 — Organization-routed cells for 20M+ users`](../prd.md) · Candidate index: [`../README.md`](../README.md)
+
+## Post-close verification (2026-08-28)
+
+Making `membershipId` required on `MembershipState` left one straggler the earlier pass missed:
+`backend/test/helpers/membership-state.ts` builds a `MembershipState` and did not set it, which
+`tsc --noEmit` reported as `TS2741`. The helper is used by five e2e specs (`me`, `projects-ai`,
+`chat-entity-channel`, `leads`, `roles`), and because `ts-jest` is transpile-only those specs kept
+running — with `membershipId: undefined`, which is neither a membership nor the `null` the guard refuses
+on. Exactly the shape of trap where the dangerous half still compiles.
+
+Fixed: `MembershipStateOverride` now carries an optional `membershipId`, and each stubbed user gets a
+distinct id by position so two users in one spec cannot silently share a membership. After the fix,
+`tsc --noEmit` reports **zero** errors in this session's territory; the 26 that remain belong to S2's
+users-column drop and S3's placement-lease spec, both raised in `CROSS-SESSION.md`.

@@ -25,8 +25,10 @@ This is the Phase 1 opener. Nothing moves; the deployment becomes cell `legacy-1
   PASS src/common/region/region-registry.spec.ts
   PASS src/common/tenant/__tests__/with-tenant-region.spec.ts
   PASS src/modules/storage/storage-region.spec.ts
-  ... 13 suites, 128 tests passed (84 pre-existing + 44 new)
+  ... 15 suites, 164 tests passed across common/region + common/tenant + storage-region
   ```
+
+  The nine pre-existing suites were verified **untouched**, not merely passing: zero commits against them since the session began and a clean worktree for each. "Passes unchanged" is therefore true by provenance, not just by outcome.
 
 - [x] The current production deployment is placed as cell `legacy-1` and behaves exactly as it does today.
 
@@ -34,7 +36,7 @@ This is the Phase 1 opener. Nothing moves; the deployment becomes cell `legacy-1
 
 - [x] `MOVING`, `READ_ONLY` and `FAILED` each have declared request behaviour, and an unknown placement is refused.
 
-  `decidePlacement()` in `common/region/placement.ts` is the single declaration. `FAILED` refuses reads and writes; `MOVING` and `READ_ONLY` serve reads and refuse writes — during relocation the source cell stays authoritative until the flip, and stopping its reads would turn a migration into an outage. An expired fence lease refuses writes even while the status still reads `ACTIVE`. Unknown/unplaced raises from the registry. Ten cases in `placement.spec.ts`, all passing.
+  `decidePlacement()` in `common/region/placement.ts` is the single declaration. `FAILED` refuses reads and writes; `MOVING` and `READ_ONLY` serve reads and refuse writes — during relocation the source cell stays authoritative until the flip, and stopping its reads would turn a migration into an outage. An expired fence lease refuses writes even while the status still reads `ACTIVE`. Unknown/unplaced raises from the registry. Twelve cases in `placement.spec.ts`, all passing (10 status/intent cases + 2 legacy-region normalisation cases).
 
 - [x] The placement read stays outside the tenant transaction — it runs before one is opened, and routing it into a caller's transaction ties it to the wrong database the moment a second cell exists.
 

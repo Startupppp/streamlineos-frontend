@@ -82,7 +82,7 @@
     √ sets statusV2 = PURGED and status = PURGED in the same transaction so legacy readers exclude the org
     √ blocks completion when an adapter cannot confirm deletion, leaving the org PURGE_SCHEDULED
     √ refuses to purge an organization under an active legal hold
-  Tests: 5 passed, 5 total
+  Tests: 9 passed, 9 total
   ```
 
   The first test is the pre-existing one; it keeps its original assertions and reaches the completion path by supplying a confirming registry, so the both-columns-consistent contract is still pinned.

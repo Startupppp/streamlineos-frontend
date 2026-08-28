@@ -37,3 +37,18 @@
 ---
 
 PRD: [`c28 — Organization-routed cells for 20M+ users`](../prd.md) · Candidate index: [`../README.md`](../README.md)
+
+## Post-close verification (2026-08-28)
+
+An adversarial re-review found `remainingSeconds` in `modules/access/snapshot-validity.ts` was exported,
+covered by four of its own spec cases, and **called from nowhere in production** —
+`grep -rn "remainingSeconds" src/` returned only the definition and its spec. Its own tests made it look
+load-bearing, and its `Math.max(1, …)` floor would have handed an already-expired snapshot a 1-second
+Redis TTL had anything used it as the expiry signal.
+
+Deleted, with its spec block. The enforcement was never the Redis TTL: it is the `validUntil` field
+carried inside the cached value and re-checked on every read in `resolveWithValidity`
+(`if (cached.validUntil > this.clock.now().getTime())`), which covers the in-memory and Redis layers
+alike because both return through that one call. `snapshotValidUntil` and `earliestTransition` remain and
+are both live. `node ./node_modules/jest/bin/jest.js src/modules/access/snapshot-validity.spec.ts` →
+`Tests: 9 passed, 9 total`.
