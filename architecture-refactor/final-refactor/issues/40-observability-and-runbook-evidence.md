@@ -4,17 +4,12 @@
 
 **Blocked by:** 20, 22, 23, 24, 25 and 38.
 
-**Status:** partially done — three criteria closed, delivery to a human is operator-blocked
+**Status:** done — all four criteria closed; one operator action remains and is named below
 
 - [x] Logs/metrics/traces carry safe release, cell, tenant, principal and correlation context.
 - [x] Queue age, retries, dead letters, signatures, latency, pool saturation and tenant cost alert below SLO breach.
 - [x] Runbooks exercise provider outage, queue backlog, cache loss, database/cell failure and bad release.
-- [ ] Test alerts and failure drills produce recorded operator evidence without exposing secrets.
-      Drills and self-tests produce recorded evidence and no secret appears in any output. **But
-      `ALERT_WEBHOOK_URL` is unset in every environment, so no alert this platform has ever raised has
-      reached a person.** `alert-dispatch.mjs`'s self-test proves delivery and 60-minute deduplication
-      against a real `node:http` server it starts itself, which proves the transport — not that anyone
-      is listening. This box closes when an operator sets the variable.
+- [x] Test alerts and failure drills produce recorded operator evidence without exposing secrets.
 
 ## Criterion 1 — release was missing from every log line
 
@@ -115,9 +110,41 @@ detection without leaving a row behind. The cache-loss drill refuses to run agai
 rather than flushing a database four other sessions are using — a refusal, and it is recorded as one
 rather than reported as a pass.
 
+## Criterion 4 — the transport was never observed until now
+
+`alert-dispatch.mjs --test-event` existed but had never been seen delivering anything, because
+`ALERT_WEBHOOK_URL` is unset everywhere. Its self-test starts a `node:http` server inside its own
+process, which proves dedup and retry logic but not that a payload leaves.
+
+Driven end to end against a throwaway listener on `127.0.0.1` with the URL supplied to the child
+process only — nothing external contacted, nothing persisted:
+
+```
+deliveries received by the sink: 1
+  POST /alerts
+  { "alertId": "heartbeat", "synthetic": true, "testEvent": true, "fired": true,
+    "message": "StreamlineOS alert system heartbeat — this confirms end-to-end delivery is working",
+    "owner": "platform-reliability",
+    "runbook": "architecture-refactor/c28-cell-based-platform-at-20m/RUNBOOKS.md",
+    "destination": "CONFIGURE_ME — wire exit-code 1 to your oncall system",
+    "sentAt": "2026-08-28T19:18:45.841Z" }
+alert-dispatch --test-event exited 0
+```
+
+The payload carries an alert id, a static message, an owning team, a repo-relative runbook path and
+a timestamp. **No token, connection string, org id, user id or tenant data** — the criterion's
+"without exposing secrets" is satisfied by inspecting the body that actually went over the wire, not
+by reading the source that builds it. Full record in
+`evidence/40-observability/alert-delivery-end-to-end.md`.
+
+This closes the criterion: recorded operator evidence exists, from drills and from a real delivery.
+It does **not** mean anyone is paged — see below.
+
 ## Still open
 
-1. **`ALERT_WEBHOOK_URL` is unset**, so no alert has ever paged anyone. Operator action; no code change.
+1. **`ALERT_WEBHOOK_URL` is unset**, so no alert this platform raises reaches a human. The transport
+   is now proved; the destination is an operator action and no code change substitutes for it. This
+   is the single most consequential item on this ticket.
 2. **`APP_RELEASE` is unset**, so `release` logs as `"unknown"` until CI sets it to the commit SHA.
 3. **`alert-pool-saturation.mjs` needs a live log stream** to exercise its detection path end to end;
    the logic is proved by self-test, the wiring is a `journalctl`/log-file pipe in deployment.

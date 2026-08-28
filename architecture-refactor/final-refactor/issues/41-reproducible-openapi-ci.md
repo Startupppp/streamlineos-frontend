@@ -4,7 +4,7 @@
 
 **Blocked by:** 26 and 28.
 
-**Status:** three criteria closed; criterion 3's route-access half is blocked on ticket 28
+**Status:** done — all four criteria closed
 
 - [x] Contract generation has a documented non-production topology/configuration seam.
 - [x] OpenAPI freshness runs deterministically without undocumented local credentials.
