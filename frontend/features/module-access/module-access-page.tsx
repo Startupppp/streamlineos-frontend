@@ -59,7 +59,8 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
   );
   const handleOpenCreateGroup = useCallback(() => setCreateGroupOpen(true), []);
   const handleOpenAddMember = useCallback(() => setAddMemberOpen(true), []);
-  const canViewOwnership = isModuleOwner;
+  const canViewOwnership =
+    myPerms?.isOrgOwner === true || myPerms?.isOrgAdmin === true || isModuleOwner;
   const visibleTab = tab === "ownership" && !canViewOwnership ? "roles" : tab;
 
   return (
@@ -136,9 +137,9 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
             />
           </TabsContent>
 
-          {isModuleOwner ? (
+          {canViewOwnership ? (
             <TabsContent value="ownership" className={TAB_PANEL_CLASS}>
-              <OwnershipSection moduleKey={moduleKey} canManage />
+              <OwnershipSection moduleKey={moduleKey} canManage={canViewOwnership} />
             </TabsContent>
           ) : null}
         </div>

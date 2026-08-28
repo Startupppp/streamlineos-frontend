@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Pencil, Trash2, Play, Archive } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
@@ -154,9 +155,7 @@ export function FormsDataTable({ forms }: FormsDataTableProps) {
       columns={columns}
       getRowKey={(row) => row.id}
       emptyState={
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <p className="text-sm text-muted-foreground">No forms yet. Create your first form to get started.</p>
-        </div>
+        <EmptyState className="border-0 bg-transparent min-h-[40vh]" title="No forms yet." description="Create your first form to get started." />
       }
     />
   );

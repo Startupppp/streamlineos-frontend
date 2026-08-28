@@ -1,8 +1,6 @@
-"use client";
-
 import { ModuleAutomationsSettings } from "@/features/shared/automations/module-automations-settings";
 
-export default function SupportAutomationsPage() {
+export default async function SupportAutomationsPage() {
   return (
     <ModuleAutomationsSettings
       config={{

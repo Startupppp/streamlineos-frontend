@@ -160,6 +160,14 @@ export function formatDealId(id: number): string {
   return `DEAL-${id.toString().padStart(4, "0")}`;
 }
 
+export function formatNumber(value: number, locale: string): string {
+  return new Intl.NumberFormat(locale).format(value);
+}
+
+export function formatPercent(value: number, locale: string): string {
+  return `${new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(value)}%`;
+}
+
 export function numberToWords(num: number): string {
   const ones = [
     "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",

@@ -1,9 +1,7 @@
-"use client";
-
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { CreateJobForm } from "@/features/hr/recruitment/jobs/create-job-form";
 
-export default function NewJobPage() {
+export default async function NewJobPage() {
   return (
     <PageWrapper
       title="Create New Job Opening"

@@ -11,8 +11,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Inbox } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { EmptyState } from "@/components/ui/empty-state";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { SearchInput } from "@/components/ui/search-input";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
@@ -183,11 +183,7 @@ export function QueueTab() {
           ))}
         </div>
       ) : !data || data.data.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <Inbox className="h-10 w-10 text-muted-foreground/40 mb-3" />
-          <p className="text-sm font-medium text-foreground">No tickets found</p>
-          <p className="text-xs text-muted-foreground mt-1">Adjust filters or wait for new submissions.</p>
-        </div>
+        <EmptyState title="No tickets found" description="No tickets match your current filters. Try adjusting your search or filters." compact className="py-16" />
       ) : (
         <>
           <div className="divide-y divide-border rounded-lg border border-border overflow-hidden">

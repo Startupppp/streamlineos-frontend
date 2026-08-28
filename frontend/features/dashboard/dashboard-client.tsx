@@ -60,6 +60,7 @@ import { AnnouncementsWidget } from "@/components/dashboard/announcements-widget
 import { UpcomingEventsWidget } from "@/components/dashboard/upcoming-events-widget";
 import { shouldRenderDashboardLoading } from "./dashboard-hydration";
 import { DeferredDashboardContent } from "./deferred-dashboard-content";
+import { HomeSectionBoundary } from "./home-section-boundary";
 
 const ExecutiveKpiWidget = dynamic(
   () =>
@@ -370,17 +371,17 @@ export function DashboardClient() {
               animate="visible"
               className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
             >
-              {projectsEnabled && <MyTasksWidget />}
-              {projectsEnabled && <TimesheetWidget />}
-              {hrEnabled && <LeaveBalanceWidget />}
-              <AlertsWidget />
-              <AnnouncementsWidget />
-              <UpcomingEventsWidget />
-              {canViewExecutive && <BusinessPulseWidget />}
-              {hrEnabled && canSelfAttendance && <MyAttendanceWidget />}
-              <PayrollWidget />
-              <ExpensesWidget />
-              <RecruitmentWidget />
+              {projectsEnabled && <HomeSectionBoundary sectionLabel="My tasks"><MyTasksWidget /></HomeSectionBoundary>}
+              {projectsEnabled && <HomeSectionBoundary sectionLabel="Timesheet"><TimesheetWidget /></HomeSectionBoundary>}
+              {hrEnabled && <HomeSectionBoundary sectionLabel="Leave balance"><LeaveBalanceWidget /></HomeSectionBoundary>}
+              <HomeSectionBoundary sectionLabel="Alerts"><AlertsWidget /></HomeSectionBoundary>
+              <HomeSectionBoundary sectionLabel="Announcements"><AnnouncementsWidget /></HomeSectionBoundary>
+              <HomeSectionBoundary sectionLabel="Upcoming events"><UpcomingEventsWidget /></HomeSectionBoundary>
+              {canViewExecutive && <HomeSectionBoundary sectionLabel="Business pulse"><BusinessPulseWidget /></HomeSectionBoundary>}
+              {hrEnabled && canSelfAttendance && <HomeSectionBoundary sectionLabel="My attendance"><MyAttendanceWidget /></HomeSectionBoundary>}
+              <HomeSectionBoundary sectionLabel="Payroll"><PayrollWidget /></HomeSectionBoundary>
+              <HomeSectionBoundary sectionLabel="Expenses"><ExpensesWidget /></HomeSectionBoundary>
+              <HomeSectionBoundary sectionLabel="Recruitment"><RecruitmentWidget /></HomeSectionBoundary>
             </motion.div>
 
         {showHrTeamRow && (
@@ -390,14 +391,16 @@ export function DashboardClient() {
             animate="visible"
             className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
           >
-            {canViewLeaves && <LeavesTodayWidget />}
+            {canViewLeaves && <HomeSectionBoundary sectionLabel="Who is out today"><LeavesTodayWidget /></HomeSectionBoundary>}
             {canViewAttendance && (
-              <TeamAttendanceWidget
-                data={teamAttendance}
-                isLoading={teamLoading}
-              />
+              <HomeSectionBoundary sectionLabel="Team attendance">
+                <TeamAttendanceWidget
+                  data={teamAttendance}
+                  isLoading={teamLoading}
+                />
+              </HomeSectionBoundary>
             )}
-            {canApproveLeaves && <PendingApprovalsWidget />}
+            {canApproveLeaves && <HomeSectionBoundary sectionLabel="Pending approvals"><PendingApprovalsWidget /></HomeSectionBoundary>}
           </motion.div>
         )}
 
@@ -408,14 +411,14 @@ export function DashboardClient() {
             animate="visible"
             className="grid grid-cols-1 gap-4 md:grid-cols-2"
           >
-            <BirthdaysWidget />
-            <UpcomingHolidaysWidget />
+            <HomeSectionBoundary sectionLabel="Birthdays"><BirthdaysWidget /></HomeSectionBoundary>
+            <HomeSectionBoundary sectionLabel="Upcoming holidays"><UpcomingHolidaysWidget /></HomeSectionBoundary>
           </motion.div>
         )}
 
         {showDocumentsCard && (
           <motion.div variants={fadeUp} initial="hidden" animate="visible">
-            <PublicDocumentsCard />
+            <HomeSectionBoundary sectionLabel="Company documents"><PublicDocumentsCard /></HomeSectionBoundary>
           </motion.div>
         )}
 
@@ -427,20 +430,24 @@ export function DashboardClient() {
             className="grid grid-cols-1 gap-4 md:auto-rows-[22rem] lg:grid-cols-7"
           >
             <div className="min-h-0 lg:col-span-4">
-              <MyIssuesCard
-                tickets={sortedMyTickets}
-                isLoading={ticketsLoading}
-                error={ticketsError}
-                onRetry={handleRetryTickets}
-              />
+              <HomeSectionBoundary sectionLabel="My issues">
+                <MyIssuesCard
+                  tickets={sortedMyTickets}
+                  isLoading={ticketsLoading}
+                  error={ticketsError}
+                  onRetry={handleRetryTickets}
+                />
+              </HomeSectionBoundary>
             </div>
             <div className="min-h-0 lg:col-span-3">
-              <SprintCard
-                summary={sprintSummary ?? undefined}
-                isLoading={sprintLoading}
-                error={sprintError}
-                onRetry={handleRetrySprint}
-              />
+              <HomeSectionBoundary sectionLabel="Active sprint">
+                <SprintCard
+                  summary={sprintSummary ?? undefined}
+                  isLoading={sprintLoading}
+                  error={sprintError}
+                  onRetry={handleRetrySprint}
+                />
+              </HomeSectionBoundary>
             </div>
           </motion.div>
         )}
@@ -454,31 +461,37 @@ export function DashboardClient() {
           >
             {projectsEnabled && canViewTickets && (
               <div className="min-h-0">
+                <HomeSectionBoundary sectionLabel="Recent projects">
                 <RecentProjectsCard
-                  projects={recentProjects?.map((p) => ({
-                    ...p,
-                    key: p.key ?? "",
-                  }))}
-                  isLoading={projectsLoading}
-                  error={projectsError}
-                  onCreateProject={handleGoToProjects}
-                  onRetry={handleRetryProjects}
-                />
+                    projects={recentProjects?.map((p) => ({
+                      ...p,
+                      key: p.key ?? "",
+                    }))}
+                    isLoading={projectsLoading}
+                    error={projectsError}
+                    onCreateProject={handleGoToProjects}
+                    onRetry={handleRetryProjects}
+                  />
+                </HomeSectionBoundary>
               </div>
             )}
             {projectsEnabled && canViewTickets && (
               <div className="min-h-0">
+                <HomeSectionBoundary sectionLabel="Recent activity">
                 <RecentActivityCard
-                  items={recentActivity}
-                  isLoading={activityLoading}
-                  error={activityError}
-                  onRetry={handleRetryActivity}
-                />
+                    items={recentActivity}
+                    isLoading={activityLoading}
+                    error={activityError}
+                    onRetry={handleRetryActivity}
+                  />
+                </HomeSectionBoundary>
               </div>
             )}
             {hrEnabled && canViewAttendance && (
               <div className="min-h-0">
-                <TeamCard members={teamAvailability} isLoading={teamLoading} />
+                <HomeSectionBoundary sectionLabel="Team availability">
+                  <TeamCard members={teamAvailability} isLoading={teamLoading} />
+                </HomeSectionBoundary>
               </div>
             )}
           </motion.div>

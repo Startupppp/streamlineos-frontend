@@ -4,10 +4,12 @@
 
 **Blocked by:** 10 — Migrate Billing, Accounting, Finance and Support actors.
 
-**Status:** ready-for-agent
+**Status:** implemented
 
-- [ ] Active billable seats and effective-dated proration produce immutable ledger evidence.
-- [ ] Usage ingestion and provider webhooks are idempotent, signature-verified and replayable.
-- [ ] Invoice/credit-note snapshots, currency minor units and tax behavior are immutable and explicit.
-- [ ] Entitlements are locally cached with event invalidation and no provider request-path call.
-- [ ] Provider replay, concurrency, proration, tax/currency and entitlement-cache tests pass.
+- [x] Active billable seats and effective-dated proration produce immutable ledger evidence.
+- [x] Usage ingestion and provider webhooks are idempotent, signature-verified and replayable.
+- [x] Invoice/credit-note snapshots, currency minor units and tax behavior are immutable and explicit.
+- [x] Entitlements are locally cached with event invalidation and no provider request-path call.
+- [x] Provider replay, concurrency, proration, tax/currency and entitlement-cache tests pass.
+
+Evidence: billing ledger, webhook, snapshot, proration, usage and entitlement focused tests pass.

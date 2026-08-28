@@ -14,6 +14,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyTransferIllustration } from "@/components/illustrations";
 import { Money } from "@/features/accounting/shared";
+import { useOrgDisplay } from "@/hooks/api/org-display";
+import { formatMoneyCompact } from "@/lib/format-utils";
 import { useCan } from "@/hooks/api/access";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useBankAccounts } from "@/hooks/api/accounting/banking";
@@ -116,6 +118,7 @@ export function BankingHubClient() {
   const canManage = useCan("accounting:banking:manage");
   const { data, isLoading, isError, error } = useBankAccounts();
   const { iconRef: addIconRef, hoverHandlers: addHoverHandlers } = useAnimatedIcon();
+  const display = useOrgDisplay();
 
   const accounts = data?.items ?? [];
 
@@ -154,15 +157,7 @@ export function BankingHubClient() {
         <StatCardGrid cols={4}>
           <StatCard
             label="Total Cash Balance"
-            value={
-              isLoading
-                ? "—"
-                : new Intl.NumberFormat("en-IN", {
-                    style: "currency",
-                    currency: "INR",
-                    maximumFractionDigits: 0,
-                  }).format(totalBalance)
-            }
+            value={isLoading ? "—" : formatMoneyCompact(totalBalance, display)}
             icon={Landmark}
             tone="default"
             isLoading={isLoading}

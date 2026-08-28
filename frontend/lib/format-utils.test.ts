@@ -5,6 +5,8 @@ import {
   formatCurrencyForBilling,
   formatINR,
   formatINRCompact,
+  formatNumber,
+  formatPercent,
 } from "./format-utils";
 
 describe("formatMoney — canonical multi-currency formatter", () => {
@@ -162,5 +164,56 @@ describe("formatINRCompact — legacy INR compact formatter", () => {
   it("returns a safe fallback for NaN", () => {
     const result = formatINRCompact(NaN);
     expect(result).toBe("₹0");
+  });
+});
+
+describe("formatNumber — plain locale-aware number formatter", () => {
+  it("formats a number with en-IN grouping", () => {
+    const result = formatNumber(1234567, "en-IN");
+    expect(result).toContain("12,34,567");
+  });
+
+  it("formats a number with en-US grouping", () => {
+    const result = formatNumber(1234567, "en-US");
+    expect(result).toContain("1,234,567");
+  });
+
+  it("formats zero without throwing", () => {
+    expect(formatNumber(0, "en-IN")).toBe("0");
+  });
+
+  it("formats a negative number without throwing", () => {
+    const result = formatNumber(-999, "en-IN");
+    expect(result).toContain("999");
+    expect(result).toContain("-");
+  });
+
+  it("formats a decimal number", () => {
+    const result = formatNumber(12.5, "en-US");
+    expect(result).toContain("12.5");
+  });
+});
+
+describe("formatPercent — locale-aware percentage formatter", () => {
+  it("appends a percent sign", () => {
+    expect(formatPercent(42, "en-IN")).toMatch(/%/);
+  });
+
+  it("renders up to one decimal place", () => {
+    expect(formatPercent(12.456, "en-US")).toBe("12.5%");
+  });
+
+  it("renders a round number without trailing decimal", () => {
+    expect(formatPercent(60, "en-US")).toBe("60%");
+  });
+
+  it("formats zero as 0%", () => {
+    expect(formatPercent(0, "en-IN")).toBe("0%");
+  });
+
+  it("formats a negative percentage without throwing", () => {
+    const result = formatPercent(-5.5, "en-US");
+    expect(result).toContain("%");
+    expect(result).toContain("5");
   });
 });

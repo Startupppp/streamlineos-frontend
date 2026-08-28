@@ -117,20 +117,88 @@ actively writing. `CATCH_UP` is the state an idle test never enters.
 
 ## What this repository cannot provision
 
-These are real gaps, not pending work items. Each names what would close it.
+Verdicts are what `cell:isolation` would report with the current source and a
+correctly-populated `.env`. The "what would close it" column names the next
+concrete step, whether code or purchase.
 
-| Resource | State | What would close it |
+**NAMESPACED is not ISOLATED.** A NAMESPACED resource uses key/prefix
+separation within a shared instance. An attacker holding the master credential
+of that instance (the Upstash token, the R2 access key, the Ably root key) can
+still read all cells' data. Every NAMESPACED row below carries this caveat.
+
+| Resource | Verdict (env configured) | What would close it to ISOLATED |
 |---|---|---|
-| Cell database | **Provisioned.** `cell2` on the same Neon project, its own migration chain, its own RLS, reached by the `NOBYPASSRLS` application role. | — |
-| Cell compute | **Shared.** `cell2` runs on the same Neon endpoint as `neondb`, so a capacity number measured here is not a per-cell number. | A separate Neon project or a separate compute endpoint, and `REGION_CELL_2_APP_DATABASE_URL` pointed at it. |
-| Redis | **Shared.** One Upstash instance, no per-cell override. | A Redis instance per cell and a `RegionCacheConfig` beside `RegionStorageConfig` in `region.config.ts`. |
-| Object storage | **Shared.** One R2 bucket. `RegionStorageConfig` already carries a per-region bucket and endpoint, so this is configuration, not code. | `REGION_CELL_2_R2_BUCKET_NAME` and `REGION_CELL_2_R2_ENDPOINT` pointed at a cell-owned bucket or prefix. |
-| Search index | **Absent.** No search cluster is deployed for any cell; `searchCluster` is a declared string with nothing behind it. | A search cluster per cell, and the ACL-safe retrieval path pointed at the cell's own index. |
-| Worker pools | **Shared.** Cron and the outbox relay run inside the control-plane process. | A worker deployment per cell, scheduled against the cell's own database. |
-| Realtime broker | **Shared.** One Ably application; channel names carry the organization id but not the cell. | An Ably application per cell, or a cell segment in the channel namespace and per-cell capability tokens. |
-| Monitoring | **Unproved.** No cell dimension is readable back from logs, spans or metrics. | A `cellId` label on every log line, span and metric, and a per-cell dashboard and alert destination. |
-| Backup and PITR | **Logical only.** `cell:backup` is a logical dump, restore and read-back verification. Point-in-time recovery is a Neon control-plane operation. | A `NEON_API_KEY` and a scripted branch-restore exercise, timed against the PRD's 5-minute recovery point and 60-minute cell recovery time. |
-| Cross-cell events | **Declared, not transported.** `common/region/cross-cell-events.ts` declares the allowlist and refuses everything else; no cross-cell transport exists to carry them. | A per-cell broker namespace and a relay that calls `assertMayCrossCells` before publishing. |
+| Cell database | **ISOLATED.** `cell2` has its own logical DB, migration chain and RLS on the `NOBYPASSRLS` application role. | — |
+| Cell compute | **SHARED (unavoidable today).** `cell2` runs on the same Neon compute endpoint as `neondb`, so capacity measured here is not a per-cell number. | A separate Neon project or compute endpoint; point `REGION_CELL_2_APP_DATABASE_URL` at it. |
+| Redis (cache) | **NAMESPACED** when `REGION_CELL_2_CACHE_KEY_PREFIX=cell-2` is set. Every key for an org in cell-2 carries the prefix; accidental cross-cell collisions in the shared Upstash instance are prevented. See `.env.example`. | A second Upstash instance; set `REGION_CELL_2_UPSTASH_REDIS_REST_URL` and `REGION_CELL_2_UPSTASH_REDIS_REST_TOKEN`. The `RegionCacheConfig` seam in `region.config.ts` already carries `upstashUrl`/`upstashToken`; wiring the cache service to use them is the remaining code step. |
+| Object storage | **NAMESPACED** when `REGION_CELL_2_R2_KEY_PREFIX=cell-2` is set. Every object key for an org in cell-2 is prefixed. See `.env.example`. | A dedicated R2 bucket; set `REGION_CELL_2_R2_BUCKET_NAME`, `REGION_CELL_2_R2_ENDPOINT`, and matching credentials. `RegionStorageConfig` already carries these fields; it is configuration, not code. |
+| Search index | **SHARED (no cluster deployed).** `searchCluster` is a declared string with nothing behind it. | A search cluster per cell; set `REGION_CELL_2_SEARCH_CLUSTER` and `REGION_CELL_2_SEARCH_API_KEY`. |
+| Worker pools | **NAMESPACED** when `REGION_CELL_2_CELL_ID=cell-2` is set on the worker process. Cron lease keys are `cron:lease:cell-2:<job>`; `forEachOrg` now also selects organizations from cell-2's database rather than the primary's. (**Code fix landed 2026-08-29.**) | A worker deployment per cell so the process boundary enforces isolation. The lease-store (Redis) is still shared; a per-cell Redis instance would close that. |
+| Realtime broker | **NAMESPACED.** Every Ably channel and token capability is cell-prefixed (`cell:cell-2:*`). A token minted for cell-2 cannot subscribe to cell-1's namespace. | An Ably application per cell; set `REGION_CELL_2_ABLY_API_KEY`. `RegionDefinition.ablyApiKey` already reads it. |
+| Monitoring | **NAMESPACED** when `CELL_ID=cell-2` is set on the process. Every log line carries `cellId="cell-2"`; `read-cell-logs.mjs` reads it back. | A per-cell log stream routed to a dedicated dashboard in the log collector. |
+| Backup and PITR | **Logical only.** `cell:backup` is a logical dump, restore and read-back verification. Point-in-time recovery is a Neon control-plane operation. | A `NEON_API_KEY` and a scripted branch-restore exercise, timed against the PRD's 5-minute RPO and 60-minute cell RTO. |
+| Cross-cell events | **Namespaced transport.** `CrossCellRelay` calls `assertMayCrossCells` before publishing; refusals are dead-lettered to the cell's own `cell_relay_dead_letters` table. The relay uses cell-prefixed Ably channels. | A separate Ably application per cell so the master key scope is cell-local. |
+
+## Provisioning runbook for ISOLATED resources
+
+Each step below closes one resource from NAMESPACED to ISOLATED. Steps are
+independent; they may be applied in any order.
+
+### Redis — second Upstash instance
+
+1. Create a new Upstash Redis instance in the Upstash console.
+2. Copy the REST URL and token.
+3. Add to the cell-2 deployment environment:
+   ```
+   REGION_CELL_2_UPSTASH_REDIS_REST_URL=https://<instance-id>.upstash.io
+   REGION_CELL_2_UPSTASH_REDIS_REST_TOKEN=<token>
+   ```
+4. Wire `RegionCellConfig.cache.upstashUrl` / `.upstashToken` into `CacheService`
+   so it selects the per-cell Redis client from the registry binding. This is the
+   remaining code step (touches `common/cache/cache.service.ts` and
+   `common/cache/cache.module.ts`).
+5. Run `pnpm -C backend cell:isolation --region=cell-2` and confirm Redis moves
+   from NAMESPACED to ISOLATED.
+
+### Object storage — dedicated R2 bucket
+
+1. Create a new R2 bucket and access key in the Cloudflare dashboard.
+2. Add to the cell-2 deployment environment:
+   ```
+   REGION_CELL_2_R2_BUCKET_NAME=<bucket-name>
+   REGION_CELL_2_R2_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
+   REGION_CELL_2_R2_ACCESS_KEY_ID=<key-id>
+   REGION_CELL_2_R2_SECRET_ACCESS_KEY=<secret>
+   ```
+   No code change needed; `RegionStorageConfig` already carries these fields.
+3. Run `pnpm -C backend cell:isolation --region=cell-2` and confirm storage moves
+   to ISOLATED.
+
+### Realtime — second Ably application
+
+1. Create a new Ably application in the Ably dashboard.
+2. Copy the root API key.
+3. Add to the cell-2 deployment environment:
+   ```
+   REGION_CELL_2_ABLY_API_KEY=<root-key>
+   ```
+   No code change needed; `RegionDefinition.ablyApiKey` reads it.
+4. Run `pnpm -C backend cell:relay` and confirm capability globs are cell-scoped.
+
+### Compute — separate Neon project
+
+1. Create a new Neon project in the Neon console.
+2. Create the application role: `pnpm -C backend db:bootstrap-role` against the
+   new project.
+3. Bootstrap the cell's schema:
+   ```
+   pnpm -C backend cell:bootstrap --region=cell-2 --database=cell2
+   ```
+   (Override `REGION_CELL_2_DATABASE_URL` and `REGION_CELL_2_APP_DATABASE_URL` to
+   point at the new project first.)
+4. Update those two vars in the cell-2 deployment environment.
+5. Run `pnpm -C backend cell:isolation --region=cell-2`; `cell compute` will
+   move from SHARED to an untested state until a capacity benchmark is run.
 
 ## Traps that have already cost time here
 

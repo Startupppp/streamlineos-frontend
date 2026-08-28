@@ -29,7 +29,7 @@ import { useProjects } from "@/hooks/api/build";
 import type { TimesheetRate, CreateRateInput, BillingType } from "@/features/timesheets/types";
 import { BILLING_TYPE_LABEL } from "@/features/timesheets/types";
 
-const BILLING_TYPE_OPTIONS: BillingType[] = ["BILLABLE", "NON_BILLABLE", "INTERNAL"];
+const BILLING_TYPE_OPTIONS: BillingType[] = ["BILLABLE", "NON_BILLABLE", "FIXED"];
 
 const SELECT_NONE = "__none__";
 

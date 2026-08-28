@@ -21,7 +21,9 @@ import {
 } from "@/components/ui/form";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Shield, AlertCircle, Lock } from "lucide-react";
+import { Shield, Lock } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { EyeIcon, EyeOffIcon } from "@animateicons/react/lucide";
 import type { HrSensitiveData } from "@/types/hr/core";
 import type { Control } from "react-hook-form";
@@ -219,15 +221,8 @@ export function EmployeeSensitiveTab({ userId }: Props) {
     });
   });
 
-  if (!canView) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <Shield className="w-8 text-muted-foreground mb-3" />
-        <p className="text-sm font-medium text-foreground">Access Restricted</p>
-        <p className="text-xs text-muted-foreground mt-1">You don&apos;t have permission to view sensitive employee data.</p>
-      </div>
-    );
-  }
+  if (!canView)
+    return <NoPermissionState permission="hr:sensitive:view" className="py-16" />;
 
   if (empLoading || sensitiveLoading) {
     return (
@@ -239,14 +234,8 @@ export function EmployeeSensitiveTab({ userId }: Props) {
     );
   }
 
-  if (!employment) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <AlertCircle className="w-8 text-muted-foreground mb-3" />
-        <p className="text-sm text-muted-foreground">No employment record found.</p>
-      </div>
-    );
-  }
+  if (!employment)
+    return <EmptyState title="No employment record found." compact className="py-16" />;
 
   const displayValues = sensitiveToForm(sensitive);
 

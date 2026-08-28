@@ -1,19 +1,13 @@
+import { formatCurrencyFull } from "@/lib/format-utils";
+
 export function formatMoney(
   amountString: string | number | null | undefined,
   currency = "INR",
 ): string {
-  if (amountString === null || amountString === undefined || amountString === "") {
-    return "—";
-  }
+  if (amountString === null || amountString === undefined || amountString === "") return "—";
   const amount = typeof amountString === "string" ? parseFloat(amountString) : amountString;
   if (!Number.isFinite(amount)) return "—";
-
-  return new Intl.NumberFormat(currency === "INR" ? "en-IN" : "en-US", {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(amount);
+  return formatCurrencyFull(amount, currency);
 }
 
 export function formatMonth(yyyyMm: string): string {

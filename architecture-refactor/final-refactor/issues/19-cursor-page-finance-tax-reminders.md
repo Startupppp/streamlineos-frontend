@@ -4,9 +4,11 @@
 
 **Blocked by:** 12 — Add the missing tenant-leading indexes.
 
-**Status:** ready-for-agent
+**Status:** implemented
 
-- [ ] List contracts use allowlisted Zod filters/sorts and stable cursors.
-- [ ] Queries use explicit DTO projections and matching indexes.
-- [ ] Retention behavior for delete/archive is implemented from the opening decision.
-- [ ] Pagination, authorization and query-budget tests pass.
+- [x] List contracts use allowlisted Zod filters/sorts and stable cursors.
+- [x] Queries use explicit DTO projections and matching indexes.
+- [x] Retention behavior for delete/archive is implemented from the opening decision.
+- [x] Pagination, authorization and query-budget tests pass.
+
+Evidence: finance tax and reminder lists use bounded ID cursors and explicit projections; archive columns and tenant-leading indexes are journaled in migrations 0631 and 0632.

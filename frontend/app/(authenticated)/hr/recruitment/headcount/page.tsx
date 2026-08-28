@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useSession } from "next-auth/react";
+import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useHrDepartments } from "@/hooks/api/hr";
@@ -67,8 +67,6 @@ const STATUS_COLORS: Record<HeadcountStatus, BadgeVariant> = {
   REJECTED: "destructive",
   JOB_CREATED: "default",
 };
-
-const HR_ROLES = ["FINAL", "HR", "ADMIN", "HR_MANAGER", "OWNER"];
 
 function statusLabel(s: HeadcountStatus): string {
   return s === "JOB_CREATED" ? "Job Created" : s.charAt(0) + s.slice(1).toLowerCase();
@@ -315,11 +313,9 @@ function RequestCard({
 }
 
 export default function HeadcountPage() {
-  const { data: session } = useSession();
   const router = useRouter();
   const qc = useQueryClient();
-  const role = (session?.user as { role?: string })?.role ?? "";
-  const isHr = HR_ROLES.includes(role);
+  const isHr = useCan("hr:employees:manage");
 
   const { data: requests = [], isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.hr.headcountRequests(),

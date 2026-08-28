@@ -54,10 +54,9 @@ const ROUNDING_OPTIONS: { value: RoundingRule; label: string }[] = [
 ];
 
 const APPROVAL_OPTIONS: { value: ApprovalMode; label: string }[] = [
-  { value: "NONE", label: "No approval" },
+  { value: "AUTO", label: "No approval (auto-approve)" },
   { value: "MANAGER", label: "Manager approval" },
-  { value: "PROJECT", label: "Project manager" },
-  { value: "CLIENT", label: "Client approval" },
+  { value: "MULTI_LEVEL", label: "Multi-level approval" },
 ];
 
 const REQUIRED_FIELD_OPTIONS = [
@@ -170,7 +169,7 @@ export function GeneralSettingsForm() {
       backdateLimitDays: "",
       roundingRule: "NONE",
       requiredFields: [],
-      approvalMode: "NONE",
+      approvalMode: "MANAGER",
       clientApprovalEnabled: false,
       lockAfterApproval: false,
       lockAfterInvoice: false,

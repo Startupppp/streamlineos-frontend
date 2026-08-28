@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { homeSectionModule } from "@/lib/home/home-sections";
 import type {
   DashboardStats,
   RecentProject,
@@ -396,6 +397,8 @@ export const useExecutiveDashboard = (
 export const usePublicDocuments = (limit = 6, enabled = true) => {
   const { data: session } = useSession();
   const orgId = session?.orgId ?? "";
+  const hrEnabled = useModuleEnabled(homeSectionModule("public-documents") ?? "hr");
+  const canView = useCan("hr:documents:view");
   return useQuery<PublicDoc[]>({
     queryKey: queryKeys.dashboard.publicDocuments(limit),
     queryFn: async () => {
@@ -403,6 +406,6 @@ export const usePublicDocuments = (limit = 6, enabled = true) => {
       return res.data;
     },
     staleTime: 5 * 60_000,
-    enabled: !!orgId && enabled,
+    enabled: !!orgId && hrEnabled && canView && enabled,
   });
 };

@@ -15,3 +15,10 @@ Read `PROTOCOL.md`, the PRD and tickets 04, 10, 19, 20, 23, 33 and 38.
 - Corresponding frontend features/routes, excluding shared route-registry and formatter primitives owned by S5.
 
 Ticket 23 starts immediately. Ticket 19 follows S1 ticket 12 and ticket 20 follows 19. Ticket 04 follows S1 ticket 03. Ticket 10 follows S1 ticket 06. Ticket 33 waits for S5 ticket 27. Ticket 38 follows 10.
+
+## Opening decisions
+
+- Tax-payment records are immutable for seven years. Reminder policies are auditable and reminder occurrences are retained for two years after resolution, with archival rather than destructive deletion.
+- Payment-provider replay and sandbox credentials are available for acceptance evidence; credentials remain local to the sandbox.
+- Organization currency and tax settings are authoritative for new transactions. Historical transaction snapshots remain immutable.
+- Migrations may be applied in the sandbox and changes remain uncommitted.

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useSession } from "next-auth/react";
+import { useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyTeamIllustration } from "@/components/illustrations";
@@ -17,12 +17,8 @@ import { SubmissionSheet } from "@/features/hr/recruitment/vendors/submission-sh
 import { VendorCard } from "@/features/hr/recruitment/vendors/vendor-card";
 import { ErrorState } from "@/components/shared/error-state";
 
-const HR_ROLES = ["FINAL", "HR", "ADMIN", "HR_MANAGER", "OWNER"];
-
 export default function VendorsPage() {
-  const { data: session } = useSession();
-  const role = (session?.user as { role?: string })?.role ?? "";
-  const isHr = HR_ROLES.includes(role);
+  const isHr = useCan("hr:employees:manage");
 
   const { data: vendors = [], isLoading, isError, refetch } = useRecruitmentVendors();
   const deleteVendor = useDeleteVendor();

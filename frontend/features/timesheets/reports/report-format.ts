@@ -1,3 +1,5 @@
+import { formatCurrencyFull } from "@/lib/format-utils";
+
 export function formatReportHours(value: number): string {
   return `${value.toFixed(1)}h`;
 }
@@ -7,15 +9,7 @@ export function formatReportPercent(ratio: number): string {
 }
 
 export function formatReportMoney(value: number, currency: string): string {
-  try {
-    return new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency,
-      maximumFractionDigits: 2,
-    }).format(value);
-  } catch {
-    return `${currency} ${value.toFixed(2)}`;
-  }
+  return formatCurrencyFull(value, currency);
 }
 
 export function memberLabel(name: string | null, email: string | null): string {

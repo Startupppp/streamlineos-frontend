@@ -6,6 +6,7 @@ import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useState, type ReactNode } from "react";
 import { getUserDisplayName } from "@/lib/person-display";
+import { formatCurrencyFull } from "@/lib/format-utils";
 import { SourceRefsPopover } from "./source-refs-popover";
 import {
   useAttendanceSnapshot,
@@ -204,11 +205,7 @@ const reimbursementColumns: DataTableColumn<PayrollInputSnapshot>[] = [
     className: "text-right",
     cell: (row) => {
       const p = row.payload as { totalAmount?: number };
-      return new Intl.NumberFormat("en-IN", {
-        style: "currency",
-        currency: "INR",
-        maximumFractionDigits: 0,
-      }).format(p.totalAmount ?? 0);
+      return formatCurrencyFull(p.totalAmount ?? 0, "INR", "en-IN", 0);
     },
   },
   {

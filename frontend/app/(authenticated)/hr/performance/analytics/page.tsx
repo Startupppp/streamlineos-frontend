@@ -106,7 +106,7 @@ export default function PerformanceAnalyticsPage() {
 
   const ratingDist = useMemo(() => {
     const counts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-    for (const r of (reviews ?? [])) {
+    for (const r of (reviews?.data ?? [])) {
       if (r.overallRating) {
         const bucket = Math.round(Number(r.overallRating));
         if (bucket >= 1 && bucket <= 5) counts[bucket] = (counts[bucket] ?? 0) + 1;
@@ -154,7 +154,7 @@ export default function PerformanceAnalyticsPage() {
             typeData={typeData}
             statusData={statusData}
             ratingDist={ratingDist}
-            hasReviews={!!reviews?.length}
+          hasReviews={Boolean(reviews?.data.length)}
           />
 
           <motion.div

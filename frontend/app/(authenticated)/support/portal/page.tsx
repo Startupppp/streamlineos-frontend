@@ -1,7 +1,5 @@
-"use client";
-
 import { PortalTicketListPage } from "@/features/support/portal/portal-ticket-list-page";
 
-export default function SupportPortalRoute() {
+export default async function SupportPortalRoute() {
   return <PortalTicketListPage />;
 }

@@ -4,9 +4,11 @@
 
 **Blocked by:** None (can start immediately).
 
-**Status:** ready-for-agent
+**Status:** implemented
 
-- [ ] Financial state and outbox intent commit atomically.
-- [ ] Duplicate retries cannot repeat an approval or external delivery.
-- [ ] Failures are observable and dead-lettered rather than swallowed.
-- [ ] Rollback, retry, replay and audit tests pass.
+- [x] Financial state and outbox intent commit atomically.
+- [x] Duplicate retries cannot repeat an approval or external delivery.
+- [x] Failures are observable and dead-lettered rather than swallowed.
+- [x] Rollback, retry, replay and audit tests pass.
+
+Evidence: the payable workflow and bill-approved outbox consumer are covered by focused accounting tests; billing/accounting verification passes.

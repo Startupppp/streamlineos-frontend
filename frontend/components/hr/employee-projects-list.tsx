@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { FolderKanban } from "lucide-react";
 import Link from "next/link";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface ProjectStats {
     todo: number;
@@ -20,18 +21,8 @@ interface ProjectItem {
 }
 
 export function EmployeeProjectsList({ projects }: { projects: ProjectItem[] }) {
-    if (!projects || projects.length === 0) {
-        return (
-            <div className="flex flex-col items-center justify-center px-2 py-6 text-center text-muted-foreground sm:py-8">
-                <div className="mb-3 h-20 w-20 sm:h-24 sm:w-24">
-                    <EmptyProjectsIllustration />
-                </div>
-                <p className="text-sm leading-relaxed">
-                    No active projects found for this employee.
-                </p>
-            </div>
-        );
-    }
+    if (!projects || projects.length === 0)
+        return <EmptyState illustration={<EmptyProjectsIllustration />} title="No active projects" description="No active projects found for this employee." className="flex-1" />;
 
     return (
         <div className="space-y-4">

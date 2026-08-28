@@ -4,8 +4,8 @@ import { useCallback, useState } from "react";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Inbox } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
@@ -71,6 +71,10 @@ export function MyTicketsTab() {
 
   const displayPage = pageIndex + 1;
 
+  function handleCreateOpen() {
+    setCreateOpen(true);
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-end">
@@ -92,20 +96,7 @@ export function MyTicketsTab() {
           ))}
         </div>
       ) : !data || data.data.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <Inbox className="h-10 w-10 text-muted-foreground/40 mb-3" />
-          <p className="text-sm font-medium text-foreground">No tickets yet</p>
-          <p className="text-xs text-muted-foreground mt-1 mb-4">Submit a request when you need HR support.</p>
-          <AnimatedIconButton
-            icon={PlusIcon}
-            iconSize={14}
-            iconClassName="mr-1.5"
-            size="sm"
-            onClick={() => setCreateOpen(true)}
-          >
-            New Request
-          </AnimatedIconButton>
-        </div>
+        <EmptyState illustrationPreset="default" title="No tickets yet" description="Submit a request when you need HR support." action={{ label: "New Request", onClick: handleCreateOpen }} className="py-16" />
       ) : (
         <>
           <div className="divide-y divide-border rounded-lg border border-border overflow-hidden">

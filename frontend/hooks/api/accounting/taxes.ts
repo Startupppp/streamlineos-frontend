@@ -15,10 +15,11 @@ import type {
 
 interface ListResponse<T> {
   items: T[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
+  total?: number;
+  page?: number;
+  pageSize?: number;
+  totalPages?: number;
+  pagination?: { limit: number; hasMore: boolean; nextCursor: number | null };
 }
 
 const taxKeys = {
@@ -169,6 +170,8 @@ export function useTaxLiabilitySummary(from: string, to: string) {
 export interface ListTaxPaymentsParams {
   page?: number;
   pageSize?: number;
+  limit?: number;
+  cursor?: number;
   taxType?: string;
   from?: string;
   to?: string;

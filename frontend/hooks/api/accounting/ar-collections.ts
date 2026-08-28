@@ -30,10 +30,11 @@ const arCollectionsKeys = {
 
 interface ListResponse<T> {
   items: T[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
+  total?: number;
+  page?: number;
+  pageSize?: number;
+  totalPages?: number;
+  pagination?: { limit: number; hasMore: boolean; nextCursor: number | null };
 }
 
 function toQuery<P extends object>(params: P): Record<string, string> {
@@ -48,6 +49,8 @@ function toQuery<P extends object>(params: P): Record<string, string> {
 export interface ListReminderPoliciesParams {
   page?: number;
   pageSize?: number;
+  limit?: number;
+  cursor?: number;
 }
 
 export function useReminderPolicies(params: ListReminderPoliciesParams = {}) {
@@ -66,6 +69,8 @@ export interface ListReminderLogParams {
   invoiceId?: number;
   page?: number;
   pageSize?: number;
+  limit?: number;
+  cursor?: number;
 }
 
 export function useReminderLog(params: ListReminderLogParams = {}) {

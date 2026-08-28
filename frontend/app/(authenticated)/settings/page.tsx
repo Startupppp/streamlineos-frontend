@@ -1,11 +1,9 @@
-"use client";
-
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SettingsProfile } from "@/features/settings/settings-profile";
 import { SettingsSecurity } from "@/features/settings/settings-security";
 import { MfaSettings } from "@/components/settings/mfa-settings";
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
   return (
     <PageWrapper
       title="Account Settings"

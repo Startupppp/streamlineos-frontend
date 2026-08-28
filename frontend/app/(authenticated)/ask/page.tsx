@@ -1,9 +1,9 @@
-"use client";
-
+import { requirePermission } from "@/lib/rbac/require-permission";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { KbAskPanel } from "@/components/support/kb-ask-panel";
 
-export default function AskPage() {
+export default async function AskPage() {
+  await requirePermission("kb:pages:view");
   return (
     <PageWrapper
       title="Ask AI"

@@ -1,10 +1,10 @@
-"use client";
-
+import { requirePermission } from "@/lib/rbac/require-permission";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ImportExportGrid } from "@/features/shared/import-export/import-export-grid";
 import { CRM_IMPORT_EXPORT_ENTITIES } from "@/features/crm/settings/import-export-entities";
 
-export default function CrmImportExportPage() {
+export default async function CrmImportExportPage() {
+  await requirePermission("crm:settings:manage");
   return (
     <PageWrapper
       title="Import / Export"

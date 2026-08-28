@@ -72,3 +72,84 @@ export async function publicGet<T>(
   if (res.status === 404) return null;
   return parseApiResponse<T>(res);
 }
+
+export async function publicGetNoStore<T>(
+  path: string,
+  params?: Record<string, string | number | undefined>,
+): Promise<T | null> {
+  const url = new URL(`${BACKEND_URL}${path}`);
+  if (params) {
+    for (const [key, value] of Object.entries(params)) {
+      if (value !== undefined) url.searchParams.set(key, String(value));
+    }
+  }
+  const res = await fetch(url.toString(), {
+    cache: "no-store",
+    signal: AbortSignal.timeout(TIMEOUT_MS),
+  });
+  if (res.status === 404) return null;
+  return parseApiResponse<T>(res);
+}
+
+export interface PublicApplicationStatus {
+  status: string;
+  appliedAt: string;
+  updatedAt: string;
+  job: { title: string; location: string | null; type: string } | null;
+  candidate: { firstName: string; lastName: string; email: string } | null;
+}
+
+export interface PublicOfferNegotiation {
+  direction: string;
+  proposedSalary: string | null;
+  message: string | null;
+  createdAt: string;
+}
+
+export interface PublicOffer {
+  id: number;
+  offerStatus: string;
+  offeredSalary: string | null;
+  offeredDesignation: string | null;
+  joiningDate: string | null;
+  validUntil: string | null;
+  notes: string | null;
+  acceptanceTokenExpiresAt: string | null;
+  currency: string;
+  negotiations: PublicOfferNegotiation[];
+}
+
+export interface PublicReferrerPortalJob {
+  id: number;
+  title: string;
+  location: string | null;
+}
+
+export interface PublicReferrerPortalReferral {
+  id: number;
+  candidateName: string;
+  jobTitle: string | null;
+  status: string;
+  rewardAmount: string | null;
+  createdAt: string;
+}
+
+export interface PublicReferrerPortal {
+  referrerName: string;
+  orgName: string;
+  openJobs: PublicReferrerPortalJob[];
+  referrals: PublicReferrerPortalReferral[];
+}
+
+export interface PublicVendorSubmission {
+  id: number;
+  candidateName: string;
+  jobTitle: string | null;
+  placementStatus: string;
+  submittedAt: string;
+}
+
+export interface PublicVendorPortal {
+  vendorName: string;
+  submissions: PublicVendorSubmission[];
+}

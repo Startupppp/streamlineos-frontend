@@ -33,6 +33,8 @@ import {
 } from "@/features/hr/analytics/shared";
 import { DrilldownSheet } from "./drilldown-sheet";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { useOrgDisplay } from "@/hooks/api/org-display";
+import { formatMoneyCompact } from "@/lib/format-utils";
 
 const JoinsExitsChart = dynamic(
   () => import("./command-center-charts").then((m) => ({ default: m.JoinsExitsChart })),
@@ -96,14 +98,6 @@ function DrillableStatCard({ label, value, hint, icon, tone = "default", onClick
   );
 }
 
-function formatCurrency(cents: number): string {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    notation: "compact",
-    maximumFractionDigits: 1,
-  }).format(cents / 100);
-}
 
 function formatPct(val: number): string {
   return `${val.toFixed(1)}%`;
@@ -125,6 +119,11 @@ interface CommandCenterSectionProps {
 
 export function CommandCenterSection({ departmentId }: CommandCenterSectionProps) {
   const canViewPayroll = useCan("hr:payroll:view");
+  const display = useOrgDisplay();
+  const formatCurrency = useCallback(
+    (cents: number) => formatMoneyCompact(cents / 100, display),
+    [display],
+  );
 
   const { data: kpis, isLoading: kpisLoading } = useHrCommandCenter(departmentId);
   const { data: attrition, isLoading: attritionLoading } = useHrAttritionPlus(departmentId);

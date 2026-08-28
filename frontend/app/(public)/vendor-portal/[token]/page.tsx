@@ -1,27 +1,12 @@
-"use client";
-
-import { use, useEffect, useState, useCallback } from "react";
+import { notFound } from "next/navigation";
+import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
-import { apiClient } from "@/lib/api-client";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { Building2 } from "lucide-react";
+import { publicGetNoStore, type PublicVendorPortal } from "@/lib/public-fetch";
+import { ApiError } from "@/lib/api-envelope";
 
 type Props = { params: Promise<{ token: string }> };
-
-interface VendorSubmissionRow {
-  id: number;
-  candidateName: string;
-  jobTitle: string | null;
-  placementStatus: string;
-  submittedAt: string;
-}
-
-interface VendorPortalData {
-  vendorName: string;
-  submissions: VendorSubmissionRow[];
-}
 
 const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   SUBMITTED: "secondary",
@@ -30,44 +15,34 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "
   REJECTED: "destructive",
 };
 
-export default function VendorPortalPage({ params }: Props) {
-  const { token } = use(params);
-  const [data, setData] = useState<VendorPortalData | null>(null);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true);
+function ExpiredState() {
+  return (
+    <main className="min-h-dvh bg-background flex items-center justify-center px-4">
+      <Card className="w-full max-w-md text-center">
+        <CardContent className="py-10">
+          <svg className="h-10 w-10 mx-auto mb-4 text-muted-foreground opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+          </svg>
+          <p className="font-medium">This portal link has expired</p>
+          <p className="text-sm text-muted-foreground mt-1">Ask your recruiting contact to generate a new one.</p>
+        </CardContent>
+      </Card>
+    </main>
+  );
+}
 
-  const fetchPortal = useCallback(async () => {
-    try {
-      const result = await apiClient.get<VendorPortalData>(`/public/vendor-portal/${token}`);
-      setData(result);
-    } catch (e) {
-      setError(getErrorMessage(e) || "Portal link not found.");
-    } finally {
-      setLoading(false);
-    }
-  }, [token]);
+export default async function VendorPortalPage({ params }: Props) {
+  const { token } = await params;
 
-  useEffect(() => { void fetchPortal(); }, [fetchPortal]);
-
-  if (loading) {
-    return (
-      <main className="min-h-dvh bg-background flex items-center justify-center">
-        <p className="text-sm text-muted-foreground">Loading…</p>
-      </main>
-    );
+  let data: PublicVendorPortal | null;
+  try {
+    data = await publicGetNoStore<PublicVendorPortal>(`/public/vendor-portal/${token}`);
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 410) return <ExpiredState />;
+    throw e;
   }
 
-  if (error || !data) {
-    return (
-      <main className="min-h-dvh bg-background flex items-center justify-center px-4">
-        <Card className="w-full max-w-md text-center">
-          <CardContent className="py-10">
-            <p className="font-medium">{error || "Portal link not found"}</p>
-          </CardContent>
-        </Card>
-      </main>
-    );
-  }
+  if (!data) return notFound();
 
   return (
     <main className="min-h-dvh bg-background">

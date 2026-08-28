@@ -22,6 +22,7 @@ import { useCan } from "@/hooks/api/access";
 import { useWarehouses } from "@/hooks/api/inventory/warehouses";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { formatCurrencyFull } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
 import {
   useValuationReport,
@@ -48,7 +49,7 @@ const METHOD_BADGE_CLASS: Record<CostingMethod, string> = {
 };
 
 function formatCents(cents: number): string {
-  return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(cents / 100);
+  return formatCurrencyFull(cents / 100, "INR");
 }
 
 function formatDate(dateStr: string): string {

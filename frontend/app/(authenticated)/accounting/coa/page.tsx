@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { Plus, Calculator, LayoutTemplate, ChevronRight, Pencil, Power, Trash2 } from "lucide-react";
+import { Plus, LayoutTemplate, ChevronRight, Pencil, Power, Trash2 } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ListToolbar, ErrorState } from "@/components/shared";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useCoaTree, useSetupStatus, useDeactivateAccount, useActivateAccount, useDeleteAccount } from "@/hooks/api/accounting/core";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -335,21 +336,12 @@ export default function ChartOfAccountsPage() {
   const columns = buildColumns(expanded, handleToggleNode, handleEditAccount, canManage);
 
   const emptyState = (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-14 px-6 text-center">
-      <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-primary/10 text-primary mb-3">
-        <Calculator className="h-5 w-5" />
-      </div>
-      <h3 className="text-sm font-semibold text-foreground">No accounts found</h3>
-      <p className="mt-1 text-sm text-muted-foreground max-w-xs">
-        {search || typeFilter !== "ALL"
-          ? "Try a different filter or search term."
-          : "Create your first ledger account or apply a template."}
-      </p>
-      <Button size="sm" className="mt-4" onClick={handleOpenCreate}>
-        <Plus className="mr-2 h-4 w-4" />
-        New account
-      </Button>
-    </div>
+    <EmptyState
+      className="border-0 bg-transparent min-h-[40vh]"
+      title="No accounts found"
+      description={search || typeFilter !== "ALL" ? "Try a different filter or search term." : "Create your first ledger account or apply a template."}
+      action={{ label: "New account", onClick: handleOpenCreate }}
+    />
   );
 
   return (
