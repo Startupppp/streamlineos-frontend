@@ -46,6 +46,8 @@ Simplicity over cleverness · normalize data · deny by default · fail fast at 
 
 Identify from the real codebase: module · entities · existing schema, APIs, cache keys, RBAC keys/guards, components, services, hooks · a simpler alternative. Audit across architecture · DB · API · cache · backend · frontend · UI/UX · security · performance · product completeness → implement → validate.
 
+**Architecture re-review is a delta audit.** Read `architecture-refactor/PRD-IN-SCOPE.md` §27, verify prior findings against current source, and classify them as VERIFIED DONE, REGRESSED, STILL PENDING or NEW. A verified fix appears once under DONE and is not reintroduced as pending without current regression evidence.
+
 ## 5. Frontend ↔ Backend Boundary
 
 - Backend owns **all** APIs and business logic. **No `app/api/**` business routes, no `lib/services/**` business logic in the frontend** — the only frontend `route.ts` is NextAuth / auth-bridge.
