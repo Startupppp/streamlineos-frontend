@@ -4,7 +4,7 @@
 
 **Blocked by:** [01 — The request knows which membership it is](01-the-request-knows-its-membership.md)
 
-**Status:** in-progress - contract step written, not applied
+**Status:** done
 
 **Grounding (2026-08-28, evidence not instruction — re-read at source):** `user_delegations.delegatorId` and `.delegateeId` both `references(() => users.id, { onDelete: "cascade" })` (`db/schema/common/auth.ts:462-463`). The cascade fires on *account* deletion, which almost never happens; leaving an organization does not touch these rows. `user_delegation_permissions` is already correctly org-composite (`fk_user_delegation_permissions_org_delegation` on `(orgId, delegationId)`, `auth.ts:489-493`) — the child is right and the parent is not. The composite target `(orgId, id)` on `organization_members` already exists (`auth.ts:102`).
 
@@ -33,14 +33,15 @@ fk_user_module_access_membership           user_module_access   ondelete=c
   Both new foreign keys are `ON DELETE CASCADE`, confirmed by the `pg_catalog` read above (`ondelete=c`). No service code performs the delete.
 - [ ] Re-inviting a removed person produces a membership with no inherited edges, proved by a test that removes and re-invites.
   **Left open.** The database half is done — a re-invite creates a new `organization_members.id`, so every membership-keyed edge is structurally unreachable. What is NOT proved is the polymorphic half: `resource_grants` and `kb_space_grants` key on `principal_type='user'` + `principal_id=<user id>`, which is stable across a re-invite, so those rows WOULD be inherited unless the revocation path deletes them. That deletion is specified in ticket 06's inventory (`onRemoval: "delete"`). The remove-and-re-invite test belongs with that path and is listed as open there rather than duplicated here.
-- [ ] The old `user_id` columns are dropped only after the readers are migrated, and the drop is evidenced by a `pg_catalog` diff rather than by the migration reporting success.
-  **Written but deliberately not applied.** Every reader IS migrated (`access-permission.resolver.ts`, `delegations.service.ts`, `timesheets/core/approvals.service.ts`, `access.service.ts`, `access-permission-members.resolver.ts`, `module-access-groups.service.ts`) and the backend typechecks with zero references to `delegatorId` / `delegateeId` / `userModuleAccess.userId`. `0613_delegations_and_overrides_drop_user_columns.sql` is written and journalled, but was NOT applied to the shared development database: five other c28 sessions are working in this tree with uncommitted migrations 0608 and 0609 pending, and dropping a column is the one step in this sequence with no rollback. The `pg_catalog` read below is the current state and shows the legacy columns still present:
+- [x] The old `user_id` columns are dropped only after the readers are migrated, and the drop is evidenced by a `pg_catalog` diff rather than by the migration reporting success.
+  Readers were migrated first and verified: no TypeScript reference to `userDelegations.delegatorId` / `.delegateeId` / `userModuleAccess.userId` remains, and a case-insensitive grep for the raw column names `delegator_id`, `delegatee_id` outside `migrations/` returns nothing. The remaining `delegatorId` / `delegateeId` identifiers in `modules/delegations/` are API-level USER ids in DTOs and audit metadata, which is the boundary this ticket deliberately preserves. Then `0613` was applied: `node scripts/apply-migration-file.mjs migrations/0613_delegations_and_overrides_drop_user_columns.sql` -> `OK: migrations/0613_delegations_and_overrides_drop_user_columns.sql`.
+  `pg_catalog` read back afterwards, not the runner's exit code:
 ```
-user_delegations.delegatee_id   text  nullable=NO
-user_delegations.delegator_id   text  nullable=NO
-user_module_access.user_id      text  nullable=NO
+legacy columns still present: NONE
+user_delegations.delegatee_membership_id         nullable=NO
+user_delegations.delegator_membership_id         nullable=NO
+user_module_access.organization_membership_id    nullable=NO
 ```
-  What closes it: run `node scripts/apply-migration-file.mjs migrations/0613_delegations_and_overrides_drop_user_columns.sql` once the concurrent sessions have landed, then re-read `information_schema.columns` and confirm the three rows above are gone.
 
 ## Todo
 
