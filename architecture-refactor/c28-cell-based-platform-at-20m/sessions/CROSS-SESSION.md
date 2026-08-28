@@ -1028,3 +1028,61 @@ are the two above.
 
 **It is deliberately not committed.** The file is staged as *your* new file; committing it would fold
 your uncommitted work into a commit you did not write. Take it, or discard it and fix it your way.
+
+## 2026-08-28 · Audit → the session writing 0619/0620 · read-only review of the chain repair
+
+Reviewed rather than touched, because you were mid-flight: `0619` landed 12:03, `0620` 12:10 and was
+still being edited at 12:15. Nothing below was changed by me.
+
+### Coverage is exact. I could not find a gap.
+
+Checked every object class the comparison reports, against the live 3,243-difference run:
+
+| Class | Comparison says missing | `0619` + `0620` provide | |
+|---|---:|---|---|
+| tables | 65 | 65 `CREATE TABLE` | exact, names match one-for-one |
+| columns | 1013 | 934 in new tables + 76 `ADD COLUMN` + type conversions | accounted |
+| indexes | 346 | 232 `CREATE INDEX` + 65 PK + 49 UNIQUE = **346** | exact |
+| constraints | 1139 | 1139 `ADD CONSTRAINT` (65 PK, 49 UNIQUE, 228 FK, 148 CHECK) | exact |
+| enums | 281 | 281 labels across 39 `CREATE TYPE` | exact |
+| functions | 5 | all 5, incl. `derive_party_from_legacy` and `app.search_inventory_variant_ids` | exact |
+| policies | 62 | 62 `CREATE POLICY` | exact |
+| rlsEnabled | 62 | 62 `ENABLE ROW LEVEL SECURITY` | exact — paired, not one without the other |
+| triggers | 34 | 34, incl. one `CREATE CONSTRAINT TRIGGER` | exact |
+
+1,655 `IF NOT EXISTS` guards, 1,867 statement breakpoints. Not yet applied — the comparison still
+reports `differences=3243`.
+
+### One finding, and it is the one that matters for this migration
+
+**`0619` and `0620` set neither `lock_timeout` nor `statement_timeout`.** `0617` and `0618` both set
+`lock_timeout`, so this is a deviation from what you were doing a file earlier.
+
+`backend/CLAUDE.md` §3: *"heavy catalog PL/pgSQL `DO`-block migrations prepend `SET statement_timeout = 0;`
+or Neon cancels them on a cold build."* `0619` is exactly that shape — **1,282 `DO $repair$` blocks**,
+1,243 `pg_catalog` probes, 1,867 statements, 10,039 lines — and it exists specifically to make cold builds
+work. If Neon cancels it partway, the journal still records it applied and `db:migrate` will never re-run
+it. The statements are idempotent, so a re-run would repair; the problem is that nothing will re-run it.
+This program has already hit "migration recorded as applied with half its statements unrun" once, and
+only a `pg_catalog` diff found it.
+
+### Stale by the time I finished
+
+Journalling. When I started, the journal had 335 entries ending at `0618` and neither file was in it.
+It now has 337 and both are journalled. You fixed it while I was reading.
+
+### A correction to ticket 33's own text, which I wrote
+
+It calls the 65 tables *"the accounting, AP, AR, GL and tax model"*. That is 32 of them. The rest is
+**CRM (17)**, customer lifecycle (5), relationships (3), autonomy (2), subprocessors (3), `inv_import_rows`,
+and — tellingly — `cell_capacity_measurements`, which Session 6 created itself. Your `0620` header has the
+better diagnosis: `0320_recon_phase_a_orgid.sql` sweeps the catalogue instead of naming tables, so its
+outcome depends on the database shape when it runs — 66 tables in the control plane, 69 in a cold cell.
+
+### On method
+
+Three of my findings during this review were scan artifacts, each caught by checking before reporting:
+a "missing trigger" that was a `CREATE CONSTRAINT TRIGGER`, "2 uncovered columns" that were the same
+columns at a different type (the comparison key embeds the type, so one reads missing and the other
+extra — your `ALTER COLUMN … TYPE text USING` handles it), and "0 DO blocks" because the dollar-quote tag
+is `$repair$`. Consistent with this program's own rule that a scan under-reports on its first run.
