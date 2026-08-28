@@ -110,7 +110,7 @@ At least one instrumented seam (a measured boundary between architectural layers
 
 **Confirm resolution:** Re-run the alert against a fresh log window. The seam no longer appears in `breached`.
 
-If the alert exits 2 ("no seam span lines found"), the instrumentation is unwired — confirm that `main.ts` calls `setSpanExporter(new LogSpanExporter())` and that Lane C's seam spans carry the `seamName` attribute.
+If the alert exits 2 ("no seam span lines found"), the instrumentation is unwired — confirm that `main.ts` calls `setSpanExporter(new LogSpanExporter())` and that the seam spans carry the `seamName` attribute.
 
 ---
 
@@ -133,7 +133,7 @@ A cell recovery event is in progress or has completed. Fired by `run-recovery-dr
 - **RTO for `CELL_DB_FAILURE`: UNMEASURABLE. MISSED.** The bootstrap (`bootstrap-cell.mjs --drop --i-mean-it`) fails reliably on a cold Neon compute with CONNECTION_CLOSED during large migrations: `0000_light_vance_astro` (4456 statements, fails at ~109) and `0619_chain_creates_what_production_has` (1867 statements, fails at 1471). Without a completed bootstrap the restore cannot proceed (schema does not exist). The 60-minute target cannot be verified in this environment.
 - **`REGIONAL_DISASTER` RPO (<= 5 min): UNVERIFIED.** No `NEON_API_KEY`, no scripted PITR branch-restore exercise.
 - **Control-plane behaviour during the cell outage**: Placement lookups from `neondb` remained available throughout. Known-org placements were served from the signed cache (TTL 10 min). Unknown orgs were refused 503 retryable. The cache TTL (10 min) is less than the fence lease (24 h). This is consistent with the 11 passing unit tests in `placement-degraded-control-plane.spec.ts` — no regression observed.
-- **Cell2 shared with Lane B**: Cell2 was in a broken pre-drill state (`public.custom_states` listed in `pg_tables` but not queryable) from concurrent migration-chain work. The drill must be re-run after Lane B completes their work on an exclusive cell2.
+- **cell2 was not exclusive to the drill**: it was in a broken pre-drill state (`public.custom_states` listed in `pg_tables` but not queryable) from concurrent migration-chain work. Re-run the drill against an exclusive cell2 before quoting its timings.
 - **No physical read replica**: Replica routing seam is built (`src/db/replica-router.ts`) and tested at pool-selection level. Lag-simulation tests are skipped pending Neon replica provisioning.
 
 **First three checks**

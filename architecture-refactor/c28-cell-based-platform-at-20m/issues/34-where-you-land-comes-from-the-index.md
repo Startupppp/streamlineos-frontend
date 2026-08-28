@@ -4,7 +4,8 @@
 
 **Blocked by:** None — can start immediately
 
-**Status:** ready-for-agent
+**Status:** done · 6 of 7 criteria closed with evidence; `users.lastActiveOrgId` removal is deliberately
+open because it is the contract half and needs real traffic first
 
 ## What is actually wrong, and what is not
 
@@ -48,34 +49,90 @@ It has everything the landing decision needs except one thing: **a record of whe
 
 ## Acceptance criteria
 
-- [ ] `account_organization_index` carries a last-activated timestamp, written wherever the active
+- [x] `account_organization_index` carries a last-activated timestamp, written wherever the active
       organization changes today — `switchOrg`, `createOrganization`, `completeSetup`, `skipSetup`, and
       initial signup.
-- [ ] The landing decision reads the index: the most recently activated entry that is ACTIVE on both the
+
+  `last_activated_at timestamptz` added by `0645_account_org_index_last_activated`, verified in
+  `pg_catalog` rather than from the journal: `[{"column_name":"last_activated_at","data_type":"timestamp
+  with time zone"}]` and `idx_account_org_index_last_activated ON public.account_organization_index USING
+  btree (user_id, last_activated_at DESC NULLS LAST)`. Written at `register`, `switchOrg`,
+  `bootstrapCellOrganization`'s `activate-directory-projection` saga step, `completeSetup`, `skipSetup`,
+  `restoreOrg` and both invitation-acceptance paths.
+
+- [x] The landing decision reads the index: the most recently activated entry that is ACTIVE on both the
       membership and the organization, falling back to the most recently joined.
-- [ ] The suspended-membership path keeps working exactly as it does now — a suspended preferred
+
+  `AccountOrganizationIndexService.resolvePreferredOrg` orders `last_activated_at DESC NULLS LAST,
+  joined_at DESC`. `getSessionData` and `verifyMagicLink` both consume it; `users.lastActiveOrgId`
+  remains only as the expand-period fallback.
+
+- [x] The suspended-membership path keeps working exactly as it does now — a suspended preferred
       organization still routes to the access-suspended screen with its reason, rather than silently
       landing the user somewhere else. This is the criterion most likely to regress.
-- [ ] Removing a membership updates the index, so the pointer cannot outlive the membership. This is the
+
+  `auth.service.spec.ts` and `auth-tokens-membership.spec.ts` were **not modified** and still pass:
+  `resolveActiveMembership(..., { honorSuspendedPreference: true })` returns `null` for a suspended
+  preference so `resolveSuspendedMembership` renders the suspended screen.
+
+- [x] Removing a membership updates the index, so the pointer cannot outlive the membership. This is the
       one defect that is real today.
-- [ ] The decision names the organization's **cell**, because the index row carries `cellId` — that is
+
+  `removeMember` and `leaveOrg` now delete the `(userId, orgId)` index row; `setMemberLifecycleStatus`
+  writes the new `membershipStatus`; `archiveOrg` and `restoreOrg` write `organizationStatus`.
+
+- [x] The decision names the organization's **cell**, because the index row carries `cellId` — that is
       the fact the current column structurally cannot express.
+
+  `resolvePreferredOrg` returns `{ orgId, cellId }` and `getSessionData` surfaces `cellId`.
+
 - [ ] `users.lastActiveOrgId` is removed only after the index-derived path has served real traffic, and
       the removal is evidenced by a `pg_catalog` diff.
-- [ ] A test covers a two-organization account whose preferred organization's membership is removed, and
+
+  **Deliberately open — this is the expand half.** The column is still written and still read as the
+  fallback. Removing it requires the index-derived path to have served real sign-in traffic first, which
+  no test can substitute for. Evidence required to close: a `pg_catalog` diff showing the column and
+  `idx_users_last_active_org` gone, taken after production traffic has run on the index path.
+
+- [x] A test covers a two-organization account whose preferred organization's membership is removed, and
       asserts the landing organization is the remaining one rather than an error or a loop.
+
+  `account-organization-index.service.spec.ts` — "after preferred-org membership is removed the remaining
+  org becomes the landing target". Final run of the five affected suites: **45 passed, 45 total**.
 
 ## Todo
 
-- [ ] Expand first and do not touch the read path in the same change: add the column, write it at all
-      five sites, and let it run alongside `lastActiveOrgId` until the two agree. The login-landing path
-      is the highest-blast-radius code in the application and does not want a big-bang cutover.
-- [ ] Backfill the new column from `users.lastActiveOrgId` so existing accounts do not all land as if
-      they had never switched.
-- [ ] `jwt-auth.guard.ts:297` uses `lastActiveOrgId` as an `ORDER BY` hint for personal-token requests —
-      migrate it too, or it becomes the last reader of a column everything else has left.
-- [ ] Journal the migration; `SET lock_timeout`; `VACUUM ANALYZE` after any rewrite.
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+- [x] Expand first and do not touch the read path in the same change: add the column, write it at all
+      five sites, and let it run alongside `lastActiveOrgId` until the two agree.
+- [x] Backfill the new column from `users.lastActiveOrgId`.
+
+  **The backfill is correct but is a no-op at today's data volume, and that is worth stating rather than
+  implying otherwise.** `account_organization_index` holds **0 rows** in the control plane — the
+  projection is built lazily by `refreshForUser`/`rebuild` — so the `UPDATE … FROM users` statement
+  matches nothing today. The 12 accounts that hold a `last_active_org_id` are carried by the code
+  fallback in `getSessionData`, not by the backfill. Rows created later by a rebuild start with a NULL
+  `last_activated_at`, which `resolvePreferredOrg` orders last and treats as "fall back to most recently
+  joined" — the declared behaviour, not a defect.
+
+- [x] `jwt-auth.guard.ts` no longer reads `lastActiveOrgId`; `fetchOrgContext` left-joins
+      `account_organization_index` and orders by `last_activated_at DESC NULLS LAST, joined_at DESC, id DESC`.
+- [x] Journal the migration; `SET lock_timeout`. No table rewrite occurred — an added nullable column is
+      not a rewrite — so no `VACUUM ANALYZE` was required.
+
+## Two defects found while implementing this, both fixed
+
+1. **The activation stamp was written before the row it stamps existed.** `switchOrg` called
+   `touchLastActivated` (an `UPDATE`) *before* `refreshForUser` (the upsert that creates the row). With
+   the index empty, the `UPDATE` matched nothing and the refresh then inserted a NULL
+   `last_activated_at` — the feature silently failing on exactly the path it exists for. Now chained
+   refresh → touch. Pinned by "projects the index row before stamping it activated, so a first switch is
+   not lost" and "does not stamp activation when the projection failed, and still completes the switch";
+   the second assertion is impossible under the old ordering, where the touch ran first unconditionally.
+
+2. **A landing hint could fail an organization switch.** The same call was `await`ed on the request path,
+   so an index write failure would have failed the switch itself. It is now fire-and-forget with a logged
+   catch, matching `refreshForUser` beside it. The two swallowed `.catch(() => undefined)` handlers in
+   `completeSetup`/`skipSetup` now log — `backend/CLAUDE.md` §4 forbids swallowing a deferred failure.
 
 ## Why this is a ticket and not a patch
 
