@@ -48,10 +48,10 @@ function useNotificationInboxInvalidation() {
 
   function invalidateInbox() {
     void queryClient.invalidateQueries({
-      queryKey: queryKeys.notifications.lists(orgId),
+      queryKey: queryKeys.notifications.lists(),
     });
     void queryClient.invalidateQueries({
-      queryKey: queryKeys.notifications.unreadCount(orgId),
+      queryKey: queryKeys.notifications.unreadCount(),
       exact: true,
     });
   }
@@ -75,10 +75,7 @@ export const useNotifications = (
   const orgId = session?.orgId;
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<Notification[], Error>({
-    queryKey: queryKeys.notifications.list(
-      params as Record<string, unknown>,
-      orgId,
-    ),
+    queryKey: queryKeys.notifications.list(params as Record<string, unknown>),
     queryFn: () =>
       apiClient.get<Notification[]>(
         "/notifications",
@@ -107,10 +104,10 @@ export const useInfiniteNotifications = (
   const limit = params?.limit ?? 30;
 
   return useInfiniteQuery<Notification[], Error>({
-    queryKey: queryKeys.notifications.list(
-      { ...(params as Record<string, unknown>), infinite: true },
-      orgId,
-    ),
+    queryKey: queryKeys.notifications.list({
+      ...(params as Record<string, unknown>),
+      infinite: true,
+    }),
     initialPageParam: undefined as number | undefined,
     queryFn: ({ pageParam }) =>
       apiClient.get<Notification[]>(
@@ -132,7 +129,7 @@ export const useUnreadNotifications = (
   const { enabled: enabledOption, ...restOptions } = options ?? {};
 
   return useQuery<Notification[], Error>({
-    queryKey: queryKeys.notifications.unreadList(orgId),
+    queryKey: queryKeys.notifications.unreadList(),
     queryFn: () =>
       apiClient.get<Notification[]>(
         "/notifications",
@@ -150,7 +147,7 @@ export const useUnreadNotificationCount = (
   const { data: session } = useSession();
   const orgId = session?.orgId;
   return useQuery<UnreadCount, Error>({
-    queryKey: queryKeys.notifications.unreadCount(orgId),
+    queryKey: queryKeys.notifications.unreadCount(),
     queryFn: () => apiClient.get<UnreadCount>("/notifications/unread-count"),
     staleTime: NOTIFICATION_FALLBACK_INTERVAL_MS,
     refetchInterval: NOTIFICATION_FALLBACK_INTERVAL_MS,
@@ -172,8 +169,8 @@ export const useMarkNotificationRead = () => {
     mutationKey: ["notifications", "mark-read"],
     mutationFn: (id) => apiClient.patch<{ success: boolean }>(`/notifications/${id}/read`),
     onMutate: async (id) => {
-      const listKey = queryKeys.notifications.lists(orgId);
-      const unreadKey = queryKeys.notifications.unreadCount(orgId);
+      const listKey = queryKeys.notifications.lists();
+      const unreadKey = queryKeys.notifications.unreadCount();
       await queryClient.cancelQueries({ queryKey: listKey });
       await queryClient.cancelQueries({ queryKey: unreadKey });
       const previousLists = queryClient.getQueriesData<Notification[]>({ queryKey: listKey });
@@ -202,7 +199,7 @@ export const useMarkNotificationRead = () => {
           queryClient.setQueryData(key, data);
         });
         if (context.previousCount !== undefined) {
-          queryClient.setQueryData(queryKeys.notifications.unreadCount(orgId), context.previousCount);
+          queryClient.setQueryData(queryKeys.notifications.unreadCount(), context.previousCount);
         }
       }
     },
@@ -222,8 +219,8 @@ export const useMarkAllNotificationsRead = () => {
     mutationKey: ["notifications", "mark-all-read"],
     mutationFn: () => apiClient.patch<{ success: boolean }>("/notifications/read-all"),
     onMutate: async () => {
-      const listKey = queryKeys.notifications.lists(orgId);
-      const unreadKey = queryKeys.notifications.unreadCount(orgId);
+      const listKey = queryKeys.notifications.lists();
+      const unreadKey = queryKeys.notifications.unreadCount();
       await queryClient.cancelQueries({ queryKey: listKey });
       await queryClient.cancelQueries({ queryKey: unreadKey });
       const previousLists = queryClient.getQueriesData<Notification[]>({ queryKey: listKey });
@@ -241,7 +238,7 @@ export const useMarkAllNotificationsRead = () => {
         });
         if (context.previousCount !== undefined) {
           queryClient.setQueryData(
-            queryKeys.notifications.unreadCount(orgId),
+            queryKeys.notifications.unreadCount(),
             context.previousCount,
           );
         }
@@ -320,8 +317,8 @@ export const useBulkMarkRead = () => {
     mutationFn: (ids) => apiClient.post<{ success: boolean }>("/notifications/bulk/read", { ids }),
     onMutate: async (ids) => {
       const idSet = new Set(ids);
-      const listKey = queryKeys.notifications.lists(orgId);
-      const unreadKey = queryKeys.notifications.unreadCount(orgId);
+      const listKey = queryKeys.notifications.lists();
+      const unreadKey = queryKeys.notifications.unreadCount();
       await queryClient.cancelQueries({ queryKey: listKey });
       await queryClient.cancelQueries({ queryKey: unreadKey });
       const previousLists = queryClient.getQueriesData<Notification[]>({ queryKey: listKey });
@@ -350,7 +347,7 @@ export const useBulkMarkRead = () => {
           queryClient.setQueryData(key, data);
         });
         if (context.previousCount !== undefined) {
-          queryClient.setQueryData(queryKeys.notifications.unreadCount(orgId), context.previousCount);
+          queryClient.setQueryData(queryKeys.notifications.unreadCount(), context.previousCount);
         }
       }
     },

@@ -37,6 +37,7 @@ import {
 } from "@/hooks/api/chat";
 import { queryKeys } from "@/lib/query-keys";
 import { apiClient } from "@/lib/api-client";
+import { orgScopedStorageKey, useOrgStorageScope } from "@/lib/org-scoped-storage";
 import { useChatRealtime } from "@/hooks/api/chat-realtime";
 import {
   useStartHuddle,
@@ -119,6 +120,8 @@ export function MessagePanel({
   isSidebarCollapsed?: boolean;
   onToggleSidebar?: () => void;
 }) {
+  const scope = useOrgStorageScope();
+  const draftKey = orgScopedStorageKey(`chat:draft:${channelId}`, scope);
   const queryClient = useQueryClient();
   const { data: channel } = useChatChannel(channelId);
   const {
@@ -288,11 +291,11 @@ export function MessagePanel({
 
   useEffect(() => {
     if (messageInput) {
-      localStorage.setItem(`chat:draft:${channelId}`, messageInput);
+      localStorage.setItem(draftKey, messageInput);
     } else {
-      localStorage.removeItem(`chat:draft:${channelId}`);
+      localStorage.removeItem(draftKey);
     }
-  }, [channelId, messageInput]);
+  }, [draftKey, messageInput]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -395,7 +398,7 @@ export function MessagePanel({
   useEffect(() => {
     setLastPollTime(new Date().toISOString());
     setReplyTo(null);
-    setMessageInput(localStorage.getItem(`chat:draft:${channelId}`) ?? "");
+    setMessageInput(localStorage.getItem(draftKey) ?? "");
     setEditingMessage(null);
     setPendingAttachments([]);
     setShowEmojiPicker(false);
@@ -623,7 +626,7 @@ export function MessagePanel({
       ),
     ];
     setMessageInput("");
-    localStorage.removeItem(`chat:draft:${channelId}`);
+    localStorage.removeItem(draftKey);
     setReplyTo(null);
     setPendingAttachments([]);
     pendingEntitiesRef.current = [];

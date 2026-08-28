@@ -1,11 +1,14 @@
 # Open findings — carried out of the lane and session request files
 
 Those files were coordination scratch for sessions that have all finished, so they are deleted. What
-survived deletion is below: **every item re-verified against the code and the migrated database on
-2026-08-27**, not copied forward on trust. Most of what those files listed had already been fixed —
-what remains is short.
+survived deletion is below.
 
-None of these belongs to an open ticket. They are real findings with no home.
+**Every item was re-verified against the code and the migrated database on 2026-08-28** (c28 Session 4,
+ticket 15). Nothing here is carried on trust and nothing here has an unknown status. Three items that the
+2026-08-27 pass recorded as open had in fact already been fixed, and one of its stated facts was wrong;
+both corrections are recorded in place rather than quietly dropped.
+
+Status vocabulary: **FIXED** · **RESOLVED BY DECISION** · **OPERATOR ACTION** · **OPEN — DEFERRED**.
 
 ---
 
@@ -20,106 +23,169 @@ in `ProviderEventLedger` now includes `orgId` as the leading column. The `FOREIG
 `billing-webhook.spec.ts` test that asserts handler behaviour under that code path; in production
 the new composite index makes it unreachable. A new `provider-event-ledger.spec.ts` proves the four
 `claim()` outcomes and verifies that two different orgs can each claim the same `(provider, event_id)`
-without blocking each other. Journal entry: see report.
+without blocking each other.
 
-## 2. `verifyPaymentSchema` carries no billing cycle — ✅ FIXED 2026-08-27, backend `0a10ae3e`
+## 2. `verifyPaymentSchema` carries no billing cycle
+
+**FIXED 2026-08-27, backend `0a10ae3e`.**
 
 **Commit-history note:** this fix landed inside `0a10ae3e`, whose message describes only the
 `provider_webhook_events` change. Two agents were editing `modules/billing` concurrently and a
-`git add -A src` swept both into one commit — the shared-index hazard, caused by me rather than
-worked around. The content is correct and tested; the message is incomplete, and this is the pointer.
+`git add -A src` swept both into one commit — the shared-index hazard. The content is correct and
+tested; the message is incomplete, and this is the pointer.
 
 **One number in the original report was wrong and the tests were not.** The report gave the STARTER
 annual figure as 958,464 paise / `"9584.64"`. The correct value is
 `Math.round(99900 × 12 × 0.8)` = **959,040 paise / `"9590.40"`**. The specs derive it from
 `PLAN_PRICES_PAISE` and `ANNUAL_DISCOUNT_PCT` rather than hard-coding a literal, so they were right
-throughout — the slip was in prose. Verified by evaluating `planBaseAmountPaise` against the real
-constants.
+throughout — the slip was in prose.
 
 `billing.schemas.ts` now carries `billingCycle: billingCycleSchema.optional()`.
 `verifyAndActivate` uses `planBaseAmountPaise(plan, cycle, ANNUAL_DISCOUNT_PCT)` for the recorded
 amount, advances `currentPeriodEnd` by 12 months for `annual` and 1 month for `monthly`, and
 populates `coupon_redemptions.amount` from the server-computed discount. Absent cycle defaults to
-`"monthly"`, preserving existing client behaviour. Six new specs in `billing.service.spec.ts`
-assert amounts in paise (958,464 STARTER annual; 95,846 discount on 10% coupon).
+`"monthly"`, preserving existing client behaviour.
 
 ## 3. `vault_access_logs` cannot record a deletion, and has no tenant column
 
-**Verified open** (diagnosis complete, nothing built). Three problems compound:
+**FIXED 2026-08-28.** Migration `0607_vault_access_logs_survive_document_deletion.sql`, journalled at
+`idx` 328 and applied.
 
-- `db/schema/hr/hiring.ts:367` — `vaultDocumentId` is `onDelete: "cascade"`, so an audit row is
-  destroyed by the same transaction that deletes the document it describes.
-- `recruitment-candidate-vault.service.ts:78-105` — the surviving delete handler writes no audit row
-  at all. The one that did (`StorageVaultController.remove`) was unreachable and is removed.
-- `vault_access_logs` has **no `org_id` column**, so it is outside the RLS sweep entirely.
+**One third of the 2026-08-27 diagnosis was already stale.** It said the table has "no `org_id` column,
+so it is outside the RLS sweep entirely". Checked against `pg_catalog` before any code was written:
+`org_id` was already there, NOT NULL, with an `organizations` FK, a composite `(org_id, id)` unique key,
+a `tenant_isolation` policy (`org_id = current_org_id()`) and a `trg_set_org_id` BEFORE INSERT trigger —
+all added by `0591_tenant_isolation_for_unprotected_tables.sql`. The table was inside the RLS sweep the
+whole time. What was genuinely broken was the other two thirds, plus schema drift nobody had recorded:
+the Drizzle model did not declare `org_id` at all, so `db:generate` would have proposed dropping it.
 
-`listVaultAccessLogs` is live and surfaced at
-`frontend/hooks/api/hr/recruitment/candidate-details.ts:235-238`, so the screen can only ever show
-`VIEW`. Closing it needs a migration adding `org_id` (NOT NULL, FK), `candidate_id` and denormalised
-`filename`/`document_type`, making `vault_document_id` nullable with `ON DELETE SET NULL`, adding a
-`tenant_isolation` policy, rewriting the reader to filter on the log's own columns, and only then
-adding the insert. **Do not add the insert alone** — with the cascade in place it is inert.
+What changed, as one migration because none of it works alone:
+
+- `vault_document_id` is nullable with `ON DELETE SET NULL` on **both** foreign keys. The composite
+  tenant FK uses the PostgreSQL 15+ column-list form `ON DELETE SET NULL ("vault_document_id")`, because
+  the plain form would null `org_id` too and the delete would fail instead of preserving the audit row.
+- `candidate_id` (NOT NULL, cascade FK plus a composite tenant FK) is the reader's new anchor. The reader
+  used to reach the candidate by inner-joining the document — exactly the row that disappears.
+- `filename` and `document_type` are denormalised onto the log, so a line still says what was deleted.
+- `chk_vault_access_logs_action` restricts the vocabulary to `VIEW` / `DOWNLOAD` / `DELETE`.
+- `idx_vault_access_logs_org_candidate_accessed` on `(org_id, candidate_id, accessed_at DESC)` — the
+  reader's new predicate, with `org_id` leading because RLS adds it.
+- `RecruitmentCandidateVaultService.deleteVaultDocument` now writes the `DELETE` row inside the same
+  transaction as the delete, and `listVaultAccessLogs` filters on the log's own columns.
+
+Evidence: a `pg_catalog` diff confirms every statement landed, and a rolled-back probe inserted a
+document plus its audit row, deleted the document, and observed the audit row surviving with
+`vault_document_id = NULL` and its filename intact. `recruitment-candidate-vault.spec.ts` covers it,
+12 tests.
+
+**Left to another owner:** the controller still calls `deleteVaultDocument(orgId, candidateId,
+documentId)` without the actor. `modules/hr/recruitment/recruitment-candidate-records.{controller,service}.ts`
+belong to c28 Session 2, so the actor is currently resolved from the ambient
+`ObservabilityContext.actorId` (set by the first global `APP_INTERCEPTOR`, so it is always present on an
+authenticated request) and the delete refuses outright if no actor can be identified. Passing it
+explicitly is a two-line change recorded in `c28-cell-based-platform-at-20m/sessions/CROSS-SESSION.md`.
 
 ## 4. `streamline_app`'s password is repaired in `.env`, not in Neon
 
+**OPERATOR ACTION — not attempted, deliberately. Confirmed still outstanding 2026-08-28.**
+
 `APP_DATABASE_URL` was fixed with `ALTER ROLE … WITH PASSWORD`. **Neon's control plane restores the
-previous password when the branch suspends**, so this repair is temporary. It has to be set in the
-Neon console.
+previous password when the branch suspends**, so this repair is temporary and no code change can hold it.
+
+- **Why not attempted:** `ALTER ROLE` does not stick; re-running it would recreate the same illusion.
+- **What would close it:** an operator setting the `streamline_app` password in the Neon console, then
+  updating `APP_DATABASE_URL` in every deployment environment.
+- **How to tell it has regressed:** `APP_DATABASE_URL` connections fail authentication after a branch
+  suspend. As of 2026-08-28 the credential still works — verified by connecting and reading
+  `current_user`, which returned `streamline_app` with `rolbypassrls = false`.
 
 ## 5. `db:verify-rls` and the constitution contradict each other
 
-With missing policies at **0**, the verifier still reports **907 failures, all one kind**:
-`FORCE ROW LEVEL SECURITY … RLS is enabled but not forced`.
+**RESOLVED BY DECISION 2026-08-28 —** [`adr/0001-force-row-level-security-is-advisory.md`](adr/0001-force-row-level-security-is-advisory.md).
 
-`backend/CLAUDE.md` §4 says *"never blanket-enable or FORCE"*. Forcing 907 tables is that blanket
-change, and it would alter nothing today: the application connects as `neondb_owner`, whose
-`BYPASSRLS` overrides `FORCE`. One of the two has to change so the check and the constitution stop
-disagreeing. Recorded against c25-04.
+Missing policies were at 0 while the verifier reported 907 failures, all
+`FORCE ROW LEVEL SECURITY … RLS is enabled but not forced`, against a `backend/CLAUDE.md` §4 rule that
+says never blanket-force.
+
+**A stated fact in the previous entry was wrong.** It claimed "the application connects as
+`neondb_owner`, whose `BYPASSRLS` overrides `FORCE`". It does not: `APP_DATABASE_URL` connects as
+`streamline_app` with `rolbypassrls = false`, verified against the live database. Only the migration
+role is `neondb_owner`. The conclusion survives the correction and is strengthened by it — FORCE binds
+only the table owner, and the request path is already policy-bound.
+
+The verifier's check #3 is now an advisory that enumerates the affected tables but never increments the
+failure count or changes the exit code; §4 is unchanged. `pnpm db:verify-rls` against the live database
+now prints `RESULT: RLS VERIFIED` with 907 advisories. The escalation condition is written into the ADR:
+if a table-owner connection ever enters the request path, this returns to a hard failure.
 
 ## 6a. `DashboardLeaveService.getPendingApprovals` counts resignations org-wide regardless of scope
 
-**Verified open, 2026-08-27** while reconciling a dangling pointer left by a since-deleted ticket file.
-`getPendingApprovals` (`dashboard-leave.service.ts:81-129`) resolves a DataScope and correctly applies it
-to the leave-request count via `leaveApprovalScope(scope, orgId, u.userId)` (line 100) — but the
-resignation count right below it (lines 105-116) filters only by `orgId` and `status`, with **no scope
-predicate at all**. An approver whose DataScope is `own` or `team` still receives the
-**organization-wide** pending-resignation count. The leak is silent: the cache key already varies by
-scope (`dashboard:pending-approvals:${orgId}:${scope}:...`), so the response looks scope-correct — only
-the number inside it isn't.
+**FIXED 2026-08-28.**
 
-Not a trivial predicate swap. `leaveRequests` carries `approverId` for `leaveApprovalScope` to key off;
-`resignations` (`db/schema/hr/offboarding.ts:230-260`) has no equivalent pre-assignment column —
-`approvedBy` / `hrReviewedBy` / `finalReviewedBy` are populated only after action, not before. Scoping
-`team`/`own` here needs a real answer for who a pending resignation's approver *would be*, most likely
-via the same reporting-manager relation that presumably backs `leaveRequests.approverId`. Left as a
-finding rather than a guessed fix.
+`getPendingApprovals` resolved a DataScope and applied it to the leave-request count via
+`leaveApprovalScope`, but the resignation count beside it filtered only on `orgId` and `status`. An
+approver scoped to `own` or `team` received the organization-wide pending-resignation count. The leak was
+silent because the cache key already varied by scope, so only the number inside was wrong.
 
-This is the defect a deleted `c25-02` ticket file referred to as "written up in `OPEN-FINDINGS.md` §3" —
-that hand-off never happened (§3 is `vault_access_logs`, unrelated); this entry is the correction, found
-by verifying the pointer rather than trusting it forward.
+The 2026-08-27 entry called this "not a trivial predicate swap" because `resignations` has no
+pre-assignment approver column. That is true, but the platform already answers the question elsewhere:
+`LeaveApproverService.resolve` derives the approver as the subject's `users.reportingTo` first, falling
+back to permission holders, and that is what populates `leaveRequests.approverId` in the common case. So
+the semantics were discoverable rather than guessable.
 
-## 6. Smaller, and genuinely optional
+`modules/dashboard/resignation-approval-scope.ts` mirrors `leaveApprovalScope` exactly: `all` → `true`;
+`own` → the subject reports to the actor; `team` → that, and the subject is the actor or a teammate via
+`applyScope`; `none` → `false`. `resignation-approval-scope.spec.ts` asserts each arm's generated SQL
+through `PgDialect.sqlToQuery` and asserts the predicate actually reaches the count query, 9 tests.
 
-- **`verify-permission-catalog.mjs` is redundant.** `backend/src/common/auth/verify-permission-catalog.mjs`
-  duplicates `src/scripts/check-permission-keys.mjs`, which is the canonical one wired at
-  `backend/.github/workflows/ci.yml:61`. Two implementations of one security predicate is the defect
-  c15-06 exists to prevent. Delete it and repoint or drop `verify:permissions` in `package.json`.
-- **`unregistered-injectables.mjs` can be promoted to a spec.** It now reports
-  `unreferencedOutsideOwnFile=0`, so the guard beside `app-route-uniqueness.spec.ts` would pass.
-- **`recurring-journals.controller.ts` holds its list schema inline**, which `CLAUDE.md` §6 forbids;
-  it belongs in `dto/`.
-- **29 hand-rolled page fields remain** of the original 411. Nine of them deliberately exceed the
-  100/page platform cap (`csat` 500, `party` 500, `issues` 400, `data-quality` 400, `hr/interviews`
-  200, `tasks` 200) and need a product ruling before migrating, not a mechanical swap.
-- **`INVITE_EXPIRED` is never written to the seat ledger.** Expiry is evaluated by predicate
-  (`expires_at > NOW()` inside `seatCount()`) rather than by a sweep, so the seat maths is correct
-  and no event is recorded. A future expiry sweep should emit one.
+**Known limitation, inherited not introduced:** `users.reportingTo` is a column on the global user, which
+is c28's mistake #1. An approver who holds `hr:leaves:approve` at `team` scope but is not the subject's
+reporting manager now counts 0 rather than the whole organization. That is the correct direction — it
+under-reports instead of leaking — and it moves with the rest when c28 tickets 09–14 migrate employment
+truth onto `hr_reporting_lines`.
+
+## 6. Smaller items
+
+- **`verify-permission-catalog.mjs` is redundant** — **STRUCK 2026-08-28. It does not exist.** Verified
+  by a repository-wide filename search: the file is absent, and `backend/package.json:43` already points
+  `verify:permissions` at the canonical `src/scripts/check-permission-keys.mjs`. Do not go looking for it.
+- **`recurring-journals.controller.ts` holds its list schema inline** — **STRUCK 2026-08-28. Already
+  resolved.** `modules/accounting/gl/recurring-journals.controller.ts` imports
+  `createRecurringJournalSchema`, `listRecurringJournalsQuerySchema` and `updateRecurringJournalSchema`
+  from `./dto/recurring-journals.schemas`. No inline schema remains.
+- **`unregistered-injectables.mjs` can be promoted to a spec** — **FIXED 2026-08-28.**
+  `backend/src/unregistered-injectables.spec.ts` now runs the same detection in the default jest suite,
+  beside `app-route-uniqueness.spec.ts`. Three tests: an anti-vacuous guard asserting the walk finds more
+  than 200 injectables (a broken walk that maps nothing would otherwise pass), the zero-orphans
+  assertion, and a synthetic-fixture case proving the detector reports an orphan when one exists. The
+  `.mjs` script is retained. 3 passed.
+- **29 hand-rolled page fields remain** — **FIXED 2026-08-28, and the count was stale.** A re-scan found
+  **11**, not 29: 20 had already migrated. Nine exceeded the 100/page platform cap (`csat` 500,
+  `party` 500, `issues` 400 ×2, `data-quality` 400 and 200, `hr/interviews` 200 ×2, `tasks` 200) and two
+  were hand-rolled discrete-value lists (`delegations`, `rbac`). **Product ruling: all nine come down to
+  the platform cap.** All 11 now use `pageSizeField` / `optionalPageSizeField`, which clamps rather than
+  rejects, so a caller that asks for 500 still gets a page — of 100. Four spec files asserted the old
+  reject-over-cap behaviour and were updated to assert the clamp instead, not deleted. `MAX_BULK`
+  (data-quality) and `MAX_PAGE` (issues) survive as **bulk-operation** bounds, which are not page sizes.
+  The four AI copilot tool-argument limits and `e-sign`'s `pageNumber` are not page fields and were left
+  alone.
+- **`INVITE_EXPIRED` is never written to the seat ledger** — **OPEN — DEFERRED 2026-08-28.** Re-verified:
+  `SEAT_EVENT_DELTAS.INVITE_EXPIRED` is declared in `modules/billing/core/seat-definition.ts` and
+  asserted by `seat-ledger.service.spec.ts`, but nothing emits it. Expiry is evaluated by predicate
+  (`expires_at > NOW()` inside `seatCount()`), so **the seat maths is correct and no customer is
+  over- or under-charged** — the only loss is a missing audit event.
+  - **Why deferred:** closing it means introducing a scheduled expiry sweep, which is a new background
+    job with its own tenant-context, idempotency and partitioning obligations. That is a ticket, not a
+    finding, and inventing one here would be scope this session does not own.
+  - **What would close it:** an expiry sweep that iterates orgs with `forEachOrg`, transitions expired
+    `PENDING` invitations to a terminal state, and emits one `INVITE_EXPIRED` seat event per transition,
+    idempotently.
 
 ---
 
 ## Already fixed — recorded so nobody re-raises them
 
-Every one of these was open in the request files and is now closed, verified on 2026-08-27:
+Every one of these was open in the request files and is now closed, verified 2026-08-27:
 
 | Was | Now |
 |---|---|
@@ -145,7 +211,6 @@ Two of them carried long inventories that are **not** reproduced above because t
 closed and the lists are regenerable:
 
 - the 123 files calling `.offset()` outside Lane 3's territory (c13-03, closed)
-- the 178 local pagination-schema copies across 119 files (c13-06 — the 29 that remain are in §6,
-  with the grep that regenerates the full list)
+- the 178 local pagination-schema copies across 119 files (c13-06 — closed by ticket 15; see §6)
 
 Both are recoverable in full: `git show 896c4b847:architecture-refactor/lane-requests/s4.md`.

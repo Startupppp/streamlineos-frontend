@@ -88,7 +88,7 @@ describe("access prefetch — acceptance criteria", () => {
 
     // Mirror what prefetchAccess() does on the server
     const serverQC = new QueryClient();
-    serverQC.setQueryData(queryKeys.access.me(ORG_A, USER_1), makeGranting());
+    serverQC.setQueryData(queryKeys.access.me(), makeGranting());
     const snapshot = dehydrate(serverQC);
 
     // Client receives that snapshot via HydrationBoundary
@@ -110,7 +110,7 @@ describe("access prefetch — acceptance criteria", () => {
   it("2. org switch — org B cannot read org A hydrated snapshot", () => {
     // Server prefetched for org A — permission granted there
     const serverQC = new QueryClient();
-    serverQC.setQueryData(queryKeys.access.me(ORG_A, USER_1), makeGranting());
+    serverQC.setQueryData(queryKeys.access.me(), makeGranting());
     const snapshot = dehydrate(serverQC);
 
     // Active session is now org B — different query key, no hydrated data
@@ -155,7 +155,7 @@ describe("access prefetch — acceptance criteria", () => {
     // Invalidate — exactly as a mutation side-effect would
     await act(async () => {
       await clientQC.invalidateQueries({
-        queryKey: queryKeys.access.me(ORG_A, USER_1),
+        queryKey: queryKeys.access.me(),
       });
     });
 

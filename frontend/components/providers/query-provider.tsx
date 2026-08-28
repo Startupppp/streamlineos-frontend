@@ -13,6 +13,7 @@ import {
   authenticatedScope,
   scopedQueryKeyHashFn,
 } from "@/lib/query-scope";
+import { OrgStorageScopeProvider } from "@/lib/org-scoped-storage";
 
 const MAX_QUERY_RETRIES = 1;
 
@@ -65,9 +66,11 @@ function ScopedQueryProvider({
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider delayDuration={200} skipDelayDuration={300}>
-        {children}
-      </TooltipProvider>
+      <OrgStorageScopeProvider scope={scope}>
+        <TooltipProvider delayDuration={200} skipDelayDuration={300}>
+          {children}
+        </TooltipProvider>
+      </OrgStorageScopeProvider>
     </QueryClientProvider>
   );
 }

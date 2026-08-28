@@ -92,11 +92,11 @@ export function useNotificationEvents() {
 
       es.onmessage = (event) => {
         void qc.invalidateQueries({
-          queryKey: queryKeys.notifications.unreadCount(orgId),
+          queryKey: queryKeys.notifications.unreadCount(),
           exact: true,
         });
         void qc.invalidateQueries({
-          queryKey: queryKeys.notifications.unreadList(orgId),
+          queryKey: queryKeys.notifications.unreadList(),
           exact: true,
         });
         try {

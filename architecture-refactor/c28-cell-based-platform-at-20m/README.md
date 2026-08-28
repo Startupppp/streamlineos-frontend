@@ -25,28 +25,28 @@ The **S** column is the execution session that owns the ticket. The split was ch
 
 | # | S | Ticket | Blocked by | Status |
 |---|---|---|---|---|
-| 01 | S1 | [The request knows which membership it is](issues/01-the-request-knows-its-membership.md) | — | ready-for-agent |
-| 02 | S1 | [A principal declares what kind of thing it is](issues/02-a-principal-declares-what-it-is.md) | 01 | ready-for-agent |
+| 01 | S1 | [The request knows which membership it is](issues/01-the-request-knows-its-membership.md) | — | done |
+| 02 | S1 | [A principal declares what kind of thing it is](issues/02-a-principal-declares-what-it-is.md) | 01 | done |
 
 ### Phase 0 — authorization
 
 | # | S | Ticket | Blocked by | Status |
 |---|---|---|---|---|
-| 03 | S1 | [A permission snapshot cannot outlive its grant](issues/03-a-snapshot-cannot-outlive-its-grant.md) | 01 | ready-for-agent |
-| 04 | S1 | [Delegations and module overrides are keyed to the membership](issues/04-delegations-and-overrides-are-membership-keyed.md) | 01 | ready-for-agent |
-| 05 | S1 | [A machine credential is membership-keyed and bounded by a ceiling](issues/05-a-machine-credential-has-a-ceiling.md) | 02, 04 | ready-for-agent |
+| 03 | S1 | [A permission snapshot cannot outlive its grant](issues/03-a-snapshot-cannot-outlive-its-grant.md) | 01 | done |
+| 04 | S1 | [Delegations and module overrides are keyed to the membership](issues/04-delegations-and-overrides-are-membership-keyed.md) | 01 | in-progress |
+| 05 | S1 | [A machine credential is membership-keyed and bounded by a ceiling](issues/05-a-machine-credential-has-a-ceiling.md) | 02, 04 | done |
 | 06 | S1 | [Removing a membership removes everything derived from it](issues/06-removing-a-membership-removes-its-authority.md) | 04, 05 | ready-for-agent |
-| 07 | S1 | [Owner-only operations are enumerated, not implied](issues/07-owner-only-operations-are-enumerated.md) | — | ready-for-agent |
-| 08 | S1 | [A module transfer records its initiator and its expected current owner separately](issues/08-a-module-transfer-records-both-parties.md) | 07 | ready-for-agent |
+| 07 | S1 | [Owner-only operations are enumerated, not implied](issues/07-owner-only-operations-are-enumerated.md) | — | done |
+| 08 | S1 | [A module transfer records its initiator and its expected current owner separately](issues/08-a-module-transfer-records-both-parties.md) | 07 | done |
 
 ### Phase 0 — the users table (expand → migrate → contract)
 
 | # | S | Ticket | Blocked by | Status |
 |---|---|---|---|---|
-| 09 | S2 | [Employment truth is backfilled into the organization-owned tables](issues/09-employment-truth-is-backfilled.md) | — | ready-for-agent |
-| 10 | S2 | [One accessor dual-reads employment, and shouts when the two disagree](issues/10-one-accessor-dual-reads-employment.md) | 09 | ready-for-agent |
+| 09 | S2 | [Employment truth is backfilled into the organization-owned tables](issues/09-employment-truth-is-backfilled.md) | — | done |
+| 10 | S2 | [One accessor dual-reads employment, and shouts when the two disagree](issues/10-one-accessor-dual-reads-employment.md) | 09 | done |
 | 11 | S2 | [HR, directory and onboarding read the accessor](issues/11-hr-directory-and-onboarding-read-the-accessor.md) | 10 | ready-for-agent |
-| 12 | S2 | [Payroll, finance and compensation read the accessor](issues/12-payroll-and-finance-read-the-accessor.md) | 10 | ready-for-agent |
+| 12 | S2 | [Payroll, finance and compensation read the accessor](issues/12-payroll-and-finance-read-the-accessor.md) | 10 | done · 1 criterion open |
 | 13 | S2 | [The remaining readers migrate](issues/13-the-last-readers-migrate.md) | 10 | ready-for-agent |
 | 14 | S2 | [`users` holds authentication identity only](issues/14-users-holds-authentication-only.md) | 11, 12, 13 | ready-for-agent |
 
@@ -54,8 +54,8 @@ The **S** column is the execution session that owns the ticket. The split was ch
 
 | # | S | Ticket | Blocked by | Status |
 |---|---|---|---|---|
-| 15 | S4 | [Every open item in `OPEN-FINDINGS.md` is closed or carries a dated reason](issues/15-the-open-findings-are-closed.md) | — | ready-for-agent |
-| 16 | S4 | [Every latency seam is instrumented and alerted below its SLO budget](issues/16-latency-seams-are-alerted-below-slo.md) | — | ready-for-agent |
+| 15 | S4 | [Every open item in `OPEN-FINDINGS.md` is closed or carries a dated reason](issues/15-the-open-findings-are-closed.md) | — | **done** |
+| 16 | S4 | [Every latency seam is instrumented and alerted below its SLO budget](issues/16-latency-seams-are-alerted-below-slo.md) | — | **done** · 1 criterion open (no paging destination configured) |
 | 17 | S5 | [The query key carries the tenant](issues/17-the-query-key-carries-the-tenant.md) | — | ready-for-agent |
 | 18 | S5 | [The API surface is versioned and its contract is generated in CI](issues/18-the-api-surface-is-versioned.md) | — | ready-for-agent |
 | 19 | S5 | [Every module is registered through one versioned manifest](issues/19-every-module-has-one-manifest.md) | — | ready-for-agent |
@@ -64,12 +64,12 @@ The **S** column is the execution session that owns the ticket. The split was ch
 
 | # | S | Ticket | Blocked by | Status |
 |---|---|---|---|---|
-| 20 | S3 | [Placement is a record, not a column](issues/20-placement-is-a-record.md) | — | ready-for-agent |
-| 21 | S3 | [A signed placement cache survives a control-plane outage](issues/21-placement-survives-a-control-plane-outage.md) | 20 | ready-for-agent |
-| 22 | S3 | [Every write carries its placement version and dies without the fence](issues/22-a-write-carries-its-placement-version.md) | 20 | ready-for-agent |
-| 23 | S3 | [No organization-owned query bypasses placement](issues/23-no-query-bypasses-placement.md) | 20 | ready-for-agent |
-| 24 | S3 | [An organization switch is revalidated in the target cell](issues/24-an-org-switch-is-revalidated-in-the-target-cell.md) | 20 | ready-for-agent |
-| 25 | S3 | [Creating an organization is an idempotent, resumable saga](issues/25-creating-an-org-is-a-resumable-saga.md) | 20 | ready-for-agent |
+| 20 | S3 | [Placement is a record, not a column](issues/20-placement-is-a-record.md) | — | done |
+| 21 | S3 | [A signed placement cache survives a control-plane outage](issues/21-placement-survives-a-control-plane-outage.md) | 20 | done |
+| 22 | S3 | [Every write carries its placement version and dies without the fence](issues/22-a-write-carries-its-placement-version.md) | 20 | done |
+| 23 | S3 | [No organization-owned query bypasses placement](issues/23-no-query-bypasses-placement.md) | 20 | done |
+| 24 | S3 | [An organization switch is revalidated in the target cell](issues/24-an-org-switch-is-revalidated-in-the-target-cell.md) | 20 | done |
+| 25 | S3 | [Creating an organization is an idempotent, resumable saga](issues/25-creating-an-org-is-a-resumable-saga.md) | 20 | done · 1 criterion open (ownership-transfer + legal-hold call sites are S1's) |
 
 ### Phases 2–4 — cells
 
@@ -85,7 +85,7 @@ The **S** column is the execution session that owns the ticket. The split was ch
 | # | S | Ticket | Blocked by | Status |
 |---|---|---|---|---|
 | 30 | S6 | [The workload envelope is a runnable load profile](issues/30-the-workload-envelope-is-runnable.md) | 26 | ready-for-agent · needs seed data |
-| 31 | S4 | [Declared degradation is tested, not described](issues/31-declared-degradation-is-tested.md) | — | ready-for-agent |
+| 31 | S4 | [Declared degradation is tested, not described](issues/31-declared-degradation-is-tested.md) | — | **done** · 1 row open (no read replica exists) |
 | 32 | S6 | [Unit cost per cell is tracked and forecast](issues/32-unit-cost-per-cell-is-forecast.md) | 27 | ready-for-agent · needs infrastructure |
 
 ## Deliberately not ticketed

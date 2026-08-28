@@ -74,7 +74,7 @@ export function useHrAttendanceStatus(
   const canAttendance = useCan("self:attendance");
   const { enabled: optEnabled, ...restOptions } = options ?? {};
   return useQuery({
-    queryKey: queryKeys.hr.attendanceStatus(orgId),
+    queryKey: queryKeys.hr.attendanceStatus(),
     queryFn: () =>
       apiClient.get<AttendanceStatusResult>("/me/attendance/status"),
     staleTime: 2 * 60_000,
@@ -130,7 +130,7 @@ export function useHrCheckIn(
   const qc = useQueryClient();
   const { data: session } = useSession();
   const orgId = session?.orgId ?? "";
-  const statusKey = queryKeys.hr.attendanceStatus(orgId);
+  const statusKey = queryKeys.hr.attendanceStatus();
   return useMutation({
     mutationKey: ["hr", "attendance", "check-in"],
     mutationFn: (data: CheckInInput) =>
@@ -190,7 +190,7 @@ export function useHrCheckIn(
         queryKey: [...queryKeys.hr.all, "attendanceHeatmap"],
       });
       void qc.invalidateQueries({
-        queryKey: queryKeys.dashboard.teamAttendance(orgId),
+        queryKey: queryKeys.dashboard.teamAttendance(),
         exact: true,
       });
     },
@@ -207,7 +207,7 @@ export function useHrCheckOut(
   const qc = useQueryClient();
   const { data: session } = useSession();
   const orgId = session?.orgId ?? "";
-  const statusKey = queryKeys.hr.attendanceStatus(orgId);
+  const statusKey = queryKeys.hr.attendanceStatus();
   return useMutation({
     mutationKey: ["hr", "attendance", "check-out"],
     mutationFn: () =>
@@ -249,7 +249,7 @@ export function useHrCheckOut(
         queryKey: [...queryKeys.hr.all, "attendanceHeatmap"],
       });
       void qc.invalidateQueries({
-        queryKey: queryKeys.dashboard.teamAttendance(orgId),
+        queryKey: queryKeys.dashboard.teamAttendance(),
         exact: true,
       });
     },
@@ -265,7 +265,7 @@ export function useHrToggleBreak(
 ) {
   const qc = useQueryClient();
   const { data: session } = useSession();
-  const statusKey = queryKeys.hr.attendanceStatus(session?.orgId ?? "");
+  const statusKey = queryKeys.hr.attendanceStatus();
   return useMutation({
     mutationKey: ["hr", "attendance", "toggle-break"],
     mutationFn: () =>

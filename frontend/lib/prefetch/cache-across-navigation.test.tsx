@@ -82,7 +82,7 @@ function stubSession(): void {
  */
 function makeClient() {
   const qc = createAppQueryClient(SCOPE);
-  qc.setQueryData(queryKeys.access.me(ORG, USER), makeAccess());
+  qc.setQueryData(queryKeys.access.me(), makeAccess());
   return qc;
 }
 
