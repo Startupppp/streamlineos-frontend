@@ -2,9 +2,9 @@
 
 PRD: [`prd.md`](prd.md) · Program: [`../README.md`](../README.md)
 
-**32 tickets, 26 marked done** (some with a single criterion left open and a written reason — read the row). Phases 0 and 1 are largely landed; Phases 2–4 have not started, because they need a second cell to exist. This is a proposed target architecture, not a repair of a broken one — the PRD's own verdict is that the current implementation is sound *inside one cell* and has not yet proved it can serve 20 million users.
+**32 tickets, 27 marked done** (some with a single criterion left open and a written reason — read the row). Phases 0 and 1 are landed. Phases 2–4 have started: a second cell (`cell-2`) exists, serves organizations and survives a control-plane outage, and placement is automated. **The cold bootstrap fails**, and that is the most important thing this program now knows — see ticket 26. This is a proposed target architecture, not a repair of a broken one — the PRD's own verdict is that the current implementation is sound *inside one cell* and has not yet proved it can serve 20 million users.
 
-**Being "done" here does not mean 20M-ready.** The release rule below is unchanged and unmet: no second cell exists, no relocation has been exercised, and the acceptance workload has not been run.
+**Being "done" here does not mean 20M-ready.** The release rule below is unchanged and unmet: a second cell exists but is not independently resourced and cannot be rebuilt from the committed migration chain, no relocation has been exercised, and the acceptance workload has not been run — there is no load driver, so not one latency objective in the PRD's reliability table has been measured.
 
 The release rule is in the PRD and is the whole point of the ticket set: the architecture may be called **20M-ready** only when Phase 0 is complete, at least two cells are operating, relocation and recovery have been exercised, and the acceptance workload passes with published headroom. Until then the accurate statement is that the design has a credible horizontal path and the implementation has not proved the capacity.
 
@@ -60,7 +60,7 @@ The **S** column is the execution session that owns the ticket. The split was ch
 | 16 | S4 | [Every latency seam is instrumented and alerted below its SLO budget](issues/16-latency-seams-are-alerted-below-slo.md) | — | **done** · 1 criterion open (operator must set `ALERT_WEBHOOK_URL`; delivery itself is proved) |
 | 17 | S5 | [The query key carries the tenant](issues/17-the-query-key-carries-the-tenant.md) | — | **done** · premise corrected: the tenant is in the query hash, not the key array |
 | 18 | S5 | [The API surface is versioned and its contract is generated in CI](issues/18-the-api-surface-is-versioned.md) | — | **done** · 3 criteria open (versioning ruled out by the user); drift check found 6 real timesheets drifts |
-| 19 | S5 | [Every module is registered through one versioned manifest](issues/19-every-module-has-one-manifest.md) | — | **done** · 8 gates wired, pilot `timesheets`; lifecycle gate red on 11 real missing indexes |
+| 19 | S5 | [Every module is registered through one versioned manifest](issues/19-every-module-has-one-manifest.md) | — | **done** · 8 gates wired, pilot `timesheets`; the 11 indexes the lifecycle gate found missing are migrated and all 4 gates pass |
 
 ### Phase 1 — placement without moving data
 
@@ -77,18 +77,18 @@ The **S** column is the execution session that owns the ticket. The split was ch
 
 | # | S | Ticket | Blocked by | Status |
 |---|---|---|---|---|
-| 26 | S6 | [A second cell exists and is proved from cold](issues/26-a-second-cell-is-proved-cold.md) | 20–25 | ready-for-agent · needs infrastructure |
-| 27 | S6 | [A cell has a measured capacity budget and an admission threshold](issues/27-a-cell-has-a-capacity-budget.md) | 26 | ready-for-agent · needs infrastructure |
-| 28 | S6 | [An organization moves between cells, and can roll back until the flip](issues/28-an-organization-moves-between-cells.md) | 22, 26 | ready-for-agent · needs infrastructure |
-| 29 | S6 | [Placement is automated and a noisy neighbour is relocated](issues/29-placement-is-automated.md) | 27, 28 | ready-for-agent · needs infrastructure |
+| 26 | S6 | [A second cell exists and is proved from cold](issues/26-a-second-cell-is-proved-cold.md) | 20–25 | **partial** · `cell-2` exists and serves orgs; cold bootstrap FAILS — the chain misses 65 tables the running DB has |
+| 27 | S6 | [A cell has a measured capacity budget and an admission threshold](issues/27-a-cell-has-a-capacity-budget.md) | 26 | **done** · 1 criterion open (forecast needs 3 daily samples); limiting resource measured = database-size 42.1% |
+| 28 | S6 | [An organization moves between cells, and can roll back until the flip](issues/28-an-organization-moves-between-cells.md) | 22, 26 | **partial** · machine + checksums + offsets built, 80 tests; no org has been moved |
+| 29 | S6 | [Placement is automated and a noisy neighbour is relocated](issues/29-placement-is-automated.md) | 27, 28 | **partial** · placement is automated and LIVE on all 3 creation paths; canary rollback never rolled |
 
 ### Acceptance
 
 | # | S | Ticket | Blocked by | Status |
 |---|---|---|---|---|
-| 30 | S6 | [The workload envelope is a runnable load profile](issues/30-the-workload-envelope-is-runnable.md) | 26 | ready-for-agent · needs seed data |
+| 30 | S6 | [The workload envelope is a runnable load profile](issues/30-the-workload-envelope-is-runnable.md) | 26 | **partial** · refusal state ENDED — 46 budgets measured, 0 over ceiling; no load driver, so no latency objective measured |
 | 31 | S4 | [Declared degradation is tested, not described](issues/31-declared-degradation-is-tested.md) | — | **done** · 7/8 rows tested; read-replica row ratcheted, not tested (no replica exists) |
-| 32 | S6 | [Unit cost per cell is tracked and forecast](issues/32-unit-cost-per-cell-is-forecast.md) | 27 | ready-for-agent · needs infrastructure |
+| 32 | S6 | [Unit cost per cell is tracked and forecast](issues/32-unit-cost-per-cell-is-forecast.md) | 27 | **partial** · 1 unit costed from the ledger, 6 measured without a price, 2 unmeasured; no invoice |
 
 ## Deliberately not ticketed
 

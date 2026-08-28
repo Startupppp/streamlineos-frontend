@@ -828,3 +828,132 @@ forbidden/view-only variants still deny. All six payroll e2e suites now pass 252
 
 **If you rename a method `ModuleGuard` or `authorize()` calls, grep for narrow `AccessService` doubles** —
 they are literals, not the shared harness, and a missing method reads as a 500, not a type error.
+
+---
+
+## 2026-08-28 · S5 → S1 · the module-access e2e suite needs a fence stub and a per-test principal
+
+**What I need:** two harness changes so `module-access.controller.e2e-spec.ts` can go green. I made the two
+call-site fixes your earlier note asked for and stopped there; the rest is harness, not spec.
+
+**Why:** `@Idempotent` on `ownership/transfer` is mine (ticket 18). Your note diagnosed the 400s correctly and
+I applied the fix you named — the four requests now `.set("Idempotency-Key", ...)` with a value unique per
+test. I also gave the per-module matrix its own `sub` (`modadmin_${moduleKey}`), because `@UseRateLimit`
+buckets on `req.user?.userId` (`rate-limit.guard.ts:30`) and thirteen iterations sharing one principal
+exhausted a 5-per-hour tier. Both are in HEAD. Two harness problems remain:
+
+**1. The fence has no organisation to point at.** With the header present the interceptor now reaches its
+claim and dies `23503` inserting into `command_fences`:
+`insert into "command_fences" ... params: org_1,internal,it-hr-transfer-initiate,...` — FK violation, because
+`signToken` mints tokens for `org_1` and there is no such row. `test/helpers/e2e-app.ts:144` already documents
+this exact trap for the region registry and stubs around it. The fence needs the same treatment: stub it the
+way membership, entitlements, access and placement are already stubbed. I did not add it — `e2e-app.ts` is
+shared and was modified in your tree while I worked.
+I tried the local alternative, `overrideProvider(IdempotencyInterceptor)` in the spec's own override list,
+with both the `src/...` and the relative import path. It does not take effect: the real interceptor still runs
+and still inserts. Do not spend time re-trying that route.
+
+**2. The suite is not repeatable within an hour.** The tier is `{ limit: 5, windowSecs: 3600 }` and nothing
+resets it between runs, so the second and third run of the day fail on routes the first run passed. My last
+run was 149 passed / 19 failed, and that number is worse than the code deserves precisely because I had
+already run it several times. Treat any single number from this suite as a floor, not a measurement, until
+the limiter is reset per test.
+
+**Blocking or not:** not blocking ticket 18 — the routes work in the running application, where the tenant is
+real and `api-client.ts:150-153` always sends a key. It blocks a green e2e run for this file only.
+
+## 2026-08-28 · S6 → whoever owns accounting, finance and inventory · the migration chain cannot rebuild the database, and one table has no RLS in a fresh cell
+
+**What I need:** a migration that creates the 65 tables the running database has and the committed chain does not, with their tenant-isolation policies; a migration adding RLS to `inv_webhook_event_subscriptions`; and removal of the three tables the chain creates that production has dropped.
+
+**Why:** ticket 26's cold-bootstrap criterion. Building a cell from an empty database now works mechanically — `pnpm -C backend cell:bootstrap --drop --i-mean-it` reaches head with no manual step — but the result is not the running database:
+
+```
+RESULT: REACHED_HEAD 334/334 already_present=1 chain_gaps=130
+RESULT: SCHEMAS DIFFER cell=cell-2 differences=3243
+  tables      control=977   cell=912   missing=65
+  policies    control=929   cell=870   missing=62
+  enums       control=2356  cell=2075  missing=281
+  triggers    control=104   cell=73    missing=34
+```
+
+130 statements reference an object no migration creates. They are concentrated in
+`0591_tenant_isolation_for_unprotected_tables`, whose own header says the accounting, AP, AR, GL and
+tax tables "the 0000 baseline never actually created" — they still do not exist after the full chain,
+so those tables were created out of band and the chain cannot reproduce them.
+
+**The security-relevant part, and it is not hypothetical.** `db:verify-rls` on the cold cell fails on
+`public.inv_webhook_event_subscriptions`. That table **does** exist in a fresh cell, carries `org_id`,
+and has no policy. Production has RLS on it and no migration adds it, so production's policy is also
+out of band. **Any newly built cell serves that table with no tenant isolation.** The other 62 missing
+policies are on tables that do not exist in the cell, so they are a reproducibility failure today
+rather than an open hole — they become one the moment those tables are created the same way.
+
+Three objects exist **only** in the cell: `credit_note_items`, `fin_payment_run_items`,
+`vendor_credit_items`. Production dropped them out of band and the chain still creates them.
+
+**Where I think it lives:** `backend/migrations/0591_tenant_isolation_for_unprotected_tables.sql` for
+the missing-table list, `backend/migrations/0420_inv_webhook_event_subscriptions.sql` for the table
+that never got a policy. Reproduce with `pnpm -C backend cell:bootstrap --drop --i-mean-it` then
+`pnpm -C backend cell:compare-schema`. Evidence, not instruction — re-read at source.
+
+**Blocking or not:** blocking for ticket 26 criterion 2 and for ticket 28 entirely — an organization
+cannot be relocated into a cell whose schema differs from the source by 3,243 catalog objects. I left
+both criteria unticked rather than claim them.
+
+## 2026-08-28 · S6 → whoever owns the read-cost budgets · eight budgets had never executed, and the refusal was hiding it
+
+**What I need:** nothing. Recording it so the corrections are not read as an unexplained diff, and so
+the class of defect is known.
+
+**Why:** ticket 30 ended the `seed too small` refusal, and eight of the 43 declared budgets then failed
+with a column error rather than a number — they had never run. They referenced `kb_spaces.cover_image`,
+`deals.title`, `payroll_run_employees.gross_pay`/`net_pay`, `payroll_line_items.component_code`,
+`inv_stock_levels.quantity_available`/`quantity_reserved`, `inv_stock_transactions.quantity`,
+`hr_leave_ledger.entry_type`, and `'ARCHIVED'`, which is not a value of `inv_product_status`
+(`ACTIVE, INACTIVE, DISCONTINUED`). None of those columns exists.
+
+**The general lesson:** a seed-adequacy refusal masks a broken query as effectively as it masks an
+unmeasured one. The runner reports both as a non-pass, so nobody looked.
+
+**What I changed:** the projections only, corrected against `information_schema`. **No ceiling was
+touched.** `leave-ledger-mine`, `deals-pipeline` and `inv-stock-transactions` now pass outright.
+
+**Blocking or not:** closed.
+
+## 2026-08-28 · S6 → S2 · FYI: I fixed two casts in a KB spec to get the typecheck to zero
+
+**What I need:** nothing — a notification so you do not find it as an unexplained diff.
+
+**Why:** `src/modules/kb/article-conversion/kb-article-migration.tenant.spec.ts` used
+`jest.spyOn(service as never, "previewOn")`, which makes the spy's value type `never`, so
+`mockResolvedValue` failed to compile. Two errors, both pre-dating my session, and the only ones left
+after I cleared the four in my own territory. This session's Definition of Done names a clean
+`tsc --noEmit`, so I fixed them rather than reporting a red typecheck I could close.
+
+**What I changed:** spec only. A local `stubPrivate` helper uses `Object.defineProperty` to replace the
+private method, which needs no cast. The service is untouched and the assertions are unchanged —
+`kb-article-migration.tenant.spec.ts` still passes, and the KB and organization-lifecycle suites are
+8 suites / 139 tests green.
+
+**Blocking or not:** closed. `NODE_OPTIONS=--max-old-space-size=8192 pnpm -C backend exec tsc --noEmit`
+is now **0 errors**, down from 6 at the start of this session.
+
+## 2026-08-28 · S6 → everyone · a concurrent process committed three of my files into an unrelated commit
+
+**What I need:** nothing. Recording it because it is the shared-index hazard firing in the direction
+this program has not seen before.
+
+**Why:** `src/scripts/cell-topology.mjs`, `src/scripts/cell-backup.mjs` and
+`src/scripts/verify-cell-isolation.mjs` were written by me and landed in commit `c15b908e`
+*"feat: enhance CI workflow with self-test checks for OpenAPI and idempotent commands"*, which is not
+mine and does not mention them. The previously recorded hazard is `git add -A` sweeping another
+session's work **into** your commit; this is the same index sweeping **your** work into someone
+else's. `git status` then reports your own new files as clean, which is easy to misread as "already
+handled".
+
+**How to notice:** after committing, run `git show --name-only --format="" HEAD` and check the list is
+what you passed. If one of your files is missing from `git status` and you did not commit it, run
+`git log --oneline -2 -- <path>`.
+
+**Blocking or not:** not blocking. The committed content is byte-identical to my working copy.
