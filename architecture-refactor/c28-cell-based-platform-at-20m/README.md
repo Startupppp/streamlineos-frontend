@@ -52,7 +52,7 @@ The **S** column is the execution session that owns the ticket. The split was ch
 | 11 | S2 | [HR, directory and onboarding read the accessor](issues/11-hr-directory-and-onboarding-read-the-accessor.md) | 10 | done · all criteria closed |
 | 12 | S2 | [Payroll, finance and compensation read the accessor](issues/12-payroll-and-finance-read-the-accessor.md) | 10 | done |
 | 13 | S2 | [The remaining readers migrate](issues/13-the-last-readers-migrate.md) | 10 | done · all criteria closed; shipped the v2 identity-only user contract, which also closed ticket 18's versioning criterion |
-| 14 | S2 | [`users` holds authentication identity only](issues/14-users-holds-authentication-only.md) | 11, 12, 13 | done · 1 criterion open |
+| 14 | S2 | [`users` holds authentication identity only](issues/14-users-holds-authentication-only.md) | 11, 12, 13 | done · all criteria closed |
 
 ### Phase 0 — carried work and client contracts
 

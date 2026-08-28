@@ -4,7 +4,7 @@
 
 **Blocked by:** [11 — HR, directory and onboarding read the accessor](11-hr-directory-and-onboarding-read-the-accessor.md) · [12 — Payroll, finance and compensation read the accessor](12-payroll-and-finance-read-the-accessor.md) · [13 — The remaining readers migrate](13-the-last-readers-migrate.md)
 
-**Status:** done (cold-migrate-from-empty open — no empty database available)
+**Status:** done
 
 **Grounding (2026-08-28, evidence not instruction — re-read at source):** the columns to drop, all in `db/schema/common/auth.ts:109-163` — `joiningDate`, `taxId`, `bankDetails`, `orgDepartmentId`, `designation`, `monthlySalary`, `employeeId`, `reportingTo`, `branchId`, and the indexes and self-referencing foreign key that hang off them (`idx_users_reporting_to`, `idx_users_org_department`, `foreignKey({ columns: [reportingTo] })`). `onboardingDocStatus` / `onboardingCompletedAt` need a product ruling: the workspace gate that reads them is per-user today and per-membership in the target model.
 
@@ -61,7 +61,34 @@
 
   `person-employment-sync.service.ts` is deliberately **kept** — it creates `organization_people` / `hr_people` / `hr_employments` rows for new members, which is live behaviour, not migration scaffolding. `sync-canonical-*.ts` are kept for the same reason: with the legacy half gone they are no longer *dual*-writes, they are simply the canonical writers.
 
-- [ ] A cold `db:migrate` from empty produces a `users` table with no employment columns.
+- [x] A cold `db:migrate` from empty produces a `users` table with no employment columns.
+
+  **Proved on `cell2`, the cold cell another session built, and verified at source rather than taken from their write-up:**
+
+  ```
+  $ node scripts/db-query.mjs --url <cell2> "select
+      (select count(*)::int from users) user_rows,
+      (select count(*)::int from organizations) orgs,
+      (select count(*)::int from information_schema.tables where table_schema='public') tables,
+      (select count(*)::int from drizzle.__drizzle_migrations) migrations"
+  { "user_rows": 0, "orgs": 0, "tables": 894, "migrations": 339 }
+
+  $ node scripts/db-query.mjs --url <cell2> "select count(*)::int users_columns,
+      count(*) filter (where column_name in ('designation','employee_id','joining_date',
+      'org_department_id','branch_id','reporting_to','monthly_salary','bank_details','tax_id'))::int
+      employment_leftovers
+    from information_schema.columns where table_name='users' and table_schema='public'"
+  { "users_columns": 33, "employment_leftovers": 0 }
+  ```
+
+  Zero users and zero organizations is what makes it a cold build rather than a copy: nothing was seeded,
+  the schema came from the chain alone, and it lands on the same 33 columns the live database has.
+
+  **The credit is theirs, and the route matters.** `c28-26` repaired the chain until a cold cell reached
+  SCHEMAS IDENTICAL. Journal replay by itself still does not get there — see below — so this criterion is
+  met by their mechanism, not by the one it was originally written against.
+
+  **What journal replay still cannot do, kept because it is a live defect:**
 
   **Still open, but no longer for the reason recorded before.** It previously said "no empty database exists".
   One was made — `CREATE DATABASE migrate_probe_s2` on the same Neon project (the role has `rolcreatedb`),
