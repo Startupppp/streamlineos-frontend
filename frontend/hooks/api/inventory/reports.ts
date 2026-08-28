@@ -268,6 +268,8 @@ interface RawReorderRow {
   onHand: number;
   onOrder: number;
   committed: number;
+  /** Server-computed, all five terms. Never recomputed here. */
+  availableQty: number;
   reorderPoint: number;
   minStockLevel: number;
   reorderRuleId: number | null;
@@ -287,7 +289,10 @@ interface RawReorderEnvelope {
 }
 
 function toReorderRowFromFlat(row: RawReorderRow): ReorderReportRow {
-  const deficit = Math.max(row.reorderPoint - row.onHand, 0);
+  // C2. The shortfall is the server's number. Recomputing it here produced a
+  // second answer that ignored on-order stock and every hold, so the screen
+  // could ask for a quantity the engine would never propose.
+  const deficit = row.suggestedQty;
   return {
     productId: row.productId,
     productName: row.productName,
@@ -296,7 +301,9 @@ function toReorderRowFromFlat(row: RawReorderRow): ReorderReportRow {
     categoryName: null,
     warehouseName: null,
     onHand: row.onHand,
-    availableQty: row.onHand - row.committed,
+    // A1. This was an eighth copy of the availability formula, two terms
+    // short — it ignored blocked, quality-held and picked-not-shipped stock.
+    availableQty: row.availableQty,
     reorderPoint: row.reorderPoint,
     reorderQty: row.suggestedQty > 0 ? row.suggestedQty : (deficit > 0 ? deficit : null),
     deficit,

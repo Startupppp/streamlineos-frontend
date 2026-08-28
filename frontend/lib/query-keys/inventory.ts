@@ -142,6 +142,10 @@ export const inventoryQueryKeys = {
     aiDigest: (narrate?: boolean) =>
       [...base, "inventory", "aiDigest", narrate] as const,
     opsBrief: () => [...base, "inventory", "opsBrief"] as const,
+    reorderProposal: (productVariantId: number) =>
+      [...base, "inventory", "reorderProposal", productVariantId] as const,
+    demandBaseline: (productVariantId: number) =>
+      [...base, "inventory", "demandBaseline", productVariantId] as const,
     supplierDelayBriefing: (vendorId?: string) =>
       [...base, "inventory", "supplierDelayBriefing", vendorId] as const,
     barcodeLookup: (code: string) =>

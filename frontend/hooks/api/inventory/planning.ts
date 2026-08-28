@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
@@ -68,7 +69,6 @@ export interface ReplenishmentSuggestion {
   warehouseId: number | null;
   warehouseName: string | null;
   currentStock: number;
-  minQty: number;
   suggestedQty: number;
   forecastedDemand: number | null;
   vendorId: number | null;
@@ -86,7 +86,6 @@ function mapSuggestion(raw: RawReplenishmentSuggestion): ReplenishmentSuggestion
     warehouseId: raw.warehouseId,
     warehouseName: raw.warehouseName,
     currentStock: raw.currentOnHand,
-    minQty: 0,
     suggestedQty: raw.suggestedQty,
     forecastedDemand: raw.forecasted,
     vendorId: raw.vendorId,
@@ -96,14 +95,21 @@ function mapSuggestion(raw: RawReplenishmentSuggestion): ReplenishmentSuggestion
   };
 }
 
-export interface GeneratePOInput {
-  vendorId: number;
-  suggestions: { variantId: number; warehouseId: number; qty: number }[];
+export interface GeneratePOLineInput {
+  productVariantId: number;
+  suggestedQty: number;
+  unitCost?: number;
 }
 
-interface GeneratePOResult {
-  purchaseOrderId: number;
-  purchaseOrderNumber: string;
+export interface GeneratePOInput {
+  vendorId: number;
+  warehouseId?: number;
+  suggestions: GeneratePOLineInput[];
+}
+
+export interface GeneratePOResult {
+  id: number;
+  poNumber: string;
 }
 
 export interface ForecastRow {
@@ -232,8 +238,10 @@ export function useGeneratePO() {
     mutationKey: ["inventory", "replenishment", "generate-po"],
     mutationFn: (input) =>
       apiClient.post<GeneratePOResult>("/inventory/replenishment/suggestions/generate-po", input),
-    onSuccess: () => {
+    onSuccess: (_result, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
+      for (const line of variables.suggestions)
+        qc.invalidateQueries({ queryKey: reorderProposalKey(line.productVariantId) });
     },
   });
 }
@@ -250,5 +258,160 @@ export function useForecasting(params?: ForecastParams) {
     staleTime: 5 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,
+  });
+}
+
+export interface ReorderEvidenceLine {
+  label: string;
+  value: string;
+  source: string;
+}
+
+export type ReorderRecommendation = "propose" | "review" | "hold";
+
+export interface ReorderPosition {
+  onHand: number;
+  committed: number;
+  onOrder: number;
+  available: number;
+}
+
+export interface ReorderProposal {
+  productVariantId: number;
+  suggestedQuantity: number | null;
+  position: ReorderPosition;
+  reorderPoint: number | null;
+  evidence: ReorderEvidenceLine[];
+  caveats: string[];
+  recommendation: ReorderRecommendation;
+}
+
+export type DemandCategory = "smooth" | "erratic" | "intermittent" | "lumpy" | "no_demand";
+
+export interface DemandClassification {
+  category: DemandCategory;
+  adi: number;
+  cv2: number;
+  nonZeroPeriods: number;
+  guidance: string;
+}
+
+export interface ForecastAccuracyMetrics {
+  n: number;
+  mae: number;
+  rmse: number;
+  bias: number;
+  mase: number | null;
+}
+
+export interface ForecastBacktestResult {
+  method: string;
+  metrics: ForecastAccuracyMetrics;
+}
+
+export interface DemandSeasonality {
+  seasonLength: number | null;
+  strength: number;
+  candidates: { lag: number; correlation: number }[];
+}
+
+export interface DemandBaselineReport {
+  productVariantId: number;
+  periods: number;
+  history: { period: string; quantity: number }[];
+  classification: DemandClassification;
+  seasonality: DemandSeasonality;
+  ranked: ForecastBacktestResult[];
+  champion: ForecastBacktestResult | null;
+  unrestrictedBest: ForecastBacktestResult | null;
+  shapeNote?: string;
+  insufficientReason?: string;
+}
+
+export interface SimulationScenarioInput {
+  label: string;
+  demandMultiplier?: number;
+  leadTimeWeeks?: number;
+  leadTimeStdDevWeeks?: number;
+  serviceLevel?: number;
+}
+
+export interface SimulationOutcome {
+  label: string;
+  serviceLevel: number;
+  demandMean: number;
+  leadTimeWeeks: number;
+  safetyStock: number;
+  reorderPoint: number;
+  deltaSafetyStock: number;
+  deltaReorderPoint: number;
+}
+
+export interface SimulationResult {
+  productVariantId: number;
+  applicable: boolean;
+  reason?: string;
+  baseline: SimulationOutcome | null;
+  scenarios: SimulationOutcome[];
+  caveats: string[];
+}
+
+export interface SimulateInput {
+  productVariantId: number;
+  scenarios: SimulationScenarioInput[];
+  serviceLevel?: number;
+}
+
+function reorderProposalKey(productVariantId: number | null) {
+  // Its own key rather than a scoped variant of the forecasting one: the two
+  // surfaces invalidate independently, and sharing a factory means refreshing
+  // one silently drops the other's cache.
+  return productVariantId === null
+    ? queryKeys.inventory.forecasting({ scope: "reorder-proposal" })
+    : queryKeys.inventory.reorderProposal(productVariantId);
+}
+
+export function useForecastReorderProposal(
+  productVariantId: number | null,
+  options?: Omit<UseQueryOptions<ReorderProposal, Error>, "queryKey" | "queryFn">,
+) {
+  const canManage = useCan("inventory:replenishment:manage");
+  return useQuery<ReorderProposal, Error>({
+    queryKey: reorderProposalKey(productVariantId),
+    queryFn: () =>
+      apiClient.get<ReorderProposal>(
+        `/inventory/forecasting/reorder-proposal/${productVariantId}`,
+      ),
+    staleTime: 60_000,
+    ...options,
+    enabled: canManage && productVariantId !== null && (options?.enabled ?? true),
+  });
+}
+
+export function useDemandBaseline(
+  productVariantId: number | null,
+  options?: Omit<UseQueryOptions<DemandBaselineReport, Error>, "queryKey" | "queryFn">,
+) {
+  const canManage = useCan("inventory:replenishment:manage");
+  return useQuery<DemandBaselineReport, Error>({
+    // The query is disabled while the id is null, so the key only has to be
+    // stable and distinct for that state rather than meaningful.
+    queryKey: queryKeys.inventory.demandBaseline(productVariantId ?? 0),
+    queryFn: () =>
+      apiClient.get<DemandBaselineReport>(`/inventory/forecasting/baseline/${productVariantId}`),
+    staleTime: 60_000,
+    ...options,
+    enabled: canManage && productVariantId !== null && (options?.enabled ?? true),
+  });
+}
+
+export function useSimulateReplenishment() {
+  return useMutation<SimulationResult, Error, SimulateInput>({
+    mutationKey: ["inventory", "forecasting", "simulate"],
+    mutationFn: ({ productVariantId, scenarios, serviceLevel }) =>
+      apiClient.post<SimulationResult>(
+        `/inventory/forecasting/simulate/${productVariantId}`,
+        { scenarios, ...(serviceLevel !== undefined ? { serviceLevel } : {}) },
+      ),
   });
 }

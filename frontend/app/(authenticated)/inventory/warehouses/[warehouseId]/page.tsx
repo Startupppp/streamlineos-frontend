@@ -25,6 +25,7 @@ import {
 } from "@/features/inventory/components/warehouse/location-type-constants";
 import { AddLocationSheet } from "@/features/inventory/components/warehouse/add-location-sheet";
 import { WarehouseStockTab } from "@/features/inventory/components/warehouse/warehouse-stock-tab";
+import { WarehouseAccessTab } from "@/features/inventory/components/warehouses/warehouse-access-tab";
 
 function groupByType(locations: WarehouseLocation[]): Map<LocationType, WarehouseLocation[]> {
   const map = new Map<LocationType, WarehouseLocation[]>();
@@ -211,6 +212,7 @@ export default function WarehouseDetailPage({
         <TabsList>
           <TabsTrigger value="locations">Locations</TabsTrigger>
           <TabsTrigger value="stock">Stock</TabsTrigger>
+          <TabsTrigger value="access">Access</TabsTrigger>
         </TabsList>
 
         <TabsContent value="locations" className={TABS_CONTENT_PAGE_BODY_CLASS}>
@@ -264,6 +266,10 @@ export default function WarehouseDetailPage({
 
         <TabsContent value="stock" className={TABS_CONTENT_PAGE_BODY_CLASS}>
           <WarehouseStockTab warehouseId={warehouseId} />
+        </TabsContent>
+
+        <TabsContent value="access" className={TABS_CONTENT_PAGE_BODY_CLASS}>
+          <WarehouseAccessTab warehouseId={warehouseId} warehouseName={warehouse.name} />
         </TabsContent>
       </Tabs>
 

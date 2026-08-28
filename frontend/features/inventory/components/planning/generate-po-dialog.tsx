@@ -19,6 +19,7 @@ import {
   useGeneratePO,
   type ReplenishmentSuggestion,
 } from "@/hooks/api/inventory/planning";
+import { formatQuantity } from "./forecast-format";
 
 interface VendorGroup {
   vendorId: number;
@@ -70,7 +71,8 @@ function VendorGroupRow({ group, isPending, onGenerate }: VendorGroupRowProps) {
         <TruncatedText text={group.vendorName} className="text-sm font-medium" />
         <p className="text-xs text-muted-foreground">
           {group.items.length} item{group.items.length !== 1 ? "s" : ""} ·{" "}
-          {group.totalQty} units total
+          <span className="font-mono tabular-nums">{formatQuantity(group.totalQty)}</span> units
+          from the min/max policy
         </p>
       </div>
       <AnimatedIconButton
@@ -100,20 +102,17 @@ export function GeneratePODialog({ suggestions, open, onClose }: GeneratePODialo
     generatePO.mutate(
       {
         vendorId: group.vendorId,
-        suggestions: group.items
-          .filter((s): s is typeof s & { warehouseId: number } => s.warehouseId !== null)
-          .map((s) => ({
-            variantId: s.variantId,
-            warehouseId: s.warehouseId,
-            qty: s.suggestedQty,
-          })),
+        suggestions: group.items.map((s) => ({
+          productVariantId: s.variantId,
+          suggestedQty: s.suggestedQty,
+        })),
       },
       {
         onSuccess: (result) => {
           toast.success("Draft PO created", {
             description: (
               <span>
-                PO #{result.purchaseOrderNumber} created for {group.vendorName}.{" "}
+                PO {result.poNumber} created for {group.vendorName}.{" "}
                 <Link
                   href="/inventory/purchase-orders"
                   className="underline text-primary"
@@ -141,8 +140,9 @@ export function GeneratePODialog({ suggestions, open, onClose }: GeneratePODialo
 
         <div className="space-y-3 py-2">
           <p className="text-sm text-muted-foreground">
-            {groups.length} vendor group{groups.length !== 1 ? "s" : ""} found. Generate a draft PO
-            for each.
+            {groups.length} vendor group{groups.length !== 1 ? "s" : ""} found. These quantities
+            come from the min/max policy, not from the forecast engine — the engine&rsquo;s proposal
+            for a SKU lives behind its Proposal button.
           </p>
           <Separator />
           {groups.map((group) => (

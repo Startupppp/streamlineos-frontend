@@ -205,3 +205,113 @@ export function useWarehouseStock(
     staleTime: 60_000,
   });
 }
+
+export interface WarehouseAssignee {
+  userId: string;
+  name: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  email: string;
+  image: string | null;
+  grantedBy: string;
+  grantedByName: string | null;
+  grantedAt: string;
+}
+
+export interface AssignableWarehouseUser {
+  userId: string;
+  name: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  email: string;
+  image: string | null;
+}
+
+/** The exact backend key on every warehouse-assignment handler. */
+export const WAREHOUSE_ASSIGNMENT_PERMISSION = "inventory:warehouses:manage" as const;
+
+export interface WarehouseAssigneePage {
+  items: WarehouseAssignee[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+function warehouseAssigneesKey(warehouseId: number, page: number, limit: number) {
+  return [...queryKeys.inventory.warehouse(warehouseId), "users", { page, limit }] as const;
+}
+
+function assignableWarehouseUsersKey(warehouseId: number, search: string) {
+  return [...queryKeys.inventory.warehouse(warehouseId), "assignable-users", search] as const;
+}
+
+export function useWarehouseAssignees(
+  warehouseId: number,
+  filters: { page: number; limit: number },
+) {
+  const canManage = useCan(WAREHOUSE_ASSIGNMENT_PERMISSION);
+  return useQuery<WarehouseAssigneePage, Error>({
+    queryKey: warehouseAssigneesKey(warehouseId, filters.page, filters.limit),
+    queryFn: () =>
+      apiClient.get<WarehouseAssigneePage>(`/inventory/warehouses/${warehouseId}/users`, {
+        page: filters.page,
+        limit: filters.limit,
+      }),
+    enabled: canManage && warehouseId > 0,
+    staleTime: 60_000,
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useAssignableWarehouseUsers(
+  warehouseId: number,
+  search: string,
+  options?: { enabled?: boolean },
+) {
+  const canManage = useCan(WAREHOUSE_ASSIGNMENT_PERMISSION);
+  return useQuery<AssignableWarehouseUser[], Error>({
+    queryKey: assignableWarehouseUsersKey(warehouseId, search),
+    queryFn: () =>
+      apiClient.get<AssignableWarehouseUser[]>(
+        `/inventory/warehouses/${warehouseId}/assignable-users`,
+        search ? { q: search } : undefined,
+      ),
+    enabled: canManage && warehouseId > 0 && (options?.enabled ?? true),
+    staleTime: 30_000,
+    placeholderData: keepPreviousData,
+  });
+}
+
+/**
+ * A grant widens what the grantee may see, so every warehouse-scoped list has to
+ * be refetched, not just this warehouse's assignment table.
+ */
+function useWarehouseAssignmentInvalidation(warehouseId: number) {
+  const qc = useQueryClient();
+  return () => {
+    void qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouse(warehouseId) });
+    void qc.invalidateQueries({ queryKey: queryKeys.inventory.warehouses() });
+  };
+}
+
+export function useGrantWarehouseUser(warehouseId: number) {
+  const invalidate = useWarehouseAssignmentInvalidation(warehouseId);
+  return useMutation<{ granted: boolean }, Error, { userId: string }>({
+    mutationKey: ["inventory", "warehouses", "grant-user", warehouseId],
+    mutationFn: (data) =>
+      apiClient.post<{ granted: boolean }>(`/inventory/warehouses/${warehouseId}/users`, data),
+    onSuccess: invalidate,
+  });
+}
+
+export function useRevokeWarehouseUser(warehouseId: number) {
+  const invalidate = useWarehouseAssignmentInvalidation(warehouseId);
+  return useMutation<{ revoked: true }, Error, { userId: string }>({
+    mutationKey: ["inventory", "warehouses", "revoke-user", warehouseId],
+    mutationFn: ({ userId }) =>
+      apiClient.delete<{ revoked: true }>(
+        `/inventory/warehouses/${warehouseId}/users/${encodeURIComponent(userId)}`,
+      ),
+    onSuccess: invalidate,
+  });
+}
