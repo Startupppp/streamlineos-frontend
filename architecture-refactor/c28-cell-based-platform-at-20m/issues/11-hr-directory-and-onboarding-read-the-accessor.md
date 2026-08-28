@@ -16,7 +16,7 @@ First migrate batch of the users-table split. Sized by blast radius, not by laye
 
   Twenty files migrated across `hr/core`, `hr/directory`, `hr/onboarding`, `hr/lifecycle`, `hr/time`, `hr/policies`, `hr/templates`, `hr/workflows`, `hr/import`, `hr/performance`, `hr/hr-calendar-source.ts` and `modules/users`.
 
-  Backend-wide scan — the only files still naming a legacy column are the migration machinery itself, plus the schema definition and the parity script that reads the legacy value deliberately as its "before":
+  Backend-wide scan, **taken while the legacy columns still existed** — the only files still naming one were the migration machinery itself, plus the schema definition and the parity script that read the legacy value deliberately as its "before". Ticket 14 has since dropped the columns and deleted four of these six, so the same scan today returns fewer:
 
   ```
   $ rg -l "users\.(designation|employeeId|joiningDate|orgDepartmentId|branchId|reportingTo|monthlySalary|bankDetails|taxId)\b" src --type ts | grep -v "\.spec\.ts"
@@ -64,7 +64,7 @@ First migrate batch of the users-table split. Sized by blast radius, not by laye
 
   Two separate `hr_employments` rows, two different answers for one `userId`. **This run is from after ticket 14 dropped the columns**, so it also demonstrates the accessor working end to end against the contracted schema. `legacyFallbackPossible: false` is a statement of structural fact — the columns no longer exist — not a measurement; the measured zero-fallback evidence is in ticket 13, taken while the columns were still there.
 
-  The payroll equivalent is `lib/payroll-multi-org.spec.ts`.
+  The payroll equivalent is `src/modules/payroll/lib/payroll-multi-org.spec.ts`.
 
 - [ ] Read budgets over the directory and employee-record lists are re-measured as `streamline_app` with the tenant GUC after the change.
 

@@ -87,6 +87,13 @@
 
   The first version of this orphan check was wrong and is worth recording: it read `organization_members` with no tenant context, RLS returned zero rows, and it reported all seven fact-bearing users as orphans — three of which demonstrably had active memberships. Fixed by collecting active member ids per organization inside `runInNewTenantTransaction`.
 
+> **Note for a later reader.** Everything this ticket built to *perform* the migration was retired by
+> ticket 14 once the legacy columns were dropped and it could no longer run: `EmploymentBackfillService`,
+> `EmploymentReconciliationService`, and the `backfill:employment` / `report:employment-drift` scripts.
+> The command output below is what they produced while the legacy columns still existed — do not expect
+> to find those files or scripts on disk. `person-employment-sync.service.ts` and the `sync-canonical-*`
+> writers were deliberately kept, because they create and maintain live records rather than migrating them.
+
 ## Todo
 
 - [x] Counted first: 77 users, 71 memberships, 49 organizations; 4 users with a non-null `employeeId`, 3 with `bankDetails`/`taxId`. Small enough for one pass, but written batched (100 per fetch, checkpointed) because the shape has to survive production volume.

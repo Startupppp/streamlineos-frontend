@@ -46,7 +46,7 @@ The **S** column is the execution session that owns the ticket. The split was ch
 | # | S | Ticket | Blocked by | Status |
 |---|---|---|---|---|
 | 09 | S2 | [Employment truth is backfilled into the organization-owned tables](issues/09-employment-truth-is-backfilled.md) | — | done |
-| 10 | S2 | [One accessor dual-reads employment, and shouts when the two disagree](issues/10-one-accessor-dual-reads-employment.md) | 09 | done |
+| 10 | S2 | [One accessor dual-reads employment, and shouts when the two disagree](issues/10-one-accessor-dual-reads-employment.md) | 09 | done · 1 criterion open |
 | 11 | S2 | [HR, directory and onboarding read the accessor](issues/11-hr-directory-and-onboarding-read-the-accessor.md) | 10 | done · 1 criterion open |
 | 12 | S2 | [Payroll, finance and compensation read the accessor](issues/12-payroll-and-finance-read-the-accessor.md) | 10 | done |
 | 13 | S2 | [The remaining readers migrate](issues/13-the-last-readers-migrate.md) | 10 | done · 2 criteria open |
@@ -57,7 +57,7 @@ The **S** column is the execution session that owns the ticket. The split was ch
 | # | S | Ticket | Blocked by | Status |
 |---|---|---|---|---|
 | 15 | S4 | [Every open item in `OPEN-FINDINGS.md` is closed or carries a dated reason](issues/15-the-open-findings-are-closed.md) | — | **done** |
-| 16 | S4 | [Every latency seam is instrumented and alerted below its SLO budget](issues/16-latency-seams-are-alerted-below-slo.md) | — | **done** · 1 criterion open (no paging destination configured) |
+| 16 | S4 | [Every latency seam is instrumented and alerted below its SLO budget](issues/16-latency-seams-are-alerted-below-slo.md) | — | **done** · 1 criterion open (operator must set `ALERT_WEBHOOK_URL`; delivery itself is proved) |
 | 17 | S5 | [The query key carries the tenant](issues/17-the-query-key-carries-the-tenant.md) | — | **done** · premise corrected: the tenant is in the query hash, not the key array |
 | 18 | S5 | [The API surface is versioned and its contract is generated in CI](issues/18-the-api-surface-is-versioned.md) | — | **done** · 3 criteria open (versioning ruled out by the user); drift check found 6 real timesheets drifts |
 | 19 | S5 | [Every module is registered through one versioned manifest](issues/19-every-module-has-one-manifest.md) | — | **done** · 8 gates wired, pilot `timesheets`; lifecycle gate red on 11 real missing indexes |
@@ -87,7 +87,7 @@ The **S** column is the execution session that owns the ticket. The split was ch
 | # | S | Ticket | Blocked by | Status |
 |---|---|---|---|---|
 | 30 | S6 | [The workload envelope is a runnable load profile](issues/30-the-workload-envelope-is-runnable.md) | 26 | ready-for-agent · needs seed data |
-| 31 | S4 | [Declared degradation is tested, not described](issues/31-declared-degradation-is-tested.md) | — | **done** · 1 row open (no read replica exists) |
+| 31 | S4 | [Declared degradation is tested, not described](issues/31-declared-degradation-is-tested.md) | — | **done** · 7/8 rows tested; read-replica row ratcheted, not tested (no replica exists) |
 | 32 | S6 | [Unit cost per cell is tracked and forecast](issues/32-unit-cost-per-cell-is-forecast.md) | 27 | ready-for-agent · needs infrastructure |
 
 ## Deliberately not ticketed

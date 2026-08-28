@@ -4,7 +4,7 @@
 
 **Blocked by:** [09 — Employment truth is backfilled into the organization-owned tables](09-employment-truth-is-backfilled.md)
 
-**Status:** done
+**Status:** done (1 criterion un-ticked on measurement — the deep-interface claim)
 
 **Grounding (2026-08-28, evidence not instruction — re-read at source):** the blast radius makes a direct swap impossible — `designation` appears in 90 backend files and 64 frontend files, `employeeId` in 78 and 52, `joiningDate` in 53. That is a wide refactor: one edit across all of them cannot land green, so this ticket is the *expand* that lets tickets 11–13 migrate in batches while both forms exist. `modules/directory/person-seam.ts` already exists and reads both `hrPeople` and `hrEmployments` — check whether it is already this accessor before writing a second one.
 
@@ -63,13 +63,38 @@
 
   Sensitive values never reach the alert payload — `salaryAmountCents`, `bankDetails` and `taxId` are reported as `<redacted>`, asserted by the third test above.
 
-- [x] The accessor is a *deep* interface: callers ask for the fact, not for the join. Its storage and the fallback are implementation details that tickets 11–13 do not need to know about.
+- [ ] The accessor is a *deep* interface: callers ask for the fact, not for the join. Its storage and the fallback are implementation details that tickets 11–13 do not need to know about.
 
-  The public surface is four methods taking `(orgId, userId)` and returning plain facts. `hr_people` → `hr_employments` → `hr_reporting_lines` → `hr_employee_sensitive_fields`, the effective-dated manager resolution, the envelope decryption and the legacy fallback are all inside. No caller in tickets 11–13 names a table.
+  **Partially met, and previously ticked on prose alone. Un-ticked on measurement.**
+
+  The first half holds: the public surface is six methods taking `(orgId, …)` and returning plain facts, and the effective-dated manager resolution, the envelope decryption and (while it existed) the legacy fallback are all inside.
+
+  The second half does not. "No caller names a table" is false — a scan of the migrated readers finds many still joining the canonical tables directly in SQL:
+
+  ```
+  $ rg -l "hrEmployments|hrPeople|hrReportingLines|hrEmployeeSensitiveFields" src/modules --type ts       | grep -v "\.spec\.ts" | grep -vE "directory/(employment-facts|person-seam)|hr/core/(person-employment-sync|hr-sensitive|hr-employments|hr-people|hr-timeline|hr-effective)"
+  branches/branches.service.ts            dashboard/resignation-approval-scope.ts
+  dashboard/dashboard-leave.service.ts    dashboard/dashboard-hr.service.ts
+  users/organization-users.reader.ts      users/user-ops.service.ts
+  rbac/roles.service.ts                   payroll/insights/lib/report-builders.ts   … and more
+  ```
+
+  That was a deliberate trade, not an oversight: a `WHERE department_id = ?` predicate and a list projection cannot be served by a per-person accessor call without either pulling the whole organization into memory or going N+1, so those sites join `hr_people → hr_employments` in the same query. The accessor is the single source for *resolving a person's facts*; it is not the only thing that names the tables.
+
+  What would close it honestly: a query-builder helper on the accessor that returns the join fragment, so a predicate site composes it rather than hand-writing the join. That is a real piece of work and is not in these six tickets.
 
 - [x] Salary, bank and tax reads go through the same accessor but stay behind their existing permission gate — widening the read surface is not part of this change.
 
-  `getSensitiveFacts` / `getSensitiveFactsBatch` / `getSensitiveFactsByPersonBatch` are separate methods from the non-sensitive ones, so a caller cannot obtain salary or bank details by asking for a designation. No `@RequirePermission` decorator was added, removed or relaxed anywhere in the six tickets: `HrSensitiveController` still gates on its existing key, and payroll's callers still sit behind theirs. The accessor moved *where* the value is read from, never *who* may read it.
+  `getSensitiveFacts` / `getSensitiveFactsBatch` / `getSensitiveFactsByPersonBatch` are separate methods from the non-sensitive ones, so a caller cannot obtain salary or bank details by asking for a designation.
+
+  No gate changed anywhere in the four modules this session touched — measured rather than asserted:
+
+  ```
+  $ git diff 034f13727..HEAD -- src/modules/hr/ src/modules/users/ src/modules/directory/ src/modules/payroll/       | grep -E "^[+-].*(@RequirePermission|@Universal|@Public|UseGuards)"
+  (no output — zero added, removed or altered)
+  ```
+
+  The accessor moved *where* a value is read from, never *who* may read it.
 
 - [x] Adding a new employment fact means adding it here, enforced by the legacy columns being unreachable from anywhere else once ticket 13 lands.
 
