@@ -4,7 +4,7 @@
 
 **Blocked by:** None — can start immediately
 
-**Status:** done · 3 criteria open (2 on an explicit user ruling, 1 with no subject yet)
+**Status:** done · 2 criteria open (deprecation dates have no subject yet; webhook payload versioning is an outward-facing change awaiting authorization). The versioning criterion closed later under ticket 13 when the user reversed the ruling.
 
 **Grounding (2026-08-28, evidence not instruction — re-read at source):** PRD mistake #21 — *"Development-only OpenAPI and a base frontend query key without organization identity make compatibility and cross-org cache safety depend on convention."* Ticket 17 is the cache half; this is the contract half. Root `CLAUDE.md` §5 already requires client types to mirror the backend Zod schema exactly *because* drift silently strips fields into no-ops — this ticket makes that requirement checkable rather than reviewable. The error envelope is already standardised (`lib/api-client.ts` parses `message` as string or string array, `{ success, data }`, `204` → `undefined`).
 
@@ -61,9 +61,17 @@ Given mid-session, after URI versioning (`/v1` alongside `VERSION_NEUTRAL`) had 
 
   Wired as the `OpenAPI contract is current` step in `backend/.github/workflows/ci.yml`.
 
-- [ ] The API declares a version; a breaking change ships under a new one, and compatibility adapters are removed only on consumer evidence rather than on a schedule.
+- [x] The API declares a version; a breaking change ships under a new one, and compatibility adapters are removed only on consumer evidence rather than on a schedule.
 
-  **Open on the user's explicit instruction above.** The agreed design was `enableVersioning({ type: VersioningType.URI, defaultVersion: ["1", VERSION_NEUTRAL] })`, which serves every route at both `/v1/x` and `/x` so no deployed client breaks and the unversioned path *is* the compatibility window. It was not implemented. Nothing was half-done: there is no `@Version`, no `enableVersioning`, and no route moved.
+  **Closed later by ticket 13, not by this session — the user reversed the ruling.** This criterion was open on an explicit instruction not to implement versioning, and the note here used to read *"there is no `@Version`, no `enableVersioning`, and no route moved."* That is no longer true, and leaving it would have made this ticket lie about the codebase.
+
+  Verified at source 2026-08-28, not taken from ticket 13's write-up:
+
+  - `src/common/http/api-version.ts` — `API_VERSION_CURRENT = "1"`, `API_VERSION_NEXT = "2"`, `API_VERSIONS`, `ApiVersion`.
+  - `src/main.ts:82-85` — `app.enableVersioning({ type: VersioningType.URI, defaultVersion: [API_VERSION_CURRENT, VERSION_NEUTRAL] })`, exactly the design agreed here.
+  - `src/modules/users/users.controller.ts:58,233` — two `@Version(API_VERSION_NEXT)` handlers, the first breaking change to ship under a new version.
+
+  **The compatibility half holds by construction rather than by promise:** `defaultVersion` carries both `"1"` and `VERSION_NEUTRAL`, so every pre-existing handler serves at `/x` and `/v1/x` and no deployed client moves. No removal is scheduled, which is what this criterion asks for.
 
 - [x] Retryable commands accept an idempotency key and honour it, so a client retry after a timeout does not double-charge, double-post or double-invite.
 
@@ -163,7 +171,9 @@ Given mid-session, after URI versioning (`/v1` alongside `VERSION_NEUTRAL`) had 
 
   **Half already true, half open on the user's ruling.** Internal outbox events **are** versioned independently: `common/outbox/outbox-event-schema.ts:12` carries `schemaVersion: z.number().int().positive().default(1)`, persisted through `buildOutboxEvent` (`outbox-envelope.ts:24`) onto the `outbox_events` row, entirely separate from anything REST.
 
-  Outbound **webhook** payloads are not: `modules/webhooks/webhooks-dispatch.service.ts:61` sends `{ event, data, timestamp }` with no version field. Adding one is a single additive change at that line. I did not ship it: the user ruled versioning out this session, and unlike an internal event this changes a payload third parties consume and sign against, which is an outward-facing change I should not make unasked.
+  Outbound **webhook** payloads are not: `modules/webhooks/webhooks-dispatch.service.ts:61` sends `{ event, data, timestamp }` with no version field. Adding one is a single additive change at that line.
+
+  **The original reason for leaving it has expired; the criterion is still open on the second reason.** This was recorded as blocked because "the user ruled versioning out this session" — that ruling was later reversed and REST versioning shipped (see the first criterion). The remaining reason stands on its own: this changes a payload third parties consume and **sign against**, so it is an outward-facing change that needs authorization rather than a session decision.
 
 ## Todo
 

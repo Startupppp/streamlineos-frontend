@@ -36,7 +36,17 @@ FAIL  triggers     control=  104  cell=   73  missing=  34  extra=  3
 RESULT: SCHEMAS DIFFER cell=cell-2 differences=3243
 ```
 
-**The 65 missing tables are the accounting, AP, AR, GL and tax model** — exactly the set `0591`'s own header says *"the 0000 baseline never actually created"*. They were created out of band and no migration has ever created them.
+**The 65 missing tables are not one model, and an earlier draft of this ticket said they were.** Counted
+from `CREATE TABLE` in the repair file, they are: **CRM 19** (commissions, call analysis, outbound,
+reports, sending domains, `crm_org_party_map`), **accounting 31** (`gl` 13, `tax` 5, `ap` 5, `bank` 4,
+`ar` 4), **customer lifecycle 5**, **relationships 3**, **subprocessor/subject 3**, **autonomy 2**,
+`inv_import_rows`, `cell_capacity_measurements`. The accounting family is the set `0591`'s header says
+*"the 0000 baseline never actually created"*, but it is under half the total — **CRM is the largest single
+family**, and treating the 65 as one accounting problem will under-scope the review.
+
+**At least one has a traced root cause.** `crm_org_party_map` is created by
+`0263_crm_org_party_map.sql`, which is **absent from `meta/_journal.json`** and has therefore never
+applied anywhere. Three more files are unjournalled in the same way — see the criterion below.
 
 **It cuts both ways.** Three objects exist **only in the freshly-built cell** — `credit_note_items`, `fin_payment_run_items`, `vendor_credit_items`. Production dropped them out of band, and the chain still creates them. So the chain is not merely incomplete; it also builds things that should not exist.
 
@@ -47,6 +57,7 @@ RESULT: SCHEMAS DIFFER cell=cell-2 differences=3243
 - [ ] The three cell-only objects are resolved in the correct direction: either the chain stops creating them, or production is wrong and they are restored. Decide from the product, not from whichever is easier.
 - [ ] `chain_gaps` reaches **0**: no migration statement references an object that no earlier migration creates. A gap that is now harmless because the object arrives later is still a gap when the chain is replayed on a genuinely empty database.
 - [ ] RLS parity holds — the 62 missing policies and 62 missing `rlsEnabled` tables close together. A table that exists without its policy is a silent cross-tenant hole, which is worse than a table that is absent.
+- [ ] **The four unjournalled migrations are resolved, not left on disk.** `0263_crm_org_party_map.sql`, `0264_crm_org_party_backfill.sql`, `0266_party_association_backfill.sql` and `0267_record_layout_adjustments.sql` are absent from `meta/_journal.json` and have never applied. Verified 2026-08-28: `0263` is why `crm_org_party_map` is in the 65; `0267` is harmless because `0590_reconcile_baseline_shape_drift.sql` creates the same table and *is* journalled. **`0264` and `0266` are data backfills, so a repair that only creates the table leaves it empty** — decide whether that data is still needed, and delete any file that is genuinely superseded rather than leaving a `.sql` that looks applied and is not.
 - [ ] A CI step runs the comparison and fails the build non-zero when the chain and the schema diverge again, self-tested against a deliberately introduced divergence.
 - [ ] Ticket 26's cold-bootstrap criterion can be ticked with this run as its evidence.
 

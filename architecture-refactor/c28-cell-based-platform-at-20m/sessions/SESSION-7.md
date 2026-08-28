@@ -31,10 +31,14 @@ blast-radius code in the application. If 33 fills the session, leave 34 and say 
 
 `cell:bootstrap` is fully scripted and reaches head — 334/334 journal entries, no manual step. But 130
 statements reference objects no earlier migration creates, and comparing the result against the control
-from `pg_catalog` finds **3,243 differences**: 65 missing tables (the whole accounting/AP/AR/GL/tax
-model, which `0591`'s own header admits the baseline never created), 1,013 columns, 346 indexes, 1,139
+from `pg_catalog` finds **3,243 differences**: 65 missing tables, 1,013 columns, 346 indexes, 1,139
 constraints, 281 enums, 62 policies, 34 triggers. Three objects exist **only** in the fresh build —
 production dropped them out of band and the chain still creates them.
+
+**The 65 are not one model.** Counted from `CREATE TABLE`: CRM 19, accounting 31 (`gl` 13, `tax` 5, `ap` 5,
+`bank` 4, `ar` 4), customer lifecycle 5, relationships 3, subprocessor/subject 3, autonomy 2,
+`inv_import_rows`, `cell_capacity_measurements`. **CRM is the largest single family**, so do not scope this
+as an accounting problem — an earlier draft of ticket 33 did, and it was wrong.
 
 ## Ask these first — plus anything else you find
 

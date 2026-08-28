@@ -46,10 +46,10 @@ The **S** column is the execution session that owns the ticket. The split was ch
 | # | S | Ticket | Blocked by | Status |
 |---|---|---|---|---|
 | 09 | S2 | [Employment truth is backfilled into the organization-owned tables](issues/09-employment-truth-is-backfilled.md) | — | done |
-| 10 | S2 | [One accessor dual-reads employment, and shouts when the two disagree](issues/10-one-accessor-dual-reads-employment.md) | 09 | done · 1 criterion open |
-| 11 | S2 | [HR, directory and onboarding read the accessor](issues/11-hr-directory-and-onboarding-read-the-accessor.md) | 10 | done · 1 criterion open |
+| 10 | S2 | [One accessor dual-reads employment, and shouts when the two disagree](issues/10-one-accessor-dual-reads-employment.md) | 09 | done · all criteria closed |
+| 11 | S2 | [HR, directory and onboarding read the accessor](issues/11-hr-directory-and-onboarding-read-the-accessor.md) | 10 | done · all criteria closed |
 | 12 | S2 | [Payroll, finance and compensation read the accessor](issues/12-payroll-and-finance-read-the-accessor.md) | 10 | done |
-| 13 | S2 | [The remaining readers migrate](issues/13-the-last-readers-migrate.md) | 10 | done · 2 criteria open |
+| 13 | S2 | [The remaining readers migrate](issues/13-the-last-readers-migrate.md) | 10 | done · all criteria closed; shipped the v2 identity-only user contract, which also closed ticket 18's versioning criterion |
 | 14 | S2 | [`users` holds authentication identity only](issues/14-users-holds-authentication-only.md) | 11, 12, 13 | done · 1 criterion open |
 
 ### Phase 0 — carried work and client contracts
@@ -59,8 +59,8 @@ The **S** column is the execution session that owns the ticket. The split was ch
 | 15 | S4 | [Every open item in `OPEN-FINDINGS.md` is closed or carries a dated reason](issues/15-the-open-findings-are-closed.md) | — | **done** |
 | 16 | S4 | [Every latency seam is instrumented and alerted below its SLO budget](issues/16-latency-seams-are-alerted-below-slo.md) | — | **done** · 1 criterion open (operator must set `ALERT_WEBHOOK_URL`; delivery itself is proved) |
 | 17 | S5 | [The query key carries the tenant](issues/17-the-query-key-carries-the-tenant.md) | — | **done** · premise corrected: the tenant is in the query hash, not the key array |
-| 18 | S5 | [The API surface is versioned and its contract is generated in CI](issues/18-the-api-surface-is-versioned.md) | — | **done** · 3 criteria open (versioning ruled out by the user); drift check found 6 real timesheets drifts |
-| 19 | S5 | [Every module is registered through one versioned manifest](issues/19-every-module-has-one-manifest.md) | — | **done** · 8 gates wired, pilot `timesheets`; the 11 indexes the lifecycle gate found missing are migrated and all 4 gates pass |
+| 18 | S5 | [The API surface is versioned and its contract is generated in CI](issues/18-the-api-surface-is-versioned.md) | — | **done** · 2 criteria open (deprecation dates have no subject; webhook payload versioning needs authorization). Versioning was ruled out here and later shipped under ticket 13; drift check found 6 real timesheets drifts |
+| 19 | S5 | [Every module is registered through one versioned manifest](issues/19-every-module-has-one-manifest.md) | — | **done** · all criteria closed; 8 gates wired, pilot `timesheets`; the 11 indexes the lifecycle gate found missing are migrated and all 4 gates pass |
 
 ### Phase 1 — placement without moving data
 
@@ -98,8 +98,8 @@ The **S** column is the execution session that owns the ticket. The split was ch
 | 34 | S7 | [Where you land after signing in comes from the index](issues/34-where-you-land-comes-from-the-index.md) | — | ready-for-agent · independent of 33, lower priority |
 
 Ticket 26 found it and could not fix it inside its own scope: a database built from empty through the
-committed chain differs from the running one by **3,243 objects**, including the 65 tables of the
-accounting/AP/AR/GL/tax model that no migration has ever created. That is the PRD's mistake #13 live,
+committed chain differs from the running one by **3,243 objects**, including 65 tables no migration has
+ever created — 19 CRM, 31 accounting, 15 across five smaller families. That is the PRD's mistake #13 live,
 and it is what blocks cold bootstrap, cell creation and any trustworthy restore. It is real code work
 rather than an infrastructure wait, so it gets its own session rather than sitting behind ticket 26's
 hardware-blocked criteria.

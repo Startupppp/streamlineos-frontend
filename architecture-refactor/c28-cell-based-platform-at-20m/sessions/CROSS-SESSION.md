@@ -1073,11 +1073,14 @@ It now has 337 and both are journalled. You fixed it while I was reading.
 
 ### A correction to ticket 33's own text, which I wrote
 
-It calls the 65 tables *"the accounting, AP, AR, GL and tax model"*. That is 32 of them. The rest is
-**CRM (17)**, customer lifecycle (5), relationships (3), autonomy (2), subprocessors (3), `inv_import_rows`,
-and — tellingly — `cell_capacity_measurements`, which Session 6 created itself. Your `0620` header has the
-better diagnosis: `0320_recon_phase_a_orgid.sql` sweeps the catalogue instead of naming tables, so its
-outcome depends on the database shape when it runs — 66 tables in the control plane, 69 in a cold cell.
+It calls the 65 tables *"the accounting, AP, AR, GL and tax model"*. **Recounted from `CREATE TABLE` in
+`0619` — my first count in this entry was also wrong, so here is the checked one:** accounting family
+**31** (`gl` 13, `tax` 5, `ap` 5, `bank` 4, `ar` 4), **CRM 19**, customer lifecycle 5, relationships 3,
+subprocessor/subject 3, autonomy 2, `inv_import_rows`, and — tellingly — `cell_capacity_measurements`,
+which Session 6 created itself in `0618`. **CRM is the largest single family, not accounting.** Ticket 33,
+`SESSION-7.md` and `README.md` are corrected. Your `0620` header has the better diagnosis:
+`0320_recon_phase_a_orgid.sql` sweeps the catalogue instead of naming tables, so its outcome depends on
+the database shape when it runs — 66 tables in the control plane, 69 in a cold cell.
 
 ### On method
 
@@ -1086,3 +1089,50 @@ a "missing trigger" that was a `CREATE CONSTRAINT TRIGGER`, "2 uncovered columns
 columns at a different type (the comparison key embeds the type, so one reads missing and the other
 extra — your `ALTER COLUMN … TYPE text USING` handles it), and "0 DO blocks" because the dollar-quote tag
 is `$repair$`. Consistent with this program's own rule that a scan under-reports on its first run.
+
+---
+
+## Completion audit, 2026-08-28 — for Session 7 / whoever owns `migrations/**`
+
+Read-only. I edited no file under `backend/migrations/**` and no generator script.
+
+### Four migrations are on disk and absent from the journal
+
+`0263_crm_org_party_map.sql`, `0264_crm_org_party_backfill.sql`, `0266_party_association_backfill.sql`
+and `0267_record_layout_adjustments.sql` are not in `meta/_journal.json`, so none has ever applied —
+`db:migrate` reported success for all of them anyway. This is the trap `SESSION-7.md` lists, and nobody
+had checked whether the repository contained an instance of it. Traced individually:
+
+- **`0263` is a root cause of the 65.** It is the only creator of `crm_org_party_map`, and that table is
+  in `0619`'s missing set — which is what "the chain never creates it" means by construction. `0619`
+  repairs the symptom; the unjournalled file is why.
+- **`0267` is harmless.** `0590_reconcile_baseline_shape_drift.sql` also runs
+  `CREATE TABLE IF NOT EXISTS "record_layout_adjustments"` and **is** journalled, so
+  `record-layouts.service.ts` is not reading a table that does not exist. I checked this specifically
+  because the service does `select` / `insert` / `delete` against it and a missing table would have been
+  a live `42P01`. It is not one.
+- **`0264` and `0266` are data backfills, and no repair covers them.** They populate `business_parties`
+  and `crm_org_party_map`. `0619` creates the table; nothing fills it. Whether that data still matters is
+  a product question, not a schema one.
+
+Leaving an unjournalled `.sql` on disk is its own hazard: it reads as applied history to the next person.
+Either journal it or delete it.
+
+### Neither `0619`, `0620` nor `0621` sets a timeout — restated because `0621` arrived after my review
+
+`backend/CLAUDE.md` §3 requires `SET statement_timeout = 0;` on heavy catalog PL/pgSQL `DO`-block
+migrations *"or Neon cancels them on a cold build"*, and `SESSION-7.md`'s own trap list requires
+`SET lock_timeout = '5s'` as the first statement of every migration. `0617` and `0618` both set
+`lock_timeout`; these three set neither. `0619` is 1,282 `DO $repair$` blocks over 1,243 `pg_catalog`
+probes across 1,867 statements — exactly the shape the rule names — and it exists to make cold builds
+work. The statements are idempotent, so a re-run would repair a partial apply; **nothing will re-run it**,
+because the journal records it applied either way. This program has already hit "recorded as applied with
+half its statements unrun" once.
+
+The durable fix is in `generate-chain-repair.mjs`, not in the `.sql` files, so a regeneration keeps it.
+I did not make it: the generator is in your working tree and modified.
+
+### Ticket 33's acceptance criteria gained one row
+
+The unjournalled-migration finding is now a criterion on ticket 33 rather than only a note here, because
+a finding recorded in this file has no checkbox anyone has to close.

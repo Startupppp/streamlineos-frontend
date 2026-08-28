@@ -4,7 +4,7 @@
 
 **Blocked by:** None — can start immediately
 
-**Status:** done · 1 gate red against the live database on real pre-existing drift (see below)
+**Status:** done · all 4 gates green (gate 3 was red on its first real run against the live database; migration `0616` closed it and the pasted run below is post-fix)
 
 **Grounding (2026-08-28, evidence not instruction — re-read at source):** ⚠️ **A module registry already exists and this ticket deepens it rather than building one.** `common/rbac/module-registry.ts:27` exports `MODULE_REGISTRY`, a typed array of `ModuleDefinition` covering all 20 modules with `id`, `displayName`, `planGated`, `administrable`, `ladder` and `administersNamespaces`; `ModuleId` is derived from it at `:73`; `planGatedModuleIds` / `delegableModuleIds` / `administrableModuleIds` / `coreModuleIds` / `storedModuleKey` / `moduleIdFromStored` all live beside it, and three specs assert invariants against it. `common/rbac/module-vocabulary.ts:11` derives `MODULE_CATALOG` from it. **The two-vocabularies defect is already half-fixed too:** `organizations.enabled_modules` was dropped in migration `0335_org_arrays_and_invites.sql:22` and replaced by the `org_modules` table, and the case conversion is centralised in `storedModuleKey` (`:134`) / `moduleIdFromStored` (`:138`). The remaining work is the manifest's *other* fields — route, entitlement, schema owner, data classification, events, cache namespaces, retention, search ACL strategy, SLO, budget, migrations, navigation, public exposure — and repointing the checks at it.
 
