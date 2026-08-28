@@ -31,7 +31,7 @@ Sessions S1-S6 may be opened in parallel. Every session must complete the openin
 | Session | Tickets | Status |
 |---:|---|---|
 | S1 | 01, 02, 03, 05, 06, 12 | 01, 02, 03, 05, 06 done · 12 done except its read-budget criterion (all four tables are empty in the dev DB; a plan there proves nothing — unblock condition named in the ticket) |
-| S2 | 07, 08, 17, 18, 21, 25 | 17, 18, 25 done · 07, 08, 21 in progress |
+| S2 | 07, 08, 17, 18, 21, 25 | done (all six) |
 | S3 | 09, 13-16, 24, 30-32 | ready-for-agent |
 | S4 | 04, 10, 19, 20, 23, 33, 38 | ready-for-agent |
 | S5 | 26-29, 34-36 | all seven done (26, 27, 28, 29, 34, 35, 36) |
