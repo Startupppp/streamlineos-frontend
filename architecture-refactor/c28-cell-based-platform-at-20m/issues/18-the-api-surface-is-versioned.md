@@ -75,6 +75,12 @@ Given mid-session, after URI versioning (`/v1` alongside `VERSION_NEUTRAL`) had 
   - `@Public()` handlers and inbound provider webhooks were excluded — external callers send no key.
   - Nine handlers already run their **own** service-level receipt from an explicit `@Headers("idempotency-key")` (`inv-stock-adjustments`, `inv-sales-orders`, `shipments`, payroll and finance approvals). Double-fencing them would have put two mechanisms on one key. They are named `bespoke-mechanism` skips in the check's output, not hidden.
 
+  **Re-verified from the client side after the rollout**, by matching every fenced operation in the artifact against every `apiClient.<verb>` call in `hooks/`, `features/`, `lib/`, `components/` and `app/`: 221 fenced operations, 143 frontend call sites reach one, and **no fenced route is `@Public()`** — the seven non-`permissioned` ones are `in-service` or `universal`, all authenticated, so `authedFetch`'s `!isPublic` condition never skips a fenced route. Only 7 call sites set the header themselves; the other 136 rely on the `api-client.ts:150-153` default, which is why that default is load-bearing rather than a convenience.
+
+  **Cost of the rollout, paid down as far as this session's territory allows:** fencing `ownership/transfer` broke `module-access.controller.e2e-spec.ts`, which sent no header. S1 diagnosed it and I applied the fix they named — four requests now set a unique `Idempotency-Key`, and the per-module matrix gets its own `sub` because `@UseRateLimit` buckets on `req.user?.userId` and thirteen iterations were exhausting one 5-per-hour tier. Both are in HEAD. The suite is still red at **19 of 168**, for two harness reasons that are not fixable from this session: the fence claim dies `23503` because `signToken` mints `org_1` and no such organisation row exists (`e2e-app.ts:144` documents the same trap for the region registry and stubs around it), and the rate-limit tier is never reset, so the suite is not repeatable within an hour. Handed to S1 with both causes and the dead end — `overrideProvider(IdempotencyInterceptor)` does not take effect — written down.
+
+  **Limit worth naming:** the default key is `newIdempotencyKey()` per *transport call*. A TanStack Query retry re-invokes the mutation function, producing a new key, so the fence does not dedupe a client-initiated retry — only a duplicate of the same in-flight request. Retry-safety in the strict sense holds where the caller pins a key across attempts, as `features/payroll/payout/bank-transfers/batches-table.tsx:46` does with `useState` and `features/timesheets/billing/billing-export-dialog.tsx:72` with `useMemo`. Call sites that generate `crypto.randomUUID()` inline get no more protection than the default.
+
   ```
   $ pnpm check:idempotent-commands
   Controllers scanned   520
@@ -109,6 +115,18 @@ Given mid-session, after URI versioning (`/v1` alongside `VERSION_NEUTRAL`) had 
 - [x] A check compares the frontend's request/response types against the generated contract and fails on drift — the review-time rule becomes a build-time one.
 
   `frontend/scripts/check-contract-drift.mjs`, scoped to **`timesheets`** so it did not fail on 3,537 handlers on its first run. It extracts the frontend's calls statically (53 found; 24 with a resolved body type, 29 unresolved, 2 skipped computed paths) and compares them against the vendored contract on five rules: unknown path, method mismatch, extra body field, missing required field, and enum-member drift. It prints the resolved/unresolved counts every run and **fails if the resolved fraction drops below a floor**, so a future refactor that breaks the extractor surfaces as a failure rather than as a clean run.
+
+  Split by responsibility once it passed, because the single file reached 851 lines and §7's hard review limit is 500: `scripts/check-contract-drift.mjs` (103) is the entry and owns every path constant, `contract-drift/frontend-calls.mjs` (237) is the static extractor, `contract-drift/rules.mjs` (153) the five rules and the floor, `contract-drift/known-drift.mjs` (156) the dated baseline, `contract-drift/self-test.mjs` the eighteen cases. Output is byte-identical before and after.
+
+  **Post-split review found one vacuous-pass hole, now closed.** An adversarial read of the split against
+  the original confirmed zero lost coverage — all five rules, the resolution floor and the baseline logic
+  are semantically identical, and the split actually *added* a missing-fixture check. But it faithfully
+  carried forward a pre-existing bug: `checkResolutionFloor` returned `null` when `calls.length === 0`, and
+  `walkTs` swallows a missing directory, so renaming the timesheets hook folders would have yielded zero
+  calls, zero violations and a green tick. A `MIN_CALLS_SCANNED = 20` floor now fails that case — 53 calls
+  are found today, so ordinary hook removal does not trip it. Two self-test cases cover it (18 total), and
+  an end-to-end probe against deliberately wrong directory names confirms `0 calls → scan floor violated`
+  while the real directories still pass at 24/53 resolved.
 
   **On its first live run it found six real drifts** — the whole reason the ticket exists:
 

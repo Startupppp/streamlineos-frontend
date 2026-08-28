@@ -44,7 +44,7 @@ jobs:
         run: pnpm run type-check
 
       - name: Query keys and caches stay tenant-scoped
-        run: pnpm run check:query-scope
+        run: pnpm run check:query-scope:self-test && pnpm run check:query-scope
 
       - name: Client contract has not drifted from the API (timesheets)
         run: pnpm run check:contract-drift:self-test && pnpm run check:contract-drift

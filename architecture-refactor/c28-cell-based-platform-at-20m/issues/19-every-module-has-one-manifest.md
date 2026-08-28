@@ -119,7 +119,22 @@ The manifest's field set is this list, not a wishlist:
 
   The self-tests for the four static gates each carry the same shape, including their pilot mismatch cases — `pilotPublicExposureMismatchDetected`, `pilotNamespaceMismatchDetected`, `pilotNavRouteMismatchDetected`, `planGatedMismatchDetected`, `storedKeyLowercaseDetected`, `storedKeyWrongValueDetected` — so each manifest-derived rule is proved to fire, not merely to pass.
 
-  **Against the live database as `streamline_app`, gate 3 is RED on real pre-existing drift.** 11 tables discovered; gates 1 (tenant isolation), 2 (cold migration) and 4 (removal) pass; gate 3 (restore) reports 11 indexes declared in the Drizzle schema files that do not exist in `pg_catalog` — they were added to the schema after the original migration and never materialised. That is the gate doing its job on its first real run, not a defect in the gate. See *Findings for another session* below.
+  **Against the live database, gate 3 was RED on its first real run and is now green.** 11 tables discovered; gate 3 (restore) reported 11 indexes declared in the Drizzle schema files that did not exist in `pg_catalog` — added to the schema after the original migration and never materialised. Each name was re-probed individually against both `pg_indexes` and `pg_constraint`, and against every same-columns index under a different name, before being accepted as genuinely absent. Migration `0616_timesheets_declared_indexes_exist.sql` (journal idx 337) creates all 11; applied and verified:
+
+  ```
+  $ node src/scripts/check-module-lifecycle.mjs
+  Gate 1: Tenant isolation (RLS policies in pg_policies)
+  PASS  All 11 tables have tenant-predicated RLS policies
+  Gate 2: Cold migration (tables in pg_catalog + journaled migration)
+  PASS  All 11 tables exist in pg_catalog with journaled migrations
+  Gate 3: Restore (declared PK, org_id FK, named indexes present in pg_catalog)
+  PASS  All 11 tables pass restore check
+  Gate 4: Removal (org_id NOT NULL with FK whose ON DELETE is defined)
+  PASS  All 11 tables have non-nullable org_id with FK
+
+  RESULT: ALL GATES PASSED  (timesheets, 11 tables)
+  exit=0
+  ```
 
 - [x] The manifest does not acquire runtime behaviour. It is data the checks read, not a framework modules run inside.
 
@@ -148,20 +163,19 @@ Tests:       123 passed, 123 total
 
 ## Findings for another session
 
-**11 declared indexes are absent from the database.** `check-module-lifecycle.mjs` gate 3, run as `streamline_app` against the live database:
+**`uniq_timesheets_work_log` is stricter than the index it supersedes.** Creating the declared indexes closed the gap, but one of them narrows what the database accepts. The schema declares
 
-```
-FAIL  timesheet_budgets      — index "uniq_timesheet_budgets_active_project" absent from pg_catalog
-FAIL  timesheets             — "idx_timesheets_org_user_date", "idx_timesheets_org_billing",
-                               "idx_timesheets_timer_session", "uniq_timesheets_work_log"
-FAIL  timesheet_exports      — "idx_timesheet_exports_created_by"
-FAIL  timesheet_periods      — "idx_timesheet_periods_current_approver"
-FAIL  timesheet_rate_cards   — "uniq_timesheet_rate_cards_org_name"
-FAIL  timesheet_rates        — "idx_timesheet_rates_rate_card"
-FAIL  timer_sessions         — "idx_timer_sessions_ticket", "idx_timer_sessions_project"
+```ts
+uniqueIndex("uniq_timesheets_work_log").on(table.orgId, table.userId, table.date).where(sql`ticket_id IS NULL`)
 ```
 
-Each needs its own migration. Two of them are `uniq_*`: a unique index that exists in the schema but not in the database means the tenant-scoped uniqueness it was written to enforce is **not being enforced**, which is the more urgent half of this finding.
+while the index the database already carried, `uniq_timesheets_day_blank`, predicates on `ticket_id IS NULL AND project_id IS NULL AND voided_at IS NULL`. So the declared form also forbids a second same-day entry when the first carries a project, and when the first has been soft-voided — and `voided_at` is a live soft-delete column that every read in `core/approvals.service.ts` and `core/billing.service.ts` filters on with `isNull`.
+
+Evidence it is safe today: across **150,150** rows, `SELECT org_id, user_id, date FROM timesheets WHERE ticket_id IS NULL GROUP BY 1,2,3 HAVING count(*) > 1` returns **0 groups**, so the strict rule already holds in the data. The exposure is future writes: void an entry, re-log the same day, and the insert now fails.
+
+Whoever owns the timesheets schema should decide which predicate is intended. If the answer is the looser one, the fix is the schema line, not the migration: `.where(sql\`ticket_id IS NULL AND voided_at IS NULL\`)`.
+
+**Three undeclared indexes survive on `timesheets`** — `idx_timesheets_user_date`, `uniq_timesheets_day_blank`, `uniq_timesheets_day_project`. No schema file declares them; they are the pre-rename forms. They were left in place rather than dropped: gate 3 only asserts that declared indexes exist, dropping is not reversible from a migration alone, and `uniq_timesheets_day_blank` is the very predicate the finding above may restore.
 
 ---
 
