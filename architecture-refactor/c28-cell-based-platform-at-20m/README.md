@@ -4,7 +4,7 @@ PRD: [`prd.md`](prd.md) · Program: [`../README.md`](../README.md)
 
 **33 tickets, 27 marked done** (some with a single criterion left open and a written reason — read the row). Ticket 33 was raised by the work itself and is now partly done. Phases 0 and 1 are landed. Phases 2–4 have started: a second cell (`cell-2`) exists, serves organizations, survives a control-plane outage, is **reproducible from an empty database** (`SCHEMAS IDENTICAL, differences=0`, down from 3,243), and placement is automated. This is a proposed target architecture, not a repair of a broken one — the PRD's own verdict is that the current implementation is sound *inside one cell* and has not yet proved it can serve 20 million users.
 
-**Being "done" here does not mean 20M-ready.** The release rule below is unchanged and unmet: the second cell is not independently resourced, no relocation has been exercised, and the acceptance workload has not been run — there is no load driver, so not one latency objective in the PRD's reliability table has been measured.
+**Being "done" here does not mean 20M-ready.** The release rule below is unchanged and unmet, but for narrower reasons than before: **a relocation has been exercised** (a real organization moved between cells, verified by reading the target, rolled back with the source intact), **the canary rollback has fired** on a real measured regression, and **the workload results are published** in [`WORKLOAD-RESULTS.md`](WORKLOAD-RESULTS.md) — 7 of 14 latency objectives measured, 7 not driven with reasons. What remains unmet: the cells are **not independently resourced** (namespace isolation is not instance isolation), **recovery has not been drilled**, and **no headroom figure exists** — the driver runs 80ms of network away from its database, so its numbers measure the link, not a cell's ceiling.
 
 **What repairing the chain found.** `0320_recon_phase_a_orgid.sql` adds the denormalised tenant column by sweeping `pg_catalog` rather than naming its tables, so its outcome depends on the shape of the database at the moment it runs — 66 tables in the control plane, 69 in a cold cell. Five tables fell through that gap. Four ended up with no tenant column at all and so could carry no RLS policy (`credit_note_items`, `fin_payment_run_items`, `vendor_credit_items`, `candidate_resumes`), and **`db:verify-rls` could not report any of them**, because both its checks require the org column to exist — a table that lost its tenant column entirely passed *by being more broken rather than less*. A third check now applies 0320's own predicate and failed on all four before the fix. One row of live data did not survive the composite tenant foreign key the chain intends: `contact_party_map` holds a mapping whose `organization_id` names a different organization from the contact it points at.
 
@@ -79,8 +79,8 @@ The **S** column is the execution session that owns the ticket. The split was ch
 
 | # | S | Ticket | Blocked by | Status |
 |---|---|---|---|---|
-| 26 | S6 | [A second cell exists and is proved from cold](issues/26-a-second-cell-is-proved-cold.md) | 20–25 | **partial** · cold bootstrap now reaches `SCHEMAS IDENTICAL` (3,243 → 0) and closed 5 tenant-isolation gaps; resources still shared, broker not per-cell |
-| 27 | S6 | [A cell has a measured capacity budget and an admission threshold](issues/27-a-cell-has-a-capacity-budget.md) | 26 | **done** · 1 criterion open (forecast needs 3 daily samples); limiting resource measured = database-size 42.1% |
+| 26 | S6 | [A second cell exists and is proved from cold](issues/26-a-second-cell-is-proved-cold.md) | 20–25 | **partial** · cold bootstrap reaches `SCHEMAS IDENTICAL`; cross-cell relay proved 12/12; 5 resources NAMESPACED by config &mdash; instance isolation needs accounts |
+| 27 | S6 | [A cell has a measured capacity budget and an admission threshold](issues/27-a-cell-has-a-capacity-budget.md) | 26 | **done** · 1 criterion open on wall-clock: daily sampler scheduled, 1 of 3 well-spaced samples exist |
 | 28 | S6 | [An organization moves between cells, and can roll back until the flip](issues/28-an-organization-moves-between-cells.md) | 22, 26 | **done** · a real org moved (887 tables), verified by reading, rolled back with the source intact; retirement gated on measured target traffic |
 | 29 | S6 | [Placement is automated and a noisy neighbour is relocated](issues/29-placement-is-automated.md) | 27, 28 | **done** · placement live on all 3 creation paths; canary rollback FIRED on a real measured regression (1382→2804ms p99) |
 
@@ -88,7 +88,7 @@ The **S** column is the execution session that owns the ticket. The split was ch
 
 | # | S | Ticket | Blocked by | Status |
 |---|---|---|---|---|
-| 30 | S6 | [The workload envelope is a runnable load profile](issues/30-the-workload-envelope-is-runnable.md) | 26 | **partial** · load driver built; 5/14 objectives measured, 9 NOT_DRIVEN with reasons; found the 100k member-list scanning the whole tenant (1513→53 blocks) |
+| 30 | S6 | [The workload envelope is a runnable load profile](issues/30-the-workload-envelope-is-runnable.md) | 26 | **partial** · results PUBLISHED; 7/14 objectives measured, 7 not driven with reasons; headroom needs a colocated deployment |
 | 31 | S4 | [Declared degradation is tested, not described](issues/31-declared-degradation-is-tested.md) | — | **done** · 7/8 rows tested; read-replica row ratcheted, not tested (no replica exists) |
 | 32 | S6 | [Unit cost per cell is tracked and forecast](issues/32-unit-cost-per-cell-is-forecast.md) | 27 | **operator-blocked** · measurement finished, vendor fetch seams built; 3 criteria need a monthly invoice that does not exist. Not engineering work |
 
