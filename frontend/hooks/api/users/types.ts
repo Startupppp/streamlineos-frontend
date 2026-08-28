@@ -57,14 +57,10 @@ export interface User {
   image: string | null;
   role: string;
   isOwner: boolean;
-  designation: string | null;
   phone: string | null;
-  departmentId: string | null;
-  branchId: string | null;
   isActive: boolean;
   userStatus?: string | null;
   archivedAt?: string | null;
-  reportingTo: string | null;
   team: string | null;
   bio: string | null;
   linkedinUrl: string | null;

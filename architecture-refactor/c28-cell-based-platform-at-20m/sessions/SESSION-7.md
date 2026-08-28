@@ -17,8 +17,15 @@ building a second cell, restoring from backup, or trusting CI's "rebuilds from e
 | # | Ticket | Blocked by |
 |---|---|---|
 | 33 | The migration chain rebuilds the database it claims to describe | — |
+| 34 | [Where you land after signing in comes from the index](../issues/34-where-you-land-comes-from-the-index.md) | — |
 
-One ticket, but it is large. Session 6 measured the gap; you close it.
+**Do 33 first and treat it as the session.** It is large, Session 6 measured the gap, and everything about
+building a cell or restoring a backup waits on it.
+
+**34 is independent and lower priority.** It is here because it is the other thing the audit raised, not
+because it is related — different territory, different risk. Nothing is broken for users today; the fix
+is expand → migrate the reader → contract on the login-landing path, and that path is the highest
+blast-radius code in the application. If 33 fills the session, leave 34 and say so.
 
 ## The situation in one paragraph
 

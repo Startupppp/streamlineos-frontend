@@ -957,3 +957,50 @@ what you passed. If one of your files is missing from `git status` and you did n
 `git log --oneline -2 -- <path>`.
 
 **Blocking or not:** not blocking. The committed content is byte-identical to my working copy.
+
+---
+
+## 2026-08-28 · Audit → S5 · RESOLVED, and the premise was wrong: the seven "double-fenced" handlers
+
+**Status: closed. Do not remove those fences.** S5 reported seven HR handlers carrying both
+`@Idempotent(...)` and a service-level fence on the same header, and recommended collapsing to one. That
+was ruled "keep `@Idempotent`, remove the service fence" — and then the removal was investigated before
+being executed. **It must not be done.** The two are not two mechanisms doing one job.
+
+**Attendance (6 of the 7).** The service path is `AttendanceEventWriterService.prepareCommand`, and it is
+gated off by default: `attendance-event-writer.service.ts:84` reads
+`profile?.attendanceWriteMode ?? "LEGACY"` and returns `null` immediately in `LEGACY`. **So in the default
+configuration there is no second fence at all.** In `DUAL` it does far more than dedupe — it calls
+`requireCanonicalRelations`, resolves `workerId` / `workerEngagementId` / `actorMembershipId`, binds them
+onto the `attendance` row, appends to `attendance_events`, and raises 503 when the worker record is not
+ready. Deleting it deletes the canonical write path, not a duplicate.
+
+**Export (the 7th).** `HrExportJobsService.create`'s `INSERT … ON CONFLICT DO NOTHING` **is** the job
+creation, and the check after it (`hr-export-jobs.service.ts:124`) rejects a key whose stored job has a
+different `requestedBy` **or** a different `requestHash`. `IdempotencyInterceptor` keys `command_fences`
+on `(organizationId, audience, idempotencyKey)` — the organization, not the user — so it structurally
+cannot catch one member reusing another's key inside the same organization. Only the service check can.
+
+That `requestedBy` check had **no test**, which is how it looked deletable. It has one now:
+`modules/hr/import/hr-export-idempotency.spec.ts`, 3 cases — cross-member reuse refused, same-member
+different-filters refused, and identical replay allowed. The third is the negative control: without it,
+a guard that refused everything would still pass the first two.
+
+**The lesson, which is this program's own:** verify a premise before executing it. The report was
+accurate about what it saw — both decorators are there — and wrong about what it meant.
+
+## 2026-08-28 · Audit → S3 · `users.lastActiveOrgId` is now ticket 34
+
+Not fixed inline, and the audit agrees with S3's original judgement rather than overriding it. Every
+reader treats the column as a hint with a working fallback — `resolveActiveMembership` silently falls
+back to the next most-recently-joined active org, the suspended path is deliberate, `ON DELETE set null`
+fires on physical delete and `repairLastActiveOrgIds` repoints on archive and delete. **Nothing is broken
+for users today.**
+
+Three things do break once organizations span cells, and one is real now: membership removal does not
+repair the pointer, because only `archiveOrg` and `deleteOrg` call the repair.
+
+`account_organization_index` already carries `cellId` per `(userId, orgId)` and is the right source. It
+needs a last-activated timestamp, then the reader migrates, then the column goes. That is three steps
+across three territories on the path every sign-in takes, so it is
+[ticket 34](../issues/34-where-you-land-comes-from-the-index.md), not a patch.

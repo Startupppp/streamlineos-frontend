@@ -22,7 +22,7 @@ export const useUsers = (
   return useQuery<UsersResponse, Error>({
     queryKey: queryKeys.users.list(params as Record<string, unknown> | undefined),
     queryFn: () =>
-      apiClient.get<UsersResponse>("/users", {
+      apiClient.get<UsersResponse>("/v2/users", {
         ...(params?.page ? { page: String(params.page) } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
         ...(params?.search ? { search: params.search } : {}),
@@ -46,7 +46,7 @@ export const useUser = (
   const canView = useCan("settings:view");
   return useQuery<User, Error>({
     queryKey: queryKeys.users.detail(userId),
-    queryFn: () => apiClient.get<User>(`/users/${userId}`),
+    queryFn: () => apiClient.get<User>(`/v2/users/${userId}`),
     staleTime: 30_000,
     ...options,
     enabled: !!userId && canView && (options?.enabled ?? true),

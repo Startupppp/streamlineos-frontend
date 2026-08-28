@@ -95,6 +95,7 @@ The **S** column is the execution session that owns the ticket. The split was ch
 | # | S | Ticket | Blocked by | Status |
 |---|---|---|---|---|
 | 33 | S7 | [The migration chain rebuilds the database it claims to describe](issues/33-the-chain-rebuilds-the-database.md) | — | ready-for-agent |
+| 34 | S7 | [Where you land after signing in comes from the index](issues/34-where-you-land-comes-from-the-index.md) | — | ready-for-agent · independent of 33, lower priority |
 
 Ticket 26 found it and could not fix it inside its own scope: a database built from empty through the
 committed chain differs from the running one by **3,243 objects**, including the 65 tables of the
