@@ -71,7 +71,7 @@ const serverFetch = await read(path.join(frontendRoot, "lib", "server-fetch.ts")
 sourceHas(serverFetch, 'import "server-only"', path.join(frontendRoot, "lib", "server-fetch.ts"));
 sourceHas(serverFetch, "export async function serverGet", path.join(frontendRoot, "lib", "server-fetch.ts"));
 sourceHas(serverFetch, "cache(async <T>(token: string, path: string)", path.join(frontendRoot, "lib", "server-fetch.ts"));
-sourceHas(serverFetch, 'Authorization: `Bearer ${token}`', path.join(frontendRoot, "lib", "server-fetch.ts"));
+sourceHas(serverFetch, 'headers.set("Authorization", `Bearer ${token}`)', path.join(frontendRoot, "lib", "server-fetch.ts"));
 sourceHas(serverFetch, 'cache: "no-store"', path.join(frontendRoot, "lib", "server-fetch.ts"));
 sourceHas(serverFetch, "AbortSignal.timeout(TIMEOUT_MS)", path.join(frontendRoot, "lib", "server-fetch.ts"));
 

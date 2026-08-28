@@ -100,20 +100,10 @@ describe("serverGet", () => {
       expect(resAlice).toEqual({ caller: "alice" });
       expect(resBob).toEqual({ caller: "bob" });
       expect(mockFetch).toHaveBeenCalledTimes(2);
-      expect(mockFetch).toHaveBeenNthCalledWith(
-        1,
-        "http://api.test/test/isolation/two-callers",
-        expect.objectContaining({
-          headers: { Authorization: "Bearer token-alice" },
-        }),
-      );
-      expect(mockFetch).toHaveBeenNthCalledWith(
-        2,
-        "http://api.test/test/isolation/two-callers",
-        expect.objectContaining({
-          headers: { Authorization: "Bearer token-bob" },
-        }),
-      );
+      const firstInit = mockFetch.mock.calls[0]?.[1] as RequestInit;
+      const secondInit = mockFetch.mock.calls[1]?.[1] as RequestInit;
+      expect(new Headers(firstInit.headers).get("Authorization")).toBe("Bearer token-alice");
+      expect(new Headers(secondInit.headers).get("Authorization")).toBe("Bearer token-bob");
     });
   });
 

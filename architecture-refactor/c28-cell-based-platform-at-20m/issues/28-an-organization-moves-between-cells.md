@@ -4,7 +4,7 @@
 
 **Blocked by:** [22 — Every write carries its placement version and dies without the fence](22-a-write-carries-its-placement-version.md) · [26 — A second cell exists and is proved from cold](26-a-second-cell-is-proved-cold.md)
 
-**Status:** partially done — the machine, its checksums, its offset reconciliation and its rollback are written and tested; **no organization has actually been moved**
+**Status:** partially done — **an organization has been moved between cells, verified by reading the target, and rolled back with the source intact.** Retirement is still not gated on real traffic.
 
 **The state machine, from the PRD:**
 
@@ -60,7 +60,45 @@ ACTIVE_SOURCE → SNAPSHOT → CATCH_UP → READ_ONLY_SOURCE
 
   Inherited from ticket 22 and unchanged by this session: `decidePlacement` refuses a write with `PLACEMENT_RELOCATING` while `status = 'MOVING'` and continues to serve reads, and `RegionRegistry.forgetVersionsBelow` evicts a cached placement below a newer version. The machine never has both cells writable: `READ_ONLY_SOURCE` precedes `VERIFY_TARGET`, which precedes `FLIP_PLACEMENT`, and no edge skips them. Covered by `src/common/region/placement.spec.ts` and `placement-degraded-control-plane.spec.ts` (7 suites, 100 tests, all pass).
 
-- [ ] Rollback is possible until target verification and the placement flip complete, and is exercised — a rollback path that has never run is a hypothesis.
+- [x] Rollback is possible until target verification and the placement flip complete, and is exercised — a rollback path that has never run is a hypothesis.
+
+  **Exercised against a real organization.** `pnpm -C backend cell:relocate-data`:
+
+  ```
+  RESULT: COPIED org=ar-test-873aff3d… tables=887/887 rows=171 constraints_rebuilt=0
+  RESULT: TARGET VERIFIED BY READING org=ar-test-873aff3d… tables=887 mismatches=0
+  RESULT: ROLLED BACK org=ar-test-873aff3d… from=SNAPSHOT target_rows_deleted=1
+
+  source  orgs=1 members=1 gl_journal_lines=8 tax_gl_map=26   ← intact
+  target  orgs=0 members=0 gl_journal_lines=0 tax_gl_map=0    ← clean
+  ```
+
+  The rollback deletes the organization row first so its cascades run, which is what
+  `guard_owner_membership`'s own comment says the ordering must be — deleting memberships first
+  raises `Cannot delete the owner membership. Transfer ownership first.`
+
+  **`relocate-org.mjs` advanced a state column and copied nothing**, so this criterion could not
+  have been met by it: driving that machine to `ACTIVE_TARGET` would have moved an
+  organization's *routing* while its data stayed in the source cell. The mover is
+  `src/scripts/relocate-org-data.ts`, in TypeScript so it uses the real state machine, checksums
+  and plan rather than re-declaring them as literals.
+
+  **Seven defects surfaced by running it, none of which a unit test would have shown:**
+
+  1. The copy plan was a hand-list of 35 tables; it is now derived from `pg_catalog` — 887
+     tables, 100% coverage.
+  2. The topological sort parked a table whenever any parent was unresolved, so everything
+     downstream of one small cycle was reported cyclic — **201 tables against the live
+     catalogue**. Strongly-connected components give **2**.
+  3. **`COPY FROM STDIN` reported success and wrote nothing.** Awaiting the query after
+     `writable.end(payload)` resolves *before* the copy completes. Only `pipeline()` both
+     finalises it and leaves the connection usable. The verifier is what caught this.
+  4. `rows_copied` is `bigint`, which postgres-js returns as a string, so `+=` concatenated.
+  5. An interrupted copy left the target's cycle-breaking constraints dropped.
+  6. **Neon terminates a session idle in transaction at 300s.** The target sat idle while the
+     source read 885 tables one at a time. Batching the counts cut the read phase 161s → 10s.
+  7. `users` and `gl_currencies` are global identity, not tenant data, so the tenant rows had
+     nothing to reference. 641 foreign keys reach 7 such tables; those rows travel first.
 
   **Open on the second half.** The rule is written and tested from three angles — the event, the predicate and the compensation:
 
@@ -99,6 +137,8 @@ ACTIVE_SOURCE → SNAPSHOT → CATCH_UP → READ_ONLY_SOURCE
 ## Todo
 
 - [x] Exercise the rollback before the happy path is polished. The forward path gets used once; the rollback gets used when something is already wrong.
+
+  It was, and it failed twice before it worked: once leaving the target's cycle-breaking constraints dropped, once against `guard_owner_membership`. Both are fixed.
 - [x] Include object storage and the search index in the checksum, not just the database. A verified database beside a stale index is a half-moved organization.
 - [x] Test with an organization that is actively writing, not an idle one. `CATCH_UP` is the state the idle test never enters.
 
@@ -108,7 +148,16 @@ ACTIVE_SOURCE → SNAPSHOT → CATCH_UP → READ_ONLY_SOURCE
 
 ## Known limitation of the copy plan
 
-`relocation-plan.ts` hand-lists 35 representative tables across seven schema areas rather than deriving them from the catalogue. `planCoverage(allTenantTables, plan)` takes the database-derived list and returns `{ covered, uncovered, coverageRatio }`, so a new table appears in `uncovered` and the ratio drops rather than the gap being silent — but nothing currently calls it on a schedule. A real move must run `planCoverage` against `pg_catalog` first and refuse on anything uncovered.
+**Closed.** `relocation-plan.ts` hand-listed 35 representative tables and had **zero importers** — it was dead code. The table half of the plan is now built by `buildTablePlan(catalogTables)` from `pg_catalog`, so it cannot go stale, and `--copy` runs `planCoverage` as a gate that refuses on anything uncovered. `NON_RELOCATABLE_TABLES` excludes control-plane routing state by name and with a reason: copying `organization_placement` or the relocation rows themselves would move a decision along with the data it decides about.
+
+```
+tenant tables in the catalogue : 891
+tables in the copy plan        : 885
+coverage                       : 100.0%
+uncovered                      : 0
+tables in a foreign-key cycle  : 2
+RESULT: PLAN COVERS EVERY TENANT TABLE tables=885 uncovered=0
+```
 
 ---
 

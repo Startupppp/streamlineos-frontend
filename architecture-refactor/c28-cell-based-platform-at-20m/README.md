@@ -81,7 +81,7 @@ The **S** column is the execution session that owns the ticket. The split was ch
 |---|---|---|---|---|
 | 26 | S6 | [A second cell exists and is proved from cold](issues/26-a-second-cell-is-proved-cold.md) | 20–25 | **partial** · cold bootstrap now reaches `SCHEMAS IDENTICAL` (3,243 → 0) and closed 5 tenant-isolation gaps; resources still shared, broker not per-cell |
 | 27 | S6 | [A cell has a measured capacity budget and an admission threshold](issues/27-a-cell-has-a-capacity-budget.md) | 26 | **done** · 1 criterion open (forecast needs 3 daily samples); limiting resource measured = database-size 42.1% |
-| 28 | S6 | [An organization moves between cells, and can roll back until the flip](issues/28-an-organization-moves-between-cells.md) | 22, 26 | **partial** · machine + checksums + offsets built, 80 tests; no org has been moved |
+| 28 | S6 | [An organization moves between cells, and can roll back until the flip](issues/28-an-organization-moves-between-cells.md) | 22, 26 | **partial** · a real org moved (887 tables, 171 rows), verified by reading, rolled back with the source intact; retire-after-traffic still ungated |
 | 29 | S6 | [Placement is automated and a noisy neighbour is relocated](issues/29-placement-is-automated.md) | 27, 28 | **partial** · placement is automated and LIVE on all 3 creation paths; canary rollback never rolled |
 
 ### Acceptance
