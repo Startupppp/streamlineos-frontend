@@ -1173,12 +1173,15 @@ database that already had the table the ordering never mattered; from empty it i
 it five times. This is the migration you wrote to make the chain create what production has, so the fix is
 yours to sequence, not mine to reorder.
 
-**The probe database is still there, at 323/342.** I have deliberately *not* dropped it, against my own
-plan, because rebuilding it costs hours and it is exactly the artifact this repair needs. Drop it with
-`DROP DATABASE migrate_probe_s2 WITH (FORCE)` when you are done. Two notes if you use it: the Neon **pooler
-cannot route to a newly created database** (`08P01`) so connect on the direct endpoint with `-pooler`
-stripped, and the compute autosuspends — a killed runner leaves idle connections that must be terminated
-before the next attempt.
+**The probe database has been dropped** — `cell2` proves the same thing and better, so keeping a second
+half-built database on the project was not worth it. If you rebuild one, two notes that cost hours here:
+the Neon **pooler cannot route to a newly created database** (`08P01`), so connect on the direct endpoint
+with `-pooler` stripped; and the compute autosuspends, so a killed runner leaves idle connections that must
+be terminated before the next attempt or the next run blocks on connection slots.
+
+**Defect 3 is still real even though `cell2` is green.** `cell2` was built by the c28-26 repair route, not
+by journal replay; replaying the journal from empty still stops at `0591`. Ticket 14's cold-build criterion
+is closed on `cell2`, and the replay defect is recorded there rather than dropped.
 
 ---
 
