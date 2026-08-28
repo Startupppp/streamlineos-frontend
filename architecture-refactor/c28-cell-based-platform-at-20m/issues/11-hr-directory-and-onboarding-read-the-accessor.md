@@ -58,11 +58,13 @@ First migrate batch of the users-table split. Sized by blast radius, not by laye
     "orgA": { "orgId": "aa5627a2-…", "employmentId": 28, "designation": "Contractor in org A" },
     "orgB": { "orgId": "779bd695-…", "employmentId": 31, "designation": "Head of Engineering in org B" },
     "independent": true,
-    "fallbacks": { "total": 0, "byField": {} }
+    "legacyFallbackPossible": false
   }
   ```
 
-  Two separate `hr_employments` rows, two different answers for one `userId`, zero legacy fallbacks. The payroll equivalent is `lib/payroll-multi-org.spec.ts`.
+  Two separate `hr_employments` rows, two different answers for one `userId`. **This run is from after ticket 14 dropped the columns**, so it also demonstrates the accessor working end to end against the contracted schema. `legacyFallbackPossible: false` is a statement of structural fact — the columns no longer exist — not a measurement; the measured zero-fallback evidence is in ticket 13, taken while the columns were still there.
+
+  The payroll equivalent is `lib/payroll-multi-org.spec.ts`.
 
 - [ ] Read budgets over the directory and employee-record lists are re-measured as `streamline_app` with the tenant GUC after the change.
 

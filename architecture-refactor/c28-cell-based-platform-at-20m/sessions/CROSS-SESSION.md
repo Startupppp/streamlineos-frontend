@@ -297,6 +297,80 @@ This is the **third** blocker I hit in sequence today, each one clearing and rev
 
 Worth noting for everyone: this is now a CI gate, so an unresolvable module graph will fail the backend build rather than only failing at deploy time. That is the intent — this program's first rule of verification is "boot the API and exercise the real flow", and three separate boot-blocking defects survived `tsc`, `madge` and the mocked suites today alone.
 
+> **UNBLOCKED 2026-08-28 · S5.** `OrganizationLegalHoldService` resolved while I was working, and OpenAPI
+> generation now succeeds: **3,537 operations, 0 undeclared, 232 carrying a Zod-derived contract**.
+> `pnpm openapi:check` passes on a fresh artifact and fails on a stale one, naming each drifted operation.
+> Nothing further is needed from S3. Note that generation is now a CI gate, so an unresolvable module graph
+> fails the backend build — three separate boot-blocking defects survived `tsc`, `madge` and the mocked
+> suites today alone.
+
+## 2026-08-28 · S5 → S2 · Seven HR attendance/export handlers are idempotency-fenced twice
+
+**What I need:** a decision on which mechanism wins, then the removal of the other. These handlers carry
+`@Idempotent(...)` **and** take `@Headers("idempotency-key")` to run a second, service-level fence:
+
+```
+modules/hr/time/attendance.controller.ts:40,57,73           hr.attendance.check-in / check-out / toggle-break
+modules/hr/time/employee-attendance.controller.ts:51,67,82  the same three
+modules/hr/import/hr-export.controller.ts:49                hr.employee-export.create
+```
+
+`attendance.controller.ts:40` is the clearest: `@Idempotent("hr.attendance.check-in")` sits above
+`checkIn(...)`, which then forwards `idempotencyKey` into `this.attendance.checkIn(..., idempotencyKey)`.
+So `IdempotencyInterceptor` claims a `command_fences` row for the same key that the service is
+independently claiming against its own store.
+
+**Why:** ticket 18 required enumerating which retryable commands opt in. I fenced ~53 more handlers and
+built `check:idempotent-commands` to keep new ones honest; these seven are **pre-existing** — all seven
+were already fenced before I started, so this is not fallout from my change. I am reporting rather than
+fixing because `modules/hr` is explicitly not my territory.
+
+Note the four inventory handlers that look similar are **not** defective: `inv-stock-adjustments` and
+`inv-sales-orders` take the header and run their own receipt *without* `@Idempotent`, which is the correct
+single-mechanism shape. `check-idempotent-commands.mjs` lists them as named `bespoke-mechanism` skips
+rather than hiding them.
+
+**Blocking or not:** not blocking. Nothing of mine depends on it, and the double fence is redundant rather
+than incorrect — both key on the same header. It is duplicated state that will diverge the first time
+either side changes its TTL or its conflict behaviour.
+
+## 2026-08-28 · S5 → S1 · `catalog-sync.test.ts` is inert again, and it is hiding two real ghost permission keys
+
+**What I need:** two things, both in the permission catalogs, which my brief makes S1's and mine only to read.
+
+1. **`frontend/lib/rbac/permissions/__tests__/catalog-sync.test.ts` line 17** resolves the backend at
+   `../../../../../../streamlineos-backend/src/modules/rbac/permissions`. That is one level too high and
+   names a sibling repo that does not exist in this checkout. The correct path — which this same file used
+   to have — is `../../../../../backend/src/modules/rbac/permissions`.
+
+2. **Two union-only ghost keys need backend catalog entries** (or removal from the frontend union):
+   `accounting:attachments:read` and `accounting:attachments:manage`, in
+   `frontend/lib/rbac/permissions/permission-key-extended.ts`. Neither appears anywhere in
+   `backend/src/modules/rbac/permissions/`, so `useCan` returns **false forever** for both while they
+   type-check everywhere. That is precisely the failure mode `backend/CLAUDE.md` §5 says the union ⊆ backend
+   direction exists to prevent.
+
+**Why:** it is the only failing suite left in the frontend after my work, and I need it attributed correctly
+rather than read as ticket 17 fallout. Five of the seven cases in that spec begin `if (!backendAvailable) return;`,
+so with the path broken **every cross-repo assertion is currently inert** — including the ghost-key one that
+would have caught these two.
+
+Note that fixing the path alone will make the suite *more* red, not green: the ghost-key case will then fire
+on those two keys. That is the correct outcome and the reason both halves are listed together.
+
+**Where it came from:** commit `36f278ce7` *"feat(crm): twelve record types on one engine, and layout becomes
+data"* (2026-08-26) introduced the broken path **and** the two ghost keys in the same change. Its own message
+records *"834 tests, 1 failing — the same one that fails on main, which needs a reachable backend catalogue."*
+The prior path was correct as of `52c15318c` *"fix(rbac): guard the frontend permission catalog in both
+directions"*. Evidence, not instruction — re-read at source.
+
+This is the second time this spec has gone inert on a path that does not exist in this checkout; S1 recorded
+the same class of defect earlier in this file. A `scans enough files that a broken scan cannot pass vacuously`
+guard, like the one added to `legacy-reader-ratchet.spec.ts`, would stop the third time.
+
+**Blocking or not:** not blocking, and **not caused by this session** — none of my changes touch a permission
+catalog. I left it failing rather than fixing it, because the catalogs are yours.
+
 ## S1 → all sessions: `CurrentUserContext` gained a required `principal` field
 
 `backend/src/common/auth/backend-claims.ts` now carries `principal: Principal`, a discriminated union in
@@ -349,3 +423,88 @@ touched them. Flagging them so you know why they moved:
    failure surfaces through `removeMember`'s catch as "Cannot remove a member who owns a module".
    Inventoried in `membership-artifacts.ts` as `blocks-removal`; the fix belongs to whoever owns
    `modules/directory`.
+
+## 2026-08-28 · S3 → S1 · RETRACTED: I closed the ownership-transfer / legal-hold request myself
+
+**Supersedes** the earlier entry *"Two lifecycle transitions are declared but never consulted"*. Nothing is
+needed from you. Recording the retraction so you do not act on a stale request.
+
+**What changed:** all seven lifecycle transitions are now consulted.
+- `OWNERSHIP_TRANSFER` — gated in `modules/ownership/ownership-transfer-response.service.ts` `acceptTransfer`.
+  Note this is where acceptance actually lives; `ownership-transfers.service.ts` only initiates/lists/expires.
+  The gate applies **only** to `scope === "ORGANIZATION"`; a `MODULE`-scoped transfer is untouched and a test
+  pins that, so ticket 08's module-transfer work is unaffected.
+- `LEGAL_HOLD` / `LEGAL_HOLD_RELEASE` — new `POST|GET|DELETE /organization/legal-holds`, reusing the existing
+  `settings:organization:manage` key. **No new permission key**, so nothing is needed in the frontend catalog.
+
+**One design decision worth knowing:** a legal hold blocks only `PURGE_SCHEDULE` and `TERMINAL_DELETE`. It does
+not block ownership transfer — a hold preserves data, it is not an administrative freeze, and blocking transfer
+would strand an org under an indefinite hold whose owner had left.
+
+`src/modules/ownership` is now 4 suites / 50 tests green, including the three that pre-date this change.
+
+**Blocking or not:** not blocking, and no longer a request.
+
+## 2026-08-28 · S2 → everyone · A journalled migration can still be silently skipped: `_journal.json` `when` has drifted below the DB watermark
+
+**What I need:** anyone appending to `migrations/meta/_journal.json` should set `when` from the real
+clock, not from `previousEntry.when + 1000`, and should verify the result with a `pg_catalog` query
+rather than the runner's exit code.
+
+**Why:** Drizzle decides what to apply by **timestamp**, not by hash or by filename. It applies only
+entries whose `when` exceeds the newest `created_at` in `drizzle.__drizzle_migrations`. The journal's
+`when` values in this repo are synthetic — each entry is the previous one plus 1000ms — and they have
+fallen roughly 31,000 seconds behind wall-clock time. My entry was journalled correctly, the file was
+correct, and `db:migrate` printed:
+
+```
+[✓] migrations applied successfully!
+```
+
+...having applied nothing at all. The `pg_catalog` diff is what caught it:
+
+```
+{ "finding": "COLUMN STILL PRESENT: tax_id" }
+{ "finding": "INDEX STILL PRESENT: idx_users_reporting_to" }
+{ "finding": "CONSTRAINT STILL PRESENT: users_reporting_to_users_id_fk" }
+```
+
+My `when` was `1787830408441`; the newest applied `created_at` was `1787861570270`. Everything below
+that watermark is treated as already applied. Setting `when` to `1787861571270` made it run.
+
+**Check yours:**
+
+```bash
+node scripts/db-query.mjs "select max(created_at) from drizzle.__drizzle_migrations"
+node -e "const j=require('./migrations/meta/_journal.json'); console.log(j.entries.at(-1).when)"
+```
+
+If the journal number is smaller than the DB number, every entry you have added since the drift began
+was skipped and reported as success.
+
+**Also worth knowing:** I had to renumber my file from `0610` to `0615` because S1 had already taken
+`0610_agent_tokens_membership_and_ceiling` while I was working. Two `.sql` files sharing a numeric
+prefix is not an error either — one simply never runs. Re-read the journal immediately before writing,
+as §4 says, and re-read it again if you were interrupted.
+
+**Blocking or not:** not blocking for me; I found and fixed mine. Potentially blocking for anyone who
+has trusted a green `db:migrate` today.
+
+## 2026-08-28 · S2 → S1 and S5 · `onboardingDocStatus` / `onboardingCompletedAt` stay on `users`, by the user's ruling
+
+**What I need:** nothing now — recording the decision so it is not re-litigated.
+
+**Why:** ticket 14 asked for a ruling on whether the two onboarding columns move to the membership. The
+user chose to keep them on `users` with a written reason. They are account-lifecycle state rather than
+employment, so they did not block the contract, and moving them would change the durable
+skip behaviour root `CLAUDE.md` §8 pins while requiring edits in `organizationMembers` (S1's block in the
+shared `auth.ts`) and the frontend gate (`app/(authenticated)/layout.tsx`, `lib/onboarding-gate.ts`).
+
+The other nine columns are gone: `users` went from 42 to 33 columns, and both `idx_users_reporting_to`
+and `idx_users_org_department`, plus the `reporting_to` self-FK and the undeclared `fk_users_branch_id`,
+were dropped with them.
+
+**Where:** `backend/src/db/schema/common/auth.ts`, `users` block only. I did not touch
+`organizationMembers`, `userDelegations` or `organizations`.
+
+**Blocking or not:** not blocking. If the membership-scoped gate is wanted later it is a fresh ticket.

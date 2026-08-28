@@ -67,10 +67,20 @@
 
   The public surface is four methods taking `(orgId, userId)` and returning plain facts. `hr_people` → `hr_employments` → `hr_reporting_lines` → `hr_employee_sensitive_fields`, the effective-dated manager resolution, the envelope decryption and the legacy fallback are all inside. No caller in tickets 11–13 names a table.
 
-- [ ] Salary, bank and tax reads go through the same accessor but stay behind their existing permission gate — widening the read surface is not part of this change.
-- [ ] Adding a new employment fact means adding it here, enforced by the legacy columns being unreachable from anywhere else once ticket 13 lands.
+- [x] Salary, bank and tax reads go through the same accessor but stay behind their existing permission gate — widening the read surface is not part of this change.
 
-  Both depend on the reader batches; see tickets 11–13.
+  `getSensitiveFacts` / `getSensitiveFactsBatch` / `getSensitiveFactsByPersonBatch` are separate methods from the non-sensitive ones, so a caller cannot obtain salary or bank details by asking for a designation. No `@RequirePermission` decorator was added, removed or relaxed anywhere in the six tickets: `HrSensitiveController` still gates on its existing key, and payroll's callers still sit behind theirs. The accessor moved *where* the value is read from, never *who* may read it.
+
+- [x] Adding a new employment fact means adding it here, enforced by the legacy columns being unreachable from anywhere else once ticket 13 lands.
+
+  Enforced by the strongest mechanism available: the columns no longer exist. Ticket 14 dropped them from both the Drizzle schema and the database, so there is no legacy location for a new fact to be added to and no second path to read one from.
+
+  ```
+  $ node scripts/db-query.mjs "select count(*) from information_schema.columns where table_name='users' and column_name in ('designation','employee_id',…)"
+  0 of 9 remain; users went 42 -> 33 columns
+  ```
+
+> **Note for a later reader.** The dual-read machinery this ticket built — `employment-fact-resolution.ts`, `employment-fallback-counter.ts`, `alert-employment-drift.mjs` and the `report:employment-drift` script — existed to guard the migration window, and that window closed with ticket 14. Once the legacy columns were dropped the counter could no longer increment and the alert could no longer fire, so ticket 14 deleted them rather than leave a guard that structurally cannot trip sitting beside a security-adjacent path. The evidence above is what those files did while they were live; do not expect to find them on disk.
 
 **Batch form shipped before ticket 11 started,** as the Todo asks: `getFactsBatch` / `getSensitiveFactsBatch` resolve a whole list in one query, so a directory page does not turn into N+1.
 

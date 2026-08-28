@@ -6,7 +6,7 @@ Second migrate batch. It is separate from batch 1 because it is the batch where 
 
 **Blocked by:** [10 — One accessor dual-reads employment, and shouts when the two disagree](10-one-accessor-dual-reads-employment.md)
 
-**Status:** done (one criterion open — the sensitive-read audit membership, which lives in ticket 11 territory)
+**Status:** done
 
 **Grounding (2026-08-28, evidence not instruction — re-read at source):** `hr_employee_sensitive_fields` (`db/schema/hr/core-people.ts:204`) holds `salaryAmountCents`, `bankDetails` and `taxId` — but `bankDetails` is a plain `jsonb` and `taxId` a plain `text`. **The destination is not encrypted today**, and the PRD requires application-level envelope encryption with per-region/cell KMS keys for exactly these fields. `users.bankDetails` (19 backend files) and `users.taxId` (14) are still the live source. `employee_salary_profiles` and `employee_salary_profile_components` (`db/schema/payroll/workforce.ts:41,85`) are the compensation destination; `modules/payroll/lib/payroll-run-payee.ts` and `modules/payroll/filings/filings.service.ts` already reach `hrPeople`/`hrEmployments`.
 
@@ -79,9 +79,13 @@ Second migrate batch. It is separate from batch 1 because it is the batch where 
 
   `payout/payout-run-completion.ts` and `payout/locking.service.ts` are another session's territory and were not touched.
 
-- [ ] Sensitive reads are audited with the acting membership, and the audit row survives deletion of the record it describes.
+- [x] Sensitive reads are audited with the acting membership, and the audit row survives deletion of the record it describes.
 
-  Half done. `hr_audit_logs.actor_membership_id` exists (migration `0609`, verified in `pg_catalog`) and deliberately carries **no foreign key** — an audit row must outlive the membership it records, and both `restrict` and `set null` defeat that. Payroll has no sensitive-read audit call site to populate: the only one in the codebase is `HrSensitiveService.get`'s `sensitive.viewed`, which is ticket 11's territory and is still writing `actorId` alone. Left open rather than ticked; see the note in ticket 11.
+  `hr_audit_logs.actor_membership_id` (migration `0609`, verified in `pg_catalog`) deliberately carries **no foreign key** — an audit row must outlive the membership it records, and both `restrict` and `set null` defeat that.
+
+  It is now populated on the one sensitive-read path in the codebase. `HrAuditService.log` takes an optional `actorMembershipId`; `HrSensitiveService.get` and `.update` thread it into the `sensitive.viewed` / `sensitive.updated` rows; `HrSensitiveController` supplies it as `actingMembershipId(u.principal)`.
+
+  The value comes from the request principal rather than a lookup — `actingMembershipId` (`common/auth/principal.ts`) returns the membership for a `human-session` or `personal-token`, and `null` for `account-only`, `agent-token` and `system-job`, which correctly have no membership to attribute. That helper is another session's work; it was read at source rather than assumed.
 
 - [x] A payroll run computed before and after the migration produces identical figures for a fixture organization; a difference is a defect, not a rounding note.
 
@@ -103,6 +107,8 @@ Second migrate batch. It is separate from batch 1 because it is the batch where 
   }
   EXIT=0
   ```
+
+  `pnpm verify:payroll-payee-parity` was **retired by ticket 14** once it had produced this evidence — it reads `users.bank_details` as its "before", so it cannot run against the contracted schema. The output above is what it produced while both sources existed.
 
   **`fallbacksDuringLoad: 0` is what stops this being a tautology.** Without it, `identical: true` could mean both sides read `users`. Zero fallbacks means every value came from `hr_employments` and the envelope-encrypted `hr_employee_sensitive_fields`, decrypted, and matched the legacy value exactly. The fixture is cleaned up on exit.
 
