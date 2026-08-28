@@ -58,3 +58,11 @@ Predicates are compared by rendering them with `PgDialect.sqlToQuery` — `JSON.
 ## Note
 
 `GET /dashboard/team-availability` has **no frontend consumer** — `dashboard-client.tsx` derives `teamAvailability` client-side from `teamAttendance.records`. It was fixed rather than deleted; deletion needs the module-graph proof in ticket 37.
+
+## Found in review of this session's own work, and fixed
+
+1. **Home stats still leaked an organization-wide count.** `presentToday` was gated on merely holding `hr:attendance:view`, so a viewer whose attendance *records* had just been narrowed to `own` still saw the org-wide present count. `resolveDashboardStatsFlags` now requires an `all`-scope attendance reader. Pinned by two tests covering `all` vs `own`/`team`/`none`.
+
+2. **The cache keys bypassed `cachedForOrg`.** They were hand-built with the org inline and passed to `cache.cached`, which skips the per-cell prefix and the TTL jitter that PRD §16 asks for. The builders now emit only the local part and every Home read goes through `cachedForOrg`, which prepends cell and org. A test asserts the local key does **not** contain the org and the final key does, so the tenant segment cannot drift back into the hand-built string.
+
+Dashboard suite after both: 33 tests, all passing.

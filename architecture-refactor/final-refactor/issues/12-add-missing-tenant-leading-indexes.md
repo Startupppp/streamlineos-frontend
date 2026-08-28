@@ -73,7 +73,7 @@ superseded_left   0
 
 ## Blocked criterion — query plans and read budgets
 
-**Not met, and not claimable on this database.** All four tables are empty in the configured development database:
+**Not met, and not claimable on this database. Owner decision 2026-08-29: leave documented as blocked rather than seed the shared development database.** All four tables are empty in the configured development database:
 
 ```
 candidate_resumes      0
@@ -83,6 +83,8 @@ vendor_credit_items    0
 ```
 
 Postgres seq-scans a zero-page table whatever indexes exist, so an `EXPLAIN` here would measure nothing — and PRD §15 explicitly requires read-budget checks to run against production-shaped datasets, not empty tables. Reporting a plan from these tables would be a false pass.
+
+The four tables' **parents are empty too** (`candidates`, `credit_notes`, `fin_payment_runs`, `vendor_credits` — all 0 rows), so a production-shaped dataset means building four full foreign-key chains (`fin_payment_run_items` alone has 9 FKs) inside a database six other sessions are actively working in, plus `VACUUM ANALYZE` on those tables. Judged not worth the blast radius mid-programme.
 
 **Unblock condition:** seed the four tables to production shape (the repo's pattern is `src/scripts/seed-*.mjs`, e.g. `seed-employment-read-scale.ts`), `VACUUM ANALYZE` each one — a bulk load leaves stale statistics and an empty visibility map, which alone can turn 53 blocks into 201,875 and will refuse an index-only scan regardless of the index — then `EXPLAIN (ANALYZE, BUFFERS)` each query **as `streamline_app` with the tenant GUC set**, never as the owner, whose `BYPASSRLS` hides the very cost this ticket is about. `pnpm db:check-read-budgets` is the existing harness to extend.
 

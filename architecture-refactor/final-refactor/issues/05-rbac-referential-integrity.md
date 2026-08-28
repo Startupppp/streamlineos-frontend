@@ -95,6 +95,22 @@ The three **controls matter as much as the denials**. An earlier run of this pro
 
 `pnpm verify:rbac-integrity:self-test` proves the harness itself distinguishes accept from reject and folds namespaces correctly, so a broken probe cannot report success.
 
+## Defect this migration introduced, found in review and fixed
+
+Adding the composite FK made a latent gap in `PermissionCatalogSyncService` fatal. That service runs on **every boot** and upserts the whole catalog, but it never wrote `administering_module_key`. Existing rows were safe (the backfill had set them and the conflict set did not clear them), but any **newly added permission key** would land with a NULL administering module and then be impossible to grant per person.
+
+Proved against the live database, both directions, in rolled-back transactions:
+
+```
+OLD sync (administering_module_key NULL)  -> REJECTED 23503
+NEW sync (administering_module_key = hr)  -> ACCEPTED
+probe rows left behind: 0
+```
+
+The column is now written on insert **and** in the conflict set, derived from `modules_catalog` read at sync time rather than from a hard-coded list, so a namespace that is not a module (`settings`, `ownership`, `billing`) correctly stays NULL and correctly stays ungrantable. Five regression tests in `permission-catalog-sync.service.spec.ts` pin all of it, including that the conflict set carries the column so an existing row is corrected rather than left stale.
+
+`seed-enterprise-workspace.ts` and the leads e2e fixture also insert permissions, both with `onConflictDoNothing`; the boot-time sync corrects whatever they create, so they need no change.
+
 ## Known, accepted
 
-`assigned_by_membership_id` is written as `NULL` at six call sites (`sync-structural-role.ts`, `module-access-groups.service.ts` ×3, `module-standing-mutations.service.ts`, `module-owner-role.helper.ts`) because `syncStructuralRoleAssignment(tx, orgId, membershipId, role)` takes no actor. Populating it means threading an actor through ~15 callers across four modules and is a separate change. The FK is not vacuous meanwhile: `granted_by_membership_id` **is** written (`user-permission-grants.service.ts:175`), and that live path is now protected against a cross-tenant grantor.
+**Decision taken with the owner:** `assigned_by_membership_id` stays unpopulated for now. It is written as `NULL` at eight call sites (`sync-structural-role.ts`, `module-access-groups.service.ts` ×3, `module-standing-mutations.service.ts`, `module-owner-role.helper.ts`) because `syncStructuralRoleAssignment(tx, orgId, membershipId, role)` takes no actor. Populating it means threading an actor through ~15 callers across four modules and is a separate change — two of the eleven call sites (`hr/directory`, `settings`) are outside S1's territory, so it cannot be done without another session's agreement. The ticket's criterion is referential integrity, which the FK delivers: a cross-tenant assigner is now impossible. The FK is not vacuous meanwhile: `granted_by_membership_id` **is** written (`user-permission-grants.service.ts:175`), and that live path is now protected against a cross-tenant grantor.

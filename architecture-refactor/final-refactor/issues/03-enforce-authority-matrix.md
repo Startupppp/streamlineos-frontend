@@ -61,9 +61,9 @@ Whole-territory run:
 
 ```
 node ./node_modules/jest/bin/jest.js src/modules/module-access src/modules/ownership \
-  src/modules/dashboard src/modules/users src/common/organization src/modules/access --maxWorkers=2
-Test Suites: 1 failed, 50 passed, 51 total
-Tests:       1 failed, 609 passed, 610 total
+  src/modules/dashboard src/modules/users src/common/organization src/modules/access src/modules/rbac --maxWorkers=2
+Test Suites: 1 skipped, 70 passed, 70 of 71 total
+Tests:       4 skipped, 726 passed, 730 total
 ```
 
 Structural checks:
@@ -76,6 +76,14 @@ pnpm check:owner-authority:self-test → SELF-TEST OK
 
 `pnpm typecheck` → 0 errors. Frontend `tsc --noEmit` → 0 errors. `madge --circular` → zero, including the new `ownership → module-access` edge.
 
-## Pre-existing failure, not caused by this ticket
+## Runtime (e2e) evidence
 
-`src/modules/module-access/__tests__/module-access-groups-rank.spec.ts` — "allows a STRUCTURAL org admin to create a group without querying rank" expects 1 `db.select` call and receives 2. All three relevant files (`module-access-groups.service.ts`, `common/rbac/is-structural-org-admin.ts`, and the spec) are **unmodified in the working tree**, and `isStructuralOrgAdmin` uses `db.query.organizationMembers.findFirst`, not `db.select`, so nothing in this ticket adds a select to that path. It also reproduces on the pre-change commit. Left failing rather than loosened — the assertion is a real guard about not querying rank for a structural admin.
+`ownership.controller.e2e-spec.ts` went from **13 passed / 22 failed to 21 passed / 14 failed** (measured both ways against HEAD). The spec had overridden `AccessService` with a two-method mock while `authorize()` calls `getModuleState`, `buildModuleAvailabilityResolver` and `scopeFor` — so every ownership route answered NO_MODULE or FORBIDDEN before its permission was read, and the guard tests were passing for the wrong reason. The mock now mirrors production, including the org-owner short-circuit and `isCoreModuleKey` being true for a namespace with no registry entry.
+
+The residual 14 are a fixture-level gap affecting every session, not this ticket: `createE2eApp` signs tokens for `org_1`, which has no `organizations` row, so every `@Idempotent` route 500s inserting into `command_fences` (**sqlstate 23503**). Recorded in `CROSS-SESSION.md` with the unblock condition.
+
+`dashboard.controller.e2e-spec.ts` passes 18/18, which is real runtime proof the Home module still boots and every route is auth-gated after ticket 02's changes.
+
+## Resolved after review — the rank spec is no longer failing
+
+`src/modules/module-access/__tests__/module-access-groups-rank.spec.ts` — "allows a STRUCTURAL org admin to create a group without querying rank" expects 1 `db.select` call and receives 2. The earlier note attributed this correctly but stopped short of the cause. Root-caused in review: `createGroup` calls `runInTenantTransaction`, which fires `refreshRelocationTargets` — an unmocked `db.select` on `organization_relocations` — and that consumed the spec's scripted mock, making the count 2 instead of 1. Isolating the tracker in the spec fixes it with the assertion intact, so "does not query rank for a structural admin" still bites. **7/7 passing.**
