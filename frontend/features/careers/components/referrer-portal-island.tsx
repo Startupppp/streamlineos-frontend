@@ -2,11 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { LoadingButton } from "@/components/ui/loading-button";
+import {
+  Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
+} from "@/components/ui/form";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -14,6 +18,8 @@ import { format } from "date-fns";
 import { Share2 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatCurrencyFull } from "@/lib/format-utils";
+import { referrerPortalSchema, type ReferrerPortalFormValues } from "./referrer-portal-schema";
 import type { PublicReferrerPortal } from "@/lib/public-fetch";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -33,42 +39,42 @@ interface Props {
 
 export function ReferrerPortalIsland({ data, token }: Props) {
   const router = useRouter();
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [jobPostingId, setJobPostingId] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [submitSuccess, setSubmitSuccess] = useState("");
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!firstName.trim() || !lastName.trim() || !email.trim()) {
-      setSubmitError("First name, last name, and email are required.");
-      return;
-    }
+  const form = useForm<ReferrerPortalFormValues>({
+    resolver: zodResolver(referrerPortalSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      jobPostingId: "",
+    },
+  });
+
+  async function handleSubmit(values: ReferrerPortalFormValues) {
     setSubmitting(true);
     setSubmitError("");
     setSubmitSuccess("");
     try {
-      const result = await apiClient.post<{ alreadyReferred: boolean }>(`/public/referrals/${token}/submit`, {
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        email: email.trim(),
-        phone: phone.trim() || undefined,
-        jobPostingId: jobPostingId ? Number(jobPostingId) : undefined,
-      });
+      const result = await apiClient.post<{ alreadyReferred: boolean }>(
+        `/public/referrals/${token}/submit`,
+        {
+          firstName: values.firstName.trim(),
+          lastName: values.lastName.trim(),
+          email: values.email.trim(),
+          phone: values.phone?.trim() || undefined,
+          jobPostingId: values.jobPostingId ? Number(values.jobPostingId) : undefined,
+        },
+      );
       setSubmitSuccess(
         result.alreadyReferred
           ? "You've already referred this person — no need to submit again."
           : "Referral submitted! We'll keep you posted on their progress.",
       );
-      setFirstName("");
-      setLastName("");
-      setEmail("");
-      setPhone("");
-      setJobPostingId("");
+      form.reset();
       router.refresh();
     } catch (e) {
       setSubmitError(getErrorMessage(e) || "Something went wrong. Please try again.");
@@ -76,11 +82,6 @@ export function ReferrerPortalIsland({ data, token }: Props) {
       setSubmitting(false);
     }
   }
-
-  function handleFirstNameChange(e: React.ChangeEvent<HTMLInputElement>) { setFirstName(e.target.value); }
-  function handleLastNameChange(e: React.ChangeEvent<HTMLInputElement>) { setLastName(e.target.value); }
-  function handleEmailChange(e: React.ChangeEvent<HTMLInputElement>) { setEmail(e.target.value); }
-  function handlePhoneChange(e: React.ChangeEvent<HTMLInputElement>) { setPhone(e.target.value); }
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-12 space-y-6">
@@ -93,48 +94,95 @@ export function ReferrerPortalIsland({ data, token }: Props) {
           <p className="text-sm text-muted-foreground text-center">Refer candidates for open roles at {data.orgName}.</p>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="firstName">First Name</Label>
-                <Input id="firstName" value={firstName} onChange={handleFirstNameChange} required />
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="firstName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>First Name</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="lastName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Last Name</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input id="lastName" value={lastName} onChange={handleLastNameChange} required />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="email">Candidate Email</Label>
-              <Input id="email" type="email" value={email} onChange={handleEmailChange} required />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="phone">Candidate Phone (optional)</Label>
-              <Input id="phone" value={phone} onChange={handlePhoneChange} />
-            </div>
-            {data.openJobs.length > 0 && (
-              <div className="space-y-1.5">
-                <Label>Role (optional)</Label>
-                <Select value={jobPostingId} onValueChange={setJobPostingId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select an open role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {data.openJobs.map((job) => (
-                      <SelectItem key={job.id} value={String(job.id)}>
-                        {job.title}{job.location ? ` · ${job.location}` : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            {submitError && <p className="text-sm text-destructive">{submitError}</p>}
-            {submitSuccess && <p className="text-sm text-status-success-ink">{submitSuccess}</p>}
-            <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting ? "Submitting…" : "Refer This Candidate"}
-            </Button>
-          </form>
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Candidate Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Candidate Phone (optional)</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {data.openJobs.length > 0 && (
+                <FormField
+                  control={form.control}
+                  name="jobPostingId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Role (optional)</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select an open role" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {data.openJobs.map((job) => (
+                            <SelectItem key={job.id} value={String(job.id)}>
+                              {job.title}{job.location ? ` · ${job.location}` : ""}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              {submitError && <p className="text-sm text-destructive">{submitError}</p>}
+              {submitSuccess && <p className="text-sm text-status-success-ink">{submitSuccess}</p>}
+              <LoadingButton type="submit" className="w-full" isPending={submitting} loadingText="Submitting…">
+                Refer This Candidate
+              </LoadingButton>
+            </form>
+          </Form>
         </CardContent>
       </Card>
 
@@ -153,7 +201,7 @@ export function ReferrerPortalIsland({ data, token }: Props) {
                     <p className="text-sm font-medium truncate">{r.candidateName}</p>
                     <p className="text-xs text-muted-foreground truncate">
                       {r.jobTitle ?? "General"} · {format(new Date(r.createdAt), "MMM d, yyyy")}
-                      {r.rewardAmount && ` · ₹${parseFloat(r.rewardAmount).toLocaleString()}`}
+                      {r.rewardAmount && ` · ${formatCurrencyFull(parseFloat(r.rewardAmount), data.currency)}`}
                     </p>
                   </div>
                   <Badge variant="secondary" className="text-xs shrink-0">{STATUS_LABEL[r.status] ?? r.status}</Badge>

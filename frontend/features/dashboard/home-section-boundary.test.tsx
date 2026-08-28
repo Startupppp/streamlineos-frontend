@@ -62,10 +62,14 @@ describe("a failing Home section is contained", () => {
 });
 
 describe("every Home widget is individually contained", () => {
-  const source = readFileSync(
-    resolve(process.cwd(), "features", "dashboard", "dashboard-client.tsx"),
-    "utf8",
-  );
+  const source = ["dashboard-client.tsx", "home-widget-grid.tsx"]
+    .map((file) =>
+      readFileSync(
+        resolve(process.cwd(), "features", "dashboard", file),
+        "utf8",
+      ),
+    )
+    .join("\n");
 
   const WIDGETS = [
     "MyTasksWidget",
@@ -92,17 +96,24 @@ describe("every Home widget is individually contained", () => {
     "TeamCard",
   ];
 
-  it("reads the Home composition file", () => {
+  it("reads the Home composition files", () => {
     expect(source).toContain("HomeSectionBoundary");
+  });
+
+  it("finds every widget it claims to check, so a moved widget cannot go unchecked", () => {
+    const missing = WIDGETS.filter(
+      (widget) => source.indexOf(`<${widget}`) < 0,
+    );
+    expect(missing).toEqual([]);
   });
 
   it("wraps each rendered widget in its own boundary", () => {
     const unwrapped = WIDGETS.filter((widget) => {
       const index = source.indexOf(`<${widget}`);
-      if (index < 0) return false;
-      return !source.slice(Math.max(0, index - 400), index).includes(
-        "HomeSectionBoundary",
-      );
+      if (index < 0) return true;
+      return !source
+        .slice(Math.max(0, index - 400), index)
+        .includes("HomeSectionBoundary");
     });
     expect(unwrapped).toEqual([]);
   });

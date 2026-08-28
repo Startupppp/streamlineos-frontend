@@ -1,6 +1,6 @@
 "use client";
 
-import { Component, type ErrorInfo, type ReactNode } from "react";
+import { Component, type ReactNode } from "react";
 import { ErrorState } from "@/components/shared/error-state";
 
 interface HomeSectionBoundaryProps {
@@ -20,15 +20,6 @@ export class HomeSectionBoundary extends Component<
 
   static getDerivedStateFromError(): HomeSectionBoundaryState {
     return { hasError: true };
-  }
-
-  componentDidCatch(error: Error, info: ErrorInfo): void {
-    if (process.env.NODE_ENV !== "production")
-      console.error(
-        `Home section "${this.props.sectionLabel}" failed`,
-        error,
-        info.componentStack,
-      );
   }
 
   handleRetry = (): void => {

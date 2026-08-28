@@ -20,6 +20,30 @@
 
   `app/(authenticated)/hr/layout.tsx` moved from bespoke resolution onto the same seam (ticket 27).
 
+  **A layout gate alone is not enough, and Next.js says so.** Post-implementation review against
+  `node_modules/next/dist/docs/01-app/02-guides/authentication.md:1350`:
+
+  > "Due to Partial Rendering, be cautious when doing checks in Layouts as these don't re-render on
+  > navigation, meaning the user session won't be checked on every route change."
+
+  So a layout gate fires on the first entry into a segment and on any hard load, but not when a user
+  soft-navigates between siblings inside it. The remedy the docs give is to check "close to your data
+  source or the component that'll be conditionally rendered".
+
+  Every **Server Component** page in these five modules that did not already gate itself now calls
+  `enforceRouteAccess` directly — 37 pages (build 27, settings 1, billing 2, support 6, timesheets 1).
+  This costs nothing extra: `getServerAccess()` is wrapped in React `cache()`, so the layout and the
+  page share one access fetch per request. The layouts stay as defence in depth.
+
+  `lib/rbac/route-access/__tests__/page-level-gates.test.ts` fails if a new ungated server page appears,
+  with an anti-vacuous guard asserting the walk found more than 100 pages.
+
+  **The remaining gap is named rather than hidden.** 65 pages in these modules are Client Components
+  (build 42, support 18, settings 4, billing 1) and cannot call a `server-only` helper. They rely on the
+  layout gate, on navigation not offering the link, and on the backend `PermissionGuard`, which is the
+  authoritative check per PRD §3 — "UI checks are presentation only". The test pins that count so it can
+  only go down; converting those pages is ticket 34's deeper pass.
+
   **Accounting was already fixed by S4 and S5 did not touch it.** `accounting/layout.tsx` now calls `requirePermission("accounting:read")` in place of the `ACCOUNTING_ROLES = ["OWNER","FINAL","HR"]` check that PRD P0 #3 named. Adopting `enforceRouteAccess` there would tighten it further — the registry declares a per-route key for all 74 accounting pages where the flat gate applies one key to the tree — but that file belongs to S4's ticket 04 and the request is logged rather than taken.
 
 - [x] Legacy role checks and inconsistent client-only gates are removed.
@@ -54,7 +78,7 @@
 
   ```
   $ node ./node_modules/jest/bin/jest.js lib/rbac components/layout
-  Tests:       104 passed, 104 total
+  Tests:       131 passed, 131 total
   ```
 
   Direct URL: ticket 27's per-route sweep plus `√ resolves a route the registry has never seen as unknown, so it fails closed`.

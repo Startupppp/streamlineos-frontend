@@ -63,7 +63,21 @@
 
   There were **no tests for any of these four flows** before this ticket. There are now 12, covering success, not-found, and the expiry or blocked path for each flow that has one.
 
-  `verify-server-data-seam.mjs` cannot be run to completion here: it reads `.next/BUILD_ID` and the app-paths manifest, so it needs a production build. The four new `publicRoutes` entries are registered and their assertions are correct by inspection; the script runs green once `next build` output exists.
+  `verify-server-data-seam.mjs` needs a production build, so it was run after `next build`:
+
+  ```
+  $ node scripts/verify-server-data-seam.mjs
+  server-data seam verified: 5 authenticated routes, 6 public routes, build BmFE5DQhI_8YvbzvIjiiK
+  EXIT=0
+  ```
+
+  Six public routes, up from the two help-centre pages it previously covered.
+
+## Review fixes applied after implementation
+
+- `referrer-portal-island.tsx` hardcoded `₹` and called `toLocaleString()` with no locale, so a non-INR organization saw the wrong symbol and output varied by browser. `GET /public/referrals/:token` now returns the organization's `currency` — mirroring what the offer flow already did — and the island formats with `formatCurrencyFull`.
+- Both islands used `disabled={isPending}` plus a label ternary; every async button is now `LoadingButton` (frontend §10).
+- The referral form was `useState` field soup with manual validation. It is now react-hook-form + `zodResolver` over a sibling `referrer-portal-schema.ts`, with `Form*` primitives giving each field a real label and error (frontend §4). Payload shape and endpoint are unchanged.
 
 ## Also fixed here
 

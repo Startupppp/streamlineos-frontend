@@ -32,7 +32,7 @@ import { OverviewSkeleton } from "./overview-skeleton";
 import { InsightsStrip } from "./insights-strip";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useOrgDisplay } from "@/hooks/api/org-display";
-import { formatMoneyCompact } from "@/lib/format-utils";
+import { formatCurrencyFull, formatMoneyCompact } from "@/lib/format-utils";
 
 function currentMonthRange(): { from: string; to: string } {
   const now = new Date();
@@ -188,7 +188,7 @@ export function OverviewClient() {
               <ActionCard
                 title="AR Overdue"
                 value={data ? `${data.arOverdue.count} inv` : "—"}
-                description={data ? `${formatMoneyCompact(Number(data.arOverdue.amount) || 0, display)} overdue` : ""}
+                description={data ? `${formatCurrencyFull(Number(data.arOverdue.amount) || 0, display.currency, display.locale, 0)} overdue` : ""}
                 href="/accounting/invoices?status=OVERDUE"
                 Icon={FiTrendingUpIcon}
                 tone="red"
@@ -196,14 +196,14 @@ export function OverviewClient() {
               <ActionCard
                 title="AP Due (7d)"
                 value={data ? `${data.apDueNext7.count} bills` : "—"}
-                description={data ? `${formatMoneyCompact(Number(data.apDueNext7.amount) || 0, display)} due` : ""}
+                description={data ? `${formatCurrencyFull(Number(data.apDueNext7.amount) || 0, display.currency, display.locale, 0)} due` : ""}
                 href="/accounting/purchase-bills"
                 Icon={FiTrendingDownIcon}
                 tone="amber"
               />
               <ActionCard
                 title="Tax Payable"
-                value={data ? formatMoneyCompact(Number(data.taxPayable) || 0, display) : "—"}
+                value={data ? formatCurrencyFull(Number(data.taxPayable) || 0, display.currency, display.locale, 0) : "—"}
                 description="Estimated GST liability"
                 href="/accounting/taxes"
                 Icon={FiWalletIcon}
@@ -212,7 +212,7 @@ export function OverviewClient() {
               <ActionCard
                 title="Cash Runway"
                 value={data?.runwayMonths != null ? `${data.runwayMonths}mo` : "N/A"}
-                description={data ? `Burn: ${formatMoneyCompact(Number(data.burnRate) || 0, display)}/mo` : ""}
+                description={data ? `Burn: ${formatCurrencyFull(Number(data.burnRate) || 0, display.currency, display.locale, 0)}/mo` : ""}
                 href="/accounting/reports/burn-rate"
                 Icon={FiPiggyBankIcon}
                 tone="default"

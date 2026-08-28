@@ -1,3 +1,4 @@
+import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 import { MyTicketsPage } from "@/features/build/my-tickets/my-tickets-page";
 
 interface PageProps {
@@ -5,5 +6,6 @@ interface PageProps {
 }
 
 export default async function MyTicketsWorkspaceRoute({ params }: PageProps) {
+  await enforceRouteAccess("/build/workspaces/[pmWorkspaceId]/[projectId]/my-tickets");
   return <MyTicketsPage params={params} />;
 }

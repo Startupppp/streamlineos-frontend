@@ -23,6 +23,10 @@
 
   `scripts/check-no-local-formatters.mjs` gained the exception mechanism the criterion asks for — `{ file, line, reason }` entries, failing on a missing reason and on a stale entry so dead exemptions cannot accumulate. It is registered and empty.
 
+  Review found the checker had **no self-test**, unlike its two siblings, so a typo in its pattern would have reported perfect compliance. It now has five assertions (`--self-test`) covering detection, a whitespace-padded form, three non-false-positives, line attribution and that the walk reaches the tree, plus a hard floor on files scanned in the real run. Registered as `check:formatters:self-test`.
+
+  **One conversion was a precision regression and is reverted.** Four `ActionCard` figures in `features/accounting/overview/overview-client.tsx` — AR overdue, AP due, Tax Payable and burn rate — previously rendered at full integer precision and were swapped to `formatMoneyCompact`, turning a statutory Tax Payable figure into `₹12.3L`. They now use `formatCurrencyFull(value, currency, locale, 0)`. The four `StatCard` values above them were already compact and correctly stay compact.
+
 - [x] Hand-written empty states migrate to shared states or documented specialized exceptions.
 
   **The reported 26 was an undercount, and finding that out was the substantive part of this ticket.**

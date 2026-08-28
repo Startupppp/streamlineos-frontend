@@ -160,6 +160,20 @@ describe("route-access registry keys", () => {
     expect(stale).toEqual([]);
   });
 
+  it("never leaves a navigable route undecidable, which would deny everyone", () => {
+    const undecidable: string[] = [];
+    for (const route of routes) {
+      if (isUniversalRoute(route.path)) continue;
+      const nav = resolveNavRouteAccess(route.path);
+      if (!nav.matched) continue;
+      if (resolveRouteAccess(route.path).kind === "unknown")
+        undecidable.push(
+          `${route.path}: navigation owns it but the registry cannot decide`,
+        );
+    }
+    expect(undecidable).toEqual([]);
+  });
+
   it("never treats access administration as universal", () => {
     expect(isUniversalRoute("/chat/access")).toBe(false);
     expect(isUniversalRoute("/directory/access")).toBe(false);

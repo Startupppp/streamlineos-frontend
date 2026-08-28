@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -109,19 +109,19 @@ export function OfferActionIsland({ offer, token }: Props) {
       )}
 
       <div className="flex gap-3 pt-2">
-        <Button className="flex-1" onClick={handleAccept} disabled={responding}>
+        <LoadingButton className="flex-1" onClick={handleAccept} isPending={responding} loadingText="Processing…">
           <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <polyline points="20 6 9 17 4 12" />
           </svg>
-          {responding ? "Processing…" : "Accept Offer"}
-        </Button>
-        <Button variant="outline" className="flex-1" onClick={handleOpenDecline} disabled={responding}>
+          Accept Offer
+        </LoadingButton>
+        <LoadingButton variant="outline" className="flex-1" onClick={handleOpenDecline} isPending={responding}>
           Decline
-        </Button>
+        </LoadingButton>
       </div>
-      <Button variant="ghost" className="w-full text-xs" onClick={handleOpenCounter} disabled={responding}>
+      <LoadingButton variant="ghost" className="w-full text-xs" onClick={handleOpenCounter} isPending={responding}>
         Propose Different Terms
-      </Button>
+      </LoadingButton>
 
       <p className="text-xs text-center text-muted-foreground">
         By accepting, you agree to the terms outlined in this offer.

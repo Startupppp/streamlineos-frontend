@@ -163,13 +163,18 @@ describe("every Home query is gated before it fires", () => {
       ),
     );
     const ungated: string[] = [];
+    let evaluated = 0;
     const blocks = source.split("export const use").slice(1);
     for (const block of blocks) {
       const endpoint = /apiClient\.get<[^>]*>\(\s*["']([^"']+)["']/.exec(block);
       if (!endpoint) continue;
       if (universalEndpoints.has(endpoint[1])) continue;
       const enabledLine = /^\s{4}enabled:\s*([^\n]+)/m.exec(block);
-      if (!enabledLine) continue;
+      if (!enabledLine) {
+        ungated.push(`${endpoint[1]}: no enabled gate at all`);
+        continue;
+      }
+      evaluated += 1;
       const gate = enabledLine[1];
       const gated =
         gate.includes("canView") ||
@@ -180,5 +185,6 @@ describe("every Home query is gated before it fires", () => {
       if (!gated) ungated.push(`${endpoint[1]}: enabled: ${gate.trim()}`);
     }
     expect(ungated).toEqual([]);
+    expect(evaluated).toBeGreaterThanOrEqual(8);
   });
 });

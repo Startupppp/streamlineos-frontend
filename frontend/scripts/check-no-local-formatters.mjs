@@ -11,6 +11,17 @@ const CANONICAL_PATH = "lib/format-utils.ts";
 export const KNOWN_EXCEPTIONS = [
 ];
 
+export function isLocalFormatterLine(line) {
+  return LOCAL_FORMATTER.test(line);
+}
+
+export function findFormatterLines(source) {
+  return source
+    .split("\n")
+    .map((line, index) => ({ line: index + 1, text: line.trim() }))
+    .filter((entry) => isLocalFormatterLine(entry.text));
+}
+
 function validateExceptions(exceptions) {
   for (const entry of exceptions) {
     if (!entry.reason || !entry.reason.trim()) {
@@ -32,6 +43,57 @@ function* walkFiles(dir) {
   }
 }
 
+function selfTest() {
+  console.log("Running self-test...\n");
+  const failures = [];
+
+  const positive = 'const f = new Intl.NumberFormat("en-IN", { style: "currency" });';
+  if (!isLocalFormatterLine(positive))
+    failures.push("(a) failed to detect a known local Intl.NumberFormat");
+
+  const spaced = "const f = new   Intl.NumberFormat (opts);";
+  if (!isLocalFormatterLine(spaced))
+    failures.push("(b) failed to detect a whitespace-padded form");
+
+  for (const benign of [
+    'import { formatMoney } from "@/lib/format-utils";',
+    "const d = new Intl.DateTimeFormat(locale);",
+    "formatMoneyCompact(value, display)",
+  ])
+    if (isLocalFormatterLine(benign))
+      failures.push(`(c) false positive on: ${benign}`);
+
+  const block = [
+    "const a = 1;",
+    'const f = new Intl.NumberFormat("en-US");',
+    "const b = 2;",
+  ].join("\n");
+  const found = findFormatterLines(block);
+  if (found.length !== 1 || found[0].line !== 2)
+    failures.push("(d) line attribution is wrong");
+
+  let scanned = 0;
+  for (const _file of walkFiles(ROOT)) scanned += 1;
+  if (scanned < 500)
+    failures.push(`(e) the walk found only ${scanned} files — it is not scanning the tree`);
+
+  if (failures.length > 0) {
+    console.error("✖  Self-test FAILED:");
+    for (const failure of failures) console.error(`  ${failure}`);
+    process.exit(1);
+  }
+
+  console.log("PASS: self-test (5 assertions)\n");
+  console.log("  (a) detects a local Intl.NumberFormat");
+  console.log("  (b) detects a whitespace-padded form");
+  console.log("  (c) no false positive on imports, DateTimeFormat or canonical helpers");
+  console.log("  (d) attributes the finding to the right line");
+  console.log(`  (e) the walk reaches the tree (${scanned} files scanned)`);
+  process.exit(0);
+}
+
+if (process.argv.includes("--self-test")) selfTest();
+
 validateExceptions(KNOWN_EXCEPTIONS);
 
 const exceptionSet = new Set(
@@ -40,24 +102,31 @@ const exceptionSet = new Set(
 const matchedExceptions = new Set();
 
 const violations = [];
+let scannedFiles = 0;
 
 for (const file of walkFiles(ROOT)) {
+  scannedFiles += 1;
   const rel = relative(ROOT, file).replace(/\\/g, "/");
   if (rel === CANONICAL_PATH) continue;
 
   const content = readFileSync(file, "utf8");
   if (!LOCAL_FORMATTER.test(content)) continue;
 
-  const lines = content.split("\n");
-  lines.forEach((line, i) => {
-    if (!LOCAL_FORMATTER.test(line)) return;
-    const key = `${rel}:${i + 1}`;
+  for (const entry of findFormatterLines(content)) {
+    const key = `${rel}:${entry.line}`;
     if (exceptionSet.has(key)) {
       matchedExceptions.add(key);
-      return;
+      continue;
     }
-    violations.push(`  ${rel}:${i + 1}  ${line.trim()}`);
-  });
+    violations.push(`  ${rel}:${entry.line}  ${entry.text}`);
+  }
+}
+
+if (scannedFiles < 500) {
+  console.error(
+    `✖  Only ${scannedFiles} files scanned — the walk is broken, so a clean result would prove nothing.`,
+  );
+  process.exit(1);
 }
 
 const staleExceptions = KNOWN_EXCEPTIONS.filter(
@@ -72,7 +141,7 @@ if (staleExceptions.length > 0) {
 }
 
 if (violations.length === 0) {
-  console.log("✔  No local Intl.NumberFormat formatters found outside lib/format-utils.ts.");
+  console.log(`✔  No local Intl.NumberFormat formatters found outside lib/format-utils.ts (${scannedFiles} files scanned).`);
   process.exit(0);
 } else {
   console.error(

@@ -45,36 +45,19 @@ import {
   TeamAttendanceWidget,
   PendingApprovalsWidget,
   BirthdaysWidget,
-  LeaveBalanceWidget,
   UpcomingHolidaysWidget,
 } from "@/features/dashboard/hr-widgets";
 import { PublicDocumentsCard } from "@/features/dashboard/public-documents-card";
-import { MyAttendanceWidget } from "@/features/dashboard/my-attendance-widget";
-import { PayrollWidget } from "@/features/dashboard/payroll-widget";
-import { ExpensesWidget } from "@/features/dashboard/expenses-widget";
-import { RecruitmentWidget } from "@/features/dashboard/recruitment-widget";
-import { AlertsWidget } from "@/features/dashboard/alerts-widget";
-import { MyTasksWidget } from "@/components/dashboard/my-tasks-widget";
-import { TimesheetWidget } from "@/components/dashboard/timesheet-widget";
-import { AnnouncementsWidget } from "@/components/dashboard/announcements-widget";
-import { UpcomingEventsWidget } from "@/components/dashboard/upcoming-events-widget";
 import { shouldRenderDashboardLoading } from "./dashboard-hydration";
 import { DeferredDashboardContent } from "./deferred-dashboard-content";
 import { HomeSectionBoundary } from "./home-section-boundary";
+import { HomeWidgetGrid } from "./home-widget-grid";
 import { useHomeCacheSync } from "./use-home-cache-sync";
 
 const ExecutiveKpiWidget = dynamic(
   () =>
     import("@/components/dashboard/executive-kpi-widget").then((m) => ({
       default: m.ExecutiveKpiWidget,
-    })),
-  { loading: () => <WidgetSkeleton rows={2} /> },
-);
-
-const BusinessPulseWidget = dynamic(
-  () =>
-    import("@/components/dashboard/project-health-widget").then((m) => ({
-      default: m.BusinessPulseWidget,
     })),
   { loading: () => <WidgetSkeleton rows={2} /> },
 );
@@ -367,24 +350,12 @@ export function DashboardClient() {
           }
         >
           <>
-            <motion.div
-              variants={fadeUp}
-              initial="hidden"
-              animate="visible"
-              className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
-            >
-              {projectsEnabled && <HomeSectionBoundary sectionLabel="My tasks"><MyTasksWidget /></HomeSectionBoundary>}
-              {projectsEnabled && <HomeSectionBoundary sectionLabel="Timesheet"><TimesheetWidget /></HomeSectionBoundary>}
-              {hrEnabled && <HomeSectionBoundary sectionLabel="Leave balance"><LeaveBalanceWidget /></HomeSectionBoundary>}
-              <HomeSectionBoundary sectionLabel="Alerts"><AlertsWidget /></HomeSectionBoundary>
-              <HomeSectionBoundary sectionLabel="Announcements"><AnnouncementsWidget /></HomeSectionBoundary>
-              <HomeSectionBoundary sectionLabel="Upcoming events"><UpcomingEventsWidget /></HomeSectionBoundary>
-              {canViewExecutive && <HomeSectionBoundary sectionLabel="Business pulse"><BusinessPulseWidget /></HomeSectionBoundary>}
-              {hrEnabled && canSelfAttendance && <HomeSectionBoundary sectionLabel="My attendance"><MyAttendanceWidget /></HomeSectionBoundary>}
-              <HomeSectionBoundary sectionLabel="Payroll"><PayrollWidget /></HomeSectionBoundary>
-              <HomeSectionBoundary sectionLabel="Expenses"><ExpensesWidget /></HomeSectionBoundary>
-              <HomeSectionBoundary sectionLabel="Recruitment"><RecruitmentWidget /></HomeSectionBoundary>
-            </motion.div>
+            <HomeWidgetGrid
+              projectsEnabled={projectsEnabled}
+              hrEnabled={hrEnabled}
+              canViewExecutive={canViewExecutive}
+              canSelfAttendance={canSelfAttendance}
+            />
 
         {showHrTeamRow && (
           <motion.div

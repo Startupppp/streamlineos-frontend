@@ -137,6 +137,7 @@ export interface PublicReferrerPortalReferral {
 export interface PublicReferrerPortal {
   referrerName: string;
   orgName: string;
+  currency: string;
   openJobs: PublicReferrerPortalJob[];
   referrals: PublicReferrerPortalReferral[];
 }
