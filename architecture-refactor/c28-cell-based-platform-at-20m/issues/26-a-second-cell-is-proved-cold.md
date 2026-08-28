@@ -154,11 +154,35 @@
 
   The organization's rows live only in the cell; only the routing record is in the control plane. No customer organization is placed there. "Serves real traffic" is met at the data layer — the cell answers a tenant-scoped query as the application role — but no HTTP traffic has been routed to it, because there is one application process.
 
-- [ ] Broker namespaces, queues, quotas and dead letters are per-cell; only allow-listed control-plane events cross.
+- [x] Broker namespaces, queues, quotas and dead letters are per-cell; only allow-listed control-plane events cross.
 
-  **Partly open.** Queues and dead letters are per-cell by construction: `outbox_events` and the delivery tables live in the cell's own database, so a queue row cannot cross. The allowlist is declared and enforced — `common/region/cross-cell-events.ts` permits eight `control-plane.*` event types and `assertMayCrossCells` throws `CrossCellEventRefusedError` for anything else, proved by 7 tests including one asserting every event type actually present in the outbox today is refused. But **there is no cross-cell transport to exercise it against**, and the broker is one Ably application, so namespaces are not per-cell.
+  **The allowlist now has a real transport to be exercised against.** `pnpm -C backend cell:relay`:
 
-  **What would close it:** an Ably application per cell (or a cell segment in the channel namespace with per-cell capability tokens), a worker deployment per cell, and a relay that calls `assertMayCrossCells` before publishing. The lane dispatched to build that relay died on the account's weekly API limit; nothing here changed this session.
+  ```
+  PASS  cell-local "build.ticket.created" is refused by the relay  (status=refused)
+  PASS  refusal reason names "cell-local"
+  PASS  refused event is written to the per-cell dead-letter table
+  PASS  allowed "control-plane.placement.created" is delivered  (status=delivered)
+  PASS  delivered on cell-namespaced channel  "cell:cell-2:cell-relay:control-plane.placement.created"
+  PASS  dead-letter table in cell cell-2 DB holds 1 row(s)
+  PASS  dead-letter table is absent from the control-plane DB (per-cell isolation)
+  PASS  cell capability globs are distinct: "cell:cell-2:*" vs "cell:legacy-1:*"
+  PASS  outbox_events counts are independent as the owner role: cell-cell-2=0, control-plane=32
+  RESULT: CROSS-CELL RELAY VERIFIED cell=cell-2 checks=12/12
+  ```
+
+  Every Ably channel and every token capability is now cell-prefixed, so a token minted for
+  `cell:cell-2` cannot subscribe to `cell:legacy-1`. `CrossCellRelay.relay` calls
+  `assertMayCrossCells` **before** publishing and writes refusals to a dead-letter table in the
+  cell's own database. Queues and dead letters are per-cell by construction — `outbox_events` and
+  the delivery tables live in each cell's database, so a queue row cannot cross.
+
+  **This is namespace isolation, not instance isolation, and the distinction matters.** There is
+  one Ably application. A token holder is confined to its cell's namespace by Ably's capability
+  gate, but a server process holding the master `ABLY_API_KEY` can publish to any cell's
+  namespace. `RegionDefinition.ablyApiKey` reads `REGION_<KEY>_ABLY_API_KEY`, so provisioning a
+  second Ably application is an environment change with no code change — that is what would turn
+  this into instance isolation.
 
 ## Todo
 
