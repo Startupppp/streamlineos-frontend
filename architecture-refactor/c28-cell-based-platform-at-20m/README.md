@@ -88,7 +88,7 @@ The **S** column is the execution session that owns the ticket. The split was ch
 
 | # | S | Ticket | Blocked by | Status |
 |---|---|---|---|---|
-| 30 | S6 | [The workload envelope is a runnable load profile](issues/30-the-workload-envelope-is-runnable.md) | 26 | **partial** · refusal state ENDED — 46 budgets measured, 0 over ceiling; no load driver, so no latency objective measured |
+| 30 | S6 | [The workload envelope is a runnable load profile](issues/30-the-workload-envelope-is-runnable.md) | 26 | **partial** · load driver built; 5/14 objectives measured, 9 NOT_DRIVEN with reasons; found the 100k member-list scanning the whole tenant (1513→53 blocks) |
 | 31 | S4 | [Declared degradation is tested, not described](issues/31-declared-degradation-is-tested.md) | — | **done** · 7/8 rows tested; read-replica row ratcheted, not tested (no replica exists) |
 | 32 | S6 | [Unit cost per cell is tracked and forecast](issues/32-unit-cost-per-cell-is-forecast.md) | 27 | **partial** · 1 unit costed from the ledger, 6 measured without a price, 2 unmeasured; no invoice |
 

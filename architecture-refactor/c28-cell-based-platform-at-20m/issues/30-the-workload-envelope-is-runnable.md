@@ -4,7 +4,7 @@
 
 **Blocked by:** [26 — A second cell exists and is proved from cold](26-a-second-cell-is-proved-cold.md)
 
-**Status:** partially done — **the refusal state has ended**; there is no load driver, so no latency objective is measured
+**Status:** partially done — a load driver exists and **5 of 14 objectives are measured**; the other 9 report NOT_DRIVEN with what each needs. The driver found the member-list surface reading all 100,004 rows to return 50.
 
 **The envelope, from the PRD** — validation inputs, not traffic predictions:
 
@@ -32,19 +32,56 @@
 
 - [ ] Every latency objective in the PRD's reliability table is reported, under the declared cold/warm cache mix, payload sizes, pool pressure, tenant sizes, geography, device and network.
 
-  **Open.** All 14 objectives are enumerated as data and every one is reported — but 12 are reported as **not measurable**, which is not the same as measured:
+  **Partly closed: 5 of 14 are now measured, 9 are reported NOT_DRIVEN with what each would need.**
+  `pnpm -C backend load:drive`:
 
   ```
-  INFO  latency-objectives-total                           14 objectives in PRD
-  INFO  objective-not-measurable:p95-transactional-write   target=500 ms — requires production load driver
-  INFO  objective-not-measurable:p95-redis-operation       target=2 ms including network — requires production load driver
-  INFO  objective-not-measurable:p75-first-useful-view     target=1000 ms — requires production load driver
-  … 9 more
+  MET         cross-org-data-exposure       0 row(s) visible across the tenant boundary (target 0)
+  BREACHED    p95-simple-db-roundtrip       p95=480.8ms  target=20ms   n=533
+  BREACHED    p95-complex-db-read           p95=605.9ms  target=50ms   n=465
+  BREACHED    p95-transactional-write       p95=575.9ms  target=500ms  n=434
+  BREACHED    p95-redis-operation           p95=138.5ms  target=2ms    n=1858
+  NOT_DRIVEN  authenticated-interactive-availability  an availability percentage is a month of
+                                            production traffic, not a run
+  NOT_DRIVEN  p99-in-process-authorization  100 microseconds of CPU with no I/O needs an
+                                            in-process profiler, not a database driver
+  … 7 more, each with its reason
+
+  RESULT: 4 OBJECTIVE(S) BREACHED measured=5/14 not_driven=9
   ```
 
-  **What would close it:** a load driver generating the declared traffic against a running application with a declared cold/warm cache mix, reference device and network. This repository has no load driver and one application process. A buffer-count check cannot stand in for a latency measurement, and reporting one as the other is what this program has already un-ticked boxes for.
+  **The breaches are a statement about where the driver ran, not about the code path.** A bare
+  `SELECT 1` at concurrency 1 is **p50=80.1ms** from this machine, and the runner prints that
+  floor beside every figure. The PRD's targets assume the application and its database are
+  colocated; this run crosses the public internet to `ap-southeast-1`. A four-round-trip
+  transaction cannot measure below ~320ms here, which is most of the simple-roundtrip number.
 
-  **Dispatched this session and not delivered.** A lane was given the whole job — drive a real authenticated API, declare the run conditions as data, report p50/p75/p95/p99 per objective, mark anything undrivable as `NOT DRIVEN` with a reason rather than dropping it, sample connections and queue depth for headroom, run the burst shape, and write `.load-driver-results.json` for tickets 29 and 32 to consume. It terminated on the account's weekly API limit before its first tool call. Nothing in this criterion changed.
+  **What the driver was actually worth.** Against the 100,004-member fixture the declared
+  member-list surface planned as:
+
+  ```
+  Limit (actual rows=50)
+    ->  Sort  Sort Key: joined_at DESC  Sort Method: top-N heapsort
+          ->  Bitmap Heap Scan on organization_members (actual rows=100004)
+                Heap Blocks: exact=1431   Buffers: shared hit=1513
+  ```
+
+  It read **every row in the organization to return fifty**. 1,513 blocks is inside the declared
+  5,000 ceiling, so `org-members-list` passes as a read-cost budget — **the budget counts blocks
+  and cannot see that the cost is linear in tenant size**, only survivable because 100,000
+  members is the largest fixture that exists. `0626` adds `(org_id, joined_at DESC)`:
+
+  ```
+  buffers   1513 → 53
+  in-db     92.8ms → 0.24ms
+  driver    p95 1883.7ms → 605.9ms, samples 191 → 465 in the same window
+  ```
+
+  **What would still close it:** the nine NOT_DRIVEN objectives need a browser, a profiler, an
+  induced node failure, a recovery drill or a month of production traffic. Each is named in
+  `NOT_DRIVEN_REASONS` with what it needs, and a test asserts no objective can be silently
+  dropped from the report.
+
 
 - [ ] At least 40% headroom remains in every limiting cell resource at the sustained target, and the burst target is survived.
 
@@ -56,7 +93,19 @@
                                            from buffer counts alone
   ```
 
-  The one resource that *is* measured says the cell has headroom — `database-size` at 42.1% of the plan limit, admission `OPEN` — but that is storage occupancy, not headroom under load, and neither the sustained nor the burst target has been driven.
+  The one resource that *is* measured says the cell has headroom — `database-size` at 42.1% of the plan limit, admission `OPEN` — but that is storage occupancy, not headroom under load.
+
+  **The burst half now has data, and it is a degradation curve rather than a headroom figure.** `load:drive` runs the declared burst multiplier and records both windows:
+
+  ```
+  sustained (concurrency 16) → burst (concurrency 32)
+    p95-simple-db-roundtrip    481ms → 901ms
+    p95-transactional-write    576ms → 1271ms
+    p95-complex-db-read        606ms → 1697ms
+    p95-redis-operation        139ms → 147ms
+  ```
+
+  Doubling concurrency roughly doubles p95 on every database seam and leaves the cache flat, which is what a connection-bound workload looks like. It is not the 40% headroom figure: that needs CPU, memory and connection saturation measured against the 50 req/s per-cell target on a colocated deployment. The driver achieved **63.6 req/s**, which is above the per-cell sustained target but from one machine against a managed database, so it says nothing about a cell's ceiling.
 
 - [x] The 100,000-member organization is a real fixture, and the list, search and directory surfaces over it stay within their budgets.
 
