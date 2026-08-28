@@ -7,7 +7,7 @@ those folders was lost: a condensed digest of each lives in [§ Closed candidate
 below, and the full original text of every deleted file is still in git history (`git log --all -- <path>`).
 
 Three tickets remain genuinely open, each blocked on something outside this repo, not on unfinished work —
-their candidate folders are the only ones still on disk, alongside c28 which hasn't started:
+their candidate folders are the only ones still on disk, alongside c28, which has now run:
 
 | Ticket | Blocked on |
 |---|---|
@@ -15,10 +15,14 @@ their candidate folders are the only ones still on disk, alongside c28 which has
 | [c18-03](c18-removals-are-proved/issues/03-the-dead-controller-is-removed.md) | Needs a real deployment's access log before a dead controller can be proved safe to remove — cannot be produced locally |
 | [c21-04](c21-fanout-retention-and-polling/issues/04-three-growing-tables-are-partitioned.md) | Same read-budget/seed-data blocker as c16-06, on the partitioned notifications tables |
 
-**c28 now has 32 tickets, none started** (written 2026-08-28) — it is a proposed target architecture
-(cell-based platform for 20M+ users), not a repair. It is out of scope for the count above. Its
-breakdown, and the four repository facts that shaped it, are in
-[`c28-cell-based-platform-at-20m/README.md`](c28-cell-based-platform-at-20m/README.md).
+**c28 now has 33 tickets, 27 marked done** (written and executed 2026-08-28) — a proposed target
+architecture for a cell-based platform at 20M+ users, not a repair. It is out of scope for the count
+above. Phases 0 and 1 landed; a second cell exists, serves organizations and survives a control-plane
+outage. **Ticket 33 is the one that matters now:** the committed migration chain differs from the running
+database by 3,243 objects, including 65 tables no migration has ever created, so cold bootstrap, cell
+creation and disaster recovery are all blocked on it. Breakdown in
+[`c28-cell-based-platform-at-20m/README.md`](c28-cell-based-platform-at-20m/README.md); execution briefs
+in [`c28-cell-based-platform-at-20m/sessions/`](c28-cell-based-platform-at-20m/sessions/README.md).
 
 What remains on disk:
 
@@ -29,7 +33,7 @@ architecture-refactor/
   c16-schema-says-what-it-means/   1 open ticket (seed data)
   c18-removals-are-proved/         1 open ticket (operator access log)
   c21-fanout-retention-and-polling/  1 open ticket (seed data)
-  c28-cell-based-platform-at-20m/  PRD + 32 tickets, not started
+  c28-cell-based-platform-at-20m/  PRD + 33 tickets (27 done) + 7 session briefs
 ~~~
 
 The nine candidates from the 2026-08-23 review (c1–c9) are **all closed**; their specs stay in
@@ -40,8 +44,16 @@ touched by this cleanup.
 ## The verdict this program starts from
 
 **The architecture does not need replacing.** Zero import cycles in both repos. Zero unused frontend files
-across 4,429. Zero arbitrary colour classes across 591k lines. Zero `useEffect` firing an API call. CI
-rebuilds the database from empty. The RBAC model as originally envisioned is substantially already built.
+across 4,429. Zero arbitrary colour classes across 591k lines. Zero `useEffect` firing an API call. The
+RBAC model as originally envisioned is substantially already built.
+
+> ⚠️ **One line of that verdict was wrong and c28 disproved it.** It read *"CI rebuilds the database from
+> empty"*. It does not. c28-26 bootstrapped a genuinely empty database through the committed chain and
+> compared the result against the running one from `pg_catalog`: **3,243 differences**, including 65
+> tables — the whole accounting/AP/AR/GL/tax model — that no migration has ever created. The chain
+> reaches head and reports success, which is exactly why this survived. Closing it is
+> [c28-33](c28-cell-based-platform-at-20m/issues/33-the-chain-rebuilds-the-database.md). The rest of the
+> verdict stands; this clause is struck.
 
 What the passes found was not systemic decay. It was concentrated correctness and scale failures around
 omission-proof authorization, list cursors, commercial billing truth, calendar expansion, durable knowledge
@@ -56,7 +68,7 @@ see the archive below for which.
 | [c16 — The schema says what it means](c16-schema-says-what-it-means/README.md) | 9 | 8 closed, 1 open (seed data) |
 | [c18 — Removals are proved, not grepped](c18-removals-are-proved/README.md) | 4 | 3 closed, 1 open (operator access log) |
 | [c21 — Right models, right throughput — fan-out, retention and polling](c21-fanout-retention-and-polling/README.md) | 7 | 6 closed, 1 open (seed data) |
-| [c28 — Cell-based platform at 20M](c28-cell-based-platform-at-20m/README.md) | 32 | not started — 0 closed |
+| [c28 — Cell-based platform at 20M](c28-cell-based-platform-at-20m/README.md) | 33 | 27 done; ticket 33 (migration-chain gap) is the open blocker |
 
 ## Closed candidates — archived 2026-08-27
 

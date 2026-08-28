@@ -2,7 +2,7 @@
 
 PRD: [`prd.md`](prd.md) · Program: [`../README.md`](../README.md)
 
-**32 tickets, 27 marked done** (some with a single criterion left open and a written reason — read the row). Phases 0 and 1 are landed. Phases 2–4 have started: a second cell (`cell-2`) exists, serves organizations and survives a control-plane outage, and placement is automated. **The cold bootstrap fails**, and that is the most important thing this program now knows — see ticket 26. This is a proposed target architecture, not a repair of a broken one — the PRD's own verdict is that the current implementation is sound *inside one cell* and has not yet proved it can serve 20 million users.
+**33 tickets, 27 marked done** (some with a single criterion left open and a written reason — read the row). Ticket 33 was raised by the work itself and is not started. Phases 0 and 1 are landed. Phases 2–4 have started: a second cell (`cell-2`) exists, serves organizations and survives a control-plane outage, and placement is automated. **The cold bootstrap fails**, and that is the most important thing this program now knows — see ticket 26. This is a proposed target architecture, not a repair of a broken one — the PRD's own verdict is that the current implementation is sound *inside one cell* and has not yet proved it can serve 20 million users.
 
 **Being "done" here does not mean 20M-ready.** The release rule below is unchanged and unmet: a second cell exists but is not independently resourced and cannot be rebuilt from the committed migration chain, no relocation has been exercised, and the acceptance workload has not been run — there is no load driver, so not one latency objective in the PRD's reliability table has been measured.
 
@@ -89,6 +89,19 @@ The **S** column is the execution session that owns the ticket. The split was ch
 | 30 | S6 | [The workload envelope is a runnable load profile](issues/30-the-workload-envelope-is-runnable.md) | 26 | **partial** · refusal state ENDED — 46 budgets measured, 0 over ceiling; no load driver, so no latency objective measured |
 | 31 | S4 | [Declared degradation is tested, not described](issues/31-declared-degradation-is-tested.md) | — | **done** · 7/8 rows tested; read-replica row ratcheted, not tested (no replica exists) |
 | 32 | S6 | [Unit cost per cell is tracked and forecast](issues/32-unit-cost-per-cell-is-forecast.md) | 27 | **partial** · 1 unit costed from the ledger, 6 measured without a price, 2 unmeasured; no invoice |
+
+### Raised by the work — added 2026-08-28
+
+| # | S | Ticket | Blocked by | Status |
+|---|---|---|---|---|
+| 33 | S7 | [The migration chain rebuilds the database it claims to describe](issues/33-the-chain-rebuilds-the-database.md) | — | ready-for-agent |
+
+Ticket 26 found it and could not fix it inside its own scope: a database built from empty through the
+committed chain differs from the running one by **3,243 objects**, including the 65 tables of the
+accounting/AP/AR/GL/tax model that no migration has ever created. That is the PRD's mistake #13 live,
+and it is what blocks cold bootstrap, cell creation and any trustworthy restore. It is real code work
+rather than an infrastructure wait, so it gets its own session rather than sitting behind ticket 26's
+hardware-blocked criteria.
 
 ## Deliberately not ticketed
 

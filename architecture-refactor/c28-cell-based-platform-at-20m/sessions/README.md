@@ -17,6 +17,11 @@ Paste one line into a fresh session:
 | S4 | `Read architecture-refactor/c28-cell-based-platform-at-20m/sessions/SESSION-4.md and execute it.` |
 | S5 | `Read architecture-refactor/c28-cell-based-platform-at-20m/sessions/SESSION-5.md and execute it.` |
 | S6 | `Read architecture-refactor/c28-cell-based-platform-at-20m/sessions/SESSION-6.md and execute it.` |
+| S7 | `Read architecture-refactor/c28-cell-based-platform-at-20m/sessions/SESSION-7.md and execute it.` |
+
+**S1–S6 have run.** S7 was raised by S6's own findings and is the one still to do — it closes the
+3,243-object gap between the committed migration chain and the running database, which is what blocks
+cold bootstrap, cell creation and disaster recovery.
 
 Each brief points at [`PROTOCOL.md`](PROTOCOL.md) as its first read, and that file is binding. Its §0 is
 the one that matters most: **a session does not stop until every one of its tickets is closed or
@@ -32,6 +37,7 @@ explicitly blocked with a written reason.**
 | [S4 — Production signal and failure behaviour](SESSION-4.md) | 15, 16, 31 | medium | immediately |
 | [S5 — Client contracts and the module registry](SESSION-5.md) | 17, 18, 19 | medium | immediately |
 | [S6 — Cells, relocation, envelope and cost](SESSION-6.md) | 26–30, 32 | medium code + ops | **after S3 lands** |
+| [S7 — The migration chain rebuilds the database](SESSION-7.md) | 33 | large, one ticket | now — S1–S6 have run |
 
 If you run fewer than five at once, start **S2** first — it is the longest and every other session
 finishes around it.
