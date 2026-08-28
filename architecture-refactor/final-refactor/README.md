@@ -36,6 +36,6 @@ Sessions S1-S6 may be opened in parallel. Every session must complete the openin
 | S4 | 04, 10, 19, 20, 23, 33, 38 | ready-for-agent |
 | S5 | 26-29, 34-36 | all seven done (26, 27, 28, 29, 34, 35, 36) |
 | S6 | 22, 37, 39-41 | 22, 40, 41 done · 39 partial (isolation coverage 27%, operator access product-blocked) · 37 blocked on 30-33 |
-| S7 | 11, 42-45 and existing c28-34 | **partial** · c28-34 **done** (6/7, contract half deliberately open). 42 enforcement half done and biting, repair half open (124 chain gaps; cold bootstrap stops at S3's `0628`). 43 code + config gaps closed, instance isolation operator-blocked. 44 drilled and **failed** (RPO 791 min vs 5; RTO unmeasurable). 45 now 13/14 objectives driven, up from 7. 11 blocked on 07/08/09 — its ratchet reads **555** |
+| S7 | 11, 42-45 and existing c28-34 | **partial** · c28-34 **done** (6/7, contract half deliberately open). 42 enforcement half done and biting, repair half open (124 chain gaps; cold bootstrap stops at S3's `0628`). 43 code + config gaps closed, instance isolation operator-blocked. 44 drilled and **failed** (RPO 791 min vs 5; RTO unmeasurable). 45 now 13/14 objectives driven, up from 7. 11 blocked on 07/08/09 — ratchet **555**, true catalog burden **~655** (100 FKs sit on raw-SQL tables the ratchet cannot see) |
 
 Read `sessions/PROTOCOL.md` before any session brief. Use `sessions/CROSS-SESSION.md` for requests outside a session's territory.

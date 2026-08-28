@@ -5,7 +5,8 @@
 **Blocked by:** 07, 08, 09 and 10.
 
 **Status:** blocked — the gate that closes criterion 1 is built, live and measuring; criteria 2–4 have
-nothing to contract until 07/08/09 land
+nothing to contract until 09 lands (07, 08 and 10 closed while this session ran). Ratchet reads **555**; the catalog figure is **~655** and is the
+one that matters
 
 - [ ] Telemetry and repository scans prove no legacy writer or required reader remains.
 
@@ -29,11 +30,23 @@ nothing to contract until 07/08/09 land
   `snapshotLegacyActorTelemetry`) is in `common/observability/` so 07–10 can adopt it with one line per
   site. This criterion closes when the ratchet reads 0 and the runtime `writes` counter reads 0.
 
+  > **555 is a floor, not the migration burden, and the ratchet is structurally blind to the
+  > difference.** `pg_catalog` holds **647** foreign keys to `users.id`; the source scan sees **563**,
+  > so **100 are invisible to it**. They sit on tables created by raw SQL with no Drizzle declaration —
+  > the accounting `ap_*`/`ar_*`/`bank_*` family and the CRM commission set, largely the 65 tables
+  > `0619_chain_creates_what_production_has` created from the catalogue. They are organizational by
+  > name (`created_by`, `posted_by`, `approved_by`, `assignee_id`), so the true burden is closer to
+  > **655**. The ratchet stays source-based because CI has no database, but `pnpm
+  > scan:legacy-actors:catalog` names every invisible column against `pg_catalog` so the gap is a
+  > known quantity rather than a surprise found at contraction time. **Criterion 1 must be judged
+  > against the catalog figure, not the ratchet figure.**
+
 - [ ] Contract migrations remove obsolete columns/constraints without losing audit history.
 
   **Structurally blocked.** Nothing has been migrated off `users.id` yet, so there is no obsolete column
-  to drop. Ticket 06 landed the `OrganizationActor` seam on 2026-08-29 and ticket 10 is implemented;
-  07, 08 and 09 are still open. Unblocks when the ratchet above reaches 0.
+  to drop. Verified 2026-08-29 at session close: 06 done, 07 done, 08 done, 10 implemented, **09 still
+  open** — so the blocker set has shrunk to one ticket while this session ran. Unblocks when 09 lands and
+  the catalog figure reaches 0.
 
 - [ ] Cold bootstrap, upgrade migration and representative domain tests pass.
 
@@ -52,4 +65,5 @@ nothing to contract until 07/08/09 land
 Three of four criteria are impossible today and saying so is the correct result, not a shortfall. What
 was buildable without entering 07–10's territory is the *evidence mechanism* those criteria will be
 judged by — and building it first means the contraction, when it happens, is measured rather than
-asserted. The 555 figure is the distance left to travel, and it is now tracked automatically.
+asserted. The distance left to travel is the ~655 catalog figure, of which 555 is tracked automatically
+and 100 is named by `scan:legacy-actors:catalog` but cannot be ratcheted without a database in CI.

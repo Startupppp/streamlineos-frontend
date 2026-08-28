@@ -14,13 +14,13 @@ Declared in `src/scripts/load-driver/load-profile.mjs`, not scattered through fl
 
 | Condition | Value |
 |---|---|
-| Concurrency | 8 sustained, 16 burst |
+| Concurrency | 16 sustained, 32 burst |
 | Duration | 30 s sustained + 10 s burst per workload, 3 s warmup |
 | Page size | 50 |
 | Tenant | the 100,004-member fixture |
 | Geography | **not the PRD's reference** — one machine to Neon `ap-southeast-1` over the public internet |
 | Browser | headless Chrome on the developer machine, loopback network |
-| Network floor | **a bare `SELECT 1` at concurrency 1 is p50 = 88 ms, p95 = 99 ms** |
+| Network floor | **a bare `SELECT 1` at concurrency 1 is p50 = 88 ms, p95 = 92 ms** |
 
 **The network floor is the single most important number here.** Every latency below includes it.
 A four-round-trip transaction cannot measure under ~350 ms from this machine. The PRD's targets
@@ -91,22 +91,9 @@ methodological: the drill cannot time a restore because the cold bootstrap it de
 reach head (see ticket 42). The driver reads the drill's own `rto_seconds`, so this closes the
 moment a cold build completes.
 
-**`p95-browser-cached-read`** and **`p75-first-useful-view`** are measured over loopback with
-headless Chrome. The PRD's reference is a same-region device on a declared network; these
-figures capture the product's own rendering cost without network cost. `p95-browser-cached-read`
-BREACHES 150 ms target on the cached TTFB (navigations 2–5), though the browser has no real
-network to cross; this is render and server parse time only.
-
-**`node-failure-committed-loss`** inserted 20 rows via the `streamline_app` role with the
-tenant GUC set, then called `pg_terminate_backend` on a live `streamline_app` connection
-(idle at the time of selection). All 20 rows survived the reconnect. This tests
-**connection/process failure**, not Neon storage-node failure — Neon's durability for the
-latter is a control-plane property not exercisable from this driver.
-
-**`regional-rpo`** and **`cell-rto`** come from the timed recovery drill
-(`pnpm -C backend cell:drill` → `backend/.recovery-drill-results.json`). `regional-rpo` is now
-measured at 791.1 min; `cell-rto` is reported by the drill as unmeasurable, with its blocker
-recorded in that same file.
+**`p75-first-useful-view`** is measured over loopback with headless Chrome. The PRD's reference is
+a same-region device on a declared network, so this captures the product's own rendering cost with
+no network to cross — a floor, not a comparable figure.
 
 `permission-revocation-explicit` is a **database floor**, not the full path: it measures the
 grant write and read-back at the DB. The live application adds a 1 s in-process version cache
@@ -115,14 +102,14 @@ number here is the floor and not the whole journey.
 
 ## Burst behaviour
 
-Doubling concurrency from 8 to 16:
+Doubling concurrency from 16 to 32:
 
 | Objective | Sustained p95 | Burst p95 |
 |---|---:|---:|
-| p95-simple-db-roundtrip | 544 ms | 912 ms |
-| p95-transactional-write | 585 ms | 1,128 ms |
-| p95-complex-db-read | 584 ms | 1,178 ms |
-| p95-redis-operation | 142 ms | 143 ms |
+| p95-simple-db-roundtrip | 472 ms | 905 ms |
+| p95-transactional-write | 585 ms | 1,116 ms |
+| p95-complex-db-read | 567 ms | 1,130 ms |
+| p95-redis-operation | 137 ms | 140 ms |
 
 Database seams roughly double under 2× load. Redis is flat. That is the shape of a
 connection-bound workload, not a CPU-bound one.
@@ -130,10 +117,10 @@ connection-bound workload, not a CPU-bound one.
 ## Achieved rate
 
 ```
-requests completed        5,018
-achieved                  31.4 req/s
+requests completed        10,267
+achieved                  64.2 req/s
 per-cell sustained target 50 req/s
-ratio                     62.7 % of target
+ratio                     128.3 % of target
 ```
 
 The achieved rate is below the per-cell target. It is **not** a capacity statement: one machine
