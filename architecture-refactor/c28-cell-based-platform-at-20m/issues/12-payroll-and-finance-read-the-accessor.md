@@ -30,6 +30,19 @@ Second migrate batch. It is separate from batch 1 because it is the batch where 
 
   `team-rewards.loadDirectReports` also carried a **pre-existing cross-tenant read** — it selected by `users.reportingTo` with no `orgId` at all, so a manager in one organization matched direct reports in every other. The accessor's `getDirectReportUserIds(orgId, managerUserId)` is org-scoped, so migrating it closes that hole; `assertDirectReport` is now org-scoped for the same reason.
 
+  **A third defect — a P0 — was found at final review and is the reason this criterion nearly shipped wrong.** The statutory PAN resolution in `filings/filings.service.ts` was reduced from
+
+  ```ts
+  const pan = resolveStatutoryTaxId(sens?.taxId, sens?.panNumber, e.taxId);   // before
+  const pan = payee?.taxId ?? null;                                            // after
+  ```
+
+  `hr_employee_sensitive_fields.pan_number` is a **separate live column** (`db/schema/hr/core-people.ts:214`, written by `hr/core/hr-sensitive.service.ts:137`), and the accessor never selected it. Every employee whose PAN is stored there — rather than in `tax_id` — would have emitted `pan = null` into TDS-24Q and Form 16. A missing PAN is a rejected statutory filing, not a cosmetic gap.
+
+  The tell was a **green test guarding dead code**: `filings-tax-id.spec.ts` still asserted the PAN fallback (`resolveStatutoryTaxId(null, "CANONICAL-PAN", …) === "CANONICAL-PAN"`) while nothing in production called the function any more. A passing test for an uncalled function is evidence of a dropped call site.
+
+  Fixed: `panNumber` now flows `hr_employee_sensitive_fields` → `SensitiveEmploymentFacts` → `PayrollPayeeDetails` → `resolveStatutoryTaxId`, decrypted through `readSensitive` exactly as `taxId` is. `resolveStatutoryTaxId` lost its third parameter — the legacy `users.taxId` arm — because its source column no longer exists, and its spec now tests the live two-source contract.
+
 - [x] `bankDetails` and `taxId` are stored under application-level envelope encryption with an auditable key reference, and the encryption **fails closed**.
 
   `common/security/envelope-encryption.ts` — a per-record AES-256-GCM data key, wrapped by a KEK behind a `KeyProvider` interface; the key id travels inside the ciphertext (`enc:v2:<keyId>:<wrappedDek>:<body>`) and is also denormalised onto `hr_employee_sensitive_fields.encryption_key_ref` for rotation audits. `EnvKeyProvider` reads `ENCRYPTION_KEY` as `kek:v1` and `ENCRYPTION_KEY_V<n>` as `kek:v<n>`; the highest configured version encrypts and every configured version still decrypts, so rotation is additive. A KMS provider drops in behind the same interface without touching a call site or a stored ciphertext.
@@ -50,6 +63,12 @@ Second migrate batch. It is separate from batch 1 because it is the batch where 
     √ refuses a value that was never encrypted (7 ms)
   Tests:       15 passed, 15 total
   ```
+
+  **One fail-open path survived that suite and was closed at review.** `readBankDetails` threw on every decryption failure but returned `null` when decryption *succeeded* and the plaintext failed `bankDetailsDecodeSchema` — so a bank record corrupted or written in a stale shape read as "this employee has no bank details on file", which on a payout path means a real account number silently vanishing rather than a run stopping. It now throws, and `employment-facts.service.spec.ts` pins it (`refuses to return a bank record it cannot decrypt`). The three live rows carrying real bank data were already proved to round-trip by ticket 09's reconciliation (`disagreements: 0` comparing decrypted content), so the stricter behaviour rejects nothing that exists today.
+
+  Also tightened: `encryptEnvelope` now wipes its data key in a `finally` rather than on the success path only, matching `decryptEnvelope`, which already did.
+
+  `bankDetailsEqual` was **deleted** — ticket 14 retired its only caller (the reconciliation service), and it compared with `JSON.stringify`, which is key-order sensitive and would have been a latent defect for any future caller.
 
   Schema change applied and verified in `pg_catalog`, not by the runner's exit code:
 

@@ -737,3 +737,94 @@ above: a gate moving ahead of the authorization check turns every RBAC assertion
 red-for-the-wrong-reason.
 
 **Blocking or not:** not blocking me — nothing in these five touches this session's eight tickets.
+
+---
+
+## 2026-08-28 · S5 → whoever owns the timesheets schema · `uniq_timesheets_work_log` is stricter than the index it replaced
+
+**What I need:** a decision on which predicate the one-entry-per-day rule is supposed to have, and the
+schema line changed if the answer is the looser one.
+
+**Why:** ticket 19's gate 3 required every declared index to exist in `pg_catalog`. Migration
+`0616_timesheets_declared_indexes_exist.sql` creates the 11 that were missing, so the gate is green — but one
+of the 11 tightens what the database accepts. `entries.ts:72` declares
+`.where(sql\`ticket_id IS NULL\`)`, while the index the database already carried,
+`uniq_timesheets_day_blank`, predicates on `ticket_id IS NULL AND project_id IS NULL AND voided_at IS NULL`.
+So the declared form also forbids a second same-day entry when the first carries a project, and when the
+first has been **soft-voided** — and `voided_at` is live, filtered with `isNull` throughout
+`core/approvals.service.ts` and `core/billing.service.ts`.
+
+**Evidence it is safe today:** across 150,150 rows,
+`SELECT org_id, user_id, date FROM timesheets WHERE ticket_id IS NULL GROUP BY 1,2,3 HAVING count(*) > 1`
+returns 0 groups. The strict rule already holds in the data. The exposure is future writes: void an entry,
+re-log the same day, and the insert fails.
+
+**Where I think it lives:** `src/db/schema/timesheets/entries.ts:72`. If the looser rule is intended the fix
+is that line — `.where(sql\`ticket_id IS NULL AND voided_at IS NULL\`)` — followed by a migration that
+recreates the index. Do not "fix" it by deleting the index; gate 3 will then go red again.
+
+**Also:** three undeclared pre-rename indexes survive on `timesheets` — `idx_timesheets_user_date`,
+`uniq_timesheets_day_blank`, `uniq_timesheets_day_project`. I left them: gate 3 only asserts that declared
+indexes exist, and `uniq_timesheets_day_blank` is the very predicate the question above may restore.
+
+**Blocking or not:** not blocking. All four gates pass and no criterion is left open on it.
+
+---
+
+## 2026-08-28 · S5 → every session that owns a money or stock mutation · a per-call idempotency key does not survive a retry
+
+**What I need:** on the mutations that move money or stock, pin the `Idempotency-Key` for the life of the
+user's attempt instead of letting the transport default generate one.
+
+**Why:** ticket 18's criterion is "a client retry after a timeout does not double-charge". The fence is real
+and enforced — `IdempotencyInterceptor` rejects a request with no key, and `api-client.ts:150-153` makes sure
+every authenticated mutating request carries one, so nothing is broken today. But that default calls
+`newIdempotencyKey()` per **transport call**. A TanStack Query retry re-invokes the mutation function, which
+produces a **new** key, so the second attempt claims a different fence and the command runs twice. The fence
+therefore protects against a duplicate of the same in-flight request, not against the retry the criterion names.
+
+**Where I think it lives:** the pattern that already works is
+`features/payroll/payout/bank-transfers/batches-table.tsx:46` (key held in `useState`) and
+`features/timesheets/billing/billing-export-dialog.tsx:72` (`useMemo`). A call site that writes
+`crypto.randomUUID()` inline — for example `hooks/api/hr/employees.ts:285` — gets no more protection than the
+default it replaced.
+
+**Scale:** 221 fenced operations, 143 frontend call sites reach one, 7 set a header themselves. I did not
+sweep the other 136: pinning a key is a per-mutation decision about what counts as "the same attempt", and
+136 call sites span every module's territory.
+
+**Blocking or not:** not blocking, and nothing is broken. Ticket 18's box is ticked with this limit written
+beside it rather than left implied.
+
+## S2 → S1/S3: `RegionRegistry` fails closed on every e2e fixture org
+
+Nine e2e tests across `src/me/me.e2e-spec.ts` and
+`src/modules/hr/onboarding/core/onboarding.controller.e2e-spec.ts` return 500 instead of their expected
+status. The cause is not the handler: `RegionRegistry.resolvePlacement`
+(`common/region/region-registry.ts:251`) throws *"[region] organisation org_1 has no region. It must be
+placed before its data can be reached"* from inside `TenantContextInterceptor.runInTenantTransaction`, so
+the request dies before reaching any controller.
+
+Fixture orgs (`org_1`, `org_3`) have no `organization_placement` row. `test/helpers/e2e-app.ts` calls
+`setRegionRegistry`, so suites built through `createE2eApp` are mostly fine — `me.e2e-spec.ts` builds
+`Test.createTestingModule({ imports: [AppModule] })` directly and gets the real registry.
+
+`common/region` and `common/tenant` are S2's declared non-territory, so this is reported, not edited. The
+fix is either a placement row per fixture org or routing these two suites through the shared harness.
+**Verified unrelated to the users-table split:** zero of the nine failures mention any employment column.
+
+## S2 → S1: `moduleAvailability` rename left five payroll e2e suites dead (fixed)
+
+`refactor(access): centralize module availability callers` (`94fffb7c`, 2026-08-26) moved `ModuleGuard`
+onto `accessSvc.moduleAvailability` and `authorize()` onto `buildModuleAvailabilityResolver` /
+`getModuleState` / `scopeFor`. Five payroll suites and the onboarding suite override `AccessService` with a
+narrow `{ resolveUserPermissions, isModuleEnabled }` literal, so every request 500'd with
+*"this.accessSvc.moduleAvailability is not a function"* — **154 failing tests that had been proving nothing
+since 2026-08-26.**
+
+Fixed in S2's own territory: new `test/helpers/access-stub.ts` exports `withAccessResolution(stub)`, which
+adds the three methods and derives `scopeFor`/`holds` from the stub's own permission map so the
+forbidden/view-only variants still deny. All six payroll e2e suites now pass 252/252.
+
+**If you rename a method `ModuleGuard` or `authorize()` calls, grep for narrow `AccessService` doubles** —
+they are literals, not the shared harness, and a missing method reads as a 500, not a type error.

@@ -21,6 +21,25 @@
   getSensitiveFactsBatch(orgId, userIds) -> Map<userId, SensitiveEmploymentFacts>
   ```
 
+  **It shipped with no unit spec at all, which is why the two defects below survived to final review.** `employment-facts.service.spec.ts` now exists — 13 tests, and six of them assert the *generated SQL* rather than a mocked return value, by capturing each join/where condition and rendering it through `PgDialect.sqlToQuery` (a captured Drizzle condition is circular, so `JSON.stringify` throws — this is the only way to read one). That is what makes them regression tests for the predicates rather than restatements of the mock:
+
+  ```
+  √ excludes a soft-deleted manager from the resolved reporting line
+  √ excludes a soft-deleted manager when listing direct reports
+  √ bounds the reporting line on both sides so a future-dated line is not current yet
+  √ scopes every join and filter to the requested organization
+  √ issues no query for an empty batch
+  √ refuses to return a bank record it cannot decrypt
+  Tests: 13 passed, 13 total
+  ```
+
+  **Two real defects it now pins:**
+
+  - **A terminated manager kept managing.** The subject's own `hr_people`/`hr_employments` joins filtered `deletedAt IS NULL`; the two *manager* aliases did not. A manager whose employment was soft-deleted while their reporting line stayed open was still returned as `managerUserId` — and `getDirectReportUserIds` still returned their reports, so anything gating a manager's view of a subordinate's data answered yes for a former employee. `syncCanonicalReportingLine`'s write path had the filter all along; only the read side was missing it.
+  - **A future-dated manager change took effect immediately.** Both reads selected the open line with `effectiveTo = 'infinity'`, ignoring `effectiveFrom`. Because `syncCanonicalReportingLine` accepts a future `effectiveFrom` and closes the *current* line at the day before it, a change scheduled for next month made the new manager current the moment it was recorded. Both sites now use `effectiveFrom <= CURRENT_DATE AND effectiveTo >= CURRENT_DATE`, which is the bound `currentManagerEmploymentId` already used — the read side simply disagreed with the writer. The `employee-reporting-line-lookup` read budget was updated to the same predicate so it measures the query the code issues.
+
+  Also fixed: both batch reads now `ORDER BY hr_employments.id`, so if a data defect ever leaves two employments marked primary for one person the last-write-wins map resolves deterministically instead of by physical row order. There is no unique index enforcing one primary employment — confirmed against `pg_indexes`.
+
 - [x] It reads the canonical tables first and the `users` columns only as fallback, and every fallback hit increments a counter that is visible in the drift dashboard.
 
   Decision logic extracted to a pure seam, `modules/directory/employment-fact-resolution.ts`, so the rule is testable without a database. Counter in `employment-fallback-counter.ts`, read with `snapshotEmploymentFallbacks()` and by `pnpm report:employment-drift`.

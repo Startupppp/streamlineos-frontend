@@ -18,12 +18,33 @@ Third and last migrate batch: everything outside HR, directory, onboarding, payr
 
   **The first attempt did not satisfy this criterion and was sent back.** It implemented every site as `COALESCE(hr_employments.x, users.x)` — a dual-read, not a migration. Fifteen sites still named a legacy column, so the count was fifteen, not zero; ticket 14 would have broken all fifteen at runtime; and because a raw-SQL COALESCE bypasses the accessor, the fallback counter would have read zero while fifteen live readers still depended on the dropped columns. A false gate is worse than no gate. The second pass removed every legacy arm.
 
-  Proof beyond grep:
-  - `npx madge@8 --circular --extensions ts src` → `✔ No circular dependency found!`
-  - `pnpm exec knip --no-progress` → none of the accessor or migration files reported unused; the 9 unused files it lists are pre-existing and belong to other modules.
-  - `pnpm build` → exit code 0, measured after the reader migration and before the ticket-14 contraction.
+  **This criterion was ticked prematurely and is now genuinely met. The correction is the important part.**
 
-  The build was **not** re-run after ticket 14 dropped the columns, because you barred typechecks and builds for the remainder of the session. That half of the criterion rests on the run above plus the fact that `NestFactory.createApplicationContext(AppModule)` reaches `BOOT OK`.
+  It was closed on grep plus `BOOT OK`, because typechecks were barred for the rest of the session. When the ban was lifted at review time, `tsc --noEmit` found **twelve more files still naming a dropped column** — none of which grep for `users.designation` finds, because they name the column as a *relational projection key* (`with: { user: { columns: { designation: true } } }`) or destructure it off a row (`const { bankDetails, taxId } = user`). `BOOT OK` cannot see them either: they are runtime query shapes, not DI edges.
+
+  | File | What it still named |
+  |---|---|
+  | `me/me.service.ts` | read **and wrote** `users.bankDetails` / `users.taxId` |
+  | `modules/auth/auth.service.ts` | `branchId` in the cached session payload |
+  | `modules/cron/cron-leave.service.ts` | `joiningDate` for annual leave proration |
+  | `modules/users/user-profile.service.ts` | **wrote** `reportingTo` / `branchId` / `orgDepartmentId` |
+  | `hr/directory/background-verification.service.ts` | `designation`, `employeeId` |
+  | `hr/directory/team-events.service.ts` | `designation` |
+  | `hr/lifecycle/termination.service.ts` | `designation`, `joiningDate` |
+  | `hr/lifecycle/termination-communications.service.ts` | `designation` ×2 (letter + email) |
+  | `hr/policies/hr-policy-evaluation.service.ts` | `designation`, `branchId` |
+  | `hr/time/leaves.service.ts` | `designation` |
+  | + 2 spec files | constructor arity |
+
+  Two were **writes**, so they did not merely read stale data — they would have thrown at runtime on the dropped column. `PATCH /me/profile` with bank details and `PATCH` of a member's placement were both broken.
+
+  All twelve are migrated. The count is now zero, proved by:
+  - `NODE_OPTIONS=--max-old-space-size=12288 pnpm exec tsc --noEmit` → **only 3 errors remain, all in other sessions' territory** (`modules/kb/article-conversion`, `modules/organization/core/lifecycle/organization-placement-admin.service.spec.ts` — the latter staged by another session).
+  - `pnpm -C frontend exec tsc --noEmit` → **exit 0, zero output.**
+  - `npx madge --circular --extensions ts backend/src` → `✔ No circular dependency found!` after the new module wiring.
+  - `NestFactory.createApplicationContext(AppModule)` → `BOOT OK`.
+
+  **Method note worth keeping:** an earlier run of this same typecheck was reported as passing because the command was `tsc --noEmit | tail -40; echo "EXIT=$?"` — `$?` there is `tail`'s exit code, not `tsc`'s, so a 36-error run printed `EXIT=0`. Redirect to a file and test the exit code before the pipe.
 
 - [ ] The API responses that carried employment on a user payload no longer do, under a declared version.
 
@@ -39,7 +60,9 @@ Third and last migrate batch: everything outside HR, directory, onboarding, payr
 
 - [ ] The frontend types are updated in the same change.
 
-  Follows from the criterion above: no response key was removed, so no frontend type needed changing. `frontend/hooks/api/users/types.ts` still declares `designation`, `departmentId`, `branchId`, `reportingTo` on `User`, and those fields are still populated — from the organization's record. `pnpm -C frontend exec tsc --noEmit` was clean when last run; note that the frontend `tsconfig` excludes tests, so that never proved the frontend tests compile.
+  Follows from the criterion above: no response key was removed, so no frontend type needed changing. `frontend/hooks/api/users/types.ts` still declares `designation`, `departmentId`, `branchId`, `reportingTo` on `User`, and those fields are still populated — from the organization's record. `pnpm -C frontend exec tsc --noEmit` exits 0 with no output; note that the frontend `tsconfig` excludes tests, so that does not prove the frontend tests compile.
+
+  **One key was removed after all, and it is not a payload key.** `getUserSession` carried `branchId` on the cached session object under `CACHE_KEYS.userSession(userId)` — an organization-scoped fact in a **user-scoped** cache key, so switching organizations would have served the previous organization's branch. It has **zero readers** in either repo (searched both for `branchId`; every hit is hierarchy forms, filters or an unrelated worker fixture). Removed rather than given an invented organization context.
 
 - [x] Exports, search projections and notification templates either read the accessor or drop them deliberately, with the drop recorded.
 
