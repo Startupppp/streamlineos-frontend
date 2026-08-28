@@ -104,30 +104,39 @@ exit=1
 
 This is the third time in this program a CI check under-reported on its first run. The lesson held.
 
-## Known limits of this guard (red-teamed 2026-08-28)
+## Red-teamed, then hardened (2026-08-28)
 
-A red-team was pointed at the check and told to break it. It did. These are recorded rather than hidden, because the criterion says *"every path"* and that claim is currently stronger than the implementation. Each was demonstrated with a real file and an exit code of 0.
+A red-team was pointed at the check and told to break it. It found **eight evasions**, each demonstrated with a real file and exit code 0. All eight are now closed, and each is pinned by a named self-test case so it cannot silently reopen.
 
-**Text-scanner evasions — fixable, not yet fixed:**
+| Evasion | Why it slipped through | Self-test now pinning it |
+|---|---|---|
+| **`forEachOrg(this.db, "(", …)`** — the worst | `balanced()` was not string-aware, so a `(` inside a string argument inflated the depth counter and the "guarded region" swallowed code that was actually *outside* the guard | `balancedIgnoresParenInsideString` |
+| a cron-like service outside `src/modules/cron/**` | `isCron` was a path literal; now `@Cron(` / `@Interval(` count too | `cronDetectedOutsideCronFolder` |
+| `this.db?.select()` | the regex required a bare `.` | `optionalChainingDetected` |
+| `import { withIdentity as wi }` | the scanner searched for the literal string | `aliasedWithIdentityDetected` |
+| `@NoTenantTransaction( )` with a space | exact-string `includes()` | `spacedDecoratorDetected` |
+| an aliased decorator import | same | `aliasedDecoratorDetected` |
+| annotation in a mid-line comment (false positive) | only lines *starting* with `//` were skipped | `annotationInCommentNotFlagged` |
+| `this.db` in a comment inside a hook body (false positive) | no comment awareness | `afterCommitDbCommentNotFlagged` |
 
-| Evasion | Why it slips through |
-|---|---|
-| `const db = this.db; db.select()` | the regex requires the literal `this.db` prefix |
-| `const { db } = this;` | same |
-| `this.db?.select()` | the regex requires a bare `.`, not `?.` |
-| `this.db["select"]()` | dot access only |
-| `import { withIdentity as wi }` | the scanner searches for the literal string `withIdentity(` |
-| `@NoTenantTransaction( )` with a space, or an aliased decorator | exact-string `includes()` |
-| a cron-like service outside `src/modules/cron/**` | `isCron` is a path literal |
-| **`forEachOrg(this.db, "(", …)`** | `balanced()` is not string-aware, so a `(` inside a string argument inflates the depth counter and the "guarded region" swallows code that is actually outside the guard — **the most dangerous of these** |
+Verified independently of the author — the three most dangerous rebuilt from scratch and re-run:
 
-**Not fixable by text scanning at all — documented, not attempted:**
-- `registerAfterCommit(() => this.doDbWork())` where the database access lives in a *called method*. Needs call-graph analysis.
-- a closure defined inside a guard block but invoked later (`process.nextTick(fn)`) — textually inside, executes outside.
+```
+  cron direct db         3
+  FAIL  [cron-bypass]  …/src/modules/cron/cron-optional.service.ts:3
+  FAIL  [cron-bypass]  …/src/modules/cron/cron-string.service.ts:4
+  FAIL  [cron-bypass]  …/src/modules/scheduler/sweep.service.ts:4
+FAIL — 3 of 3 bypass site(s) not on the allowlist.
+EXIT=1
+```
 
-**False positives** in the same family: an annotation inside a mid-line comment or a string literal is flagged, because no scanner here is string- or comment-aware.
+Hardening surfaced **no new real sites** — the tree stays at 74, exit 0.
 
-The honest summary: this guard is materially stronger than the one it replaced — 40 → 74 enumerated sites, and it now catches the partial-guard shape that hid 31 real cron sites — but it is a **text scanner**, and the list above is what that costs. It raises the floor; it is not a proof. Hardening it (string-aware `balanced()`, alias resolution, `@Cron(` detection) is the next increment and is the single highest-value follow-up on this ticket.
+**Two limits remain and cannot be closed by text scanning.** Both are now written into the script's own header so the next reader meets them before trusting it:
+- `registerAfterCommit(() => this.doDbWork())` where the database access lives in a *called method* — needs call-graph analysis.
+- a closure defined inside a guard block but invoked later (`process.nextTick(fn)`) — textually inside the guard, executes outside it.
+
+The honest summary: 40 → 74 enumerated sites, the partial-guard shape that hid 31 real cron sites now caught, and eight demonstrated evasions closed. It is still a text scanner, and the two limits above are what that costs — it raises the floor very substantially, but it is not a proof.
 
 ## Todo
 
