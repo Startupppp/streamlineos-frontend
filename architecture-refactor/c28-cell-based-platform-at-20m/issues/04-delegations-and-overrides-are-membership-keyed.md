@@ -44,11 +44,16 @@ user_module_access.user_id      text  nullable=NO
 
 ## Todo
 
-- [ ] Expand first: add the membership columns nullable, backfill, then make them `NOT NULL` — one migration that does all three takes a long `ACCESS EXCLUSIVE` lock.
-- [ ] Set `lock_timeout` at the top of each migration so it fails fast rather than queueing behind a reader.
-- [ ] Journal every migration file. A `.sql` absent from `meta/_journal.json` never applies and `db:migrate` reports success anyway.
-- [ ] `VACUUM ANALYZE` after any rewrite — the stats and the visibility map do not survive one.
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+- [x] Expand first: add the membership columns nullable, backfill, then make them `NOT NULL` — one migration that does all three takes a long `ACCESS EXCLUSIVE` lock.
+  0611 adds nullable and backfills; 0612 enforces NOT NULL and installs the foreign keys; 0613 (written, unapplied) drops the legacy columns.
+- [x] Set `lock_timeout` at the top of each migration so it fails fast rather than queueing behind a reader.
+  Every migration opens with `SET lock_timeout = '5s'`. NOT NULL is done as `CHECK ... NOT VALID` -> `VALIDATE` -> `SET NOT NULL` -> drop the check, and each foreign key as `NOT VALID` -> `VALIDATE`.
+- [x] Journal every migration file. A `.sql` absent from `meta/_journal.json` never applies and `db:migrate` reports success anyway.
+  All five are in `migrations/meta/_journal.json` (idx 331-335), appended after re-reading it, never reordered.
+- [x] `VACUUM ANALYZE` after any rewrite — the stats and the visibility map do not survive one.
+  Not needed and deliberately omitted: `ADD COLUMN` with no default and `DROP COLUMN` are metadata-only in Postgres, so no table is rewritten. `VACUUM` also cannot run inside the migrator's transaction, so including it would have failed the migration outright.
+- [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+  Status is `in-progress`; the README row says the same. The contract step is written and journalled but not applied - see the criterion above.
 
 ---
 

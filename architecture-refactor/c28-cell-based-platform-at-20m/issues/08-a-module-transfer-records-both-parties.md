@@ -29,9 +29,12 @@ fk_ownership_transfers_initiator   ownership_transfers   ondelete=r
 
 ## Todo
 
-- [ ] Read the existing acceptance path before adding fields — the bug may be one predicate reading the wrong column rather than a missing column.
-- [ ] Cover the concurrent case: two transfers initiated for the same module, one accepted; the second must fail on its expected-owner check, not overwrite.
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+- [x] Read the existing acceptance path before adding fields — the bug may be one predicate reading the wrong column rather than a missing column.
+  Read first, and the ticket's suspicion was half right: one predicate did read the wrong column, but the column it should have read did not exist, so the field was genuinely missing as well.
+- [x] Cover the concurrent case: two transfers initiated for the same module, one accepted; the second must fail on its expected-owner check, not overwrite.
+  Covered: two transfers for the same module, one accepted, the second failing its expected-owner check rather than overwriting. The conditional `status = 'PENDING'` update plus `ConflictException` is the guard.
+- [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+  Status set; README row updated.
 
 ---
 

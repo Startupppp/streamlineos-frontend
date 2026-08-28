@@ -51,6 +51,24 @@ The shed order is data with an explicit numeric rank, and admission thresholds a
 
 Refusal is a 503 carrying a `Retry-After` header and a machine-readable `retryAfterSeconds` in the body. The refused path never increments the in-flight counter, so a shed request consumes nothing.
 
+**Proved over real HTTP through real Nest dependency injection, not against mocks.** A global `APP_GUARD` is the highest-blast-radius thing that can be added to this application — if it cannot be constructed, every route fails, and unit tests with hand-made `ExecutionContext` doubles would never show it. `admission-boot.spec.ts` stands up a real Nest application containing `AdmissionModule`, the guard and the interceptor, with the same CORS-then-body-parser ordering `main.ts` uses, and drives it with `supertest`:
+
+```
+$ node ./node_modules/jest/bin/jest.js src/common/admission/admission-boot.spec.ts
+  admission control resolves through real Nest DI and serves real HTTP
+    √ boots, which is what proves the guard and interceptor are constructible
+    √ admits an ordinary request and returns the handler's response
+    √ returns the in-flight count to zero after a served request
+    √ answers an oversized body with 413 that still carries its CORS header
+    √ leaks no in-flight slot when the body parser rejects before the guard
+  admission control sheds over real HTTP
+    √ refuses a sheddable route with 503 and retry information once saturated
+    √ serves the reserved route again as soon as capacity is released
+Tests:       7 passed, 7 total
+```
+
+**Why this rather than booting the whole API:** the application currently **cannot start**. `pnpm build` is clean, but `dist/main.js` exits during `NestFactory.create` with `UnknownExportException: Nest cannot export a provider/module that is not a part of the currently processed module (HrCoreModule) … EmploymentFactsService`. That is c28 Session 2's in-flight work, not this ticket's; it is recorded in `sessions/CROSS-SESSION.md`. Standing up a real application module containing only the admission seam answers the same question for this ticket without waiting on it.
+
 - [x] Every ingress has a bounded concurrency, queue depth, body size, execution time and per-organization cost, each with a number rather than a default.
 
 | Bound | Env | Default | Where the number comes from |
@@ -66,7 +84,9 @@ Refusal is a 503 carrying a `Retry-After` header and a machine-readable `retryAf
 
 - [x] The rate-limit fallback test accounts for the dev multiplier and for the fail-open tier gap, or it proves nothing.
 
-Both traps handled, and both turned out to be already-closed in the source — verified rather than assumed. `RateLimitService.check` now **denies** an unknown tier (deny-by-default), and all 24 `@UseRateLimit` decorator keys have a `TIERS` entry, so the fail-open gap does not currently exist. The tests use `effectiveRateLimit(tier)` rather than the declared limit, so `DEV_LIMIT_MULTIPLIER`'s ×10 outside production cannot make them pass for the wrong reason. 19 tests.
+Both traps handled, and both turned out to be already-closed in the source — verified rather than assumed. `RateLimitService.check` now **denies** an unknown tier (deny-by-default), and all 24 `@UseRateLimit` decorator keys have a `TIERS` entry (counted directly: 24 unique decorator keys, 24 present in `TIERS`), so the fail-open gap does not currently exist. The tests use `effectiveRateLimit(tier)` rather than the declared limit, so `DEV_LIMIT_MULTIPLIER`'s ×10 outside production cannot make them pass for the wrong reason.
+
+Coverage, counted rather than estimated: `src/degradation/redis.spec.ts` is 12 tests across the cache and rate-limit fallback paths, and `src/common/ratelimit` is a further 13.
 
 ## Todo
 

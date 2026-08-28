@@ -25,10 +25,14 @@
 
 ## Todo
 
-- [ ] Enumerate every input to the snapshot that has a time component before writing the cap — a `valid_until` that misses one source is worse than no cap, because it looks correct.
-- [ ] Inject the clock; a temporal test that sleeps is flaky and will be deleted by someone later.
-- [ ] Keep `PERMS_CACHE_TTL_MS` as the ceiling, not the rule — it stays as the upper bound when no transition is pending.
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+- [x] Enumerate every input to the snapshot that has a time component before writing the cap — a `valid_until` that misses one source is worse than no cap, because it looks correct.
+  Enumerated from the schema before writing the cap: exactly three columns carry time. Every other grant source has no time column at all.
+- [x] Inject the clock; a temporal test that sleeps is flaky and will be deleted by someone later.
+  `Clock` is a constructor parameter on `AccessPermissionResolver` and a field on `AccessService`. No test sleeps or uses fake timers.
+- [x] Keep `PERMS_CACHE_TTL_MS` as the ceiling, not the rule — it stays as the upper bound when no transition is pending.
+  Kept as the ceiling. `snapshotValidUntil` returns `now + ceiling` when no transition is pending, and the transition instant only when it is sooner.
+- [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+  Status set; README row updated.
 
 ---
 

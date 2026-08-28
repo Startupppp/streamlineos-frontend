@@ -19,6 +19,8 @@
     "check:formatters": "node scripts/check-no-local-formatters.mjs",
     "check:empty-states": "node scripts/check-no-handrolled-empty-states.mjs",
     "check:icon-labels": "node scripts/check-no-unlabeled-icon-buttons.mjs",
+    "check:query-scope": "node scripts/check-query-scope.mjs",
+    "check:query-scope:self-test": "node scripts/check-query-scope.mjs --self-test",
     "check:properties": "node scripts/check-no-business-routes.mjs && node scripts/check-no-arbitrary-colors.mjs && node scripts/check-no-effect-fetches.mjs && node scripts/check-no-unlabeled-icon-buttons.mjs && npx --yes madge@8 --circular --ts-config tsconfig.json --extensions ts,tsx --exclude \"node_modules|\\.next|feedbucket-widget\" ."
   },
   "dependencies": {

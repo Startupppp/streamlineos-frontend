@@ -25,9 +25,12 @@
 
 ## Todo
 
-- [ ] Enumerate what the code does today before deciding what it should do; the current behaviour is the specification of the bugs.
-- [ ] Watch for the inverse defect — an operation gated on the owner that has no business being, which locks a large organization out of its own administration.
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+- [x] Enumerate what the code does today before deciding what it should do; the current behaviour is the specification of the bugs.
+  Enumerated first: ten operations legitimately owner-only, and seven gated on the owner that should not have been.
+- [x] Watch for the inverse defect — an operation gated on the owner that has no business being, which locks a large organization out of its own administration.
+  This was the larger half of the ticket. Seven inverse defects were found and demoted, four of which had error messages that already said "admins" while the check demanded the owner.
+- [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+  Status set; README row updated.
 
 ---
 

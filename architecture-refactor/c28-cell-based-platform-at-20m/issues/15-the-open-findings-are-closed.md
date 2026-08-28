@@ -114,11 +114,11 @@ $ node ./node_modules/jest/bin/jest.js src/unregistered-injectables.spec.ts \
     src/modules/rbac/dto/list-roles-query-schema.spec.ts \
     src/modules/csat src/modules/party src/modules/tasks
 
-Test Suites: 1 failed, 3 skipped, 22 passed, 23 of 26 total
-Tests:       2 failed, 23 skipped, 310 passed, 335 total
+Test Suites: 3 skipped, 23 passed, 23 of 26 total
+Tests:       23 skipped, 314 passed, 337 total
 ```
 
-The one failing suite is `src/modules/party/legacy-reader-ratchet.spec.ts`, and it is **not this ticket's**. It scans the whole `src/**` tree through `git ls-files` and reads `eslint.config.mjs`; its own comment says "another session is mid-refactor in this tree". `eslint.config.mjs` is byte-identical to `HEAD` (`git diff --stat HEAD -- eslint.config.mjs` returns nothing), so the assertion that reads it fails on a clean checkout of this branch and cannot have been caused by any uncommitted work. The other failing assertion (`keeps the list honest as batches land`) depends on the legacy-identity readers that c28 Session 2 is actively migrating. Reported, not touched — `modules/party` legacy identity is S2 territory.
+**This ran red first, and the failure was not this ticket's.** `src/modules/party/legacy-reader-ratchet.spec.ts` failed with 2 tests: it scans the whole `src/**` tree through `execSync("git ls-files … 'src/**/*.ts'")`, which returns **zero files** under `cmd.exe` because the quotes are not stripped — so every known reader looked "departed", and the opposite assertion passed vacuously. It was reported to c28 Session 2 rather than touched, `modules/party` legacy identity being their territory, and they have since resolved it. The re-run above is green.
 
 ## Todo
 

@@ -43,6 +43,9 @@ jobs:
       - name: Type Check
         run: pnpm run type-check
 
+      - name: Query keys and caches stay tenant-scoped
+        run: pnpm run check:query-scope
+
       - name: Run Tests
         run: pnpm test --runInBand
 

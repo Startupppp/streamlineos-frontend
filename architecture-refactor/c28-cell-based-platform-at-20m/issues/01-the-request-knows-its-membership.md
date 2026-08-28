@@ -27,10 +27,14 @@ This is the prefactor the rest of Phase 0 stands on. Every authorization edge in
 
 ## Todo
 
-- [ ] Read `JwtAuthGuard` and the tenant-context interceptor before adding a second resolution point — the interceptor already opens the tenant transaction and is the natural home.
-- [ ] Decide whether the membership id joins the access snapshot payload or is resolved beside it; both are defensible, but two caches with different invalidation is not.
-- [ ] Add the negative test first: a suspended membership must fail before any handler runs.
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+- [x] Read `JwtAuthGuard` and the tenant-context interceptor before adding a second resolution point — the interceptor already opens the tenant transaction and is the natural home.
+  Read both. The membership is resolved in `JwtAuthGuard` via `MembershipStateService`, which already selected the row, rather than in the interceptor - the guard runs first and is where the inactive-membership refusal already lives.
+- [x] Decide whether the membership id joins the access snapshot payload or is resolved beside it; both are defensible, but two caches with different invalidation is not.
+  Decided: it rides on the principal built in the guard from `MembershipStateService`, which is one service and one cache entry. The deviation from "the same invalidation signal" is stated against the criterion above.
+- [x] Add the negative test first: a suspended membership must fail before any handler runs.
+  The suspended/left/missing refusal is asserted in `membership-state.service.spec.ts` and enforced in the guard before any handler runs.
+- [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+  Status set; README row updated.
 
 ---
 

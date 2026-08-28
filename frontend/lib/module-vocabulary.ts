@@ -1,57 +1,71 @@
-export const ORG_MODULE_NAME: Readonly<Record<string, string>> = {
-  hr: "HR",
-  crm: "CRM",
-  build: "BUILD",
-  accounting: "FINANCE",
-  inventory: "INVENTORY",
-  support: "HELPDESK",
-  kb: "KB",
-  surveys: "SURVEYS",
-  payroll: "PAYROLL",
-  sign: "SIGN",
+import { MANIFEST } from "./module-manifest";
+
+// Modules where historical stored data used the productKey uppercase (not the
+// module id uppercase). This is not derivable from the manifest — it depends on
+// data that predates the current storedModuleKey convention.
+const LEGACY_STORED_AS_PRODUCT_KEY = new Set(["accounting", "support"]);
+
+// Retired module names that have no manifest field and must be mapped explicitly.
+const RETIRED_CANONICAL: Readonly<Record<string, string>> = {
+  projects: "build",
 };
+
+// All modules from the manifest that have a user-facing sidebar product,
+// keyed by their canonical id.
+export const ORG_MODULE_NAME: Readonly<Record<string, string>> = Object.fromEntries(
+  MANIFEST.modules
+    .filter((m) => m.productKey !== null && m.administrable)
+    .map((m) => [m.id, m.id.toUpperCase()]),
+);
 
 const BUILD_ALIASES = ["BUILD", "PROJECTS"] as const;
 
-const MODULE_ALIASES: Readonly<Record<string, readonly string[]>> = {
+const moduleAliasesMap: Record<string, readonly string[]> = {
   build: BUILD_ALIASES,
   projects: BUILD_ALIASES,
-  accounting: ["FINANCE", "ACCOUNTING"],
-  finance: ["FINANCE", "ACCOUNTING"],
-  support: ["HELPDESK", "SUPPORT"],
-  helpdesk: ["HELPDESK", "SUPPORT"],
 };
 
-/**
- * Canonical lowercase org module key for any accepted spelling: the key itself,
- * its UPPERCASE display name, or a retired name (`projects` → `build`).
- * The access snapshot is keyed by canonical keys, so every gate must normalize
- * before looking a module up — an unnormalized key silently reads as enabled.
- */
-const CANONICAL_MODULE_KEY: Readonly<Record<string, string>> = {
-  hr: "hr",
-  hrms: "hr",
-  crm: "crm",
-  build: "build",
-  projects: "build",
-  accounting: "accounting",
-  finance: "accounting",
-  inventory: "inventory",
-  kb: "kb",
-  chat: "chat",
-  support: "support",
-  helpdesk: "support",
-  surveys: "surveys",
-  payroll: "payroll",
-  sign: "sign",
-};
+for (const m of MANIFEST.modules) {
+  if (
+    m.productKey !== null &&
+    m.productKey !== m.id &&
+    LEGACY_STORED_AS_PRODUCT_KEY.has(m.id)
+  ) {
+    const aliases: readonly string[] = [
+      m.productKey.toUpperCase(),
+      m.id.toUpperCase(),
+    ];
+    moduleAliasesMap[m.id] = aliases;
+    moduleAliasesMap[m.productKey] = aliases;
+  }
+}
+
+const MODULE_ALIASES: Readonly<Record<string, readonly string[]>> =
+  moduleAliasesMap;
+
+const canonicalMap: Record<string, string> = {};
+
+for (const m of MANIFEST.modules) {
+  canonicalMap[m.id] = m.id;
+  if (m.productKey !== null && m.productKey !== m.id) {
+    canonicalMap[m.productKey] = m.id;
+  }
+}
+
+for (const [alias, canonical] of Object.entries(RETIRED_CANONICAL)) {
+  canonicalMap[alias] = canonical;
+}
+
+const CANONICAL_MODULE_KEY: Readonly<Record<string, string>> = canonicalMap;
 
 export function normalizeOrgModuleKey(moduleKeyOrName: string): string {
   const key = moduleKeyOrName.trim().toLowerCase();
   return CANONICAL_MODULE_KEY[key] ?? key;
 }
 
-export function orgModuleAliasesFor(moduleKeyOrName: string): readonly string[] {
+export function orgModuleAliasesFor(
+  moduleKeyOrName: string,
+): readonly string[] {
   const key = moduleKeyOrName.toLowerCase();
   const aliased = MODULE_ALIASES[key];
   if (aliased) return aliased;

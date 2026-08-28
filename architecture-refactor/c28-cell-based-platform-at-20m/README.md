@@ -35,7 +35,7 @@ The **S** column is the execution session that owns the ticket. The split was ch
 | 03 | S1 | [A permission snapshot cannot outlive its grant](issues/03-a-snapshot-cannot-outlive-its-grant.md) | 01 | done |
 | 04 | S1 | [Delegations and module overrides are keyed to the membership](issues/04-delegations-and-overrides-are-membership-keyed.md) | 01 | in-progress |
 | 05 | S1 | [A machine credential is membership-keyed and bounded by a ceiling](issues/05-a-machine-credential-has-a-ceiling.md) | 02, 04 | done |
-| 06 | S1 | [Removing a membership removes everything derived from it](issues/06-removing-a-membership-removes-its-authority.md) | 04, 05 | ready-for-agent |
+| 06 | S1 | [Removing a membership removes everything derived from it](issues/06-removing-a-membership-removes-its-authority.md) | 04, 05 | in-progress |
 | 07 | S1 | [Owner-only operations are enumerated, not implied](issues/07-owner-only-operations-are-enumerated.md) | — | done |
 | 08 | S1 | [A module transfer records its initiator and its expected current owner separately](issues/08-a-module-transfer-records-both-parties.md) | 07 | done |
 
@@ -56,7 +56,7 @@ The **S** column is the execution session that owns the ticket. The split was ch
 |---|---|---|---|---|
 | 15 | S4 | [Every open item in `OPEN-FINDINGS.md` is closed or carries a dated reason](issues/15-the-open-findings-are-closed.md) | — | **done** |
 | 16 | S4 | [Every latency seam is instrumented and alerted below its SLO budget](issues/16-latency-seams-are-alerted-below-slo.md) | — | **done** · 1 criterion open (no paging destination configured) |
-| 17 | S5 | [The query key carries the tenant](issues/17-the-query-key-carries-the-tenant.md) | — | ready-for-agent |
+| 17 | S5 | [The query key carries the tenant](issues/17-the-query-key-carries-the-tenant.md) | — | **done** · premise corrected: the tenant is in the query hash, not the key array |
 | 18 | S5 | [The API surface is versioned and its contract is generated in CI](issues/18-the-api-surface-is-versioned.md) | — | ready-for-agent |
 | 19 | S5 | [Every module is registered through one versioned manifest](issues/19-every-module-has-one-manifest.md) | — | ready-for-agent |
 

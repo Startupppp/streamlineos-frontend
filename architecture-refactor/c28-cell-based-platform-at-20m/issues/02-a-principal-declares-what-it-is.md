@@ -30,10 +30,14 @@ The rest of the ~40 hits are specs and fixtures. `agent_tokens` (`db/schema/comm
 
 ## Todo
 
-- [ ] Start with `module-standing.ts:166` — it is the one inside the authorization engine itself, so it is the one whose fabrication is load-bearing for other decisions.
-- [ ] The two payroll sites share a shape; extract the system principal once rather than twice.
-- [ ] Do not delete the flag from the spec fixtures wholesale — a fixture asserting owner behaviour is testing the human variant and stays.
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+- [x] Start with `module-standing.ts:166` — it is the one inside the authorization engine itself, so it is the one whose fabrication is load-bearing for other decisions.
+  Done first, and it disproved the grounding: it was a derived local struct, not a fabricated principal. Collapsing `resolveModuleAuthority` + `authoritySource` into `resolveAuthoritySource` removed both the literal and the intermediate type.
+- [x] The two payroll sites share a shape; extract the system principal once rather than twice.
+  Extracted once as `systemActor(jobId, orgId, onBehalfOfUserId?)`; both payroll sites call it with their own job id.
+- [x] Do not delete the flag from the spec fixtures wholesale — a fixture asserting owner behaviour is testing the human variant and stays.
+  No spec fixture lost its owner behaviour. The CI scan excludes `*.spec.ts` and `*.e2e-spec.ts` precisely so a fixture asserting owner behaviour keeps testing the human variant.
+- [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+  Status set; README row updated.
 
 ---
 

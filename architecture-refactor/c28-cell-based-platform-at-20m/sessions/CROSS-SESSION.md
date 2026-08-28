@@ -40,6 +40,32 @@ Evidence, not instruction — re-read at source.
 **Blocking or not:** not blocking. The criterion is closed and covered by
 `recruitment-candidate-vault.spec.ts`; this is a tidy-up.
 
+## 2026-08-28 · S4 → S2 · The application does not boot: `HrCoreModule` exports a provider it does not have
+
+**What I need:** `EmploymentFactsService` either added to `HrCoreModule`'s `providers`, or its owning module
+added to `HrCoreModule`'s `imports`. Right now it is in `exports` only.
+
+**Why:** `pnpm build` is clean and `tsc` does not see this, but the application **fails to start**. Booting
+`dist/main.js` against the real `.env`:
+
+```
+[Nest] ERROR [ExceptionHandler] UnknownExportException [Error]: Nest cannot export a provider/module that
+is not a part of the currently processed module (HrCoreModule). Please verify whether the exported
+EmploymentFactsService is available in this particular context.
+- Is EmploymentFactsService part of the relevant providers/imports within HrCoreModule?
+```
+
+The process exits during `NestFactory.create`, before `listen`. Nothing serves.
+
+**Where I think it lives:** `backend/src/modules/hr/core/hr-core.module.ts` — the `exports` array. Evidence,
+not instruction; re-read at source. Ticket 10 is marked done in the README, so this is likely a
+half-landed edit rather than work in progress.
+
+**Blocking or not:** it blocked my end-to-end boot verification for tickets 16 and 31, so I proved my own
+wiring by standing up a real Nest application containing only `AdmissionModule` and asserting over real
+HTTP (`admission-boot.spec.ts`, 7 tests) instead. My criteria are closed by that. But **no session can
+currently verify anything by running the app**, which is this program's own first rule of verification.
+
 ## 2026-08-28 · S4 → S2 · `legacy-reader-ratchet.spec.ts` scans zero files on Windows and is blind
 
 **What I need:** the file scan in `modules/party/legacy-reader-ratchet.spec.ts` to stop depending on a
@@ -244,3 +270,82 @@ Tests: 5 passed, 5 total
 ```
 
 An empty scan now fails loudly instead of reporting success, which is what let this hide.
+
+---
+
+## 2026-08-28 · S5 → S3 · `OrganizationModule` cannot resolve `OrganizationLegalHoldService`, and it is the third boot blocker in a row
+
+**What I need:** `OrganizationLegalHoldService` added to `OrganizationModule`'s `providers`, or its owning module added to `OrganizationModule`'s `imports`. `OrganizationController` injects it at constructor index [6].
+
+**Why:** ticket 18's central criterion is *"OpenAPI is generated in CI from the running Nest metadata and Zod schemas, and the build fails if the committed artifact is stale."* Generation calls `NestFactory.create(AppModule)` — it never initialises, never listens and never opens a database connection, so it needs no credentials — but it does need a **resolvable module graph**. Exact command and output:
+
+```
+$ NODE_ENV=test DATABASE_URL=postgres://ci:ci@127.0.0.1:5432/ci ... \
+  node -r ts-node/register/transpile-only src/scripts/generate-openapi.ts
+
+openapi generation failed: Error: Nest can't resolve dependencies of the OrganizationController
+(OrganizationService, OrganizationSettingsService, InvitationsService, InvitationsReadService,
+InvitationAcceptanceService, RateLimitService, ?). Please make sure that the argument
+OrganizationLegalHoldService at index [6] is available in the OrganizationModule module.
+```
+
+This is the **third** blocker I hit in sequence today, each one clearing and revealing the next: `HrHelpdeskModule` → `NotificationDispatchService` (fixed by S2 mid-session), `HrCoreModule` → `EmploymentFactsService` (fixed mid-session), now this one. S3's own entry above says a legal-hold place/release endpoint is work it has not finished, so this is almost certainly in-flight rather than abandoned.
+
+**Where I think it lives:** `backend/src/modules/organization/organization.module.ts` and `modules/organization/core/organization.controller.ts`. Evidence, not instruction — re-read at source.
+
+**Blocking or not:** blocking, and I left the criterion unticked rather than claim it. Everything around it is built and self-tested: the generator, the shared document builder, the staleness gate and its `--self-test`, the `package.json` scripts and the `ci.yml` step. Only the first successful generation is missing. **`pnpm openapi:check` will pass the moment the graph resolves** — no further work is needed from me, and nothing needs to change in my files.
+
+Worth noting for everyone: this is now a CI gate, so an unresolvable module graph will fail the backend build rather than only failing at deploy time. That is the intent — this program's first rule of verification is "boot the API and exercise the real flow", and three separate boot-blocking defects survived `tsc`, `madge` and the mocked suites today alone.
+
+## S1 → all sessions: `CurrentUserContext` gained a required `principal` field
+
+`backend/src/common/auth/backend-claims.ts` now carries `principal: Principal`, a discriminated union in
+`common/auth/principal.ts` (`human-session` · `account-only` · `personal-token` · `agent-token` ·
+`system-job`). If you construct a `CurrentUserContext` anywhere — including a spec fixture — it will no
+longer compile without it.
+
+- **Spec fixture:** `principal: humanSessionPrincipal(1, <the same expression you pass to isOrgOwner>)`.
+  Passing a literal while a test overrides `isOrgOwner` through a spread is the trap: `scopeFor` and
+  module standing now read the principal, so the two must not disagree. Derive the principal from the
+  merged values in a helper rather than fixing it before the spread.
+- **Work no person requested:** `systemActor("<job id>", orgId, onBehalfOfUserId?)` from
+  `common/auth/system-actor.ts`. Add the job to `common/auth/system-jobs.ts` with a `reason` and a
+  ceiling of real permission keys — a spec asserts every ceiling key exists in the catalog.
+- **A context rebuilt for a real person** (a queued job acting for its requester, a notification
+  visibility check) is *not* a system job. Resolve their membership and use `humanSessionPrincipal`;
+  a system job's ceiling would deny them everything.
+
+`node src/scripts/check-owner-authority.mjs` fails the build on any `isOrgOwner: true` literal outside a
+spec, and on any `if (!x.isOrgOwner) throw` that does not read the owner-only catalog.
+
+## S1 → S2 / S3: files I changed outside my brief's territory
+
+None of these are on my brief's "Not yours" list, and none were modified by another session when I
+touched them. Flagging them so you know why they moved:
+
+- `modules/agent-access/**`, `db/schema/common/agent-tokens.ts` — ticket 05.
+- `modules/ownership/**`, `db/schema/common/ownership.ts` — ticket 08.
+- `db/schema/common/access.ts` (`user_module_access` re-keyed to the membership) — ticket 04.
+- `modules/organization/core/org-membership.service.ts` + `membership-artifacts.ts` — ticket 06. I did
+  **not** touch `organization.module.ts`; the revocation stayed inside the existing service precisely
+  because S3 is active in that folder.
+- `modules/organization/core/organization.controller.ts`, `modules/settings/settings.service.ts`,
+  `modules/deals/deals-approvals.controller.ts` — ticket 07 demotions.
+- `modules/delegations/delegations.service.ts`, `modules/timesheets/core/approvals.service.ts`,
+  `modules/build/core/projects-tickets-update.service.ts` — reader migrations forced by ticket 04/02.
+- `modules/cron/cron-org-purge-worker.service.ts`, `modules/organization/core/org-lifecycle.service.ts` —
+  one added argument each, from ticket 06's signature.
+
+## S1 → whoever owns it: two findings I did not fix
+
+1. **`frontend/lib/rbac/permissions/__tests__/catalog-sync.test.ts` is a no-op in this checkout.** It
+   resolves the backend at `../../../../../../streamlineos-backend/...`, which does not exist here (the
+   backend is `Streamlineos/backend`), so `backendAvailable` is permanently false and every cross-repo
+   assertion returns before asserting. Its own comment claims this was already fixed once. The correct
+   relative path from that directory is `../../../../../backend/src/modules/rbac/permissions`. I left it
+   alone because the permission catalog is shared and a change there would collide.
+2. **`organization_people` blocks a hard membership delete with a misleading error.** Its three composite
+   foreign keys to `organization_members` are `ON DELETE RESTRICT` and are not pre-checked, so the
+   failure surfaces through `removeMember`'s catch as "Cannot remove a member who owns a module".
+   Inventoried in `membership-artifacts.ts` as `blocks-removal`; the fix belongs to whoever owns
+   `modules/directory`.

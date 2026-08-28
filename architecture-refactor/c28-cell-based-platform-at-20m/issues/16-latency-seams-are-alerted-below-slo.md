@@ -22,8 +22,11 @@ Declared once in `backend/src/common/observability/seam-budgets.ts` and asserted
 | `cache.roundtrip` | 2 ms | 1.5 ms | PRD p95 same-region Redis operation including network |
 | `route.cached.read` | 150 ms | 112 ms | PRD p95 browser-visible cached read |
 | `route.write` | 500 ms | 375 ms | PRD p95 transactional write, excluding declared async work |
+| `runtime.eventloop.delay` | 50 ms | 37 ms | Derived, not given by the PRD: a loop delay above a third of the 150 ms cached-read budget makes that budget unattainable however fast the handler is |
 
 5 + 3 + 12 = 20, which is exactly `db.roundtrip.simple`. The headroom is a uniform 25% so an alert fires before the objective is breached rather than as it is breached.
+
+**The ninth seam was inert when first written, and the duplication that hid it is now guarded.** `runtime.eventloop.delay` was being emitted by `event-loop-delay.ts` but appeared in neither `seam-budgets.ts` nor the alert's threshold table, so the only alert that reads seam spans silently ignored it. The alert is a `.mjs` script and cannot import the TypeScript budget table, so the table is necessarily duplicated — and an unguarded duplicate is exactly what produced the `seamName`/`seam` dead alert described below. `alert-seam-parity.spec.ts` now binds them: it reads the script as text, extracts its table, and asserts coverage in **both** directions plus exact threshold equality, plus that `SEAM_ATTRIBUTE_KEY` is `"seam"`. It refuses to pass vacuously if the parse finds fewer entries than the budget table holds, and three negative fixtures prove it bites — a differing number, a missing key, and a wrong attribute key are each detected.
 
 ## Acceptance criteria
 
@@ -157,13 +160,17 @@ The seam alert was tested against a real emission and it fired — and the test 
 ```
 $ node ./node_modules/jest/bin/jest.js src/common/observability src/db/query-telemetry.spec.ts src/common/cache src/db/pool.config.spec.ts src/common/http
 Test Suites: 22 passed, 22 total
-Tests:       238 passed, 238 total
+Tests:       240 passed, 240 total
 
 $ node ./node_modules/jest/bin/jest.js src/db/query-telemetry.spec.ts
 Tests:       16 passed, 16 total
 
 $ node ./node_modules/jest/bin/jest.js src/common/observability/event-loop-delay.spec.ts
 Tests:       4 passed, 4 total
+
+$ node ./node_modules/jest/bin/jest.js src/common/observability/seam-budgets.spec.ts src/scripts/alert-seam-parity.spec.ts
+Test Suites: 2 passed, 2 total
+Tests:       15 passed, 15 total
 
 $ node src/scripts/alert-seam-latency.mjs --self-test
 {"selfTest":true,"pass":true,"checks":{"staleAndNonSeamExcluded":true,"dbQueryExecuteBreached":true,"cacheRoundtripNotBreached":true,"noSeamSpansWouldExitTwo":true}}

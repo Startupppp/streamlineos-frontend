@@ -1,6 +1,7 @@
 import { LayoutDashboard, Users, Briefcase, Timer, IndianRupee, Handshake, ClipboardList, Package, LifeBuoy, Building2, Calculator, Library, PenTool } from "lucide-react";
 import type { ComponentType } from "react";
 import { matchesOrgModule } from "@/lib/module-vocabulary";
+import { MANIFEST, moduleByProductKey } from "@/lib/module-manifest";
 import type { ProductKey } from "./sidebar-nav-types";
 
 export interface ProductDefinition {
@@ -10,36 +11,62 @@ export interface ProductDefinition {
   icon: ComponentType<{ className?: string; strokeWidth?: number }>;
 }
 
+// Products whose href intentionally differs from the manifest route.
+// - administration: no manifest module; chrome product pointing at /settings
+// - documents: manifest route is /knowledge; the sidebar entry lands at /knowledge/chat
+export const PRODUCT_HREF_EXCEPTIONS: Readonly<Partial<Record<ProductKey, string>>> = {
+  administration: "/settings",
+  documents: "/knowledge/chat",
+};
+
+// Products with no manifest module counterpart (not in any module's productKey set).
+export const PRODUCT_KEY_EXCEPTIONS = new Set<ProductKey>(["administration"]);
+
+function resolveProductHref(key: ProductKey): string {
+  const exception = PRODUCT_HREF_EXCEPTIONS[key];
+  if (exception !== undefined) return exception;
+  const module = moduleByProductKey(key);
+  return module?.route ?? `/${key}`;
+}
+
+// Verify at module load time that the manifest productKey set and the
+// PRODUCT_DEFINITIONS key set agree (minus the named exceptions above).
+// Failures surface as console warnings rather than crashes so that a stale
+// vendor copy degrades gracefully in development.
+const manifestProductKeys = new Set(
+  MANIFEST.modules
+    .filter((m) => m.productKey !== null)
+    .map((m) => m.productKey as string),
+);
+
 export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
-  { key: "home", label: "Home", href: "/dashboard", icon: LayoutDashboard },
-  { key: "crm", label: "CRM", href: "/crm", icon: Handshake },
-  { key: "hrms", label: "HRMS", href: "/hr", icon: Users },
-  { key: "build", label: "Build", href: "/build", icon: Briefcase },
-  { key: "timesheets", label: "Timesheets", href: "/timesheets", icon: Timer },
-  { key: "inventory", label: "Inventory", href: "/inventory", icon: Package },
-  { key: "finance", label: "Finance", href: "/accounting", icon: Calculator },
-  { key: "helpdesk", label: "Helpdesk", href: "/support", icon: LifeBuoy },
-  {
-    key: "documents",
-    label: "Documents",
-    href: "/knowledge/chat",
-    icon: Library,
-  },
-  { key: "surveys", label: "Surveys", href: "/surveys", icon: ClipboardList },
-  {
-    key: "administration",
-    label: "Administration",
-    href: "/settings",
-    icon: Building2,
-  },
-  {
-    key: "payroll",
-    label: "Payroll",
-    href: "/payroll",
-    icon: IndianRupee,
-  },
-  { key: "sign", label: "SignOS", href: "/sign", icon: PenTool },
+  { key: "home", label: "Home", href: resolveProductHref("home"), icon: LayoutDashboard },
+  { key: "crm", label: "CRM", href: resolveProductHref("crm"), icon: Handshake },
+  { key: "hrms", label: "HRMS", href: resolveProductHref("hrms"), icon: Users },
+  { key: "build", label: "Build", href: resolveProductHref("build"), icon: Briefcase },
+  { key: "timesheets", label: "Timesheets", href: resolveProductHref("timesheets"), icon: Timer },
+  { key: "inventory", label: "Inventory", href: resolveProductHref("inventory"), icon: Package },
+  { key: "finance", label: "Finance", href: resolveProductHref("finance"), icon: Calculator },
+  { key: "helpdesk", label: "Helpdesk", href: resolveProductHref("helpdesk"), icon: LifeBuoy },
+  { key: "documents", label: "Documents", href: resolveProductHref("documents"), icon: Library },
+  { key: "surveys", label: "Surveys", href: resolveProductHref("surveys"), icon: ClipboardList },
+  { key: "administration", label: "Administration", href: resolveProductHref("administration"), icon: Building2 },
+  { key: "payroll", label: "Payroll", href: resolveProductHref("payroll"), icon: IndianRupee },
+  { key: "sign", label: "SignOS", href: resolveProductHref("sign"), icon: PenTool },
 ];
+
+if (process.env.NODE_ENV !== "production") {
+  for (const definition of PRODUCT_DEFINITIONS) {
+    if (
+      !PRODUCT_KEY_EXCEPTIONS.has(definition.key) &&
+      !manifestProductKeys.has(definition.key)
+    ) {
+      console.warn(
+        `[sidebar-products] product key "${definition.key}" is not in the manifest productKey set and not in PRODUCT_KEY_EXCEPTIONS`,
+      );
+    }
+  }
+}
 
 export const PRODUCT_DESCRIPTIONS: Record<ProductKey, string> = {
   home: "Overview & activity",
@@ -64,23 +91,6 @@ export interface ModuleAccent {
   border: string;
 }
 
-/**
- * A product's colour is its name in the sidebar rail, so no two products may
- * share one.
- *
- * The four roles of an entry all read the same hue. They used to split — a
- * categorical `text` and `indicator` over a `status-*` `bg` and `border` —
- * which put crm, timesheets, finance and sign on one blue panel and hrms,
- * surveys and payroll on one green one, with only the 2px indicator telling
- * them apart.
- *
- * Two hues moved rather than being restored: timesheets keeps indigo but no
- * longer borrows violet from build, and payroll takes green because it and
- * surveys were both teal even before the migration.
- *
- * home, documents and administration share the neutral on purpose: they are
- * chrome around the products rather than products themselves.
- */
 export const MODULE_ACCENTS: Record<ProductKey, ModuleAccent> = {
   home: {
     text: "!text-category-slate-ink",
@@ -184,4 +194,3 @@ export function isModuleEnabled(
   if (!moduleKey) return true;
   return matchesOrgModule(enabledModules, moduleKey);
 }
-

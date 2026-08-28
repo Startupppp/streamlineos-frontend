@@ -2,9 +2,8 @@
 
 import { createContext, useContext } from "react";
 import type { ReactNode } from "react";
-import { UNAUTHENTICATED_SCOPE } from "@/lib/query-scope";
 
-export const UNSCOPED: string = UNAUTHENTICATED_SCOPE;
+export const UNSCOPED = "unscoped";
 
 const OrgStorageScopeContext = createContext<string>(UNSCOPED);
 

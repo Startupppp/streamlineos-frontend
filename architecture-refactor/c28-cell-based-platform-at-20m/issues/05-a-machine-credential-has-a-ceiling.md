@@ -29,10 +29,14 @@ fk_agent_tokens_issuer_membership   agent_tokens   ondelete=c
 
 ## Todo
 
-- [ ] Check what happens today when `tokenScopes` is `null` before changing anything — a null that currently means *"full inherited access"* is the vulnerability, and its callers need finding first.
-- [ ] Write the intersection test against a real demotion, not a mocked resolver; a stubbed capability set proves nothing about the composition.
-- [ ] Include the personal-token variant if one exists — the two differ in who they represent, not in whether they need a ceiling.
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+- [x] Check what happens today when `tokenScopes` is `null` before changing anything — a null that currently means *"full inherited access"* is the vulnerability, and its callers need finding first.
+  Checked first, and it was worse than the ticket assumed: `agent_tokens` had no scopes column at all, so every agent token inherited its issuer's full capability, including `all` outright when the issuer was the org owner. Written up at the foot of this ticket.
+- [x] Write the intersection test against a real demotion, not a mocked resolver; a stubbed capability set proves nothing about the composition.
+  The intersection is exercised through `AccessService.scopeFor` reading the live resolved map rather than a stubbed capability set; the token arm deliberately skips the owner shortcut so a demotion is visible.
+- [x] Include the personal-token variant if one exists — the two differ in who they represent, not in whether they need a ceiling.
+  `personal-token` is its own variant of the principal union with its own ceiling, and `scopeFor` bounds it the same way. It differs from an agent token in who it represents, not in whether it has a ceiling.
+- [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+  Status set; README row updated.
 
 ---
 
