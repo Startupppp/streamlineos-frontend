@@ -60,6 +60,13 @@ jobs:
         run: pnpm check:contract-vendor:self-test && pnpm check:contract-vendor
         continue-on-error: true
 
+      # Every permission the route-access registry and the navigation model can require must name
+      # an endpoint in the generated contract. A gate on a key no endpoint enforces is false
+      # forever: the route hides from everyone who is not an owner and no backend guard ever runs.
+      # Reads the vendored contract, so it works in a frontend-only checkout.
+      - name: Route-access permissions name a real endpoint
+        run: pnpm check:route-access-contract:self-test && pnpm check:route-access-contract
+
       - name: Build application
         run: pnpm build
         env:

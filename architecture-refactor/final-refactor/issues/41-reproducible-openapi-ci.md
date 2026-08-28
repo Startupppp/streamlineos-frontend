@@ -8,11 +8,7 @@
 
 - [x] Contract generation has a documented non-production topology/configuration seam.
 - [x] OpenAPI freshness runs deterministically without undocumented local credentials.
-- [ ] Timesheets and route-access changes appear in generated contracts.
-      **Timesheets half proved; route-access half blocked on ticket 28.** `frontend/lib/rbac/route-access*`
-      does not exist yet — the barrel S5 has started is still unimported. The exposure-stamping
-      machinery is live and correct, so ticket 28's adoption will surface with no further work here,
-      but the criterion names route-access and cannot be ticked before it exists.
+- [x] Timesheets and route-access changes appear in generated contracts.
 - [x] CI fails on stale or breaking unversioned contracts and passes on the current source.
 
 Full evidence: `architecture-refactor/final-refactor/evidence/41-openapi/OPENAPI-CI.md`.
@@ -65,6 +61,54 @@ and `git diff HEAD` on the file is empty. The enum reads `["BILLABLE","NON_BILLA
 
 Exposure counts across 3,540 operations: **3,183 permissioned · 215 public · 95 universal · 47
 in-service · 0 undeclared.**
+
+### The route-access half, closed after ticket 28 landed
+
+S5's registry now exists at `frontend/lib/rbac/route-access/` (6 files). At the time of writing it
+still has **zero importers outside its own folder**, so exposure stamping alone had nothing to
+compare against. `frontend/scripts/check-route-access-contract.mjs` gives the criterion a real gate:
+every permission the route-access registry and the navigation model can require must name an
+endpoint carrying that key as `x-permission` in the generated contract.
+
+```
+$ pnpm check:route-access-contract
+Navigation source files   27
+Permission keys checked   186 (17 excluded as access rungs or non-permissions)
+x-permission in contract  620
+
+✔  every route-access permission names an endpoint in the generated contract.
+```
+
+**The 17 exclusions are the interesting part, and getting them wrong is the known trap.** Thirteen
+are `<module>:access:view` rungs. Those are never `@RequirePermission` keys — `backend/CLAUDE.md` §5
+resolves both module-access rungs from `assertModuleAccessPolicy`/`resolveModuleManagementStanding`,
+and those routes declare `@AuthorizedInService`, so they are correctly never stamped. Reporting them
+would be a generated-`:access:`-key false positive, which this codebase has produced before. The
+other four are `node:fs`, `node:path` (import specifiers) and `route:unregistered`,
+`route:unresolved` (the registry's own sentinels) — permission-shaped strings that are not
+permissions.
+
+After those exclusions: **186 keys checked, 0 ghosts.** A nav gate on a key no endpoint enforces
+would be false forever — the route hides from everyone who is not an owner, and no backend guard
+ever runs.
+
+The self-test proves the check bites rather than merely returning green, including both anti-vacuity
+floors, because a scan that resolves nothing would otherwise report a clean tree:
+
+```
+✔  a nav key with no backing endpoint is reported as a ghost
+✔  a generated <module>:access:* rung is excluded, not reported
+✔  node: import specifiers are excluded
+✔  registry sentinels are excluded
+✔  a key backed by an endpoint is not reported
+✔  a broken source walk refuses to report a pass
+✔  a truncated contract refuses to report a pass
+✔  healthy counts pass the vacuity floors
+```
+
+It reads the vendored contract rather than the backend artifact, so it runs in a frontend-only
+checkout, and it is a hard CI gate rather than a reported one — unlike the dead-code and coverage
+checks, its current count is zero and a regression is a single reviewable line.
 
 ## Criterion 4 — the gate bites, and the artifact was stale
 
@@ -122,10 +166,17 @@ Raised in `CROSS-SESSION.md` as a programme-level item with the measurement atta
 
 ## Blocker note
 
-Ticket 26 (Timesheets drift, S5) and ticket 28 (route-access adoption, S5) are both still in flight.
-Neither blocked building the gate: 26's outcome is what the gate measures, and 28's adoption is
-surfaced automatically by exposure stamping that already works. Only criterion 3's route-access half
-genuinely waits, and it is left unticked.
+Both blockers cleared during this session. S5 marked tickets 26, 27 and 28 done and the route-access
+registry landed, which is what allowed criterion 3 to close rather than be deferred — the gate was
+built against the registry that now exists, not against a hypothetical one.
+
+Neither blocker actually gated the work: 26's outcome is what the drift gate measures, and 28's
+adoption is surfaced by exposure stamping that already worked. What 28 supplied was the *source* of
+route-access permissions to check against the contract.
+
+One thing 28 has not finished: the registry still has **zero importers outside its own folder**, so
+nothing enforces it at a server layout yet. That is ticket 28's remaining half, not this ticket's —
+recorded here so it is not mistaken for complete because the contract gate is green.
 
 ## Files
 
