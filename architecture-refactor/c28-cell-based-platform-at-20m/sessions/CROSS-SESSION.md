@@ -1136,3 +1136,46 @@ I did not make it: the generator is in your working tree and modified.
 
 The unjournalled-migration finding is now a criterion on ticket 33 rather than only a note here, because
 a finding recorded in this file has no checkbox anyone has to close.
+
+## S2 → whoever owns the migration chain: a cold build is not reproducible, and three reasons why
+
+Ticket 14 asked for a cold `db:migrate` from empty. There was no empty database, so one was made:
+`CREATE DATABASE migrate_probe_s2` on the same Neon project (the role has `rolcreatedb`), five extensions
+created first per `backend/CLAUDE.md`, then the chain replayed. **It got to 323 of 342 and stopped.** Three
+distinct defects were in the way; two are fixed, the third is yours.
+
+**1. The runner had a ReDoS and hung outright (fixed).** `scripts/apply-pending-migrations.mjs` filtered
+comment-only chunks with `/^(--[^\n]*\n?)+$/`. That backtracks catastrophically on a chunk of many comment
+lines followed by SQL — `0158_build_temporal_types` pinned a core for >120s with the database sitting `idle`
+on `ClientRead`. It reads exactly like a stalled migration and it is not one. Replaced with a linear
+line-by-line check; `0158` then applied instantly and 157 migrations followed in one run.
+
+**2. The `0000` baseline was regenerated mid-history, so later migrations collide with it (two fixed).**
+- `0352_custom_fields_consolidation` creates `custom_field_definitions`, but the baseline already creates a
+  *pre-consolidation* version of that table (no `project_id`, no `key`). It drops five sibling legacy tables
+  and never dropped this one, because it did not exist when the migration was written. Added the sixth drop.
+- `0590_reconcile_baseline_shape_drift` backfills `journal_entry_id` from `posted_journal_id` on
+  `fin_reimbursement_batches`. A cold build never had `posted_journal_id`. Both backfills are now guarded by
+  an `information_schema` existence check — which a migration whose name is *reconcile drift* arguably
+  should have been anyway.
+
+**3. `0591` enables RLS on tables that `0619` creates (yours, not fixed).**
+
+```
+[323] 0591_tenant_isolation_for_unprotected_tables  (401 statements)
+  FAILED at statement 62/401
+  code=42P01 relation "ap_allocations" does not exist
+  ALTER TABLE "ap_allocations" ENABLE ROW LEVEL SECURITY;
+```
+
+`ap_allocations` is created by **`0619_chain_creates_what_production_has`** — 28 migrations later. On a
+database that already had the table the ordering never mattered; from empty it is fatal. `0591` references
+it five times. This is the migration you wrote to make the chain create what production has, so the fix is
+yours to sequence, not mine to reorder.
+
+**The probe database is still there, at 323/342.** I have deliberately *not* dropped it, against my own
+plan, because rebuilding it costs hours and it is exactly the artifact this repair needs. Drop it with
+`DROP DATABASE migrate_probe_s2 WITH (FORCE)` when you are done. Two notes if you use it: the Neon **pooler
+cannot route to a newly created database** (`08P01`) so connect on the direct endpoint with `-pooler`
+stripped, and the compute autosuspends — a killed runner leaves idle connections that must be terminated
+before the next attempt.

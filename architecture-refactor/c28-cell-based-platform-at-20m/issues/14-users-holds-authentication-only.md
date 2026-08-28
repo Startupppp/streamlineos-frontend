@@ -63,25 +63,50 @@
 
 - [ ] A cold `db:migrate` from empty produces a `users` table with no employment columns.
 
-  Not run — there is no empty database to run it against. One `DATABASE_URL`, no second Neon branch, and no local Postgres or Docker on this machine (`which psql pg_dump docker` returns nothing). The established practice here is `DROP SCHEMA public CASCADE` on the dev database, which would destroy the 49 organizations this session's other evidence depends on.
+  **Still open, but no longer for the reason recorded before.** It previously said "no empty database exists".
+  One was made — `CREATE DATABASE migrate_probe_s2` on the same Neon project (the role has `rolcreatedb`),
+  with the five extensions `backend/CLAUDE.md` requires created before the first migration — and the chain
+  replayed **323 of 342 migrations**. It is now blocked on a specific, named, actionable defect that belongs
+  to another session rather than on missing infrastructure.
 
-  What would close it: any empty database. `pnpm db:migrate` against it, then the same `information_schema.columns` query. The schema source and the live database already agree — the remaining question is only whether the chain reproduces from zero.
+  Getting that far required fixing three things, and finding them is worth more than the checkbox:
 
-  **The Drizzle snapshot is reconciled.** Because the migration was hand-written rather than generated, `migrations/meta`'s newest snapshot (`0464_snapshot.json`, the one `db:generate` diffs against) still described the old shape. It has been corrected: the nine columns, both indexes and `users_reporting_to_users_id_fk` removed, 42 → 33 columns. `fk_users_branch_id` was never in the snapshot, which is consistent with it having existed only in the database.
+  1. **The migration runner has a ReDoS.** `scripts/apply-pending-migrations.mjs` filtered comment-only
+     chunks with `/^(--[^
+]*
+?)+$/`, which backtracks catastrophically on a chunk of many comment lines
+     followed by SQL. `0158_build_temporal_types` pinned a core for over two minutes while the database sat
+     `idle` on `ClientRead` — indistinguishable from a slow migration, and the reason several earlier
+     attempts looked like they were "hanging on Neon". Replaced with a linear check; 157 migrations then
+     applied in a single run.
+  2. **`0352_custom_fields_consolidation`** creates `custom_field_definitions`, but the regenerated `0000`
+     baseline already creates a *pre-consolidation* version of it. It drops five sibling legacy tables and
+     never dropped this one. Added the sixth drop.
+  3. **`0590_reconcile_baseline_shape_drift`** backfills from `posted_journal_id` / `cash_account_id`, columns
+     a cold build never had. Both backfills are now guarded by an `information_schema` existence check.
 
-  All three sources now agree, which is the check that matters rather than the edit itself:
+  **What blocks it now:**
 
   ```
-  snapshot cols : 33
-  schema file   : 33
-  in snapshot not in file: none
-  in file not in snapshot: none
-
-  $ node scripts/db-query.mjs "select count(*) from information_schema.columns where table_name='users'"
-  { "db_users_columns": "33" }
+  [323] 0591_tenant_isolation_for_unprotected_tables  (401 statements)
+    FAILED at statement 62/401
+    code=42P01 relation "ap_allocations" does not exist
+    ALTER TABLE "ap_allocations" ENABLE ROW LEVEL SECURITY;
   ```
 
-  `db:generate` was deliberately **not** run to verify this: it rewrites the journal and snapshot, and three other sessions are appending migrations `0610`–`0614` to that same directory right now, so a generate here would capture their in-flight schema work into my migration. The three-way name-by-name comparison above proves the same property without that side effect.
+  `ap_allocations` is created by `0619_chain_creates_what_production_has` — 28 migrations later. `0591`
+  references it five times. That migration is another session's active chain-repair work, so the ordering is
+  theirs to fix; handed over in `sessions/CROSS-SESSION.md` with the probe database left in place at 323/342
+  rather than dropped, because rebuilding it costs hours.
+
+  `0615_users_holds_authentication_identity_only` — the migration this criterion is actually about — sits
+  after `0591`, so it has not been reached. The drop itself is proved on the live database by the
+  `pg_catalog` diff in the criterion above (42 → 33 columns, zero of the nine remaining); what remains
+  unproved is only that a **cold** build reaches the same place.
+
+  **The broader finding matters more than this box:** the chain is not currently replayable from empty, which
+  is what disaster recovery and new-cell provisioning both depend on — and provisioning a new cell is the
+  point of the c28 program this ticket belongs to.
 
 - [x] The onboarding-status columns are decided rather than left.
 

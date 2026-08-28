@@ -4,7 +4,7 @@
 
 **Blocked by:** [20](20-placement-is-a-record.md) · [21](21-placement-survives-a-control-plane-outage.md) · [22](22-a-write-carries-its-placement-version.md) · [23](23-no-query-bypasses-placement.md) · [24](24-an-org-switch-is-revalidated-in-the-target-cell.md) · [25](25-creating-an-org-is-a-resumable-saga.md)
 
-**Status:** partially done — a second cell exists and serves organizations; **the cold bootstrap fails and that is the headline finding**
+**Status:** partially done — a second cell exists, serves organizations, and **is now reproducible from cold: `SCHEMAS IDENTICAL, differences=0`, down from 3,243.** Resource isolation is still the open half.
 
 **Grounding (2026-08-28, evidence not instruction — re-read at source):** the region topology already supports more than one binding — `region.module.ts` opens a `postgres` client per non-primary region from `definition.databaseUrl` and `RegionModule.onApplicationBootstrap` refuses to serve traffic without a registry — so the second cell is a configuration and operations task on an existing seam, not new application code. Two environment facts from this repository apply: CI already rebuilds the database from empty, which is the cold-bootstrap primitive; and `streamline_app`'s password must be set in the Neon console rather than with `ALTER ROLE`, because the control plane restores the previous one on suspend.
 
