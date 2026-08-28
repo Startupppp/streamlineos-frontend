@@ -4,7 +4,7 @@
 
 **Blocked by:** [01 — The request knows which membership it is](01-the-request-knows-its-membership.md)
 
-**Status:** done
+**Status:** done · 1 criterion open — system-principal audit attribution needs the principal on `TenantContext`, which is not this session's territory (raised in `sessions/CROSS-SESSION.md`)
 
 **Grounding (2026-08-28, evidence not instruction — re-read at source):** four production sites fabricate `isOrgOwner: true` today —
 `modules/payroll/payout/lib/payout-run-completion.ts:202` and `modules/payroll/payout/locking.service.ts:83` both build `{ role: "system", isOrgOwner: true, sessionId: "system", tokenScopes: null }`;

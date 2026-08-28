@@ -28,7 +28,7 @@ The **S** column is the execution session that owns the ticket. The split was ch
 | # | S | Ticket | Blocked by | Status |
 |---|---|---|---|---|
 | 01 | S1 | [The request knows which membership it is](issues/01-the-request-knows-its-membership.md) | — | done |
-| 02 | S1 | [A principal declares what kind of thing it is](issues/02-a-principal-declares-what-it-is.md) | 01 | done |
+| 02 | S1 | [A principal declares what kind of thing it is](issues/02-a-principal-declares-what-it-is.md) | 01 | **done** · 1 criterion open (system-job audit attribution needs the principal on `TenantContext`) |
 
 ### Phase 0 — authorization
 
