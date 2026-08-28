@@ -269,7 +269,10 @@ export interface CreatePurchaseOrderInput {
 
 export interface ReceiveGoodsLineInput {
   poLineId: number;
-  quantityReceived: number;
+  /** Decimal string at scale 4 — this becomes a stock ledger row. */
+  quantityReceived: string;
+  /** Why the line did not match what the order still owed. */
+  discrepancyReason?: "SHORT" | "OVER" | "DAMAGED" | "WRONG_ITEM";
   qualityStatus?: "ACCEPTED" | "REJECTED";
   rejectionReason?: string;
   lotNumber?: string;

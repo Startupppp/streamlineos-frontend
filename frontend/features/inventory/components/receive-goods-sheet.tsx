@@ -27,10 +27,12 @@ import { LocationSelect } from "@/components/inventory/location-select";
 import type { PurchaseOrder, ReceiveGoodsInput, ReceiveGoodsLineInput } from "@/types/inventory";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { TrackingMethod } from "@/types/inventory";
+import { decimalQuantityOrZeroSchema } from "@/features/inventory/lib/quantity-schema";
 
 const grnLineSchema = z.object({
   poLineId: z.number(),
-  quantityReceived: z.number().min(0),
+  quantityReceived: decimalQuantityOrZeroSchema,
+  discrepancyReason: z.enum(["SHORT", "OVER", "DAMAGED", "WRONG_ITEM"]).optional(),
   qualityStatus: z.enum(["ACCEPTED", "REJECTED"]),
   rejectionReason: z.string().optional(),
   lotNumber: z.string().optional(),
@@ -114,7 +116,7 @@ const GrnLineRow = memo(function GrnLineRow({ meta, index, control }: GrnLineRow
                   step="0.0001"
                   className="w-28 text-right tabular-nums"
                   value={field.value}
-                  onChange={(e) => field.onChange(Number(e.target.value))}
+                  onChange={(e) => field.onChange(e.target.value)}
                 />
               </FormControl>
               <FormMessage />
@@ -217,7 +219,7 @@ const GrnLineRow = memo(function GrnLineRow({ meta, index, control }: GrnLineRow
               <FormLabel className="text-xs">
                 Serial numbers
                 <span className="ml-2 text-muted-foreground">
-                  {serialCount} / {quantityReceived > 0 ? quantityReceived.toFixed(0) : "?"} entered
+                  {serialCount} / {Number(quantityReceived) > 0 ? Math.round(Number(quantityReceived)) : "?"} entered
                 </span>
               </FormLabel>
               <FormControl>
@@ -259,7 +261,7 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
       notes: "",
       lines: pendingLines.map((l) => ({
         poLineId: l.id,
-        quantityReceived: Math.max(0, Number(l.quantity) - Number(l.quantityReceived)),
+        quantityReceived: Math.max(0, Number(l.quantity) - Number(l.quantityReceived)).toFixed(4),
         qualityStatus: "ACCEPTED" as const,
         rejectionReason: "",
         lotNumber: "",
@@ -288,7 +290,7 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
 
   async function onSubmit(values: GrnFormValues): Promise<void> {
     const indexedLines = values.lines.map((l, origIdx) => ({ l, meta: lineMetas[origIdx] }));
-    const activeIndexed = indexedLines.filter(({ l }) => l.quantityReceived > 0);
+    const activeIndexed = indexedLines.filter(({ l }) => Number(l.quantityReceived) > 0);
 
     if (activeIndexed.length === 0) {
       toast.error("Enter quantity for at least one line");
@@ -302,9 +304,9 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
           .split(/[\n,]/)
           .map((s) => s.trim())
           .filter(Boolean);
-        if (serials.length !== Math.round(line.quantityReceived)) {
+        if (serials.length !== Math.round(Number(line.quantityReceived))) {
           toast.error(
-            `Serial count mismatch on line ${i + 1}: ${serials.length} entered, ${Math.round(line.quantityReceived)} expected`,
+            `Serial count mismatch on line ${i + 1}: ${serials.length} entered, ${Math.round(Number(line.quantityReceived))} expected`,
           );
           return;
         }
@@ -328,6 +330,7 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
         return {
           poLineId: l.poLineId,
           quantityReceived: l.quantityReceived,
+          discrepancyReason: l.discrepancyReason,
           qualityStatus: l.qualityStatus,
           rejectionReason: l.qualityStatus === "REJECTED" ? l.rejectionReason : undefined,
           lotNumber: meta?.trackingMethod === "LOT" ? l.lotNumber?.trim() || undefined : undefined,
