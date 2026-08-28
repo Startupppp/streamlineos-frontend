@@ -545,6 +545,25 @@ each decorated handler to its full route pattern, then assert some client sends 
 only asserting the decorator is present. `pnpm check:idempotent-commands` currently exits 0 with this
 break live, which is the tell that it only checks one side.
 
+### FIXED 2026-08-28 by S1, on the user's instruction
+
+Both hooks now send the header, matching the pattern already used in the inventory and HR hooks.
+
+**A second defect surfaced doing it, and it is the more important one.** `apiClient.post` accepted a
+`config` with `headers`, but `put`, `patch` and `delete` took an `AbortSignal` as their third argument and
+had **no way to pass a header at all** (`frontend/lib/api-client.ts`). So no `@Idempotent` route reachable
+by PUT, PATCH or DELETE could ever have been satisfied from this client — `useCancelModuleOwnershipTransfer`
+is a DELETE, and could not have been fixed without this.
+
+`put`, `patch` and `del` now accept `AbortSignal | RequestConfig` and normalise, so the 9 existing call
+sites that pass a signal keep working unchanged while a header becomes possible. `pnpm -C frontend exec
+tsc --noEmit` exits 0 across all 626 put/patch/delete call sites.
+
+**Still yours to finish:** the two-sided check above. I fixed the two routes I could prove were broken;
+I did not audit the other 218, and my attempt at a matcher was broken so I published none of its
+findings. Anyone adding `@Idempotent` to a PUT/PATCH/DELETE before today shipped a route no client could
+call.
+
 ## S1: a genuinely dead e2e assertion, now alive
 
 `src/modules/access/permission.guard.e2e-spec.ts` was failing on
@@ -631,10 +650,10 @@ failing `tsc`.
 
 **Blocking or not:** blocking for a clean typecheck only.
 
-## 2026-08-28 · S1 → whoever owns member removal · a transfer party cannot be hard-deleted
+## 2026-08-28 · S1 → FYI · a transfer party could not be hard-deleted — FIXED, no action needed
 
-**What I need:** a decision on what happens to `ownership_transfers` history when a membership is
-removed. I have not changed the behaviour; I am reporting a defect my ticket 08 column widened.
+**What I need:** nothing. This is a notification so nobody re-diagnoses it. Fixed on the user's
+instruction after I first raised it as a question.
 
 **Why:** all three party FKs on `ownership_transfers` are `ON DELETE RESTRICT` —
 `fk_ownership_transfers_from_member` and `fk_ownership_transfers_to_member` (both pre-existing) and
@@ -658,14 +677,18 @@ The pre-existing half is reachable without any of my work: a member who **declin
 owner initiating a transfer for a module they do not own — is what makes the initiator a third party who
 was not previously pinned.
 
-**The trade-off, which is a product call, not a code call:** `CASCADE` deletes the transfer's audit trail
-along with the member; `RESTRICT` blocks the removal. The rest of this refactor chose `CASCADE`
-(`agent_tokens`, `user_delegations`, `user_module_access` all cascade on the membership FK), so
-`ownership_transfers` is the outlier — but it is the only one of the four that is a historical record
-rather than a live grant.
+**The fix:** `removeMember` and `leaveOrganization` now delete the departing membership's
+`ownership_transfers` rows in the same transaction, immediately before the `organization_members` delete,
+instead of only marking PENDING ones `CANCELLED`. No migration; the three FKs stay `RESTRICT` so an
+unintended delete elsewhere still fails loudly. The audit trail is unaffected — each transfer is recorded
+independently in `audit_logs` (`ownership-transfers.service.ts:103`, `:228`). `revokeOrgScopedAccess` is
+untouched because it does not delete the membership.
 
-**Blocking or not:** not blocking this session. It surfaces as a `500` on member removal, not as an
-authorization hole.
+Re-proved after the change, both arms rolled back: without the cleanup the delete still fails `23001`;
+with it, `cleanup removed 1 transfer row(s)` and the delete succeeds. Covered by
+`organization-member-status.spec.ts` asserting the *order* of the two `tx.delete` calls.
+
+**Blocking or not:** closed.
 
 ## 2026-08-28 · S1 → whoever owns `common/tenant` · the audit row cannot name a system job
 

@@ -64,8 +64,39 @@ The pre-existing half needs none of this ticket's work: a member who **declines*
 case — criterion 3 exists precisely so an org owner can initiate a transfer for a module they do not own,
 which pins a membership that `from`/`to` would not have pinned.
 
-**Left open deliberately.** The fix is a product decision, not a code one: `CASCADE` discards the
-transfer's audit trail with the member, `RESTRICT` blocks the removal. The rest of this refactor chose
-`CASCADE` (`agent_tokens`, `user_delegations`, `user_module_access`), but those are live grants and this
-is a historical record. Raised in `CROSS-SESSION.md` for whoever owns member removal. It surfaces as a
-`500` on member removal, not as an authorization hole, so it blocks nothing here.
+**Fixed 2026-08-28.** `removeMember` and `leaveOrganization` now **delete** the departing membership's
+`ownership_transfers` rows instead of only marking the PENDING ones `CANCELLED`, immediately before the
+`organization_members` delete in the same transaction. No migration and no schema change: the three FKs
+stay `RESTRICT`, so an unintended delete anywhere else still fails loudly rather than silently discarding
+a transfer.
+
+Why deleting is the right call rather than `CASCADE` or a nullable initiator: every transfer touching the
+member is already terminal by that point (the pre-existing cancel ran first), the membership row itself
+is being hard-deleted, and the transfer is independently recorded in `audit_logs` — `this.audit.log` fires
+at `ownership-transfers.service.ts:103` and `:228`. So the audit trail survives; only the operational row
+pointing at a membership that no longer exists is removed. `revokeOrgScopedAccess` is deliberately
+untouched: it revokes access without deleting the membership, so the FK never bites there.
+
+Proved against the dev database, both arms in rolled-back transactions:
+
+```
+initiator-only membership under test: 10
+
+without the new cleanup (the old behaviour):
+  old: member delete FAILED  code=23001  fk_ownership_transfers_initiator
+
+with the new cleanup (what removeMember/leaveOrganization now do):
+  new: cleanup removed 1 transfer row(s)
+  new: member delete SUCCEEDED (rolled back)
+
+rows still present after both rolled-back probes: 4 (unchanged = rollback held)
+```
+
+Regression-covered by `organization-member-status.spec.ts` → *"clears the member's ownership transfers
+before deleting the membership row"*, which asserts the **order** of the two `tx.delete` calls, not merely
+that both happened — ordering is the whole point, and it guards against a vacuous pass by first asserting
+both indices are non-negative. `node ./node_modules/jest/bin/jest.js src/modules/organization/core/organization-member-status.spec.ts`
+→ `Tests: 18 passed, 18 total`.
+
+This also closes the pre-existing half: a member who declined a transfer, and so kept a
+`to_membership_id` reference forever, was equally unremovable before this change.
