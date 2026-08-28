@@ -4,6 +4,7 @@ import { memo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { AiGeneratedLabel } from "@/components/ai/ai-generated-label";
 import type { ReorderEvidence, ReorderProposalResponse } from "@/hooks/api/inv-ai-explain";
+import { AiSuggestedActions } from "../ai-suggested-actions";
 
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return "—";
@@ -111,23 +112,7 @@ export const AiNarrationSection = memo(function AiNarrationSection({
         </div>
       )}
 
-      {explanation.suggestedActions.length > 0 && (
-        <div>
-          <p className="text-micro font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
-            Suggested Actions
-          </p>
-          <ul className="space-y-1">
-            {explanation.suggestedActions.map((action, i) => (
-              <li key={i} className="flex items-start gap-1.5 text-dense text-muted-foreground">
-                <span className="shrink-0 mt-0.5 h-3.5 w-3.5 rounded-full border border-primary/30 bg-primary/5 flex items-center justify-center text-micro font-bold text-primary">
-                  {i + 1}
-                </span>
-                {action}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <AiSuggestedActions actions={explanation.actions} />
     </div>
   );
 });

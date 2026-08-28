@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import type { PermissionKey } from "@/lib/rbac/permissions";
 
 export interface ExplainFactor {
   label: string;
@@ -10,11 +11,52 @@ export interface ExplainFactor {
   isFactual: boolean;
 }
 
+/**
+ * INV-102. An action arrives as a resolved object, not a sentence: the server
+ * chose the label, the route and the permission from a closed table. The model
+ * contributed only which member of the enum this is, so nothing renderable
+ * here originated as model text except `rationale`.
+ */
+export type InvAiActionKey =
+  | "review_reorder_suggestion"
+  | "draft_purchase_order"
+  | "open_stock_movements"
+  | "open_expiry_report"
+  | "review_vendor_performance"
+  | "acknowledge_insight"
+  | "dismiss_insight";
+
+export interface ResolvedAiAction {
+  action: InvAiActionKey;
+  label: string;
+  /** `null` for anything that mutates — those never render as a link. */
+  href: string | null;
+  permission: PermissionKey;
+  mutates: boolean;
+  rationale: string;
+  evidence: Array<{ kind: string; id: number }>;
+}
+
+export interface AiProvenance {
+  contractVersion: number;
+  promptKey: string;
+  promptVersion: number;
+  model: string;
+  correlationId: string;
+}
+
 export interface InsightNarration {
+  /**
+   * `insufficient_evidence` and `refused` are real answers and must render as
+   * themselves. Showing either as an empty success would read as "nothing
+   * found", which is a different claim than "I could not tell".
+   */
+  status: "ok" | "insufficient_evidence" | "refused";
   explanation: string;
   factors: ExplainFactor[];
-  suggestedActions: string[];
+  actions: ResolvedAiAction[];
   evidenceSnapshot: Record<string, unknown>;
+  provenance: AiProvenance;
 }
 
 export function useExplainInsight() {

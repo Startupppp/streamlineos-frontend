@@ -34,10 +34,12 @@ function narrationToText(narration: InsightNarration): string {
     );
   }
 
-  if (narration.suggestedActions.length > 0) {
+  if (narration.actions.length > 0) {
     parts.push(
       "Suggested Actions:\n" +
-        narration.suggestedActions.map((a, i) => `${i + 1}. ${a}`).join("\n"),
+        narration.actions
+          .map((a, i) => `${i + 1}. ${a.label} — ${a.rationale}`)
+          .join("\n"),
     );
   }
 
