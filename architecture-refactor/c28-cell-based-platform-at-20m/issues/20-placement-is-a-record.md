@@ -46,6 +46,14 @@ This is the Phase 1 opener. Nothing moves; the deployment becomes cell `legacy-1
 
   **Routing now reads the placement record only.** `organizations.region` is no longer consulted by any routing path; it is still dual-*written* on create and is read solely to log a divergence (`placement-lookup.ts`, `"[region] placement diverges from the legacy region column"`). Dropping the column is deliberately deferred to Session 6 (ticket 28) so a rollback exists before a second cell has ever been exercised — decision recorded at session start. One source of routing truth; one legacy mirror scheduled for contraction.
 
+## Follow-up: the statuses can now be written (2026-08-28)
+
+A verifier pointed out that `MOVING`, `READ_ONLY` and `FAILED` had declared behaviour, enforcement and tests — but **no code path could ever set them**. The guard infrastructure was unreachable.
+
+`OrganizationPlacementAdminService` (`core/lifecycle/`) closes that: `markMoving` / `markReadOnly` / `markFailed` / `markActive`, each a **conditional UPDATE on both the current status and the current `placementVersion`**, checking the affected-row count so two concurrent operators cannot both succeed. Every transition **bumps the version and rotates the write fence token** — which is precisely what makes every in-flight writer's fence check fail, and therefore how source writes stop before a relocation starts. Legal edges are declared as a map, not scattered `if`s. Each transition invalidates the registry via `forgetVersionsBelow(orgId, newVersion)`, which finally gives that method a production caller. 23 tests.
+
+**No HTTP routes were added, deliberately.** The proposed surface took `orgId` from the **URL** and gated it on `settings:organization:manage` — but that key is granted to the `hr` role template, and every existing route in that controller reads `orgId` from the **token**. As proposed, an HR-role user in org A could have marked org B's placement `FAILED`, denying all writes to another tenant — the exact cross-tenant hole root `CLAUDE.md` §5 forbids. This codebase has no platform-admin guard to gate it correctly, so the operator surface belongs with ticket 29, which owns operator-driven relocation. The service is registered and ready; only the unsafe entry point is withheld.
+
 ## Findings
 
 **Organization creation was broken by this seam before this ticket.** All three creation paths — `auth.service.ts:78`, `org-profile.service.ts:170`, `org-setup.service.ts:342` — opened a tenant transaction for an organisation that had no `organizations` row yet, so `regionForOrg` found no placement and raised. `with-tenant-region.spec.ts:77` ("refuses to open anything for an unplaced organisation") is the proof the refusal is real, and `RegionModule` is registered in `app.module.ts:106`, so `hasRegionRegistry()` is true in a booted app. Fixed by reserving placement *before* the transaction opens in all three paths, which is also what ticket 25's saga requires.

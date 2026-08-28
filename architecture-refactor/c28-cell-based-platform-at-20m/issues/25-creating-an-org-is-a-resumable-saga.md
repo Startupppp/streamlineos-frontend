@@ -87,6 +87,18 @@
 
   The first test is the pre-existing one; it keeps its original assertions and reaches the completion path by supplying a confirming registry, so the both-columns-consistent contract is still pinned.
 
+## Follow-up: the remaining kinds now record saga steps (2026-08-28)
+
+Previously only `CREATE`, `LEGAL_HOLD` and `LEGAL_HOLD_RELEASE` called `saga.begin()`; the other operations consulted the transition table but recorded no steps. Now wired: `ARCHIVE`, `RESTORE`, `TERMINAL_DELETE`, `PURGE_SCHEDULE`, `PURGE_CANCEL` (`org-lifecycle.service.ts`) and `OWNERSHIP_TRANSFER` for `ORGANIZATION` scope only (`ownership-transfer-response.service.ts`). Each uses the step names already declared in `SAGA_STEPS`, an actor-and-org-scoped `requestKey`, and skips steps already `DONE` on retry. `EXPORT` has no implementation to wrap and is untouched.
+
+**What this buys, precisely: step tracking and resumability — not rollback.** Every compensator for these six is deliberately empty, because none of the steps is safely reversible: invitation revocation is terminal, a hard delete cannot be undone, un-archiving would bypass `RESTORE`'s own transition checks, and auto-reversing an ownership transfer would silently strip the new owner. `compensate()` therefore marks steps `COMPENSATED` and undoes nothing for these kinds. Saying so plainly, because "compensates" otherwise reads as rollback. `CREATE` remains the one kind with real compensators (it releases both reservations and unplaces).
+
+**Two findings from wiring it, both mine to fix and fixed:**
+
+Adding the saga dependency to `OwnershipTransferResponseService` made `OrganizationSagaService` unresolvable in `OwnershipModule` — **the application would not have booted**, and three ownership specs failed with `Nest can't resolve dependencies … at index [4]`. The agent's proposed fix was to import the whole `OrganizationModule`; I provided the saga service directly in `OwnershipModule` instead, since it injects only the global `DRIZZLE` token. That avoids dragging in Billing, Sessions, Notifications and Realtime, and avoids any module cycle. `src/modules/ownership` is 4 suites / 54 tests green.
+
+Two `SAGA_STEPS` entries do not match the real phases and were **reported, not silently renamed**: `ARCHIVE` declares invitation revocation and status archival as separate steps where the original code kept them in one atomic transaction, and `TERMINAL_DELETE` has no step for member-access revocation, which is currently bundled inside `delete-org-data`.
+
 ## Adversarial review round (2026-08-28)
 
 Three parallel reviewers went over this work afterwards. Four real defects found and fixed; the headline one was **mine, not an agent's**.
