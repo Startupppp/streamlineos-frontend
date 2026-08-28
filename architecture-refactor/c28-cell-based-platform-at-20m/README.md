@@ -2,7 +2,9 @@
 
 PRD: [`prd.md`](prd.md) · Program: [`../README.md`](../README.md)
 
-**32 tickets, 0 closed.** Not started. This is a proposed target architecture, not a repair of a broken one — the PRD's own verdict is that the current implementation is sound *inside one cell* and has not yet proved it can serve 20 million users.
+**32 tickets, 26 marked done** (some with a single criterion left open and a written reason — read the row). Phases 0 and 1 are largely landed; Phases 2–4 have not started, because they need a second cell to exist. This is a proposed target architecture, not a repair of a broken one — the PRD's own verdict is that the current implementation is sound *inside one cell* and has not yet proved it can serve 20 million users.
+
+**Being "done" here does not mean 20M-ready.** The release rule below is unchanged and unmet: no second cell exists, no relocation has been exercised, and the acceptance workload has not been run.
 
 The release rule is in the PRD and is the whole point of the ticket set: the architecture may be called **20M-ready** only when Phase 0 is complete, at least two cells are operating, relocation and recovery have been exercised, and the acceptance workload passes with published headroom. Until then the accurate statement is that the design has a credible horizontal path and the implementation has not proved the capacity.
 
@@ -33,9 +35,9 @@ The **S** column is the execution session that owns the ticket. The split was ch
 | # | S | Ticket | Blocked by | Status |
 |---|---|---|---|---|
 | 03 | S1 | [A permission snapshot cannot outlive its grant](issues/03-a-snapshot-cannot-outlive-its-grant.md) | 01 | done |
-| 04 | S1 | [Delegations and module overrides are keyed to the membership](issues/04-delegations-and-overrides-are-membership-keyed.md) | 01 | in-progress |
+| 04 | S1 | [Delegations and module overrides are keyed to the membership](issues/04-delegations-and-overrides-are-membership-keyed.md) | 01 | done |
 | 05 | S1 | [A machine credential is membership-keyed and bounded by a ceiling](issues/05-a-machine-credential-has-a-ceiling.md) | 02, 04 | done |
-| 06 | S1 | [Removing a membership removes everything derived from it](issues/06-removing-a-membership-removes-its-authority.md) | 04, 05 | in-progress |
+| 06 | S1 | [Removing a membership removes everything derived from it](issues/06-removing-a-membership-removes-its-authority.md) | 04, 05 | done |
 | 07 | S1 | [Owner-only operations are enumerated, not implied](issues/07-owner-only-operations-are-enumerated.md) | — | done |
 | 08 | S1 | [A module transfer records its initiator and its expected current owner separately](issues/08-a-module-transfer-records-both-parties.md) | 07 | done |
 
@@ -45,10 +47,10 @@ The **S** column is the execution session that owns the ticket. The split was ch
 |---|---|---|---|---|
 | 09 | S2 | [Employment truth is backfilled into the organization-owned tables](issues/09-employment-truth-is-backfilled.md) | — | done |
 | 10 | S2 | [One accessor dual-reads employment, and shouts when the two disagree](issues/10-one-accessor-dual-reads-employment.md) | 09 | done |
-| 11 | S2 | [HR, directory and onboarding read the accessor](issues/11-hr-directory-and-onboarding-read-the-accessor.md) | 10 | ready-for-agent |
-| 12 | S2 | [Payroll, finance and compensation read the accessor](issues/12-payroll-and-finance-read-the-accessor.md) | 10 | done · 1 criterion open |
-| 13 | S2 | [The remaining readers migrate](issues/13-the-last-readers-migrate.md) | 10 | ready-for-agent |
-| 14 | S2 | [`users` holds authentication identity only](issues/14-users-holds-authentication-only.md) | 11, 12, 13 | ready-for-agent |
+| 11 | S2 | [HR, directory and onboarding read the accessor](issues/11-hr-directory-and-onboarding-read-the-accessor.md) | 10 | done · 1 criterion open |
+| 12 | S2 | [Payroll, finance and compensation read the accessor](issues/12-payroll-and-finance-read-the-accessor.md) | 10 | done |
+| 13 | S2 | [The remaining readers migrate](issues/13-the-last-readers-migrate.md) | 10 | done · 2 criteria open |
+| 14 | S2 | [`users` holds authentication identity only](issues/14-users-holds-authentication-only.md) | 11, 12, 13 | done · 1 criterion open |
 
 ### Phase 0 — carried work and client contracts
 
@@ -57,8 +59,8 @@ The **S** column is the execution session that owns the ticket. The split was ch
 | 15 | S4 | [Every open item in `OPEN-FINDINGS.md` is closed or carries a dated reason](issues/15-the-open-findings-are-closed.md) | — | **done** |
 | 16 | S4 | [Every latency seam is instrumented and alerted below its SLO budget](issues/16-latency-seams-are-alerted-below-slo.md) | — | **done** · 1 criterion open (no paging destination configured) |
 | 17 | S5 | [The query key carries the tenant](issues/17-the-query-key-carries-the-tenant.md) | — | **done** · premise corrected: the tenant is in the query hash, not the key array |
-| 18 | S5 | [The API surface is versioned and its contract is generated in CI](issues/18-the-api-surface-is-versioned.md) | — | ready-for-agent |
-| 19 | S5 | [Every module is registered through one versioned manifest](issues/19-every-module-has-one-manifest.md) | — | ready-for-agent |
+| 18 | S5 | [The API surface is versioned and its contract is generated in CI](issues/18-the-api-surface-is-versioned.md) | — | **done** · 3 criteria open (versioning ruled out by the user); drift check found 6 real timesheets drifts |
+| 19 | S5 | [Every module is registered through one versioned manifest](issues/19-every-module-has-one-manifest.md) | — | **done** · 8 gates wired, pilot `timesheets`; lifecycle gate red on 11 real missing indexes |
 
 ### Phase 1 — placement without moving data
 
@@ -69,7 +71,7 @@ The **S** column is the execution session that owns the ticket. The split was ch
 | 22 | S3 | [Every write carries its placement version and dies without the fence](issues/22-a-write-carries-its-placement-version.md) | 20 | done |
 | 23 | S3 | [No organization-owned query bypasses placement](issues/23-no-query-bypasses-placement.md) | 20 | done |
 | 24 | S3 | [An organization switch is revalidated in the target cell](issues/24-an-org-switch-is-revalidated-in-the-target-cell.md) | 20 | done |
-| 25 | S3 | [Creating an organization is an idempotent, resumable saga](issues/25-creating-an-org-is-a-resumable-saga.md) | 20 | done · 1 criterion open (ownership-transfer + legal-hold call sites are S1's) |
+| 25 | S3 | [Creating an organization is an idempotent, resumable saga](issues/25-creating-an-org-is-a-resumable-saga.md) | 20 | done |
 
 ### Phases 2–4 — cells
 

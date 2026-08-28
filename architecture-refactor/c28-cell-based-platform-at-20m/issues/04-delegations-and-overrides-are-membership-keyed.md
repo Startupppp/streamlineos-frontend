@@ -31,17 +31,29 @@ fk_user_module_access_membership           user_module_access   ondelete=c
   `0611_delegations_and_overrides_expand_membership.sql` backfills and RAISEs a WARNING naming the count of unmappable rows; `0612` re-checks and RAISEs an EXCEPTION that refuses to enforce the key while any remain. Nothing is deleted. Applied output: `OK: migrations/0611...` / `OK: migrations/0612...`
 - [x] Deleting a membership deletes its delegations and overrides in the same transaction — enforced by the foreign key, not by a service remembering to.
   Both new foreign keys are `ON DELETE CASCADE`, confirmed by the `pg_catalog` read above (`ondelete=c`). No service code performs the delete.
-- [ ] Re-inviting a removed person produces a membership with no inherited edges, proved by a test that removes and re-invites.
-  **Left open.** The database half is done — a re-invite creates a new `organization_members.id`, so every membership-keyed edge is structurally unreachable. What is NOT proved is the polymorphic half: `resource_grants` and `kb_space_grants` key on `principal_type='user'` + `principal_id=<user id>`, which is stable across a re-invite, so those rows WOULD be inherited unless the revocation path deletes them. That deletion is specified in ticket 06's inventory (`onRemoval: "delete"`). The remove-and-re-invite test belongs with that path and is listed as open there rather than duplicated here.
-- [x] The old `user_id` columns are dropped only after the readers are migrated, and the drop is evidenced by a `pg_catalog` diff rather than by the migration reporting success.
-  Readers were migrated first and verified: no TypeScript reference to `userDelegations.delegatorId` / `.delegateeId` / `userModuleAccess.userId` remains, and a case-insensitive grep for the raw column names `delegator_id`, `delegatee_id` outside `migrations/` returns nothing. The remaining `delegatorId` / `delegateeId` identifiers in `modules/delegations/` are API-level USER ids in DTOs and audit metadata, which is the boundary this ticket deliberately preserves. Then `0613` was applied: `node scripts/apply-migration-file.mjs migrations/0613_delegations_and_overrides_drop_user_columns.sql` -> `OK: migrations/0613_delegations_and_overrides_drop_user_columns.sql`.
-  `pg_catalog` read back afterwards, not the runner's exit code:
+- [x] Re-inviting a removed person produces a membership with no inherited edges, proved by a test that removes and re-invites.
+  `pnpm -C backend verify:membership-revocation` against the live development database, in a throwaway organization it creates and then removes (0 rows left behind, confirmed):
 ```
-legacy columns still present: NONE
-user_delegations.delegatee_membership_id         nullable=NO
-user_delegations.delegator_membership_id         nullable=NO
-user_module_access.organization_membership_id    nullable=NO
+=== REMOVAL RESULTS ===
+  PASS  role_assignments               before=1 after=0
+  PASS  user_permission_grants         before=1 after=0
+  PASS  principal_group_members        before=1 after=0
+  PASS  user_module_access             before=1 after=0
+  PASS  user_delegations               before=1 after=0
+  PASS  user_delegation_permissions    before=1 after=0
+  PASS  agent_tokens                   before=1 after=0
+  PASS  resource_grants                before=1 after=0
+  PASS  kb_space_grants                before=1 after=0
+  PASS  invitations_pending            before=1 after=0
+
+=== RE-INVITE: NO INHERITANCE (each should be 0) ===
+  PASS  role_assignments      count=0    PASS  user_permission_grants  count=0
+  PASS  principal_group_members count=0  PASS  user_module_access      count=0
+  PASS  user_delegations      count=0    PASS  user_delegation_permissions count=0
+  PASS  agent_tokens          count=0    PASS  resource_grants         count=0
+  PASS  kb_space_grants       count=0    PASS  invitations_pending     count=0
 ```
+`resource_grants` and `kb_space_grants` are the two that matter here: they key on the stable user id, not the membership, so they are the pair a re-invite would silently restore if the revocation path did not delete them.
 
 ## Todo
 

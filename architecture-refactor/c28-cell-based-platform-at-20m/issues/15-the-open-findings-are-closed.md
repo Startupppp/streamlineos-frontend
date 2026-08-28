@@ -18,7 +18,7 @@
 | 6 | `unregistered-injectables.mjs` reports 0 and can become a spec | **FIXED.** `src/unregistered-injectables.spec.ts`, 3 tests, in the default suite. |
 | 6 | ~~`recurring-journals.controller.ts` holds its list schema inline~~ | **STRUCK.** Already imports from `./dto/recurring-journals.schemas`. |
 | 6 | 29 hand-rolled page fields remain | **FIXED, and the count was stale — 11 remained, not 29.** All migrated to the shared helpers; the nine over-cap fields come down to the 100/page cap per the product ruling. |
-| 6 | `INVITE_EXPIRED` is never written to the seat ledger | **OPEN — DEFERRED**, with a dated reason and what would close it. Seat maths is correct; only the audit event is missing. |
+| 6 | `INVITE_EXPIRED` is never written to the seat ledger | **FIXED.** `cron-invitation-expiry.service.ts` — a `forEachOrg` sweep transitioning expired `PENDING` invitations and emitting one seat event each, in the same transaction. Registered; 10 tests. Deferred at first, then built once it was clear no schema change was needed. |
 
 ## Acceptance criteria
 
@@ -100,7 +100,7 @@ The "other twenty" had already migrated before this session — the re-scan foun
 
 - [x] `OPEN-FINDINGS.md` afterwards contains no item whose status is unknown.
 
-Every item carries exactly one status from a declared vocabulary. Two are deliberately open, each with a date, a reason, and what would close it.
+Every item carries exactly one status from a declared vocabulary. **One** remains deliberately open — §4, the Neon password, which is operator-only and carries a date, a reason, how to tell it has regressed, and the fact that `ALTER ROLE` does not stick. The `INVITE_EXPIRED` deferral was subsequently reversed and built, because re-checking showed the enum value, the ledger delta, the executor-accepting API and the cron sweep pattern all already existed, so no schema change was required and it was smaller than the deferral assumed.
 
 Combined evidence for the criteria above:
 

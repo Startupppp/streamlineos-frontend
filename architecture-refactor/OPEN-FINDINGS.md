@@ -169,17 +169,25 @@ truth onto `hr_reporting_lines`.
   (data-quality) and `MAX_PAGE` (issues) survive as **bulk-operation** bounds, which are not page sizes.
   The four AI copilot tool-argument limits and `e-sign`'s `pageNumber` are not page fields and were left
   alone.
-- **`INVITE_EXPIRED` is never written to the seat ledger** — **OPEN — DEFERRED 2026-08-28.** Re-verified:
-  `SEAT_EVENT_DELTAS.INVITE_EXPIRED` is declared in `modules/billing/core/seat-definition.ts` and
-  asserted by `seat-ledger.service.spec.ts`, but nothing emits it. Expiry is evaluated by predicate
-  (`expires_at > NOW()` inside `seatCount()`), so **the seat maths is correct and no customer is
-  over- or under-charged** — the only loss is a missing audit event.
-  - **Why deferred:** closing it means introducing a scheduled expiry sweep, which is a new background
-    job with its own tenant-context, idempotency and partitioning obligations. That is a ticket, not a
-    finding, and inventing one here would be scope this session does not own.
-  - **What would close it:** an expiry sweep that iterates orgs with `forEachOrg`, transitions expired
-    `PENDING` invitations to a terminal state, and emits one `INVITE_EXPIRED` seat event per transition,
-    idempotently.
+- **`INVITE_EXPIRED` is never written to the seat ledger** — **FIXED 2026-08-28.** It was first deferred
+  as "a ticket, not a finding", on the grounds that a scheduled sweep is a new background job. That was
+  over-cautious: every part already existed. `invitationStatusEnum` already carried `EXPIRED`,
+  `SEAT_EVENT_DELTAS.INVITE_EXPIRED` was already `-1`, `SeatLedgerService.recordSeatEvent` already
+  accepted a transaction executor, and `modules/cron/` already had the sweep pattern — so **no schema
+  change was needed**, which matters because `db/schema/common/auth.ts` is shared by three sessions.
+
+  `modules/cron/cron-invitation-expiry.service.ts` iterates organizations with `forEachOrg` (a
+  background sweep has no ambient tenant context, and a write without the GUC dies `42501` under live
+  RLS), transitions `PENDING` invitations past `expires_at` to `EXPIRED`, and emits one
+  `INVITE_EXPIRED` seat event per transitioned row **inside the same transaction**, so a crash cannot
+  leave one without the other. The update is predicated on the current status, never on id alone, so an
+  `ACCEPTED` or `REVOKED` invitation can never be revived — and that predicate is what makes the sweep
+  idempotent: a second run matches nothing. Nothing is ever deleted; terminal history is retained.
+  Registered in `cron.module.ts` with a `CRON_SECRET`-guarded controller behind `CronLeaseService`,
+  matching its siblings. 10 tests.
+
+  **The seat maths did not change and must not** — `seatCount()` already excluded expired invitations by
+  predicate, so this restores the missing audit event and nothing else.
 
 ---
 

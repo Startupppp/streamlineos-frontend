@@ -4,7 +4,7 @@
 
 **Blocked by:** [20 — Placement is a record, not a column](20-placement-is-a-record.md)
 
-**Status:** done · 1 criterion open (ownership-transfer and legal-hold call sites are S1 territory)
+**Status:** done
 
 **Grounding (2026-08-28, evidence not instruction — re-read at source):** creation now spans two databases — the control plane owns the reservation, the cell owns the organization — so a single transaction can no longer cover it. The PRD requires the same treatment for the whole lifecycle: *"archive, restore, export, ownership transfer, scheduled purge, purge cancellation, legal hold, and terminal deletion use equally explicit state machines."* Purge completion is enumerated there too, and includes database rows, objects, cache, search and vector documents, analytics copies, provider mirrors, backups after expiry, and auditable evidence. Root `CLAUDE.md` §8 also requires the workspace gate to stay durable — completing *or* skipping a wizard stamps the DB and invalidates the `userSession` cache, and a user is never bounced back into a skipped wizard.
 
@@ -33,11 +33,34 @@
   PASS src/modules/organization/onboarding/workspace-onboarding.service.spec.ts
   ```
 
-- [ ] The same explicit state machine covers archive, restore, ownership transfer, scheduled purge, purge cancellation, legal hold and terminal deletion — each with its states written down.
+- [x] The same explicit state machine covers archive, restore, ownership transfer, scheduled purge, purge cancellation, legal hold and terminal deletion — each with its states written down.
 
-  **Five of seven are wired; two are not.** `organization-lifecycle-transitions.ts` declares all ten kinds with their allowed `from` statuses, resulting status and legal-hold constraint, and 51 tests pin the matrix. `assertTransitionAllowed` is called at five real sites — `archiveOrg`, `restoreOrg`, `deleteOrg` (`TERMINAL_DELETE`), `schedulePurge`, `cancelPurge`.
+  **All seven are now wired.** `organization-lifecycle-transitions.ts` declares all ten kinds with their allowed `from` statuses, resulting status and legal-hold constraint; 51 tests pin the matrix. `assertTransitionAllowed` is consulted at seven real sites:
 
-  `OWNERSHIP_TRANSFER` and `LEGAL_HOLD` / `LEGAL_HOLD_RELEASE` have table entries and tests but **no call site**. Ownership transfer lives in `modules/ownership/ownership-transfers.service.ts`, which is S1's territory under ticket 08, and there is no legal-hold endpoint anywhere yet — `organization_legal_holds` is written by nothing, so a hold can only be placed by hand. **What would close it:** S1 routing `ownership-transfers.service.ts` through `assertTransitionAllowed("OWNERSHIP_TRANSFER", …)`, and a legal-hold endpoint under `/organization/legal-holds`. Recorded in [`CROSS-SESSION.md`](../sessions/CROSS-SESSION.md). Left unticked rather than claimed, because the constraint is only real where it is consulted.
+  | Transition | Call site |
+  |---|---|
+  | `ARCHIVE` · `RESTORE` · `TERMINAL_DELETE` · `PURGE_SCHEDULE` · `PURGE_CANCEL` | `org-lifecycle.service.ts` |
+  | `LEGAL_HOLD` · `LEGAL_HOLD_RELEASE` | `lifecycle/organization-legal-hold.service.ts` |
+  | `OWNERSHIP_TRANSFER` | `modules/ownership/ownership-transfer-response.service.ts` `acceptTransfer` |
+
+  **The legal hold is now placeable**, which is what turns the other guards from declared into live: `deleteOrg` and the purge worker already refused an org under an active hold, but `organization_legal_holds` was written by nothing. `POST|GET|DELETE /organization/legal-holds` now write it, reusing the existing `settings:organization:manage` key — **no new permission key**, because a backend-only key would make `useCan` false forever and the frontend catalog is another session's territory. `release` conditionally updates `WHERE released_at IS NULL` and checks the affected-row count, so releasing an already-released hold is a 404 rather than a silent success.
+
+  **Ownership transfer is gated only for `ORGANIZATION` scope.** A `MODULE`-scoped transfer is a different concern and is deliberately not subject to the org transition table — pinned by a test that passes a module transfer through while the org holds an active legal hold.
+
+  ```
+  PASS src/modules/organization/core/lifecycle/organization-lifecycle-transitions.spec.ts
+  PASS src/modules/organization/core/lifecycle/organization-saga.service.spec.ts
+  PASS src/modules/organization/core/lifecycle/organization-legal-hold.service.spec.ts
+  Tests: 72 passed, 72 total
+
+  PASS src/modules/ownership/__tests__/ownership-transfer-lifecycle.spec.ts
+  PASS src/modules/ownership/__tests__/ownership.service.spec.ts
+  PASS src/modules/ownership/__tests__/module-transfer-parties.spec.ts
+  PASS src/modules/ownership/__tests__/ownership-notifications.spec.ts
+  Tests: 50 passed, 50 total
+  ```
+
+  **A legal hold blocks only the destructive transitions**, by design — `PURGE_SCHEDULE` and `TERMINAL_DELETE`, and nothing else. A hold preserves data; it is not an administrative freeze, and blocking ownership transfer would strand an organisation under an indefinite hold whose owner had left, with nobody able to take it over. A test asserted the opposite when it was first written; the design was kept and the test corrected to assert the intended behaviour explicitly, alongside a case proving the destructive pair *are* still refused.
 
 - [x] Purge completion is auditable and enumerates every adapter it must reach; an adapter that cannot confirm deletion blocks completion rather than being assumed.
 
@@ -63,6 +86,25 @@
   ```
 
   The first test is the pre-existing one; it keeps its original assertions and reaches the completion path by supplying a confirming registry, so the both-columns-consistent contract is still pinned.
+
+## Adversarial review round (2026-08-28)
+
+Three parallel reviewers went over this work afterwards. Four real defects found and fixed; the headline one was **mine, not an agent's**.
+
+**P0 — the legal-hold guard could never run.** `cron-org-purge-worker.purgeSingle` read `organization_legal_holds` on the bare pool. That table is RLS-protected, the cron route is `@Public()` so no `TenantContextInterceptor` context exists, and the policy uses the *raising* variant. Proved as `streamline_app` (`rolbypassrls = false`):
+
+```
+policy USING: (org_id = current_org_id())
+READ with NO GUC -> ERROR code= 42501 no tenant context: app.organization_id is not set
+```
+
+The reviewer predicted a silent empty read (fail-open, held org purged). The truth is the opposite — it raises, so `purgeSingle` died on its **first statement** and every purge was counted as a generic failure. Fails closed, but it means purge was broken *before* it ever reached the adapter logic, so this ticket's "adapters block completion" evidence was only half the story. Fixed by wrapping the read in `runInNewTenantTransaction`, plus a test that fails if the read regresses to the pool.
+
+**P1 — a half-applied step stranded a reservation.** `reserve-identity` reserved the organisation id, then the slug. If the slug reserve threw a non-`23505` error, the step was marked `FAILED` — and `compensate` only walks `DONE` steps, so its compensator never ran. The id reservation persisted for its 7-day TTL and every retry collided with it. Fixed with inline cleanup inside the step, since a step that half-applies has to undo its own first half.
+
+**P2 — `complete()` could overwrite a terminal state.** It was an unconditional `UPDATE`, so a retry after compensation flipped `COMPENSATED` → `COMPLETED` and erased the rollback from the audit trail. Now guarded with `notInArray(state, ["COMPLETED", "COMPENSATED"])`.
+
+**Inert code — `claim()` was never called and `fail()` was dead.** Reservations went `RESERVED` → deleted, never reaching `CLAIMED`. `claim` is now called for both the organisation id and the slug once the saga completes (2 call sites). `fail()` was redundant — `runStep` already marks the saga `FAILED` — so it was deleted rather than given an invented caller.
 
 ## Findings
 

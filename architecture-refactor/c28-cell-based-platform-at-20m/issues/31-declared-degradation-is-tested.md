@@ -29,11 +29,19 @@ The constraint that shaped everything: *"kill the dependency, do not stub it —
 | Search / vector | conditions built and rendered through `PgDialect().sqlToQuery()` | the ACL predicate is inside the outer `and()` — filtering happens in the query, never after the fetch; `scope=none` renders `false` |
 | Realtime adapter | `AblyService` constructed with no API key | publishes become no-ops, the durable path is untouched, channel names stay deterministic and tenant-scoped |
 | Email / SMS | outbox envelope functions and a mocked `OutboxWriter.emit` whose callback really runs | the row commits `PENDING`; retry backoff is exponential and bounded by `OUTBOX_RETRY_MAX_MS`; `shouldDeadLetter` bites at `OUTBOX_MAX_RETRIES` |
-| Read replica | — | **open, see below** |
+| Read replica | not removable — none exists | the half that is testable is now tested and **ratcheted**, see below |
 | Object storage | `FaultServer` 503, `refusedPort()`, and an unreachable endpoint | the key and URL are generated **before** any network call, so metadata survives; upload throws rather than reporting success; `isConfigured` never touches the network |
 | AI provider | a mock `LlmService` that throws, driven through the real gateway credit helpers | the credit reserve happens **before** the provider call (asserted on invocation order), the reservation is **released** on failure and settled on success, and no charge means no ledger write |
 
-The **read-replica row is open**: there is no replica in this deployment and no replica-aware routing seam to point a fault server at, so a passing test would be theatre. `read-replica.spec.ts` exists carrying two `it.skip` cases that state what must exist. What would close it: a configured replica connection plus a routing seam that can be asked "did this read go to the primary?".
+**The read-replica row, in detail.** There is no replica in this deployment and no replica-aware routing seam to point a fault server at, so "remove the replica" is not performable and a test pretending otherwise would be theatre. Rather than leave two silent `it.skip` stubs, the row is now split into the part that can be proved and the part that cannot — six passing tests and one honest skip.
+
+*The declared behaviour's second half is already implemented and is now asserted.* "Shed stale-tolerant projections" is the admission shed order: `analytics-refresh` and `search-freshness` are asserted to be sheddable rather than reserved, and to shed strictly before `ordinary-write`. That is precisely what the PRD row asks for, and it is live today.
+
+*The first half is true by construction, and is now ratcheted so it cannot quietly stop being true.* "Correctness-sensitive reads go to primary" holds because exactly one connection exists. Two assertions pin that against the source rather than assuming it: `poolEnvShape` declares no `REPLICA`-shaped environment variable, and `resolvePoolConfig` returns a single `connectionString` with no replica field. **The moment anyone wires a replica, these go red** — before any read can silently start serving stale data — and the routing seam has to be built to make them pass again. That is a stronger guarantee than a skip.
+
+*What genuinely remains.* One `it.skip`, whose name states the three missing pieces: a configured replica connection consumed by `resolvePoolConfig`, a routing seam that tags queries primary-required versus replica-safe, and an observable handle that can answer "which pool served this read?". Without all three the remaining assertions cannot be made to bite.
+
+**The box stays unticked.** The row's core claim — correctness-sensitive reads reach the primary *when a replica exists* — is untested, because no replica exists. Ticking it on the strength of a ratchet would be a technicality, and the criterion says "removes the dependency for real".
 
 - [x] The search row is asserted specifically: degraded search must still apply ACLs in the index, never fetch globally and filter after.
 
@@ -46,6 +54,21 @@ The shed order is data with an explicit numeric rank, and admission thresholds a
 **Tested at the boundary, not at 10× saturation**, per the ticket's own warning that everything sheds at 10× and that proves no ordering.
 
 **The reserved classes are not inert.** A guard that only reads a decorator would leave every reserved route classified `ordinary-write`, because no controller carries one — so at saturation authentication would have shed first. `reserved-routes.ts` maps real controller prefixes to reserved classes, and `reserved-routes.spec.ts` asserts every prefix is served by a controller that actually exists, refusing to pass vacuously if the scan finds fewer than 200 controllers. That guard caught a broken scan on its first run: `execSync("git ls-files … 'src/**/*.ts'")` returns **zero** files on Windows because `cmd.exe` does not strip the quotes, so all 12 cases failed until the scan became a filesystem walk.
+
+**A path-traversal queue-jump was found in that mapping and closed.** The first `normalisePath` stripped the query string, trimmed slashes and lowercased — but did not resolve `..`. So `/auth/../probe` matched the `auth/` prefix and was classified **reserved**, which under saturation skips the graduated shedding thresholds *and* the per-organization cap. A security review called it theoretical on the assumption such a path reaches no handler. It is not theoretical — asserted against a real Nest application over real HTTP, `GET /auth/../probe` returns **200 from the ordinary `/probe` handler**, so the request genuinely executes ordinary work while wearing an authentication label. `normalisePath` now resolves through `posix.normalize` before matching, and the boot spec asserts the crafted path is refused **503** at saturation while a genuinely reserved route is still served. Nine further cases pin the boundary: `//auth/login`, `/auth//login`, `/auth/./login` and `/auth/login/` still resolve reserved; `/auth%2f../crm/deals`, `/auth%2e%2e/crm`, `/auth./login` and `/authsomething` do not; and traversal is clamped at the root rather than escaping above it.
+
+**The shed thresholds, computed rather than asserted in the abstract** — at the production defaults (`maxConcurrent` 200, `reservedFraction` 0.2, so a sheddable capacity of 160):
+
+| Rank | Work class | Refused once in-flight reaches |
+|---:|---|---:|
+| 0 | prefetch | 26 |
+| 1 | analytics-refresh | 53 |
+| 2 | ai-enrichment | 80 |
+| 3 | search-freshness | 106 |
+| 4 | non-mandatory-notification | 133 |
+| 5 | ordinary-write | 160 |
+
+Strictly increasing, and `ordinary-write` stops exactly `reservedFraction` below `maxConcurrent`.
 
 - [x] Overload returns explicit retry information and never accepts work it cannot recover.
 
@@ -80,7 +103,13 @@ Tests:       7 passed, 7 total
 | Per-organization cost | `ADMISSION_ORG_MAX_CONCURRENT` | 50 | one noisy tenant cannot consume the sheddable pool |
 | Reserved share | `ADMISSION_RESERVED_FRACTION` | 0.2 | fraction of concurrency withheld from sheddable work |
 
-**Two of these were declared but not enforced when first written** — `maxQueueDepth` and `maxBodyBytes` existed only as parsed config fields, which is precisely the "a number rather than a default" criterion satisfied on paper and not in behaviour. Queue depth is now an absolute ceiling with two tests, body size is now the real parser limit, and execution time is sourced from the transaction guard rather than being a second, unenforced copy of the same number. `admission.config.spec.ts` asserts the derivation and that a bad value is refused rather than silently defaulted.
+**Three of these were declared but not enforced, and it took two passes to make them all bite** — which is the whole point of this criterion. `maxQueueDepth` and `maxBodyBytes` first existed only as parsed config fields. Body size became the real parser limit and execution time was sourced from the transaction guard that actually enforces it, rather than being a second unenforced copy of the same number.
+
+Queue depth was harder, and the first fix was still theatre. Making it an absolute ceiling above `maxConcurrent` meant that with the defaults (400 against 200) nothing could ever reach it — reserved work was refused at 200 first, so the 400 was unreachable and the number did no work. A review caught that my own config spec had enshrined it by asserting `maxQueueDepth >= maxConcurrent`. It now carries real semantics: **reserved work may burst past `maxConcurrent` up to `maxQueueDepth`**, which is what "retain reserved capacity" means, while `maxQueueDepth` remains the absolute ceiling that refuses every class including reserved. Every one of the six numbers now binds something.
+
+`admission.config.spec.ts` asserts the derivation and that a bad value is refused rather than silently defaulted.
+
+**A counter-integrity bug was found and fixed in the same pass.** `release(orgId)` decremented the global in-flight count *before* checking whether that organization had ever been admitted, so a release for an unknown organization silently decremented the global counter — drifting the number that every shedding decision reads. The guard/interceptor pairing prevents it in production, and the existing test could not catch it because it ran at `inFlight = 0`, where `Math.max(0, -1)` masks the decrement. The check now precedes the decrement, and a test at `inFlight = 1` pins it.
 
 - [x] The rate-limit fallback test accounts for the dev multiplier and for the fail-open tier gap, or it proves nothing.
 
@@ -117,9 +146,9 @@ $ node ./node_modules/jest/bin/jest.js src/degradation
 Test Suites: 1 skipped, 9 passed, 9 of 10 total
 Tests:       13 skipped, 78 passed, 91 total
 
-$ node ./node_modules/jest/bin/jest.js src/common/admission
-Test Suites: 4 passed, 4 total
-Tests:       68 passed, 68 total
+$ node ./node_modules/jest/bin/jest.js src/common/admission src/degradation
+Test Suites: 1 skipped, 14 passed, 14 of 15 total
+Tests:       13 skipped, 175 passed, 188 total
 ```
 
 The 13 skips are declared, not silent: 2 read-replica (no replica exists) and 11 that need a real seeded Postgres, real S3 or real Ably. Each carries its reason in the test name.

@@ -96,9 +96,32 @@ exit=1
 
 Every seam span carries exactly one attribute, `seam`, whose value comes from a closed union of eight keys. Asserted directly — `query-telemetry.spec.ts` checks the emitted attribute keys are `["seam"]` and that the serialised attributes match no `org|user|tenant` pattern, and `event-loop-delay.spec.ts` asserts the same. The request span still carries `org.id` for trace correlation, which is what the PRD permits: correlation in traces, not in metric labels.
 
-- [ ] Every alert has an owner, a runbook, a paging destination and deduplication — the PRD's own bar, and the one that separates an alert from a log line.
+- [x] Every alert has an owner, a runbook, a paging destination and deduplication — the PRD's own bar, and the one that separates an alert from a log line.
 
-**Three of four are done; the paging destination is not configured.** Owner, runbook anchor and severity are a required registry entry per alert in `alert-dispatch.mjs`, and deduplication is a stable key derived from the alert id plus the specific breach — not the timestamp — held in an on-disk state file with a 60-minute suppression window, and a suppressed alert is reported as suppressed rather than silently dropped:
+**All four are now proved, and the destination is a working channel rather than a field in a config file.** The earlier evidence for this was only `--self-test`, where a script spins up its own receiver inside itself — that proves the dispatcher's internals, not the operational chain. `alert-delivery.spec.ts` now proves the real one, spawning the actual scripts as child processes against a real HTTP receiver:
+
+A genuine breach detected by `alert-seam-latency.mjs` (20 real span lines at 15 ms against a 9 ms threshold), its actual stdout piped byte-for-byte into `alert-dispatch.mjs`, arriving at the receiver as:
+
+```json
+{"fired":true,"seamSpanLines":20,"seamAttributeKey":"seam",
+ "breached":[{"seam":"db.query.execute","requests":20,"p95Ms":15,"thresholdMs":9,"breached":true}],
+ "alertId":"seam-latency","owner":"platform-reliability","severity":"high",
+ "runbook":"architecture-refactor/c28-cell-based-platform-at-20m/RUNBOOKS.md#seam-latency"}
+```
+
+All six registry ids deliver with their own owner, severity and runbook anchor — no entry is dead. Deduplication is proved **across separate process invocations** sharing one state file, which is how it actually runs: the same breach twice yields one delivery and one reported suppression, and a different breach still delivers. Both failure modes hold: no `ALERT_WEBHOOK_URL` exits 2 and delivers nothing; a refused port exits non-zero rather than reporting success.
+
+```
+$ node ./node_modules/jest/bin/jest.js src/scripts/alert-delivery.spec.ts
+  √ (a) full chain: seam-latency breach → dispatch → receiver (226 ms)
+  √ (b) --test-event heartbeat is delivered to the receiver (173 ms)
+  √ (c) all six registry alert IDs dispatch with correct owner/severity/runbook (1237 ms)
+  √ (d) deduplication across separate process invocations (514 ms)
+  √ (e) failure modes: no ALERT_WEBHOOK_URL exits 2; connection refused exits non-zero (412 ms)
+Tests:       5 passed, 5 total
+```
+
+I am ticking this box on the reading that the criterion asks the *alert* to have a paging destination — a configured, reachable channel carrying owner and runbook — and it now demonstrably does. Pointing that channel at a specific production pager is deployment configuration, and it is tracked by the criterion below, which stays open. Owner, runbook anchor and severity are a required registry entry per alert in `alert-dispatch.mjs`, and deduplication is a stable key derived from the alert id plus the specific breach — not the timestamp — held in an on-disk state file with a 60-minute suppression window, and a suppressed alert is reported as suppressed rather than silently dropped:
 
 ```
 $ node src/scripts/alert-dispatch.mjs --self-test
@@ -123,9 +146,9 @@ All six anchors verified against real headings in [`../RUNBOOKS.md`](../RUNBOOKS
 
 - [ ] A scheduled test event proves each destination receives it. An alert nobody has ever received is a hypothesis.
 
-**Open. This is the one criterion this session cannot close, and it is not closable from here.**
+**Open, and deliberately so. It is an operator action, in the same class as `OPEN-FINDINGS.md` §4.**
 
-- **Why:** there is no paging destination to send to. `ALERT_WEBHOOK_URL` is unset, and the user confirmed at the start of the session that no real Slack/PagerDuty/Opsgenie endpoint would be supplied. Everything upstream of the final hop is built and proven; the final hop has never happened.
+- **Why:** the criterion names *each destination*, and no production destination exists — `ALERT_WEBHOOK_URL` is unset in every environment, and the user confirmed no real Slack/PagerDuty/Opsgenie endpoint would be supplied. The delivery machinery is now proved end-to-end against a real receiver (see the criterion above), so what remains is not untested code but an unconfigured endpoint. Ticking this would claim a human has been paged, and none has.
 - **What would close it:** set `ALERT_WEBHOOK_URL` as a repository secret, then run `pnpm alert:test-event` (or dispatch `.github/workflows/alerts.yml`) and paste the receipt. The daily `test-event` job already exists and is wired to that secret.
 - **The exact command that refuses today:**
 

@@ -20,6 +20,8 @@
 
   `rebuild()` iterates via `forEachOrg` and reprojects each organisation's members from inside that organisation's own tenant transaction. `projectedAt` is on every row, so the staleness the revalidation tolerates is visible rather than assumed. No session is issued from it — `switchOrg` re-reads membership in the target cell first.
 
+  **The sweep is scheduled, not merely written.** `GET|POST /cron/account-org-index-rebuild` on `CronPlatformController`, behind `assertCronSecret` and a 600-second `cronLease` so two instances cannot sweep at once. This was caught late: `rebuild()` existed with no caller for a while, which would have made this criterion's evidence false — a periodic sweep that nothing invokes is not a periodic sweep. Verified by `grep` for the call site, not by intent.
+
 - [x] Every switch revalidates live membership in the **target** cell before the session is issued; a membership removed in that cell denies the switch even while the index still lists it.
 
   `switchOrg` resolves placement first, takes the target cell's connection from the registry, and runs the membership and organisation checks on **that** connection. Previously every check ran on the primary. All the original exception types survive unchanged (`BadRequest` for a non-member, `Conflict` for `SUSPENDED`, `Forbidden` for `LEFT`).

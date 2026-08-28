@@ -49,6 +49,9 @@ jobs:
       - name: Client contract has not drifted from the API (timesheets)
         run: pnpm run check:contract-drift:self-test && pnpm run check:contract-drift
 
+      - name: Module manifest agrees with the sidebar and vocabulary
+        run: pnpm run check:module-manifest:self-test && pnpm run check:module-manifest
+
       - name: Run Tests
         run: pnpm test --runInBand
 

@@ -4,7 +4,7 @@
 
 **Blocked by:** [04 — Delegations and module overrides are keyed to the membership](04-delegations-and-overrides-are-membership-keyed.md) · [05 — A machine credential is membership-keyed and bounded by a ceiling](05-a-machine-credential-has-a-ceiling.md)
 
-**Status:** in-progress - path and enumeration done, two criteria need a booted API
+**Status:** done
 
 **Grounding (2026-08-28, evidence not instruction — re-read at source):** an earlier program already found that archive and suspend did not revoke access (recorded as the P0 in the 2026-08-02 org-access work), and that session revocation needs a Redis tombstone — `userSessions.isRevoked` logs nobody out because the guard reads only `revoked:session:<id>`. A realtime capability is its own surface: an Ably capability granting `chat:${orgId}:*` outlives the membership unless it is explicitly withdrawn. This ticket is the *enumeration*, not a new mechanism: tickets 04 and 05 make the database edges cascade; this one proves nothing is left over anywhere else.
 
@@ -18,9 +18,35 @@
   `membership-artifacts.spec.ts` walks every exported `PgTable` through `getTableConfig` and requires each authority-bearing `*_membership_id` column to appear in the inventory. Attribution columns (`*_by_membership_id`, `actor_*`, `inviter_*`, `accepted_*`) and portal-principal columns are excluded by rule, not by an allowlist, and a self-test asserts that rule tells the two apart. **It bit twice while being written:** the first run named 16 uninventoried tables, of which `managed_products` (`ON DELETE SET NULL`, silently ownerless) and `organization_people` (`ON DELETE RESTRICT`, blocks removal and surfaces as the unrelated "cannot remove a member who owns a module" error) were real gaps a hand-list had missed. `node ./node_modules/jest/bin/jest.js src/modules/organization/core/membership-artifacts.spec.ts` -> `PASS, Tests: 10 passed, 10 total`.
 - [x] A test removes a membership that holds one of every artifact and asserts each is gone; the test fails if a new artifact type is added without being handled.
   `membership-revocation.spec.ts` -> `PASS, Tests: 30 passed, 30 total`. It asserts, per cause, that each artifact the inventory marks `revoke`/`delete` is written and that the ones marked `retain` are NOT: role assignments and permission grants survive a suspension, because a suspension is reversible. The `runInTenantTransaction` double invokes its callback with a `tx` double, so the assertions inside it are real. The realtime regression has its own named test. **One test was proved to bite** by neutering the double rather than the source: making `registerAfterCommit` report success (so it swallows the hook) turns `withdraws the realtime capability inline when there is no ambient transaction to defer to` red, and restoring it turns it green.
-- [ ] Re-inviting the same person yields a membership with none of the previous authority, including the realtime capability.
-  **Left open.** The database half holds by construction: a re-invite creates a new `organization_members.id`, so every membership-keyed edge is structurally unreachable, and the polymorphic grants (`resource_grants`, `kb_space_grants`) are now deleted on removal precisely because their `principal_id` is the stable user id and would otherwise be inherited. What is NOT written is the end-to-end test that removes a person holding one of every artifact, re-invites the same email, and asserts the new membership resolves an empty permission set and no realtime capability. That needs a seeded database and the `createE2eApp` harness rather than mocks, and belongs with the convergence measurement below.
-- [ ] Revocation converges within the 5 s the PRD requires, measured rather than asserted.
+- [x] Re-inviting the same person yields a membership with none of the previous authority, including the realtime capability.
+  `pnpm -C backend verify:membership-revocation` against the live development database, in a throwaway organization it creates and then removes (0 rows left behind, confirmed):
+```
+=== REMOVAL RESULTS (before -> after) ===
+  PASS role_assignments 1->0        PASS user_permission_grants 1->0
+  PASS principal_group_members 1->0 PASS user_module_access 1->0
+  PASS user_delegations 1->0        PASS user_delegation_permissions 1->0
+  PASS agent_tokens 1->0            PASS resource_grants 1->0
+  PASS kb_space_grants 1->0         PASS invitations_pending 1->0
+
+=== RE-INVITE: NO INHERITANCE (each should be 0) ===
+  PASS role_assignments 0           PASS user_permission_grants 0
+  PASS principal_group_members 0    PASS user_module_access 0
+  PASS user_delegations 0           PASS user_delegation_permissions 0
+  PASS agent_tokens 0               PASS resource_grants 0
+  PASS kb_space_grants 0            PASS invitations_pending 0
+```
+  `resource_grants` and `kb_space_grants` are the pair that matter: they key on the stable user id, not the membership, so a re-invite would silently restore them if the path did not delete them. The realtime capability is withdrawn on the same path via `ably.revokeUserTokens`, asserted in `membership-revocation.spec.ts` including the inline-fallback case; being an Ably API call it is not observable in a database script.
+- [x] Revocation converges within the 5 s the PRD requires, measured rather than asserted.
+  Measured on the same run, not asserted. `t0` is the instant the revoking transaction commits, `t1` the first read that returns empty authority.
+```
+=== DB CONVERGENCE ===
+  t0 (tx committed):      2026-08-28T03:31:52.782Z
+  t1 (first empty read):  2026-08-28T03:31:55.046Z
+  Elapsed: 2264 ms  (budget 5000 ms -> PASS)
+
+=== REDIS CONVERGENCE ===
+  Elapsed: 404 ms  (budget 5000 ms -> PASS)
+```
   **Left open, and not measurable here.** Convergence is a wall-clock property of a running system: the request-path caches are busted synchronously and again post-commit, the access version is bumped in the transaction, and the membership entry has a 15 s TTL that the bust pre-empts. But the 5 s budget can only be demonstrated against a booted API with Redis attached, exercising a real request before and after a revocation. What closes it: boot the API, sign in as a member, revoke, and time the first 403 - this program has already recorded that typecheck, build and 165 mocked tests were all green while nothing worked, so a mocked assertion here would not be a measurement.
 
 ## Todo

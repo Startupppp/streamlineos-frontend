@@ -51,7 +51,7 @@ This is the Phase 1 opener. Nothing moves; the deployment becomes cell `legacy-1
 ## Todo
 
 - [x] Read `region-registry.ts`, `region.module.ts` and `with-tenant.ts` end to end before touching them.
-- [x] The placement cache TTL is 10 minutes on the assumption placement is effectively immutable — the cache now knows that assumption ends: entries carry the `placementVersion` they were issued under, and `forgetVersionsBelow(orgId, version)` drops a superseded entry ahead of its expiry.
+- [x] The placement cache TTL is 10 minutes on the assumption placement is effectively immutable — the cache now knows that assumption ends. Every entry carries the `placementVersion` it was issued under, inside the signature, and that is verified on every read (live today). `forgetVersionsBelow(orgId, version)` drops a superseded entry ahead of its expiry — tested, but with **no production caller until ticket 28**, because nothing changes a placement version before relocation exists.
 - [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
 ---
