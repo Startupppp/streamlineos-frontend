@@ -268,9 +268,10 @@ export function SalaryStructuresPageContent() {
           initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
           animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
           transition={{ duration: 0.22, ease: "easeOut" }}
-          className="flex flex-col items-center justify-center flex-1 h-full"
+          className="flex-1"
         >
           <EmptyState
+            className="h-full"
             illustrationPreset="documents"
             title="No salary structure templates yet"
             description="Create your first template to standardise employee compensation structures."

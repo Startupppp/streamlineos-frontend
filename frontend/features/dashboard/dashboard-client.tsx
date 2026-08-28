@@ -61,6 +61,7 @@ import { UpcomingEventsWidget } from "@/components/dashboard/upcoming-events-wid
 import { shouldRenderDashboardLoading } from "./dashboard-hydration";
 import { DeferredDashboardContent } from "./deferred-dashboard-content";
 import { HomeSectionBoundary } from "./home-section-boundary";
+import { useHomeCacheSync } from "./use-home-cache-sync";
 
 const ExecutiveKpiWidget = dynamic(
   () =>
@@ -84,6 +85,7 @@ export function DashboardClient() {
   const currentUserId = session?.user?.id;
   const firstName = getFirstName(session);
   const access = useDashboardAccess();
+  useHomeCacheSync();
   const {
     hrEnabled,
     crmEnabled,

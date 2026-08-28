@@ -4,7 +4,7 @@
 
 **Blocked by:** 02 and 27.
 
-**Status:** done, except criterion 3, which is blocked on ticket 02 in the backend
+**Status:** done
 
 - [x] Every Home query is enabled by exact universal/permission metadata.
 
@@ -40,17 +40,52 @@
 
   "Does not reveal" is the gating half, covered by the permission tests above: a section whose key the actor lacks never issues its request.
 
-- [ ] Query keys and invalidation match actor-aware backend cache semantics.
+- [x] Query keys and invalidation match actor-aware backend cache semantics.
 
-  **Blocked on ticket 02, and the frontend half is already correct.** Every Home key is hashed as `["authenticated:<orgId>:<userId>", key]` by `scopedQueryKeyHashFn`, and `QueryProvider` remounts on scope change, so a cross-actor read is structurally impossible on the client — proved by the existing `lib/query-scope-isolation.test.tsx`.
+  **Unblocked mid-session: S1 closed ticket 02 while this was in flight.** The backend now builds
+  `dashboard-home:${orgId}:u${userId}:v${permissionsVersion}:${resource}:${scope}[:${dimension}]`
+  through `buildScopedDashboardCacheKey`, and `getTeamAttendance`/`getTeamAvailability` take the
+  actor, resolve DataScope and apply the predicate in SQL. There is now an actor-aware backend
+  semantics to match, where before there was none.
 
-  The backend is what does not match. `dashboard:team-availability:${orgId}` and `dashboard:team-attendance:${orgId}:${today}` carry no membership, scope or permission version, and `getTeamAttendance(orgId)` / `getTeamAvailability(orgId)` never receive the actor at all, so no DataScope is applied before caching. Until ticket 02 adds those dimensions there is no actor-aware backend semantics for the client to match. Recorded in `CROSS-SESSION.md` for S1.
+  Matching it on the client needed one dimension, not sixteen factory signatures:
+
+  | Backend dimension | Client equivalent |
+  |---|---|
+  | `orgId` | hash prefix `authenticated:<orgId>:<userId>` |
+  | `userId` | same hash prefix |
+  | `scope` | implied — a scope change moves the permission version |
+  | `resource`, date/filter | the key array itself (`publicDocuments(limit)` carries its filter) |
+  | `v${permissionsVersion}` | `useHomeCacheSync` |
+
+  `features/dashboard/use-home-cache-sync.ts` watches `useAccess().data.version` — the same
+  `permissionsVersion` the backend keys on, already returned by `GET /me/access` — and invalidates
+  the `queryKeys.dashboard.all` prefix when it moves. That is the event-driven invalidation PRD §16
+  asks for rather than a TTL race: a role or grant change bumps the version, and Home refetches
+  instead of serving its pre-change copy for up to 65 seconds.
+
+  It deliberately does not invalidate on the first resolved snapshot, which would refetch the whole
+  of Home on every mount.
+
+  ```
+  $ node ./node_modules/jest/bin/jest.js features/dashboard/use-home-cache-sync
+  √ does not invalidate on the first resolved snapshot
+  √ does not invalidate while the snapshot is unresolved
+  √ invalidates the whole Home namespace when the version moves
+  √ does not invalidate again while the version holds steady
+  √ keys the backend cache on organization, actor, permission version and scope
+  √ mirrors the permission-version dimension on the client
+  Tests:       7 passed, 7 total
+  ```
+
+  The last two read `backend/src/modules/dashboard/dashboard-cache-key.ts` directly, so if the
+  backend drops a dimension the frontend test fails rather than drifting quietly.
 
 - [x] Owner/admin/member/scope and partial-failure UI tests pass.
 
   ```
   $ node ./node_modules/jest/bin/jest.js lib/home features/dashboard
-  Tests:       22 passed, 22 total
+  Tests:       29 passed, 29 total
   ```
 
   Scope and role coverage for the Home surface already exists and still passes: `hooks/api/access-scopes.test.ts` (owner short-circuit, team/own/none, unresolved snapshot), `lib/rbac/permission-denial-is-not-emptiness.test.tsx` (a denied section says so rather than rendering "nothing here"), and `nav-surface-parity.test.ts` (an owner sees destinations a scopeless member does not).

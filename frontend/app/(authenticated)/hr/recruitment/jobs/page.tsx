@@ -1,5 +1,6 @@
 "use client";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { ErrorState } from "@/components/shared/error-state";
 
 import { useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -196,11 +197,7 @@ export default function JobPostingsPage() {
               {Array.from({ length: 12 }).map((_, i) => <JobCardSkeleton key={i} />)}
             </div>
           ) : isError ? (
-            <div className="flex flex-col items-center justify-center flex-1 gap-4 text-center">
-              <p className="text-sm font-semibold text-foreground">Unable to load job postings</p>
-              <p className="text-xs text-muted-foreground">Try again. If this keeps happening, check your permissions or contact an admin.</p>
-              <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
-            </div>
+            <ErrorState className="flex-1" title="Unable to load job postings" onRetry={handleRetry} />
           ) : !jobs?.length ? (
             <RecruitmentEmptyState
               illustration={<EmptyPersonIllustration />}

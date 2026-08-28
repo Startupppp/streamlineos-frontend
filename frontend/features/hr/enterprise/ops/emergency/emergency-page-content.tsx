@@ -9,6 +9,7 @@ import type { DataTableColumn } from "@/components/ui/data-table";
 import { AlertTriangle } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useCan } from "@/hooks/api/access";
 import {
   useEmergencyEvents,
@@ -98,19 +99,13 @@ export function EmergencyPageContent() {
           onRowClick={(r) => setSelectedId(r.id)}
           isLoading={isLoading}
           emptyState={
-            <div className="flex flex-col items-center justify-center gap-3 py-12">
-              <StateIllustration preset="alert" className="h-28 w-28" />
-              <div className="text-center space-y-1">
-                <p className="text-sm font-medium text-foreground">No emergency events</p>
-                <p className="text-xs text-muted-foreground">Declare emergency events to coordinate employee safety responses.</p>
-              </div>
-              {canManage && (
-                <Button size="sm" onClick={() => setShowCreate(true)} className="mt-1 bg-primary hover:bg-primary/90 text-primary-foreground">
-                  <PlusIcon size={16} className="mr-1.5" />
-                  Declare Event
-                </Button>
-              )}
-            </div>
+            <EmptyState
+              className="border-0 bg-transparent min-h-[40vh]"
+              illustration={<StateIllustration preset="alert" className="h-28 w-28" />}
+              title="No emergency events"
+              description="Declare emergency events to coordinate employee safety responses."
+              action={canManage ? { label: "Declare Event", onClick: () => setShowCreate(true) } : undefined}
+            />
           }
           pagination={
             data

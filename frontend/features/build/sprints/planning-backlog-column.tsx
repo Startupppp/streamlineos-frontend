@@ -1,6 +1,7 @@
 "use client";
 
 import { PackageOpen } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { PlusIcon, XIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
@@ -173,25 +174,12 @@ export function PlanningBacklogColumn({
             ))}
             {provided.placeholder}
             {backlogFilters.filtered.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-10 gap-2 text-muted-foreground">
-                <PackageOpen className="w-8 opacity-40" aria-hidden />
-                <p className="text-xs text-center">
-                  {backlogFilters.hasActiveFilters
-                    ? "No tickets match the active filters"
-                    : "No backlog tickets"}
-                </p>
-                {backlogFilters.hasActiveFilters && (
-                  <Button
-                    type="button"
-                    variant="link"
-                    size="sm"
-                    className="text-xs h-auto p-0"
-                    onClick={backlogFilters.clearFilters}
-                  >
-                    Clear filters
-                  </Button>
-                )}
-              </div>
+              <EmptyState
+                compact
+                illustration={<PackageOpen className="h-8 w-8 text-muted-foreground opacity-40" />}
+                title={backlogFilters.hasActiveFilters ? "No tickets match the active filters" : "No backlog tickets"}
+                action={backlogFilters.hasActiveFilters ? { label: "Clear filters", onClick: backlogFilters.clearFilters } : undefined}
+              />
             )}
           </div>
         )}

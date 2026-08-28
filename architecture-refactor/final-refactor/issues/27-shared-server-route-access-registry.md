@@ -46,14 +46,14 @@ Built against PRD §12's authority matrix as the specification rather than waiti
 
 - [x] Coverage tests detect missing, conflicting and frontend-only permission keys.
 
-  `lib/rbac/route-access/__tests__/` — 16 tests. The sweep enumerates every `page.tsx` under `app/(authenticated)` from disk, so a new unregistered route fails the build.
+  `lib/rbac/route-access/__tests__/` — 17 tests. The sweep enumerates every `page.tsx` under `app/(authenticated)` from disk, so a new unregistered route fails the build.
 
   ```
   $ node ./node_modules/jest/bin/jest.js lib/rbac/route-access
   PASS lib/rbac/route-access/__tests__/route-access-coverage.test.ts
   PASS lib/rbac/route-access/__tests__/no-legacy-role-gates.test.ts
   PASS lib/rbac/route-access/__tests__/route-access-keys.test.ts
-  Tests:       16 passed, 16 total
+  Tests:       17 passed, 17 total
   ```
 
   Missing: `√ answers every authenticated route with universal or permission access` over 553 routes, with `√ finds the authenticated route tree, so an empty sweep cannot pass` guarding against a broken walk.
@@ -68,7 +68,7 @@ Built against PRD §12's authority matrix as the specification rather than waiti
 
 ```
 $ node ./node_modules/jest/bin/jest.js lib/rbac/route-access
-Tests:       16 passed, 16 total
+Tests:       17 passed, 17 total
 
 $ node ./node_modules/jest/bin/jest.js components/layout
 Tests:       80 passed, 80 total

@@ -20,6 +20,7 @@ import {
 } from "@/hooks/api/payroll/payroll-inputs";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
 
 function resolveDisplayName(row: PayrollInputSnapshot | PayrollAdjustment): string {
   return getUserDisplayName({
@@ -283,16 +284,16 @@ function buildAdjustmentColumns(
 }
 
 const EMPTY_NO_DATA: ReactNode = (
-  <p className="text-center text-muted-foreground text-sm py-6">No data — build the period first</p>
+  <EmptyState compact className="border-0 bg-transparent" title="No data" description="Build the period first." />
 );
 const EMPTY_NO_OT: ReactNode = (
-  <p className="text-center text-muted-foreground text-sm py-6">No approved overtime this period</p>
+  <EmptyState compact className="border-0 bg-transparent" title="No approved overtime" description="No overtime has been approved for this period." />
 );
 const EMPTY_NO_REIMB: ReactNode = (
-  <p className="text-center text-muted-foreground text-sm py-6">No approved reimbursements this period</p>
+  <EmptyState compact className="border-0 bg-transparent" title="No approved reimbursements" description="No reimbursements have been approved for this period." />
 );
 const EMPTY_NO_ADJ: ReactNode = (
-  <p className="text-center text-muted-foreground text-sm py-6">No adjustments for this period</p>
+  <EmptyState compact className="border-0 bg-transparent" title="No adjustments" description="No adjustments for this period." />
 );
 
 function AttendanceTab({ periodId }: { periodId: number }) {

@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmWithReasonSheet } from "@/components/ui/confirm-with-reason-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Plus } from "lucide-react";
+import { ErrorState } from "@/components/shared/error-state";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
@@ -142,11 +143,7 @@ export default function RequisitionsPage() {
               ))}
             </div>
           ) : isError ? (
-            <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
-              <p className="text-sm font-semibold text-foreground">Failed to load requisitions</p>
-              <p className="text-xs text-muted-foreground">An error occurred while fetching data.</p>
-              <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
-            </div>
+            <ErrorState className="flex-1" title="Failed to load requisitions" onRetry={handleRetry} />
           ) : isEmpty ? (
             <RecruitmentEmptyState
               illustration={<EmptyApprovalIllustration />}

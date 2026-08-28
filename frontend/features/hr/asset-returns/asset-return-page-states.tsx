@@ -1,10 +1,10 @@
 "use client";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyDevicesIllustration } from "@/components/illustrations";
-import { AlertCircle, Plus } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 
 const PAGE_TITLE = "Asset Returns";
 const PAGE_SUBTITLE = "Track company asset returns";
@@ -33,20 +33,7 @@ export function AssetReturnsSkeleton() {
 export function AssetReturnsError({ onRetry }: { onRetry: () => void }) {
   return (
     <PageWrapper title={PAGE_TITLE} subtitle={PAGE_SUBTITLE}>
-      <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
-        <AlertCircle className="w-8 text-destructive" />
-        <div>
-          <p className="text-sm font-medium text-foreground">
-            Failed to load asset returns
-          </p>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Something went wrong. Please try again.
-          </p>
-        </div>
-        <Button size="sm" variant="outline" onClick={onRetry}>
-          Try again
-        </Button>
-      </div>
+      <ErrorState className="flex-1" title="Failed to load asset returns" onRetry={onRetry} />
     </PageWrapper>
   );
 }
@@ -59,24 +46,12 @@ export function AssetReturnsEmptyState({
   onOpenSheet: () => void;
 }) {
   return (
-    <div className="flex flex-1 min-h-0 w-full flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-border bg-card py-14 px-6 text-center">
-      <div className="h-28 w-28">
-        <EmptyDevicesIllustration />
-      </div>
-      <div>
-        <p className="text-sm font-semibold text-foreground">
-          No asset returns tracked
-        </p>
-        <p className="mt-1 text-sm text-muted-foreground max-w-xs">
-          Log an asset return when an employee returns company equipment.
-        </p>
-      </div>
-      {isAdmin && (
-        <Button size="sm" onClick={onOpenSheet} className="gap-1.5">
-          <Plus className="h-3.5 w-3.5" />
-          Log Return
-        </Button>
-      )}
-    </div>
+    <EmptyState
+      className="flex-1"
+      illustration={<EmptyDevicesIllustration />}
+      title="No asset returns tracked"
+      description="Log an asset return when an employee returns company equipment."
+      action={isAdmin ? { label: "Log Return", onClick: onOpenSheet } : undefined}
+    />
   );
 }

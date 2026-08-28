@@ -102,12 +102,12 @@ function CalmPlaceholder({
   description: string;
 }) {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center px-6 py-12 text-center">
-      <p className="text-sm font-medium text-foreground/90">{title}</p>
-      <p className="mt-1.5 max-w-xs text-xs leading-relaxed text-muted-foreground">
-        {description}
-      </p>
-    </div>
+    <EmptyState
+      compact
+      className="flex-1 border-0 bg-transparent"
+      title={title}
+      description={description}
+    />
   );
 }
 

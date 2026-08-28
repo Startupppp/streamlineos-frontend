@@ -32,6 +32,18 @@ const EXCEPTIONS = [
     file: "features/hr/work-logs/work-log-state-cards.tsx",
     reason: "Purpose-built card states inside HR rich-surface card design; Card wrapper is intrinsic to design",
   },
+  {
+    file: "components/charts/chart-empty-state.tsx",
+    reason: "This IS the chart-specific empty-state primitive — the shared counterpart to EmptyState for chart surfaces; converting it would be circular",
+  },
+  {
+    file: "features/crm/analytics/sla-compliance-chart.tsx",
+    reason: "False positive: the matched div centers the donut chart SVG in the data-present branch; 'No SLA policy' appears nearby via ChartEmptyState which already uses the chart primitive",
+  },
+  {
+    file: "features/hr/expenses/components/import-expense-sheet.tsx",
+    reason: "File-upload dropzone, not a data-empty state; detected because EmptyUploadIllustration contains the word 'empty' which matches the checker EMPTY_INDICATOR pattern",
+  },
 ];
 
 for (const exc of EXCEPTIONS) {

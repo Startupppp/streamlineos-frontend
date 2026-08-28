@@ -34,7 +34,7 @@ Sessions S1-S6 may be opened in parallel. Every session must complete the openin
 | S2 | 07, 08, 17, 18, 21, 25 | 17, 18, 25 done · 07, 08, 21 in progress |
 | S3 | 09, 13-16, 24, 30-32 | ready-for-agent |
 | S4 | 04, 10, 19, 20, 23, 33, 38 | ready-for-agent |
-| S5 | 26-29, 34-36 | 26, 27, 28, 29, 34, 36 done · 35 in progress |
+| S5 | 26-29, 34-36 | all seven done (26, 27, 28, 29, 34, 35, 36) |
 | S6 | 22, 37, 39-41 | 22, 40, 41 done · 39 partial (isolation coverage 27%, operator access product-blocked) · 37 blocked on 30-33 |
 | S7 | 11, 42-45 and existing c28-34 | ready-for-agent |
 

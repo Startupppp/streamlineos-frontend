@@ -3,12 +3,12 @@
 import { useMemo } from "react";
 import { useHrSlaReport } from "@/hooks/api/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
-import { AlertTriangle, TrendingUp, AlertCircle } from "lucide-react";
+import { AlertTriangle, TrendingUp } from "lucide-react";
+import { ErrorState } from "@/components/shared/error-state";
 import { cn } from "@/lib/utils";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
@@ -145,13 +145,7 @@ export default function SlaReportPage() {
           <Skeleton className="h-48 w-full rounded-lg" />
         </div>
       ) : isError ? (
-        <div className="flex flex-col items-center justify-center flex-1 gap-3 py-16">
-          <AlertCircle className="h-10 w-10 text-destructive/50" />
-          <p className="text-sm text-muted-foreground">Failed to load SLA breach report.</p>
-          <Button variant="outline" size="sm" onClick={handleRetry}>
-            Try again
-          </Button>
-        </div>
+        <ErrorState className="flex-1" title="Failed to load SLA breach report" onRetry={handleRetry} />
       ) : !data || data.stages.length === 0 ? (
         <RecruitmentEmptyState
           illustration={<EmptyReportIllustration />}
