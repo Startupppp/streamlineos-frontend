@@ -158,6 +158,39 @@ export function useExpireStaleReservations() {
   });
 }
 
+/**
+ * INV-203. A POST, because a GS1 payload carries FNC1 separators that a query
+ * string re-encodes or drops -- and a dropped separator turns a multi-element
+ * label into one long lot number.
+ */
+export interface Gs1Parsed {
+  raw: string;
+  isGs1: boolean;
+  gtin?: string;
+  lotNumber?: string;
+  serialNumber?: string;
+  expiryDate?: string;
+  elements: Array<{ ai: string; value: string }>;
+  unparsed?: string;
+}
+
+export interface BarcodeScanResult {
+  parsed: Gs1Parsed;
+  variant?: { id: number; sku: string; name: string; isActive: boolean } | null;
+  lot?: { id: number; lotNumber: string; status: string; expiryDate: string | null } | null;
+  serial?: { id: number; serialNumber: string; status: string } | null;
+  lookup?: BarcodeLookupResult;
+  warnings: string[];
+}
+
+export function useScanBarcode() {
+  return useMutation<BarcodeScanResult, Error, string>({
+    mutationKey: ["inventory", "barcode", "scan"],
+    mutationFn: (payload: string) =>
+      apiClient.post<BarcodeScanResult>("/inventory/barcode/scan", { payload }),
+  });
+}
+
 export function useBarcodeLookup(code: string) {
   const canView = useCan("inventory:stock:read");
   return useQuery<BarcodeLookupResult, Error>({

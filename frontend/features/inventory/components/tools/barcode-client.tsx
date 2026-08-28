@@ -14,6 +14,8 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useBarcodeLookup, type BarcodeLookupResult } from "@/hooks/api/inventory/admin";
+import { useKeyboardWedge } from "@/hooks/common/use-keyboard-wedge";
+import { useScanBarcode } from "@/hooks/api/inventory/admin";
 
 interface RecentScan {
   code: string;
@@ -207,6 +209,52 @@ function BarcodeResultSection({ code }: BarcodeResultSectionProps) {
   return <ResultCard result={data} />;
 }
 
+/** INV-203. What a hardware scan resolved to, including anything that disagreed. */
+function ScanResultCard({
+  result,
+}: {
+  result: import("@/hooks/api/inventory/admin").BarcodeScanResult;
+}) {
+  const { parsed } = result;
+  return (
+    <div className="rounded-lg border border-border bg-card p-3 space-y-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-micro font-semibold uppercase tracking-wide text-muted-foreground">
+          {parsed.isGs1 ? "GS1 label" : "Plain barcode"}
+        </span>
+        {parsed.gtin ? <span className="text-dense">GTIN {parsed.gtin}</span> : null}
+        {parsed.lotNumber ? <span className="text-dense">Lot {parsed.lotNumber}</span> : null}
+        {parsed.serialNumber ? (
+          <span className="text-dense">Serial {parsed.serialNumber}</span>
+        ) : null}
+        {parsed.expiryDate ? (
+          <span className="text-dense">Expires {parsed.expiryDate}</span>
+        ) : null}
+      </div>
+
+      {result.variant ? (
+        <p className="text-dense text-muted-foreground">
+          {result.variant.sku} — {result.variant.name}
+        </p>
+      ) : null}
+
+      {result.warnings.length > 0 ? (
+        // Never collapsed into "scan failed": each of these is a specific
+        // disagreement an operator can act on, and the scan itself succeeded.
+        <ul className="space-y-1">
+          {result.warnings.map((warning) => (
+            <li key={warning} className="text-dense text-status-warning-fg">
+              {warning}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      <p className="text-micro text-muted-foreground break-all">Raw: {parsed.raw}</p>
+    </div>
+  );
+}
+
 export function BarcodeClient() {
   const isOnline = useOnlineStatus();
   const inputRef = React.useRef<HTMLInputElement>(null);
@@ -216,6 +264,21 @@ export function BarcodeClient() {
   const [isPending, setIsPending] = React.useState(false);
   const { data: lookupData } = useBarcodeLookup(activeCode);
   const { iconRef, hoverHandlers } = useAnimatedIcon();
+  const scan = useScanBarcode();
+
+  /**
+   * INV-203. Hardware goes through the GS1 endpoint; the text box keeps the
+   * plain lookup. They are different paths because they carry different data:
+   * a wedge can emit FNC1 separators, and the moment those travel through a
+   * query string a multi-element label collapses into one long lot number.
+   */
+  useKeyboardWedge(
+    (payload) => {
+      if (!isOnline) return;
+      scan.mutate(payload);
+    },
+    { enabled: isOnline },
+  );
 
   React.useEffect(function focusInput() {
     inputRef.current?.focus();
@@ -271,6 +334,8 @@ export function BarcodeClient() {
             <span>You are offline. Barcode lookup is unavailable.</span>
           </div>
         )}
+
+        {scan.data ? <ScanResultCard result={scan.data} /> : null}
 
         <form onSubmit={handleSubmit} className="flex gap-2">
           <div className="relative flex-1">
