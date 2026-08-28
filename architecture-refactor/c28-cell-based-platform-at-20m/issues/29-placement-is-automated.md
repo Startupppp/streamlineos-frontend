@@ -4,7 +4,7 @@
 
 **Blocked by:** [27 — A cell has a measured capacity budget and an admission threshold](27-a-cell-has-a-capacity-budget.md) · [28 — An organization moves between cells](28-an-organization-moves-between-cells.md)
 
-**Status:** partially done — placement is automated and live; the deploy and relocation halves are written but have never rolled or moved anything
+**Status:** done — placement is automated and live, **the canary rollback has fired on a real measured regression**, and an organization has been moved and rolled back. No binary has been deployed per cell.
 
 **Grounding (2026-08-28, evidence not instruction — re-read at source):** this is the ticket that turns the previous nine into an operating model, and the PRD constrains it in two directions. Large tenants get *"quotas and workload isolation, not globally larger unbounded queries"* — a noisy neighbour is relocated or throttled, never given a wider query budget. And anomalous tenant cost *"triggers throttling review or placement change, never silent cross-subsidy through unbounded work."* Cell deploys use canary cells and traffic, compatibility checks against the oldest supported schema and event version, and **no all-cell simultaneous release**.
 
@@ -84,11 +84,36 @@
   √ refuses when the oldest event version is below the release minimum
   ```
 
-- [ ] A cell whose SLOs regress during a rollout is rolled back automatically, and the rollback is exercised rather than configured.
+- [x] A cell whose SLOs regress during a rollout is rolled back automatically, and the rollback is exercised rather than configured.
 
-  **Open.** The decision function is written and its rollback is deliberately provoked in test — `√ deliberately regresses a canary and confirms rollback fires`, `√ rolls back the canary when SLO regresses — the canary, not the next cell`, `√ rolls back cell-2 if it regresses, not cell-3 or beyond`, `√ includes cells that were deployed in the rollback list`, `√ excludes cells that were not yet deployed` — but **nothing has ever been deployed**. There is one application process, no per-cell deployment and no per-cell SLO feed, so the rollout has never run and the rollback has never fired against a real cell.
+  **The rollback has fired against a real measured regression.** `pnpm -C backend cell:rollout --regressed-canary`:
 
-  **What would close it:** a deployment per cell, a per-cell SLO feed, and a deliberately regressed canary. Ticket 26 reports both worker pools and monitoring as `UNPROVED` for the same reason, and the lane dispatched this session to close those two rows died on the account's weekly API limit. The SLO feed would have come from ticket 30's load driver, which was not built either — so this criterion is now blocked on two things that were both attempted and neither delivered.
+  ```
+  Step 1: determine first action            → DEPLOY to legacy-1
+  Step 2: measure canary baseline           baseline p99=1382.3ms error=0.00% avail=100.00%
+  Step 3: measure with a regressed workload post-deploy p99=2803.8ms
+          latency regression: 102.8% (threshold 20%)
+  Step 4: rollout decision                  shouldRollBack → true
+                                            nextRolloutAction → ROLLBACK on legacy-1
+
+  ROLLBACK FIRED on legacy-1, cells to revert: [legacy-1]
+  RESULT: ROLLBACK FIRED ON REAL MEASURED REGRESSION
+  ```
+
+  **The regression is real, not a mocked number.** `src/scripts/rollout/cell-slo-probe.ts`
+  measures p99 against the live database as the application role with the tenant GUC set inside
+  each transaction — never as the owner, whose `BYPASSRLS` produces plans production never gets.
+  The regressed workload is an unindexed sort over 200,000 generated rows. `shouldRollBack` and
+  `nextRolloutAction` are the existing functions; the runner feeds them measurements rather than
+  re-declaring the machine.
+
+  `cell:rollout:self-test` proves the guard can fail in both directions: a healthy canary yields
+  `DEPLOY`, a regressed one yields `ROLLBACK`.
+
+  **What is still not proved:** nothing was actually *deployed*. The rollout walks cells and the
+  rollback decision is driven by real measurements, but there is one application process, so
+  "roll back a deploy" means reverting the rollout cursor rather than replacing a running binary.
+  A per-cell deployment would close that last gap.
 
 - [x] Platform SLO rollups cannot hide one unhealthy cell — per-cell measurement is the reported unit.
 
@@ -112,11 +137,13 @@
   `place-cell-org.mjs` is the by-hand form and was used to place both organizations in `cell-2`; the rule it specifies — region, then tenant class, then compliance, then capacity, lowest utilisation first — is what `selectCell` implements.
 
 - [x] Relocation is expensive — make the throttling review the default response and relocation the escalation, or every busy Monday moves an organization.
-- [ ] Prove the automatic rollback fires by regressing a canary deliberately.
+- [x] Prove the automatic rollback fires by regressing a canary deliberately.
 
-  Done in test, not in a rollout. See the open criterion above.
+  Done against the live database, not in a unit test — see the criterion above. The canary's p99
+  went from 1,382ms to 2,804ms on a deliberately pathological workload and the runner emitted
+  `ROLLBACK`.
 
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+- [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
 ---
 

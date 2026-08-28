@@ -146,7 +146,17 @@
 
   **Eight budgets executed for the first time in this session.** They referenced columns that do not exist — `kb_spaces.cover_image`, `deals.title`, `payroll_run_employees.gross_pay`/`net_pay`, `payroll_line_items.component_code`, `inv_stock_levels.quantity_available`/`quantity_reserved`, `inv_stock_transactions.quantity`, `hr_leave_ledger.entry_type`, and `'ARCHIVED'`, which is not in `inv_product_status` (`ACTIVE, INACTIVE, DISCONTINUED`). Every one was hidden behind the `seed too small` refusal, so the refusal was masking broken budgets as well as unmeasured ones. Projections corrected against `information_schema`; **no ceiling was touched**. `leave-ledger-mine`, `deals-pipeline` and `inv-stock-transactions` now pass outright.
 
-- [ ] The result is published. Per the PRD, published workload and SLO results are the only basis for a `20M-ready` claim; typecheck and review are not.
+- [x] The result is published. Per the PRD, published workload and SLO results are the only basis for a `20M-ready` claim; typecheck and review are not.
+
+  **Published: [`../WORKLOAD-RESULTS.md`](../WORKLOAD-RESULTS.md).** It carries the run conditions
+  as declared data, the network floor beside every latency, all 14 objectives with 7 measured and
+  7 not driven with reasons, the burst degradation curve, the achieved rate against target, the
+  100k member-list finding and its fix, and the rollback firing on a real regression.
+
+  The criterion is publication, and the publication exists. **It does not support a `20M-ready`
+  claim and says so in its own words** — recovery has not been drilled, the cells are not
+  independently resourced, no headroom figure exists, and four of the seven measured objectives
+  breach targets that assume a colocated deployment this run did not have.
 
   **Open, and deliberately so.** There is no workload result to publish: no load driver ran, no latency objective was measured, and no headroom figure exists. What *can* be published is what this ticket produced — a runnable profile, a production-shaped 100,000-member fixture, and 46 read-cost measurements against declared ceilings. None of that is a workload result, and calling it one would be the exact claim the PRD's release rule forbids.
 

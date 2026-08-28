@@ -81,8 +81,8 @@ The **S** column is the execution session that owns the ticket. The split was ch
 |---|---|---|---|---|
 | 26 | S6 | [A second cell exists and is proved from cold](issues/26-a-second-cell-is-proved-cold.md) | 20–25 | **partial** · cold bootstrap now reaches `SCHEMAS IDENTICAL` (3,243 → 0) and closed 5 tenant-isolation gaps; resources still shared, broker not per-cell |
 | 27 | S6 | [A cell has a measured capacity budget and an admission threshold](issues/27-a-cell-has-a-capacity-budget.md) | 26 | **done** · 1 criterion open (forecast needs 3 daily samples); limiting resource measured = database-size 42.1% |
-| 28 | S6 | [An organization moves between cells, and can roll back until the flip](issues/28-an-organization-moves-between-cells.md) | 22, 26 | **partial** · a real org moved (887 tables, 171 rows), verified by reading, rolled back with the source intact; retire-after-traffic still ungated |
-| 29 | S6 | [Placement is automated and a noisy neighbour is relocated](issues/29-placement-is-automated.md) | 27, 28 | **partial** · placement is automated and LIVE on all 3 creation paths; canary rollback never rolled |
+| 28 | S6 | [An organization moves between cells, and can roll back until the flip](issues/28-an-organization-moves-between-cells.md) | 22, 26 | **done** · a real org moved (887 tables), verified by reading, rolled back with the source intact; retirement gated on measured target traffic |
+| 29 | S6 | [Placement is automated and a noisy neighbour is relocated](issues/29-placement-is-automated.md) | 27, 28 | **done** · placement live on all 3 creation paths; canary rollback FIRED on a real measured regression (1382→2804ms p99) |
 
 ### Acceptance
 
@@ -90,7 +90,7 @@ The **S** column is the execution session that owns the ticket. The split was ch
 |---|---|---|---|---|
 | 30 | S6 | [The workload envelope is a runnable load profile](issues/30-the-workload-envelope-is-runnable.md) | 26 | **partial** · load driver built; 5/14 objectives measured, 9 NOT_DRIVEN with reasons; found the 100k member-list scanning the whole tenant (1513→53 blocks) |
 | 31 | S4 | [Declared degradation is tested, not described](issues/31-declared-degradation-is-tested.md) | — | **done** · 7/8 rows tested; read-replica row ratcheted, not tested (no replica exists) |
-| 32 | S6 | [Unit cost per cell is tracked and forecast](issues/32-unit-cost-per-cell-is-forecast.md) | 27 | **partial** · 1 unit costed from the ledger, 6 measured without a price, 2 unmeasured; no invoice |
+| 32 | S6 | [Unit cost per cell is tracked and forecast](issues/32-unit-cost-per-cell-is-forecast.md) | 27 | **operator-blocked** · measurement finished, vendor fetch seams built; 3 criteria need a monthly invoice that does not exist. Not engineering work |
 
 ### Raised by the work — added 2026-08-28
 

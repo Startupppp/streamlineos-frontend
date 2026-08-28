@@ -4,7 +4,16 @@
 
 **Blocked by:** [27 — A cell has a measured capacity budget and an admission threshold](27-a-cell-has-a-capacity-budget.md)
 
-**Status:** partially done — one unit has a real cost, six have measured quantities and no price, two are unmeasured; **no invoice exists, so no cost model can be approved**
+**Status:** **OPERATOR-BLOCKED, not open engineering work.** Decision taken 2026-08-28: the
+measurement side is finished — every unit that can be counted from this cell is counted, and the
+vendor fetch seams are built and refuse loudly rather than substituting a list price. What is
+missing is a **monthly invoice for this cell, which does not exist**. Three of the five criteria
+below cannot close without one and are not to be re-raised as engineering tasks.
+
+**What an operator must supply to close them:** the cell's monthly Neon invoice (compute-hours,
+GB-months), the R2 and Resend invoices, and the Ably channel-minutes figure — or the API
+credentials named in criterion 1, plus per-unit USD rates taken from those invoices rather than
+from a price list.
 
 **The units, from the PRD:** cost per active organization · per active user · per 1,000 requests · per 1,000 realtime minutes · per GB stored · per million indexed chunks · per million events · per notification delivered · per AI token.
 
@@ -18,7 +27,7 @@
 
 - [ ] Each unit above has a measured cost, derived from real cell spend rather than from a list price.
 
-  **Open, and it cannot close from inside this repository.** `node src/scripts/run-cell-unit-cost.mjs`:
+  **OPERATOR-BLOCKED.** The engineering half is done; the missing half is an invoice. `node src/scripts/run-cell-unit-cost.mjs`:
 
   ```
   per active organization              7
@@ -106,7 +115,7 @@
 
 - [ ] The forecast is approved before capacity is claimed; per the PRD's release decision, unit-cost and per-cell forecasts remaining approved is one of the acceptance conditions for `20M-ready`.
 
-  **Open.** There is no forecast to approve. Eight of nine units have no cost and the ninth is $0.0005 of lifetime AI spend. Nothing here supports a `20M-ready` claim and nothing here should be read as approving one.
+  **OPERATOR-BLOCKED, and it is an approval, not a build.** There is no forecast to approve. Eight of nine units have no cost and the ninth is $0.0005 of lifetime AI spend. Nothing here supports a `20M-ready` claim and nothing here should be read as approving one.
 
 - [x] Organization and user ids stay out of unbounded metric labels; cost attribution is sampled or aggregated, not labelled per tenant.
 

@@ -4,7 +4,7 @@
 
 **Blocked by:** [22 — Every write carries its placement version and dies without the fence](22-a-write-carries-its-placement-version.md) · [26 — A second cell exists and is proved from cold](26-a-second-cell-is-proved-cold.md)
 
-**Status:** partially done — **an organization has been moved between cells, verified by reading the target, and rolled back with the source intact.** Retirement is still not gated on real traffic.
+**Status:** **done** — an organization has been moved between cells, verified by reading the target, and rolled back with the source intact; retirement is gated on measured traffic in the target cell.
 
 **The state machine, from the PRD:**
 
@@ -128,11 +128,33 @@ ACTIVE_SOURCE → SNAPSHOT → CATCH_UP → READ_ONLY_SOURCE
 
   Structural rather than tested-by-move: nothing in the machine, the plan or the checksum layer writes an identifier. `organization_relocations` keys on `organization_id` and records `source_cell`/`target_cell` beside it; no step rewrites a key, and the copy plan carries table and tenant-column names only. `place-cell-org.mjs` demonstrates the same property from the other direction — an organization is reachable in `cell-2` under the id the control plane recorded.
 
-- [ ] The source is retired only after the target has served real traffic, and retirement is its own recorded state.
+- [x] The source is retired only after the target has served real traffic, and retirement is its own recorded state.
 
-  **Half met.** `RETIRE_SOURCE` is its own state, is terminal, follows `ACTIVE_TARGET`, and no edge reaches it earlier — `√ refuses a FAIL event from a terminal state` and the transition table pin it. The ordering constraint "after the target has served real traffic" is **not** enforced: nothing measures traffic, so advancing from `ACTIVE_TARGET` to `RETIRE_SOURCE` is an operator decision the machine does not gate.
+  **Both halves now hold.** `RETIRE_SOURCE` was already its own terminal state reachable only
+  from `ACTIVE_TARGET`. The ordering constraint is now enforced rather than left to the operator:
+  `evaluateRetireGate` refuses the edge until the organization has been served a declared minimum
+  of requests in the TARGET cell over a declared window (`RETIRE_GATE = { minRequests: 25,
+  windowMs: 600_000 }` — declared data, not a magic number in a branch).
 
-  **What would close it:** a per-cell request counter for the organization, checked before the `RETIRE_SOURCE` edge is offered. That needs the per-cell monitoring listed as `UNPROVED` in ticket 26. Dispatched this session and not delivered — the lane died on the account's weekly API limit.
+  The refusal names the shortfall rather than failing silently:
+
+  ```
+  zero traffic       target has served 0 requests, needs 25 since 2026-08-28T11:50:00.000Z
+  one below minimum  target has served 24 requests, needs 25 since 2026-08-28T11:49:59.000Z
+  window not elapsed target has served 25 requests since …; window has not elapsed (540s of 600s)
+  gate open          allowed: true
+  assertRetireGateOpen threw: code=ILLEGAL_TRANSITION
+  ```
+
+  **The counter is wired, not decorative.** The gate arrived with no caller anywhere in the
+  codebase — the classic inert delivery. `withTenant` now counts a request, in the same
+  transaction that serves it, **only when that organization is mid-relocation and this cell is its
+  target** (`relocation-traffic-tracker.ts`, refreshed every 30s). Counting every request
+  unconditionally would serialise all of an organization's traffic on one row for the 99.99% of
+  the time when no relocation is running.
+
+  Backed by `organization_cell_traffic` (migration `0627`) and 15 tests including the boundary:
+  exactly the minimum passes, one below refuses.
 
 ## Todo
 
@@ -144,7 +166,7 @@ ACTIVE_SOURCE → SNAPSHOT → CATCH_UP → READ_ONLY_SOURCE
 
   `pendingEventCount` counts `PENDING` and `IN_FLIGHT` outbox events, which is exactly the signal of an organization writing during `CATCH_UP`, and both arms are pinned: `√ counts PENDING and IN_FLIGHT events — these represent active writes during CATCH_UP` and `√ returns 0 for an idle org — the state an CATCH_UP test never sees in the happy path`.
 
-- [ ] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
+- [x] Set **Status** to `done` and update this ticket's row in [`../README.md`](../README.md)
 
 ## Known limitation of the copy plan
 
