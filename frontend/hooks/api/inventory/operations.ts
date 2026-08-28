@@ -107,7 +107,8 @@ export type VendorReturnStatus = "DRAFT" | "POSTED" | "CANCELLED";
 interface VendorReturnLine {
   productVariantId: number;
   locationId: number;
-  quantity: number;
+  /** Decimal string at scale 4 — quantities are exact, never JS floats. */
+  quantity: string;
   reason: VendorReturnReason;
   lotId?: number;
   serialId?: number;
@@ -211,7 +212,8 @@ export type CustomerReturnStatus = "DRAFT" | "POSTED" | "CANCELLED";
 
 interface CustomerReturnLine {
   productVariantId: number;
-  quantity: number;
+  /** Decimal string at scale 4 — quantities are exact, never JS floats. */
+  quantity: string;
   reason: string;
   disposition: CustomerReturnDisposition;
   targetLocationId?: number;

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { decimalQuantitySchema } from "@/features/inventory/lib/quantity-schema";
 import { toast } from "sonner";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -40,7 +41,7 @@ const RETURN_REASONS = [
 const lineSchema = z.object({
   productVariantId: z.number({ error: "Required" }).int().positive(),
   locationId: z.number({ error: "Required" }).int().positive(),
-  quantity: z.number({ error: "Required" }).positive(),
+  quantity: decimalQuantitySchema,
   reason: z.enum(["DAMAGED", "WRONG_ITEM", "EXCESS", "EXPIRED", "QUALITY_REJECTED"]),
   unitCost: z.string().optional(),
 });
@@ -106,7 +107,7 @@ export function VendorReturnSheet({ open, onOpenChange }: VendorReturnSheetProps
     resolver: zodResolver(formSchema),
     defaultValues: {
       notes: "",
-      lines: [{ productVariantId: 0, locationId: 0, quantity: 1, reason: "DAMAGED", unitCost: "" }],
+      lines: [{ productVariantId: 0, locationId: 0, quantity: "1", reason: "DAMAGED", unitCost: "" }],
     },
   });
 
@@ -127,7 +128,7 @@ export function VendorReturnSheet({ open, onOpenChange }: VendorReturnSheetProps
   }
 
   function handleAddLine(): void {
-    append({ productVariantId: 0, locationId: 0, quantity: 1, reason: "DAMAGED", unitCost: "" });
+    append({ productVariantId: 0, locationId: 0, quantity: "1", reason: "DAMAGED", unitCost: "" });
   }
 
   function handleRemoveLine(index: number): void {
@@ -295,8 +296,8 @@ export function VendorReturnSheet({ open, onOpenChange }: VendorReturnSheetProps
                             type="number"
                             min="0.0001"
                             step="0.0001"
-                            value={f.value || ""}
-                            onChange={(e) => f.onChange(Number(e.target.value))}
+                            value={f.value}
+                            onChange={(e) => f.onChange(e.target.value)}
                           />
                         </FormControl>
                         <FormMessage />
