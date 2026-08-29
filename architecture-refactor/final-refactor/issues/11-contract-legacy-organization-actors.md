@@ -32,14 +32,20 @@ one that matters
 
   > **555 is a floor, not the migration burden, and the ratchet is structurally blind to the
   > difference.** `pg_catalog` holds **647** foreign keys to `users.id`; the source scan sees **563**,
-  > so **100 are invisible to it**. They sit on tables created by raw SQL with no Drizzle declaration —
-  > the accounting `ap_*`/`ar_*`/`bank_*` family and the CRM commission set, largely the 65 tables
-  > `0619_chain_creates_what_production_has` created from the catalogue. They are organizational by
-  > name (`created_by`, `posted_by`, `approved_by`, `assignee_id`), so the true burden is closer to
-  > **655**. The ratchet stays source-based because CI has no database, but `pnpm
-  > scan:legacy-actors:catalog` names every invisible column against `pg_catalog` so the gap is a
-  > known quantity rather than a surprise found at contraction time. **Criterion 1 must be judged
-  > against the catalog figure, not the ratchet figure.**
+  > and **100 of the catalog's are invisible to it**. Those sit on tables created by raw SQL with no
+  > Drizzle declaration — the accounting `ap_*`/`ar_*`/`bank_*` family and the CRM commission set,
+  > largely the 65 tables `0619_chain_creates_what_production_has` created from the catalogue. They are
+  > organizational by name (`created_by`, `posted_by`, `approved_by`, `assignee_id`).
+  >
+  > So the burden is **roughly 655** — 555 visible plus ~100 invisible — and *roughly* is the honest
+  > word: the two sets overlap imperfectly (563 source, 647 catalog, 547 in common), so ~16 FKs are
+  > declared in the schema but absent from the database. Do not treat 655 as an exact count; treat it
+  > as "the ratchet is under-reporting by about a fifth".
+  >
+  > The ratchet stays source-based because CI has no database, but `pnpm scan:legacy-actors:catalog`
+  > names every invisible column against `pg_catalog` so the gap is a known quantity rather than a
+  > surprise found at contraction time. **Criterion 1 must be judged against the catalog figure, not
+  > the ratchet figure.**
 
 - [ ] Contract migrations remove obsolete columns/constraints without losing audit history.
 

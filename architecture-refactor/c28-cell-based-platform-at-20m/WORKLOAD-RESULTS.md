@@ -20,7 +20,7 @@ Declared in `src/scripts/load-driver/load-profile.mjs`, not scattered through fl
 | Tenant | the 100,004-member fixture |
 | Geography | **not the PRD's reference** — one machine to Neon `ap-southeast-1` over the public internet |
 | Browser | headless Chrome on the developer machine, loopback network |
-| Network floor | **a bare `SELECT 1` at concurrency 1 is p50 = 88 ms, p95 = 123 ms** |
+| Network floor | **a bare `SELECT 1` at concurrency 1 is p50 = 80 ms, p95 = 90 ms** |
 
 **The network floor is the single most important number here.** Every latency below includes it.
 A four-round-trip transaction cannot measure under ~350 ms from this machine. The PRD's targets
@@ -35,14 +35,14 @@ statement about where the driver ran, not about the code path it measured.
 | cross-org-data-exposure | **MET** | 0 rows | 0 | RLS enforced; second org present |
 | p99-in-process-authorization | **MET** | 15.58 µs CPU (batch mean p99); 22.40 µs wall p99 | ≤ 100 µs | real `AccessService`, all 4 caches primed, zero I/O |
 | durable-event-loss-after-ack | **MET** | 0 of 20 acked | 0 | ack tx aborted; 20 remaining PENDING |
-| permission-revocation-explicit | **MET** | 728 ms | ≤ 5,000 ms | DB floor only — live app adds in-process cache delay |
+| permission-revocation-explicit | **MET** | 648 ms | ≤ 5,000 ms | DB floor only — live app adds in-process cache delay |
 | node-failure-committed-loss | **MET** | 0 of 20 committed | 0 | `pg_terminate_backend` fired; connection/process failure only |
 | p75-first-useful-view | **MET** | 326 ms FCP p75 | ≤ 1,000 ms | localhost loopback, headless Chrome, login-redirect page |
 | p95-browser-cached-read | **MET** | 52 ms TTFB p95 | ≤ 150 ms | localhost loopback; warm-cache navigation, 92 observed cache replays |
-| p95-redis-operation | BREACHED | 145 ms | 2 ms | Upstash REST over public internet |
-| p95-simple-db-roundtrip | BREACHED | 518 ms | 20 ms | 88 ms network floor; 4 round trips |
-| p95-complex-db-read | BREACHED | 649 ms | 50 ms | 100 k-member org; index migration `0626` applied |
-| p95-transactional-write | BREACHED | 678 ms | 500 ms | committed insert through RLS on the cell probe table |
+| p95-redis-operation | BREACHED | 135 ms | 2 ms | Upstash REST over public internet |
+| p95-simple-db-roundtrip | BREACHED | 512 ms | 20 ms | 80 ms network floor; 4 round trips |
+| p95-complex-db-read | BREACHED | 545 ms | 50 ms | 100 k-member org; index migration `0626` applied |
+| p95-transactional-write | BREACHED | 537 ms | 500 ms | committed insert through RLS on the cell probe table |
 | regional-rpo | **BREACHED** | 360 min | ≤ 5 min | timed drill; the **operational** figure (backup interval), not the drill's best case |
 | cell-rto | **MET** | 19.6 min | ≤ 60 min | timed drill, `CELL_DB_FAILURE`; elapsed is inside target, but the recovered cell fails 2 RLS checks |
 
@@ -118,10 +118,10 @@ Doubling concurrency from 16 to 32:
 
 | Objective | Sustained p95 | Burst p95 |
 |---|---:|---:|
-| p95-simple-db-roundtrip | 518 ms | 905 ms |
-| p95-transactional-write | 678 ms | 1,116 ms |
-| p95-complex-db-read | 649 ms | 1,130 ms |
-| p95-redis-operation | 145 ms | 140 ms |
+| p95-simple-db-roundtrip | 512 ms | 887 ms |
+| p95-transactional-write | 537 ms | 1,090 ms |
+| p95-complex-db-read | 545 ms | 1,040 ms |
+| p95-redis-operation | 135 ms | 133 ms |
 
 Database seams roughly double under 2× load. Redis is flat. That is the shape of a
 connection-bound workload, not a CPU-bound one.
@@ -129,10 +129,10 @@ connection-bound workload, not a CPU-bound one.
 ## Achieved rate
 
 ```
-requests completed        9,855
-achieved                  61.6 req/s
+requests completed        10,677
+achieved                  66.7 req/s
 per-cell sustained target 50 req/s
-ratio                     123.2 % of target
+ratio                     133.4 % of target
 ```
 
 The achieved rate exceeds the per-cell sustained target, and that is **not** a capacity statement: one machine
@@ -147,7 +147,7 @@ geography. **That measurement is not available from this driver.** What can be c
 - **Connection pool** was fully saturated (8 workers, 8 connections) during all sustained windows
   and 2× saturated during burst. The doubling in DB latency under burst is consistent with pool
   wait as the binding constraint at this connection count.
-- **Redis** is effectively flat between sustained and burst (145 ms vs 140 ms p95). The Upstash
+- **Redis** is effectively flat between sustained and burst (135 ms vs 133 ms p95). The Upstash
   REST API is not connection-bound in the same way, so the cache seam does not saturate under 2×.
 - **In-process authorization** consumed 7.50 µs CPU per resolution averaged over 50,000 calls,
   p99 15.58 µs by batch mean and 22.40 µs by per-call wall clock. At 50 req/s with a conservatively
@@ -157,7 +157,7 @@ geography. **That measurement is not available from this driver.** What can be c
 - **No headroom figure in percent** is available. The PRD requires headroom be published against
   the 50 req/s ceiling after a same-region, colocated run. This run cannot produce that figure.
 
-The **limiting resource** at this machine is the network round-trip floor (88–123 ms to Neon
+The **limiting resource** at this machine is the network round-trip floor (80–90 ms to Neon
 ap-southeast-1). In a colocated deployment the round-trip floor would be ≤1 ms, which would
 reduce 4-round-trip transaction latency from ~350 ms to ≤4 ms — bringing every database
 objective inside its target.
@@ -190,7 +190,7 @@ policy; **the cells are still not independently resourced**; and **no same-regio
 exists**.
 
 All 14 objectives are now measured and 5 breach. Four of those (`p95-redis-operation`,
-`p95-simple-db-roundtrip`, `p95-complex-db-read`, `p95-transactional-write`) sit on top of an 88 ms
+`p95-simple-db-roundtrip`, `p95-complex-db-read`, `p95-transactional-write`) sit on top of an 80 ms
 network floor and are statements about where the driver ran, not about the code path measured. The
 fifth, `regional-rpo`, is **not** a geography artefact — it is a real operational gap. Reporting it
 alongside the network-bound four would understate it.

@@ -38,13 +38,13 @@ Headroom needs a colocated deployment and unit cost needs vendor invoices; both 
 - [x] Colocated tests publish p50/p95/p99, throughput, errors, saturation point and remaining headroom.
 
   Published in [`WORKLOAD-RESULTS.md`](../../c28-cell-based-platform-at-20m/WORKLOAD-RESULTS.md) with
-  per-objective p50/p95/p99, sample counts and maxima; achieved 61.6 req/s against a 50 req/s per-cell
-  target across 9,855 requests. The limiting resource is identified — connection-pool wait at 16
+  per-objective p50/p95/p99, sample counts and maxima; achieved 66.7 req/s against a 50 req/s per-cell
+  target across 10,677 requests. The limiting resource is identified — connection-pool wait at 16
   connections, roughly doubling database latency under 2× burst while Redis stays flat, which is the
-  shape of a connection-bound workload — on top of an 88 ms network floor.
+  shape of a connection-bound workload — on top of an 80 ms network floor.
 
   **The run is not colocated and no headroom percentage is published, deliberately.** A bare `SELECT 1`
-  at concurrency 1 measures p50 = 88 ms from this machine to Neon `ap-southeast-1`, so four of the five
+  at concurrency 1 measures p50 = 80 ms from this machine to Neon `ap-southeast-1`, so four of the five
   breaches measure the link rather than a cell's ceiling. Publishing a headroom figure from that would
   be publishing a property of a home internet connection. The saturation evidence that *is* valid is
   published instead.

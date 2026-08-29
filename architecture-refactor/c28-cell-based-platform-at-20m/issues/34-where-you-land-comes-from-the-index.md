@@ -93,7 +93,7 @@ It has everything the landing decision needs except one thing: **a record of whe
 
   The projection was empty (0 rows), which is why the migration's backfill was a no-op. It has been
   rebuilt through the same projection `AccountOrganizationIndexService.rebuild()` produces —
-  **100,095 rows** across 59 active organizations — and `0645`'s backfill then stamped
+  **100,093 rows** across 59 active organizations — exactly the number of memberships in active, non-deleted organizations, which is the projection's definition — and `0645`'s backfill then stamped
   `last_activated_at` on **12 rows**, exactly the 12 accounts holding a legacy pointer. The backfill is
   no longer inert.
 
@@ -133,7 +133,7 @@ It has everything the landing decision needs except one thing: **a record of whe
   **The backfill was a no-op when first written, and is not any more.** `account_organization_index` held
   **0 rows** — the projection is built lazily by `refreshForUser`/`rebuild` — so `UPDATE … FROM users`
   matched nothing, and saying "backfilled" would have been false. The projection has since been rebuilt
-  (100,095 rows) and the same statement then stamped 12 rows. Rows created later by a rebuild still start
+  (100,093 rows) and the same statement then stamped 12 rows. Rows created later by a rebuild still start
   with a NULL `last_activated_at`, which `resolvePreferredOrg` orders last and treats as "fall back to
   most recently joined" — the declared behaviour, not a defect.
 
