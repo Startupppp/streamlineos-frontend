@@ -1,4 +1,4 @@
-import { queryKeyBase as base } from "./base";
+import { queryKeyBase as base, trimKey as k } from "./base";
 
 /**
  * B6 — the packing bench.
@@ -22,7 +22,7 @@ export const inventoryPackingQueryKeys = {
     all: [...base, "packing"] as const,
     queueList: [...base, "packing", "queue"] as const,
     queue: (params?: Record<string, unknown>) =>
-      [...base, "packing", "queue", params] as const,
+      k(...base, "packing", "queue", params),
     reconciliation: (packageId: number) =>
       [...base, "packing", "reconciliation", packageId] as const,
   },

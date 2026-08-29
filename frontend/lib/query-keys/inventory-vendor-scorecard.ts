@@ -1,4 +1,4 @@
-import { queryKeyBase as base } from "./base";
+import { queryKeyBase as base, trimKey as k } from "./base";
 
 /**
  * C4 — the supplier scorecard and the deliveries behind it.
@@ -23,6 +23,6 @@ export const inventoryVendorScorecardQueryKeys = {
       [...base, "inventory", "vendorScorecard", "card", vendorId] as const,
     deliveriesList: [...base, "inventory", "vendorScorecard", "deliveries"] as const,
     deliveries: (vendorId: number, params?: Record<string, unknown>) =>
-      [...base, "inventory", "vendorScorecard", "deliveries", vendorId, params] as const,
+      k(...base, "inventory", "vendorScorecard", "deliveries", vendorId, params),
   },
 } as const;

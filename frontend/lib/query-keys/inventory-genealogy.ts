@@ -1,4 +1,4 @@
-import { queryKeyBase as base } from "./base";
+import { queryKeyBase as base, trimKey as k } from "./base";
 
 /**
  * D1 — the lot/serial genealogy graph.
@@ -22,6 +22,6 @@ export const inventoryGenealogyQueryKeys = {
     all: [...base, "inventory", "genealogy"] as const,
     graphList: [...base, "inventory", "genealogy", "graph"] as const,
     graph: (params?: Record<string, unknown>) =>
-      [...base, "inventory", "genealogy", "graph", params] as const,
+      k(...base, "inventory", "genealogy", "graph", params),
   },
 } as const;

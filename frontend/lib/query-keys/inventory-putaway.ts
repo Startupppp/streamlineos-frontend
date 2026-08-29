@@ -1,4 +1,4 @@
-import { queryKeyBase as base } from "./base";
+import { queryKeyBase as base, trimKey as k } from "./base";
 
 /**
  * B3 — putaway tasks.
@@ -21,7 +21,7 @@ export const inventoryPutawayQueryKeys = {
     all: [...base, "putaway"] as const,
     tasksList: [...base, "putaway", "tasks"] as const,
     tasks: (params?: Record<string, unknown>) =>
-      [...base, "putaway", "tasks", params] as const,
+      k(...base, "putaway", "tasks", params),
     task: (taskId: number) => [...base, "putaway", "task", taskId] as const,
   },
 } as const;

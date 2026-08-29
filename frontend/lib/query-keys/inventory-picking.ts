@@ -1,4 +1,4 @@
-import { queryKeyBase as base } from "./base";
+import { queryKeyBase as base, trimKey as k } from "./base";
 
 /**
  * B4 — pick waves.
@@ -22,7 +22,7 @@ export const inventoryPickingQueryKeys = {
     all: [...base, "picking"] as const,
     wavesList: [...base, "picking", "waves"] as const,
     waves: (params?: Record<string, unknown>) =>
-      [...base, "picking", "waves", params] as const,
+      k(...base, "picking", "waves", params),
     wave: (pickListId: number) => [...base, "picking", "wave", pickListId] as const,
     /**
      * B5 — the supervisor queue. `exceptionsList` is the params-less prefix, for
@@ -33,6 +33,6 @@ export const inventoryPickingQueryKeys = {
      */
     exceptionsList: [...base, "picking", "exceptions"] as const,
     exceptions: (params?: Record<string, unknown>) =>
-      [...base, "picking", "exceptions", params] as const,
+      k(...base, "picking", "exceptions", params),
   },
 } as const;

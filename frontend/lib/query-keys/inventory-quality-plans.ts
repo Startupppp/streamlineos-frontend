@@ -1,4 +1,4 @@
-import { queryKeyBase as base } from "./base";
+import { queryKeyBase as base, trimKey as k } from "./base";
 
 /**
  * D3 — inspection plans.
@@ -22,7 +22,7 @@ export const inventoryQualityPlanQueryKeys = {
     all: [...base, "inspectionPlans"] as const,
     plansList: [...base, "inspectionPlans", "plans"] as const,
     plans: (params?: Record<string, unknown>) =>
-      [...base, "inspectionPlans", "plans", params] as const,
+      k(...base, "inspectionPlans", "plans", params),
     plan: (planId: number) => [...base, "inspectionPlans", "plan", planId] as const,
     versions: (planId: number) =>
       [...base, "inspectionPlans", "versions", planId] as const,
