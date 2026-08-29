@@ -396,6 +396,15 @@ export interface AdjustmentDetail {
   approvedAt?: string | null;
   postedAt?: string | null;
   createdByName?: string | null;
+  scrapLocationId?: number | null;
+  scrapLocation?: { id: number; name: string; code: string } | null;
+  /**
+   * D8. What the write-off cost, from the layers the issue consumed. Absent —
+   * not null — for a caller without `inventory:valuation:read`: the backend
+   * omits the field rather than blanking it, so `undefined` means "not allowed
+   * to know" and `null` means "not posted yet".
+   */
+  writtenOffValue?: string | null;
   lines: AdjustmentDetailLine[];
 }
 

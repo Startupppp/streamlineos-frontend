@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { EntityFormDialog } from "@/components/shared";
 import {
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -12,6 +13,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { ProductVariantCombobox } from "@/components/inventory/product-variant-combobox";
+import { LocationSelect } from "@/components/inventory/location-select";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -22,16 +24,26 @@ import {
 } from "@/components/ui/select";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useReportPickException, type PickWaveLine } from "@/hooks/api/inventory/picking";
+import { useCan } from "@/hooks/api/access";
+import {
+  SUBSTITUTE_KEY,
+  useReportPickException,
+  type PickWaveLine,
+} from "@/hooks/api/inventory/picking";
 import {
   pickExceptionSchema,
   type PickExceptionFormValues,
 } from "./pick-exception-schema";
 
+/** The two a picker cannot settle alone, mirrored from the server's policy. */
+const REVIEWED_REASONS: readonly string[] = ["DAMAGED", "SUBSTITUTED"];
+
 interface PickExceptionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   pickListId: number;
+  /** The wave's building, so the found-bin picker offers only bins in it. */
+  warehouseId: number | null;
   line: PickWaveLine | null;
 }
 
@@ -48,9 +60,14 @@ export function PickExceptionDialog({
   open,
   onOpenChange,
   pickListId,
+  warehouseId,
   line,
 }: PickExceptionDialogProps) {
   const report = useReportPickException();
+  // Swapping a SKU rewrites what the customer is owed, so it answers to its own
+  // key and its own endpoint. Hiding the option a picker cannot use beats
+  // offering it and failing at the server, which is where it also fails closed.
+  const canSubstitute = useCan(SUBSTITUTE_KEY);
 
   function handleSubmit(values: PickExceptionFormValues): void {
     if (!line) return;
@@ -60,14 +77,21 @@ export function PickExceptionDialog({
         pickLineId: line.id,
         reason: values.reason,
         notes: values.notes,
+        foundLocationId: values.foundLocationId
+          ? Number(values.foundLocationId)
+          : undefined,
         substituteVariantId: values.substituteVariantId
           ? Number(values.substituteVariantId)
           : undefined,
         quantityPicked: values.quantityPicked,
       },
       {
-        onSuccess: () => {
-          toast.success("Exception recorded");
+        onSuccess: (result) => {
+          toast.success(
+            result.status === "OPEN" && REVIEWED_REASONS.includes(result.reason)
+              ? "Exception recorded — a supervisor has to sign it off"
+              : "Exception recorded",
+          );
           onOpenChange(false);
         },
         onError: (error) => {
@@ -113,14 +137,44 @@ export function PickExceptionDialog({
                     <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
                       <SelectItem value="SHORT">Short — fewer on the shelf</SelectItem>
                       <SelectItem value="NOT_FOUND">Not found — bin empty</SelectItem>
+                      <SelectItem value="WRONG_LOCATION">
+                        Wrong location — they were somewhere else
+                      </SelectItem>
                       <SelectItem value="DAMAGED">Damaged</SelectItem>
-                      <SelectItem value="SUBSTITUTED">Substituted</SelectItem>
+                      {canSubstitute ? (
+                        <SelectItem value="SUBSTITUTED">Substituted</SelectItem>
+                      ) : null}
                     </SelectContent>
                   </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            {reason === "WRONG_LOCATION" ? (
+              <FormField
+                control={form.control}
+                name="foundLocationId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Where they actually were</FormLabel>
+                    <FormControl>
+                      <LocationSelect
+                        warehouseId={warehouseId ?? undefined}
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                        placeholder="Pick the bin you found them in…"
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Naming the bin retargets this task so you can carry on picking, and
+                      leaves the discrepancy on the record for a count to chase.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ) : null}
 
             {reason === "SUBSTITUTED" ? (
               <div className="grid gap-4 sm:grid-cols-2">
@@ -157,6 +211,11 @@ export function PickExceptionDialog({
                           value={field.value ?? ""}
                         />
                       </FormControl>
+                      <FormDescription>
+                        Has to cover the whole line, and the replacement must be sold in
+                        the same unit. The order line moves onto it and the reservation
+                        moves with it.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}

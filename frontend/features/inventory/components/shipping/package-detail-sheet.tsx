@@ -39,7 +39,9 @@ import {
   useUpdatePackageLines,
   useClosePackage,
   useReopenPackage,
+  type PackageLine,
 } from "@/hooks/api/inventory/shipping";
+import { useProductVariants } from "@/hooks/api/inventory/products";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError } from "@/lib/api-client";
 
@@ -50,17 +52,25 @@ interface EditableLine {
   serialId: string;
 }
 
+function variantLabel(
+  variants: { id: number; name: string; productName: string; sku: string }[],
+  variantId: number,
+): string {
+  const variant = variants.find((v) => v.id === variantId);
+  return variant ? `${variant.productName} — ${variant.name}` : "Unknown item";
+}
+
 interface PackageDetailSheetProps {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   packageId: number | null;
 }
 
-function buildDefaultLines(lines?: { variantId: number; qty: number; lotId?: number | null; serialId?: number | null }[]): EditableLine[] {
+function buildDefaultLines(lines?: PackageLine[]): EditableLine[] {
   if (!lines || lines.length === 0) return [];
   return lines.map((l) => ({
-    variantId: String(l.variantId),
-    qty: String(l.qty),
+    variantId: String(l.productVariantId),
+    qty: String(Number(l.quantity)),
     lotId: l.lotId ? String(l.lotId) : "",
     serialId: l.serialId ? String(l.serialId) : "",
   }));
@@ -185,6 +195,9 @@ const EditableLineRow = memo(function EditableLineRow({
 
 export function PackageDetailSheet({ open, onOpenChange, packageId }: PackageDetailSheetProps) {
   const pkgQuery = usePackageDetail(packageId ?? 0);
+  // §5: show names, never raw ids. The API returns the variant id alone, so the
+  // name is resolved from the catalogue list at the display boundary.
+  const { data: variants = [] } = useProductVariants({ activeOnly: false });
   const updateLinesMutation = useUpdatePackageLines();
   const closeMutation = useClosePackage();
   const reopenMutation = useReopenPackage();
@@ -224,8 +237,8 @@ export function PackageDetailSheet({ open, onOpenChange, packageId }: PackageDet
     const lines = editableLines
       .filter((l) => l.variantId.trim() && Number(l.qty) > 0)
       .map((l) => ({
-        variantId: Number(l.variantId),
-        qty: Number(l.qty),
+        productVariantId: Number(l.variantId),
+        quantity: String(Number(l.qty)),
         ...(l.lotId ? { lotId: Number(l.lotId) } : {}),
         ...(l.serialId ? { serialId: Number(l.serialId) } : {}),
       }));
@@ -248,7 +261,7 @@ export function PackageDetailSheet({ open, onOpenChange, packageId }: PackageDet
 
   function handleConfirmClose(): void {
     if (!packageId) return;
-    closeMutation.mutate(packageId, {
+    closeMutation.mutate({ packageId }, {
       onSuccess: () => {
         toast.success("Package closed");
         setCloseConfirmOpen(false);
@@ -378,7 +391,9 @@ export function PackageDetailSheet({ open, onOpenChange, packageId }: PackageDet
                     pkg.lines.map((line) => (
                       <div key={line.id} className="flex items-center justify-between px-3 py-2">
                         <div>
-                          <span className="text-sm font-medium">{line.variantName}</span>
+                          <span className="text-sm font-medium">
+                            {variantLabel(variants, line.productVariantId)}
+                          </span>
                           {line.lotId && (
                             <span className="ml-2 text-xs text-muted-foreground">Lot #{line.lotId}</span>
                           )}
@@ -386,7 +401,9 @@ export function PackageDetailSheet({ open, onOpenChange, packageId }: PackageDet
                             <span className="ml-2 text-xs text-muted-foreground">S/N #{line.serialId}</span>
                           )}
                         </div>
-                        <span className="text-sm tabular-nums">{line.qty}</span>
+                        <span className="font-mono text-sm tabular-nums">
+                          {Number(line.quantity)}
+                        </span>
                       </div>
                     ))
                   ) : (

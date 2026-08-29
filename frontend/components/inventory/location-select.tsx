@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { Combobox } from "@/components/ui/combobox";
-import { useLocations } from "@/hooks/api/inventory/warehouses";
+import { useLocations, type LocationType } from "@/hooks/api/inventory/warehouses";
 
 interface LocationSelectProps {
   warehouseId: number | undefined;
@@ -12,6 +12,12 @@ interface LocationSelectProps {
   disabled?: boolean;
   className?: string;
   activeOnly?: boolean;
+  /**
+   * Narrow the list to one kind of bin — a write-off's scrap location is the
+   * first caller. Extending this select rather than writing a second one, so a
+   * later change to how a location is labelled reaches every picker.
+   */
+  locationTypes?: readonly LocationType[];
 }
 
 export function LocationSelect({
@@ -22,18 +28,20 @@ export function LocationSelect({
   disabled,
   className,
   activeOnly = false,
+  locationTypes,
 }: LocationSelectProps) {
   const resolvedWarehouseId = warehouseId ?? 0;
   const { data: locations = [], isLoading } = useLocations(resolvedWarehouseId);
 
   const options = useMemo(() => {
-    const source = activeOnly ? locations.filter((loc) => loc.isActive) : locations;
+    let source = activeOnly ? locations.filter((loc) => loc.isActive) : locations;
+    if (locationTypes) source = source.filter((loc) => locationTypes.includes(loc.locationType));
     return source.map((loc) => ({
       value: String(loc.id),
       label: loc.name,
       sublabel: `Code: ${loc.code}`,
     }));
-  }, [locations, activeOnly]);
+  }, [locations, activeOnly, locationTypes]);
 
   const noWarehouse = resolvedWarehouseId === 0;
 

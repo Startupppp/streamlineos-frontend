@@ -31,18 +31,23 @@ import { formatShortDate } from "@/lib/date-utils";
 import { useCan } from "@/hooks/api/access";
 import {
   usePickWaves,
+  EXCEPTION_REVIEW_KEY,
   WAVE_READ_KEY,
   WAVE_WRITE_KEY,
+  type PickExceptionOwnership,
+  type PickExceptionStatus,
   type PickWaveAssignment,
   type PickWaveStatus,
   type PickWaveSummary,
 } from "@/hooks/api/inventory/picking";
 import {
+  PICK_EXCEPTION_STATUS_LABEL,
   PICK_WAVE_STATUS_BADGE,
   PICK_WAVE_STATUS_LABEL,
 } from "@/features/inventory/lib/inventory-status";
 import { CreateWaveDialog } from "./create-wave-dialog";
 import { PickWaveSheet } from "./pick-wave-sheet";
+import { PickExceptionQueue } from "./pick-exception-queue";
 
 const ASSIGNMENTS: ReadonlyArray<{ value: PickWaveAssignment; label: string }> = [
   { value: "UNCLAIMED", label: "Available" },
@@ -65,8 +70,45 @@ function isStatus(value: string | null): value is PickWaveStatus {
   return STATUSES.includes(value as PickWaveStatus);
 }
 
+/**
+ * B5, item 5 — the supervisor queue is a view of this screen, not a second
+ * route.
+ *
+ * A picker and the person who signs off what a picker could not do are looking at
+ * two faces of one job, and splitting them across two URLs means a second nav
+ * entry, a second permission row in the sidebar coverage test, and a supervisor
+ * navigating away from the board to answer a question about it.
+ */
+type WorkbenchView = "waves" | "exceptions";
+
+const EXCEPTION_STATUSES: ReadonlyArray<PickExceptionStatus> = ["OPEN", "RESOLVED"];
+
+function isView(value: string | null): value is WorkbenchView {
+  return value === "waves" || value === "exceptions";
+}
+
+function isExceptionStatus(value: string | null): value is PickExceptionStatus {
+  return EXCEPTION_STATUSES.includes(value as PickExceptionStatus);
+}
+
+function isOwnership(value: string | null): value is PickExceptionOwnership {
+  return value === "ANY" || value === "MINE";
+}
+
 function progressLabel(wave: PickWaveSummary): string {
   return `${wave.linesClosed}/${wave.lineCount}`;
+}
+
+/**
+ * B5. Why a wave that looks finished is not.
+ *
+ * `linesClosed` now counts a damaged or substituted line only once a reviewer has
+ * signed it, so a wave can sit at 3/4 with nobody walking. Saying so on the row is
+ * the difference between "the picker is slow" and "this is on a supervisor's desk".
+ */
+function blockedLabel(wave: PickWaveSummary): string | null {
+  if (wave.openExceptions === 0) return null;
+  return `${wave.openExceptions} to review`;
 }
 
 /**
@@ -87,6 +129,7 @@ export function PickWorkbenchPage() {
 
   const canView = useCan(WAVE_READ_KEY);
   const canPick = useCan(WAVE_WRITE_KEY);
+  const canReview = useCan(EXCEPTION_REVIEW_KEY);
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
@@ -95,19 +138,43 @@ export function PickWorkbenchPage() {
 
   const assignmentParam = searchParams.get("assignment");
   const statusParam = searchParams.get("status");
+  const viewParam = searchParams.get("view");
+  const ownershipParam = searchParams.get("ownership");
   const assignment: PickWaveAssignment = isAssignment(assignmentParam)
     ? assignmentParam
     : "UNCLAIMED";
   const status: PickWaveStatus | undefined = isStatus(statusParam) ? statusParam : undefined;
+  // A view nobody may open falls back to the board rather than rendering an
+  // access-denied dead end somebody arrived at through a shared link.
+  const view: WorkbenchView = isView(viewParam) && canReview ? viewParam : "waves";
+  const exceptionStatus: PickExceptionStatus | undefined = isExceptionStatus(statusParam)
+    ? statusParam
+    : undefined;
+  const ownership: PickExceptionOwnership = isOwnership(ownershipParam)
+    ? ownershipParam
+    : "ANY";
 
   const waves = usePickWaves(
     { page, limit: pageSize, assignment, status },
-    { enabled: canView },
+    { enabled: canView && view === "waves" },
   );
 
-  function syncParams(next: { assignment?: PickWaveAssignment; status?: string }): void {
+  function syncParams(next: {
+    assignment?: PickWaveAssignment;
+    status?: string;
+    view?: WorkbenchView;
+    ownership?: PickExceptionOwnership;
+  }): void {
     const params = new URLSearchParams(searchParams.toString());
     if (next.assignment) params.set("assignment", next.assignment);
+    if (next.ownership) params.set("ownership", next.ownership);
+    if (next.view) {
+      params.set("view", next.view);
+      // The two views share the word "status" and mean different vocabularies by
+      // it, so switching drops the old one rather than carrying a filter the new
+      // list cannot honour.
+      params.delete("status");
+    }
     if (next.status !== undefined) {
       if (next.status === "all") params.delete("status");
       else params.set("status", next.status);
@@ -124,6 +191,14 @@ export function PickWorkbenchPage() {
 
   function handleStatusChange(value: string): void {
     syncParams({ status: value });
+  }
+
+  function handleViewChange(value: string): void {
+    if (isView(value)) syncParams({ view: value });
+  }
+
+  function handleOwnershipChange(value: string): void {
+    if (isOwnership(value)) syncParams({ ownership: value });
   }
 
   function handleCreateOpen(): void {
@@ -186,7 +261,12 @@ export function PickWorkbenchPage() {
       key: "progress",
       header: "Picked",
       cell: (wave) => (
-        <span className="font-mono tabular-nums">{progressLabel(wave)}</span>
+        <div className="flex flex-col items-end gap-0.5">
+          <span className="font-mono tabular-nums">{progressLabel(wave)}</span>
+          {blockedLabel(wave) ? (
+            <span className="text-micro text-muted-foreground">{blockedLabel(wave)}</span>
+          ) : null}
+        </div>
       ),
       className: "text-right",
       headerClassName: "text-right",
@@ -213,28 +293,64 @@ export function PickWorkbenchPage() {
 
   const filters = (
     <div className={FILTER_TOOLBAR_ROW}>
-      <Tabs value={assignment} onValueChange={handleAssignmentChange}>
-        <TabsList>
-          {ASSIGNMENTS.map((option) => (
-            <TabsTrigger key={option.value} value={option.value}>
-              {option.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
-      <Select value={status ?? "all"} onValueChange={handleStatusChange}>
-        <SelectTrigger className={FILTER_SELECT_TRIGGER} aria-label="Filter by wave status">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
-          <SelectItem value="all">All statuses</SelectItem>
-          {STATUSES.map((option) => (
-            <SelectItem key={option} value={option}>
-              {PICK_WAVE_STATUS_LABEL[option]}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      {canReview ? (
+        <Tabs value={view} onValueChange={handleViewChange}>
+          <TabsList>
+            <TabsTrigger value="waves">Waves</TabsTrigger>
+            <TabsTrigger value="exceptions">Exceptions</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      ) : null}
+      {view === "waves" ? (
+        <Tabs value={assignment} onValueChange={handleAssignmentChange}>
+          <TabsList>
+            {ASSIGNMENTS.map((option) => (
+              <TabsTrigger key={option.value} value={option.value}>
+                {option.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+      ) : (
+        <Tabs value={ownership} onValueChange={handleOwnershipChange}>
+          <TabsList>
+            <TabsTrigger value="MINE">Mine</TabsTrigger>
+            <TabsTrigger value="ANY">All</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      )}
+      {view === "waves" ? (
+        <Select value={status ?? "all"} onValueChange={handleStatusChange}>
+          <SelectTrigger className={FILTER_SELECT_TRIGGER} aria-label="Filter by wave status">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
+            <SelectItem value="all">All statuses</SelectItem>
+            {STATUSES.map((option) => (
+              <SelectItem key={option} value={option}>
+                {PICK_WAVE_STATUS_LABEL[option]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : (
+        <Select value={exceptionStatus ?? "all"} onValueChange={handleStatusChange}>
+          <SelectTrigger
+            className={FILTER_SELECT_TRIGGER}
+            aria-label="Filter by exception status"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
+            <SelectItem value="all">All exceptions</SelectItem>
+            {EXCEPTION_STATUSES.map((option) => (
+              <SelectItem key={option} value={option}>
+                {PICK_EXCEPTION_STATUS_LABEL[option]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
     </div>
   );
 
@@ -252,13 +368,15 @@ export function PickWorkbenchPage() {
     <PageWrapper
       title="Picking"
       subtitle={
-        waves.data
-          ? `${waves.data.total} wave${waves.data.total === 1 ? "" : "s"} in this view`
-          : "Waves waiting to be walked."
+        view === "exceptions"
+          ? "Lines a picker could not close the way the wave asked."
+          : waves.data
+            ? `${waves.data.total} wave${waves.data.total === 1 ? "" : "s"} in this view`
+            : "Waves waiting to be walked."
       }
       filters={filters}
       actions={
-        canPick ? (
+        canPick && view === "waves" ? (
           <AnimatedIconButton
             icon={PlusIcon}
             iconSize={16}
@@ -274,7 +392,9 @@ export function PickWorkbenchPage() {
       noInternalScroll
       className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
     >
-      {waves.isError ? (
+      {view === "exceptions" ? (
+        <PickExceptionQueue status={exceptionStatus} ownership={ownership} />
+      ) : waves.isError ? (
         <ErrorState
           className="flex-1"
           title="Couldn't load the pick queue"

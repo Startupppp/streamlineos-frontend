@@ -24,5 +24,15 @@ export const inventoryPickingQueryKeys = {
     waves: (params?: Record<string, unknown>) =>
       [...base, "picking", "waves", params] as const,
     wave: (pickListId: number) => [...base, "picking", "wave", pickListId] as const,
+    /**
+     * B5 — the supervisor queue. `exceptionsList` is the params-less prefix, for
+     * the same reason `wavesList` is: `exceptions()` with no argument yields a
+     * key ending in `undefined`, which TanStack's partial match compares against
+     * a stored params object and never matches, so every no-argument invalidate
+     * would be a silent no-op.
+     */
+    exceptionsList: [...base, "picking", "exceptions"] as const,
+    exceptions: (params?: Record<string, unknown>) =>
+      [...base, "picking", "exceptions", params] as const,
   },
 } as const;

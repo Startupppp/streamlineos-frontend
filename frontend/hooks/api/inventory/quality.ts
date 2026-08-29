@@ -23,6 +23,12 @@ interface InspectionLine {
   serialId?: number | null;
   qty: number;
   disposition?: string | null;
+  /** D3. What this inspection is holding out of ATP right now. */
+  heldQuantity?: string | null;
+  /** How many units the governing plan requires be opened. */
+  sampleQuantity?: string | null;
+  locationId?: number | null;
+  planVersionId?: number | null;
 }
 
 interface TimelineEntry {
@@ -37,6 +43,9 @@ interface Inspection {
   source: string | null;
   lines: InspectionLine[];
   statusTimeline?: TimelineEntry[];
+  /** Set on a compensating correction; the original stays untouched. */
+  correctsInspectionId?: number | null;
+  correctionReason?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -238,14 +247,47 @@ export function useDisposeInspection() {
   });
 }
 
+/**
+ * D3. Cancelling hands back whatever the inspection was holding, so it moves
+ * stock — hence the idempotency key and the stock invalidations, neither of
+ * which it needed while a cancel was a pure status flip.
+ */
 export function useCancelInspection() {
   const qc = useQueryClient();
   return useMutation<Inspection, Error, number>({
     mutationKey: ["inventory", "quality", "inspection", "cancel"],
     mutationFn: (inspectionId) =>
-      apiClient.post<Inspection>(`/inventory/quality/inspections/${inspectionId}/cancel`),
+      apiClient.post<Inspection>(
+        `/inventory/quality/inspections/${inspectionId}/cancel`,
+        undefined,
+        { headers: { "Idempotency-Key": crypto.randomUUID() } },
+      ),
     onSuccess: (_, inspectionId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.qualityInspection(inspectionId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.qualityInspections() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.dashboard() });
+    },
+  });
+}
+
+/**
+ * D3. A completed result is evidence and is never edited — correcting one raises
+ * a fresh inspection that names what it supersedes, and both stay readable.
+ */
+export function useCorrectInspection() {
+  const qc = useQueryClient();
+  return useMutation<Inspection, Error, { inspectionId: number; reason: string }>({
+    mutationKey: ["inventory", "quality", "inspection", "correct"],
+    mutationFn: ({ inspectionId, reason }) =>
+      apiClient.post<Inspection>(
+        `/inventory/quality/inspections/${inspectionId}/correct`,
+        { reason },
+      ),
+    onSuccess: (_, variables) => {
+      void qc.invalidateQueries({
+        queryKey: queryKeys.inventory.qualityInspection(variables.inspectionId),
+      });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.qualityInspections() });
     },
   });

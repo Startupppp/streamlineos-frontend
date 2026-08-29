@@ -20,7 +20,20 @@ export type RecallStatus = "OPEN" | "IN_PROGRESS" | "CLOSED";
 export type PackageStatus = "OPEN" | "CLOSED" | "SHIPPED";
 /** B4. Where a pick wave is in its walk. */
 export type PickWaveStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
-export type PickExceptionReason = "SHORT" | "NOT_FOUND" | "DAMAGED" | "SUBSTITUTED";
+/**
+ * B5. `WRONG_LOCATION` is the one reason that does not close its line: the goods
+ * exist, the wave sent the picker to the wrong bin, and the walk is not over.
+ */
+export type PickExceptionReason =
+  | "SHORT"
+  | "NOT_FOUND"
+  | "DAMAGED"
+  | "SUBSTITUTED"
+  | "WRONG_LOCATION";
+/** B5. Where an exception is in its own life, separately from the line's. */
+export type PickExceptionStatus = "OPEN" | "RESOLVED";
+/** B5. What the reviewer decided. Present only once the status is RESOLVED. */
+export type PickExceptionResolution = "ACCEPTED" | "REJECTED";
 /** B3. Where a putaway task is between the receiving dock and the shelf. */
 export type PutawayTaskStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
 export type PutawayDisposition = "STORAGE" | "QUARANTINE";
@@ -352,7 +365,39 @@ export const PICK_EXCEPTION_LABEL: Record<PickExceptionReason, string> = {
   NOT_FOUND: "Not found",
   DAMAGED: "Damaged",
   SUBSTITUTED: "Substituted",
+  WRONG_LOCATION: "Wrong location",
 };
+
+/**
+ * B5. The tone says what the reader has to do about it, not how bad it is.
+ * A shortfall is a fact of the day's work; a write-off or a swap is waiting on
+ * somebody; a wrong bin is a correction the picker can still act on.
+ */
+export const PICK_EXCEPTION_BADGE: Record<PickExceptionReason, string> = {
+  SHORT: WARNING,
+  NOT_FOUND: WARNING,
+  DAMAGED: DANGER,
+  SUBSTITUTED: INFO,
+  WRONG_LOCATION: INFO,
+};
+
+export const PICK_EXCEPTION_STATUS_LABEL: Record<PickExceptionStatus, string> = {
+  OPEN: "Waiting on review",
+  RESOLVED: "Reviewed",
+};
+
+export const PICK_EXCEPTION_STATUS_BADGE: Record<PickExceptionStatus, string> = {
+  OPEN: WARNING,
+  RESOLVED: SUCCESS,
+};
+
+export const PICK_EXCEPTION_RESOLUTION_LABEL: Record<PickExceptionResolution, string> = {
+  ACCEPTED: "Accepted",
+  REJECTED: "Not accepted",
+};
+
+/** B5. The "a picker is standing still for this one" marker on the queue. */
+export const PICK_EXCEPTION_BLOCKING_BADGE = WARNING;
 
 export const PUTAWAY_TASK_STATUS_BADGE: Record<PutawayTaskStatus, string> = {
   PENDING: INFO,

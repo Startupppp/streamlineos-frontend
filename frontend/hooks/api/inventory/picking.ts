@@ -6,9 +6,16 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 
+import type {
+  PickExceptionReason,
+  PickExceptionResolution,
+  PickExceptionStatus,
+} from "@/features/inventory/lib/inventory-status";
+
 export type PickWaveStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
 export type PickWaveAssignment = "ANY" | "MINE" | "UNCLAIMED";
-export type PickExceptionReason = "SHORT" | "NOT_FOUND" | "DAMAGED" | "SUBSTITUTED";
+export type PickExceptionOwnership = "ANY" | "MINE";
+export type { PickExceptionReason, PickExceptionResolution, PickExceptionStatus };
 
 export interface PickWaveSummary {
   id: number;
@@ -23,6 +30,8 @@ export interface PickWaveSummary {
   orderCount: number;
   lineCount: number;
   linesClosed: number;
+  /** B5. How many of this wave's lines are waiting on a reviewer. */
+  openExceptions: number;
 }
 
 export interface PickWaveListResponse {
@@ -63,6 +72,24 @@ export interface PickWaveLine {
   quantity_to_pick: string;
   quantity_picked: string;
   exception_reason: PickExceptionReason | null;
+  exception_notes: string | null;
+  exception_status: PickExceptionStatus | null;
+  exception_resolution: PickExceptionResolution | null;
+  exception_owner_id: string | null;
+  exception_owner_name: string | null;
+  exception_location_code: string | null;
+  substitute_variant_id: number | null;
+  substitute_sku: string | null;
+  substitute_quantity: string | null;
+  /**
+   * B5. Whether the server considers this task finished with.
+   *
+   * Sent rather than derived here. The rule now has three clauses — picked in
+   * full, a closing reason, and a reviewer's signature where one is required —
+   * and a client copy of it would be a fourth place for it to drift, showing a
+   * picker a finished row the wave still considers outstanding.
+   */
+  line_closed: boolean;
 }
 
 export interface PickWaveDetail {
@@ -111,14 +138,37 @@ export interface ReportPickExceptionInput {
   pickLineId: number;
   reason: PickExceptionReason;
   notes?: string;
+  /** `WRONG_LOCATION` only — where the picker actually found the goods. */
+  foundLocationId?: number;
+  /** `SUBSTITUTED` only. Posted to its own endpoint, which has its own key. */
   substituteVariantId?: number;
   quantityPicked?: string;
 }
+
+export interface PickExceptionResult {
+  pickLineId: number;
+  reason: PickExceptionReason;
+  status: PickExceptionStatus;
+  ownerUserId: string | null;
+  substituteVariantId: number | null;
+  substituteQuantity: string | null;
+  quantityPicked: string;
+  waveComplete: boolean;
+  reportedBy: string;
+}
+
 
 type QueryOptions<T> = Omit<UseQueryOptions<T, Error>, "queryKey" | "queryFn">;
 
 const WAVE_READ_KEY = "inventory:sales-orders:read";
 const WAVE_WRITE_KEY = "inventory:sales-orders:ship";
+/**
+ * B5. Two keys of their own, and the split is the point: swapping a SKU at the
+ * shelf changes what the customer is owed, and signing off a write-off is a
+ * supervisor's job — neither is the same authority as walking a wave.
+ */
+const SUBSTITUTE_KEY = "inventory:picking:substitute";
+const EXCEPTION_REVIEW_KEY = "inventory:picking:review";
 
 export function usePickWaves(
   filters?: PickWaveFilters,
@@ -257,29 +307,66 @@ export function useConfirmPick() {
   });
 }
 
+/**
+ * B5. Two endpoints behind one hook, because they are one act at the shelf.
+ *
+ * `SUBSTITUTED` posts to `/substitute`, which carries
+ * `inventory:picking:substitute`; every other reason posts to `/exception`,
+ * which carries the picker's own key. The server splits them because
+ * `PermissionGuard` reads exactly one permission per handler, and a single route
+ * covering every reason could only be gated at the weakest of them.
+ *
+ * Reporting an exception now releases the reservation on the unpicked remainder,
+ * and a substitution moves the reservation onto the new SKU and rewrites the
+ * sales-order line — so reservations, stock levels and the sales-order lists are
+ * all stale afterwards, not just the wave.
+ */
 export function useReportPickException() {
   const qc = useQueryClient();
-  return useMutation<{ waveComplete: boolean }, Error, ReportPickExceptionInput>({
+  return useMutation<PickExceptionResult, Error, ReportPickExceptionInput>({
     mutationKey: ["inventory", "picking", "exception"],
-    mutationFn: ({ pickListId, pickLineId, reason, notes, substituteVariantId, quantityPicked }) =>
-      apiClient.post(
-        `/inventory/picking/waves/${pickListId}/exception`,
-        {
-          pickLineId,
-          reason,
-          ...(notes ? { notes } : {}),
-          ...(reason === "SUBSTITUTED"
-            ? { substituteVariantId, quantityPicked }
-            : {}),
-        },
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
-      ),
+    mutationFn: ({
+      pickListId,
+      pickLineId,
+      reason,
+      notes,
+      foundLocationId,
+      substituteVariantId,
+      quantityPicked,
+    }) =>
+      reason === "SUBSTITUTED"
+        ? apiClient.post<PickExceptionResult>(
+            `/inventory/picking/waves/${pickListId}/substitute`,
+            {
+              pickLineId,
+              substituteVariantId,
+              quantityPicked,
+              ...(notes ? { notes } : {}),
+            },
+            { headers: { "Idempotency-Key": crypto.randomUUID() } },
+          )
+        : apiClient.post<PickExceptionResult>(
+            `/inventory/picking/waves/${pickListId}/exception`,
+            {
+              pickLineId,
+              reason,
+              ...(notes ? { notes } : {}),
+              ...(reason === "WRONG_LOCATION" && foundLocationId !== undefined
+                ? { foundLocationId }
+                : {}),
+            },
+            { headers: { "Idempotency-Key": crypto.randomUUID() } },
+          ),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.picking.wave(variables.pickListId) });
       void qc.invalidateQueries({ queryKey: queryKeys.picking.wavesList });
+      void qc.invalidateQueries({ queryKey: queryKeys.picking.exceptionsList });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.reservations() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
     },
   });
 }
 
-export { WAVE_READ_KEY, WAVE_WRITE_KEY };
+
+export { WAVE_READ_KEY, WAVE_WRITE_KEY, SUBSTITUTE_KEY, EXCEPTION_REVIEW_KEY };

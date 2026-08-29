@@ -101,12 +101,35 @@ const INSPECTION_LINE_COLUMNS: DataTableColumn<InspectionLine>[] = [
     cell: (line) => line.qty,
   },
   {
+    key: "sampleQuantity",
+    header: "Sample",
+    className: "text-right tabular-nums text-xs text-muted-foreground",
+    headerClassName: "text-right",
+    // What the governing plan requires be opened. Absent on an inspection raised
+    // by hand, where nobody has said how much to check.
+    cell: (line) => (line.sampleQuantity ? trimQuantity(line.sampleQuantity) : "—"),
+  },
+  {
+    key: "heldQuantity",
+    header: "Held",
+    className: "text-right tabular-nums text-xs",
+    headerClassName: "text-right",
+    // The figure a verdict releases — not the line quantity, and not whatever the
+    // stock level happens to show.
+    cell: (line) => (line.heldQuantity ? trimQuantity(line.heldQuantity) : "—"),
+  },
+  {
     key: "disposition",
     header: "Disposition",
     className: "text-muted-foreground text-xs",
     cell: (line) => line.disposition ?? "—",
   },
 ];
+
+/** `numeric(18,4)` reads back with four decimals; a whole count should not. */
+function trimQuantity(value: string): string {
+  return value.includes(".") ? value.replace(/\.?0+$/, "") : value;
+}
 
 export function InspectionDetailSheet({ open, onOpenChange, inspectionId }: Props) {
   const [showFailForm, setShowFailForm] = useState(false);

@@ -15,7 +15,23 @@ export type AdjustmentReason =
   | "EXPIRY"
   | "THEFT"
   | "RECOUNT"
-  | "OTHER";
+  | "OTHER"
+  | "SCRAP";
+
+/**
+ * D8. The reasons that condemn stock. A write-off is one of these on an
+ * ordinary adjustment — there is no second document and no second endpoint —
+ * so the client asks the same questions of it that the server does: every line
+ * must remove stock, and a scrap location is only meaningful here.
+ */
+export const WRITE_OFF_REASONS: readonly AdjustmentReason[] = ["DAMAGE", "EXPIRY", "THEFT", "SCRAP"];
+
+const WRITE_OFF_REASON_SET: ReadonlySet<string> = new Set(WRITE_OFF_REASONS);
+
+/** Takes a plain string, so a detail payload's `reason` needs no cast. */
+export function isWriteOffReason(reason: string): boolean {
+  return WRITE_OFF_REASON_SET.has(reason);
+}
 
 type AdjustmentType = "IN" | "OUT" | "SET";
 
@@ -28,6 +44,8 @@ export interface AdjustmentListItem {
   createdAt: string;
   createdByName: string | null;
   lineCount: number;
+  /** Absent for a caller without `inventory:valuation:read`. */
+  writtenOffValue: string | null | undefined;
 }
 
 interface AdjustmentsResult {
@@ -44,6 +62,7 @@ interface CreateAdjustmentInput {
   quantity: number;
   reason: AdjustmentReason;
   notes?: string;
+  scrapLocationId?: number;
 }
 
 interface RawAdjustment {
@@ -55,6 +74,7 @@ interface RawAdjustment {
   createdAt: string;
   creator: { id: string; name: string | null } | null;
   lines: Array<{ id: number }>;
+  writtenOffValue?: string | null;
 }
 
 interface RawAdjustmentsResponse {
@@ -74,6 +94,7 @@ function toAdjustmentListItem(r: RawAdjustment): AdjustmentListItem {
     createdAt: r.createdAt,
     createdByName: r.creator?.name ?? null,
     lineCount: r.lines?.length ?? 0,
+    writtenOffValue: "writtenOffValue" in r ? r.writtenOffValue : undefined,
   };
 }
 
@@ -82,7 +103,13 @@ function signedQuantity(type: AdjustmentType, quantity: number): number {
   return type === "OUT" ? -magnitude : magnitude;
 }
 
-export function useAdjustments(filters?: { page?: number; limit?: number; status?: string }) {
+export function useAdjustments(filters?: {
+  page?: number;
+  limit?: number;
+  status?: string;
+  reason?: string;
+  writeOffsOnly?: boolean;
+}) {
   const canView = useCan("inventory:stock:read");
   return useQuery<AdjustmentsResult, Error>({
     queryKey: queryKeys.inventory.adjustments(filters),
@@ -91,6 +118,8 @@ export function useAdjustments(filters?: { page?: number; limit?: number; status
         page: filters?.page,
         limit: filters?.limit,
         status: filters?.status,
+        reason: filters?.reason,
+        writeOffsOnly: filters?.writeOffsOnly,
       });
       return {
         items: res.items.map(toAdjustmentListItem),
@@ -119,18 +148,27 @@ export function useCreateAdjustment() {
   return useMutation<AdjustmentDetail, Error, CreateAdjustmentInput>({
     mutationKey: ["inventory", "adjustment", "create"],
     mutationFn: (data) =>
-      apiClient.post<AdjustmentDetail>("/inventory/stock/adjustments", {
-        reason: data.reason,
-        notes: data.notes,
-        lines: [
-          {
-            productVariantId: data.productVariantId,
-            locationId: data.locationId,
-            quantityChange: signedQuantity(data.adjustmentType, data.quantity),
-            notes: data.notes,
-          },
-        ],
-      }),
+      apiClient.post<AdjustmentDetail>(
+        "/inventory/stock/adjustments",
+        {
+          reason: data.reason,
+          notes: data.notes,
+          scrapLocationId: data.scrapLocationId,
+          lines: [
+            {
+              productVariantId: data.productVariantId,
+              locationId: data.locationId,
+              quantityChange: signedQuantity(data.adjustmentType, data.quantity),
+              notes: data.notes,
+            },
+          ],
+        },
+        // The endpoint demands a key and 400s without one, so every create was
+        // failing before it reached the service. A write-off is the case where
+        // a duplicate is not cosmetic: two documents, both approvable, both
+        // postable, against the same missing stock.
+        { headers: { "Idempotency-Key": crypto.randomUUID() } },
+      ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.adjustments() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
@@ -144,7 +182,11 @@ export function useApproveAdjustment() {
   return useMutation<AdjustmentDetail, Error, number>({
     mutationKey: ["inventory", "adjustment", "approve"],
     mutationFn: (adjustmentId) =>
-      apiClient.post<AdjustmentDetail>(`/inventory/stock/adjustments/${adjustmentId}/approve`, {}),
+      apiClient.post<AdjustmentDetail>(
+        `/inventory/stock/adjustments/${adjustmentId}/approve`,
+        {},
+        { headers: { "Idempotency-Key": crypto.randomUUID() } },
+      ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.adjustments() });
     },

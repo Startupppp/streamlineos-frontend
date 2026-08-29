@@ -17,7 +17,8 @@ interface RecommendationCopy {
   badge: string;
   headline: string;
   body: string;
-  quantity: number | null;
+  /** Exact decimal string, as the API sends it. */
+  quantity: string | null;
 }
 
 /**
@@ -113,7 +114,7 @@ const RecommendationBanner = memo(function RecommendationBanner({
 
 interface PositionTileProps {
   label: string;
-  value: number;
+  value: string;
 }
 
 const PositionTile = memo(function PositionTile({ label, value }: PositionTileProps) {
@@ -129,7 +130,7 @@ const PositionTile = memo(function PositionTile({ label, value }: PositionTilePr
 
 interface PositionGridProps {
   position: ReorderPosition;
-  reorderPoint: number | null;
+  reorderPoint: string | null;
 }
 
 const PositionGrid = memo(function PositionGrid({ position, reorderPoint }: PositionGridProps) {

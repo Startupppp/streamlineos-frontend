@@ -6,20 +6,37 @@ import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { PackageStatus, ShipmentStatus, LoadStatus } from "@/features/inventory/lib";
 
-interface PackageLine {
+/**
+ * B6. These are the column names the API actually returns and accepts.
+ *
+ * They were declared as `variantId`/`qty`, which the backend's strict Zod
+ * schemas reject outright on the way in and never emit on the way out — so
+ * every package line rendered blank and every line save came back 400. A
+ * contract that does not match is not a smaller contract, it is a broken one.
+ */
+export interface PackageLine {
   id: number;
-  variantId: number;
-  variantName: string;
+  productVariantId: number;
   lotId?: number | null;
   serialId?: number | null;
-  qty: number;
+  quantity: string;
+}
+
+export interface PackageWriteLine {
+  productVariantId: number;
+  lotId?: number;
+  serialId?: number;
+  quantity: string;
 }
 
 export interface Package {
   id: number;
   orgId: string;
   status: PackageStatus;
+  packageNumber: string;
   shipmentId?: number | null;
+  soId?: number | null;
+  cartonTypeId?: number | null;
   lines?: PackageLine[];
   createdAt: string;
   updatedAt: string;
@@ -100,6 +117,7 @@ export interface Carrier {
 interface PackageQueryParams {
   [key: string]: unknown;
   shipmentId?: number;
+  soId?: number;
   status?: PackageStatus;
   page?: number;
   limit?: number;
@@ -112,6 +130,7 @@ export function usePackages(params?: PackageQueryParams) {
     queryFn: () =>
       apiClient.get<PackageListResponse>("/inventory/packages", {
         ...(params?.shipmentId ? { shipmentId: String(params.shipmentId) } : {}),
+        ...(params?.soId ? { soId: String(params.soId) } : {}),
         ...(params?.status ? { status: params.status } : {}),
         ...(params?.page ? { page: String(params.page) } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
@@ -136,42 +155,43 @@ export function useCreatePackage() {
   return useMutation<
     Package,
     Error,
-    { shipmentId?: number; lines?: { variantId: number; lotId?: number; serialId?: number; qty: number }[] }
+    { shipmentId?: number; soId?: number; cartonTypeId?: number; lines?: PackageWriteLine[] }
   >({
     mutationKey: ["inventory", "package", "create"],
     mutationFn: (data) => apiClient.post<Package>("/inventory/packages", data),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.packages() });
+      void qc.invalidateQueries({ queryKey: queryKeys.packing.queueList });
     },
   });
 }
 
 export function useUpdatePackageLines() {
   const qc = useQueryClient();
-  return useMutation<
-    Package,
-    Error,
-    { packageId: number; lines: { variantId: number; lotId?: number; serialId?: number; qty: number }[] }
-  >({
+  return useMutation<Package, Error, { packageId: number; lines: PackageWriteLine[] }>({
     mutationKey: ["inventory", "package", "lines", "update"],
     mutationFn: ({ packageId, lines }) =>
       apiClient.patch<Package>(`/inventory/packages/${packageId}/lines`, { lines }),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.packageDetail(vars.packageId) });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.packages() });
+      void qc.invalidateQueries({ queryKey: queryKeys.packing.reconciliation(vars.packageId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.packing.queueList });
     },
   });
 }
 
 export function useClosePackage() {
   const qc = useQueryClient();
-  return useMutation<Package, Error, number>({
+  return useMutation<Package, Error, { packageId: number; cartonTypeId?: number }>({
     mutationKey: ["inventory", "package", "close"],
-    mutationFn: (packageId) =>
-      apiClient.post<Package>(`/inventory/packages/${packageId}/close`, {}),
-    onSuccess: (_, packageId) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.packageDetail(packageId) });
+    mutationFn: ({ packageId, ...body }) =>
+      apiClient.post<Package>(`/inventory/packages/${packageId}/close`, body),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.packageDetail(vars.packageId) });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.packages() });
+      void qc.invalidateQueries({ queryKey: queryKeys.packing.reconciliation(vars.packageId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.packing.queueList });
     },
   });
 }
@@ -185,6 +205,8 @@ export function useReopenPackage() {
     onSuccess: (_, packageId) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.packageDetail(packageId) });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.packages() });
+      void qc.invalidateQueries({ queryKey: queryKeys.packing.reconciliation(packageId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.packing.queueList });
     },
   });
 }

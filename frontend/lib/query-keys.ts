@@ -9,8 +9,11 @@ import { knowledgeAndSurveysQueryKeys } from "./query-keys/knowledge-and-surveys
 import { supportAndWorkflowsQueryKeys } from "./query-keys/support-and-workflows";
 import { platformHierarchyQueryKeys } from "./query-keys/platform-hierarchy";
 import { inventoryQueryKeys } from "./query-keys/inventory";
+import { inventoryGenealogyQueryKeys } from "./query-keys/inventory-genealogy";
 import { inventoryPickingQueryKeys } from "./query-keys/inventory-picking";
+import { inventoryPackingQueryKeys } from "./query-keys/inventory-packing";
 import { inventoryPutawayQueryKeys } from "./query-keys/inventory-putaway";
+import { inventoryQualityPlanQueryKeys } from "./query-keys/inventory-quality-plans";
 import { inventoryReturnsQueryKeys } from "./query-keys/inventory-returns";
 import { inventoryVendorScorecardQueryKeys } from "./query-keys/inventory-vendor-scorecard";
 import { usersAndCommerceQueryKeys } from "./query-keys/users-and-commerce";
@@ -30,8 +33,11 @@ export const queryKeys = {
   ...supportAndWorkflowsQueryKeys,
   ...platformHierarchyQueryKeys,
   ...inventoryQueryKeys,
+  ...inventoryGenealogyQueryKeys,
   ...inventoryPickingQueryKeys,
+  ...inventoryPackingQueryKeys,
   ...inventoryPutawayQueryKeys,
+  ...inventoryQualityPlanQueryKeys,
   ...inventoryReturnsQueryKeys,
   ...inventoryVendorScorecardQueryKeys,
   ...usersAndCommerceQueryKeys,

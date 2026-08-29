@@ -43,6 +43,10 @@ function QualityHubInner() {
     router.push("/inventory/quality/recalls");
   }
 
+  function handleViewPlans(): void {
+    router.push("/inventory/quality/plans");
+  }
+
   const columns: DataTableColumn<Inspection>[] = [
     {
       key: "status",
@@ -138,6 +142,9 @@ function QualityHubInner() {
           </Button>
           <Button size="sm" variant="outline" onClick={handleViewRecalls}>
             View Recalls
+          </Button>
+          <Button size="sm" variant="outline" onClick={handleViewPlans}>
+            Inspection Plans
           </Button>
         </div>
 

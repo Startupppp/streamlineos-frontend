@@ -91,7 +91,12 @@ export const ForecastProposalSheet = memo(function ForecastProposalSheet({
         suggestions: [
           {
             productVariantId: proposal.productVariantId,
-            suggestedQty: proposal.suggestedQuantity,
+            // The server re-derives the quantity from the live proposal and
+            // ignores whatever is sent here (backend INV-309), so the lossy
+            // hop from the exact decimal string to a JSON number decides
+            // nothing. It is sent only because the endpoint's schema still
+            // requires the field.
+            suggestedQty: Number(proposal.suggestedQuantity),
           },
         ],
       },

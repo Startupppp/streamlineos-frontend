@@ -10,7 +10,12 @@ import { CONTENT_PANEL_SOLID } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useConfirmPick, type PickWaveLine } from "@/hooks/api/inventory/picking";
-import { PICK_EXCEPTION_LABEL } from "@/features/inventory/lib/inventory-status";
+import {
+  PICK_EXCEPTION_BADGE,
+  PICK_EXCEPTION_LABEL,
+  PICK_EXCEPTION_STATUS_BADGE,
+  PICK_EXCEPTION_STATUS_LABEL,
+} from "@/features/inventory/lib/inventory-status";
 
 interface PickTaskRowProps {
   pickListId: number;
@@ -43,9 +48,12 @@ export function PickTaskRow({
   const [scan, setScan] = useState("");
   const confirmPick = useConfirmPick();
 
-  const closed =
-    line.exception_reason !== null ||
-    Number(line.quantity_picked) >= Number(line.quantity_to_pick);
+  // B5. The server's answer, not a local re-derivation of it. The rule now has
+  // three clauses -- picked in full, a closing reason, and a reviewer's signature
+  // where one is required -- and a copy here would be a fourth place for it to
+  // drift. A WRONG_LOCATION line in particular still has work left in it, which
+  // the old "any reason closes the row" test got exactly backwards.
+  const closed = line.line_closed;
 
   function handleQuantityChange(event: React.ChangeEvent<HTMLInputElement>): void {
     setQuantity(event.target.value);
@@ -110,9 +118,44 @@ export function PickTaskRow({
       </div>
 
       {line.exception_reason ? (
-        <Badge variant="outline" className="w-fit text-micro">
-          {PICK_EXCEPTION_LABEL[line.exception_reason]}
-        </Badge>
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Badge
+              variant="outline"
+              className={cn("text-micro", PICK_EXCEPTION_BADGE[line.exception_reason])}
+            >
+              {PICK_EXCEPTION_LABEL[line.exception_reason]}
+            </Badge>
+            {line.exception_status ? (
+              <Badge
+                variant="outline"
+                className={cn(
+                  "text-micro",
+                  PICK_EXCEPTION_STATUS_BADGE[line.exception_status],
+                )}
+              >
+                {PICK_EXCEPTION_STATUS_LABEL[line.exception_status]}
+              </Badge>
+            ) : null}
+          </div>
+          {/* Names, never ids: the picker needs to know who is holding this up. */}
+          {line.exception_owner_name ? (
+            <p className="truncate text-micro text-muted-foreground">
+              With {line.exception_owner_name}
+            </p>
+          ) : null}
+          {line.substitute_sku ? (
+            <p className="truncate text-micro text-muted-foreground">
+              {line.substitute_quantity ? Number(line.substitute_quantity).toFixed(2) : null}{" "}
+              of {line.substitute_sku} went in instead
+            </p>
+          ) : null}
+          {line.exception_location_code ? (
+            <p className="truncate text-micro text-muted-foreground">
+              Found at {line.exception_location_code}
+            </p>
+          ) : null}
+        </div>
       ) : null}
 
       {closed ? null : (

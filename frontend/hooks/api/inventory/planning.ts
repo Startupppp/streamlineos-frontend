@@ -269,18 +269,25 @@ export interface ReorderEvidenceLine {
 
 export type ReorderRecommendation = "propose" | "review" | "hold";
 
+/**
+ * Exact `numeric(18,4)` decimal strings, not numbers. The API owns the
+ * arithmetic and hands over figures a buyer acts on; parsing them into floats
+ * here would undo the exactness on the last hop.
+ */
 export interface ReorderPosition {
-  onHand: number;
-  committed: number;
-  onOrder: number;
-  available: number;
+  onHand: string;
+  committed: string;
+  onOrder: string;
+  available: string;
 }
 
 export interface ReorderProposal {
   productVariantId: number;
-  suggestedQuantity: number | null;
+  /** Null when the proposal covers the whole organisation. */
+  warehouseId: number | null;
+  suggestedQuantity: string | null;
   position: ReorderPosition;
-  reorderPoint: number | null;
+  reorderPoint: string | null;
   evidence: ReorderEvidenceLine[];
   caveats: string[];
   recommendation: ReorderRecommendation;
@@ -315,17 +322,35 @@ export interface DemandSeasonality {
   candidates: { lag: number; correlation: number }[];
 }
 
+export interface DemandPeriod {
+  period: string;
+  /** Exact decimal string — the ledger figure, not a float. */
+  quantity: string;
+  closingOnHand: string;
+  /**
+   * The period closed with nothing on hand, so its demand is a lower bound
+   * rather than a measurement.
+   */
+  stockoutCensored: boolean;
+}
+
 export interface DemandBaselineReport {
   productVariantId: number;
+  /** Null when the report covers the whole organisation. */
+  warehouseId: number | null;
   periods: number;
-  history: { period: string; quantity: number }[];
+  history: DemandPeriod[];
   classification: DemandClassification;
   seasonality: DemandSeasonality;
   ranked: ForecastBacktestResult[];
   champion: ForecastBacktestResult | null;
   unrestrictedBest: ForecastBacktestResult | null;
+  censoredPeriods: number;
+  stockoutCensored: boolean;
+  coverage: { from: string; to: string };
   shapeNote?: string;
   insufficientReason?: string;
+  censoringNote?: string;
 }
 
 export interface SimulationScenarioInput {
@@ -349,6 +374,8 @@ export interface SimulationOutcome {
 
 export interface SimulationResult {
   productVariantId: number;
+  /** Null when the simulation covers the whole organisation. */
+  warehouseId: number | null;
   applicable: boolean;
   reason?: string;
   baseline: SimulationOutcome | null;

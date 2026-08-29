@@ -18,6 +18,7 @@ import { LOT_STATUS_LABEL } from "@/features/inventory/lib";
 import { LotStockTable } from "./lot-stock-table";
 import { MovementHistoryTable } from "./movement-history-table";
 import { TraceabilityTimeline } from "./traceability-timeline";
+import { LotGenealogyPanel } from "./lot-genealogy-panel";
 
 function getExpiryClass(dateStr: string | null): string {
   if (!dateStr) return "text-muted-foreground";
@@ -136,6 +137,17 @@ export function LotDetailClient({ lotId }: LotDetailClientProps) {
 
         <PageSection title="Movement History">
           <MovementHistoryTable movements={lot.movements} />
+        </PageSection>
+
+        <PageSection
+          title="Genealogy"
+          description="Every document this lot moved on, and the lots and units those documents connect it to. The walk is capped; a partial answer says so."
+        >
+          <Card>
+            <CardContent className="pt-4 pb-4">
+              <LotGenealogyPanel lotId={lotId} />
+            </CardContent>
+          </Card>
         </PageSection>
 
         <PageSection

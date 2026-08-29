@@ -185,6 +185,7 @@ export function PickWaveSheet({
         open={exceptionLine !== null}
         onOpenChange={handleExceptionOpenChange}
         pickListId={pickListId ?? 0}
+        warehouseId={detail?.warehouseId ?? null}
         line={exceptionLine}
       />
     </>
