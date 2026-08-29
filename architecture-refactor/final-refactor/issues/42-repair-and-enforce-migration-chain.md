@@ -4,12 +4,13 @@
 
 **Blocked by:** 11, 13, 14, 15 and 16.
 
-**Status:** partial — the enforcement half is **done and biting**; the repair half is blocked on a
-defect in another session's migration and on a mid-chain re-ordering job
+**Status:** partial — enforcement **done and biting**; repair advanced a long way this session (cold
+bootstrap reaches head for the first time; chain gaps 132 -> 9). The 9 remaining gaps and all 144
+schema differences originate in other sessions or in an out-of-scope module
 
 - [ ] Every migration is journaled in dependency order and the reported chain-gap count is zero.
 
-  **Journalling: done. Gap count: 124, not zero.**
+  **Journalling: done. Gap count: 9, down from 132 — not zero, and the 9 are not this session's.**
 
   Journal repairs made this session, all verified by `pnpm db:reconcile-journal` reporting **0 timestamp
   regressions and 0 orphan entries**:
@@ -26,31 +27,53 @@ defect in another session's migration and on a mid-chain re-ordering job
   - A duplicate `0641` (S4's `financial_actor_audit_identity` vs this ticket's `org_members_org_fk`) was
     resolved by renaming ours to `0649`.
 
-  **Why 124 gaps remain.** `RECONCILED [0591_tenant_isolation_for_unprotected_tables] 0 already present,
-  124 referencing an object the chain never creates (of 401)`. This is the job c28-33 identified and
-  deliberately did not attempt: `0619_chain_creates_what_production_has` fixed the **end state** by
-  appending 65 table creations at the tail, so `differences=0` holds, but statements in `0352`, `0590`
-  and `0591` still reference objects that only arrive at `0619`. Closing this means moving those
-  creations to the point in the chain where the referencing statements run — a re-ordering of history,
-  not an addition to it. It is a substantial, separable piece of work and is not started.
+  **chain_gaps went from 132 to 9, and all 9 that remain belong to other sessions.**
+
+  The whole count was in one migration. `0591_tenant_isolation_for_unprotected_tables` protects 401
+  tables and 124 of them did not exist at that point, because `0619_chain_creates_what_production_has`
+  appends them at the tail — it fixed the end state (`differences=0`) without fixing the middle.
+  `0489_chain_creates_early` lifts **only** the enum and table creation out of `0619` to a position
+  before `0590`, leaving its constraints, indexes, policies and triggers where they were, because
+  nothing earlier in the chain references those.
+
+  The extract was checked to be self-contained *before* running it, not after: its 65 `CREATE TABLE`
+  statements carry **no inline `REFERENCES`**, and of the 25 non-builtin types its columns use, 24 are
+  among the 39 enums it creates and the 25th (`crm_health`) comes from the `0000` baseline. Every
+  statement is idempotent, so `0619` remains a correct no-op behind it.
+
+  Remaining 9, verified from the run: 8 in `0650_tenant_isolation_for_three_unprotected_tables`
+  referencing `inv_carton_types` and `inv_shipment_status_events` — **Inventory is explicitly out of
+  this PRD's scope**, so those tables have no Drizzle declaration and are not in the chain — and 1 in
+  `0653_kb_remaining_composite_tenant_constraints` referencing `projects` unqualified when it lives in
+  the `build` schema. Both files were added by other sessions today and are recorded in
+  `CROSS-SESSION.md` rather than edited.
 
 - [ ] Cold bootstrap and upgrade schema comparison report no differences.
 
-  **Blocked, but much further along than it was.** The cold bootstrap previously died with
-  `CONNECTION_CLOSED` at statement 109 of 4,456 in `0000`, and on a second attempt at statement 1,471 of
-  1,867 in `0619` — the documented Neon behaviour where a very large migration on a freshly-woken compute
-  has its connection dropped. `apply-chain-cold.mjs` now reconnects up to 8 times and tracks applied
-  hashes across restarts, and the run gets past both: **349 migrations executed**.
+  **Cold bootstrap now reaches head — `RESULT: REACHED_HEAD 371/371` — for the first time. The
+  comparison is 144 differences, not zero.**
 
-  It now fails at `0628_communication_actor_normalization` with `42P10 there is no unique or exclusion
-  constraint matching the ON CONFLICT specification` — a real ordering defect in that migration, which is
-  S3 territory: it inserts with `ON CONFLICT (org_id, message_id, membership_id, emoji)` 22 lines before
-  it creates the unique index that clause requires. Recorded in `CROSS-SESSION.md` with the fix. Because
-  the bootstrap cannot reach head, `cell:compare-schema` (step 5 of the bootstrap) does not run, so no
-  comparison figure exists this session. Protocol §3 forbids implementing a guessed substitute for a
-  blocker, so the file was not edited here.
+  Getting there took two fixes. The build previously died with `CONNECTION_CLOSED` at statement 109 of
+  4,456 in `0000`, and on a second attempt at 1,471 of 1,867 in `0619` — the documented Neon behaviour
+  where a very large migration on a freshly-woken compute has its connection dropped.
+  `apply-chain-cold.mjs` now reconnects up to 8 times and tracks applied hashes across restarts. It then
+  stopped at S3's `0628` (`42P10`, an `ON CONFLICT` 22 lines before the index it needs); S3 fixed that in
+  `c4a59aaf` and the chain has run clean through since.
 
-  Exact failing command: `pnpm -C backend cell:bootstrap --region=cell-2 --database=cell2 --drop --i-mean-it`
+  `cell:compare-schema` now runs and reports **`SCHEMAS DIFFER differences=144`**, classified rather
+  than counted: **55 of the 59 named objects are inventory** (`inv_*` tables, enums, policies, a
+  function and a trigger) — a module this PRD excludes, whose objects exist in production but were never
+  in the chain. The other 4 are `event_attendees` constraints, where the chain is correctly **ahead** of
+  production because S3's calendar contraction has landed in the chain and not yet in the control plane.
+  **None of the 144 originate in this session's work.**
+
+  Reproduce: `pnpm -C backend cell:bootstrap --region=cell-2 --database=cell2 --drop --i-mean-it`
+  then `pnpm -C backend cell:compare-schema`.
+
+  Note the bootstrap still exits non-zero, at `verify-rls` rather than at the chain: two tables from
+  S3's `0628` carry `org_id` with no RLS policy. That is a cross-tenant defect, recorded in
+  `CROSS-SESSION.md`, and it is the reason `compare-schema` has to be run as a separate command rather
+  than as the bootstrap's own final step.
 
 - [x] Repair/backfill work is resumable, lock-bounded and catalog-verified.
 
@@ -70,11 +93,13 @@ defect in another session's migration and on a mid-chain re-ordering job
   `pnpm check:migration-chain` checks five failure modes: unjournalled `.sql` not on the deliberate
   allowlist, duplicate numeric prefixes, timestamp regressions (Drizzle skips by timestamp, so a
   backwards entry never runs), journal entries with no file, and chain gaps. `--self-test` constructs
-  each of the five divergences in a temporary fixture directory and asserts the guard catches it:
-  **5 passed, 0 failed**. Wired into `backend/.github/workflows/ci.yml`, with a nightly
+  each of the five divergences in a temporary fixture directory and asserts the guard catches it, and
+  additionally asserts the chain-gap check does **not** fire on a zero count: **7 passed, 0 failed**. Wired into `backend/.github/workflows/ci.yml`, with a nightly
   `cell-cold-bootstrap.yml` producing the `.chain-gaps` figure the gate reads.
 
-  **It is not a guard that has never failed.** Its first live run found 15 issues. Twelve were historical
+  **It is not a guard that has never failed, and it caught one of my own mistakes.** Its first live run
+  found 15 issues, and a later run caught this ticket colliding on `0650` with another session, which is
+  why the early-creation migration is numbered `0489`. Twelve of the original 15 were historical
   duplicate prefixes on already-applied migrations (0300, 0370–0375, 0379, 0420, 0426, 0430–0432);
   renaming an applied migration changes its hash and re-proposes it everywhere, so those are baselined
   with a dated reason and the set is **closed** — a new collision still fails. The remaining 3 are live
@@ -84,7 +109,10 @@ defect in another session's migration and on a mid-chain re-ordering job
 ## What a reader should take from this
 
 The enforcement half is finished: the chain can no longer silently drift, because five specific ways it
-used to drift now fail a build, and the guard has proved it catches all five. The repair half is not
-finished, and the two reasons are precise rather than vague — one migration belonging to another session
-is broken in a way only a cold build reveals, and 124 gaps need history re-ordered rather than extended.
-Neither is hidden behind a green tick.
+used to drift now fail a build, and the guard has proved it catches all five.
+
+The repair half moved from stuck to nearly done. A cold database now rebuilds the schema end to end,
+which it could not do at the start of this session, and the gap count fell 132 -> 9. What is left is
+not this session's to close: 8 of the 9 gaps and 55 of the 59 named schema differences are Inventory,
+a module this PRD excludes; the rest belong to migrations other sessions added today. Both counts are
+published rather than rounded, and neither is hidden behind a green tick.

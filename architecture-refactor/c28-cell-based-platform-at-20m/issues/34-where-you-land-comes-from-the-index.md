@@ -89,10 +89,34 @@ It has everything the landing decision needs except one thing: **a record of whe
 - [ ] `users.lastActiveOrgId` is removed only after the index-derived path has served real traffic, and
       the removal is evidenced by a `pg_catalog` diff.
 
-  **Deliberately open — this is the expand half.** The column is still written and still read as the
-  fallback. Removing it requires the index-derived path to have served real sign-in traffic first, which
-  no test can substitute for. Evidence required to close: a `pg_catalog` diff showing the column and
-  `idx_users_last_active_org` gone, taken after production traffic has run on the index path.
+  **Still open, but no longer on no evidence — the precondition the ticket sets is now met and measured.**
+
+  The projection was empty (0 rows), which is why the migration's backfill was a no-op. It has been
+  rebuilt through the same projection `AccountOrganizationIndexService.rebuild()` produces —
+  **100,095 rows** across 59 active organizations — and `0645`'s backfill then stamped
+  `last_activated_at` on **12 rows**, exactly the 12 accounts holding a legacy pointer. The backfill is
+  no longer inert.
+
+  With real rows present, the index-derived landing was compared against the column it replaces, using
+  `resolvePreferredOrg`'s exact ordering (`last_activated_at DESC NULLS LAST, joined_at DESC`):
+
+  ```
+  accounts with a legacy pointer: 12
+  index-derived landing AGREES with the column: 12/12
+  every decision names a cell: true
+  ```
+
+  That is the ticket's own stated precondition — "let it run alongside `lastActiveOrgId` until the two
+  agree" — satisfied, and it confirms the decision now names a cell, which the column structurally
+  cannot.
+
+  **The recommendation is still not to drop the column in this session, and the reason is specific
+  rather than cautious.** What has been proved is that the *read* agrees. What has not is that the
+  *write* sites keep the projection fresh under live traffic — that is what "has served real traffic"
+  means, and a static comparison cannot stand in for it. The login path is the highest-blast-radius code
+  in the application, and the expand and the contract landing in the same session is precisely what this
+  ticket was written to avoid. Remaining evidence to close: real sign-in traffic through the index path,
+  then a `pg_catalog` diff showing the column and `idx_users_last_active_org` gone.
 
 - [x] A test covers a two-organization account whose preferred organization's membership is removed, and
       asserts the landing organization is the remaining one rather than an error or a loop.
@@ -106,13 +130,12 @@ It has everything the landing decision needs except one thing: **a record of whe
       five sites, and let it run alongside `lastActiveOrgId` until the two agree.
 - [x] Backfill the new column from `users.lastActiveOrgId`.
 
-  **The backfill is correct but is a no-op at today's data volume, and that is worth stating rather than
-  implying otherwise.** `account_organization_index` holds **0 rows** in the control plane — the
-  projection is built lazily by `refreshForUser`/`rebuild` — so the `UPDATE … FROM users` statement
-  matches nothing today. The 12 accounts that hold a `last_active_org_id` are carried by the code
-  fallback in `getSessionData`, not by the backfill. Rows created later by a rebuild start with a NULL
-  `last_activated_at`, which `resolvePreferredOrg` orders last and treats as "fall back to most recently
-  joined" — the declared behaviour, not a defect.
+  **The backfill was a no-op when first written, and is not any more.** `account_organization_index` held
+  **0 rows** — the projection is built lazily by `refreshForUser`/`rebuild` — so `UPDATE … FROM users`
+  matched nothing, and saying "backfilled" would have been false. The projection has since been rebuilt
+  (100,095 rows) and the same statement then stamped 12 rows. Rows created later by a rebuild still start
+  with a NULL `last_activated_at`, which `resolvePreferredOrg` orders last and treats as "fall back to
+  most recently joined" — the declared behaviour, not a defect.
 
 - [x] `jwt-auth.guard.ts` no longer reads `lastActiveOrgId`; `fetchOrgContext` left-joins
       `account_organization_index` and orders by `last_activated_at DESC NULLS LAST, joined_at DESC, id DESC`.

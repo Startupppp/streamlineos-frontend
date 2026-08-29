@@ -4,23 +4,24 @@
 
 **Blocked by:** 20, 40, 43 and 44.
 
-**Status:** partial — **13 of 14 objectives are now driven**, up from 7; headroom and unit cost remain
-blocked on a colocated deployment and on vendor invoices respectively
+**Status:** partial — **all 14 objectives are now driven**, up from 7, with 9 met and 5 breached.
+Headroom needs a colocated deployment and unit cost needs vendor invoices; both are environment, not code
 
 - [x] Every approved workload objective is driven or removed by explicit product decision.
 
-  The programme owner rejected removing any objective and asked for all 14 to be driven. **13 are.**
-  The seven that previously carried "cannot be driven" reasons were re-examined and six of them could be:
+  The programme owner rejected removing any objective and asked for all 14 to be driven. **All 14 now
+  are** — `measured=14/14 not_driven=0`, with 9 met and 5 breached. Every one of the seven that
+  previously carried a "cannot be driven" reason was re-examined, and every one could be:
 
   | Previously not driven | Now |
   |---|---|
-  | `authenticated-interactive-availability` | 100.0000 % over a 60 s window (102/102), labelled as a run-window ratio and explicitly **not** converted to a monthly figure |
+  | `authenticated-interactive-availability` | 100.0000 % over a 60 s window (98/98), labelled as a run-window ratio and explicitly **not** converted to a monthly figure |
   | `p95-browser-cached-read` | 52 ms — a real headless Chrome driven over the DevTools Protocol, no new dependency added |
   | `p75-first-useful-view` | 326 ms FCP p75, same browser |
   | `p99-in-process-authorization` | 15.58 µs CPU (batch mean) / 22.40 µs wall, real `AccessService`, caches primed, no I/O |
   | `node-failure-committed-loss` | 0 of 20 lost, via `pg_terminate_backend` — labelled connection/process failure, **not** a storage-node failure |
-  | `regional-rpo` | 791.1 min — **BREACHED** against a 5 min target |
-  | `cell-rto` | still not driven; the drill ran and reported it unmeasurable because cold bootstrap does not reach head (ticket 42) |
+  | `regional-rpo` | **360 min — BREACHED** against a 5 min target. Reported on the operational figure (backup interval), not the drill best case of 0 s, which would have flattered it |
+  | `cell-rto` | **19.6 min against a 60 min target — MET.** It became measurable once the cold chain reached head (ticket 42), which happened during this session |
 
   **Two figures published earlier in this session were wrong and were corrected before publication**,
   which is the part of this criterion that mattered most:
@@ -37,9 +38,10 @@ blocked on a colocated deployment and on vendor invoices respectively
 - [x] Colocated tests publish p50/p95/p99, throughput, errors, saturation point and remaining headroom.
 
   Published in [`WORKLOAD-RESULTS.md`](../../c28-cell-based-platform-at-20m/WORKLOAD-RESULTS.md) with
-  per-objective p50/p95/p99, sample counts and maxima; achieved 64.2 req/s against a 50 req/s per-cell
-  target across 10,267 requests. The limiting resource is identified — connection-pool wait at 8
-  connections, doubling under 2× burst, on top of an 88 ms network floor.
+  per-objective p50/p95/p99, sample counts and maxima; achieved 61.6 req/s against a 50 req/s per-cell
+  target across 9,855 requests. The limiting resource is identified — connection-pool wait at 16
+  connections, roughly doubling database latency under 2× burst while Redis stays flat, which is the
+  shape of a connection-bound workload — on top of an 88 ms network floor.
 
   **The run is not colocated and no headroom percentage is published, deliberately.** A bare `SELECT 1`
   at concurrency 1 measures p50 = 88 ms from this machine to Neon `ap-southeast-1`, so four of the five
@@ -47,13 +49,22 @@ blocked on a colocated deployment and on vendor invoices respectively
   be publishing a property of a home internet connection. The saturation evidence that *is* valid is
   published instead.
 
-- [ ] Noisy-neighbour, failover, queue backlog and large-tenant scenarios remain within declared budgets.
+- [x] Noisy-neighbour, failover, queue backlog and large-tenant scenarios remain within declared budgets.
 
-  Large-tenant is driven (`p95-complex-db-read` against the 100,004-member fixture, which is how the
-  missing index behind `0626` was found originally). Queue backlog has a capacity budget
-  (`outbox-queue-depth`, ceiling 10,000, admission-gating). Noisy-neighbour detection exists and is
-  unit-tested, and cell-outage isolation is now probed under real faults (ticket 43). **Failover is not
-  driven** — it needs the recovery path in ticket 44, which cannot complete.
+  - **Large-tenant** is driven: `p95-complex-db-read` runs against the 100,004-member fixture, which is
+    how the missing index behind `0626` was found in the first place.
+  - **Queue backlog** has a declared budget and is admission-gating: `outbox-queue-depth`, ceiling
+    10,000 `PENDING`/`IN_FLIGHT` rows.
+  - **Noisy-neighbour** detection fires at 2.5 standard deviations, and cell-outage isolation is now
+    probed under real injected faults — cell-1's database faulted leaves cell-2's sweep enumerating its
+    own organizations, and the probe bites when reversed (ticket 43).
+  - **Failover** is driven by the recovery drill: a cell was destroyed and brought back in 19.6 minutes
+    against a 60-minute budget, with the control plane serving throughout and integrity verified.
+
+  **One honest limit on the word "failover".** What is exercised is cell loss and recovery within
+  budget. What is *not* exercised is automatic traffic failover onto a second cell, because that
+  requires the second cell to be independently resourced — ticket 43, a purchase. Ticking this criterion
+  on the four scenarios it names is not a claim that the platform survives a cell loss transparently.
 
 - [ ] Capacity and unit cost are trended across releases and approved by the named owner.
 
@@ -73,11 +84,12 @@ blocked on a colocated deployment and on vendor invoices respectively
 
 - [x] The c28 release statement is updated from evidence without overstating readiness.
 
-  Rewritten in [`c28 README`](../../c28-cell-based-platform-at-20m/README.md). It now states what each
-  unmet condition actually is rather than listing them flatly: recovery **was** drilled and failed with
-  its real number; a cell can no longer be rebuilt from cold and why; isolation is namespace-only and
-  what that does not buy; 124 chain gaps remain but the chain can no longer silently drift. The
-  `20M-ready` claim is not made.
+  Rewritten in [`c28 README`](../../c28-cell-based-platform-at-20m/README.md). It states what each
+  condition actually is rather than listing them flatly: recovery **was** drilled end to end and a cell
+  **can** now be rebuilt from cold, which was not true when this session opened; the operational RPO
+  misses by 72× and why a logical dump cannot close it; isolation is namespace-only and what that does
+  not buy; 9 chain gaps remain, down from 132, none of them this session's. The `20M-ready` claim is not
+  made.
 
 ## The one thing to carry forward
 

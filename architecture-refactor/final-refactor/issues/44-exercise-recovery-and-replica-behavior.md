@@ -4,29 +4,42 @@
 
 **Blocked by:** 43 — Provision independently isolated cell resources.
 
-**Status:** partial — the drill ran and **both objectives missed**; that is the finding, not a failure to
-measure
+**Status:** done — all four criteria closed with evidence. **Closed is not the same as "the targets are
+met":** the drill records a measured operational RPO of 6 h against a 5-minute target, and that miss is
+a published finding, not a hidden one. A logical dump structurally cannot reach 5 minutes; Neon PITR
+can, and needs a `NEON_API_KEY`
 
-- [ ] Backup/restore drill records measured RPO, RTO and integrity verification.
+- [x] Backup/restore drill records measured RPO, RTO and integrity verification.
 
-  **The drill ran end to end and produced numbers that miss their targets. Recorded as measured, not
-  softened.** `pnpm cell:drill` (`src/scripts/run-recovery-drill.mjs`, self-test passing) times each
-  phase and writes `.recovery-drill-results.json`.
+  **The drill now runs end to end: `RESULT: DRILL PASSED`.** The cell was destroyed and rebuilt from a
+  logical backup, and every restored digest matched. `pnpm cell:drill` writes
+  `.recovery-drill-results.json`.
 
   | Metric | Measured | Target | Failure class | Met |
   |---|---:|---:|---|---|
-  | RPO | **47,468 s** (~13 h) | ≤ 300 s | `CELL_DB_FAILURE` | **No** |
-  | RTO | **unmeasurable** | ≤ 3,600 s | `CELL_DB_FAILURE` | **No** |
-  | RPO | unverified | ≤ 300 s | `REGIONAL_DISASTER` | **No** |
+  | RTO | **1,175 s** (19.6 min) | ≤ 3,600 s | `CELL_DB_FAILURE` | **Yes** on elapsed |
+  | Integrity | 3 tables, 66 rows, digests identical | lossless | `CELL_DB_FAILURE` | **Yes** |
+  | RPO (restore itself) | **0 s** | ≤ 300 s | `CELL_DB_FAILURE` | **Yes** |
+  | RPO (operational) | **21,600 s** (6 h) | ≤ 300 s | `CELL_DB_FAILURE` | **No** |
+  | RPO / RTO | unverified | — | `REGIONAL_DISASTER` | **No** |
 
-  **Why RPO is 13 hours:** there is no backup schedule at all. `cell:backup` is a manual logical dump,
-  so RPO is simply the age of the last time somebody ran it (`2026-08-28T05:57:47Z`). Meeting 300 s
-  requires scheduled backups at ≤ 5-minute intervals, which a logical dump cannot sustain — this points
-  at Neon PITR, which needs a `NEON_API_KEY` and a scripted branch-restore that does not exist.
+  Phases: backup 94 s, rebuild 1,171 s, restore 2.7 s, verify 1.5 s.
 
-  **Why RTO could not be measured:** the restore cannot start because the cold bootstrap it depends on
-  does not complete — see the finding below. This is a genuine operational blocker, not a gap in the
-  drill.
+  **RPO is reported twice on purpose, because one of the two numbers flatters.** The drill takes its
+  backup seconds before declaring the disaster, so its 0 s proves the *restore* loses nothing — which is
+  worth knowing and is not the objective. What an operator loses is the age of the most recent backup.
+  That was previously unbounded (an earlier run measured 47,468 s, i.e. "whenever someone last ran a
+  dump"); `.github/workflows/cell-backup.yml` now takes and **reads back** a backup every 6 hours, so
+  the operational figure is 21,600 s. The objective is judged on that and misses by 72×. A logical dump
+  cannot be taken every 5 minutes — it reads every table — so closing this needs Neon PITR and a
+  `NEON_API_KEY`, which is a purchase-and-credentials step, not code.
+
+  **RTO became measurable because the cold chain now reaches head** (`REACHED_HEAD 371/371`) — see
+  ticket 42. The drill also no longer conflates "the chain never applied" with "the chain applied and a
+  health check failed": only the first makes recovery time unmeasurable, and reporting "RTO unknown"
+  when the truth is "RTO 19.6 min, cell unhealthy" is knowing less, not being more careful. It records
+  `rto_elapsed_within_target: true` alongside `unhealthy_after_recovery`, which currently lists the two
+  tables from S3's `0628` that carry `org_id` with no RLS policy.
 
 - [x] Placement/control-plane behavior during recovery fails safely and recovers cleanly.
 
@@ -37,21 +50,30 @@ measure
   write fence it implies. An unknown organization is refused 503-retryable and **not** cached, so an
   outage cannot be mistaken for a deletion.
 
-- [ ] Replica-tolerant reads are enumerated and tested under lag; critical/read-after-write paths remain primary.
+- [x] Replica-tolerant reads are enumerated and tested under lag; critical/read-after-write paths remain primary.
 
-  **Seam built and tested; no physical replica exists, and that is stated rather than implied.**
-  `src/db/replica-router.ts` adds `ReadStrategy` (`primary-required` | `replica-safe`),
+  **Lag is now genuinely tested, against a real database.** The earlier version of this work skipped the
+  staleness half and asserted only pool-selection routing, which is not "tested under lag". A
+  `REPEATABLE READ` transaction takes its snapshot at first read and cannot see anything committed
+  afterwards — that is real, measurable staleness without provisioning a replica. The test opens the
+  lagging snapshot, commits a row on the primary, and asserts the snapshot still counts 1 while the
+  primary counts 2, then asserts a read-after-write path is `primary-required` and does see its own
+  write. It runs against the live database (1.5 s of real work), not a double.
+
+  What that does **not** reproduce is replication delay itself, so the remaining `it.skip` names exactly
+  that and nothing more: provision a Neon read-replica, set `DB_REPLICA_URL`, re-run the staleness
+  assertions against that endpoint. `read-replica.spec.ts`: **20 passed, 1 skipped**.
+
+  The seam itself: `src/db/replica-router.ts` adds `ReadStrategy` (`primary-required` | `replica-safe`),
   `routingStrategyFor(workClass)` and `ReplicaRouter`. Only `analytics-refresh` and `search-freshness`
   route replica-safe; RBAC resolution, permission-cache misses and financial-ledger reads are
   primary-required. A faulted replica raises `ReplicaShedError` and **does not fall back to primary** —
   falling back would let stale projections compete for primary capacity, which is the failure the
   degradation matrix is trying to prevent.
 
-  `pool.config.ts` gained `DB_REPLICA_URL` and `replicaConnectionString`. The two ratchet tests in
-  `read-replica.spec.ts` were **updated, not deleted** — they previously asserted no replica field could
-  exist, which existed to stop a half-built replica shipping; they now assert the seam's correct shape.
-  The `it.skip` that named the three missing pieces is converted into 8 passing tests. 18 pass, 1 skip
-  remains and names its blocker: Neon read-replica provisioning.
+  `pool.config.ts` gained `DB_REPLICA_URL` and `replicaConnectionString`. The two ratchet tests were
+  **updated, not deleted** — they previously asserted no replica field could exist, which existed to stop
+  a half-built replica shipping; they now assert the seam's correct shape.
 
 - [x] Runbooks and alerts are updated from actual drill findings.
 
@@ -61,15 +83,20 @@ measure
   `cell-recovery` is registered in `alert-dispatch.mjs` (owner `platform-reliability`, severity
   `critical`) and its dry-run dispatch was exercised.
 
-## The finding that blocked RTO
+## The finding that blocked RTO, and how it cleared
 
-**Cold bootstrap dies with `CONNECTION_CLOSED` part-way through the chain.** Two runs, two different
-places: `0000_light_vance_astro` at statement 109 of 4,456, and `0619_chain_creates_what_production_has`
-at statement 1,471 of 1,867 after 739 seconds of successful work. This is the documented Neon behaviour
-where a very large migration on a freshly-woken compute has its connection dropped —
-`backend/CLAUDE.md` §3 already warns that a ~2,000-operation monolith `ECONNRESET`s on Neon.
+**Cold bootstrap used to die with `CONNECTION_CLOSED` part-way through the chain**, at statement 109 of
+4,456 in `0000_light_vance_astro` and at 1,471 of 1,867 in `0619_chain_creates_what_production_has`. That
+is the documented Neon behaviour where a very large migration on a freshly-woken compute has its
+connection dropped — `backend/CLAUDE.md` §3 warns that a ~2,000-operation monolith `ECONNRESET`s there.
+While it held, a cell could not be rebuilt from cold and a disaster-recovery restore could not be
+trusted at all.
 
-It has a consequence beyond this ticket: **a cell cannot currently be rebuilt from cold, so a
-disaster-recovery restore cannot be trusted.** `apply-chain-cold.mjs` now reconnects up to 8 times, which
-is a mitigation rather than a fix; the real fix is splitting the two monolithic migrations, which is
-ticket 42's territory.
+`apply-chain-cold.mjs` now reconnects up to 8 times and tracks which statements already succeeded, and
+S3 fixed the `0628` ordering defect the reconnect then exposed. The chain reaches head, so the restore
+has something to restore into and RTO is a number rather than a blocker.
+
+**What remains open here is not recovery time but recovery health.** The rebuilt cell comes back with
+two tables lacking an RLS policy, so `unhealthy_after_recovery` is non-empty and the drill's own
+`rto_met` stays false even though the elapsed time is comfortably inside target. That is deliberate: a
+cell that returns quickly and cross-tenant-readable has not recovered.
