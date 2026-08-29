@@ -2,6 +2,7 @@
 
 import { memo } from "react";
 import { useWatch, type Control } from "react-hook-form";
+import { ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,6 +17,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { cn } from "@/lib/utils";
+import { statusToneClasses, typeScaleClass } from "@/lib/design-tokens";
 import {
   GRN_DISCREPANCY_LABEL,
   type GrnDiscrepancyReason,
@@ -26,6 +29,8 @@ import type { GrnFormValues } from "./receive-goods-schema";
 const DISCREPANCY_OPTIONS: GrnDiscrepancyReason[] = ["SHORT", "OVER", "DAMAGED", "WRONG_ITEM"];
 
 export interface DraftLineMeta {
+  poLineId: number;
+  productVariantId: number;
   productName: string;
   sku: string | null;
   ordered: number;
@@ -37,6 +42,10 @@ interface GrnLineRowProps {
   meta: DraftLineMeta;
   index: number;
   control: Control<GrnFormValues>;
+  /** Units scanned onto this line so far. Zero means nobody has scanned it. */
+  scannedCount: number;
+  isActive: boolean;
+  onActivate: (poLineId: number) => void;
 }
 
 /**
@@ -46,8 +55,21 @@ interface GrnLineRowProps {
  * in the schema and had no control anywhere, so `SHORT` and `DAMAGED` could be
  * stored by the API and never entered by a human — the receipt recorded that
  * eight of ten arrived and no way to say why.
+ *
+ * B11 — below `md` only the line being worked is open. A delivery of nine lines
+ * is nine stacked forms on a 375px screen, and a receiver holding a carton
+ * cannot scroll past eight of them to reach the ninth. The summary row stays
+ * visible for all of them, a scan opens the line it names, and every field is
+ * present at `md` and above exactly as before.
  */
-export const GrnLineRow = memo(function GrnLineRow({ meta, index, control }: GrnLineRowProps) {
+export const GrnLineRow = memo(function GrnLineRow({
+  meta,
+  index,
+  control,
+  scannedCount,
+  isActive,
+  onActivate,
+}: GrnLineRowProps) {
   const qualityStatus = useWatch({ control, name: `lines.${index}.qualityStatus` });
   const quantityReceived = useWatch({ control, name: `lines.${index}.quantityReceived` });
   const serialNumbersValue = useWatch({ control, name: `lines.${index}.serialNumbers` });
@@ -63,16 +85,58 @@ export const GrnLineRow = memo(function GrnLineRow({ meta, index, control }: Grn
         .filter(Boolean).length
     : 0;
 
+  function handleToggle(): void {
+    onActivate(meta.poLineId);
+  }
+
+  const success = statusToneClasses("success");
+
   return (
-    <div className="rounded-md border border-border/60 p-3 space-y-2">
-      <div>
-        <div className="text-sm font-medium">{meta.productName}</div>
-        {meta.sku ? <div className="text-xs text-muted-foreground font-mono">{meta.sku}</div> : null}
-        <div className="text-xs text-muted-foreground mt-0.5">
-          Ordered: {meta.ordered.toFixed(2)} · Received: {meta.alreadyReceived.toFixed(2)} ·
-          Outstanding: {outstanding.toFixed(2)}
-        </div>
-      </div>
+    <div
+      className={cn(
+        "rounded-md border border-border/60 p-3",
+        isActive && "ring-2 ring-ring",
+      )}
+    >
+      <button
+        type="button"
+        onClick={handleToggle}
+        aria-expanded={isActive}
+        className="flex w-full min-w-0 items-start justify-between gap-2 text-left"
+      >
+        <span className="min-w-0">
+          <span className="block truncate text-sm font-medium">{meta.productName}</span>
+          {meta.sku ? (
+            <span className={cn("block truncate font-mono text-muted-foreground", typeScaleClass("dense"))}>
+              {meta.sku}
+            </span>
+          ) : null}
+          <span className={cn("mt-0.5 block text-muted-foreground", typeScaleClass("dense"))}>
+            Ordered: {meta.ordered.toFixed(2)} · Received: {meta.alreadyReceived.toFixed(2)} ·
+            Outstanding: {outstanding.toFixed(2)}
+          </span>
+        </span>
+        <span className="flex shrink-0 items-center gap-1.5">
+          {scannedCount > 0 ? (
+            <span
+              className={cn(
+                "rounded px-1.5 py-0.5 font-mono tabular-nums",
+                success.surface,
+                success.ink,
+                typeScaleClass("micro"),
+              )}
+            >
+              {scannedCount} scanned
+            </span>
+          ) : null}
+          <ChevronDown
+            aria-hidden
+            className={cn("h-4 w-4 text-muted-foreground md:hidden", isActive && "rotate-180")}
+          />
+        </span>
+      </button>
+
+      <div className={cn("space-y-2 pt-2", !isActive && "hidden md:block")}>
       <div className="flex items-center gap-3 flex-wrap">
         <FormField
           control={control}
@@ -232,6 +296,7 @@ export const GrnLineRow = memo(function GrnLineRow({ meta, index, control }: Grn
           )}
         />
       ) : null}
+      </div>
     </div>
   );
 });

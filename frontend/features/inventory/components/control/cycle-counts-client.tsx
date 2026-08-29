@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
 import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyWarehouseIllustration } from "@/components/illustrations";
 import {
@@ -42,6 +42,8 @@ import {
 } from "@/features/inventory/lib/inventory-status";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
+import { COUNT_READ_KEY, COUNT_WRITE_KEY } from "@/hooks/api/inventory/counts";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
@@ -188,6 +190,8 @@ export function CycleCountsClient() {
   const [page, setPage] = useState(1);
   const [sheetOpen, setSheetOpen] = useState(false);
   const { iconRef: plusRef, hoverHandlers: plusHandlers } = useAnimatedIcon();
+  const canView = useCan(COUNT_READ_KEY);
+  const canCount = useCan(COUNT_WRITE_KEY);
 
   const { data, isLoading, error, refetch } = useCycleCounts({
     status: statusFilter === "all" ? undefined : statusFilter,
@@ -294,14 +298,27 @@ export function CycleCountsClient() {
         subtitle="Count inventory by location or category to verify stock accuracy."
         filters={filtersRow}
         actions={
-          <Button size="sm" onClick={handleOpenSheet} {...plusHandlers}>
-            <PlusIcon ref={plusRef} size={14} aria-hidden="true" />
-            New Cycle Count
-          </Button>
+          canCount ? (
+            <Button size="sm" onClick={handleOpenSheet} {...plusHandlers}>
+              <PlusIcon ref={plusRef} size={14} aria-hidden="true" />
+              New Cycle Count
+            </Button>
+          ) : undefined
         }
       >
         <div className="flex flex-1 min-h-0 flex-col">
-        {error ? (
+        {/*
+         * G8 — denied is a different answer from empty.
+         *
+         * The list query is gated on the read key inside its hook, so a reader
+         * without it received an empty page and was told the warehouse has no
+         * cycle counts. The branch sits below every hook on purpose: an early return
+         * above them would make hook order depend on a permission, which only
+         * breaks for the person who lacks it.
+         */}
+        {!canView ? (
+          <NoPermissionState className="flex-1" permission={COUNT_READ_KEY} />
+        ) : error ? (
           <ErrorState
             title="Failed to load cycle counts"
             description={getErrorMessage(error)}
@@ -320,7 +337,7 @@ export function CycleCountsClient() {
                 illustration={<EmptyWarehouseIllustration />}
                 title="No cycle counts yet"
                 description="Create a cycle count to verify stock accuracy."
-                action={{ label: "New Cycle Count", onClick: handleOpenSheet }}
+                action={canCount ? { label: "New Cycle Count", onClick: handleOpenSheet } : undefined}
                 className="border-0 bg-transparent"
               />
             }

@@ -30,13 +30,29 @@ export const inventoryPlanningQueryKeys = {
       k(...base, "inventory", "planning", "batchableProposals", params),
 
     poBatchPreviewList: [...base, "inventory", "planning", "poBatchPreview"] as const,
-    poBatchPreview: (proposalIds: readonly number[]) =>
+    /**
+     * C2. The overrides are in the key, not only the selection.
+     *
+     * A preview of the same rows with a different overridden quantity is a
+     * different answer — different lines, a different total, a different
+     * approval verdict. Keyed on the ids alone, changing an override would serve
+     * the pre-override preview back and the buyer would approve a total that was
+     * never computed (frontend §6: every discriminator belongs in the key).
+     */
+    poBatchPreview: (
+      proposalIds: readonly number[],
+      overrides: readonly { proposalId: number; quantity: string }[] = [],
+    ) =>
       [
         ...base,
         "inventory",
         "planning",
         "poBatchPreview",
         [...proposalIds].sort((a, b) => a - b).join(","),
+        [...overrides]
+          .sort((a, b) => a.proposalId - b.proposalId)
+          .map((o) => `${o.proposalId}:${o.quantity}`)
+          .join(","),
       ] as const,
 
     driftWatchlistList: [...base, "inventory", "planning", "drift"] as const,

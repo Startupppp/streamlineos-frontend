@@ -87,16 +87,7 @@ function ownsACollection(routeRel: string): boolean {
  * checker stops checking. Each of these is a real gap, reported to the session
  * that owns the route, and this list is meant to reach zero.
  */
-const IN_FLIGHT_ELSEWHERE = new Set<string>([
-  "inventory/barcode",
-  "inventory/cycle-counts",
-  "inventory/cycle-counts/[countId]",
-  "inventory/operations",
-  "inventory/operations/issues",
-  "inventory/operations/shipping",
-  "inventory/physical-audits",
-  "inventory/physical-audits/[auditId]",
-]);
+const IN_FLIGHT_ELSEWHERE = new Set<string>([]);
 
 function routeDirs(dir: string, acc: string[] = []): string[] {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {

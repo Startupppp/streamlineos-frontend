@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { AppSheet, ErrorState } from "@/components/shared";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -21,6 +20,9 @@ import {
   type PackingQueueRow,
   type PackingReconciliationLine,
 } from "@/hooks/api/inventory/packing";
+import { useScanTarget } from "@/features/inventory/hooks/use-scan-target";
+import { scanNamesVariant, type ResolvedScan } from "@/features/inventory/lib/scan-resolution";
+import { ScanField } from "@/features/inventory/components/scan";
 import { PackingCartonPicker } from "@/features/inventory/components/operations/packing-carton-picker";
 
 interface PackingStationSheetProps {
@@ -32,12 +34,17 @@ interface PackingStationSheetProps {
 interface VariantLike {
   id: number;
   name: string;
+  sku: string;
   productName: string;
 }
 
 function variantLabel(variants: VariantLike[], variantId: number): string {
   const variant = variants.find((v) => v.id === variantId);
   return variant ? `${variant.productName} — ${variant.name}` : "Unknown item";
+}
+
+function variantSku(variants: VariantLike[], variantId: number): string | null {
+  return variants.find((v) => v.id === variantId)?.sku ?? null;
 }
 
 function QuantityList({
@@ -74,7 +81,6 @@ function QuantityList({
  * is in the packer's hand — rather than at close with the box already taped.
  */
 export function PackingStationSheet({ open, onOpenChange, row }: PackingStationSheetProps) {
-  const [scanValue, setScanValue] = useState<string>("");
   const [cartonTypeId, setCartonTypeId] = useState<string>("");
   const [suggestion, setSuggestion] = useState<CartonSuggestion | null>(null);
 
@@ -91,8 +97,40 @@ export function PackingStationSheet({ open, onOpenChange, row }: PackingStationS
   const packedLines = useMemo(() => reconciliation.data?.packed ?? [], [reconciliation.data]);
   const outstandingLines = useMemo(() => reconciliation.data?.outstanding ?? [], [reconciliation.data]);
 
-  function handleScanChange(event: React.ChangeEvent<HTMLInputElement>): void {
-    setScanValue(event.target.value);
+  /**
+   * B2 — the scan is captured before it goes in the box, and it is refused if
+   * the box does not owe it. `outstanding` is what the picker actually took off
+   * the shelf minus what is already packed, so a unit from another order finds
+   * no candidate and stops here, in the packer's hand, rather than at close with
+   * the carton already taped.
+   */
+  const scan = useScanTarget<PackingReconciliationLine>({
+    candidates: outstandingLines,
+    documentNoun: "carton",
+    enabled: packageId !== null,
+    match: (line, resolved) =>
+      scanNamesVariant(resolved, line.productVariantId, variantSku(variants, line.productVariantId)),
+    describe: (line) => ({
+      key: String(line.productVariantId),
+      primary: variantLabel(variants, line.productVariantId),
+      secondary: `${Number(line.quantity)} still to pack`,
+    }),
+    onResolved: handleScanResolved,
+  });
+
+  function handleScanResolved(line: PackingReconciliationLine, resolved: ResolvedScan): void {
+    if (packageId === null) return;
+    scanIntoPackage.mutate(
+      {
+        packageId,
+        scannedPayload: resolved.raw,
+        // Sent alongside the payload so the server re-checks the pairing this
+        // client just made; it refuses the two if they name different goods.
+        productVariantId: line.productVariantId,
+        quantity: "1",
+      },
+      { onError: (error) => toast.error(getErrorMessage(error)) },
+    );
   }
 
   function handleCartonTypeChange(value: string): void {
@@ -105,20 +143,6 @@ export function PackingStationSheet({ open, onOpenChange, row }: PackingStationS
       { soId: row.soId },
       {
         onSuccess: () => toast.success("Carton opened"),
-        onError: (error) => toast.error(getErrorMessage(error)),
-      },
-    );
-  }
-
-  function handleScanSubmit(event: React.FormEvent<HTMLFormElement>): void {
-    event.preventDefault();
-    if (packageId === null) return;
-    const payload = scanValue.trim();
-    if (!payload) return;
-    scanIntoPackage.mutate(
-      { packageId, scannedPayload: payload, quantity: "1" },
-      {
-        onSuccess: () => setScanValue(""),
         onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
@@ -221,35 +245,13 @@ export function PackingStationSheet({ open, onOpenChange, row }: PackingStationS
           onRetry={handleRetry}
         />
       ) : (
-        <div className="space-y-5">
+        <div className="flex flex-col gap-5">
+          <ScanField scan={scan} label="Scan an item into this carton" sticky />
+
           <p className={cn("text-muted-foreground", typeScaleClass("dense"))}>
             <span className="font-mono tabular-nums">{packedTotal}</span> of{" "}
             <span className="font-mono tabular-nums">{pickedTotal}</span> picked units in cartons.
           </p>
-
-          <form onSubmit={handleScanSubmit} className="space-y-2">
-            <Label htmlFor="packing-scan" className={cn("font-medium", typeScaleClass("label"))}>
-              Scan an item
-            </Label>
-            <div className="flex items-center gap-2">
-              <Input
-                id="packing-scan"
-                value={scanValue}
-                onChange={handleScanChange}
-                placeholder="Barcode, GTIN, SKU, lot or serial"
-                autoComplete="off"
-                className="min-w-0 flex-1"
-              />
-              <LoadingButton
-                type="submit"
-                isPending={scanIntoPackage.isPending}
-                loadingText="Adding…"
-                disabled={!scanValue.trim()}
-              >
-                Add
-              </LoadingButton>
-            </div>
-          </form>
 
           <section className="space-y-2">
             <Label className={cn("font-medium", typeScaleClass("label"))}>Still to pack</Label>

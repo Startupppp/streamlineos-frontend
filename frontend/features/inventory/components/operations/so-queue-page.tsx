@@ -6,15 +6,18 @@ import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { EmptyOrdersIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "@/components/ui/search-input";
 import { useSalesOrders } from "@/hooks/api/inventory/sales-orders";
+import { useCan } from "@/hooks/api/access";
 import { SO_STATUS_BADGE, SO_STATUS_LABEL } from "@/features/inventory/lib/inventory-status";
 import type { SalesOrderListItem, SalesOrderStatus } from "@/hooks/api/inventory/sales-orders";
 import { TruncatedText } from "@/components/ui/truncated-text";
+
+const SO_READ_KEY = "inventory:sales-orders:read";
 
 interface SoQueuePageProps {
   status: SalesOrderStatus;
@@ -106,6 +109,15 @@ export function SoQueuePage({ status, title, emptyTitle, emptyDescription }: SoQ
       )
     : allItems;
 
+  /**
+   * G8 — the queue's own gate, read from the same key `useSalesOrders` uses.
+   *
+   * Without it a picker who cannot read sales orders saw "Nothing to ship",
+   * which is a statement about the warehouse rather than about their access, and
+   * is the exact confusion this rule exists to stop.
+   */
+  const canView = useCan(SO_READ_KEY);
+
   function handleSearchChange(value: string): void {
     setSearch(value);
   }
@@ -127,6 +139,9 @@ export function SoQueuePage({ status, title, emptyTitle, emptyDescription }: SoQ
       filters={filterBar}
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
+      {!canView ? (
+        <NoPermissionState className="flex-1" permission={SO_READ_KEY} />
+      ) : (
       <DataTable
         data={items}
         columns={columns}
@@ -149,6 +164,7 @@ export function SoQueuePage({ status, title, emptyTitle, emptyDescription }: SoQ
         }
         minWidth="640px"
       />
+      )}
       </div>
     </PageWrapper>
   );

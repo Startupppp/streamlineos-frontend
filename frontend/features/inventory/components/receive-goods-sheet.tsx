@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -23,6 +23,9 @@ import { LocationSelect } from "@/components/inventory/location-select";
 import type { PurchaseOrder, ReceiveGoodsInput } from "@/types/inventory";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { getTodayString } from "@/lib/date-utils";
+import { useScanTarget } from "@/features/inventory/hooks/use-scan-target";
+import { scanNamesVariant, type ResolvedScan } from "@/features/inventory/lib/scan-resolution";
+import { ScanField } from "@/features/inventory/components/scan";
 import { GrnLineRow, type DraftLineMeta } from "./receive-goods-line-row";
 import {
   grnSchema,
@@ -56,10 +59,16 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
   const receiveMutation = useReceiveGoods(po.id);
   const draftMutation = useCreateGrnDraft();
   const [selectedWarehouseId, setSelectedWarehouseId] = useState<number>(po.warehouseId ?? 0);
+  const [activeLineId, setActiveLineId] = useState<number | null>(null);
   const effectiveWarehouseId = selectedWarehouseId > 0 ? selectedWarehouseId : undefined;
 
-  const pendingLines = po.lines.filter((l) => Number(l.quantity) > Number(l.quantityReceived));
+  const pendingLines = useMemo(
+    () => po.lines.filter((l) => Number(l.quantity) > Number(l.quantityReceived)),
+    [po.lines],
+  );
   const lineMetas: DraftLineMeta[] = pendingLines.map((l) => ({
+    poLineId: l.id,
+    productVariantId: l.productVariantId,
     productName: l.productVariant?.product?.name ?? l.productVariant?.name ?? "Product",
     sku: l.productVariant?.sku ?? null,
     ordered: Number(l.quantity),
@@ -87,8 +96,73 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
 
   const { fields } = useFieldArray({ control: form.control, name: "lines" });
 
+  /**
+   * B2 — the count a receiver scanned, per PO line.
+   *
+   * Kept beside the form rather than derived from it, because the two mean
+   * different things: the form field starts at what the order still owed, and a
+   * tally starts at nothing. Once a line has been scanned even once its count is
+   * the tally, so a partial delivery cannot post the ordered quantity because
+   * nobody cleared a pre-filled box.
+   */
+  const [scannedTally, setScannedTally] = useState<Record<number, number>>({});
+
+  const scan = useScanTarget<DraftLineMeta>({
+    candidates: lineMetas,
+    documentNoun: "delivery",
+    match: (meta, resolved) => scanNamesVariant(resolved, meta.productVariantId, meta.sku),
+    describe: (meta) => ({
+      key: String(meta.poLineId),
+      primary: meta.productName,
+      secondary: `${meta.sku ?? "no SKU"} · ${(meta.ordered - meta.alreadyReceived).toFixed(2)} outstanding`,
+    }),
+    acceptedMessage: (meta) =>
+      `${meta.productName} — ${(scannedTally[meta.poLineId] ?? 0) + 1} counted.`,
+    onResolved: handleScanResolved,
+  });
+
+  /**
+   * A scanned unit lands on its line, and the grains the label carried land with
+   * it. A GS1 label knows its own lot and serial; making the receiver retype
+   * them is how a lot number ends up transposed on a receipt that has to answer
+   * a recall.
+   */
+  function handleScanResolved(meta: DraftLineMeta, resolved: ResolvedScan): void {
+    const index = lineMetas.findIndex((candidate) => candidate.poLineId === meta.poLineId);
+    if (index < 0) return;
+
+    const next = (scannedTally[meta.poLineId] ?? 0) + 1;
+    setScannedTally((previous) => ({ ...previous, [meta.poLineId]: next }));
+    setActiveLineId(meta.poLineId);
+    form.setValue(`lines.${index}.quantityReceived`, next.toFixed(4), { shouldDirty: true });
+
+    if (meta.trackingMethod === "LOT" && resolved.lotNumber) {
+      form.setValue(`lines.${index}.lotNumber`, resolved.lotNumber, { shouldDirty: true });
+    }
+    if (meta.trackingMethod === "SERIAL" && resolved.serialNumber) {
+      const existing = form.getValues(`lines.${index}.serialNumbers`) ?? "";
+      const already = existing
+        .split(/[\n,]/)
+        .map((serial) => serial.trim())
+        .filter(Boolean);
+      if (!already.includes(resolved.serialNumber)) {
+        form.setValue(
+          `lines.${index}.serialNumbers`,
+          [...already, resolved.serialNumber].join("\n"),
+          { shouldDirty: true },
+        );
+      }
+    }
+  }
+
+  function handleActivateLine(poLineId: number): void {
+    setActiveLineId((current) => (current === poLineId ? null : poLineId));
+  }
+
   function handleClose(): void {
     form.reset();
+    setScannedTally({});
+    setActiveLineId(null);
     setSelectedWarehouseId(po.warehouseId ?? 0);
     onOpenChange(false);
   }
@@ -96,6 +170,8 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
   function handleOpenChange(nextOpen: boolean): void {
     if (!nextOpen) {
       form.reset();
+      setScannedTally({});
+      setActiveLineId(null);
       setSelectedWarehouseId(po.warehouseId ?? 0);
     }
     onOpenChange(nextOpen);
@@ -229,7 +305,13 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
       }
     >
       <Form {...form}>
-        <form id="receive-goods-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        <form id="receive-goods-form" onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col gap-4">
+          <ScanField
+            scan={scan}
+            label="Scan a unit as it comes off the pallet"
+            placeholder="Barcode, GTIN, SKU, lot or serial"
+            sticky
+          />
           {!po.warehouseId ? (
             <FormItem>
               <FormLabel>Warehouse *</FormLabel>
@@ -258,11 +340,21 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
               </FormItem>
             )}
           />
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             {fields.map((field, index) => {
               const meta = lineMetas[index];
               if (!meta) return null;
-              return <GrnLineRow key={field.id} meta={meta} index={index} control={form.control} />;
+              return (
+                <GrnLineRow
+                  key={field.id}
+                  meta={meta}
+                  index={index}
+                  control={form.control}
+                  scannedCount={scannedTally[meta.poLineId] ?? 0}
+                  isActive={activeLineId === meta.poLineId}
+                  onActivate={handleActivateLine}
+                />
+              );
             })}
           </div>
           <FormField

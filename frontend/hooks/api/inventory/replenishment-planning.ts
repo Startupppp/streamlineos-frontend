@@ -142,15 +142,50 @@ export interface BatchableProposalsResponse {
   totalPages: number;
 }
 
+/**
+ * C2 — a person's number, carried as theirs.
+ *
+ * `requested` is what they asked for, before the supplier's minimum and pack
+ * size were applied to it. The line's `ordered` is that number through the same
+ * policy the engine's goes through.
+ */
+export interface PoBatchLineOverride {
+  requested: string;
+  reason: string;
+}
+
 export interface PoBatchLine {
   productVariantId: number;
   productName: string;
   requested: string;
   ordered: string;
+  /**
+   * What the engine's own arithmetic would have ordered. Equal to `ordered` on
+   * every line nobody touched; carried separately so the screen can always show
+   * which number came from the engine and which from a person.
+   */
+  engineOrdered: string;
+  /** Null when this line is the engine's own answer. */
+  override: PoBatchLineOverride | null;
   unitCost: string;
   lineValue: string;
   excess: string;
   reasons: string[];
+}
+
+/**
+ * C2 — the only way a client changes a quantity.
+ *
+ * It is not a field on a line. An override names the persisted proposal it
+ * overrules and carries a reason, and the server records both beside the order
+ * it produced. `quantity` is an exact `numeric(18,4)` **string** for the same
+ * reason every other quantity here is: a float between the buyer's keyboard and
+ * the order line is the one hop that makes an exact figure inexact.
+ */
+export interface ProposalOverrideInput {
+  proposalId: number;
+  quantity: string;
+  reason: string;
 }
 
 export interface SupplierSiteBatch {
@@ -219,14 +254,16 @@ export function useBatchableProposals(params?: BatchableProposalsParams) {
  */
 export function usePoBatchPreview(
   proposalIds: readonly number[],
+  overrides: readonly ProposalOverrideInput[] = [],
   options?: Omit<UseQueryOptions<PoBatchPreview, Error>, "queryKey" | "queryFn">,
 ) {
   const canRead = useCan("inventory:replenishment:read");
   return useQuery<PoBatchPreview, Error>({
-    queryKey: queryKeys.inventoryPlanning.poBatchPreview(proposalIds),
+    queryKey: queryKeys.inventoryPlanning.poBatchPreview(proposalIds, overrides),
     queryFn: () =>
       apiClient.post<PoBatchPreview>("/inventory/replenishment/po-batches/preview", {
         proposalIds: [...proposalIds],
+        overrides: [...overrides],
       }),
     staleTime: 30_000,
     ...options,
@@ -234,9 +271,52 @@ export function usePoBatchPreview(
   });
 }
 
+export interface CreatePoBatchInput {
+  proposalIds: number[];
+  vendorId: number;
+  overrides?: ProposalOverrideInput[];
+}
+
+export interface RefreshProposalsInput {
+  warehouseId?: number;
+  limit?: number;
+}
+
+export interface RefreshedProposals {
+  scanned: number;
+  recorded: number;
+  unchanged: number;
+  failed: Array<{ productVariantId: number; reason: string }>;
+}
+
+/**
+ * C2 — ask the engine to record proposals for the SKUs that have been selling.
+ *
+ * The persistence endpoint has existed since C1 and nothing called it, so the
+ * proposals table stayed empty and this screen had nothing to review. It writes
+ * forecast versions, so it takes the manage key rather than the read one, and it
+ * is idempotent by fingerprint: a second sweep over unchanged data reports
+ * `unchanged` rather than appending a duplicate history.
+ */
+export function useRefreshProposals() {
+  const qc = useQueryClient();
+  return useMutation<RefreshedProposals, Error, RefreshProposalsInput>({
+    mutationKey: ["inventory", "planning", "proposals", "refresh"],
+    mutationFn: (input) =>
+      apiClient.post<RefreshedProposals>("/inventory/forecasting/versions/refresh", input),
+    onSuccess: () => {
+      qc.invalidateQueries({
+        queryKey: queryKeys.inventoryPlanning.batchableProposalsList,
+      });
+      qc.invalidateQueries({ queryKey: queryKeys.inventoryPlanning.poBatchPreviewList });
+      qc.invalidateQueries({ queryKey: queryKeys.inventoryPlanning.driftWatchlistList });
+    },
+  });
+}
+
 export function useCreatePoBatch() {
   const qc = useQueryClient();
-  return useMutation<CreatedPoBatch, Error, { proposalIds: number[]; vendorId: number }>({
+  return useMutation<CreatedPoBatch, Error, CreatePoBatchInput>({
     mutationKey: ["inventory", "planning", "po-batch", "create"],
     mutationFn: (input) =>
       apiClient.post<CreatedPoBatch>("/inventory/replenishment/po-batches", input, {

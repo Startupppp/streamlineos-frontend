@@ -63,14 +63,6 @@ interface SettingsHealth {
   failedPublicationsCount: number;
 }
 
-export type BarcodeLookupResult =
-  | { type: "product"; productId: number; productName: string; sku: string }
-  | { type: "variant"; variantId: number; productName: string; variantSku: string; barcode: string }
-  | { type: "lot"; lotId: number; lotNumber: string; variantSku: string; productName: string }
-  | { type: "serial"; serialId: number; serialNumber: string; variantSku: string; productName: string }
-  | { type: "location"; locationId: number; locationName: string; warehouseName: string }
-  | { type: "not_found" };
-
 export interface ImportPreviewResult {
   columns: string[];
   mappedFields: Record<string, string>;
@@ -186,50 +178,6 @@ export function useExpireStaleReservations() {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.reservations() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
     },
-  });
-}
-
-/**
- * INV-203. A POST, because a GS1 payload carries FNC1 separators that a query
- * string re-encodes or drops -- and a dropped separator turns a multi-element
- * label into one long lot number.
- */
-export interface Gs1Parsed {
-  raw: string;
-  isGs1: boolean;
-  gtin?: string;
-  lotNumber?: string;
-  serialNumber?: string;
-  expiryDate?: string;
-  elements: Array<{ ai: string; value: string }>;
-  unparsed?: string;
-}
-
-export interface BarcodeScanResult {
-  parsed: Gs1Parsed;
-  variant?: { id: number; sku: string; name: string; isActive: boolean } | null;
-  lot?: { id: number; lotNumber: string; status: string; expiryDate: string | null } | null;
-  serial?: { id: number; serialNumber: string; status: string } | null;
-  lookup?: BarcodeLookupResult;
-  warnings: string[];
-}
-
-export function useScanBarcode() {
-  return useMutation<BarcodeScanResult, Error, string>({
-    mutationKey: ["inventory", "barcode", "scan"],
-    mutationFn: (payload: string) =>
-      apiClient.post<BarcodeScanResult>("/inventory/barcode/scan", { payload }),
-  });
-}
-
-export function useBarcodeLookup(code: string) {
-  const canView = useCan("inventory:stock:read");
-  return useQuery<BarcodeLookupResult, Error>({
-    queryKey: queryKeys.inventory.barcodeLookup(code),
-    queryFn: () =>
-      apiClient.get<BarcodeLookupResult>("/inventory/barcode/lookup", { code }),
-    enabled: canView && code.length > 0,
-    staleTime: 2 * 60_000,
   });
 }
 

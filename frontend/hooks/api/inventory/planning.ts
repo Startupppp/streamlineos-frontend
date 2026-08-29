@@ -44,74 +44,6 @@ interface CreateReplenishmentRuleInput {
   vendorId?: number;
 }
 
-interface RawReplenishmentSuggestion {
-  productVariantId: number;
-  variantSku: string;
-  variantName: string;
-  productName: string;
-  ruleId: number;
-  warehouseId: number | null;
-  warehouseName: string | null;
-  currentOnHand: number;
-  forecasted: number;
-  suggestedQty: number;
-  vendorId: number | null;
-  leadTimeDays: number;
-  expectedDate: string;
-  reason: string;
-}
-
-export interface ReplenishmentSuggestion {
-  id: number;
-  variantId: number;
-  variantSku: string;
-  productName: string;
-  warehouseId: number | null;
-  warehouseName: string | null;
-  currentStock: number;
-  suggestedQty: number;
-  forecastedDemand: number | null;
-  vendorId: number | null;
-  vendorName: string | null;
-  expectedDate: string | null;
-  reason: string;
-}
-
-function mapSuggestion(raw: RawReplenishmentSuggestion): ReplenishmentSuggestion {
-  return {
-    id: raw.ruleId,
-    variantId: raw.productVariantId,
-    variantSku: raw.variantSku,
-    productName: raw.productName,
-    warehouseId: raw.warehouseId,
-    warehouseName: raw.warehouseName,
-    currentStock: raw.currentOnHand,
-    suggestedQty: raw.suggestedQty,
-    forecastedDemand: raw.forecasted,
-    vendorId: raw.vendorId,
-    vendorName: null,
-    expectedDate: raw.expectedDate,
-    reason: raw.reason,
-  };
-}
-
-export interface GeneratePOLineInput {
-  productVariantId: number;
-  suggestedQty: number;
-  unitCost?: number;
-}
-
-export interface GeneratePOInput {
-  vendorId: number;
-  warehouseId?: number;
-  suggestions: GeneratePOLineInput[];
-}
-
-export interface GeneratePOResult {
-  id: number;
-  poNumber: string;
-}
-
 export interface ForecastRow {
   variantId: number;
   variantSku: string;
@@ -193,55 +125,6 @@ export function useDeactivateReplenishmentRule() {
       apiClient.delete<void>(`/inventory/replenishment/rules/${ruleId}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.replenishmentRules() });
-    },
-  });
-}
-
-interface RawReplenishmentSuggestionsResponse {
-  items: RawReplenishmentSuggestion[];
-  total: number;
-  page: number;
-  totalPages: number;
-}
-
-export interface ReplenishmentSuggestionsResponse {
-  items: ReplenishmentSuggestion[];
-  total: number;
-  page: number;
-  totalPages: number;
-}
-
-interface ReplenishmentSuggestionsParams {
-  page?: number;
-  limit?: number;
-}
-
-export function useReplenishmentSuggestions(params?: ReplenishmentSuggestionsParams) {
-  const canView = useCan("inventory:reports:read");
-  return useQuery<ReplenishmentSuggestionsResponse, Error>({
-    queryKey: queryKeys.inventory.replenishmentSuggestions(params),
-    queryFn: async () => {
-      const raw = await apiClient.get<RawReplenishmentSuggestionsResponse>("/inventory/replenishment/suggestions", {
-        ...(params?.page ? { page: String(params.page) } : {}),
-        ...(params?.limit ? { limit: String(params.limit) } : {}),
-      });
-      return { items: raw.items.map(mapSuggestion), total: raw.total, page: raw.page, totalPages: raw.totalPages };
-    },
-    staleTime: 5 * 60_000,
-    enabled: canView,
-  });
-}
-
-export function useGeneratePO() {
-  const qc = useQueryClient();
-  return useMutation<GeneratePOResult, Error, GeneratePOInput>({
-    mutationKey: ["inventory", "replenishment", "generate-po"],
-    mutationFn: (input) =>
-      apiClient.post<GeneratePOResult>("/inventory/replenishment/suggestions/generate-po", input),
-    onSuccess: (_result, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
-      for (const line of variables.suggestions)
-        qc.invalidateQueries({ queryKey: reorderProposalKey(line.productVariantId) });
     },
   });
 }

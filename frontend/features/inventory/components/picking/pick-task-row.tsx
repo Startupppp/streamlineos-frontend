@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { CONTENT_PANEL_SOLID } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { statusToneClasses, typeScaleClass } from "@/lib/design-tokens";
 import { useConfirmPick, type PickWaveLine } from "@/hooks/api/inventory/picking";
 import {
   PICK_EXCEPTION_BADGE,
@@ -21,7 +23,12 @@ interface PickTaskRowProps {
   pickListId: number;
   line: PickWaveLine;
   disabled: boolean;
+  /** The task a scan just named. It scrolls into view and takes the thumb. */
+  isActive: boolean;
+  /** The captured payload backing `isActive`, replayed to the server on confirm. */
+  scannedPayload: string | null;
   onReportException: (line: PickWaveLine) => void;
+  onConfirmed: () => void;
 }
 
 function remaining(line: PickWaveLine): string {
@@ -30,23 +37,32 @@ function remaining(line: PickWaveLine): string {
 }
 
 /**
- * One task on the walk: where it is, what it is, how many, scan, confirm.
+ * One task on the walk: where it is, what it is, how many, confirm.
  *
  * A card rather than a table row because this is the surface a picker holds in
  * one hand at 375px. The fields are stacked in the order the walk happens —
  * location first, because that is what the picker is looking for before they
  * look at anything else — and the confirm control is the last thing in the card
  * so a thumb reaches it without covering the quantity it is about to commit.
+ *
+ * B2 — the row no longer owns a scan box. A scan is captured once, at the top of
+ * the wave, and lands here already resolved and already checked against the
+ * tasks on this walk; the row replays that payload on confirm so the server
+ * records which label the picker was holding. Fifteen rows each with their own
+ * unvalidated text field was fifteen ways to post against the wrong task.
  */
 export function PickTaskRow({
   pickListId,
   line,
   disabled,
+  isActive,
+  scannedPayload,
   onReportException,
+  onConfirmed,
 }: PickTaskRowProps) {
   const [quantity, setQuantity] = useState(remaining(line));
-  const [scan, setScan] = useState("");
   const confirmPick = useConfirmPick();
+  const cardRef = useRef<HTMLLIElement>(null);
 
   // B5. The server's answer, not a local re-derivation of it. The rule now has
   // three clauses -- picked in full, a closing reason, and a reviewer's signature
@@ -55,12 +71,16 @@ export function PickTaskRow({
   // the old "any reason closes the row" test got exactly backwards.
   const closed = line.line_closed;
 
+  useEffect(
+    function revealScannedTask() {
+      if (!isActive) return;
+      cardRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+    },
+    [isActive],
+  );
+
   function handleQuantityChange(event: React.ChangeEvent<HTMLInputElement>): void {
     setQuantity(event.target.value);
-  }
-
-  function handleScanChange(event: React.ChangeEvent<HTMLInputElement>): void {
-    setScan(event.target.value);
   }
 
   function handleException(): void {
@@ -73,11 +93,11 @@ export function PickTaskRow({
         pickListId,
         pickLineId: line.id,
         quantityPicked: quantity,
-        scannedPayload: scan.trim() ? scan.trim() : undefined,
+        ...(scannedPayload ? { scannedPayload } : {}),
       },
       {
         onSuccess: (result) => {
-          setScan("");
+          onConfirmed();
           toast.success(
             result.waveComplete ? "Wave complete" : `Picked ${result.quantityPicked}`,
           );
@@ -89,8 +109,18 @@ export function PickTaskRow({
     );
   }
 
+  const success = statusToneClasses("success");
+
   return (
-    <li className={cn(CONTENT_PANEL_SOLID, "flex flex-col gap-3 p-3", closed && "opacity-60")}>
+    <li
+      ref={cardRef}
+      className={cn(
+        CONTENT_PANEL_SOLID,
+        "flex flex-col gap-3 p-3",
+        closed && "opacity-60",
+        isActive && "ring-2 ring-ring",
+      )}
+    >
       <div className="flex min-w-0 items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="truncate font-mono text-sm font-semibold tabular-nums">
@@ -160,20 +190,28 @@ export function PickTaskRow({
 
       {closed ? null : (
         <div className="flex flex-col gap-2">
-          <div className="grid grid-cols-[1fr_7rem] gap-2">
+          {scannedPayload ? (
+            <p
+              className={cn(
+                "truncate rounded-md border px-2 py-1 font-mono",
+                success.surface,
+                success.ink,
+                success.rule,
+                typeScaleClass("micro"),
+              )}
+            >
+              Scanned {scannedPayload}
+            </p>
+          ) : null}
+          <div className="grid gap-1.5">
+            <Label htmlFor={`pick-qty-${line.id}`} className={typeScaleClass("label")}>
+              Quantity picked
+            </Label>
             <Input
-              value={scan}
-              onChange={handleScanChange}
-              placeholder="Scan SKU, lot or serial"
-              aria-label={`Scan for ${line.sku}`}
-              autoComplete="off"
-              disabled={disabled}
-            />
-            <Input
+              id={`pick-qty-${line.id}`}
               value={quantity}
               onChange={handleQuantityChange}
               inputMode="decimal"
-              aria-label={`Quantity picked for ${line.sku}`}
               className="font-mono tabular-nums"
               disabled={disabled}
             />

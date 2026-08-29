@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileText, BarChart3, ClipboardList, ShieldCheck, TrendingUp, Package, Globe, ClipboardCheck, RefreshCcw, History, BarChart2, Building2, SlidersHorizontal, Calculator, Tag, Warehouse, ArrowLeftRight, ShoppingCart, Truck, Activity, Layers, TrendingDown, Scan, Boxes, CalendarClock, Container, Upload, RotateCcw, PackageCheck, DollarSign, Scale } from "lucide-react";
+import { LayoutDashboard, FileText, BarChart3, ClipboardList, ShieldCheck, TrendingUp, Package, Globe, ClipboardCheck, RefreshCcw, History, BarChart2, Building2, SlidersHorizontal, Calculator, Tag, Warehouse, ArrowLeftRight, ShoppingCart, Truck, Activity, Layers, TrendingDown, Scan, Boxes, CalendarClock, Container, Upload, RotateCcw, PackageCheck, DollarSign, Scale, Gauge, Sparkles } from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
 export const INVENTORY_NAV_GROUPS: NavGroup[] = [
@@ -128,6 +128,12 @@ export const INVENTORY_NAV_GROUPS: NavGroup[] = [
             label: "Expiry",
             icon: CalendarClock,
             href: "/inventory/reports/expiry",
+            requiredPermission: "inventory:reports:read",
+          },
+          {
+            label: "Operations SLA",
+            icon: Gauge,
+            href: "/inventory/reports/throughput",
             requiredPermission: "inventory:reports:read",
           },
           {
@@ -271,6 +277,20 @@ export const INVENTORY_NAV_GROUPS: NavGroup[] = [
             requiredPermission: "inventory:stock:reconcile",
           },
         ],
+      },
+      {
+        /**
+         * F3/F6 — the AI surfaces, which had no entry at all before this: the
+         * copilot was written, tested and mounted nowhere, and a page nobody can
+         * navigate to has not shipped. Gated on the surfaces' own key rather
+         * than on `inventory:stock:read`, because `inventory:ai:read` is exactly
+         * what the pages behind it require — a parent that asks for less shows
+         * the entry to people who then land on NoPermissionState.
+         */
+        label: "AI",
+        icon: Sparkles,
+        href: "/inventory/ai",
+        requiredPermission: "inventory:ai:read",
       },
       {
         label: "Channels",

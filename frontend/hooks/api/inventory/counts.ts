@@ -6,6 +6,16 @@ import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { CycleCountStatus } from "@/features/inventory/lib/inventory-status";
 
+/**
+ * The exact keys the counts controllers carry.
+ *
+ * Exported because a screen has to gate on the same string the endpoint does,
+ * and a hand-typed copy at a call site is how "denied" silently became "empty"
+ * on both count surfaces.
+ */
+export const COUNT_READ_KEY = "inventory:stock:read";
+export const COUNT_WRITE_KEY = "inventory:stock:reconcile";
+
 export interface CycleCountLine {
   id: number;
   variantId: number;
@@ -109,7 +119,7 @@ function toApiParams(params?: CountsParams): Record<string, unknown> {
 }
 
 export function useCycleCounts(params?: CountsParams) {
-  const canView = useCan("inventory:stock:read");
+  const canView = useCan(COUNT_READ_KEY);
   return useQuery<CycleCountListResponse, Error>({
     queryKey: queryKeys.inventory.cycleCounts(toApiParams(params)),
     queryFn: () =>
@@ -120,7 +130,7 @@ export function useCycleCounts(params?: CountsParams) {
 }
 
 export function useCycleCount(id: number) {
-  const canView = useCan("inventory:stock:read");
+  const canView = useCan(COUNT_READ_KEY);
   return useQuery<CycleCount, Error>({
     queryKey: queryKeys.inventory.cycleCount(id),
     queryFn: () => apiClient.get<CycleCount>(`/inventory/cycle-counts/${id}`),
@@ -212,7 +222,7 @@ export function useCancelCycleCount() {
 }
 
 export function usePhysicalAudits(params?: CountsParams) {
-  const canView = useCan("inventory:stock:read");
+  const canView = useCan(COUNT_READ_KEY);
   return useQuery<PhysicalAuditListResponse, Error>({
     queryKey: queryKeys.inventory.physicalAudits(toApiParams(params)),
     queryFn: () =>
@@ -223,7 +233,7 @@ export function usePhysicalAudits(params?: CountsParams) {
 }
 
 export function usePhysicalAudit(id: number) {
-  const canView = useCan("inventory:stock:read");
+  const canView = useCan(COUNT_READ_KEY);
   return useQuery<PhysicalAudit, Error>({
     queryKey: queryKeys.inventory.physicalAudit(id),
     queryFn: () => apiClient.get<PhysicalAudit>(`/inventory/physical-audits/${id}`),

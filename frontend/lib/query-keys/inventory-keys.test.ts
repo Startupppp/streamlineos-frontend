@@ -4,6 +4,7 @@ import { inventoryGenealogyQueryKeys } from "./inventory-genealogy";
 import { inventoryPackingQueryKeys } from "./inventory-packing";
 import { inventoryPickingQueryKeys } from "./inventory-picking";
 import { inventoryPutawayQueryKeys } from "./inventory-putaway";
+import { inventoryOpsMetricsQueryKeys } from "./inventory-ops-metrics";
 import { inventoryQualityPlanQueryKeys } from "./inventory-quality-plans";
 import { inventoryVendorScorecardQueryKeys } from "./inventory-vendor-scorecard";
 
@@ -24,6 +25,7 @@ const NAMESPACES = {
   ...inventoryPackingQueryKeys,
   ...inventoryPickingQueryKeys,
   ...inventoryPutawayQueryKeys,
+  ...inventoryOpsMetricsQueryKeys,
   ...inventoryQualityPlanQueryKeys,
   ...inventoryVendorScorecardQueryKeys,
 } as Record<string, Record<string, unknown>>;

@@ -8,6 +8,7 @@ import { InventoryEmptyState } from "@/features/inventory/components/inventory-e
 import { ErrorState, NoPermissionState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
@@ -29,6 +30,10 @@ const STATUS_OPTIONS: GrnStatus[] = ["DRAFT", "COUNTING", "QUALITY_REVIEW", "POS
 
 function isGrnStatus(value: string): value is GrnStatus {
   return (STATUS_OPTIONS as string[]).includes(value);
+}
+
+function isDateString(value: string | null): value is string {
+  return value !== null && /^\d{4}-\d{2}-\d{2}$/.test(value);
 }
 
 const columns: DataTableColumn<GrnSummary>[] = [
@@ -91,6 +96,16 @@ export default function ReceiptsPage() {
 
   const resolvedVendorId = vendorParam !== "all" ? Number(vendorParam) : undefined;
   const resolvedStatus = isGrnStatus(statusParam) ? statusParam : undefined;
+  /*
+   * B10. The SLA dashboard drills through to here carrying its window, and a
+   * link whose parameters the destination ignores is worse than no link: the
+   * supervisor reads the whole history as though it were the period they were
+   * looking at.
+   */
+  const dateFromParam = searchParams.get("dateFrom");
+  const dateToParam = searchParams.get("dateTo");
+  const resolvedDateFrom = isDateString(dateFromParam) ? dateFromParam : undefined;
+  const resolvedDateTo = isDateString(dateToParam) ? dateToParam : undefined;
 
   function updateParams(updates: Record<string, string>): void {
     const params = new URLSearchParams(searchParams.toString());
@@ -114,6 +129,10 @@ export default function ReceiptsPage() {
     updateParams({ status: value, page: "1" });
   }
 
+  function handleClearDates(): void {
+    updateParams({ dateFrom: "", dateTo: "", page: "1" });
+  }
+
   function handlePageChange(nextPage: number): void {
     updateParams({ page: String(nextPage) });
   }
@@ -134,6 +153,8 @@ export default function ReceiptsPage() {
   const query = useGoodsReceipts({
     vendorId: resolvedVendorId,
     status: resolvedStatus,
+    dateFrom: resolvedDateFrom,
+    dateTo: resolvedDateTo,
     page,
     pageSize: 50,
   });
@@ -142,7 +163,11 @@ export default function ReceiptsPage() {
   const vendors = vendorsQuery.data?.items ?? [];
   const total = query.data?.total ?? 0;
   const totalPages = query.data?.totalPages ?? 1;
-  const filtersActive = resolvedVendorId !== undefined || resolvedStatus !== undefined;
+  const filtersActive =
+    resolvedVendorId !== undefined ||
+    resolvedStatus !== undefined ||
+    resolvedDateFrom !== undefined ||
+    resolvedDateTo !== undefined;
 
   const filterBar = (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
@@ -157,6 +182,16 @@ export default function ReceiptsPage() {
           ))}
         </SelectContent>
       </Select>
+      {resolvedDateFrom || resolvedDateTo ? (
+        <Button
+          variant="outline"
+          size="sm"
+          className="shrink-0"
+          onClick={handleClearDates}
+        >
+          {resolvedDateFrom ?? "…"} to {resolvedDateTo ?? "…"} · clear
+        </Button>
+      ) : null}
       <Select value={vendorParam} onValueChange={handleVendorChange}>
         <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "min-w-0 flex-1 max-w-xs")}>
           <SelectValue placeholder="All vendors" />

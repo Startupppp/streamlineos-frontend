@@ -189,6 +189,12 @@ export const inventoryQueryKeys = {
     supplierDelayBriefing: (vendorId?: string) =>
       k(...base, "inventory", "supplierDelayBriefing", vendorId),
     barcodeLookup: (code: string) => k(...base, "inventory", "barcodeLookup", code),
+    variantLabel: (productVariantId: number, lotId?: number) =>
+      k(...base, "inventory", "variantLabel", productVariantId, lotId),
+    landedCostVouchers: (params?: Record<string, unknown>) =>
+      k(...base, "inventory", "landedCostVouchers", params),
+    landedCostVoucher: (voucherId: number) =>
+      k(...base, "inventory", "landedCostVoucher", voucherId),
     qualityHold: (qualityHoldId: number) => k(...base, "inventory", "qualityHold", qualityHoldId),
     webhooks: () => k(...base, "inventory", "webhooks"),
     webhookEvents: (webhookId: number, params?: Record<string, unknown>) =>

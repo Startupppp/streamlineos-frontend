@@ -6,12 +6,13 @@ import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { DatePicker } from "@/components/ui/date-picker";
 import { useStockTransactions } from "@/hooks/api/inventory/stock";
 import type { StockTransaction } from "@/hooks/api/inventory/stock";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
 
 const TYPE_BADGE: Record<string, string> = {
   SALE: "bg-status-info-surface text-status-info-ink border-status-info-rule",
@@ -19,6 +20,9 @@ const TYPE_BADGE: Record<string, string> = {
   TRANSFER_OUT: "bg-status-info-surface text-status-info-ink border-status-info-rule",
   RETURN_OUT: "bg-muted text-muted-foreground border-border",
 };
+
+/** The key `GET /inventory/stock/transactions` carries. */
+const ISSUES_READ_KEY = "inventory:stock:read";
 
 function formatDate(value: string | null | undefined): string {
   if (!value) return "—";
@@ -137,6 +141,14 @@ export default function IssuesPage() {
     void query.refetch();
   }
 
+  /*
+   * G8 — the ledger read is gated inside its hook, so without this branch a
+   * reader who lacks the key was told there are no outbound issues rather than
+   * that they may not see them. Declared below the other hooks so hook order
+   * never depends on a permission.
+   */
+  const canView = useCan(ISSUES_READ_KEY);
+
   const query = useStockTransactions({
     transactionType: "SALE",
     fromDate: fromDate || undefined,
@@ -163,6 +175,9 @@ export default function IssuesPage() {
       filters={filterBar}
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
+      {!canView ? (
+        <NoPermissionState className="flex-1" permission={ISSUES_READ_KEY} />
+      ) : (
       <DataTable
         data={items}
         columns={columns}
@@ -187,6 +202,7 @@ export default function IssuesPage() {
         }
         minWidth="640px"
       />
+      )}
       </div>
     </PageWrapper>
   );

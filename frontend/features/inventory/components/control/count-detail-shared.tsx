@@ -6,8 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
+import { COUNT_READ_KEY, COUNT_WRITE_KEY } from "@/hooks/api/inventory/counts";
+import { useScanTarget } from "@/features/inventory/hooks/use-scan-target";
+import { scanNamesVariant } from "@/features/inventory/lib/scan-resolution";
+import { ScanField } from "@/features/inventory/components/scan";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import {
   AlertDialog,
@@ -117,11 +122,44 @@ export function CountDetailShared({
   cancelPending,
 }: CountDetailSharedProps) {
   const [postDialogOpen, setPostDialogOpen] = useState(false);
+  const [scannedTally, setScannedTally] = useState<Record<number, number>>({});
+  const canView = useCan(COUNT_READ_KEY);
+  const canCount = useCan(COUNT_WRITE_KEY);
 
   const shortNoun = entityNoun.split(" ").pop() ?? entityNoun;
 
-  const isCounting = status === "COUNTING";
+  const isCounting = status === "COUNTING" && canCount;
   const isReview = status === "REVIEW";
+
+  /**
+   * B2 — counting by scanning, one unit at a time.
+   *
+   * The scan is captured before the counted quantity moves, and it is refused if
+   * the code names goods this count sheet does not list — which is the whole
+   * point of a cycle count: a SKU that should not be in this aisle is a finding,
+   * not a line to quietly add. The same SKU at two bins stops and asks, because
+   * which bin it came off is the only thing the count is measuring.
+   */
+  const scan = useScanTarget<CycleCountLine>({
+    candidates: lines,
+    documentNoun: shortNoun.toLowerCase(),
+    enabled: isCounting,
+    match: (line, resolved) => scanNamesVariant(resolved, line.variantId, line.variantSku),
+    describe: (line) => ({
+      key: String(line.id),
+      primary: `${line.variantSku} · ${line.locationName ?? "no bin"}`,
+      secondary: line.productName,
+    }),
+    acceptedMessage: (line) =>
+      `${line.variantSku} at ${line.locationName ?? "no bin"} — ${(scannedTally[line.id] ?? 0) + 1} counted.`,
+    onResolved: handleScanResolved,
+  });
+
+  function handleScanResolved(line: CycleCountLine): void {
+    const next = (scannedTally[line.id] ?? 0) + 1;
+    setScannedTally((previous) => ({ ...previous, [line.id]: next }));
+    onSaveLine(line.id, next);
+  }
 
   const actionsMutating = startPending || reviewPending || postPending || cancelPending;
 
@@ -135,7 +173,10 @@ export function CountDetailShared({
   }
 
   function buildActions(): React.ReactNode {
-    if (!status) return null;
+    // G8. Every control here posts to an endpoint carrying the reconcile key, so
+    // a reader who holds only `stock:read` is shown the count and none of the
+    // buttons rather than a row of controls the server will refuse.
+    if (!status || !canCount) return null;
     if (status === "PLANNED") {
       return (
         <Button size="sm" onClick={onStart} disabled={actionsMutating}>
@@ -203,7 +244,19 @@ export function CountDetailShared({
         cell: (row) =>
           isCounting ? (
             <div className="flex justify-end">
-              <DebouncedQtyInput lineId={row.id} initial={row.countedQty} onSave={onSaveLine} />
+              {/*
+               * Keyed on the scan tally, not on `countedQty`. The field seeds
+               * itself from `initial` on mount, so a scanned count would
+               * otherwise never reach a row somebody had already opened —
+               * while keying on the server value would remount it mid-type,
+               * 300ms after every keystroke, and steal the caret.
+               */}
+              <DebouncedQtyInput
+                key={`${row.id}:${scannedTally[row.id] ?? 0}`}
+                lineId={row.id}
+                initial={scannedTally[row.id] ?? row.countedQty}
+                onSave={onSaveLine}
+              />
             </div>
           ) : (
             <span className="tabular-nums">
@@ -224,8 +277,26 @@ export function CountDetailShared({
           ),
       },
     ],
-    [isCounting, isReview, onSaveLine],
+    [isCounting, isReview, onSaveLine, scannedTally],
   );
+
+  /*
+   * G8 — denied is not empty, and this branch sits after every hook.
+   *
+   * `useCycleCount` and `usePhysicalAudit` are gated on the read key inside the
+   * hook, so a reader without it gets no rows and no error: without this the
+   * page told them the count has no lines, which is a claim about the warehouse
+   * rather than about them. Placed below the hooks deliberately — returning
+   * early above `useMemo` would make hook order depend on a permission, and that
+   * only breaks for the person who lacks the key.
+   */
+  if (!canView) {
+    return (
+      <PageWrapper title={entityNoun} backHref={backHref}>
+        <NoPermissionState className="flex-1" permission={COUNT_READ_KEY} />
+      </PageWrapper>
+    );
+  }
 
   if (error) {
     return (
@@ -257,7 +328,10 @@ export function CountDetailShared({
         }
         actions={buildActions()}
       >
-        <div className="flex flex-1 min-h-0 flex-col">
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
+          {isCounting ? (
+            <ScanField scan={scan} label="Scan a unit to count it" className="shrink-0" />
+          ) : null}
           <DataTable
             data={lines}
             columns={columns}

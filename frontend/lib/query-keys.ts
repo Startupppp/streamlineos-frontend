@@ -19,7 +19,9 @@ import { inventoryRecallSimulationQueryKeys } from "./query-keys/inventory-recal
 import { inventoryReturnsQueryKeys } from "./query-keys/inventory-returns";
 import { inventoryVendorScorecardQueryKeys } from "./query-keys/inventory-vendor-scorecard";
 import { inventoryCopilotQueryKeys } from "./query-keys/inventory-copilot";
+import { inventoryAiReviewQueryKeys } from "./query-keys/inventory-ai-review";
 import { inventoryOutboxQueryKeys } from "./query-keys/inventory-outbox";
+import { inventoryOpsMetricsQueryKeys } from "./query-keys/inventory-ops-metrics";
 import { usersAndCommerceQueryKeys } from "./query-keys/users-and-commerce";
 import { payrollQueryKeys } from "./query-keys/payroll";
 import { growthAndSignQueryKeys } from "./query-keys/growth-and-sign";
@@ -47,7 +49,9 @@ export const queryKeys = {
   ...inventoryReturnsQueryKeys,
   ...inventoryVendorScorecardQueryKeys,
   ...inventoryCopilotQueryKeys,
+  ...inventoryAiReviewQueryKeys,
   ...inventoryOutboxQueryKeys,
+  ...inventoryOpsMetricsQueryKeys,
   ...usersAndCommerceQueryKeys,
   ...payrollQueryKeys,
   ...growthAndSignQueryKeys,

@@ -19,3 +19,4 @@ export * from "./channels";
 export * from "./ai";
 export * from "./webhooks";
 export * from "./audit-events";
+export * from "./scan";

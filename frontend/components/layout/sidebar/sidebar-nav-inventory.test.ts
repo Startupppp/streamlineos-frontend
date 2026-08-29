@@ -29,8 +29,16 @@ import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 // Moved 2026-08-24 by the CRM autonomy review route ("What the system did",
 // /crm/autonomy, gated on crm:autonomy:view). The digest exists so a route or
 // its permission cannot change without somebody saying why.
+// Moved 2026-08-29 by F3/F6: the inventory AI surfaces got their first nav entry
+// ("AI", /inventory/ai, gated on inventory:ai:read). Before it, the copilot was
+// written, tested and mounted on no route at all — a page nobody can navigate to
+// has not shipped — and the anomaly queue and demand-risk narrative would have
+// landed in the same state. The gate is the surfaces' own key rather than
+// inventory:stock:read, because that is what the pages behind it require and a
+// parent asking for less shows the entry to people who then hit
+// NoPermissionState.
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "4480eee41a479f9ce9e267d3bc34bed83bfcb9071a9fa447158a2e793cc22edf";
+  "c241cd6c9923ac84c40c862b407f0f0d40ddf0718993798b60b1d29787aa47e4";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {

@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { AppSheet, ErrorState } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
@@ -12,11 +13,15 @@ import {
   useAbandonPutawayTask,
   useClaimPutawayTask,
   usePutawayTask,
+  type PutawayTaskLine,
 } from "@/hooks/api/inventory/putaway";
 import {
   PUTAWAY_TASK_STATUS_BADGE,
   PUTAWAY_TASK_STATUS_LABEL,
 } from "@/features/inventory/lib/inventory-status";
+import { useScanTarget } from "@/features/inventory/hooks/use-scan-target";
+import { scanNamesVariant } from "@/features/inventory/lib/scan-resolution";
+import { ScanField } from "@/features/inventory/components/scan";
 import { PutawayLineRow } from "./putaway-line-row";
 
 interface PutawayTaskSheetProps {
@@ -45,16 +50,54 @@ export function PutawayTaskSheet({
   currentUserId,
   canPutAway,
 }: PutawayTaskSheetProps) {
+  const [activeLineId, setActiveLineId] = useState<number | null>(null);
   const detail = usePutawayTask(taskId ?? 0, { enabled: open && !!taskId });
   const claim = useClaimPutawayTask();
   const abandon = useAbandonPutawayTask();
 
   const task = detail.data?.task;
-  const lines = detail.data?.lines ?? [];
+  const lines = useMemo(() => detail.data?.lines ?? [], [detail.data]);
   const heldByMe = !!task && task.assignedTo === currentUserId;
   const heldBySomeoneElse =
     !!task && task.assignedTo !== null && task.assignedTo !== currentUserId;
   const finished = task?.status === "COMPLETED" || task?.status === "CANCELLED";
+  const canConfirm = canPutAway && heldByMe && !finished;
+
+  const openLines = useMemo(
+    () => lines.filter((line) => !/^-?0(\.0+)?$/.test(line.remaining)),
+    [lines],
+  );
+
+  /**
+   * B2 — the pallet is scanned at the dock before anything about it moves.
+   *
+   * The capture is the point: a putaway the server later refuses still leaves
+   * evidence the goods reached the door, which a stock movement that never
+   * happened cannot provide. Matching against the task's own open lines is what
+   * stops a pallet from the next bay being put away against this one.
+   */
+  const scan = useScanTarget<PutawayTaskLine>({
+    candidates: openLines,
+    documentNoun: "task",
+    enabled: canConfirm,
+    match: (line, resolved) => {
+      if (resolved.serialId !== null && line.serial_id !== null)
+        return resolved.serialId === line.serial_id;
+      if (resolved.lotId !== null && line.lot_id !== null) return resolved.lotId === line.lot_id;
+      return scanNamesVariant(resolved, line.product_variant_id, line.sku);
+    },
+    describe: (line) => ({
+      key: String(line.id),
+      primary: `${line.sku} · ${line.variant_name}`,
+      secondary: `${line.remaining} left to put away`,
+    }),
+    acceptedMessage: (line) => `${line.sku} — choose the bin and confirm below.`,
+    onResolved: handleScanResolved,
+  });
+
+  function handleScanResolved(line: PutawayTaskLine): void {
+    setActiveLineId(line.id);
+  }
 
   function handleRetry(): void {
     void detail.refetch();
@@ -133,6 +176,15 @@ export function PutawayTaskSheet({
         />
       ) : task ? (
         <div className="flex flex-col gap-3">
+          {canConfirm ? (
+            <ScanField
+              scan={scan}
+              label="Scan the pallet or carton you are holding"
+              placeholder="Barcode, SKU, lot or serial"
+              sticky
+            />
+          ) : null}
+
           <div className="flex flex-wrap items-center gap-2">
             <Badge
               variant="outline"
@@ -165,6 +217,7 @@ export function PutawayTaskSheet({
                 taskId={task.id}
                 line={line}
                 disabled={!canPutAway || heldBySomeoneElse || finished}
+                isActive={line.id === activeLineId}
               />
             ))}
           </ul>

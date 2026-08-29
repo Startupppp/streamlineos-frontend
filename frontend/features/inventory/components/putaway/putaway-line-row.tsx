@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,8 @@ interface PutawayLineRowProps {
   taskId: number;
   line: PutawayTaskLine;
   disabled: boolean;
+  /** The line a scan just named. It scrolls into view and takes the thumb. */
+  isActive: boolean;
 }
 
 /**
@@ -50,12 +52,21 @@ function capacityLabel(remaining: string | null): string {
  * fact about them, decided by the quality state of the receipt, and the server
  * refuses any other destination — so it shows the bin rather than offering it.
  */
-export function PutawayLineRow({ taskId, line, disabled }: PutawayLineRowProps) {
+export function PutawayLineRow({ taskId, line, disabled, isActive }: PutawayLineRowProps) {
   const [quantity, setQuantity] = useState(line.remaining);
   const [destination, setDestination] = useState(
     line.to_location_id === null ? "" : String(line.to_location_id),
   );
   const complete = useCompletePutaway();
+  const cardRef = useRef<HTMLLIElement>(null);
+
+  useEffect(
+    function revealScannedLine() {
+      if (!isActive) return;
+      cardRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+    },
+    [isActive],
+  );
 
   // Against the string, not `Number(line.remaining)`. These are `numeric(18,4)`
   // values and the server went to some trouble to keep them off floats on the
@@ -92,7 +103,15 @@ export function PutawayLineRow({ taskId, line, disabled }: PutawayLineRowProps) 
   }
 
   return (
-    <li className={cn(CONTENT_PANEL_SOLID, "flex flex-col gap-3 p-3", closed && "opacity-60")}>
+    <li
+      ref={cardRef}
+      className={cn(
+        CONTENT_PANEL_SOLID,
+        "flex flex-col gap-3 p-3",
+        closed && "opacity-60",
+        isActive && "ring-2 ring-ring",
+      )}
+    >
       <div className="flex min-w-0 items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold">{line.sku}</p>

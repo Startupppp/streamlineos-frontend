@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { AppSheet, ErrorState } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,9 @@ import {
   PICK_WAVE_STATUS_BADGE,
   PICK_WAVE_STATUS_LABEL,
 } from "@/features/inventory/lib/inventory-status";
+import { useScanTarget } from "@/features/inventory/hooks/use-scan-target";
+import { scanNamesVariant, type ResolvedScan } from "@/features/inventory/lib/scan-resolution";
+import { ScanField } from "@/features/inventory/components/scan";
 import { PickTaskRow } from "./pick-task-row";
 import { PickExceptionDialog } from "./pick-exception-dialog";
 
@@ -49,6 +52,8 @@ export function PickWaveSheet({
   canPick,
 }: PickWaveSheetProps) {
   const [exceptionLine, setExceptionLine] = useState<PickWaveLine | null>(null);
+  const [activeLineId, setActiveLineId] = useState<number | null>(null);
+  const [scannedPayload, setScannedPayload] = useState<string | null>(null);
   const wave = usePickWave(pickListId ?? 0, { enabled: open && !!pickListId });
   const claim = useClaimPickWave();
   const abandon = useAbandonPickWave();
@@ -58,6 +63,54 @@ export function PickWaveSheet({
   const heldBySomeoneElse =
     !!detail && detail.assignedTo !== null && detail.assignedTo !== currentUserId;
   const finished = detail?.status === "COMPLETED" || detail?.status === "CANCELLED";
+  const canConfirm = canPick && heldByMe && !finished;
+
+  const openLines = useMemo(
+    () => (detail?.lines ?? []).filter((line) => !line.line_closed),
+    [detail],
+  );
+
+  /**
+   * B2 / B11 — one scan field for the whole walk, not one per row.
+   *
+   * A picker at 375px holding a unit in the other hand cannot find the right
+   * row and then its field. The wedge fires wherever focus happens to be, the
+   * scan is captured before anything moves, and the task it names becomes the
+   * active one — which is also what makes the confirm control reachable with a
+   * thumb instead of buried in a list.
+   *
+   * `openLines` is the whole scope: a unit that belongs to no open task on this
+   * wave is refused here, with the goods still in the picker's hand.
+   */
+  const scan = useScanTarget<PickWaveLine>({
+    candidates: openLines,
+    documentNoun: "wave",
+    enabled: canConfirm,
+    match: (line, resolved) => {
+      if (resolved.serialId !== null && line.serial_id !== null)
+        return resolved.serialId === line.serial_id;
+      if (resolved.lotId !== null && line.lot_id !== null) return resolved.lotId === line.lot_id;
+      return scanNamesVariant(resolved, line.product_variant_id, line.sku);
+    },
+    describe: (line) => ({
+      key: String(line.id),
+      primary: `${line.sku} · ${line.location_code ?? "no bin"}`,
+      secondary: `${Number(line.quantity_picked).toFixed(2)} of ${Number(line.quantity_to_pick).toFixed(2)} picked${line.so_number ? ` · ${line.so_number}` : ""}`,
+    }),
+    acceptedMessage: (line) =>
+      `${line.sku} at ${line.location_code ?? "no bin"} — confirm the quantity below.`,
+    onResolved: handleScanResolved,
+  });
+
+  function handleScanResolved(line: PickWaveLine, resolved: ResolvedScan): void {
+    setActiveLineId(line.id);
+    setScannedPayload(resolved.raw);
+  }
+
+  function handleConfirmed(): void {
+    setActiveLineId(null);
+    setScannedPayload(null);
+  }
 
   function handleRetry(): void {
     void wave.refetch();
@@ -147,6 +200,15 @@ export function PickWaveSheet({
           />
         ) : detail ? (
           <div className="flex flex-col gap-3">
+            {canConfirm ? (
+              <ScanField
+                scan={scan}
+                label="Scan the unit you just took"
+                placeholder="Barcode, SKU, lot, serial or bin"
+                sticky
+              />
+            ) : null}
+
             <div className="flex flex-wrap items-center gap-2">
               <Badge
                 variant="outline"
@@ -164,6 +226,11 @@ export function PickWaveSheet({
                   You can see this walk but not confirm against it.
                 </span>
               ) : null}
+              {canConfirm && activeLineId === null ? (
+                <span className="text-xs text-muted-foreground">
+                  Scan a unit to open its task, or confirm one by hand below.
+                </span>
+              ) : null}
             </div>
 
             <ul className="flex flex-col gap-2">
@@ -173,7 +240,10 @@ export function PickWaveSheet({
                   pickListId={detail.id}
                   line={line}
                   disabled={!canPick || heldBySomeoneElse || finished}
+                  isActive={line.id === activeLineId}
+                  scannedPayload={line.id === activeLineId ? scannedPayload : null}
                   onReportException={handleReportException}
+                  onConfirmed={handleConfirmed}
                 />
               ))}
             </ul>
