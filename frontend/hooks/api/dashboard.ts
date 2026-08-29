@@ -63,13 +63,12 @@ export const useMyIssues = (
   options?: Omit<UseQueryOptions<MyIssue[], Error>, "queryKey" | "queryFn">
 ) => {
   const buildEnabled = useModuleEnabled("build");
-  const canView = useCan("build:tickets:view");
   return useQuery<MyIssue[], Error>({
     queryKey: queryKeys.dashboard.myIssues(),
     queryFn: () => apiClient.get<MyIssue[]>("/dashboard/my-issues"),
     staleTime: 5 * 60 * 1000,
     ...options,
-    enabled: buildEnabled && canView && (options?.enabled ?? true),
+    enabled: buildEnabled && (options?.enabled ?? true),
   });
 };
 
@@ -120,14 +119,13 @@ export const useActiveSprintSummary = (
   const { data: session } = useSession();
   const orgId = session?.orgId ?? "";
   const buildEnabled = useModuleEnabled("build");
-  const canView = useCan("build:tickets:view");
   return useQuery<SprintSummary | null, Error>({
     queryKey: queryKeys.dashboard.activeSprintSummary(),
     queryFn: () =>
       apiClient.get<SprintSummary | null>("/dashboard/active-sprint"),
     staleTime: 5 * 60 * 1000,
     ...options,
-    enabled: !!orgId && buildEnabled && canView && (options?.enabled ?? true),
+    enabled: !!orgId && buildEnabled && (options?.enabled ?? true),
   });
 };
 
