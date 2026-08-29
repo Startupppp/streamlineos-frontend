@@ -71,6 +71,7 @@ export const inventoryQueryKeys = {
     expiryReportList: list("expiryReport"),
     aiInsightsList: list("aiInsights"),
     webhookEventsList: list("webhookEvents"),
+    auditEventsList: list("auditEvents"),
 
     products: (params?: Record<string, unknown>) => k(...base, "inventory", "products", params),
     product: (productId: number) => k(...base, "inventory", "product", productId),
@@ -106,6 +107,7 @@ export const inventoryQueryKeys = {
     stockSummary: (params?: object) => k(...base, "inventory", "stockSummary", params),
     reorderReport: (params?: object) => k(...base, "inventory", "reorderReport", params),
     movementsReport: (params?: object) => k(...base, "inventory", "movementsReport", params),
+    auditEvents: (params?: object) => k(...base, "inventory", "auditEvents", params),
     lots: (params?: Record<string, unknown>) => k(...base, "inventory", "lots", params),
     lot: (lotId: number) => k(...base, "inventory", "lot", lotId),
     serials: (params?: Record<string, unknown>) => k(...base, "inventory", "serials", params),
@@ -175,6 +177,7 @@ export const inventoryQueryKeys = {
     exportJobs: (params?: Record<string, unknown>) => k(...base, "inventory", "exportJobs", params),
     exportJob: (exportJobId: number) => k(...base, "inventory", "exportJob", exportJobId),
     settings: () => k(...base, "inventory", "settings"),
+    packs: () => k(...base, "inventory", "packs"),
     numberSequences: () => k(...base, "inventory", "numberSequences"),
     aiInsights: (params?: object) => k(...base, "inventory", "aiInsights", params),
     aiDigest: (narrate?: boolean) => k(...base, "inventory", "aiDigest", narrate),

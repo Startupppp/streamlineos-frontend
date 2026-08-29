@@ -24,6 +24,26 @@ export interface InventorySettings {
   autoReserveOnConfirm: boolean;
   allowPartialShipment: boolean;
   packageRequiredForShipping: boolean;
+  packWarehouse: boolean;
+  packKirana: boolean;
+  packPharmacy: boolean;
+  packGst: boolean;
+}
+
+/**
+ * E1 — which packs this organisation runs.
+ *
+ * Read through `useInventoryPacks`, which is gated on the read key every
+ * inventory role holds rather than on `inventory:settings:manage`: navigation,
+ * form fields and validation all have to know, and gating it on the
+ * administration key would show a pharmacy's MRP field only to the person who
+ * administers the module.
+ */
+export interface InventoryPacks {
+  warehouse: boolean;
+  kirana: boolean;
+  pharmacy: boolean;
+  gst: boolean;
 }
 
 export interface NumberSequence {
@@ -91,6 +111,16 @@ export function useInventorySettings() {
   });
 }
 
+export function useInventoryPacks() {
+  const canRead = useCan("inventory:products:read");
+  return useQuery<InventoryPacks, Error>({
+    queryKey: queryKeys.inventory.packs(),
+    queryFn: () => apiClient.get<InventoryPacks>("/inventory/settings/packs"),
+    staleTime: 5 * 60_000,
+    enabled: canRead,
+  });
+}
+
 export function useUpdateInventorySettings() {
   const qc = useQueryClient();
   return useMutation<InventorySettings, Error, Partial<InventorySettings>>({
@@ -98,6 +128,7 @@ export function useUpdateInventorySettings() {
     mutationFn: (data) => apiClient.patch<InventorySettings>("/inventory/settings", data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.settings() });
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.packs() });
     },
   });
 }

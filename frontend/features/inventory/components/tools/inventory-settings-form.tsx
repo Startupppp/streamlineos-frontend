@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { InventorySettings } from "@/hooks/api/inventory/admin";
 
 function SwitchField({
@@ -182,6 +182,23 @@ export function InventorySettingsForm() {
             label="Default Costing Method"
             options={COSTING_METHOD_OPTIONS}
           />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-semibold">Packs</CardTitle>
+          <CardDescription>
+            A pack is a bundle of domain rules only some businesses need. Turning one off
+            hides its navigation, its fields and its validation — it never deletes data
+            already captured, so switching a pack back on finds its records intact.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="divide-y divide-border">
+          <SwitchField name="packWarehouse" label="Warehouse — bins, putaway, waves, packing, shipping" />
+          <SwitchField name="packGst" label="GST — HSN codes and tax treatment on products and document lines" />
+          <SwitchField name="packPharmacy" label="Pharmacy — MRP, GS1 on receive, LASA and high-alert handling" />
+          <SwitchField name="packKirana" label="Kirana — loose versus packed selling units and scale quantities" />
         </CardContent>
       </Card>
 

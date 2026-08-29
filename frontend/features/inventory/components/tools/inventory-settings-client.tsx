@@ -33,7 +33,19 @@ const settingsSchema = z.object({
   autoReserveOnConfirm: z.boolean(),
   allowPartialShipment: z.boolean(),
   packageRequiredForShipping: z.boolean(),
-});
+  packWarehouse: z.boolean(),
+  packKirana: z.boolean(),
+  packPharmacy: z.boolean(),
+  packGst: z.boolean(),
+}).refine(
+  function atLeastOnePack(values) {
+    return values.packWarehouse || values.packKirana || values.packPharmacy || values.packGst;
+  },
+  {
+    message: "Keep at least one pack enabled — warehouse, kirana, pharmacy or gst.",
+    path: ["packWarehouse"],
+  },
+);
 
 type SettingsFormValues = z.infer<typeof settingsSchema>;
 
