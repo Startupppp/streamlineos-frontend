@@ -132,16 +132,28 @@ export function useSendPurchaseOrder(poId?: number) {
   });
 }
 
+/**
+ * Record and post a delivery in one call.
+ *
+ * The header is not optional: the endpoint takes `@IdempotencyKey()`, which
+ * throws without it, so every receipt raised from this sheet was answered with
+ * "An Idempotency-Key header is required for this operation". It sent none.
+ */
 export function useReceiveGoods(poId: number) {
   const qc = useQueryClient();
   return useMutation<GoodsReceiptNote, Error, ReceiveGoodsInput>({
     mutationKey: ["inventory", "purchase-orders", "receive", poId],
     mutationFn: (data) =>
-      apiClient.post<GoodsReceiptNote>(`/inventory/purchase-orders/${poId}/receive`, data),
+      apiClient.post<GoodsReceiptNote>(`/inventory/purchase-orders/${poId}/receive`, data, {
+        headers: { "Idempotency-Key": crypto.randomUUID() },
+      }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrder(poId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.inventory.goodsReceiptsList,
+      });
     },
   });
 }

@@ -1,30 +1,27 @@
 "use client";
 
-import { useState } from "react";
-import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { AppSheet } from "@/components/shared/app-sheet";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { LoadingState, ErrorState, NoPermissionState } from "@/components/shared";
+import { useCan } from "@/hooks/api/access";
+import { useGoodsReceipt, type GrnLine } from "@/hooks/api/inventory/operations";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { LoadingState, ErrorState } from "@/components/shared";
-import { useGoodsReceipt, useReverseGrn } from "@/hooks/api/inventory/operations";
-import { GRN_QUALITY_BADGE, GRN_QUALITY_LABEL } from "@/features/inventory/lib";
+  GRN_DISCREPANCY_LABEL,
+  GRN_QUALITY_BADGE,
+  GRN_QUALITY_LABEL,
+  GRN_STATUS_BADGE,
+  GRN_STATUS_LABEL,
+} from "@/features/inventory/lib";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { LoadingButton } from "@/components/ui/loading-button";
+import { formatShortDate } from "@/lib/date-utils";
+import { GrnLifecycleActions } from "./grn-lifecycle-actions";
+
+const READ_PERMISSION = "inventory:purchase-orders:read";
+const RECEIVE_PERMISSION = "inventory:purchase-orders:receive";
 
 export interface GrnDetailSheetProps {
   grnId: number;
@@ -32,30 +29,40 @@ export interface GrnDetailSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
-type GrnLine = ReturnType<typeof useGoodsReceipt>["data"] extends infer D
-  ? D extends { lines: Array<infer L> }
-    ? L
-    : never
-  : never;
-
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
-}
-
 const grnLineColumns: DataTableColumn<GrnLine>[] = [
   {
-    key: "product",
-    header: "Product",
-    cell: (line) => String(line.poLineId),
+    key: "line",
+    header: "PO line",
+    cell: (line) => <span className="font-mono text-dense">#{line.poLineId}</span>,
+  },
+  {
+    key: "expected",
+    header: "Expected",
+    headerClassName: "text-right",
+    className: "text-right font-mono tabular-nums",
+    cell: (line) =>
+      line.quantityExpected === null ? (
+        <span className="text-muted-foreground">—</span>
+      ) : (
+        Number(line.quantityExpected).toFixed(2)
+      ),
   },
   {
     key: "qty",
-    header: "Qty",
+    header: "Received",
     headerClassName: "text-right",
     className: "text-right font-mono tabular-nums",
-    cell: (line) => Number(line.quantityReceived).toFixed(2),
+    cell: (line) => (
+      <>
+        <div>{Number(line.quantityReceived).toFixed(2)}</div>
+        {/* The entered figure only earns a line when it differs from the base. */}
+        {line.quantityEntered !== null && line.uomId !== null ? (
+          <div className="text-micro text-muted-foreground">
+            {Number(line.quantityEntered).toFixed(2)} × {Number(line.uomFactor ?? 1).toFixed(2)}
+          </div>
+        ) : null}
+      </>
+    ),
   },
   {
     key: "quality",
@@ -64,16 +71,22 @@ const grnLineColumns: DataTableColumn<GrnLine>[] = [
       <>
         <Badge
           variant="outline"
-          className={cn(
-            "h-4 text-micro px-1.5 py-0",
-            GRN_QUALITY_BADGE[line.qualityStatus],
-          )}
+          className={cn("h-4 text-micro px-1.5 py-0", GRN_QUALITY_BADGE[line.qualityStatus])}
         >
           {GRN_QUALITY_LABEL[line.qualityStatus]}
         </Badge>
-        {line.rejectionReason && (
-          <TruncatedText text={line.rejectionReason} lines={2} className="text-micro text-muted-foreground mt-0.5" />
-        )}
+        {line.discrepancyReason ? (
+          <div className="text-micro text-muted-foreground mt-0.5">
+            {GRN_DISCREPANCY_LABEL[line.discrepancyReason]}
+          </div>
+        ) : null}
+        {line.rejectionReason ? (
+          <TruncatedText
+            text={line.rejectionReason}
+            lines={2}
+            className="text-micro text-muted-foreground mt-0.5"
+          />
+        ) : null}
       </>
     ),
   },
@@ -85,26 +98,23 @@ const grnLineColumns: DataTableColumn<GrnLine>[] = [
       if (line.lotNumber) {
         return (
           <div>
-            <span className="text-muted-foreground text-micro">LOT:</span>{" "}
-            {line.lotNumber}
-            {line.expiryDate && (
+            <span className="text-muted-foreground text-micro">LOT:</span> {line.lotNumber}
+            {line.expiryDate ? (
               <div className="text-micro text-muted-foreground">
-                Exp: {formatDate(line.expiryDate)}
+                Exp: {formatShortDate(line.expiryDate)}
               </div>
-            )}
+            ) : null}
           </div>
         );
       }
-      if (line.serialNumbers && line.serialNumbers.length > 0) {
+      if (line.serials.length > 0) {
         return (
           <div>
             <span className="text-muted-foreground text-micro">S/N:</span>{" "}
-            {line.serialNumbers.slice(0, 3).join(", ")}
-            {line.serialNumbers.length > 3 && (
-              <span className="text-muted-foreground">
-                {" "}+{line.serialNumbers.length - 3} more
-              </span>
-            )}
+            {line.serials.slice(0, 3).map((s) => s.serialNumber).join(", ")}
+            {line.serials.length > 3 ? (
+              <span className="text-muted-foreground"> +{line.serials.length - 3} more</span>
+            ) : null}
           </div>
         );
       }
@@ -113,141 +123,99 @@ const grnLineColumns: DataTableColumn<GrnLine>[] = [
   },
 ];
 
+/**
+ * B1 — one delivery, at whatever stage of its life it is in.
+ *
+ * This used to be a read-only view of something that had already posted,
+ * because that was the only kind of receipt that could exist. It is now the
+ * workbench: the counted quantities beside what the order owed, the discrepancy
+ * the receiver noted, and the controls that move the document forward.
+ */
 export function GrnDetailSheet({ grnId, open, onOpenChange }: GrnDetailSheetProps) {
+  const canView = useCan(READ_PERMISSION);
+  const canReceive = useCan(RECEIVE_PERMISSION);
   const grnQuery = useGoodsReceipt(open ? grnId : 0);
-  const reverseMutation = useReverseGrn();
-  const [reverseOpen, setReverseOpen] = useState<boolean>(false);
-  const [reverseReason, setReverseReason] = useState<string>("");
-
-  function handleOpenReverseDialog(): void {
-    setReverseReason("");
-    setReverseOpen(true);
-  }
-
-  function handleCloseReverseDialog(): void {
-    setReverseOpen(false);
-    setReverseReason("");
-  }
-
-  function handleReverseReasonChange(e: React.ChangeEvent<HTMLInputElement>): void {
-    setReverseReason(e.target.value);
-  }
 
   function handleRefetchGrn(): void {
     void grnQuery.refetch();
   }
 
-  function handleConfirmReverse(): void {
-    if (!reverseReason.trim()) {
-      toast.error("Reversal reason is required");
-      return;
-    }
-    reverseMutation.mutate(
-      { grnId, reason: reverseReason.trim() },
-      {
-        onSuccess: () => {
-          toast.success("GRN reversed");
-          setReverseOpen(false);
-          onOpenChange(false);
-        },
-        onError: (error) => toast.error(getErrorMessage(error)),
-      },
-    );
+  function handleReversed(): void {
+    onOpenChange(false);
   }
 
   const grn = grnQuery.data;
 
   return (
-    <>
-      <AppSheet
-        open={open}
-        onOpenChange={onOpenChange}
-        title={grn ? `GRN ${grn.grnNumber}` : "Goods Receipt Note"}
-        description={grn ? `Received on ${formatDate(grn.receivedDate)}` : undefined}
-        footer={
-          grn ? (
-            <div className="w-full">
-              <LoadingButton
-                variant="destructive"
-                size="sm"
-                onClick={handleOpenReverseDialog}
-                isPending={reverseMutation.isPending}
-                loadingText="Reversing…"
-              >
-                Reverse GRN
-              </LoadingButton>
-            </div>
-          ) : undefined
-        }
-      >
-        {grnQuery.isLoading && <LoadingState variant="form" />}
-        {grnQuery.error && (
-          <ErrorState description={getErrorMessage(grnQuery.error)} onRetry={handleRefetchGrn} />
-        )}
-        {grn && (
-          <div className="space-y-4">
-            <Card className="p-4">
-              <dl className="grid grid-cols-2 gap-3 text-sm">
-                <dt className="text-muted-foreground">GRN Number</dt>
-                <dd className="font-mono">{grn.grnNumber}</dd>
-                <dt className="text-muted-foreground">Received Date</dt>
-                <dd className="font-mono tabular-nums">{formatDate(grn.receivedDate)}</dd>
-                {grn.notes && (
-                  <>
-                    <dt className="text-muted-foreground">Notes</dt>
-                    <dd className="col-span-1">{grn.notes}</dd>
-                  </>
-                )}
-              </dl>
-            </Card>
+    <AppSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title={grn ? `GRN ${grn.grnNumber}` : "Goods Receipt Note"}
+      description={grn ? `Received on ${formatShortDate(grn.receivedDate)}` : undefined}
+      footer={
+        grn ? (
+          <GrnLifecycleActions
+            grnId={grn.id}
+            grnNumber={grn.grnNumber}
+            status={grn.status}
+            canReceive={canReceive}
+            onReversed={handleReversed}
+          />
+        ) : undefined
+      }
+    >
+      {!canView ? <NoPermissionState permission={READ_PERMISSION} compact /> : null}
+      {canView && grnQuery.isLoading ? <LoadingState variant="form" /> : null}
+      {canView && grnQuery.error ? (
+        <ErrorState description={getErrorMessage(grnQuery.error)} onRetry={handleRefetchGrn} />
+      ) : null}
+      {canView && grn ? (
+        <div className="space-y-4">
+          <Card className="p-4">
+            <dl className="grid grid-cols-2 gap-3 text-sm">
+              <dt className="text-muted-foreground">Status</dt>
+              <dd>
+                <Badge
+                  variant="outline"
+                  className={cn("h-5 px-2 py-0.5 text-micro", GRN_STATUS_BADGE[grn.status])}
+                >
+                  {GRN_STATUS_LABEL[grn.status]}
+                </Badge>
+              </dd>
+              <dt className="text-muted-foreground">Purchase order</dt>
+              <dd className="font-mono">{grn.purchaseOrder?.poNumber ?? "—"}</dd>
+              <dt className="text-muted-foreground">Vendor</dt>
+              <dd>{grn.purchaseOrder?.vendor?.name ?? "—"}</dd>
+              <dt className="text-muted-foreground">Received date</dt>
+              <dd className="font-mono tabular-nums">{formatShortDate(grn.receivedDate)}</dd>
+              {grn.postedAt ? (
+                <>
+                  <dt className="text-muted-foreground">Posted</dt>
+                  <dd className="font-mono tabular-nums">
+                    {formatShortDate(grn.postedAt)}
+                    {grn.poster?.name ? (
+                      <span className="ml-1 font-sans text-muted-foreground">by {grn.poster.name}</span>
+                    ) : null}
+                  </dd>
+                </>
+              ) : null}
+              {grn.notes ? (
+                <>
+                  <dt className="text-muted-foreground">Notes</dt>
+                  <dd>{grn.notes}</dd>
+                </>
+              ) : null}
+            </dl>
+          </Card>
 
-            <div className="space-y-1.5">
-              <DataTable
-                data={grn.lines}
-                columns={grnLineColumns}
-                getRowKey={(line) => line.id}
-                minWidth="480px"
-              />
-            </div>
-          </div>
-        )}
-      </AppSheet>
-
-      <AlertDialog open={reverseOpen} onOpenChange={setReverseOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Reverse GRN?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will reverse all stock movements from this receipt. Provide a reason below.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="py-2 space-y-1.5">
-            <Label htmlFor="reverse-reason" className="text-sm">
-              Reason *
-            </Label>
-            <Input
-              id="reverse-reason"
-              value={reverseReason}
-              onChange={handleReverseReasonChange}
-              placeholder="e.g. Wrong items received"
-            />
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleCloseReverseDialog}>Cancel</AlertDialogCancel>
-            <AlertDialogAction asChild>
-              <LoadingButton
-                isPending={reverseMutation.isPending}
-                loadingText="Reversing…"
-                onClick={handleConfirmReverse}
-                disabled={reverseMutation.isPending || !reverseReason.trim()}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                Reverse GRN
-              </LoadingButton>
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+          <DataTable
+            data={grn.lines}
+            columns={grnLineColumns}
+            getRowKey={(line) => line.id}
+            minWidth="560px"
+          />
+        </div>
+      ) : null}
+    </AppSheet>
   );
 }

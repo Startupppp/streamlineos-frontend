@@ -5,10 +5,16 @@ import { AiActionsMenu, type AiAction } from "@/components/ai";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import type { SupplierDelayBriefing } from "@/hooks/api/inv-ai-explain";
+import type { ScorecardRate } from "@/types/inventory";
 
 interface VendorAiActionsProps {
   vendorId: number;
   vendorName: string;
+}
+
+function rateLine(rate: ScorecardRate, unit: string): string {
+  if (rate.percent === null) return `not measured (no ${unit})`;
+  return `${rate.percent}% over ${rate.sampleSize} ${unit}`;
 }
 
 function briefingToText(briefing: SupplierDelayBriefing): string {
@@ -25,11 +31,14 @@ function briefingToText(briefing: SupplierDelayBriefing): string {
 
   for (const v of briefing.vendors) {
     const p = v.performance;
+    // C4. Copied out verbatim, sample size included. A rate with no sample
+    // beside it is the shape that lets somebody quote "50% rejected" from two
+    // receipts, and this text is what a buyer pastes into an email.
     const metrics = [
-      `• On-Time Rate: ${(p.onTimeRate * 100).toFixed(1)}%`,
-      `• Fill Rate: ${(p.fillRate * 100).toFixed(1)}%`,
-      `• Avg Lead Time: ${p.avgLeadTimeDays} days`,
-      `• Return Rate: ${(p.returnRate * 100).toFixed(1)}%`,
+      `• On-Time Rate: ${rateLine(p.onTime, "orders")}`,
+      `• Line Fill Rate: ${rateLine(p.lineFill, "lines")}`,
+      `• Lead Time p90: ${p.leadTime.observations === 0 ? "not measured" : `${p.leadTime.p90Days} days over ${p.leadTime.observations} receipts`}`,
+      `• Return Rate: ${rateLine(p.returns, "returned lines")}`,
       `• Open POs: ${p.openPoCount}`,
       `• Delay Insights: ${v.insightCount}`,
     ].join("\n");

@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { PermissionKey } from "@/lib/rbac/permissions";
+import type { VendorScorecard } from "@/types/inventory";
 
 export interface ExplainFactor {
   label: string;
@@ -92,20 +93,17 @@ export interface ReorderProposalResponse {
   };
 }
 
-export interface VendorPerformance {
-  onTimeRate: number;
-  fillRate: number;
-  avgLeadTimeDays: number;
-  returnRate: number;
-  openPoCount: number;
-  totalSpend: number;
-}
-
 export interface SupplierDelayVendor {
   vendorId: string;
   vendorName: string;
   insights: unknown[];
-  performance: VendorPerformance;
+  /**
+   * C4. The same scorecard the vendor page renders, from the same service.
+   * The briefing used to declare its own `VendorPerformance` shape whose
+   * `totalSpend` was typed as cents and rendered as rupees — a hundredfold
+   * error nothing type-checked away, because the two declarations never met.
+   */
+  performance: VendorScorecard;
   insightCount: number;
 }
 

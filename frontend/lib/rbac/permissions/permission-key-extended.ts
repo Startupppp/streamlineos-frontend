@@ -214,6 +214,7 @@ export type ExtendedPermissionKey =
   | "inventory:ai:manage"
   | "inventory:ai:propose"
   | "inventory:ai:read"
+  | "inventory:audit:export"
   | "sales:manage"
   | "sales:view"
   | "self:onboarding-docs"

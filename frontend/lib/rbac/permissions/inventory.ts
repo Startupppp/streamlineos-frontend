@@ -48,5 +48,6 @@ export const INVENTORY_PERMISSIONS: Permission[] = [
   { name: "inventory:ai:manage", resource: "inventory:ai", action: "manage", description: "Dismiss or update AI-generated inventory insights" },
   { name: "inventory:ai:propose", resource: "inventory:ai", action: "propose", description: "Propose AI-generated reorder draft POs and confirm them" },
   { name: "inventory:export", resource: "inventory:export", action: "export", description: "Export inventory data" },
+  { name: "inventory:audit:export", resource: "inventory:audit", action: "export", description: "Take an immutable, checksummed audit export of the inventory ledger and audit trail" },
   { name: "inventory:import", resource: "inventory:import", action: "import", description: "Import inventory data" },
 ];

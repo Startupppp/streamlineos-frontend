@@ -179,14 +179,19 @@ export interface GoodsReceiptLine {
   productVariant?: { id: number; name: string; sku: string };
 }
 
+/** B1. Nothing but POSTED has stock behind it. */
+export type GoodsReceiptStatus = "DRAFT" | "COUNTING" | "QUALITY_REVIEW" | "POSTED" | "CANCELLED";
+
 export interface GoodsReceiptNote {
   id: number;
   orgId: string;
   poId: number;
   grnNumber: string;
+  status: GoodsReceiptStatus;
   receivedDate: string;
   locationId: number | null;
   notes: string | null;
+  postedAt: string | null;
   createdBy: string;
   createdAt: string;
   creator?: { id: string; name: string };
@@ -280,14 +285,73 @@ export interface ReceiveGoodsLineInput {
   serialNumbers?: string[];
 }
 
-export interface VendorPerformance {
+/**
+ * C4. A supplier rate never travels without the sample it rests on.
+ *
+ * `percent` is a decimal string the backend already rounded, and null when the
+ * denominator was zero — "nothing to measure" and "zero percent" are opposite
+ * claims about a vendor, and rendering both as 0.0% says the worst supplier on
+ * the list is flawless.
+ */
+export interface ScorecardRate {
+  percent: string | null;
+  numerator: string;
+  denominator: string;
+  sampleSize: number;
+  sufficient: boolean;
+}
+
+export interface VendorScorecard {
   vendorId: number;
-  onTimeRate: number;
-  fillRate: number;
-  returnRate: number;
-  avgLeadTimeDays: number;
+  leadTime: {
+    observations: number;
+    meanDays: number;
+    stdDevDays: number;
+    p50Days: number;
+    p90Days: number;
+    reliable: boolean;
+    note?: string;
+  };
+  onTime: ScorecardRate;
+  lineFill: ScorecardRate;
+  unitFill: ScorecardRate;
+  returns: ScorecardRate;
+  rejection: ScorecardRate;
+  discrepancy: ScorecardRate;
   openPoCount: number;
-  totalSpend: string;
+  spend: {
+    amount: string;
+    currency: string;
+    excludedCurrencies: string[];
+  };
+  notes: string[];
+}
+
+/** One purchase order behind the rates, with the receipts that settled it. */
+export interface VendorDelivery {
+  poId: number;
+  poNumber: string;
+  status: PurchaseOrderStatus;
+  orderDate: string;
+  expectedDeliveryDate: string | null;
+  firstReceiptDate: string | null;
+  daysToReceive: number | null;
+  onTime: boolean | null;
+  orderedQty: string;
+  receivedQty: string;
+  lines: number;
+  linesInFull: number;
+  receiptCount: number;
+  receiptIds: number[];
+  total: string;
+  currency: string;
+}
+
+export interface VendorDeliveriesResponse {
+  items: VendorDelivery[];
+  total: number;
+  page: number;
+  totalPages: number;
 }
 
 export interface WarehouseStockRow {

@@ -25,7 +25,7 @@ import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { useVendors } from "@/hooks/api/inventory/vendors";
 import { useWarehouses, useLocations } from "@/hooks/api/inventory/warehouses";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { useCreateVendorReturn } from "@/hooks/api/inventory/operations";
+import { useCreateVendorReturn } from "@/hooks/api/inventory/returns";
 import { usePurchaseOrders } from "@/hooks/api/inventory/purchase-orders";
 import { useProductVariants } from "@/hooks/api/inventory/products";
 import { getErrorMessage } from "@/lib/get-error-message";

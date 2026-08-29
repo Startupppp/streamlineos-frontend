@@ -23,23 +23,16 @@ import {
 } from "@/components/ui/form";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { useCreateCustomerReturn } from "@/hooks/api/inventory/operations";
+import { useCreateCustomerReturn } from "@/hooks/api/inventory/returns";
 import { useSalesOrders } from "@/hooks/api/inventory/sales-orders";
 import { useProductVariants } from "@/hooks/api/inventory/products";
 import { useWarehouses, useLocations } from "@/hooks/api/inventory/warehouses";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-const DISPOSITIONS = [
-  { value: "RESTOCK", label: "Restock" },
-  { value: "QUARANTINE", label: "Quarantine" },
-  { value: "SCRAP", label: "Scrap" },
-] as const;
-
 const lineSchema = z.object({
   productVariantId: z.number({ error: "Required" }).int().positive(),
   quantity: decimalQuantitySchema,
   reason: z.string().min(1, "Reason is required").max(500),
-  disposition: z.enum(["RESTOCK", "QUARANTINE", "SCRAP"]),
   targetLocationId: z.number().int().positive().optional(),
 });
 
@@ -105,7 +98,7 @@ export function CustomerReturnSheet({ open, onOpenChange }: CustomerReturnSheetP
     resolver: zodResolver(formSchema),
     defaultValues: {
       notes: "",
-      lines: [{ productVariantId: 0, quantity: "1", reason: "", disposition: "RESTOCK", targetLocationId: undefined }],
+      lines: [{ productVariantId: 0, quantity: "1", reason: "", targetLocationId: undefined }],
     },
   });
 
@@ -122,7 +115,7 @@ export function CustomerReturnSheet({ open, onOpenChange }: CustomerReturnSheetP
   }
 
   function handleAddLine(): void {
-    append({ productVariantId: 0, quantity: "1", reason: "", disposition: "RESTOCK", targetLocationId: undefined });
+    append({ productVariantId: 0, quantity: "1", reason: "", targetLocationId: undefined });
   }
 
   function handleRemoveLine(index: number): void {
@@ -138,7 +131,6 @@ export function CustomerReturnSheet({ open, onOpenChange }: CustomerReturnSheetP
           productVariantId: l.productVariantId,
           quantity: l.quantity,
           reason: l.reason,
-          disposition: l.disposition,
           targetLocationId: l.targetLocationId,
         })),
       });
@@ -154,7 +146,7 @@ export function CustomerReturnSheet({ open, onOpenChange }: CustomerReturnSheetP
       open={open}
       onOpenChange={handleOpenChange}
       title="New Customer Return"
-      description="Create a return merchandise authorization for a customer."
+      description="Log what the customer says came back. What happens to it is decided at inspection."
       footer={
         <div className="grid grid-cols-2 gap-2 w-full">
           <Button variant="outline" size="sm" onClick={handleClose}>
@@ -266,28 +258,6 @@ export function CustomerReturnSheet({ open, onOpenChange }: CustomerReturnSheetP
                             onChange={(e) => f.onChange(e.target.value)}
                           />
                         </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name={`lines.${index}.disposition`}
-                    render={({ field: f }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">Disposition *</FormLabel>
-                        <Select value={f.value} onValueChange={f.onChange}>
-                          <FormControl>
-                            <SelectTrigger className="text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {DISPOSITIONS.map((d) => (
-                              <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}

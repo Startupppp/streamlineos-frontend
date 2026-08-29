@@ -3,6 +3,9 @@ export type SoStatus = "DRAFT" | "CONFIRMED" | "PARTIALLY_RESERVED" | "RESERVED"
 export type TransferStatus = "PENDING" | "RESERVED" | "IN_TRANSIT" | "COMPLETED" | "CANCELLED";
 export type AdjustmentStatus = "DRAFT" | "PENDING_APPROVAL" | "APPROVED" | "POSTED" | "CANCELLED";
 export type GrnQuality = "ACCEPTED" | "REJECTED";
+/** B1. A goods receipt has a life before it posts stock. */
+export type GrnStatus = "DRAFT" | "COUNTING" | "QUALITY_REVIEW" | "POSTED" | "CANCELLED";
+export type GrnDiscrepancyReason = "SHORT" | "OVER" | "DAMAGED" | "WRONG_ITEM";
 export type CycleCountStatus = "PLANNED" | "COUNTING" | "REVIEW" | "POSTED" | "CANCELLED";
 export type InspectionStatus = "PENDING" | "IN_PROGRESS" | "PASSED" | "FAILED" | "DISPOSITION_REQUIRED" | "COMPLETED" | "CANCELLED";
 export type ShipmentStatus = "DRAFT" | "PACKED" | "LABEL_CREATED" | "SHIPPED" | "DELIVERED" | "CANCELLED";
@@ -15,6 +18,12 @@ export type SyncStatus = "IDLE" | "SYNCING" | "SUCCESS" | "ERROR" | "PAUSED";
 export type QualityHoldStatus = "ACTIVE" | "RELEASED" | "EXPIRED";
 export type RecallStatus = "OPEN" | "IN_PROGRESS" | "CLOSED";
 export type PackageStatus = "OPEN" | "CLOSED" | "SHIPPED";
+/** B4. Where a pick wave is in its walk. */
+export type PickWaveStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+export type PickExceptionReason = "SHORT" | "NOT_FOUND" | "DAMAGED" | "SUBSTITUTED";
+/** B3. Where a putaway task is between the receiving dock and the shelf. */
+export type PutawayTaskStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+export type PutawayDisposition = "STORAGE" | "QUARANTINE";
 
 const INFO = "bg-status-info-surface text-status-info-ink border-status-info-rule";
 const SUCCESS = "bg-status-success-surface text-status-success-ink border-status-success-rule";
@@ -108,6 +117,34 @@ export const GRN_QUALITY_BADGE: Record<GrnQuality, string> = {
 export const GRN_QUALITY_LABEL: Record<GrnQuality, string> = {
   ACCEPTED: "Accepted",
   REJECTED: "Rejected",
+};
+
+/**
+ * Only POSTED has stock behind it, so it is the only tone that reads as done.
+ * COUNTING and QUALITY_REVIEW are warnings because a receipt sitting in either
+ * is a delivery the warehouse has taken in and not yet accounted for.
+ */
+export const GRN_STATUS_BADGE: Record<GrnStatus, string> = {
+  DRAFT: INFO,
+  COUNTING: WARNING,
+  QUALITY_REVIEW: WARNING,
+  POSTED: SUCCESS,
+  CANCELLED: DANGER,
+};
+
+export const GRN_STATUS_LABEL: Record<GrnStatus, string> = {
+  DRAFT: "Draft",
+  COUNTING: "Counting",
+  QUALITY_REVIEW: "Quality review",
+  POSTED: "Posted",
+  CANCELLED: "Cancelled",
+};
+
+export const GRN_DISCREPANCY_LABEL: Record<GrnDiscrepancyReason, string> = {
+  SHORT: "Short delivery",
+  OVER: "Over-receipt",
+  DAMAGED: "Damaged",
+  WRONG_ITEM: "Wrong item",
 };
 
 export const CYCLE_COUNT_STATUS_BADGE: Record<CycleCountStatus, string> = {
@@ -294,4 +331,49 @@ export const PACKAGE_STATUS_LABEL: Record<PackageStatus, string> = {
   OPEN: "Open",
   CLOSED: "Closed",
   SHIPPED: "Shipped",
+};
+
+export const PICK_WAVE_STATUS_BADGE: Record<PickWaveStatus, string> = {
+  PENDING: INFO,
+  IN_PROGRESS: WARNING,
+  COMPLETED: SUCCESS,
+  CANCELLED: DANGER,
+};
+
+export const PICK_WAVE_STATUS_LABEL: Record<PickWaveStatus, string> = {
+  PENDING: "Waiting",
+  IN_PROGRESS: "Walking",
+  COMPLETED: "Done",
+  CANCELLED: "Cancelled",
+};
+
+export const PICK_EXCEPTION_LABEL: Record<PickExceptionReason, string> = {
+  SHORT: "Short",
+  NOT_FOUND: "Not found",
+  DAMAGED: "Damaged",
+  SUBSTITUTED: "Substituted",
+};
+
+export const PUTAWAY_TASK_STATUS_BADGE: Record<PutawayTaskStatus, string> = {
+  PENDING: INFO,
+  IN_PROGRESS: WARNING,
+  COMPLETED: SUCCESS,
+  CANCELLED: NEUTRAL,
+};
+
+export const PUTAWAY_TASK_STATUS_LABEL: Record<PutawayTaskStatus, string> = {
+  PENDING: "Waiting",
+  IN_PROGRESS: "Walking",
+  COMPLETED: "Done",
+  CANCELLED: "Cancelled",
+};
+
+export const PUTAWAY_DISPOSITION_BADGE: Record<PutawayDisposition, string> = {
+  STORAGE: NEUTRAL,
+  QUARANTINE: DANGER,
+};
+
+export const PUTAWAY_DISPOSITION_LABEL: Record<PutawayDisposition, string> = {
+  STORAGE: "Storage",
+  QUARANTINE: "Quarantine",
 };

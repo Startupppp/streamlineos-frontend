@@ -1,10 +1,22 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+  type UseQueryOptions,
+} from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
-import type { InventoryVendor, CreateVendorInput, UpdateVendorInput, VendorPerformance } from "@/types/inventory";
+import type {
+  InventoryVendor,
+  CreateVendorInput,
+  UpdateVendorInput,
+  VendorScorecard,
+  VendorDeliveriesResponse,
+} from "@/types/inventory";
 
 type VendorFilters = {
   search?: string;
@@ -73,18 +85,52 @@ export function useUpdateVendor(vendorId?: number) {
     onSuccess: (_, variables) => {
       const targetId = vendorId ?? variables.id;
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.vendors() });
-      if (targetId) void qc.invalidateQueries({ queryKey: queryKeys.inventory.vendor(targetId) });
+      if (targetId) {
+        void qc.invalidateQueries({ queryKey: queryKeys.inventory.vendor(targetId) });
+        // The scorecard reports spend in the vendor's own currency, so editing
+        // that field moves a number the card renders.
+        void qc.invalidateQueries({ queryKey: queryKeys.vendorScorecard.card(targetId) });
+      }
     },
   });
 }
 
-export function useVendorPerformance(vendorId: number) {
+/**
+ * C4. Every supplier number the page renders comes from here — the backend
+ * derives them once and the component does no arithmetic of its own.
+ */
+export function useVendorPerformance(
+  vendorId: number,
+  options?: Omit<UseQueryOptions<VendorScorecard, Error>, "queryKey" | "queryFn">,
+) {
   const canView = useCan("inventory:vendors:read");
-  return useQuery<VendorPerformance, Error>({
-    queryKey: [...queryKeys.inventory.vendor(vendorId), "performance"],
-    queryFn: () => apiClient.get<VendorPerformance>(`/inventory/vendors/${vendorId}/performance`),
+  return useQuery<VendorScorecard, Error>({
+    ...options,
+    queryKey: queryKeys.vendorScorecard.card(vendorId),
+    queryFn: () => apiClient.get<VendorScorecard>(`/inventory/vendors/${vendorId}/performance`),
     staleTime: 5 * 60_000,
-    enabled: canView && vendorId > 0,
+    enabled: canView && vendorId > 0 && (options?.enabled ?? true),
+  });
+}
+
+/** The purchase orders and receipts a rate was computed from. */
+export function useVendorDeliveries(
+  vendorId: number,
+  params: { page: number; limit: number },
+  options?: Omit<UseQueryOptions<VendorDeliveriesResponse, Error>, "queryKey" | "queryFn">,
+) {
+  const canView = useCan("inventory:vendors:read");
+  return useQuery<VendorDeliveriesResponse, Error>({
+    ...options,
+    queryKey: queryKeys.vendorScorecard.deliveries(vendorId, params),
+    queryFn: () =>
+      apiClient.get<VendorDeliveriesResponse>(`/inventory/vendors/${vendorId}/deliveries`, {
+        page: String(params.page),
+        limit: String(params.limit),
+      }),
+    staleTime: 2 * 60_000,
+    placeholderData: keepPreviousData,
+    enabled: canView && vendorId > 0 && (options?.enabled ?? true),
   });
 }
 

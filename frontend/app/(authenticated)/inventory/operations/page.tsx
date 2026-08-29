@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpFromLine, ListChecks, Package, Truck, RotateCcw } from "lucide-react";
+import { ArrowUpFromLine, ListChecks, PackagePlus, Package, Truck, RotateCcw } from "lucide-react";
 import { PackageOpenIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
@@ -10,7 +10,7 @@ import { useSalesOrders } from "@/hooks/api/inventory/sales-orders";
 import {
   useVendorReturns,
   useCustomerReturns,
-} from "@/hooks/api/inventory/operations";
+} from "@/hooks/api/inventory/returns";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 
 interface StaticHubCard {
@@ -26,6 +26,12 @@ const STATIC_CARDS: StaticHubCard[] = [
     title: "Issues",
     description: "Outbound stock movements",
     Icon: ArrowUpFromLine,
+  },
+  {
+    href: "/inventory/operations/putaway",
+    title: "Putaway",
+    description: "Move deliveries from the dock to the shelves",
+    Icon: PackagePlus,
   },
   {
     href: "/inventory/operations/picking",
@@ -80,8 +86,8 @@ export default function OperationsHubPage() {
   const soReserved = useSalesOrders({ status: "RESERVED", limit: 1 });
   const soPicked = useSalesOrders({ status: "PICKED", limit: 1 });
   const soPacked = useSalesOrders({ status: "PACKED", limit: 1 });
-  const vendorDrafts = useVendorReturns({ status: "DRAFT", pageSize: 1 });
-  const customerDrafts = useCustomerReturns({ status: "DRAFT", pageSize: 1 });
+  const vendorDrafts = useVendorReturns({ status: "DRAFT", limit: 1 });
+  const customerDrafts = useCustomerReturns({ status: "DRAFT", limit: 1 });
 
   const soToFulfilTotal =
     (soReserved.data?.total ?? 0) + (soPicked.data?.total ?? 0);

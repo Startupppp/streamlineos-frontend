@@ -91,6 +91,8 @@ export const inventoryQueryKeys = {
       [...base, "inventory", "physicalAudits", params] as const,
     physicalAudit: (physicalAuditId: number) =>
       [...base, "inventory", "physicalAudit", physicalAuditId] as const,
+    /** Params-less prefix, for invalidation. See `productsList`. */
+    goodsReceiptsList: [...base, "inventory", "goodsReceipts"] as const,
     goodsReceipts: (params?: Record<string, unknown>) =>
       [...base, "inventory", "goodsReceipts", params] as const,
     goodsReceipt: (goodsReceiptId: number) =>

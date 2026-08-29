@@ -10,32 +10,32 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AiGeneratedLabel } from "@/components/ai/ai-generated-label";
 import { NoPermissionState } from "@/components/shared";
 import { useCan } from "@/hooks/api/access";
+import { useOrgDisplay } from "@/hooks/api/org-display";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatMoneyCompact } from "@/lib/format-utils";
+import type { ScorecardRate } from "@/types/inventory";
 import {
   useSupplierDelayBriefing,
   type SupplierDelayVendor,
 } from "@/hooks/api/inv-ai-explain";
 
-function formatPercent(value: number): string {
-  return `${(value * 100).toFixed(1)}%`;
-}
-
-function formatCurrency(cents: number): string {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(cents / 100);
+/**
+ * C4. The rates arrive already derived and already rounded; this file computes
+ * nothing. It used to multiply by a hundred here, and divide spend by a hundred
+ * as if an 18,4 decimal were cents, in rupees regardless of the organisation.
+ */
+function displayPercent(rate: ScorecardRate): string {
+  return rate.percent === null ? "—" : `${rate.percent}%`;
 }
 
 interface VendorMetricProps {
   label: string;
   value: string;
+  hint?: string;
   highlight?: boolean;
 }
 
-const VendorMetric = memo(function VendorMetric({ label, value, highlight }: VendorMetricProps) {
+const VendorMetric = memo(function VendorMetric({ label, value, hint, highlight }: VendorMetricProps) {
   return (
     <div className="flex flex-col gap-0.5 rounded-md border border-border bg-muted/40 px-2 py-1.5">
       <span className="text-micro text-muted-foreground">{label}</span>
@@ -44,6 +44,7 @@ const VendorMetric = memo(function VendorMetric({ label, value, highlight }: Ven
       >
         {value}
       </span>
+      {hint ? <span className="text-micro text-muted-foreground">{hint}</span> : null}
     </div>
   );
 });
@@ -53,8 +54,10 @@ interface VendorDelayCardProps {
 }
 
 const VendorDelayCard = memo(function VendorDelayCard({ vendor }: VendorDelayCardProps) {
+  const display = useOrgDisplay();
   const p = vendor.performance;
-  const lowOnTime = p.onTimeRate < 0.8;
+  // A threshold comparison for a colour, never a displayed value.
+  const lowOnTime = p.onTime.percent !== null && Number(p.onTime.percent) < 80;
 
   return (
     <div className="rounded-lg border border-border bg-card p-3 space-y-2.5">
@@ -74,12 +77,32 @@ const VendorDelayCard = memo(function VendorDelayCard({ vendor }: VendorDelayCar
       </div>
 
       <div className="grid grid-cols-3 gap-1.5">
-        <VendorMetric label="On-Time Rate" value={formatPercent(p.onTimeRate)} highlight={lowOnTime} />
-        <VendorMetric label="Fill Rate" value={formatPercent(p.fillRate)} />
-        <VendorMetric label="Avg Lead Time" value={`${p.avgLeadTimeDays}d`} />
-        <VendorMetric label="Return Rate" value={formatPercent(p.returnRate)} />
+        <VendorMetric
+          label="On-Time Rate"
+          value={displayPercent(p.onTime)}
+          hint={`over ${p.onTime.sampleSize} orders`}
+          highlight={lowOnTime}
+        />
+        <VendorMetric
+          label="Line Fill Rate"
+          value={displayPercent(p.lineFill)}
+          hint={`over ${p.lineFill.sampleSize} lines`}
+        />
+        <VendorMetric
+          label="Lead Time p90"
+          value={p.leadTime.observations === 0 ? "—" : `${p.leadTime.p90Days}d`}
+          hint={`${p.leadTime.observations} receipts`}
+        />
+        <VendorMetric
+          label="Return Rate"
+          value={displayPercent(p.returns)}
+          hint={`over ${p.returns.sampleSize} returned lines`}
+        />
         <VendorMetric label="Open POs" value={String(p.openPoCount)} />
-        <VendorMetric label="Total Spend" value={formatCurrency(p.totalSpend)} />
+        <VendorMetric
+          label="Spend"
+          value={formatMoneyCompact(p.spend.amount, { ...display, currency: p.spend.currency })}
+        />
       </div>
     </div>
   );

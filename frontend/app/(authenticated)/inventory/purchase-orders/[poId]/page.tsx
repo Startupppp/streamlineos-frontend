@@ -23,6 +23,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
+import {
+  GRN_STATUS_BADGE,
+  GRN_STATUS_LABEL,
+  type GrnStatus,
+} from "@/features/inventory/lib/inventory-status";
 import {
   usePurchaseOrder,
   useSendPurchaseOrder,
@@ -46,6 +52,7 @@ type ConfirmAction = "cancel" | "close";
 type GrnRow = {
   id: number;
   grnNumber: string;
+  status: GrnStatus;
   receivedDate: string | null;
   creator?: { name: string } | null;
   notes?: string | null;
@@ -142,6 +149,20 @@ function buildGrnColumns(onRowClick: (id: number) => void): DataTableColumn<GrnR
       ),
     },
     {
+      // B1. A receipt on this order may be a draft nobody has posted, which is
+      // the difference between "these goods are in stock" and "a lorry arrived".
+      key: "status",
+      header: "Status",
+      cell: (row) => (
+        <Badge
+          variant="outline"
+          className={cn("h-4 px-1.5 py-0 text-micro", GRN_STATUS_BADGE[row.status])}
+        >
+          {GRN_STATUS_LABEL[row.status]}
+        </Badge>
+      ),
+    },
+    {
       key: "receivedDate",
       header: "Received date",
       className: "font-mono tabular-nums",
@@ -169,6 +190,13 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
   const approveMutation = useApprovePurchaseOrder(id);
   const closeMutation = useClosePurchaseOrder(id);
   const cancelMutation = useCancelPurchaseOrder(id);
+
+  /**
+   * B1. The exact key `POST /purchase-orders/:poId/receive` and every goods-receipt
+   * route carries. The receive control was offered on document status alone, so a
+   * clerk without it was shown a button that could only ever 403.
+   */
+  const canReceiveGoods = useCan("inventory:purchase-orders:receive");
 
   const [receiveSheetOpen, setReceiveSheetOpen] = useState<boolean>(false);
   const [editSheetOpen, setEditSheetOpen] = useState<boolean>(false);
@@ -266,7 +294,8 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
   const canEdit = status === "DRAFT";
   const canApprove = status === "DRAFT";
   const canSend = status === "DRAFT";
-  const canReceive = (status === "SENT" || status === "PARTIAL") && pendingLines.length > 0;
+  const canReceive =
+    canReceiveGoods && (status === "SENT" || status === "PARTIAL") && pendingLines.length > 0;
   const canClose = status === "PARTIAL" || status === "RECEIVED";
   const canCancel = status === "DRAFT" || status === "SENT" || status === "PARTIAL";
 

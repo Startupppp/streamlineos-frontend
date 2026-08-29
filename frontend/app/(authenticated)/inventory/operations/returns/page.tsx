@@ -1,69 +1,86 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
-import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
-import { ErrorState } from "@/components/shared";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
+import { NoPermissionState } from "@/components/shared";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { Tabs, TabsContent, TabsList, TabsTrigger, TABS_CONTENT_PAGE_BODY_CLASS } from "@/components/ui/tabs";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { cn } from "@/lib/utils";
+import { useCan } from "@/hooks/api/access";
 import {
-  useVendorReturns,
-  useCustomerReturns,
-  usePostVendorReturn,
-  useCancelVendorReturn,
-  usePostCustomerReturn,
-  useCancelCustomerReturn,
-  type VendorReturnSummary,
-  type CustomerReturnSummary,
-  type VendorReturnStatus,
-  type CustomerReturnStatus,
-} from "@/hooks/api/inventory/operations";
+  CUSTOMER_RETURNS_PERMISSION,
+  VENDOR_RETURNS_PERMISSION,
+  type ReturnStatus,
+} from "@/hooks/api/inventory/returns";
 import { VendorReturnSheet } from "@/features/inventory/components/operations/vendor-return-sheet";
 import { CustomerReturnSheet } from "@/features/inventory/components/operations/customer-return-sheet";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { VendorReturnsTable } from "@/features/inventory/components/operations/vendor-returns-table";
+import { CustomerReturnsTable } from "@/features/inventory/components/operations/customer-returns-table";
 
-type ReturnStatus = "DRAFT" | "POSTED" | "CANCELLED";
+const PAGE_LIMIT = 20;
 
-const RETURN_STATUS_BADGE: Record<ReturnStatus, string> = {
-  DRAFT: "bg-status-info-surface text-status-info-ink border-status-info-rule",
-  POSTED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
-  CANCELLED: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
+/**
+ * Status is a Select, not more Tabs triggers: the two Tabs this page has are
+ * content categories, and a status filter built from them is AP-2. The first
+ * option is an "all" sentinel that *removes* the query param rather than
+ * setting it to "all" (§9).
+ */
+const RETURN_STATUSES: ReturnStatus[] = ["DRAFT", "APPROVED", "POSTED", "CANCELLED"];
+
+const RETURN_STATUS_FILTER_LABEL: Readonly<Record<ReturnStatus, string>> = {
+  DRAFT: "Draft",
+  APPROVED: "Approved",
+  POSTED: "Posted",
+  CANCELLED: "Cancelled",
 };
 
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
+function parseStatus(value: string | null): ReturnStatus | undefined {
+  return RETURN_STATUSES.find((status) => status === value);
 }
 
-function ReturnStatusBadge({ status }: { status: VendorReturnStatus | CustomerReturnStatus }) {
-  const cls = RETURN_STATUS_BADGE[status] ?? "bg-muted text-muted-foreground border-border";
-  return (
-    <Badge variant="outline" className={cn("h-4 text-micro px-1.5 py-0", cls)}>
-      {status}
-    </Badge>
-  );
-}
+function ReturnsPageInner() {
+  const canVendor = useCan(VENDOR_RETURNS_PERMISSION);
+  const canCustomer = useCan(CUSTOMER_RETURNS_PERMISSION);
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
-export default function ReturnsPage() {
   const [vendorSheetOpen, setVendorSheetOpen] = useState(false);
   const [customerSheetOpen, setCustomerSheetOpen] = useState(false);
 
-  const vendorQuery = useVendorReturns({ pageSize: 50 });
-  const customerQuery = useCustomerReturns({ pageSize: 50 });
-  const postVendorMutation = usePostVendorReturn();
-  const cancelVendorMutation = useCancelVendorReturn();
-  const postCustomerMutation = usePostCustomerReturn();
-  const cancelCustomerMutation = useCancelCustomerReturn();
+  const tab = searchParams.get("tab") === "customer" ? "customer" : "vendor";
+  const status = parseStatus(searchParams.get("status"));
+  const page = Math.max(1, Number(searchParams.get("page") ?? "1"));
 
-  const vendorItems = vendorQuery.data?.items ?? [];
-  const customerItems = customerQuery.data?.items ?? [];
+  function updateParams(updates: Record<string, string | null>): void {
+    const params = new URLSearchParams(searchParams.toString());
+    for (const [key, value] of Object.entries(updates)) {
+      if (!value) params.delete(key);
+      else params.set(key, value);
+    }
+    // Any filter or tab change resets the page, or page 3 of one view becomes
+    // an empty page 3 of another.
+    params.delete("page");
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }
+
+  function handleStatusChange(value: string): void {
+    updateParams({ status: value === "all" ? null : value });
+  }
+
+  function handleTabChange(value: string): void {
+    updateParams({ tab: value === "vendor" ? null : value });
+  }
+
+  function handlePageChange(nextPage: number): void {
+    const params = new URLSearchParams(searchParams.toString());
+    if (nextPage <= 1) params.delete("page");
+    else params.set("page", String(nextPage));
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }
 
   function handleOpenVendorSheet(): void {
     setVendorSheetOpen(true);
@@ -73,262 +90,94 @@ export default function ReturnsPage() {
     setCustomerSheetOpen(true);
   }
 
-  const handlePostVendorReturn = useCallback((id: number): void => {
-    postVendorMutation.mutate(
-      { returnId: id },
-      {
-        onSuccess: () => toast.success("Vendor return posted"),
-        onError: (err) => toast.error(getErrorMessage(err)),
-      },
-    );
-  }, [postVendorMutation]);
-
-  const handleCancelVendorReturn = useCallback((id: number): void => {
-    cancelVendorMutation.mutate(
-      { returnId: id },
-      {
-        onSuccess: () => toast.success("Vendor return cancelled"),
-        onError: (err) => toast.error(getErrorMessage(err)),
-      },
-    );
-  }, [cancelVendorMutation]);
-
-  const handlePostCustomerReturn = useCallback((id: number): void => {
-    postCustomerMutation.mutate(
-      { returnId: id },
-      {
-        onSuccess: () => toast.success("Customer return posted"),
-        onError: (err) => toast.error(getErrorMessage(err)),
-      },
-    );
-  }, [postCustomerMutation]);
-
-  const handleCancelCustomerReturn = useCallback((id: number): void => {
-    cancelCustomerMutation.mutate(
-      { returnId: id },
-      {
-        onSuccess: () => toast.success("Customer return cancelled"),
-        onError: (err) => toast.error(getErrorMessage(err)),
-      },
-    );
-  }, [cancelCustomerMutation]);
-
-  function handleVendorRetry(): void {
-    void vendorQuery.refetch();
-  }
-
-  function handleCustomerRetry(): void {
-    void customerQuery.refetch();
-  }
-
-  const vendorColumns = useMemo((): DataTableColumn<VendorReturnSummary>[] => [
-    {
-      key: "returnNumber",
-      header: "Return #",
-      cell: (r) => <span className="font-mono text-dense">{r.returnNumber}</span>,
-      sortable: true,
-      sortValue: (r) => r.returnNumber,
-    },
-    { key: "vendorName", header: "Vendor", cell: (r) => r.vendorName ?? "—" },
-    {
-      key: "poId",
-      header: "PO ID",
-      cell: (r) => <span className="font-mono text-dense text-muted-foreground">{r.poId ?? "—"}</span>,
-      className: "hidden md:table-cell",
-      headerClassName: "hidden md:table-cell",
-    },
-    {
-      key: "status",
-      header: "Status",
-      cell: (r) => <ReturnStatusBadge status={r.status} />,
-    },
-    {
-      key: "createdAt",
-      header: "Created",
-      cell: (r) => <span className="font-mono tabular-nums text-dense">{formatDate(r.createdAt)}</span>,
-    },
-    {
-      key: "actions",
-      header: "",
-      cell: (r) => {
-        function handlePost(): void { handlePostVendorReturn(r.id); }
-        function handleCancel(): void { handleCancelVendorReturn(r.id); }
-        return r.status === "DRAFT" ? (
-          <div className="flex items-center gap-1.5">
-            <LoadingButton
-              variant="outline"
-              size="sm"
-              className="h-6 text-micro px-2"
-              onClick={handlePost}
-              isPending={postVendorMutation.isPending}
-              loadingText="Posting…"
-            >
-              Post
-            </LoadingButton>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-6 text-micro px-2 text-destructive">
-                  Cancel
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Cancel this return?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Keep</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={handleCancel}
-                    variant="destructive"
-                  >
-                    Cancel Return
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
-        ) : null;
-      },
-    },
-  ], [handlePostVendorReturn, handleCancelVendorReturn, postVendorMutation.isPending]);
-
-  const customerColumns = useMemo((): DataTableColumn<CustomerReturnSummary>[] => [
-    {
-      key: "returnNumber",
-      header: "Return #",
-      cell: (r) => <span className="font-mono text-dense">{r.returnNumber}</span>,
-      sortable: true,
-      sortValue: (r) => r.returnNumber,
-    },
-    { key: "customerName", header: "Customer", cell: (r) => r.customerName ?? "—" },
-    {
-      key: "soId",
-      header: "SO ID",
-      cell: (r) => <span className="font-mono text-dense text-muted-foreground">{r.soId ?? "—"}</span>,
-      className: "hidden md:table-cell",
-      headerClassName: "hidden md:table-cell",
-    },
-    {
-      key: "status",
-      header: "Status",
-      cell: (r) => <ReturnStatusBadge status={r.status} />,
-    },
-    {
-      key: "createdAt",
-      header: "Created",
-      cell: (r) => <span className="font-mono tabular-nums text-dense">{formatDate(r.createdAt)}</span>,
-    },
-    {
-      key: "actions",
-      header: "",
-      cell: (r) => {
-        function handlePost(): void { handlePostCustomerReturn(r.id); }
-        function handleCancel(): void { handleCancelCustomerReturn(r.id); }
-        return r.status === "DRAFT" ? (
-          <div className="flex items-center gap-1.5">
-            <LoadingButton
-              variant="outline"
-              size="sm"
-              className="h-6 text-micro px-2"
-              onClick={handlePost}
-              isPending={postCustomerMutation.isPending}
-              loadingText="Posting…"
-            >
-              Post
-            </LoadingButton>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-6 text-micro px-2 text-destructive">
-                  Cancel
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Cancel this return?</AlertDialogTitle>
-                  <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Keep</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={handleCancel}
-                    variant="destructive"
-                  >
-                    Cancel Return
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
-        ) : null;
-      },
-    },
-  ], [handlePostCustomerReturn, handleCancelCustomerReturn, postCustomerMutation.isPending]);
-
   return (
     <PageWrapper
       title="Returns"
-      subtitle="Manage vendor and customer return merchandise authorizations"
+      subtitle="Goods coming back, in both directions — inspected, approved, then posted"
+      filters={
+        <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
+          <Select value={status ?? "all"} onValueChange={handleStatusChange}>
+            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-44")}>
+              <SelectValue placeholder="All statuses" />
+            </SelectTrigger>
+            <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
+              <SelectItem value="all">All statuses</SelectItem>
+              {RETURN_STATUSES.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {RETURN_STATUS_FILTER_LABEL[option]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      }
     >
-      <div className="flex flex-1 min-h-0 flex-col gap-4">
-      <Tabs defaultValue="vendor" className="flex flex-1 min-h-0 flex-col">
-        <TabsList className="mb-4">
-          <TabsTrigger value="vendor">Vendor Returns</TabsTrigger>
-          <TabsTrigger value="customer">Customer Returns</TabsTrigger>
-        </TabsList>
+      <div className="flex min-h-0 flex-1 flex-col gap-4">
+        <Tabs value={tab} onValueChange={handleTabChange} className="flex min-h-0 flex-1 flex-col">
+          <TabsList className="mb-4">
+            <TabsTrigger value="vendor">Vendor Returns</TabsTrigger>
+            <TabsTrigger value="customer">Customer Returns</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="vendor" className={TABS_CONTENT_PAGE_BODY_CLASS}>
-          <div className="flex justify-end mb-3">
-            <Button size="sm" onClick={handleOpenVendorSheet}>
-              New Vendor Return
-            </Button>
-          </div>
-          <DataTable
-            data={vendorItems}
-            columns={vendorColumns}
-            className="flex-1 min-h-0"
-            getRowKey={(r) => r.id}
-            isLoading={vendorQuery.isLoading}
-            emptyState={
-              vendorQuery.error ? (
-                <ErrorState description={getErrorMessage(vendorQuery.error)} onRetry={handleVendorRetry} compact />
-              ) : (
-                <InventoryEmptyState title="No vendor returns" description="Create a vendor return to get started." compact />
-              )
-            }
-            minWidth="580px"
-          />
-        </TabsContent>
+          {/*
+            Only the open tab is mounted, which is also the query gate: two
+            tables both fetching on every visit would double the load for a page
+            where one of them is always hidden.
+          */}
+          <TabsContent value="vendor" className={TABS_CONTENT_PAGE_BODY_CLASS}>
+            {!canVendor ? (
+              <NoPermissionState permission={VENDOR_RETURNS_PERMISSION} />
+            ) : (
+              <>
+                <div className="mb-3 flex justify-end">
+                  <Button size="sm" onClick={handleOpenVendorSheet}>
+                    New Vendor Return
+                  </Button>
+                </div>
+                <VendorReturnsTable
+                  status={status}
+                  page={page}
+                  pageSize={PAGE_LIMIT}
+                  onPageChange={handlePageChange}
+                  onCreate={handleOpenVendorSheet}
+                />
+              </>
+            )}
+          </TabsContent>
 
-        <TabsContent value="customer" className={TABS_CONTENT_PAGE_BODY_CLASS}>
-          <div className="flex justify-end mb-3">
-            <Button size="sm" onClick={handleOpenCustomerSheet}>
-              New Customer Return
-            </Button>
-          </div>
-          <DataTable
-            data={customerItems}
-            columns={customerColumns}
-            className="flex-1 min-h-0"
-            getRowKey={(r) => r.id}
-            isLoading={customerQuery.isLoading}
-            emptyState={
-              customerQuery.error ? (
-                <ErrorState description={getErrorMessage(customerQuery.error)} onRetry={handleCustomerRetry} compact />
-              ) : (
-                <InventoryEmptyState title="No customer returns" description="Create a customer return to get started." compact />
-              )
-            }
-            minWidth="580px"
-          />
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="customer" className={TABS_CONTENT_PAGE_BODY_CLASS}>
+            {!canCustomer ? (
+              <NoPermissionState permission={CUSTOMER_RETURNS_PERMISSION} />
+            ) : (
+              <>
+                <div className="mb-3 flex justify-end">
+                  <Button size="sm" onClick={handleOpenCustomerSheet}>
+                    New Customer Return
+                  </Button>
+                </div>
+                <CustomerReturnsTable
+                  status={status}
+                  page={page}
+                  pageSize={PAGE_LIMIT}
+                  onPageChange={handlePageChange}
+                  onCreate={handleOpenCustomerSheet}
+                />
+              </>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
 
       <VendorReturnSheet open={vendorSheetOpen} onOpenChange={setVendorSheetOpen} />
       <CustomerReturnSheet open={customerSheetOpen} onOpenChange={setCustomerSheetOpen} />
     </PageWrapper>
+  );
+}
+
+export default function ReturnsPage() {
+  return (
+    <Suspense fallback={null}>
+      <ReturnsPageInner />
+    </Suspense>
   );
 }
