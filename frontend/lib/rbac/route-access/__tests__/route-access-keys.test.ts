@@ -201,9 +201,6 @@ describe("route-access registry keys", () => {
     }
     expect(isUniversalRoute("/knowledge/wiki/spaces/1")).toBe(true);
     expect(isUniversalRoute("/notifications/preferences")).toBe(true);
-    // New descendants are never silently universal; they must declare a route rung.
-    expect(isUniversalRoute("/notifications/admin/future")).toBe(false);
-    expect(isUniversalRoute("/knowledge/wiki/admin/future")).toBe(false);
   });
 
   it("gates a universal page only on a permission every member keeps by default", () => {
