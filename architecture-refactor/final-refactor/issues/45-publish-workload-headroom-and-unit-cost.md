@@ -68,19 +68,32 @@ Headroom needs a colocated deployment and unit cost needs vendor invoices; both 
 
 - [ ] Capacity and unit cost are trended across releases and approved by the named owner.
 
-  **Operator-blocked and wall-clock-blocked, and the seams refuse rather than guess — which is the
-  correct behaviour and worth keeping.** `pnpm cell:unit-cost` runs; Ably returns real data (26
-  messages). Neon and Cloudflare R2 refuse with the exact credentials they need (`NEON_API_KEY` +
-  `NEON_PROJECT_ID`; `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` — note the existing
-  `R2_ACCESS_KEY_ID` is an S3-compat key and cannot query billing). Resend exposes no cost endpoint at
-  all. No unit is given a list price in place of a measured one.
+  **Credentials arrived during the session, so three of the four vendor seams now return measured
+  quantities instead of refusing.** `pnpm cell:unit-cost` reports, for the 2026-08-01 → 2026-09-01
+  billing period:
 
-  Trending additionally needs wall-clock: `filterWellSpacedSamples` requires 3 samples ≥ 24 h apart and
-  only 1 of 5 qualifies, so every forecast correctly REFUSES. The daily sampler workflow exists to
-  accumulate them.
+  | Vendor | Measured | Status |
+  |---|---|---|
+  | Neon | **297.17 compute-hours**, 2.424 GiB synthetic storage, 8.509 GiB data transfer | quantities ✓, dollars need invoice rates |
+  | Cloudflare R2 | 0.000 GB, 0 Class-A ops, 0 Class-B ops | quantities ✓ (genuinely empty), dollars need invoice rates |
+  | Ably | 26 messages | quantities ✓ (channel-minutes estimated from peak; may overcount) |
+  | Resend | — | no cost endpoint exists in its public API |
 
-  The named cost and capacity approval owner is the repository owner. There is no forecast to approve
-  yet, so this criterion cannot close on approval alone.
+  **A defect found by having the credentials at last: the Neon seam was reading the wrong field names.**
+  It asked for `compute_time` and `storage_bytes_hour`; the API returns `compute_time_seconds` and
+  `data_storage_bytes_hour`. So the two largest cost drivers reported as `null` — a value that reads as
+  a vendor limitation and was really a typo. Fixed, with the old names kept as fallbacks. Compute time
+  went from "unavailable" to 297 hours.
+
+  **Still open, on two things neither of which is code.** Dollar figures need the six invoice-derived
+  rate variables (`NEON_COMPUTE_RATE_USD_PER_HOUR` and siblings) — no unit is given a list price in
+  place of a measured one, deliberately. And trending needs wall-clock: `filterWellSpacedSamples`
+  requires 3 samples ≥ 24 h apart and only 2 of 6 qualify, so every forecast correctly REFUSES. The
+  daily sampler workflow accumulates them; this cannot close in under ~2 more days regardless of
+  credentials.
+
+  The named cost and capacity approval owner is the repository owner. There is no dollar forecast to
+  approve yet, so this criterion cannot close on approval alone.
 
 - [x] The c28 release statement is updated from evidence without overstating readiness.
 
