@@ -14,7 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
+import { useCan } from "@/hooks/api/access";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { fadeUp } from "@/lib/motion-variants";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -130,6 +131,7 @@ const EXPIRY_COLUMNS: DataTableColumn<ExpiryItem>[] = [
 ];
 
 export function ExpiryClient() {
+  const canView = useCan("inventory:stock:read");
   const [days, setDays] = useState("30");
 
   const { data, isLoading, isError, refetch } = useExpiryItems({ withinDays: Number(days) });
@@ -154,6 +156,18 @@ export function ExpiryClient() {
       />
     </motion.div>
   );
+
+  // G8. Denied is not empty. Placed after every hook, not at the top of
+  // the component: an early return above a useState or useQuery makes the
+  // hook order depend on a permission, which React forbids and which only
+  // shows up for the user who lacks the key.
+  if (!canView) {
+    return (
+      <PageWrapper title="Expiry Management">
+        <NoPermissionState permission="inventory:stock:read" className="flex-1" />
+      </PageWrapper>
+    );
+  }
 
   return (
     <PageWrapper

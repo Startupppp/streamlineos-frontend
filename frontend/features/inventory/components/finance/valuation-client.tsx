@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ErrorState, AppSheet } from "@/components/shared";
+import { AppSheet, ErrorState, NoPermissionState } from "@/components/shared";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useCan } from "@/hooks/api/access";
 import { useWarehouses } from "@/hooks/api/inventory/warehouses";
@@ -219,6 +219,7 @@ function buildValuationColumns(
 }
 
 export function ValuationClient() {
+  const canView = useCan("inventory:valuation:read");
   const canRead = useCan("inventory:valuation:read");
   const [warehouseFilter, setWarehouseFilter] = useState<number | undefined>(undefined);
   const [selectedVariantId, setSelectedVariantId] = useState<number>(0);
@@ -267,6 +268,18 @@ export function ValuationClient() {
   }
 
   const columns = buildValuationColumns(handleViewLayers);
+
+  // G8. Denied is not empty. Placed after every hook, not at the top of
+  // the component: an early return above a useState or useQuery makes the
+  // hook order depend on a permission, which React forbids and which only
+  // shows up for the user who lacks the key.
+  if (!canView) {
+    return (
+      <PageWrapper title="Inventory Valuation">
+        <NoPermissionState permission="inventory:valuation:read" className="flex-1" />
+      </PageWrapper>
+    );
+  }
 
   return (
     <PageWrapper

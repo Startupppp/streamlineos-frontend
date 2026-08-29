@@ -218,6 +218,7 @@ export type ExtendedPermissionKey =
   | "inventory:allocation:override"
   | "inventory:transit:abandon"
   | "inventory:labels:print"
+  | "inventory:landed-cost:manage"
   | "inventory:audit:read"
   | "inventory:audit:export"
   | "sales:manage"

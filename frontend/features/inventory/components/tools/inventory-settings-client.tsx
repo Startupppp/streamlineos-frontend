@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
+import { NoPermissionState } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -80,14 +80,14 @@ export function InventorySettingsClient() {
   );
 
   if (!canManage) {
+    // G8. This used to render "Access Denied" through the *empty* component —
+    // the same illustration and layout the screen shows when a list has no rows.
+    // Denied and empty are different answers and must not look alike, which is
+    // what `NoPermissionState` exists to say; it also names the key, so the
+    // reader can ask for the right thing.
     return (
       <PageWrapper title="Settings" subtitle="">
-        <div className="flex flex-1 min-h-0 flex-col gap-4">
-          <InventoryEmptyState
-            title="Access Denied"
-            description="You don't have permission to manage inventory settings."
-          />
-        </div>
+        <NoPermissionState permission="inventory:settings:manage" className="flex-1" />
       </PageWrapper>
     );
   }

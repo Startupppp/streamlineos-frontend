@@ -9,7 +9,7 @@ import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ConfirmWithReasonSheet } from "@/components/ui/confirm-with-reason-sheet";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import {
   Select,
@@ -164,14 +164,13 @@ export function ReconciliationClient() {
   }
 
   if (!canReconcile) {
+    // G8. This said "Access restricted" through the *empty* component, with the
+    // same illustration and layout the screen shows when reconciliation finds no
+    // drift. Denied and empty are different answers; `NoPermissionState` says so
+    // and names the key the reader needs to ask for.
     return (
       <PageWrapper title="Stock Reconciliation">
-        <InventoryEmptyState
-          illustrationPreset="security"
-          title="Access restricted"
-          description="You don't have permission to reconcile stock."
-          className="flex-1 h-full"
-        />
+        <NoPermissionState permission="inventory:stock:reconcile" className="flex-1" />
       </PageWrapper>
     );
   }

@@ -1,6 +1,8 @@
 import { createHash } from "node:crypto";
 import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 
+// Moved 2026-08-29 by B10: the throughput/SLA dashboard got its nav entry
+// ("Operations SLA", /inventory/reports/throughput, on inventory:reports:read).
 // Moved 2026-08-29 by C2/C5/C7: the Planning group and its Replenishment child
 // shared an href but asked for `inventory:reports:read` while that page asks for
 // `inventory:replenishment:read` — so a reports-only reader saw the entry and
@@ -28,7 +30,7 @@ import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 // /crm/autonomy, gated on crm:autonomy:view). The digest exists so a route or
 // its permission cannot change without somebody saying why.
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "5934166ca04c8e75149d30a9ecd3645e261f46e7fea9acbfd0ee77476fcbb533";
+  "4480eee41a479f9ce9e267d3bc34bed83bfcb9071a9fa447158a2e793cc22edf";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {

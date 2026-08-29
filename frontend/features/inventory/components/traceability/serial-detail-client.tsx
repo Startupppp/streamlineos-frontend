@@ -7,7 +7,8 @@ import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatCardGrid, StatCard } from "@/components/ui/stat-card";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
+import { useCan } from "@/hooks/api/access";
 import { InventoryDetailPageLoading } from "@/features/inventory/components/inventory-detail-page-loading";
 import { fadeUp } from "@/lib/motion-variants";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -21,6 +22,7 @@ interface SerialDetailClientProps {
 }
 
 export function SerialDetailClient({ serialId }: SerialDetailClientProps) {
+  const canViewStock = useCan("inventory:stock:read");
   const [showTraceability, setShowTraceability] = useState(false);
   const { iconRef: traceChevronRef, hoverHandlers: traceHoverHandlers } = useAnimatedIcon();
 
@@ -63,6 +65,18 @@ export function SerialDetailClient({ serialId }: SerialDetailClientProps) {
           onRetry={handleRetry}
           className="flex-1 min-h-[40dvh]"
         />
+      </PageWrapper>
+    );
+  }
+
+  // G8. Denied is not empty. Placed after every hook, not at the top of
+  // the component: an early return above a useState or useQuery makes the
+  // hook order depend on a permission, which React forbids and which only
+  // shows up for the user who lacks the key.
+  if (!canViewStock) {
+    return (
+      <PageWrapper title="Serial">
+        <NoPermissionState permission="inventory:stock:read" className="flex-1" />
       </PageWrapper>
     );
   }

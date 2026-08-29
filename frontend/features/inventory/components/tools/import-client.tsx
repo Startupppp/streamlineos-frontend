@@ -3,12 +3,14 @@
 import * as React from "react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent, TABS_CONTENT_PAGE_BODY_CLASS } from "@/components/ui/tabs";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useCan } from "@/hooks/api/access";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { JOB_STATUS_BADGE, JOB_STATUS_LABEL, type JobStatus } from "@/features/inventory/lib";
 import {
   useImportPreview,
@@ -99,7 +101,12 @@ const IMPORT_HISTORY_COLUMNS: DataTableColumn<ImportJobRow>[] = [
 ];
 
 export function ImportClient() {
+  const canView = useCan("inventory:import");
   const canImport = useCan("inventory:import");
+
+  function handleRetryJobs(): void {
+    void refetchJobs();
+  }
   const [step, setStep] = React.useState<Step>("type");
   const [selectedType, setSelectedType] = React.useState<ImportType | null>(null);
   const [preview, setPreview] = React.useState<ImportPreviewResult | null>(null);
@@ -107,7 +114,13 @@ export function ImportClient() {
 
   const previewMutation = useImportPreview();
   const createJobMutation = useCreateImportJob();
-  const { data: jobsData, isLoading: isJobsLoading } = useImportJobs();
+  const {
+    data: jobsData,
+    isLoading: isJobsLoading,
+    isError: isJobsError,
+    error: jobsError,
+    refetch: refetchJobs,
+  } = useImportJobs();
 
   function handleTypeSelect(type: ImportType): void {
     setSelectedType(type);
@@ -147,6 +160,18 @@ export function ImportClient() {
     setSelectedType(null);
     setPreview(null);
     setJobId(null);
+  }
+
+  // G8. Denied is not empty. Placed after every hook, not at the top of
+  // the component: an early return above a useState or useQuery makes the
+  // hook order depend on a permission, which React forbids and which only
+  // shows up for the user who lacks the key.
+  if (!canView) {
+    return (
+      <PageWrapper title="Import & Export">
+        <NoPermissionState permission="inventory:import" className="flex-1" />
+      </PageWrapper>
+    );
   }
 
   return (
@@ -209,14 +234,27 @@ export function ImportClient() {
 
               <div>
                 <p className="text-xs font-semibold text-foreground mb-2">Import History</p>
-                <DataTable
-                  data={jobsData?.items ?? []}
-                  columns={IMPORT_HISTORY_COLUMNS}
-                  getRowKey={(job) => job.id}
-                  isLoading={isJobsLoading}
-                  className="flex-1 min-h-0"
-                  emptyState={<div className="py-8 text-center text-sm text-muted-foreground">No import jobs yet.</div>}
-                />
+                {isJobsError ? (
+                  // G8. A failed history read used to render the empty table, so
+                  // "we could not fetch your imports" and "you have never imported
+                  // anything" looked identical — and the second sends somebody off
+                  // to re-run an import that already succeeded.
+                  <ErrorState
+                    className="flex-1"
+                    title="Couldn't load import history"
+                    description={getErrorMessage(jobsError)}
+                    onRetry={handleRetryJobs}
+                  />
+                ) : (
+                  <DataTable
+                    data={jobsData?.items ?? []}
+                    columns={IMPORT_HISTORY_COLUMNS}
+                    getRowKey={(job) => job.id}
+                    isLoading={isJobsLoading}
+                    className="flex-1 min-h-0"
+                    emptyState={<div className="py-8 text-center text-sm text-muted-foreground">No import jobs yet.</div>}
+                  />
+                )}
               </div>
             </>
           )}

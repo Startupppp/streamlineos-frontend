@@ -54,6 +54,7 @@ export const INVENTORY_PERMISSIONS: Permission[] = [
   { name: "inventory:allocation:override", resource: "inventory:allocation", action: "override", description: "Override FEFO or a near-expiry block when allocating a lot, with a recorded reason" },
   { name: "inventory:transit:abandon", resource: "inventory:transit", action: "abandon", description: "Abandon or return-to-source stock stranded in transit by a short receipt" },
   { name: "inventory:labels:print", resource: "inventory:labels", action: "print", description: "Print barcode labels, goods-receipt notes and pick lists" },
+  { name: "inventory:landed-cost:manage", resource: "inventory:landed-cost", action: "manage", description: "Raise landed-cost vouchers and apply freight, duty and handling into inventory cost layers" },
   { name: "inventory:export", resource: "inventory:export", action: "export", description: "Export inventory data" },
   { name: "inventory:audit:read", resource: "inventory:audit", action: "read", description: "Read the inventory audit trail — who changed which record, and when" },
   { name: "inventory:audit:export", resource: "inventory:audit", action: "export", description: "Take an immutable, checksummed audit export of the inventory ledger and audit trail" },

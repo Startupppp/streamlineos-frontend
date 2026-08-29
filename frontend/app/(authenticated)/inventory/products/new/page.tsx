@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { NoPermissionState } from "@/components/shared";
+import { useCan } from "@/hooks/api/access";
 import { useCreateProduct } from "@/hooks/api/inventory";
 import {
   NewProductForm,
@@ -10,6 +12,7 @@ import {
 } from "@/features/inventory/components/new-product-form";
 
 export default function NewProductPage() {
+  const canCreate = useCan("inventory:products:create");
   const router = useRouter();
   const createMutation = useCreateProduct();
 
@@ -40,6 +43,19 @@ export default function NewProductPage() {
 
   function handleCancel(): void {
     router.push("/inventory/products");
+  }
+
+  // G8. A create form is not a list, so it has no empty state — but it can
+  // still be opened by somebody who may not save, and letting them fill it
+  // in before the server refuses is the worst version of that. Placed after
+  // every hook: an early return above one makes hook order depend on a
+  // permission, which React forbids.
+  if (!canCreate) {
+    return (
+      <PageWrapper title="New Product">
+        <NoPermissionState permission="inventory:products:create" className="flex-1" />
+      </PageWrapper>
+    );
   }
 
   return (

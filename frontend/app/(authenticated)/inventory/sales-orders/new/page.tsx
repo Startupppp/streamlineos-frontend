@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { parseISO } from "date-fns";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { useCan } from "@/hooks/api/access";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -15,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { LoadingState, ErrorState } from "@/components/shared";
+import { ErrorState, LoadingState, NoPermissionState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateSalesOrder, useProductVariants, useWarehouses } from "@/hooks/api/inventory";
 import { OrderLineTable } from "@/features/inventory/components/order-line-table";
@@ -31,6 +32,7 @@ function isValidVariantName(name: string): boolean {
 }
 
 export default function NewSalesOrderPage() {
+  const canCreate = useCan("inventory:sales-orders:create");
   const router = useRouter();
   const variantsQuery = useProductVariants({ activeOnly: true });
   const warehousesQuery = useWarehouses();
@@ -150,6 +152,19 @@ export default function NewSalesOrderPage() {
       </div>
     </div>
   );
+
+  // G8. A create form is not a list, so it has no empty state — but it can
+  // still be opened by somebody who may not save, and letting them fill it
+  // in before the server refuses is the worst version of that. Placed after
+  // every hook: an early return above one makes hook order depend on a
+  // permission, which React forbids.
+  if (!canCreate) {
+    return (
+      <PageWrapper title="New Sales Order">
+        <NoPermissionState permission="inventory:sales-orders:create" className="flex-1" />
+      </PageWrapper>
+    );
+  }
 
   return (
     <PageWrapper

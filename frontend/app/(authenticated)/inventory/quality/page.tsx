@@ -16,7 +16,8 @@ import { INSPECTION_STATUS_BADGE, INSPECTION_STATUS_LABEL } from "@/features/inv
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useCan } from "@/hooks/api/access";
-import { NoPermissionState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 
 function QualityHubInner() {
   const canView = useCan("inventory:quality:read");
@@ -30,6 +31,22 @@ function QualityHubInner() {
 
   const openRecalls = (recallsQuery.data?.items ?? []).filter((r) => r.status !== "CLOSED").length;
   const recentInspections = recentQuery.data?.items ?? [];
+
+  // G8. Every tile below reads `data?.total ?? 0`, so a failed request rendered
+  // a confident zero — "no open recalls" when the truth was "we could not ask".
+  // On a quality hub that is the worst possible substitution, so a failure is
+  // shown as one rather than averaged into the numbers.
+  const failed = [pendingQuery, inProgressQuery, holdsQuery, recallsQuery, recentQuery].find(
+    (query) => query.isError,
+  );
+
+  function handleRetryQuality(): void {
+    void pendingQuery.refetch();
+    void inProgressQuery.refetch();
+    void holdsQuery.refetch();
+    void recallsQuery.refetch();
+    void recentQuery.refetch();
+  }
 
   function handleViewInspections(): void {
     router.push("/inventory/quality/inspections");
@@ -91,6 +108,19 @@ function QualityHubInner() {
         <NoPermissionState permission="inventory:quality:read" className="flex-1" />
       </PageWrapper>
     );
+
+  if (failed) {
+    return (
+      <PageWrapper title="Quality">
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load quality"
+          description={getErrorMessage(failed.error)}
+          onRetry={handleRetryQuality}
+        />
+      </PageWrapper>
+    );
+  }
 
   return (
     <PageWrapper

@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { useCan } from "@/hooks/api/access";
 import { Card } from "@/components/ui/card";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { LoadingState, ErrorState } from "@/components/shared";
+import { ErrorState, LoadingState, NoPermissionState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useVendors, useProductVariants, useCreatePurchaseOrder } from "@/hooks/api/inventory";
 import { OrderLineTable } from "@/features/inventory/components/order-line-table";
@@ -29,6 +30,7 @@ function todayIso(): string {
 }
 
 export default function NewPurchaseOrderPage() {
+  const canCreate = useCan("inventory:purchase-orders:create");
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedVendorId = searchParams.get("vendorId") ?? "";
@@ -151,6 +153,19 @@ export default function NewPurchaseOrderPage() {
       </div>
     </div>
   );
+
+  // G8. A create form is not a list, so it has no empty state — but it can
+  // still be opened by somebody who may not save, and letting them fill it
+  // in before the server refuses is the worst version of that. Placed after
+  // every hook: an early return above one makes hook order depend on a
+  // permission, which React forbids.
+  if (!canCreate) {
+    return (
+      <PageWrapper title="New Purchase Order">
+        <NoPermissionState permission="inventory:purchase-orders:create" className="flex-1" />
+      </PageWrapper>
+    );
+  }
 
   return (
     <PageWrapper

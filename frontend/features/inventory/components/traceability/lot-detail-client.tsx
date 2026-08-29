@@ -8,7 +8,7 @@ import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatCardGrid, StatCard } from "@/components/ui/stat-card";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { InventoryDetailPageLoading } from "@/features/inventory/components/inventory-detail-page-loading";
 import { fadeUp } from "@/lib/motion-variants";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -33,6 +33,7 @@ interface LotDetailClientProps {
 }
 
 export function LotDetailClient({ lotId }: LotDetailClientProps) {
+  const canViewStock = useCan("inventory:stock:read");
   const [showTraceability, setShowTraceability] = useState(false);
   const { iconRef: traceChevronRef, hoverHandlers: traceHoverHandlers } = useAnimatedIcon();
   const { iconRef: lockIconRef, hoverHandlers: lockHoverHandlers } = useAnimatedIcon();
@@ -88,6 +89,18 @@ export function LotDetailClient({ lotId }: LotDetailClientProps) {
 
   const canToggleStatus = canAdjust && (lot.status === "ACTIVE" || lot.status === "BLOCKED");
   const expiryClass = getExpiryClass(lot.expiryDate);
+
+  // G8. Denied is not empty. Placed after every hook, not at the top of
+  // the component: an early return above a useState or useQuery makes the
+  // hook order depend on a permission, which React forbids and which only
+  // shows up for the user who lacks the key.
+  if (!canViewStock) {
+    return (
+      <PageWrapper title="Lot">
+        <NoPermissionState permission="inventory:stock:read" className="flex-1" />
+      </PageWrapper>
+    );
+  }
 
   return (
     <PageWrapper
