@@ -75,3 +75,77 @@ export function useThroughputMetrics(
     enabled: canView && (options?.enabled ?? true),
   });
 }
+
+
+/** B10 — one age band of open work. `oldestHours` is null when the band is empty. */
+export interface AgeBand {
+  label: "0-4h" | "4-24h" | "24-72h" | "72h+";
+  count: number;
+  oldestHours: number | null;
+}
+
+export interface WorkAgingLane {
+  open: number;
+  bands: AgeBand[];
+}
+
+export interface WorkAging {
+  asOf: string;
+  /**
+   * B10 — the three answers this field carries, and why it is not a boolean.
+   *
+   * `null` — the reader holds `inventory:warehouses:scope-all`, so the numbers
+   * are the whole estate.
+   * `[1, 4]` — the reader is assigned those warehouses and the numbers are theirs.
+   * `[]` — the reader is assigned **no** warehouse. Every count is zero, and
+   * that zero means something entirely different from an idle warehouse.
+   *
+   * The existing throughput report conflates the last two, which is the defect
+   * this array exists to let the aging section avoid: "you are assigned no
+   * warehouse" and "there is nothing to do" look identical on a card, and only
+   * one of them is somebody's problem to fix.
+   */
+  scopedWarehouseIds: number[] | null;
+  receipts: WorkAgingLane;
+  putaway: WorkAgingLane;
+  picking: WorkAgingLane;
+  pickExceptions: WorkAgingLane;
+  shipping: WorkAgingLane;
+}
+
+export interface WorkAgingQuery {
+  warehouseId?: number;
+  asOf?: string;
+}
+
+/**
+ * B10 — how old the open work is, which throughput cannot say.
+ *
+ * Throughput answers "how much moved in this window". It cannot answer "what has
+ * been sitting here since Tuesday", because a lane that processes a hundred lines
+ * a day and has one receipt stuck for a week looks healthy by volume. The bands
+ * are the part a supervisor acts on.
+ *
+ * Same permission and the same slow-list tier as throughput: this is aggregate
+ * scans over open work, and it does not move minute to minute.
+ */
+export function useWorkAging(
+  query: WorkAgingQuery = {},
+  options?: Omit<UseQueryOptions<WorkAging, Error>, "queryKey" | "queryFn">,
+) {
+  const canView = useCan(THROUGHPUT_READ_KEY);
+  return useQuery<WorkAging, Error>({
+    queryKey: queryKeys.inventoryOps.workAging({
+      warehouseId: query.warehouseId,
+      asOf: query.asOf,
+    }),
+    queryFn: () =>
+      apiClient.get<WorkAging>("/inventory/reports/work-aging", {
+        warehouseId: query.warehouseId,
+        asOf: query.asOf,
+      }),
+    staleTime: 2 * 60_000,
+    ...options,
+    enabled: canView && (options?.enabled ?? true),
+  });
+}

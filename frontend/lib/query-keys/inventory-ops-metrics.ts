@@ -20,5 +20,9 @@ export const inventoryOpsMetricsQueryKeys = {
     throughputAll: [...base, "inventoryOps", "throughput"] as const,
     throughput: (params?: Record<string, unknown>) =>
       k(...base, "inventoryOps", "throughput", params),
+    /** B10 — open work by age band. Same prefix rule as `throughput`. */
+    workAgingAll: [...base, "inventoryOps", "workAging"] as const,
+    workAging: (params?: Record<string, unknown>) =>
+      k(...base, "inventoryOps", "workAging", params),
   },
 } as const;

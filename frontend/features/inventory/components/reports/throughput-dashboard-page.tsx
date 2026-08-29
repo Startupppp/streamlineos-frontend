@@ -25,6 +25,7 @@ import {
   type ThroughputMetrics,
 } from "@/hooks/api/inventory/operations-metrics";
 import { ThroughputSlaRow, type SlaTarget } from "./throughput-sla-row";
+import { WorkAgingPanel } from "./work-aging-panel";
 
 const DEFAULT_WINDOW_DAYS = 7;
 
@@ -218,6 +219,14 @@ export function ThroughputDashboardPage() {
               />
             </StatCardGrid>
           </ThroughputSection>
+
+          {/*
+            B10. Throughput says how much moved; this says what has not. A lane
+            processing a hundred lines a day with one receipt stuck for a week
+            looks healthy above and is not, so the age bands sit beside the rates
+            rather than on a page of their own.
+          */}
+          <WorkAgingPanel />
 
           <p
             className={cn(
