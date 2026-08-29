@@ -10,3 +10,5 @@ export * from "./pricebooks";
 export * from "./campaigns";
 export * from "./automations";
 export * from "./inbox";
+export * from "./commission";
+export * from "./call-intelligence";

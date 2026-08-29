@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Briefcase, Clock, FileText, Handshake, Contact2, BarChart3, UserCheck, ShieldCheck, Star, TrendingUp, Package, Share2, MailOpen, Zap, History, BarChart2, Inbox, Building2, SlidersHorizontal, Brain, Copy, Search, Sliders, CheckSquare, Key, Activity, Megaphone, Bot, ArrowLeftRight, AlertTriangle, Rows3 } from "lucide-react";
+import { LayoutDashboard, Users, Briefcase, Clock, FileText, Handshake, Contact2, BarChart3, UserCheck, ShieldCheck, Star, TrendingUp, Package, Share2, MailOpen, Zap, History, BarChart2, Inbox, Building2, SlidersHorizontal, Brain, Copy, Search, Sliders, CheckSquare, Key, Activity, Megaphone, Bot, ArrowLeftRight, AlertTriangle, Rows3, PhoneCall, Coins } from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
 export const CRM_NAV_GROUPS: NavGroup[] = [
@@ -178,6 +178,23 @@ export const CRM_NAV_GROUPS: NavGroup[] = [
             requiredPermission: "crm:reports:view",
           },
         ],
+      },
+      {
+        // Every CRM member holds the earnings key for their own rows, so this is
+        // a rep's destination as much as a manager's — the server narrows to the
+        // caller's scope rather than the nav hiding it.
+        label: "Commissions",
+        icon: Coins,
+        href: "/crm/commissions",
+        requiredPermission: "crm:commission-earnings:view",
+      },
+      {
+        // The team digest, so `view-team` and not `:view`. A rep reads their own
+        // calls' analyses on the calls themselves.
+        label: "Call intelligence",
+        icon: PhoneCall,
+        href: "/crm/intelligence",
+        requiredPermission: "crm:call-analysis:view-team",
       },
       {
         label: "Access",

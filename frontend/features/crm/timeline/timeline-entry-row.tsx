@@ -1,9 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { Phone, Mail, CalendarDays, StickyNote, CheckSquare, Sparkles } from "lucide-react";
+import {
+  Phone,
+  Mail,
+  CalendarDays,
+  StickyNote,
+  CheckSquare,
+  Sparkles,
+  ChevronDown,
+  ChevronRight,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { CallAnalysisPanel } from "@/features/crm/intelligence/call-analysis-panel";
 import { statusToneClasses, type StatusTone } from "@/lib/design-tokens";
 import { formatTime } from "@/lib/format-utils";
 import { formatShortDate } from "@/lib/date-utils";
@@ -91,6 +103,16 @@ export function TimelineEntryRow({
   const Icon = entry.actorKind === "system" ? Sparkles : KIND_ICON[entry.kind];
   const overdue = isOverdue(entry);
   const done = entry.kind === "task" && !!entry.completedAt;
+
+  /**
+   * The analysis is fetched only once somebody asks for it.
+   *
+   * A timeline renders many calls, and mounting the panel on every one would put
+   * a read per row behind a page load. Kept closed by default for the same
+   * reason the backend split reading from running: the cheap thing should be the
+   * one that happens automatically.
+   */
+  const [analysisOpen, setAnalysisOpen] = useState(false);
 
   function handleComplete() {
     onComplete?.(entry.activityId);
@@ -182,6 +204,26 @@ export function TimelineEntryRow({
           >
             Mark done
           </LoadingButton>
+        ) : null}
+
+        {entry.kind === "call" ? (
+          <div className="mt-1 flex flex-col gap-2">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="w-fit px-2 text-muted-foreground"
+              aria-expanded={analysisOpen}
+              onClick={() => setAnalysisOpen((open) => !open)}
+            >
+              {analysisOpen ? (
+                <ChevronDown className="mr-1 h-3.5 w-3.5" />
+              ) : (
+                <ChevronRight className="mr-1 h-3.5 w-3.5" />
+              )}
+              Call analysis
+            </Button>
+            {analysisOpen ? <CallAnalysisPanel activityId={entry.activityId} /> : null}
+          </div>
         ) : null}
       </div>
     </li>

@@ -18,3 +18,5 @@ export * from "./customer360";
 export * from "./campaigns";
 export * from "./automations";
 export * from "./sequences";
+export * from "./commission";
+export * from "./call-intelligence";

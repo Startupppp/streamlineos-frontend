@@ -57,6 +57,34 @@ export const growthAndSignQueryKeys = {
       [...base, "crmSequences", "enrollments", sequenceId, page] as const,
   },
 
+  crmCommission: {
+    all: [...base, "crmCommission"] as const,
+    plans: () => [...base, "crmCommission", "plans"] as const,
+    plan: (planId: string) => [...base, "crmCommission", "plan", planId] as const,
+    versionInForce: (planId: string, on: string) =>
+      [...base, "crmCommission", "plan", planId, "version-in-force", on] as const,
+    earnings: (params?: Record<string, unknown>) =>
+      [...base, "crmCommission", "earnings", params] as const,
+    /** The period accrual and its decomposition are one cache entry per period. */
+    accrual: (params?: Record<string, unknown>) =>
+      [...base, "crmCommission", "accrual", params] as const,
+    accrualCurve: (params?: Record<string, unknown>) =>
+      [...base, "crmCommission", "accrual", "curve", params] as const,
+    accrualByDeal: (dealId: string) =>
+      [...base, "crmCommission", "accrual", "by-deal", dealId] as const,
+    earningBreakdown: (earningId: string) =>
+      [...base, "crmCommission", "accrual", "earning", earningId] as const,
+  },
+
+  crmCallIntelligence: {
+    all: [...base, "crmCallIntelligence"] as const,
+    /** Keyed by activity: one analysis belongs to one call, never to a list. */
+    analysis: (activityId: string) =>
+      [...base, "crmCallIntelligence", "analysis", activityId] as const,
+    coaching: (sinceDays: number) =>
+      [...base, "crmCallIntelligence", "coaching", sinceDays] as const,
+  },
+
   crmInbox: {
     all: [...base, "crmInbox"] as const,
     data: () => [...base, "crmInbox", "data"] as const,
