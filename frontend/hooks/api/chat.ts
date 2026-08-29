@@ -83,7 +83,7 @@ export function useChatChannel(channelId: number) {
 }
 
 export function useChatMessages(channelId: number) {
-  const canRead = useCan("chat:channels:read");
+  const canRead = useCan("chat:messages:read");
   return useInfiniteQuery({
     queryKey: queryKeys.chat.messages(channelId),
     queryFn: ({ pageParam }) =>
@@ -102,7 +102,7 @@ export function useChatPoll(
   since: string,
   enabled: boolean,
 ) {
-  const canRead = useCan("chat:channels:read");
+  const canRead = useCan("chat:messages:read");
   const pollInterval = useRealtimePollInterval(30_000);
   return useQuery({
     queryKey: queryKeys.chat.poll(channelId, since),
@@ -119,7 +119,7 @@ export function useChatPoll(
 export function useChatUnreadTotal(enabled = true) {
   const { data: session } = useSession();
   const orgId = session?.orgId;
-  const canRead = useCan("chat:channels:read");
+  const canRead = useCan("chat:messages:read");
   const chatEnabled = useModuleEnabled("chat");
   return useQuery({
     queryKey: queryKeys.chat.unreadTotal(orgId),
@@ -131,7 +131,7 @@ export function useChatUnreadTotal(enabled = true) {
 }
 
 export function useChatOnlineUsers(enabled = true) {
-  const canRead = useCan("chat:channels:read");
+  const canRead = useCan("chat:messages:read");
   return useQuery({
     queryKey: queryKeys.chat.onlineUsers(),
     queryFn: () => apiClient.get<OnlineUser[]>("/chat/presence/online"),
@@ -457,7 +457,7 @@ export function useToggleReaction(channelId: number) {
 }
 
 export function useChatPins(channelId: number) {
-  const canRead = useCan("chat:channels:read");
+  const canRead = useCan("chat:messages:read");
   return useQuery({
     queryKey: queryKeys.chat.pins(channelId),
     queryFn: () =>
@@ -512,7 +512,7 @@ export function useUnpinMessage() {
 }
 
 export function useThreadReplies(channelId: number, messageId: number) {
-  const canRead = useCan("chat:channels:read");
+  const canRead = useCan("chat:messages:read");
   return useInfiniteQuery({
     queryKey: queryKeys.chat.thread(channelId, messageId),
     queryFn: ({ pageParam }) =>
@@ -544,7 +544,7 @@ export function useSendThreadReply(channelId: number, parentMessageId: number) {
 }
 
 export function useSearchMessages(query: string, enabled: boolean) {
-  const canRead = useCan("chat:channels:read");
+  const canRead = useCan("chat:messages:read");
   return useQuery({
     queryKey: [...queryKeys.chat.all, "search", "messages", query] as const,
     queryFn: () =>
@@ -584,7 +584,7 @@ export function useSearchUsers(query: string, enabled: boolean) {
 }
 
 export function useSavedMessages() {
-  const canRead = useCan("chat:channels:read");
+  const canRead = useCan("chat:messages:read");
   return useInfiniteQuery({
     queryKey: queryKeys.chat.savedMessages(),
     queryFn: ({ pageParam }) =>
@@ -825,7 +825,7 @@ export interface ChannelFile {
 }
 
 export function useChannelFiles(channelId: number) {
-  const canRead = useCan("chat:channels:read");
+  const canRead = useCan("chat:messages:read");
   return useInfiniteQuery({
     queryKey: [...queryKeys.chat.all, "channelFiles", channelId] as const,
     queryFn: ({ pageParam }) =>
