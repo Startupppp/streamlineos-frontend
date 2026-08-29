@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AiGeneratedLabel } from "@/components/ai/ai-generated-label";
 import { AiSuggestedActions } from "@/features/inventory/components/ai-suggested-actions";
@@ -51,7 +51,7 @@ function SignalLink({ signal }: { signal: OpsBriefSignal }) {
  * copy of that map on the client is a copy that drifts.
  */
 export function InventoryAiBriefCard() {
-  const canView = useCan("inventory:reports:read");
+  const canView = useCan("inventory:ai:read");
   const brief = useOpsBrief();
   const narrate = useNarrateOpsBrief();
 
@@ -87,10 +87,12 @@ export function InventoryAiBriefCard() {
         {!canView ? (
           // Denial, not emptiness. "No signals" and "you may not see the
           // signals" are different facts and must not render the same.
-          <p className="text-sm text-muted-foreground">
-            You do not have access to inventory reports, so this brief is hidden.
-            Ask an inventory admin for the <code className="text-micro">inventory:reports:read</code> permission.
-          </p>
+          <NoPermissionState
+            compact
+            permission="inventory:ai:read"
+            title="Brief hidden"
+            description="You do not have access to the AI-assisted inventory surfaces, so this brief is hidden."
+          />
         ) : brief.isLoading ? (
           <div className="space-y-2">
             <Skeleton className="h-4 w-2/3" />

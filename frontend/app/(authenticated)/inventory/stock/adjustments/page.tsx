@@ -28,6 +28,8 @@ import {
 import { AdjustmentDetailSheet } from "@/features/inventory/components/stock/adjustment-detail-sheet";
 import { CreateAdjustmentSheet } from "@/features/inventory/components/stock/create-adjustment-sheet";
 import { cn } from "@/lib/utils";
+import { useCan } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared";
 
 const REASON_LABELS: Record<AdjustmentReason, string> = {
   PURCHASE: "Purchase", SALE: "Sale", RETURN: "Return", DAMAGE: "Damage",
@@ -96,6 +98,7 @@ const ADJUSTMENT_COLUMNS: DataTableColumn<AdjustmentListItem>[] = [
 ];
 
 export default function AdjustmentsPage() {
+  const canView = useCan("inventory:stock:read");
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -174,6 +177,16 @@ export default function AdjustmentsPage() {
   }
 
   const hasActiveFilters = searchQ || reasonFilter !== "all" || statusFilter !== "all";
+
+  if (!canView)
+    return (
+      <PageWrapper
+        title="Stock Adjustments"
+        subtitle="Create and review inventory quantity corrections."
+      >
+        <NoPermissionState permission="inventory:stock:read" className="flex-1" />
+      </PageWrapper>
+    );
 
   return (
     <PageWrapper

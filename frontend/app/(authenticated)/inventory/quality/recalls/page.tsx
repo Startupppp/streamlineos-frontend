@@ -8,7 +8,7 @@ import { format } from "date-fns";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptySearchIllustration } from "@/components/illustrations";
@@ -19,10 +19,12 @@ import { RecallCreateDialog } from "@/features/inventory/components/quality/reca
 import { RECALL_STATUS_BADGE, RECALL_STATUS_LABEL } from "@/features/inventory/lib";
 import { cn } from "@/lib/utils";
 import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
+import { useCan } from "@/hooks/api/access";
 
 const PAGE_LIMIT = 20;
 
 function RecallsPageInner() {
+  const canView = useCan("inventory:quality:read");
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -113,6 +115,16 @@ function RecallsPageInner() {
       sortValue: (r) => r.createdAt,
     },
   ];
+
+  if (!canView)
+    return (
+      <PageWrapper
+        title="Recalls"
+        subtitle="Manage product recalls"
+      >
+        <NoPermissionState permission="inventory:quality:read" className="flex-1" />
+      </PageWrapper>
+    );
 
   return (
     <>

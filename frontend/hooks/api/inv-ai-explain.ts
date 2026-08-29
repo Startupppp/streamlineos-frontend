@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
 export interface ExplainFactor {
@@ -163,6 +164,7 @@ export function useConfirmReorderProposal() {
 }
 
 export function useSupplierDelayBriefing(vendorId?: string) {
+  const canRead = useCan("inventory:ai:read");
   return useQuery<SupplierDelayBriefing, Error>({
     queryKey: queryKeys.inventory.supplierDelayBriefing(vendorId),
     queryFn: () =>
@@ -171,5 +173,6 @@ export function useSupplierDelayBriefing(vendorId?: string) {
         vendorId ? { vendorId } : {},
       ),
     staleTime: 5 * 60_000,
+    enabled: canRead,
   });
 }

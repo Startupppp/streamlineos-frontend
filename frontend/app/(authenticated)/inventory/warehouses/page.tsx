@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { staggerContainer } from "@/lib/motion-variants";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import {
@@ -32,8 +32,10 @@ import {
 import type { WarehouseListFilters } from "@/hooks/api/inventory/warehouses";
 import { WarehouseCard } from "@/features/inventory/components/warehouse-card";
 import { WarehouseCreateSheet } from "@/features/inventory/components/warehouse/warehouse-create-sheet";
+import { useCan } from "@/hooks/api/access";
 
 export default function WarehousesPage() {
+  const canView = useCan("inventory:warehouses:read");
   const searchParams = useSearchParams();
   const router = useRouter();
   const shouldReduceMotion = useReducedMotion();
@@ -180,6 +182,16 @@ export default function WarehousesPage() {
       )}
     </div>
   );
+
+  if (!canView)
+    return (
+      <PageWrapper
+        title="Warehouses"
+        subtitle="Physical storage facilities and their locations"
+      >
+        <NoPermissionState permission="inventory:warehouses:read" className="flex-1" />
+      </PageWrapper>
+    );
 
   return (
     <PageWrapper

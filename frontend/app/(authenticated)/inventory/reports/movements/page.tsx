@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyActivityIllustration } from "@/components/illustrations";
@@ -17,6 +17,7 @@ import { useWarehouses } from "@/hooks/api/inventory/warehouses";
 import { downloadCsv } from "@/features/inventory/lib";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
+import { useCan } from "@/hooks/api/access";
 
 const TYPE_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
   { value: "ALL", label: "All types" },
@@ -167,6 +168,7 @@ function exportToCsv(rows: MovementRow[]): void {
 }
 
 export default function MovementsReportPage() {
+  const canView = useCan("inventory:reports:read");
   const [warehouseId, setWarehouseId] = useState<string>("");
   const [movementType, setMovementType] = useState<string>("ALL");
   const [dateFrom, setDateFrom] = useState<string>("");
@@ -263,6 +265,16 @@ export default function MovementsReportPage() {
       </AnimatedIconButton>
     </div>
   );
+
+  if (!canView)
+    return (
+      <PageWrapper
+        title="Stock Movements"
+        subtitle="Full audit trail of all inventory movements — receipts, shipments, adjustments, and transfers."
+      >
+        <NoPermissionState permission="inventory:reports:read" className="flex-1" />
+      </PageWrapper>
+    );
 
   return (
     <PageWrapper

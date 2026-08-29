@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptySearchIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
@@ -24,6 +24,7 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { ThreePlConnectionSheet } from "@/features/inventory/components/channels/three-pl-connection-sheet";
+import { useCan } from "@/hooks/api/access";
 
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
@@ -71,6 +72,7 @@ function SyncButtonCell({ connectionId }: SyncButtonCellProps) {
 }
 
 function ThreePlContent() {
+  const canView = useCan("inventory:3pl:manage");
   const { data, isLoading, isError, refetch } = useThreePlConnections();
   const connections = useMemo(() => (Array.isArray(data) ? data : []), [data]);
 
@@ -207,6 +209,16 @@ function ThreePlContent() {
       Add Connection
     </Button>
   );
+
+  if (!canView)
+    return (
+      <PageWrapper
+        title="3PL Connections"
+        subtitle="Manage third-party logistics provider connections"
+      >
+        <NoPermissionState permission="inventory:3pl:manage" className="flex-1" />
+      </PageWrapper>
+    );
 
   if (isLoading) {
     return (

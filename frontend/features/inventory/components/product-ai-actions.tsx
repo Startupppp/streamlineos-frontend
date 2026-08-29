@@ -47,7 +47,8 @@ function narrationToText(narration: InsightNarration): string {
 }
 
 export function ProductAiActions({ product }: ProductAiActionsProps) {
-  const canAi = useCan("inventory:reports:read");
+  const canAi = useCan("inventory:ai:read");
+  const canPropose = useCan("inventory:ai:propose");
 
   const actions = useMemo<AiAction[]>(() => {
     const result: AiAction[] = [];
@@ -87,49 +88,50 @@ export function ProductAiActions({ product }: ProductAiActionsProps) {
         },
       });
 
-      result.push({
-        key: "reorder-proposal",
-        label: "Reorder proposal",
-        description: "Draft PO based on deterministic reorder evidence",
-        run: async () => {
-          const response = await apiClient.post<{
-            evidence: {
-              currentOnHand: number;
-              forecasted: number;
-              suggestedQty: number;
-              leadTimeDays: number;
-              expectedDate: string | null;
-              reason: string;
-              variantSku: string;
-            };
-            explanation: InsightNarration;
-            proposal: { proposalId: string; expiresAt: string };
-          }>("/inventory/ai/reorder-proposal", {
-            variantId: String(firstVariant.id),
-          });
+      if (canPropose)
+        result.push({
+          key: "reorder-proposal",
+          label: "Reorder proposal",
+          description: "Draft PO based on deterministic reorder evidence",
+          run: async () => {
+            const response = await apiClient.post<{
+              evidence: {
+                currentOnHand: number;
+                forecasted: number;
+                suggestedQty: number;
+                leadTimeDays: number;
+                expectedDate: string | null;
+                reason: string;
+                variantSku: string;
+              };
+              explanation: InsightNarration;
+              proposal: { proposalId: string; expiresAt: string };
+            }>("/inventory/ai/reorder-proposal", {
+              variantId: String(firstVariant.id),
+            });
 
-          const ev = response.evidence;
-          const evidenceText = [
-            `Evidence (Deterministic):`,
-            `• Current On-Hand: ${ev.currentOnHand}`,
-            `• Forecasted Stock: ${ev.forecasted}`,
-            `• Suggested Reorder Qty: ${ev.suggestedQty}`,
-            `• Lead Time: ${ev.leadTimeDays} days`,
-            `• Expected Arrival: ${ev.expectedDate ?? "—"}`,
-            `• Reason: ${ev.reason}`,
-          ].join("\n");
+            const ev = response.evidence;
+            const evidenceText = [
+              `Evidence (Deterministic):`,
+              `• Current On-Hand: ${ev.currentOnHand}`,
+              `• Forecasted Stock: ${ev.forecasted}`,
+              `• Suggested Reorder Qty: ${ev.suggestedQty}`,
+              `• Lead Time: ${ev.leadTimeDays} days`,
+              `• Expected Arrival: ${ev.expectedDate ?? "—"}`,
+              `• Reason: ${ev.reason}`,
+            ].join("\n");
 
-          const narration = narrationToText(response.explanation);
+            const narration = narrationToText(response.explanation);
 
-          const draftNote = `\n\nDraft PO: Proposal ${response.proposal.proposalId.slice(0, 8)}… expires ${new Date(response.proposal.expiresAt).toLocaleString()}. Open the Replenishment view to confirm and create the draft purchase order.`;
+            const draftNote = `\n\nDraft PO: Proposal ${response.proposal.proposalId.slice(0, 8)}… expires ${new Date(response.proposal.expiresAt).toLocaleString()}. Open the Replenishment view to confirm and create the draft purchase order.`;
 
-          return { text: `${evidenceText}\n\n${narration}${draftNote}` };
-        },
-      });
+            return { text: `${evidenceText}\n\n${narration}${draftNote}` };
+          },
+        });
     }
 
     return result;
-  }, [product]);
+  }, [product, canPropose]);
 
   if (!canAi || actions.length === 0) return null;
 

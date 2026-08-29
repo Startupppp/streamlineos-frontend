@@ -13,7 +13,7 @@ export const INVENTORY_NAV_GROUPS: NavGroup[] = [
         icon: LayoutDashboard,
         href: "/inventory",
         exact: true,
-        requiredPermission: "inventory:stock:read",
+        requiredPermission: ["inventory:stock:read", "inventory:reports:read"],
       },
       {
         label: "Products",
@@ -89,7 +89,10 @@ export const INVENTORY_NAV_GROUPS: NavGroup[] = [
         label: "Operations",
         icon: Activity,
         href: "/inventory/operations",
-        requiredPermission: "inventory:stock:read",
+        requiredPermission: [
+          "inventory:purchase-orders:read",
+          "inventory:sales-orders:read",
+        ],
       },
       {
         label: "Reports",
@@ -145,13 +148,13 @@ export const INVENTORY_NAV_GROUPS: NavGroup[] = [
             label: "Packages",
             icon: Container,
             href: "/inventory/packages",
-            requiredPermission: "inventory:shipments:manage",
+            requiredPermission: "inventory:packages:manage",
           },
           {
             label: "Loads",
             icon: Boxes,
             href: "/inventory/loads",
-            requiredPermission: "inventory:shipments:manage",
+            requiredPermission: "inventory:loads:manage",
           },
           {
             label: "Carriers",
@@ -163,7 +166,7 @@ export const INVENTORY_NAV_GROUPS: NavGroup[] = [
             label: "3PL Connections",
             icon: Globe,
             href: "/inventory/3pl",
-            requiredPermission: "inventory:shipments:manage",
+            requiredPermission: "inventory:3pl:manage",
           },
         ],
       },
@@ -227,13 +230,13 @@ export const INVENTORY_NAV_GROUPS: NavGroup[] = [
             label: "Valuation",
             icon: DollarSign,
             href: "/inventory/valuation",
-            requiredPermission: "inventory:reports:read",
+            requiredPermission: "inventory:valuation:read",
           },
           {
             label: "Costing",
             icon: Calculator,
             href: "/inventory/costing",
-            requiredPermission: "inventory:reports:read",
+            requiredPermission: "inventory:valuation:read",
           },
           {
             label: "Reconciliation",
@@ -259,7 +262,7 @@ export const INVENTORY_NAV_GROUPS: NavGroup[] = [
         label: "Import",
         icon: Upload,
         href: "/inventory/import",
-        requiredPermission: "inventory:products:read",
+        requiredPermission: "inventory:import",
       },
       {
         label: "Settings",

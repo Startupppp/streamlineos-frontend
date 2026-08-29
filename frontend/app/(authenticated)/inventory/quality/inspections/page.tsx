@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyOrdersIllustration } from "@/components/illustrations";
@@ -22,6 +22,7 @@ import { INSPECTION_STATUS_BADGE, INSPECTION_STATUS_LABEL } from "@/features/inv
 import type { InspectionStatus } from "@/features/inventory/lib";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { useCan } from "@/hooks/api/access";
 
 const PAGE_LIMIT = 20;
 
@@ -30,6 +31,7 @@ const INSPECTION_STATUSES: InspectionStatus[] = [
 ];
 
 function InspectionsPageInner() {
+  const canView = useCan("inventory:quality:read");
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -162,6 +164,16 @@ function InspectionsPageInner() {
       </Select>
     </div>
   );
+
+  if (!canView)
+    return (
+      <PageWrapper
+        title="Inspections"
+        subtitle="Manage quality inspections"
+      >
+        <NoPermissionState permission="inventory:quality:read" className="flex-1" />
+      </PageWrapper>
+    );
 
   return (
     <>

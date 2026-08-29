@@ -10,7 +10,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyWarehouseIllustration } from "@/components/illustrations";
@@ -27,6 +27,7 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { useCan } from "@/hooks/api/access";
 
 const PAGE_LIMIT = 20;
 
@@ -86,6 +87,7 @@ const HoldReleaseAction = forwardRef<HTMLDivElement, HoldReleaseActionProps>(
 );
 
 function HoldsPageInner() {
+  const canView = useCan("inventory:quality:read");
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -236,6 +238,16 @@ function HoldsPageInner() {
       </Select>
     </div>
   );
+
+  if (!canView)
+    return (
+      <PageWrapper
+        title="Quality Holds"
+        subtitle="Manage inventory quality holds"
+      >
+        <NoPermissionState permission="inventory:quality:read" className="flex-1" />
+      </PageWrapper>
+    );
 
   return (
     <>

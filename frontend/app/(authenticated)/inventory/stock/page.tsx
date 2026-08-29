@@ -10,6 +10,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import {
   Select,
@@ -72,6 +73,7 @@ export default function StockLevelsPage() {
   const [availabilityOpen, setAvailabilityOpen] = useState(false);
   const [openingStockOpen, setOpeningStockOpen] = useState(false);
 
+  const canView = useCan("inventory:stock:read");
   const canAdjust = useCan("inventory:stock:adjust");
 
   const filters = useMemo(
@@ -280,6 +282,16 @@ export default function StockLevelsPage() {
       </div>
     </div>
   );
+
+  if (!canView)
+    return (
+      <PageWrapper
+        title="Stock Levels"
+        subtitle="Track real-time stock levels across all warehouses and locations."
+      >
+        <NoPermissionState permission="inventory:stock:read" className="flex-1" />
+      </PageWrapper>
+    );
 
   return (
     <>

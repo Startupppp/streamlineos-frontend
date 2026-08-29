@@ -15,10 +15,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
+import { useCan } from "@/hooks/api/access";
 import { useCostingProducts, type CostingProductRow } from "@/hooks/api/inventory/valuation";
 
 type CostingMethod = CostingProductRow["costingMethod"];
@@ -153,6 +154,7 @@ const columns: DataTableColumn<CostingProductRow>[] = [
 ];
 
 export function CostingClient() {
+  const canView = useCan("inventory:valuation:read");
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
   const [page, setPage] = useState(1);
@@ -173,6 +175,16 @@ export function CostingClient() {
   function handleRetry(): void {
     void refetch();
   }
+
+  if (!canView)
+    return (
+      <PageWrapper
+        title="Costing Setup"
+        subtitle="Manage costing methods per product. Methods are locked while stock exists."
+      >
+        <NoPermissionState permission="inventory:valuation:read" className="flex-1" />
+      </PageWrapper>
+    );
 
   return (
     <PageWrapper

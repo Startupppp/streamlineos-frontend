@@ -10,7 +10,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
-import { ErrorState, AppSheet } from "@/components/shared";
+import { ErrorState, AppSheet, NoPermissionState } from "@/components/shared";
 import { LoadCreateSheet } from "@/features/inventory/components/shipping/load-create-sheet";
 import { LoadDetailPanel } from "@/features/inventory/components/shipping/load-detail-panel";
 import {
@@ -22,6 +22,7 @@ import {
   type Load,
 } from "@/hooks/api/inventory/shipping";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
 
 const PAGE_LIMIT = 20;
 
@@ -31,6 +32,7 @@ function formatDate(value: string): string {
 }
 
 function LoadsPageInner() {
+  const canView = useCan("inventory:loads:manage");
   const router = useRouter();
   const searchParams = useSearchParams();
   const [detailOpen, setDetailOpen] = useState<boolean>(false);
@@ -110,6 +112,16 @@ function LoadsPageInner() {
   ];
 
   const selectedLoad = selectedId !== null ? items.find((l) => l.id === selectedId) : undefined;
+
+  if (!canView)
+    return (
+      <PageWrapper
+        title="Loads"
+        subtitle="Group shipments into transport loads"
+      >
+        <NoPermissionState permission="inventory:loads:manage" className="flex-1" />
+      </PageWrapper>
+    );
 
   return (
     <>

@@ -213,6 +213,7 @@ export type ExtendedPermissionKey =
   | "hr:travel:create"
   | "inventory:ai:manage"
   | "inventory:ai:propose"
+  | "inventory:ai:read"
   | "sales:manage"
   | "sales:view"
   | "self:onboarding-docs"

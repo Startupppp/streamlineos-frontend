@@ -44,6 +44,7 @@ export const INVENTORY_PERMISSIONS: Permission[] = [
   { name: "inventory:replenishment:manage", resource: "inventory:replenishment", action: "manage", description: "Manage replenishment rules and forecasting" },
   { name: "inventory:settings:manage", resource: "inventory:settings", action: "manage", description: "Manage inventory module settings" },
   { name: "inventory:webhooks:manage", resource: "inventory:webhooks", action: "manage", description: "Manage inventory webhooks" },
+  { name: "inventory:ai:read", resource: "inventory:ai", action: "read", description: "Read AI-assisted inventory surfaces: the operations brief, the digest, insight explanations and supplier-delay signals" },
   { name: "inventory:ai:manage", resource: "inventory:ai", action: "manage", description: "Dismiss or update AI-generated inventory insights" },
   { name: "inventory:ai:propose", resource: "inventory:ai", action: "propose", description: "Propose AI-generated reorder draft POs and confirm them" },
   { name: "inventory:export", resource: "inventory:export", action: "export", description: "Export inventory data" },

@@ -32,7 +32,7 @@ import {
   AlertDialogFooter,
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyOrdersIllustration, EmptySearchIllustration } from "@/components/illustrations";
@@ -48,6 +48,7 @@ import {
   type ListFilterSpec,
 } from "@/features/shared/list-view";
 import type { PurchaseOrderStatus, PurchaseOrderSummary } from "@/types/inventory";
+import { useCan } from "@/hooks/api/access";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All statuses" },
@@ -285,6 +286,7 @@ const PURCHASE_ORDER_FILTERS: ListFilterSpec = {
 const ALL = "all";
 
 export default function PurchaseOrdersListPage() {
+  const canView = useCan("inventory:purchase-orders:read");
   const router = useRouter();
   const filters = useListFilterParams(PURCHASE_ORDER_FILTERS);
 
@@ -384,6 +386,16 @@ export default function PurchaseOrdersListPage() {
       </div>
     </div>
   );
+
+  if (!canView)
+    return (
+      <PageWrapper
+        title="Purchase Orders"
+        subtitle="Track and manage orders sent to your suppliers."
+      >
+        <NoPermissionState permission="inventory:purchase-orders:read" className="flex-1" />
+      </PageWrapper>
+    );
 
   return (
     <PageWrapper

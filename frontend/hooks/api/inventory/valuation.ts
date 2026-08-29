@@ -100,8 +100,13 @@ export function useValuationLayers(variantId: number, page?: number) {
   });
 }
 
+/**
+ * The costing table reads the variant list, so the gate is that endpoint's own key.
+ * Gating it on `inventory:valuation:read` sent a 403 for anyone holding valuation
+ * without products; the page-level finance gate lives in `CostingClient`.
+ */
 export function useCostingProducts(params?: CostingParams) {
-  const canView = useCan("inventory:valuation:read");
+  const canView = useCan("inventory:products:read");
   return useQuery<CostingListResponse, Error>({
     queryKey: queryKeys.inventory.costingProducts(params),
     queryFn: () =>

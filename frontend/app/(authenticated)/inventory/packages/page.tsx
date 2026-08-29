@@ -20,7 +20,7 @@ import {
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { PackageDetailSheet } from "@/features/inventory/components/shipping/package-detail-sheet";
 import { PackageCreateDialog } from "@/features/inventory/components/shipping/package-create-dialog";
 import {
@@ -29,6 +29,7 @@ import {
   type PackageStatus,
 } from "@/features/inventory/lib";
 import { usePackages, type Package } from "@/hooks/api/inventory/shipping";
+import { useCan } from "@/hooks/api/access";
 
 const PAGE_LIMIT = 20;
 
@@ -38,6 +39,7 @@ function formatDate(value: string): string {
 }
 
 function PackagesPageInner() {
+  const canView = useCan("inventory:packages:manage");
   const router = useRouter();
   const searchParams = useSearchParams();
   const [detailOpen, setDetailOpen] = useState<boolean>(false);
@@ -160,6 +162,16 @@ function PackagesPageInner() {
       </Select>
     </div>
   );
+
+  if (!canView)
+    return (
+      <PageWrapper
+        title="Packages"
+        subtitle="Manage shipping packages"
+      >
+        <NoPermissionState permission="inventory:packages:manage" className="flex-1" />
+      </PageWrapper>
+    );
 
   return (
     <>

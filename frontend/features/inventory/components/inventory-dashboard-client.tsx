@@ -21,7 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { Card, CardHeader, CardTitle, CardContent, CardAction } from "@/components/ui/card";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { EmptyProductsIllustration } from "@/components/illustrations";
 import {
   useInventoryDashboard,
@@ -29,6 +29,7 @@ import {
   type ReorderReportRow,
 } from "@/hooks/api/inventory/reports";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { useCan } from "@/hooks/api/access";
 import { RecentMovementsTable } from "./inventory-recent-movements";
 import { DashboardInsightsPanel } from "./dashboard-insights-panel";
 import { InventoryAiBriefCard } from "./inventory-ai-brief-card";
@@ -80,13 +81,23 @@ function LowStockSkeleton() {
   );
 }
 
-function LowStockAlertSection() {
+function LowStockAlertSection({ canReadReports }: { canReadReports: boolean }) {
   const { data: reorderData, isLoading, error, refetch } = useReorderReport();
   const items = reorderData?.items ?? [];
 
   function handleRetry(): void {
     void refetch();
   }
+
+  if (!canReadReports)
+    return (
+      <NoPermissionState
+        compact
+        permission="inventory:reports:read"
+        title="Alerts hidden"
+        description="Reorder alerts are part of inventory reporting."
+      />
+    );
 
   if (isLoading) return <LowStockSkeleton />;
 
@@ -197,6 +208,10 @@ function ExpiryAlertsCard({ count }: { count: number }) {
 }
 
 export function InventoryDashboardClient() {
+  const canReadReports = useCan("inventory:reports:read");
+  const canReadStock = useCan("inventory:stock:read");
+  const canCreateProduct = useCan("inventory:products:create");
+  const canImport = useCan("inventory:import");
   const {
     data: dashboard,
     isLoading: isKpiLoading,
@@ -228,7 +243,31 @@ export function InventoryDashboardClient() {
     void dashRefetch();
   }
 
-  if (!isKpiLoading && !kpiError && !hasAnyData) {
+  /**
+   * A6. "Denied" and "empty" are different facts.
+   *
+   * Every KPI on this page comes from `GET /inventory/reports/dashboard`, gated on
+   * `inventory:reports:read`. Without that key the query never fires, so the numbers
+   * are all zero — and the onboarding state below used to read that as "this company
+   * has no inventory yet" and invite a stock reader to add their first product. It is
+   * shown only to somebody who could have seen the data and genuinely has none.
+   */
+  if (!canReadReports && !canReadStock)
+    return (
+      <PageWrapper
+        title="Inventory Dashboard"
+        subtitle="Track stock levels, movements, and reorder alerts."
+      >
+        <NoPermissionState
+          permission="inventory:reports:read"
+          title="Dashboard unavailable"
+          description="The inventory dashboard needs either inventory reporting or stock-level access."
+          className="flex-1"
+        />
+      </PageWrapper>
+    );
+
+  if (canReadReports && !isKpiLoading && !kpiError && !hasAnyData) {
     return (
       <PageWrapper
         title="Inventory Dashboard"
@@ -238,8 +277,14 @@ export function InventoryDashboardClient() {
           illustration={<EmptyProductsIllustration />}
           title="Set up your inventory"
           description="Add products, configure warehouses, and start tracking stock levels, movements, and reorder alerts — all in one place."
-          action={{ label: "Add Your First Product", href: "/inventory/products/new" }}
-          secondaryAction={{ label: "Import Products", href: "/inventory/import" }}
+          action={
+            canCreateProduct
+              ? { label: "Add Your First Product", href: "/inventory/products/new" }
+              : undefined
+          }
+          secondaryAction={
+            canImport ? { label: "Import Products", href: "/inventory/import" } : undefined
+          }
           className="flex-1"
         />
       </PageWrapper>
@@ -250,10 +295,17 @@ export function InventoryDashboardClient() {
     <PageWrapper
       title="Inventory Dashboard"
       subtitle="Track stock levels, movements, and reorder alerts."
-      actions={<AddProductLink />}
+      actions={canCreateProduct ? <AddProductLink /> : undefined}
     >
       <div className="space-y-4">
-        {isKpiLoading ? (
+        {!canReadReports ? (
+          <NoPermissionState
+            compact
+            permission="inventory:reports:read"
+            title="Metrics hidden"
+            description="Inventory totals, values and counts come from inventory reporting."
+          />
+        ) : isKpiLoading ? (
           <KpiSkeletons />
         ) : kpiError ? (
           <ErrorState
@@ -368,7 +420,16 @@ export function InventoryDashboardClient() {
               </CardAction>
             </CardHeader>
             <CardContent className="p-0">
-              <RecentMovementsTable />
+              {canReadStock ? (
+                <RecentMovementsTable />
+              ) : (
+                <NoPermissionState
+                  compact
+                  permission="inventory:stock:read"
+                  title="Movements hidden"
+                  description="Stock movements need stock-level access."
+                />
+              )}
             </CardContent>
           </Card>
 
@@ -388,12 +449,12 @@ export function InventoryDashboardClient() {
               </CardAction>
             </CardHeader>
             <CardContent className="pt-3">
-              <LowStockAlertSection />
+              <LowStockAlertSection canReadReports={canReadReports} />
             </CardContent>
           </Card>
         </div>
 
-        {!isKpiLoading && !kpiError && (
+        {canReadReports && !isKpiLoading && !kpiError && (
           <ExpiryAlertsCard count={expiringLotsCount} />
         )}
 

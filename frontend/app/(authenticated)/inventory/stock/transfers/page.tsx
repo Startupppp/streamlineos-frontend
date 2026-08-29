@@ -27,6 +27,8 @@ import {
   TRANSFER_STATUS_LABEL,
 } from "@/features/inventory/lib";
 import { cn } from "@/lib/utils";
+import { useCan } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared";
 
 const ALL_STATUSES: TransferStatus[] = ["PENDING", "RESERVED", "IN_TRANSIT", "COMPLETED", "CANCELLED"];
 
@@ -127,6 +129,7 @@ function buildTransferColumns(
 }
 
 export default function TransfersPage() {
+  const canView = useCan("inventory:stock:read");
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -230,6 +233,16 @@ export default function TransfersPage() {
     !!searchQ || statusParam !== "all" || !!fromWarehouseParam || !!toWarehouseParam || !!fromDateParam || !!toDateParam;
 
   const columns = useMemo(() => buildTransferColumns(handleView), [handleView]);
+
+  if (!canView)
+    return (
+      <PageWrapper
+        title="Stock Transfers"
+        subtitle="Move stock between warehouse locations"
+      >
+        <NoPermissionState permission="inventory:stock:read" className="flex-1" />
+      </PageWrapper>
+    );
 
   return (
     <PageWrapper

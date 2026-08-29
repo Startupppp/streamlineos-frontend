@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { DataTableSkeleton } from "@/components/ui/data-table";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyReportIllustration, EmptySearchIllustration } from "@/components/illustrations";
@@ -18,6 +18,7 @@ import { useWarehouses } from "@/hooks/api/inventory/warehouses";
 import { LOT_STATUS_BADGE, LOT_STATUS_LABEL, type LotStatus, downloadCsv } from "@/features/inventory/lib";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
+import { useCan } from "@/hooks/api/access";
 
 const LIMIT = 50;
 
@@ -136,6 +137,7 @@ function exportToCsv(rows: ExpiryReportRow[]): void {
 }
 
 function ExpiryReportContent() {
+  const canView = useCan("inventory:reports:read");
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -213,6 +215,16 @@ function ExpiryReportContent() {
   const hasData = !query.isLoading && !query.error;
   const isEmpty = hasData && total === 0;
   const hasRows = hasData && total > 0;
+
+  if (!canView)
+    return (
+      <PageWrapper
+        title="Expiry Report"
+        subtitle="Lots approaching or past their expiry date within the selected window"
+      >
+        <NoPermissionState permission="inventory:reports:read" className="flex-1" />
+      </PageWrapper>
+    );
 
   return (
     <PageWrapper

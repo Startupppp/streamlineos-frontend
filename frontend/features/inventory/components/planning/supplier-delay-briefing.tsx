@@ -8,6 +8,8 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AiGeneratedLabel } from "@/components/ai/ai-generated-label";
+import { NoPermissionState } from "@/components/shared";
+import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useSupplierDelayBriefing,
@@ -90,6 +92,7 @@ interface SupplierDelayBriefingProps {
 export const SupplierDelayBriefing = memo(function SupplierDelayBriefing({
   vendorId,
 }: SupplierDelayBriefingProps) {
+  const canRead = useCan("inventory:ai:read");
   const { data, isLoading, isError, error, refetch, isFetching } =
     useSupplierDelayBriefing(vendorId);
 
@@ -104,24 +107,35 @@ export const SupplierDelayBriefing = memo(function SupplierDelayBriefing({
           <CardTitle className="text-label font-semibold text-foreground">
             Supplier Delay Briefing
           </CardTitle>
-          <LoadingButton
-            variant="outline"
-            size="sm"
-            className="h-7 text-micro gap-1.5"
-            onClick={handleRefetch}
-            isPending={isFetching}
-            loadingText="Refreshing…"
-          >
-            <RefreshCw className="h-3 w-3" />
-            Refresh
-          </LoadingButton>
+          {canRead ? (
+            <LoadingButton
+              variant="outline"
+              size="sm"
+              className="h-7 text-micro gap-1.5"
+              onClick={handleRefetch}
+              isPending={isFetching}
+              loadingText="Refreshing…"
+            >
+              <RefreshCw className="h-3 w-3" />
+              Refresh
+            </LoadingButton>
+          ) : null}
         </div>
       </CardHeader>
 
       <Separator />
 
       <CardContent className="px-4 pb-4 pt-3 space-y-3">
-        {isLoading && (
+        {!canRead && (
+          <NoPermissionState
+            compact
+            permission="inventory:ai:read"
+            title="Briefing hidden"
+            description="Supplier-delay briefings need AI-assisted inventory access."
+          />
+        )}
+
+        {canRead && isLoading && (
           <div className="space-y-3">
             <Skeleton className="h-8 w-3/4 rounded-md" />
             <div className="space-y-2">
@@ -132,11 +146,11 @@ export const SupplierDelayBriefing = memo(function SupplierDelayBriefing({
           </div>
         )}
 
-        {isError && (
+        {canRead && isError && (
           <p className="text-dense text-destructive">{getErrorMessage(error)}</p>
         )}
 
-        {!isLoading && !isError && data && (
+        {canRead && !isLoading && !isError && data && (
           <>
             {data.narration && (
               <div className="rounded-lg border border-border bg-muted/30 p-3">

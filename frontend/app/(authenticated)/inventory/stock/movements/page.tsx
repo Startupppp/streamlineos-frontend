@@ -31,6 +31,7 @@ import { useCan } from "@/hooks/api/access";
 import { MobileFilterDrawer } from "@/features/payroll/shared/mobile-filter-drawer";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { NoPermissionState } from "@/components/shared";
 
 const LIMIT = 25;
 
@@ -251,6 +252,7 @@ const MOVEMENTS_COLUMNS: DataTableColumn<StockTransaction>[] = [
 ];
 
 export default function MovementsPage() {
+  const canView = useCan("inventory:stock:read");
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -359,6 +361,15 @@ export default function MovementsPage() {
   }
 
   const subtitle = "Track every stock change from receipts, sales, transfers, adjustments, opening stock, and returns.";
+
+  if (!canView)
+    return (
+      <PageWrapper
+        title="Stock Movements"
+      >
+        <NoPermissionState permission="inventory:stock:read" className="flex-1" />
+      </PageWrapper>
+    );
 
   return (
     <PageWrapper

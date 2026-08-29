@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import {
   EmptyReportIllustration,
@@ -36,6 +36,7 @@ import {
 } from "@/hooks/api/inventory/reports";
 import { useWarehouses } from "@/hooks/api/inventory/warehouses";
 import { downloadCsv } from "@/features/inventory/lib";
+import { useCan } from "@/hooks/api/access";
 
 function StockLevelBadge({
   available,
@@ -189,6 +190,7 @@ const STOCK_SUMMARY_COLUMNS: DataTableColumn<StockSummaryRow>[] = [
 ];
 
 function StockSummaryContent() {
+  const canView = useCan("inventory:reports:read");
   const searchParams = useSearchParams();
   const router = useRouter();
   const warehousesQuery = useWarehouses();
@@ -267,6 +269,16 @@ function StockSummaryContent() {
     params.delete("page");
     router.replace(`?${params.toString()}`, { scroll: false });
   }, [debouncedSearch, router, searchParams]);
+
+  if (!canView)
+    return (
+      <PageWrapper
+        title="Stock Summary"
+        subtitle="Current stock levels across all products"
+      >
+        <NoPermissionState permission="inventory:reports:read" className="flex-1" />
+      </PageWrapper>
+    );
 
   return (
     <PageWrapper

@@ -41,7 +41,7 @@ function briefingToText(briefing: SupplierDelayBriefing): string {
 }
 
 export function VendorAiActions({ vendorId, vendorName }: VendorAiActionsProps) {
-  const canAi = useCan("inventory:reports:read");
+  const canAi = useCan("inventory:ai:read");
 
   const actions = useMemo<AiAction[]>(
     () => [

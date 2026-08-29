@@ -20,7 +20,7 @@ import {
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { ShipmentDetailSheet } from "@/features/inventory/components/shipping/shipment-detail-sheet";
 import { ShipmentCreateDialog } from "@/features/inventory/components/shipping/shipment-create-dialog";
 import {
@@ -29,6 +29,7 @@ import {
   type ShipmentStatus,
 } from "@/features/inventory/lib";
 import { useShipments, type Shipment } from "@/hooks/api/inventory/shipping";
+import { useCan } from "@/hooks/api/access";
 
 const PAGE_LIMIT = 20;
 
@@ -38,6 +39,7 @@ function formatDate(value: string): string {
 }
 
 function ShipmentsPageInner() {
+  const canView = useCan("inventory:shipments:manage");
   const router = useRouter();
   const searchParams = useSearchParams();
   const [detailOpen, setDetailOpen] = useState<boolean>(false);
@@ -174,6 +176,16 @@ function ShipmentsPageInner() {
       </Select>
     </div>
   );
+
+  if (!canView)
+    return (
+      <PageWrapper
+        title="Shipments"
+        subtitle="Track and manage outbound shipments"
+      >
+        <NoPermissionState permission="inventory:shipments:manage" className="flex-1" />
+      </PageWrapper>
+    );
 
   return (
     <>

@@ -33,7 +33,7 @@ export interface OpsBriefNarration {
  * are the same ones the reports compute. Nothing here reaches a model.
  */
 export function useOpsBrief() {
-  const canView = useCan("inventory:reports:read");
+  const canView = useCan("inventory:ai:read");
   return useQuery<InventoryOpsBrief, Error>({
     queryKey: queryKeys.inventory.opsBrief(),
     queryFn: () => apiClient.get<InventoryOpsBrief>("/inventory/ai/ops-brief"),

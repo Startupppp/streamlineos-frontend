@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { EmptyOrdersIllustration } from "@/components/illustrations";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
@@ -27,6 +27,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { ChannelSheet } from "@/features/inventory/components/channels/channel-sheet";
 import { ChannelPublicationsPanel } from "@/features/inventory/components/channels/channel-publications-panel";
+import { useCan } from "@/hooks/api/access";
 
 const CHANNEL_TYPE_BADGE: Record<ChannelType, string> = {
   INTERNAL: "bg-muted text-muted-foreground border-border",
@@ -192,6 +193,7 @@ const ChannelCard = memo(function ChannelCard({ channel, onEdit, onViewPublicati
 });
 
 function ChannelsContent() {
+  const canView = useCan("inventory:channels:manage");
   const { data, isLoading, isError, refetch } = useChannels();
   const channels = useMemo(() => (Array.isArray(data) ? data : []), [data]);
   const shouldReduceMotion = useReducedMotion();
@@ -237,6 +239,15 @@ function ChannelsContent() {
       New Channel
     </Button>
   );
+
+  if (!canView)
+    return (
+      <PageWrapper
+        title="Channels"
+      >
+        <NoPermissionState permission="inventory:channels:manage" className="flex-1" />
+      </PageWrapper>
+    );
 
   if (isLoading) {
     return (

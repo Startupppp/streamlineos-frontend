@@ -11,12 +11,13 @@ import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "@/components/ui/search-input";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyReportIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { useReorderReport, type ReorderReportRow } from "@/hooks/api/inventory/reports";
 import { downloadCsv } from "@/features/inventory/lib";
+import { useCan } from "@/hooks/api/access";
 
 function UrgencyBadge({ available, reorderPoint }: { available: number; reorderPoint: number }) {
   if (available <= 0) {
@@ -96,6 +97,7 @@ const REORDER_COLUMNS: DataTableColumn<ReorderReportRow>[] = [
 ];
 
 function ReorderReportContent() {
+  const canView = useCan("inventory:reports:read");
   const searchParams = useSearchParams();
   const router = useRouter();
   const currentPage = Number(searchParams.get("page") ?? "1");
@@ -180,6 +182,16 @@ function ReorderReportContent() {
   const hasData = !query.isLoading && !query.error;
   const noData = hasData && items.length === 0;
   const noResults = hasData && items.length > 0 && filtered.length === 0;
+
+  if (!canView)
+    return (
+      <PageWrapper
+        title="Reorder Report"
+        subtitle="Products below their reorder points"
+      >
+        <NoPermissionState permission="inventory:reports:read" className="flex-1" />
+      </PageWrapper>
+    );
 
   return (
     <PageWrapper

@@ -15,8 +15,11 @@ import type { Inspection } from "@/hooks/api/inventory/quality";
 import { INSPECTION_STATUS_BADGE, INSPECTION_STATUS_LABEL } from "@/features/inventory/lib";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { useCan } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared";
 
 function QualityHubInner() {
+  const canView = useCan("inventory:quality:read");
   const router = useRouter();
 
   const pendingQuery = useQualityInspections({ status: "PENDING", limit: 1 });
@@ -74,6 +77,16 @@ function QualityHubInner() {
       cell: (r) => format(new Date(r.createdAt), "dd MMM yyyy"),
     },
   ];
+
+  if (!canView)
+    return (
+      <PageWrapper
+        title="Quality Hub"
+        subtitle="Overview of inspections, holds, and recalls"
+      >
+        <NoPermissionState permission="inventory:quality:read" className="flex-1" />
+      </PageWrapper>
+    );
 
   return (
     <PageWrapper

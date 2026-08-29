@@ -23,11 +23,12 @@ import {
   EmptySearchIllustration,
 } from "@/components/illustrations";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useSalesOrders, type SalesOrderStatus, type SalesOrderListItem } from "@/hooks/api/inventory/sales-orders";
+import { useCan } from "@/hooks/api/access";
 
 type StatusFilter = "ALL" | SalesOrderStatus;
 
@@ -146,6 +147,7 @@ const columns: DataTableColumn<SalesOrderListItem>[] = [
 ];
 
 function SalesOrdersContent() {
+  const canView = useCan("inventory:sales-orders:read");
   const router = useRouter();
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
@@ -241,6 +243,16 @@ function SalesOrdersContent() {
       />
     </div>
   );
+
+  if (!canView)
+    return (
+      <PageWrapper
+        title="Sales Orders"
+        subtitle="Manage customer sales orders from creation to invoicing."
+      >
+        <NoPermissionState permission="inventory:sales-orders:read" className="flex-1" />
+      </PageWrapper>
+    );
 
   return (
     <PageWrapper
