@@ -2,16 +2,7 @@
 
 import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { addHours, differenceInMinutes, endOfDay, format, parseISO, startOfDay } from "date-fns";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/common/use-mobile";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   useCreateCalendarEvent,
   useUpdateCalendarEvent,
@@ -22,16 +13,8 @@ import {
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { useCalendarConnections } from "./use-calendar-connections";
 import { toast } from "sonner";
-import { EventFormFields } from "./event-form-fields";
 import type { TicketSearchResult } from "@/hooks/api/build";
-import { TicketPickerDialog } from "./ticket-picker-dialog";
-import { Input } from "@/components/ui/input";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Ticket, Link as LinkIcon, MapPin } from "lucide-react";
-import { XIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { LoadingButton } from "@/components/ui/loading-button";
-import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   getDateTimeError,
   isValidUrl,
@@ -39,9 +22,9 @@ import {
   resolveEventDateTimes,
   toDefaultForm,
   toEditForm,
-  type EventCategory,
   type FormState,
 } from "./event-form-state";
+import { EventCreateForm } from "./event-create-form";
 
 interface EventCreateDialogProps {
   open: boolean;
@@ -49,30 +32,6 @@ interface EventCreateDialogProps {
   defaultSlot?: { start: Date; end: Date } | null;
   event?: CalendarListItem | null;
 }
-
-const DialogCloseButton = React.forwardRef<
-  HTMLButtonElement,
-  React.ButtonHTMLAttributes<HTMLButtonElement>
->(function DialogCloseButton({ className, ...props }, ref) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <button ref={ref} {...hoverHandlers} className={className} {...props}>
-      <XIcon ref={iconRef} size={16} />
-    </button>
-  );
-});
-
-const RemoveTicketButton = React.forwardRef<
-  HTMLButtonElement,
-  React.ButtonHTMLAttributes<HTMLButtonElement>
->(function RemoveTicketButton({ className, ...props }, ref) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <button ref={ref} {...hoverHandlers} className={className} {...props}>
-      <XIcon ref={iconRef} size={14} />
-    </button>
-  );
-});
 
 export function EventCreateDialog({
   open,
@@ -266,12 +225,11 @@ export function EventCreateDialog({
     });
   }, []);
 
-  const handleCategoryChange = useCallback(
-    (v: string) => {
-      set("category", v as EventCategory);
-    },
-    [set],
-  );
+  const handleCategoryChange = useCallback((value: string) => {
+    if (value === "general" || value === "meeting" || value === "deadline" || value === "reminder" || value === "leave" || value === "project" || value === "other") {
+      set("category", value);
+    }
+  }, [set]);
 
   const handleColorChange = useCallback(
     (v: string) => {
@@ -438,161 +396,42 @@ export function EventCreateDialog({
     setExistingEntityId(null);
   }, []);
 
-  const displayLinkedKey = linkedTicket
-    ? `${linkedTicket.projectKey}-${linkedTicket.ticketNumber}`
-    : existingEntityId
-      ? `#${existingEntityId}`
-      : null;
-
-  const displayLinkedTitle = linkedTicket?.title ?? null;
-
   return (
-    <>
-      <Drawer
-        open={open}
-        onOpenChange={onOpenChange}
-        direction={isMobile ? "bottom" : "right"}
-      >
-        <DrawerContent
-          className={cn(
-            "flex flex-col gap-0 p-0 pb-0 overflow-hidden shadow-2xl border bg-card",
-            isMobile
-              ? "w-full max-h-[min(92dvh,48rem)] rounded-t-xl"
-              : "h-full w-full md:w-1/2 md:max-w-2xl lg:max-w-3xl",
-          )}
-        >
-          <DrawerHeader className="px-4 py-2.5 border-b flex flex-row items-center justify-between shrink-0 select-none">
-            <DrawerTitle className="text-base font-semibold text-foreground">
-              {isEdit ? "Edit Event" : "New Event"}
-            </DrawerTitle>
-            <DialogCloseButton
-              type="button"
-              onClick={handleClose}
-              className="p-1 text-muted-foreground hover:text-foreground rounded hover:bg-muted transition-colors"
-              title="Close"
-              aria-label="Close"
-            />
-          </DrawerHeader>
-
-          <ScrollArea className="flex-1 min-h-0">
-            <div className="px-4 py-2 space-y-2">
-              <EventFormFields
-                title={form.title}
-                titleError={titleError}
-                description={form.description}
-                allDay={form.allDay}
-                startDate={form.startDate}
-                startTime={form.startTime}
-                endDate={form.endDate}
-                endTime={form.endTime}
-                category={form.category}
-                color={form.color}
-                connections={connections}
-                syncConnectionId={form.syncConnectionId}
-                addConference={form.addConference}
-                isEdit={isEdit}
-                showEndDate={showEndDate}
-                dateTimeError={dateTimeError}
-                onTitleChange={handleTitleChange}
-                onDescriptionChange={handleDescriptionChange}
-                onAllDayChange={handleAllDayChange}
-                onStartDateChange={handleStartDateChange}
-                onStartTimeChange={handleStartTimeChange}
-                onEndDateChange={handleEndDateChange}
-                onEndTimeChange={handleEndTimeChange}
-                onCategoryChange={handleCategoryChange}
-                onColorChange={handleColorChange}
-                onSyncConnectionChange={handleSyncConnectionChange}
-                onAddConferenceChange={handleAddConferenceChange}
-                onShowEndDate={handleShowEndDate}
-                members={members}
-                attendeeIds={form.attendeeIds}
-                onToggleAttendee={toggleAttendee}
-              />
-
-              <div className="flex items-start gap-2.5">
-                <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-2" />
-                <div className="flex-1 min-w-0 space-y-1">
-                  <Input
-                    id="ev-location"
-                    value={form.location}
-                    onChange={handleLocationChange}
-                    placeholder="Room or Location"
-                    className={cn(
-                      "h-8 text-xs flex-1 min-w-0",
-                      form.locationError && "border-destructive",
-                    )}
-                  />
-                  {form.locationError && (
-                    <p className="text-micro text-destructive">{form.locationError}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-start gap-2.5">
-                <LinkIcon className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                <div className="flex-1 space-y-1">
-                  <p className="text-xs font-semibold text-muted-foreground">Linked work item</p>
-                  {displayLinkedKey ? (
-                    <div className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-1.5">
-                      <Ticket className="h-3.5 w-3.5 text-primary shrink-0" />
-                      <span className="font-mono text-dense text-primary shrink-0">
-                        {displayLinkedKey}
-                      </span>
-                      {displayLinkedTitle && (
-                        <TruncatedText text={displayLinkedTitle} className="text-xs flex-1" />
-                      )}
-                      <RemoveTicketButton
-                        type="button"
-                        onClick={handleRemoveLinkedTicket}
-                        className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted transition-colors shrink-0"
-                        aria-label="Remove linked ticket"
-                      />
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={handleOpenTicketPicker}
-                      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground border border-dashed rounded-lg px-3 py-1.5 w-full transition-colors hover:border-primary/50"
-                    >
-                      <Ticket className="h-3.5 w-3.5" />
-                      Link a ticket…
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </ScrollArea>
-
-          <div className="px-4 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] border-t bg-muted/20 shrink-0 flex flex-row items-center justify-end gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs px-3 font-normal text-muted-foreground hover:text-foreground"
-              onClick={handleClose}
-              disabled={isPending}
-            >
-              Discard
-            </Button>
-            <LoadingButton
-              size="sm"
-              className="text-xs px-4 font-medium"
-              onClick={handleSave}
-              disabled={!form.title.trim()}
-              isPending={isPending}
-              loadingText={isEdit ? "Saving…" : "Creating…"}
-            >
-              Save
-            </LoadingButton>
-          </div>
-        </DrawerContent>
-      </Drawer>
-
-      <TicketPickerDialog
-        open={ticketPickerOpen}
-        onOpenChange={setTicketPickerOpen}
-        onSelect={handleTicketSelect}
-      />
-    </>
+    <EventCreateForm
+      open={open}
+      onOpenChange={onOpenChange}
+      isMobile={isMobile}
+      isEdit={isEdit}
+      form={form}
+      titleError={titleError}
+      dateTimeError={dateTimeError}
+      showEndDate={showEndDate}
+      members={members}
+      connections={connections}
+      linkedTicket={linkedTicket}
+      existingEntityId={existingEntityId}
+      ticketPickerOpen={ticketPickerOpen}
+      isPending={isPending}
+      onClose={handleClose}
+      onTitleChange={handleTitleChange}
+      onDescriptionChange={handleDescriptionChange}
+      onLocationChange={handleLocationChange}
+      onAllDayChange={handleAllDayChange}
+      onStartDateChange={handleStartDateChange}
+      onStartTimeChange={handleStartTimeChange}
+      onEndDateChange={handleEndDateChange}
+      onEndTimeChange={handleEndTimeChange}
+      onCategoryChange={handleCategoryChange}
+      onColorChange={handleColorChange}
+      onSyncConnectionChange={handleSyncConnectionChange}
+      onAddConferenceChange={handleAddConferenceChange}
+      onShowEndDate={handleShowEndDate}
+      onToggleAttendee={toggleAttendee}
+      onOpenTicketPicker={handleOpenTicketPicker}
+      onTicketSelect={handleTicketSelect}
+      onRemoveLinkedTicket={handleRemoveLinkedTicket}
+      onTicketPickerChange={setTicketPickerOpen}
+      onSave={handleSave}
+    />
   );
 }

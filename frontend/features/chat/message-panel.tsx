@@ -6,10 +6,8 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ArrowLeft } from "lucide-react";
 import {
-  BookmarkIcon,
   EllipsisIcon,
   MicIcon,
-  PaperclipIcon,
   UsersIcon,
 } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -45,12 +43,10 @@ import {
   useActiveHuddle,
 } from "@/hooks/api/chat-huddles";
 import { useHuddleRealtime } from "./huddle-realtime";
-import { HuddlePanel } from "./huddle-panel";
 import { getInitials, getDateLabel, buildChatUserMap, resolveChatUserName } from "./chat-helpers";
 import type { Message, TicketEntityRef, MessageMetadata } from "./chat-types";
 import type { TicketSearchResult } from "@/hooks/api/build";
-import { MessageList } from "./message-list";
-import { MessageInput } from "./message-input";
+import { MessagePanelWorkspace } from "./message-panel-workspace";
 import { useChatScroll } from "./use-chat-scroll";
 import { ChannelAvatar } from "./channel-avatar";
 import { ThreadPanel } from "./thread-panel";
@@ -70,34 +66,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useIsChatMobile } from "./use-chat-mobile";
-
-const PaperclipButton = React.forwardRef<
-  HTMLButtonElement,
-  React.ButtonHTMLAttributes<HTMLButtonElement>
->(function PaperclipButton({ className, ...props }, ref) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <button ref={ref} {...hoverHandlers} className={className} {...props}>
-      <PaperclipIcon ref={iconRef} size={16} />
-    </button>
-  );
-});
-
-const BookmarkButton = React.forwardRef<
-  HTMLButtonElement,
-  React.ButtonHTMLAttributes<HTMLButtonElement> & { active: boolean }
->(function BookmarkButton({ className, active, ...props }, ref) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <button ref={ref} {...hoverHandlers} className={className} {...props}>
-      <BookmarkIcon
-        ref={iconRef}
-        size={16}
-        className={cn(active && "fill-amber-500 text-status-warning-ink")}
-      />
-    </button>
-  );
-});
+import { BookmarkButton, PaperclipButton } from "./message-panel-actions";
 
 export function MessagePanel({
   channelId,
@@ -1120,99 +1089,31 @@ export function MessagePanel({
             You&apos;re offline — messages will be sent when you reconnect
           </div>
         )}
-        <MessageList
-          groupedMessages={groupedMessages}
-          messages={messages}
-          isLoading={isLoading}
-          hasNextPage={hasNextPage}
-          isFetchingNextPage={isFetchingNextPage}
-          fetchNextPage={fetchNextPage}
-          currentUserId={currentUserId}
-          channelId={channelId}
-          displayName={displayName}
-          channelType={channel?.type}
-          editingMessage={editingMessage}
-          editInput={editInput}
-          pinnedMessageIds={pinnedMessageIds}
-          savedMessageIds={savedMessageIds}
-          replyCountMap={replyCountMap}
-          firstUnreadMessageId={firstUnreadMessageId}
-          onEditInputChange={setEditInput}
-          onStartEdit={(msg) => {
-            setEditingMessage(msg);
-            setEditInput(msg.content ?? "");
+        <MessagePanelWorkspace
+          messageList={{
+            groupedMessages, messages, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage,
+            currentUserId, channelId, displayName, channelType: channel?.type, editingMessage, editInput,
+            pinnedMessageIds, savedMessageIds, replyCountMap, firstUnreadMessageId,
+            onEditInputChange: setEditInput,
+            onStartEdit: (msg) => { setEditingMessage(msg); setEditInput(msg.content ?? ""); },
+            onCancelEdit: () => { setEditingMessage(null); setEditInput(""); }, onSaveEdit: handleEdit,
+            onReply: (msg) => { setReplyTo(msg); inputRef.current?.focus(); }, onOpenThread: handleOpenThread,
+            onDelete: (messageId) => deleteMessage.mutate({ channelId, messageId }), onReact: handleReact,
+            onPin: handlePin, onUnpin: handleUnpin, onSave: handleSave, onUnsaveMsg: handleUnsaveMsg,
+            onForward: handleForward, resolveUserName, showScrollBtn, scrollToBottom: () => scrollToBottom("smooth"),
+            messagesEndRef, scrollContainerRef, onScroll: handleScroll,
           }}
-          onCancelEdit={() => {
-            setEditingMessage(null);
-            setEditInput("");
+          messageInput={{
+            channelId, displayName, channelType: channel?.type, messageInput, setMessageInput, inputRef,
+            fileInputRef, replyTo, setReplyTo, pendingAttachments, setPendingAttachments, uploading,
+            onFileSelect: handleFileSelect, showEmojiPicker, setShowEmojiPicker, emojiRef, insertEmoji,
+            showMentions, setShowMentions, mentionQuery, mentionIndex, setMentionIndex, filteredMentions,
+            insertMention, showTicketPicker, ticketQuery, ticketSelectedIndex, onTicketSelect: insertTicket,
+            typingText, sendMessage, onSend: handleSend, onKeyDown: handleKeyDown, onInputChange: handleInputChange,
+            onFilesSelected: handlePastedFiles,
           }}
-          onSaveEdit={handleEdit}
-          onReply={(msg) => {
-            setReplyTo(msg);
-            inputRef.current?.focus();
-          }}
-          onOpenThread={handleOpenThread}
-          onDelete={(messageId) =>
-            deleteMessage.mutate({ channelId, messageId })
-          }
-          onReact={handleReact}
-          onPin={handlePin}
-          onUnpin={handleUnpin}
-          onSave={handleSave}
-          onUnsaveMsg={handleUnsaveMsg}
-          onForward={handleForward}
-          resolveUserName={resolveUserName}
-          showScrollBtn={showScrollBtn}
-          scrollToBottom={() => scrollToBottom("smooth")}
-          messagesEndRef={messagesEndRef}
-          scrollContainerRef={scrollContainerRef}
-          onScroll={handleScroll}
+          huddle={activeHuddle && isInHuddle ? { huddle: activeHuddle, channelId, currentUserId } : undefined}
         />
-
-        <MessageInput
-          channelId={channelId}
-          displayName={displayName}
-          channelType={channel?.type}
-          messageInput={messageInput}
-          setMessageInput={setMessageInput}
-          inputRef={inputRef}
-          fileInputRef={fileInputRef}
-          replyTo={replyTo}
-          setReplyTo={setReplyTo}
-          pendingAttachments={pendingAttachments}
-          setPendingAttachments={setPendingAttachments}
-          uploading={uploading}
-          onFileSelect={handleFileSelect}
-          showEmojiPicker={showEmojiPicker}
-          setShowEmojiPicker={setShowEmojiPicker}
-          emojiRef={emojiRef}
-          insertEmoji={insertEmoji}
-          showMentions={showMentions}
-          setShowMentions={setShowMentions}
-          mentionQuery={mentionQuery}
-          mentionIndex={mentionIndex}
-          setMentionIndex={setMentionIndex}
-          filteredMentions={filteredMentions}
-          insertMention={insertMention}
-          showTicketPicker={showTicketPicker}
-          ticketQuery={ticketQuery}
-          ticketSelectedIndex={ticketSelectedIndex}
-          onTicketSelect={insertTicket}
-          typingText={typingText}
-          sendMessage={sendMessage}
-          onSend={handleSend}
-          onKeyDown={handleKeyDown}
-          onInputChange={handleInputChange}
-          onFilesSelected={handlePastedFiles}
-        />
-
-        {activeHuddle && isInHuddle && (
-          <HuddlePanel
-            huddle={activeHuddle}
-            channelId={channelId}
-            currentUserId={currentUserId}
-          />
-        )}
       </div>
 
       <AnimatePresence>

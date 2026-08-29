@@ -17,6 +17,21 @@ export type EventCategory =
   | "project"
   | "other";
 
+function eventCategory(value: string | null | undefined): EventCategory {
+  switch (value) {
+    case "meeting":
+    case "deadline":
+    case "reminder":
+    case "leave":
+    case "project":
+    case "other":
+    case "general":
+      return value;
+    default:
+      return "general";
+  }
+}
+
 export interface FormState {
   title: string;
   description: string;
@@ -66,7 +81,7 @@ export function toEditForm(event: CalendarListItem): FormState {
     location: event.location ?? "",
     allDay: event.allDay ?? false,
     color: event.color ?? "blue",
-    category: (event.category as EventCategory) ?? "general",
+    category: eventCategory(event.category),
     startDate: format(start, "yyyy-MM-dd"),
     startTime: format(start, "HH:mm"),
     endDate: format(end, "yyyy-MM-dd"),
