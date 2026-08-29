@@ -42,6 +42,8 @@ The current S7 evidence is authoritative: migration reconciliation is 373/373 wi
 
 Read `sessions/PROTOCOL.md` before any session brief. Use `sessions/CROSS-SESSION.md` for requests outside a session's territory.
 
+Completed execution-ticket Markdown files are intentionally removed after their criteria and evidence were verified. Durable evidence remains under `evidence/`, in source history and in the session status below. Only active, blocked or partial ticket files remain under `issues/`.
+
 Session 7 ticket 42 migration-chain evidence: 372 SQL files and 372 journal entries reconcile with zero
 unjournalled, orphaned or timestamp-regressed entries; the upgrade path reaches `372/372` with `chain_gaps=0`;
 the migration-chain guard passes and its self-test passes 10/10. Schema comparison remains open for control-plane
