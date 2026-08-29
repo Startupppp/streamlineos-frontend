@@ -52,7 +52,7 @@ export function PublicArticleFeedback({ orgId, slug }: PublicArticleFeedbackProp
         <CardContent className="py-5">
           {submitted ? (
             <div className="flex items-center justify-center gap-2 text-sm text-foreground py-2">
-              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+              <CheckCircle2 className="h-5 w-5 text-status-success-ink" />
               Thanks for your feedback!
             </div>
           ) : (
