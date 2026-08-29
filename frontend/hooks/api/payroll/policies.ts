@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   PolicyRow,
   PolicyCurrentResult,
@@ -82,7 +83,7 @@ export function useToggleImpact(toggle: string, enabled = false) {
 
 export function useCreatePolicy() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payroll:policies:manage", {
     mutationKey: ["payroll", "policies", "create"],
     mutationFn: (data: CreatePolicyInput) =>
       apiClient.post<PolicyRow>("/payroll/policies", data),
@@ -92,7 +93,7 @@ export function useCreatePolicy() {
 }
 
 export function usePreviewPolicy() {
-  return useMutation({
+  return useAuthorizedMutation("payroll:policies:manage", {
     mutationKey: ["payroll", "policies", "preview"],
     mutationFn: (data: PolicyPreviewInput) =>
       apiClient.post<PolicyPreviewResult>("/payroll/policies/preview", data),
@@ -101,7 +102,7 @@ export function usePreviewPolicy() {
 
 export function useUpdatePolicy() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payroll:policies:manage", {
     mutationKey: ["payroll", "policies", "update"],
     mutationFn: ({ policyId, data }: UpdatePolicyInput) =>
       apiClient.patch<PolicyRow>(`/payroll/policies/${policyId}`, data),
@@ -112,7 +113,7 @@ export function useUpdatePolicy() {
 
 export function useActivatePolicy() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payroll:policies:manage", {
     mutationKey: ["payroll", "policies", "activate"],
     mutationFn: ({ policyId, ...data }: ActivatePolicyInput) =>
       apiClient.post<ActivateResult>(
@@ -137,7 +138,7 @@ export function usePolicyVersions(policyId: number, enabled = true) {
 
 export function useCreatePolicyVersion() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payroll:policies:manage", {
     mutationKey: ["payroll", "policies", "version", "create"],
     mutationFn: ({ policyId, ...data }: CreateVersionInput) =>
       apiClient.post<VersionRow>(

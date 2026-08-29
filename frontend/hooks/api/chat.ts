@@ -2,7 +2,6 @@
 
 import {
   useQuery,
-  useMutation,
   useQueryClient,
   useInfiniteQuery,
   keepPreviousData,
@@ -13,6 +12,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { reauthorizeAblyClients } from "@/lib/ably";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useRealtimePollInterval } from "@/hooks/common/use-realtime-poll-interval";
 import type {
   Channel,
@@ -154,7 +154,7 @@ export function useChatOrgUsers(enabled = true) {
 export function useSendMessage() {
   const queryClient = useQueryClient();
   const { data: session } = useSession();
-  return useMutation({
+  return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "messages", "send"],
     mutationFn: (input: SendMessageInput) =>
       apiClient.post<Message>(
@@ -227,7 +227,7 @@ export function useSendMessage() {
 
 export function useEditMessage() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "messages", "edit"],
     mutationFn: ({
       channelId,
@@ -246,7 +246,7 @@ export function useEditMessage() {
 
 export function useDeleteMessage() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "messages", "delete"],
     mutationFn: ({
       channelId,
@@ -266,7 +266,7 @@ export function useDeleteMessage() {
 
 export function useMarkChannelRead() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "mark-read"],
     mutationFn: ({ channelId }: { channelId: number }) =>
       apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/read`),
@@ -283,7 +283,7 @@ function refreshRealtimeCapability(): void {
 
 export function useCreateDMChannel() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "create-dm"],
     mutationFn: (input: CreateDMInput) =>
       apiClient.post<Channel>("/chat/channels", { type: "DIRECT", ...input }),
@@ -296,7 +296,7 @@ export function useCreateDMChannel() {
 
 export function useCreateGroupChannel() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "create-group"],
     mutationFn: (input: CreateGroupChannelInput) =>
       apiClient.post<Channel>("/chat/channels", { type: "GROUP", ...input }),
@@ -309,7 +309,7 @@ export function useCreateGroupChannel() {
 
 export function useCreatePublicChannel() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "create-public"],
     mutationFn: (input: CreatePublicChannelInput) =>
       apiClient.post<Channel>("/chat/channels", { type: "PUBLIC", ...input }),
@@ -325,7 +325,7 @@ export function useCreatePublicChannel() {
 
 export function useCreatePrivateChannel() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "create-private"],
     mutationFn: (input: CreatePrivateChannelInput) =>
       apiClient.post<Channel>("/chat/channels", { type: "PRIVATE", ...input }),
@@ -338,7 +338,7 @@ export function useCreatePrivateChannel() {
 
 export function useJoinChannel() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "join"],
     mutationFn: (channelId: number) =>
       apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/join`),
@@ -354,7 +354,7 @@ export function useJoinChannel() {
 
 export function useLeaveChannel() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "leave"],
     mutationFn: (channelId: number) =>
       apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/leave`),
@@ -370,7 +370,7 @@ export function useLeaveChannel() {
 
 export function useAddChannelMember() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "add-member"],
     mutationFn: ({
       channelId,
@@ -392,7 +392,7 @@ export function useAddChannelMember() {
 
 export function useRemoveChannelMember() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "remove-member"],
     mutationFn: ({
       channelId,
@@ -415,7 +415,7 @@ export function useRemoveChannelMember() {
 
 export function useUpdateChannel() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "update"],
     mutationFn: ({
       channelId,
@@ -432,7 +432,7 @@ export function useUpdateChannel() {
 }
 
 export function useChatHeartbeat() {
-  return useMutation({
+  return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "presence", "heartbeat"],
     mutationFn: () =>
       apiClient.post<{ ok: boolean }>("/chat/presence/heartbeat"),
@@ -441,7 +441,7 @@ export function useChatHeartbeat() {
 
 export function useToggleReaction(channelId: number) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "messages", "toggle-reaction"],
     mutationFn: ({ messageId, emoji }: { messageId: number; emoji: string }) =>
       apiClient.post<{ reactions: Record<string, string[]> }>(
@@ -469,7 +469,7 @@ export function useChatPins(channelId: number) {
 
 export function usePinMessage() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:messages:pin", {
     mutationKey: ["chat", "messages", "pin"],
     mutationFn: ({
       channelId,
@@ -491,7 +491,7 @@ export function usePinMessage() {
 
 export function useUnpinMessage() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:messages:pin", {
     mutationKey: ["chat", "messages", "unpin"],
     mutationFn: ({
       channelId,
@@ -528,7 +528,7 @@ export function useThreadReplies(channelId: number, messageId: number) {
 
 export function useSendThreadReply(channelId: number, parentMessageId: number) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "thread", "reply"],
     mutationFn: (body: { content?: string; attachments?: AttachmentInput[] }) =>
       apiClient.post<Message>(
@@ -601,7 +601,7 @@ export function useSavedMessages() {
 
 export function useSaveMessage() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "messages", "save"],
     mutationFn: (messageId: number) =>
       apiClient.post<{ ok: boolean }>(`/chat/saved/${messageId}`),
@@ -615,7 +615,7 @@ export function useSaveMessage() {
 
 export function useUnsaveMessage() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "messages", "unsave"],
     mutationFn: (messageId: number) =>
       apiClient.delete<{ ok: boolean }>(`/chat/saved/${messageId}`),
@@ -629,7 +629,7 @@ export function useUnsaveMessage() {
 
 export function useArchiveChannel() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "archive"],
     mutationFn: (channelId: number) =>
       apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/archive`),
@@ -645,7 +645,7 @@ export function useArchiveChannel() {
 
 export function useUnarchiveChannel() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "unarchive"],
     mutationFn: (channelId: number) =>
       apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/unarchive`),
@@ -660,7 +660,7 @@ export function useUnarchiveChannel() {
 }
 
 export function useSetPresenceStatus() {
-  return useMutation({
+  return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "presence", "set-status"],
     mutationFn: (status: "ONLINE" | "AWAY" | "BUSY" | "INVISIBLE") =>
       apiClient.put<{ ok: boolean }>("/chat/presence/status", { status }),
@@ -669,7 +669,7 @@ export function useSetPresenceStatus() {
 
 export function useMarkChannelUnread() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "mark-unread"],
     mutationFn: (channelId: number) =>
       apiClient.post<{ ok: boolean }>(
@@ -697,7 +697,7 @@ export function useEntityChannel(
 
 export function useMuteChannel() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "mute"],
     mutationFn: ({
       channelId,
@@ -718,7 +718,7 @@ export function useMuteChannel() {
 
 export function useUnmuteChannel() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "unmute"],
     mutationFn: (channelId: number) =>
       apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/unmute`),
@@ -730,7 +730,7 @@ export function useUnmuteChannel() {
 
 export function useFavoriteChannel() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "favorite"],
     mutationFn: (channelId: number) =>
       apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/favorite`),
@@ -742,7 +742,7 @@ export function useFavoriteChannel() {
 
 export function useUnfavoriteChannel() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "unfavorite"],
     mutationFn: (channelId: number) =>
       apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/unfavorite`),
@@ -766,7 +766,7 @@ export function useChannelInviteLink(channelId: number, enabled: boolean) {
 
 export function useRegenerateInviteLink() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:invite-links:manage", {
     mutationKey: ["chat", "channels", "invite-link", "regenerate"],
     mutationFn: (channelId: number) =>
       apiClient.post<{ token: string }>(
@@ -782,7 +782,7 @@ export function useRegenerateInviteLink() {
 
 export function useJoinViaInviteLink() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "invite-links", "join"],
     mutationFn: (token: string) =>
       apiClient.post<{ ok: boolean; channelId: number }>(
@@ -796,7 +796,7 @@ export function useJoinViaInviteLink() {
 
 export function useSetNotificationPreference() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "channels", "notification-preference"],
     mutationFn: ({
       channelId,
@@ -933,7 +933,7 @@ export function useEntityActions(
  */
 export function useSubmitEntityAction() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "entity-actions", "submit"],
     mutationFn: (variables: SubmitEntityActionInput) =>
       apiClient.post<Record<string, unknown>>("/chat/entity-actions/submit", {
@@ -957,7 +957,7 @@ export function useSubmitEntityAction() {
  */
 export function useCreateTaskFromMessage() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "actions", "create-task-from-message"],
     mutationFn: (input: CreateTaskFromMessageInput) =>
       apiClient.post<{ ticketId: number; ticketNumber: number }>(
