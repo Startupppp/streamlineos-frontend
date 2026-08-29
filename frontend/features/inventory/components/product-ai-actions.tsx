@@ -4,7 +4,10 @@ import { useMemo } from "react";
 import { AiActionsMenu, type AiAction } from "@/components/ai";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
-import type { InsightNarration } from "@/hooks/api/inv-ai-explain";
+import type {
+  InsightNarration,
+  ReorderProposalResponse,
+} from "@/hooks/api/inv-ai-explain";
 import type { AiInsight } from "@/hooks/api/inventory/reports";
 import type { InventoryProduct } from "@/types/inventory";
 
@@ -94,36 +97,37 @@ export function ProductAiActions({ product }: ProductAiActionsProps) {
           label: "Reorder proposal",
           description: "Draft PO based on deterministic reorder evidence",
           run: async () => {
-            const response = await apiClient.post<{
-              evidence: {
-                currentOnHand: number;
-                forecasted: number;
-                suggestedQty: number;
-                leadTimeDays: number;
-                expectedDate: string | null;
-                reason: string;
-                variantSku: string;
-              };
-              explanation: InsightNarration;
-              proposal: { proposalId: string; expiresAt: string };
-            }>("/inventory/ai/reorder-proposal", {
-              variantId: String(firstVariant.id),
-            });
+            // F4. The response is the persisted C2 proposal: the quantity is
+            // the one the server would order, as an exact decimal string, and
+            // `blocked` means it declined to propose at all.
+            const response = await apiClient.post<ReorderProposalResponse>(
+              "/inventory/ai/reorder-proposal",
+              { variantId: firstVariant.id },
+            );
 
             const ev = response.evidence;
             const evidenceText = [
               `Evidence (Deterministic):`,
-              `• Current On-Hand: ${ev.currentOnHand}`,
-              `• Forecasted Stock: ${ev.forecasted}`,
-              `• Suggested Reorder Qty: ${ev.suggestedQty}`,
-              `• Lead Time: ${ev.leadTimeDays} days`,
-              `• Expected Arrival: ${ev.expectedDate ?? "—"}`,
-              `• Reason: ${ev.reason}`,
+              `• SKU: ${ev.variantSku}`,
+              `• Order Quantity: ${ev.suggestedQuantity}`,
+              `• Reorder Point: ${ev.reorderPoint ?? "—"}`,
+              `• Supplier: ${ev.vendorName ?? "—"}`,
+              `• Warehouse: ${ev.warehouseName ?? "Organisation-wide"}`,
+              `• Unit Cost: ${ev.unitCost}`,
             ].join("\n");
 
-            const narration = narrationToText(response.explanation);
+            if (response.status === "blocked" || response.proposal === null) {
+              const reason =
+                response.blockedReason ??
+                "This item cannot be ordered from here right now.";
+              return { text: `${evidenceText}\n\n${reason}` };
+            }
 
-            const draftNote = `\n\nDraft PO: Proposal ${response.proposal.proposalId.slice(0, 8)}… expires ${new Date(response.proposal.expiresAt).toLocaleString()}. Open the Replenishment view to confirm and create the draft purchase order.`;
+            const narration = response.explanation
+              ? narrationToText(response.explanation)
+              : "";
+
+            const draftNote = `\n\nDraft PO: Proposal ${response.proposal.proposalId} expires ${new Date(response.proposal.expiresAt).toLocaleString()}. Open the Replenishment view to confirm and create the draft purchase order.`;
 
             return { text: `${evidenceText}\n\n${narration}${draftNote}` };
           },

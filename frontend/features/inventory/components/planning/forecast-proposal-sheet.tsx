@@ -1,36 +1,21 @@
 "use client";
 
 import { memo } from "react";
-import Link from "next/link";
-import { toast } from "sonner";
 import { AppSheet, ErrorState, NoPermissionState } from "@/components/shared";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
-import {
-  useForecastReorderProposal,
-  useGeneratePO,
-  type ReorderProposal,
-} from "@/hooks/api/inventory/planning";
+import { useForecastReorderProposal } from "@/hooks/api/inventory/planning";
+import type {
+  BatchableProposal,
+  ProposalOverrideInput,
+} from "@/hooks/api/inventory/replenishment-planning";
 import { DemandBaselineNote } from "./demand-baseline-note";
 import { ForecastProposalDetail } from "./forecast-proposal-detail";
+import { ReorderProposalPanel } from "./reorder-proposal-panel";
 import { formatQuantity } from "./forecast-format";
-
-function blockedReason(
-  proposal: ReorderProposal | undefined,
-  canCreatePo: boolean,
-  vendorId: number | null,
-): string | null {
-  if (!canCreatePo) return "Creating a purchase order needs inventory:purchase-orders:create.";
-  if (!proposal) return null;
-  if (proposal.suggestedQuantity === null)
-    return "The engine proposed no quantity, so there is nothing to order from it. Resolve the caveats or raise the order by hand.";
-  if (vendorId === null)
-    return "No vendor is assigned to this variant, so the draft PO has nobody to go to.";
-  return null;
-}
 
 const ProposalSkeleton = memo(function ProposalSkeleton() {
   return (
@@ -47,32 +32,62 @@ const ProposalSkeleton = memo(function ProposalSkeleton() {
   );
 });
 
+interface QuantityRowProps {
+  label: string;
+  value: string;
+  note?: string;
+  emphasis?: boolean;
+}
+
+function QuantityRow({ label, value, note, emphasis }: QuantityRowProps) {
+  return (
+    <div className="flex items-baseline justify-between gap-3 py-1.5">
+      <div className="min-w-0">
+        <p className="text-dense font-medium">{label}</p>
+        {note ? <p className="text-micro text-muted-foreground">{note}</p> : null}
+      </div>
+      <span
+        className={
+          emphasis
+            ? "font-mono text-sm font-semibold tabular-nums text-primary"
+            : "font-mono text-sm tabular-nums text-muted-foreground"
+        }
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
 interface ForecastProposalSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  productVariantId: number | null;
-  productName: string;
-  variantSku: string;
-  vendorId: number | null;
-  warehouseId: number | null;
+  /** The persisted `inv_demand_forecasts` row this sheet explains. */
+  proposal: BatchableProposal | null;
+  /** The override staged for it on the list, if a person has recorded one. */
+  override: ProposalOverrideInput | null;
 }
 
+/**
+ * C2 — the evidence behind a recorded proposal, and nothing that orders it.
+ *
+ * The sheet used to carry a "Create draft PO" button that posted a quantity it
+ * had read off the live proposal. That was the last client-originated quantity
+ * on this screen, and it is gone: ordering happens from the list, where the
+ * server's own figure and any override are both visible and the request carries
+ * proposal ids only. What remains here is the working — the position, the
+ * reorder point, the caveats and the demand baseline — which is what a planner
+ * who disagrees with the number actually needs.
+ */
 export const ForecastProposalSheet = memo(function ForecastProposalSheet({
   open,
   onOpenChange,
-  productVariantId,
-  productName,
-  variantSku,
-  vendorId,
-  warehouseId,
+  proposal,
+  override,
 }: ForecastProposalSheetProps) {
   const canManage = useCan("inventory:replenishment:manage");
-  const canCreatePo = useCan("inventory:purchase-orders:create");
+  const productVariantId = proposal?.productVariantId ?? null;
   const proposalQuery = useForecastReorderProposal(productVariantId, { enabled: open });
-  const generatePo = useGeneratePO();
-
-  const proposal = proposalQuery.data;
-  const blocked = blockedReason(proposal, canCreatePo, vendorId);
 
   function handleClose(): void {
     onOpenChange(false);
@@ -82,69 +97,20 @@ export const ForecastProposalSheet = memo(function ForecastProposalSheet({
     void proposalQuery.refetch();
   }
 
-  function handleCreateDraftPo(): void {
-    if (!proposal || proposal.suggestedQuantity === null || vendorId === null) return;
-    generatePo.mutate(
-      {
-        vendorId,
-        ...(warehouseId !== null ? { warehouseId } : {}),
-        suggestions: [
-          {
-            productVariantId: proposal.productVariantId,
-            // The server re-derives the quantity from the live proposal and
-            // ignores whatever is sent here (backend INV-309), so the lossy
-            // hop from the exact decimal string to a JSON number decides
-            // nothing. It is sent only because the endpoint's schema still
-            // requires the field.
-            suggestedQty: Number(proposal.suggestedQuantity),
-          },
-        ],
-      },
-      {
-        onSuccess: (result) => {
-          toast.success("Draft PO created", {
-            description: (
-              <span>
-                PO {result.poNumber} raised for {productName}.{" "}
-                <Link href="/inventory/purchase-orders" className="underline">
-                  View purchase orders
-                </Link>
-              </span>
-            ),
-          });
-          onOpenChange(false);
-        },
-        onError: (err) => toast.error(getErrorMessage(err)),
-      },
-    );
-  }
-
-  const footer = canManage ? (
-    <div className="grid w-full grid-cols-2 gap-2">
-      <Button variant="outline" onClick={handleClose}>
-        Close
-      </Button>
-      <LoadingButton
-        isPending={generatePo.isPending}
-        loadingText="Creating…"
-        disabled={blocked !== null}
-        onClick={handleCreateDraftPo}
-      >
-        {proposal === undefined
-          ? "Create draft PO"
-          : proposal.suggestedQuantity === null
-            ? "No quantity to order"
-            : `Order ${formatQuantity(proposal.suggestedQuantity)}`}
-      </LoadingButton>
-    </div>
-  ) : undefined;
+  const footer = (
+    <Button variant="outline" className="w-full" onClick={handleClose}>
+      Close
+    </Button>
+  );
 
   return (
     <AppSheet
       open={open}
       onOpenChange={onOpenChange}
       title="Reorder proposal"
-      description={`${productName} · ${variantSku}`}
+      description={
+        proposal ? `${proposal.productName} · ${proposal.variantSku}` : "No proposal selected"
+      }
       footer={footer}
       className="sm:max-w-xl"
     >
@@ -154,24 +120,65 @@ export const ForecastProposalSheet = memo(function ForecastProposalSheet({
           title="Reorder proposals are restricted"
           description="The forecast engine's proposals need replenishment access. Nothing is hidden here — you simply cannot read it."
         />
-      ) : proposalQuery.isLoading ? (
-        <ProposalSkeleton />
-      ) : proposalQuery.isError ? (
-        <ErrorState
-          compact
-          title="Could not read the proposal"
-          description={getErrorMessage(proposalQuery.error)}
-          onRetry={handleRetry}
-        />
-      ) : proposal ? (
+      ) : proposal === null ? null : (
         <div className="space-y-4">
-          <ForecastProposalDetail proposal={proposal} />
-          <DemandBaselineNote productVariantId={productVariantId} />
-          {blocked ? (
-            <p className="text-dense leading-relaxed text-muted-foreground">{blocked}</p>
+          <div className="rounded-xl border border-border/70 bg-card px-4 py-3">
+            <QuantityRow
+              label="Engine quantity"
+              value={formatQuantity(proposal.suggestedQuantity)}
+              note="Re-derived from the recorded reorder point against today's position, then put through the supplier's minimum and pack size."
+              emphasis={override === null}
+            />
+            {override !== null ? (
+              <>
+                <div className="border-t border-border/60" />
+                <QuantityRow
+                  label="Override"
+                  value={formatQuantity(override.quantity)}
+                  note={override.reason}
+                  emphasis
+                />
+                <Badge
+                  variant="outline"
+                  className="mt-1 h-5 px-2 py-0.5 text-micro border-primary/40 text-primary"
+                >
+                  Recorded against the purchase order when it is raised
+                </Badge>
+              </>
+            ) : null}
+            {proposal.blockedReason !== null ? (
+              <p className="mt-2 text-dense leading-relaxed text-muted-foreground">
+                {proposal.blockedReason}
+              </p>
+            ) : null}
+          </div>
+
+          {proposalQuery.isLoading ? (
+            <ProposalSkeleton />
+          ) : proposalQuery.isError ? (
+            <ErrorState
+              compact
+              title="Could not read the working"
+              description={getErrorMessage(proposalQuery.error)}
+              onRetry={handleRetry}
+            />
+          ) : proposalQuery.data ? (
+            <>
+              <ForecastProposalDetail proposal={proposalQuery.data} />
+              <DemandBaselineNote productVariantId={productVariantId} />
+            </>
           ) : null}
+
+          {/* Contextual AI on the record it explains (frontend §5). The panel
+              gates itself on `inventory:ai:propose` and renders nothing without
+              it, so it is safe to mount unconditionally here. */}
+          <ReorderProposalPanel
+            variantId={proposal.productVariantId}
+            variantName={proposal.productName}
+            warehouseId={proposal.warehouseId ?? undefined}
+          />
         </div>
-      ) : null}
+      )}
     </AppSheet>
   );
 });

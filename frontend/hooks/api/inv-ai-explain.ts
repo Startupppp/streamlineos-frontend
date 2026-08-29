@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { PermissionKey } from "@/lib/rbac/permissions";
+import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 import type { VendorScorecard } from "@/types/inventory";
 
 export interface ExplainFactor {
@@ -69,28 +70,79 @@ export function useExplainInsight() {
   });
 }
 
+/**
+ * F4. The evidence is the **persisted C2 proposal**, resolved by the same
+ * service the buyer's own batching screen uses. Every quantity is an exact
+ * decimal string, not a number: these are 18,4 ledger figures and rendering one
+ * through a JS float is how a purchase order acquires a rounding error.
+ *
+ * The old shape described a live reorder *suggestion* and named four fields the
+ * server never sent (`forecasted`, `suggestedQty`, `expectedDate`, `reason` —
+ * the API returns `forecastedQty`, `suggestedOrderQty`, `expectedDeliveryDate`,
+ * `reorderReason`), so those cells rendered `undefined`. They are gone rather
+ * than renamed, because the figures they described are no longer what the
+ * proposal is made of.
+ */
 export interface ReorderEvidence {
-  productVariantId: string;
+  /** The persisted forecast version this proposal is about. */
+  proposalId: number;
+  productVariantId: number;
   variantSku: string;
-  variantName: string;
   productName: string;
-  currentOnHand: number;
-  forecasted: number;
-  suggestedQty: number;
-  vendorId: string;
-  leadTimeDays: number;
-  expectedDate: string | null;
-  reason: string;
+  warehouseId: number | null;
+  warehouseName: string | null;
+  vendorId: number | null;
+  vendorName: string | null;
+  currency: string | null;
+  /** When the forecast version behind the proposal was generated. */
+  generatedAt: string;
+  reorderPoint: string | null;
+  /** What the server will order, through the supplier's minimum and pack size. */
+  suggestedQuantity: string;
+  unitCost: string;
+  duplicateOfPoNumber: string | null;
+  blockedReason: string | null;
+}
+
+/**
+ * The C1 forecast behind the proposal, carried so the panel can show what the
+ * model was and was not confident about rather than only the point estimate.
+ */
+export interface ReorderForecast {
+  method: string | null;
+  demandCategory: string;
+  applicable: boolean;
+  refusalReason: string | null;
+  serviceLevel: string;
+  safetyStock: string | null;
+  demandMean: string;
+  demandStdDev: string;
+  leadTimeWeeks: string;
+  leadTimeStdDevWeeks: string;
+  mase: string | null;
+  stockoutCensored: boolean;
 }
 
 export interface ReorderProposalResponse {
+  /**
+   * `blocked` is the server declining to propose — no supplier, already on a
+   * draft order, the position already covers the reorder point. It is a real
+   * answer with a reason, and no credits were spent producing it, so it must
+   * render as itself rather than as an empty success.
+   */
+  status: "proposed" | "blocked";
   evidence: ReorderEvidence;
-  explanation: InsightNarration;
+  forecast: ReorderForecast;
+  /** Null on `blocked` — there is nothing to narrate. */
+  explanation: InsightNarration | null;
+  /** Null on `blocked` — there is nothing confirmable. */
   proposal: {
-    proposalId: string;
+    proposalId: number;
     token: string;
     expiresAt: string;
-  };
+  } | null;
+  blockedReason: string | null;
+  aiUsage?: AiUsageMeta | null;
 }
 
 export interface SupplierDelayVendor {
@@ -142,7 +194,7 @@ export function useInventoryDigest() {
 }
 
 export function useReorderProposal() {
-  return useMutation<ReorderProposalResponse, Error, { variantId: string; warehouseId?: string }>({
+  return useMutation<ReorderProposalResponse, Error, { variantId: number; warehouseId?: number }>({
     mutationKey: ["inventory", "ai", "reorder-proposal"],
     mutationFn: (body) =>
       apiClient.post<ReorderProposalResponse>("/inventory/ai/reorder-proposal", body),
@@ -151,7 +203,7 @@ export function useReorderProposal() {
 
 export function useConfirmReorderProposal() {
   const qc = useQueryClient();
-  return useMutation<unknown, Error, { proposalId: string; token: string }>({
+  return useMutation<unknown, Error, { proposalId: number; token: string }>({
     mutationKey: ["inventory", "ai", "reorder-proposal", "confirm"],
     mutationFn: (body) =>
       apiClient.post<unknown>("/inventory/ai/reorder-proposal/confirm", body),

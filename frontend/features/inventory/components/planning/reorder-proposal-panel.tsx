@@ -17,9 +17,9 @@ import {
 import { ReorderEvidenceCard } from "./reorder-evidence-card";
 
 interface DraftProposalCardProps {
-  proposal: ReorderProposalResponse["proposal"];
+  proposal: NonNullable<ReorderProposalResponse["proposal"]>;
   productName: string;
-  onConfirm: (proposalId: string, token: string) => void;
+  onConfirm: (proposalId: number, token: string) => void;
   isPending: boolean;
   /**
    * F1. Confirming this proposal raises a draft purchase order, so the control
@@ -55,7 +55,7 @@ const DraftProposalCard = memo(function DraftProposalCard({
         <div className="min-w-0">
           <p className="text-dense font-semibold text-foreground">Draft PO Ready</p>
           <p className="text-micro text-muted-foreground">
-            Expires {expiresAt} · Proposal {proposal.proposalId.slice(0, 8)}…
+            Expires {expiresAt} · Proposal {proposal.proposalId}
           </p>
         </div>
         {canCreatePurchaseOrder ? (
@@ -89,9 +89,9 @@ const DraftProposalCard = memo(function DraftProposalCard({
 });
 
 interface ReorderProposalPanelProps {
-  variantId: string;
+  variantId: number;
   variantName: string;
-  warehouseId?: string;
+  warehouseId?: number;
 }
 
 export const ReorderProposalPanel = memo(function ReorderProposalPanel({
@@ -128,7 +128,7 @@ export const ReorderProposalPanel = memo(function ReorderProposalPanel({
     );
   }
 
-  function handleConfirm(proposalId: string, token: string): void {
+  function handleConfirm(proposalId: number, token: string): void {
     confirmMutation.mutate(
       { proposalId, token },
       {
@@ -212,10 +212,19 @@ export const ReorderProposalPanel = memo(function ReorderProposalPanel({
               <div className="space-y-4">
                 <ReorderEvidenceCard
                   evidence={result.evidence}
+                  forecast={result.forecast}
                   explanation={result.explanation}
                 />
                 <Separator />
-                {confirmed ? (
+                {/* F4. `blocked` is the server declining to propose, with its own
+                    reason and no credits spent. It renders as that reason rather
+                    than as a confirm button that would only ever 409. */}
+                {result.status === "blocked" || result.proposal === null ? (
+                  <p className="text-dense text-muted-foreground">
+                    {result.blockedReason ??
+                      "This item cannot be ordered from here right now."}
+                  </p>
+                ) : confirmed ? (
                   <p className="text-dense text-muted-foreground">
                     Draft PO created successfully.
                   </p>

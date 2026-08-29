@@ -60,7 +60,7 @@ function BatchCard({ batch, canCreate, isPending, onCreate }: BatchCardProps) {
           <thead>
             <tr className="border-b border-border/70 text-left">
               <th className="pb-2 text-micro font-medium text-muted-foreground">Item</th>
-              <th className="pb-2 text-right text-micro font-medium text-muted-foreground">Needed</th>
+              <th className="pb-2 text-right text-micro font-medium text-muted-foreground">Engine</th>
               <th className="pb-2 text-right text-micro font-medium text-muted-foreground">Ordering</th>
               <th className="pb-2 text-right text-micro font-medium text-muted-foreground">Unit cost</th>
               <th className="pb-2 text-right text-micro font-medium text-muted-foreground">Line value</th>
@@ -70,17 +70,40 @@ function BatchCard({ batch, canCreate, isPending, onCreate }: BatchCardProps) {
             {batch.lines.map((line) => (
               <tr key={line.productVariantId} className="border-b border-border/60 last:border-0">
                 <td className="py-2 text-dense">
-                  <span className="block">{line.productName}</span>
+                  <span className="flex flex-wrap items-center gap-1.5">
+                    {line.productName}
+                    {line.override !== null && (
+                      <Badge
+                        variant="outline"
+                        className="h-4 px-1.5 py-0 text-micro border-primary/40 text-primary"
+                      >
+                        Override
+                      </Badge>
+                    )}
+                  </span>
                   {line.reasons.map((reason) => (
                     <span key={reason} className="block text-micro text-muted-foreground">
                       {reason}
                     </span>
                   ))}
                 </td>
-                <td className="py-2 text-right font-mono text-dense tabular-nums text-muted-foreground">
-                  {formatQuantity(line.requested)}
+                {/* C2. The engine's own number stays visible beside the one that
+                    will be ordered — struck through when a person changed it, so
+                    the two are never read as the same figure. */}
+                <td
+                  className={cn(
+                    "py-2 text-right font-mono text-dense tabular-nums text-muted-foreground",
+                    line.override !== null && "line-through",
+                  )}
+                >
+                  {formatQuantity(line.engineOrdered)}
                 </td>
-                <td className="py-2 text-right font-mono text-dense font-semibold tabular-nums">
+                <td
+                  className={cn(
+                    "py-2 text-right font-mono text-dense font-semibold tabular-nums",
+                    line.override !== null && "text-primary",
+                  )}
+                >
                   {formatQuantity(line.ordered)}
                 </td>
                 <td className="py-2 text-right font-mono text-dense tabular-nums">

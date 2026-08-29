@@ -19,6 +19,8 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
 import { GrnLifecycleActions } from "./grn-lifecycle-actions";
+import { GrnPrintNoteButton } from "./grn-print-note-button";
+import { LABELS_PRINT_KEY } from "@/hooks/api/inventory/labels";
 
 const READ_PERMISSION = "inventory:purchase-orders:read";
 const RECEIVE_PERMISSION = "inventory:purchase-orders:receive";
@@ -134,6 +136,10 @@ const grnLineColumns: DataTableColumn<GrnLine>[] = [
 export function GrnDetailSheet({ grnId, open, onOpenChange }: GrnDetailSheetProps) {
   const canView = useCan(READ_PERMISSION);
   const canReceive = useCan(RECEIVE_PERMISSION);
+  // Printing is its own authority. A clerk who may not post a receipt may still
+  // need the sheet, and somebody who posts all day may not be allowed to put the
+  // vendor's prices on paper that leaves the building.
+  const canPrint = useCan(LABELS_PRINT_KEY);
   const grnQuery = useGoodsReceipt(open ? grnId : 0);
 
   function handleRefetchGrn(): void {
@@ -154,13 +160,18 @@ export function GrnDetailSheet({ grnId, open, onOpenChange }: GrnDetailSheetProp
       description={grn ? `Received on ${formatShortDate(grn.receivedDate)}` : undefined}
       footer={
         grn ? (
-          <GrnLifecycleActions
-            grnId={grn.id}
-            grnNumber={grn.grnNumber}
-            status={grn.status}
-            canReceive={canReceive}
-            onReversed={handleReversed}
-          />
+          <div className="flex w-full flex-col gap-2">
+            <GrnLifecycleActions
+              grnId={grn.id}
+              grnNumber={grn.grnNumber}
+              status={grn.status}
+              canReceive={canReceive}
+              onReversed={handleReversed}
+            />
+            {canPrint ? (
+              <GrnPrintNoteButton grnId={grn.id} grnNumber={grn.grnNumber} />
+            ) : null}
+          </div>
         ) : undefined
       }
     >
