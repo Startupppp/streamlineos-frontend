@@ -4,13 +4,13 @@
 
 **Blocked by:** 11, 13, 14, 15 and 16.
 
-**Status:** partial — enforcement **done and biting**; repair advanced a long way this session (cold
-bootstrap reaches head for the first time; chain gaps 132 -> 9). The 9 remaining gaps and all 144
-schema differences originate in other sessions or in an out-of-scope module
+**Status:** partial — enforcement **done and biting** (six checks, self-test 10/10); repair went a long
+way: cold bootstrap reaches head for the first time, chain gaps 132 -> 1, schema differences 144 -> 44
+with 5 of 9 object classes now identical. The 1 gap and all 44 differences originate in other sessions
 
 - [ ] Every migration is journaled in dependency order and the reported chain-gap count is zero.
 
-  **Journalling: done. Gap count: 9, down from 132 — not zero, and the 9 are not this session's.**
+  **Journalling: done. Gap count: 1, down from 132 — not zero, and the 1 is not this session's.**
 
   Journal repairs made this session, all verified by `pnpm db:reconcile-journal` reporting **0 timestamp
   regressions and 0 orphan entries**:
@@ -27,7 +27,7 @@ schema differences originate in other sessions or in an out-of-scope module
   - A duplicate `0641` (S4's `financial_actor_audit_identity` vs this ticket's `org_members_org_fk`) was
     resolved by renaming ours to `0649`.
 
-  **chain_gaps went from 132 to 9, and all 9 that remain belong to other sessions.**
+  **chain_gaps went from 132 to 1, in two steps, and the 1 that remains is another session's.**
 
   The whole count was in one migration. `0591_tenant_isolation_for_unprotected_tables` protects 401
   tables and 124 of them did not exist at that point, because `0619_chain_creates_what_production_has`
@@ -41,17 +41,26 @@ schema differences originate in other sessions or in an out-of-scope module
   among the 39 enums it creates and the 25th (`crm_health`) comes from the `0000` baseline. Every
   statement is idempotent, so `0619` remains a correct no-op behind it.
 
-  Remaining 9, verified from the run: 8 in `0650_tenant_isolation_for_three_unprotected_tables`
-  referencing `inv_carton_types` and `inv_shipment_status_events` — **Inventory is explicitly out of
-  this PRD's scope**, so those tables have no Drizzle declaration and are not in the chain — and 1 in
-  `0653_kb_remaining_composite_tenant_constraints` referencing `projects` unqualified when it lives in
-  the `build` schema. Both files were added by other sessions today and are recorded in
+  That left 9. `0655_chain_creates_remaining_catalog_objects` closed 8 of them by creating the
+  inventory and CRM objects the control plane has and the chain never made — generated from
+  `pg_catalog` by `cell:chain-repair`, not hand-written.
+
+  **The 3 statements it deliberately drops matter more than the 98 it keeps.** `cell:chain-repair` runs
+  *forward* — control plane to chain — and the control plane still carries
+  `event_attendees_event_user_unique` and its foreign keys to `users(id)` only because S3's calendar
+  actor migration has landed in the chain and **not** in the control plane. There the chain is ahead, so
+  copying those back would have re-added the legacy user-keyed constraints ticket 13 exists to remove. A
+  forward repair is correct only where production is ahead; applying it wholesale would have silently
+  reversed another session's work.
+
+  **1 gap remains**, in `0653_kb_remaining_composite_tenant_constraints`, which references `projects`
+  unqualified when it lives in the `build` schema. Another session's file, recorded in
   `CROSS-SESSION.md` rather than edited.
 
 - [ ] Cold bootstrap and upgrade schema comparison report no differences.
 
-  **Cold bootstrap now reaches head — `RESULT: REACHED_HEAD 371/371` — for the first time. The
-  comparison is 144 differences, not zero.**
+  **Cold bootstrap now reaches head — `RESULT: REACHED_HEAD 372/372` — for the first time. The
+  comparison is 44 differences, not zero.**
 
   Getting there took two fixes. The build previously died with `CONNECTION_CLOSED` at statement 109 of
   4,456 in `0000`, and on a second attempt at 1,471 of 1,867 in `0619` — the documented Neon behaviour
@@ -60,12 +69,19 @@ schema differences originate in other sessions or in an out-of-scope module
   stopped at S3's `0628` (`42P10`, an `ON CONFLICT` 22 lines before the index it needs); S3 fixed that in
   `c4a59aaf` and the chain has run clean through since.
 
-  `cell:compare-schema` now runs and reports **`SCHEMAS DIFFER differences=144`**, classified rather
-  than counted: **55 of the 59 named objects are inventory** (`inv_*` tables, enums, policies, a
-  function and a trigger) — a module this PRD excludes, whose objects exist in production but were never
-  in the chain. The other 4 are `event_attendees` constraints, where the chain is correctly **ahead** of
-  production because S3's calendar contraction has landed in the chain and not yet in the control plane.
-  **None of the 144 originate in this session's work.**
+  `cell:compare-schema` now runs and reports **`SCHEMAS DIFFER differences=44`**, down from 144 after
+  `0655`, with **five of the nine object classes passing outright** — enums, functions, policies,
+  `rlsEnabled` and triggers are all identical.
+
+  The 44 that remain are classified, not counted, and every one is the same shape: **the chain is ahead
+  of a control plane that has not caught up.** All 4 "missing in cell" are the `event_attendees`
+  constraints S3 is dropping. The "only in cell" set is S3's chat and calendar composite tenant FKs
+  (`fk_chat_messages_org_channel`, `fk_chat_attachments_org_message`,
+  `fk_calendar_event_exceptions_org_event` and siblings) plus `communication_backfill_issues`. **None is
+  a chain defect** — they are journalled migrations that a cold build applies and the control plane has
+  not.
+
+  Chasing *why* the control plane had not caught up produced the worst finding of the session, below.
 
   Reproduce: `pnpm -C backend cell:bootstrap --region=cell-2 --database=cell2 --drop --i-mean-it`
   then `pnpm -C backend cell:compare-schema`.
@@ -90,12 +106,31 @@ schema differences originate in other sessions or in an out-of-scope module
 
 - [x] CI rejects unjournalled SQL, chain gaps and cold/runtime schema drift.
 
-  `pnpm check:migration-chain` checks five failure modes: unjournalled `.sql` not on the deliberate
+  `pnpm check:migration-chain` checks **six** failure modes: unjournalled `.sql` not on the deliberate
   allowlist, duplicate numeric prefixes, timestamp regressions (Drizzle skips by timestamp, so a
-  backwards entry never runs), journal entries with no file, and chain gaps. `--self-test` constructs
-  each of the five divergences in a temporary fixture directory and asserts the guard catches it, and
-  additionally asserts the chain-gap check does **not** fire on a zero count: **7 passed, 0 failed**. Wired into `backend/.github/workflows/ci.yml`, with a nightly
+  backwards entry never runs), journal entries with no file, chain gaps, and — added after the finding
+  below — an **applied watermark ahead of the journal**. `--self-test` constructs each divergence in a
+  temporary fixture and asserts the guard catches it, *and* asserts each clean case is not reported:
+  **10 passed, 0 failed**. Wired into `backend/.github/workflows/ci.yml`, with a nightly
   `cell-cold-bootstrap.yml` producing the `.chain-gaps` figure the gate reads.
+
+  ### The finding the watermark check exists for
+
+  **`db:migrate` has been a no-op for every session, and reporting success.** Three rows in
+  `drizzle.__drizzle_migrations` sit above every journal entry — one dated `1788048000000`, which is
+  **2026-08-30, tomorrow**, while the newest journal entry is 2026-08-28T18:16. Drizzle decides what to
+  run by comparing each entry's `when` against the highest `created_at` already applied, so one
+  future-dated row disables the migrator for everyone.
+
+  It is not theoretical. `fk_chat_messages_org_channel` and `fk_chat_attachments_org_message` are
+  journalled and **absent from `pg_constraint`** — ticket 15's chat composite tenant constraints are not
+  in the database, which is also why `compare-schema` still shows the chain ahead by 44.
+
+  None of the three rows matches a journal `when`, so they were recorded by hand rather than by
+  `db:migrate`. **They are not deleted here:** removing rows from the migrations table is destructive to
+  shared state, and only whoever recorded them knows whether the work behind them actually ran. Recorded
+  in `CROSS-SESSION.md`. Check (f) fired on its first live run, which is also how the alias was found to
+  be running without `.env` — it would have skipped the database check entirely and looked green.
 
   **It is not a guard that has never failed, and it caught one of my own mistakes.** Its first live run
   found 15 issues, and a later run caught this ticket colliding on `0650` with another session, which is
@@ -112,7 +147,13 @@ The enforcement half is finished: the chain can no longer silently drift, becaus
 used to drift now fail a build, and the guard has proved it catches all five.
 
 The repair half moved from stuck to nearly done. A cold database now rebuilds the schema end to end,
-which it could not do at the start of this session, and the gap count fell 132 -> 9. What is left is
-not this session's to close: 8 of the 9 gaps and 55 of the 59 named schema differences are Inventory,
-a module this PRD excludes; the rest belong to migrations other sessions added today. Both counts are
-published rather than rounded, and neither is hidden behind a green tick.
+which it could not do at the start of this session; the gap count fell 132 -> 1 and the schema
+difference count 144 -> 44, with five of nine object classes now identical. What is left is not this
+session's to close: the single remaining gap is another session's unqualified table reference, and all
+44 differences are that same session's migrations being ahead of a control plane whose migrator has
+been silently disabled by a future-dated watermark row. Both counts are published rather than rounded.
+
+The most useful thing this ticket produced is not a number. It is that a forward chain repair was
+**not** applied wholesale: three of its statements would have re-added the legacy constraints another
+ticket exists to remove. A generator that emits the difference between two databases cannot know which
+side is right.
