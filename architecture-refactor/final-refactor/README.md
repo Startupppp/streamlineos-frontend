@@ -30,7 +30,7 @@ Sessions S1-S6 may be opened in parallel. Every session must complete the openin
 
 | Session | Tickets | Status |
 |---:|---|---|
-| S1 | 01, 02, 03, 05, 06, 12 | 01, 02, 03, 05, 06 done · 12 done except its read-budget criterion (all four tables are empty in the dev DB; a plan there proves nothing — unblock condition named in the ticket) |
+| S1 | 01, 02, 03, 05, 06, 12 | **closed** — 01, 02, 03, 05, 06 done · 12 done except its read-budget criterion (all four tables and their parents are empty in the dev DB; unblock condition named in the ticket). 1031 unit tests green, typecheck 0, madge 0, tenant-index/owner-authority/rbac-integrity checks passing. Residuals belonging to other sessions are in CROSS-SESSION.md |
 | S2 | 07, 08, 17, 18, 21, 25 | done (all six) |
 | S3 | 09, 13-16, 24, 30-32 | ready-for-agent |
 | S4 | 04, 10, 19, 20, 23, 33, 38 | ready-for-agent |
