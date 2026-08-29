@@ -1,5 +1,6 @@
 export interface UniversalRoute {
   readonly path: string;
+  /** Exact matching is the safe default; set false only for an intentional subtree. */
   readonly exact?: boolean;
   readonly reason: string;
 }
@@ -7,75 +8,92 @@ export interface UniversalRoute {
 export const UNIVERSAL_ROUTES: readonly UniversalRoute[] = [
   {
     path: "/dashboard",
+    exact: false,
     reason: "Home. Every active member keeps the cross-module read projection.",
   },
   {
     path: "/home",
+    exact: false,
     reason: "Home alias. Same surface as /dashboard.",
   },
   {
     path: "/me",
+    exact: false,
     reason:
       "Employee self-service. A member always reaches their own attendance, leave, expenses, pay and employment documents.",
   },
   {
     path: "/mail",
+    exact: false,
     reason: "Platform core communication surface.",
   },
   {
     path: "/chat",
+    exact: false,
     reason: "Platform core communication surface.",
   },
   {
     path: "/notifications",
+    exact: false,
     reason: "Platform core communication surface.",
   },
   {
     path: "/calendar",
+    exact: false,
     reason:
       "One unified calendar serves everyone; module event sources are toggles inside it, not separate surfaces.",
   },
   {
     path: "/announcements",
+    exact: false,
     reason: "Company announcements are readable by every active member.",
   },
   {
     path: "/hr/announcements",
+    exact: false,
     reason:
       "The announcements surface lives under the HR prefix but is company-wide reading, not HR administration.",
   },
   {
     path: "/directory",
+    exact: false,
     reason: "People directory reading is platform core.",
   },
   {
     path: "/kb",
+    exact: false,
     reason: "Knowledge Base reading is platform core.",
   },
   {
     path: "/docs",
+    exact: false,
     reason: "Knowledge Base reading is platform core.",
   },
   {
     path: "/knowledge",
+    exact: false,
     reason: "Knowledge Base reading is platform core; administration is explicitly listed below.",
   },
   {
     path: "/knowledge-base",
+    exact: false,
     reason: "Knowledge Base reading is platform core.",
   },
   {
     path: "/support/my",
+    exact: false,
     reason:
       "A member's own support requests, not the helpdesk queue that serves them.",
   },
   {
     path: "/referrals",
+    exact: false,
     reason:
       "Referrals and internal job openings are universal; the candidate pipeline behind them is not.",
   },
   {
     path: "/jobs",
+    exact: false,
     reason:
       "Internal job openings are universal; recruitment administration is not.",
   },
@@ -87,11 +105,13 @@ export const UNIVERSAL_ROUTES: readonly UniversalRoute[] = [
   },
   {
     path: "/access-denied",
+    exact: false,
     reason:
       "The denial page itself must render, or a denied member sees a redirect loop.",
   },
   {
     path: "/access-suspended",
+    exact: false,
     reason:
       "The suspension notice must render for a member whose membership is no longer active.",
   },
@@ -172,7 +192,7 @@ export function matchUniversalRoute(pathname: string): UniversalRoute | null {
   if (isUniversalExclusion(pathname)) return null;
   for (const route of UNIVERSAL_ROUTES) {
     if (pathname === route.path) return route;
-    if (!route.exact && pathname.startsWith(`${route.path}/`)) return route;
+    if (route.exact === false && pathname.startsWith(`${route.path}/`)) return route;
   }
   return null;
 }
