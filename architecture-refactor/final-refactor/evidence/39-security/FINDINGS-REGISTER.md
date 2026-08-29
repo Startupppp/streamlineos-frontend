@@ -192,12 +192,19 @@ hand-maintain a table list.
 **Unblock condition:** a product decision on whether org purge is a hard delete or a permanent
 anonymisation, because the two need different code and only one satisfies erasure.
 
-## F-11 — cross-tenant negative-test coverage is 27%
+## F-11 — cross-tenant negative-test coverage is 18%
 
 **Status:** OPEN — baseline recorded · **Severity:** medium · **Verdict:** REPAIR
 
 `check:tenant-isolation` reports 817 service files holding a `db` handle, 773 of them tenant-owned,
-209 with a cross-tenant negative test — **27%**. The check exits non-zero and prints the uncovered
+136 with a cross-tenant negative test — **18%**.
+
+**The first number this check produced was 27%, and it was wrong.** The original heuristic marked a
+service covered when any spec contained the service's bare filename **stem** as a substring, so
+`leave.service.ts` was "covered" by any spec mentioning *leaving* or *bereavement-leave*.
+Attribution now requires the exported class name as a whole word or an import of the module path.
+The number went down because the measurement got honest, which is the right direction for a metric
+nobody should be able to move by accident. The check exits non-zero and prints the uncovered
 list, with anti-vacuity assertions (>100 services, >5 test files) so a broken walk cannot report
 full coverage.
 
@@ -206,9 +213,44 @@ table with no policy is readable org-wide and nothing else notices. 564 services
 test that would catch a missing policy, a raw query that forgets `org_id`, or a `SECURITY DEFINER`
 helper that widens scope.
 
-**Why it is a baseline and not a fix:** writing 564 shallow specs would produce a number, not
-safety. The honest position is a recorded baseline that can only go up, module by module, with the
-uncovered list as the work queue.
+**Why it is a baseline and not a fix:** writing 637 shallow specs would produce a number, not
+safety. **The systemic control for these services is RLS, not per-service unit tests** — and that
+control is now provably complete (F-12). The per-service count is a secondary trend with the
+uncovered list as its work queue.
+
+## F-12 — three tenant tables were live with no RLS policy
+
+**Status:** CLOSED · **Severity:** high · **Verdict:** REPAIR · **found and fixed in this session**
+
+`db:verify-rls` reported `RESULT: 3 CHECK(S) FAILED`. All 17 behavioural checks passed; the
+coverage check did not. `inv_carton_types`, `inv_shipment_status_events` and
+`organization_cell_traffic` each carried a NOT NULL `org_id`, `relrowsecurity = false`, zero rows in
+`pg_policies` — and `streamline_app` already held SELECT/INSERT/UPDATE/DELETE on them, because
+grants arrive through `ALTER DEFAULT PRIVILEGES`. A table created without a policy is readable
+org-wide and nothing complains.
+
+All three were empty, so nothing had leaked; the hole was structural rather than exploited. None
+belonged to session 6 — two are Inventory (excluded from this PRD, no owning session) and the third
+came from `0627_org_cell_traffic`. Fixed here rather than filed, because Inventory has no owner to
+file it with.
+
+**Fix:** `migrations/0650_tenant_isolation_for_three_unprotected_tables.sql`, journalled at idx 357
+and applied. Follows `0591` exactly: ENABLE, DROP IF EXISTS, CREATE POLICY, REVOKE from PUBLIC,
+GRANT to the app role — in that order, because reversing the last two leaves PUBLIC holding rights
+on a table whose policy is already live.
+
+**Proof, as `streamline_app` with the tenant GUC, in a rolled-back transaction:**
+
+```
+as orgA, rows visible: 1
+cross-tenant INSERT blocked with 42501
+as orgB, rows visible: 0   (invisible, not forbidden — what makes a 404 honest)
+rows after rollback: 0
+```
+
+`db:verify-rls` now prints `RESULT: RLS VERIFIED`. Guarded against regression by
+`test/security/rls-exemption-allowlist.spec.ts`, which pins `PLATFORM_GLOBAL_TABLES` — the one list
+that can silence this check — and fails if a tenant business table is ever added to it.
 
 ---
 
@@ -216,7 +258,7 @@ uncovered list as the work queue.
 
 | Status | Findings |
 |---|---|
-| CLOSED | F-02, F-04 |
+| CLOSED | F-02, F-04, F-12 |
 | OPEN | F-01, F-05, F-07, F-11 |
 | OPERATOR-BLOCKED | F-03, F-09 |
 | PRODUCT-BLOCKED | F-06, F-08, F-10 |

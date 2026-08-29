@@ -118,11 +118,6 @@ interface PublicKbArticleListItem {
   publishedAt: string | null;
 }
 
-interface PublicKbResponse {
-  categories: PublicKbCategory[];
-  articles: PublicKbArticleListItem[];
-}
-
 interface PublicKbArticle {
   id: number;
   title: string;
@@ -137,11 +132,6 @@ interface PublicKbArticle {
   notHelpfulCount: number;
   tags: string[] | null;
   publishedAt: string | null;
-}
-
-interface PublicKbParams {
-  categoryId?: number;
-  search?: string;
 }
 
 interface SubmitKbFeedbackInput {
@@ -253,27 +243,6 @@ export function useDeleteSupportKbArticle() {
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/support/kb/articles/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.supportKb.all, "articles"] }),
-  });
-}
-
-export function usePublicSupportKb(orgId: string, params?: PublicKbParams) {
-  return useQuery({
-    queryKey: queryKeys.supportKb.publicArticles({ orgId, ...params }),
-    queryFn: () =>
-      apiClient.get<PublicKbResponse>("/public/kb", { org: orgId, ...params }),
-    enabled: Boolean(orgId),
-    staleTime: 60_000,
-    placeholderData: keepPreviousData,
-  });
-}
-
-export function usePublicSupportKbArticle(orgId: string, slug: string) {
-  return useQuery({
-    queryKey: queryKeys.supportKb.publicArticle(orgId, slug),
-    queryFn: () =>
-      apiClient.get<PublicKbArticle>(`/public/kb/${slug}`, { org: orgId }),
-    enabled: Boolean(orgId) && Boolean(slug),
-    staleTime: 60_000,
   });
 }
 

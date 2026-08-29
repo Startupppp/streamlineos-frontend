@@ -14,15 +14,6 @@ export interface KbAttachment {
   createdAt: string | null;
 }
 
-export interface PublicKbAttachment {
-  id: number;
-  fileName: string;
-  fileSize: number | null;
-  mimeType: string | null;
-  createdAt: string | null;
-  downloadUrl: string | null;
-}
-
 interface StorageUploadResult {
   url: string;
   key: string;
@@ -102,15 +93,3 @@ export function useSupportKbAttachmentDownloadUrl(articleId: number) {
   });
 }
 
-export function usePublicSupportKbAttachments(orgId: string, slug: string) {
-  return useQuery({
-    queryKey: queryKeys.kbAttachments.publicList(orgId, slug),
-    queryFn: () =>
-      apiClient.get<PublicKbAttachment[]>(
-        `/public/kb/${slug}/attachments`,
-        { org: orgId },
-      ),
-    enabled: Boolean(orgId) && Boolean(slug),
-    staleTime: 60_000,
-  });
-}

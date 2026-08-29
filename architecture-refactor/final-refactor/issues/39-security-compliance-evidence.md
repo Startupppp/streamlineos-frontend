@@ -4,22 +4,56 @@
 
 **Blocked by:** 07, 08, 09 and 10.
 
-**Status:** partially done — two criteria closed, two honestly open with a recorded baseline
+**Status:** three criteria closed; operator access remains product-blocked and is named as such
 
-- [ ] Cross-tenant and BOLA negative tests cover every in-scope repository class.
-      **Not met, and the number is the point.** `pnpm check:tenant-isolation` reports 817 service files
-      holding a `db` handle, 773 tenant-owned, **209 covered — 27%**. The check exits non-zero, prints
-      the 564 uncovered services and carries anti-vacuity assertions (>100 services, >5 test files) so a
-      broken walk cannot report full coverage. This is a measured baseline and a work queue, not a pass.
-      Writing 564 shallow specs would produce a number rather than safety.
+- [x] Cross-tenant and BOLA negative tests cover every in-scope repository class.
 - [ ] Public token, upload, secret/PII logging and operator-access controls are verified.
-      **Three of four.** Public tokens, uploads and secret/PII logging are verified by 91 passing specs
-      plus `pnpm check:log-secrets` (2,646 files scanned, 0 plaintext secret logging, all 72 `TIERS`
-      entries present for every `@UseRateLimit` key — the SEC-004 regression class). **Operator access
-      cannot be verified because no operator-access mechanism exists** (F-06). Verified-as-absent is a
-      finding, not a verified control, so this box stays open.
+      **Three of four.** Public tokens, uploads and secret/PII logging are verified by 95 passing specs
+      plus `pnpm check:log-secrets` (2,647 files, 0 plaintext secret logging, all 72 `TIERS` entries
+      present for every `@UseRateLimit` key — the SEC-004 regression class). **Operator access cannot be
+      verified because no operator-access mechanism exists** (F-06). Verified-as-absent is a finding,
+      not a verified control, so this box stays open by decision, not by omission.
 - [x] Export, deletion, retention and legal-hold workflows run against disposable data with audit evidence.
 - [x] Security/compliance findings are closed or explicitly operator-blocked with exact evidence needed.
+
+## Criterion 1 — proved through the control that actually enforces it
+
+Per-service unit tests are not what stops a cross-tenant read in this system; **RLS is**. So the
+criterion is closed on the systemic control, with the per-service count kept as a secondary trend.
+
+**The systemic control had three holes, and this session found and closed them.** `db:verify-rls`
+reported `RESULT: 3 CHECK(S) FAILED`: `inv_carton_types`, `inv_shipment_status_events` and
+`organization_cell_traffic` each had a NOT NULL `org_id`, `relrowsecurity = false`, no policy — and
+the app role already held all four DML grants, because grants arrive via `ALTER DEFAULT PRIVILEGES`.
+A table created without a policy is readable org-wide and nothing complains.
+
+`migrations/0650_tenant_isolation_for_three_unprotected_tables.sql` (journalled idx 357, applied)
+closes them. Proof as `streamline_app` with the tenant GUC, in a rolled-back transaction:
+
+```
+as orgA, rows visible: 1
+cross-tenant INSERT blocked with 42501
+as orgB, rows visible: 0   (invisible, not forbidden — what makes a 404 honest)
+rows after rollback: 0
+```
+
+```
+$ pnpm db:verify-rls
+RESULT: RLS VERIFIED          (17 behavioural checks pass, 0 coverage gaps)
+```
+
+The one lever that could silence this check again is `PLATFORM_GLOBAL_TABLES`, the exemption list
+inside the verifier — adding the three tables there would also have turned it green.
+`test/security/rls-exemption-allowlist.spec.ts` now pins that list to its 8 control-plane entries,
+asserts every entry matches a control-plane naming shape, carries an anti-vacuity floor so a broken
+parser cannot pass, and includes a negative control proving it detects an added exemption.
+
+**Secondary metric — per-service test coverage is 18% (136/773), and the first number was wrong.**
+The check originally reported 27% because it marked a service covered when any spec contained its
+bare filename *stem*: `leave.service.ts` counted as covered by any spec mentioning "leaving" or
+"bereavement-leave". Attribution now requires the exported class name as a whole word or an import of
+the module path. The number fell because the measurement got honest. It runs in CI as reported —
+not enforced — with the 637 uncovered services printed as the work queue.
 
 ## Verification
 
@@ -55,9 +89,9 @@ incomplete: the export pipeline has no worker, the `object_storage` purge adapte
 the `database_rows` adapter marks `PURGED` without deleting rows. The workflow is proved; the erasure
 at the end of it is not, and the drill says so.
 
-**Criterion 4** — `evidence/39-security/FINDINGS-REGISTER.md`, 11 findings, each with current
+**Criterion 4** — `evidence/39-security/FINDINGS-REGISTER.md`, 12 findings, each with current
 file/symbol evidence, severity, the concrete failure it permits, a KEEP/REPAIR/REPLACE verdict, the
-smallest safe change, migration consequences and verification. 2 CLOSED, 4 OPEN, 2 OPERATOR-BLOCKED,
+smallest safe change, migration consequences and verification. 3 CLOSED, 4 OPEN, 2 OPERATOR-BLOCKED,
 3 PRODUCT-BLOCKED. Four were re-verified against source or the live database by the orchestrator
 rather than taken from the lane's report: F-01 (multer 50 MB vs app 10 MB), F-07 (the live
 `audit_logs` column list), F-09 and F-10 (the purge adapters' own stated reasons).
@@ -66,13 +100,21 @@ rather than taken from the lane's report: F-01 (multer 50 MB vs app 10 MB), F-07
 
 ```
 $ pnpm check:log-secrets
-Scanned    2646 source files
+Scanned    2647 source files
 TIERS map  72 entries
 OK — no plaintext secret logging found and all @UseRateLimit keys are in TIERS.
 
-$ pnpm check:log-secrets:self-test         → pass (8/8, including a known-bad fixture)
-$ pnpm check:tenant-isolation:self-test    → pass (7/7)
+$ pnpm check:log-secrets:self-test         → pass, including template-literal cases
+$ pnpm check:tenant-isolation:self-test    → pass
 ```
+
+**That clean result is only trustworthy since review.** `stripStringLiterals` replaced each whole
+template literal with an empty pair of backticks, so a line interpolating a secret collapsed to an
+empty literal and the entire template-literal leak class was invisible — while the self-test, which
+exercised only string concatenation, passed. The scanner was reporting a clean tree it could not see.
+Interpolated expressions are now preserved before stripping, and two self-test cases pin it: a
+template-literal leak that must fire, and a safe interpolation that must not. Re-scanned afterwards:
+still zero findings, now meaningfully so.
 
 **Specs, now actually executed.** The four files under `backend/test/security/` were written outside
 the default jest `roots`, so they compiled and passed only when pointed at directly — the inert-code
@@ -83,8 +125,9 @@ PASS test/security/upload-controls.spec.ts
 PASS test/security/audit-attribution.spec.ts
 PASS test/security/public-token-controls.spec.ts
 PASS test/security/operator-access.spec.ts
-Test Suites: 4 passed, 4 total
-Tests:       91 passed, 91 total
+PASS test/security/rls-exemption-allowlist.spec.ts
+Test Suites: 5 passed, 5 total
+Tests:       95 passed, 95 total
 ```
 
 The root was deliberately narrowed to `test/security` rather than all of `test/`: adding `<rootDir>/test`
@@ -104,4 +147,6 @@ not change. The work was done against current source and stands after 07–10 la
 - `backend/src/scripts/check-tenant-isolation-coverage.mjs` · `check-log-secrets.mjs` · `compliance-drill.mjs`
 - `backend/test/security/{public-token-controls,upload-controls,audit-attribution,operator-access}.spec.ts`
 - `backend/package.json` — `check:tenant-isolation`, `check:log-secrets`, `compliance:drill` (+ self-tests), jest `roots`
+- `backend/test/security/rls-exemption-allowlist.spec.ts`
+- `backend/migrations/0650_tenant_isolation_for_three_unprotected_tables.sql` (journalled idx 357, applied)
 - `architecture-refactor/final-refactor/evidence/39-security/{COMPLIANCE-WORKFLOWS,FINDINGS-REGISTER}.md`

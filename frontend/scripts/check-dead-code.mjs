@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 import { execSync } from "node:child_process";
-import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
+import { readFileSync, readdirSync, statSync, existsSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join, dirname, relative, resolve as pathResolve, basename, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -31,7 +32,14 @@ const SCRIPTS_RE = /^scripts\//;
 
 const SKIP_DIRS = new Set(["node_modules", ".next", "feedbucket-widget", ".git"]);
 
-const BASELINE = { deadFiles: 4, deadExports: 3 };
+const BASELINE = { deadFiles: 0, deadExports: 0 };
+
+// Floors that detect a broken scan (knip returning nothing, or the graph walk
+// resolving almost no files). Current real values: ~6 knip files, ~70 exports+types,
+// hundreds of graph files, thousands of import edges. These are deliberately
+// conservative — they fire only when the tool is clearly broken, not when the
+// codebase legitimately improves.
+const SCAN_FLOOR = { knipTotal: 5, graphFiles: 100, graphEdges: 300 };
 
 function toFwd(p) {
   return p.replace(/\\/g, "/");
@@ -205,12 +213,42 @@ function runSelfTest() {
   assert(r5.cls === "UNPROVEN",
     `(e) CRM export → expected UNPROVEN, got ${r5.cls}`);
 
-  console.log("PASS: self-test (5 assertions)\n");
+  // Test buildImporterMap itself against a real temp fixture so the file-walk
+  // and import-parsing logic (not just classifyFile) is covered.
+  const fixtureDir = join(tmpdir(), `dead-code-self-test-${Date.now()}`);
+  try {
+    mkdirSync(fixtureDir, { recursive: true });
+    writeFileSync(join(fixtureDir, "entry.ts"),
+      'import x from "./a";\nimport "./b";\nexport * from "./c";\n');
+    writeFileSync(join(fixtureDir, "a.ts"), "export default 1;\n");
+    writeFileSync(join(fixtureDir, "b.ts"), "export {};\n");
+    writeFileSync(join(fixtureDir, "c.ts"), "export const C = 1;\n");
+
+    const fixMap = buildImporterMap(fixtureDir);
+    const entryAbs = join(fixtureDir, "entry.ts");
+    const aAbs = join(fixtureDir, "a.ts");
+    const bAbs = join(fixtureDir, "b.ts");
+    const cAbs = join(fixtureDir, "c.ts");
+
+    assert(fixMap.has(aAbs) && fixMap.get(aAbs).named.has(entryAbs),
+      "(f) buildImporterMap: named import edge a.ts ← entry.ts not recorded");
+    assert(fixMap.has(bAbs) && fixMap.get(bAbs).sideEffect.has(entryAbs),
+      "(g) buildImporterMap: side-effect import edge b.ts ← entry.ts not recorded");
+    assert(fixMap.has(cAbs) && fixMap.get(cAbs).reexport.has(entryAbs),
+      "(h) buildImporterMap: re-export edge c.ts ← entry.ts not recorded");
+  } finally {
+    rmSync(fixtureDir, { recursive: true, force: true });
+  }
+
+  console.log("PASS: self-test (8 assertions)\n");
   console.log("  (a) file with no live importers                    → DEAD");
   console.log("  (b) file reachable via side-effect import          → RETAINED-BY-CONTRACT");
   console.log("  (c) file reachable via re-export from live barrel  → RETAINED-BY-CONTRACT");
   console.log("  (d) export from feature barrel                     → RETAINED-BY-CONTRACT");
   console.log("  (e) export from CRM domain                        → UNPROVEN");
+  console.log("  (f) buildImporterMap: named import edge recorded");
+  console.log("  (g) buildImporterMap: side-effect import edge recorded");
+  console.log("  (h) buildImporterMap: re-export edge recorded");
 }
 
 async function runMain() {
@@ -244,8 +282,30 @@ async function runMain() {
 
   const knipDeadSet = new Set(deadFileRels);
 
+  const knipTotal = deadFileRels.length + deadExportItems.length;
+  if (knipTotal < SCAN_FLOOR.knipTotal) {
+    console.error(
+      `FAIL: knip returned only ${deadFileRels.length} files and ` +
+      `${deadExportItems.length} exports/types — scan looks broken, not clean.`
+    );
+    process.exit(1);
+  }
+
   console.log("Building import graph (scanning all TS/TSX files)...");
   const importerMap = buildImporterMap(ROOT);
+
+  const graphFileCount = importerMap.size;
+  let graphEdgeCount = 0;
+  for (const entry of importerMap.values()) {
+    for (const set of Object.values(entry)) graphEdgeCount += set.size;
+  }
+  if (graphFileCount < SCAN_FLOOR.graphFiles || graphEdgeCount < SCAN_FLOOR.graphEdges) {
+    console.error(
+      `FAIL: module-graph walk resolved only ${graphFileCount} files / ` +
+      `${graphEdgeCount} import edges — scan looks broken.`
+    );
+    process.exit(1);
+  }
 
   const buckets = {
     "DEAD": [],
