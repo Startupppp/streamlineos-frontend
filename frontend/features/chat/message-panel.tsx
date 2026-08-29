@@ -50,9 +50,6 @@ import { MessagePanelWorkspace } from "./message-panel-workspace";
 import { useChatScroll } from "./use-chat-scroll";
 import { ChannelAvatar } from "./channel-avatar";
 import { ThreadPanel } from "./thread-panel";
-import { SavedMessagesPanel } from "./saved-messages-panel";
-import { SharedFilesPanel } from "./shared-files-panel";
-import { ForwardMessageDialog } from "./forward-message-dialog";
 import { ChannelSidebarCollapseButton } from "./channel-sidebar-collapse-button";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { AiActionsMenu, type AiAction } from "@/components/ai";
@@ -64,9 +61,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useIsChatMobile } from "./use-chat-mobile";
 import { BookmarkButton, PaperclipButton } from "./message-panel-actions";
+import { MessagePanelSidePanels } from "./message-panel-side-panels";
+import type { ForwardableMessage } from "./forward-message-dialog";
+import { useChatMentions } from "./use-chat-mentions";
+import { useChatTypingText } from "./use-chat-typing-text";
 
 export function MessagePanel({
   channelId,
@@ -145,15 +145,7 @@ export function MessagePanel({
     [onlineUsers],
   );
 
-  const typingText = useMemo(() => {
-    if (!typingUsers || typingUsers.length === 0) return null;
-    const names = typingUsers.map(
-      (t: { name: string }) => t.name.split(" ")[0],
-    );
-    if (names.length === 1) return `${names[0]} is typing...`;
-    if (names.length === 2) return `${names[0]} and ${names[1]} are typing...`;
-    return `${names[0]} and ${names.length - 1} others are typing...`;
-  }, [typingUsers]);
+  const typingText = useChatTypingText(typingUsers);
 
   const [messageInput, setMessageInput] = useState("");
   const [replyTo, setReplyTo] = useState<Message | null>(null);
@@ -188,11 +180,7 @@ export function MessagePanel({
   }, [autoStartCall, channelId, activeHuddle, startHuddle, joinHuddle, onAutoStartHandled]);
   const [showSavedPanel, setShowSavedPanel] = useState(false);
   const [showFilesPanel, setShowFilesPanel] = useState(false);
-  const [forwardMessage, setForwardMessage] = useState<{
-    content: string | null;
-    metadata?: Message["metadata"];
-    attachments?: Message["attachments"];
-  } | null>(null);
+  const [forwardMessage, setForwardMessage] = useState<ForwardableMessage | null>(null);
 
   const [pendingAttachments, setPendingAttachments] = useState<
     {
@@ -242,21 +230,12 @@ export function MessagePanel({
   const pendingEntitiesRef = useRef<TicketEntityRef[]>([]);
   const pendingMentionsRef = useRef<Map<string, string>>(new Map());
 
-  const mentionCandidates = useMemo(() => {
-    if (!orgUsers) return [];
-    if (channel?.type === "DIRECT") {
-      const otherId = channel.members?.find((m) => m.user?.id !== currentUserId)
-        ?.user?.id;
-      return orgUsers.filter((u) => u.id === otherId);
-    }
-    return orgUsers.filter((u) => u.id !== currentUserId);
-  }, [orgUsers, channel, currentUserId]);
-
-  const filteredMentions = useMemo(() => {
-    if (!mentionQuery) return mentionCandidates;
-    const q = mentionQuery.toLowerCase();
-    return mentionCandidates.filter((u) => u.name?.toLowerCase().includes(q));
-  }, [mentionCandidates, mentionQuery]);
+  const { candidates: mentionCandidates, filtered: filteredMentions } = useChatMentions({
+    orgUsers,
+    channel,
+    currentUserId,
+    query: mentionQuery,
+  });
 
   useEffect(() => {
     if (messageInput) {
@@ -1135,68 +1114,15 @@ export function MessagePanel({
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {showSavedPanel && (
-          <motion.div
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 320, opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
-            transition={{ duration: 0.2, ease: "easeInOut" }}
-            className="hidden lg:flex flex-col overflow-hidden shrink-0"
-          >
-            <SavedMessagesPanel
-              onClose={() => setShowSavedPanel(false)}
-              onJumpToChannel={() => setShowSavedPanel(false)}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {isChatMobile && (
-      <Sheet open={showSavedPanel} onOpenChange={setShowSavedPanel}>
-        <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:hidden">
-          <SavedMessagesPanel
-            onClose={() => setShowSavedPanel(false)}
-            onJumpToChannel={() => setShowSavedPanel(false)}
-          />
-        </SheetContent>
-      </Sheet>
-      )}
-
-      <AnimatePresence>
-        {showFilesPanel && (
-          <motion.div
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 320, opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
-            transition={{ duration: 0.2, ease: "easeInOut" }}
-            className="hidden lg:flex flex-col overflow-hidden shrink-0"
-          >
-            <SharedFilesPanel
-              channelId={channelId}
-              onClose={() => setShowFilesPanel(false)}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {isChatMobile && (
-      <Sheet open={showFilesPanel} onOpenChange={setShowFilesPanel}>
-        <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:hidden">
-          <SharedFilesPanel
-            channelId={channelId}
-            onClose={() => setShowFilesPanel(false)}
-          />
-        </SheetContent>
-      </Sheet>
-      )}
-
-      <ForwardMessageDialog
-        message={forwardMessage}
-        open={Boolean(forwardMessage)}
-        onOpenChange={(o) => {
-          if (!o) setForwardMessage(null);
-        }}
+      <MessagePanelSidePanels
+        channelId={channelId}
+        isChatMobile={isChatMobile}
+        showSavedPanel={showSavedPanel}
+        setShowSavedPanel={setShowSavedPanel}
+        showFilesPanel={showFilesPanel}
+        setShowFilesPanel={setShowFilesPanel}
+        forwardMessage={forwardMessage}
+        setForwardMessage={setForwardMessage}
       />
     </div>
   );
