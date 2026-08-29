@@ -33,9 +33,17 @@ const SIZE_CLASS = {
   header: "h-5 px-2 py-0.5 text-xs",
 } as const;
 
-/** Archived (INACTIVE) and DISCONTINUED are both undone by the restore endpoint. */
+/**
+ * Archiving is what Restore undoes.
+ *
+ * DISCONTINUED used to be listed here too, because the restore endpoint wrote
+ * ACTIVE over whatever status it found. It no longer does: retiring a SKU is a
+ * decision with a demand gate behind it, and its inverse is the deliberate edit
+ * that set it, not a one-click Restore. Offering the control on a discontinued
+ * product now would offer a button that does nothing.
+ */
 export function isRestorableStatus(status: ProductStatus): boolean {
-  return status !== "ACTIVE";
+  return status === "INACTIVE";
 }
 
 interface ProductStatusBadgeProps {

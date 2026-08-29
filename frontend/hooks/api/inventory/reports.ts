@@ -212,6 +212,13 @@ interface RawStockLevelRow {
   onHand: string;
   committed: string;
   onOrder: string;
+  /**
+   * Server-computed availability: on hand less committed, blocked, quality-held
+   * and outgoing, and zero at a location that may not be sold from. Never
+   * recomputed here — the row does not carry the terms, and the two that it does
+   * carry are the two that made the old `onHand - committed` wrong.
+   */
+  availableQty: string;
   productVariant: RawVariantRef | null;
   location: RawLocationRef | null;
 }
@@ -349,7 +356,7 @@ function toStockSummaryRow(row: RawStockLevelRow): StockSummaryRow {
     warehouseName: row.location?.warehouse?.name ?? null,
     onHandQty,
     reservedQty,
-    availableQty: onHandQty - reservedQty,
+    availableQty: toNumber(row.availableQty),
     reorderPoint: product?.reorderPoint != null ? toNumber(product.reorderPoint) : null,
     costPrice,
     totalValue: onHandQty * toNumber(costPrice),
