@@ -175,9 +175,28 @@ function routeSource(routeDir: string): string {
   return source;
 }
 
+/**
+ * Comments are prose, not code.
+ *
+ * The first version matched raw text, and `components/ui/content-fill-panel.tsx`
+ * mentions `EmptyState` in a comment — so every route that imported it scored
+ * `empty` for free, and `/inventory/barcode` passed the check without having an
+ * empty state at all. A substring walk that reads prose is a checker that
+ * approves documentation.
+ *
+ * The same fix the D5 float ratchet needed, for the same reason. String literals
+ * cannot smuggle a marker past this: a `//` inside one is a URL.
+ */
+function code(source: string): string {
+  return source
+    .replace(/\/\*[\s\S]*?\*\//g, " ")
+    .replace(/(^|[^:])\/\/[^\n]*/g, "$1");
+}
+
 function missingStates(source: string): StateName[] {
+  const stripped = code(source);
   return (Object.keys(STATE_MARKERS) as StateName[]).filter(
-    (state) => !STATE_MARKERS[state].some((marker) => source.includes(marker)),
+    (state) => !STATE_MARKERS[state].some((marker) => stripped.includes(marker)),
   );
 }
 
@@ -188,6 +207,27 @@ describe("G8 — inventory routes answer all five states", () => {
     // A scan that returns nothing reports zero violations, which reads exactly
     // like success. This is the guard on the guard.
     expect(routes.length).toBeGreaterThan(40);
+  });
+
+  it("reads code and not prose, so a marker in a comment cannot pass a route", () => {
+    // The hole this closes was real: `components/ui/content-fill-panel.tsx`
+    // mentions EmptyState in a comment, and the two-hop walk pulls that file in,
+    // so every route importing it scored `empty` for free. /inventory/barcode
+    // passed the check without having an empty state at all.
+    expect(missingStates("// EmptyState ErrorState isLoading useCan")).toEqual([
+      "loading",
+      "empty",
+      "error",
+      "denied",
+    ]);
+    expect(missingStates("/* EmptyState ErrorState isLoading useCan */")).toEqual([
+      "loading",
+      "empty",
+      "error",
+      "denied",
+    ]);
+    // And it still sees the real thing.
+    expect(missingStates("<EmptyState /> <ErrorState /> isLoading useCan(")).toEqual([]);
   });
 
   it("gives every route a loading, empty, error and denied answer", () => {
@@ -222,7 +262,7 @@ describe("G8 — inventory routes answer all five states", () => {
         "/",
       );
       if (IN_FLIGHT_ELSEWHERE.has(rel)) continue;
-      const source = routeSource(routeDir);
+      const source = code(routeSource(routeDir));
       const gatesAQuery = source.includes("useCan(") || source.includes("requirePermission");
       if (!gatesAQuery) continue;
 
