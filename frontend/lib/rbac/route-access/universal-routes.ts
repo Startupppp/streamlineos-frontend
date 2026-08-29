@@ -58,7 +58,7 @@ export const UNIVERSAL_ROUTES: readonly UniversalRoute[] = [
   },
   {
     path: "/knowledge",
-    reason: "Knowledge Base reading is platform core.",
+    reason: "Knowledge Base reading is platform core; administration is explicitly listed below.",
   },
   {
     path: "/knowledge-base",
@@ -103,6 +103,55 @@ export const UNIVERSAL_EXCLUSIONS: readonly UniversalRoute[] = [
     reason:
       "Workforce administration, not the people directory. It is gated on directory:workers:view, which is not a member default, and root §8 places workers under organization governance.",
   },
+  {
+    path: "/notifications/providers",
+    reason: "Provider administration requires notifications:providers:view.",
+  },
+  {
+    path: "/notifications/templates",
+    reason: "Template administration requires notifications:templates:view.",
+  },
+  {
+    path: "/notifications/events",
+    reason: "Event-catalog administration requires notifications:events:view.",
+  },
+  {
+    path: "/notifications/policy",
+    reason: "Policy administration requires notifications:policy:view.",
+  },
+  {
+    path: "/notifications/broadcasts",
+    reason: "Broadcast administration requires notifications:broadcasts:view.",
+  },
+  {
+    path: "/knowledge/wiki/settings",
+    reason: "Knowledge settings require kb:settings:manage.",
+  },
+  {
+    path: "/knowledge/wiki/import",
+    reason: "Knowledge import requires kb:pages:import.",
+  },
+  {
+    path: "/knowledge/wiki/analytics",
+    reason: "Knowledge analytics require kb:analytics:view.",
+  },
+  {
+    path: "/knowledge/wiki/reviews",
+    reason: "Knowledge reviews require kb:reviews:view.",
+  },
+  {
+    path: "/knowledge/wiki/spaces",
+    exact: true,
+    reason: "Knowledge space administration requires kb:spaces:view.",
+  },
+  {
+    path: "/knowledge/wiki/templates",
+    reason: "Knowledge template administration requires kb:templates:manage.",
+  },
+  {
+    path: "/knowledge/wiki/trash",
+    reason: "Knowledge trash requires kb:pages:purge.",
+  },
 ];
 
 export function isAccessAdministrationPath(pathname: string): boolean {
@@ -112,7 +161,9 @@ export function isAccessAdministrationPath(pathname: string): boolean {
 function isUniversalExclusion(pathname: string): boolean {
   return UNIVERSAL_EXCLUSIONS.some(
     (entry) =>
-      pathname === entry.path || pathname.startsWith(`${entry.path}/`),
+      entry.exact
+        ? pathname === entry.path
+        : pathname === entry.path || pathname.startsWith(`${entry.path}/`),
   );
 }
 

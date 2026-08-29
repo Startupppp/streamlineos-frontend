@@ -53,33 +53,37 @@ export function useChatChannels(enabled = true) {
 }
 
 export function useArchivedChannels(enabled = true) {
+  const canRead = useCan("chat:channels:read");
   return useQuery({
     queryKey: queryKeys.chat.archivedChannels(),
     queryFn: () => apiClient.get<Channel[]>("/chat/channels/archived"),
     staleTime: 2 * 60_000,
-    enabled,
+    enabled: enabled && canRead,
   });
 }
 
 export function usePublicChannels(enabled = true) {
+  const canRead = useCan("chat:channels:read");
   return useQuery({
     queryKey: queryKeys.chat.publicChannels(),
     queryFn: () => apiClient.get<PublicChannel[]>("/chat/channels/public"),
     staleTime: 2 * 60_000,
-    enabled,
+    enabled: enabled && canRead,
   });
 }
 
 export function useChatChannel(channelId: number) {
+  const canRead = useCan("chat:channels:read");
   return useQuery({
     queryKey: queryKeys.chat.channel(channelId),
     queryFn: () => apiClient.get<Channel>(`/chat/channels/${channelId}`),
     staleTime: 2 * 60_000,
-    enabled: channelId > 0,
+    enabled: canRead && channelId > 0,
   });
 }
 
 export function useChatMessages(channelId: number) {
+  const canRead = useCan("chat:channels:read");
   return useInfiniteQuery({
     queryKey: queryKeys.chat.messages(channelId),
     queryFn: ({ pageParam }) =>
@@ -89,7 +93,7 @@ export function useChatMessages(channelId: number) {
       ),
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     initialPageParam: undefined as number | undefined,
-    enabled: channelId > 0,
+    enabled: canRead && channelId > 0,
   });
 }
 
@@ -98,6 +102,7 @@ export function useChatPoll(
   since: string,
   enabled: boolean,
 ) {
+  const canRead = useCan("chat:channels:read");
   const pollInterval = useRealtimePollInterval(30_000);
   return useQuery({
     queryKey: queryKeys.chat.poll(channelId, since),
@@ -106,8 +111,8 @@ export function useChatPoll(
         since,
       }),
     staleTime: 2 * 60_000,
-    enabled: enabled && channelId > 0,
-    refetchInterval: enabled ? pollInterval : false,
+    enabled: enabled && canRead && channelId > 0,
+    refetchInterval: enabled && canRead ? pollInterval : false,
   });
 }
 
@@ -126,21 +131,23 @@ export function useChatUnreadTotal(enabled = true) {
 }
 
 export function useChatOnlineUsers(enabled = true) {
+  const canRead = useCan("chat:channels:read");
   return useQuery({
     queryKey: queryKeys.chat.onlineUsers(),
     queryFn: () => apiClient.get<OnlineUser[]>("/chat/presence/online"),
     refetchInterval: 60_000,
     staleTime: 65_000,
-    enabled,
+    enabled: enabled && canRead,
   });
 }
 
 export function useChatOrgUsers(enabled = true) {
+  const canRead = useCan("chat:channels:read");
   return useQuery({
     queryKey: queryKeys.chat.orgUsers(),
     queryFn: () => apiClient.get<OrgUser[]>("/chat/users"),
     staleTime: 2 * 60_000,
-    enabled,
+    enabled: enabled && canRead,
   });
 }
 
@@ -450,12 +457,13 @@ export function useToggleReaction(channelId: number) {
 }
 
 export function useChatPins(channelId: number) {
+  const canRead = useCan("chat:channels:read");
   return useQuery({
     queryKey: queryKeys.chat.pins(channelId),
     queryFn: () =>
       apiClient.get<PinnedMessage[]>(`/chat/channels/${channelId}/pins`),
     staleTime: 2 * 60_000,
-    enabled: channelId > 0,
+    enabled: canRead && channelId > 0,
   });
 }
 
@@ -504,6 +512,7 @@ export function useUnpinMessage() {
 }
 
 export function useThreadReplies(channelId: number, messageId: number) {
+  const canRead = useCan("chat:channels:read");
   return useInfiniteQuery({
     queryKey: queryKeys.chat.thread(channelId, messageId),
     queryFn: ({ pageParam }) =>
@@ -513,7 +522,7 @@ export function useThreadReplies(channelId: number, messageId: number) {
       ),
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     initialPageParam: undefined as number | undefined,
-    enabled: channelId > 0 && messageId > 0,
+    enabled: canRead && channelId > 0 && messageId > 0,
   });
 }
 
@@ -535,43 +544,47 @@ export function useSendThreadReply(channelId: number, parentMessageId: number) {
 }
 
 export function useSearchMessages(query: string, enabled: boolean) {
+  const canRead = useCan("chat:channels:read");
   return useQuery({
     queryKey: [...queryKeys.chat.all, "search", "messages", query] as const,
     queryFn: () =>
       apiClient.get<SearchMessagesResult>("/chat/search/messages", {
         q: query,
       }),
-    enabled: enabled && query.trim().length >= 2,
+    enabled: enabled && canRead && query.trim().length >= 2,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
   });
 }
 
 export function useSearchChannels(query: string, enabled: boolean) {
+  const canRead = useCan("chat:channels:read");
   return useQuery({
     queryKey: [...queryKeys.chat.all, "search", "channels", query] as const,
     queryFn: () =>
       apiClient.get<SearchChannelResult[]>("/chat/search/channels", {
         q: query,
       }),
-    enabled: enabled && query.trim().length >= 1,
+    enabled: enabled && canRead && query.trim().length >= 1,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
   });
 }
 
 export function useSearchUsers(query: string, enabled: boolean) {
+  const canRead = useCan("chat:channels:read");
   return useQuery({
     queryKey: [...queryKeys.chat.all, "search", "users", query] as const,
     queryFn: () =>
       apiClient.get<SearchUserResult[]>("/chat/search/users", { q: query }),
-    enabled: enabled && query.trim().length >= 1,
+    enabled: enabled && canRead && query.trim().length >= 1,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
   });
 }
 
 export function useSavedMessages() {
+  const canRead = useCan("chat:channels:read");
   return useInfiniteQuery({
     queryKey: queryKeys.chat.savedMessages(),
     queryFn: ({ pageParam }) =>
@@ -582,6 +595,7 @@ export function useSavedMessages() {
     getNextPageParam: (last) => last.nextCursor,
     initialPageParam: undefined as number | undefined,
     staleTime: 60_000,
+    enabled: canRead,
   });
 }
 
@@ -811,6 +825,7 @@ export interface ChannelFile {
 }
 
 export function useChannelFiles(channelId: number) {
+  const canRead = useCan("chat:channels:read");
   return useInfiniteQuery({
     queryKey: [...queryKeys.chat.all, "channelFiles", channelId] as const,
     queryFn: ({ pageParam }) =>
@@ -820,7 +835,7 @@ export function useChannelFiles(channelId: number) {
       ),
     getNextPageParam: (last) => last.nextCursor,
     initialPageParam: undefined as number | undefined,
-    enabled: channelId > 0,
+    enabled: canRead && channelId > 0,
   });
 }
 

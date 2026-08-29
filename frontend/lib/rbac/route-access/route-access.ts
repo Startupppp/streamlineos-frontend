@@ -27,6 +27,16 @@ export function orgModuleKeyForProduct(product: ProductKey): string | null {
 }
 
 export function resolveRouteAccess(pathname: string): RouteAccessDecision {
+  const extension = matchRouteAccessExtension(pathname);
+  if (extension) {
+    const orgModuleKey = extension.product
+      ? orgModuleKeyForProduct(extension.product)
+      : null;
+    const permission = extension.permission ?? null;
+    if (orgModuleKey !== null || permission !== null)
+      return { kind: "permission", orgModuleKey, permission };
+  }
+
   const universal = matchUniversalRoute(pathname);
   if (universal) return { kind: "universal", reason: universal.reason };
 
@@ -34,16 +44,6 @@ export function resolveRouteAccess(pathname: string): RouteAccessDecision {
   if (nav.matched) {
     const orgModuleKey = nav.module ? orgModuleKeyForProduct(nav.module) : null;
     const permission = nav.requiredPermission ?? null;
-    if (orgModuleKey !== null || permission !== null)
-      return { kind: "permission", orgModuleKey, permission };
-  }
-
-  const extension = matchRouteAccessExtension(pathname);
-  if (extension) {
-    const orgModuleKey = extension.product
-      ? orgModuleKeyForProduct(extension.product)
-      : null;
-    const permission = extension.permission ?? null;
     if (orgModuleKey !== null || permission !== null)
       return { kind: "permission", orgModuleKey, permission };
   }

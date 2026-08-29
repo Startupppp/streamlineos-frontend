@@ -180,6 +180,29 @@ describe("route-access registry keys", () => {
     expect(isUniversalRoute("/chat")).toBe(true);
   });
 
+  it("does not treat administrative descendants of universal roots as universal", () => {
+    const protectedRoutes = [
+      "/notifications/providers",
+      "/notifications/templates",
+      "/notifications/events",
+      "/notifications/policy",
+      "/notifications/broadcasts",
+      "/knowledge/wiki/settings",
+      "/knowledge/wiki/import",
+      "/knowledge/wiki/analytics",
+      "/knowledge/wiki/reviews",
+      "/knowledge/wiki/spaces",
+      "/knowledge/wiki/templates",
+      "/knowledge/wiki/trash",
+    ];
+    for (const route of protectedRoutes) {
+      expect(isUniversalRoute(route)).toBe(false);
+      expect(resolveRouteAccess(route).kind).toBe("permission");
+    }
+    expect(isUniversalRoute("/knowledge/wiki/spaces/1")).toBe(true);
+    expect(isUniversalRoute("/notifications/preferences")).toBe(true);
+  });
+
   it("gates a universal page only on a permission every member keeps by default", () => {
     const defaults = memberDefaultPermissions();
     expect(defaults.size).toBeGreaterThan(20);

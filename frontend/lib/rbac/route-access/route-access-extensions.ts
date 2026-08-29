@@ -50,6 +50,78 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     reason:
       "Business subjects surface reached from Party, with no navigation entry of its own.",
   },
+  {
+    prefix: "/notifications/providers",
+    product: "administration",
+    permission: "notifications:providers:view",
+    reason: "Notification provider administration is not a universal communication read surface.",
+  },
+  {
+    prefix: "/notifications/templates",
+    product: "administration",
+    permission: "notifications:templates:view",
+    reason: "Notification template administration is not a universal communication read surface.",
+  },
+  {
+    prefix: "/notifications/events",
+    product: "administration",
+    permission: "notifications:events:view",
+    reason: "Notification event administration is not a universal communication read surface.",
+  },
+  {
+    prefix: "/notifications/policy",
+    product: "administration",
+    permission: "notifications:policy:view",
+    reason: "Notification policy administration is not a universal communication read surface.",
+  },
+  {
+    prefix: "/notifications/broadcasts",
+    product: "administration",
+    permission: "notifications:broadcasts:view",
+    reason: "Broadcast administration is not a universal communication read surface.",
+  },
+  {
+    prefix: "/knowledge/wiki/settings",
+    product: "administration",
+    permission: "kb:settings:manage",
+    reason: "Knowledge settings are administrative, not universal reading.",
+  },
+  {
+    prefix: "/knowledge/wiki/import",
+    product: "administration",
+    permission: "kb:pages:import",
+    reason: "Knowledge import is an administrative mutation surface.",
+  },
+  {
+    prefix: "/knowledge/wiki/analytics",
+    product: "administration",
+    permission: "kb:analytics:view",
+    reason: "Knowledge analytics are administrative reporting.",
+  },
+  {
+    prefix: "/knowledge/wiki/reviews",
+    product: "administration",
+    permission: "kb:reviews:view",
+    reason: "Knowledge reviews are an administrative workflow.",
+  },
+  {
+    prefix: "/knowledge/wiki/spaces",
+    product: "administration",
+    permission: "kb:spaces:view",
+    reason: "Knowledge space management is administrative.",
+  },
+  {
+    prefix: "/knowledge/wiki/templates",
+    product: "administration",
+    permission: "kb:templates:manage",
+    reason: "Knowledge template management is administrative.",
+  },
+  {
+    prefix: "/knowledge/wiki/trash",
+    product: "administration",
+    permission: "kb:pages:purge",
+    reason: "Knowledge purge is an administrative destructive surface.",
+  },
 ];
 
 export function matchRouteAccessExtension(
