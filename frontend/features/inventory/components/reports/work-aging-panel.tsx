@@ -37,18 +37,36 @@ const LANES: Lane[] = [
 ];
 
 /**
- * The oldest band with anything in it decides the lane's tone.
+ * The oldest band with anything in it decides the lane's tone — not the total.
  *
- * Not the total: a lane with eighty items all under four hours is busy and fine,
- * and a lane with one item three days old is not. Colouring by volume would say
- * the opposite of what the reader needs.
+ * A lane with eighty items all under four hours is busy and fine; a lane with one
+ * item three days old is not. Colouring by volume would say the opposite of what
+ * the reader needs.
+ *
+ * Ranked by label rather than by position, so the colour does not depend on the
+ * order the API happened to serialise the bands in: the type pins the four labels
+ * and says nothing about their order, and a reordering upstream would otherwise
+ * turn a three-day backlog green.
  */
+const BAND_SEVERITY: Record<AgeBand["label"], number> = {
+  "72h+": 3,
+  "24-72h": 2,
+  "4-24h": 1,
+  "0-4h": 0,
+};
+
 function laneTone(lane: WorkAgingLane): "success" | "warning" | "danger" | "neutral" {
   if (lane.open === 0) return "neutral";
-  const oldest = [...lane.bands].reverse().find((band) => band.count > 0);
-  if (!oldest) return "neutral";
-  if (oldest.label === "72h+") return "danger";
-  if (oldest.label === "24-72h") return "warning";
+  const worst = lane.bands
+    .filter((band) => band.count > 0)
+    .reduce<AgeBand | null>(
+      (acc, band) =>
+        acc === null || BAND_SEVERITY[band.label] > BAND_SEVERITY[acc.label] ? band : acc,
+      null,
+    );
+  if (!worst) return "neutral";
+  if (worst.label === "72h+") return "danger";
+  if (worst.label === "24-72h") return "warning";
   return "success";
 }
 
@@ -147,6 +165,7 @@ export function WorkAgingPanel({ warehouseId, className }: WorkAgingPanelProps) 
           {LANES.map((lane) => {
             const value = data[lane.key];
             const tone = laneTone(value);
+            const toneClasses = statusToneClasses(tone);
             function handleDrillThrough(): void {
               router.push(lane.href);
             }
@@ -159,7 +178,19 @@ export function WorkAgingPanel({ warehouseId, className }: WorkAgingPanelProps) 
               >
                 <div className="flex min-w-0 flex-1 items-center gap-2">
                   <span className="truncate text-sm font-medium">{lane.label}</span>
-                  <Badge variant="outline" className={cn("h-5 px-2 py-0.5 text-xs", statusToneClasses(tone))}>
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "h-5 px-2 py-0.5 text-xs",
+                      // `statusToneClasses` returns an object keyed by role, not
+                      // a class string. Handing it straight to `cn()` emits the
+                      // role *names* — "surface ink inkStrong rule fill" — as
+                      // class names, which silently produces an unstyled badge.
+                      toneClasses.surface,
+                      toneClasses.ink,
+                      toneClasses.rule,
+                    )}
+                  >
                     {value.open} open
                   </Badge>
                 </div>
