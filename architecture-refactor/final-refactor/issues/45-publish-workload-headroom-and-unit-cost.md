@@ -104,6 +104,20 @@ Headroom needs a colocated deployment and unit cost needs vendor invoices; both 
   not buy; 9 chain gaps remain, down from 132, none of them this session's. The `20M-ready` claim is not
   made.
 
+## S7 evidence refresh
+
+On 2026-08-29, the read-only evidence collector ran against the configured development environment.
+The capacity snapshot measured database size at 2,480,013,312 bytes of a 3,221,225,472-byte limit
+(77.0%), so admission correctly returned a non-zero exit. The unit-cost runner measured 14 active
+organizations, 100,099 active users, 10,677 load-driver requests, 2.31 GB stored, and 865 delivered
+notifications. It reported 297.17 Neon compute-hours and 26 Ably messages for the vendor period.
+
+The collector passed recovery, capacity, unit-cost, and load-driver self-tests and wrote
+`evidence/45-scale/S7-LIVE-DEV-EVIDENCE.md`. It intentionally does not run a destructive recovery
+drill, restore, migration, or provisioning operation. Current blockers remain the missing invoice rate
+inputs, fewer than three well-spaced trend samples, no colocated load deployment, and no independently
+provisioned physical replica.
+
 ## The one thing to carry forward
 
 Driving an objective and labelling it correctly are different jobs, and the second is where this ticket

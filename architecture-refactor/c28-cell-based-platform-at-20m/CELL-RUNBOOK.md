@@ -130,7 +130,7 @@ still read all cells' data. Every NAMESPACED row below carries this caveat.
 |---|---|---|
 | Cell database | **ISOLATED.** `cell2` has its own logical DB, migration chain and RLS on the `NOBYPASSRLS` application role. | — |
 | Cell compute | **SHARED (unavoidable today).** `cell2` runs on the same Neon compute endpoint as `neondb`, so capacity measured here is not a per-cell number. | A separate Neon project or compute endpoint; point `REGION_CELL_2_APP_DATABASE_URL` at it. |
-| Redis (cache) | **NAMESPACED** when `REGION_CELL_2_CACHE_KEY_PREFIX=cell-2` is set. Every key for an org in cell-2 carries the prefix; accidental cross-cell collisions in the shared Upstash instance are prevented. See `.env.example`. | A second Upstash instance; set `REGION_CELL_2_UPSTASH_REDIS_REST_URL` and `REGION_CELL_2_UPSTASH_REDIS_REST_TOKEN`. The `RegionCacheConfig` seam in `region.config.ts` already carries `upstashUrl`/`upstashToken`; wiring the cache service to use them is the remaining code step. |
+| Redis (cache) | **NAMESPACED** when `REGION_CELL_2_CACHE_KEY_PREFIX=cell-2` is set. Every key for an org in cell-2 carries the prefix; accidental cross-cell collisions in the shared Upstash instance are prevented. When both per-cell Redis credentials are configured, tenant-aware cache operations select that cell's Redis instance. See `.env.example`. | A second Upstash instance; set `REGION_CELL_2_UPSTASH_REDIS_REST_URL` and `REGION_CELL_2_UPSTASH_REDIS_REST_TOKEN`. `CacheService` selects the configured client; the remaining step is operator provisioning and live verification. |
 | Object storage | **NAMESPACED** when `REGION_CELL_2_R2_KEY_PREFIX=cell-2` is set. Every object key for an org in cell-2 is prefixed. See `.env.example`. | A dedicated R2 bucket; set `REGION_CELL_2_R2_BUCKET_NAME`, `REGION_CELL_2_R2_ENDPOINT`, and matching credentials. `RegionStorageConfig` already carries these fields; it is configuration, not code. |
 | Search index | **SHARED (no cluster deployed).** `searchCluster` is a declared string with nothing behind it. | A search cluster per cell; set `REGION_CELL_2_SEARCH_CLUSTER` and `REGION_CELL_2_SEARCH_API_KEY`. |
 | Worker pools | **NAMESPACED** when `REGION_CELL_2_CELL_ID=cell-2` is set on the worker process. Cron lease keys are `cron:lease:cell-2:<job>`; `forEachOrg` now also selects organizations from cell-2's database rather than the primary's. (**Code fix landed 2026-08-29.**) | A worker deployment per cell so the process boundary enforces isolation. The lease-store (Redis) is still shared; a per-cell Redis instance would close that. |
@@ -153,11 +153,7 @@ independent; they may be applied in any order.
    REGION_CELL_2_UPSTASH_REDIS_REST_URL=https://<instance-id>.upstash.io
    REGION_CELL_2_UPSTASH_REDIS_REST_TOKEN=<token>
    ```
-4. Wire `RegionCellConfig.cache.upstashUrl` / `.upstashToken` into `CacheService`
-   so it selects the per-cell Redis client from the registry binding. This is the
-   remaining code step (touches `common/cache/cache.service.ts` and
-   `common/cache/cache.module.ts`).
-5. Run `pnpm -C backend cell:isolation --region=cell-2` and confirm Redis moves
+4. Run `pnpm -C backend cell:isolation --region=cell-2` and confirm Redis moves
    from NAMESPACED to ISOLATED.
 
 ### Object storage — dedicated R2 bucket

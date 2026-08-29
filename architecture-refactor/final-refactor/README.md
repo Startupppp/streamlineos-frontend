@@ -28,6 +28,8 @@ Sessions S1-S6 may be opened in parallel. Every session must complete the openin
 
 ## Status
 
+The current S7 evidence is authoritative: migration reconciliation is 373/373 with zero chain gaps, and ticket 44 is partial pending physical replica and operational RPO evidence. Older historical counts in individual session narratives are superseded by the latest ticket evidence.
+
 | Session | Tickets | Status |
 |---:|---|---|
 | S1 | 01, 02, 03, 05, 06, 12 | **closed** — 01, 02, 03, 05, 06 done · 12 done except its read-budget criterion (all four tables and their parents are empty in the dev DB; unblock condition named in the ticket). 1031 unit tests green, typecheck 0, madge 0, tenant-index/owner-authority/rbac-integrity checks passing. Residuals belonging to other sessions are in CROSS-SESSION.md |
@@ -39,3 +41,8 @@ Sessions S1-S6 may be opened in parallel. Every session must complete the openin
 | S7 | 11, 42-45 and existing c28-34 | **partial** · c28-34 **done** (6/7; the column drop is the contract half and now has 12/12 read agreement as evidence). 44 **done** (4/4 — recovery drilled end to end, RTO 19.6 min, lag tested on a real DB; operational RPO misses 5 min by 72x and needs PITR). 42 enforcement done and biting (6 checks, self-test 10/10); cold bootstrap reaches head for the first time, chain gaps 132 -> 1, schema differences 144 -> 44 with 5 of 9 classes identical; found that a future-dated watermark row has been silently disabling db:migrate for every session. 45 all 14 objectives driven, up from 7; headroom and unit cost need environment. 43 code and config gaps closed, instance isolation is a purchase. 11 blocked on 09 alone; catalog burden ~655 |
 
 Read `sessions/PROTOCOL.md` before any session brief. Use `sessions/CROSS-SESSION.md` for requests outside a session's territory.
+
+Session 7 ticket 42 migration-chain evidence: 372 SQL files and 372 journal entries reconcile with zero
+unjournalled, orphaned or timestamp-regressed entries; the upgrade path reaches `372/372` with `chain_gaps=0`;
+the migration-chain guard passes and its self-test passes 10/10. Schema comparison remains open for control-plane
+lag and an S3-owned RLS policy gap.

@@ -4,10 +4,7 @@
 
 **Blocked by:** 43 — Provision independently isolated cell resources.
 
-**Status:** done — all four criteria closed with evidence. **Closed is not the same as "the targets are
-met":** the drill records a measured operational RPO of 6 h against a 5-minute target, and that miss is
-a published finding, not a hidden one. A logical dump structurally cannot reach 5 minutes; Neon PITR
-can, and needs a `NEON_API_KEY`
+**Status:** partial — recovery code and drill evidence are complete, but physical replica and operational RPO evidence remain operator-blocked.
 
 - [x] Backup/restore drill records measured RPO, RTO and integrity verification.
 
@@ -50,7 +47,7 @@ can, and needs a `NEON_API_KEY`
   write fence it implies. An unknown organization is refused 503-retryable and **not** cached, so an
   outage cannot be mistaken for a deletion.
 
-- [x] Replica-tolerant reads are enumerated and tested under lag; critical/read-after-write paths remain primary.
+- [ ] Replica-tolerant reads are enumerated and tested under lag; critical/read-after-write paths remain primary.
 
   **Lag is now genuinely tested, against a real database.** The earlier version of this work skipped the
   staleness half and asserted only pool-selection routing, which is not "tested under lag". A
@@ -100,3 +97,14 @@ has something to restore into and RTO is a number rather than a blocker.
 two tables lacking an RLS policy, so `unhealthy_after_recovery` is non-empty and the drill's own
 `rto_met` stays false even though the elapsed time is comfortably inside target. That is deliberate: a
 cell that returns quickly and cross-tenant-readable has not recovered.
+
+## S7 evidence refresh
+
+On 2026-08-29, the non-destructive recovery tooling self-test passed. The latest stored drill remains
+the evidence for the live recovery exercise: integrity passed for 3 tables and 66 rows, RTO was 1,175
+seconds, operational RPO was 21,600 seconds, and the recovered-cell health check reported the two RLS
+findings recorded above. A fresh recovery drill was not run because it drops and rebuilds cell-2.
+
+The regional PITR exercise and physical replica lag exercise remain operator-controlled. The reproducible
+evidence collector is `backend/src/scripts/collect-s7-evidence.mjs` and its latest report is
+`evidence/45-scale/S7-LIVE-DEV-EVIDENCE.md`.

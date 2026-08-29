@@ -4,9 +4,10 @@
 
 **Blocked by:** 07, 08, 09 and 10.
 
-**Status:** blocked — the gate that closes criterion 1 is built, live and measuring; criteria 2–4 have
-nothing to contract until 09 lands (07, 08 and 10 closed while this session ran). Ratchet reads **555**; the catalog figure is **~655** and is the
-one that matters
+**Status:** blocked — the gate is built, live and measuring; criteria 2–4 have nothing safe to
+contract until 09 lands. Verified 2026-08-29: the source ratchet reads **555**, the catalog contains
+**645 distinct** `users.id` foreign-key columns, and the combined source/catalog burden is **663
+distinct columns**. Evidence: `evidence/11-legacy-actors/CONTRACTION-GATE.md`.
 
 - [ ] Telemetry and repository scans prove no legacy writer or required reader remains.
 
@@ -31,16 +32,16 @@ one that matters
   site. This criterion closes when the ratchet reads 0 and the runtime `writes` counter reads 0.
 
   > **555 is a floor, not the migration burden, and the ratchet is structurally blind to the
-  > difference.** `pg_catalog` holds **647** foreign keys to `users.id`; the source scan sees **563**,
-  > and **100 of the catalog's are invisible to it**. Those sit on tables created by raw SQL with no
+  > difference.** `pg_catalog` holds **645 distinct columns** referencing `users.id`; the source scan
+  > sees **563**, and **100 of the catalog's are invisible to it**. The source has **18 declarations**
+  > absent from the catalog, so the combined distinct burden is **663**. The invisible rows sit on tables
+  > created by raw SQL with no
   > Drizzle declaration — the accounting `ap_*`/`ar_*`/`bank_*` family and the CRM commission set,
   > largely the 65 tables `0619_chain_creates_what_production_has` created from the catalogue. They are
   > organizational by name (`created_by`, `posted_by`, `approved_by`, `assignee_id`).
   >
-  > So the burden is **roughly 655** — 555 visible plus ~100 invisible — and *roughly* is the honest
-  > word: the two sets overlap imperfectly (563 source, 647 catalog, 547 in common), so ~16 FKs are
-  > declared in the schema but absent from the database. Do not treat 655 as an exact count; treat it
-  > as "the ratchet is under-reporting by about a fifth".
+  > The combined distinct burden is the exact count for this capture; it must be re-run after each
+  > actor migration because the source and database can change independently.
   >
   > The ratchet stays source-based because CI has no database, but `pnpm scan:legacy-actors:catalog`
   > names every invisible column against `pg_catalog` so the gap is a known quantity rather than a

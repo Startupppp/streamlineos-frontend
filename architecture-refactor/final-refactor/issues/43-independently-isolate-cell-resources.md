@@ -35,6 +35,9 @@ operator-blocked and is deliberately NOT claimed**
   `.env.example` with `REGION_CELL_2_CACHE_KEY_PREFIX` and `REGION_CELL_2_R2_KEY_PREFIX`; no operator
   could previously set them without guessing the variable names out of the code. `region.config.ts`
   gained a `RegionCacheConfig` so the ISOLATED path has a real seam rather than a documented intention.
+  `CacheService` now resolves the organization placement before tenant-aware cache operations and selects
+  the configured per-cell Redis client when both credentials are present. Partial Redis credentials are
+  rejected during topology parsing. Verified with the region configuration suite (23/23 tests passed).
   The provisioning runbook for each row is in
   [`CELL-RUNBOOK.md`](../../c28-cell-based-platform-at-20m/CELL-RUNBOOK.md).
 
