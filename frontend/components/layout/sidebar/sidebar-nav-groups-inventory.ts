@@ -215,16 +215,36 @@ export const INVENTORY_NAV_GROUPS: NavGroup[] = [
         ],
       },
       {
+        // C2/C5/C7. The group and its Replenishment child share an href, so the
+        // parent has to require what that page requires — it used to ask for
+        // `inventory:reports:read` while the page asks for
+        // `inventory:replenishment:read`, which showed the entry to people who
+        // then landed on NoPermissionState. A parent nobody may open is not a
+        // dead end here: `filterRoute` promotes its accessible children instead
+        // of hiding them, so a reports-only reader still reaches Forecasting,
+        // Valuation, Costing and Reconciliation.
         label: "Planning",
         icon: TrendingUp,
         href: "/inventory/replenishment",
-        requiredPermission: "inventory:reports:read",
+        requiredPermission: "inventory:replenishment:read",
         children: [
           {
             label: "Replenishment",
             icon: RefreshCcw,
             href: "/inventory/replenishment",
-            requiredPermission: "inventory:reports:read",
+            requiredPermission: "inventory:replenishment:read",
+          },
+          {
+            label: "Transfer recommendations",
+            icon: ArrowLeftRight,
+            href: "/inventory/replenishment/transfers",
+            requiredPermission: "inventory:replenishment:read",
+          },
+          {
+            label: "Forecast drift",
+            icon: Activity,
+            href: "/inventory/replenishment/drift",
+            requiredPermission: "inventory:replenishment:read",
           },
           {
             label: "Forecasting",

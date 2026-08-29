@@ -1,6 +1,16 @@
 import { createHash } from "node:crypto";
 import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 
+// Moved 2026-08-29 by C2/C5/C7: the Planning group and its Replenishment child
+// shared an href but asked for `inventory:reports:read` while that page asks for
+// `inventory:replenishment:read` — so a reports-only reader saw the entry and
+// landed on NoPermissionState. Both now ask for what the page asks for. A parent
+// nobody may open is not a dead end: `filterRoute` promotes its accessible
+// children, so that reader still reaches Forecasting, Valuation, Costing and
+// Reconciliation. Two routes that had pages and no way to reach them joined the
+// group: "Transfer recommendations" (/inventory/replenishment/transfers) and
+// "Forecast drift" (/inventory/replenishment/drift), both on
+// inventory:replenishment:read.
 // Moved 2026-08-29 by G1: the inventory audit trail got its first read surface
 // ("Audit Trail", /inventory/reports/audit-trail, gated on inventory:audit:read
 // — a key of its own, because inventory:audit:export is the right to take a
@@ -18,7 +28,7 @@ import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 // /crm/autonomy, gated on crm:autonomy:view). The digest exists so a route or
 // its permission cannot change without somebody saying why.
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "31ee2f7386bafe1340c119febb0c95f78a30eaafe0efeb0e200540cffb802710";
+  "5934166ca04c8e75149d30a9ecd3645e261f46e7fea9acbfd0ee77476fcbb533";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {
