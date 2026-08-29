@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
 import {
   useReorderProposal,
   useConfirmReorderProposal,
@@ -20,6 +21,14 @@ interface DraftProposalCardProps {
   productName: string;
   onConfirm: (proposalId: string, token: string) => void;
   isPending: boolean;
+  /**
+   * F1. Confirming this proposal raises a draft purchase order, so the control
+   * carries the purchase order's own permission -- not the AI one that produced
+   * the proposal. Seeing a proposal and being allowed to act on it are two
+   * different rights, and the backend now asserts both at confirm; this hides
+   * the button that would otherwise render for people the server will refuse.
+   */
+  canCreatePurchaseOrder: boolean;
 }
 
 const DraftProposalCard = memo(function DraftProposalCard({
@@ -27,6 +36,7 @@ const DraftProposalCard = memo(function DraftProposalCard({
   productName,
   onConfirm,
   isPending,
+  canCreatePurchaseOrder,
 }: DraftProposalCardProps) {
   const expiresAt = new Date(proposal.expiresAt).toLocaleString("en-US", {
     month: "short",
@@ -48,19 +58,31 @@ const DraftProposalCard = memo(function DraftProposalCard({
             Expires {expiresAt} · Proposal {proposal.proposalId.slice(0, 8)}…
           </p>
         </div>
-        <LoadingButton
-          size="sm"
-          className="text-micro h-7 px-2 shrink-0"
-          isPending={isPending}
-          loadingText="Creating…"
-          onClick={handleConfirmClick}
-        >
-          Confirm &amp; Create Draft PO
-        </LoadingButton>
+        {canCreatePurchaseOrder ? (
+          <LoadingButton
+            size="sm"
+            className="text-micro h-7 px-2 shrink-0"
+            isPending={isPending}
+            loadingText="Creating…"
+            onClick={handleConfirmClick}
+          >
+            Confirm &amp; Create Draft PO
+          </LoadingButton>
+        ) : null}
       </div>
       <p className="text-micro text-muted-foreground">
-        This will create a <span className="font-medium">DRAFT</span> purchase order for{" "}
-        {productName}. No stock movements occur until the PO is confirmed.
+        {canCreatePurchaseOrder ? (
+          <>
+            This will create a <span className="font-medium">DRAFT</span> purchase order for{" "}
+            {productName}. No stock movements occur until the PO is confirmed.
+          </>
+        ) : (
+          <>
+            You do not have permission to raise purchase orders, so this proposal cannot be
+            confirmed from here. Ask someone with purchase order access to review it before it
+            expires.
+          </>
+        )}
       </p>
     </div>
   );
@@ -80,6 +102,9 @@ export const ReorderProposalPanel = memo(function ReorderProposalPanel({
   const [open, setOpen] = useState(false);
   const [result, setResult] = useState<ReorderProposalResponse | null>(null);
   const [confirmed, setConfirmed] = useState(false);
+
+  const canPropose = useCan("inventory:ai:propose");
+  const canCreatePurchaseOrder = useCan("inventory:purchase-orders:create");
 
   const proposalMutation = useReorderProposal();
   const confirmMutation = useConfirmReorderProposal();
@@ -121,6 +146,11 @@ export const ReorderProposalPanel = memo(function ReorderProposalPanel({
   const isLoading = proposalMutation.isPending;
   const hasResult = !!result;
   const showToggle = hasResult || isLoading;
+
+  // The panel exists only to call an endpoint gated on `inventory:ai:propose`.
+  // Rendering it to someone without that key offers a button whose only outcome
+  // is a 403, so the whole card stays away rather than becoming an empty state.
+  if (!canPropose) return null;
 
   return (
     <Card className="mt-2 border-border/60">
@@ -195,6 +225,7 @@ export const ReorderProposalPanel = memo(function ReorderProposalPanel({
                     productName={result.evidence.productName}
                     onConfirm={handleConfirm}
                     isPending={confirmMutation.isPending}
+                    canCreatePurchaseOrder={canCreatePurchaseOrder}
                   />
                 )}
                 {confirmMutation.isError && (

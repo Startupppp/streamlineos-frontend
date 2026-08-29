@@ -89,20 +89,13 @@ export function ShipmentTrackingTimeline({
               type="button"
               size="sm"
               variant="ghost"
-              className="h-7 text-xs"
               onClick={handleRefresh}
               isPending={refresh.isPending}
               loadingText="Checking…"
             >
               Refresh
             </LoadingButton>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="h-7 text-xs"
-              onClick={handleOpenRecord}
-            >
+            <Button type="button" size="sm" variant="outline" onClick={handleOpenRecord}>
               Record update
             </Button>
           </div>

@@ -90,29 +90,38 @@ type HoldListResponse = {
 
 interface RecallLine {
   id: number;
+  productVariantId?: number | null;
   lotId?: number | null;
   serialId?: number | null;
-  lotNumber?: string | null;
-  serialNumber?: string | null;
 }
 
-interface AffectedCustomer {
+interface AffectedShipment {
   shipmentId: number;
-  salesOrderId?: number | null;
-  clientName?: string | null;
-  shippedAt?: string | null;
+  shipmentNumber: string;
 }
 
+/**
+ * D4. Mirrors `inv_recall_events` as `findOne` actually returns it.
+ *
+ * It used to declare `reason`, `severity`, `notes`, `lotNumber` and
+ * `affectedCustomers` — five fields the API has never sent. Nothing failed:
+ * the Severity column rendered an em dash on every row for ever, and the
+ * "Reason" block rendered `undefined`. A response type that describes columns
+ * the server does not have is not documentation, it is a screen that is
+ * quietly always empty.
+ */
 interface Recall {
   id: number;
   orgId: string;
+  recallNumber: string;
   title: string;
-  reason: string;
-  severity?: string | null;
+  description?: string | null;
   status: RecallStatus;
-  notes?: string | null;
+  /** The impact set this recall was executed against, if it was simulated. */
+  evidenceVersion?: string | null;
   lines: RecallLine[];
-  affectedCustomers?: AffectedCustomer[];
+  affectedShipments?: AffectedShipment[];
+  closedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -123,6 +132,102 @@ type RecallListResponse = {
   page: number;
   totalPages: number;
 };
+
+/**
+ * D4 — the question a recall is about.
+ *
+ * Every supplied criterion narrows: lot ids AND a variant AND a date range is
+ * the intersection, which is the reading a filter bar teaches and the only one
+ * that cannot silently widen a recall.
+ */
+export interface RecallSelection {
+  [key: string]: unknown;
+  lotIds?: number[];
+  productVariantIds?: number[];
+  vendorId?: number;
+  manufacturedFrom?: string;
+  manufacturedTo?: string;
+  expiryFrom?: string;
+  expiryTo?: string;
+}
+
+export interface RecallImpactLot {
+  lotId: number;
+  lotNumber: string;
+  productVariantId: number;
+  variantSku: string;
+  variantName: string;
+  status: string;
+  manufactureDate: string | null;
+  expiryDate: string | null;
+}
+
+export interface RecallImpactOnHandRow {
+  lotId: number;
+  locationId: number;
+  locationName: string;
+  warehouseId: number;
+  warehouseName: string;
+  onHand: string;
+  qualityHold: string;
+}
+
+export interface RecallImpactTransitRow {
+  lotId: number;
+  transferId: number;
+  referenceNumber: string;
+  status: string;
+  quantity: string;
+  fromLocationId: number;
+  toLocationId: number;
+}
+
+export interface RecallImpactShippedRow {
+  lotId: number;
+  shipmentId: number;
+  shipmentNumber: string;
+  status: string;
+  shippedAt: string | null;
+  salesOrderId: number | null;
+  salesOrderNumber: string | null;
+  quantity: string;
+}
+
+export interface RecallImpactReturnedRow {
+  lotId: number;
+  returnId: number;
+  returnNumber: string;
+  status: string;
+  quantity: string;
+}
+
+export interface RecallImpact {
+  selection: RecallSelection;
+  warehouseScope: string;
+  lots: RecallImpactLot[];
+  onHand: RecallImpactOnHandRow[];
+  inTransit: RecallImpactTransitRow[];
+  shipped: RecallImpactShippedRow[];
+  returned: RecallImpactReturnedRow[];
+  totals: {
+    lots: number;
+    onHand: string;
+    onQualityHold: string;
+    inTransit: string;
+    shipped: string;
+    returned: string;
+  };
+  /** Present this back on execute; a moved picture is refused, not acted on. */
+  evidenceVersion: string;
+}
+
+export type CreateRecallPayload =
+  | { title: string; description?: string; selection: RecallSelection; evidenceVersion: string }
+  | {
+      title: string;
+      description?: string;
+      lines: { productVariantId?: number; lotId?: number; serialId?: number }[];
+    };
 
 export type { Inspection, InspectionLine, QualityHold, Recall };
 
@@ -396,20 +501,49 @@ export function useRecall(recallId: number) {
   });
 }
 
+/**
+ * D4 — what a recall would do, before anybody does it.
+ *
+ * A mutation rather than a query even though it reads: the endpoint is a POST
+ * because a selection does not fit in a query string, and — more to the point
+ * — simulating is an act the operator takes, not something a screen should do
+ * on mount while they are still typing lot numbers into it. It writes nothing
+ * server-side, so it carries no `Idempotency-Key` and invalidates nothing.
+ */
+export function useSimulateRecall() {
+  return useMutation<RecallImpact, Error, RecallSelection>({
+    mutationKey: ["inventory", "quality", "recall", "simulate"],
+    mutationFn: (selection) =>
+      apiClient.post<RecallImpact>("/inventory/quality/recalls/simulate", { selection }),
+  });
+}
+
+/**
+ * D4 — execute a recall.
+ *
+ * `selection` + `evidenceVersion` is the simulated form: the server re-runs the
+ * simulation and refuses with a 409 if the picture has moved since the operator
+ * read it. `lines` is the explicit form, for a caller naming lots outright.
+ *
+ * The `Idempotency-Key` is minted per attempt and held by the caller across
+ * retries — a recall posts stock movements, and a retry that mints a fresh key
+ * raises a second recall against the same lots.
+ */
 export function useCreateRecall() {
   const qc = useQueryClient();
-  return useMutation<
-    Recall,
-    Error,
-    { title: string; reason: string; lotIds?: number[]; serialIds?: number[]; severity?: string }
-  >({
+  return useMutation<Recall, Error, CreateRecallPayload & { idempotencyKey: string }>({
     mutationKey: ["inventory", "quality", "recall", "create"],
-    mutationFn: (data) =>
-      apiClient.post<Recall>("/inventory/quality/recalls", data),
+    mutationFn: ({ idempotencyKey, ...data }) =>
+      apiClient.post<Recall>("/inventory/quality/recalls", data, {
+        headers: { "Idempotency-Key": idempotencyKey },
+      }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.recalls() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.qualityHolds() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.lots() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.dashboard() });
+      void qc.invalidateQueries({ queryKey: queryKeys.recallSimulation.impactList });
     },
   });
 }

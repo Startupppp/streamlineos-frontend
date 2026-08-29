@@ -11,11 +11,15 @@ import { platformHierarchyQueryKeys } from "./query-keys/platform-hierarchy";
 import { inventoryQueryKeys } from "./query-keys/inventory";
 import { inventoryGenealogyQueryKeys } from "./query-keys/inventory-genealogy";
 import { inventoryPickingQueryKeys } from "./query-keys/inventory-picking";
+import { inventoryPlanningQueryKeys } from "./query-keys/inventory-planning";
 import { inventoryPackingQueryKeys } from "./query-keys/inventory-packing";
 import { inventoryPutawayQueryKeys } from "./query-keys/inventory-putaway";
 import { inventoryQualityPlanQueryKeys } from "./query-keys/inventory-quality-plans";
+import { inventoryRecallSimulationQueryKeys } from "./query-keys/inventory-recall-simulation";
 import { inventoryReturnsQueryKeys } from "./query-keys/inventory-returns";
 import { inventoryVendorScorecardQueryKeys } from "./query-keys/inventory-vendor-scorecard";
+import { inventoryCopilotQueryKeys } from "./query-keys/inventory-copilot";
+import { inventoryOutboxQueryKeys } from "./query-keys/inventory-outbox";
 import { usersAndCommerceQueryKeys } from "./query-keys/users-and-commerce";
 import { payrollQueryKeys } from "./query-keys/payroll";
 import { growthAndSignQueryKeys } from "./query-keys/growth-and-sign";
@@ -35,11 +39,15 @@ export const queryKeys = {
   ...inventoryQueryKeys,
   ...inventoryGenealogyQueryKeys,
   ...inventoryPickingQueryKeys,
+  ...inventoryPlanningQueryKeys,
   ...inventoryPackingQueryKeys,
   ...inventoryPutawayQueryKeys,
   ...inventoryQualityPlanQueryKeys,
+  ...inventoryRecallSimulationQueryKeys,
   ...inventoryReturnsQueryKeys,
   ...inventoryVendorScorecardQueryKeys,
+  ...inventoryCopilotQueryKeys,
+  ...inventoryOutboxQueryKeys,
   ...usersAndCommerceQueryKeys,
   ...payrollQueryKeys,
   ...growthAndSignQueryKeys,

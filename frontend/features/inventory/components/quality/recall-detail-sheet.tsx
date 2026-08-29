@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { useState, type ChangeEvent } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { AppSheet } from "@/components/shared";
@@ -30,24 +31,36 @@ interface Props {
 
 interface RecallLine {
   id: number;
+  productVariantId?: number | null;
   lotId?: number | null;
   serialId?: number | null;
-  lotNumber?: string | null;
-  serialNumber?: string | null;
 }
 
+/**
+ * A line names a lot, not a lot *number* — the API sends the id and never the
+ * label. Linking rather than printing the id keeps the rule that a visible
+ * database id is a bug: the lot page carries the number, the expiry and the
+ * stock, which is what somebody clicking here is after.
+ */
 const RECALL_LINE_COLUMNS: DataTableColumn<RecallLine>[] = [
   {
-    key: "lotNumber",
-    header: "Lot #",
-    className: "text-muted-foreground text-xs",
-    cell: (line) => line.lotNumber ?? (line.lotId ? String(line.lotId) : "—"),
+    key: "lot",
+    header: "Lot",
+    className: "text-xs",
+    cell: (line) =>
+      line.lotId ? (
+        <Link href={`/inventory/lots/${line.lotId}`} className="text-primary transition-colors hover:underline">
+          View lot
+        </Link>
+      ) : (
+        <span className="text-muted-foreground">—</span>
+      ),
   },
   {
-    key: "serialNumber",
-    header: "Serial #",
+    key: "serial",
+    header: "Serial",
     className: "text-muted-foreground text-xs",
-    cell: (line) => line.serialNumber ?? (line.serialId ? String(line.serialId) : "—"),
+    cell: (line) => (line.serialId ? `#${line.serialId}` : "—"),
   },
 ];
 
@@ -62,7 +75,7 @@ export function RecallDetailSheet({ open, onOpenChange, recallId }: Props) {
   const isLoading = recallQuery.isLoading;
 
   function handleEditNotes(): void {
-    setNotesValue(recall?.notes ?? "");
+    setNotesValue(recall?.description ?? "");
     setEditingNotes(true);
   }
 
@@ -102,7 +115,7 @@ export function RecallDetailSheet({ open, onOpenChange, recallId }: Props) {
     );
   }
 
-  function handleNotesChange(e: React.ChangeEvent<HTMLTextAreaElement>): void {
+  function handleNotesChange(e: ChangeEvent<HTMLTextAreaElement>): void {
     setNotesValue(e.target.value);
   }
 
@@ -178,24 +191,17 @@ export function RecallDetailSheet({ open, onOpenChange, recallId }: Props) {
             >
               {RECALL_STATUS_LABEL[recall.status]}
             </Badge>
-            {recall.severity && (
-              <Badge variant="outline" className="h-5 text-micro px-2 border border-status-warning-rule bg-status-warning-surface text-status-warning-ink">
-                {recall.severity}
-              </Badge>
-            )}
+            <Badge variant="outline" className="h-5 text-micro px-2 font-mono">
+              {recall.recallNumber}
+            </Badge>
             <span className="text-xs text-muted-foreground">
               {format(new Date(recall.createdAt), "dd MMM yyyy")}
             </span>
           </div>
 
-          <div className="space-y-1">
-            <p className="text-xs font-medium text-foreground">Reason</p>
-            <p className="text-xs text-muted-foreground">{recall.reason}</p>
-          </div>
-
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <p className="text-xs font-medium text-foreground">Notes</p>
+              <p className="text-xs font-medium text-foreground">Reason</p>
               {!editingNotes && (
                 <button
                   type="button"
@@ -219,7 +225,7 @@ export function RecallDetailSheet({ open, onOpenChange, recallId }: Props) {
                 </div>
               </div>
             ) : (
-              <p className="text-xs text-muted-foreground">{recall.notes || "—"}</p>
+              <p className="text-xs text-muted-foreground">{recall.description || "—"}</p>
             )}
           </div>
 
@@ -234,23 +240,39 @@ export function RecallDetailSheet({ open, onOpenChange, recallId }: Props) {
             </div>
           )}
 
-          {recall.affectedCustomers && recall.affectedCustomers.length > 0 && (
+          {recall.affectedShipments && recall.affectedShipments.length > 0 && (
             <div className="space-y-1">
-              <p className="text-xs font-medium text-foreground">Affected Customers ({recall.affectedCustomers.length})</p>
+              <p className="text-xs font-medium text-foreground">
+                Shipments carrying recalled goods ({recall.affectedShipments.length})
+              </p>
               <div className="space-y-1.5">
-                {recall.affectedCustomers.map((c) => (
-                  <div key={c.shipmentId} className="flex items-start gap-3 rounded-md border border-border/60 px-3 py-2">
-                    <div className="min-w-0 flex-1">
-                      <TruncatedText text={c.clientName ?? "Unknown"} className="text-xs font-medium" />
-                      <p className="text-micro text-muted-foreground">
-                        Shipment #{c.shipmentId}
-                        {c.salesOrderId ? ` · SO #${c.salesOrderId}` : ""}
-                        {c.shippedAt ? ` · ${format(new Date(c.shippedAt), "dd MMM yyyy")}` : ""}
-                      </p>
-                    </div>
+                {recall.affectedShipments.map((shipment) => (
+                  <div
+                    key={shipment.shipmentId}
+                    className="rounded-md border border-border/60 px-3 py-2"
+                  >
+                    <TruncatedText text={shipment.shipmentNumber} className="text-xs font-medium" />
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {recall.evidenceVersion ? (
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-foreground">Evidence</p>
+              <p className="text-micro text-muted-foreground">
+                Executed against simulated impact{" "}
+                <span className="font-mono">{recall.evidenceVersion}</span>. The server re-checked
+                that picture before acting.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-foreground">Evidence</p>
+              <p className="text-micro text-muted-foreground">
+                Raised from an explicit line list, so no impact simulation was recorded.
+              </p>
             </div>
           )}
         </div>

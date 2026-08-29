@@ -130,6 +130,12 @@ export const INVENTORY_NAV_GROUPS: NavGroup[] = [
             href: "/inventory/reports/expiry",
             requiredPermission: "inventory:reports:read",
           },
+          {
+            label: "Audit Trail",
+            icon: History,
+            href: "/inventory/reports/audit-trail",
+            requiredPermission: "inventory:audit:read",
+          },
         ],
       },
       {

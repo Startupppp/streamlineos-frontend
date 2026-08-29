@@ -1,6 +1,10 @@
 import { createHash } from "node:crypto";
 import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 
+// Moved 2026-08-29 by G1: the inventory audit trail got its first read surface
+// ("Audit Trail", /inventory/reports/audit-trail, gated on inventory:audit:read
+// — a key of its own, because inventory:audit:export is the right to take a
+// checksummed evidence bundle away, not the right to look at the trail).
 // Moved 2026-08-29 by A6: nine inventory routes were gated on a key their page
 // does not use. Dashboard now accepts inventory:stock:read OR inventory:reports:read
 // (it serves a stock-safe subset instead of the onboarding empty state); Operations
@@ -14,7 +18,7 @@ import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 // /crm/autonomy, gated on crm:autonomy:view). The digest exists so a route or
 // its permission cannot change without somebody saying why.
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "b179993a22a7164618345818fae258c3bf8fb97c5debf9ebfb0c88b7b02ba9bd";
+  "31ee2f7386bafe1340c119febb0c95f78a30eaafe0efeb0e200540cffb802710";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {

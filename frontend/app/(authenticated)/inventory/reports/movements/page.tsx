@@ -18,6 +18,9 @@ import { downloadCsv } from "@/features/inventory/lib";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
+import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
+
+const PAGE_SIZE = 50;
 
 const TYPE_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
   { value: "ALL", label: "All types" },
@@ -173,44 +176,54 @@ export default function MovementsReportPage() {
   const [movementType, setMovementType] = useState<string>("ALL");
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
-  const [page, setPage] = useState<number>(1);
+  // G1. The ledger is written to while this report is read, so it walks a
+  // `(created_at, id)` keyset rather than counting offsets. There is no page
+  // count because there is no count: the server is not asked for one.
+  const {
+    cursor,
+    pageNumber,
+    hasPrevious,
+    goNext,
+    goPrevious,
+    reset: resetCursor,
+  } = useCursorPagination();
 
   const warehousesQuery = useWarehouses();
   const warehouses = warehousesQuery.data ?? [];
 
   const query = useMovementsReport({
     warehouseId: warehouseId ? Number(warehouseId) : undefined,
-    type: movementType === "ALL" ? undefined : movementType,
+    transactionType: movementType === "ALL" ? undefined : movementType,
     dateFrom: dateFrom || undefined,
     dateTo: dateTo || undefined,
-    page,
-    limit: 50,
+    cursor,
+    limit: PAGE_SIZE,
   });
 
   const rows = useMemo(() => query.data?.items ?? [], [query.data]);
 
   function handleWarehouseChange(value: string): void {
     setWarehouseId(value === "ALL" ? "" : value);
-    setPage(1);
+    resetCursor();
   }
 
   function handleTypeChange(value: string): void {
     setMovementType(value);
-    setPage(1);
+    resetCursor();
   }
 
   function handleDateFromChange(value: string): void {
     setDateFrom(value);
-    setPage(1);
+    resetCursor();
   }
 
   function handleDateToChange(value: string): void {
     setDateTo(value);
-    setPage(1);
+    resetCursor();
   }
 
-  function handlePageChange(nextPage: number): void {
-    setPage(nextPage);
+  function handleNextPage(): void {
+    goNext(query.data?.nextCursor);
   }
 
   function handleRetry(): void {
@@ -304,11 +317,13 @@ export default function MovementsReportPage() {
               isLoading={query.isLoading}
               minWidth="900px"
               pagination={{
-                mode: "server",
-                page,
-                pageSize: 50,
-                total: query.data?.total ?? 0,
-                onPageChange: handlePageChange,
+                mode: "cursor",
+                pageSize: PAGE_SIZE,
+                pageNumber,
+                hasMore: query.data?.hasMore ?? false,
+                hasPrevious,
+                onNext: handleNextPage,
+                onPrevious: goPrevious,
               }}
             />
         )}

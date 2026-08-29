@@ -62,6 +62,12 @@ export type StockTransactionFilters = {
   toDate?: string;
   page?: number;
   limit?: number;
+  /**
+   * G1. Keyset position. Sent, it supersedes `page`: the ledger is append-only
+   * and a reader scrolling it while the engine posts loses or repeats a row at
+   * every offset boundary. Drive it with `useCursorPagination`.
+   */
+  cursor?: string;
 };
 
 export interface StockLevelRow {
@@ -117,9 +123,12 @@ export interface StockTransaction {
 
 interface StockTransactionsResult {
   items: StockTransaction[];
-  total: number;
+  /** Null on a cursor page: the server was not asked to count. */
+  total: number | null;
   page: number;
-  totalPages: number;
+  totalPages: number | null;
+  hasMore: boolean;
+  nextCursor: string | null;
 }
 
 interface RawStockLevel {
@@ -176,9 +185,11 @@ interface RawTransaction {
 
 interface RawTransactionsResponse {
   items: RawTransaction[];
-  total: number;
+  total: number | null;
   page: number;
-  totalPages: number;
+  totalPages: number | null;
+  hasMore: boolean;
+  nextCursor: string | null;
 }
 
 function toStockLevelRow(r: RawStockLevel): StockLevelRow {
@@ -297,15 +308,19 @@ export function useStockTransactions(filters?: StockTransactionFilters) {
         toDate: filters?.toDate,
         page: filters?.page,
         limit: filters?.limit,
+        cursor: filters?.cursor,
       });
       return {
         items: res.items.map(toStockTransaction),
         total: res.total,
         page: res.page,
         totalPages: res.totalPages,
+        hasMore: res.hasMore,
+        nextCursor: res.nextCursor,
       };
     },
     staleTime: 2 * 60_000,
+    placeholderData: keepPreviousData,
     enabled: canView,
   });
 }

@@ -1,3 +1,5 @@
+import { format } from "date-fns";
+
 
 
 export function formatDateOnly(date: Date | string | null | undefined): string {
@@ -16,6 +18,20 @@ export function formatDateOnly(date: Date | string | null | undefined): string {
 }
 export function getTodayString(): string {
   return formatDateOnly(new Date());
+}
+
+/**
+ * Date and time, for a log where "when exactly" is the question being asked.
+ *
+ * `formatShortDate` deliberately drops the time, which is right for a due date
+ * and wrong for an audit trail: two events a minute apart would render
+ * identically and the order would look arbitrary.
+ */
+export function formatDateTime(value: string | Date | null | undefined): string {
+  if (!value) return "";
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  return format(d, "d MMM yyyy, HH:mm:ss");
 }
 
 export function formatShortDate(value: string | Date | null | undefined): string {

@@ -61,6 +61,28 @@ type ServerPagination = {
   onPageSizeChange?: (pageSize: number) => void;
   pageSizeOptions?: readonly number[];
 };
+/**
+ * Keyset pagination, for a list whose rows are still being written.
+ *
+ * A cursor list has no total and therefore no page count: the server was never
+ * asked how many rows match, because counting them is most of what offset
+ * pagination costs once a tenant has history. So the footer walks rather than
+ * jumps, and the caller keeps the cursor stack — `hooks/common/use-cursor-pagination.ts`
+ * is that stack. Use this wherever the API returns `hasMore` and `nextCursor`
+ * instead of `total`; anything that can report a real total stays on `"server"`.
+ */
+type CursorPagination = {
+  mode: "cursor";
+  pageSize: number;
+  /** Position in the walk, 1-based. Not a page number a caller may jump to. */
+  pageNumber: number;
+  hasMore: boolean;
+  hasPrevious: boolean;
+  onNext: () => void;
+  onPrevious: () => void;
+  onPageSizeChange?: (pageSize: number) => void;
+  pageSizeOptions?: readonly number[];
+};
 
 export interface DataTableProps<T> {
   data: T[];
@@ -72,7 +94,7 @@ export interface DataTableProps<T> {
     onChange: (sel: Set<string | number>) => void;
     isRowSelectable?: (row: T) => boolean;
   };
-  pagination?: ClientPagination | ServerPagination;
+  pagination?: ClientPagination | ServerPagination | CursorPagination;
   isLoading?: boolean;
   emptyState?: ReactNode;
   footer?: ReactNode;
@@ -130,10 +152,14 @@ export function DataTable<T>({
   const [localRowSelection, setLocalRowSelection] = useState<RowSelectionState>({});
   const [internalPage, setInternalPage] = useState(0);
 
-  const isServerPagination =
-    pagination !== undefined && "mode" in pagination && pagination.mode === "server";
+  const paginationMode =
+    pagination !== undefined && "mode" in pagination ? pagination.mode : "client";
+  const isServerPagination = paginationMode === "server";
+  const isCursorPagination = paginationMode === "cursor";
   const serverPag = isServerPagination ? (pagination as ServerPagination) : null;
-  const clientPag = !isServerPagination ? (pagination as ClientPagination | undefined) : null;
+  const cursorPag = isCursorPagination ? (pagination as CursorPagination) : null;
+  const clientPag =
+    paginationMode === "client" ? (pagination as ClientPagination | undefined) : null;
   const clientPageSize = clientPag?.pageSize ?? 50;
 
   const isRowSelectable = selection?.isRowSelectable;
@@ -213,15 +239,21 @@ export function DataTable<T>({
     state: {
       sorting: sortState ? externalSorting : sorting,
       rowSelection,
-      pagination: isServerPagination
-        ? { pageIndex: serverPag!.page - 1, pageSize: serverPag!.pageSize }
-        : { pageIndex: internalPage, pageSize: clientPageSize },
+      pagination: serverPag
+        ? { pageIndex: serverPag.page - 1, pageSize: serverPag.pageSize }
+        : cursorPag
+          ? { pageIndex: cursorPag.pageNumber - 1, pageSize: cursorPag.pageSize }
+          : { pageIndex: internalPage, pageSize: clientPageSize },
     },
     manualSorting: sortState !== undefined,
-    manualPagination: isServerPagination,
-    pageCount: isServerPagination
-      ? Math.ceil(serverPag!.total / serverPag!.pageSize)
-      : undefined,
+    manualPagination: isServerPagination || isCursorPagination,
+    // -1 is TanStack's "the page count is unknowable", which is the literal
+    // truth for a keyset walk.
+    pageCount: serverPag
+      ? Math.ceil(serverPag.total / serverPag.pageSize)
+      : cursorPag
+        ? -1
+        : undefined,
     enableRowSelection: !selection
       ? false
       : isRowSelectable
@@ -247,6 +279,9 @@ export function DataTable<T>({
       }
     },
     onPaginationChange: (updater) => {
+      // A cursor walk is driven by the footer's own next/previous handlers, not
+      // by a page index — there is no index to move to.
+      if (isCursorPagination) return;
       if (isServerPagination) {
         const prev = { pageIndex: serverPag!.page - 1, pageSize: serverPag!.pageSize };
         const next = typeof updater === "function" ? updater(prev) : updater;
@@ -261,7 +296,8 @@ export function DataTable<T>({
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: sortState ? undefined : getSortedRowModel(),
-    getPaginationRowModel: isServerPagination ? undefined : getPaginationRowModel(),
+    getPaginationRowModel:
+      isServerPagination || isCursorPagination ? undefined : getPaginationRowModel(),
   });
 
   const rows = table.getRowModel().rows;
@@ -273,10 +309,9 @@ export function DataTable<T>({
   const totalItems = isServerPagination ? serverPag!.total : data.length;
   const pSize = isServerPagination ? serverPag!.pageSize : clientPageSize;
   const hasPageSizeControl = !!(serverPag?.onPageSizeChange ?? clientPag?.onPageSizeChange);
-  const showPagination =
-    pagination !== undefined &&
-    totalItems > 0 &&
-    (totalPages > 1 || hasPageSizeControl);
+  const showPagination = cursorPag
+    ? data.length > 0 || cursorPag.hasPrevious
+    : pagination !== undefined && totalItems > 0 && (totalPages > 1 || hasPageSizeControl);
 
   function handleSearchChange(value: string) {
     search?.onChange(value);
@@ -507,15 +542,30 @@ export function DataTable<T>({
 
       {showPagination && (
         <div className="shrink-0 border-t px-2">
-          <DataTablePagination
-            page={currentPage + 1}
-            totalPages={totalPages}
-            total={totalItems}
-            limit={pSize}
-            onPageChange={handlePageChange}
-            onLimitChange={serverPag?.onPageSizeChange ?? clientPag?.onPageSizeChange}
-            pageSizeOptions={serverPag?.pageSizeOptions}
-          />
+          {cursorPag ? (
+            <DataTablePagination
+              mode="cursor"
+              page={cursorPag.pageNumber}
+              shown={data.length}
+              limit={cursorPag.pageSize}
+              hasMore={cursorPag.hasMore}
+              hasPrevious={cursorPag.hasPrevious}
+              onNext={cursorPag.onNext}
+              onPrevious={cursorPag.onPrevious}
+              onLimitChange={cursorPag.onPageSizeChange}
+              pageSizeOptions={cursorPag.pageSizeOptions}
+            />
+          ) : (
+            <DataTablePagination
+              page={currentPage + 1}
+              totalPages={totalPages}
+              total={totalItems}
+              limit={pSize}
+              onPageChange={handlePageChange}
+              onLimitChange={serverPag?.onPageSizeChange ?? clientPag?.onPageSizeChange}
+              pageSizeOptions={serverPag?.pageSizeOptions}
+            />
+          )}
         </div>
       )}
     </div>

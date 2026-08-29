@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
@@ -37,11 +37,26 @@ interface ReorderReportParams {
 
 export interface MovementsParams {
   warehouseId?: number;
-  type?: string;
+  transactionType?: string;
   dateFrom?: string;
   dateTo?: string;
   page?: number;
   limit?: number;
+  /**
+   * G1. Keyset position over `(created_at, id)`. Sent, it supersedes `page` and
+   * the response carries no `total` — see `useCursorPagination`.
+   */
+  cursor?: string;
+}
+
+/** What a keyset-paginated list answers with instead of a total. */
+export interface CursorResponse<T> {
+  items: T[];
+  total: number | null;
+  page: number;
+  totalPages: number | null;
+  hasMore: boolean;
+  nextCursor: string | null;
 }
 
 export interface SlowMovingRow {
@@ -322,9 +337,11 @@ function toReorderRowFromFlat(row: RawReorderRow): ReorderReportRow {
 
 interface RawMovementsEnvelope {
   items: RawTransactionRow[];
-  total: number;
+  total: number | null;
   page: number;
-  totalPages: number;
+  totalPages: number | null;
+  hasMore: boolean;
+  nextCursor: string | null;
 }
 
 function toNumber(value: string | null | undefined): number {
@@ -468,21 +485,30 @@ export function useReorderReport(params?: ReorderReportParams) {
 
 export function useMovementsReport(params?: MovementsParams) {
   const canView = useCan("inventory:reports:read");
-  return useQuery<PaginatedResponse<MovementReportRow>, Error>({
+  return useQuery<CursorResponse<MovementReportRow>, Error>({
     queryKey: queryKeys.inventory.movementsReport(params),
     queryFn: async () => {
       const data = await apiClient.get<RawMovementsEnvelope>("/inventory/reports/movements", {
         ...(params?.dateFrom !== undefined ? { fromDate: params.dateFrom } : {}),
         ...(params?.dateTo !== undefined ? { toDate: params.dateTo } : {}),
         ...(params?.warehouseId !== undefined ? { warehouseId: String(params.warehouseId) } : {}),
-        ...(params?.type !== undefined ? { type: params.type } : {}),
+        ...(params?.transactionType !== undefined ? { transactionType: params.transactionType } : {}),
         ...(params?.page !== undefined ? { page: String(params.page) } : {}),
         ...(params?.limit !== undefined ? { limit: String(params.limit) } : {}),
+        ...(params?.cursor !== undefined ? { cursor: params.cursor } : {}),
       });
       const items = (data.items ?? []).map(toMovementRow);
-      return { items, total: data.total, page: data.page, totalPages: data.totalPages };
+      return {
+        items,
+        total: data.total,
+        page: data.page,
+        totalPages: data.totalPages,
+        hasMore: data.hasMore,
+        nextCursor: data.nextCursor,
+      };
     },
     staleTime: 5 * 60_000,
+    placeholderData: keepPreviousData,
     enabled: canView,
   });
 }

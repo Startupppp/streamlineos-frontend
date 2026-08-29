@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { format, subDays, startOfDay, endOfDay } from "date-fns";
@@ -32,6 +32,7 @@ import { MobileFilterDrawer } from "@/features/payroll/shared/mobile-filter-draw
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { NoPermissionState } from "@/components/shared";
+import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
 
 const LIMIT = 25;
 
@@ -267,7 +268,18 @@ export default function MovementsPage() {
   const dirFilter: StockTransactionDirection | "all" = isDirectionOrAll(dirParam) ? dirParam : "all";
   const warehouseId = warehouseParam !== "all" ? Number(warehouseParam) || undefined : undefined;
 
-  const [page, setPage] = useState(1);
+  // G1. The ledger is append-only and is written to while it is read, so the
+  // list walks a `(created_at, id)` keyset rather than counting offsets: page
+  // two is the rows after the cursor page one ended on, not rows 26-50 of a
+  // set that has since shifted down.
+  const {
+    cursor,
+    pageNumber,
+    hasPrevious,
+    goNext,
+    goPrevious,
+    reset: resetCursor,
+  } = useCursorPagination();
 
   const dateRange = useMemo(() => getDateRange(datePreset), [datePreset]);
 
@@ -290,10 +302,10 @@ export default function MovementsPage() {
       ...(dirFilter !== "all" ? { direction: dirFilter } : {}),
       ...(warehouseId ? { warehouseId } : {}),
       ...(searchQ ? { search: searchQ } : {}),
-      page,
+      ...(cursor !== undefined ? { cursor } : {}),
       limit: LIMIT,
     }),
-    [dateRange, txnTypeFilter, dirFilter, warehouseId, searchQ, page],
+    [dateRange, txnTypeFilter, dirFilter, warehouseId, searchQ, cursor],
   );
 
   const { data: txnData, isLoading, isError, refetch } = useStockTransactions(filters);
@@ -302,10 +314,11 @@ export default function MovementsPage() {
   const canAdjust = useCan("inventory:stock:adjust");
   const canTransfer = useCan("inventory:stock:transfer");
 
-  const total = txnData?.total ?? 0;
-  const currentPage = txnData?.page ?? page;
-
   const transactions = txnData?.items ?? [];
+
+  function handleNextPage(): void {
+    goNext(txnData?.nextCursor);
+  }
 
   const handleDatePresetChange = useCallback((val: string) => {
     if (isDatePreset(val)) {
@@ -313,9 +326,9 @@ export default function MovementsPage() {
       if (val === "30d") params.delete("date");
       else params.set("date", val);
       router.replace(`?${params.toString()}`);
-      setPage(1);
+      resetCursor();
     }
-  }, [router, searchParams]);
+  }, [router, searchParams, resetCursor]);
 
   const handleTypeChange = useCallback((val: string) => {
     if (isTransactionTypeOrAll(val)) {
@@ -323,9 +336,9 @@ export default function MovementsPage() {
       if (val === "all") params.delete("type");
       else params.set("type", val);
       router.replace(`?${params.toString()}`);
-      setPage(1);
+      resetCursor();
     }
-  }, [router, searchParams]);
+  }, [router, searchParams, resetCursor]);
 
   const handleDirChange = useCallback((val: string) => {
     if (isDirectionOrAll(val)) {
@@ -333,23 +346,23 @@ export default function MovementsPage() {
       if (val === "all") params.delete("dir");
       else params.set("dir", val);
       router.replace(`?${params.toString()}`);
-      setPage(1);
+      resetCursor();
     }
-  }, [router, searchParams]);
+  }, [router, searchParams, resetCursor]);
 
   const handleWarehouseChange = useCallback((val: string) => {
     const params = new URLSearchParams(searchParams.toString());
     if (val === "all") params.delete("warehouse");
     else params.set("warehouse", val);
     router.replace(`?${params.toString()}`);
-    setPage(1);
-  }, [router, searchParams]);
+    resetCursor();
+  }, [router, searchParams, resetCursor]);
 
   function handleRetry(): void { void refetch(); }
 
   function handleResetFilters(): void {
     router.replace("?");
-    setPage(1);
+    resetCursor();
   }
 
   function handleSearchChange(val: string): void {
@@ -357,7 +370,7 @@ export default function MovementsPage() {
     if (val) params.set("q", val);
     else params.delete("q");
     router.replace(`?${params.toString()}`);
-    setPage(1);
+    resetCursor();
   }
 
   const subtitle = "Track every stock change from receipts, sales, transfers, adjustments, opening stock, and returns.";
@@ -556,11 +569,13 @@ export default function MovementsPage() {
               getRowKey={(row) => row.id}
               isLoading={isLoading}
               pagination={{
-                mode: "server",
-                page: currentPage,
+                mode: "cursor",
                 pageSize: LIMIT,
-                total,
-                onPageChange: setPage,
+                pageNumber,
+                hasMore: txnData?.hasMore ?? false,
+                hasPrevious,
+                onNext: handleNextPage,
+                onPrevious: goPrevious,
               }}
               search={{
                 value: searchQ,

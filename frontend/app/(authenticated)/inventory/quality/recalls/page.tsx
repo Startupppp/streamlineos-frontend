@@ -15,7 +15,7 @@ import { EmptySearchIllustration } from "@/components/illustrations";
 import { useRecalls } from "@/hooks/api/inventory/quality";
 import type { Recall } from "@/hooks/api/inventory/quality";
 import { RecallDetailSheet } from "@/features/inventory/components/quality/recall-detail-sheet";
-import { RecallCreateDialog } from "@/features/inventory/components/quality/recall-create-dialog";
+import { RecallPlanSheet } from "@/features/inventory/components/quality/recall-plan-sheet";
 import { RECALL_STATUS_BADGE, RECALL_STATUS_LABEL } from "@/features/inventory/lib";
 import { cn } from "@/lib/utils";
 import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
@@ -79,11 +79,13 @@ function RecallsPageInner() {
       sortValue: (r) => r.title,
     },
     {
-      key: "severity",
-      header: "Severity",
-      headerClassName: "w-[100px]",
-      className: "text-muted-foreground",
-      cell: (r) => r.severity ?? "—",
+      key: "recallNumber",
+      header: "Recall #",
+      headerClassName: "w-[120px]",
+      className: "font-mono text-muted-foreground",
+      cell: (r) => r.recallNumber,
+      sortable: true,
+      sortValue: (r) => r.recallNumber,
     },
     {
       key: "status",
@@ -180,7 +182,7 @@ function RecallsPageInner() {
         recallId={selectedId}
       />
 
-      <RecallCreateDialog open={createOpen} onOpenChange={handleCreateOpenChange} />
+      <RecallPlanSheet open={createOpen} onOpenChange={handleCreateOpenChange} />
     </>
   );
 }
