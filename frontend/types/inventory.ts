@@ -76,7 +76,6 @@ export interface InventoryProduct {
   salesUomId?: number | null;
   defaultVendorId?: number | null;
   reorderEnabled?: boolean;
-  isArchived?: boolean;
 }
 
 export interface CreateProductInput {

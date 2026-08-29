@@ -15,12 +15,15 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { LoadingState, ErrorState } from "@/components/shared";
+import { LoadingState, ErrorState, NoPermissionState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { useProduct, useStockLevels, type StockLevelRow } from "@/hooks/api/inventory";
 import { ProductEditForm } from "@/features/inventory/components/product-edit-form";
 import { ProductAiActions } from "@/features/inventory/components/product-ai-actions";
+import { ProductStatusBadge } from "@/features/inventory/components/product-status-badge";
+import { ProductLifecycleButton } from "@/features/inventory/components/product-lifecycle-actions";
 import {
   AddVariantSheet,
   EditVariantSheet,
@@ -49,44 +52,6 @@ function InfoRow({ label, value }: { label: string; value: ReactNode }) {
       </p>
       <div className="text-sm text-foreground">{value}</div>
     </div>
-  );
-}
-
-function ProductStatusBadge({
-  status,
-  isActive,
-}: {
-  status?: string;
-  isActive?: boolean;
-}) {
-  const effectiveStatus = status ?? (isActive ? "ACTIVE" : "INACTIVE");
-  if (effectiveStatus === "ACTIVE") {
-    return (
-      <Badge
-        variant="outline"
-        className="h-5 text-micro px-2 py-0 border-status-success-rule text-status-success-ink bg-status-success-surface"
-      >
-        Active
-      </Badge>
-    );
-  }
-  if (effectiveStatus === "DISCONTINUED") {
-    return (
-      <Badge
-        variant="outline"
-        className="h-5 text-micro px-2 py-0 border-status-warning-rule text-status-warning-ink bg-status-warning-surface"
-      >
-        Discontinued
-      </Badge>
-    );
-  }
-  return (
-    <Badge
-      variant="outline"
-      className="h-5 text-micro px-2 py-0 border-border text-muted-foreground bg-muted"
-    >
-      Inactive
-    </Badge>
   );
 }
 
@@ -121,6 +86,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const [editingVariant, setEditingVariant] =
     useState<ProductVariantForSheet | null>(null);
 
+  const canView = useCan("inventory:products:read");
+  const canUpdate = useCan("inventory:products:update");
   const productQuery = useProduct(productId);
   const stockQuery = useStockLevels({ productId });
 
@@ -149,6 +116,23 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
 
   function handleRetryStock(): void {
     void stockQuery.refetch();
+  }
+
+  if (!canView) {
+    return (
+      <PageWrapper
+        title="Product"
+        backHref="/inventory/products"
+        backLabel="Back to Products"
+      >
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          <NoPermissionState
+            permission="inventory:products:read"
+            className="flex-1"
+          />
+        </div>
+      </PageWrapper>
+    );
   }
 
   if (productQuery.isLoading) {
@@ -271,16 +255,18 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     <PageWrapper
       title={product.name}
       subtitle={`SKU: ${product.sku}`}
+      badge={<ProductStatusBadge status={product.status} size="header" />}
       backHref="/inventory/products"
       backLabel="Back to Products"
       actions={
         <div className="flex items-center gap-2">
-          {!editing && (
+          {!editing && canUpdate && (
             <Button variant="outline" size="sm" onClick={handleEditClick}>
               <Pencil className="mr-1 h-3.5 w-3.5" />
               Edit
             </Button>
           )}
+          <ProductLifecycleButton product={product} />
           <ProductAiActions product={product} />
         </div>
       }
@@ -347,12 +333,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   />
                   <InfoRow
                     label="Status"
-                    value={
-                      <ProductStatusBadge
-                        status={product.status}
-                        isActive={product.isActive}
-                      />
-                    }
+                    value={<ProductStatusBadge status={product.status} />}
                   />
                   <InfoRow label="Product Type" value={
                     product.productType === "STOCKABLE" ? "Stockable"

@@ -3,6 +3,19 @@ import { queryKeyBase as base } from "./base";
 export const inventoryQueryKeys = {
   inventory: {
     all: [...base, "inventory"] as const,
+    /**
+     * A4. The params-less prefix, for invalidation.
+     *
+     * `products()` with no argument yields `[..., "products", undefined]`, and
+     * TanStack's partial match walks the filter key's own indexes — so index 3
+     * compares `undefined` against a stored params object and never matches.
+     * Every no-argument `invalidateQueries({ queryKey: products() })` was
+     * therefore a silent no-op, which is why archiving or restoring a product
+     * left the list showing the old row.
+     *
+     * Invalidate with `productsList`; read with `products(params)`.
+     */
+    productsList: [...base, "inventory", "products"] as const,
     products: (params?: Record<string, unknown>) =>
       [...base, "inventory", "products", params] as const,
     product: (productId: number) =>

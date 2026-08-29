@@ -152,6 +152,14 @@ export function useUpdateProduct(id?: number) {
   });
 }
 
+/**
+ * The lifecycle writes invalidate `inventory.all`, not `inventory.products()`.
+ * The list factory takes a filters argument, so calling it with none yields a
+ * key ending in an explicit `undefined`, which `partialMatchKey` compares
+ * against the stored filters object and rejects — the list never refetched. The
+ * wider prefix is also the honest one: archiving a SKU changes what every order
+ * form, variant picker and stock view is allowed to show.
+ */
 export function useDeleteProduct() {
   const qc = useQueryClient();
   return useMutation<void, Error, number>({
@@ -159,7 +167,7 @@ export function useDeleteProduct() {
     mutationFn: (productId) =>
       apiClient.delete<void>(`/inventory/products/${productId}`),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.products() });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.productsList });
     },
   });
 }
@@ -170,9 +178,8 @@ export function useArchiveProduct() {
     mutationKey: ["inventory", "product", "archive"],
     mutationFn: (productId) =>
       apiClient.post<InventoryProduct>(`/inventory/products/${productId}/archive`, {}),
-    onSuccess: (_, productId) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.products() });
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.product(productId) });
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.productsList });
     },
   });
 }
@@ -183,9 +190,8 @@ export function useRestoreProduct() {
     mutationKey: ["inventory", "product", "restore"],
     mutationFn: (productId) =>
       apiClient.post<InventoryProduct>(`/inventory/products/${productId}/restore`, {}),
-    onSuccess: (_, productId) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.products() });
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.product(productId) });
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.productsList });
     },
   });
 }

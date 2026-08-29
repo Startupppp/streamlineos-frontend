@@ -5,9 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import Link from "next/link";
 import { Package } from "lucide-react";
-import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { toast } from "sonner";
 import {
   EmptyProductsIllustration,
   EmptySearchIllustration,
@@ -23,40 +22,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, NoPermissionState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
+import { ProductStatusBadge } from "@/features/inventory/components/product-status-badge";
+import { ProductRowActions } from "@/features/inventory/components/product-lifecycle-actions";
 import {
   CONTENT_FILL_PANEL,
   FILTER_SELECT_TRIGGER,
 } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
-import {
-  useProducts,
-  useCategories,
-  useArchiveProduct,
-  useRestoreProduct,
-  useDeleteProduct,
-} from "@/hooks/api/inventory";
+import { useProducts, useCategories } from "@/hooks/api/inventory";
 import { useCan } from "@/hooks/api/access";
 import { MobileFilterDrawer } from "@/features/payroll/shared/mobile-filter-drawer";
 import type { InventoryProduct, TrackingMethod } from "@/types/inventory";
@@ -71,27 +48,6 @@ function formatPrice(value: string | number | null | undefined): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
-}
-
-function StatusBadge({ status }: { status: string }) {
-  if (status === "ACTIVE") {
-    return (
-      <Badge
-        variant="outline"
-        className="h-4 text-micro px-1.5 py-0 border-status-success-rule text-status-success-ink bg-status-success-surface"
-      >
-        Active
-      </Badge>
-    );
-  }
-  return (
-    <Badge
-      variant="outline"
-      className="h-4 text-micro px-1.5 py-0 border-border text-muted-foreground bg-muted"
-    >
-      Inactive
-    </Badge>
-  );
 }
 
 function StockBadge({ qty }: { qty: number }) {
@@ -153,109 +109,8 @@ function TrackingBadge({
   );
 }
 
-function ProductRowActions({ product }: { product: InventoryProduct }) {
-  const [alertOpen, setAlertOpen] = useState<boolean>(false);
-  const { iconRef: ellipsisRef, hoverHandlers: ellipsisHover } =
-    useAnimatedIcon();
-  const archiveMutation = useArchiveProduct();
-  const restoreMutation = useRestoreProduct();
-  const deleteMutation = useDeleteProduct();
-  const canUpdate = useCan("inventory:products:update");
-  const canDelete = useCan("inventory:products:delete");
-
-  function handleArchive(): void {
-    archiveMutation.mutate(product.id, {
-      onSuccess: () => toast.success("Product archived"),
-      onError: (err) => toast.error(getErrorMessage(err)),
-    });
-  }
-
-  function handleRestore(): void {
-    restoreMutation.mutate(product.id, {
-      onSuccess: () => toast.success("Product restored"),
-      onError: (err) => toast.error(getErrorMessage(err)),
-    });
-  }
-
-  function handleDeleteConfirm(): void {
-    deleteMutation.mutate(product.id, {
-      onSuccess: () => {
-        setAlertOpen(false);
-        toast.success("Product deleted");
-      },
-      onError: (err) => {
-        setAlertOpen(false);
-        toast.error(getErrorMessage(err), {
-          description: "Consider archiving this product instead.",
-        });
-      },
-    });
-  }
-
-  function handleAlertOpenChange(open: boolean): void {
-    setAlertOpen(open);
-  }
-
-  return (
-    <AlertDialog open={alertOpen} onOpenChange={handleAlertOpenChange}>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="w-7"
-            {...ellipsisHover}
-          >
-            <EllipsisIcon ref={ellipsisRef} size={14} />
-            <span className="sr-only">Product actions</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem asChild>
-            <Link href={`/inventory/products/${product.id}`}>View</Link>
-          </DropdownMenuItem>
-          {canUpdate && (
-            <DropdownMenuItem asChild>
-              <Link href={`/inventory/products/${product.id}`}>Edit</Link>
-            </DropdownMenuItem>
-          )}
-          {(canUpdate || canDelete) && <DropdownMenuSeparator />}
-          {canUpdate && !product.isArchived && product.status === "ACTIVE" && (
-            <DropdownMenuItem onClick={handleArchive}>Archive</DropdownMenuItem>
-          )}
-          {canUpdate && product.isArchived && (
-            <DropdownMenuItem onClick={handleRestore}>Restore</DropdownMenuItem>
-          )}
-          {canDelete && (
-            <AlertDialogTrigger asChild>
-              <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
-            </AlertDialogTrigger>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Delete product?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This action cannot be undone. Archiving preserves history without
-            removing the product.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleDeleteConfirm}
-            disabled={deleteMutation.isPending}
-          >
-            Delete
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
-}
-
 function ProductsPageInner() {
+  const canView = useCan("inventory:products:read");
   const canCreate = useCan("inventory:products:create");
   const canImport = useCan("inventory:import");
   const router = useRouter();
@@ -327,7 +182,9 @@ function ProductsPageInner() {
       ? ("ACTIVE" as const)
       : statusParam === "INACTIVE"
         ? ("INACTIVE" as const)
-        : undefined;
+        : statusParam === "DISCONTINUED"
+          ? ("DISCONTINUED" as const)
+          : undefined;
   const categoryId = categoryIdParam ? Number(categoryIdParam) : undefined;
   const productTypeFilter =
     productTypeParam === "STOCKABLE"
@@ -365,6 +222,7 @@ function ProductsPageInner() {
     productTypeParam
   );
   const isFirstLoad =
+    canView &&
     !productsQuery.isLoading &&
     !productsQuery.error &&
     total === 0 &&
@@ -445,8 +303,8 @@ function ProductsPageInner() {
       {
         key: "status",
         header: "Status",
-        headerClassName: "w-[80px]",
-        cell: (p) => <StatusBadge status={p.status} />,
+        headerClassName: "w-[110px]",
+        cell: (p) => <ProductStatusBadge status={p.status} />,
       },
       {
         key: "actions",
@@ -476,6 +334,7 @@ function ProductsPageInner() {
             <SelectItem value="all">All statuses</SelectItem>
             <SelectItem value="ACTIVE">Active</SelectItem>
             <SelectItem value="INACTIVE">Inactive</SelectItem>
+            <SelectItem value="DISCONTINUED">Discontinued</SelectItem>
           </SelectContent>
         </Select>
         <Select
@@ -523,6 +382,7 @@ function ProductsPageInner() {
               { value: "all", label: "All statuses" },
               { value: "ACTIVE", label: "Active" },
               { value: "INACTIVE", label: "Inactive" },
+              { value: "DISCONTINUED", label: "Discontinued" },
             ],
             onChange: handleStatusChange,
           },
@@ -568,10 +428,15 @@ function ProductsPageInner() {
           </Button>
         ) : undefined
       }
-      filters={filtersRow}
+      filters={canView ? filtersRow : undefined}
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
-        {productsQuery.error ? (
+        {!canView ? (
+          <NoPermissionState
+            permission="inventory:products:read"
+            className="flex-1"
+          />
+        ) : productsQuery.error ? (
           <ErrorState
             title="Failed to load products"
             description={getErrorMessage(productsQuery.error)}
