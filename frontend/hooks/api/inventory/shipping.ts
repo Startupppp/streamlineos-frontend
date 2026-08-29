@@ -296,6 +296,103 @@ export function useShipShipment() {
   });
 }
 
+/**
+ * B7 — the carrier contract, as the API actually exposes it.
+ *
+ * A shipment's journey is a list of events the carrier claimed, newest first.
+ * Each is stored under the carrier's own event id, so a replayed scan is a
+ * no-op, and an event that would move the shipment backwards is recorded and
+ * ignored rather than applied — `advanced: false` is the API saying so.
+ */
+export interface ShipmentStatusEvent {
+  id: number;
+  status: ShipmentStatus;
+  /** When the carrier says it happened, which is not when we heard. */
+  occurredAt: string;
+  receivedAt: string;
+  description?: string | null;
+}
+
+export interface ShipmentTimeline {
+  shipment: { id: number; status: ShipmentStatus; trackingNumber: string | null };
+  events: ShipmentStatusEvent[];
+}
+
+export interface CarrierStatusRecorded {
+  recorded: boolean;
+  advanced: boolean;
+  status: ShipmentStatus;
+}
+
+/**
+ * What a refresh did. `polled: false` is the normal answer while no real carrier
+ * adapter is registered: there is nobody to ask, and tracking on this shipment
+ * is whatever the operator entered.
+ */
+export interface CarrierRefreshResult {
+  shipmentId: number;
+  carrier: string;
+  polled: boolean;
+  recorded: number;
+  status: ShipmentStatus;
+  deadLettered: boolean;
+  error?: string;
+}
+
+export function useShipmentTimeline(shipmentId: number) {
+  const canView = useCan("inventory:shipments:manage");
+  return useQuery<ShipmentTimeline, Error>({
+    queryKey: queryKeys.inventory.shipmentTimeline(shipmentId),
+    queryFn: () =>
+      apiClient.get<ShipmentTimeline>(`/inventory/shipments/${shipmentId}/timeline`),
+    enabled: canView && shipmentId > 0,
+    staleTime: 30_000,
+  });
+}
+
+export function useRecordCarrierStatus() {
+  const qc = useQueryClient();
+  return useMutation<
+    CarrierStatusRecorded,
+    Error,
+    {
+      shipmentId: number;
+      trackingNumber: string;
+      status: "LABEL_CREATED" | "SHIPPED" | "DELIVERED" | "CANCELLED";
+      occurredAt: string;
+      carrierEventId?: string;
+      description?: string;
+    }
+  >({
+    mutationKey: ["inventory", "shipment", "carrier-status"],
+    mutationFn: ({ shipmentId: _shipmentId, ...body }) =>
+      apiClient.post<CarrierStatusRecorded>("/inventory/shipments/carrier-status", body),
+    onSuccess: (_data, vars) => {
+      void qc.invalidateQueries({
+        queryKey: queryKeys.inventory.shipmentTimeline(vars.shipmentId),
+      });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.shipment(vars.shipmentId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.shipments() });
+    },
+  });
+}
+
+export function useRefreshShipmentTracking() {
+  const qc = useQueryClient();
+  return useMutation<CarrierRefreshResult, Error, number>({
+    mutationKey: ["inventory", "shipment", "refresh-tracking"],
+    mutationFn: (shipmentId) =>
+      apiClient.post<CarrierRefreshResult>(
+        `/inventory/shipments/${shipmentId}/refresh-tracking`,
+        {},
+      ),
+    onSuccess: (_data, shipmentId) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.shipmentTimeline(shipmentId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.shipment(shipmentId) });
+    },
+  });
+}
+
 export function useCancelShipment() {
   const qc = useQueryClient();
   return useMutation<Shipment, Error, number>({

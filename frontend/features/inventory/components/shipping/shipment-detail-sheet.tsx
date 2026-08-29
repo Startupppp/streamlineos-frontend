@@ -37,6 +37,7 @@ import {
   useCancelShipment,
   useCarriers,
 } from "@/hooks/api/inventory/shipping";
+import { ShipmentTrackingTimeline } from "./shipment-tracking-timeline";
 
 interface ShipmentDetailSheetProps {
   open: boolean;
@@ -228,8 +229,14 @@ export function ShipmentDetailSheet({ open, onOpenChange, shipmentId }: Shipment
                   />
                 </div>
               </div>
+              {/* B7. Not "coming soon": the carrier contract is live and this
+                  organisation's carrier is tracked manually, which is a way of
+                  running a warehouse rather than a missing feature. Saying so
+                  tells the operator what to do; the old copy told them to wait
+                  for something nobody was building. */}
               <p className="text-micro text-muted-foreground">
-                Carrier integrations coming soon — enter tracking manually
+                Tracked manually — record carrier updates below as the courier
+                reports them.
               </p>
               <LoadingButton
                 type="button"
@@ -243,6 +250,13 @@ export function ShipmentDetailSheet({ open, onOpenChange, shipmentId }: Shipment
                 Save
               </LoadingButton>
             </div>
+
+            {shipmentId ? (
+              <ShipmentTrackingTimeline
+                shipmentId={shipmentId}
+                trackingNumber={shipment.trackingNumber}
+              />
+            ) : null}
 
             {shipment.lines && shipment.lines.length > 0 && (
               <div>
