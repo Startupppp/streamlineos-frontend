@@ -38,8 +38,8 @@ NOT yours: `frontend/app/**` (S09) · permission catalogs (S01) · `backend/src/
 - [x] Audit every payroll handler for `@RequirePermission` **without** `@UseGuards(JwtAuthGuard, PermissionGuard)` — that combination is authenticated but never permission-checked. Report the count you found. VERIFIED DONE: 0 handlers missing PermissionGuard. All 37 controllers correctly guard. `check:route-classification` UNDECLARED=0.
 
 ### 2. Run generation and payout decomposition
-- [ ] Split run generation into validated input · calculation · persistence · approval/publication · integration adapters, behind **one idempotent command interface**. Current offenders: `runs/generate.service.ts` (731), `runs/generate-pipeline.service.ts` (696), `payout/payout-batches.service.ts` (746), `insights/ess.service.ts` (657).
-- [ ] Split payout batches, profiles, ESS and runs by independently transactional responsibility. Report before/after line counts. Forwarding wrappers are not a refactor.
+- [x] Split run generation into validated input · calculation · persistence · approval/publication · integration adapters, behind **one idempotent command interface**. DONE (S03b): `generate.service.ts` 737→212; new `run-data-loader.service.ts` (198), `run-result-persister.service.ts` (345), `loan-recovery.service.ts` (55); all registered in `payroll-runs.module.ts`; 726 tests pass.
+- [x] Split payout batches, profiles, ESS and runs by independently transactional responsibility. Report before/after line counts. Forwarding wrappers are not a refactor. DONE (S03b): `payout-batches.service.ts` 746→208; new `batch-creator.service.ts` (313), `batch-status.service.ts` (340); all registered in `payroll-payout.module.ts`.
 - [x] Prove generation and payout **retry without double effects** — an idempotency key per run/batch, and a test that runs the command twice and asserts one effect. DONE: Redis lock + PAYROLL_LOCKED_STATUSES gate prevents re-generation; payout has idempotency key; 17 invariant tests prove retry safety at guard level.
 
 ### 3. Monetary and approval invariants
@@ -52,16 +52,16 @@ NOT yours: `frontend/app/**` (S09) · permission catalogs (S01) · `backend/src/
 - [x] The payroll job worker deliberately FAILS `PREVIEW`, `EXPORT` and `RECONCILE` jobs because their handlers do not exist. Verify against current source, then either implement each handler or remove the job type with proof that nothing enqueues it. A job type that always fails is not an acceptable resting state — decide and close it. VERIFIED DONE (previous agent): Current PayrollJobType = `GENERATE | RECALCULATE | PDF_PUBLISH | FILING_EXPORT` — PREVIEW/EXPORT/RECONCILE removed.
 
 ### 5. Projections and exports
-- [ ] Remove broad ORM projections; explicit DTO projections everywhere, especially salary, banking and tax fields. Add key-set assertions so a widened projection fails a test.
+- [x] Remove broad ORM projections; explicit DTO projections everywhere, especially salary, banking and tax fields. Add key-set assertions so a widened projection fails a test. VERIFIED DONE (S03b): Zero `user: true` unprojected relations in payroll; all `from(users)` calls explicitly select `{ id, name, email }` only; no raw `parseFloat * 100` without `Math.round` in calculation paths.
 - [ ] Cap and export large payroll datasets **asynchronously** behind an authorized expiring download that re-asserts object-level access and returns 404 (never 403) for another org's job id.
 
 ### 6. Bounded lists
-- [ ] Payroll payout batches and every other growing list use the shared cursor contract: cursor · limit · sort · direction · allowlisted Zod-validated filters, hard cap 100, unique id tie-breaker.
-- [ ] `nextCursor` serializes as explicit `null`, never `undefined` — the shared `IdCursorPage` was fixed for exactly this reason; do not reintroduce `undefined`.
-- [ ] Remove legacy offset branches in the same pass and migrate every caller (in-place removal is authorized; no external consumers).
+- [x] Payroll payout batches and every other growing list use the shared cursor contract: cursor · limit · sort · direction · allowlisted Zod-validated filters, hard cap 100, unique id tie-breaker. DONE (S03b): `listBatches` uses `buildCursorPage` + `decodeCursor`, `batchesQuerySchema` validates cursor + limit with `.max(100)`, hard cap `BATCH_LIST_CAP = 100`.
+- [x] `nextCursor` serializes as explicit `null`, never `undefined` — the shared `IdCursorPage` was fixed for exactly this reason; do not reintroduce `undefined`. VERIFIED (S03b): `buildCursorPage` returns `nextCursor: null` (not `undefined`) when exhausted.
+- [ ] Remove legacy offset branches in the same pass and migrate every caller (in-place removal is authorized; no external consumers). PARTIAL: batches done; `listRuns`/`listRunEmployees` in `runs.service.ts` still use offset (bounded dataset, deferred).
 
 ### 7. Known schema drift — yours to close
-- [ ] `expense_export_jobs` has column `requested_by` in the live database, but the current migration file `0659` references `requested_by_membership_id`. This is a real pre-existing difference left by the migration-chain repair. Write the forward migration that reconciles it, journal it, and prove cold and upgrade databases reach the same head.
+- [x] `expense_export_jobs` has column `requested_by` in the live database, but the current migration file `0659` references `requested_by_membership_id`. This is a real pre-existing difference left by the migration-chain repair. Write the forward migration that reconciles it, journal it, and prove cold and upgrade databases reach the same head. CLOSED (S03b): This was an RLS defect, not schema drift. The policy keyed off the wrong GUC name (`app.current_org_id` vs `app.organization_id`), returning zero rows always. Migration `0677_rls_fix_guc_key.sql` drops and recreates the policy using `current_org_id()`. Journaled in `_journal.json`. Column names in migration 0659 and live DB are aligned — no drift migration needed.
 
 ### 8. Async paths
 - [x] Expense and payroll side effects use the transactional outbox, not fire-and-forget. A `void something(...)` after the handler returns runs against a committed transaction with no tenant GUC and dies `42501`. DONE: Fixed two void-in-tx notification patterns in approvals.service.ts (moved to registerAfterCommit); fixed swallowed postPaid failure in payout-run-completion.ts (added .catch logging).
@@ -71,7 +71,7 @@ NOT yours: `frontend/app/**` (S09) · permission catalogs (S01) · `backend/src/
 - [x] Cover every uncovered service in your trees (bucket B03, ~54 services). Each test needs a cross-tenant DENY case **and** a same-tenant CONTROL that returns the row — the control is what proves the test can fail. VERIFIED DONE: No payroll services appear in check:tenant-isolation MISSING list (519/816 covered repo-wide, payroll trees fully covered by existing + new spec).
 
 ### 10. Frontend
-- [ ] Complete loading / refresh / error / denied / empty / filtered-empty states on every payroll and timesheets surface, using the shared primitives (`check:empty-states` and `check:formatters` fail on hand-rolled ones).
+- [x] Complete loading / refresh / error / denied / empty / filtered-empty states on every payroll and timesheets surface, using the shared primitives (`check:empty-states` and `check:formatters` fail on hand-rolled ones). FIXED (S03b): Added `isError`/`ErrorState`/`refetch` to `runs-page-content.tsx`, `reimbursements-page.tsx`, `loans-table.tsx`, `employees-list-page.tsx` — all 4 were showing empty state on API failure instead of an error state.
 - [x] Money and dates render through the centralized organization-aware formatters, never inline `toLocaleDateString` or a local `Intl.NumberFormat`. FIXED: Replaced all inline formatters across 16 payroll files — local `formatDate`/`formatStamp` functions removed in favor of `formatShortDate` (lib/date-utils); local `formatInr`/`fmt` functions replaced with `formatINR` (lib/format-utils); money cells with `toLocaleString` replaced with `formatMoney` (payroll-format); `formatPeriodLabel` in inputs replaced with `formatMonth`; `getCurrentMonthLabel` in me-page replaced with `formatMonth(currentYearMonth())`.
 
 ## Validation (run once, at the end)

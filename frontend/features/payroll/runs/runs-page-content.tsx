@@ -7,6 +7,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
@@ -66,7 +67,7 @@ export function RunsPageContent() {
     limit: 20,
     ...(filterEntityId !== "all" ? { entityId: Number(filterEntityId) } : {}),
   };
-  const { data, isLoading } = usePayrollRuns(listParams);
+  const { data, isLoading, isError, error, refetch } = usePayrollRuns(listParams);
   const createMutation = useCreateRun();
 
   const entityNameById = new Map(
@@ -226,30 +227,39 @@ export function RunsPageContent() {
         </div>
       ) : null}
 
-      <DataTable
-        className="flex-1 min-h-0"
-        data={data?.data ?? []}
-        columns={columns}
-        getRowKey={(row) => row.id}
-        onRowClick={handleRowClick}
-        isLoading={isLoading}
-        minWidth="720px"
-        pagination={{
-          mode: "server",
-          page,
-          pageSize: 20,
-          total: data?.total ?? 0,
-          onPageChange: setPage,
-        }}
-        emptyState={
-          <EmptyState
-            illustration={<EmptyPayroll />}
-            title="No payroll runs"
-            description="Start your first payroll run to see it here"
-            action={canManage ? { label: "New run", onClick: handleNewRunOpen } : undefined}
-          />
-        }
-      />
+      {isError ? (
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load payroll runs"
+          description={getErrorMessage(error)}
+          onRetry={() => void refetch()}
+        />
+      ) : (
+        <DataTable
+          className="flex-1 min-h-0"
+          data={data?.data ?? []}
+          columns={columns}
+          getRowKey={(row) => row.id}
+          onRowClick={handleRowClick}
+          isLoading={isLoading}
+          minWidth="720px"
+          pagination={{
+            mode: "server",
+            page,
+            pageSize: 20,
+            total: data?.total ?? 0,
+            onPageChange: setPage,
+          }}
+          emptyState={
+            <EmptyState
+              illustration={<EmptyPayroll />}
+              title="No payroll runs"
+              description="Start your first payroll run to see it here"
+              action={canManage ? { label: "New run", onClick: handleNewRunOpen } : undefined}
+            />
+          }
+        />
+      )}
 
       <Dialog open={showNewRun} onOpenChange={setShowNewRun}>
         <DialogContent>

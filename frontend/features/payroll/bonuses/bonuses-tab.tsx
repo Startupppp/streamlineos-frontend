@@ -34,8 +34,8 @@ import {
   TYPE_COLORS,
   getCurrentMonth,
   getBonusMonth,
-  formatDate,
 } from "./bonus-schema";
+import { formatShortDate } from "@/lib/date-utils";
 
 export function BonusesTab() {
   const router = useRouter();
@@ -196,7 +196,7 @@ export function BonusesTab() {
       key: "submitted",
       header: "Submitted",
       cell: (row) => (
-        <span className="text-micro text-muted-foreground">{formatDate(row.createdAt)}</span>
+        <span className="text-micro text-muted-foreground">{formatShortDate(row.createdAt)}</span>
       ),
     },
     ...(canManage ? [actionColumn] : []),

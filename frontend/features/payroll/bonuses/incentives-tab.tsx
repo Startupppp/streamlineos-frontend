@@ -35,6 +35,7 @@ import {
 import { useCan } from "@/hooks/api/access";
 import { EmptyTargetIllustration } from "@/components/illustrations";
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { formatShortDate } from "@/lib/date-utils";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All Statuses" },
@@ -51,14 +52,6 @@ const INCENTIVE_STATUS_STYLES: Record<string, string> = {
   ADDED_TO_PAYROLL: "bg-primary/10 text-foreground border-primary/20",
 };
 
-function formatDate(value: string | null): string {
-  if (!value) return "—";
-  return new Date(value).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
 
 export function IncentivesTab() {
   const router = useRouter();
@@ -231,7 +224,7 @@ export function IncentivesTab() {
       key: "submitted",
       header: "Submitted",
       cell: (row) => (
-        <span className="text-micro text-muted-foreground">{formatDate(row.createdAt)}</span>
+        <span className="text-micro text-muted-foreground">{formatShortDate(row.createdAt)}</span>
       ),
     },
     ...(canApprove ? [actionColumn] : []),

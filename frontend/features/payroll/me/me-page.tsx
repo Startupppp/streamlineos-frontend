@@ -64,11 +64,9 @@ const TAB_PANEL_CLASS = cn(
   "mt-0 h-full min-h-0 w-full flex-1",
 );
 
-function getCurrentMonthLabel(): string {
-  return new Date().toLocaleDateString("en-IN", {
-    month: "long",
-    year: "numeric",
-  });
+function currentYearMonth(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
 function getYear(month: string): string {
@@ -190,7 +188,7 @@ export function MyPayrollPageContent() {
     >
       <PageWrapper
         title="Pay"
-        subtitle={`${getCurrentMonthLabel()} · Your payroll data only`}
+        subtitle={`${formatMonth(currentYearMonth())} · Your payroll data only`}
         noInternalScroll
         contentClassName="flex min-h-0 flex-1 flex-col"
         filtersClassName="flex-col items-stretch gap-3 overflow-visible pb-3 [&>*]:w-full"

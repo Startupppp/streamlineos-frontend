@@ -22,6 +22,7 @@ import { useTaxWindows, useUpdateTaxWindow } from "@/hooks/api/payroll/tax-windo
 import type { TaxWindow, TaxWindowStatus } from "@/types/payroll/reports";
 import { TaxWindowStatusBadge } from "./tax-window-status-badge";
 import { TaxWindowSheet } from "./tax-window-sheet";
+import { formatShortDate } from "@/lib/date-utils";
 
 const NEXT_STATUS: Partial<Record<TaxWindowStatus, { next: TaxWindowStatus; label: string; confirm: string }>> = {
   DRAFT: {
@@ -41,14 +42,6 @@ const NEXT_STATUS: Partial<Record<TaxWindowStatus, { next: TaxWindowStatus; labe
   },
 };
 
-function formatDate(iso: string | null): string {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
 
 interface AdvanceTarget {
   window: TaxWindow;
@@ -72,22 +65,22 @@ export function TaxWindowsTab() {
     {
       key: "opensAt",
       header: "Opens At",
-      cell: (row) => <span className="text-dense">{formatDate(row.opensAt)}</span>,
+      cell: (row) => <span className="text-dense">{formatShortDate(row.opensAt)}</span>,
     },
     {
       key: "closesAt",
       header: "Closes At",
-      cell: (row) => <span className="text-dense">{formatDate(row.closesAt)}</span>,
+      cell: (row) => <span className="text-dense">{formatShortDate(row.closesAt)}</span>,
     },
     {
       key: "proofDeadline",
       header: "Proof Deadline",
-      cell: (row) => <span className="text-dense">{formatDate(row.proofDeadline)}</span>,
+      cell: (row) => <span className="text-dense">{formatShortDate(row.proofDeadline)}</span>,
     },
     {
       key: "lockDate",
       header: "Lock Date",
-      cell: (row) => <span className="text-dense">{formatDate(row.lockDate)}</span>,
+      cell: (row) => <span className="text-dense">{formatShortDate(row.lockDate)}</span>,
     },
     {
       key: "status",

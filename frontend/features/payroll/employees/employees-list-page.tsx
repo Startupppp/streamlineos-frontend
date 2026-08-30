@@ -15,6 +15,8 @@ import {
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { SalaryProfileSheet } from "@/features/payroll/runs/salary-profile-sheet";
+import { ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 import { useEmployeeProfiles } from "@/hooks/api/payroll/employees";
 import { useCan } from "@/hooks/api/access";
@@ -73,7 +75,7 @@ export function EmployeesListPage() {
     updateParams({ page: String(val) });
   }
 
-  const { data, isLoading } = useEmployeeProfiles({
+  const { data, isLoading, isError, error, refetch } = useEmployeeProfiles({
     page,
     limit: 20,
     search: search || undefined,
@@ -210,54 +212,63 @@ export function EmployeesListPage() {
         </>
       }
     >
-      <DataTable
-        className="flex-1 min-h-0"
-        data={data?.data ?? []}
-        columns={columns}
-        getRowKey={(row) => row.id}
-        onRowClick={handleRowClick}
-        isLoading={isLoading}
-        minWidth="680px"
-        search={{ value: search, onChange: handleSearchChange, placeholder: workforceLabel.searchPlaceholder }}
-        pagination={{
-          mode: "server",
-          page,
-          pageSize: 20,
-          total: data?.total ?? 0,
-          onPageChange: handlePageChange,
-        }}
-        mobileCard={(row) => {
-          const cfg = STATUS_CONFIG[row.status];
-          return (
-            <div className="space-y-1.5">
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{row.userName}</p>
-                  <p className="text-dense text-muted-foreground truncate">{row.userEmail}</p>
+      {isError ? (
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load salary profiles"
+          description={getErrorMessage(error)}
+          onRetry={() => void refetch()}
+        />
+      ) : (
+        <DataTable
+          className="flex-1 min-h-0"
+          data={data?.data ?? []}
+          columns={columns}
+          getRowKey={(row) => row.id}
+          onRowClick={handleRowClick}
+          isLoading={isLoading}
+          minWidth="680px"
+          search={{ value: search, onChange: handleSearchChange, placeholder: workforceLabel.searchPlaceholder }}
+          pagination={{
+            mode: "server",
+            page,
+            pageSize: 20,
+            total: data?.total ?? 0,
+            onPageChange: handlePageChange,
+          }}
+          mobileCard={(row) => {
+            const cfg = STATUS_CONFIG[row.status];
+            return (
+              <div className="space-y-1.5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{row.userName}</p>
+                    <p className="text-dense text-muted-foreground truncate">{row.userEmail}</p>
+                  </div>
+                  <span
+                    className={`inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium border shrink-0 ${cfg.className}`}
+                  >
+                    {cfg.label}
+                  </span>
                 </div>
-                <span
-                  className={`inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium border shrink-0 ${cfg.className}`}
-                >
-                  {cfg.label}
-                </span>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{row.workerType}</span>
+                  <span className="font-mono tabular-nums text-foreground">
+                    {formatMoney(row.annualCtc)}
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>{row.workerType}</span>
-                <span className="font-mono tabular-nums text-foreground">
-                  {formatMoney(row.annualCtc)}
-                </span>
-              </div>
-            </div>
-          );
-        }}
-        emptyState={
-          <EmptyState
-            illustration={<EmptyPersonIllustration />}
-            title="No salary profiles"
-            description={workforceLabel.emptyDescription}
-          />
-        }
-      />
+            );
+          }}
+          emptyState={
+            <EmptyState
+              illustration={<EmptyPersonIllustration />}
+              title="No salary profiles"
+              description={workforceLabel.emptyDescription}
+            />
+          }
+        />
+      )}
 
       <SalaryProfileSheet
         open={addSheetOpen}

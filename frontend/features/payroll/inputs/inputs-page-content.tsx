@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ErrorState } from "@/components/shared";
 import { MonthPicker } from "@/features/payroll/shared/month-picker";
+import { formatMonth } from "@/features/payroll/shared/payroll-format";
+import { formatShortDate } from "@/lib/date-utils";
 import { PeriodStatusChip } from "@/features/payroll/inputs/period-status-chip";
 import { InputsSectionTabs } from "@/features/payroll/inputs/inputs-section-tabs";
 import { CreateAdjustmentDialog } from "@/features/payroll/inputs/create-adjustment-dialog";
@@ -34,11 +36,6 @@ function currentYearMonth(): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
-function formatPeriodLabel(key: string): string {
-  const [year, month] = key.split("-");
-  const date = new Date(Number(year), Number(month) - 1, 1);
-  return date.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
-}
 
 export function InputsPageContent() {
   const [month, setMonth] = useState(currentYearMonth);
@@ -190,18 +187,12 @@ export function InputsPageContent() {
                 )}
                 {currentPeriod.builtAt && (
                   <span className="text-muted-foreground text-xs">
-                    Built{" "}
-                    {new Date(currentPeriod.builtAt).toLocaleDateString(
-                      "en-IN",
-                    )}
+                    Built {formatShortDate(currentPeriod.builtAt)}
                   </span>
                 )}
                 {currentPeriod.lockedAt && (
                   <span className="text-muted-foreground text-xs">
-                    Locked{" "}
-                    {new Date(currentPeriod.lockedAt).toLocaleDateString(
-                      "en-IN",
-                    )}
+                    Locked {formatShortDate(currentPeriod.lockedAt)}
                   </span>
                 )}
               </div>
@@ -211,7 +202,7 @@ export function InputsPageContent() {
                   <p className="text-sm text-muted-foreground mb-2">
                     Period is open. Click <strong>Build Inputs</strong> to
                     snapshot attendance, leave, overtime, reimbursements, and
-                    deductions for {formatPeriodLabel(month)}.
+                    deductions for {formatMonth(month)}.
                   </p>
                 </div>
               )}
@@ -234,7 +225,7 @@ export function InputsPageContent() {
             <div className="border border-dashed border-border rounded-lg p-6 text-center">
               <p className="text-sm text-muted-foreground mb-3">
                 No input period found for{" "}
-                <strong>{formatPeriodLabel(month)}</strong>.
+                <strong>{formatMonth(month)}</strong>.
               </p>
               <LoadingButton
                 variant="outline"
@@ -256,7 +247,7 @@ export function InputsPageContent() {
             <AlertDialogTitle>Open payroll input period?</AlertDialogTitle>
             <AlertDialogDescription>
               This will create an input period for{" "}
-              <strong>{formatPeriodLabel(month)}</strong>. You can then build
+              <strong>{formatMonth(month)}</strong>. You can then build
               and lock HR data for payroll.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -276,7 +267,7 @@ export function InputsPageContent() {
           <AlertDialogHeader>
             <AlertDialogTitle>Lock this period?</AlertDialogTitle>
             <AlertDialogDescription>
-              Locking <strong>{formatPeriodLabel(month)}</strong> will prevent
+              Locking <strong>{formatMonth(month)}</strong> will prevent
               further changes. Leave ledger entries for this period will be
               marked as locked. Any subsequent HR changes will create
               adjustments for the next cycle.
@@ -299,7 +290,7 @@ export function InputsPageContent() {
             <AlertDialogTitle>Unlock this period?</AlertDialogTitle>
             <AlertDialogDescription>
               Unlocking will allow changes to be made to{" "}
-              <strong>{formatPeriodLabel(month)}</strong>. This action is
+              <strong>{formatMonth(month)}</strong>. This action is
               audited. Payroll processing that has already consumed this period
               may be affected.
             </AlertDialogDescription>

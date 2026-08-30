@@ -20,6 +20,7 @@ import type { AiAction } from "@/components/ai";
 import { apiClient } from "@/lib/api-client";
 import { formatMoney, formatMonth } from "@/features/payroll/shared/payroll-format";
 import { numberToWords } from "@/lib/format-utils";
+import { formatShortDate } from "@/lib/date-utils";
 import type { EssPayslip } from "@/types/payroll/ess";
 
 function getYear(month: string): string {
@@ -28,7 +29,7 @@ function getYear(month: string): string {
 
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+  return formatShortDate(iso);
 }
 
 function PayslipRowSkeleton() {

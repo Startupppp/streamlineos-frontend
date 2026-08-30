@@ -21,6 +21,7 @@ import { ErrorState } from "@/components/shared";
 import { EssStatusBadge } from "./ess-status-badge";
 import { useEssTaxDeclaration, useSubmitTaxDeclaration } from "@/hooks/api/payroll/ess";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
+import { formatShortDate } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
 
 const taxSchema = z.object({
@@ -52,7 +53,7 @@ const DECLARATION_FIELDS: { key: keyof Omit<TaxFormValues, "regime">; label: str
 
 function formatDate(iso: string | null | undefined): string {
   if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+  return formatShortDate(iso);
 }
 
 interface TaxSheetProps {

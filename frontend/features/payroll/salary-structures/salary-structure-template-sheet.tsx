@@ -10,6 +10,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { HrSheet } from "@/features/hr/hr-sheet";
+import { formatINR } from "@/lib/format-utils";
 import type { SalaryStructureTemplate, CreateSalaryTemplateInput } from "@/hooks/api/hr/salary-structures";
 
 const templateSchema = z.object({
@@ -68,20 +69,17 @@ function CtcPreview({ values }: { values: TemplateFormValues }) {
   const pfDeduction = basic * pfPercent / 100;
   const estimatedNet = gross - pfDeduction - profTax;
 
-  const fmt = (n: number) =>
-    n.toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
-
   const rows: Array<{ label: string; value: string; highlight?: boolean }> = [
-    { label: "Basic", value: fmt(basic) },
-    { label: "HRA", value: fmt(hra) },
-    { label: "Special Allowance", value: fmt(special) },
-    { label: "Medical Allowance", value: fmt(medical) },
-    { label: "Travel Allowance", value: fmt(travel) },
-    { label: "Other Allowances", value: fmt(other) },
-    { label: "Gross", value: fmt(gross), highlight: true },
-    { label: "PF Deduction", value: `− ${fmt(pfDeduction)}` },
-    { label: "Professional Tax", value: `− ${fmt(profTax)}` },
-    { label: "Estimated Net", value: fmt(estimatedNet), highlight: true },
+    { label: "Basic", value: formatINR(basic) },
+    { label: "HRA", value: formatINR(hra) },
+    { label: "Special Allowance", value: formatINR(special) },
+    { label: "Medical Allowance", value: formatINR(medical) },
+    { label: "Travel Allowance", value: formatINR(travel) },
+    { label: "Other Allowances", value: formatINR(other) },
+    { label: "Gross", value: formatINR(gross), highlight: true },
+    { label: "PF Deduction", value: `− ${formatINR(pfDeduction)}` },
+    { label: "Professional Tax", value: `− ${formatINR(profTax)}` },
+    { label: "Estimated Net", value: formatINR(estimatedNet), highlight: true },
   ];
 
   return (
