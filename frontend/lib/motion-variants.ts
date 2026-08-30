@@ -1,4 +1,5 @@
 import type { Variants } from "framer-motion";
+import { useReducedMotion } from "framer-motion";
 
 export const staggerContainer: Variants = {
   hidden: { opacity: 0 },
@@ -42,3 +43,27 @@ export const scaleIn: Variants = {
     transition: { duration: 0.3, ease: "easeOut" },
   },
 };
+
+const reducedFade: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1 },
+};
+
+const reducedStagger: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0 },
+  },
+};
+
+export function useMotionVariants() {
+  const prefersReduced = useReducedMotion();
+  return {
+    staggerContainer: prefersReduced ? reducedStagger : staggerContainer,
+    fadeUp: prefersReduced ? reducedFade : fadeUp,
+    fadeIn: prefersReduced ? reducedFade : fadeIn,
+    slideInLeft: prefersReduced ? reducedFade : slideInLeft,
+    scaleIn: prefersReduced ? reducedFade : scaleIn,
+  };
+}
