@@ -59,8 +59,7 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
   );
   const handleOpenCreateGroup = useCallback(() => setCreateGroupOpen(true), []);
   const handleOpenAddMember = useCallback(() => setAddMemberOpen(true), []);
-  const canViewOwnership =
-    myPerms?.isOrgOwner === true || myPerms?.isOrgAdmin === true || isModuleOwner;
+  const canViewOwnership = isModuleOwner;
   const visibleTab = tab === "ownership" && !canViewOwnership ? "roles" : tab;
 
   return (
