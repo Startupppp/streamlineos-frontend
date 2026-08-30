@@ -242,6 +242,13 @@ Verdict: **PASS — 0 circular imports**
 ```
 Ratchet OK: 553/555 remaining (2 migrated since baseline).
 ```
+SUPERSEDED 2026-08-30 — this output came from a scanner whose regex matched only
+`pgTable(`, so ~121 raw-SQL FKs were invisible and 555 was a floor, not a count.
+After the scanner fix the honest baseline is 697 organizational FKs (705 after
+concurrent lanes). Two EXPAND tranches shipped (0690-0699, 0700/0701); no legacy
+column has been dropped, so contraction is not complete.
+```
+```
 
 Verdict: **PASS** (ratchet locked; 2 migrated since baseline)
 
@@ -503,5 +510,5 @@ Blocked items:
 | Tests (e2e) | `pnpm test:e2e` | **FAIL — the suite proves nothing today.** "Harness green / 3 pre-existing failures" was wrong: in a measured shard 25 of 25 suites failed to RUN and only 2 tests executed, while jest still exited 0 because of `--forceExit`. Two blockers: a stale ts-jest transform cache holding pre-rename `chat-messages.controller` output, and AppModule OOM without a raised heap. 10 scope specs also skip SILENTLY because `RBAC_E2E_DATABASE_URL` is not wired into `jest-e2e.json` |
 | Migrations (applied state) | pg_catalog diff | **REPAIRED this session — was silently broken.** Journal `when` values of 1798000000000+ pushed the applied watermark above every normally-numbered entry, so five journalled migrations were skipped permanently while `db:migrate` printed success, and six Drizzle-declared columns were absent from Neon (42703 for every org). All applied and verified in the catalog; the discipline gate now enforces journal integrity |
 | Tests (frontend) | jest | OPEN — not run this session |
-| Structure >500 lines | file scan | OPEN — tracked per-lane; no S10 additions |
+| Structure >500 lines | file scan | **OPEN — 45 files still over the hard ceiling.** Counted 2026-08-30: backend 38 non-spec + 24 spec, frontend 7 non-test. Many splits landed today (payroll, CRM, workflows, cron, timesheets, directory, users, party, e-sign, autonomy, ownership) and four ABANDONED splits were finished — new files existed, sometimes registered, while the original still held the code; one was neither wired nor called. A lane reported 'all remaining files are under the limit', which was false. Largest outstanding: `crm-import.service.ts` 1234, `notification-events.catalog.ts` 1054 (cohesive catalog exception), `db/schema/crm/deals.ts` 1016, `access.service.ts` 754 |
 | Recovery / Load / Cost | S08 runbooks | **OPEN — operator-blocked** |
