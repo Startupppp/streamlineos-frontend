@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { LoadingButton } from "@/components/ui/loading-button";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
-import type { ImportPreview } from "@/types/crm/import";
+import type { ImportPreview, MappedColumn } from "@/types/crm/import";
 import { ColumnMappingReview } from "./column-mapping-review";
 
 function toneFor(action: string): string {
@@ -34,7 +34,7 @@ interface ImportPreviewCardProps {
   preview: ImportPreview;
   overrides: Record<string, string>;
   choicesChanged: boolean;
-  unanswered: string[];
+  unanswered: MappedColumn[];
   progress: { done: number; remaining: number } | null;
   commitIsPending: boolean;
   onOverride(header: string, field: string): void;

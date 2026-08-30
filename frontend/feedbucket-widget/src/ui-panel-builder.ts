@@ -243,7 +243,7 @@ export function buildFeedbackPanel(
     "Your feedback could not be submitted. Please try again.",
     "Try again", callbacks.onRetryClick,
   );
-  const errorSubtitle = errorView.querySelector(".result-subtitle");
+  const errorSubtitle = errorView.querySelector<HTMLElement>(".result-subtitle");
   panel.appendChild(errorView);
 
   return {

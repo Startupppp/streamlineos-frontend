@@ -75,7 +75,7 @@ function LoadsPageInner() {
     {
       key: "id",
       header: "Load",
-      cell: (l) => l.name ?? formatShortDate(l.createdAt) || "—",
+      cell: (l) => l.name ?? (formatShortDate(l.createdAt) || "—"),
     },
     {
       key: "status",
