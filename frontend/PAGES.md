@@ -8,20 +8,24 @@
 - Hooks column shows the primary TanStack Query hooks seen in the `page.tsx` or its direct feature import. Routes that delegate entirely to a feature component show `→ feature/`.
 - **Never delete a row** — mark it `[x]` and append `[RETIRED path]` if a route is removed.
 
-**Generated:** 2026-08-30. **Total routes: 598.**
+**Generated:** 2026-08-30. **Total routes: 597.** Last updated: 2026-08-30 (PAGES1 lane).
 
 ---
 
 ## Route-Ownership Violations
 
-Violations of the rules in root `CLAUDE.md` §8. Routes are listed as-is; nothing has been moved or deleted.
+All prior violations resolved on 2026-08-30:
 
-| Path | Rule Violated |
+| Path | Resolution |
 |---|---|
-| `/crm/calendar` | Single unified calendar rule — exactly one calendar lives at `/calendar`; a CRM-specific calendar page is a violation. |
-| `/payroll/me` | Employee self-service rule — self-service pay belongs at `/me/pay` (which already exists at `app/(authenticated)/me/pay/page.tsx`). Duplicate self-service surface inside the payroll admin route tree. |
-| `/knowledge-base` | Legacy route — canonical knowledge base is at `/knowledge/wiki/**`. This orphan route should be deleted. |
-| `(portal)/projects` and `(portal)/projects/[projectId]` | Build module naming rule — the build module route is `/build`; `/projects` is documented as a redirect to `/build`. The client portal group uses `/projects` directly as a path segment instead of `/build`. |
+| `/crm/calendar` | DELETED — module events flow through the unified `/calendar`. |
+| `/payroll/me` | DELETED — self-service pay is at `/me/pay`. |
+| `/knowledge-base` | DELETED — canonical KB is at `/knowledge/wiki/**`. |
+| `(portal)/projects` and `(portal)/projects/[projectId]` | DELETED — external client portal moved to `/client-portal` and `/client-portal/[projectId]`. |
+
+**Open question (blocked — do not change unilaterally):** Root `CLAUDE.md` §8 lists "people directory" as a universal surface but also places workforce at `/directory/workers` as governance. The current code gates `/directory/workers` on `directory:workers:view`. Widening access is the unsafe direction to guess; left as-is pending an explicit product decision.
+
+**Note:** `(authenticated)/portal` (internal, session JWT, `useCan("build:portal:view")`) and `(portal)/client-portal` (external, portal token, `portalApiClient`) are intentionally distinct surfaces — the hook collision was resolved by renaming to `useExternalPortalProjects`.
 
 ---
 
@@ -37,21 +41,20 @@ Violations of the rules in root `CLAUDE.md` §8. Routes are listed as-is; nothin
 | Chat | 3 |
 | Notifications | 7 |
 | AI / Ask | 2 |
-| CRM | 57 |
+| CRM | 56 |
 | Build | 77 |
 | HR | 124 |
-| Payroll | 24 |
+| Payroll | 23 |
 | Accounting | 74 |
 | Inventory | 61 |
 | Knowledge | 16 |
-| Knowledge-base (legacy) | 1 |
 | Me (self-service) | 7 |
 | Support | 26 |
 | Surveys | 6 |
 | Workflows | 11 |
 | Sign (e-signature) | 8 |
 | Timesheets | 9 |
-| Directory | 4 |
+| Directory | 6 |
 | Settings | 25 |
 | Billing (customer invoices) | 3 |
 | Blog | 1 |
@@ -180,8 +183,8 @@ Violations of the rules in root `CLAUDE.md` §8. Routes are listed as-is; nothin
 - [ ] `/crm/api-keys` · **CRM** · hooks: `→ feature/crm` · §8: L ? C ? D ? Perm ? States ?
 - [ ] `/crm/autonomy` · **CRM** · hooks: `→ feature/crm` · §8: States ?
 
-### Calendar (⚠ VIOLATION)
-- [ ] `/crm/calendar` · **CRM** · hooks: `→ feature/crm/calendar` · §8: States ? · ⚠ VIOLATION: module-specific calendar; should use `/calendar`
+### Calendar
+- [x] `/crm/calendar` · **CRM** [RETIRED 2026-08-30: file deleted; module events now flow through the unified `/calendar` per §8 rule]
 
 ### Access
 - [ ] `/crm/access` · **CRM** · hooks: `→ feature/crm` · §8: Perm ? States ?
@@ -506,8 +509,8 @@ Violations of the rules in root `CLAUDE.md` §8. Routes are listed as-is; nothin
 - [ ] `/payroll/settings` · **Payroll** · hooks: `→ features/payroll/settings` · §8: E ? Perm ? States ?
 - [ ] `/payroll/settings/import-export` · **Payroll** · hooks: `→ features/payroll/settings` · §8: States ?
 
-### Self-service (⚠ VIOLATION)
-- [ ] `/payroll/me` · **Payroll** · hooks: `→ features/payroll/me` · §8: States ? · ⚠ VIOLATION: self-service pay belongs at `/me/pay` (already exists); this duplicates it inside the payroll admin route tree
+### Self-service
+- [x] `/payroll/me` · **Payroll** [RETIRED 2026-08-30: file deleted; self-service pay is at `/me/pay` (no `requiredPermission`, universal for all active members)]
 
 ### Access
 - [ ] `/payroll/access` · **Payroll** · hooks: `→ features/payroll` · §8: Perm ? States ?
@@ -724,8 +727,8 @@ Violations of the rules in root `CLAUDE.md` §8. Routes are listed as-is; nothin
 - [ ] `/knowledge/wiki/settings` · **Knowledge** · hooks: `→ features/wiki` · §8: E ? Perm ? States ?
 - [ ] `/knowledge/chat` · **Knowledge** · hooks: `→ features/wiki` · §8: States ?
 
-### Legacy (⚠ VIOLATION)
-- [ ] `/knowledge-base` · **Knowledge (legacy)** · hooks: `→ features/wiki or features/knowledge-base` · §8: ? · ⚠ VIOLATION: legacy route; canonical KB is at `/knowledge/wiki/**`; this route should be deleted
+### Legacy
+- [x] `/knowledge-base` · **Knowledge (legacy)** [RETIRED 2026-08-30: file deleted; canonical KB is at `/knowledge/wiki/**`]
 
 ---
 
@@ -908,9 +911,13 @@ Violations of the rules in root `CLAUDE.md` §8. Routes are listed as-is; nothin
 
 ## Portal Group `(portal)` — external client portal
 
-- [ ] `/accept-invitation` · **Portal (client)** · hooks: `→ features/portal` · §8: States ?
-- [ ] `/projects` · **Portal (client)** · hooks: `→ features/portal` · §8: L ? States ? · ⚠ VIOLATION: uses `/projects` path; build module canonical is `/build`
-- [ ] `/projects/[projectId]` · **Portal (client)** · hooks: `→ features/portal` · §8: E ? States ? · ⚠ VIOLATION: same as above
+> External surface only — portal token auth (`portalApiClient`), no session JWT. Distinct from `(authenticated)/portal` (internal, session JWT, `useCan("build:portal:view")`).
+
+- [ ] `/accept-invitation` · **Portal (client)** · hooks: `useAcceptInvitation`, `setPortalToken` · §8: States ?
+- [x] `/projects` · **Portal (client)** [RETIRED 2026-08-30: file deleted; moved to `/client-portal`]
+- [x] `/projects/[projectId]` · **Portal (client)** [RETIRED 2026-08-30: file deleted; moved to `/client-portal/[projectId]`]
+- [ ] `/client-portal` · **Portal (client)** · hooks: `usePortalGuard`, `useExternalPortalProjects` · §8: L ? States ?
+- [ ] `/client-portal/[projectId]` · **Portal (client)** · hooks: `usePortalGuard`, `usePortalProjectOverview` · §8: E ? States ?
 
 ---
 
