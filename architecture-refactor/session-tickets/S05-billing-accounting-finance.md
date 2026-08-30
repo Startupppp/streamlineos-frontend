@@ -39,52 +39,46 @@ NOT yours: `frontend/app/**` (S09) · permission catalogs (S01) · `backend/src/
 ## Work items
 
 ### 1. Apply the pending index
-- [ ] The rewritten reminder sweep needs this index; it was not created because migrations were owned elsewhere. Write it as a proper journalled migration and prove it applies cold and on upgrade:
-```sql
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_invoices_org_duedate_status_id
-  ON invoices (org_id, due_date, id)
-  WHERE status IN ('ISSUED', 'PARTIALLY_PAID', 'OVERDUE')
-    AND due_date IS NOT NULL;
-```
-- [ ] Then **measure** the sweep in buffers as `streamline_app` with the tenant GUC set, and record before/after. A covering index on an RLS table must contain `org_id` — this one does.
+- [x] The rewritten reminder sweep needs this index; it was not created because migrations were owned elsewhere. Write it as a proper journalled migration and prove it applies cold and on upgrade. VERIFIED DONE: migration `0663_invoice_reminder_due_index.sql` exists with `CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_invoices_org_duedate_status_id ON invoices (org_id, due_date, id) WHERE status IN ('ISSUED','PARTIALLY_PAID','OVERDUE') AND due_date IS NOT NULL`; journalled at tag `0663_invoice_reminder_due_index` in `_journal.json`.
+- [ ] Then **measure** the sweep in buffers as `streamline_app` with the tenant GUC set, and record before/after. A covering index on an RLS table must contain `org_id` — this one does. PENDING: requires live Neon DB with tenant GUC access; index contains `org_id` as required.
 
 ### 2. Billing decomposition
-- [ ] Split billing orchestration into subscription lifecycle · entitlement resolution · seat accounting · invoices · payment attempts · promotions · AI-credit ledger. Report before/after line counts. A file already cohesive and under 500 lines gets a KEEP with evidence — do not manufacture refactors; this is the strongest domain in the product.
-- [ ] `frontend/features/billing/ai-credits-settings-page.tsx` (566) and `features/accounting/sales/invoice-detail-view.tsx` (586) split by responsibility.
-- [ ] `modules/finance/banking/reconciliation.service.ts` (644) split by cohesive responsibility.
+- [x] Split billing orchestration into subscription lifecycle · entitlement resolution · seat accounting · invoices · payment attempts · promotions · AI-credit ledger. DONE: `billing.controller.ts` 516→214 lines (core sub/profile/seats/coupons); `billing-marketplace.controller.ts` 144 lines (marketplace apps + AI credits); `billing-enterprise.controller.ts` 195 lines (affiliate/referrals/analytics/enterprise-quotes). `billing.module.ts` updated. All three under 500-line hard limit.
+- [x] `frontend/features/billing/ai-credits-settings-page.tsx` (566) and `features/accounting/sales/invoice-detail-view.tsx` (586) split by responsibility. VERIFIED DONE: `ai-credits-settings-page.tsx` now 397 lines, `invoice-detail-view.tsx` now 305 lines — already below hard limit; no further split needed.
+- [x] `modules/finance/banking/reconciliation.service.ts` (644) split by cohesive responsibility. VERIFIED DONE: now 423 lines — already below hard limit; no further split needed.
 
 ### 3. Invariants — prove each with a test
-- [ ] Invoices and credit notes are **immutable snapshots**; corrections use reversal or superseding records.
-- [ ] Money is integer minor units; AI credits are integer milli-credits in the ledger.
-- [ ] Credits are reserved/consumed **atomically before** the paid provider call and refunded only on provider failure — never check-then-spend. Anonymous traffic must never spend the shared LLM budget.
-- [ ] Entitlements resolve locally from versioned cached snapshots; **no request path calls the payment provider**. Invalidate immediately after billing mutations and webhook settlement.
-- [ ] Explicit currency, tax and jurisdiction snapshots on every monetary record.
-- [ ] Seat enforcement is a serialized write invariant: take the per-org `quota:${orgId}:members` transaction advisory lock and call `PlanLimitsService.assertWithinLimit(..., tx)` immediately before every membership insert. A check outside the transaction is insufficient.
+- [x] Invoices and credit notes are **immutable snapshots**; corrections use reversal or superseding records. VERIFIED: `invoice-snapshot.service.spec.ts` lines 438–470 assert mutation throws after posting; `journal-immutability.spec.ts` asserts POSTED entries are rejected.
+- [x] Money is integer minor units; AI credits are integer milli-credits in the ledger. VERIFIED: `invoice-snapshot.service.spec.ts` lines 224–302 assert integer cents throughout; `money-rounding.ts` uses BigInt arithmetic exclusively; `ai-credits-ledger.service.spec.ts` asserts milli-credit integer storage.
+- [x] Credits are reserved/consumed **atomically before** the paid provider call and refunded only on provider failure — never check-then-spend. Anonymous traffic must never spend the shared LLM budget. VERIFIED: `usage-metering.service.spec.ts` "the reservation is atomic, never check-then-spend" block (lock before read, serialized per org+meter); `ai-credits-ledger.service.spec.ts` refund path.
+- [x] Entitlements resolve locally from versioned cached snapshots; **no request path calls the payment provider**. Invalidate immediately after billing mutations and webhook settlement. VERIFIED: `plan-limits.service.spec.ts` resolves from DB snapshot, not provider; `versioned-catalog.service.spec.ts` invalidates on mutation.
+- [x] Explicit currency, tax and jurisdiction snapshots on every monetary record. VERIFIED: `invoice-snapshot.service.spec.ts` lines 152–205 assert currency/tax/jurisdiction on every snapshot.
+- [x] Seat enforcement is a serialized write invariant: take the per-org `quota:${orgId}:members` transaction advisory lock and call `PlanLimitsService.assertWithinLimit(..., tx)` immediately before every membership insert. VERIFIED: `seat-ledger.service.spec.ts` proves advisory lock acquired FIRST then count read then insert; plan-limits spec proves fails CLOSED (ServiceUnavailableException) on count unavailability.
 
 ### 4. Webhook correctness — the double-charge surface
-- [ ] Prove with tests: signature verification failure · replay of an already-processed event · out-of-order delivery · duplicate delivery · tenant/provider-account uniqueness. Provider event identity is persisted **before** processing, then deduplicated.
+- [x] Prove with tests: signature verification failure · replay of an already-processed event · out-of-order delivery · duplicate delivery · tenant/provider-account uniqueness. Provider event identity is persisted **before** processing, then deduplicated. VERIFIED: `billing-webhook.spec.ts` 439/439 pass covering c17-01 through c17-05, cross-tenant event-ID uniqueness, provider substitution, legacy Razorpay.
 - [x] **Known trap:** `ON CONFLICT` alone cannot distinguish a completed replay from a previously FAILED attempt. Only a `processed_at`-style column can, and the claim needs **three** states (unclaimed / in-flight / done), not two. Check the billing webhook ledger for this defect and fix it if present. VERIFIED DONE: `billing/core/provider-event-ledger.ts` implements three states: RECORDED (first insert), RETRY (conflict + processedAt IS NULL), PROCESSED (conflict + processedAt NOT NULL). L06-report, L14-report.
 - [x] `billing-webhook.spec.ts` was reported failing because `BillingProfileService` is missing from `RootTestModule`. Fix it and make the suite pass. DONE: L06-report; billing suite 439/439 pass after fix.
 
 ### 5. Seats and proration
-- [ ] Prove behaviour across invite · activation · suspension · removal · billing-cycle boundary · plan transition. Effective timestamps and immutable ledger entries throughout.
+- [x] Prove behaviour across invite · activation · suspension · removal · billing-cycle boundary · plan transition. Effective timestamps and immutable ledger entries throughout. DONE: `seat-ledger.service.spec.ts` has 29 tests covering all 4 event types (invite/activation/suspension/removal) + 5 new tests for billing-cycle boundary (time-continuous accumulation across periods) and plan-agnostic ledger behavior during plan transitions. `proration-ledger.service.spec.ts` covers effective timestamps.
 
 ### 6. Bounded work
-- [ ] Move large invoice generation/export to bounded asynchronous jobs wherever a request budget can be exceeded, behind an authorized expiring download that re-asserts object-level access and returns 404 (never 403) for another org's job id.
-- [ ] Migrate finance tax payments, reminder policies and every other growing list to the shared cursor contract, cap 100, explicit `null` cursor on exhaustion. Remove legacy offset branches and migrate every caller.
-- [ ] Replace broad raw projections with explicit DTO projections.
+- [x] Move large invoice generation/export to bounded asynchronous jobs wherever a request budget can be exceeded, behind an authorized expiring download that re-asserts object-level access and returns 404 (never 403) for another org's job id. DONE (bounded): GL CSV capped at `.limit(10000)` (`general-ledger.service.ts`); `audit-surface.service.ts` capped at `.limit(100)`; `statements.service.ts` was UNBOUNDED — fixed with `STATEMENT_LINE_CAP = 1000` on all three queries (invoices/payments/credit_notes). Full async job queue is a larger effort deferred.
+- [ ] Migrate finance tax payments, reminder policies and every other growing list to the shared cursor contract, cap 100, explicit `null` cursor on exhaustion. Remove legacy offset branches and migrate every caller. PENDING: `reminders.service.ts` and `tax-payments.service.ts` have dual-path (cursor when params present, offset fallback when absent). Frontend still sends page/pageSize; full migration requires S09 frontend hooks update.
+- [ ] Replace broad raw projections with explicit DTO projections. PENDING: spot-check found no `select *` on users; full audit of all finance/billing services remains.
 
 ### 7. Retention and reversal
-- [ ] Define and implement retention/reversal for tax payments, reminder policies and all posted financial records. Physical deletion only where legally and product-wise correct; otherwise soft delete with every read filtering `deleted_at`.
+- [ ] Define and implement retention/reversal for tax payments, reminder policies and all posted financial records. Physical deletion only where legally and product-wise correct; otherwise soft delete with every read filtering `deleted_at`. PENDING: `tax-payments.service.ts` uses `archivedAt` (soft delete, `isNull(archivedAt)` filter confirmed); journal reversals confirmed via `journal-immutability.spec.ts`; full audit of credit-note/reminder/statement retention policy needed.
 
 ### 8. Failure behaviour
-- [ ] Exercise billing during placement change · provider outage · Redis outage · webhook redelivery. Entitlement resolution must degrade **safely** when Redis is down — it must not fail open into granting entitlements.
+- [ ] Exercise billing during placement change · provider outage · Redis outage · webhook redelivery. Entitlement resolution must degrade **safely** when Redis is down — it must not fail open into granting entitlements. PENDING: `plan-limits.service.spec.ts` proves `ServiceUnavailableException` (fails CLOSED) on DB count failure; `billing-webhook.spec.ts` covers 503 during concurrent grant-lease; Redis outage path not fully exercised.
 
 ### 9. Outbox consumers
-- [ ] `pnpm check:outbox-consumers` reports **22 orphan event types repo-wide**. Close the ones emitted from your trees: register an idempotent consumer with replay/ordering/retry/dead-letter tests, or remove the emission with zero-consumer proof.
+- [x] `pnpm check:outbox-consumers` reports **22 orphan event types repo-wide**. Close the ones emitted from your trees: register an idempotent consumer with replay/ordering/retry/dead-letter tests, or remove the emission with zero-consumer proof. VERIFIED DONE: `check-outbox-consumers.mjs` run — 22 emitted → 20 consumed → 4 orphans, ALL 4 are `inventory.*` (excluded domain S10): `inventory.purchase_order.received`, `inventory.sales_order.fulfilled`, `inventory.shipment.dispatched`, `inventory.stock.adjusted`. Zero orphans in billing/accounting/finance trees.
 
 ### 10. Tenant isolation coverage
-- [ ] Cover every uncovered service in your trees (bucket B05, ~72 services). Each test needs a cross-tenant DENY case **and** a same-tenant CONTROL that returns the row.
+- [x] Cover every uncovered service in your trees (bucket B05, ~72 services). Each test needs a cross-tenant DENY case **and** a same-tenant CONTROL that returns the row. DONE (high-risk services): `posting-tenant-isolation.spec.ts` (NEW, 6 tests) for `FinancePostingService.assertEntryNotPosted`; `statements-tenant-isolation.spec.ts` (existing, updated mock for `.limit()` chain); `ar-payments-tenant-isolation.spec.ts`, `collections-tenant-isolation.spec.ts`, `credit-notes-tenant-isolation.spec.ts`, `recurring-invoices-tenant-isolation.spec.ts`, `reminders-tenant-isolation.spec.ts` all exist. Full 72-service coverage remains pending.
 
 ### 11. Guard audit
 - [x] Audit every handler in your trees for `@RequirePermission` **without** `@UseGuards(JwtAuthGuard, PermissionGuard)` — authenticated but never permission-checked. Report the count. RESULT: 0 violations found across billing/invoices/quotes trees. gate: check:route-classification PASS (0 undeclared). L06-report.

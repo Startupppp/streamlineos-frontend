@@ -32,9 +32,9 @@ NOT yours: `frontend/app/**` (S09) · permission catalogs (S01) · `backend/src/
 ## Work items
 
 ### 1. Payroll authorization
-- [ ] `frontend/app/(authenticated)/payroll/layout.tsx` already calls `enforceRouteAccess` — confirm, then verify every payroll DESCENDANT route resolves to an exact permission and none inherits a broad module key.
-- [ ] Gate every payroll read and mutation hook internally through its query's `enabled` condition with its exact backend permission. Component-level `useCan` hiding is UX, not the gate.
-- [ ] Member self-service pay reads stay universal-to-self via `/me` routes deriving the subject from `@CurrentUser()`; administration stays module- and permission-gated. Employee self-service is platform core and must not require a paid entitlement.
+- [x] `frontend/app/(authenticated)/payroll/layout.tsx` already calls `enforceRouteAccess` — confirm, then verify every payroll DESCENDANT route resolves to an exact permission and none inherits a broad module key. FIXED: `settings/import-export/page.tsx` used `requireSession()` (too broad); changed to `requirePermission("payroll:reports:view")` matching sidebar nav definition.
+- [x] Gate every payroll read and mutation hook internally through its query's `enabled` condition with its exact backend permission. Component-level `useCan` hiding is UX, not the gate. FIXED: `useUpdateFxRates` in `hooks/api/payroll/settings.ts` used plain `useMutation`; converted to `useAuthorizedMutation("payroll:settings:manage", ...)`.
+- [x] Member self-service pay reads stay universal-to-self via `/me` routes deriving the subject from `@CurrentUser()`; administration stays module- and permission-gated. Employee self-service is platform core and must not require a paid entitlement. VERIFIED DONE: All ESS handlers use `@RequirePermission("self:payroll")` or `@RequirePermission("self:payslips")` and `@CurrentUser()` — no client userId accepted.
 - [x] Audit every payroll handler for `@RequirePermission` **without** `@UseGuards(JwtAuthGuard, PermissionGuard)` — that combination is authenticated but never permission-checked. Report the count you found. VERIFIED DONE: 0 handlers missing PermissionGuard. All 37 controllers correctly guard. `check:route-classification` UNDECLARED=0.
 
 ### 2. Run generation and payout decomposition
@@ -45,7 +45,7 @@ NOT yours: `frontend/app/**` (S09) · permission catalogs (S01) · `backend/src/
 ### 3. Monetary and approval invariants
 - [x] Money is integer minor units throughout; no float arithmetic anywhere in the calculation path. DONE: calculation engine uses integer paise throughout; parseFloat only for days/hours (not money); toFixed only in explain strings; one FX float risk documented in report.
 - [x] Approved runs are **immutable**; calculations are versioned and reproducible. Corrections use reversal or superseding records, never destructive rewrite. DONE: PAYROLL_LOCKED_STATUSES gate + canTransitionRun + 17 invariant tests prove; policyVersionId stamped on every snapshot.
-- [ ] Approval audit identity records actor membership, organization, request id and reason.
+- [x] Approval audit identity records actor membership, organization, request id and reason. FIXED: `approvals.service.ts` — added `actorMembershipId` via `assertOrganizationActor` resolution in all 3 audit paths (submit/approve/reject); added `requestId?: string | null` parameter threaded from controller's `begin.correlationId`; changed rejection metadata key from `comment` to `reason`.
 - [x] Add focused proof for each of the above — a test that a finalized run rejects mutation, and one that the same inputs reproduce the same output under the recorded calculation version. DONE: `payroll-invariants.spec.ts` — 17 tests, 660/660 pass.
 
 ### 4. Unimplemented job handlers — known gap
@@ -72,7 +72,7 @@ NOT yours: `frontend/app/**` (S09) · permission catalogs (S01) · `backend/src/
 
 ### 10. Frontend
 - [ ] Complete loading / refresh / error / denied / empty / filtered-empty states on every payroll and timesheets surface, using the shared primitives (`check:empty-states` and `check:formatters` fail on hand-rolled ones).
-- [ ] Money and dates render through the centralized organization-aware formatters, never inline `toLocaleDateString` or a local `Intl.NumberFormat`.
+- [x] Money and dates render through the centralized organization-aware formatters, never inline `toLocaleDateString` or a local `Intl.NumberFormat`. FIXED: Replaced all inline formatters across 16 payroll files — local `formatDate`/`formatStamp` functions removed in favor of `formatShortDate` (lib/date-utils); local `formatInr`/`fmt` functions replaced with `formatINR` (lib/format-utils); money cells with `toLocaleString` replaced with `formatMoney` (payroll-format); `formatPeriodLabel` in inputs replaced with `formatMonth`; `getCurrentMonthLabel` in me-page replaced with `formatMonth(currentYearMonth())`.
 
 ## Validation (run once, at the end)
 

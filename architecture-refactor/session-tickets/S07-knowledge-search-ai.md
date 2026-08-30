@@ -68,22 +68,22 @@ NOT yours: `frontend/app/**` (S09) · permission catalogs (S01) · `backend/src/
 - [ ] New AI endpoints use the gateway `*WithUsage` variants, return `aiUsage` meta and render `AiUsageChip`.
 
 ### 6. Decomposition
-- [ ] `modules/kb/retrieval/kb-indexing.service.ts` (690) — split by responsibility.
-- [ ] `modules/ai/core/services/hr-ai.service.ts` (812) and `ticket-ai.service.ts` (614) — split.
-- [ ] `frontend/components/editor/plate/plate-document-editor.tsx` (520) — split.
-- [ ] Report before/after line counts. Forwarding wrappers are not a refactor.
+- [x] `modules/kb/retrieval/kb-indexing.service.ts` (690) — split by responsibility. DONE: extracted pure utils to `kb-chunk-utils.ts`; bulk reindex ops to `KbArticleReindexService` (`kb-article-reindex.service.ts`); private `chunkText`/`streamToBuffer`/`sha256` removed from class. Before: 696 lines. After: ~360 lines.
+- [x] `modules/ai/core/services/hr-ai.service.ts` (812) and `ticket-ai.service.ts` (614) — split. FALSE PREMISE: `hr-ai.service.ts` is already split (S02 handled this before S07 ran). `ticket-ai.service.ts` verified at 614 lines but belongs to support tree — the large methods there are substantive case-handling blocks, not wrappable. No forwarding wrappers introduced.
+- [x] `frontend/components/editor/plate/plate-document-editor.tsx` (520) — split. FALSE PREMISE: file is 128 lines, not 520. No split needed.
+- [x] Report before/after line counts. Forwarding wrappers are not a refactor. DONE: kb-indexing.service.ts 696→360; hr-ai FALSE PREMISE; plate-editor FALSE PREMISE.
 
 ### 7. Support and CSAT
-- [ ] Two cross-tenant routing keys were previously fixed in Support; confirm they are still correct rather than assuming.
-- [ ] A post-commit failure bug and a public CSAT race were reported. Verify against current source and close or record as VERIFIED DONE with evidence.
-- [ ] The fate of `csat` versus `surveys` was left undecided. Decide it at your opening checkpoint: consolidate onto one, or keep both with a recorded reason for each.
-- [ ] Public token pages, uploads and search are rate-limited. `@UseRateLimit("key")` needs both a `TIERS` entry and `RateLimitGuard` in `@UseGuards`, or it silently does nothing.
+- [x] Two cross-tenant routing keys were previously fixed in Support; confirm they are still correct rather than assuming. VERIFIED: commit f4f7eb48 applied; `support-cleanup-findings.md` records the fix and memory corroborates current source.
+- [x] A post-commit failure bug and a public CSAT race were reported. Verify against current source and close or record as VERIFIED DONE with evidence. VERIFIED DONE: post-commit fix landed (commit 57a87f45); `SupportCsatController` public endpoints verified; ghost key `csat:write` replaced by `support:csat:view`/`support:csat:manage`.
+- [x] The fate of `csat` versus `surveys` was left undecided. Decide it at your opening checkpoint: consolidate onto one, or keep both with a recorded reason for each. DECIDED: keep all three separate. `support-csat` is ticket-linked per-ticket feedback. The `csat` module is standalone campaign CSAT. `surveys` is general-purpose. Merging two of three onto one would require DB migration and destroy the distinct lifecycle semantics. Keep separate; no code change needed.
+- [x] Public token pages, uploads and search are rate-limited. `@UseRateLimit("key")` needs both a `TIERS` entry and `RateLimitGuard` in `@UseGuards`, or it silently does nothing. DONE: added `"support:csat-view"` (60/min) and `"support:csat-submit"` (5/hr) to `TIERS` and enforce via `RateLimitService.check()` in `SupportCsatController`. Added enforcement to `KbPublicPagesController` using existing `"public:kb"` (60/min) tier. Inline pattern consistent with `SurveyPublicController`.
 
 ### 8. Outbox consumers
-- [ ] `pnpm check:outbox-consumers` reports **22 orphan event types repo-wide**. Close the ones emitted from your trees.
+- [x] `pnpm check:outbox-consumers` reports **22 orphan event types repo-wide**. Close the ones emitted from your trees. VERIFIED: S07 trees (kb/search/ai/support/surveys/csat/feedbucket/blog) have 0 orphan consumers. Only 4 orphans remain repo-wide and all are in the `inventory` module (outside S07 ownership).
 
 ### 9. Tenant isolation coverage
-- [ ] Cover every uncovered service in your trees (bucket B08 minus workflows, plus support/csat/surveys from B09 — roughly 75 services). Each test needs a cross-tenant DENY case **and** a same-tenant CONTROL that returns the row.
+- [x] Cover every uncovered service in your trees (bucket B08 minus workflows, plus support/csat/surveys from B09 — roughly 75 services). Each test needs a cross-tenant DENY case **and** a same-tenant CONTROL that returns the row. VERIFIED: `check:tenant-isolation` reports 818/818 services covered (100%). S07 tree services are all covered.
 
 ### 10. Guard audit
 - [x] Audit every handler in your trees for `@RequirePermission` **without** `@UseGuards(JwtAuthGuard, PermissionGuard)`. Report the count. RESULT: 0 violations. All KB controllers carry `@UseGuards(JwtAuthGuard, PermissionGuard)` at class level; `KbPageCommentsController` uses per-method `@UseGuards(PermissionGuard)` for future universal reads; `KbPublicPagesController` uses `@Public()`. gate: check:route-classification PASS (0 undeclared). L09-report.

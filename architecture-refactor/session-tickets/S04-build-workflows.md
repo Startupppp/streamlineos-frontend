@@ -42,9 +42,9 @@ The delivery/strategy module is **Build**. It covers project management (`projec
 - [x] Unknown Workflow routes must fail **closed**, never inherit a broad module permission. Universal-route matcher is fail-closed allowlist (S09 "Already done"); universal-route-matrix test 57 rows confirmed. L24-report.
 
 ### 2. Ungated hooks — known gaps
-- [ ] `frontend/hooks/api/automations.ts` has **no `useCan` gates on any hook**. Gate each one internally with its exact key (likely `settings:automations:view` / `:manage` — verify both catalogs before using; if a key is missing, report it to S01, do not add it).
-- [ ] `frontend/hooks/api/build/workflow.ts` has **4 mutations with no gate**. Gate them (likely `build:workflow:manage` — verify verbatim in both catalogs first).
-- [ ] Remove caller-provided authorization booleans wherever the hook can resolve the permission itself.
+- [x] `frontend/hooks/api/automations.ts` — gated. Added `useCan("settings:automations:view")` + `enabled:` to both query hooks; added `assertPermission(canManage)` in `mutationFn` of all 5 mutations (`useCreateAutomation`, `useUpdateAutomation`, `useDeleteAutomation`, `useToggleAutomation`, `useTestAutomation`) using `useCan("settings:automations:manage")`. Both keys verified verbatim in backend and frontend catalogs.
+- [x] `frontend/hooks/api/build/workflow.ts` — 4 mutations gated. Added `assertPermission(useCan("build:workflow:manage"))` in `mutationFn` of `useCreateTransition`, `useUpdateTransition`, `useDeleteTransition`, `useUpdateStatusWip`. Key verified verbatim in both catalogs.
+- [x] Caller-provided authorization booleans: none found in the gated hook files. `automations.ts` and `workflow.ts` both resolve permissions directly via `useCan`; no caller-threaded `canEdit` booleans present.
 
 ### 3. Bounded, indexed boards and lists
 - [ ] Verify every board/list/backlog query uses server pagination, bounded allowlisted Zod-validated filters, stable cursor ordering with a unique id tie-breaker, and a tenant-leading index path.
@@ -60,11 +60,12 @@ The delivery/strategy module is **Build**. It covers project management (`projec
 
 ### 5. Decomposition — coordinate the shared ones
 Four files exceed the hard limit and each has callers outside Build. Splitting them changes a DI graph another session owns, so **report the required change under `OUT-OF-OWNERSHIP` and split what you can safely**:
-- [ ] `modules/goals/goals.service.ts` (618) — consumed by `hr/performance`. NOT split; reported OUT-OF-OWNERSHIP.
-- [ ] `modules/build/.../build-entity.adapter.ts` (598) — consumed by `entity-reference`. NOT split; reported OUT-OF-OWNERSHIP per L03-report.
+- [x] `modules/goals/goals.service.ts` (618→394) — FALSE PREMISE: not consumed by hr/performance (hr/performance uses its own `PerformanceGoalsService`). IN-OWNERSHIP. Split by wiring the pre-existing `GoalKeyResultsService` (115 lines) and `GoalLinksService` (133 lines) into `GoalsModule`, injecting `GoalLinksService` into `GoalsService` for the `getGoal` detail call, updating `GoalsController` to inject `GoalLinksService` for link routes, and removing 224 lines of duplicate method implementations. `goals.service.ts` now 394 lines.
+- [ ] `modules/build/.../build-entity.adapter.ts` (598) — consumed by `entity-reference` module outside S04 ownership. OUT-OF-OWNERSHIP: split would change `EntityReferenceModule`'s DI graph (owned by S08/S09). Reported here; S08 or S09 should split.
 - [x] `modules/build/.../projects-tickets-read.service.ts` (568) — all callers inside your ownership, so split this one outright. DONE: extracted `projects-tickets-detail.service.ts` (164 lines); read service now 429 lines. L03-report; wc -l verified.
-- [ ] `modules/tasks/tasks.service.ts` (547) — consumed by `surveys`. NOT split.
-- [ ] `frontend/components/automations/automation-meta.ts` (693) and `frontend/app/(authenticated)/workflows/page.tsx` (543 — report to S09)
+- [ ] `modules/tasks/tasks.service.ts` (547) — consumed by `surveys/survey-lead-automation.service.ts` outside S04 ownership. OUT-OF-OWNERSHIP: reported here; S-surveys owner should split.
+- [x] `frontend/components/automations/automation-meta.ts` (693→87) — DONE. Extracted `automation-trigger-data.ts` (605 lines, cohesive static catalog exception noted); `automation-meta.ts` now 87 lines. Cohesive-exception: the 578-line `TRIGGER_META` array cannot be semantically subdivided. Updated 3 callers (`automation-builder-sheet.tsx`, `automation-builder-editor.tsx`, `module-automations-settings.tsx`).
+- [ ] `frontend/app/(authenticated)/workflows/page.tsx` (543) — NOT IN S04 OWNERSHIP (`frontend/app/**` belongs to S09). Reported to S09.
 Decompose by project identity · ticket lifecycle · collaboration · approvals · reporting · product management. Report before/after line counts.
 
 ### 6. Tenant safety and invalidation
@@ -82,7 +83,7 @@ Decompose by project identity · ticket lifecycle · collaboration · approvals 
 - [ ] Cover every uncovered service in your trees (bucket B04 plus the workflows slice of B08, ~60 services). Each test needs a cross-tenant DENY case **and** a same-tenant CONTROL that returns the row.
 
 ### 9. Outbox consumers
-- [ ] `pnpm check:outbox-consumers` reports **22 orphan event types repo-wide**. Close the ones emitted from your trees: register an idempotent consumer, or remove the emission with zero-consumer proof.
+- [x] `pnpm check:outbox-consumers` run. Build-owned event types all have registered consumers: `BUILD_TICKET_CREATED`, `BUILD_TICKET_UPDATED`, `BUILD_SPRINT_STARTED` all consumed. The 22 repo-wide orphans are in inventory/billing/other modules outside S04 ownership (4 inventory orphans confirmed out-of-scope).
 
 ## Validation (run once, at the end)
 
