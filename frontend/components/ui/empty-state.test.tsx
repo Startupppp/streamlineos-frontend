@@ -82,4 +82,63 @@ describe("EmptyState — semantic structure", () => {
     render(<EmptyState title="No data" />);
     expect(screen.getByTestId("state-illustration")).toBeInTheDocument();
   });
+
+  it("replaces the data-empty title when filtersActive is true", () => {
+    render(
+      <EmptyState
+        title="No contacts yet"
+        filtersActive
+        onClearFilters={jest.fn()}
+      />,
+    );
+    // "No contacts yet" would tell the user nothing exists org-wide, which is
+    // false while a filter is hiding rows.
+    expect(screen.queryByText("No contacts yet")).not.toBeInTheDocument();
+    expect(screen.getByText("No results match your filters.")).toBeInTheDocument();
+  });
+
+  it("keeps the data-empty title when no filters are active", () => {
+    render(<EmptyState title="No contacts yet" />);
+    expect(screen.getByText("No contacts yet")).toBeInTheDocument();
+    expect(screen.queryByText("No results match your filters.")).not.toBeInTheDocument();
+  });
+
+  it("lets a caller override the filtered heading", () => {
+    render(
+      <EmptyState
+        title="No contacts yet"
+        filtersActive
+        filteredTitle="No contacts match this search"
+        onClearFilters={jest.fn()}
+      />,
+    );
+    expect(screen.getByText("No contacts match this search")).toBeInTheDocument();
+  });
+
+  it("renders a Clear filters button when filtersActive is true", () => {
+    const handleClear = jest.fn();
+    render(
+      <EmptyState
+        title="No results"
+        filtersActive
+        onClearFilters={handleClear}
+      />,
+    );
+    const btn = screen.getByRole("button", { name: "Clear filters" });
+    expect(btn).toBeInTheDocument();
+    fireEvent.click(btn);
+    expect(handleClear).toHaveBeenCalledTimes(1);
+  });
+
+  it("suppresses the create action when filtersActive is true", () => {
+    render(
+      <EmptyState
+        title="No results"
+        filtersActive
+        action={{ label: "Create item", onClick: jest.fn() }}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: "Create item" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Clear filters" })).toBeInTheDocument();
+  });
 });

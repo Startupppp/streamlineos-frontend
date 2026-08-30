@@ -27,6 +27,19 @@ interface EmptyStateProps {
   className?: string;
   compact?: boolean;
   /**
+   * When true, one or more active filters are responsible for the empty result.
+   * Renders "No results match your filters." and a "Clear filters" button
+   * instead of the create action, suppressing the normal `action` prop.
+   */
+  filtersActive?: boolean;
+  /**
+   * Overrides the filtered-empty heading. Only used when `filtersActive` is true;
+   * defaults to "No results match your filters."
+   */
+  filteredTitle?: string;
+  /** Called when the user clicks "Clear filters". Required when `filtersActive` is true. */
+  onClearFilters?: () => void;
+  /**
    * The gate on the read this emptiness is claimed from.
    *
    * A refused read holds no rows for the same reason a finished one can hold
@@ -69,6 +82,8 @@ function ActionButton({
   );
 }
 
+const FILTERED_EMPTY_TITLE = "No results match your filters.";
+
 const ILLUSTRATION_BOX_CLASS: Record<"sm" | "md", string> = {
   sm: "mb-2 h-24 w-24",
   md: "mb-5 h-40 w-40",
@@ -85,6 +100,9 @@ export function EmptyState({
   actionVariant,
   className,
   compact = false,
+  filtersActive = false,
+  filteredTitle,
+  onClearFilters,
   access,
 }: EmptyStateProps) {
   if (access?.denied) {
@@ -136,7 +154,7 @@ export function EmptyState({
           compact ? "text-label leading-tight" : "text-sm"
         )}
       >
-        {title}
+        {filtersActive ? filteredTitle ?? FILTERED_EMPTY_TITLE : title}
       </h3>
 
       {description && (
@@ -150,7 +168,18 @@ export function EmptyState({
         </p>
       )}
 
-      {(action || secondaryAction) && (
+      {filtersActive ? (
+        <div className={cn("flex items-center gap-2", compact ? "mt-2" : "mt-5")}>
+          <Button
+            type="button"
+            size={compact ? "sm" : "default"}
+            variant="outline"
+            onClick={onClearFilters}
+          >
+            Clear filters
+          </Button>
+        </div>
+      ) : (action || secondaryAction) ? (
         <div className={cn("flex items-center gap-2", compact ? "mt-2" : "mt-5")}>
           {action && (
             <ActionButton
@@ -167,7 +196,7 @@ export function EmptyState({
             />
           )}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
