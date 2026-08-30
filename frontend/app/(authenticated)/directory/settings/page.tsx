@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: "Directory | StreamlineOS",
 };
 
-export default async function SettingsDirectoryRoute() {
+export default async function DirectorySettingsRoute() {
   await requirePermission("directory:people:view");
-  return <PeopleDirectoryPage basePath="/settings/directory" />;
+  return <PeopleDirectoryPage basePath="/directory/settings" />;
 }

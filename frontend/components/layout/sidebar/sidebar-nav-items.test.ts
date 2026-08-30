@@ -97,7 +97,7 @@ describe("Administration information architecture", () => {
       (route) => route.href === "/settings/organization",
     );
     const directory = routes.find(
-      (route) => route.href === "/settings/directory",
+      (route) => route.href === "/directory/settings",
     );
 
     expect(account && isNavRouteActive(account, "/settings/users")).toBe(false);
@@ -110,15 +110,15 @@ describe("Administration information architecture", () => {
     ).toBe(false);
     expect(
       directory &&
-        isNavRouteActive(directory, "/settings/directory/person-1"),
+        isNavRouteActive(directory, "/directory/settings/person-1"),
     ).toBe(true);
   });
 
-  it("keeps settings-owned directory routes inside Administration", () => {
-    expect(getProductFromPathname("/settings/directory")).toBe(
+  it("keeps directory-settings routes inside Administration", () => {
+    expect(getProductFromPathname("/directory/settings")).toBe(
       "administration",
     );
-    expect(getProductFromPathname("/settings/directory/person-1")).toBe(
+    expect(getProductFromPathname("/directory/settings/person-1")).toBe(
       "administration",
     );
   });
@@ -157,7 +157,7 @@ describe("Administration information architecture", () => {
     expect(groups.some((group) => group.label === "Organization")).toBe(true);
     expect(hrefs).toContain("/settings/organization/cost-centers");
     expect(hrefs).not.toContain("/directory/workers");
-    expect(hrefs).toContain("/settings/directory");
+    expect(hrefs).toContain("/directory/settings");
     expect(hrefs).toContain("/settings/users");
   });
 
@@ -171,7 +171,7 @@ describe("Administration information architecture", () => {
     const hrefs = groups.flatMap((group) => flattenNavRoutes(group.routes)).map((route) => route.href);
 
     expect(hrefs).toContain("/directory/workers");
-    expect(hrefs).not.toContain("/settings/directory/workers");
+    expect(hrefs).not.toContain("/directory/settings/workers");
   });
 
   it("shows AI Credits to its permission without requiring settings management", () => {

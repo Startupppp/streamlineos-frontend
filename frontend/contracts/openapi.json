@@ -13237,7 +13237,49 @@
         ],
         "x-exposure": "permissioned",
         "x-permission": "crm:ai:use",
-        "description": "Exposure: permission — crm:ai:use"
+        "description": "Exposure: permission — crm:ai:use",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "leadIds": {
+                        "minItems": 1,
+                        "maxItems": 50,
+                        "type": "array",
+                        "items": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        }
+                      }
+                    },
+                    "required": [
+                      "leadIds"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "leadId": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": [
+                      "leadId"
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
       }
     },
     "/ai/sentiment-analysis": {
@@ -17443,41 +17485,6 @@
             "schema": {
               "type": "number"
             }
-          },
-          {
-            "name": "status",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "requested",
-                "pending",
-                "approved",
-                "rejected",
-                "changes_requested",
-                "escalated",
-                "cancelled"
-              ]
-            }
-          },
-          {
-            "name": "entityType",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "task",
-                "milestone",
-                "budget",
-                "release",
-                "change_request",
-                "document",
-                "timesheet",
-                "client_approval"
-              ]
-            }
           }
         ],
         "responses": {
@@ -17500,7 +17507,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -17586,7 +17595,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -17620,7 +17631,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -17690,7 +17703,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -17726,7 +17741,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -18558,7 +18575,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -18600,7 +18619,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -18667,7 +18688,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -18701,7 +18724,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -18792,7 +18817,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -18828,7 +18855,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -18854,7 +18883,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -18908,7 +18939,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -18962,7 +18995,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -19016,7 +19051,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -19490,7 +19527,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -19527,7 +19566,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -19590,7 +19631,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -19997,7 +20040,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -20021,7 +20066,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -20090,7 +20137,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -20192,7 +20241,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -21208,7 +21259,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -21268,7 +21321,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -21516,7 +21571,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -21629,7 +21686,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -21755,7 +21814,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -21789,7 +21850,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -21969,7 +22032,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -22005,7 +22070,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -22013,7 +22080,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -22067,7 +22136,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -22075,7 +22146,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -22165,7 +22238,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -22173,7 +22248,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -22209,7 +22286,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -22217,7 +22296,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -22253,7 +22334,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -22308,7 +22391,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -22353,7 +22438,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -22592,7 +22679,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -22616,7 +22705,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -22767,7 +22858,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -22791,7 +22884,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -23840,7 +23935,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -23864,7 +23961,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -24010,7 +24109,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -27115,7 +27216,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -27139,7 +27242,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -27550,7 +27655,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -27574,7 +27681,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -27984,7 +28093,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -28008,7 +28119,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -28054,7 +28167,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -28088,7 +28203,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -28185,7 +28302,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -28221,7 +28340,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -28229,7 +28350,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -28294,7 +28417,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -28302,7 +28427,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -28337,7 +28464,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -28345,7 +28474,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -28413,7 +28544,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -28421,7 +28554,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -34414,7 +34549,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -34465,7 +34602,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -34727,7 +34866,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -34789,7 +34930,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -34893,7 +35036,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -35077,7 +35222,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -35234,7 +35381,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -35264,7 +35413,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -35316,7 +35467,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -35426,7 +35579,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -48608,7 +48763,7 @@
     },
     "/cron/chat-reply-reminders": {
       "get": {
-        "operationId": "CronPlatformController_getChatReplyReminders",
+        "operationId": "CronNotificationsController_getChatReplyReminders",
         "parameters": [
           {
             "name": "authorization",
@@ -48625,13 +48780,13 @@
           }
         },
         "tags": [
-          "CronPlatform"
+          "CronNotifications"
         ],
         "x-exposure": "public",
         "description": "Exposure: public — unauthenticated"
       },
       "post": {
-        "operationId": "CronPlatformController_postChatReplyReminders",
+        "operationId": "CronNotificationsController_postChatReplyReminders",
         "parameters": [
           {
             "name": "authorization",
@@ -48648,7 +48803,7 @@
           }
         },
         "tags": [
-          "CronPlatform"
+          "CronNotifications"
         ],
         "x-exposure": "public",
         "description": "Exposure: public — unauthenticated"
@@ -49586,7 +49741,7 @@
     },
     "/cron/notification-delivery-flush": {
       "get": {
-        "operationId": "CronPlatformController_getNotificationDeliveryFlush",
+        "operationId": "CronNotificationsController_getNotificationDeliveryFlush",
         "parameters": [
           {
             "name": "authorization",
@@ -49603,13 +49758,13 @@
           }
         },
         "tags": [
-          "CronPlatform"
+          "CronNotifications"
         ],
         "x-exposure": "public",
         "description": "Exposure: public — unauthenticated"
       },
       "post": {
-        "operationId": "CronPlatformController_postNotificationDeliveryFlush",
+        "operationId": "CronNotificationsController_postNotificationDeliveryFlush",
         "parameters": [
           {
             "name": "authorization",
@@ -49626,7 +49781,7 @@
           }
         },
         "tags": [
-          "CronPlatform"
+          "CronNotifications"
         ],
         "x-exposure": "public",
         "description": "Exposure: public — unauthenticated"
@@ -49634,7 +49789,7 @@
     },
     "/cron/notification-digest-flush": {
       "get": {
-        "operationId": "CronPlatformController_getNotificationDigestFlush",
+        "operationId": "CronNotificationsController_getNotificationDigestFlush",
         "parameters": [
           {
             "name": "authorization",
@@ -49651,13 +49806,13 @@
           }
         },
         "tags": [
-          "CronPlatform"
+          "CronNotifications"
         ],
         "x-exposure": "public",
         "description": "Exposure: public — unauthenticated"
       },
       "post": {
-        "operationId": "CronPlatformController_postNotificationDigestFlush",
+        "operationId": "CronNotificationsController_postNotificationDigestFlush",
         "parameters": [
           {
             "name": "authorization",
@@ -49674,7 +49829,7 @@
           }
         },
         "tags": [
-          "CronPlatform"
+          "CronNotifications"
         ],
         "x-exposure": "public",
         "description": "Exposure: public — unauthenticated"
@@ -49682,7 +49837,7 @@
     },
     "/cron/notification-outbox-flush": {
       "get": {
-        "operationId": "CronPlatformController_getNotificationOutboxFlush",
+        "operationId": "CronNotificationsController_getNotificationOutboxFlush",
         "parameters": [
           {
             "name": "authorization",
@@ -49699,13 +49854,13 @@
           }
         },
         "tags": [
-          "CronPlatform"
+          "CronNotifications"
         ],
         "x-exposure": "public",
         "description": "Exposure: public — unauthenticated"
       },
       "post": {
-        "operationId": "CronPlatformController_postNotificationOutboxFlush",
+        "operationId": "CronNotificationsController_postNotificationOutboxFlush",
         "parameters": [
           {
             "name": "authorization",
@@ -49722,7 +49877,7 @@
           }
         },
         "tags": [
-          "CronPlatform"
+          "CronNotifications"
         ],
         "x-exposure": "public",
         "description": "Exposure: public — unauthenticated"
@@ -49730,7 +49885,7 @@
     },
     "/cron/notification-time-sweeps": {
       "get": {
-        "operationId": "CronPlatformController_getNotificationTimeSweeps",
+        "operationId": "CronNotificationsController_getNotificationTimeSweeps",
         "parameters": [
           {
             "name": "authorization",
@@ -49747,13 +49902,13 @@
           }
         },
         "tags": [
-          "CronPlatform"
+          "CronNotifications"
         ],
         "x-exposure": "public",
         "description": "Exposure: public — unauthenticated"
       },
       "post": {
-        "operationId": "CronPlatformController_postNotificationTimeSweeps",
+        "operationId": "CronNotificationsController_postNotificationTimeSweeps",
         "parameters": [
           {
             "name": "authorization",
@@ -49770,7 +49925,7 @@
           }
         },
         "tags": [
-          "CronPlatform"
+          "CronNotifications"
         ],
         "x-exposure": "public",
         "description": "Exposure: public — unauthenticated"
@@ -49778,7 +49933,7 @@
     },
     "/cron/notifications-retention-detach": {
       "get": {
-        "operationId": "CronPlatformController_getNotificationsRetentionDetach",
+        "operationId": "CronNotificationsController_getNotificationsRetentionDetach",
         "parameters": [
           {
             "name": "authorization",
@@ -49795,13 +49950,13 @@
           }
         },
         "tags": [
-          "CronPlatform"
+          "CronNotifications"
         ],
         "x-exposure": "public",
         "description": "Exposure: public — unauthenticated"
       },
       "post": {
-        "operationId": "CronPlatformController_postNotificationsRetentionDetach",
+        "operationId": "CronNotificationsController_postNotificationsRetentionDetach",
         "parameters": [
           {
             "name": "authorization",
@@ -49818,7 +49973,7 @@
           }
         },
         "tags": [
-          "CronPlatform"
+          "CronNotifications"
         ],
         "x-exposure": "public",
         "description": "Exposure: public — unauthenticated"
@@ -49826,7 +49981,7 @@
     },
     "/cron/notifications-retention-sweep": {
       "get": {
-        "operationId": "CronPlatformController_getNotificationsRetentionSweep",
+        "operationId": "CronNotificationsController_getNotificationsRetentionSweep",
         "parameters": [
           {
             "name": "authorization",
@@ -49843,13 +49998,13 @@
           }
         },
         "tags": [
-          "CronPlatform"
+          "CronNotifications"
         ],
         "x-exposure": "public",
         "description": "Exposure: public — unauthenticated"
       },
       "post": {
-        "operationId": "CronPlatformController_postNotificationsRetentionSweep",
+        "operationId": "CronNotificationsController_postNotificationsRetentionSweep",
         "parameters": [
           {
             "name": "authorization",
@@ -49866,7 +50021,7 @@
           }
         },
         "tags": [
-          "CronPlatform"
+          "CronNotifications"
         ],
         "x-exposure": "public",
         "description": "Exposure: public — unauthenticated"
@@ -52577,7 +52732,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -52601,7 +52758,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -52683,7 +52842,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -52764,7 +52925,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -55540,7 +55703,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -55566,7 +55731,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -55612,7 +55779,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -55683,7 +55852,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -55729,7 +55900,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -55877,7 +56050,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -55913,7 +56088,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -87926,7 +88103,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -87952,7 +88131,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -88088,7 +88269,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -88112,7 +88295,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -88169,7 +88354,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -88269,7 +88456,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -88295,7 +88484,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -88319,7 +88510,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -88375,7 +88568,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -88459,7 +88654,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -88483,7 +88680,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -88557,7 +88756,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -88645,7 +88846,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -88915,7 +89118,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -88939,7 +89144,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -89009,7 +89216,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -89135,7 +89344,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -89171,7 +89382,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -89195,7 +89408,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -89259,7 +89474,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -89342,7 +89559,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -89368,7 +89587,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -89392,7 +89613,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -89625,7 +89848,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -89649,7 +89874,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -89726,7 +89953,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -89762,7 +89991,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -89798,7 +90029,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -92819,7 +93052,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -92843,7 +93078,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -92917,7 +93154,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -93005,7 +93244,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -101087,7 +101328,17 @@
     "/integrations/git/webhook": {
       "post": {
         "operationId": "IntegrationsGitController_webhook",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "connectionId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -112728,7 +112979,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -112742,7 +112995,27 @@
         ],
         "x-exposure": "permissioned",
         "x-permission": "kb:articles:view",
-        "description": "Exposure: permission — kb:articles:view"
+        "description": "Exposure: permission — kb:articles:view",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "question": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 500
+                  }
+                },
+                "required": [
+                  "question"
+                ]
+              }
+            }
+          }
+        }
       }
     },
     "/kb/articles/{articleId}/ai/improve": {
@@ -112754,7 +113027,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -112780,7 +113055,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -112806,7 +113083,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -114498,7 +114777,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -114512,7 +114793,27 @@
         ],
         "x-exposure": "permissioned",
         "x-permission": "kb:pages:view",
-        "description": "Exposure: permission — kb:pages:view"
+        "description": "Exposure: permission — kb:pages:view",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "question": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 500
+                  }
+                },
+                "required": [
+                  "question"
+                ]
+              }
+            }
+          }
+        }
       }
     },
     "/kb/pages/{pageId}/ai/improve": {
@@ -114524,7 +114825,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -114550,7 +114853,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -114576,7 +114881,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -120590,6 +120897,16 @@
               "minLength": 1,
               "maxLength": 64
             }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
           }
         ],
         "responses": {
@@ -120659,7 +120976,8 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             }
           },
           {
@@ -120667,7 +120985,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -120691,7 +121011,8 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             }
           },
           {
@@ -120699,7 +121020,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -120774,7 +121097,8 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             }
           },
           {
@@ -120782,7 +121106,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -123274,6 +123600,57 @@
         "x-exposure": "permissioned",
         "x-permission": "notifications:events:manage",
         "description": "Exposure: permission — notifications:events:manage",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "subject": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "body": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "channels": {
+                    "default": [
+                      "email"
+                    ],
+                    "minItems": 1,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "email",
+                        "sms",
+                        "whatsapp"
+                      ]
+                    }
+                  },
+                  "whatsappSmsFallback": {
+                    "default": true,
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "subject",
+                  "body"
+                ]
+              }
+            }
+          }
+        },
         "x-idempotency-command": "notifications.dispatch",
         "x-idempotent": true
       }
@@ -123866,7 +124243,35 @@
           "OnboardingDocuments"
         ],
         "x-exposure": "universal",
-        "description": "Exposure: universal — any authenticated member, subject from the token"
+        "description": "Exposure: universal — any authenticated member, subject from the token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "CONTRACT",
+                      "CERTIFICATE",
+                      "ID_PROOF",
+                      "PAYSLIP",
+                      "POLICY",
+                      "OFFER_LETTER",
+                      "RESUME",
+                      "OTHER"
+                    ]
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            }
+          }
+        }
       }
     },
     "/onboarding/me": {
@@ -132104,7 +132509,8 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
@@ -133892,6 +134298,25 @@
               "type": "integer",
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
             }
           }
         ],
@@ -136122,14 +136547,11 @@
         "operationId": "RunsController_list",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -136140,7 +136562,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -136204,42 +136626,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "name": "status",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "requested",
-                "pending",
-                "approved",
-                "rejected",
-                "changes_requested",
-                "escalated",
-                "cancelled"
-              ]
-            }
-          },
-          {
-            "name": "entityType",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "task",
-                "milestone",
-                "budget",
-                "release",
-                "change_request",
-                "document",
-                "timesheet",
-                "client_approval"
-              ]
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -136265,7 +136654,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -136325,7 +136716,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -136389,7 +136782,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -136429,14 +136824,11 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -136447,7 +136839,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -136672,7 +137064,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -136724,7 +137118,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -136780,7 +137176,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -136868,7 +137266,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -136902,7 +137302,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -136973,7 +137375,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -136999,7 +137403,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -137065,7 +137471,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -137099,7 +137507,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -137147,7 +137557,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -137324,7 +137736,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -137378,7 +137792,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -137429,6 +137845,136 @@
         "x-exposure": "permissioned",
         "x-permission": "payroll:runs:view",
         "description": "Exposure: permission — payroll:runs:view"
+      }
+    },
+    "/payroll/runs/export/jobs": {
+      "post": {
+        "operationId": "PayrollExportController_createExportJob",
+        "parameters": [
+          {
+            "name": "idempotency-key",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "monthFrom",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$"
+            }
+          },
+          {
+            "name": "monthTo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$"
+            }
+          },
+          {
+            "name": "runType",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "REGULAR",
+                "BONUS",
+                "OFF_CYCLE",
+                "CORRECTION",
+                "FINAL_SETTLEMENT"
+              ]
+            }
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKeyHeader"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "PayrollExport"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "payroll:reports:export",
+        "description": "Exposure: permission — payroll:reports:export",
+        "x-idempotency-command": "payroll.runs.export.create",
+        "x-idempotent": true
+      }
+    },
+    "/payroll/runs/export/jobs/{jobId}": {
+      "get": {
+        "operationId": "PayrollExportController_getExportJob",
+        "parameters": [
+          {
+            "name": "jobId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "PayrollExport"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "payroll:reports:export",
+        "description": "Exposure: permission — payroll:reports:export"
+      }
+    },
+    "/payroll/runs/export/jobs/{jobId}/download": {
+      "get": {
+        "operationId": "PayrollExportController_downloadExportJob",
+        "parameters": [
+          {
+            "name": "jobId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "PayrollExport"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "payroll:reports:export",
+        "description": "Exposure: permission — payroll:reports:export"
       }
     },
     "/payroll/tax-windows": {
@@ -147605,7 +148151,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -156025,7 +156573,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -156087,7 +156637,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -156402,7 +156954,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -156456,7 +157010,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -156480,7 +157036,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -156561,7 +157119,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -157082,7 +157642,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -157150,7 +157712,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -157244,7 +157808,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -157300,7 +157866,9 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -164073,7 +164641,8 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             }
           }
         ],

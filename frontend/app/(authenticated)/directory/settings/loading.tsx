@@ -2,7 +2,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 
-export default function DirectoryLoading() {
+export default function DirectorySettingsLoading() {
   return (
     <PageWrapper
       title="Directory"

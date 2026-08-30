@@ -7,7 +7,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { PortalHeader } from "@/features/portal/components/portal-header";
 import { PortalProjectCard } from "@/features/portal/components/portal-project-card";
 import { usePortalGuard } from "@/hooks/api/portal/use-portal-guard";
-import { usePortalProjects } from "@/hooks/api/portal/use-portal-projects";
+import { useExternalPortalProjects } from "@/hooks/api/portal/use-portal-projects";
 
 function ProjectsListSkeleton() {
   return (
@@ -36,7 +36,7 @@ function ProjectsListSkeleton() {
 
 export default function PortalProjectsPage() {
   const { isReady } = usePortalGuard();
-  const { data, isLoading, isError, refetch } = usePortalProjects();
+  const { data, isLoading, isError, refetch } = useExternalPortalProjects();
 
   const handleRetry = useCallback(() => {
     void refetch();

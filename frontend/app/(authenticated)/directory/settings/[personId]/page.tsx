@@ -1,19 +1,19 @@
 import { PersonDetailPage } from "@/features/directory/people/person-detail-page";
 import { requirePermission } from "@/lib/rbac/require-permission";
 
-interface SettingsDirectoryPersonRouteProps {
+interface DirectorySettingsPersonRouteProps {
   params: Promise<{ personId: string }>;
 }
 
-export default async function SettingsDirectoryPersonRoute({
+export default async function DirectorySettingsPersonRoute({
   params,
-}: SettingsDirectoryPersonRouteProps) {
+}: DirectorySettingsPersonRouteProps) {
   await requirePermission("directory:people:view");
   const { personId } = await params;
   return (
     <PersonDetailPage
       organizationPersonId={personId}
-      directoryBasePath="/settings/directory"
+      directoryBasePath="/directory/settings"
     />
   );
 }

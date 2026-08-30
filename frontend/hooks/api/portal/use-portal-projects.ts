@@ -9,7 +9,7 @@ export const portalProjectsQueryOptions = queryOptions({
   staleTime: 1000 * 60 * 2,
 });
 
-export function usePortalProjects() {
+export function useExternalPortalProjects() {
   return useQuery({
     ...portalProjectsQueryOptions,
     enabled: typeof window !== "undefined" && !!getPortalToken(),

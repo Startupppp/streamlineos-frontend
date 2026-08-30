@@ -22,7 +22,6 @@ Violations of the rules in root `CLAUDE.md` §8. Routes are listed as-is; nothin
 | `/payroll/me` | Employee self-service rule — self-service pay belongs at `/me/pay` (which already exists at `app/(authenticated)/me/pay/page.tsx`). Duplicate self-service surface inside the payroll admin route tree. |
 | `/knowledge-base` | Legacy route — canonical knowledge base is at `/knowledge/wiki/**`. This orphan route should be deleted. |
 | `(portal)/projects` and `(portal)/projects/[projectId]` | Build module naming rule — the build module route is `/build`; `/projects` is documented as a redirect to `/build`. The client portal group uses `/projects` directly as a path segment instead of `/build`. |
-| `/settings/directory` and `/settings/directory/[personId]` | Module-settings rule — module configuration belongs at `/<module>/settings/*`, not in global `/settings/*`. The people directory is a module-level feature; its settings should live at `/directory/settings/*`. |
 
 ---
 
@@ -844,6 +843,8 @@ Violations of the rules in root `CLAUDE.md` §8. Routes are listed as-is; nothin
 - [ ] `/directory/workers` · **Directory** · hooks: `→ features/directory` · §8: L ? F ? P ? Perm ? States ?
 - [ ] `/directory/[personId]` · **Directory** · hooks: `→ features/directory` · §8: E ? D ? Perm ? States ?
 - [ ] `/directory/access` · **Directory** · hooks: `→ features/directory` · §8: Perm ? States ?
+- [ ] `/directory/settings` · **Directory (Administration view)** · hooks: `→ features/directory/people` · §8: L ? F ? Perm ? States ?
+- [ ] `/directory/settings/[personId]` · **Directory (Administration view)** · hooks: `→ features/directory/people` · §8: E ? D ? Perm ? States ?
 
 ---
 
@@ -872,10 +873,6 @@ Violations of the rules in root `CLAUDE.md` §8. Routes are listed as-is; nothin
 - [ ] `/settings/audit-log` · **Settings** · hooks: `→ features/settings/audit-log` · §8: L ? F ? P ? Perm ? States ?
 - [ ] `/settings/delegations` · **Settings** · hooks: `→ features/settings/delegations` · §8: L ? C ? D ? Perm ? States ?
 - [ ] `/settings/incoming-transfer` · **Settings** · hooks: `→ features/settings/incoming-transfer` · §8: States ?
-
-### Directory in settings (⚠ VIOLATION)
-- [ ] `/settings/directory` · **Settings** · hooks: `→ features/settings/directory` · §8: L ? F ? Perm ? States ? · ⚠ VIOLATION: directory module configuration should live at `/directory/settings/*` per module-settings rule
-- [ ] `/settings/directory/[personId]` · **Settings** · hooks: `→ features/settings/directory` · §8: E ? D ? Perm ? States ? · ⚠ VIOLATION: same as above
 
 ---
 
