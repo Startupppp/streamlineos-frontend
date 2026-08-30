@@ -207,7 +207,19 @@
     "/access/org-modules/{moduleKey}": {
       "patch": {
         "operationId": "EntitlementsController_toggleModule",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "moduleKey",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64,
+              "pattern": "^[a-z][a-z0-9_-]*$"
+            }
+          }
+        ],
         "responses": {
           "204": {
             "description": ""
@@ -6745,30 +6757,11 @@
             }
           },
           {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
-            }
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
-            }
-          },
-          {
             "name": "limit",
             "in": "query",
             "required": false,
             "schema": {
+              "default": 50,
               "type": "integer",
               "minimum": 1,
               "maximum": 9007199254740991
@@ -6803,30 +6796,11 @@
         "operationId": "RemindersController_listPolicies",
         "parameters": [
           {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
-            }
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
-            }
-          },
-          {
             "name": "limit",
             "in": "query",
             "required": false,
             "schema": {
+              "default": 50,
               "type": "integer",
               "minimum": 1,
               "maximum": 9007199254740991
@@ -8982,30 +8956,11 @@
         "operationId": "TaxPaymentsController_list",
         "parameters": [
           {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
-            }
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
-            }
-          },
-          {
             "name": "limit",
             "in": "query",
             "required": false,
             "schema": {
+              "default": 50,
               "type": "integer",
               "minimum": 1,
               "maximum": 9007199254740991
@@ -10665,17 +10620,6 @@
         "operationId": "AgentController_getAllWork",
         "parameters": [
           {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
-            }
-          },
-          {
             "name": "limit",
             "in": "query",
             "required": false,
@@ -10684,6 +10628,14 @@
               "type": "integer",
               "minimum": 1,
               "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -14709,7 +14661,7 @@
     },
     "/billing/affiliate": {
       "get": {
-        "operationId": "BillingController_getAffiliateDashboard",
+        "operationId": "BillingEnterpriseController_getAffiliateDashboard",
         "parameters": [],
         "responses": {
           "200": {
@@ -14717,7 +14669,7 @@
           }
         },
         "tags": [
-          "Billing"
+          "BillingEnterprise"
         ],
         "x-exposure": "permissioned",
         "x-permission": "billing:affiliate:manage",
@@ -14726,7 +14678,7 @@
     },
     "/billing/affiliate/payout-request": {
       "post": {
-        "operationId": "BillingController_requestAffiliatePayoutRequest",
+        "operationId": "BillingEnterpriseController_requestAffiliatePayoutRequest",
         "parameters": [
           {
             "$ref": "#/components/parameters/IdempotencyKeyHeader"
@@ -14738,7 +14690,7 @@
           }
         },
         "tags": [
-          "Billing"
+          "BillingEnterprise"
         ],
         "x-exposure": "permissioned",
         "x-permission": "billing:affiliate:manage",
@@ -14749,7 +14701,7 @@
     },
     "/billing/affiliate/register": {
       "post": {
-        "operationId": "BillingController_registerAffiliate",
+        "operationId": "BillingEnterpriseController_registerAffiliate",
         "parameters": [
           {
             "$ref": "#/components/parameters/IdempotencyKeyHeader"
@@ -14761,7 +14713,7 @@
           }
         },
         "tags": [
-          "Billing"
+          "BillingEnterprise"
         ],
         "x-exposure": "permissioned",
         "x-permission": "billing:affiliate:manage",
@@ -14772,7 +14724,7 @@
     },
     "/billing/ai-credits": {
       "get": {
-        "operationId": "BillingController_getAiCredits",
+        "operationId": "BillingMarketplaceController_getAiCredits",
         "parameters": [],
         "responses": {
           "200": {
@@ -14780,7 +14732,7 @@
           }
         },
         "tags": [
-          "Billing"
+          "BillingMarketplace"
         ],
         "x-exposure": "permissioned",
         "x-permission": "billing:ai-credits:view",
@@ -14789,7 +14741,7 @@
     },
     "/billing/ai-credits/auto-topup": {
       "post": {
-        "operationId": "BillingController_configureAutoTopUp",
+        "operationId": "BillingMarketplaceController_configureAutoTopUp",
         "parameters": [],
         "responses": {
           "200": {
@@ -14797,7 +14749,7 @@
           }
         },
         "tags": [
-          "Billing"
+          "BillingMarketplace"
         ],
         "x-exposure": "permissioned",
         "x-permission": "billing:ai-credits:purchase",
@@ -14833,7 +14785,7 @@
     },
     "/billing/ai-credits/purchase": {
       "post": {
-        "operationId": "BillingController_purchaseAiCredits",
+        "operationId": "BillingMarketplaceController_purchaseAiCredits",
         "parameters": [
           {
             "$ref": "#/components/parameters/IdempotencyKeyHeader"
@@ -14845,7 +14797,7 @@
           }
         },
         "tags": [
-          "Billing"
+          "BillingMarketplace"
         ],
         "x-exposure": "permissioned",
         "x-permission": "billing:ai-credits:purchase",
@@ -14885,7 +14837,7 @@
     },
     "/billing/ai-credits/transactions": {
       "get": {
-        "operationId": "BillingController_listAiCreditTransactions",
+        "operationId": "BillingMarketplaceController_listAiCreditTransactions",
         "parameters": [
           {
             "name": "page",
@@ -14916,7 +14868,7 @@
           }
         },
         "tags": [
-          "Billing"
+          "BillingMarketplace"
         ],
         "x-exposure": "permissioned",
         "x-permission": "billing:ai-credits:view",
@@ -14925,7 +14877,7 @@
     },
     "/billing/ai-credits/usage": {
       "get": {
-        "operationId": "BillingController_getAiCreditsUsage",
+        "operationId": "BillingMarketplaceController_getAiCreditsUsage",
         "parameters": [
           {
             "name": "days",
@@ -14943,7 +14895,7 @@
           }
         },
         "tags": [
-          "Billing"
+          "BillingMarketplace"
         ],
         "x-exposure": "permissioned",
         "x-permission": "billing:ai-credits:view",
@@ -14952,7 +14904,7 @@
     },
     "/billing/analytics": {
       "get": {
-        "operationId": "BillingController_getAnalytics",
+        "operationId": "BillingEnterpriseController_getAnalytics",
         "parameters": [
           {
             "name": "period",
@@ -14975,7 +14927,7 @@
           }
         },
         "tags": [
-          "Billing"
+          "BillingEnterprise"
         ],
         "x-exposure": "permissioned",
         "x-permission": "billing:analytics:view",
@@ -15259,22 +15211,62 @@
     },
     "/billing/enterprise-quotes": {
       "get": {
-        "operationId": "BillingController_listEnterpriseQuotes",
-        "parameters": [],
+        "operationId": "BillingEnterpriseController_listEnterpriseQuotes",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "DRAFT",
+                "PENDING_APPROVAL",
+                "APPROVED",
+                "SENT",
+                "ACCEPTED",
+                "REJECTED",
+                "EXPIRED"
+              ]
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
         "tags": [
-          "Billing"
+          "BillingEnterprise"
         ],
         "x-exposure": "permissioned",
         "x-permission": "billing:enterprise-quotes:view",
         "description": "Exposure: permission — billing:enterprise-quotes:view"
       },
       "post": {
-        "operationId": "BillingController_createEnterpriseQuote",
+        "operationId": "BillingEnterpriseController_createEnterpriseQuote",
         "parameters": [],
         "responses": {
           "201": {
@@ -15282,7 +15274,7 @@
           }
         },
         "tags": [
-          "Billing"
+          "BillingEnterprise"
         ],
         "x-exposure": "permissioned",
         "x-permission": "billing:enterprise-quotes:create",
@@ -15367,7 +15359,7 @@
     },
     "/billing/enterprise-quotes/{quoteId}": {
       "get": {
-        "operationId": "BillingController_getEnterpriseQuote",
+        "operationId": "BillingEnterpriseController_getEnterpriseQuote",
         "parameters": [
           {
             "name": "quoteId",
@@ -15386,7 +15378,7 @@
           }
         },
         "tags": [
-          "Billing"
+          "BillingEnterprise"
         ],
         "x-exposure": "permissioned",
         "x-permission": "billing:enterprise-quotes:view",
@@ -15395,7 +15387,7 @@
     },
     "/billing/enterprise-quotes/{quoteId}/accept": {
       "post": {
-        "operationId": "BillingController_acceptEnterpriseQuote",
+        "operationId": "BillingEnterpriseController_acceptEnterpriseQuote",
         "parameters": [
           {
             "name": "quoteId",
@@ -15417,7 +15409,7 @@
           }
         },
         "tags": [
-          "Billing"
+          "BillingEnterprise"
         ],
         "x-exposure": "permissioned",
         "x-permission": "billing:enterprise-quotes:view",
@@ -15428,7 +15420,7 @@
     },
     "/billing/enterprise-quotes/{quoteId}/approve": {
       "post": {
-        "operationId": "BillingController_approveEnterpriseQuote",
+        "operationId": "BillingEnterpriseController_approveEnterpriseQuote",
         "parameters": [
           {
             "name": "quoteId",
@@ -15450,7 +15442,7 @@
           }
         },
         "tags": [
-          "Billing"
+          "BillingEnterprise"
         ],
         "x-exposure": "permissioned",
         "x-permission": "billing:enterprise-quotes:approve",
@@ -15476,7 +15468,7 @@
     },
     "/billing/enterprise-quotes/{quoteId}/reject": {
       "post": {
-        "operationId": "BillingController_rejectEnterpriseQuote",
+        "operationId": "BillingEnterpriseController_rejectEnterpriseQuote",
         "parameters": [
           {
             "name": "quoteId",
@@ -15498,7 +15490,7 @@
           }
         },
         "tags": [
-          "Billing"
+          "BillingEnterprise"
         ],
         "x-exposure": "permissioned",
         "x-permission": "billing:enterprise-quotes:approve",
@@ -15528,7 +15520,7 @@
     },
     "/billing/enterprise-quotes/{quoteId}/send": {
       "post": {
-        "operationId": "BillingController_sendEnterpriseQuote",
+        "operationId": "BillingEnterpriseController_sendEnterpriseQuote",
         "parameters": [
           {
             "name": "quoteId",
@@ -15550,7 +15542,7 @@
           }
         },
         "tags": [
-          "Billing"
+          "BillingEnterprise"
         ],
         "x-exposure": "permissioned",
         "x-permission": "billing:enterprise-quotes:approve",
@@ -15561,7 +15553,7 @@
     },
     "/billing/enterprise-quotes/{quoteId}/submit": {
       "post": {
-        "operationId": "BillingController_submitEnterpriseQuote",
+        "operationId": "BillingEnterpriseController_submitEnterpriseQuote",
         "parameters": [
           {
             "name": "quoteId",
@@ -15583,7 +15575,7 @@
           }
         },
         "tags": [
-          "Billing"
+          "BillingEnterprise"
         ],
         "x-exposure": "permissioned",
         "x-permission": "billing:enterprise-quotes:create",
@@ -15626,7 +15618,7 @@
     },
     "/billing/marketplace/{appId}/install": {
       "post": {
-        "operationId": "BillingController_installApp",
+        "operationId": "BillingMarketplaceController_installApp",
         "parameters": [
           {
             "name": "appId",
@@ -15648,7 +15640,7 @@
           }
         },
         "tags": [
-          "Billing"
+          "BillingMarketplace"
         ],
         "x-exposure": "permissioned",
         "x-permission": "billing:marketplace:install",
@@ -15657,7 +15649,7 @@
         "x-idempotent": true
       },
       "delete": {
-        "operationId": "BillingController_uninstallApp",
+        "operationId": "BillingMarketplaceController_uninstallApp",
         "parameters": [
           {
             "name": "appId",
@@ -15676,7 +15668,7 @@
           }
         },
         "tags": [
-          "Billing"
+          "BillingMarketplace"
         ],
         "x-exposure": "permissioned",
         "x-permission": "billing:marketplace:install",
@@ -15685,7 +15677,7 @@
     },
     "/billing/marketplace/{appId}/trial": {
       "post": {
-        "operationId": "BillingController_startTrial",
+        "operationId": "BillingMarketplaceController_startTrial",
         "parameters": [
           {
             "name": "appId",
@@ -15707,7 +15699,7 @@
           }
         },
         "tags": [
-          "Billing"
+          "BillingMarketplace"
         ],
         "x-exposure": "permissioned",
         "x-permission": "billing:marketplace:install",
@@ -15718,7 +15710,7 @@
     },
     "/billing/marketplace/apps": {
       "get": {
-        "operationId": "BillingController_listApps",
+        "operationId": "BillingMarketplaceController_listApps",
         "parameters": [],
         "responses": {
           "200": {
@@ -15726,7 +15718,7 @@
           }
         },
         "tags": [
-          "Billing"
+          "BillingMarketplace"
         ],
         "x-exposure": "permissioned",
         "x-permission": "billing:marketplace:view",
@@ -16057,7 +16049,7 @@
     },
     "/billing/referrals": {
       "post": {
-        "operationId": "BillingController_createReferral",
+        "operationId": "BillingEnterpriseController_createReferral",
         "parameters": [
           {
             "$ref": "#/components/parameters/IdempotencyKeyHeader"
@@ -16069,7 +16061,7 @@
           }
         },
         "tags": [
-          "Billing"
+          "BillingEnterprise"
         ],
         "x-exposure": "permissioned",
         "x-permission": "billing:referrals:manage",
@@ -16098,7 +16090,7 @@
         "x-idempotent": true
       },
       "get": {
-        "operationId": "BillingController_listReferrals",
+        "operationId": "BillingEnterpriseController_listReferrals",
         "parameters": [],
         "responses": {
           "200": {
@@ -16106,7 +16098,7 @@
           }
         },
         "tags": [
-          "Billing"
+          "BillingEnterprise"
         ],
         "x-exposure": "permissioned",
         "x-permission": "billing:referrals:view",
@@ -27401,6 +27393,9 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKeyHeader"
           }
         ],
         "responses": {
@@ -27477,7 +27472,37 @@
               }
             }
           }
-        }
+        },
+        "x-idempotency-command": "build.ticket.bulk-update",
+        "x-idempotent": true
+      }
+    },
+    "/build/{projectId}/tickets/column-counts": {
+      "get": {
+        "operationId": "ProjectsTicketsController_getColumnCounts",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ProjectsTickets"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "build:tickets:view",
+        "description": "Exposure: permission — build:tickets:view"
       }
     },
     "/build/{projectId}/tickets/export": {
@@ -28905,17 +28930,6 @@
         "operationId": "ProjectsTicketsController_getAllWork",
         "parameters": [
           {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
-            }
-          },
-          {
             "name": "limit",
             "in": "query",
             "required": false,
@@ -28924,6 +28938,14 @@
               "type": "integer",
               "minimum": 1,
               "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -29168,14 +29190,11 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -29600,14 +29619,11 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -31293,14 +31309,11 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -34533,7 +34546,8 @@
                 },
                 "required": [
                   "role"
-                ]
+                ],
+                "additionalProperties": false
               }
             }
           }
@@ -37278,7 +37292,10 @@
         ],
         "x-exposure": "permissioned",
         "x-permission": "crm:clients:read",
-        "description": "Exposure: permission — crm:clients:read"
+        "description": "Exposure: permission — crm:clients:read",
+        "deprecated": true,
+        "x-sunset": "2026-10-25",
+        "x-deprecation-link": "/crm/organizations"
       }
     },
     "/clients/{clientId}": {
@@ -37306,7 +37323,10 @@
         ],
         "x-exposure": "permissioned",
         "x-permission": "crm:clients:read",
-        "description": "Exposure: permission — crm:clients:read"
+        "description": "Exposure: permission — crm:clients:read",
+        "deprecated": true,
+        "x-sunset": "2026-10-25",
+        "x-deprecation-link": "/crm/organizations/:organizationId"
       },
       "patch": {
         "operationId": "ClientsController_updateClientStatus",
@@ -37333,6 +37353,9 @@
         "x-exposure": "permissioned",
         "x-permission": "crm:clients:update",
         "description": "Exposure: permission — crm:clients:update",
+        "deprecated": true,
+        "x-sunset": "2026-10-25",
+        "x-deprecation-link": "/crm/organizations/:organizationId",
         "requestBody": {
           "required": true,
           "content": {
@@ -37396,7 +37419,10 @@
         ],
         "x-exposure": "permissioned",
         "x-permission": "crm:clients:read",
-        "description": "Exposure: permission — crm:clients:read"
+        "description": "Exposure: permission — crm:clients:read",
+        "deprecated": true,
+        "x-sunset": "2026-10-25",
+        "x-deprecation-link": "/crm/organizations/:organizationId/timeline"
       },
       "post": {
         "operationId": "ClientsController_createClientActivity",
@@ -37483,7 +37509,10 @@
         ],
         "x-exposure": "permissioned",
         "x-permission": "crm:clients:read",
-        "description": "Exposure: permission — crm:clients:read"
+        "description": "Exposure: permission — crm:clients:read",
+        "deprecated": true,
+        "x-sunset": "2026-10-25",
+        "x-deprecation-link": "/crm/organizations/:organizationId/timeline"
       }
     },
     "/clients/assign-crm": {
@@ -37607,7 +37636,10 @@
         ],
         "x-exposure": "permissioned",
         "x-permission": "crm:clients:read",
-        "description": "Exposure: permission — crm:clients:read"
+        "description": "Exposure: permission — crm:clients:read",
+        "deprecated": true,
+        "x-sunset": "2026-10-25",
+        "x-deprecation-link": "/crm/organizations"
       }
     },
     "/clients/onboarding/items": {
@@ -38234,6 +38266,9 @@
         "x-exposure": "permissioned",
         "x-permission": "crm:contacts:manage",
         "description": "Exposure: permission — crm:contacts:manage",
+        "deprecated": true,
+        "x-sunset": "2026-10-25",
+        "x-deprecation-link": "/party/parties/:partyId/contacts",
         "requestBody": {
           "required": true,
           "content": {
@@ -38358,6 +38393,9 @@
         "x-exposure": "permissioned",
         "x-permission": "crm:contacts:manage",
         "description": "Exposure: permission — crm:contacts:manage",
+        "deprecated": true,
+        "x-sunset": "2026-10-25",
+        "x-deprecation-link": "/party/contacts/:partyContactId",
         "requestBody": {
           "required": true,
           "content": {
@@ -38528,7 +38566,10 @@
         ],
         "x-exposure": "permissioned",
         "x-permission": "crm:contacts:manage",
-        "description": "Exposure: permission — crm:contacts:manage"
+        "description": "Exposure: permission — crm:contacts:manage",
+        "deprecated": true,
+        "x-sunset": "2026-10-25",
+        "x-deprecation-link": "/party/contacts/:partyContactId"
       }
     },
     "/contacts/{contactId}/roles": {
@@ -43257,7 +43298,27 @@
         ],
         "x-exposure": "permissioned",
         "x-permission": "crm:tasks:update",
-        "description": "Exposure: permission — crm:tasks:update"
+        "description": "Exposure: permission — crm:tasks:update",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "until": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                  }
+                },
+                "required": [
+                  "until"
+                ]
+              }
+            }
+          }
+        }
       }
     },
     "/crm/ingress/inbound": {
@@ -69155,7 +69216,8 @@
                 "required": [
                   "countryCode",
                   "periodKey"
-                ]
+                ],
+                "additionalProperties": false
               }
             }
           }
@@ -101744,7 +101806,32 @@
         ],
         "x-exposure": "permissioned",
         "x-permission": "inventory:ai:propose",
-        "description": "Exposure: permission — inventory:ai:propose"
+        "description": "Exposure: permission — inventory:ai:propose",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "variantId": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "warehouseId": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "variantId"
+                ]
+              }
+            }
+          }
+        }
       }
     },
     "/inventory/ai/reorder-proposal/confirm": {
@@ -101761,7 +101848,32 @@
         ],
         "x-exposure": "permissioned",
         "x-permission": "inventory:ai:propose",
-        "description": "Exposure: permission — inventory:ai:propose"
+        "description": "Exposure: permission — inventory:ai:propose",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "proposalId": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "token": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "proposalId",
+                  "token"
+                ]
+              }
+            }
+          }
+        }
       }
     },
     "/inventory/ai/supplier-delay": {
@@ -141642,7 +141754,8 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
@@ -141712,7 +141825,8 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
@@ -141757,7 +141871,8 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
@@ -141782,7 +141897,8 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
@@ -141827,7 +141943,8 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
@@ -141973,7 +142090,8 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
@@ -141998,7 +142116,8 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
@@ -142023,7 +142142,8 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
@@ -142048,7 +142168,8 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
@@ -163965,7 +164086,8 @@
                 },
                 "required": [
                   "rows"
-                ]
+                ],
+                "additionalProperties": false
               }
             }
           }
