@@ -174,6 +174,29 @@ export default function OperationsHubPage() {
         />
       ) : (
         <div className="flex flex-1 min-h-0 flex-col gap-4">
+          {/*
+            NEO-5. On a handheld this hub is the wrong screen: it is six tiles
+            leading to six desktop tables. The RF queue is offered first, and only
+            below `md`, because a supervisor on a laptop wants the cockpit and a
+            picker on a scanner wants the next task. Offered rather than
+            redirected - a tablet in a supervisor's hands is under `md` too, and
+            taking the cockpit away from them would be deciding who they are from
+            their screen width.
+          */}
+          {canReadStock && (
+            <Link
+              href="/inventory/rf"
+              className="md:hidden flex items-center gap-3 rounded-lg border border-border bg-card p-4"
+            >
+              <ListChecks className="h-5 w-5 shrink-0 text-muted-foreground" />
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-medium">My tasks</span>
+                <span className="block text-xs text-muted-foreground">
+                  One task at a time, sized for a scanner
+                </span>
+              </span>
+            </Link>
+          )}
           {loading ? (
             <StatCardGridSkeleton cols={4} count={Math.max(1, statCount)} />
           ) : (

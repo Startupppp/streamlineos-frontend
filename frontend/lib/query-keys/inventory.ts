@@ -189,6 +189,13 @@ export const inventoryQueryKeys = {
       k(...base, "inventory", "platformPurchaseOrders", "detail", platformPoId),
     asnsList: [...base, "inventory", "asns"] as const,
     asns: (filters?: Record<string, unknown>) => k(...base, "inventory", "asns", filters),
+    /** NEO-4. Params-less prefix plus the two shapes the screens read. */
+    handlingUnitsList: [...base, "inventory", "handlingUnits"] as const,
+    handlingUnits: (filters?: Record<string, unknown>) =>
+      k(...base, "inventory", "handlingUnits", filters),
+    handlingUnit: (handlingUnitId: number) =>
+      k(...base, "inventory", "handlingUnits", "detail", handlingUnitId),
+
     platformFillRateAll: [...base, "inventory", "platformFillRate"] as const,
     platformFillRate: (platformPoId: number) =>
       k(...base, "inventory", "platformFillRate", platformPoId),

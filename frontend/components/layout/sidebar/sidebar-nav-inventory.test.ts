@@ -37,8 +37,17 @@ import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 // inventory:stock:read, because that is what the pages behind it require and a
 // parent asking for less shows the entry to people who then hit
 // NoPermissionState.
+// Moved 2026-08-30 by NEO-2/NEO-3, NEO-4 and NEO-5: three inventory routes got
+// their first nav entries. "Quick commerce" (/inventory/quick-commerce, gated on
+// inventory:channels:manage) is where platform purchase orders from Blinkit,
+// Instamart and Zepto arrive and where fill rate is read. "Handling units"
+// (/inventory/handling-units, on inventory:stock:read) is the pallet, cage or
+// tote stock now stands on. "My tasks (RF)" (/inventory/rf, on
+// inventory:stock:read) is the one-task-at-a-time operator surface; it is gated
+// on the read key rather than on a write key because the queue itself is a read,
+// and each runner behind it re-gates on the key its own command needs.
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "c241cd6c9923ac84c40c862b407f0f0d40ddf0718993798b60b1d29787aa47e4";
+  "6d933487ec4e7a55d832f099e496d8dbf99f542420d7776ca4d74436fa9d4316";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {
