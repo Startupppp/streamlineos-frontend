@@ -811,3 +811,46 @@ under the preference. 40 static-import call sites remain and are recorded as OPE
 Nine commits across the two repos rather than one omnibus: KB chunk ACL + migrations, wired service
 extractions, the 227-file isolation sweep, new e2e suites, the OpenAPI param sweep, finance/scripts,
 the contracts sync, lane documentation, and the idempotency fix.
+
+## Session restart: 390 backend + 90 root files recovered from killed lanes
+Every lane died when the process exited. One file was killed mid-write —
+`crm/deals/win-loss/page.tsx` used `shouldReduceMotion` with no declaration, because the migration
+landed the usage before the hook. Both typechecks are clean after that one fix, so nothing else was
+truncated. Eight commits landed the recovered work.
+
+Also deleted a `transform_controllers.py` and its `__pycache__` a lane had left in the backend root.
+Scratch tooling does not belong in the tree.
+
+## OpenAPI: the substantive claim holds, the bookkeeping did not
+The lane reported "703 without contracts, all 550 genuinely payload-free" — two numbers that cannot
+both be right. Counted the document myself:
+
+- 3,546 operations total
+- **0** path-param operations without a schema
+- **0** query-or-body operations without a schema
+- 650 operations have no input surface at all, so there is nothing to document
+
+So the contract has no holes wherever an input exists, which is the claim that mattered. The 703 was
+`3546 - 2843` where 2,843 counts *Zod contracts applied* — a different denominator from "operations
+with a documented schema". Worth recording because the two get conflated easily and the smaller
+number reads like a gap that is not there.
+
+## Seven PRD items now found already done
+Membership revocation, admin route descendants, multi-org creation, cache collision tests, payroll
+profiles, the migration watermark, and now Workflows gating — 30 handlers already carrying exact
+catalog keys under a class-level guard, 28 hooks each on their own domain key, unknown routes failing
+closed. **The §28.2a queue is substantially stale**, and a lane that implements from it without
+checking current source will write code that is already there. Every lane brief now says to verify the
+premise first; that instruction has paid for itself seven times.
+
+## A test that was OOMing, not failing
+`workflows-gates.test.tsx` mocked `apiClient.get` with a response shape that was not a valid
+`AccessResponse`, so `useCan` evaluated `"key" in undefined`, threw, and React re-rendered until the
+worker died. It presented as a heavy flaky suite. **A suite that kills its worker is a broken double
+until proven otherwise** — and this one was probably contributing to the machine load that made the
+whole session sluggish.
+
+## Concurrency cut from 14 lanes to 4
+On request, to keep the machine responsive: single-worker jest runs, no concurrent heavy commands,
+incremental saves. The full-suite baseline is the heaviest job and is being held to run alone rather
+than alongside the others.
