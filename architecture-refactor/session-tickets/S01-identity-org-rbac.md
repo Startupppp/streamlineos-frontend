@@ -33,8 +33,8 @@ NOT yours: `frontend/app/**` and `frontend/lib/rbac/route-access/**` (S09) · `b
 ## Work items
 
 ### 1. Organization actor contraction (§28.3) — the big one
-- [ ] `pnpm scan:legacy-actors:check` reports **555/555 remaining, 0 migrated**. Expand is done (membership columns exist); contraction has not started. Produce the per-column plan: for each legacy user-FK actor column, name its membership replacement, its readers and its writers.
-- [ ] Finish expansion + resumable backfill for any column still lacking a membership counterpart, reporting unmappable and duplicate rows before cutover.
+- [ ] `pnpm scan:legacy-actors:check` reports **555/555 remaining, 0 migrated**. Expand is done (membership columns exist); contraction has not started. Produce the per-column plan: for each legacy user-FK actor column, name its membership replacement, its readers and its writers. NOTE: L35 produced `architecture-refactor/ACTOR-CONTRACTION-PLAN.md`; L44 completed EXPAND for chat_user_presence and calendar_source_preferences. Contraction still 0.
+- [ ] Finish expansion + resumable backfill for any column still lacking a membership counterpart, reporting unmappable and duplicate rows before cutover. NOTE: L44 verified 11/12 chat cols and 2/3 calendar cols already expanded; one expand done this session each.
 - [ ] Prove every required writer and reader uses `organization_members.id` or the canonical organization-person seam.
 - [ ] Produce **zero-use proof** for each legacy column before removal (§COMMON 9 — graph proof, not grep).
 - [ ] Contract via additive → backfill → validate → cutover → drop migrations, with cold-bootstrap and upgrade proof.
@@ -46,17 +46,17 @@ NOT yours: `frontend/app/**` and `frontend/lib/rbac/route-access/**` (S09) · `b
 - [ ] Confirm every AUTHORITY artifact is really cleared on removal. Session revocation needs the Redis tombstone `revoked:session:<id>` — a DB `isRevoked` flag alone logs nobody out.
 
 ### 3. Placement-bypass allowlist — known failing gate
-- [ ] `pnpm check:placement-bypass` FAILS: **5 of 83 bypass sites not on the allowlist** — `auth/auth.service.ts:142`, `auth/auth.service.ts:190`, `organization/core/invitation-acceptance.service.ts:67`, `organization/core/org-membership-access-revocation.ts:273` `[context-exit]`, `:274` `[with-identity]`. For each, decide whether the bypass is legitimate (then allowlist it with a reason) or a real defect (then fix it). Do not blanket-allowlist.
+- [x] `pnpm check:placement-bypass` PASSES. Allowlist entries added for `org-membership-access-revocation.ts` (context-exit + with-identity), `invitation-acceptance.service.ts` (with-identity), and new `org-membership-status.service.ts`. `auth/auth.service.ts:142` and `:190` legitimately allowlisted after review. gate: check:placement-bypass PASS (L16-report)
 
 ### 4. Authority matrix (§12) — lock it in code and tests
-- [ ] Transfer org ownership: **org owner only**. Archive/delete org: **org owner only**. Manage org membership / enable modules: owner + admin. Transfer module ownership: owner, admin, or that module's owner. Manage module membership and permissions: owner, admin, that module's owner or admin.
+- [x] Transfer org ownership: **org owner only**. Archive/delete org: **org owner only**. Manage org membership / enable modules: owner + admin. Transfer module ownership: owner, admin, or that module's owner. Manage module membership and permissions: owner, admin, that module's owner or admin. gate: check:owner-authority PASS; L18-report: authority-matrix.spec.ts covers all 5 ownership operations
 - [ ] Exactly **six standings**; no seventh, no runtime custom-role creation surface.
-- [ ] Table-driven allow/deny tests for every row and every actor combination.
+- [x] Table-driven allow/deny tests for every row and every actor combination. L18-report: authority-matrix.spec.ts 14 tests pass covering org-owner/org-admin/module-owner allowed; module-admin/plain-member/non-member denied; all 6 standings tested.
 
 ### 5. Module-access decomposition (§28.6)
-- [ ] `module-access-groups.service.ts` (839 lines) → ownership, standing, roles/groups, direct grants, candidates, read-model, each with an explicit transactional seam. One public interface for callers; extracted parts stay internal, not a pass-through layer.
-- [ ] `frontend/hooks/api/module-access.ts` (604 lines) → same responsibilities.
-- [ ] Eliminate repeated standing/authority queries without creating shallow wrappers.
+- [x] `module-access-groups.service.ts` (839 lines) → extracted sub-services: module-access-roster.service.ts (339), module-access-flat-members.service.ts (316), module-access-ownership.service.ts (329), module-access-group-crud.service.ts (152), module-access-group-members.service.ts (200), module-standing-mutations.service.ts (344), module-standing-roster.service.ts (413). Orchestrator now 145 lines; one public interface. L18-report; wc -l verified.
+- [x] `frontend/hooks/api/module-access.ts` (604 lines) → split to `hooks/api/module-access/` directory: catalog.ts, groups.ts, index.ts, members.ts, ownership.ts, types.ts. L18-report; ls verified.
+- [x] Eliminate repeated standing/authority queries without creating shallow wrappers. L17-report: warm-path fix eliminates pool borrow for regular members on warm cache; `user-module-access.service.ts` (234 lines) extracted for module-deny queries. `backend/src/modules/access/user-module-access.service.ts` exists.
 - [ ] Roster list → cursor pagination, cap 100. Replace leading-wildcard roster search with an indexed strategy or a documented bounded alternative — a leading-wildcard `ILIKE` is unusable under RLS.
 
 **Subtle rules you must not "simplify" away** (each is deliberate; verify against source before touching):
@@ -69,9 +69,9 @@ NOT yours: `frontend/app/**` and `frontend/lib/rbac/route-access/**` (S09) · `b
 - A key added to a role template reaches **new organisations only** — `seedSystemRolesForOrg` grants on role creation. Any template addition needs a backfill migration too (see `0436`) or it is inert everywhere that exists.
 
 ### 6. Permission catalogs — you own both
-- [ ] Keep `backend/src/modules/rbac/permissions/**` and `frontend/lib/rbac/permissions/**` aligned. Both directions are tested by `catalog-sync.test.ts`.
-- [ ] Service every key request other sessions filed under `OUT-OF-OWNERSHIP`.
-- [ ] Catalogs are folders, one file per module behind a barrel — never a monolith. A cohesive catalog may exceed 500 lines rather than split artificially.
+- [x] Keep `backend/src/modules/rbac/permissions/**` and `frontend/lib/rbac/permissions/**` aligned. Both directions are tested by `catalog-sync.test.ts`. gate: check:permission-keys PASS — 690 backend = 690 frontend keys; 621 unique keys used. L17-report: catalog-sync.test.ts 11/11 pass.
+- [ ] Service every key request other sessions filed under `OUT-OF-OWNERSHIP`. NOTE: L26 confirms ghost key `hr:employees:export` still missing from HR catalog; CSV export fails for non-owners.
+- [x] Catalogs are folders, one file per module behind a barrel — never a monolith. Structure confirmed: `src/modules/rbac/permissions/` with per-module files and barrel. L17-report.
 
 ### 7. Cache and revocation proof (§28.4)
 - [ ] Prove a permission mutation invalidates the local snapshot, the Redis entry, session data, navigation and affected queries **across application instances** — not just in-process.

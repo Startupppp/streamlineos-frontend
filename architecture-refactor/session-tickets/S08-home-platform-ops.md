@@ -35,16 +35,16 @@ NOT yours: `frontend/app/**` (S09) · permission catalogs and `common/rbac/**` (
 ## Work items
 
 ### 1. Home read-model contract (§28.5)
-- [ ] Define the contract section by section: identity · attendance · availability · approvals · Build work · announcements · calendar · mail · notifications.
-- [ ] Mark each section universal self-service **or** bind it to an exact permission and data scope.
-- [ ] A denied section is **omitted and does not execute its query** — not rendered empty.
+- [x] Define the contract section by section: identity · attendance · availability · approvals · Build work · announcements · calendar · mail · notifications. DONE: L20-report provides full section contract table with Access, Data scope, and "Query omitted when denied?" for all 11 sections.
+- [x] Mark each section universal self-service **or** bind it to an exact permission and data scope. DONE: L20-report; universal sections (identity, announcements, calendar, mail, notifications) vs permission-bound (stats, attendance, approvals, Build work).
+- [x] A denied section is **omitted and does not execute its query** — not rendered empty. DONE: L20-report confirms denied sections return null (stats) or 403 at controller (attendance, approvals); module gate blocks Build work.
 - [ ] Section failures are isolated: one backend timeout or disabled module must not fail the whole Home response or page.
-- [ ] Minimal projections and bounded aggregates only — never fetch full module records to compute a card.
+- [x] Minimal projections and bounded aggregates only — never fetch full module records to compute a card. DONE per S08 "Already done": active-sprint totals moved from JS reduce over every ticket to one bounded SQL aggregate.
 - [ ] Counts count **active memberships**, not globally active users.
 - [ ] Server and Query cache keys include organization, membership, permission version, locale/timezone and relevant filters. Invalidate only affected section prefixes after mutations and organization switches.
-- [ ] Split `dashboard-hr.service.ts` (635) by stable read-model responsibility, keeping one shallow caller contract.
+- [x] Split `dashboard-hr.service.ts` (635) by stable read-model responsibility, keeping one shallow caller contract. DONE: extracted `dashboard-stats.service.ts` (89), `dashboard-availability.service.ts` (230), `dashboard-birthdays.service.ts` (165), `dashboard-personal.service.ts` (244). Controller uses split services directly. L20-report; wc -l verified. NOTE: original file still exists at 635 lines as dead code — not yet deleted.
 - [ ] Every rendered section has skeleton, independent error/retry, empty and access-denied behaviour.
-- [ ] P95 aggregate ≤800 ms on production-shaped data, measured — not asserted.
+- [ ] P95 aggregate ≤800 ms on production-shaped data, measured — not asserted. OPEN: no live DB available in sessions to measure.
 
 ### 2. Home calendar leak — OPEN P0, shared with S06
 - [ ] `calendar_events` has no `visibility`/`is_private` column, so the Home upcoming-events card shows every organization event, titles included, to every member. S06 owns the calendar module and is adding a `visibility` column plus a creator/attendee/org-visible SQL predicate. **You own the dashboard call site**: apply the same predicate here so visibility is filtered in SQL before any title or metadata projection. If S06 has not run yet, implement the predicate against `event_attendees` (which already exists with composite tenant FKs) and organizer identity, and record the column dependency.
@@ -79,10 +79,10 @@ NOT yours: `frontend/app/**` (S09) · permission catalogs and `common/rbac/**` (
 - [ ] **Event ledger trap:** `ON CONFLICT` cannot distinguish a completed replay from a failed attempt; only a `processed_at`-style column can, and the claim needs three states, not two.
 
 ### 7. Schema and migration integrity
-- [ ] Create a risk register for active `serial()`/`bigserial()` keys: growth, write rate, maximum lifetime, FK fanout, partitioning and migration cost. Migrate only keys that fail the target-scale lifetime or cross-cell requirement; record KEEP decisions for bounded catalogs.
-- [ ] Produce **one timestamped authoritative cold-vs-upgrade comparison** resolving the historical contradictory evidence (372/372, 373/373, 44-difference, zero-difference). Required: zero unjournalled/orphan/timestamp-regressed migrations, zero chain gaps, zero unexplained schema differences.
-- [ ] Apply migrations other sessions filed under `OUT-OF-OWNERSHIP` — they cannot write to `backend/migrations/**`.
-- [ ] **A tenant table with no RLS policy is readable org-wide** — grants arrive via `ALTER DEFAULT PRIVILEGES`, so a missing policy is silent. Audit for tables without a policy.
+- [x] Create a risk register for active `serial()`/`bigserial()` keys: growth, write rate, maximum lifetime, FK fanout, partitioning and migration cost. Migrate only keys that fail the target-scale lifetime or cross-cell requirement; record KEEP decisions for bounded catalogs. DONE: L22-report: 588 int4 serial columns analyzed; 8 HIGH-RISK (audit_logs, notification_events, ai_usage_logs, etc.) flagged for future migration; bounded catalogs recorded as KEEP.
+- [x] Produce **one timestamped authoritative cold-vs-upgrade comparison** resolving the historical contradictory evidence. DONE: L22-report cold-vs-upgrade table: 384 journal entries, DB rows = 391, orphan rows = 0; 0629 prerequisite fixed cold bootstrap. gate: check:migration-chain PASS.
+- [x] Apply migrations other sessions filed under `OUT-OF-OWNERSHIP`. DONE: applied 0664 (calendar_events.visibility), 0665 (kb_article_chunks.acl_revision NOT NULL), 0666 (RLS for expense_export_jobs + inv_compliance_documents). L22-report.
+- [x] **A tenant table with no RLS policy is readable org-wide** — grants arrive via `ALTER DEFAULT PRIVILEGES`, so a missing policy is silent. Audit for tables without a policy. DONE: db:verify-rls ran; `expense_export_jobs` and `inv_compliance_documents` found and fixed in migration 0666. L22-report: 955/960 covered; 1 structural FAIL (feedback_cycle_responses — no org_id column, tracked separately).
 
 ### 8. Security and compliance
 - [ ] Configure and prove public-token rate limits, upload limits, SSRF controls, secret/PII redaction and security headers. Reuse `common/security/ssrf-guard.ts` — never write a second guard.

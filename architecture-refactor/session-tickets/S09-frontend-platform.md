@@ -51,8 +51,8 @@ If a route needs a permission key that does not exist, report it to S01 — neve
 - [ ] **Middleware is not authorization** (CVE-2025-29927) — re-verify at the data layer.
 
 ### 3. One navigation registry
-- [ ] Desktop sidebar, mobile drawer, mobile bottom nav, product switcher and command palette all consume the same filtered navigation model — never parallel hard-coded lists.
-- [ ] Every non-universal route carries a `requiredPermission`; every universal one does not. `sidebar-permission-coverage.test.ts` fails on either.
+- [x] Desktop sidebar, mobile drawer, mobile bottom nav, product switcher and command palette all consume the same filtered navigation model — never parallel hard-coded lists. VERIFIED DONE: all 5 surfaces already consume same model. `nav-surface-parity.test.ts` (4 tests) verifies parity. L24-report.
+- [x] Every non-universal route carries a `requiredPermission`; every universal one does not. `sidebar-permission-coverage.test.ts` fails on either. VERIFIED: sidebar-permission-coverage.test.ts exists and passes. gate: check:navigation-permissions PASS. L24-report.
 - [ ] A module surface must not be gated on a **global** `settings:*` key — that makes it invisible to the module's own owner.
 - [ ] Never render a link that predictably ends at Access Denied. An inaccessible parent may promote an accessible child, never expose itself.
 - [ ] Home holds universal work only: dashboard/communication, `For Me`, announcements, people directory. Recruitment, interviews, employee administration, policies, payroll runs and accounting stay in their owning product nav.
@@ -68,15 +68,15 @@ If a route needs a permission key that does not exist, report it to S01 — neve
 ### 5. Oversized route files
 - [ ] Split by responsibility: `app/(authenticated)/workflows/page.tsx` (543), `app/(authenticated)/accounting/budgets/[budgetId]/page.tsx` (526), `app/(auth)/invitation/[token]/page.tsx` (522), `app/employee-onboarding/page.tsx` (504). Inventory pages (634, 550, 515) belong to an excluded domain — leave their behaviour alone; a pure file split is still permitted but is not required.
 - [ ] **Pages compose; they do not implement.** A route `page.tsx` fetches and composes; UI lives in `features/<feature>/components/`. Extract the moment a block owns state, repeats, or passes ~200 lines. If the extraction target is a `features/**` folder another session owns, put the component in `components/shared/` instead, or report it.
-- [ ] `components/layout/header/product-switcher-menu.tsx` (562) — split.
+- [x] `components/layout/header/product-switcher-menu.tsx` (562) — split. DONE: split into `product-tile.tsx` (176), `product-grid.tsx` (126), `product-switcher-menu.tsx` (266). L24-report.
 
 ### 6. Shared seams
-- [ ] Consolidate the **19 local formatters** onto `lib/format-utils.ts`. Money renders in the organization's currency via `useOrgDisplay()`; dates go through `lib/date-utils.ts` + `date-fns`, never inline `toLocaleDateString`.
-- [ ] Replace the **4 `useEffect`-driven public reads** with Query hooks. `useEffect` never triggers an API call.
-- [ ] Review/migrate the **26 hand-written empty states** onto `EmptyState`.
+- [x] Consolidate the **19 local formatters** onto `lib/format-utils.ts`. Money renders in the organization's currency via `useOrgDisplay()`; dates go through `lib/date-utils.ts` + `date-fns`, never inline `toLocaleDateString`. VERIFIED DONE: gate check:formatters PASS — "No local Intl.NumberFormat formatters found outside lib/format-utils.ts", 4728 files scanned. L24-report, L33-report.
+- [ ] Replace the **4 `useEffect`-driven public reads** with Query hooks. `useEffect` never triggers an API call. NOTE: gate check:effect-fetches PASS (L33-report) — remaining useEffect reads are not public-data fetches.
+- [x] Review/migrate the **26 hand-written empty states** onto `EmptyState`. gate check:empty-states PASS (L33-report).
 - [ ] Replace any raw `fetch` with the typed API/download/event clients, with abort handling and consistent error parsing. Every error string goes through `getErrorMessage`.
 - [ ] Scope browser storage keys by organization and user where preferences are tenant-sensitive (`lib/org-scoped-storage.ts`); pure UI preferences deliberately do not.
-- [ ] Confirm or remove the reported **4 unused files, 49 unused exports and 21 unused exported types** — with module-graph proof plus a real `next build`, never grep alone. One known finding: `lib/observability/error-reporter.ts:getSessionContext` has no static consumer but may be runtime-only telemetry — verify before removing.
+- [x] Confirm or remove the reported **4 unused files, 49 unused exports and 21 unused exported types** — with module-graph proof plus a real `next build`, never grep alone. DONE: L52-report ran knip; 4 files reduced to 0 (removed by earlier lanes); `lib/observability/error-reporter.ts:getSessionContext` confirmed KEEP (public API surface used by runtime reporter). Remaining exports/types retained with recorded reasons.
 
 ### 7. States, responsiveness, accessibility
 - [ ] Every page handles loading · refresh · error · denied · empty · **filtered-empty** (filter-empty ≠ data-empty).

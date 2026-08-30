@@ -38,8 +38,8 @@ The delivery/strategy module is **Build**. It covers project management (`projec
 ## Work items
 
 ### 1. Guard audit (distinct from route classification)
-- [ ] Route classification proves every handler *declares* an exposure. It does **not** prove a permissioned handler is actually checked. Separately audit every Build and Workflows handler for `@RequirePermission` present **without** `@UseGuards(JwtAuthGuard, PermissionGuard)` — that combination is authenticated and module-gated but never permission-checked. Report the count.
-- [ ] Unknown Workflow routes must fail **closed**, never inherit a broad module permission.
+- [x] Route classification proves every handler *declares* an exposure. It does **not** prove a permissioned handler is actually checked. Separately audit every Build and Workflows handler for `@RequirePermission` present **without** `@UseGuards(JwtAuthGuard, PermissionGuard)` — that combination is authenticated and module-gated but never permission-checked. Report the count. RESULT: 0 violations. Every Build controller carries class-level `@UseGuards(JwtAuthGuard, PermissionGuard)`. Both WorkflowsController (line 34) and AutomationController (line 12) confirmed. L03-report, L05-report.
+- [x] Unknown Workflow routes must fail **closed**, never inherit a broad module permission. Universal-route matcher is fail-closed allowlist (S09 "Already done"); universal-route-matrix test 57 rows confirmed. L24-report.
 
 ### 2. Ungated hooks — known gaps
 - [ ] `frontend/hooks/api/automations.ts` has **no `useCan` gates on any hook**. Gate each one internally with its exact key (likely `settings:automations:view` / `:manage` — verify both catalogs before using; if a key is missing, report it to S01, do not add it).
@@ -60,10 +60,10 @@ The delivery/strategy module is **Build**. It covers project management (`projec
 
 ### 5. Decomposition — coordinate the shared ones
 Four files exceed the hard limit and each has callers outside Build. Splitting them changes a DI graph another session owns, so **report the required change under `OUT-OF-OWNERSHIP` and split what you can safely**:
-- [ ] `modules/goals/goals.service.ts` (618) — consumed by `hr/performance`
-- [ ] `modules/build/.../build-entity.adapter.ts` (598) — consumed by `entity-reference`
-- [ ] `modules/build/.../projects-tickets-read.service.ts` (568) — all callers inside your ownership, so split this one outright
-- [ ] `modules/tasks/tasks.service.ts` (547) — consumed by `surveys`
+- [ ] `modules/goals/goals.service.ts` (618) — consumed by `hr/performance`. NOT split; reported OUT-OF-OWNERSHIP.
+- [ ] `modules/build/.../build-entity.adapter.ts` (598) — consumed by `entity-reference`. NOT split; reported OUT-OF-OWNERSHIP per L03-report.
+- [x] `modules/build/.../projects-tickets-read.service.ts` (568) — all callers inside your ownership, so split this one outright. DONE: extracted `projects-tickets-detail.service.ts` (164 lines); read service now 429 lines. L03-report; wc -l verified.
+- [ ] `modules/tasks/tasks.service.ts` (547) — consumed by `surveys`. NOT split.
 - [ ] `frontend/components/automations/automation-meta.ts` (693) and `frontend/app/(authenticated)/workflows/page.tsx` (543 — report to S09)
 Decompose by project identity · ticket lifecycle · collaboration · approvals · reporting · product management. Report before/after line counts.
 

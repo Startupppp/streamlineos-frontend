@@ -41,16 +41,16 @@ NOT yours: `frontend/app/**` (S09) · permission catalogs (S01) · `backend/src/
 ## Work items
 
 ### 1. Retrieval authorization — the headline
-- [ ] Confirm ACL is enforced **inside** SQL/search/vector retrieval before top-k selection, not applied to results afterwards. Read the retrieval path end to end and quote the predicate.
-- [ ] Index entries carry organization, **ACL revision** and content revision.
-- [ ] **Known trap:** the KB ACL revision gate has an `IS NULL` arm that skips the gate entirely. After the revision column was added, every pre-existing chunk has a NULL revision — so the gate is inert for all existing content. Verify whether this is still true; if so, backfill the revisions and remove the `IS NULL` bypass, or make NULL fail closed.
-- [ ] Chatbot citations resolve only to **authorized immutable revisions**. Conversations are membership-scoped.
+- [x] Confirm ACL is enforced **inside** SQL/search/vector retrieval before top-k selection, not applied to results afterwards. Read the retrieval path end to end and quote the predicate. DONE: ACL JOIN enforced before `.limit(pool * 4)` top-k. Tenant, space membership, published status, and restriction filter are WHERE predicates. L09-report.
+- [x] Index entries carry organization, **ACL revision** and content revision. DONE: `kb-chunks.ts:53` now `aclRevision: integer("acl_revision").notNull().default(1)` (migration 0665 applied). L22-report; L09-report.
+- [x] **Known trap:** the KB ACL revision gate has an `IS NULL` arm that skips the gate entirely. FIXED: `kb-search.service.ts:302` and `:373` changed from `IS NULL OR =` to strict `eq(kbArticleChunks.aclRevision, kbArticles.aclRevision)`. NULL chunks now fail closed. L09-report; grep confirmed.
+- [ ] Chatbot citations resolve only to **authorized immutable revisions**. Conversations are membership-scoped. NOTE: `kb_page_favorites`, `kb_page_visits`, `kb_page_reviews` gained membership actor columns (migrations 0661/0662 per "Already done"). Chatbot citation ACL review not completed.
 
 ### 2. Search under RLS
-- [ ] **A text index is unusable under RLS and `LEAKPROOF` is impossible on Neon** — no true superuser exists, so `ALTER FUNCTION … LEAKPROOF` fails 42501 even in the console. Never propose it.
-- [ ] The one escape is a `SECURITY DEFINER` function owned by the BYPASSRLS owner, valid only with all five conditions: org from `app.current_org_id()` (**never a parameter**, so it fails closed with no GUC) · returns **ids only** · the caller's query still runs under RLS with its DataScope · `REVOKE ALL … FROM PUBLIC` + `GRANT EXECUTE` to the app role · a `LIMIT` argument, with the caller requesting `cap + 1` and falling back to `ILIKE` at the cap. Canonical example: `app.search_ticket_ids`, migrations `0424`/`0425`.
-- [ ] Five such functions already exist and **global search ignores them** — wire global search to the security-definer seam, or record why not.
-- [ ] Replace leading-wildcard `ILIKE` search with trigram/FTS or the seam above.
+- [x] **A text index is unusable under RLS and `LEAKPROOF` is impossible on Neon** — no true superuser exists, so `ALTER FUNCTION … LEAKPROOF` fails 42501 even in the console. Never propose it. VERIFIED: No LEAKPROOF attempts. L09-report confirms awareness.
+- [x] The one escape is a `SECURITY DEFINER` function owned by the BYPASSRLS owner, valid only with all five conditions: org from `app.current_org_id()` (**never a parameter**, so it fails closed with no GUC) · returns **ids only** · the caller's query still runs under RLS with its DataScope · `REVOKE ALL … FROM PUBLIC` + `GRANT EXECUTE` to the app role · a `LIMIT` argument, with the caller requesting `cap + 1` and falling back to `ILIKE` at the cap. Canonical example: `app.search_ticket_ids`, migrations `0424`/`0425`. VERIFIED EXISTING: `app.search_kb_article_ids` (migration 0453) and `app.search_kb_page_ids` (migration 0498) are wired in retrieval. L09-report.
+- [x] Five such functions already exist and **global search ignores them** — wire global search to the security-definer seam, or record why not. RECORDED: global search (`search.service.ts`) covers tickets/leads/deals/contacts/clients only — KB is excluded by design; the KB-specific seam functions are used by KB retrieval directly. L09-report.
+- [ ] Replace leading-wildcard `ILIKE` search with trigram/FTS or the seam above. NOTE: KB uses the seam (DONE for KB); other modules not addressed.
 
 ### 3. Revisions and lifecycle
 - [ ] Documents have immutable revisions, author **membership**, publication state and audit history.
@@ -86,7 +86,7 @@ NOT yours: `frontend/app/**` (S09) · permission catalogs (S01) · `backend/src/
 - [ ] Cover every uncovered service in your trees (bucket B08 minus workflows, plus support/csat/surveys from B09 — roughly 75 services). Each test needs a cross-tenant DENY case **and** a same-tenant CONTROL that returns the row.
 
 ### 10. Guard audit
-- [ ] Audit every handler in your trees for `@RequirePermission` **without** `@UseGuards(JwtAuthGuard, PermissionGuard)`. Report the count. KB read handlers that are intentionally universal must carry `@Universal()` and have the guard moved, not the key deleted.
+- [x] Audit every handler in your trees for `@RequirePermission` **without** `@UseGuards(JwtAuthGuard, PermissionGuard)`. Report the count. RESULT: 0 violations. All KB controllers carry `@UseGuards(JwtAuthGuard, PermissionGuard)` at class level; `KbPageCommentsController` uses per-method `@UseGuards(PermissionGuard)` for future universal reads; `KbPublicPagesController` uses `@Public()`. gate: check:route-classification PASS (0 undeclared). L09-report.
 
 ## Validation (run once, at the end)
 

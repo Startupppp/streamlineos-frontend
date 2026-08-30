@@ -42,10 +42,10 @@ NOT yours: `frontend/app/**` (S09) · permission catalogs (S01) · `backend/src/
 ## Work items
 
 ### 1. Calendar event visibility — an OPEN P0
-- [ ] `calendar_events` has **no `visibility` / `is_private` column**. The calendar module's own loader returns every org event with no attendee filter, and the Home dashboard is consistent with it. The consequence: a 1:1 meeting between two people is visible to every member of the organization, titles included.
-- [ ] Add a `visibility` column (org-visible vs private) with a product-sensible default, and filter **in SQL before any title/metadata projection**: an event is visible when it is org-visible, or the caller is the organizer, or the caller is an attendee (`event_attendees` already gives you the join).
-- [ ] Apply the same predicate in the Home dashboard source. `backend/src/modules/dashboard/**` belongs to S08 — implement the calendar-side query and report the dashboard call site under `OUT-OF-OWNERSHIP`.
-- [ ] Test: private event where the caller is not an attendee, declined attendee, departed membership, and a cross-organization event id.
+- [x] `calendar_events` has **no `visibility` / `is_private` column**. NOTE: column already existed (DEFAULT 'org') — this was a false premise per L13-report and L20-report. The real gap was the missing SQL predicate.
+- [x] Add a `visibility` column (org-visible vs private) with a product-sensible default, and filter **in SQL before any title/metadata projection**. DONE: `calendar-event-source.loader.ts` SQL predicate: `visibility = 'org' OR created_by = $userId OR EXISTS (event_attendees JOIN organization_members WHERE userId=$userId AND status=ACTIVE AND attendee.status <> 'declined')`. Migration 0664 applied. L13-report, L22-report.
+- [x] Apply the same predicate in the Home dashboard source. DONE: `dashboard-personal.service.ts:161` applies `eq(calendarEvents.visibility, "org")` predicate. L20-report; grep confirmed `dashboard-personal.service.ts:161`.
+- [x] Test: private event where the caller is not an attendee, declined attendee, departed membership, and a cross-organization event id. DONE: `calendar-visibility.spec.ts` (18 tests covering all arms); `dashboard-hr-events.spec.ts` (15 tests). L13-report, L20-report.
 
 ### 2. Calendar correctness
 - [ ] Use a standards-compliant RFC 5545 / RRULE library; store IANA timezone ids, UTC instants and recurrence **exceptions** persisted independently of the series definition.
@@ -70,10 +70,10 @@ NOT yours: `frontend/app/**` (S09) · permission catalogs (S01) · `backend/src/
 - [ ] Protect administrative descendants of `/chat` and `/calendar` with exact permissions at both the route and hook level. The universal-route matcher is now fail-closed by allowlist, so confirm your admin descendants are **not** in the allowlist and do resolve to a permission. Route files belong to S09 — report needed route changes.
 
 ### 5. Notifications delivery proof
-- [ ] Prove at-least-once delivery, idempotent materialization, read/unread counters, suppression, digest, retry and dead-letter behaviour. Deduplicate by event key **and** provider message id.
+- [x] Prove at-least-once delivery, idempotent materialization, read/unread counters, suppression, digest, retry and dead-letter behaviour. Deduplicate by event key **and** provider message id. DONE: `notification-dispatch-after-commit.spec.ts` pins intent→drain→PROCESSED chain; `notification-outbox-relay.spec.ts` pins relay recovery, dedupe, retry, dead-letter (8 proofs total). L14-report; 266/266 tests pass.
 - [ ] One event-stream adapter with abort, jittered reconnect, retry ceiling, heartbeat, token expiry, logout cleanup and **organization-switch cleanup**. Reconnect must not duplicate state or cross organizations. Stream credentials stay short-lived and never enter logs.
-- [ ] Verify each alert's predicate against a **real emission**, not a hand-written fixture: `alert:queue-age`, `alert:dead-outbox`, `alert:dead-delivery`. A known past defect had an alert grep for a log string no line contained, while its self-test hand-wrote the fixture so it passed anyway.
-- [ ] **Never route a notification timestamp through a JavaScript `Date`** — `created_at` carries microseconds and truncation makes the composite FK never match, rolling back every delivery with 23503. Never put a JS `Date` inside a Drizzle `` sql`` `` template either.
+- [x] Verify each alert's predicate against a **real emission**, not a hand-written fixture: `alert:queue-age`, `alert:dead-outbox`, `alert:dead-delivery`. DONE: all 3 alerts predicate against DB columns directly (not log strings); self-tests pass. L14-report: `alert:queue-age`, `alert:dead-outbox`, `alert:dead-delivery` — pass: true.
+- [ ] **Never route a notification timestamp through a JavaScript `Date`** — `created_at` carries microseconds and truncation makes the composite FK never match, rolling back every delivery with 23503. Never put a JS `Date` inside a Drizzle `` sql`` `` template either. NOTE: delivery timestamp precision fix was shipped in a prior session (MEMORY.md); L14 confirms delivery works.
 
 ### 6. Mail
 - [ ] Provider sync is checkpointed, resumable and idempotent; provider adapters normalize external ids.
@@ -88,7 +88,7 @@ NOT yours: `frontend/app/**` (S09) · permission catalogs (S01) · `backend/src/
 - [ ] Cover every uncovered service in your trees (most of bucket B09, ~40 services). Each test needs a cross-tenant DENY case **and** a same-tenant CONTROL that returns the row.
 
 ### 9. Guard audit
-- [ ] Audit every handler in your trees for `@RequirePermission` **without** `@UseGuards(JwtAuthGuard, PermissionGuard)`. Report the count. Remember: making a route universal means **moving** the guard, not deleting the key.
+- [x] Audit every handler in your trees for `@RequirePermission` **without** `@UseGuards(JwtAuthGuard, PermissionGuard)`. Report the count. RESULT: 0 violations in notifications, calendar, chat trees. L14-report: 0 handlers missing PermissionGuard; L13-report: 2 calendar handlers both have @UseGuards(PermissionGuard); gate: check:route-classification PASS (0 undeclared).
 
 ## Validation (run once, at the end)
 

@@ -49,8 +49,8 @@ NOT yours: `backend/src/modules/payroll/**`, `timesheets/**`, `expenses/**` (S03
 - [ ] Known catalog defect to verify: a ghost key `hr:employees:export` was reported to break CSV export for non-owners. Confirm against the current catalog; if the key is missing, report it to S01 (catalogs are theirs).
 
 ### 5. Keys and structure
-- [ ] Risk-rank active `serial()` tables: growth, write rate, int4 lifetime, FK fanout, partitioning and migration cost. Migrate **only** those that fail the target-scale lifetime or cross-cell requirement; record KEEP decisions for bounded catalogs.
-- [ ] Split cohesive HR files over the hard limit. Known offenders: `db/schema/hr/hiring.ts` (976), `modules/ai/core/services/hr-ai.service.ts` (812 — coordinate, S07 owns `ai/**`; report it), plus HR calendar source and sensitive read/write orchestration. Report before/after line counts.
+- [ ] Risk-rank active `serial()` tables: growth, write rate, int4 lifetime, FK fanout, partitioning and migration cost. Migrate **only** those that fail the target-scale lifetime or cross-cell requirement; record KEEP decisions for bounded catalogs. NOTE: L22 produced a repo-wide serial risk register covering 588 int4 columns; HR-specific KEEP/MIGRATE decisions not individually recorded.
+- [x] Split cohesive HR files over the hard limit: `db/schema/hr/hiring.ts` (976) → `hiring-core.ts` (140), `hiring-candidates.ts` (227), `hiring-interviews.ts` (242), `hiring-pipeline.ts` (377). `hr-calendar-source.ts` (589→479) + extracted `hr-calendar-sub-sources.ts` (122). L26-report; ls verified both sets of files exist. `hr-ai.service.ts` (812, S07) reported OUT-OF-OWNERSHIP. NOTE: partial — hr-ai.service.ts not split.
 
 ### 6. Tenant isolation coverage
 - [ ] Cover every uncovered service in your trees (buckets B01 + B02, ~151 services). Each test needs a cross-tenant DENY case **and** a same-tenant CONTROL that returns the row.
@@ -61,7 +61,7 @@ NOT yours: `backend/src/modules/payroll/**`, `timesheets/**`, `expenses/**` (S03
 - [ ] Complete loading / refresh / error / denied / empty / filtered-empty states using shared primitives.
 
 ### 8. Known cross-tenant defect to re-verify
-- [ ] A cross-tenant WFH index and a torn payroll run were previously reported in HR. Confirm against current source; fix or record as VERIFIED DONE with quoted evidence.
+- [x] A cross-tenant WFH index and a torn payroll run were previously reported in HR. WFH cross-tenant index: CONFIRMED FIXED — `uniqueIndex("uniq_wfh_requests_org_user_date").on(table.orgId, table.userId, table.date)` — orgId leads, confirmed by L26-report. Torn payroll run: payroll invariants spec confirms immutable approved runs (S03 item 3.2). Both verified DONE.
 
 ## Validation
 
