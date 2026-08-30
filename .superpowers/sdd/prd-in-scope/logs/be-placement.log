@@ -81,8 +81,8 @@ ALLOWLISTED — each has a reason:
   SKIP  [with-identity]  src/modules/organization/core/org-profile.service.ts:118  — lists all orgs a user belongs to, which is a cross-org identity read that cannot run under a single org's tenant context
   SKIP  [no-tenant-transaction]  src/modules/organization/core/organization.controller.ts:116  — identity-scoped organization discovery and switching; each handler opens its own withIdentity or runInTenantTransaction before touching the database
   SKIP  [no-tenant-transaction]  src/modules/organization/core/organization.controller.ts:124  — identity-scoped organization discovery and switching; each handler opens its own withIdentity or runInTenantTransaction before touching the database
-  SKIP  [no-tenant-transaction]  src/modules/organization/core/organization.controller.ts:147  — identity-scoped organization discovery and switching; each handler opens its own withIdentity or runInTenantTransaction before touching the database
-  SKIP  [no-tenant-transaction]  src/modules/organization/core/organization.controller.ts:337  — identity-scoped organization discovery and switching; each handler opens its own withIdentity or runInTenantTransaction before touching the database
+  SKIP  [no-tenant-transaction]  src/modules/organization/core/organization.controller.ts:146  — identity-scoped organization discovery and switching; each handler opens its own withIdentity or runInTenantTransaction before touching the database
+  SKIP  [no-tenant-transaction]  src/modules/organization/core/organization.controller.ts:336  — identity-scoped organization discovery and switching; each handler opens its own withIdentity or runInTenantTransaction before touching the database
   SKIP  [context-exit]  src/modules/organization/setup/org-setup.service.ts:108  — post-setup work fires after the setup transaction commits via setImmediate; running outside the ambient context is the design
   SKIP  [with-identity]  src/modules/organization/setup/org-setup.service.ts:197  — creates the first org membership under user identity, before the new org's tenant context exists
   SKIP  [with-identity]  src/modules/organization/setup/org-setup.service.ts:450  — creates the first org membership under user identity, before the new org's tenant context exists
@@ -93,8 +93,8 @@ DATABASE BYPASS NOT ALLOWLISTED:
   FAIL  [with-identity]  src/modules/auth/auth.service.ts:142
   FAIL  [with-identity]  src/modules/auth/auth.service.ts:190
   FAIL  [with-identity]  src/modules/organization/core/invitation-acceptance.service.ts:67
-  FAIL  [context-exit]  src/modules/organization/core/org-membership-access-revocation.ts:273
-  FAIL  [with-identity]  src/modules/organization/core/org-membership-access-revocation.ts:274
+  FAIL  [context-exit]  src/modules/organization/core/org-membership-access-revocation.ts:314
+  FAIL  [with-identity]  src/modules/organization/core/org-membership-access-revocation.ts:315
 
 FAIL — 5 of 83 bypass site(s) not on the allowlist.
  ELIFECYCLE  Command failed with exit code 1.

@@ -6,7 +6,7 @@ Building import graph (scanning all TS/TSX files)...
 
 === Dead Code Classification ===
 
-knip raw: files=0 exports=47 types=21
+knip raw: files=0 exports=58 types=37
 
 DEAD (0):
   (none)
@@ -34,7 +34,7 @@ RETAINED-BY-CONTRACT (18):
 RETAINED-BY-CONVENTION (0):
   (none)
 
-UNPROVEN (50):
+UNPROVEN (77):
   [export] lib/observability/index.ts:getSessionContext  — no consumer found statically; runtime telemetry required
   [export] lib/observability/index.ts:resetErrorReporter  — no consumer found statically; runtime telemetry required
   [export] lib/observability/index.ts:redact  — no consumer found statically; runtime telemetry required
@@ -56,7 +56,26 @@ UNPROVEN (50):
   [type] lib/design-tokens/index.ts:SpacingRole  — no consumer found statically; runtime telemetry required
   [type] lib/design-tokens/index.ts:DensitySpacingRole  — no consumer found statically; runtime telemetry required
   [export] lib/observability/error-reporter.ts:getSessionContext  — no consumer found statically; runtime telemetry required
+  [export] hooks/api/workflows.ts:useWorkflowSchedules  — no consumer found statically; runtime telemetry required
+  [export] hooks/api/workflows.ts:useCreateSchedule  — no consumer found statically; runtime telemetry required
+  [export] hooks/api/workflows.ts:useWorkflowSecrets  — no consumer found statically; runtime telemetry required
+  [export] hooks/api/workflows.ts:useCreateWorkflowSecret  — no consumer found statically; runtime telemetry required
+  [export] hooks/api/workflows.ts:useDeleteWorkflowSecret  — no consumer found statically; runtime telemetry required
+  [type] hooks/api/workflows.ts:TriggerType  — no consumer found statically; runtime telemetry required
+  [type] hooks/api/workflows.ts:ApprovalStatus  — no consumer found statically; runtime telemetry required
+  [type] hooks/api/workflows.ts:WorkflowSortField  — no consumer found statically; runtime telemetry required
+  [type] hooks/api/workflows.ts:SortDirection  — no consumer found statically; runtime telemetry required
+  [type] hooks/api/workflows.ts:WorkflowVersion  — no consumer found statically; runtime telemetry required
+  [type] hooks/api/workflows.ts:WorkflowAnalytics  — no consumer found statically; runtime telemetry required
+  [type] hooks/api/workflows.ts:WorkflowCursorPage  — no consumer found statically; runtime telemetry required
+  [type] hooks/api/workflows.ts:WorkflowListParams  — no consumer found statically; runtime telemetry required
+  [type] hooks/api/workflows.ts:ExecutionListParams  — no consumer found statically; runtime telemetry required
   [export] types/crm/autonomy.ts:ROUTINE_KINDS  — CRM/Inventory excluded from PRD scope; runtime telemetry required
+  [export] hooks/api/workflows-secrets.ts:useWorkflowSecrets  — no consumer found statically; runtime telemetry required
+  [export] hooks/api/workflows-secrets.ts:useCreateWorkflowSecret  — no consumer found statically; runtime telemetry required
+  [export] hooks/api/workflows-secrets.ts:useDeleteWorkflowSecret  — no consumer found statically; runtime telemetry required
+  [export] hooks/api/workflows-schedules.ts:useWorkflowSchedules  — no consumer found statically; runtime telemetry required
+  [export] hooks/api/workflows-schedules.ts:useCreateSchedule  — no consumer found statically; runtime telemetry required
   [export] lib/rbac/owner-only-operations.ts:OWNER_ONLY_OPERATION_IDS  — no consumer found statically; runtime telemetry required
   [export] lib/rbac/owner-only-operations.ts:canPerformOwnerOnly  — no consumer found statically; runtime telemetry required
   [export] hooks/api/crm/metadata.ts:resolveStage  — CRM/Inventory excluded from PRD scope; runtime telemetry required
@@ -64,19 +83,20 @@ UNPROVEN (50):
   [export] lib/constants/roles.ts:ADMIN_ROLES  — no consumer found statically; runtime telemetry required
   [export] lib/renderer/reference-route.ts:LINKABLE_REFERENCE_DOMAINS  — no consumer found statically; runtime telemetry required
   [export] hooks/api/party/subjects.ts:useDeleteSubject  — no consumer found statically; runtime telemetry required
-  [export] hooks/api/hr/dashboard.ts:useHrDashboardMetrics  — no consumer found statically; runtime telemetry required
-  [export] hooks/api/hr/dashboard.ts:useHrLeaveCalendar  — no consumer found statically; runtime telemetry required
-  [export] hooks/api/hr/dashboard.ts:useHrOnboardingStatus  — no consumer found statically; runtime telemetry required
   [export] hooks/api/crm/autonomy.ts:useAutonomyReviewQueue  — CRM/Inventory excluded from PRD scope; runtime telemetry required
   [export] hooks/api/crm/autonomy.ts:useMarkReviewed  — CRM/Inventory excluded from PRD scope; runtime telemetry required
   [export] hooks/api/crm/autonomy.ts:useAutonomySettings  — CRM/Inventory excluded from PRD scope; runtime telemetry required
   [export] hooks/api/crm/autonomy.ts:useUpdateAutonomySettings  — CRM/Inventory excluded from PRD scope; runtime telemetry required
+  [export] hooks/api/hr/dashboard.ts:useHrDashboardMetrics  — no consumer found statically; runtime telemetry required
+  [export] hooks/api/hr/dashboard.ts:useHrLeaveCalendar  — no consumer found statically; runtime telemetry required
+  [export] hooks/api/hr/dashboard.ts:useHrOnboardingStatus  — no consumer found statically; runtime telemetry required
   [export] hooks/api/crm/activity-timeline.ts:useActivityParticipants  — CRM/Inventory excluded from PRD scope; runtime telemetry required
   [export] hooks/api/crm/activity-timeline.ts:useLogActivity  — CRM/Inventory excluded from PRD scope; runtime telemetry required
   [export] features/hr/employees/hr-types.ts:PAGE_SIZE  — no consumer found statically; runtime telemetry required
   [export] features/hr/employees/hr-types.ts:getDisplayName  — no consumer found statically; runtime telemetry required
   [export] features/hr/employees/hr-types.ts:getInitials  — no consumer found statically; runtime telemetry required
   [export] features/workflows/builder/workflow-node-palette.tsx:WorkflowNodePalette  — no consumer found statically; runtime telemetry required
+  [export] hooks/api/module-access/groups.ts:manageKey  — no consumer found statically; runtime telemetry required
   [export] hooks/api/hr/attendance.ts:useAttendanceHeatmap  — no consumer found statically; runtime telemetry required
   [export] types/crm/customer360.ts:CONTACT_ROLE_DEFAULTS  — CRM/Inventory excluded from PRD scope; runtime telemetry required
   [export] lib/person-name-schema.ts:optionalPersonNameSchema  — no consumer found statically; runtime telemetry required
@@ -84,6 +104,13 @@ UNPROVEN (50):
   [type] hooks/api/roles.ts:RoleTemplate  — no consumer found statically; runtime telemetry required
   [type] types/crm/import.ts:ExportEntity  — CRM/Inventory excluded from PRD scope; runtime telemetry required
   [type] lib/module-manifest-schema.ts:ModuleLadder  — no consumer found statically; runtime telemetry required
+  [type] hooks/api/module-access/index.ts:ModuleRolePermission  — no consumer found statically; runtime telemetry required
+  [type] hooks/api/module-access/index.ts:ModuleMemberCandidate  — no consumer found statically; runtime telemetry required
+  [type] hooks/api/module-access/index.ts:ModuleOwnership  — no consumer found statically; runtime telemetry required
+  [type] hooks/api/module-access/index.ts:MemberGrant  — no consumer found statically; runtime telemetry required
+  [type] hooks/api/module-access/index.ts:Pagination  — no consumer found statically; runtime telemetry required
+  [type] hooks/api/module-access/index.ts:PaginatedResult  — no consumer found statically; runtime telemetry required
+  [type] hooks/api/module-access/index.ts:ModuleMyPermissions  — no consumer found statically; runtime telemetry required
   [type] features/build/shared/filter-category-submenu.tsx:FilterCategory  — no consumer found statically; runtime telemetry required
 
 === Baseline: files=0 exports=0 ===

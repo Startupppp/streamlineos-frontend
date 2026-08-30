@@ -2,7 +2,7 @@
 > streamlineos-api@0.1.0 check:module-lifecycle D:\projects\personal\Streamlineos\backend
 > node src/scripts/check-module-lifecycle.mjs
 
-◇ injected env (51) from .env // tip: ⌘ override existing { override: true }
+◇ injected env (51) from .env // tip: ⌘ suppress logs { quiet: true }
 Module: timesheets  (schemaFolder: timesheets)
 Tables discovered: 11
   timesheet_audit_events  (1 declared index(es))

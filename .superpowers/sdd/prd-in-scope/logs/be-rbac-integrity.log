@@ -8,10 +8,9 @@
   PASS  expect=REJECT got=REJECT  uncatalogued module on module_ownerships [23503]
   PASS  expect=REJECT got=REJECT  uncatalogued module on roles [23503]
   PASS  expect=REJECT got=REJECT  namespace drift: chat key under crm [23503]
-  FAIL  expect=ACCEPT got=REJECT  correct: chat key under home [control] [23503]
-  FAIL  expect=ACCEPT got=REJECT  correct: hr key under hr [control] [23503]
+  PASS  expect=ACCEPT got=ACCEPT  correct: chat key under home [control]
+  PASS  expect=ACCEPT got=ACCEPT  correct: hr key under hr [control]
   PASS  expect=REJECT got=REJECT  platform namespace settings:manage is not grantable [23503]
   PASS  expect=REJECT got=REJECT  cross-tenant granter on user_permission_grants [23503]
 
-FAIL — 2 problem(s).
- ELIFECYCLE  Command failed with exit code 1.
+OK — RBAC actor and module keys are referentially constrained, and the controls prove the constraints are not over-strict.

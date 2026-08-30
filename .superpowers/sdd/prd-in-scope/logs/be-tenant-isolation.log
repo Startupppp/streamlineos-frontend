@@ -2,11 +2,11 @@
 > streamlineos-api@0.1.0 check:tenant-isolation D:\projects\personal\Streamlineos\backend
 > node src/scripts/check-tenant-isolation-coverage.mjs
 
-Service files with db handle   828
-  — tenant-owned               783
-  — global/platform            45
-Isolation test files found     102
-Covered tenant services        154 / 783  (20%)
+Service files with db handle   832
+  — tenant-owned               786
+  — global/platform            46
+Isolation test files found     154
+Covered tenant services        368 / 786  (47%)
 
 UNCOVERED — tenant-owned services with no cross-tenant negative test:
   MISSING  src/modules/access/mfa-policy.service.ts
@@ -17,7 +17,6 @@ UNCOVERED — tenant-owned services with no cross-tenant negative test:
   MISSING  src/modules/accounting/gl/general-ledger.service.ts
   MISSING  src/modules/accounting/gl/journal-approvals.service.ts
   MISSING  src/modules/accounting/gl/recurring-journals.service.ts
-  MISSING  src/modules/accounting/posting/journal-posting.service.ts
   MISSING  src/modules/accounting/settings/accounting-settings.service.ts
   MISSING  src/modules/accounting/settings/opening-balances.service.ts
   MISSING  src/modules/accounting/settings/system-accounts.service.ts
@@ -59,7 +58,8 @@ UNCOVERED — tenant-owned services with no cross-tenant negative test:
   MISSING  src/modules/billing/payments/payment-manual-methods.service.ts
   MISSING  src/modules/billing/payments/payment-provider-resolver.service.ts
   MISSING  src/modules/billing/payments/payment-provider-setup.service.ts
-  … and 579 more
+  MISSING  src/modules/billing/payments/payment-readiness.service.ts
+  … and 368 more
 
-FAIL — 629 tenant-owned service(s) have no cross-tenant negative test (20% covered).
+FAIL — 418 tenant-owned service(s) have no cross-tenant negative test (47% covered).
  ELIFECYCLE  Command failed with exit code 1.

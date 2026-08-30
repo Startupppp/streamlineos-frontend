@@ -8,14 +8,14 @@ be-record-access	0
 be-module-entitle	0	
 be-module-lifecycle	0	
 be-idempotent	0	
-be-tenant-isolation	1	> node src/scripts/check-tenant-isolation-coverage.mjs FAIL — 629 tenant-owned service(s) have no cross-tenant negative test (20% covered). 
+be-tenant-isolation	1	> node src/scripts/check-tenant-isolation-coverage.mjs FAIL — 418 tenant-owned service(s) have no cross-tenant negative test (47% covered). 
 be-log-secrets	0	
-be-placement	1	  FAIL  [context-exit]  src/modules/organization/core/org-membership-access-revocation.ts:273   FAIL  [with-identity]  src/modules/organization/core/org-membership-access-revocation.ts:274 FAIL — 5 of 83 bypass site(s) not on the allowlist. 
+be-placement	1	  FAIL  [context-exit]  src/modules/organization/core/org-membership-access-revocation.ts:314   FAIL  [with-identity]  src/modules/organization/core/org-membership-access-revocation.ts:315 FAIL — 5 of 83 bypass site(s) not on the allowlist. 
 be-owner-authority	0	
 be-legacy-actors	0	Ratchet OK: 555/555 remaining (0 migrated since baseline). 
-be-migration-chain	1	FAIL  migration chain has 1 issue(s): 
-be-rbac-integrity	1	  FAIL  expect=ACCEPT got=REJECT  correct: chat key under home [control] [23503]   FAIL  expect=ACCEPT got=REJECT  correct: hr key under hr [control] [23503] FAIL — 2 problem(s). 
-be-openapi	1	For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors     at async ExceptionsZone.asyncRun (D:\projects\personal\Streamlineos\backend\node_modules\.pnpm\@nestjs+core@11.1.28_@nestj_154d0e7219cbe1cb668b4eec23e98a99\node_modules\@nestjs\core\errors\exceptions-zone.js:22:13) 
+be-migration-chain	0	
+be-rbac-integrity	0	
+be-openapi	1	
 fe-typecheck	0	
 fe-routes	0	
 fe-effect-fetches	0	

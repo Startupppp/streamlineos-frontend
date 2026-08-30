@@ -2,31 +2,9 @@
 > streamlineos-api@0.1.0 openapi:check D:\projects\personal\Streamlineos\backend
 > node --max-old-space-size=8192 --env-file-if-exists=.env -r ts-node/register/transpile-only src/scripts/check-openapi-fresh.ts
 
-openapi freshness check failed to run: Error: Nest can't resolve dependencies of the ReminderOutboxConsumer (DRIZZLE, NotificationDispatchService, ?). Please make sure that the argument OutboxConsumerRegistry at index [2] is available in the FinanceArModule module.
-
-Potential solutions:
-- Is FinanceArModule a valid NestJS module?
-- If OutboxConsumerRegistry is a provider, is it part of the current FinanceArModule?
-- If OutboxConsumerRegistry is exported from a separate @Module, is that module imported within FinanceArModule?
-  @Module({
-    imports: [ /* the Module containing OutboxConsumerRegistry */ ]
-  })
-
-For more common dependency resolution issues, see: https://docs.nestjs.com/faq/common-errors
-    at Injector.lookupComponentInParentModules (D:\projects\personal\Streamlineos\backend\node_modules\.pnpm\@nestjs+core@11.1.28_@nestj_154d0e7219cbe1cb668b4eec23e98a99\node_modules\@nestjs\core\injector\injector.js:300:19)
-    at async resolveParam (D:\projects\personal\Streamlineos\backend\node_modules\.pnpm\@nestjs+core@11.1.28_@nestj_154d0e7219cbe1cb668b4eec23e98a99\node_modules\@nestjs\core\injector\injector.js:150:38)
-    at async Promise.all (index 2)
-    at async Injector.resolveConstructorParams (D:\projects\personal\Streamlineos\backend\node_modules\.pnpm\@nestjs+core@11.1.28_@nestj_154d0e7219cbe1cb668b4eec23e98a99\node_modules\@nestjs\core\injector\injector.js:179:27)
-    at async Injector.loadInstance (D:\projects\personal\Streamlineos\backend\node_modules\.pnpm\@nestjs+core@11.1.28_@nestj_154d0e7219cbe1cb668b4eec23e98a99\node_modules\@nestjs\core\injector\injector.js:77:13)
-    at async Injector.loadProvider (D:\projects\personal\Streamlineos\backend\node_modules\.pnpm\@nestjs+core@11.1.28_@nestj_154d0e7219cbe1cb668b4eec23e98a99\node_modules\@nestjs\core\injector\injector.js:111:9)
-    at async D:\projects\personal\Streamlineos\backend\node_modules\.pnpm\@nestjs+core@11.1.28_@nestj_154d0e7219cbe1cb668b4eec23e98a99\node_modules\@nestjs\core\injector\instance-loader.js:56:13
-    at async Promise.all (index 9)
-    at async InstanceLoader.createInstancesOfProviders (D:\projects\personal\Streamlineos\backend\node_modules\.pnpm\@nestjs+core@11.1.28_@nestj_154d0e7219cbe1cb668b4eec23e98a99\node_modules\@nestjs\core\injector\instance-loader.js:55:9)
-    at async D:\projects\personal\Streamlineos\backend\node_modules\.pnpm\@nestjs+core@11.1.28_@nestj_154d0e7219cbe1cb668b4eec23e98a99\node_modules\@nestjs\core\injector\instance-loader.js:40:13
-    at async Promise.all (index 70)
-    at async InstanceLoader.createInstances (D:\projects\personal\Streamlineos\backend\node_modules\.pnpm\@nestjs+core@11.1.28_@nestj_154d0e7219cbe1cb668b4eec23e98a99\node_modules\@nestjs\core\injector\instance-loader.js:39:9)
-    at async InstanceLoader.createInstancesOfDependencies (D:\projects\personal\Streamlineos\backend\node_modules\.pnpm\@nestjs+core@11.1.28_@nestj_154d0e7219cbe1cb668b4eec23e98a99\node_modules\@nestjs\core\injector\instance-loader.js:22:13)
-    at async D:\projects\personal\Streamlineos\backend\node_modules\.pnpm\@nestjs+core@11.1.28_@nestj_154d0e7219cbe1cb668b4eec23e98a99\node_modules\@nestjs\core\nest-factory.js:113:17
-    at async ExceptionsZone.asyncRun (D:\projects\personal\Streamlineos\backend\node_modules\.pnpm\@nestjs+core@11.1.28_@nestj_154d0e7219cbe1cb668b4eec23e98a99\node_modules\@nestjs\core\errors\exceptions-zone.js:22:13)
-    at async NestFactoryStatic.initialize (D:\projects\personal\Streamlineos\backend\node_modules\.pnpm\@nestjs+core@11.1.28_@nestj_154d0e7219cbe1cb668b4eec23e98a99\node_modules\@nestjs\core\nest-factory.js:111:13)
+openapi.json is STALE. Run: pnpm openapi:generate
+  changed GET /workflows
+  changed GET /workflows/{workflowId}/executions
+  changed GET /workflows/executions
+  changed POST /organization
  ELIFECYCLE  Command failed with exit code 1.
