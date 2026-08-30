@@ -10,6 +10,7 @@ import { EmptyTransferIllustration } from "@/components/illustrations";
 import { usePayoutBatches } from "@/hooks/api/payroll/payout-batches";
 import { usePayrollPolicyCurrent } from "@/hooks/api/payroll/policies";
 import { formatMoney } from "@/features/payroll/shared";
+import { formatShortDate } from "@/lib/date-utils";
 import { GeneratePayoutDialog } from "./generate-payout-dialog";
 import { MarkBatchSentDialog, MarkBatchPaidDialog } from "./mark-batch-dialogs";
 import { cn } from "@/lib/utils";
@@ -149,7 +150,7 @@ export function BatchesTable({
       header: "Generated",
       cell: (row) => (
         <span className="text-xs text-muted-foreground">
-          {row.generatedAt ? new Date(row.generatedAt).toLocaleDateString() : "—"}
+          {formatShortDate(row.generatedAt)}
         </span>
       ),
     },
@@ -175,7 +176,7 @@ export function BatchesTable({
 
         <DataTable
           className="flex-1 min-h-0"
-          data={batches ?? []}
+          data={batches?.data ?? []}
           columns={columns}
           getRowKey={(row) => row.id}
           onRowClick={(row) => onSelectBatch(row.id)}
