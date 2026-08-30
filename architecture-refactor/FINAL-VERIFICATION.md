@@ -192,7 +192,7 @@ Verdict: **PASS** (387/387 migrations, cold-DB verified)
 openapi.json is current — 3546 operations, 2843 carrying a zod contract
 ```
 
-Verdict: **PASS** — 3,546 ops; 703 ops have no client input surface (GET endpoints with path params only or no input); 0 path-param or query/body ops missing a schema
+Verdict: **STALE as of 2026-08-30 — `openapi:check` now exits 1.** 160+ operations changed after today's work (cursor migration dropped `page` from several list contracts; ~1,032 handlers moved to `@Validate`), so the vendored document no longer matches the code. Needs regeneration. Separately, a boot-time check found the `x-exposure` stamp applied to **0 of 7,100 operations**: `record-route-classification.ts` builds keys as `ClassName_method` while Swagger emits `ClassName_method[1]` under URI versioning, so the lookup never matched and that gate has never verified anything.
 
 ### Module entitlement — `pnpm check:module-entitlement`
 
