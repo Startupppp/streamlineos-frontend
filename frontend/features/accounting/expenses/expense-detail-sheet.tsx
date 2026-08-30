@@ -16,12 +16,7 @@ import { useApproveExpense, useRejectExpense } from "@/hooks/api/accounting/expe
 import type { ExpenseWithRelations } from "@/types/hr/expenses";
 import type { ExpenseStatus } from "@/features/accounting/shared";
 import { parseExpenseReceipts } from "@/features/hr/expenses/expense-constants";
-
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-}
+import { formatShortDate } from "@/lib/date-utils";
 
 interface ExpenseDetailSheetProps {
   expense: ExpenseWithExtras | null;
@@ -165,7 +160,7 @@ export function ExpenseDetailSheet({ expense, open, onOpenChange }: ExpenseDetai
           </div>
           <div>
             <p className="text-dense text-muted-foreground mb-0.5">Date</p>
-            <p className="text-sm">{formatDate(expense.expenseDate)}</p>
+            <p className="text-sm">{formatShortDate(expense.expenseDate) || "—"}</p>
           </div>
           <div>
             <p className="text-dense text-muted-foreground mb-0.5">Amount</p>
@@ -218,7 +213,7 @@ export function ExpenseDetailSheet({ expense, open, onOpenChange }: ExpenseDetai
         {expense.approvedAt && (
           <div className="pt-2 border-t border-border/50">
             <p className="text-dense text-muted-foreground mb-0.5">Approved by</p>
-            <p className="text-sm">{getUserDisplayName(expense.approver)} · {formatDate(String(expense.approvedAt))}</p>
+            <p className="text-sm">{getUserDisplayName(expense.approver)} · {formatShortDate(String(expense.approvedAt)) || "—"}</p>
           </div>
         )}
 

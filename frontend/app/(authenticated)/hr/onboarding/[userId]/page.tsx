@@ -7,7 +7,6 @@ import { CheckCircle2, Circle, Clock, AlertCircle, CheckCheck, ListTodo, Timer }
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTasksIllustration } from "@/components/illustrations";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,7 +20,9 @@ import {
   useOnboardingStatus,
   type OnboardingTask,
 } from "@/hooks/api/hr/onboarding";
+import { ErrorState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatShortDate } from "@/lib/date-utils";
 
 function ownerRoleVariant(role: string): "default" | "secondary" | "outline" {
   switch (role) {
@@ -37,15 +38,6 @@ function ownerRoleVariant(role: string): "default" | "secondary" | "outline" {
 function isOverdue(dueDate: string | null, status: string): boolean {
   if (!dueDate || status === "COMPLETED") return false;
   return new Date(dueDate).getTime() < Date.now();
-}
-
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
 }
 
 function TaskCard({
@@ -123,12 +115,12 @@ function TaskCard({
                   ) : (
                     <Clock className="h-3 w-3" />
                   )}
-                  Due {formatDate(task.dueDate)}
+                  Due {formatShortDate(task.dueDate) || "—"}
                 </span>
               )}
               {done && task.completedAt && (
                 <span className="text-dense text-status-success-ink">
-                  Completed {formatDate(task.completedAt)}
+                  Completed {formatShortDate(task.completedAt) || "—"}
                 </span>
               )}
             </div>
@@ -246,14 +238,12 @@ export default function UserOnboardingPage({
       {isLoading ? (
         <LoadingSkeleton />
       ) : isError ? (
-        <div className="flex flex-col items-center gap-3 py-16 text-center">
-          <p className="text-sm text-muted-foreground">
-            Failed to load onboarding data. Please try again.
-          </p>
-          <Button variant="outline" size="sm" onClick={handleRetry}>
-            Retry
-          </Button>
-        </div>
+        <ErrorState
+          className="flex-1"
+          title="Failed to load onboarding"
+          description="Failed to load onboarding data. Please try again."
+          onRetry={handleRetry}
+        />
       ) : taskList.length === 0 ? (
         <EmptyState
           illustration={<EmptyTasksIllustration className="h-24 w-24" />}

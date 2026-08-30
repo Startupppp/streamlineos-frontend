@@ -16,10 +16,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
 import {
   CONTENT_FILL_PANEL,
   ContentFillPanel,
 } from "@/components/ui/content-fill-panel";
+import { formatShortDate } from "@/lib/date-utils";
 import {
   useWorkflowInbox,
   useWorkflowActed,
@@ -138,7 +140,7 @@ function InstanceRow({
               <span>·</span>
               <span className="flex items-center gap-0.5 text-status-warning-ink">
                 <Clock className="h-2.5 w-2.5" />
-                Due {new Date(instance.dueAt).toLocaleDateString()}
+                Due {formatShortDate(instance.dueAt)}
               </span>
             </>
           )}
@@ -212,8 +214,8 @@ export default function ApprovalsPage() {
   const [delegationOpen, setDelegationOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("pending");
 
-  const { data: inboxData, isLoading: inboxLoading } = useWorkflowInbox();
-  const { data: actedData, isLoading: actedLoading } = useWorkflowActed(1, 50, {
+  const { data: inboxData, isLoading: inboxLoading, isError: inboxError, refetch: refetchInbox } = useWorkflowInbox();
+  const { data: actedData, isLoading: actedLoading, isError: actedError, refetch: refetchActed } = useWorkflowActed(1, 50, {
     enabled: activeTab === "acted",
   });
 
@@ -222,6 +224,14 @@ export default function ApprovalsPage() {
 
   function handleClose() {
     setSelectedInstanceId(null);
+  }
+
+  function handleRetryInbox() {
+    void refetchInbox();
+  }
+
+  function handleRetryActed() {
+    void refetchActed();
   }
 
   return (
@@ -272,25 +282,43 @@ export default function ApprovalsPage() {
           />
 
           <TabsContent value="pending" className="flex min-h-0 flex-1 flex-col">
-            <InstanceList
-              instances={inbox}
-              isLoading={inboxLoading}
-              onOpen={setSelectedInstanceId}
-              showActions
-              emptyTitle="No pending approvals"
-              emptyDescription="You are all caught up. New approval requests will appear here."
-            />
+            {inboxError ? (
+              <ErrorState
+                className="flex-1"
+                title="Couldn't load approvals"
+                description="Failed to load your pending approvals. Please try again."
+                onRetry={handleRetryInbox}
+              />
+            ) : (
+              <InstanceList
+                instances={inbox}
+                isLoading={inboxLoading}
+                onOpen={setSelectedInstanceId}
+                showActions
+                emptyTitle="No pending approvals"
+                emptyDescription="You are all caught up. New approval requests will appear here."
+              />
+            )}
           </TabsContent>
 
           <TabsContent value="acted" className="flex min-h-0 flex-1 flex-col">
-            <InstanceList
-              instances={acted}
-              isLoading={actedLoading}
-              onOpen={setSelectedInstanceId}
-              showActions={false}
-              emptyTitle="No actions yet"
-              emptyDescription="Requests you have approved or rejected will appear here."
-            />
+            {actedError ? (
+              <ErrorState
+                className="flex-1"
+                title="Couldn't load history"
+                description="Failed to load acted approvals. Please try again."
+                onRetry={handleRetryActed}
+              />
+            ) : (
+              <InstanceList
+                instances={acted}
+                isLoading={actedLoading}
+                onOpen={setSelectedInstanceId}
+                showActions={false}
+                emptyTitle="No actions yet"
+                emptyDescription="Requests you have approved or rejected will appear here."
+              />
+            )}
           </TabsContent>
         </Tabs>
       </motion.div>

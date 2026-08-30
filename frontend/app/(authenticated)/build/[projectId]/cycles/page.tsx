@@ -6,6 +6,8 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
+import { formatShortDate } from "@/lib/date-utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetBody } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -84,7 +86,7 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
   const projectId = parseInt(projectIdStr);
   const [createOpen, setCreateOpen] = useState(false);
 
-  const { data: cycles, isLoading } = useCycles(projectId);
+  const { data: cycles, isLoading, isError, refetch } = useCycles(projectId);
   const activeCycles = cycles?.filter((c) => c.status === "active") ?? [];
   const upcomingCycles = cycles?.filter((c) => c.status === "draft") ?? [];
   const completedCycles = cycles?.filter((c) => c.status === "completed") ?? [];
@@ -113,6 +115,7 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
 
   const handleToggleCompleted = useCallback(() => setShowCompleted((v) => !v), []);
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const { iconRef: completedChevronRef, hoverHandlers: completedChevronHoverHandlers } = useAnimatedIcon();
   const watchedStartDate = form.watch("startDate");
   const startPickerBounds = planningStartPickerProps();
@@ -189,6 +192,19 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
             ))}
           </div>
         </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Cycles">
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load cycles"
+          description="Failed to load cycles for this project. Please try again."
+          onRetry={handleRetry}
+        />
       </PageWrapper>
     );
   }
@@ -298,7 +314,7 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
                       <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2">
                         <span className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
-                          {new Date(cycle.startDate).toLocaleDateString()} — {new Date(cycle.endDate).toLocaleDateString()}
+                          {formatShortDate(cycle.startDate)} — {formatShortDate(cycle.endDate)}
                         </span>
                         <span className="flex items-center gap-1">
                           <CheckCircle2 className="h-3 w-3" />
@@ -343,7 +359,7 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
                         <p className="font-semibold text-sm truncate" title={cycle.name}>{cycle.name}</p>
                         <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                           <Clock className="h-3 w-3 shrink-0" />
-                          {new Date(cycle.startDate).toLocaleDateString()} — {new Date(cycle.endDate).toLocaleDateString()}
+                          {formatShortDate(cycle.startDate)} — {formatShortDate(cycle.endDate)}
                         </p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">

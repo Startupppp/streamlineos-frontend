@@ -7,12 +7,7 @@ import { FinanceStatusBadge, Money } from "@/features/accounting/shared";
 import { getUserDisplayName } from "@/lib/person-display";
 import type { FinReimbursementBatch, ReimbursementBatchStatus } from "@/types/accounting/expenses";
 import type { FinanceStatus } from "@/features/accounting/shared";
-
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-}
+import { formatShortDate } from "@/lib/date-utils";
 
 const STATUS_MAP: Record<ReimbursementBatchStatus, FinanceStatus> = {
   DRAFT: "DRAFT",
@@ -48,7 +43,7 @@ const COLUMNS: DataTableColumn<FinReimbursementBatch>[] = [
   {
     key: "created",
     header: "Created",
-    cell: (row) => <span className="text-sm text-muted-foreground">{formatDate(row.createdAt)}</span>,
+    cell: (row) => <span className="text-sm text-muted-foreground">{formatShortDate(row.createdAt) || "—"}</span>,
   },
   {
     key: "createdBy",
