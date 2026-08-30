@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { memo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { format, isSameDay, parseISO } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -174,15 +174,15 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
         ))}
       </div>
 
-      <AnimatePresence>
-        {expanded && memberTickets.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="bg-muted/20"
-          >
+      {memberTickets.length > 0 && (
+        <div
+          className={cn(
+            "grid transition-[grid-template-rows] ease-in-out",
+            reducedMotion ? "duration-0" : "duration-200",
+            expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+          )}
+        >
+          <div className="overflow-hidden bg-muted/20">
             {memberTickets.slice(0, 10).map((ticket) => (
               <div
                 key={ticket.id}
@@ -241,9 +241,9 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
                 +{memberTickets.length - 10} more tickets
               </div>
             )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 });

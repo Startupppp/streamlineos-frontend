@@ -227,7 +227,7 @@ export function MyTicketsPage({ params }: PageProps) {
               className={cn(PM_FILL_PANEL, "mb-0 mt-2")}
               illustrationPreset="ticket"
               title="No tickets assigned to you"
-              description="Tickets you create or get assigned to will appear here."
+              description={hasActiveFilters && myTickets.length > 0 ? undefined : "Tickets you create or get assigned to will appear here."}
               filtersActive={hasActiveFilters && myTickets.length > 0}
               onClearFilters={handleClearFilters}
             />

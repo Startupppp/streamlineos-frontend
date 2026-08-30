@@ -176,7 +176,7 @@ export function ReportsHubClient() {
           <EmptyState
             illustration={<EmptyReportIllustration />}
             title="No reports available"
-            description="Reports will appear here once the accounting module is configured."
+            description={search ? undefined : "Reports will appear here once the accounting module is configured."}
             filtersActive={!!search}
             onClearFilters={handleClearSearch}
           />

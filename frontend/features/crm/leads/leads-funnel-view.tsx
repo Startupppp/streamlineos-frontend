@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyLeadsIllustration } from "@/components/illustrations";
@@ -70,6 +70,7 @@ export function LeadsFunnelView({
     );
   }
 
+  const shouldReduceMotion = useReducedMotion();
   const maxCount = Math.max(...STAGE_ORDER.map((s) => board[s]?.length ?? 0), 1);
 
   const stages = STAGE_ORDER.map((stage, idx) => {
@@ -126,14 +127,17 @@ export function LeadsFunnelView({
               </div>
 
               <div className="flex-1 relative h-10">
-                <div
-                  className={`h-full bg-gradient-to-r ${STAGE_COLORS[stage]} rounded-md flex items-center px-3`}
-                  style={{ width: `${widthPct}%` }}
+                <motion.div
+                  className={`h-full bg-gradient-to-r ${STAGE_COLORS[stage]} rounded-md flex items-center px-3 overflow-hidden`}
+                  style={{ width: `${widthPct}%`, originX: 0 }}
+                  initial={shouldReduceMotion ? false : { scaleX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={shouldReduceMotion ? { duration: 0 } : { delay: idx * 0.08 + 0.1, duration: 0.4, ease: "easeOut" }}
                 >
                   <span className="text-xs font-semibold text-white whitespace-nowrap">
                     {count} leads
                   </span>
-                </div>
+                </motion.div>
               </div>
 
               <div className="w-24 shrink-0 flex items-center gap-1">

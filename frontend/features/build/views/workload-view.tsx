@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useState, useMemo, memo, useCallback } from "react";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { format, addDays, isSameDay, parseISO } from "date-fns";
 import {
   ChevronDown,
@@ -289,15 +289,15 @@ export const WorkloadView = memo(function WorkloadView({
                   </div>
                 </div>
 
-                <AnimatePresence>
-                  {expandedMembers.has("__unassigned__") && unassigned.length > 0 && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="bg-status-warning-surface"
-                    >
+                {unassigned.length > 0 && (
+                  <div
+                    className={cn(
+                      "grid transition-[grid-template-rows] ease-in-out",
+                      shouldReduceMotion ? "duration-0" : "duration-200",
+                      expandedMembers.has("__unassigned__") ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+                    )}
+                  >
+                    <div className="overflow-hidden bg-status-warning-surface">
                       {unassigned.slice(0, 10).map((ticket) => (
                         <div
                           key={ticket.id}
@@ -344,9 +344,9 @@ export const WorkloadView = memo(function WorkloadView({
                           +{unassigned.length - 10} more unassigned tickets
                         </div>
                       )}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                    </div>
+                  </div>
+                )}
               </motion.div>
             )}
           </div>

@@ -1,11 +1,10 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import {
   type ColumnDef,
   type SortingState,
   type RowSelectionState,
-  type RowData,
   flexRender,
   getCoreRowModel,
   getSortedRowModel,
@@ -32,70 +31,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import type { DataTableColumn, DataTableProps, ClientPagination, ServerPagination } from "./data-table.types";
 
-declare module "@tanstack/react-table" {
-  interface ColumnMeta<TData extends RowData, TValue> {
-    className?: string;
-    headerClassName?: string;
-    sortValue?: (row: TData) => TValue;
-  }
-}
-
-export interface DataTableColumn<T> {
-  key: string;
-  header: string;
-  cell: (row: T) => ReactNode;
-  sortable?: boolean;
-  sortValue?: (row: T) => string | number;
-  className?: string;
-  headerClassName?: string;
-}
-
-type ClientPagination = { pageSize?: number; onPageSizeChange?: (pageSize: number) => void };
-type ServerPagination = {
-  mode: "server";
-  page: number;
-  pageSize: number;
-  total: number;
-  onPageChange: (page: number) => void;
-  onPageSizeChange?: (pageSize: number) => void;
-  pageSizeOptions?: readonly number[];
-};
-
-export interface DataTableProps<T> {
-  data: T[];
-  columns: DataTableColumn<T>[];
-  getRowKey: (row: T, index: number) => string | number;
-  onRowClick?: (row: T) => void;
-  selection?: {
-    selected: Set<string | number>;
-    onChange: (sel: Set<string | number>) => void;
-    isRowSelectable?: (row: T) => boolean;
-  };
-  pagination?: ClientPagination | ServerPagination;
-  isLoading?: boolean;
-  emptyState?: ReactNode;
-  footer?: ReactNode;
-  minWidth?: string;
-  className?: string;
-  rowClassName?: (row: T, index: number) => string;
-  search?: {
-    value: string;
-    onChange: (value: string) => void;
-    placeholder?: string;
-  };
-  toolbar?: ReactNode;
-  sortState?: {
-    field: string | null;
-    direction: "asc" | "desc";
-    onChange: (field: string, direction: "asc" | "desc") => void;
-  };
-  /**
-   * Optional mobile card renderer. When provided, cards replace the table
-   * below the `sm` breakpoint to avoid horizontal page overflow at 375/390px.
-   */
-  mobileCard?: (row: T, index: number) => ReactNode;
-}
+export type { DataTableColumn, DataTableProps };
 
 function SortIndicator({ sorted }: { sorted: "asc" | "desc" | false }) {
   if (sorted === "asc")
@@ -522,39 +460,4 @@ export function DataTable<T>({
   );
 }
 
-export function DataTableSkeleton({
-  rows = 12,
-  columns = 4,
-  className,
-}: {
-  rows?: number;
-  columns?: number;
-  className?: string;
-}) {
-  return (
-    <div className={cn("rounded-md border border-border bg-card overflow-hidden", className)}>
-      <Table>
-        <TableHeader className="bg-muted/50 border-b border-border">
-          <TableRow className="hover:bg-transparent">
-            {Array.from({ length: columns }).map((_, colIdx) => (
-              <TableHead key={colIdx} className="px-2 py-2">
-                <Skeleton className="h-3.5 w-16" />
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {Array.from({ length: rows }).map((_, rowIdx) => (
-            <TableRow key={rowIdx} className="h-10 hover:bg-transparent">
-              {Array.from({ length: columns }).map((_, colIdx) => (
-                <TableCell key={colIdx} className="px-2 py-2">
-                  <Skeleton className={cn("h-3.5", colIdx === 0 ? "w-3/4" : "w-1/2")} />
-                </TableCell>
-              ))}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
-}
+export { DataTableSkeleton } from "./data-table-skeleton";
