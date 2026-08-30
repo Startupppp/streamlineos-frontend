@@ -132,21 +132,23 @@ HR/Directory: `/hr/employees` returns owner employee record.
 
 ## REAL DEFECTS FOUND
 
-### DEFECT-1: GET /hr/employees?status=ACTIVE → 400 VALIDATION_FAILED
-- **Path:** `GET http://localhost:1500/hr/employees?status=ACTIVE`
-- **Status:** 400 `{"code":"VALIDATION_FAILED","message":"Validation failed.","details":[{"path":"body","message":"Unrecognized key: \"status\""}]}`
-- **Impact:** If the frontend HR employee list page passes `status` as a query param (common for filtering), the API will reject it and the page will show an error state instead of the employee list.
-- **Backend log:** No 42501. Clean 400 from Zod validation.
+### DEFECT-1 — WITHDRAWN, not a defect (verified 2026-08-30)
+- **Original claim:** `GET /hr/employees?status=ACTIVE` → 400 `VALIDATION_FAILED: Unrecognized key: "status"`.
+- **Why it is not a defect:** the probe used a param name the API never accepted. `listEmployeesSchema` is `.strict()` and takes `isActive: "true" | "false" | "all"`. The page's `?status=active` URL param is read by `parseEmployeeListFilters()` and mapped to `isActive` by `toHrEmployeesApiParams()` before the request is made, so the frontend sends `isActive` and always has. All four filter controls — search, department, status, role — map to keys the schema accepts.
+- **The real gap, now closed:** nothing pinned that mapping, so a hook that started sending `status`, or a schema that dropped `isActive`, would have failed at runtime rather than in CI. `src/modules/hr/directory/list-employees-schema-contract.spec.ts` now asserts the accepted and rejected key sets (16 tests).
+- **Lesson for this document:** a 400 from a hand-written probe is evidence about the probe until the caller is checked. Verify what the frontend actually sends before recording a finding.
 
 ### DEFECT-2: Backend dist was stale at boot
 - **Evidence:** Compiled `finance-ar.module.js` lacked `OutboxModule` import that was present in source. Backend refused to start with existing dist.
 - **Fix applied (not a code change):** Rebuilt with `nest build --builder swc`.
 - **Impact:** Any CI/CD environment relying on a cached dist from before `OutboxModule` was added to `FinanceArModule` will fail to boot. Requires a fresh build.
 
-### DEFECT-3: prefers-reduced-motion not applied globally
+### DEFECT-3: prefers-reduced-motion not applied globally — CONFIRMED, partially fixed
 - **Evidence:** `globals.css` only suppresses animation on 3 named CSS classes. Framer Motion animations (translate, scale) on authenticated pages are not covered by CSS-level suppression.
-- **Risk:** Users with `prefers-reduced-motion: reduce` will still see translate/scale animations from Framer Motion unless each component implements `useReducedMotion()`.
-- **Cannot confirm:** Whether Framer Motion components actually implement `useReducedMotion` — would require authenticated browser session.
+- **Confirmed, and worse than it looked.** `MotionProvider` already wraps the app in `<MotionConfig reducedMotion="user">` (`app/layout.tsx:148`), which reads as coverage. Reading the Framer Motion v12 source shows it only suppresses CSS positional properties (`width`, `height`, `top`, `left`, `right`) and layout animations — it does **not** touch authored `x`/`y`/`scale` variants. `fadeUp.hidden = { opacity: 0, y: 16 }` still translated in full for a user who asked it not to.
+- **Fix (commit `ef88f1b93`):** `useMotionVariants()` in `lib/motion-variants.ts` returns opacity-only variants under the preference. `motion-reveal.tsx` is migrated.
+- **Still OPEN:** 40 files import the static variants directly and remain unaffected. Migration in progress; the hook existing is not the same as the preference being honoured.
+- **Not exempted:** skeleton shimmer and `Loader2` keep animating under the preference — they signal progress rather than moving content, and a blanket `animation: none !important` would remove that feedback.
 
 ---
 

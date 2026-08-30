@@ -748,3 +748,66 @@ column, so `chunkVisibleTo` silently omits the `createdByMembershipId` arm the p
 MORE restrictive — a page whose creator is recorded only by membership loses its chunks from its own author's
 search — so it is a correctness gap, not a disclosure. But it worsens as the actor migration moves creators onto
 membership ids. Assigned to L57.
+
+## Gate state, measured rather than reported (2026-08-30)
+Ran all 16 backend static gates myself instead of trusting lane summaries. **14 pass, 2 fail:**
+`check:tenant-isolation` (93%, 61 services uncovered) and `check:outbox-consumers` (orphaned events).
+Passing: cycles · route-classification · permission-keys · navigation-permissions · tenant-indexes ·
+scope-application · record-access · module-entitlement · module-lifecycle · idempotent-commands ·
+log-secrets · placement-bypass · owner-authority · migration-chain. Both failures now have lanes.
+
+## Three inert file splits, caught before they were committed
+`git status` showed 988 lines of new HR schema, an `hr-calendar-sub-sources.ts` and an
+`auth-google-oauth.service.ts`. **None of them was imported by anything.** In each case the original
+file was untouched and still live — `hiring.ts` (976 lines) is imported by seven files including the
+schema barrel, and `hr-calendar-source.ts` still contains the functions its "extraction" copied. So
+these were splits whose activating wire was never written: dead duplicates that would have read as
+completed work. `knip` and a symbol grep both confirm it. Assigned to L61 to finish properly rather
+than delete — the originals are over the 500-line limit and the splits are worth having.
+
+The pattern is worth naming because it has now happened four times in this program: a scoped lane
+produces the artefact and stops at the boundary of its scope, and the boundary is exactly where the
+change becomes real. **A new file that nothing imports is not progress.**
+
+## Idempotency fence: rejected a fail-open and replaced it
+L55 correctly diagnosed that the fence was claimed BEFORE validation ran, so a request that failed
+validation burned its Idempotency-Key and the corrected retry was impossible. It fixed the ordering,
+and also made any store error return "proceed without a fence".
+
+I rejected that second part. These are payments and payroll posts; failing open means a retry
+executes twice, which is the entire thing the fence prevents. It also could not have worked: the
+claim now runs inside the request transaction, so a failed INSERT aborts the transaction and the
+swallowed error resurfaces as `25P02` on every following statement. It converted one clean failure
+into a cascade.
+
+The reason it was added was a test artefact — the e2e harness builds the real AppModule against a
+fake DATABASE_URL, so the fence write always fails there. The harness's own precedent (documented in
+its `installFixtureRegionRegistry` docstring) is to stub the fixture and leave production failing
+closed. So the persistence moved behind `CommandFenceStore` and the harness supplies an in-memory
+double. Same test numbers — module-access 166/168, ownership 32/35, zero 500s — with production
+fail-closed. Commit `5a632faa`.
+
+**Weakening a production safety mechanism to make a test pass is always the wrong trade**; the
+harness is the thing that should bend.
+
+## A reported runtime defect that wasn't one
+The runtime lane recorded `GET /hr/employees?status=ACTIVE → 400` as DEFECT-1. It is not a defect:
+the schema is strict and accepts `isActive`, and the page maps its `?status=` URL param to `isActive`
+before calling the API. The probe used a param name the API never accepted.
+
+L59 checked the caller before changing anything, which is the right instinct — the failure mode here
+would have been to "fix" the backend to accept a param nothing sends. The genuine gap was that
+nothing pinned the mapping, so a hook change would have broken it silently; that spec now exists.
+DEFECT-1 is marked WITHDRAWN in RUNTIME-EVIDENCE.md with the reasoning, not deleted.
+
+## `prefers-reduced-motion` was confirmed, and the existing "fix" was decorative
+`<MotionConfig reducedMotion="user">` has been mounted at `app/layout.tsx:148` all along and reads as
+coverage. In Framer Motion v12 it only suppresses CSS positional properties and layout animations —
+it does **not** touch authored `x`/`y`/`scale` variants, so `fadeUp` still translated in full for a
+user who asked it not to. `useMotionVariants()` now collapses the shared variants to opacity-only
+under the preference. 40 static-import call sites remain and are recorded as OPEN, not as covered.
+
+## Commits
+Nine commits across the two repos rather than one omnibus: KB chunk ACL + migrations, wired service
+extractions, the 227-file isolation sweep, new e2e suites, the OpenAPI param sweep, finance/scripts,
+the contracts sync, lane documentation, and the idempotency fix.
