@@ -49,7 +49,7 @@ const RUN_TYPES_NEEDING_SOURCE: PayrollRunType[] = ["OFF_CYCLE", "CORRECTION", "
 
 export function RunsPageContent() {
   const router = useRouter();
-  const [page, setPage] = useState(1);
+  const [cursor, setCursor] = useState<string | undefined>(undefined);
   const [filterEntityId, setFilterEntityId] = useState<string>("all");
   const [showNewRun, setShowNewRun] = useState(false);
   const [newRunMonth, setNewRunMonth] = useState(() => {
@@ -63,7 +63,7 @@ export function RunsPageContent() {
   const canManage = useCan("payroll:runs:manage");
   const { data: entities } = usePayrollEntities();
   const listParams = {
-    page,
+    cursor,
     limit: 20,
     ...(filterEntityId !== "all" ? { entityId: Number(filterEntityId) } : {}),
   };
@@ -209,7 +209,7 @@ export function RunsPageContent() {
             value={filterEntityId}
             onValueChange={(v) => {
               setFilterEntityId(v);
-              setPage(1);
+              setCursor(undefined);
             }}
           >
             <SelectTrigger className="w-[240px]">
@@ -243,13 +243,29 @@ export function RunsPageContent() {
           onRowClick={handleRowClick}
           isLoading={isLoading}
           minWidth="720px"
-          pagination={{
-            mode: "server",
-            page,
-            pageSize: 20,
-            total: data?.total ?? 0,
-            onPageChange: setPage,
-          }}
+          footer={
+            data?.pagination.hasMore ? (
+              <div className="flex justify-end px-4 py-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setCursor(data.pagination.nextCursor ?? undefined)}
+                >
+                  Next page
+                </Button>
+              </div>
+            ) : cursor != null ? (
+              <div className="flex justify-end px-4 py-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setCursor(undefined)}
+                >
+                  Back to start
+                </Button>
+              </div>
+            ) : undefined
+          }
           emptyState={
             <EmptyState
               illustration={<EmptyPayroll />}

@@ -86,11 +86,11 @@ const COLUMNS: DataTableColumn<RunEmployee>[] = [
 ];
 
 export function EmployeesTab({ runId, isLocked }: EmployeesTabProps) {
-  const [page, setPage] = useState(1);
+  const [cursor, setCursor] = useState<string | undefined>(undefined);
   const [search, setSearch] = useState("");
   const [selectedRunEmployeeId, setSelectedRunEmployeeId] = useState<number | null>(null);
 
-  const { data, isLoading } = useRunEmployees(runId, { page, limit: 20, search: search || undefined });
+  const { data, isLoading } = useRunEmployees(runId, { cursor, limit: 20, search: search || undefined });
 
   function handleRowClick(row: RunEmployee) {
     setSelectedRunEmployeeId(row.id);
@@ -102,7 +102,7 @@ export function EmployeesTab({ runId, isLocked }: EmployeesTabProps) {
 
   function handleSearchChange(val: string) {
     setSearch(val);
-    setPage(1);
+    setCursor(undefined);
   }
 
   return (
@@ -115,13 +115,19 @@ export function EmployeesTab({ runId, isLocked }: EmployeesTabProps) {
         isLoading={isLoading}
         minWidth="700px"
         search={{ value: search, onChange: handleSearchChange, placeholder: "Search employees…" }}
-        pagination={{
-          mode: "server",
-          page,
-          pageSize: 20,
-          total: data?.total ?? 0,
-          onPageChange: setPage,
-        }}
+        footer={
+          data?.pagination.hasMore ? (
+            <div className="flex justify-end px-4 py-2">
+              <button
+                type="button"
+                className="text-xs text-muted-foreground hover:text-foreground underline"
+                onClick={() => setCursor(data.pagination.nextCursor ?? undefined)}
+              >
+                Load next page
+              </button>
+            </div>
+          ) : undefined
+        }
         mobileCard={(row) => (
           <div className="space-y-1.5">
             <div className="flex items-start justify-between gap-2">

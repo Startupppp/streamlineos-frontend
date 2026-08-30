@@ -27,11 +27,8 @@ import {
   AiActionConfigRenderer,
   StandardActionConfigRenderer,
 } from "./ai-node-config-forms";
-import {
-  ACTION_TYPES,
-  CONDITION_OPS,
-  type TriggerMeta,
-} from "./automation-meta";
+import { ACTION_TYPES, CONDITION_OPS } from "./automation-meta";
+import type { TriggerMeta } from "./automation-trigger-data";
 
 interface AutomationBuilderEditorProps {
   actions: ExtendedAutomationAction[];

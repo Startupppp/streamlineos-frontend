@@ -6,18 +6,16 @@ import { queryKeys } from "@/lib/query-keys";
 import { serverGet } from "@/lib/server-fetch";
 import type { PayrollRunListItem } from "@/types/payroll/runs";
 
-interface PaginatedRuns {
+interface RunsPage {
   data: PayrollRunListItem[];
-  total: number;
-  page: number;
-  limit: number;
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
 export async function prefetchPayrollRuns() {
   const queryClient = await createServerQueryClient();
   await queryClient.prefetchQuery({
-    queryKey: queryKeys.payroll.runs({ page: 1, limit: 20 }),
-    queryFn: () => serverGet<PaginatedRuns>("/payroll/runs?page=1&limit=20"),
+    queryKey: queryKeys.payroll.runs({ cursor: undefined, limit: 20 }),
+    queryFn: () => serverGet<RunsPage>("/payroll/runs?limit=20"),
     staleTime: 60_000,
   });
   return dehydrate(queryClient);

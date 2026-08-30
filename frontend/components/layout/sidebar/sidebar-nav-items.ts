@@ -57,7 +57,7 @@ export const PRODUCT_PATH_EXCEPTIONS: ProductPathException[] = [
   { prefix: "/customer-executive", product: "crm", reason: "CRM operational surface with no nav entry." },
   { prefix: "/billing/invoices", product: "finance", reason: "The org's own customer invoicing, not platform billing." },
   { prefix: "/portal", product: "build", reason: "Client portal for delivery work." },
-  { prefix: "/portal/projects", product: "home", reason: "Portal surfaces a client sees outside a product." },
+  { prefix: "/client-portal", product: "home", reason: "Portal surfaces a client sees outside a product." },
   { prefix: "/portal/accept-invitation", product: "home", reason: "Portal surfaces a client sees outside a product." },
 ];
 
@@ -251,7 +251,7 @@ export function shouldHideProductSidebar(navGroups: NavGroup[]): boolean {
 export function isPortalChromelessPath(pathname: string): boolean {
   if (pathname === "/portal") return true;
   if (
-    pathname.startsWith("/portal/projects") ||
+    pathname.startsWith("/client-portal") ||
     pathname.startsWith("/portal/accept-invitation")
   ) {
     return false;

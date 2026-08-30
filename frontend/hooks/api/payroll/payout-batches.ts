@@ -23,12 +23,17 @@ export function usePayoutValidation(runId: number) {
   });
 }
 
+type PayoutBatchesPage = {
+  data: PayoutBatch[];
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
+};
+
 export function usePayoutBatches(runId?: number) {
   const canManage = useCan("payroll:bank:manage");
-  return useQuery<PayoutBatch[]>({
+  return useQuery<PayoutBatchesPage>({
     queryKey: queryKeys.payroll.bankBatches(runId),
     queryFn: () =>
-      apiClient.get<PayoutBatch[]>("/payroll/payout/batches", runId ? { runId } : undefined),
+      apiClient.get<PayoutBatchesPage>("/payroll/payout/batches", runId ? { runId } : undefined),
     staleTime: 30_000,
     enabled: canManage,
   });

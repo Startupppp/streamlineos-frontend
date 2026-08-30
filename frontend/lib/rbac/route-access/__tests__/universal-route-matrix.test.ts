@@ -42,8 +42,11 @@ const MATRIX: readonly MatrixRow[] = [
   { path: "/chat/channels", universalMatch: true, decisionKind: "universal", label: "channel list" },
   { path: "/chat/channels/general", universalMatch: true, decisionKind: "universal", label: "channel conversation" },
   { path: "/chat/invite/token123", universalMatch: true, decisionKind: "universal", label: "invite acceptance" },
+  { path: "/chat/settings", universalMatch: false, decisionKind: "permission", label: "org chat settings admin — gated on chat:org-settings:manage" },
+  { path: "/chat/moderation", universalMatch: false, decisionKind: "permission", label: "huddle moderation admin — gated on chat:huddles:moderate" },
 
   { path: "/calendar", universalMatch: true, decisionKind: "universal", label: "unified calendar" },
+  { path: "/calendar/settings", universalMatch: false, decisionKind: "permission", label: "calendar admin settings — gated on calendar:admin:manage" },
 
   { path: "/directory", universalMatch: true, decisionKind: "universal", label: "people directory root" },
   { path: "/directory/123", universalMatch: false, decisionKind: "permission", label: "individual person profile — nav-resolved, not prefix-universal" },
@@ -122,6 +125,9 @@ describe("universal route matrix — exact-by-default with explicit allowlist", 
       "/knowledge/wiki/spaces",
       "/knowledge/wiki/templates",
       "/knowledge/wiki/trash",
+      "/chat/settings",
+      "/chat/moderation",
+      "/calendar/settings",
     ];
     for (const p of adminPaths) {
       expect({ path: p, universal: isUniversalRoute(p) }).toEqual({

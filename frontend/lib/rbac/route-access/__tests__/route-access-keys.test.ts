@@ -190,6 +190,9 @@ describe("route-access registry keys", () => {
       "/knowledge/wiki/spaces",
       "/knowledge/wiki/templates",
       "/knowledge/wiki/trash",
+      "/chat/settings",
+      "/chat/moderation",
+      "/calendar/settings",
     ];
     for (const route of protectedRoutes) {
       expect(isUniversalRoute(route)).toBe(false);

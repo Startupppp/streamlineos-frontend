@@ -1,32 +1,22 @@
 "use client";
 
-import { useState, memo } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import {
-  Pencil,
   GitBranch,
   Activity,
   CheckCircle2,
   Clock,
 } from "lucide-react";
-import { PlusIcon, CopyIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { PlusIcon } from "@animateicons/react/lucide";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -34,21 +24,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -64,256 +39,18 @@ import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
-import { cn } from "@/lib/utils";
 import {
   useWorkflows,
-  useCreateWorkflow,
   useDeleteWorkflow,
   useDuplicateWorkflow,
   useWorkflowAnalytics,
   type Workflow,
   type WorkflowStatus,
 } from "@/hooks/api/workflows";
-import {
-  createWorkflowSchema,
-  type CreateWorkflowValues,
-} from "@/features/workflows/create-workflow-schema";
+import { WorkflowCardItem } from "@/features/workflows/components/workflow-card";
+import { CreateWorkflowDialog } from "@/features/workflows/components/create-workflow-dialog";
 
 type StatusFilter = WorkflowStatus | "all";
-
-const STATUS_BADGE_CLASS: Record<WorkflowStatus, string> = {
-  draft: "bg-muted text-muted-foreground",
-  published: "bg-status-success-surface text-status-success-ink",
-  disabled: "bg-status-warning-surface text-status-warning-ink",
-  archived: "bg-status-danger-surface text-status-danger-ink",
-};
-
-const STATUS_LEFT_BORDER: Record<WorkflowStatus, string> = {
-  draft: "border-l-border",
-  published: "border-l-green-400",
-  disabled: "border-l-yellow-400",
-  archived: "border-l-red-400",
-};
-
-const WorkflowCard = memo(function WorkflowCard({
-  workflow,
-  onDuplicate,
-  onDelete,
-}: {
-  workflow: Workflow;
-  onDuplicate: () => void;
-  onDelete: () => void;
-}) {
-  return (
-    <Card
-      className={cn(
-        "bg-card rounded-xl border border-border shadow-sm border-l-4 transition-all duration-200 hover:shadow-md h-full",
-        STATUS_LEFT_BORDER[workflow.status]
-      )}
-    >
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-              <p className="font-semibold text-sm text-foreground truncate">
-                {workflow.name}
-              </p>
-              <span
-                className={cn(
-                  "inline-flex items-center px-2 py-0.5 rounded-full text-micro font-medium capitalize",
-                  STATUS_BADGE_CLASS[workflow.status]
-                )}
-              >
-                {workflow.status}
-              </span>
-              <span className="text-micro text-muted-foreground bg-muted border border-border px-1.5 py-0.5 rounded">
-                v{workflow.version}
-              </span>
-            </div>
-
-            {workflow.description && (
-              <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2 leading-relaxed">
-                {workflow.description}
-              </p>
-            )}
-
-            <p className="text-dense text-muted-foreground mt-2">
-              Updated{" "}
-              {formatDistanceToNow(new Date(workflow.updatedAt), {
-                addSuffix: true,
-              })}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-0.5 shrink-0">
-            <Button
-              asChild
-              size="icon"
-              variant="ghost"
-              className="w-7"
-              aria-label="Edit workflow in builder"
-            >
-              <Link href={`/workflows/${workflow.id}/builder`}>
-                <Pencil className="h-3.5 w-3.5" />
-              </Link>
-            </Button>
-            <AnimatedIconButton
-              icon={CopyIcon}
-              iconSize={14}
-              size="icon"
-              variant="ghost"
-              className="w-7"
-              aria-label="Duplicate workflow"
-              onClick={onDuplicate}
-            />
-            <AnimatedIconButton
-              icon={Trash2Icon}
-              iconSize={14}
-              size="icon"
-              variant="ghost"
-              className="w-7 text-destructive hover:text-destructive"
-              aria-label="Delete workflow"
-              onClick={onDelete}
-            />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-});
-
-interface WorkflowCardItemProps {
-  workflow: Workflow;
-  onDuplicate: (workflow: Workflow) => void;
-  onDelete: (workflow: Workflow) => void;
-}
-
-function WorkflowCardItem({
-  workflow,
-  onDuplicate,
-  onDelete,
-}: WorkflowCardItemProps) {
-  function handleDuplicate() {
-    onDuplicate(workflow);
-  }
-
-  function handleDelete() {
-    onDelete(workflow);
-  }
-
-  return (
-    <WorkflowCard
-      workflow={workflow}
-      onDuplicate={handleDuplicate}
-      onDelete={handleDelete}
-    />
-  );
-}
-
-interface CreateWorkflowDialogProps {
-  open: boolean;
-  onClose: () => void;
-}
-
-function CreateWorkflowDialog({ open, onClose }: CreateWorkflowDialogProps) {
-  const router = useRouter();
-  const create = useCreateWorkflow();
-
-  const form = useForm<CreateWorkflowValues>({
-    resolver: zodResolver(createWorkflowSchema),
-    defaultValues: { name: "", description: "" },
-  });
-
-  function handleSubmit(values: CreateWorkflowValues) {
-    create.mutate(
-      { name: values.name, description: values.description || undefined },
-      {
-        onSuccess: (data) => {
-          toast.success("Workflow created");
-          form.reset();
-          onClose();
-          router.push(`/workflows/${data.id}/builder`);
-        },
-        onError: () => toast.error("Failed to create workflow"),
-      }
-    );
-  }
-
-  function handleOpenChange(nextOpen: boolean) {
-    if (!nextOpen) {
-      form.reset();
-      onClose();
-    }
-  }
-
-  const handleFormSubmit = form.handleSubmit(handleSubmit);
-
-  return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>New Workflow</DialogTitle>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={handleFormSubmit} className="space-y-4 pt-1">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="e.g. Lead Assignment Flow"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description (optional)</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="What does this workflow do?"
-                      className="resize-none"
-                      rows={3}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <DialogFooter className="pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onClose}
-                disabled={create.isPending}
-              >
-                Cancel
-              </Button>
-              <LoadingButton
-                type="submit"
-                isPending={create.isPending}
-                loadingText="Creating…"
-                className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-all duration-200"
-              >
-                {"Create & Open Builder"}
-              </LoadingButton>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 export default function WorkflowsPage() {
   const router = useRouter();

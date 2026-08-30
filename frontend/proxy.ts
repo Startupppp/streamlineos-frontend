@@ -86,7 +86,6 @@ const PROTECTED_ROUTES = [
   "/notifications",
   "/calendar",
   "/knowledge",
-  "/knowledge-base",
   "/surveys",
   "/accounting",
   "/ai",

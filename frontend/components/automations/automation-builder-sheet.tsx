@@ -29,11 +29,7 @@ import type {
   ExtendedAutomationAction,
   ExtendedAutomationActionType,
 } from "@/hooks/api/automation-ai-nodes";
-import {
-  TRIGGER_META,
-  getTriggerMeta,
-  type TriggerMeta,
-} from "./automation-meta";
+import { TRIGGER_META, getTriggerMeta, type TriggerMeta } from "./automation-trigger-data";
 import { AutomationBuilderEditor } from "./automation-builder-editor";
 import { AutomationTestResultPanel } from "./automation-test-result";
 

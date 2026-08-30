@@ -5,6 +5,10 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 
+function assertPermission(allowed: boolean): void {
+  if (!allowed) throw new Error("You do not have permission to manage automations.");
+}
+
 export type AutomationTrigger =
   | "lead.created"
   | "deal.stage_changed"
@@ -159,50 +163,65 @@ export function useAutomationRuns(ruleId: number) {
 
 export function useCreateAutomation() {
   const qc = useQueryClient();
+  const canManage = useCan("settings:automations:manage");
   return useMutation({
     mutationKey: ["automations", "create"],
-    mutationFn: (input: CreateAutomationInput) =>
-      apiClient.post<AutomationRule>("/settings/automations", input),
+    mutationFn: (input: CreateAutomationInput) => {
+      assertPermission(canManage);
+      return apiClient.post<AutomationRule>("/settings/automations", input);
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.automations.all }),
   });
 }
 
 export function useUpdateAutomation() {
   const qc = useQueryClient();
+  const canManage = useCan("settings:automations:manage");
   return useMutation({
     mutationKey: ["automations", "update"],
-    mutationFn: ({ id, ...input }: UpdateAutomationInput & { id: number }) =>
-      apiClient.patch<AutomationRule>(`/settings/automations/${id}`, input),
+    mutationFn: ({ id, ...input }: UpdateAutomationInput & { id: number }) => {
+      assertPermission(canManage);
+      return apiClient.patch<AutomationRule>(`/settings/automations/${id}`, input);
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.automations.all }),
   });
 }
 
 export function useToggleAutomation() {
   const qc = useQueryClient();
+  const canManage = useCan("settings:automations:manage");
   return useMutation({
     mutationKey: ["automations", "toggle"],
-    mutationFn: ({ id, isEnabled }: { id: number; isEnabled: boolean }) =>
-      apiClient.patch<AutomationRule>(`/settings/automations/${id}`, { isEnabled }),
+    mutationFn: ({ id, isEnabled }: { id: number; isEnabled: boolean }) => {
+      assertPermission(canManage);
+      return apiClient.patch<AutomationRule>(`/settings/automations/${id}`, { isEnabled });
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.automations.all }),
   });
 }
 
 export function useDeleteAutomation() {
   const qc = useQueryClient();
+  const canManage = useCan("settings:automations:manage");
   return useMutation({
     mutationKey: ["automations", "delete"],
-    mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/settings/automations/${id}`),
+    mutationFn: (id: number) => {
+      assertPermission(canManage);
+      return apiClient.delete<{ success: boolean }>(`/settings/automations/${id}`);
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.automations.all }),
   });
 }
 
 export function useTestAutomation() {
   const qc = useQueryClient();
+  const canManage = useCan("settings:automations:manage");
   return useMutation({
     mutationKey: ["automations", "test"],
-    mutationFn: ({ id, payload }: { id: number; payload: Record<string, unknown> }) =>
-      apiClient.post<AutomationTestResult>(`/settings/automations/${id}/test`, { payload }),
+    mutationFn: ({ id, payload }: { id: number; payload: Record<string, unknown> }) => {
+      assertPermission(canManage);
+      return apiClient.post<AutomationTestResult>(`/settings/automations/${id}/test`, { payload });
+    },
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.automations.runs(variables.id) });
       qc.invalidateQueries({ queryKey: queryKeys.automations.all });

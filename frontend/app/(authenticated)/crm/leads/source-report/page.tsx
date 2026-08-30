@@ -21,7 +21,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { cn } from "@/lib/utils";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { useLeadSourceReport } from "@/hooks/api/crm/leads";
-import { formatCurrency } from "@/features/crm/lib/format-currency";
+import { formatCurrency } from "@/lib/format-utils";
 
 const SOURCE_LABELS: Record<string, string> = {
   referral: "Referral",

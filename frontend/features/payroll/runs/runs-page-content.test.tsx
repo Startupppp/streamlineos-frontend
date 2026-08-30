@@ -56,14 +56,12 @@ const run: PayrollRunListItem = {
 
 const seededRuns = {
   data: [run],
-  total: 1,
-  page: 1,
-  limit: 20,
+  pagination: { limit: 20, nextCursor: null, hasMore: false },
 };
 
 function makeHydratedState() {
   const seed = new QueryClient();
-  seed.setQueryData(queryKeys.payroll.runs({ page: 1, limit: 20 }), seededRuns);
+  seed.setQueryData(queryKeys.payroll.runs({ cursor: undefined, limit: 20 }), seededRuns);
   return dehydrate(seed);
 }
 

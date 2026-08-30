@@ -25,7 +25,7 @@ function PayrollSelfCard() {
       iconClassName="text-primary"
       title="My Payroll"
       badge={data?.latestPayslip ? data.latestPayslip.month : undefined}
-      link={{ href: "/payroll/me", label: "View" }}
+      link={{ href: "/me/pay", label: "View" }}
       isLoading={isLoading}
       loadingRows={2}
       isEmpty={!data}

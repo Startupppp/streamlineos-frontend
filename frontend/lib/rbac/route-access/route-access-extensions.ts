@@ -128,6 +128,27 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     reason:
       "Workforce administration records are not the people directory. Root §8 places workers under organization governance and excludes them from the universal directory surface.",
   },
+  {
+    prefix: "/chat/settings",
+    product: "administration",
+    permission: "chat:org-settings:manage",
+    reason:
+      "Organisation-wide chat configuration is administrative. Only org owners and admins hold chat:org-settings:manage; it is org-only and cannot be delegated.",
+  },
+  {
+    prefix: "/chat/moderation",
+    product: "administration",
+    permission: "chat:huddles:moderate",
+    reason:
+      "Huddle moderation controls (kick, restrict, view active sessions) are administrative. chat:huddles:moderate is outside the universal MEMBER set.",
+  },
+  {
+    prefix: "/calendar/settings",
+    product: "administration",
+    permission: "calendar:admin:manage",
+    reason:
+      "Organisation-wide calendar configuration (source integrations, defaults) is administrative, not the universal personal calendar surface.",
+  },
 ];
 
 export function matchRouteAccessExtension(

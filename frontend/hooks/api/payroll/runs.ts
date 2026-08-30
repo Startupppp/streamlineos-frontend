@@ -7,11 +7,9 @@ import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { PayrollRun, PayrollRunListItem, PayrollChecklistItem } from "@/types/payroll/runs";
 
-interface PaginatedRuns {
+interface RunsPage {
   data: PayrollRunListItem[];
-  total: number;
-  page: number;
-  limit: number;
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
 interface RunDetail {
@@ -21,7 +19,7 @@ interface RunDetail {
 }
 
 export function usePayrollRuns(params?: {
-  page?: number;
+  cursor?: string;
   limit?: number;
   entityId?: number;
 }) {
@@ -29,7 +27,7 @@ export function usePayrollRuns(params?: {
   return useQuery({
     queryKey: queryKeys.payroll.runs(params as Record<string, unknown> | undefined),
     queryFn: () =>
-      apiClient.get<PaginatedRuns>("/payroll/runs", params as Record<string, string | number> | undefined),
+      apiClient.get<RunsPage>("/payroll/runs", params as Record<string, string | number> | undefined),
     staleTime: 60_000,
     enabled: canView,
   });

@@ -23,7 +23,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { cn } from "@/lib/utils";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { useWinLossAnalysis } from "@/hooks/api/crm";
-import { formatCurrency } from "@/features/crm/lib/format-currency";
+import { formatCurrency } from "@/lib/format-utils";
 
 const REASON_COLORS = [
   "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",

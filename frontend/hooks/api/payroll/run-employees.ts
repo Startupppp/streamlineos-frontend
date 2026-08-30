@@ -6,11 +6,9 @@ import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { RunEmployee, RunEmployeeDetail, VarianceData } from "@/types/payroll/runs";
 
-interface PaginatedRunEmployees {
+interface RunEmployeesPage {
   data: RunEmployee[];
-  total: number;
-  page: number;
-  limit: number;
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
 interface AdjustmentBody {
@@ -22,13 +20,13 @@ interface AdjustmentBody {
 
 export function useRunEmployees(
   runId: number,
-  params?: { page?: number; limit?: number; search?: string; status?: string; workerType?: string },
+  params?: { cursor?: string; limit?: number; search?: string; status?: string; workerType?: string },
 ) {
   const canView = useCan("payroll:runs:view");
   return useQuery({
     queryKey: queryKeys.payroll.runEmployeesList(runId, params as Record<string, unknown> | undefined),
     queryFn: () =>
-      apiClient.get<PaginatedRunEmployees>(
+      apiClient.get<RunEmployeesPage>(
         `/payroll/runs/${runId}/employees`,
         params as Record<string, string | number> | undefined,
       ),

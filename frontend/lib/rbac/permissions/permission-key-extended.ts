@@ -72,6 +72,7 @@ export type ExtendedPermissionKey =
   | "calendar:read"
   | "calendar:write"
   | "calendar:events:export"
+  | "calendar:admin:manage"
   | "support:reports:view"
   | "support:ai:view"
   | "support:ai:invoke"
