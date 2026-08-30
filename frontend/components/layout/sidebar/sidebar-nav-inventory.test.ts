@@ -54,8 +54,17 @@ import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 // that screen names individual people and rates their work, which is an
 // authority an organisation should grant deliberately rather than one that
 // arrives with the ability to read a stock summary.
+// Moved 2026-08-30 by NEO-9, NEO-11 and NEO-12: three more inventory routes got
+// nav entries. "Kits" (/inventory/kits, on inventory:products:read) is a kit's
+// bill of materials and the build command; the assemble action behind it re-gates
+// on inventory:kits:assemble, because building consumes components and creates a
+// SKU that did not exist a moment ago. "Consignment" (/inventory/consignment, on
+// inventory:stock:read) lists stock standing in the building that belongs to
+// somebody else; taking title re-gates on inventory:stock:adjust. "Dock"
+// (/inventory/dock) is gated on inventory:dock:manage — booking vehicles in is a
+// receiving clerk's job rather than the person who configures the site.
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "fb26c75f7bd70fe7324d6f9daaa45745c8fc490c230760c6292e3c16133f23eb";
+  "f63c8cc5a8cd76b9ed5fc8b41e71d6ce66d03f068ff5b0e52b9f28271c5c0c23";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {

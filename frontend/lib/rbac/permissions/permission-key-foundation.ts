@@ -184,6 +184,8 @@ export type FoundationPermissionKey =
   | "inventory:loads:manage"
   | "inventory:channels:manage"
   | "inventory:labor:read"
+  | "inventory:kits:assemble"
+  | "inventory:dock:manage"
   | "inventory:3pl:manage"
   | "inventory:replenishment:manage"
   | "inventory:settings:manage"

@@ -305,6 +305,24 @@ export const INVENTORY_NAV_GROUPS: NavGroup[] = [
         requiredPermission: "inventory:channels:manage",
       },
       {
+        label: "Kits",
+        icon: Scan,
+        href: "/inventory/kits",
+        requiredPermission: "inventory:products:read",
+      },
+      {
+        label: "Consignment",
+        icon: Scan,
+        href: "/inventory/consignment",
+        requiredPermission: "inventory:stock:read",
+      },
+      {
+        label: "Dock",
+        icon: Scan,
+        href: "/inventory/dock",
+        requiredPermission: "inventory:dock:manage",
+      },
+      {
         label: "Slotting",
         icon: Scan,
         href: "/inventory/slotting",
