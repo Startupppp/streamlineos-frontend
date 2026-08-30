@@ -8,6 +8,7 @@ import { CircleCheckIcon, DownloadIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -53,7 +54,7 @@ interface PayrollExportsHistoryProps {
 export function PayrollExportsHistory({ fallbackMapping }: PayrollExportsHistoryProps) {
   const [page, setPage] = useState(1);
   const pageSize = 20;
-  const { data, isLoading } = useTimesheetPayrollExports(page, pageSize);
+  const { data, isLoading, isError, refetch } = useTimesheetPayrollExports(page, pageSize);
   const qc = useQueryClient();
   const canAck = useCan("timesheets:payroll:export");
   const [ackTarget, setAckTarget] = useState<TimesheetExportDto | null>(null);
@@ -173,6 +174,8 @@ export function PayrollExportsHistory({ fallbackMapping }: PayrollExportsHistory
     [handleDownload, canAck, handleAckOpen],
   );
 
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
   const emptyState = (
     <EmptyState
       illustration={<EmptyReportIllustration className="h-32 w-32" />}
@@ -180,6 +183,17 @@ export function PayrollExportsHistory({ fallbackMapping }: PayrollExportsHistory
       description="Export a payroll period to see it here."
     />
   );
+
+  if (isError) {
+    return (
+      <ErrorState
+        title="Couldn't load export history"
+        description="Failed to load payroll export history. Please try again."
+        onRetry={handleRetry}
+        className="flex-1"
+      />
+    );
+  }
 
   return (
     <>

@@ -633,8 +633,8 @@ This is the first queue Claude must execute. Each item is current-source evidenc
 
 - [ ] **Complete generated OpenAPI coverage.** Freshness/synchronization pass, but coverage is only `1,916/3,540` operations. Classify genuine no-payload operations; add metadata-driven body/query/param schemas for all others; assert mutation/webhook idempotency and error envelopes. Failure prevented: client fields silently no-op and webhook contracts drift.
 - [x] **Add cache correctness collision tests.** DONE 2026-08-30 — `src/common/cache/cache-key-collision.spec.ts`, 12 tests across six dimensions: tenant, permission-version bump, filtered-vs-unfiltered under one namespace, locale/timezone, org-switch session invalidation, and cross-process propagation for mutation, role, membership and entitlement changes. **Every dimension has a negative control that was run and observed to fail** — stripping the filter token served a filtered result to an unfiltered caller; removing the invalidate left a stale pre-switch session. The controls live in the test's own doubles; no source was modified to produce a failure.
-- [ ] **Separate code proof from infrastructure proof.** Self-tests for cells, backup, capacity, cost and alert dispatch are KEEPs, but do not complete operations. Provision or deliver an operator-owned runbook for independent cells, physical replica, PITR restore, production-shaped load/headroom, cost, live alert delivery and acknowledgement. Failure prevented: a mocked or namespace-only deployment is claimed as 20M-ready.
-- [ ] **Resolve operator/compliance decisions explicitly.** Produce approved operator-access, export/erasure/retention/legal-hold decisions. The current compliance dry run has no real export-file worker and cannot physically purge object storage by organization prefix; it remains failing until implementation and drill evidence exist.
+- [ ] **Separate code proof from infrastructure proof.** Self-tests for cells, backup, capacity, cost and alert dispatch are KEEPs, but do not complete operations. Provision or deliver an operator-owned runbook for independent cells, physical replica, PITR restore, production-shaped load/headroom, cost, live alert delivery and acknowledgement. Failure prevented: a mocked or namespace-only deployment is claimed as 20M-ready. _Operator-blocked D01: runbooks [RB-01](runbooks/RB-01-cell-isolation.md) [RB-02](runbooks/RB-02-pitr-backup.md) [RB-03](runbooks/RB-03-read-replica.md) [RB-04](runbooks/RB-04-recovery-drill.md) [RB-05](runbooks/RB-05-production-load.md) [RB-06](runbooks/RB-06-live-alert-delivery.md) [RB-07](runbooks/RB-07-per-cell-cost.md); evidence analysis: [P8](session-tickets/reports/P8-production-evidence.md) §D01._
+- [ ] **Resolve operator/compliance decisions explicitly.** Produce approved operator-access, export/erasure/retention/legal-hold decisions. The current compliance dry run has no real export-file worker and cannot physically purge object storage by organization prefix; it remains failing until implementation and drill evidence exist. _Operator-blocked D02: runbook [RB-08](session-tickets/reports/P8-production-evidence.md#rb-08--compliance-drill-end-to-end) (stub in P8); code gaps must be fixed first — export worker, storage purge, physical row deletion; analysis: [P8](session-tickets/reports/P8-production-evidence.md) §D02._
 
 #### Quarantined worktree change
 
@@ -759,7 +759,7 @@ Failure to prevent: large billing orchestration and incomplete runtime evidence 
 - [ ] Keep entitlement checks local through versioned cached snapshots; invalidate immediately after billing mutations and webhook settlement.
 - [ ] Prove AI reserve/settle/refund/overage behavior is atomic and token-metered.
 - [ ] Move large invoice generation/export work to bounded asynchronous jobs where request budgets can be exceeded.
-- [ ] Exercise billing/payment behavior during placement change, provider outage, Redis outage and webhook redelivery.
+- [ ] Exercise billing/payment behavior during placement change, provider outage, Redis outage and webhook redelivery. _Operator-blocked D03: requires provisioned cell-2 and real provider test-mode webhooks; runbook stub [RB-09](session-tickets/reports/P8-production-evidence.md#rb-09--billing-under-cell-failure-and-provider-outage) in P8 §D03._
 
 Completion gate: no retry can double-charge or double-credit; entitlements never require a provider call per request; invoice/tax/currency history is immutable; runtime replay and failure evidence exists.
 
@@ -822,7 +822,7 @@ Failure to prevent: protected administration inherits universal route access, ov
 - [ ] Ensure stream credentials are short-lived, purpose-limited and redacted from telemetry.
 - [x] Preserve database-side notification timestamp handling and composite FK correctness. VERIFIED 2026-08-31: same fact as §28.2 baseline tick. The microsecond-truncation bug that 23503-rolled every delivery row is fixed; confirmed by `notification-dispatch-after-commit.spec.ts` + `notification-outbox-relay.spec.ts` (266/266 pass, RECONCILIATION.md §S06).
 - [ ] Prove at-least-once delivery, idempotent materialization, read/unread counters, suppression, digest, retry and dead-letter behavior.
-- [ ] Configure durable alerting for queue age, pending intents, dead letters, provider failure and consumer absence.
+- [ ] Configure durable alerting for queue age, pending intents, dead letters, provider failure and consumer absence. _Operator-blocked D04: requires `ALERT_WEBHOOK_URL`; runbook [RB-06](runbooks/RB-06-live-alert-delivery.md); analysis: [P8](session-tickets/reports/P8-production-evidence.md) §D04._
 
 Completion gate: personal notifications remain universally reachable, administration is exactly gated, reconnect cannot cross organizations or duplicate state, and every delivery failure is observable and replayable.
 
@@ -852,7 +852,7 @@ Completion gate: no Workflow route renders and no Workflow request fires without
 
 #### Query cost and caching
 
-- [ ] Seed or obtain production-shaped data for the blocked read-budget criterion.
+- [ ] Seed or obtain production-shaped data for the blocked read-budget criterion. _Operator-blocked D15: requires a seed script or operator-approved sanitized snapshot; analysis: [P8](session-tickets/reports/P8-production-evidence.md) §D15._
 - [ ] Measure plans as the application role with tenant context, warm/cold cache mix and declared row distributions.
 - [ ] Eliminate unbounded selects, fetch-then-filter, per-row lookups and leading-wildcard scans on target paths.
 - [ ] Keep hard page cap 100 and stable tenant-scoped cursor indexes.
@@ -880,19 +880,19 @@ Completion gate: no Workflow route renders and no Workflow request fires without
 
 - [ ] Complete operator-access design and audit evidence.
 - [ ] Configure and prove public-token rate limits, upload limits, SSRF controls, secret/PII redaction and security headers.
-- [ ] Configure `ALERT_WEBHOOK_URL`, `APP_RELEASE` and a live production log stream.
-- [ ] Send test alerts through every on-call destination and record acknowledgement.
-- [ ] Complete export, retention, legal-hold and erasure drills with disposable data and auditable cleanup.
+- [ ] Configure `ALERT_WEBHOOK_URL`, `APP_RELEASE` and a live production log stream. _Operator-blocked D05: runbook [RB-06](runbooks/RB-06-live-alert-delivery.md); analysis: [P8](session-tickets/reports/P8-production-evidence.md) §D05._
+- [ ] Send test alerts through every on-call destination and record acknowledgement. _Operator-blocked D06: runbook [RB-06](runbooks/RB-06-live-alert-delivery.md); analysis: [P8](session-tickets/reports/P8-production-evidence.md) §D06._
+- [ ] Complete export, retention, legal-hold and erasure drills with disposable data and auditable cleanup. _Operator-blocked D07: code gaps must be fixed first (export worker, storage purge, physical delete); runbook stub [RB-08](session-tickets/reports/P8-production-evidence.md#rb-08--compliance-drill-end-to-end) in P8 §D07._
 
 #### Cell, recovery and 20M evidence
 
-- [ ] Provision independently isolated cell compute, cache, object storage, search, realtime, worker and monitoring resources; namespace-only separation does not pass.
-- [ ] Provision PITR/backup frequency that meets the five-minute operational RPO.
-- [ ] Provision a physical read replica and prove replica-safe versus primary-required workload behavior under real lag.
-- [ ] Re-run all 14 workload objectives with production-shaped data and declared geography/device/network/cache conditions.
-- [ ] Meet every latency objective with at least 40% sustained-resource headroom and survive the burst target.
-- [ ] Measure and approve per-cell cost, cost per active organization/member/message/job and saturation forecast.
-- [ ] Record operator-owned blockers as blockers; never convert missing infrastructure into a passing code-only claim.
+- [ ] Provision independently isolated cell compute, cache, object storage, search, realtime, worker and monitoring resources; namespace-only separation does not pass. _Operator-blocked D08: runbook [RB-01](runbooks/RB-01-cell-isolation.md); detailed provisioning steps in [CELL-RUNBOOK.md](c28-cell-based-platform-at-20m/CELL-RUNBOOK.md); analysis: [P8](session-tickets/reports/P8-production-evidence.md) §D08._
+- [ ] Provision PITR/backup frequency that meets the five-minute operational RPO. _Operator-blocked D09: logical backup RTO met (1175s); RPO is 6h not 5min; REGIONAL_DISASTER unverified; runbook [RB-02](runbooks/RB-02-pitr-backup.md); analysis: [P8](session-tickets/reports/P8-production-evidence.md) §D09._
+- [ ] Provision a physical read replica and prove replica-safe versus primary-required workload behavior under real lag. _Operator-blocked D10: `DB_REPLICA_URL` absent; lag-simulation tests skipped; routing code correct; runbook [RB-03](runbooks/RB-03-read-replica.md); analysis: [P8](session-tickets/reports/P8-production-evidence.md) §D10._
+- [ ] Re-run all 14 workload objectives with production-shaped data and declared geography/device/network/cache conditions. _Operator-blocked D11: load driver self-tests 14/14 PASS; current run is public-internet, not colocated; production-shaped data (D15) is a prerequisite; runbook [RB-05](runbooks/RB-05-production-load.md); analysis: [P8](session-tickets/reports/P8-production-evidence.md) §D11._
+- [ ] Meet every latency objective with at least 40% sustained-resource headroom and survive the burst target. _Operator-blocked D12: headroom cannot be measured from public-internet runner; requires colocated deployment after D08 and D11 are complete; runbook [RB-05](runbooks/RB-05-production-load.md); analysis: [P8](session-tickets/reports/P8-production-evidence.md) §D12._
+- [ ] Measure and approve per-cell cost, cost per active organization/member/message/job and saturation forecast. _Operator-blocked D13: vendor rate env vars absent; 8 dimensionless cost-history entries exist; requires invoice-derived rates and cost-owner approval; runbook [RB-07](runbooks/RB-07-per-cell-cost.md); analysis: [P8](session-tickets/reports/P8-production-evidence.md) §D13._
+- [ ] Record operator-owned blockers as blockers; never convert missing infrastructure into a passing code-only claim. _D14: satisfied by [P8-production-evidence.md](session-tickets/reports/P8-production-evidence.md) which enumerates all 15 D rows with explicit evidence boundaries. No D row is ticked until its runbook evidence file is committed._
 
 ### 28.17 Dependency-ordered implementation plan
 

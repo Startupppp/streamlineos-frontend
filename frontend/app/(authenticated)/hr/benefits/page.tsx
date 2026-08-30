@@ -22,6 +22,7 @@ import { BenefitPlanCard } from "@/features/hr/benefits/benefit-plan-card";
 import { PlanUpsertSheet } from "@/features/hr/benefits/plan-upsert-sheet";
 import { ClaimReviewSheet } from "@/features/hr/benefits/claim-review-sheet";
 import { DependentsManager } from "@/features/hr/benefits/dependents-manager";
+import { ErrorState } from "@/components/shared/error-state";
 import {
   useBenefitPlans,
   useMyBenefits,
@@ -47,7 +48,7 @@ const CLAIM_STATUS_META: Record<
 };
 
 function MyBenefitsTab() {
-  const { data, isLoading } = useMyBenefits();
+  const { data, isLoading, isError, refetch } = useMyBenefits();
   const { data: allPlans } = useBenefitPlans({ status: "active" });
   const enroll = useEnroll();
   const waive = useWaive();
@@ -78,6 +79,8 @@ function MyBenefitsTab() {
     [waive],
   );
 
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -87,6 +90,17 @@ function MyBenefitsTab() {
           ))}
         </div>
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        title="Couldn't load your benefits"
+        description="Failed to load benefit information. Please try again."
+        onRetry={handleRetry}
+        className="flex-1"
+      />
     );
   }
 
@@ -284,7 +298,7 @@ function buildClaimColumns(
 }
 
 function PlansAdminTab({ canManage }: { canManage: boolean }) {
-  const { data, isLoading } = useBenefitPlans();
+  const { data, isLoading, isError, refetch } = useBenefitPlans();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editPlan, setEditPlan] = useState<BenefitPlan | undefined>(undefined);
 
@@ -303,7 +317,20 @@ function PlansAdminTab({ canManage }: { canManage: boolean }) {
     if (!open) setEditPlan(undefined);
   }, []);
 
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
   const plans = data?.data ?? [];
+
+  if (isError) {
+    return (
+      <ErrorState
+        title="Couldn't load benefit plans"
+        description="Failed to load benefit plans. Please try again."
+        onRetry={handleRetry}
+        className="flex-1"
+      />
+    );
+  }
 
   return (
     <div className="flex flex-1 min-h-0 flex-col gap-4">
@@ -343,7 +370,7 @@ function ClaimsDashboardTab({ canManage }: { canManage: boolean }) {
   const [reviewClaim, setReviewClaim] = useState<InsuranceClaim | null>(null);
 
   const query = statusFilter !== "all" ? { status: statusFilter as InsuranceClaim["status"] } : {};
-  const { data, isLoading } = useInsuranceClaims(query);
+  const { data, isLoading, isError, refetch } = useInsuranceClaims(query);
 
   const handleStatusFilterChange = useCallback((v: string) => {
     setStatusFilter(v);
@@ -357,7 +384,20 @@ function ClaimsDashboardTab({ canManage }: { canManage: boolean }) {
     if (!open) setReviewClaim(null);
   }, []);
 
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
   const claims = data?.data ?? [];
+
+  if (isError) {
+    return (
+      <ErrorState
+        title="Couldn't load insurance claims"
+        description="Failed to load claims. Please try again."
+        onRetry={handleRetry}
+        className="flex-1"
+      />
+    );
+  }
 
   return (
     <div className="flex flex-1 min-h-0 flex-col gap-4">

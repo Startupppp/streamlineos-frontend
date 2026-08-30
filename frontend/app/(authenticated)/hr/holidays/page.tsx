@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { ErrorState } from "@/components/shared/error-state";
 import {
   useHolidays,
   useCreateHoliday,
@@ -31,7 +32,7 @@ import { LocationView } from "@/features/hr/holidays/components/location-view";
 import { HolidaySheet } from "@/features/hr/holidays/components/holiday-sheet";
 
 export default function HolidaysPage() {
-  const { data: holidays, isLoading } = useHolidays();
+  const { data: holidays, isLoading, isError, refetch } = useHolidays();
   const createMutation = useCreateHoliday();
   const updateMutation = useUpdateHoliday();
   const deleteMutation = useDeleteHoliday();
@@ -178,6 +179,13 @@ export default function HolidaysPage() {
             ))}
           </div>
         </div>
+      ) : isError ? (
+        <ErrorState
+          title="Couldn't load holidays"
+          description="Failed to load the holiday calendar. Please try again."
+          onRetry={() => void refetch()}
+          className="flex-1"
+        />
       ) : (
         <AnimatePresence mode="wait">
           <motion.div

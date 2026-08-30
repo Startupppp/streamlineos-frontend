@@ -254,7 +254,17 @@
     "/access/user-module-access/{userId}": {
       "get": {
         "operationId": "UserModuleAccessController_getModuleAccess",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -269,7 +279,17 @@
       },
       "patch": {
         "operationId": "UserModuleAccessController_setModuleAccess",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -819,6 +839,16 @@
             }
           },
           {
+            "name": "periodId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
             "$ref": "#/components/parameters/IdempotencyKeyHeader"
           }
         ],
@@ -847,6 +877,16 @@
             "in": "path",
             "schema": {
               "type": "number"
+            }
+          },
+          {
+            "name": "periodId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -8552,7 +8592,36 @@
     "/accounting/settings/system-accounts/{purpose}": {
       "put": {
         "operationId": "SystemAccountsController_upsertSystemAccount",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "purpose",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "AR",
+                "AP",
+                "BANK_CLEARING",
+                "SALES_INCOME",
+                "DISCOUNT_GIVEN",
+                "TAX_PAYABLE",
+                "TAX_RECEIVABLE",
+                "PAYROLL_PAYABLE",
+                "EXPENSE_CLEARING",
+                "RETAINED_EARNINGS",
+                "OWNER_EQUITY",
+                "PAYMENT_FEES",
+                "REIMBURSEMENT_PAYABLE",
+                "FX_GAIN_LOSS",
+                "DEPRECIATION_EXPENSE",
+                "ACCUM_DEPRECIATION",
+                "SALARY_EXPENSE",
+                "ASSET_DISPOSAL_GAIN_LOSS"
+              ]
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -15181,18 +15250,25 @@
         "parameters": [
           {
             "name": "code",
-            "required": true,
             "in": "query",
+            "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
             }
           },
           {
             "name": "plan",
-            "required": true,
             "in": "query",
+            "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "STARTER",
+                "PROFESSIONAL",
+                "ENTERPRISE"
+              ]
             }
           }
         ],
@@ -17477,6 +17553,16 @@
             "schema": {
               "type": "number"
             }
+          },
+          {
+            "name": "runId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
           }
         ],
         "responses": {
@@ -19215,6 +19301,15 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         ],
         "responses": {
@@ -19292,6 +19387,15 @@
               "type": "integer",
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
@@ -19691,6 +19795,16 @@
             "name": "cycleId",
             "required": true,
             "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
             "schema": {
               "type": "integer",
               "exclusiveMinimum": 0,
@@ -21403,6 +21517,16 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
           }
         ],
         "responses": {
@@ -21448,7 +21572,17 @@
     "/build/{projectId}/labels": {
       "get": {
         "operationId": "ProjectsController_listProjectLabels",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -21463,7 +21597,17 @@
       },
       "post": {
         "operationId": "ProjectsController_createProjectLabel",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
         "responses": {
           "201": {
             "description": ""
@@ -22767,6 +22911,16 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
           }
         ],
         "responses": {
@@ -22821,6 +22975,16 @@
             "name": "milestoneId",
             "required": true,
             "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
             "schema": {
               "type": "integer",
               "exclusiveMinimum": 0,
@@ -22951,6 +23115,16 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
           }
         ],
         "responses": {
@@ -23032,6 +23206,16 @@
             "name": "moduleId",
             "required": true,
             "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
             "schema": {
               "type": "integer",
               "exclusiveMinimum": 0,
@@ -23180,6 +23364,15 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         ],
         "responses": {
@@ -23257,6 +23450,15 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         ],
         "responses": {
@@ -23284,6 +23486,15 @@
               "type": "integer",
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
@@ -23342,6 +23553,15 @@
               "type": "integer",
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
@@ -24021,6 +24241,16 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
           }
         ],
         "responses": {
@@ -24042,6 +24272,16 @@
             "name": "sprintId",
             "required": true,
             "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
             "schema": {
               "type": "integer",
               "exclusiveMinimum": 0,
@@ -25451,6 +25691,15 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         ],
         "responses": {
@@ -25476,6 +25725,15 @@
               "type": "integer",
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
@@ -25724,6 +25982,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         ],
         "responses": {
@@ -25808,6 +26075,15 @@
               "type": "integer",
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
@@ -25964,6 +26240,24 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "ticketId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         ],
         "responses": {
@@ -26010,6 +26304,24 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "ticketId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         ],
         "responses": {
@@ -26037,6 +26349,24 @@
               "type": "integer",
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "ticketId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
@@ -26104,6 +26434,33 @@
               "type": "integer",
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "ticketId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "checklistId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
@@ -26176,6 +26533,33 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "ticketId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "checklistId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         ],
         "responses": {
@@ -26203,6 +26587,15 @@
               "type": "integer",
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
@@ -26415,6 +26808,24 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "ticketId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         ],
         "responses": {
@@ -26468,6 +26879,24 @@
             "name": "emoji",
             "required": true,
             "in": "path",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "ticketId",
+            "in": "path",
+            "required": true,
             "schema": {
               "type": "string",
               "minLength": 1
@@ -26653,6 +27082,15 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         ],
         "responses": {
@@ -26708,6 +27146,15 @@
               "type": "integer",
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
@@ -27184,6 +27631,15 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         ],
         "responses": {
@@ -27212,6 +27668,16 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
           }
         ],
         "responses": {
@@ -27233,6 +27699,16 @@
             "name": "ticketId",
             "required": true,
             "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
             "schema": {
               "type": "integer",
               "exclusiveMinimum": 0,
@@ -27298,6 +27774,15 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         ],
         "responses": {
@@ -27323,6 +27808,15 @@
               "type": "integer",
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
@@ -27364,6 +27858,15 @@
               "type": "integer",
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
@@ -27803,6 +28306,16 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
           }
         ],
         "responses": {
@@ -27895,6 +28408,16 @@
             "name": "viewId",
             "required": true,
             "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
             "schema": {
               "type": "integer",
               "exclusiveMinimum": 0,
@@ -28017,6 +28540,15 @@
               "type": "integer",
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
@@ -34816,6 +35348,16 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "name": "channelId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
           }
         ],
         "responses": {
@@ -34862,6 +35404,16 @@
             "name": "messageId",
             "required": true,
             "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "channelId",
+            "in": "path",
+            "required": true,
             "schema": {
               "type": "integer",
               "exclusiveMinimum": 0,
@@ -35037,6 +35589,16 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "channelId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
           }
@@ -41941,7 +42503,17 @@
     "/crm/consent/contacts/{contactId}": {
       "get": {
         "operationId": "CrmConsentController_listForContact",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "contactId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -41956,7 +42528,17 @@
       },
       "post": {
         "operationId": "CrmConsentController_record",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "contactId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -76848,6 +77430,15 @@
             "schema": {
               "type": "number"
             }
+          },
+          {
+            "name": "delegationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         ],
         "responses": {
@@ -89106,6 +89697,16 @@
             }
           },
           {
+            "name": "candidateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
             "$ref": "#/components/parameters/IdempotencyKeyHeader"
           }
         ],
@@ -89153,6 +89754,16 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "name": "candidateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
           }
         ],
         "responses": {
@@ -89174,6 +89785,16 @@
             "name": "offerId",
             "required": true,
             "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "candidateId",
+            "in": "path",
+            "required": true,
             "schema": {
               "type": "integer",
               "exclusiveMinimum": 0,
@@ -89233,6 +89854,16 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "name": "candidateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
           }
         ],
         "responses": {
@@ -89279,6 +89910,16 @@
             }
           },
           {
+            "name": "candidateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
             "$ref": "#/components/parameters/IdempotencyKeyHeader"
           }
         ],
@@ -89305,6 +89946,16 @@
             "name": "offerId",
             "required": true,
             "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "candidateId",
+            "in": "path",
+            "required": true,
             "schema": {
               "type": "integer",
               "exclusiveMinimum": 0,
@@ -120837,6 +121488,15 @@
               "minimum": 1,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "name": "moduleKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         ],
         "responses": {
@@ -120855,7 +121515,17 @@
     "/module-access/{moduleKey}/catalog": {
       "get": {
         "operationId": "ModuleAccessController_catalog",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "moduleKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -120872,7 +121542,17 @@
     "/module-access/{moduleKey}/groups": {
       "get": {
         "operationId": "ModuleAccessController_listGroups",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "moduleKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -120887,7 +121567,17 @@
       },
       "post": {
         "operationId": "ModuleAccessController_createGroup",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "moduleKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
         "responses": {
           "201": {
             "description": ""
@@ -120924,7 +121614,26 @@
     "/module-access/{moduleKey}/groups/{groupId}": {
       "patch": {
         "operationId": "ModuleAccessController_renameGroup",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "moduleKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -120959,7 +121668,26 @@
       },
       "delete": {
         "operationId": "ModuleAccessController_deleteGroup",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "moduleKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -120976,7 +121704,26 @@
     "/module-access/{moduleKey}/groups/{groupId}/members": {
       "get": {
         "operationId": "ModuleAccessController_listGroupMembers",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "moduleKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -120991,7 +121738,26 @@
       },
       "post": {
         "operationId": "ModuleAccessController_addGroupMember",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "moduleKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
         "responses": {
           "201": {
             "description": ""
@@ -121027,7 +121793,35 @@
     "/module-access/{moduleKey}/groups/{groupId}/members/{userId}": {
       "delete": {
         "operationId": "ModuleAccessController_removeGroupMember",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "moduleKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -121044,7 +121838,26 @@
     "/module-access/{moduleKey}/groups/{groupId}/permissions": {
       "put": {
         "operationId": "ModuleAccessController_setGroupPermissions",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "moduleKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -121109,7 +121922,17 @@
     "/module-access/{moduleKey}/me/permissions": {
       "get": {
         "operationId": "ModuleAccessController_getCallerPermissions",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "moduleKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -121180,6 +122003,15 @@
                 "false"
               ]
             }
+          },
+          {
+            "name": "moduleKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         ],
         "responses": {
@@ -121240,6 +122072,15 @@
               "minimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "name": "moduleKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         ],
         "responses": {
@@ -121256,7 +122097,17 @@
       },
       "post": {
         "operationId": "ModuleAccessController_addMember",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "moduleKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
         "responses": {
           "201": {
             "description": ""
@@ -121470,7 +122321,26 @@
     "/module-access/{moduleKey}/members/{userId}": {
       "patch": {
         "operationId": "ModuleAccessController_updateMemberGroups",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "moduleKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -121510,7 +122380,26 @@
       },
       "delete": {
         "operationId": "ModuleAccessController_removeMember",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "moduleKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -121527,7 +122416,17 @@
     "/module-access/{moduleKey}/ownership": {
       "get": {
         "operationId": "ModuleAccessController_getOwnership",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "moduleKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -121545,6 +122444,15 @@
       "post": {
         "operationId": "ModuleAccessController_initiateOwnershipTransfer",
         "parameters": [
+          {
+            "name": "moduleKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
           {
             "$ref": "#/components/parameters/IdempotencyKeyHeader"
           }
@@ -121586,6 +122494,15 @@
         "operationId": "ModuleAccessController_cancelOwnershipTransfer",
         "parameters": [
           {
+            "name": "moduleKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
             "$ref": "#/components/parameters/IdempotencyKeyHeader"
           }
         ],
@@ -121607,7 +122524,17 @@
     "/module-access/{moduleKey}/roles": {
       "get": {
         "operationId": "ModuleAccessController_roles",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "moduleKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -121624,7 +122551,26 @@
     "/module-access/{moduleKey}/roles/{roleId}/permissions": {
       "put": {
         "operationId": "ModuleAccessController_setRolePermissions",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "moduleKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "roleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -121689,7 +122635,17 @@
     "/module-access/{moduleKey}/standing": {
       "get": {
         "operationId": "ModuleAccessController_listStanding",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "moduleKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -121706,7 +122662,26 @@
     "/module-access/{moduleKey}/standing/{membershipId}": {
       "post": {
         "operationId": "ModuleAccessController_grantAdminStanding",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "moduleKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "membershipId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -121721,7 +122696,26 @@
       },
       "delete": {
         "operationId": "ModuleAccessController_revokeStanding",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "moduleKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "membershipId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -121738,7 +122732,17 @@
     "/module-access/{moduleKey}/standing/grantable": {
       "get": {
         "operationId": "ModuleAccessController_describeGrantable",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "moduleKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -121755,7 +122759,17 @@
     "/module-access/{moduleKey}/standing/transfer-owner": {
       "post": {
         "operationId": "ModuleAccessController_directTransferOwnership",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "moduleKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -126450,6 +127464,32 @@
                 "archive",
                 "retire"
               ]
+            }
+          },
+          {
+            "name": "unitKind",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "BUSINESS_UNIT",
+                "BRANCH",
+                "DEPARTMENT",
+                "TEAM",
+                "LOCATION",
+                "COST_CENTER"
+              ]
+            }
+          },
+          {
+            "name": "unitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
             }
           }
         ],
@@ -142504,6 +143544,15 @@
               "type": "string",
               "minLength": 1
             }
+          },
+          {
+            "name": "collectorToken",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         ],
         "responses": {
@@ -142572,6 +143621,15 @@
             "name": "sessionId",
             "required": true,
             "in": "path",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "collectorToken",
+            "in": "path",
+            "required": true,
             "schema": {
               "type": "string",
               "minLength": 1
