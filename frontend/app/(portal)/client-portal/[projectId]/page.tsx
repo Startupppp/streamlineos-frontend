@@ -308,7 +308,7 @@ export default function PortalProjectPage({ params }: PortalProjectPageProps) {
         <PortalHeader showProjectsLink />
         <main className="flex-1 px-4 sm:px-6 py-8 max-w-3xl mx-auto w-full">
           <Link
-            href="/portal/projects"
+            href="/client-portal"
             className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-6"
           >
             <ChevronLeft className="h-3.5 w-3.5" />
@@ -331,7 +331,7 @@ export default function PortalProjectPage({ params }: PortalProjectPageProps) {
         <PortalHeader showProjectsLink />
         <main className="flex-1 px-4 sm:px-6 py-8 max-w-3xl mx-auto w-full">
           <Link
-            href="/portal/projects"
+            href="/client-portal"
             className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-6"
           >
             <ChevronLeft className="h-3.5 w-3.5" />
@@ -341,7 +341,7 @@ export default function PortalProjectPage({ params }: PortalProjectPageProps) {
             illustrationPreset="projects"
             title="Project not found"
             description="This project is not available. Please check your access or contact the project team."
-            action={{ label: "Back to projects", href: "/portal/projects" }}
+            action={{ label: "Back to projects", href: "/client-portal" }}
             className="min-h-[320px]"
           />
         </main>
@@ -356,7 +356,7 @@ export default function PortalProjectPage({ params }: PortalProjectPageProps) {
       <PortalHeader showProjectsLink />
       <main className="flex-1 px-4 sm:px-6 py-8 max-w-3xl mx-auto w-full">
         <Link
-          href="/portal/projects"
+          href="/client-portal"
           className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-6"
         >
           <ChevronLeft className="h-3.5 w-3.5" />
