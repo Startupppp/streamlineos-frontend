@@ -37,7 +37,7 @@ NOT yours: `frontend/app/**` and `frontend/lib/rbac/route-access/**` (S09) · `b
 - [ ] Finish expansion + resumable backfill for any column still lacking a membership counterpart, reporting unmappable and duplicate rows before cutover. NOTE: L44 verified 11/12 chat cols and 2/3 calendar cols already expanded; one expand done this session each. OPEN: billing(0/18), accounting(0/27), support(0/25), ai(0/6), e-sign(0/7), surveys(0/5), mail(0/1) still have 0% expansion. Blocked on wave execution.
 - [ ] Prove every required writer and reader uses `organization_members.id` or the canonical organization-person seam. OPEN: Cannot prove until contraction is done.
 - [ ] Produce **zero-use proof** for each legacy column before removal (§COMMON 9 — graph proof, not grep). OPEN: Cannot do before contraction.
-- [ ] Contract via additive → backfill → validate → cutover → drop migrations, with cold-bootstrap and upgrade proof. OPEN: Not started.
+- [ ] Contract via additive → backfill → validate → cutover → drop migrations, with cold-bootstrap and upgrade proof. PARTIAL: ACTOR5 (2026-08-31) contracted 8 accounting/finance ATTR columns (accounting_periods×2, fin_bank_imports, fin_reconciliation_matches, fin_bank_transfers, fin_cash_flow_scenarios, fin_budgets×2) via migrations 0718/0719/0720 with re-backfill + unmapped-row guard. Ratchet: 553 → 545. Report: reports/ACTOR5.md. Remaining: billing(0/18), support(0/25), ai(0/6), e-sign(0/7), surveys(0/5), mail(0/1), AP/AR tables (not yet classified), journal_entries.created_by (DataScope dependency), fin_approval_requests (NOT NULL, complex routing).
 - [ ] Historical/inactive actors stay renderable but carry no current authority. OPEN: Not implemented.
 
 ### 2. Membership artifact inventory

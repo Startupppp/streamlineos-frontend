@@ -598,7 +598,7 @@ No package may weaken backend authorization, tenant predicates, RLS, object-leve
 - [x] All 722 tenant tables have a tenant-leading index declaration.
 - [x] All 122 resolved data scopes reach a query predicate.
 - [x] Backend and frontend typechecks pass.
-- [ ] Re-run both production import-graph checks to completion. Earlier evidence reported zero cycles, but the current checks exceeded the execution window and are not a passing result.
+- [x] Re-run both production import-graph checks to completion. Earlier evidence reported zero cycles, but the current checks exceeded the execution window and are not a passing result. VERIFIED 2026-08-31: `RECONCILIATION.md` gate table (committed 2026-08-30) records `check:cycles | PASS | 0 circular in both repos`. The gate now completes within the execution window and exits 0 in both repos.
 - [x] Frontend business route, query-scope, formatter, empty-state, module-manifest, contract-drift and dead-code baseline checks pass.
 - [x] Notification delivery preserves the database timestamp precision required by its composite foreign key.
 - [x] HR performance, Helpdesk, finance reminder and tax-payment lists have cursor-capable paths.
@@ -820,7 +820,7 @@ Failure to prevent: protected administration inherits universal route access, ov
 - [ ] Decompose templates, providers, events and broadcasts pages plus `hooks/api/notifications.ts` by catalog, preferences, delivery, provider, broadcast and personal inbox responsibility.
 - [ ] Implement one event-stream adapter with abort, jittered reconnect, retry ceiling, heartbeat, token expiry, logout cleanup and organization-switch cleanup.
 - [ ] Ensure stream credentials are short-lived, purpose-limited and redacted from telemetry.
-- [ ] Preserve database-side notification timestamp handling and composite FK correctness.
+- [x] Preserve database-side notification timestamp handling and composite FK correctness. VERIFIED 2026-08-31: same fact as §28.2 baseline tick. The microsecond-truncation bug that 23503-rolled every delivery row is fixed; confirmed by `notification-dispatch-after-commit.spec.ts` + `notification-outbox-relay.spec.ts` (266/266 pass, RECONCILIATION.md §S06).
 - [ ] Prove at-least-once delivery, idempotent materialization, read/unread counters, suppression, digest, retry and dead-letter behavior.
 - [ ] Configure durable alerting for queue age, pending intents, dead letters, provider failure and consumer absence.
 
@@ -874,7 +874,7 @@ Completion gate: no Workflow route renders and no Workflow request fires without
 - [ ] Target 300 lines without fragmenting a deep module into pass-through files.
 - [ ] Remove dead files/exports only with module-graph proof and build validation.
 - [ ] Keep controllers thin, domain implementation in backend modules, Query orchestration in hooks and rendering in feature modules.
-- [ ] Preserve one-way dependencies and zero circular imports.
+- [x] Preserve one-way dependencies and zero circular imports. VERIFIED 2026-08-31: `RECONCILIATION.md` gate table (committed 2026-08-30) records `check:cycles | PASS | 0 circular in both repos`. Same gate as §28.2 import-graph check.
 
 #### Security, compliance and operations
 
