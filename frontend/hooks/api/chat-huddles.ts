@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { Huddle, HuddleSignalInput } from "@/types/chat";
 
 export function useActiveHuddle(channelId: number) {
@@ -114,7 +115,7 @@ export function useSetHuddleScreenShare() {
 
 export function useKickParticipant() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:huddles:moderate", {
     mutationKey: ["chat", "huddle", "kick"],
     mutationFn: ({ huddleId, targetUserId }: { huddleId: number; channelId: number; targetUserId: string }) =>
       apiClient.post<{ ok: boolean }>(`/chat/huddles/${huddleId}/kick`, { targetUserId }),
