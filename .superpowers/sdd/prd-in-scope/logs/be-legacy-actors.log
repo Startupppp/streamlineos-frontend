@@ -1,0 +1,34 @@
+
+> streamlineos-api@0.1.0 scan:legacy-actors:check D:\projects\personal\Streamlineos\backend
+> node src/scripts/scan-legacy-org-actors.mjs --check
+
+
+Legacy Organization-Actor Scan
+======================================================
+Organizational (to migrate):   555
+Bridge (person↔account links): 3
+Authentication (identity):     5
+Unknown (manual review):       0
+Total user_id FKs scanned:     563
+
+By module (organizational count):
+  hr                     org=219  unknown=0
+  payroll                org=55  unknown=0
+  crm                    org=51  unknown=0
+  common                 org=49  unknown=0
+  inventory              org=37  unknown=0
+  accounting             org=27  unknown=0
+  support                org=25  unknown=0
+  kb                     org=24  unknown=0
+  billing                org=18  unknown=0
+  timesheets             org=15  unknown=0
+  chat                   org=12  unknown=0
+  e-sign                 org=7  unknown=0
+  ai                     org=6  unknown=0
+  surveys                org=5  unknown=0
+  directory              org=2  unknown=0
+  calendar               org=1  unknown=0
+  mail                   org=1  unknown=0
+  portal-access          org=1  unknown=0
+
+Ratchet OK: 555/555 remaining (0 migrated since baseline).

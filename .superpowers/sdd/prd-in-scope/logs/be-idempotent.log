@@ -1,0 +1,19 @@
+
+> streamlineos-api@0.1.0 check:idempotent-commands D:\projects\personal\Streamlineos\backend
+> node src/scripts/check-idempotent-commands.mjs
+
+Controllers scanned   522
+Handlers in scope     9
+
+EXCLUDED BY DESIGN — named, not hidden:
+  SKIP  src/modules/finance/controls/approvals.controller.ts:48  approve(":requestId/approve")  — bespoke-mechanism
+  SKIP  src/modules/finance/controls/approvals.controller.ts:59  reject(":requestId/reject")  — bespoke-mechanism
+  SKIP  src/modules/hr/recruitment/recruitment-candidate-records.controller.ts:170  updateReferral("referral")  — http-put-idempotent
+  SKIP  src/modules/inventory/sales-orders/inv-sales-orders.controller.ts:126  ship(":soId/ship")  — bespoke-mechanism
+  SKIP  src/modules/inventory/shipments/shipments.controller.ts:69  ship(":shipmentId/ship")  — bespoke-mechanism
+  SKIP  src/modules/inventory/stock/inv-stock-adjustments.controller.ts:39  createAdjustment("")  — bespoke-mechanism
+  SKIP  src/modules/inventory/stock/inv-stock-adjustments.controller.ts:72  postAdjustment(":adjustmentId/post")  — bespoke-mechanism
+  SKIP  src/modules/payroll/payout/approvals.controller.ts:79  approveStage("approvals/:approvalId/approve")  — bespoke-mechanism
+  SKIP  src/modules/payroll/payout/approvals.controller.ts:112  rejectStage("approvals/:approvalId/reject")  — bespoke-mechanism
+
+OK — every in-scope mutating handler carries @Idempotent.

@@ -1,0 +1,6 @@
+
+> streamlineos@0.1.0 check:contract-vendor D:\projects\personal\Streamlineos\frontend
+> node scripts/check-contract-vendor.mjs
+
+✔  frontend/contracts/openapi.json matches backend/openapi.json
+   sha256: a16b1c0274714875...

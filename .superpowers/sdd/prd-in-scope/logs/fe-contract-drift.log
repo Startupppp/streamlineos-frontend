@@ -1,0 +1,10 @@
+
+> streamlineos@0.1.0 check:contract-drift D:\projects\personal\Streamlineos\frontend
+> node scripts/check-contract-drift.mjs
+
+Timesheets calls extracted: 53 (body resolved: 24, body unresolved: 29, skipped computed paths: 2)
+
+=== KNOWN UNFIXED DEFECTS — 0 baselined drift(s) tracked; not accepted behaviour; awaiting resolution ===
+===
+
+✔  No new timesheets contract drift detected.

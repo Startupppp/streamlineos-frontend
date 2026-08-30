@@ -1,0 +1,43 @@
+
+> streamlineos-api@0.1.0 check:module-lifecycle D:\projects\personal\Streamlineos\backend
+> node src/scripts/check-module-lifecycle.mjs
+
+◇ injected env (51) from .env // tip: ⌘ override existing { override: true }
+Module: timesheets  (schemaFolder: timesheets)
+Tables discovered: 11
+  timesheet_audit_events  (1 declared index(es))
+  timesheet_budgets  (3 declared index(es))
+  timesheets  (10 declared index(es))
+  timesheet_exceptions  (3 declared index(es))
+  timesheet_exports  (3 declared index(es))
+  timesheet_periods  (5 declared index(es))
+  timesheet_rate_cards  (2 declared index(es))
+  timesheet_rates  (3 declared index(es))
+  timesheet_settings_history  (1 declared index(es))
+  timesheet_settings  (0 declared index(es))
+  timer_sessions  (3 declared index(es))
+
+Gate 1: Tenant isolation (RLS policies in pg_policies)
+PASS  All 11 tables have tenant-predicated RLS policies
+
+Gate 2: Cold migration (tables in pg_catalog + journaled migration)
+PASS  All 11 tables exist in pg_catalog with journaled migrations
+
+Gate 3: Restore (declared PK, org_id FK, named indexes present in pg_catalog)
+PASS  All 11 tables pass restore check
+
+Gate 4: Removal (org_id NOT NULL with FK whose ON DELETE is defined)
+PASS  All 11 tables have non-nullable org_id with FK
+  org_id ON DELETE CASCADE  — timer_sessions
+  org_id ON DELETE CASCADE  — timesheet_audit_events
+  org_id ON DELETE CASCADE  — timesheet_budgets
+  org_id ON DELETE CASCADE  — timesheet_exceptions
+  org_id ON DELETE CASCADE  — timesheet_exports
+  org_id ON DELETE RESTRICT  — timesheet_periods
+  org_id ON DELETE CASCADE  — timesheet_rate_cards
+  org_id ON DELETE SET NULL  — timesheet_rates
+  org_id ON DELETE CASCADE  — timesheet_settings
+  org_id ON DELETE CASCADE  — timesheet_settings_history
+  org_id ON DELETE RESTRICT  — timesheets
+
+RESULT: ALL GATES PASSED  (timesheets, 11 tables)

@@ -166,7 +166,7 @@ function ExecutionsTab({ workflowId }: ExecutionsTabProps) {
       {executions.map((ex) => (
         <ExecutionRow key={ex.id} execution={ex} />
       ))}
-      {(data?.total ?? 0) > 20 && (
+      {data?.pagination.hasMore === true && (
         <div className="pt-3 text-center">
           <Button variant="ghost" size="sm" asChild>
             <Link href="/workflows/executions">View all executions</Link>

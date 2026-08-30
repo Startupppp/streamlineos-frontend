@@ -1,0 +1,21 @@
+
+> streamlineos-api@0.1.0 check:owner-authority D:\projects\personal\Streamlineos\backend
+> node src/scripts/check-owner-authority.mjs
+
+production files scanned   3126
+owner-only operations      9 declared, 9 enforced
+owner shortcuts (reported) 12
+  SKIP  src/modules/build/core/projects-tickets-query.service.ts:116  owner skips a permission check, not a gate
+  SKIP  src/modules/build/core/projects-write.service.ts:52  owner skips a permission check, not a gate
+  SKIP  src/modules/build/core/projects-write.service.ts:218  owner skips a permission check, not a gate
+  SKIP  src/modules/delegations/delegation-policy.ts:40  owner skips a permission check, not a gate
+  SKIP  src/modules/hr/analytics-plus/hr-analytics-plus.controller.ts:71  owner skips a permission check, not a gate
+  SKIP  src/modules/module-access/module-access-group-crud.service.ts:90  owner skips a permission check, not a gate
+  SKIP  src/modules/module-access/module-access-groups.service.ts:794  owner skips a permission check, not a gate
+  SKIP  src/modules/module-access/module-role-permissions.ts:133  owner skips a permission check, not a gate
+  SKIP  src/modules/module-access/module-standing-mutations.service.ts:73  owner skips a permission check, not a gate
+  SKIP  src/modules/payroll/hr-payroll/reimbursements.controller.ts:71  owner skips a permission check, not a gate
+  SKIP  src/modules/rbac/rbac.service.ts:89  owner skips a permission check, not a gate
+  SKIP  src/modules/storage/storage-vault.controller.ts:42  owner skips a permission check, not a gate
+
+OK — nothing fabricates ownership and every owner gate reads the catalog.

@@ -1,17 +1,14 @@
 "use client";
 
-import { useState, useCallback, useEffect, type ReactNode } from "react";
-import { addMonths, format } from "date-fns";
+import { useState, useCallback, useEffect } from "react";
 import { Activity, RefreshCw, TrendingDown, TrendingUp, Zap } from "lucide-react";
-import { ZapIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Switch } from "@/components/ui/switch";
-import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -22,9 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TruncatedText } from "@/components/ui/truncated-text";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useCan } from "@/hooks/api/access";
 import {
   useAiCreditsWallet,
@@ -33,7 +28,6 @@ import {
   useConfigureAutoTopUp,
   usePurchaseAiCredits,
   useVerifyAiCreditPurchase,
-  type AiCreditTransaction,
   type AiCreditPack,
   type PurchaseAiPackOrder,
   type PurchaseAiPackResult,
@@ -41,174 +35,11 @@ import {
 } from "@/hooks/api/ai-credits";
 import { AiCreditsDailyChart } from "@/features/billing/ai-credits-daily-chart";
 import { AiCreditsBreakdownTables } from "@/features/billing/ai-credits-breakdown-tables";
+import { AiCreditPackCard } from "@/features/billing/components/ai-credit-pack-card";
+import { TXN_COLUMNS, getTxnRowKey } from "@/features/billing/components/ai-credit-txn-columns";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatCredits, formatTokens } from "@/lib/format-ai";
 import { cn } from "@/lib/utils";
-
-const TXN_LABELS: Record<
-  AiCreditTransaction["type"],
-  { label: string; sign: string; color: string }
-> = {
-  PURCHASE: { label: "Purchase", sign: "+", color: "text-status-success-ink" },
-  PLAN_GRANT: { label: "Plan Grant", sign: "+", color: "text-status-success-ink" },
-  USAGE: { label: "Usage", sign: "-", color: "text-foreground" },
-  REFUND: { label: "Refund", sign: "+", color: "text-status-info-ink" },
-  EXPIRY: { label: "Expiry", sign: "-", color: "text-destructive" },
-};
-
-const TXN_COLUMNS: DataTableColumn<AiCreditTransaction>[] = [
-  {
-    key: "type",
-    header: "Type",
-    cell: (txn): ReactNode => {
-      const meta = TXN_LABELS[txn.type] ?? { label: txn.type, sign: "", color: "text-foreground" };
-      return <Badge variant="secondary" className="text-micro">{meta.label}</Badge>;
-    },
-  },
-  {
-    key: "feature",
-    header: "Feature",
-    cell: (txn): ReactNode => (
-      <span className="text-xs text-muted-foreground">{txn.feature ?? "—"}</span>
-    ),
-  },
-  {
-    key: "model",
-    header: "Model",
-    cell: (txn): ReactNode =>
-      txn.model ? (
-        <TruncatedText text={txn.model} className="text-xs text-muted-foreground max-w-[120px]" />
-      ) : (
-        <span className="text-xs text-muted-foreground">—</span>
-      ),
-  },
-  {
-    key: "totalTokens",
-    header: "Tokens",
-    headerClassName: "text-right",
-    className: "text-right tabular-nums text-xs",
-    cell: (txn): ReactNode => {
-      if (txn.totalTokens == null) return <span className="text-muted-foreground">—</span>;
-      const title =
-        txn.promptTokens != null && txn.completionTokens != null
-          ? `In: ${txn.promptTokens.toLocaleString()}  Out: ${txn.completionTokens.toLocaleString()}`
-          : undefined;
-      return (
-        <span className="text-muted-foreground" title={title}>
-          {formatTokens(txn.totalTokens)}
-        </span>
-      );
-    },
-  },
-  {
-    key: "amount",
-    header: "Amount",
-    headerClassName: "text-right",
-    cell: (txn): ReactNode => {
-      const meta = TXN_LABELS[txn.type] ?? { label: txn.type, sign: "", color: "text-foreground" };
-      return (
-        <span className={`font-mono text-sm font-medium tabular-nums ${meta.color}`}>
-          {meta.sign}{formatCredits(Math.abs(txn.amount))}
-        </span>
-      );
-    },
-    className: "text-right",
-  },
-  {
-    key: "balanceAfter",
-    header: "Balance",
-    headerClassName: "text-right",
-    className: "text-right font-mono text-sm tabular-nums text-muted-foreground",
-    cell: (txn): ReactNode => formatCredits(txn.balanceAfter),
-  },
-  {
-    key: "expires",
-    header: "Expires",
-    headerClassName: "text-right",
-    className: "text-right text-xs text-muted-foreground",
-    cell: (txn): ReactNode =>
-      txn.type === "PURCHASE"
-        ? format(addMonths(new Date(txn.createdAt), 12), "dd MMM yyyy")
-        : "—",
-  },
-  {
-    key: "createdAt",
-    header: "Date",
-    headerClassName: "text-right",
-    className: "text-right text-xs text-muted-foreground",
-    cell: (txn): ReactNode => format(new Date(txn.createdAt), "dd MMM yyyy"),
-  },
-];
-
-function getTxnRowKey(txn: AiCreditTransaction): string | number {
-  return txn.id;
-}
-
-function CreditPackCard({
-  pack,
-  canPurchase,
-  isPending,
-  isBusy,
-  onBuy,
-}: {
-  pack: AiCreditPack;
-  canPurchase: boolean;
-  isPending: boolean;
-  isBusy: boolean;
-  onBuy: (pack: AiCreditPack) => void;
-}) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  const totalCredits = pack.credits + pack.bonusCredits;
-
-  function handleBuy() {
-    onBuy(pack);
-  }
-
-  return (
-    <div
-      className={cn(
-        "relative flex flex-col rounded-lg border border-border bg-card p-4 transition-shadow hover:shadow-sm",
-        pack.bonusCredits > 0 && "border-primary/25",
-      )}
-      {...hoverHandlers}
-    >
-      {pack.bonusCredits > 0 ? (
-        <span className="absolute -top-px right-3 inline-flex items-center rounded-b-md bg-primary px-2 py-0.5 text-micro font-semibold uppercase tracking-wide text-primary-foreground">
-          +{pack.bonusCredits.toLocaleString()} bonus
-        </span>
-      ) : null}
-      <div className="mb-3 flex items-start gap-2.5">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-          <ZapIcon ref={iconRef} size={16} className="text-primary" />
-        </div>
-        <div className="min-w-0 flex-1 pt-0.5">
-          <p className="text-sm font-semibold text-foreground">{pack.name}</p>
-          <p className="text-xs text-muted-foreground tabular-nums">
-            {pack.credits.toLocaleString()} credits
-          </p>
-        </div>
-      </div>
-      <p className="mb-1 text-2xl font-bold tabular-nums tracking-tight text-foreground">
-        ₹{(pack.priceInPaise / 100).toLocaleString("en-IN")}
-      </p>
-      <p className="mb-4 text-xs text-muted-foreground tabular-nums">
-        {totalCredits.toLocaleString()} total credits
-      </p>
-      {canPurchase ? (
-        <LoadingButton
-          size="sm"
-          className="mt-auto w-full"
-          isPending={isPending}
-          loadingText="Opening…"
-          disabled={isBusy && !isPending}
-          onClick={handleBuy}
-        >
-          Buy
-        </LoadingButton>
-      ) : null}
-    </div>
-  );
-}
 
 type TxnPageSize = 10 | 20 | 50;
 
@@ -477,7 +308,7 @@ export function AiCreditsSettingsPage() {
               ) : (
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                   {packs.map((pack) => (
-                    <CreditPackCard
+                    <AiCreditPackCard
                       key={pack.id}
                       pack={pack}
                       canPurchase={canPurchase}

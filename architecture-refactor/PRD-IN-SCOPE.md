@@ -2,7 +2,7 @@
 
 **Target:** 10/10 architecture, implementation, security, performance, maintainability and operability  
 **Status:** approved target specification; current implementation is not yet complete  
-**Last grounded against source:** 2026-08-29
+**Last grounded against source:** 2026-08-30 (`frontend` `60d27c879`; `backend` `32638f21`, plus an uncommitted Payroll Profiles read-repository change that must be reviewed before it is committed)
 **Scope:** every backend, frontend, schema, migration, API, worker, realtime, test, documentation and operational file, except CRM- and Inventory-owned implementation.  
 **Excluded domains:** CRM and Inventory, including their owned backend modules, schemas, APIs, workers, tests, frontend routes, features, hooks and contracts. They may adopt compatible shared primitives but must not be behaviorally redesigned by this PRD.
 
@@ -566,11 +566,11 @@ The final report must contain separate sections for VERIFIED DONE, REGRESSED, ST
 
 ## 28. Current 10/10 completion backlog (authoritative execution scope)
 
-This section is the single executable backlog for the next implementation pass. Sections 1-27 remain the product and architecture contract; this section records only work that is not yet proved complete against the current source at commit `846d71143`. CRM and Inventory remain excluded, including their pages, domain schema and domain-specific migrations. A shared-platform change may touch them only when required to preserve a shared interface, and must not redesign either excluded domain.
+This section is the single executable backlog for the next implementation pass. Sections 1-27 remain the product and architecture contract; this section records only work that is not yet proved complete against the source revisions named at the top of this document. CRM and Inventory remain excluded, including their pages, domain schema and domain-specific migrations. A shared-platform change may touch them only when required to preserve a shared interface, and must not redesign either excluded domain.
 
 The target is evidence-backed 10/10, not a declared score. A module reaches 10/10 only when every applicable checkbox below is complete and the final verification matrix is green. Existing sound design receives a KEEP verdict. A REPLACE verdict must name the failure that occurs at target scale or under an authorization, correctness, recovery or maintenance condition.
 
-### 28.1 Execution protocol for Luna
+### 28.1 Execution protocol for Claude
 
 Before editing, ask all blocking questions in one opening message. At minimum confirm:
 
@@ -593,12 +593,12 @@ No package may weaken backend authorization, tenant predicates, RLS, object-leve
 
 ### 28.2 Confirmed baseline — preserve it
 
-- [x] All 3,528 backend handlers are classified; zero are undeclared.
-- [x] All 3,091 permission usages resolve against the synchronized 690-key catalogs.
-- [x] All 720 tenant tables have a tenant-leading index declaration.
+- [x] All 3,533 backend handlers are classified; zero are undeclared.
+- [x] All 3,094 permission usages resolve against the synchronized 690-key catalogs.
+- [x] All 722 tenant tables have a tenant-leading index declaration.
 - [x] All 122 resolved data scopes reach a query predicate.
 - [x] Backend and frontend typechecks pass.
-- [x] Backend and frontend import graphs have zero circular dependencies.
+- [ ] Re-run both production import-graph checks to completion. Earlier evidence reported zero cycles, but the current checks exceeded the execution window and are not a passing result.
 - [x] Frontend business route, query-scope, formatter, empty-state, module-manifest, contract-drift and dead-code baseline checks pass.
 - [x] Notification delivery preserves the database timestamp precision required by its composite foreign key.
 - [x] HR performance, Helpdesk, finance reminder and tax-payment lists have cursor-capable paths.
@@ -606,6 +606,39 @@ No package may weaken backend authorization, tenant predicates, RLS, object-leve
 - [x] Expense create/decision writes commit their domain change and outbox intent atomically.
 
 These items are regression gates, not implementation TODOs.
+
+### 28.2a 2026-08-30 audit delta — P0/P1 execution queue
+
+This is the first queue Claude must execute. Each item is current-source evidence, not speculative cleanup. Do not move an item to DONE on a typecheck alone.
+
+#### P0 — security, tenancy and release-integrity repairs
+
+- [ ] **Repair the Organization membership-revocation test graph.** `backend/src/modules/organization/core/org-membership.service.ts` now needs `OrgMembershipReadService`, but `membership-revocation.spec.ts` does not provide it. Add the real/minimal test provider through the existing Nest test seam; make the entire spec pass. Failure prevented: a broken revocation path has no executable regression proof.
+- [ ] **Fix Home calendar object-level access before projection.** In `backend/src/modules/home/dashboard/dashboard-hr.service.ts`, upcoming events are selected by organization/time without attendee or event-visibility authorization. Move visibility/attendee predicates into SQL before title/metadata projection and test private event, declined attendee, departed membership and cross-organization IDs. Failure prevented: private calendar titles leak into a universal dashboard.
+- [ ] **Fix Build dashboard ownership and scope.** In `backend/src/modules/home/dashboard/dashboard-project.service.ts`, replace the HR permission used to decide Build visibility with the exact Build permission/DataScope. Add `orgId` to all project-member predicates, and replace in-memory active-sprint ticket aggregation with a bounded tenant-scoped SQL aggregate. Failure prevented: a member in another organization can influence visibility/counts and large sprints load every ticket.
+- [ ] **Make tenant-isolation proof complete for every tenant-owned DB service.** The current gate reports `154/783` covered and `629` uncovered. Prioritize Organization/RBAC, Home, HRMS/Payroll, Build, Billing/Accounting, Chat, Calendar, Notifications, Knowledge Base, Workflows and Inbox. For each uncovered service, either add a focused cross-tenant allow/deny test or remove it if graph proof shows it dead. Do not lower the gate or add blanket exclusions. Failure prevented: a missing `orgId` predicate is not structurally caught.
+- [ ] **Repair the migration-chain watermark using exact journal evidence.** Applied watermark `1788051829642` is ahead of repository journal `1787941388254`. First identify and stop the writer recreating unjournalled entries. Then reconcile only exact orphan rows/hashes, run cold and upgrade databases to the same head, and document before/after counts. The user permits destructive repair because staging/production contain no required data; this does not permit broad deletes or guessing. Failure prevented: a deployment or new environment drifts from live schema.
+- [ ] **Protect administrative route descendants structurally.** Add server-side `enforceRouteAccess` (or the established equivalent) and exact hook-level permissions for Notifications admin, Knowledge/Wiki settings, Chat admin and Calendar admin descendants. A navigation-only layout or client-only `RequireModule` is insufficient. Add route-gate tests for every protected descendant, not only five representative modules. Failure prevented: deep links render and sensitive queries fire before controls are hidden.
+
+#### P1 — correctness, policy and bounded-work repairs
+
+- [ ] **Restore multi-organization creation policy.** Current organization creation rejects a user unless their active membership is owner/admin. Members must be able to create and own a separate organization. Keep organization switching membership-checked and test member/admin/owner creation plus cross-org switch denial. Failure prevented: the product's multi-organization model is contradicted by the API.
+- [ ] **Finish Calendar actor/attendee cutover.** Remove duplicate authority between `calendar_events.created_by`/user IDs and membership IDs only after resumable backfill with unmappable/duplicate reporting. Make attendees membership-keyed with composite tenant FKs; test departed actors, series exceptions, timezone/DST edits and reminder cancellation/replacement. Failure prevented: invalid attendee edges and stale/duplicate reminders.
+- [ ] **Finish Chat actor/reaction cutover.** Migrate remaining legacy Chat actor fields, normalize reactions with `(organization_id, message_id, membership_id, emoji)` uniqueness, composite FKs and idempotent mutations, then prove private-channel/thread BOLA and reconnect/duplicate-event behavior. The current legacy-actor baseline is 555 organization-user FKs across in-scope domains; zero migration since baseline is not completion. Failure prevented: cross-tenant actor edges, duplicate reactions and stale former-member authority.
+- [ ] **Bound every remaining offset/expensive list.** Migrate module-access-groups, Workflow CRUD/executions, Build ticket compatibility paths and Payroll payout batches to stable cursor contracts. Replace leading-wildcard roster search with an approved indexed strategy or documented bounded alternative. Cap calendar export date ranges and each Home calendar source before merge/truncation. Failure prevented: deep pages, search and exports become unbounded work.
+- [ ] **Complete decomposition by responsibility.** Review all 88 backend and 22 frontend in-scope production files over 500 lines. Split mixed persistence/policy/orchestration/rendering; retain only cohesive exceptions in a named register with interface, reason and owner. Start with notification events catalog, org membership/module access, payroll generate/pipeline/payout, KB indexing, chat messages, calendar source/detail, workflows and frontend notification/calendar/chat/mail/workflow pages. Failure prevented: authorization/cache changes remain unauditable and regress during parallel work.
+- [ ] **Finish finance async paths.** Confirm `accounting.journal.posted` has an idempotent consumer or remove its outbox emission with proof; make reminder selection an indexed bounded SQL query; complete expense export job/table/worker and authorized expiring download. Add consumer, negative-context, retry, duplicate and dead-letter tests. Failure prevented: silent event loss, unbounded cron work and request-bound exports.
+
+#### P1 — contracts, cache and operational evidence
+
+- [ ] **Complete generated OpenAPI coverage.** Freshness/synchronization pass, but coverage is only `1,916/3,540` operations. Classify genuine no-payload operations; add metadata-driven body/query/param schemas for all others; assert mutation/webhook idempotency and error envelopes. Failure prevented: client fields silently no-op and webhook contracts drift.
+- [ ] **Add cache correctness collision tests.** Exercise a resource/filter across two organizations, memberships/permission versions, locale/timezone variants and organization switches. Prove mutation/membership/role/entitlement invalidation reaches another application instance. Failure prevented: cache content leaks or remains authorized after access changes.
+- [ ] **Separate code proof from infrastructure proof.** Self-tests for cells, backup, capacity, cost and alert dispatch are KEEPs, but do not complete operations. Provision or deliver an operator-owned runbook for independent cells, physical replica, PITR restore, production-shaped load/headroom, cost, live alert delivery and acknowledgement. Failure prevented: a mocked or namespace-only deployment is claimed as 20M-ready.
+- [ ] **Resolve operator/compliance decisions explicitly.** Produce approved operator-access, export/erasure/retention/legal-hold decisions. The current compliance dry run has no real export-file worker and cannot physically purge object storage by organization prefix; it remains failing until implementation and drill evidence exist.
+
+#### Quarantined worktree change
+
+- [ ] **Review and either complete or discard the uncommitted Payroll Profiles split.** The worktree changes `backend/src/modules/payroll/runs/dto/runs.schemas.ts` and `profiles.service.ts`, and adds `salary-profiles.repository.ts`. Confirm repository injection through the established seam rather than ad-hoc instantiation, preserve tenant/data-scope predicates and projections, add focused tests, then commit it as one self-contained package. Do not silently mix it with unrelated work.
 
 ### 28.3 Organization — target 10/10
 
@@ -910,3 +943,44 @@ Tests, lint, builds, live migrations, load tests and destructive cleanup run onl
 The following modules must each reach 10/10 architecture and 10/10 implementation with evidence: Organization, Org/module RBAC, Home, Settings, HRMS, Payroll, Build/PM, Billing/Payments, Accounting/Finance, Chat, Calendar, Notifications and Workflows.
 
 No average can hide a weak module. No P0 or P1 may remain. A P2 may remain only when it is a documented KEEP decision with no concrete target-scale, security, correctness, compliance, cost or maintenance failure. Operator-blocked infrastructure keeps production readiness below 10/10 until the real resource and evidence exist.
+
+### 28.20 Completeness ledger — no implicit “done” claims
+
+Completion of this PRD means every applicable row in this ledger has a linked source change, automated proof or real operational evidence. A checkbox in an implementation ticket is not proof by itself. This ledger is intentionally repetitive: it prevents a domain implementation from being called complete after only its happy-path screen or controller works.
+
+#### A. Every in-scope domain must be checked against the same complete slice
+
+For **Organization, RBAC, Home, Settings, HRMS, Payroll, Build, Billing/Payments, Accounting/Finance, Chat, Calendar, Notifications, Inbox/Mail, Knowledge Base/Wiki/Chatbot and Workflows**, record a KEEP, REPAIR, REPLACE, CONSOLIDATE or REMOVE verdict for each applicable item below:
+
+- [ ] **Data:** canonical owner, normalized relationships, tenant-leading indexes, composite tenant foreign keys, unique constraints, audit fields, soft-delete/restore/retention semantics, immutable history where required, migration/backfill/cutover/rollback plan and explicit projections.
+- [ ] **Authorization:** organization, module, record and DataScope policy; server route guard; controller/service/query enforcement; hook/query suppression; action/button visibility; BOLA and cross-tenant tests; membership removal, role change and org-switch invalidation.
+- [ ] **CRUD and lifecycle:** create/read/list/update/archive-or-delete/restore behavior; duplicate/retry/idempotency behavior; concurrency/version conflict behavior; actor attribution; complete error/empty/loading/denied states; import/export and bulk action policy.
+- [ ] **Lists and search:** stable cursor, deterministic tenant-scoped sort, allowed filters, hard cap, explicit field projection, index/plan evidence, no fetch-then-filter, no N+1, no offset compatibility path left without an approved sunset, and authorized search/vector filtering before retrieval.
+- [ ] **Cache and realtime:** tenant/actor/permission/locale/timezone/filter-safe keys, TTL/stale policy, mutation and access-change invalidation, stampede behavior, event ordering/retry/deduplication/reconnect and offline/late-event behavior where realtime applies.
+- [ ] **Interfaces and structure:** controller/DTO/OpenAPI contract, idempotency key/error envelope/deprecation policy, thin controller, one-way imports, deep module interface, file-size review, reusable primitive only where duplicate load-bearing behavior exists, dead-code and obsolete API/component/schema removal proof.
+- [ ] **UX and accessibility:** responsive 375/768/1280 behavior, keyboard-only navigation, focus management, semantic labels/roles, color contrast, reduced-motion behavior, localization/timezone/currency formatting, destructive-action confirmation and permission-aware navigation.
+- [ ] **Operations:** structured/redacted audit logs, metrics/traces, SLO and alert ownership, queue/dead-letter/replay behavior, backup/restore/retention obligations, rate/cost/resource budget and runbook evidence.
+
+#### B. Cross-cutting small-but-critical checks
+
+- [ ] **Authentication lifecycle:** validate session issuance, refresh/rotation, logout/session revocation, organization switch, disabled/suspended user, invitation acceptance/expiry/revocation, password/MFA/SSO recovery paths actually supported by the product, and service-principal expiry/scope/audit. Do not invent unsupported auth features; document a KEEP/NOT-IN-SCOPE decision.
+- [ ] **Authorization mutation matrix:** for every owner/admin/member/module-owner/module-admin/module-member/custom-role transition, prove allowed and denied operations, cannot escalate self or peers, cannot transfer organization ownership except through the canonical owner-only flow, and cannot retain a cached grant after revocation.
+- [ ] **Data safety:** validate upload MIME/content/size, malware/quarantine workflow where uploads are public or executable, signed-download expiry and authorization, SSRF egress allowlist, HTML/Markdown sanitization, CSP/security headers/CSRF policy, SQL parameterization, secret rotation and PII redaction in logs/traces/errors.
+- [ ] **Privacy/compliance:** data inventory and lawful-purpose/retention owner for every personal-data class; export/erasure/legal-hold conflict handling; consent/preferences where applicable; regional residency/transfers and subprocessors; immutable audit-access controls; operator break-glass approval, time limit and review trail.
+- [ ] **Database and connection safety:** connection pool caps/timeouts per workload, transaction timeout/lock timeout/retry policy, primary-vs-replica routing, replica-lag fallback, statement telemetry, slow-query budget, partition/archival decision for high-growth tables, and schema ownership/deployment ordering.
+- [ ] **Async and external effects:** transactional outbox for every durable side effect; consumer idempotency key; retry/backoff/jitter/lease; poison-message/dead-letter replay; provider timeout/circuit-breaker behavior; webhook signature/replay/order handling; job cancellation and exactly what “at-least-once” means to the user.
+- [ ] **Email, notifications and alerts:** recipient authorization at send time, preference/suppression/digest rules, template versioning/localization, bounce/complaint handling, no secret/PII leakage in delivery logs, in-app/email/realtime deduplication, and human acknowledgement for critical production alerts.
+- [ ] **Public web/SEO:** only intentionally public pages are crawlable; authenticated/product pages use correct robots/noindex behavior; metadata/canonical URLs/sitemaps/structured data are accurate; no tenant content reaches public render/cache; Core Web Vitals budgets are measured on representative devices/networks.
+- [ ] **Release engineering:** reproducible build artifact, dependency/license/vulnerability review, environment schema validation, feature flags with removal dates, backward/forward migration compatibility, canary/rollback plan, release notes, change owner and post-release verification.
+- [ ] **Test quality:** unit, integration and controller/e2e tests prove allow/deny, tenant isolation, idempotency, failure/retry and regression cases; fixtures invoke transactions correctly; tests do not pass only because a mock omits an assertion; mutation/high-risk-path coverage is measured, not assumed.
+
+#### C. Final independent review procedure
+
+Before assigning **any** 10/10 rating, a reviewer who did not implement the last work package must:
+
+1. Re-run the current-source delta audit in section 27 and classify every previous item as VERIFIED DONE, REGRESSED, STILL PENDING or NEW.
+2. Execute or inspect evidence for every row in sections 23, 28.18 and 28.20; mark absent evidence as OPEN, never as a pass.
+3. Audit at least one allowed and one denied path for each domain role and a cross-organization resource-ID path for every sensitive read/write family.
+4. Review every remaining production file over 500 lines and every remaining legacy actor/API/schema field; accept only documented cohesive or compatibility exceptions with an expiry/removal owner.
+5. Independently verify that CRM and Inventory were not behaviorally changed while shared primitives remained compatible.
+6. Publish the scorecard with separate **architecture**, **implementation** and **production evidence** scores. The final 10/10 is allowed only when all three are 10/10 and no row above is OPEN.

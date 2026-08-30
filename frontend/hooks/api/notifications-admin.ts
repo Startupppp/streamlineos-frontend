@@ -1,23 +1,11 @@
 "use client";
 
-import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { UseQueryOptions, QueryKey } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import type { UseQueryOptions } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
-  Notification,
-  UnreadCount,
-  NotificationListParams,
-  NotificationTemplate,
-  SetTemplateApprovalInput,
-  CreateTemplateInput,
-  UpdateTemplateInput,
-  TemplatePreviewResult,
-  Broadcast,
-  BroadcastListResponse,
-  CreateBroadcastInput,
-  UpdateBroadcastInput,
   NotificationPreferences,
   UpdatePreferencesInput,
   NotificationProvider,
@@ -34,16 +22,21 @@ import type {
   SuppressionRule,
   CreateSuppressionInput,
 } from "@/types/notifications";
-import { SHARED_UNREAD_PARAMS, toStringParams, useNotificationInboxInvalidation } from "./notifications-shared";
+import { useNotificationInboxInvalidation } from "./notifications-shared";
+import { useCan } from "@/hooks/api/access";
 
 export const useNotificationPreferences = (
   options?: Omit<UseQueryOptions<NotificationPreferences, Error>, "queryKey" | "queryFn">,
 ) => {
+  const { data: session } = useSession();
+  const orgId = session?.orgId;
+  const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<NotificationPreferences, Error>({
     queryKey: queryKeys.notifications.preferences(),
     queryFn: () => apiClient.get<NotificationPreferences>("/notification-preferences"),
     staleTime: 5 * 60_000,
-    ...options,
+    ...restOptions,
+    enabled: !!orgId && (enabledOption ?? true),
   });
 };
 
@@ -79,11 +72,14 @@ export const useRejectNotification = () => {
 export const useNotificationProviders = (
   options?: Omit<UseQueryOptions<NotificationProvider[], Error>, "queryKey" | "queryFn">,
 ) => {
+  const canView = useCan("notifications:providers:view");
+  const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<NotificationProvider[], Error>({
     queryKey: queryKeys.notifications.providers(),
     queryFn: () => apiClient.get<NotificationProvider[]>("/notifications/admin/providers"),
     staleTime: 60_000,
-    ...options,
+    ...restOptions,
+    enabled: canView && (enabledOption ?? true),
   });
 };
 
@@ -136,11 +132,14 @@ export const useTestNotificationProvider = () => {
 export const useNotificationEventCatalog = (
   options?: Omit<UseQueryOptions<NotificationEventDefinition[], Error>, "queryKey" | "queryFn">,
 ) => {
+  const canView = useCan("notifications:events:view");
+  const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<NotificationEventDefinition[], Error>({
     queryKey: queryKeys.notifications.events(),
     queryFn: () => apiClient.get<NotificationEventDefinition[]>("/notifications/admin/events"),
     staleTime: 60_000,
-    ...options,
+    ...restOptions,
+    enabled: canView && (enabledOption ?? true),
   });
 };
 
@@ -175,11 +174,14 @@ export const useEmitNotificationEvent = () => {
 export const useNotificationPolicies = (
   options?: Omit<UseQueryOptions<NotificationPolicyDefault[], Error>, "queryKey" | "queryFn">,
 ) => {
+  const canView = useCan("notifications:policy:view");
+  const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<NotificationPolicyDefault[], Error>({
     queryKey: queryKeys.notifications.policy(),
     queryFn: () => apiClient.get<NotificationPolicyDefault[]>("/notifications/admin/policy"),
     staleTime: 60_000,
-    ...options,
+    ...restOptions,
+    enabled: canView && (enabledOption ?? true),
   });
 };
 
@@ -197,11 +199,15 @@ export const useUpsertNotificationPolicy = () => {
 export const useSuppressions = (
   options?: Omit<UseQueryOptions<SuppressionRule[], Error>, "queryKey" | "queryFn">,
 ) => {
+  const { data: session } = useSession();
+  const orgId = session?.orgId;
+  const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<SuppressionRule[], Error>({
     queryKey: queryKeys.notifications.suppressions(),
     queryFn: () => apiClient.get<SuppressionRule[]>("/notification-preferences/suppressions"),
     staleTime: 60_000,
-    ...options,
+    ...restOptions,
+    enabled: !!orgId && (enabledOption ?? true),
   });
 };
 

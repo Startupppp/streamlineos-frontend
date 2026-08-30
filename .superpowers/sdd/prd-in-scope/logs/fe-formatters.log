@@ -1,0 +1,5 @@
+
+> streamlineos@0.1.0 check:formatters D:\projects\personal\Streamlineos\frontend
+> node scripts/check-no-local-formatters.mjs
+
+✔  No local Intl.NumberFormat formatters found outside lib/format-utils.ts (4707 files scanned).

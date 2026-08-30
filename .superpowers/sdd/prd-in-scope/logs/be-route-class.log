@@ -1,0 +1,16 @@
+
+> streamlineos-api@0.1.0 check:route-classification D:\projects\personal\Streamlineos\backend
+> node src/scripts/route-classification-report.mjs
+
+
+Route classification report
+  Total handlers : 3533
+  public         : 208
+  universal      : 95
+  permissioned   : 3183
+  in-service     : 47
+  UNDECLARED     : 0
+
+RESULT: ALL ROUTES CLASSIFIED
+
+Manifest pilot (timesheets): publicExposure=false — OK

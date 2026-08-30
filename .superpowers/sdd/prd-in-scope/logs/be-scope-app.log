@@ -1,0 +1,8 @@
+
+> streamlineos-api@0.1.0 check:scope-application D:\projects\personal\Streamlineos\backend
+> node src/scripts/check-scope-application.mjs
+
+Scope resolutions   122
+Applied             122
+
+OK — every resolved DataScope reaches a predicate.

@@ -1,45 +1,25 @@
 "use client";
 
-import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { UseQueryOptions, QueryKey } from "@tanstack/react-query";
-import { useSession } from "next-auth/react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
-  Notification,
-  UnreadCount,
-  NotificationListParams,
   NotificationTemplate,
   SetTemplateApprovalInput,
   CreateTemplateInput,
   UpdateTemplateInput,
   TemplatePreviewResult,
-  Broadcast,
-  BroadcastListResponse,
-  CreateBroadcastInput,
-  UpdateBroadcastInput,
-  NotificationPreferences,
-  UpdatePreferencesInput,
-  NotificationProvider,
-  CreateProviderInput,
-  UpdateProviderInput,
-  TestProviderInput,
-  TestProviderResult,
-  NotificationEventDefinition,
-  UpdateEventPolicyInput,
-  EmitTestEventInput,
-  DispatchResult,
-  NotificationPolicyDefault,
-  UpsertPolicyInput,
-  SuppressionRule,
-  CreateSuppressionInput,
 } from "@/types/notifications";
-import { SHARED_UNREAD_PARAMS, toStringParams, useNotificationInboxInvalidation } from "./notifications-shared";
+import { toStringParams } from "./notifications-shared";
+import { useCan } from "@/hooks/api/access";
 
 export const useNotificationTemplates = (
   params?: Record<string, unknown>,
   options?: Omit<UseQueryOptions<NotificationTemplate[], Error>, "queryKey" | "queryFn">,
 ) => {
+  const canView = useCan("notifications:templates:view");
+  const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<NotificationTemplate[], Error>({
     queryKey: queryKeys.notifications.templates(params),
     queryFn: () =>
@@ -48,7 +28,8 @@ export const useNotificationTemplates = (
         params ? toStringParams(params) : undefined,
       ),
     staleTime: 60_000,
-    ...options,
+    ...restOptions,
+    enabled: canView && (enabledOption ?? true),
   });
 };
 
@@ -76,11 +57,6 @@ export const useUpdateNotificationTemplate = () => {
   });
 };
 
-/**
- * COMP-004 / COMP-005. Records the provider's approval decision for a template.
- * Without this the WhatsApp and SMS gates can never be opened from the product â€”
- * `approvalStatus` defaults to NOT_REQUIRED and every send is refused.
- */
 export const useSetTemplateApproval = () => {
   const queryClient = useQueryClient();
   return useMutation<NotificationTemplate, Error, { id: number } & SetTemplateApprovalInput>({
@@ -112,4 +88,3 @@ export const usePreviewTemplate = () => {
       apiClient.post<TemplatePreviewResult>(`/notification-templates/${id}/preview`, { variables }),
   });
 };
-

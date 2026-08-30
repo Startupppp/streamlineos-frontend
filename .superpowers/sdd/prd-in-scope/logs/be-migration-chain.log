@@ -1,0 +1,8 @@
+
+> streamlineos-api@0.1.0 check:migration-chain D:\projects\personal\Streamlineos\backend
+> node --env-file-if-exists=.env src/scripts/verify-migration-chain.mjs
+
+FAIL  migration chain has 1 issue(s):
+
+  (f) WATERMARK AHEAD OF JOURNAL  applied max created_at=1788051829642 (2026-08-30T01:03:49.642Z) exceeds the newest journal entry when=1787941388254 (2026-08-28T18:23:08.254Z) — every entry below it is silently skipped and db:migrate still reports success
+ ELIFECYCLE  Command failed with exit code 1.

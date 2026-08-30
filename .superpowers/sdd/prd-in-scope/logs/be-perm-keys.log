@@ -1,0 +1,12 @@
+
+> streamlineos-api@0.1.0 check:permission-keys D:\projects\personal\Streamlineos\backend
+> node src/scripts/check-permission-keys.mjs
+
+Scanned  3094 @RequirePermission usages  (621 unique keys)
+  of which 21 pass a constant rather than a literal
+Backend catalog   690 keys
+Frontend PermissionKey union  690 keys
+
+OK — every @RequirePermission key resolves and exists in the backend catalog and the frontend PermissionKey union.
+
+Manifest pilot (timesheets): all @RequirePermission keys in its folder use declared namespaces — OK

@@ -5,7 +5,6 @@ import { collectAppRoutes } from "../app-routes";
 import { ROUTE_ACCESS_EXTENSIONS } from "../route-access-extensions";
 import {
   UNIVERSAL_ROUTES,
-  UNIVERSAL_EXCLUSIONS,
   isUniversalRoute,
 } from "../universal-routes";
 import { resolveRouteAccess } from "../route-access";
@@ -138,10 +137,7 @@ describe("route-access registry keys", () => {
       ...UNIVERSAL_ROUTES.filter((route) => route.reason.trim().length < 20).map(
         (route) => route.path,
       ),
-      ...UNIVERSAL_EXCLUSIONS.filter(
-        (route) => route.reason.trim().length < 20,
-      ).map((route) => route.path),
-      ...ROUTE_ACCESS_EXTENSIONS.filter(
+...ROUTE_ACCESS_EXTENSIONS.filter(
         (entry) => entry.reason.trim().length < 20,
       ).map((entry) => entry.prefix),
     ];

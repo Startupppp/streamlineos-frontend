@@ -122,6 +122,12 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     permission: "kb:pages:purge",
     reason: "Knowledge purge is an administrative destructive surface.",
   },
+  {
+    prefix: "/directory/workers",
+    permission: "directory:workers:view",
+    reason:
+      "Workforce administration records are not the people directory. Root §8 places workers under organization governance and excludes them from the universal directory surface.",
+  },
 ];
 
 export function matchRouteAccessExtension(
