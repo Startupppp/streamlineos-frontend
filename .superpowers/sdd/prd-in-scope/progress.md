@@ -854,3 +854,37 @@ whole session sluggish.
 On request, to keep the machine responsive: single-worker jest runs, no concurrent heavy commands,
 incremental saves. The full-suite baseline is the heaviest job and is being held to run alone rather
 than alongside the others.
+
+## A real money bug, found with the wrong example
+`couponDiscountPaise` computed a FIXED coupon as `parseFloat(coupon.value) * 100`, where the source is
+a Postgres `numeric(15,2)` returned as a string. That is float arithmetic in a monetary path, which
+`backend/CLAUDE.md` §3 forbids outright.
+
+The lane illustrated it with `parseFloat("33.33") * 100 = 3332.999…`, which is **not true** — that one
+is exactly 3333. I nearly dismissed the finding on that basis. Enumerating the range instead:
+**1,146 of the 10,000 values from 0.00 to 99.99 do not produce an integer**, including
+`0.29 → 28.999999999999996` and `0.07 → 7.000000000000001`. The low-value end is the dangerous half,
+because a discount of 29 paise becoming 28 is a real rupee difference at volume and lands fractional
+paise in an integer column.
+
+Fixed by parsing the integer and fractional parts separately with no floating-point multiply. 19/19.
+
+**The lesson is about how to handle a wrong example, not about floats.** A finding whose illustration
+does not reproduce is not automatically false — check the class of the claim before rejecting it. The
+inverse error is the more common one in this program, but this is the same discipline pointed the
+other way.
+
+## Billing: four items verified, one defect
+Provider-event idempotency proved across 14 scenarios including duplicate delivery, retry-after-
+failure, retry-after-success via the effect ledger, signature failure, cross-tenant same event-ID, and
+out-of-order delivery. The three-state separation (`processed_at IS NULL` = retry, `NOT NULL` =
+processed) is what `ON CONFLICT` alone cannot express.
+
+AI credits: reserve-before-spend proved by call-order, settlement token-metered through
+`computeTokenCharge`, integer milli-credit round-trip proved, and anonymous denial-of-wallet blocked by
+short-circuiting before embedding when the org has no published articles.
+
+Seat enforcement: the advisory lock is the first operation in `recordSeatEvent`, and its key and count
+expression match `assertWithinLimit` — proved by comparing rendered SQL rather than by reading both.
+
+148 tests across 8 suites.
