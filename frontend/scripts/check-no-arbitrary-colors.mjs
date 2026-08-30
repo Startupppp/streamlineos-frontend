@@ -20,8 +20,10 @@ function* walkFiles(dir) {
 }
 
 const violations = [];
+let scannedFiles = 0;
 
 for (const file of walkFiles(ROOT)) {
+  scannedFiles++;
   const content = readFileSync(file, "utf8");
   if (!HEX_ARBITRARY.test(content)) continue;
   const lines = content.split("\n");
@@ -30,6 +32,11 @@ for (const file of walkFiles(ROOT)) {
       violations.push(`  ${relative(ROOT, file)}:${i + 1}  ${line.trim()}`);
     }
   });
+}
+
+if (scannedFiles < 500) {
+  console.error(`✖  Only ${scannedFiles} files scanned — the walk is broken, so a clean result would prove nothing.`);
+  process.exit(1);
 }
 
 if (violations.length === 0) {

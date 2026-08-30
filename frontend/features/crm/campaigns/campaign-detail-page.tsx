@@ -15,7 +15,9 @@ import { withColumns } from "@/lib/renderer/layout-adjustment";
 import { CAMPAIGN_LAYOUT } from "@/lib/renderer/crm/campaign-layout";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { useMotionVariants } from "@/lib/motion-variants";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useCampaigns,
   useCampaignRoi,
@@ -59,7 +61,7 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
     [leadLayout],
   );
 
-  const { data: listData, isLoading: listLoading } = useCampaigns({ limit: 200 });
+  const { data: listData, isLoading: listLoading, isError: listError, error: listQueryError, refetch: refetchList } = useCampaigns({ limit: 200 });
   const campaign = listData?.items.find((c) => c.id === campaignId);
 
   const { data: roi, isLoading: roiLoading } = useCampaignRoi(campaignId);
@@ -86,6 +88,19 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
           <StatCardGridSkeleton cols={4} count={4} />
           <Skeleton className="h-72 rounded-xl" />
         </div>
+      </PageWrapper>
+    );
+  }
+
+  if (listError) {
+    return (
+      <PageWrapper title="Campaign" backHref="/crm/campaigns">
+        <ErrorState
+          title="Couldn't load campaign"
+          description={getErrorMessage(listQueryError)}
+          onRetry={() => void refetchList()}
+          className="flex-1"
+        />
       </PageWrapper>
     );
   }

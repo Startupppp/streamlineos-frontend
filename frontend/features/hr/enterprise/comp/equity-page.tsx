@@ -10,7 +10,9 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { useCan } from "@/hooks/api/access";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { EquityGrantSheet } from "@/features/hr/enterprise/comp/equity-grant-sheet";
 import { VestingTimeline } from "@/features/hr/enterprise/comp/vesting-timeline";
 import { ExerciseDialog } from "@/features/hr/enterprise/comp/exercise-dialog";
@@ -34,7 +36,7 @@ export function EquityPage() {
   const [selectedGrant, setSelectedGrant] = useState<EquityGrant | null>(null);
   const [exerciseOpen, setExerciseOpen] = useState(false);
 
-  const { data, isLoading } = useEquityGrants();
+  const { data, isLoading, isError, error, refetch } = useEquityGrants();
   const { data: membersData } = useOrgMembers(1, 200);
   const grants = data?.data ?? [];
 
@@ -99,6 +101,13 @@ export function EquityPage() {
           <div className={selectedGrant ? "lg:col-span-3" : "lg:col-span-5"}>
             {isLoading ? (
               <div className="space-y-2">{Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-lg" />)}</div>
+            ) : isError ? (
+              <ErrorState
+                title="Couldn't load equity grants"
+                description={getErrorMessage(error)}
+                onRetry={() => void refetch()}
+                className="flex-1"
+              />
             ) : !grants.length ? (
               <EmptyState
                 illustrationPreset="default"

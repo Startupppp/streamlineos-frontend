@@ -14,6 +14,7 @@ import { InventoryEmptyState } from "@/features/inventory/components/inventory-e
 import { ErrorState } from "@/components/shared";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatShortDate } from "@/lib/date-utils";
 import {
   useReplenishmentSuggestions,
   useGeneratePO,
@@ -24,15 +25,6 @@ import { useInventoryInsights } from "@/hooks/api/inventory/ai";
 import { GeneratePODialog } from "./generate-po-dialog";
 import { ReorderProposalPanel } from "./reorder-proposal-panel";
 import { SupplierDelayBriefing } from "./supplier-delay-briefing";
-
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleDateString("en-IN", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
 
 function buildColumns(
   selectedIds: Set<number>,
@@ -96,7 +88,7 @@ function buildColumns(
     {
       key: "expectedDate",
       header: "Expected Date",
-      cell: (row) => <span className="text-dense text-muted-foreground">{formatDate(row.expectedDate)}</span>,
+      cell: (row) => <span className="text-dense text-muted-foreground">{formatShortDate(row.expectedDate) || "—"}</span>,
     },
     {
       key: "reason",

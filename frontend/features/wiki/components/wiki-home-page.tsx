@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { LoadingState } from "@/components/shared/loading-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   useKbPagesRecent,
@@ -19,6 +20,7 @@ import {
   useKbProjectPagesTree,
   useCreateKbPage,
 } from "@/hooks/api/kb";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useMotionVariants } from "@/lib/motion-variants";
 import type { KbPageTreeNode } from "@/hooks/api/kb/pages";
 import { pageHref, projectPageHref } from "@/features/wiki/lib/knowledge-routes";
@@ -84,7 +86,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
     [isProjectScoped, projectId],
   );
 
-  const { data: recentPages = [], isLoading: recentLoading } =
+  const { data: recentPages = [], isLoading: recentLoading, isError: recentError, error: recentQueryError, refetch: refetchRecent } =
     useKbPagesRecent();
   const { data: favoritePages = [] } = useKbPagesFavorites();
   const orgTree = useKbPagesTree();
@@ -92,6 +94,8 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
   const treeQuery = isProjectScoped ? projectTree : orgTree;
   const treeNodes = treeQuery.data ?? [];
   const treeLoading = treeQuery.isLoading;
+  const treeError = treeQuery.isError;
+  const treeRefetch = treeQuery.refetch;
 
   const createPage = useCreateKbPage();
   const { staggerContainer, fadeUp } = useMotionVariants();
@@ -100,6 +104,12 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
     (n: KbPageTreeNode) => n.parentPageId === null,
   );
   const isLoading = recentLoading || treeLoading;
+  const isError = recentError || treeError;
+
+  const handleRetry = useCallback(() => {
+    void refetchRecent();
+    void treeRefetch();
+  }, [refetchRecent, treeRefetch]);
 
   const handleNewPage = useCallback(() => {
     createPage.mutate(
@@ -129,6 +139,19 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
     return (
       <PageWrapper title="Wiki" actions={newPageAction}>
         <LoadingState variant="cards" />
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Wiki" actions={newPageAction}>
+        <ErrorState
+          title="Couldn't load wiki pages"
+          description={getErrorMessage(recentQueryError ?? treeQuery.error)}
+          onRetry={handleRetry}
+          className="flex-1"
+        />
       </PageWrapper>
     );
   }

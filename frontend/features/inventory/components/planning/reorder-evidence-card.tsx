@@ -3,16 +3,8 @@
 import { memo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { AiGeneratedLabel } from "@/components/ai/ai-generated-label";
+import { formatShortDate } from "@/lib/date-utils";
 import type { ReorderEvidence, ReorderProposalResponse } from "@/hooks/api/inv-ai-explain";
-
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleDateString("en-IN", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
 
 interface EvidenceGridProps {
   evidence: ReorderEvidence;
@@ -24,7 +16,7 @@ const EvidenceGrid = memo(function EvidenceGrid({ evidence }: EvidenceGridProps)
     { label: "Forecasted Stock", value: String(evidence.forecasted) },
     { label: "Suggested Reorder Qty", value: String(evidence.suggestedQty) },
     { label: "Lead Time", value: `${evidence.leadTimeDays} days` },
-    { label: "Expected Arrival", value: formatDate(evidence.expectedDate) },
+    { label: "Expected Arrival", value: formatShortDate(evidence.expectedDate) || "—" },
     { label: "SKU", value: evidence.variantSku },
   ];
 

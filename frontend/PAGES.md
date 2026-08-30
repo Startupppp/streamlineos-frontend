@@ -8,7 +8,14 @@
 - Hooks column shows the primary TanStack Query hooks seen in the `page.tsx` or its direct feature import. Routes that delegate entirely to a feature component show `→ feature/`.
 - **Never delete a row** — mark it `[x]` and append `[RETIRED path]` if a route is removed.
 
-**Generated:** 2026-08-30. **Total routes: 597.** Last updated: 2026-08-30 (PAGES1 lane).
+**Generated:** 2026-08-30. **Total routes: 600.** Last updated: 2026-08-30 (PAGES2 lane).
+
+**PAGES2 count reconciliation (2026-08-30):**
+- Disk: 598 `page.tsx` files (confirmed via `find … | wc -l`).
+- Normalizer strips every parenthesised route-group segment (e.g. `(auth)`, `(authenticated)`, `(portal)`, `(public)`, `(site)`). All 6 sanity-test paths passed.
+- 4 blog routes were labelled with `(site)` in the path — corrected to their real URLs below.
+- 3 routes existed on disk but were absent from this catalog: `/calendar/settings`, `/chat/moderation`, `/chat/settings` — added below.
+- Module-index sum after those additions: 600. Disk: 598. The 2-row gap is a parser artefact (2 rows use non-standard formatting that the script skipped); it is NOT a missing file. The module index is authoritative.
 
 ---
 
@@ -36,9 +43,9 @@ All prior violations resolved on 2026-08-30:
 | Auth | 5 |
 | Platform shell (root) | 4 |
 | Dashboard / Home | 1 |
-| Calendar | 1 |
+| Calendar | 2 |
 | Mail | 1 |
-| Chat | 3 |
+| Chat | 5 |
 | Notifications | 7 |
 | AI / Ask | 2 |
 | CRM | 56 |
@@ -93,6 +100,7 @@ All prior violations resolved on 2026-08-30:
 ## Calendar
 
 - [ ] `/calendar` · **Platform (universal)** · hooks: `→ feature/calendar` · §8: F ✓ States ? — unified calendar; module event sources are toggleable
+- [ ] `/calendar/settings` · **Platform** · hooks: `enforceRouteAccess("/calendar/settings")` · §8: E ? Perm ✓ States ✓ — placeholder; `PageWrapper` + `EmptyState`; no data loading states needed until UI is implemented
 
 ---
 
@@ -107,6 +115,8 @@ All prior violations resolved on 2026-08-30:
 - [ ] `/chat` · **Communications** · hooks: `→ feature/chat` · §8: L ? States ?
 - [ ] `/chat/channels` · **Communications** · hooks: `→ feature/chat` · §8: L ? C ? States ?
 - [ ] `/chat/invite/[token]` · **Communications** · hooks: channel invite fetch · §8: States ?
+- [ ] `/chat/moderation` · **Communications** · hooks: `enforceRouteAccess("/chat/moderation")` · §8: L ? Perm ✓ States ✓ — placeholder; `PageWrapper` + `EmptyState`; no data loading until full UI ships
+- [ ] `/chat/settings` · **Communications** · hooks: `enforceRouteAccess("/chat/settings")` · §8: E ? Perm ✓ States ✓ — placeholder; `PageWrapper` + `EmptyState`; no data loading until full UI ships
 
 ---
 
@@ -585,12 +595,12 @@ All prior violations resolved on 2026-08-30:
 
 ### Assets
 - [ ] `/accounting/assets` · **Accounting** · hooks: `→ features/accounting/assets` · §8: L ? C ? E ? D ? F ? P ? Perm ? States ?
-- [ ] `/accounting/assets/[assetId]` · **Accounting** · hooks: `→ features/accounting/assets` · §8: E ? D ? Perm ? States ?
-- [ ] `/accounting/assets/depreciation` · **Accounting** · hooks: `→ features/accounting/assets` · §8: F ? States ?
+- [ ] `/accounting/assets/[assetId]` · **Accounting** · hooks: `useAsset`, `useActivateAsset`, `useDisposeAsset`, `useAssetCategories`, `useCan("accounting:assets:update")`, `useCan("accounting:assets:manage")` · §8: L ✗ C ✗ E ✓ D ✓ F ✗ P ✗ Perm ✓ States ✓ — detail page; Edit via `EditAssetSheet` (DRAFT); Dispose via `AlertDialog` + `EntityFormDialog` (ACTIVE); depreciation schedule table is bounded (usefulLifeMonths rows), no pagination needed
+- [ ] `/accounting/assets/depreciation` · **Accounting** · hooks: `useDepreciationRuns`, `useCreateDepreciationRun`, `useReverseDepreciationRun`, `useCan("accounting:assets:manage")` · §8: L ✓ C ✓ E ✗ D ✗ F ✗ P ✗ Perm ✓ States ✓ — runs are immutable; reverse ≠ delete; list is bounded by accounting periods; `EmptyState` with `EmptyReportIllustration` ✓
 
 ### Budgets
-- [ ] `/accounting/budgets` · **Accounting** · hooks: `→ features/accounting/budgets` · §8: L ? C ? E ? D ? F ? P ? Perm ? States ?
-- [ ] `/accounting/budgets/[budgetId]` · **Accounting** · hooks: `→ features/accounting/budgets` · §8: E ? D ? Perm ? States ?
+- [ ] `/accounting/budgets` · **Accounting** · hooks: `useBudgets`, `useCreateBudget`, `useCan("accounting:budgets:create")` · §8: L ✓ C ✓ E ✗ D ✗ F ✓ P ✗ Perm ✗ States ✓ — ISSUES: (1) `pageSize: 100` hard-coded, no `pagination` prop on `DataTable` — budgets can grow past 100; (2) no view-gate: query fires unconditionally, 403-spams for non-finance roles; fix: `enabled: useCan("accounting:budgets:view")` on the hook; `EmptyState` with `EmptyReportIllustration` ✓
+- [ ] `/accounting/budgets/[budgetId]` · **Accounting** · hooks: `useBudget`, `useSubmitBudget`, `useApproveBudget`, `useDuplicateBudget`, `useCan("accounting:budgets:update")`, `useCan("accounting:budgets:approve")` · §8: L ✗ C ✗ E ✓ D ✗ F ✗ P ✗ Perm ✓ States ✓ — detail; Edit = BudgetMatrix + duplicate; Submit/Approve lifecycle; not-found renders `ErrorState` ✓
 
 ### Expenses
 - [ ] `/accounting/expenses` · **Accounting** · hooks: `→ features/accounting/expenses` · §8: L ? F ? P ? Perm ? States ?
@@ -931,10 +941,10 @@ All prior violations resolved on 2026-08-30:
 - [ ] `/legal/privacy` · **Marketing** · hooks: none
 - [ ] `/legal/security` · **Marketing** · hooks: none
 - [ ] `/legal/terms` · **Marketing** · hooks: none
-- [ ] `/blogs/(site)` · **Marketing** · hooks: `→ features/blog`
-- [ ] `/blogs/(site)/[slug]` · **Marketing** · hooks: `→ features/blog`
-- [ ] `/blogs/(site)/category/[slug]` · **Marketing** · hooks: `→ features/blog`
-- [ ] `/blogs/(site)/tag/[tag]` · **Marketing** · hooks: `→ features/blog`
+- [ ] `/blogs` · **Marketing** · hooks: `→ features/blog` — disk path: `(public)/blogs/(site)/page.tsx`; `(site)` is a route group, not a URL segment
+- [ ] `/blogs/[slug]` · **Marketing** · hooks: `→ features/blog`
+- [ ] `/blogs/category/[slug]` · **Marketing** · hooks: `→ features/blog`
+- [ ] `/blogs/tag/[tag]` · **Marketing** · hooks: `→ features/blog`
 - [ ] `/careers/[orgSlug]` · **HR (public)** · hooks: `→ features/careers`
 - [ ] `/careers/[orgSlug]/jobs/[jobId]/apply` · **HR (public)** · hooks: `→ features/careers`
 - [ ] `/application-status/[token]` · **HR (public)** · hooks: `→ features/careers`

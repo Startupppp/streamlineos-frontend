@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,6 +19,7 @@ import {
   useCreateKbPage,
 } from "@/hooks/api/kb";
 import { useCan } from "@/hooks/api/access";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { pageHref } from "@/features/wiki/lib/knowledge-routes";
 import {
   KbBarChart2Icon,
@@ -160,15 +162,22 @@ function AnalyticsSkeleton() {
 
 export default function KnowledgeAnalyticsPage() {
   const canView = useCan("kb:analytics:view");
-  const { data: overview, isLoading: overviewLoading } =
+  const { data: overview, isLoading: overviewLoading, isError: overviewError, error: overviewQueryError, refetch: refetchOverview } =
     useKbAnalyticsOverview();
-  const { data: noResults = [], isLoading: noResultsLoading } =
+  const { data: noResults = [], isLoading: noResultsLoading, isError: noResultsError, refetch: refetchNoResults } =
     useKbNoResults();
-  const { data: pageAnalytics = [], isLoading: pagesLoading } =
+  const { data: pageAnalytics = [], isLoading: pagesLoading, isError: pagesError, refetch: refetchPages } =
     usePageAnalytics();
-  const { data: gaps = [], isLoading: gapsLoading } = useKnowledgeGaps();
+  const { data: gaps = [], isLoading: gapsLoading, isError: gapsError, refetch: refetchGaps } = useKnowledgeGaps();
   const createPage = useCreateKbPage();
   const router = useRouter();
+
+  function handleRetry() {
+    void refetchOverview();
+    void refetchNoResults();
+    void refetchPages();
+    void refetchGaps();
+  }
 
   function handleCreatePageFromGap(query: string) {
     createPage.mutate(
@@ -199,6 +208,19 @@ export default function KnowledgeAnalyticsPage() {
     return (
       <PageWrapper title="Analytics">
         <AnalyticsSkeleton />
+      </PageWrapper>
+    );
+  }
+
+  if (overviewError || noResultsError || pagesError || gapsError) {
+    return (
+      <PageWrapper title="Analytics">
+        <ErrorState
+          title="Couldn't load analytics"
+          description={getErrorMessage(overviewQueryError)}
+          onRetry={handleRetry}
+          className="flex-1"
+        />
       </PageWrapper>
     );
   }

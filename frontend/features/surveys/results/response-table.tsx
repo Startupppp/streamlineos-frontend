@@ -7,11 +7,12 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { ErrorState } from "@/components/shared/error-state";
 import { useSurveyResponses, useExportResponses, type SurveyResponseSession } from "@/hooks/api/surveys/analytics";
 import { ResponseDetailSheet } from "./response-detail-sheet";
 
 export function ResponseTable({ surveyId }: { surveyId: number }) {
-  const { data: responses, isLoading } = useSurveyResponses(surveyId, { pageSize: 100 });
+  const { data: responses, isLoading, isError, error, refetch } = useSurveyResponses(surveyId, { pageSize: 100 });
   const exportResponses = useExportResponses(surveyId);
   const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
 
@@ -39,6 +40,9 @@ export function ResponseTable({ surveyId }: { surveyId: number }) {
       toast.error(getErrorMessage(error));
     }
   }
+
+  if (isError)
+    return <ErrorState title="Couldn't load responses" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
 
   return (
     <div className="flex flex-col gap-3">

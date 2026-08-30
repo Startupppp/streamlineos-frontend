@@ -16,6 +16,7 @@ import { Save, Globe, GlobeLock } from "lucide-react";
 import Link from "next/link";
 import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
 import { useUnsavedChangesGuard } from "@/hooks/common/use-unsaved-changes-guard";
+import { ErrorState } from "@/components/shared/error-state";
 
 export function DocumentEditorPage() {
   const params = useParams<{ documentId: string }>();
@@ -23,7 +24,7 @@ export function DocumentEditorPage() {
 
   const updateDoc = useUpdateRichDocument();
   const publishDoc = usePublishRichDocument();
-  const { data: doc, isLoading } = useRichDocument(documentId);
+  const { data: doc, isLoading, isError, error, refetch } = useRichDocument(documentId);
   const router = useRouter();
 
   const [title, setTitle] = useState("");
@@ -99,6 +100,19 @@ export function DocumentEditorPage() {
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-[400px] w-full" />
         </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Document Editor" backHref="/hr/documents">
+        <ErrorState
+          title="Couldn't load document"
+          description={getErrorMessage(error)}
+          onRetry={() => void refetch()}
+          className="flex-1"
+        />
       </PageWrapper>
     );
   }

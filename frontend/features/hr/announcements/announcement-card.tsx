@@ -18,6 +18,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
+import { formatShortDate } from "@/lib/date-utils";
 import type { HrAnnouncement } from "@/hooks/api/hr/announcements";
 
 const TARGET_TYPE_ICONS: Record<HrAnnouncement["targetType"], ReactNode> = {
@@ -62,13 +63,6 @@ function getInitials(id: string): string {
   return id.slice(0, 2).toUpperCase();
 }
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-IN", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
 
 export interface AnnouncementCardProps {
   announcement: HrAnnouncement;
@@ -164,7 +158,7 @@ export function AnnouncementCard({
 
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-dense text-muted-foreground">
             <time dateTime={announcement.createdAt}>
-              {formatDate(announcement.createdAt)}
+              {formatShortDate(announcement.createdAt)}
             </time>
             <span className="text-border" aria-hidden>
               ·

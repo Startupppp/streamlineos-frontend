@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { ErrorState } from "@/components/shared/error-state";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { useCollectors, useCreateCollector, usePatchCollector, type CollectorType, type CollectorStatus } from "@/hooks/api/surveys/collectors";
 
@@ -41,7 +42,7 @@ function publicLinkFor(token: string): string {
 }
 
 export function CollectorsCard({ surveyId }: { surveyId: number }) {
-  const { data: collectors, isLoading } = useCollectors(surveyId);
+  const { data: collectors, isLoading, isError, error, refetch } = useCollectors(surveyId);
   const createCollector = useCreateCollector(surveyId);
   const patchCollector = usePatchCollector(surveyId);
   const [newType, setNewType] = useState<CollectorType>("public_link");
@@ -76,6 +77,8 @@ export function CollectorsCard({ surveyId }: { surveyId: number }) {
       <CardContent className="space-y-3">
         {isLoading ? (
           <Skeleton className="h-16 w-full" />
+        ) : isError ? (
+          <ErrorState compact title="Couldn't load collectors" description={getErrorMessage(error)} onRetry={() => void refetch()} />
         ) : (
           collectors?.map((collector) => (
             <div key={collector.id} className="rounded-md border border-border p-3">
