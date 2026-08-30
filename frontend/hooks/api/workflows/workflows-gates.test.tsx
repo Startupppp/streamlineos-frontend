@@ -10,9 +10,20 @@ jest.mock("next-auth/react", () => ({
   }),
 }));
 
+const EMPTY_ACCESS: AccessResponse = {
+  scopes: {},
+  isOrgOwner: false,
+  canManageOrganizationMembership: false,
+  modules: { WORKFLOWS: true },
+};
+
+const EMPTY_LIST = { data: [], pagination: { limit: 20, nextCursor: null, hasMore: false } };
+
 jest.mock("@/lib/api-client", () => ({
   apiClient: {
-    get: jest.fn().mockResolvedValue({ data: [], pagination: { limit: 20, nextCursor: null, hasMore: false } }),
+    get: jest.fn().mockImplementation((url: string) =>
+      Promise.resolve(url === "/me/access" ? EMPTY_ACCESS : EMPTY_LIST),
+    ),
     post: jest.fn().mockResolvedValue({}),
     delete: jest.fn().mockResolvedValue({}),
   },
@@ -21,9 +32,6 @@ jest.mock("@/lib/api-client", () => ({
 const { apiClient } = jest.requireMock("@/lib/api-client") as {
   apiClient: { get: jest.Mock; post: jest.Mock; delete: jest.Mock };
 };
-
-const ORG_ID = "org-1";
-const USER_ID = "user-1";
 
 function makeClient(permissions: string[], isOrgOwner = false): QueryClient {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -52,7 +60,7 @@ describe("useWorkflows — permission gate", () => {
     const { result } = renderHook(() => useWorkflows(), { wrapper: makeWrapper(client) });
 
     await waitFor(() => expect(result.current.fetchStatus).toBe("idle"));
-    expect(apiClient.get).not.toHaveBeenCalled();
+    expect(apiClient.get).not.toHaveBeenCalledWith("/workflows", expect.anything());
     expect(result.current.data).toBeUndefined();
   });
 
@@ -69,7 +77,7 @@ describe("useWorkflows — permission gate", () => {
     const { useWorkflows } = await import("../workflows-definitions");
     renderHook(() => useWorkflows(), { wrapper: makeWrapper(client) });
 
-    await waitFor(() => expect(apiClient.get).toHaveBeenCalled());
+    await waitFor(() => expect(apiClient.get).toHaveBeenCalledWith("/workflows", undefined));
   });
 });
 
@@ -80,7 +88,7 @@ describe("useAllExecutions — permission gate", () => {
     const { result } = renderHook(() => useAllExecutions(), { wrapper: makeWrapper(client) });
 
     await waitFor(() => expect(result.current.fetchStatus).toBe("idle"));
-    expect(apiClient.get).not.toHaveBeenCalled();
+    expect(apiClient.get).not.toHaveBeenCalledWith("/workflows/executions", expect.anything());
   });
 
   it("fires the API call when workflows:executions:view is granted", async () => {
@@ -99,7 +107,7 @@ describe("useGlobalSecrets — permission gate", () => {
     const { result } = renderHook(() => useGlobalSecrets(), { wrapper: makeWrapper(client) });
 
     await waitFor(() => expect(result.current.fetchStatus).toBe("idle"));
-    expect(apiClient.get).not.toHaveBeenCalled();
+    expect(apiClient.get).not.toHaveBeenCalledWith("/workflows/secrets");
   });
 
   it("fires when workflows:secrets:manage is granted", async () => {
@@ -118,7 +126,7 @@ describe("useGlobalVariables — permission gate", () => {
     const { result } = renderHook(() => useGlobalVariables(), { wrapper: makeWrapper(client) });
 
     await waitFor(() => expect(result.current.fetchStatus).toBe("idle"));
-    expect(apiClient.get).not.toHaveBeenCalled();
+    expect(apiClient.get).not.toHaveBeenCalledWith("/workflows/variables");
   });
 });
 
@@ -129,7 +137,7 @@ describe("usePendingApprovals — permission gate", () => {
     const { result } = renderHook(() => usePendingApprovals(), { wrapper: makeWrapper(client) });
 
     await waitFor(() => expect(result.current.fetchStatus).toBe("idle"));
-    expect(apiClient.get).not.toHaveBeenCalled();
+    expect(apiClient.get).not.toHaveBeenCalledWith("/workflows/approvals/pending");
   });
 });
 
@@ -140,7 +148,7 @@ describe("useAllSchedules — permission gate", () => {
     const { result } = renderHook(() => useAllSchedules(), { wrapper: makeWrapper(client) });
 
     await waitFor(() => expect(result.current.fetchStatus).toBe("idle"));
-    expect(apiClient.get).not.toHaveBeenCalled();
+    expect(apiClient.get).not.toHaveBeenCalledWith("/workflows/schedules");
   });
 });
 
@@ -151,16 +159,19 @@ describe("useWorkflowAnalytics — permission gate", () => {
     const { result } = renderHook(() => useWorkflowAnalytics(), { wrapper: makeWrapper(client) });
 
     await waitFor(() => expect(result.current.fetchStatus).toBe("idle"));
-    expect(apiClient.get).not.toHaveBeenCalled();
+    expect(apiClient.get).not.toHaveBeenCalledWith("/workflows/analytics");
   });
 });
 
 describe("cursor pagination contract", () => {
   it("useWorkflows passes cursor param to API when supplied", async () => {
-    apiClient.get.mockResolvedValueOnce({
-      data: [],
-      pagination: { limit: 20, nextCursor: "cursor_abc", hasMore: true },
-    });
+    apiClient.get.mockImplementationOnce((url: string) =>
+      Promise.resolve(
+        url === "/me/access"
+          ? EMPTY_ACCESS
+          : { data: [], pagination: { limit: 20, nextCursor: "cursor_abc", hasMore: true } },
+      ),
+    );
     const client = makeClient(["workflows:workflows:view"]);
     const { useWorkflows } = await import("../workflows-definitions");
     renderHook(() => useWorkflows({ cursor: "prev_cursor", limit: 20 }), {
@@ -173,10 +184,13 @@ describe("cursor pagination contract", () => {
   });
 
   it("nextCursor is null (not undefined) on the last page", async () => {
-    apiClient.get.mockResolvedValueOnce({
-      data: [],
-      pagination: { limit: 20, nextCursor: null, hasMore: false },
-    });
+    apiClient.get.mockImplementationOnce((url: string) =>
+      Promise.resolve(
+        url === "/me/access"
+          ? EMPTY_ACCESS
+          : { data: [], pagination: { limit: 20, nextCursor: null, hasMore: false } },
+      ),
+    );
     const client = makeClient(["workflows:workflows:view"]);
     const { useWorkflows } = await import("../workflows-definitions");
     const { result } = renderHook(() => useWorkflows(), { wrapper: makeWrapper(client) });
