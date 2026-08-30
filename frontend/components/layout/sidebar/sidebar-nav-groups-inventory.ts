@@ -305,6 +305,18 @@ export const INVENTORY_NAV_GROUPS: NavGroup[] = [
         requiredPermission: "inventory:channels:manage",
       },
       {
+        label: "Slotting",
+        icon: Scan,
+        href: "/inventory/slotting",
+        requiredPermission: "inventory:warehouses:read",
+      },
+      {
+        label: "Labour",
+        icon: Scan,
+        href: "/inventory/labor",
+        requiredPermission: "inventory:labor:read",
+      },
+      {
         label: "My tasks (RF)",
         icon: Scan,
         href: "/inventory/rf",

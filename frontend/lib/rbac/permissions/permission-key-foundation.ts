@@ -183,6 +183,7 @@ export type FoundationPermissionKey =
   | "inventory:shipments:manage"
   | "inventory:loads:manage"
   | "inventory:channels:manage"
+  | "inventory:labor:read"
   | "inventory:3pl:manage"
   | "inventory:replenishment:manage"
   | "inventory:settings:manage"

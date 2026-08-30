@@ -46,8 +46,16 @@ import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 // inventory:stock:read) is the one-task-at-a-time operator surface; it is gated
 // on the read key rather than on a write key because the queue itself is a read,
 // and each runner behind it re-gates on the key its own command needs.
+// Moved 2026-08-30 by NEO-6 and NEO-7: two more inventory routes got nav
+// entries. "Slotting" (/inventory/slotting, on inventory:warehouses:read) is
+// where the rules that decide which zone a SKU lives in are read, alongside the
+// nightly re-slot recommendations. "Labour" (/inventory/labor) is gated on
+// inventory:labor:read — its own key rather than inventory:reports:read, because
+// that screen names individual people and rates their work, which is an
+// authority an organisation should grant deliberately rather than one that
+// arrives with the ability to read a stock summary.
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "6d933487ec4e7a55d832f099e496d8dbf99f542420d7776ca4d74436fa9d4316";
+  "fb26c75f7bd70fe7324d6f9daaa45745c8fc490c230760c6292e3c16133f23eb";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {

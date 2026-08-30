@@ -189,6 +189,16 @@ export const inventoryQueryKeys = {
       k(...base, "inventory", "platformPurchaseOrders", "detail", platformPoId),
     asnsList: [...base, "inventory", "asns"] as const,
     asns: (filters?: Record<string, unknown>) => k(...base, "inventory", "asns", filters),
+    /** NEO-6 / NEO-7. Same R2 discipline: a params-less prefix per family. */
+    slottingRulesAll: [...base, "inventory", "slottingRules"] as const,
+    slottingRules: (warehouseId: number | null) =>
+      k(...base, "inventory", "slottingRules", warehouseId ?? "all"),
+    slottingRecommendationsAll: [...base, "inventory", "slottingRecommendations"] as const,
+    slottingRecommendations: (filters?: Record<string, unknown>) =>
+      k(...base, "inventory", "slottingRecommendations", filters),
+    laborBoardAll: [...base, "inventory", "laborBoard"] as const,
+    laborBoard: (filters?: Record<string, unknown>) => k(...base, "inventory", "laborBoard", filters),
+
     /** NEO-4. Params-less prefix plus the two shapes the screens read. */
     handlingUnitsList: [...base, "inventory", "handlingUnits"] as const,
     handlingUnits: (filters?: Record<string, unknown>) =>

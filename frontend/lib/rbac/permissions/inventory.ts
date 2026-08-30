@@ -58,5 +58,6 @@ export const INVENTORY_PERMISSIONS: Permission[] = [
   { name: "inventory:export", resource: "inventory:export", action: "export", description: "Export inventory data" },
   { name: "inventory:audit:read", resource: "inventory:audit", action: "read", description: "Read the inventory audit trail — who changed which record, and when" },
   { name: "inventory:audit:export", resource: "inventory:audit", action: "export", description: "Take an immutable, checksummed audit export of the inventory ledger and audit trail" },
+  { name: "inventory:labor:read", resource: "inventory:labor", action: "read", description: "Read the warehouse labour board: units per hour and performance against standard, by named person" },
   { name: "inventory:import", resource: "inventory:import", action: "import", description: "Import inventory data" },
 ];
