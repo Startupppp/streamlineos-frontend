@@ -139,14 +139,8 @@ function PoliciesTab({
   onEdit,
   onNew,
 }: PoliciesTabProps) {
-  const [page, setPage] = useState(1);
-  const query = useReminderPolicies({ page, pageSize: 20 });
+  const query = useReminderPolicies({ limit: 100 });
   const items = query.data?.items ?? [];
-  const total = query.data?.total ?? 0;
-
-  function handlePageChange(p: number): void {
-    setPage(p);
-  }
 
   const columns: DataTableColumn<ReminderPolicy>[] = [
     {
@@ -218,7 +212,7 @@ function PoliciesTab({
         columns={columns}
         getRowKey={(row) => row.id}
         isLoading={query.isLoading}
-        pagination={{ mode: "server", page, pageSize: 20, total, onPageChange: handlePageChange }}
+        pagination={{ pageSize: 20 }}
       />
       <ReminderPolicyDialog
         open={dialogOpen}
@@ -230,14 +224,8 @@ function PoliciesTab({
 }
 
 function LogTab() {
-  const [page, setPage] = useState(1);
-  const query = useReminderLog({ page, pageSize: 30 });
+  const query = useReminderLog({ limit: 100 });
   const items = query.data?.items ?? [];
-  const total = query.data?.total ?? 0;
-
-  function handlePageChange(p: number): void {
-    setPage(p);
-  }
 
   const columns: DataTableColumn<ReminderLogEntry>[] = [
     {
@@ -318,7 +306,7 @@ function LogTab() {
       columns={columns}
       getRowKey={(row) => row.id}
       isLoading={query.isLoading}
-      pagination={{ mode: "server", page, pageSize: 30, total, onPageChange: handlePageChange }}
+      pagination={{ pageSize: 30 }}
     />
   );
 }

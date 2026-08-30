@@ -70,7 +70,7 @@ export default function TaxPaymentsPage() {
   const canPay = useCan("accounting:taxes:pay");
   const canManage = useCan("accounting:taxes:manage");
 
-  const { data, isLoading, isError, error, refetch } = useTaxPayments({ pageSize: 100 });
+  const { data, isLoading, isError, error, refetch } = useTaxPayments({ limit: 100 });
   const createPayment = useCreateTaxPayment();
   const deletePayment = useDeleteTaxPayment();
   const createAdjustment = useCreateTaxAdjustment();

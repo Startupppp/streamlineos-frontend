@@ -175,8 +175,6 @@ export function useTaxLiabilitySummary(from: string, to: string) {
 }
 
 export interface ListTaxPaymentsParams {
-  page?: number;
-  pageSize?: number;
   limit?: number;
   cursor?: number;
   taxType?: string;

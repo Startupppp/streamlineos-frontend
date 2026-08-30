@@ -48,8 +48,6 @@ function toQuery<P extends object>(params: P): Record<string, string> {
 }
 
 export interface ListReminderPoliciesParams {
-  page?: number;
-  pageSize?: number;
   limit?: number;
   cursor?: number;
 }
@@ -70,8 +68,6 @@ export function useReminderPolicies(params: ListReminderPoliciesParams = {}) {
 
 export interface ListReminderLogParams {
   invoiceId?: number;
-  page?: number;
-  pageSize?: number;
   limit?: number;
   cursor?: number;
 }
