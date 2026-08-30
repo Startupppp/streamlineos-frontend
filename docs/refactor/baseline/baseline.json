@@ -10,8 +10,8 @@
       "id": "Q1-board-page1",
       "label": "Board / list, page 1, sorted by fractional rank (the benchmark)",
       "text": "select t.id, t.title, t.description, t.status, t.priority, t.type, t.rank,\n                  t.assignee_id, t.ticket_number, t.points, t.due_date, t.created_at\n           from build.tickets t\n           where t.org_id = $1 and t.project_id = $2 and t.deleted_at is null\n           order by t.rank asc, t.created_at desc, t.id asc\n           limit 50 offset 0",
-      "execMs": 0.2,
-      "planMs": 0.34,
+      "execMs": 17.87,
+      "planMs": 0.38,
       "actualRows": 50,
       "blocks": 54,
       "seqScans": 0,
@@ -29,13 +29,13 @@
           "Total Cost": 119.59,
           "Plan Rows": 50,
           "Plan Width": 376,
-          "Actual Startup Time": 0.042,
-          "Actual Total Time": 0.143,
+          "Actual Startup Time": 1.438,
+          "Actual Total Time": 17.816,
           "Actual Rows": 50,
           "Actual Loops": 1,
           "Disabled": false,
-          "Shared Hit Blocks": 54,
-          "Shared Read Blocks": 0,
+          "Shared Hit Blocks": 1,
+          "Shared Read Blocks": 53,
           "Shared Dirtied Blocks": 0,
           "Shared Written Blocks": 0,
           "Local Hit Blocks": 0,
@@ -54,14 +54,14 @@
               "Total Cost": 663.02,
               "Plan Rows": 278,
               "Plan Width": 376,
-              "Actual Startup Time": 0.041,
-              "Actual Total Time": 0.138,
+              "Actual Startup Time": 1.437,
+              "Actual Total Time": 17.805,
               "Actual Rows": 50,
               "Actual Loops": 1,
               "Disabled": false,
               "One-Time Filter": "(current_org_id() = '73e5076a-225f-4b4c-b93e-9bc66a548bfe'::text)",
-              "Shared Hit Blocks": 54,
-              "Shared Read Blocks": 0,
+              "Shared Hit Blocks": 1,
+              "Shared Read Blocks": 53,
               "Shared Dirtied Blocks": 0,
               "Shared Written Blocks": 0,
               "Local Hit Blocks": 0,
@@ -84,16 +84,16 @@
                   "Total Cost": 663.02,
                   "Plan Rows": 278,
                   "Plan Width": 376,
-                  "Actual Startup Time": 0.016,
-                  "Actual Total Time": 0.107,
+                  "Actual Startup Time": 1.418,
+                  "Actual Total Time": 17.771,
                   "Actual Rows": 50,
                   "Actual Loops": 1,
                   "Disabled": false,
                   "Index Cond": "((org_id = '73e5076a-225f-4b4c-b93e-9bc66a548bfe'::text) AND (project_id = 129))",
                   "Rows Removed by Index Recheck": 0,
                   "Index Searches": 1,
-                  "Shared Hit Blocks": 54,
-                  "Shared Read Blocks": 0,
+                  "Shared Hit Blocks": 1,
+                  "Shared Read Blocks": 53,
                   "Shared Dirtied Blocks": 0,
                   "Shared Written Blocks": 0,
                   "Local Hit Blocks": 0,
@@ -108,8 +108,8 @@
           ]
         },
         "Planning": {
-          "Shared Hit Blocks": 21,
-          "Shared Read Blocks": 0,
+          "Shared Hit Blocks": 16,
+          "Shared Read Blocks": 3,
           "Shared Dirtied Blocks": 3,
           "Shared Written Blocks": 0,
           "Local Hit Blocks": 0,
@@ -119,17 +119,17 @@
           "Temp Read Blocks": 0,
           "Temp Written Blocks": 0
         },
-        "Planning Time": 0.343,
+        "Planning Time": 0.381,
         "Triggers": [],
-        "Execution Time": 0.197
+        "Execution Time": 17.869
       }
     },
     {
       "id": "Q2-board-deep-page",
       "label": "Same list at offset 3000 (offset pagination cost)",
       "text": "select t.id, t.title, t.description, t.status, t.priority, t.rank, t.created_at\n           from build.tickets t\n           where t.org_id = $1 and t.project_id = $2 and t.deleted_at is null\n           order by t.rank asc, t.created_at desc, t.id asc\n           limit 50 offset 3000",
-      "execMs": 0.77,
-      "planMs": 0.23,
+      "execMs": 69.09,
+      "planMs": 0.28,
       "actualRows": 0,
       "blocks": 336,
       "seqScans": 0,
@@ -148,13 +148,13 @@
           "Total Cost": 630.88,
           "Plan Rows": 1,
           "Plan Width": 323,
-          "Actual Startup Time": 0.733,
-          "Actual Total Time": 0.734,
+          "Actual Startup Time": 69.041,
+          "Actual Total Time": 69.043,
           "Actual Rows": 0,
           "Actual Loops": 1,
           "Disabled": false,
-          "Shared Hit Blocks": 336,
-          "Shared Read Blocks": 0,
+          "Shared Hit Blocks": 50,
+          "Shared Read Blocks": 286,
           "Shared Dirtied Blocks": 0,
           "Shared Written Blocks": 0,
           "Local Hit Blocks": 0,
@@ -173,8 +173,8 @@
               "Total Cost": 630.87,
               "Plan Rows": 278,
               "Plan Width": 323,
-              "Actual Startup Time": 0.702,
-              "Actual Total Time": 0.719,
+              "Actual Startup Time": 69.008,
+              "Actual Total Time": 69.027,
               "Actual Rows": 334,
               "Actual Loops": 1,
               "Disabled": false,
@@ -186,8 +186,8 @@
               "Sort Method": "quicksort",
               "Sort Space Used": 194,
               "Sort Space Type": "Memory",
-              "Shared Hit Blocks": 336,
-              "Shared Read Blocks": 0,
+              "Shared Hit Blocks": 50,
+              "Shared Read Blocks": 286,
               "Shared Dirtied Blocks": 0,
               "Shared Written Blocks": 0,
               "Local Hit Blocks": 0,
@@ -206,14 +206,14 @@
                   "Total Cost": 618.89,
                   "Plan Rows": 278,
                   "Plan Width": 323,
-                  "Actual Startup Time": 0.04,
-                  "Actual Total Time": 0.548,
+                  "Actual Startup Time": 1.411,
+                  "Actual Total Time": 68.739,
                   "Actual Rows": 334,
                   "Actual Loops": 1,
                   "Disabled": false,
                   "One-Time Filter": "(current_org_id() = '73e5076a-225f-4b4c-b93e-9bc66a548bfe'::text)",
-                  "Shared Hit Blocks": 336,
-                  "Shared Read Blocks": 0,
+                  "Shared Hit Blocks": 50,
+                  "Shared Read Blocks": 286,
                   "Shared Dirtied Blocks": 0,
                   "Shared Written Blocks": 0,
                   "Local Hit Blocks": 0,
@@ -236,8 +236,8 @@
                       "Total Cost": 618.89,
                       "Plan Rows": 278,
                       "Plan Width": 323,
-                      "Actual Startup Time": 0.023,
-                      "Actual Total Time": 0.494,
+                      "Actual Startup Time": 1.393,
+                      "Actual Total Time": 68.663,
                       "Actual Rows": 334,
                       "Actual Loops": 1,
                       "Disabled": false,
@@ -246,8 +246,8 @@
                       "Filter": "(deleted_at IS NULL)",
                       "Rows Removed by Filter": 0,
                       "Index Searches": 1,
-                      "Shared Hit Blocks": 336,
-                      "Shared Read Blocks": 0,
+                      "Shared Hit Blocks": 50,
+                      "Shared Read Blocks": 286,
                       "Shared Dirtied Blocks": 0,
                       "Shared Written Blocks": 0,
                       "Local Hit Blocks": 0,
@@ -275,16 +275,16 @@
           "Temp Read Blocks": 0,
           "Temp Written Blocks": 0
         },
-        "Planning Time": 0.228,
+        "Planning Time": 0.279,
         "Triggers": [],
-        "Execution Time": 0.77
+        "Execution Time": 69.086
       }
     },
     {
       "id": "Q3-list-count",
       "label": "The COUNT(*) fired alongside every list request",
       "text": "select count(*) from build.tickets t where t.org_id = $1 and t.project_id = $2 and t.deleted_at is null",
-      "execMs": 0.18,
+      "execMs": 0.17,
       "planMs": 0.19,
       "actualRows": 1,
       "blocks": 9,
@@ -305,8 +305,8 @@
           "Total Cost": 38.68,
           "Plan Rows": 1,
           "Plan Width": 8,
-          "Actual Startup Time": 0.139,
-          "Actual Total Time": 0.139,
+          "Actual Startup Time": 0.137,
+          "Actual Total Time": 0.138,
           "Actual Rows": 1,
           "Actual Loops": 1,
           "Disabled": false,
@@ -330,8 +330,8 @@
               "Total Cost": 37.97,
               "Plan Rows": 278,
               "Plan Width": 0,
-              "Actual Startup Time": 0.043,
-              "Actual Total Time": 0.117,
+              "Actual Startup Time": 0.041,
+              "Actual Total Time": 0.115,
               "Actual Rows": 334,
               "Actual Loops": 1,
               "Disabled": false,
@@ -360,8 +360,8 @@
                   "Total Cost": 37.97,
                   "Plan Rows": 278,
                   "Plan Width": 0,
-                  "Actual Startup Time": 0.024,
-                  "Actual Total Time": 0.069,
+                  "Actual Startup Time": 0.023,
+                  "Actual Total Time": 0.067,
                   "Actual Rows": 334,
                   "Actual Loops": 1,
                   "Disabled": false,
@@ -396,16 +396,16 @@
           "Temp Read Blocks": 0,
           "Temp Written Blocks": 0
         },
-        "Planning Time": 0.187,
+        "Planning Time": 0.188,
         "Triggers": [],
-        "Execution Time": 0.177
+        "Execution Time": 0.173
       }
     },
     {
       "id": "Q4-search-ilike",
       "label": "Search: leading-wildcard ILIKE on title (seq-scan under RLS — use app.search_ticket_ids SDF instead)",
       "text": "select t.id, t.title from build.tickets t\n           where t.org_id = $1 and t.project_id = $2 and t.deleted_at is null and t.title ILIKE '%ticket 1234%'\n           order by t.rank asc limit 50",
-      "execMs": 0.57,
+      "execMs": 1.03,
       "planMs": 0.26,
       "actualRows": 0,
       "blocks": 336,
@@ -425,8 +425,8 @@
           "Total Cost": 619.6,
           "Plan Rows": 1,
           "Plan Width": 43,
-          "Actual Startup Time": 0.534,
-          "Actual Total Time": 0.535,
+          "Actual Startup Time": 0.993,
+          "Actual Total Time": 0.994,
           "Actual Rows": 0,
           "Actual Loops": 1,
           "Disabled": false,
@@ -450,8 +450,8 @@
               "Total Cost": 619.6,
               "Plan Rows": 1,
               "Plan Width": 43,
-              "Actual Startup Time": 0.534,
-              "Actual Total Time": 0.534,
+              "Actual Startup Time": 0.992,
+              "Actual Total Time": 0.993,
               "Actual Rows": 0,
               "Actual Loops": 1,
               "Disabled": false,
@@ -481,8 +481,8 @@
                   "Total Cost": 619.59,
                   "Plan Rows": 1,
                   "Plan Width": 43,
-                  "Actual Startup Time": 0.53,
-                  "Actual Total Time": 0.53,
+                  "Actual Startup Time": 0.987,
+                  "Actual Total Time": 0.987,
                   "Actual Rows": 0,
                   "Actual Loops": 1,
                   "Disabled": false,
@@ -511,8 +511,8 @@
                       "Total Cost": 619.59,
                       "Plan Rows": 1,
                       "Plan Width": 43,
-                      "Actual Startup Time": 0.512,
-                      "Actual Total Time": 0.512,
+                      "Actual Startup Time": 0.968,
+                      "Actual Total Time": 0.968,
                       "Actual Rows": 0,
                       "Actual Loops": 1,
                       "Disabled": false,
@@ -550,17 +550,17 @@
           "Temp Read Blocks": 0,
           "Temp Written Blocks": 0
         },
-        "Planning Time": 0.255,
+        "Planning Time": 0.259,
         "Triggers": [],
-        "Execution Time": 0.568
+        "Execution Time": 1.034
       }
     },
     {
       "id": "Q6-my-work",
       "label": "My Work: assigned tickets across the whole org",
       "text": "select t.id, t.title, t.status, t.priority, t.due_date, t.project_id\n           from build.tickets t\n           where t.org_id = $1 and t.assignee_id = $3 and t.deleted_at is null and t.status <> 'DONE'\n           order by t.due_date asc nulls last limit 50",
-      "execMs": 0.18,
-      "planMs": 0.24,
+      "execMs": 12.19,
+      "planMs": 0.27,
       "actualRows": 50,
       "blocks": 52,
       "seqScans": 0,
@@ -578,13 +578,13 @@
           "Total Cost": 69.64,
           "Plan Rows": 50,
           "Plan Width": 57,
-          "Actual Startup Time": 0.05,
-          "Actual Total Time": 0.145,
+          "Actual Startup Time": 1.451,
+          "Actual Total Time": 12.152,
           "Actual Rows": 50,
           "Actual Loops": 1,
           "Disabled": false,
-          "Shared Hit Blocks": 52,
-          "Shared Read Blocks": 0,
+          "Shared Hit Blocks": 15,
+          "Shared Read Blocks": 37,
           "Shared Dirtied Blocks": 0,
           "Shared Written Blocks": 0,
           "Local Hit Blocks": 0,
@@ -603,14 +603,14 @@
               "Total Cost": 7432.48,
               "Plan Rows": 5358,
               "Plan Width": 57,
-              "Actual Startup Time": 0.049,
-              "Actual Total Time": 0.14,
+              "Actual Startup Time": 1.449,
+              "Actual Total Time": 12.143,
               "Actual Rows": 50,
               "Actual Loops": 1,
               "Disabled": false,
               "One-Time Filter": "(current_org_id() = '73e5076a-225f-4b4c-b93e-9bc66a548bfe'::text)",
-              "Shared Hit Blocks": 52,
-              "Shared Read Blocks": 0,
+              "Shared Hit Blocks": 15,
+              "Shared Read Blocks": 37,
               "Shared Dirtied Blocks": 0,
               "Shared Written Blocks": 0,
               "Local Hit Blocks": 0,
@@ -633,8 +633,8 @@
                   "Total Cost": 7432.48,
                   "Plan Rows": 5358,
                   "Plan Width": 57,
-                  "Actual Startup Time": 0.032,
-                  "Actual Total Time": 0.118,
+                  "Actual Startup Time": 1.431,
+                  "Actual Total Time": 12.113,
                   "Actual Rows": 50,
                   "Actual Loops": 1,
                   "Disabled": false,
@@ -643,8 +643,8 @@
                   "Filter": "(deleted_at IS NULL)",
                   "Rows Removed by Filter": 0,
                   "Index Searches": 1,
-                  "Shared Hit Blocks": 52,
-                  "Shared Read Blocks": 0,
+                  "Shared Hit Blocks": 15,
+                  "Shared Read Blocks": 37,
                   "Shared Dirtied Blocks": 0,
                   "Shared Written Blocks": 0,
                   "Local Hit Blocks": 0,
@@ -670,9 +670,9 @@
           "Temp Read Blocks": 0,
           "Temp Written Blocks": 0
         },
-        "Planning Time": 0.245,
+        "Planning Time": 0.27,
         "Triggers": [],
-        "Execution Time": 0.176
+        "Execution Time": 12.193
       }
     },
     {
@@ -700,8 +700,8 @@
           "Total Cost": 15.28,
           "Plan Rows": 4,
           "Plan Width": 16,
-          "Actual Startup Time": 0.135,
-          "Actual Total Time": 0.136,
+          "Actual Startup Time": 0.134,
+          "Actual Total Time": 0.134,
           "Actual Rows": 1,
           "Actual Loops": 1,
           "Disabled": false,
@@ -728,8 +728,8 @@
               "Total Cost": 13.85,
               "Plan Rows": 278,
               "Plan Width": 8,
-              "Actual Startup Time": 0.043,
-              "Actual Total Time": 0.101,
+              "Actual Startup Time": 0.038,
+              "Actual Total Time": 0.1,
               "Actual Rows": 334,
               "Actual Loops": 1,
               "Disabled": false,
@@ -758,8 +758,8 @@
                   "Total Cost": 13.85,
                   "Plan Rows": 278,
                   "Plan Width": 8,
-                  "Actual Startup Time": 0.023,
-                  "Actual Total Time": 0.052,
+                  "Actual Startup Time": 0.02,
+                  "Actual Total Time": 0.054,
                   "Actual Rows": 334,
                   "Actual Loops": 1,
                   "Disabled": false,
@@ -796,15 +796,15 @@
         },
         "Planning Time": 0.195,
         "Triggers": [],
-        "Execution Time": 0.174
+        "Execution Time": 0.175
       }
     },
     {
       "id": "Q10-dependency-graph",
       "label": "Dependency edges for a ticket (blocks / blocked_by)",
       "text": "select r.id, r.relation_type, r.work_item_id, r.related_work_item_id\n           from build.work_item_relations r\n           where r.org_id = $1 and (r.work_item_id = $4 or r.related_work_item_id = $4)",
-      "execMs": 0.1,
-      "planMs": 0.29,
+      "execMs": 0.85,
+      "planMs": 0.56,
       "actualRows": 1,
       "blocks": 5,
       "seqScans": 0,
@@ -824,14 +824,14 @@
           "Total Cost": 16.18,
           "Plan Rows": 2,
           "Plan Width": 16,
-          "Actual Startup Time": 0.05,
-          "Actual Total Time": 0.051,
+          "Actual Startup Time": 0.798,
+          "Actual Total Time": 0.8,
           "Actual Rows": 1,
           "Actual Loops": 1,
           "Disabled": false,
           "One-Time Filter": "(current_org_id() = '73e5076a-225f-4b4c-b93e-9bc66a548bfe'::text)",
-          "Shared Hit Blocks": 5,
-          "Shared Read Blocks": 0,
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 5,
           "Shared Dirtied Blocks": 0,
           "Shared Written Blocks": 0,
           "Local Hit Blocks": 0,
@@ -852,8 +852,8 @@
               "Total Cost": 16.18,
               "Plan Rows": 2,
               "Plan Width": 16,
-              "Actual Startup Time": 0.03,
-              "Actual Total Time": 0.031,
+              "Actual Startup Time": 0.648,
+              "Actual Total Time": 0.649,
               "Actual Rows": 1,
               "Actual Loops": 1,
               "Disabled": false,
@@ -863,8 +863,8 @@
               "Rows Removed by Filter": 0,
               "Exact Heap Blocks": 1,
               "Lossy Heap Blocks": 0,
-              "Shared Hit Blocks": 5,
-              "Shared Read Blocks": 0,
+              "Shared Hit Blocks": 0,
+              "Shared Read Blocks": 5,
               "Shared Dirtied Blocks": 0,
               "Shared Written Blocks": 0,
               "Local Hit Blocks": 0,
@@ -883,13 +883,13 @@
                   "Total Cost": 8.58,
                   "Plan Rows": 2,
                   "Plan Width": 0,
-                  "Actual Startup Time": 0.016,
-                  "Actual Total Time": 0.017,
+                  "Actual Startup Time": 0.086,
+                  "Actual Total Time": 0.087,
                   "Actual Rows": 0,
                   "Actual Loops": 1,
                   "Disabled": false,
-                  "Shared Hit Blocks": 4,
-                  "Shared Read Blocks": 0,
+                  "Shared Hit Blocks": 0,
+                  "Shared Read Blocks": 4,
                   "Shared Dirtied Blocks": 0,
                   "Shared Written Blocks": 0,
                   "Local Hit Blocks": 0,
@@ -909,15 +909,15 @@
                       "Total Cost": 4.29,
                       "Plan Rows": 1,
                       "Plan Width": 0,
-                      "Actual Startup Time": 0.013,
-                      "Actual Total Time": 0.013,
+                      "Actual Startup Time": 0.043,
+                      "Actual Total Time": 0.043,
                       "Actual Rows": 1,
                       "Actual Loops": 1,
                       "Disabled": false,
                       "Index Cond": "(work_item_id = 20001)",
                       "Index Searches": 1,
-                      "Shared Hit Blocks": 2,
-                      "Shared Read Blocks": 0,
+                      "Shared Hit Blocks": 0,
+                      "Shared Read Blocks": 2,
                       "Shared Dirtied Blocks": 0,
                       "Shared Written Blocks": 0,
                       "Local Hit Blocks": 0,
@@ -937,15 +937,15 @@
                       "Total Cost": 4.29,
                       "Plan Rows": 1,
                       "Plan Width": 0,
-                      "Actual Startup Time": 0.002,
-                      "Actual Total Time": 0.002,
+                      "Actual Startup Time": 0.043,
+                      "Actual Total Time": 0.043,
                       "Actual Rows": 0,
                       "Actual Loops": 1,
                       "Disabled": false,
                       "Index Cond": "(related_work_item_id = 20001)",
                       "Index Searches": 1,
-                      "Shared Hit Blocks": 2,
-                      "Shared Read Blocks": 0,
+                      "Shared Hit Blocks": 0,
+                      "Shared Read Blocks": 2,
                       "Shared Dirtied Blocks": 0,
                       "Shared Written Blocks": 0,
                       "Local Hit Blocks": 0,
@@ -962,9 +962,9 @@
           ]
         },
         "Planning": {
-          "Shared Hit Blocks": 93,
-          "Shared Read Blocks": 0,
-          "Shared Dirtied Blocks": 1,
+          "Shared Hit Blocks": 87,
+          "Shared Read Blocks": 9,
+          "Shared Dirtied Blocks": 0,
           "Shared Written Blocks": 0,
           "Local Hit Blocks": 0,
           "Local Read Blocks": 0,
@@ -973,19 +973,19 @@
           "Temp Read Blocks": 0,
           "Temp Written Blocks": 0
         },
-        "Planning Time": 0.295,
+        "Planning Time": 0.558,
         "Triggers": [],
-        "Execution Time": 0.101
+        "Execution Time": 0.85
       }
     },
     {
       "id": "Q11-portfolio-rollup",
       "label": "Portfolio dashboard: per-project open/done rollup from daily snapshots",
       "text": "select s.project_id::int,\n                  coalesce(sum(case when s.state_group in ('backlog','unstarted','started') then s.count else 0 end),0)::int open_count,\n                  coalesce(sum(case when s.state_group = 'completed' then s.count else 0 end),0)::int done_count\n           from build.project_daily_snapshots s\n           where s.org_id = $1\n             and s.snapshot_date = (\n               select max(s2.snapshot_date) from build.project_daily_snapshots s2 where s2.project_id = s.project_id\n             )\n           group by s.project_id\n           order by open_count desc limit 50",
-      "execMs": 0.07,
-      "planMs": 0.6,
+      "execMs": 0.18,
+      "planMs": 0.68,
       "actualRows": 0,
-      "blocks": 2,
+      "blocks": 5,
       "seqScans": 0,
       "nodes": [
         "Limit",
@@ -1007,12 +1007,12 @@
           "Total Cost": 36.9,
           "Plan Rows": 1,
           "Plan Width": 12,
-          "Actual Startup Time": 0.025,
-          "Actual Total Time": 0.026,
+          "Actual Startup Time": 0.107,
+          "Actual Total Time": 0.109,
           "Actual Rows": 0,
           "Actual Loops": 1,
           "Disabled": false,
-          "Shared Hit Blocks": 2,
+          "Shared Hit Blocks": 5,
           "Shared Read Blocks": 0,
           "Shared Dirtied Blocks": 0,
           "Shared Written Blocks": 0,
@@ -1032,8 +1032,8 @@
               "Total Cost": 36.9,
               "Plan Rows": 1,
               "Plan Width": 12,
-              "Actual Startup Time": 0.024,
-              "Actual Total Time": 0.025,
+              "Actual Startup Time": 0.106,
+              "Actual Total Time": 0.107,
               "Actual Rows": 0,
               "Actual Loops": 1,
               "Disabled": false,
@@ -1043,7 +1043,7 @@
               "Sort Method": "quicksort",
               "Sort Space Used": 25,
               "Sort Space Type": "Memory",
-              "Shared Hit Blocks": 2,
+              "Shared Hit Blocks": 5,
               "Shared Read Blocks": 0,
               "Shared Dirtied Blocks": 0,
               "Shared Written Blocks": 0,
@@ -1065,8 +1065,8 @@
                   "Total Cost": 36.88,
                   "Plan Rows": 1,
                   "Plan Width": 12,
-                  "Actual Startup Time": 0.022,
-                  "Actual Total Time": 0.023,
+                  "Actual Startup Time": 0.036,
+                  "Actual Total Time": 0.037,
                   "Actual Rows": 0,
                   "Actual Loops": 1,
                   "Disabled": false,
@@ -1093,8 +1093,8 @@
                       "Total Cost": 36.85,
                       "Plan Rows": 1,
                       "Plan Width": 40,
-                      "Actual Startup Time": 0.021,
-                      "Actual Total Time": 0.022,
+                      "Actual Startup Time": 0.035,
+                      "Actual Total Time": 0.036,
                       "Actual Rows": 0,
                       "Actual Loops": 1,
                       "Disabled": false,
@@ -1124,8 +1124,8 @@
                           "Total Cost": 36.84,
                           "Plan Rows": 1,
                           "Plan Width": 40,
-                          "Actual Startup Time": 0.014,
-                          "Actual Total Time": 0.014,
+                          "Actual Startup Time": 0.028,
+                          "Actual Total Time": 0.028,
                           "Actual Rows": 0,
                           "Actual Loops": 1,
                           "Disabled": false,
@@ -1152,8 +1152,8 @@
                               "Total Cost": 36.84,
                               "Plan Rows": 1,
                               "Plan Width": 40,
-                              "Actual Startup Time": 0.009,
-                              "Actual Total Time": 0.009,
+                              "Actual Startup Time": 0.016,
+                              "Actual Total Time": 0.017,
                               "Actual Rows": 0,
                               "Actual Loops": 1,
                               "Disabled": false,
@@ -1184,8 +1184,8 @@
                                   "Total Cost": 4.17,
                                   "Plan Rows": 3,
                                   "Plan Width": 0,
-                                  "Actual Startup Time": 0.003,
-                                  "Actual Total Time": 0.003,
+                                  "Actual Startup Time": 0.002,
+                                  "Actual Total Time": 0.002,
                                   "Actual Rows": 0,
                                   "Actual Loops": 1,
                                   "Disabled": false,
@@ -1277,8 +1277,8 @@
           ]
         },
         "Planning": {
-          "Shared Hit Blocks": 109,
-          "Shared Read Blocks": 5,
+          "Shared Hit Blocks": 132,
+          "Shared Read Blocks": 7,
           "Shared Dirtied Blocks": 0,
           "Shared Written Blocks": 0,
           "Local Hit Blocks": 0,
@@ -1288,9 +1288,9 @@
           "Temp Read Blocks": 0,
           "Temp Written Blocks": 0
         },
-        "Planning Time": 0.605,
+        "Planning Time": 0.678,
         "Triggers": [],
-        "Execution Time": 0.073
+        "Execution Time": 0.176
       }
     }
   ],
@@ -1305,9 +1305,16 @@
     {
       "relname": "ticket_activity_log",
       "rows": 40000,
-      "heap": "12 MB",
+      "heap": "13 MB",
       "idx": "20 MB",
       "total": "32 MB"
+    },
+    {
+      "relname": "kb_article_chunks",
+      "rows": 30000,
+      "heap": "5336 kB",
+      "idx": "101 MB",
+      "total": "343 MB"
     },
     {
       "relname": "tickets",
@@ -1327,8 +1334,8 @@
       "relname": "timesheets",
       "rows": 15000,
       "heap": "3160 kB",
-      "idx": "2984 kB",
-      "total": "6184 kB"
+      "idx": "3128 kB",
+      "total": "6328 kB"
     },
     {
       "relname": "ticket_label_mappings",
@@ -1345,6 +1352,69 @@
       "total": "3856 kB"
     },
     {
+      "relname": "hr_employments",
+      "rows": 5000,
+      "heap": "696 kB",
+      "idx": "2448 kB",
+      "total": "3184 kB"
+    },
+    {
+      "relname": "hr_people",
+      "rows": 5000,
+      "heap": "536 kB",
+      "idx": "1816 kB",
+      "total": "2392 kB"
+    },
+    {
+      "relname": "chat_messages",
+      "rows": 4250,
+      "heap": "760 kB",
+      "idx": "2024 kB",
+      "total": "2824 kB"
+    },
+    {
+      "relname": "role_permission_grants",
+      "rows": 1399,
+      "heap": "160 kB",
+      "idx": "504 kB",
+      "total": "704 kB"
+    },
+    {
+      "relname": "hr_reporting_lines",
+      "rows": 1000,
+      "heap": "144 kB",
+      "idx": "648 kB",
+      "total": "832 kB"
+    },
+    {
+      "relname": "leads",
+      "rows": 960,
+      "heap": "144 kB",
+      "idx": "568 kB",
+      "total": "752 kB"
+    },
+    {
+      "relname": "contacts",
+      "rows": 960,
+      "heap": "128 kB",
+      "idx": "192 kB",
+      "total": "360 kB"
+    },
+    {
+      "relname": "deals",
+      "rows": 900,
+      "heap": "120 kB",
+      "idx": "408 kB",
+      "total": "568 kB"
+    },
+    {
+      "relname": "kb_pages",
+      "rows": 850,
+      "heap": "192 kB",
+      "idx": "480 kB",
+      "total": "712 kB"
+    },
+    {
       "relname": "permission_supported_scopes",
       "rows": 833,
       "heap": "48 kB",
@@ -1354,9 +1424,58 @@
     {
       "relname": "permissions",
       "rows": 725,
-      "heap": "336 kB",
-      "idx": "248 kB",
-      "total": "624 kB"
+      "heap": "2560 kB",
+      "idx": "600 kB",
+      "total": "3200 kB"
+    },
+    {
+      "relname": "attendance",
+      "rows": 640,
+      "heap": "112 kB",
+      "idx": "184 kB",
+      "total": "336 kB"
+    },
+    {
+      "relname": "leave_requests",
+      "rows": 510,
+      "heap": "88 kB",
+      "idx": "232 kB",
+      "total": "360 kB"
+    },
+    {
+      "relname": "clients",
+      "rows": 350,
+      "heap": "48 kB",
+      "idx": "88 kB",
+      "total": "176 kB"
+    },
+    {
+      "relname": "invoices",
+      "rows": 350,
+      "heap": "104 kB",
+      "idx": "208 kB",
+      "total": "352 kB"
+    },
+    {
+      "relname": "hr_leave_ledger",
+      "rows": 340,
+      "heap": "56 kB",
+      "idx": "120 kB",
+      "total": "216 kB"
+    },
+    {
+      "relname": "inv_stock_transactions",
+      "rows": 338,
+      "heap": "56 kB",
+      "idx": "432 kB",
+      "total": "528 kB"
+    },
+    {
+      "relname": "purchase_bills",
+      "rows": 325,
+      "heap": "64 kB",
+      "idx": "120 kB",
+      "total": "224 kB"
     },
     {
       "relname": "sprints",
@@ -1366,37 +1485,59 @@
       "total": "264 kB"
     },
     {
+      "relname": "notifications_y2026_m08",
+      "rows": 300,
+      "heap": "72 kB",
+      "idx": "304 kB",
+      "total": "416 kB"
+    },
+    {
       "relname": "project_statuses",
-      "rows": 256,
+      "rows": 260,
       "heap": "64 kB",
       "idx": "200 kB",
       "total": "304 kB"
     },
     {
+      "relname": "chat_channel_members",
+      "rows": 240,
+      "heap": "40 kB",
+      "idx": "160 kB",
+      "total": "240 kB"
+    },
+    {
       "relname": "notification_events",
-      "rows": 133,
-      "heap": "112 kB",
-      "idx": "120 kB",
-      "total": "272 kB"
+      "rows": 154,
+      "heap": "880 kB",
+      "idx": "280 kB",
+      "total": "1200 kB"
     },
     {
       "relname": "project_members",
-      "rows": 128,
+      "rows": 129,
       "heap": "40 kB",
       "idx": "152 kB",
       "total": "232 kB"
+    },
+    {
+      "relname": "support_tickets",
+      "rows": 120,
+      "heap": "24 kB",
+      "idx": "176 kB",
+      "total": "240 kB"
+    },
+    {
+      "relname": "chat_saved_messages",
+      "rows": 120,
+      "heap": "16 kB",
+      "idx": "96 kB",
+      "total": "152 kB"
     }
   ],
   "idx": [
     {
       "relname": "projects",
-      "indexrelname": "idx_projects_managed_product",
-      "scans": 0,
-      "size": "16 kB"
-    },
-    {
-      "relname": "projects",
-      "indexrelname": "idx_projects_manager",
+      "indexrelname": "idx_projects_deal",
       "scans": 0,
       "size": "16 kB"
     },
@@ -1420,13 +1561,19 @@
     },
     {
       "relname": "projects",
-      "indexrelname": "idx_projects_deal",
+      "indexrelname": "idx_projects_manager",
       "scans": 0,
       "size": "16 kB"
     },
     {
       "relname": "projects",
       "indexrelname": "uniq_projects_org_id",
+      "scans": 0,
+      "size": "16 kB"
+    },
+    {
+      "relname": "projects",
+      "indexrelname": "idx_projects_managed_product",
       "scans": 0,
       "size": "16 kB"
     },
@@ -1439,7 +1586,7 @@
     {
       "relname": "projects",
       "indexrelname": "projects_pkey",
-      "scans": 17,
+      "scans": 110,
       "size": "16 kB"
     },
     {
@@ -1463,32 +1610,26 @@
     {
       "relname": "ticket_activity_log",
       "indexrelname": "idx_ticket_activity_log_org_ticket",
-      "scans": 20001,
+      "scans": 20004,
       "size": "9104 kB"
     },
     {
       "relname": "ticket_assignees",
       "indexrelname": "idx_ticket_assignees_org_user_ticket",
-      "scans": 0,
+      "scans": 10,
       "size": "5136 kB"
     },
     {
       "relname": "ticket_assignees",
       "indexrelname": "idx_ticket_assignees_user_id",
-      "scans": 94,
+      "scans": 102,
       "size": "240 kB"
     },
     {
       "relname": "ticket_assignees",
       "indexrelname": "idx_ticket_assignees_org_member_membership",
-      "scans": 142,
+      "scans": 170,
       "size": "240 kB"
-    },
-    {
-      "relname": "ticket_assignees",
-      "indexrelname": "ticket_assignees_pkey",
-      "scans": 34286,
-      "size": "768 kB"
     },
     {
       "relname": "ticket_assignees",
@@ -1498,8 +1639,14 @@
     },
     {
       "relname": "ticket_assignees",
+      "indexrelname": "ticket_assignees_pkey",
+      "scans": 34286,
+      "size": "768 kB"
+    },
+    {
+      "relname": "ticket_assignees",
       "indexrelname": "uniq_ticket_assignees_ticket_user",
-      "scans": 74292,
+      "scans": 74322,
       "size": "3544 kB"
     },
     {
@@ -1511,7 +1658,7 @@
     {
       "relname": "ticket_comments",
       "indexrelname": "uniq_ticket_comments_org_id",
-      "scans": 1,
+      "scans": 4,
       "size": "6704 kB"
     },
     {
@@ -1529,7 +1676,7 @@
     {
       "relname": "ticket_label_mappings",
       "indexrelname": "uniq_ticket_label_mappings_org_id",
-      "scans": 20045,
+      "scans": 20048,
       "size": "1360 kB"
     },
     {
@@ -1540,15 +1687,21 @@
     },
     {
       "relname": "tickets",
-      "indexrelname": "idx_tickets_org_status_priority",
-      "scans": 0,
-      "size": "680 kB"
-    },
-    {
-      "relname": "tickets",
       "indexrelname": "idx_tickets_cycle",
       "scans": 0,
       "size": "608 kB"
+    },
+    {
+      "relname": "tickets",
+      "indexrelname": "uniq_tickets_project_number",
+      "scans": 0,
+      "size": "2144 kB"
+    },
+    {
+      "relname": "tickets",
+      "indexrelname": "idx_tickets_org_status_priority",
+      "scans": 0,
+      "size": "680 kB"
     },
     {
       "relname": "tickets",
@@ -1600,80 +1753,74 @@
     },
     {
       "relname": "tickets",
-      "indexrelname": "idx_tickets_org_project_due_date",
-      "scans": 0,
-      "size": "5736 kB"
-    },
-    {
-      "relname": "tickets",
-      "indexrelname": "idx_tickets_customer_party_id",
-      "scans": 0,
-      "size": "640 kB"
-    },
-    {
-      "relname": "tickets",
-      "indexrelname": "idx_tickets_customer_org_party_id",
-      "scans": 0,
-      "size": "640 kB"
-    },
-    {
-      "relname": "tickets",
-      "indexrelname": "idx_tickets_project_status",
-      "scans": 0,
-      "size": "1040 kB"
-    },
-    {
-      "relname": "tickets",
-      "indexrelname": "uniq_tickets_project_number",
-      "scans": 0,
-      "size": "2144 kB"
-    },
-    {
-      "relname": "tickets",
-      "indexrelname": "idx_tickets_org_project_rank_sort",
-      "scans": 1,
-      "size": "8456 kB"
-    },
-    {
-      "relname": "tickets",
       "indexrelname": "idx_tickets_org_assignee_due_open",
-      "scans": 1,
+      "scans": 2,
       "size": "352 kB"
     },
     {
       "relname": "tickets",
-      "indexrelname": "idx_tickets_org_assignee_membership",
+      "indexrelname": "idx_tickets_customer_org_party_id",
       "scans": 2,
       "size": "640 kB"
     },
     {
       "relname": "tickets",
+      "indexrelname": "idx_tickets_customer_party_id",
+      "scans": 2,
+      "size": "640 kB"
+    },
+    {
+      "relname": "tickets",
+      "indexrelname": "idx_tickets_org_project_rank_sort",
+      "scans": 3,
+      "size": "8456 kB"
+    },
+    {
+      "relname": "tickets",
+      "indexrelname": "idx_tickets_project_status",
+      "scans": 4,
+      "size": "1040 kB"
+    },
+    {
+      "relname": "tickets",
+      "indexrelname": "idx_tickets_org_assignee_membership",
+      "scans": 10,
+      "size": "640 kB"
+    },
+    {
+      "relname": "tickets",
+      "indexrelname": "idx_tickets_org_project_due_date",
+      "scans": 19,
+      "size": "5736 kB"
+    },
+    {
+      "relname": "tickets",
       "indexrelname": "idx_tickets_org_reporter_membership",
-      "scans": 7,
+      "scans": 33,
       "size": "640 kB"
     },
     {
       "relname": "tickets",
       "indexrelname": "idx_tickets_org_assignee_status",
-      "scans": 8,
+      "scans": 47,
       "size": "688 kB"
     },
     {
       "relname": "tickets",
       "indexrelname": "idx_tickets_org_project_number",
-      "scans": 11,
+      "scans": 76,
       "size": "5368 kB"
     },
     {
       "relname": "tickets",
       "indexrelname": "idx_tickets_sprint",
-      "scans": 600,
+      "scans": 605,
       "size": "752 kB"
     },
     {
       "relname": "tickets",
       "indexrelname": "idx_tickets_org_project_status",
-      "scans": 786,
+      "scans": 823,
       "size": "1040 kB"
     },
     {
@@ -1685,56 +1832,8 @@
     {
       "relname": "tickets",
       "indexrelname": "tickets_pkey",
-      "scans": 1066790,
+      "scans": 1066807,
       "size": "1944 kB"
-    },
-    {
-      "relname": "timesheets",
-      "indexrelname": "idx_timesheets_org_status",
-      "scans": 0,
-      "size": "128 kB"
-    },
-    {
-      "relname": "timesheets",
-      "indexrelname": "idx_timesheets_org_project_date",
-      "scans": 0,
-      "size": "296 kB"
-    },
-    {
-      "relname": "timesheets",
-      "indexrelname": "uniq_timesheets_work_log",
-      "scans": 0,
-      "size": "8192 bytes"
-    },
-    {
-      "relname": "timesheets",
-      "indexrelname": "idx_timesheets_timer_session",
-      "scans": 0,
-      "size": "112 kB"
-    },
-    {
-      "relname": "timesheets",
-      "indexrelname": "idx_timesheets_org_billing",
-      "scans": 0,
-      "size": "128 kB"
-    },
-    {
-      "relname": "timesheets",
-      "indexrelname": "idx_timesheets_org_user_date",
-      "scans": 0,
-      "size": "184 kB"
-    },
-    {
-      "relname": "timesheets",
-      "indexrelname": "uniq_timesheets_day_blank",
-      "scans": 0,
-      "size": "8192 bytes"
-    },
-    {
-      "relname": "timesheets",
-      "indexrelname": "uniq_timesheets_day_project",
-      "scans": 0,
-      "size": "8192 bytes"
     },
     {
       "relname": "timesheets",
@@ -1744,15 +1843,9 @@
     },
     {
       "relname": "timesheets",
-      "indexrelname": "idx_timesheets_period",
+      "indexrelname": "uniq_timesheets_day_blank",
       "scans": 0,
-      "size": "112 kB"
-    },
-    {
-      "relname": "timesheets",
-      "indexrelname": "uniq_timesheets_org_id",
-      "scans": 0,
-      "size": "1008 kB"
+      "size": "8192 bytes"
     },
     {
       "relname": "timesheets",
@@ -1762,20 +1855,80 @@
     },
     {
       "relname": "timesheets",
+      "indexrelname": "uniq_timesheets_day_project",
+      "scans": 0,
+      "size": "8192 bytes"
+    },
+    {
+      "relname": "timesheets",
+      "indexrelname": "uniq_timesheets_org_id",
+      "scans": 0,
+      "size": "1008 kB"
+    },
+    {
+      "relname": "timesheets",
       "indexrelname": "idx_timesheets_org_invoicing",
       "scans": 0,
       "size": "120 kB"
     },
     {
       "relname": "timesheets",
-      "indexrelname": "idx_timesheets_user_date",
+      "indexrelname": "idx_timesheets_org_status_date",
+      "scans": 0,
+      "size": "144 kB"
+    },
+    {
+      "relname": "timesheets",
+      "indexrelname": "idx_timesheets_org_billing",
+      "scans": 0,
+      "size": "128 kB"
+    },
+    {
+      "relname": "timesheets",
+      "indexrelname": "idx_timesheets_period",
+      "scans": 0,
+      "size": "112 kB"
+    },
+    {
+      "relname": "timesheets",
+      "indexrelname": "idx_timesheets_timer_session",
+      "scans": 0,
+      "size": "112 kB"
+    },
+    {
+      "relname": "timesheets",
+      "indexrelname": "uniq_timesheets_work_log",
+      "scans": 0,
+      "size": "8192 bytes"
+    },
+    {
+      "relname": "timesheets",
+      "indexrelname": "idx_timesheets_org_user_date",
       "scans": 2,
+      "size": "184 kB"
+    },
+    {
+      "relname": "timesheets",
+      "indexrelname": "idx_timesheets_org_status",
+      "scans": 3,
+      "size": "128 kB"
+    },
+    {
+      "relname": "timesheets",
+      "indexrelname": "idx_timesheets_org_project_date",
+      "scans": 8,
+      "size": "296 kB"
+    },
+    {
+      "relname": "timesheets",
+      "indexrelname": "idx_timesheets_user_date",
+      "scans": 10,
       "size": "208 kB"
     },
     {
       "relname": "timesheets",
       "indexrelname": "idx_timesheets_org_approved_actor",
-      "scans": 3,
+      "scans": 20,
       "size": "120 kB"
     },
     {
@@ -1793,19 +1946,19 @@
     {
       "relname": "work_item_relations",
       "indexrelname": "uniq_work_item_relations_org_id",
-      "scans": 13338,
+      "scans": 13341,
       "size": "896 kB"
     },
     {
       "relname": "work_item_relations",
       "indexrelname": "idx_work_item_relations_item",
-      "scans": 20001,
+      "scans": 20002,
       "size": "424 kB"
     },
     {
       "relname": "work_item_relations",
       "indexrelname": "idx_work_item_relations_related",
-      "scans": 40001,
+      "scans": 40002,
       "size": "424 kB"
     }
   ]
