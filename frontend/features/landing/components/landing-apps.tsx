@@ -120,10 +120,10 @@ export function LandingApps() {
             transition={{ type: "spring", stiffness: 300 }}
           >
             <Link
-              href="/waitlist"
+              href="/signin"
               className="inline-flex items-center gap-1.5 mt-5 text-label font-semibold text-brand-core hover:text-brand-deep focus-visible:outline-none focus-visible:underline"
             >
-              Join the waitlist
+              Get started
               <ArrowRight className="h-3.5 w-3.5" aria-hidden />
             </Link>
           </motion.div>
