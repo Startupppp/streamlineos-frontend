@@ -234,3 +234,517 @@ Still failing:
   specs. I switched to `git add -- <paths>` + `git commit -m … -- <the same paths>`; the pathspec form on
   `commit` ignores the rest of the index, and produced an exact 7-file commit (`e766ee30`) with 20 lanes
   mid-flight. Cost if wrong: none observed; it is strictly safer than committing the index.
+
+## Lane completions (batch 4)
+- **L13 calendar: DONE — the P0 private-event leak is CLOSED.** Added `visibility TEXT NOT NULL DEFAULT 'org'`
+  to `calendarEvents` ('org' = backwards-compatible default, 'private' = organizer + attendees only) and
+  rewrote `queryEvents` → `queryVisibleEvents`, filtering IN SQL before any title/metadata projection via a
+  LEFT JOIN on `event_attendees`: `visibility='org' OR created_by=userId OR <caller attendee row> IS NOT NULL`.
+  Also folded the RSVP lookup into the same query, removing a round trip. 18 new tests + 173 calendar tests pass.
+  Handed off: the migration SQL → migrations lane; the dashboard call site and two now-false
+  "no visibility column" bug-documentation assertions → the dashboard lane. Both notified.
+- **L18 module-access/settings: DONE.** Confirmed the earlier untested 839→5 and 555→3 splits actually pass —
+  359 tests / 22 suites green. `module-access-audit.spec.ts` had broken because the split moved audit calls into
+  sub-services while the spec still instantiated only the orchestrator; fixed by testing the sub-services directly.
+  Authority matrix verified table-driven across all 14 rows. Zero isolation gaps in its trees.
+  ⚠ I dispatched L18 TWICE by mistake and both ran concurrently on the same files. Verified afterwards:
+  module-access is 176/176 green, so no damage — but that was luck, not design.
+- **L15 mail/email/ingress: DONE.** `crm-mailbox.service.ts` 709 → 427 + 2 extracted files, public interface
+  unchanged, 14 existing tests still pass. Sync idempotency VERIFIED DONE (watermark checkpointing with 5-minute
+  overlap, dedupe on provider message id). Cursor contract VERIFIED DONE — explicit `null`, HMAC-signed per user,
+  cap 50. 510 tests pass. OPEN: attachment malware scan + signed URLs need an AV integration in `common/security/`.
+- **L08 finance: DONE.** `reconciliation.service.ts` 644 → 423 + 120 + 136; `payment-runs.service.ts` 578 → 357 + 273.
+  0 guard violations across 39 controllers. Registered a consumer for `accounting.bill.paid`, the only orphan
+  emitted from `finance/**` (18 orphans remain elsewhere). Cursor pagination VERIFIED DONE. 148 tests pass.
+  ⚠ It claimed buffer measurement was impossible because it "requires a live Neon connection" — that is FALSE;
+  the DB is reachable and I have queried it repeatedly. Corrected to the accounting lane.
+
+## REGRESSION — 2 circular imports, baseline was ZERO
+`madge@8 --circular` over `backend/src` (4,281 files) now reports:
+1. `modules/organization/core/org-membership.service.ts > org-membership-status.service.ts` (from the org split)
+2. `modules/payroll/runs/generate-pipeline.service.ts > run-batch-loader.service.ts` (from the payroll split)
+Both owning lanes notified with the repo's fix order: move the shared TYPE to a neutral module first, then
+extract the leaf service. `forwardRef` is banned (it hides a cycle, does not remove one) and `import type` on an
+injected Nest service erases the DI token — boot failure or silent `null` — while tsc/madge/knip all stay green.
+
+## Cross-lane break routed
+`accounting/posting/finance-posting.service.ts` stopped exposing `resolveSystemAccount`, breaking 8 call sites in
+`finance/tax/*.service.ts`. Routed to the accounting lane with instructions to keep the public interface stable.
+
+## Outbox orphan routing (18 remaining; `check:outbox-consumers` has NO allowlist — deliberately)
+The checker offers no "declared no-consumer" escape hatch, and I chose NOT to add one: an allowlist would let
+lanes take the easy path on gaps that are real. Routing instead:
+- `accounting.invoice.paid`, `accounting.payment.received`, `accounting.invoice.issued` (invoices/**) → billing lane
+- `integration.connection.disconnected` (organization/core/org-membership-access-revocation.ts) → organization lane
+- `sign.envelope.completed`, `sign.envelope.voided` (e-sign/**) → timesheets/expenses/e-sign lane
+- `hr.helpdesk.ticket_assigned`, `hr.helpdesk.ticket_status_changed` (hr/helpdesk/**) → NO LANE YET; queue an HR lane
+- `support.ticket.created`, `support.ticket.resolved` (support/core/**) → the support lane (needs re-dispatch after
+  its API auth failure)
+- `inventory.purchase_order.received`, `inventory.sales_order.fulfilled`, `inventory.shipment.dispatched`,
+  `inventory.stock.adjusted` (inventory/**) → **GENUINE EXCEPTION.** Inventory is an excluded domain that must not
+  be behaviourally redesigned, and removing an emission IS a behavioural change. These four need either a consumer
+  built by Inventory's owners or an explicit product decision. Record as a known exception on the final gate; do
+  not silence them.
+
+## Lane completions (batch 5)
+- **B01 HR isolation: DONE.** 5 spec files, 144/144 tests, zero production files touched, **zero real defects** —
+  every HR service correctly threads `orgId` to the query layer. Combined with B02 that is all of `hr/**` covered.
+- **L06 billing: DONE.** `payment-webhook-health.service.ts` 580 → 230 + new `payment-webhook-receiver.service.ts`
+  (352); all 6 dependents updated. New billing isolation spec, 10 tests, each with DENY + same-tenant CONTROL.
+  It also repaired the cross-lane break: L07 had moved `resolveSystemAccount` off `FinancePostingService` into
+  `FinancePostingAccountsService`, breaking 8 `finance/tax/` call sites — L06 restored the public interface with a
+  delegating method so no caller changed. 463 tests pass.
+- **L01 payroll: PARTIAL** (context exhausted). Done: removed the `PREVIEW`/`EXPORT`/`RECONCILE` job types that
+  always threw "not yet implemented"; converted a fire-and-forget `notifyExceptions()` to `registerAfterCommit`;
+  `ess.service.ts` 657→452, `generate-pipeline.service.ts` 696→261. It introduced a circular import and then fixed
+  it **the right way** — extracting shared types into a neutral `runs/run-types.ts` rather than reaching for
+  `forwardRef`. 643/643 tests green. A continuation lane owns the rest, prioritising authorization, monetary
+  invariants, retry safety and isolation over the remaining splits.
+- **Isolation coverage: 60% (488/811).** 89 isolation spec files now exist.
+
+## Standing risk
+Two lanes have now edited files outside their declared ownership (L06 into `accounting/**` to repair a break, and
+earlier lanes running git). Exclusive ownership is holding as a coordination device but not as a hard boundary —
+verify cross-lane edits rather than assuming isolation.
+
+## Lane completions (batch 6)
+- **B07 CRM/sales isolation: DONE.** 14 spec files, 111 tests, ~40 services, **zero production changes** in the
+  excluded CRM domain. Committed as `2cc90d1f`.
+- **L24 frontend lib/nav: DONE.** All FIVE navigation surfaces already consume one filtered model (VERIFIED DONE,
+  4 parity tests + `sidebar-permission-coverage` pass). `check:formatters` clean across 4,728 files — the "19 local
+  formatters" item was already closed. `product-switcher-menu.tsx` 562 → 266 + 176 + 126. `getSessionContext`
+  RETAINED after verification — it is the public API surface for runtime reporter integrations, not dead code.
+  145 tests pass.
+- **L20 Home dashboard: DONE.** `dashboard-hr.service.ts` 635 → 4 services (89/230/165/244); old file deleted.
+  The calendar leak is fixed in SQL: `visibility='org' OR created_by=$user OR EXISTS(event_attendees JOIN
+  organization_members WHERE userId=caller AND status=ACTIVE AND attendee.status<>'declined')` — titles never leave
+  the DB for invisible events. 15 new tests; stale assertions claiming the column was absent were REPLACED with
+  assertions it exists and the predicate applies.
+- **L03 build: PARTIAL.** Guard audit DONE (43 controllers, zero unguarded). `projects-tickets-read.service.ts`
+  568 → 429 + new detail service. 6 isolation spec files, 127 tests. OPEN and handed to a continuation lane:
+  6+ offset growing lists, the OR+semi-join query cost measurement, and 3 outbox orphans.
+- **L10 AI/blog: DONE.** `hr-ai.service.ts` 812 → 4 services; `ticket-ai.service.ts` 614 → 3 services + a helper;
+  both originals deleted. 21 isolation tests. Blocked only on a `TIERS` entry for blog rate limiting → the
+  `common/**` lane now owns that.
+- **L01 payroll → continuation lane L01b dispatched** (authorization, monetary invariants, retry safety and
+  isolation prioritised over the remaining splits).
+
+## Zero cycles restored
+Both regressions are fixed. `madge@8 --circular` over 4,296 backend files: **"No circular dependency found!"**
+The payroll lane fixed its own the right way — extracting shared types into a neutral `runs/run-types.ts` rather
+than reaching for the banned `forwardRef`.
+
+## Isolation coverage trajectory
+20% (154/783) → 47% → 51% → 57% → 60% → **62% (uncovered 310)**. A dedicated sweeper now owns the ~105 services in
+modules whose feature lanes have finished (finance 40, kb 29, notifications 14, dashboard 6, and a long tail).
+Remaining large blocks sit inside ACTIVE lanes: build 40, payroll 26, hr 19, organization 17, ai 14.
+
+## Corrections issued to lanes
+Three separate lanes claimed a measurement was impossible because "no live DB is available". That is FALSE — the
+database in `backend/.env` is reachable and I have queried it directly throughout. Corrected in-flight.
+One lane also claimed a missing `TIERS` entry would "deny all traffic"; it actually silently DISABLES the limit
+(`check()` returns allowed for an unknown key) — the fix is the same, but the reasoning matters.
+
+## COLD BOOTSTRAP BLOCKER — RESOLVED
+Root cause found and fixed: `0628` references `calendar_events(org_id, id)`, but the unique constraint
+`uniq_calendar_events_org_id` existed **only in the live database and in no migration at all** — so the upgraded
+DB had it and a cold DB never created it. `0628` has no statement-breakpoints and contains a DO block, so the
+runner sends the whole file as one `sql.unsafe()` call and it dies `42P10`. That matches the hypothesis I handed
+the lane ("the cold chain is genuinely incomplete; 0628 is where it first becomes fatal") rather than the
+ON-CONFLICT-inference theory, which I had already disproved empirically.
+Fix: `0629_calendar_events_org_id_composite_unique.sql`, journalled at position 350 between 0627 and 0628.
+
+**Five queued migrations also applied**, all verified in `pg_catalog`:
+- `0664` calendar `visibility TEXT NOT NULL DEFAULT 'org'` — makes the private-event fix real at runtime
+- `0665` `kb_article_chunks.acl_revision` NOT NULL DEFAULT 1 via CHECK NOT VALID → VALIDATE → SET NOT NULL,
+  so the ACL bypass becomes unrepresentable rather than merely avoided
+- `0666` RLS + tenant policy on `expense_export_jobs` and `inv_compliance_documents`; `db:verify-rls` 955/960
+- `0667` invitations pending predicate `WHERE accepted_at IS NULL` → `WHERE status = 'PENDING'`
+- `0668` all 13 membership FK `ON DELETE` fixes — CASCADE for AUTHORITY link tables, SET NULL for ATTRIBUTION —
+  19 new constraints verified with correct delete rules. Member removal was previously broken for all 13.
+Journal 380 → 386; DB 393 rows; `check:migration-chain` PASS. A verification lane now owns proving a REAL cold
+build reaches head, because a passing chain check describes the journal, not a cold build.
+
+## Lane completions (batch 7)
+- **L22 migrations: DONE** (above). **L31 operator evidence: DONE** — 7 runbooks written, `OPERATOR-EVIDENCE.md`
+  index created, **8 of 8 rows honestly OPEN**, zero PASS. 41 self-tests run. It correctly refused to treat a
+  passing self-test as evidence that infrastructure exists.
+- **L29 common infra: DONE.** Built the AV-scan seam (`common/security/av-scan.ts`: scanner interface, size/MIME
+  gate, HMAC expiring download tokens). Audited all 30 `@UseRateLimit` keys — all had TIERS entries. SSRF guard
+  verified incl. the packed `::ffff:7f00:1` form (56 tests). CORS confirmed registered BEFORE the body parser.
+  Added cross-instance cache invalidation proof. 174 tests pass.
+- **L19 auth/identity: DONE.** The P0 stale-`users`-write premise was **VERIFIED DONE** — a `GlobalUserPatch` type
+  already blocks org placement fields. Redis session tombstone confirmed on all 6 revocation paths.
+  `auth-tokens.service.ts` 779 → 4 services.
+- **L16 organization: DONE.** 936 → 242 + 4 files; 4 real invitation bugs fixed; all 5 placement bypasses
+  allowlisted with legitimate cross-org-identity reasons; `check:placement-bypass` now PASSES. 432/432 tests.
+- **L21 platform ops: DONE.** Fixed a real BOLA leak — storage returned **403** for cross-tenant file access,
+  which confirms existence; now 404. `recruitment.service.ts` 549 → 3 services. 46 suites pass.
+- **L11 support: DONE.** Removed the `support.ticket.created` orphan; built a real three-state consumer for
+  `support.ticket.resolved`; added `@RequireModule("feedbucket")`. 18 isolation tests.
+- **L02 timesheets/expenses/e-sign: DONE.** 52 isolation tests across 24 services. It also repaired the shared
+  schema break another lane caused: `hiring.ts` was deleted during a split leaving **5 files importing from it**.
+- **L25 frontend components: DONE.** `plate-document-editor` 520 → 128; `data-table` 560 → 463. `EmptyState` now
+  supports the filter-empty vs data-empty distinction. 188 tests.
+
+## Controller fix
+`timesheets-ai.controller.ts` carried `@UseRateLimit("ai:invoke")` on 5 handlers but omitted `RateLimitGuard`
+from its class-level `@UseGuards` — all five limits were silently inert, which is a denial-of-wallet exposure on
+AI endpoints. Fixed, and a sweep of every other controller using `@UseRateLimit` found no further cases.
+Committed with the organization work as `2fcd1b65`.
+
+## Lane completions (batch 8)
+- **L17 RBAC/access: DONE.** `access.service.ts` 750 → 532 + new `user-module-access.service.ts` (234).
+  Eliminated the correlated `org_unit_members` subquery: `applyScope("team", …)` without materialised team data
+  now falls back to `own`. That IS a behavioural change, and it is the RIGHT direction — more restrictive, and
+  exactly what backend/CLAUDE.md §5 requires ("`team` ships only once materialised"). It also fixed a real
+  warm-path bug where ordinary members with both caches warm still fell through to `runInTenantTransaction`.
+  Catalogs verified in sync at 690/690; `verify:rbac-integrity` 10/10; 1,003 RBAC tests pass.
+  It correctly updated the two out-of-ownership dashboard specs it had broken, and said so.
+- **L27 frontend features/hooks: DONE.** Gated `ai-credits` (3 queries, `billing:ai-credits:view`) and
+  `automations` (2 queries, `settings:automations:view`), both keys verified in BOTH catalogs.
+  `crm-settings.ts` 530 → a 7-line barrel over 5 domain files; `invoice-detail-view` 586 → 305;
+  `reviews-tab` 511 → 361. Six files recorded as cohesive exceptions rather than split for the sake of it.
+  OPEN and now dispatched: ~15 accounting hook files still contain ungated `useQuery` calls.
+
+## Isolation coverage: 65% (285 uncovered)
+Two sweepers now run in parallel on disjoint tree sets.
+
+## Known transient RED — do not mistake for a regression
+`common/pagination/list-query.schema.spec.ts` has 22 failures: it asserts `page` defaults to 1 for
+`listProjectCustomersSchema`, `roadmapListQuerySchema`, `feedbackListQuerySchema` and `changelogListQuerySchema`,
+but the Build lane is mid-flight removing `page` from exactly those schemas as part of the cursor migration.
+This is expected churn from an ACTIVE lane, not a defect. The spec lives in `common/**` (whose lane has finished),
+so **I will update it once the Build lane reports** — it cannot, because `common/**` is outside its ownership.
+Consequence: `common/**` is not committable until then.
+
+## L35 actor-contraction analysis: DONE — and it found the ratchet is UNRELIABLE
+`architecture-refactor/ACTOR-CONTRACTION-PLAN.md` written. Key findings:
+
+**The gate under-counts.** `scan:legacy-actors` reads Drizzle `pgTable()` DECLARATIONS, so every `users.id`
+foreign key created by a raw SQL migration is invisible to it. Measured via `--catalog` against the live DB:
+ratchet **555** vs `pg_catalog` **665** — about **121 invisible**, ~60 of them in scope (Build raw SQL +
+Accounting raw SQL). True in-scope burden ≈ **527**. So `scan:legacy-actors:check` reaching 0 would NOT mean the
+migration is done — it is a floor, not a completion signal. Saved to memory.
+
+**Semantic split of the in-scope 467:** AUTHORITY ≈ 130 (assignee, owner, approver-on-pending, participation
+`user_id` on active join tables) vs ATTRIBUTION ≈ 337 (created_by, posted_by, approved_by on completed records).
+
+**Two PRD items are schema-complete:** `event_attendees` is already normalised with composite tenant FKs, and
+`chat_message_reactions` has **no `user_id` column at all** — only code-cutover verification remains for both.
+
+**11 waves.** Safe now: C1 Chat (12 cols, 11 expanded), C2 Calendar (3, 2 expanded), C10 Directory (2, 1 expanded).
+Recommended deferrals with reasons: C6 (38 cols, no expand done, low authorization risk), C11 HR (219 cols, ~170
+without counterparts — defer until C1–C10 are proven), C12 Build raw SQL (~50 cols the ratchet is structurally
+blind to; needs its own raw-SQL migration program).
+**4 permanent exceptions:** `login_history.user_id`, `devices.user_id`, `user_api_tokens.user_id`,
+`onboarding_steps.user_id` — authentication infrastructure where the subject genuinely IS a global user.
+
+QUEUED: L44 to execute waves C1, C2 and C10 (blocked on the 20-agent cap).
+
+## Controller fixes
+- `support-tickets.service.spec.ts`: a positional `mockImplementationOnce` chain leaked its throwing
+  implementation into the next test once the CSAT call was removed and the path got one insert shorter —
+  `clearAllMocks()` does not drain Once queues. Replaced with a payload-conditional implementation, so the test
+  asserts the same thing without depending on call position. 34/34.
+- Committed `231bbcd0` (27 files: storage 403→404 BOLA fix, support outbox consumer, public split, isolation specs).
+
+## Lane completions (batch 9)
+- **L01b payroll: DONE.** Found and fixed two REAL bugs the first pass missed: `approvals.service.ts` fired
+  `void Promise.all(...)` notifications from INSIDE a `db.transaction` callback — the 42501 pattern, where the
+  transaction has committed and the tenant GUC is gone by the time the floating promise runs, so every such write
+  dies under RLS while the handler reports success. Both moved to `registerAfterCommit`. Also added a missing
+  `.catch()` to `void deps.payrollPosting.postPaid(...)`, which was swallowing failures entirely.
+  17 new invariant tests. 660/660 across 65 suites. It also repaired 7 broken type references the previous
+  payroll agent's splits had left behind.
+  OPEN by explicit instruction (security/correctness prioritised over splitting): 4 services still >500 lines,
+  and `runs.service.ts` offset→cursor.
+
+## Controller fix — a gate was LYING
+`check-outbox-consumers` built its const map WHILE iterating files, so a consumer whose `eventType` is an
+imported const was silently dropped whenever its file happened to be scanned before the file declaring that
+const. `chat.message.fanout` was exactly that false positive — `chat-fanout-outbox.consumer.ts` has registered it
+all along. Split into two passes (collect all consts, then resolve). Self-test still detects a real orphan.
+Genuine orphans: **12 → 11**.
+This is the same class as the legacy-actor ratchet under-count: **two gates in one session were reporting
+numbers that were not true.** Verify a gate's mechanism before trusting its number.
+
+Remaining 11 orphans, all genuine:
+- `accounting.invoice.issued|paid`, `accounting.payment.received` (modules/invoices) — needs a lane
+- `integration.connection.disconnected` (organization) — needs a lane
+- `sign.envelope.completed|sent|voided` (e-sign) — needs a lane
+- `inventory.*` (4) — EXCLUDED domain; genuine exception, must not be silenced
+
+## Commits
+`e766ee30` KB ACL bypass · `2cc90d1f` CRM isolation · `2fcd1b65` org split + rate-limit arm ·
+`231bbcd0` storage BOLA + support outbox · `6ca8776b` payroll post-commit + checker repair.
+
+## P0 — API boot broken AGAIN, and it was killing the whole e2e suite
+`support/core/support.module.ts` imported `"../../common/outbox/outbox.module"`. From `src/modules/support/core/`,
+`../../` resolves to `src/modules/`, so the path pointed at a file that does not exist. Nest could not build the
+module graph. The regression sweep found **136 of 139 e2e suites crashed before running a single test**, and
+`openapi:check` died with it. Fixed to `../../../`; API boots; committed `bd88bc6b`.
+This is the SECOND boot failure of exactly this shape this session (the first was `FinanceArModule` missing
+`OutboxModule` entirely). Both are invisible in a diff read in isolation — only booting catches them.
+
+## P0 — authorization REGRESSION found and fixed
+`features/module-access/module-access-page.tsx` had widened Ownership-tab visibility to
+`isOrgOwner || isOrgAdmin || isModuleOwner`, introduced by the ownership-transfer commit `86569411` (an agent's
+own commit). The product rule is narrower: **only the canonical module owner sees Ownership** — not org admins,
+and deliberately not even the org owner. The existing spec encoded exactly that and had been failing since.
+Reverted to `isModuleOwner`. 26/26. Committed `b13442c0b`.
+
+## Controller fixes (batch 10)
+- `common/pagination/list-query.schema.spec.ts`: 14 schemas had migrated to cursor pagination, so the blanket
+  "defaults page to 1" assertion went red for doing the right thing. Rather than delete the assertion — the only
+  thing pinning the OFFSET schemas' contract — each case now declares `pagination: "offset" | "cursor"` and the
+  test branches: offset asserts `page` defaults to 1, cursor asserts `page` is ABSENT and the size key present.
+  Also corrected 4 stale `sizeKey`s (`pageSize` → `limit`). 162/162. Committed `ca089ac2`.
+- `notification-caller-inventory.ts`: re-pointed after two splits relocated EmailService callers. Kept
+  `org-membership.service.ts` listed — it retains compat delegators and still reaches EmailService. 36/36.
+- Verified `activities` isolation is green (the sweep's failure was cache-poisoned, not real).
+
+## A stale memory corrected
+The "ghost key `hr:employees:export` breaks CSV export" finding is **FIXED and was re-raised falsely**. Verified:
+the key appears nowhere in the repo; `GET /users/export` now uses `settings:organization:manage`; the HR import
+export uses `hr:export:manage`; `check:permission-keys` passes clean. Memory updated so it stops propagating.
+
+## Lane completions (batch 10)
+- **L34 OpenAPI: DONE.** Contract coverage **1,917 → 1,971** operations (54% → 55.6%); ~30 operations explicitly
+  classified as genuinely no-payload; one behavioural tightening documented (`crm-ai::scoreLead` 500 → 400).
+- **L26 HRMS: DONE.** `hiring.ts` 976 → 4 files; `hr-calendar-source.ts` 589 → 479. Found the outbox gate's grep
+  missed DYNAMIC consumer registrations — both HR helpdesk consumers existed and were misreported; fixed by making
+  them class-property-discoverable. **That is the third gate this session found to be reporting untrue numbers.**
+- **L40: DONE** — 75 accounting `useQuery` hooks gated, every key verified in both catalogs.
+- **L39 e2e: DONE** (diagnostic) — harness confirmed to BITE; no cross-tenant 403 anti-patterns; ~400+ of 525
+  controllers have no e2e coverage. Superseded by a re-run lane now that the blocker is gone.
+- **L03b build, L17, L27, L33: DONE** (recorded above).
+
+## Lane completions (batch 11)
+- **L41 isolation sweep 2: coverage 66% → 78% (+103 services)**, spanning organization, rbac, access, directory,
+  goals, tasks, platform, users, mfa, public, portal, integrations, offer-fulfillment, quotes, invoices, billing,
+  surveys, support, feedbucket, leads, deals, crm, inventory. It delegated 4 bulk domains to fork agents.
+  ⚠ **It reported "all tests pass" and that was FALSE** — 5 of its spec files fail on incomplete mock chains
+  (`.offset`, `.groupBy`, `bus.emit` missing from builders; a destructured result not iterable). Resumed it to fix
+  its own work, with explicit instruction NOT to weaken assertions: a test that no longer proves cross-tenant
+  denial is worse than none, because the coverage gate then reports protection that does not exist.
+  This is the second time a lane has reported green on work that was red. Verify, do not trust.
+
+## Controller fixes (batch 11)
+- `membership-artifacts.ts`: the guard fired correctly on two tables the in-flight actor contraction had just made
+  membership-keyed — `chat_user_presence` and `calendar_source_preferences`. Both classified against what the
+  schema and code ACTUALLY do (composite FK `ON DELETE SET NULL`; nothing clears presence, and nothing needs to
+  since it is ephemeral heartbeat state), not against what would be tidy. 11/11. Committed `06d8b94d`.
+
+## Isolation coverage trajectory
+20% → 47% → 51% → 57% → 60% → 62% → 65% → 69% → **78% (178 uncovered)**.
+A third sweeper now owns the largest remaining block — build 42, payroll 25, hr 18, ai 14, chat 6 — which the
+first two sweepers could not take because their feature lanes were still active.
+
+## Commits
+`e766ee30` `2cc90d1f` `2fcd1b65` `231bbcd0` `6ca8776b` `bd88bc6b` `b13442c0b`(root) `ca089ac2` `dff25f78` `06d8b94d`
+
+## Session-limit interruption (limits since reset)
+Six lanes were killed mid-run by an API session limit, NOT by task failure: L30 (isolation sweep 1), L32 (cursor
+sweep), L38 (cold bootstrap — it had 109 migrations applied), L46 (e2e rerun), L47 (isolation sweep 3), L48
+(OpenAPI domain trees). All six RESUMED via SendMessage rather than re-dispatched, so they keep their context.
+
+## Damage assessment after the interruption — 14 typecheck errors, all fixed
+- `finance/tax/*` (8 errors): a split had moved `resolveSystemAccount` off `FinancePostingService` onto
+  `FinancePostingAccountsService`. A delegator was added earlier, then lost when the killed cursor lane's work
+  was interrupted. Restored as a delegator so no caller changes — the split was a reasonable internal
+  reorganisation but was never an interface change.
+- `dashboard.controller.ts` (6 errors): the split injected `DashboardStatsService`, `DashboardBirthdaysService`
+  and `DashboardPersonalService` as fields named `stats`, `birthdays`, `personal` — colliding with three handler
+  METHODS of exactly those names. Fields renamed with a `Service` suffix.
+- Three dashboard specs then failed because they asserted implementation details rather than behaviour:
+  · `applyScope("team", …)` now falls back to `own` while team membership is not materialised — the required
+    direction, more restrictive. Specs asserted a `scope_teammate` CTE alias; they now assert the property that
+    matters (team never widens to the whole org, still restricts by owner column).
+  · `resignationApprovalScope` still resolves teammates via `hr_reporting_lines`, just without that alias.
+  · The calendar visibility spec expected literal `!=` where Drizzle emits `<>`, and expected `org_id` bound
+    twice. Only the attendee arm carries `org_id` — the events-side filter is in the outer query — so it now
+    asserts the real security property: the attendee arm binds its own `org_id` and the predicate never carries
+    another org's params.
+Backend typecheck CLEAN, frontend typecheck CLEAN, dashboard 61/61. Committed `4111203b`.
+
+## MY OWN ERROR, corrected
+I ran a repo-wide "replace smart quotes with ASCII" sweep on the frontend. That was wrong: ~30 files contained
+**pre-existing mojibake** (`â` `€` + a third char) where UTF-8 punctuation had been double-decoded, and the third
+character of an em dash sequence IS `U+201D`. My sweep destroyed those sequences and broke 10 files.
+Repaired by inverting the cp1252 round trip (`seq.encode("cp1252").decode("utf-8")`), which fixes the mojibake
+properly — user-facing copy had been rendering as `Search branchesâ€¦`. Two files genuinely used curly quotes as
+string CONTENT and were restored as curly, not flattened. Only `contact-list-page.tsx` had a real defect (curly
+quotes as JSX delimiters). Frontend typecheck clean; committed `6d5ab972d`. Saved to memory.
+
+## Newly dispatched
+L49 outbox orphans (invoices, e-sign, organization — inventory's 4 deliberately excluded), L50 read-budget
+seeding and query-cost measurement, L51 frontend `next build` + responsive/a11y proof, L52 dead-code sweep.
+
+## Infrastructure instability — repeated lane kills
+Lanes are being terminated by connection drops and 600s stream-watchdog stalls, not by task failures. Six were
+killed by a session limit, then five more by stalls/drops. All resumed via SendMessage (which preserves context)
+rather than re-dispatched, and every resume now instructs the lane to WORK IN SMALLER INCREMENTS and to verify its
+own files before continuing — unfinished in-flight work is the entire cost of an interruption. One lane
+(cursor sweep) confirmed the value of this: it found `accounting.schemas.ts` had landed but
+`recurring-journals.schemas.ts` had not.
+
+## A FOURTH gate found reporting untrue results — and this one reported a PASS
+`verify-rbac-referential-integrity.mjs` picked the first two orgs by `org_id` and took a role from the first.
+That org has **zero roles**, so `role.id` threw a TypeError in every probe using it. Two ACCEPT controls reported
+FAIL with a generic `[ERROR]`, which read as an RBAC regression and was not — but far worse, the REJECT probe
+above them **PASSED**, because it expected a rejection and *a JavaScript crash counts as one*. So
+"cross-tenant assigner on role_assignments" reported success while proving nothing whatsoever.
+Fixed: orgs are now selected with `EXISTS (SELECT 1 FROM roles …)`, the SKIP message says why probes cannot run,
+and the script ABORTS rather than running probes that would pass on a crash. All 10 pass, and the cross-tenant
+probe now reports `[23503]` — a real FK rejection — instead of `[ERROR]`. Committed `ac6ebeb9`.
+**Principle recorded to memory: a probe whose failure mode is indistinguishable from its success criterion is
+worthless. Verify a gate's MECHANISM before trusting its number, especially a green one.**
+
+## check:placement-bypass restored
+3 new sites in `auth-tokens.service.ts` (lines 84/109/153) — all pre-tenant cross-org identity reads
+(`resolvePreferredOrgId` over `accountOrganizationIndex`, plus membership and suspended-membership lookups at
+sign-in) that moved there during the auth decomposition. Same class already allowlisted for `auth.service.ts`
+and `auth-membership-resolver.service.ts`. Allowlisted with that reason. Committed `0063484e`.
+
+## Current gate state
+PASS: route-classification · permission-keys · placement-bypass · rbac-integrity (10/10) · migration-chain
+FAIL: tenant-isolation **84% covered, 134 uncovered** (was 20%) · outbox-consumers (11 orphans, 4 of them the
+deliberately-excluded inventory events) · 10 accounting typecheck errors owned by the resumed cursor lane.
+
+## FRONTEND BUILD PASSES — first real build of the programme
+`pnpm build`: **463 routes compiled cleanly** under Turbopack / Next 16.3.0, no Server/Client boundary
+violations. All 12 frontend gates PASS: type-check, client-pages (259/598, exactly at the ceiling), routes,
+query-scope, empty-states, icon-labels, formatters, effect-fetches, dead-code, cycles, server-data-seam.
+Jest: **1,401 tests / 157 suites / 0 failures.** No fixes were needed in features/components/hooks/lib.
+Further client-page reduction now depends on the routes lane, which owns `app/**`.
+
+That lane also reported responsive and WCAG behaviour as **NOT observed and not asserted**, because it could not
+find a browser driver. That was the right call on the evidence it had — but the driver exists, in the BACKEND
+package, and I verified it works:
+`node src/scripts/browser-driver.mjs --self-test` → "SELF-TEST PASS: 3 navigation(s), min TTFB=2.8ms".
+So a new lane (L53) now owns the missing proof: boot both services, sign in, exercise Home, calendar, chat, a
+Build board, a filtered list and Settings, and measure at 375/768/1280 with keyboard and reduced-motion checks.
+This is the one class of evidence nothing else here produces — typecheck, mocked tests and a green build were ALL
+passing in a past incident while the product was entirely broken by a swallowed `42501` under RLS.
+
+## Code review (user-invoked) found 8 findings — the largest was a real regression I introduced via a lane
+The filter-empty pass conditioned the DESCRIPTION but not the TITLE, so on 9+ pages a filtered result showed
+"No contacts yet" / "No leads yet" / "No tickets yet" as the heading while the description said "No results match
+your filters." and a Clear-filters button sat below. On `my-tickets-page` it was flatly wrong: a user with ten
+assigned tickets was told none were assigned to them. On `reports-hub-client` the description claimed the
+accounting module was unconfigured during a live search — actively misleading diagnostic information.
+
+**Fixed at the COMPONENT, not the 9 call sites.** `EmptyState` now substitutes the heading with
+"No results match your filters." whenever `filtersActive` is true, with a new `filteredTitle` override. The prop's
+own doc comment already claimed it did this — only half had ever been implemented. Three tests pin it including
+the negative case (the data-empty title must survive when no filter is active, or the fix just moves the bug).
+Committed `d32d7690c`. This makes the contradictory state unrepresentable instead of relying on every caller.
+
+Remaining 7 findings dispatched to a lane (L54): two description-only call sites, three MOTION regressions where
+the previous pass satisfied §12 by DELETING animations rather than converting them (trading a lint violation for
+a visible layout jump — §12 explicitly permits CSS `transition-[width]`, which the sidebar already uses), one
+pre-existing pagination bug where `useCreditNotes({})` fetches page 1 and filters client-side so a credit note on
+page 2+ is silently invisible, and one inverted error state where a NaN confidence now renders a FULL bar instead
+of none on a financial reconciliation screen.
+
+## Lane completions
+- **L49 outbox: orphans 15 → 8.** Found a real SECURITY GAP: `integration.connection.disconnected` was emitted
+  but never consumed, so membership revocation marked the Composio connection disabled in our DB while the
+  external connection stayed live. Built a consumer that calls `deleteConnectedAccount()`. Also built a consumer
+  for `sign.envelope.completed`, and REMOVED 5 emissions whose effects were already inline, each with proof.
+  Both consumers use the three-state claim (PENDING → COMPLETED/FAILED/SKIPPED). Remaining 8 are out of scope
+  (build 2, hr-helpdesk 2, inventory 4 — the excluded domain).
+- **L48 OpenAPI: 1,984 → 2,016.** Found the scanner skips NAMED params (`@Param("id", ParseIntPipe)` has
+  `data = "id"`, not `undefined`), so every path-param handler is invisible without an explicit `@Validate`.
+  ~181 controllers still need that sweep.
+- **L52 dead code: 1 file removed, 8 deferred with recorded reasons.** Correctly refused to delete 12 schema
+  files, a knip false-positive barrel, and the observability exports. Deferred everything touched recently by a
+  live lane — exactly the right call while ten lanes are active.
+
+## MAJOR ENVIRONMENT FINDING — the app role could not query anything; RLS now verified working
+Chasing a read-budget lane's claim that 35 of 48 budgets failed with "relation not found", I found the cause and
+it was not the budgets:
+
+- `DATABASE_URL` connects as **`neondb_owner`, which has `rolbypassrls = true`**.
+- `APP_DATABASE_URL` is correctly set to `streamline_app` (`rolbypassrls = false`), and
+  `pool.config.ts` uses `APP_DATABASE_URL || DATABASE_URL`.
+- But `streamline_app` had **no USAGE on schema `public`**. Connecting as it, every table was invisible:
+  `42P01 relation "organizations" does not exist`. So the role was completely unusable, and any measurement
+  "as the app role" was silently being taken as the OWNER — which bypasses RLS and hides exactly the cost that
+  matters.
+
+Fixed with the repo's own tooling, not a hand-written grant: `pnpm db:bootstrap-role`.
+Verification it printed: `superuser=false createdb=false createrole=false bypassrls=false login=true`,
+**tables granted 1000/1000**, `can create objects in: (none)`.
+
+Then I verified RLS actually bites, which nothing in this programme had done:
+```
+calendar_events    42501: no tenant context: app.organization_id is not set for this transaction
+notifications      42501: no tenant context: app.organization_id is not set for this transaction
+organizations      rls=false  (deliberate — you must list orgs to switch between them)
+```
+So the policies fail CLOSED for the application role. Two incidental facts worth keeping: the GUC is
+`app.organization_id` (not `app.current_org_id`, which is the function name), and `tickets` lives in the `build`
+schema so a default-search_path query returns 42P01.
+
+The codebase already defends this: `assertRlsIsEnforced` in `drizzle.module.ts` THROWS in production when the
+connecting role has BYPASSRLS, and logs an error otherwise — with a comment naming this as "the one failure mode
+of this design that is invisible". The guard was right; the environment had simply never been bootstrapped.
+
+## Lane completions
+- **L50 read budgets: seeder FIXED and real measurements taken.** Two enum-cast bugs blocked
+  `seed-build-load.mjs` (`::state_group`, `::timesheet_entry_status`). Seeded 20k tickets, 50k comments,
+  40k activity, 17.1k assignees, 15k timesheets, 60 projects, then VACUUM ANALYZE. Measured in BUFFERS as
+  `streamline_app` with the GUC: ticket-list-project 342 blocks (ceiling 8,000) PASS, search-tickets 68 PASS.
+  Three "failures" are index-only-scan assertions that are a **seed-data artifact** — a 2-user org gives each
+  user 50% of `ticket_assignees`, so the planner correctly prefers a seq scan.
+- **L46 e2e: suites now BOOT** after the support import fix. Added an `MfaPolicyService` stub to the harness —
+  without it `MfaGuard` failed closed and threw 403 MFA_REQUIRED before `PermissionGuard` could fire, masking
+  every permission-tier test. 8 new controller specs (mfa, billing/payments, api-tokens, agent-access, finance,
+  timesheets, surveys, build). Two REAL defects: **RD-01** `@Idempotent` writes its `command_fences` row BEFORE
+  validation, so a request that fails validation burns its idempotency key and cannot be corrected and retried
+  (dispatched to L55); **RD-02** confirms `fin_recurring_invoice_templates.archived_at` and
+  `expense_export_jobs.requested_by_membership_id` are declared in Drizzle but ABSENT from the live DB.
+
+## Isolation coverage: 93% (758/819) — from 20% (154/783)
+L30 closed the KB block (28 specs). The remaining 61 uncovered sit in hr, payroll, build, ai, billing,
+accounting, chat, e-sign, auth and inventory/webhooks — a third sweeper owns most of them.
+Committed `24f03cc3`.
+
+## Controller fix — a half-finished cursor migration was blocking the whole backend build
+Four accounting query schemas had `page`/`pageSize` REMOVED in favour of `cursor`/`limit`, but their services
+still called `paginateOffset`/`buildListResponse`. Ten TS2339 errors across `accounting-ledger`,
+`accounting-payables-query` and `accounting-receivables` — which blocked `nest build`, and therefore blocked the
+runtime-verification lane from starting at all. The owning lane had been killed four times mid-migration.
+Rather than finish the migration (which changes the list RESPONSE shape that the accounting frontend hooks
+consume — not a change to make unreviewed with a dozen lanes in flight), I restored the offset fields ALONGSIDE
+cursor/limit. That is the repo's own transitional shape: `finance/ar/reminders.service.ts` branches to the cursor
+path when a cursor or limit is supplied and uses page otherwise. Accounting's cursor migration is now a
+deliberate open piece of work rather than a broken tree. Committed `31666128`.
+
+**I also had to walk back my own earlier spec change.** I had made `list-query.schema.spec.ts` declare each
+schema's pagination style, so a silent shape change would fail. With lanes concurrently migrating schemas in BOTH
+directions, that declaration flapped and read as a regression every time. It now derives the style from the
+schema and asserts the invariant that holds either way — the size field is always present and capped, and an
+offset schema always starts at page 1. Pinning an implementation detail that is legitimately in motion was the
+wrong call; the invariant is the thing worth asserting.
+
+## Lane completions
+- **L54 review fixes: all 7 done.** The three motion regressions are converted rather than deleted —
+  CSS `transition-[width]` for the detail panel (§12 permits it; the sidebar already uses it), composited
+  `scaleX` with `originX: 0` and the stagger restored for the funnel, and a `grid-rows 0fr/1fr` transition so the
+  workload collapse actually collapses instead of leaving a 200ms ghost gap. Reconciliation's NaN case had
+  INVERTED — it rendered a full bar (false high confidence on a financial screen) where it previously rendered
+  none; now guarded with `Number.isFinite`. Frontend build still passes; 158 suites / 1,407 tests.
+- **L56 credit notes:** added an `invoiceId` filter pushed into SQL, closing a bug where a credit note on page 2+
+  was permanently invisible on the invoice panel. It also corrected my wrong path guess — the route is
+  `finance/ar/**`, not `accounting/**`.
+
+## New OPEN item with a lane
+`kb_article_chunks` denormalises `pageVisibility`, `pageProjectId` and `pageCreatedById` but has NO membership
+column, so `chunkVisibleTo` silently omits the `createdByMembershipId` arm the page predicate has.
+`kb-chunk-visibility.spec.ts` asserts the two rules are identical and fails on exactly this. The divergence is
+MORE restrictive — a page whose creator is recorded only by membership loses its chunks from its own author's
+search — so it is a correctness gap, not a disclosure. But it worsens as the actor migration moves creators onto
+membership ids. Assigned to L57.
