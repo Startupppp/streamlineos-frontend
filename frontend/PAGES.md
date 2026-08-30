@@ -86,7 +86,7 @@ All prior violations resolved on 2026-08-30:
 
 - [ ] `/` · **Platform** · hooks: session redirect · §8: not a data page
 - [ ] `/access-denied` · **Platform** · hooks: none · §8: States ✓
-- [ ] `/employee-onboarding` · **Platform** · hooks: `resolveWizardGate` · §8: States ?
+- [ ] `/employee-onboarding` · **Platform** · hooks: `useOnboardingWizard` · §8: L ✗ C ✗ E ✓ D ✗ F ✗ P ✗ Perm ✓ States ✓ — multi-step wizard; skeleton loading; `ErrorState` for load failure; StrictMode-safe; delegates steps to feature components; no `requiredPermission` (correct, universal)
 - [ ] `/org-setup` · **Platform** · hooks: `resolveWizardGate` · §8: States ?
 
 ---
@@ -147,7 +147,7 @@ All prior violations resolved on 2026-08-30:
 ### Leads
 - [ ] `/crm/leads` · **CRM** · hooks: `useLeadBoard`, `useLeadStats`, `useLeads`, `useUpdateLeadStatus`, `useCrmOptions` · §8: L ✓ C ✓ E ✓ D ✓ F ✓ P ✓ Perm ✓ States ✓
 - [ ] `/crm/leads/[leadId]` · **CRM** · hooks: `→ feature/crm/leads` · §8: E ? D ? Perm ? States ?
-- [ ] `/crm/leads/source-report` · **CRM** · hooks: `→ feature/crm/leads` · §8: F ? States ?
+- [ ] `/crm/leads/source-report` · **CRM** · hooks: `useLeadSourceReport` · §8: L ✓ C ✗ E ✗ D ✗ F ✓ P ✗ Perm ✗ States ✓ — analytics/report view; no `useCan` gate; all four states present (skeleton loading, `ErrorState`, `EmptyState` inside card, success chart); Framer Motion bar chart
 - [ ] `/crm/leads/distribute` · **CRM** · hooks: `→ feature/crm/leads` · §8: E ? Perm ? States ?
 - [ ] `/crm/leads/duplicates` · **CRM** · hooks: `→ feature/crm/leads` · §8: L ? States ?
 - [ ] `/crm/leads/smart-search` · **CRM** · hooks: `→ feature/crm/leads` · §8: F ? States ?
@@ -164,7 +164,7 @@ All prior violations resolved on 2026-08-30:
 - [ ] `/crm/deals` · **CRM** · hooks: `useDeals`, `useDealStats` · §8: L ? C ? E ? D ? F ? P ? Perm ? States ?
 - [ ] `/crm/deals/[dealId]` · **CRM** · hooks: `→ feature/crm/deals` · §8: E ? D ? Perm ? States ?
 - [ ] `/crm/deals/forecast` · **CRM** · hooks: `→ feature/crm/deals` · §8: F ? States ?
-- [ ] `/crm/deals/win-loss` · **CRM** · hooks: `useWinLossAnalysis` · §8: F ? States ?
+- [ ] `/crm/deals/win-loss` · **CRM** · hooks: `useWinLossAnalysis` · §8: L ✓ C ✗ E ✗ D ✗ F ✓ P ✗ Perm ✗ States ✓ — analytics/report view; no `useCan` gate; all four states present (skeleton loading, `ErrorState`, `EmptyState` with `EmptyDealsIllustration`, success view); uses `access` prop on `EmptyState`
 - [ ] `/crm/deals/aging` · **CRM** · hooks: `→ feature/crm/deals` · §8: F ? States ?
 - [ ] `/crm/deals/approvals` · **CRM** · hooks: `→ feature/crm/deals` · §8: L ? States ?
 
@@ -517,7 +517,7 @@ All prior violations resolved on 2026-08-30:
 
 ### Settings
 - [ ] `/payroll/settings` · **Payroll** · hooks: `→ features/payroll/settings` · §8: E ? Perm ? States ?
-- [ ] `/payroll/settings/import-export` · **Payroll** · hooks: `→ features/payroll/settings` · §8: States ?
+- [ ] `/payroll/settings/import-export` · **Payroll** · hooks: `requirePermission("payroll:reports:view")` (server) · §8: L ✗ C ✗ E ✗ D ✗ F ✗ P ✗ Perm ✓ States ✓ — server component; Suspense loading fallback; delegates entirely to feature component; import/export only, no CRUD
 
 ### Self-service
 - [x] `/payroll/me` · **Payroll** [RETIRED 2026-08-30: file deleted; self-service pay is at `/me/pay` (no `requiredPermission`, universal for all active members)]
@@ -544,10 +544,10 @@ All prior violations resolved on 2026-08-30:
 - [ ] `/accounting/aged-receivables` · **Accounting** · hooks: `→ features/accounting` · §8: F ? States ?
 
 ### Purchase & Payables
-- [ ] `/accounting/purchase-bills` · **Accounting** · hooks: `→ features/accounting/purchase-bills` · §8: L ? C ? E ? D ? F ? P ? Perm ? States ?
+- [ ] `/accounting/purchase-bills` · **Accounting** · hooks: `usePurchaseBills`, `useCreatePurchaseBill`, `useCan("accounting:payables:approve")`, `useCan("accounting:payables:manage")` · §8: L ✓ C ✓ E ✓ D ✓ F ✓ P ✓ Perm ✓ States ✓ — cursor pagination; search + status filters URL-synced; `EmptyState` with `EmptyExpensesIllustration` ✓; minor: empty state action shows "New bill" without checking `canManage`
 - [ ] `/accounting/purchase-bills/new` · **Accounting** · hooks: `→ features/accounting/purchase-bills` · §8: C ? Perm ? States ?
 - [ ] `/accounting/purchase-bills/[billId]` · **Accounting** · hooks: `→ features/accounting/purchase-bills` · §8: E ? D ? Perm ? States ?
-- [ ] `/accounting/vendor-payments` · **Accounting** · hooks: `→ features/accounting` · §8: L ? C ? F ? P ? Perm ? States ?
+- [ ] `/accounting/vendor-payments` · **Accounting** · hooks: `useVendorPayments`, `useCreateVendorPayment`, `useCan("accounting:payables:manage")` · §8: L ✓ C ✓ E ✗ D ✗ F ✓ P ✓ Perm ✓ States ✓ — dual cursor queries (paid + partial) merged; vendor filter URL-synced; `EmptyState` with `illustrationPreset="tasks"` ✓
 - [ ] `/accounting/vendor-credits` · **Accounting** · hooks: `→ features/accounting` · §8: L ? C ? E ? D ? F ? P ? States ?
 - [ ] `/accounting/vendors/[vendorId]` · **Accounting** · hooks: `→ features/accounting` · §8: E ? D ? States ?
 - [ ] `/accounting/vendors` · **Accounting** · hooks: `→ features/accounting` · §8: L ? C ? E ? D ? F ? P ? States ?
@@ -556,10 +556,10 @@ All prior violations resolved on 2026-08-30:
 
 ### Chart of Accounts & Journal
 - [ ] `/accounting/coa` · **Accounting** · hooks: `→ features/accounting/coa` · §8: L ? C ? E ? D ? F ? P ? Perm ? States ?
-- [ ] `/accounting/coa/[accountId]` · **Accounting** · hooks: `→ features/accounting/coa` · §8: E ? D ? Perm ? States ?
-- [ ] `/accounting/journal` · **Accounting** · hooks: `→ features/accounting/journal` · §8: L ? C ? E ? D ? F ? P ? Perm ? States ?
-- [ ] `/accounting/journal/new` · **Accounting** · hooks: `→ features/accounting/journal` · §8: C ? Perm ? States ?
-- [ ] `/accounting/journal/[entryId]` · **Accounting** · hooks: `→ features/accounting/journal` · §8: E ? D ? Perm ? States ?
+- [ ] `/accounting/coa/[accountId]` · **Accounting** · hooks: `useAccount`, `useAccountJournalEntries`, `useCan("accounting:accounts:update")`, `useCan("accounting:journal:manage")` · §8: L ✗ C ✗ E ✓ D ✗ F ✗ P ✗ Perm ✓ States ✓ — detail; Edit via `EditAccountDialog`; journal preview table capped at 20 rows (acceptable for preview); not-found uses bespoke div, not `EmptyState` (minor)
+- [ ] `/accounting/journal` · **Accounting** · hooks: `useJournalEntries`, `useCan("accounting:journal:create")` · §8: L ✓ C ✓ E ✗ D ✗ F ✓ P ✓ Perm ✗ States ✓ — cursor pagination (pageSize 25, server mode); filters: date range, source, status, URL-synced; `useCan` gates create button only — no `enabled` view-gate on the list query (403-spam for non-finance roles); `EmptyState` with `EmptyReportIllustration` ✓
+- [ ] `/accounting/journal/new` · **Accounting** · hooks: `useChartOfAccounts`, `useCreateJournalEntry`, `useCan("accounting:journal:create")` · §8: L ✗ C ✓ E ✗ D ✗ F ✗ P ✗ Perm ✓ States ✓ — create-only form; gate: `EmptyState illustrationPreset="security"` when `!canCreate`; `LoadingState` while accounts load; `ErrorState` if accounts fail; `LoadingButton` for submit
+- [ ] `/accounting/journal/[entryId]` · **Accounting** · hooks: `useJournalEntry`, `usePostJournalEntry`, `useReverseJournalEntry`, `useSubmitJournalApproval`, `useCan("accounting:journal:post")`, `useCan("accounting:journal:approve")` · §8: L ✗ C ✗ E ✓ D ✗ F ✗ P ✗ Perm ✓ States ✓ — detail; post, submit-for-approval, approve, reject, reverse lifecycle; `LoadingState` and `ErrorState` ✓; not-found renders `ErrorState` ✓
 - [ ] `/accounting/general-ledger` · **Accounting** · hooks: `→ features/accounting` · §8: L ? F ? P ? Perm ? States ?
 - [ ] `/accounting/opening-balances` · **Accounting** · hooks: `→ features/accounting` · §8: E ? Perm ? States ?
 - [ ] `/accounting/dimensions` · **Accounting** · hooks: `→ features/accounting` · §8: L ? C ? E ? D ? Perm ? States ?
@@ -623,7 +623,7 @@ All prior violations resolved on 2026-08-30:
 - [ ] `/accounting/reports/working-capital` · **Accounting** · hooks: `→ features/accounting/reports` · §8: F ? States ?
 
 ### Settings
-- [ ] `/accounting/settings` · **Accounting** · hooks: `→ features/accounting/settings` · §8: E ? Perm ? States ?
+- [ ] `/accounting/settings` · **Accounting** · hooks: `useAccountingSettings`, `useUpdateAccountingSettings`, `useCan("accounting:settings:manage")` · §8: L ✗ C ✗ E ✓ D ✗ F ✗ P ✗ Perm ✓ States ✗ — company + tax registration forms; ISSUE: loading and error branches return bare `<div>` wrappers, not `PageWrapper` with `LoadingState`/`ErrorState`
 - [ ] `/accounting/settings/automations` · **Accounting** · hooks: `→ features/accounting/settings` · §8: L ? C ? E ? D ? Perm ? States ?
 - [ ] `/accounting/settings/payment-providers` · **Accounting** · hooks: `→ features/accounting/settings` · §8: L ? C ? E ? Perm ? States ?
 - [ ] `/accounting/setup` · **Accounting** · hooks: `→ features/accounting/setup` · §8: E ? Perm ? States ?
@@ -744,13 +744,13 @@ All prior violations resolved on 2026-08-30:
 
 ## Me (Self-service — universal for all active members)
 
-- [ ] `/me/attendance` · **Self-service** · hooks: `→ features/me/attendance` · §8: L ? F ? States ?
-- [ ] `/me/documents` · **Self-service** · hooks: `→ features/me/documents` · §8: L ? States ?
-- [ ] `/me/expenses` · **Self-service** · hooks: `→ features/me/expenses` · §8: L ? C ? E ? D ? F ? P ? States ?
+- [ ] `/me/attendance` · **Self-service** · hooks: `requirePermission("self:attendance")` (server), `→ features/me/attendance` · §8: L ? F ? P ? Perm ✗ States ? — VIOLATION: server component uses `requirePermission` with `self:*` key; §8/CLAUDE.md rule: `/me/*` must NEVER carry `requiredPermission` (universal for all active members)
+- [ ] `/me/documents` · **Self-service** · hooks: `requirePermission("self:onboarding-docs")` (server), `→ features/me/documents` · §8: L ? P ? Perm ✗ States ? — VIOLATION: `requirePermission` on a `/me/*` route; must be removed
+- [ ] `/me/expenses` · **Self-service** · hooks: `requirePermission("self:expenses")` (server), `→ features/me/expenses` · §8: L ? C ? E ? D ? F ? P ? Perm ✗ States ? — VIOLATION: `requirePermission` on a `/me/*` route; must be removed
 - [ ] `/me/onboarding` · **Self-service** · hooks: `→ features/me/onboarding` · §8: States ?
-- [ ] `/me/pay` · **Self-service** · hooks: `→ features/me/pay` · §8: L ? F ? States ?
-- [ ] `/me/recruitment` · **Self-service** · hooks: `→ features/me/recruitment` · §8: L ? States ? — internal job openings only, not the candidate pipeline
-- [ ] `/me/time-off` · **Self-service** · hooks: `→ features/me/time-off` · §8: L ? C ? F ? States ?
+- [ ] `/me/pay` · **Self-service** · hooks: `requirePermission(["self:payroll","self:payslips"])` (server), `→ features/me/pay` · §8: L ? F ? Perm ✗ States ? — VIOLATION: `requirePermission` on a `/me/*` route; must be removed
+- [ ] `/me/recruitment` · **Self-service** · hooks: `requirePermission("self:recruitment")` (server), `→ features/me/recruitment` · §8: L ? Perm ✗ States ? — VIOLATION: `requirePermission` on a `/me/*` route; must be removed; internal job openings only, not the candidate pipeline
+- [ ] `/me/time-off` · **Self-service** · hooks: `requirePermission("self:leaves")` (server), `→ features/me/time-off` · §8: L ? C ? F ? Perm ✗ States ? — VIOLATION: `requirePermission` on a `/me/*` route; must be removed
 
 ---
 
@@ -809,7 +809,7 @@ All prior violations resolved on 2026-08-30:
 
 ## Workflows
 
-- [ ] `/workflows` · **Workflows** · hooks: `→ features/workflows` · §8: L ? C ? E ? D ? F ? P ? Perm ? States ?
+- [ ] `/workflows` · **Workflows** · hooks: `useWorkflows`, `useCreateWorkflow`, `useDeleteWorkflow`, `useWorkflowStats` · §8: L ✓ C ✓ E ✓ D ✓ F ✗ P ✗ Perm ✗ States ✓ — ISSUES: (1) `limit: 50`, no pagination prop on `DataTable`; (2) no `useCan` gate on create button or list query; `EmptyState` with `EmptyProjectsIllustration` ✓; `AlertDialog` confirm on delete ✓
 - [ ] `/workflows/[workflowId]` · **Workflows** · hooks: `→ features/workflows` · §8: E ? D ? Perm ? States ?
 - [ ] `/workflows/[workflowId]/builder` · **Workflows** · hooks: `→ features/workflows/builder` · §8: E ? Perm ? States ?
 - [ ] `/workflows/analytics` · **Workflows** · hooks: `→ features/workflows` · §8: F ? States ?
@@ -923,7 +923,7 @@ All prior violations resolved on 2026-08-30:
 
 > External surface only — portal token auth (`portalApiClient`), no session JWT. Distinct from `(authenticated)/portal` (internal, session JWT, `useCan("build:portal:view")`).
 
-- [ ] `/accept-invitation` · **Portal (client)** · hooks: `useAcceptInvitation`, `setPortalToken` · §8: States ?
+- [ ] `/accept-invitation` · **Portal (client)** · hooks: `useAcceptInvitation`, `setPortalToken` · §8: L ✗ C ✗ E ✗ D ✗ F ✗ P ✗ Perm ✓ States ✓ — invitation acceptance flow; four states: missing token, loading, error (expired vs other), success redirect; StrictMode double-invoke guard via `calledRef`
 - [x] `/projects` · **Portal (client)** [RETIRED 2026-08-30: file deleted; moved to `/client-portal`]
 - [x] `/projects/[projectId]` · **Portal (client)** [RETIRED 2026-08-30: file deleted; moved to `/client-portal/[projectId]`]
 - [ ] `/client-portal` · **Portal (client)** · hooks: `usePortalGuard`, `useExternalPortalProjects` · §8: L ? States ?
