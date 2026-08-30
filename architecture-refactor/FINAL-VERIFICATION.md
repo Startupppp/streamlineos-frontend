@@ -497,7 +497,7 @@ Blocked items:
 | Frontend client pages | `check:client-pages` | **PASS — 315/315 ceiling** |
 | Frontend module manifest | `check:module-manifest` | **PASS** |
 | Server data seam | `verify:server-data-seam` | **PASS** |
-| Dead code | `check:dead-code` + knip | **PASS — 0 unused files both repos** |
+| Dead code | `check:dead-code` + knip | **PASS (frontend only) — files=0 against a baseline of 0.** "Both repos" was wrong: knip and `check:dead-code` exist ONLY in the frontend; the backend has neither the binary nor the script, so no tool has ever produced that number for it. Caught one real regression this session — a helper refactor orphaned `features/crm/lib/format-currency.ts`, failing the gate at files=1; deleted |
 | Tests (isolation) | `check:tenant-isolation:run` | **PASS — 373/373** |
 | Tests (full backend) | jest sharded | OPEN — not run; isolation suite green |
 | Tests (e2e) | `pnpm test:e2e` | **FAIL — the suite proves nothing today.** "Harness green / 3 pre-existing failures" was wrong: in a measured shard 25 of 25 suites failed to RUN and only 2 tests executed, while jest still exited 0 because of `--forceExit`. Two blockers: a stale ts-jest transform cache holding pre-rename `chat-messages.controller` output, and AppModule OOM without a raised heap. 10 scope specs also skip SILENTLY because `RBAC_E2E_DATABASE_URL` is not wired into `jest-e2e.json` |
