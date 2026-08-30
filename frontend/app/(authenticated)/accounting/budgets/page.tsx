@@ -162,17 +162,20 @@ const budgetColumns: DataTableColumn<BudgetSummary>[] = [
   },
 ];
 
+const PAGE_SIZE = 25;
+
 export default function BudgetsListPage() {
   const router = useRouter();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [fiscalYear, setFiscalYear] = useState<string>("");
+  const [page, setPage] = useState(1);
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const canCreate = useCan("accounting:budgets:create");
 
   const query = useBudgets({
-    page: 1,
-    pageSize: 100,
+    page,
+    pageSize: PAGE_SIZE,
     status: statusFilter !== "ALL" ? statusFilter : undefined,
     fiscalYear: fiscalYear || undefined,
   });
@@ -182,11 +185,19 @@ export default function BudgetsListPage() {
   const items = query.data?.items ?? [];
 
   function handleStatusFilterChange(value: string): void {
-    if (isStatusFilter(value)) setStatusFilter(value);
+    if (isStatusFilter(value)) {
+      setStatusFilter(value);
+      setPage(1);
+    }
   }
 
   function handleFiscalYearChange(event: ChangeEvent<HTMLInputElement>): void {
     setFiscalYear(event.target.value);
+    setPage(1);
+  }
+
+  function handlePageChange(newPage: number): void {
+    setPage(newPage);
   }
 
   function handleRetry(): void {
@@ -280,6 +291,13 @@ export default function BudgetsListPage() {
               />
             }
             minWidth="700px"
+            pagination={{
+              mode: "server",
+              page,
+              pageSize: PAGE_SIZE,
+              total: query.data?.total ?? 0,
+              onPageChange: handlePageChange,
+            }}
           />
         )}
       </div>

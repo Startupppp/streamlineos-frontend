@@ -3,6 +3,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   Account,
   AccountType,
@@ -119,11 +120,13 @@ interface ListJournalParams {
 }
 
 export function useJournal(params: ListJournalParams = {}) {
+  const can = useCan("accounting:journal:read");
   return useQuery<CursorResponse<JournalEntry>, Error>({
     queryKey: queryKeys.accounting.journal(params),
     queryFn: () =>
       apiClient.get<CursorResponse<JournalEntry>>("/accounting/journal", toQuery(params)),
     staleTime: 30_000,
+    enabled: can,
   });
 }
 

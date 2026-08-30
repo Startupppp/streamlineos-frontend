@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { motion, AnimatePresence } from "framer-motion";
@@ -49,8 +49,11 @@ import {
 } from "@/hooks/api/workflows";
 import { WorkflowCardItem } from "@/features/workflows/components/workflow-card";
 import { CreateWorkflowDialog } from "@/features/workflows/components/create-workflow-dialog";
+import { TablePagination } from "@/components/ui/table-pagination";
 
 type StatusFilter = WorkflowStatus | "all";
+
+const WORKFLOW_PAGE_SIZE = 24;
 
 export default function WorkflowsPage() {
   const router = useRouter();
@@ -58,13 +61,25 @@ export default function WorkflowsPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Workflow | null>(null);
+  const [cursors, setCursors] = useState<(string | null)[]>([null]);
+  const [cursorIndex, setCursorIndex] = useState(0);
 
   const debouncedSearch = useDebouncedValue(search, 300);
+
+  const filterKey = `${debouncedSearch}|${statusFilter}`;
+
+  useEffect(() => {
+    setCursors([null]);
+    setCursorIndex(0);
+  }, [filterKey]);
+
+  const currentCursor = cursors[cursorIndex] ?? null;
 
   const { data, isLoading, isError, refetch } = useWorkflows({
     search: debouncedSearch.trim() || undefined,
     status: statusFilter === "all" ? undefined : statusFilter,
-    limit: 50,
+    limit: WORKFLOW_PAGE_SIZE,
+    cursor: currentCursor ?? undefined,
   });
 
   const { data: analytics, isLoading: analyticsLoading } =
@@ -73,8 +88,24 @@ export default function WorkflowsPage() {
   const remove = useDeleteWorkflow();
   const duplicate = useDuplicateWorkflow();
 
+  useEffect(() => {
+    if (!data) return;
+    const nextCursor = data.pagination.nextCursor;
+    setCursors((prev) => {
+      if (prev[cursorIndex + 1] !== undefined) return prev;
+      const next = [...prev];
+      next[cursorIndex + 1] = nextCursor;
+      return next;
+    });
+  }, [data, cursorIndex]);
+
   const workflows = data?.data ?? [];
   const hasFilters = search.length > 0 || statusFilter !== "all";
+  const hasMore = data?.pagination?.hasMore ?? false;
+  const currentPage = cursorIndex + 1;
+  const syntheticTotal = hasMore
+    ? currentPage * WORKFLOW_PAGE_SIZE + 1
+    : (currentPage - 1) * WORKFLOW_PAGE_SIZE + workflows.length;
 
   function handleOpenCreate() {
     setCreateOpen(true);
@@ -123,6 +154,14 @@ export default function WorkflowsPage() {
 
   function handleRetry() {
     void refetch();
+  }
+
+  function handlePageChange(newPage: number) {
+    const targetIndex = newPage - 1;
+    if (targetIndex < 0) return;
+    if (targetIndex < cursors.length && cursors[targetIndex] !== undefined) {
+      setCursorIndex(targetIndex);
+    }
   }
 
   return (
@@ -221,32 +260,42 @@ export default function WorkflowsPage() {
             className={CONTENT_FILL_PANEL}
           />
         ) : (
-          <AnimatePresence mode="popLayout">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {workflows.map((workflow, idx) => (
-                <motion.div
-                  key={workflow.id}
-                  layout
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.96 }}
-                  whileHover={{ scale: 1.01, transition: { duration: 0.15 } }}
-                  whileTap={{ scale: 0.98, transition: { duration: 0.1 } }}
-                  transition={{
-                    duration: 0.22,
-                    ease: "easeOut",
-                    delay: idx * 0.04,
-                  }}
-                >
-                  <WorkflowCardItem
-                    workflow={workflow}
-                    onDuplicate={handleDuplicate}
-                    onDelete={handleSetDeleteTarget}
-                  />
-                </motion.div>
-              ))}
-            </div>
-          </AnimatePresence>
+          <>
+            <AnimatePresence mode="popLayout">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {workflows.map((workflow, idx) => (
+                  <motion.div
+                    key={workflow.id}
+                    layout
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.96 }}
+                    whileHover={{ scale: 1.01, transition: { duration: 0.15 } }}
+                    whileTap={{ scale: 0.98, transition: { duration: 0.1 } }}
+                    transition={{
+                      duration: 0.22,
+                      ease: "easeOut",
+                      delay: idx * 0.04,
+                    }}
+                  >
+                    <WorkflowCardItem
+                      workflow={workflow}
+                      onDuplicate={handleDuplicate}
+                      onDelete={handleSetDeleteTarget}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            </AnimatePresence>
+            {(syntheticTotal > WORKFLOW_PAGE_SIZE || currentPage > 1) && (
+              <TablePagination
+                page={currentPage}
+                pageSize={WORKFLOW_PAGE_SIZE}
+                total={syntheticTotal}
+                onPageChange={handlePageChange}
+              />
+            )}
+          </>
         )}
       </div>
 
