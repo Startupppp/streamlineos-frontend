@@ -482,7 +482,7 @@ Blocked items:
 | Module lifecycle | `check:module-lifecycle` | **PASS** |
 | Navigation permissions | `check:navigation-permissions` | **PASS** |
 | Log secrets | `check:log-secrets` | **PASS** |
-| Legacy actors | `scan:legacy-actors:check` | **UNSOUND — ratchet 553/555, but it cannot see 121 FKs** |
+| Legacy actors | `scan:legacy-actors:check` | **PASS — baseline re-emitted at 697, shrink-only.** The old 553/555 ratchet was unsound: its regex matched only `pgTable(`, so ~121 raw-SQL FKs were invisible. Two EXPAND tranches have shipped (0690-0699, 0700/0701); no legacy column has been dropped yet, so contraction is NOT complete |
 | Async | `check:outbox-consumers` | **PASS** (exit 0; the 4 orphan emits were deleted) |
 | Migrations | `check:migration-chain` | **PASS** |
 | OpenAPI | `openapi:check` | **PASS — 3,546 ops** |
@@ -500,7 +500,8 @@ Blocked items:
 | Dead code | `check:dead-code` + knip | **PASS — 0 unused files both repos** |
 | Tests (isolation) | `check:tenant-isolation:run` | **PASS — 373/373** |
 | Tests (full backend) | jest sharded | OPEN — not run; isolation suite green |
-| Tests (e2e) | `pnpm test:e2e` | OPEN — harness green; 3 known pre-existing failures |
+| Tests (e2e) | `pnpm test:e2e` | **FAIL — the suite proves nothing today.** "Harness green / 3 pre-existing failures" was wrong: in a measured shard 25 of 25 suites failed to RUN and only 2 tests executed, while jest still exited 0 because of `--forceExit`. Two blockers: a stale ts-jest transform cache holding pre-rename `chat-messages.controller` output, and AppModule OOM without a raised heap. 10 scope specs also skip SILENTLY because `RBAC_E2E_DATABASE_URL` is not wired into `jest-e2e.json` |
+| Migrations (applied state) | pg_catalog diff | **REPAIRED this session — was silently broken.** Journal `when` values of 1798000000000+ pushed the applied watermark above every normally-numbered entry, so five journalled migrations were skipped permanently while `db:migrate` printed success, and six Drizzle-declared columns were absent from Neon (42703 for every org). All applied and verified in the catalog; the discipline gate now enforces journal integrity |
 | Tests (frontend) | jest | OPEN — not run this session |
 | Structure >500 lines | file scan | OPEN — tracked per-lane; no S10 additions |
 | Recovery / Load / Cost | S08 runbooks | **OPEN — operator-blocked** |
