@@ -888,3 +888,34 @@ Seat enforcement: the advisory lock is the first operation in `recordSeatEvent`,
 expression match `assertWithinLimit` — proved by comparing rendered SQL rather than by reading both.
 
 148 tests across 8 suites.
+
+## The isolation number did not mean what it claimed — and this was the one that mattered
+`check:tenant-isolation` reported **817/819 (100%)**. Running the suites for real:
+**28 of 373 failing, 55 of 1,368 tests.**
+
+`hasIsolationTest()` reads a spec file and asks whether it *mentions* the service by class name or
+relative path. It never executes anything. So a spec that threw on its first expectation counted as
+coverage — and 20+ of them did exactly that. Every crash was in the double, never the service: a
+builder missing `offset`/`for`/thenable, `insert().returning()` handed `[]` so `row.id` threw, a mock
+built on `db.select` where the service uses `db.query.<table>.findMany`, `where()` with no `limit()`,
+`.data` read where the service returns `.items`, a membership fixture missing `status: "ACTIVE"`, a
+transaction mock with no `execute()` under `withPublicToken`.
+
+**No real isolation hole was hiding behind any of them. That is precisely the danger** — they proved
+nothing in either direction while the headline security metric read 100%. A gate that reports a green
+it has not earned is worse than a gate that reports red, because it ends the investigation.
+
+Fixed three ways, because fixing only the specs would leave the gate free to lie again:
+1. 23 crashing specs repaired (`ac934253`).
+2. The gate now prints **"Services with a DECLARED test"**, states in its own output that it does not
+   run anything, and names its companion.
+3. `check:tenant-isolation:run` added — it executes the suites. The two together mean what one of them
+   was claiming alone (`2c661d57`).
+
+28 named failing suites are being repaired across three lanes, with the standing rule that a red test
+telling the truth beats a green one that does not, and that a fix in the double and a fix in the
+service are opposite responses that must be told apart before either is applied.
+
+**Seven gates in this program have now been caught reporting untrue numbers.** The recurring shape:
+the probe's failure mode is indistinguishable from its success criterion, or the metric counts an
+artefact's existence and calls it proof.
