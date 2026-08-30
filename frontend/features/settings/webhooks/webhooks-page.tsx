@@ -20,7 +20,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyDevicesIllustration } from "@/components/illustrations";
 import { DataTablePagination } from "@/components/shared/data-table-pagination";
-import { staggerContainer } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -44,6 +44,7 @@ import { WebhookDeliveryLogSheet } from "./webhook-delivery-log";
 import { WebhookSecretRevealDialog } from "./webhook-secret-reveal-dialog";
 
 export function WebhooksPage() {
+  const { staggerContainer } = useMotionVariants();
   const canManage = useCan("settings:webhooks:manage");
   const router = useRouter();
   const pathname = usePathname();

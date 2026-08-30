@@ -10,7 +10,7 @@ import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
-import { fadeUp, staggerContainer } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import {
   useAdjustments,
   type AdjustmentListItem,
@@ -96,6 +96,7 @@ const ADJUSTMENT_COLUMNS: DataTableColumn<AdjustmentListItem>[] = [
 ];
 
 export default function AdjustmentsPage() {
+  const { fadeUp, staggerContainer } = useMotionVariants();
   const router = useRouter();
   const searchParams = useSearchParams();
 

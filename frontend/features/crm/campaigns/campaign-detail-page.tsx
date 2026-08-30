@@ -15,7 +15,7 @@ import { withColumns } from "@/lib/renderer/layout-adjustment";
 import { CAMPAIGN_LAYOUT } from "@/lib/renderer/crm/campaign-layout";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { EmptyState } from "@/components/ui/empty-state";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import {
   useCampaigns,
   useCampaignRoi,
@@ -48,6 +48,7 @@ interface CampaignDetailPageProps {
 }
 
 export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
+  const { staggerContainer, fadeUp } = useMotionVariants();
   const [leadsPage, setLeadsPage] = useState(1);
   const [attributionTab, setAttributionTab] = useState<"first-touch" | "last-touch">("first-touch");
 

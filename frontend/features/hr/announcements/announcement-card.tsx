@@ -16,7 +16,7 @@ import { Trash2Icon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
 import type { HrAnnouncement } from "@/hooks/api/hr/announcements";
 
@@ -85,6 +85,7 @@ export function AnnouncementCard({
   onDelete,
   onMarkRead,
 }: AnnouncementCardProps) {
+  const { fadeUp } = useMotionVariants();
   const [expanded, setExpanded] = useState(false);
   const contentLong = announcement.content.length > 140;
 

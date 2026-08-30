@@ -31,9 +31,8 @@ export default function NewPurchaseBillPage() {
   const router = useRouter();
   const clientsQuery = useClientAccounts({});
   const accountsQuery = useAccounts({
-    page: 1,
-    pageSize: 500,
     activeOnly: true,
+    limit: 100,
     type: "EXPENSE",
   });
   const createMutation = useCreatePurchaseBill();
@@ -210,7 +209,7 @@ export default function NewPurchaseBillPage() {
   }
 
   const vendors = clientsQuery.data?.accounts ?? [];
-  const expenseAccounts = accountsQuery.data?.items ?? [];
+  const expenseAccounts = accountsQuery.data?.data ?? [];
 
   return (
     <PageWrapper

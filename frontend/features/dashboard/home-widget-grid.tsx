@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
-import { fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { WidgetSkeleton } from "@/components/dashboard/widget-skeleton";
 import { LeaveBalanceWidget } from "@/features/dashboard/hr-widgets";
 import { MyAttendanceWidget } from "@/features/dashboard/my-attendance-widget";
@@ -37,6 +37,7 @@ export function HomeWidgetGrid({
   canViewExecutive,
   canSelfAttendance,
 }: HomeWidgetGridProps) {
+  const { fadeUp } = useMotionVariants();
   return (
     <motion.div
       variants={fadeUp}

@@ -261,8 +261,7 @@ export default function PurchaseBillsListPage() {
   const debouncedSearch = useDebouncedValue(search, 300);
 
   const query = usePurchaseBills({
-    page: 1,
-    pageSize: 100,
+    limit: 100,
     q: debouncedSearch.trim() || undefined,
     status: status === "ALL" ? undefined : status,
   });
@@ -279,7 +278,7 @@ export default function PurchaseBillsListPage() {
     void query.refetch();
   }
 
-  const items = query.data?.items ?? [];
+  const items = query.data?.data ?? [];
   const columns = buildColumns(canApprove);
 
   return (

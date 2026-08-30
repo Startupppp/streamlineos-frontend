@@ -34,13 +34,13 @@ export default function VendorPaymentsPage() {
   const [vendorFilter, setVendorFilter] = useState<string>("all");
   const [allocationDialogOpen, setAllocationDialogOpen] = useState(false);
 
-  const paidQuery = usePurchaseBills({ status: "PAID", page: 1, pageSize: 50 });
-  const partialQuery = usePurchaseBills({ status: "PARTIALLY_PAID", page: 1, pageSize: 50 });
+  const paidQuery = usePurchaseBills({ status: "PAID", limit: 50 });
+  const partialQuery = usePurchaseBills({ status: "PARTIALLY_PAID", limit: 50 });
   const vendorsQuery = useVendorsOutstanding({ pageSize: 100 });
 
   const allItems: PurchaseBillSummary[] = [
-    ...(paidQuery.data?.items ?? []),
-    ...(partialQuery.data?.items ?? []),
+    ...(paidQuery.data?.data ?? []),
+    ...(partialQuery.data?.data ?? []),
   ];
 
   const filteredItems =

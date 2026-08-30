@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, use } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { MapPin } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -13,7 +13,7 @@ import { InventoryDetailPageLoading } from "@/features/inventory/components/inve
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { Tabs, TabsList, TabsTrigger, TabsContent, TABS_CONTENT_PAGE_BODY_CLASS } from "@/components/ui/tabs";
 import { ErrorState } from "@/components/shared";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { useWarehouse, useLocations } from "@/hooks/api/inventory/warehouses";
 import type { LocationType, WarehouseLocation } from "@/hooks/api/inventory/warehouses";
 import { cn } from "@/lib/utils";
@@ -85,7 +85,7 @@ export default function WarehouseDetailPage({
 }) {
   const { warehouseId: warehouseIdStr } = use(params);
   const warehouseId = Number(warehouseIdStr);
-  const shouldReduceMotion = useReducedMotion();
+  const { staggerContainer, fadeUp } = useMotionVariants();
 
   const {
     data: warehouseData,
@@ -224,15 +224,15 @@ export default function WarehouseDetailPage({
           ) : (
             <motion.div
               className="space-y-4"
-              variants={shouldReduceMotion ? undefined : staggerContainer}
-              initial={shouldReduceMotion ? undefined : "hidden"}
-              animate={shouldReduceMotion ? undefined : "visible"}
+              variants={staggerContainer}
+              initial="hidden"
+              animate="visible"
             >
               {LOCATION_TYPE_ORDER.map((lt) => {
                 const items = grouped.get(lt) ?? [];
                 if (items.length === 0) return null;
                 return (
-                  <motion.div key={lt} variants={shouldReduceMotion ? undefined : fadeUp}>
+                  <motion.div key={lt} variants={fadeUp}>
                     <Card>
                       <CardHeader className="pb-2 pt-4 px-4">
                         <div className="flex items-center gap-2">

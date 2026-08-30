@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { StatCardGrid, StatCard } from "@/components/ui/stat-card";
 import { ErrorState } from "@/components/shared";
 import { InventoryDetailPageLoading } from "@/features/inventory/components/inventory-detail-page-loading";
-import { fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useSerial, useTraceability } from "@/hooks/api/inventory/traceability";
 import { SERIAL_STATUS_LABEL } from "@/features/inventory/lib";
@@ -21,6 +21,7 @@ interface SerialDetailClientProps {
 }
 
 export function SerialDetailClient({ serialId }: SerialDetailClientProps) {
+  const { fadeUp } = useMotionVariants();
   const [showTraceability, setShowTraceability] = useState(false);
   const { iconRef: traceChevronRef, hoverHandlers: traceHoverHandlers } = useAnimatedIcon();
 

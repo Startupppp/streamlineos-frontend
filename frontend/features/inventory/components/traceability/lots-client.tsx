@@ -22,7 +22,7 @@ import {
   EmptyTransferIllustration,
   EmptySearchIllustration,
 } from "@/components/illustrations";
-import { fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useLots } from "@/hooks/api/inventory/traceability";
 import {
@@ -131,6 +131,7 @@ const LOTS_COLUMNS: DataTableColumn<LotItem>[] = [
 ];
 
 export function LotsClient() {
+  const { fadeUp } = useMotionVariants();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("ALL");
   const [search, setSearch] = useState("");

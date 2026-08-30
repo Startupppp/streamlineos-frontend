@@ -5,7 +5,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatMoneyCompact } from "@/lib/format-utils";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import type { Deal, DealStage } from "@/types/crm";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
@@ -53,6 +53,7 @@ interface DealForecastChartProps {
 export function DealForecastChart({ deals }: DealForecastChartProps) {
   const money = useOrgDisplay();
   const shouldReduceMotion = useReducedMotion();
+  const { staggerContainer, fadeUp } = useMotionVariants();
 
   const { rows, maxWeighted } = useMemo(() => {
     const map = new Map<DealStage, StageRow>();
@@ -83,10 +84,6 @@ export function DealForecastChart({ deals }: DealForecastChartProps) {
     return { rows: stageRows, maxWeighted: max };
   }, [deals]);
 
-  const itemVariants = shouldReduceMotion
-    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
-    : fadeUp;
-
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -106,7 +103,7 @@ export function DealForecastChart({ deals }: DealForecastChartProps) {
             {rows.map((row, idx) => (
               <motion.div
                 key={row.stage}
-                variants={itemVariants}
+                variants={fadeUp}
                 transition={{ delay: idx * 0.08 }}
               >
                 <div className="flex items-center justify-between mb-1.5 gap-2">

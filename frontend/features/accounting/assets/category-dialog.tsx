@@ -59,8 +59,8 @@ interface CategoryDialogProps {
 export function CategoryDialog({ open, onOpenChange, editing }: CategoryDialogProps) {
   const createMutation = useCreateAssetCategory();
   const updateMutation = useUpdateAssetCategory(editing?.id ?? 0);
-  const accountsQuery = useAccounts({ activeOnly: true, pageSize: 200 });
-  const accounts = accountsQuery.data?.items ?? [];
+  const accountsQuery = useAccounts({ activeOnly: true, limit: 100 });
+  const accounts = accountsQuery.data?.data ?? [];
 
   const defaultValues: CategoryFormValues = {
     name: editing?.name ?? "",

@@ -21,7 +21,7 @@ import { useSession } from "next-auth/react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import {
   EXPENSE_CATEGORIES,
   PAYMENT_METHODS,
@@ -43,6 +43,7 @@ import type { ExpenseWithRelations } from "@/types/hr/expenses";
 import { useCan } from "@/hooks/api/access";
 
 export default function ExpensesPage() {
+  const { staggerContainer, fadeUp } = useMotionVariants();
   const { data: session } = useSession();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<ExpenseToEdit | null>(

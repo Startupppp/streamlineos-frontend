@@ -48,8 +48,8 @@ export function OpeningBalancesEditor({ onSuccess }: OpeningBalancesEditorProps)
   const [asOfDate, setAsOfDate] = useState<string>("");
   const [lines, setLines] = useState<EditorLine[]>([makeEmptyLine(), makeEmptyLine()]);
 
-  const accountsQuery = useAccounts({ activeOnly: true, pageSize: 500 });
-  const accounts = accountsQuery.data?.items ?? [];
+  const accountsQuery = useAccounts({ activeOnly: true, limit: 100 });
+  const accounts = accountsQuery.data?.data ?? [];
 
   const postMutation = usePostOpeningBalances();
 

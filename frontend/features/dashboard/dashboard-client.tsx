@@ -25,7 +25,7 @@ import { EmptyActivityIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
-import { fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { getGreeting, getFirstName } from "@/lib/format-utils";
 import { QuickActions } from "@/features/dashboard/quick-actions";
 import { SprintCard } from "@/features/dashboard/sprint-card";
@@ -63,6 +63,7 @@ const ExecutiveKpiWidget = dynamic(
 );
 
 export function DashboardClient() {
+  const { fadeUp } = useMotionVariants();
   const router = useRouter();
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;

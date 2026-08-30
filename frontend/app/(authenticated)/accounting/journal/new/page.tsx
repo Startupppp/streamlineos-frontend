@@ -202,9 +202,8 @@ export default function NewJournalEntryPage() {
   const canCreate = useCan("accounting:journal:create");
   const router = useRouter();
   const accountsQuery = useAccounts({
-    page: 1,
-    pageSize: 500,
     activeOnly: true,
+    limit: 100,
   });
   const createMutation = useCreateJournalEntry();
 
@@ -346,7 +345,7 @@ export default function NewJournalEntryPage() {
     );
   }
 
-  const accountOptions = accountsQuery.data?.items ?? [];
+  const accountOptions = accountsQuery.data?.data ?? [];
 
   const lineRows: LineRowContext[] = fields.map((_field, index) => ({
     index,

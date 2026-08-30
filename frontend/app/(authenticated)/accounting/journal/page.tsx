@@ -115,8 +115,7 @@ function EntriesTab() {
   const canCreate = useCan("accounting:journal:create");
 
   const query = useJournal({
-    page: 1,
-    pageSize: 100,
+    limit: 100,
     from: from || undefined,
     to: to || undefined,
     sourceType: sourceType === "ALL" ? undefined : sourceType,
@@ -143,8 +142,7 @@ function EntriesTab() {
     void query.refetch();
   }
 
-  const items = query.data?.items ?? [];
-  const total = query.data?.total ?? 0;
+  const items = query.data?.data ?? [];
 
   const columns: DataTableColumn<JournalEntry>[] = [
     {
@@ -267,11 +265,6 @@ function EntriesTab() {
             ))}
           </SelectContent>
         </Select>
-        {total > 0 && (
-          <span className="text-xs text-muted-foreground ml-auto">
-            {total} entries
-          </span>
-        )}
       </div>
 
       {query.error ? (

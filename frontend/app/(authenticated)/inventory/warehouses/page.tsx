@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { Filter } from "lucide-react";
 import { PlusIcon, XIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -24,7 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ErrorState } from "@/components/shared";
-import { staggerContainer } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import {
   useWarehouses,
@@ -36,7 +36,7 @@ import { WarehouseCreateSheet } from "@/features/inventory/components/warehouse/
 export default function WarehousesPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const shouldReduceMotion = useReducedMotion();
+  const { staggerContainer } = useMotionVariants();
 
   const statusValue = (searchParams.get("status") ??
     "all") as WarehouseListFilters["status"];
@@ -222,9 +222,9 @@ export default function WarehousesPage() {
             {warehouses.length > 0 ? (
               <motion.div
                 className="flex-1 grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
-                variants={shouldReduceMotion ? undefined : staggerContainer}
-                initial={shouldReduceMotion ? undefined : "hidden"}
-                animate={shouldReduceMotion ? undefined : "visible"}
+                variants={staggerContainer}
+                initial="hidden"
+                animate="visible"
               >
                 {warehouses.map((wh) => (
                   <WarehouseCard key={wh.id} warehouse={wh} />

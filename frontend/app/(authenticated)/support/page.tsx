@@ -19,7 +19,7 @@ import { ActivityFeed } from "@/components/charts/activity-feed";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { cn } from "@/lib/utils";
 import { useSupportDashboard } from "@/hooks/api";
-import { staggerContainer, fadeUp, slideInLeft } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { safeMax, calcPercent } from "@/lib/format-utils";
 import { getColorSafe, onlineStatusColors, sparkColors } from "@/lib/theme-constants";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
@@ -78,6 +78,7 @@ function getTeamMemberKey(member: SupportTeamMember) {
 }
 
 export default function SupportDashboardPage() {
+  const { staggerContainer, fadeUp, slideInLeft } = useMotionVariants();
   const { data, isLoading, isError, refetch } = useSupportDashboard();
 
   const ticketStatusBreakdown = useMemo(() => data?.ticketStatusBreakdown ?? [], [data]);

@@ -2,13 +2,13 @@
 
 import { use, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useReducedMotion, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState } from "@/components/shared";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
 import {
   useQuoteDetail,
@@ -45,7 +45,7 @@ export default function QuoteDetailPage({
   const { quoteId: quoteIdStr } = use(params);
   const quoteId = Number(quoteIdStr);
   const router = useRouter();
-  const shouldReduceMotion = useReducedMotion();
+  const { staggerContainer, fadeUp } = useMotionVariants();
 
   const [editOpen, setEditOpen] = useState(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
@@ -69,10 +69,6 @@ export default function QuoteDetailPage({
   const canApprove = useCan("crm:quotes:approve");
 
   const quote = data ?? null;
-
-  const sectionVariants = shouldReduceMotion
-    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
-    : fadeUp;
 
   const handleRetry = useCallback(() => void refetch(), [refetch]);
 
@@ -277,11 +273,11 @@ export default function QuoteDetailPage({
           initial="hidden"
           animate="visible"
         >
-          <motion.div variants={sectionVariants}>
+          <motion.div variants={fadeUp}>
             <QuoteStatusProgress status={quote.status} />
           </motion.div>
 
-          <motion.div variants={sectionVariants}>
+          <motion.div variants={fadeUp}>
             <QuoteDetailContent quote={quote} />
           </motion.div>
         </motion.div>

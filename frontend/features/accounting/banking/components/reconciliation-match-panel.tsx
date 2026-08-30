@@ -57,8 +57,8 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
   const confirmMatch = useConfirmMatch(bankAccountId);
   const unmatch = useUnmatch(bankAccountId);
   const ignoreTransaction = useIgnoreTransaction(bankAccountId);
-  const accountsQuery = useAccounts({ pageSize: 200 });
-  const ledgerAccounts = accountsQuery.data?.items ?? [];
+  const accountsQuery = useAccounts({ limit: 100 });
+  const ledgerAccounts = accountsQuery.data?.data ?? [];
 
   const amount = parseFloat(txn.amount);
   const isReconciled = txn.status === "RECONCILED" || txn.status === "MATCHED";

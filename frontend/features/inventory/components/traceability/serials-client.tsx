@@ -22,7 +22,7 @@ import {
   EmptyProductsIllustration,
   EmptySearchIllustration,
 } from "@/components/illustrations";
-import { fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useSerials } from "@/hooks/api/inventory/traceability";
 import {
@@ -127,6 +127,7 @@ const SERIALS_COLUMNS: DataTableColumn<SerialItem>[] = [
 ];
 
 export function SerialsClient() {
+  const { fadeUp } = useMotionVariants();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("ALL");
   const [search, setSearch] = useState("");

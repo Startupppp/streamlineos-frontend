@@ -31,7 +31,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { motion } from "framer-motion";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { ArrowRight, Mail, MailCheck, ShieldCheck } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatRoleLabel } from "@/features/users/user-invite-roles";
@@ -192,6 +192,7 @@ function DeclineInvitationDialog({
 }
 
 export default function InvitationPage() {
+  const { staggerContainer, fadeUp } = useMotionVariants();
   const router = useRouter();
   const params = useParams();
   const token = typeof params.token === "string" ? params.token : "";

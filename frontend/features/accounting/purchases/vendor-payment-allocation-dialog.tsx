@@ -45,7 +45,7 @@ export function VendorPaymentAllocationDialog({
   onOpenChange,
 }: VendorPaymentAllocationDialogProps) {
   const allocateMutation = useCreateVendorPaymentAllocation();
-  const billsQuery = usePurchaseBills({ status: "POSTED", pageSize: 50 });
+  const billsQuery = usePurchaseBills({ status: "POSTED", limit: 50 });
 
   const form = useForm<AllocationFormValues>({
     resolver: zodResolver(allocationSchema),
@@ -69,7 +69,7 @@ export function VendorPaymentAllocationDialog({
     );
   }
 
-  const bills = billsQuery.data?.items ?? [];
+  const bills = billsQuery.data?.data ?? [];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

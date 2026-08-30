@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { TrendingUp, Target, Handshake, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -11,7 +11,7 @@ import { EmptyDealsIllustration } from "@/components/illustrations";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { useDeals, useCaptureForecastSnapshot, useForecastSnapshots } from "@/hooks/api/crm";
 import { DealForecastSummary } from "@/features/crm/deals/deal-forecast-summary";
 import { DealForecastChart } from "@/features/crm/deals/deal-forecast-chart";
@@ -34,7 +34,7 @@ function ForecastSkeleton() {
 }
 
 export default function DealForecastPage() {
-  const shouldReduceMotion = useReducedMotion();
+  const { staggerContainer, fadeUp } = useMotionVariants();
   const { data: deals, isLoading, isError, error, refetch, access } = useDeals({ limit: 100 });
   const { data: snapshots = [] } = useForecastSnapshots({ limit: 10 });
   const captureForecast = useCaptureForecastSnapshot();
@@ -42,10 +42,6 @@ export default function DealForecastPage() {
 
   const allDeals = deals ?? [];
   const openDeals = allDeals.filter((d) => d.stage !== "LOST");
-
-  const itemVariants = shouldReduceMotion
-    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
-    : fadeUp;
 
   const handleRefetch = useCallback(() => { void refetch(); }, [refetch]);
 
@@ -115,19 +111,19 @@ export default function DealForecastPage() {
           initial="hidden"
           animate="visible"
         >
-          <motion.div variants={itemVariants}>
+          <motion.div variants={fadeUp}>
             <DealForecastSummary deals={allDeals} />
           </motion.div>
 
-          <motion.div variants={itemVariants}>
+          <motion.div variants={fadeUp}>
             <DealForecastChart deals={allDeals} />
           </motion.div>
 
-          <motion.div variants={itemVariants}>
+          <motion.div variants={fadeUp}>
             <DealCloseDateList deals={allDeals} />
           </motion.div>
 
-          <motion.div variants={itemVariants}>
+          <motion.div variants={fadeUp}>
             <Card className="bg-card border border-border rounded-xl shadow-sm">
               <CardHeader>
                 <CardTitle className="text-base">Saved Snapshots</CardTitle>

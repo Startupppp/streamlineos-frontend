@@ -119,8 +119,8 @@ export function RecurringJournalSheet({
   mode,
   template,
 }: RecurringJournalSheetProps) {
-  const accountsQuery = useAccounts({ activeOnly: true, pageSize: 500 });
-  const accounts = accountsQuery.data?.items ?? [];
+  const accountsQuery = useAccounts({ activeOnly: true, limit: 100 });
+  const accounts = accountsQuery.data?.data ?? [];
 
   const createMutation = useCreateRecurringJournal();
   const updateMutation = useUpdateRecurringJournal(template?.id ?? 0);

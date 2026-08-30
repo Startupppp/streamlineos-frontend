@@ -189,15 +189,15 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
 
   const [editOpen, setEditOpen] = useState(false);
 
-  const accountsQuery = useAccounts({ page: 1, pageSize: 500 });
-  const journalQuery = useJournal({ pageSize: 20 });
+  const accountsQuery = useAccounts({ limit: 100 });
+  const journalQuery = useJournal({ limit: 20 });
 
   const account = Number.isInteger(accountId)
-    ? accountsQuery.data?.items.find((item) => item.id === accountId)
+    ? accountsQuery.data?.data.find((item) => item.id === accountId)
     : undefined;
 
   const parentAccount = account?.parentAccountId
-    ? accountsQuery.data?.items.find(
+    ? accountsQuery.data?.data.find(
         (item) => item.id === account.parentAccountId,
       )
     : undefined;
@@ -215,7 +215,7 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
     void journalQuery.refetch();
   }, [accountsQuery, journalQuery]);
 
-  const journalEntries = journalQuery.data?.items ?? [];
+  const journalEntries = journalQuery.data?.data ?? [];
 
   const journalColumns: DataTableColumn<JournalEntry>[] = [
     {

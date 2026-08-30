@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import {
   usePendingTravelApprovals,
   useManagerApproveTravelRequest,
@@ -167,6 +167,8 @@ const TravelApprovalCard = memo(function TravelApprovalCard({
   isFinanceApproving: boolean;
   isRejecting: boolean;
 }) {
+  const { fadeUp } = useMotionVariants();
+
   function handleManagerApprove() {
     onManagerApprove(request.id);
   }
@@ -243,6 +245,7 @@ const TravelApprovalCard = memo(function TravelApprovalCard({
 });
 
 export default function TravelApprovalsPage() {
+  const { staggerContainer } = useMotionVariants();
   const { data: requests, isLoading } = usePendingTravelApprovals();
   const { data: membersData } = useOrgMembers(1, 200);
   const managerApprove = useManagerApproveTravelRequest();

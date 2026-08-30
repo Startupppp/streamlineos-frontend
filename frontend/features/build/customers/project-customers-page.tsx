@@ -12,7 +12,7 @@ import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { useProjectCustomers } from "@/hooks/api/build/customers";
 import { useCan } from "@/hooks/api/access";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { EmptyCompaniesIllustration } from "@/components/illustrations";
 import { useCustomerDisplayPrefs } from "./use-customer-display-prefs";
 import { CustomerDisplayPrefsPopover } from "./customer-display-prefs-popover";
@@ -26,6 +26,7 @@ import { CustomerTable } from "./customer-table";
 const PAGE_SIZE = 20;
 
 export function ProjectCustomersPage() {
+  const { staggerContainer, fadeUp } = useMotionVariants();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();

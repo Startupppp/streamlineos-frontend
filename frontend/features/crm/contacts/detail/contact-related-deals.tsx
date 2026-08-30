@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTableSkeleton } from "@/components/ui/data-table";
@@ -19,7 +19,7 @@ import { useCan } from "@/hooks/api/access";
 import { useDealDetail } from "@/hooks/api/crm/deals";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { fadeUp, fadeIn } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import type { Contact } from "@/types/crm";
 
 /**
@@ -63,7 +63,7 @@ export function ContactRelatedDeals({ contact }: ContactRelatedDealsProps) {
   const layout = withColumns(useDealLayout(), RELATED_DEAL_COLUMNS);
   const money = useOrgDisplay();
   const [density] = useDensity();
-  const shouldReduceMotion = useReducedMotion();
+  const { fadeUp } = useMotionVariants();
   const canReadDeals = useCan("crm:deals:read");
 
   const { data: deal, isLoading, isError, error, refetch } = useDealDetail(contact.dealId ?? 0);
@@ -83,7 +83,7 @@ export function ContactRelatedDeals({ contact }: ContactRelatedDealsProps) {
 
   return (
     <motion.div
-      variants={shouldReduceMotion ? fadeIn : fadeUp}
+      variants={fadeUp}
       initial="hidden"
       animate="visible"
     >

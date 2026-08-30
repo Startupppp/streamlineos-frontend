@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import type { WebhookEndpoint } from "@/hooks/api/webhooks";
 
 export interface WebhookCardProps {
@@ -45,6 +45,7 @@ export function WebhookCard({
   onViewLogs,
   canManage,
 }: WebhookCardProps) {
+  const { fadeUp } = useMotionVariants();
   const handleCopy = useCallback(() => onCopyUrl(wh.url), [wh.url, onCopyUrl]);
   const handleRotateClick = useCallback(
     () => onRotateSecret(wh.id),

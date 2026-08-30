@@ -1,14 +1,14 @@
 "use client";
 
 import { memo, useCallback, type MouseEvent } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { Warehouse, MapPin } from "lucide-react";
 import { StarIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { useSetDefaultWarehouse } from "@/hooks/api/inventory/warehouses";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -28,7 +28,7 @@ export interface WarehouseCardData {
 }
 
 export const WarehouseCard = memo(function WarehouseCard({ warehouse }: { warehouse: WarehouseCardData }) {
-  const shouldReduceMotion = useReducedMotion();
+  const { fadeUp } = useMotionVariants();
   const setDefault = useSetDefaultWarehouse();
   const locationCount =
     warehouse._count?.locations ??
@@ -53,7 +53,7 @@ export const WarehouseCard = memo(function WarehouseCard({ warehouse }: { wareho
   );
 
   return (
-    <motion.div variants={shouldReduceMotion ? undefined : fadeUp}>
+    <motion.div variants={fadeUp}>
       <Link href={`/inventory/warehouses/${warehouse.id}`} className="block group">
         <Card className="cursor-pointer transition-shadow duration-200 hover:shadow-md group-focus-visible:ring-2 group-focus-visible:ring-ring">
           <CardContent className="p-3">

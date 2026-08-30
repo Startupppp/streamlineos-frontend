@@ -24,7 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { useEngagementOverview, useMyMoodHistory, useOrgMoodAggregate } from "@/hooks/api/hr/engagement";
 import { useOrgMembers } from "@/hooks/api/organization";
 import {
@@ -107,6 +107,7 @@ function MoodSparkline({ data }: { data: { date: string; avgMood: number }[] }) 
 }
 
 function OverviewTab() {
+  const { staggerContainer, fadeUp } = useMotionVariants();
   const { data: overview, isLoading } = useEngagementOverview();
   const { data: moodData, isLoading: moodLoading } = useOrgMoodAggregate();
   const { data: recognitions, isLoading: recLoading } = useRecognitions();

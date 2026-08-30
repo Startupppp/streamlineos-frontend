@@ -13,7 +13,7 @@ jest.mock("@/hooks/api/accounting/banking", () => ({
 }));
 
 jest.mock("@/hooks/api/accounting", () => ({
-  useAccounts: () => ({ data: { items: [] } }),
+  useAccounts: () => ({ data: { data: [] } }),
 }));
 
 jest.mock("@/features/accounting/ai", () => ({

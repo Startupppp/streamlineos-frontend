@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import {
   useStockTransactions,
   type StockTransaction,
@@ -234,6 +234,7 @@ const MOVEMENTS_COLUMNS: DataTableColumn<StockTransaction>[] = [
 ];
 
 export default function MovementsPage() {
+  const { staggerContainer, fadeUp } = useMotionVariants();
   const router = useRouter();
   const searchParams = useSearchParams();
 

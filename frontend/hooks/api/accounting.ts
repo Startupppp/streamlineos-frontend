@@ -31,6 +31,15 @@ interface ListResponse<T> {
   totalPages: number;
 }
 
+interface CursorResponse<T> {
+  data: T[];
+  pagination: {
+    limit: number;
+    nextCursor: string | null;
+    hasMore: boolean;
+  };
+}
+
 interface TrialBalanceResponse {
   asOf: string;
   rows: TrialBalanceRow[];
@@ -40,8 +49,8 @@ interface TrialBalanceResponse {
 }
 
 interface ListAccountsParams {
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
   q?: string;
   type?: AccountType;
   activeOnly?: boolean;
@@ -57,10 +66,10 @@ function toQuery<P extends object>(params: P): Record<string, string> {
 }
 
 export function useAccounts(params: ListAccountsParams = {}) {
-  return useQuery<ListResponse<Account>, Error>({
+  return useQuery<CursorResponse<Account>, Error>({
     queryKey: queryKeys.accounting.accounts(params),
     queryFn: () =>
-      apiClient.get<ListResponse<Account>>("/accounting/accounts", toQuery(params)),
+      apiClient.get<CursorResponse<Account>>("/accounting/accounts", toQuery(params)),
     staleTime: 60_000,
   });
 }
@@ -101,8 +110,8 @@ export function useUpdateAccount(accountId: number) {
 }
 
 interface ListJournalParams {
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
   from?: string;
   to?: string;
   sourceType?: string;
@@ -110,10 +119,10 @@ interface ListJournalParams {
 }
 
 export function useJournal(params: ListJournalParams = {}) {
-  return useQuery<ListResponse<JournalEntry>, Error>({
+  return useQuery<CursorResponse<JournalEntry>, Error>({
     queryKey: queryKeys.accounting.journal(params),
     queryFn: () =>
-      apiClient.get<ListResponse<JournalEntry>>("/accounting/journal", toQuery(params)),
+      apiClient.get<CursorResponse<JournalEntry>>("/accounting/journal", toQuery(params)),
     staleTime: 30_000,
   });
 }
@@ -313,18 +322,18 @@ export function useAgedReceivables(asOf: string) {
 }
 
 interface ListPurchaseBillsParams {
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
   q?: string;
   status?: PurchaseBillStatus;
   vendorId?: number;
 }
 
 export function usePurchaseBills(params: ListPurchaseBillsParams = {}) {
-  return useQuery<ListResponse<PurchaseBillSummary>, Error>({
+  return useQuery<CursorResponse<PurchaseBillSummary>, Error>({
     queryKey: queryKeys.accounting.purchaseBills(params),
     queryFn: () =>
-      apiClient.get<ListResponse<PurchaseBillSummary>>("/accounting/purchase-bills", toQuery(params)),
+      apiClient.get<CursorResponse<PurchaseBillSummary>>("/accounting/purchase-bills", toQuery(params)),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
   });

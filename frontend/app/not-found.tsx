@@ -6,9 +6,10 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { NotFoundIllustration } from "@/components/illustrations";
 import { LayoutDashboard, HeadphonesIcon } from "lucide-react";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 
 export default function GlobalNotFound() {
+  const { staggerContainer, fadeUp } = useMotionVariants();
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center bg-background px-6">
       <motion.div

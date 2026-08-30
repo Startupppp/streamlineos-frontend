@@ -5,7 +5,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { memo, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { EmptyKnowledgeIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -19,7 +19,7 @@ import {
   useKbProjectPagesTree,
   useCreateKbPage,
 } from "@/hooks/api/kb";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import type { KbPageTreeNode } from "@/hooks/api/kb/pages";
 import { pageHref, projectPageHref } from "@/features/wiki/lib/knowledge-routes";
 import {
@@ -94,16 +94,12 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
   const treeLoading = treeQuery.isLoading;
 
   const createPage = useCreateKbPage();
-  const shouldReduceMotion = useReducedMotion();
+  const { staggerContainer, fadeUp } = useMotionVariants();
 
   const rootPages: KbPageTreeNode[] = treeNodes.filter(
     (n: KbPageTreeNode) => n.parentPageId === null,
   );
   const isLoading = recentLoading || treeLoading;
-
-  const itemVariants = shouldReduceMotion
-    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
-    : fadeUp;
 
   const handleNewPage = useCallback(() => {
     createPage.mutate(
@@ -221,7 +217,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
             animate="visible"
           >
             {rootPages.map((node) => (
-              <motion.div key={node.id} variants={itemVariants}>
+              <motion.div key={node.id} variants={fadeUp}>
                 <Link
                   href={resolvePageHref(node.id)}
                   className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors"

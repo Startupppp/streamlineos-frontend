@@ -24,7 +24,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import {
   useTransfer,
   useCompleteTransfer,
@@ -135,6 +135,7 @@ export default function TransferDetailPage({
 }: {
   params: Promise<{ transferId: string }>;
 }) {
+  const { staggerContainer, fadeUp } = useMotionVariants();
   const { transferId: transferIdStr } = use(params);
   const transferId = Number(transferIdStr);
   const [receiveOpen, setReceiveOpen] = useState(false);

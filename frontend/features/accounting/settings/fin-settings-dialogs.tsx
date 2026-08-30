@@ -163,8 +163,8 @@ export function SystemAccountMapDialog({
   onOpenChange: (v: boolean) => void;
 }) {
   const upsert = useUpsertSystemAccount(mapping.purpose);
-  const accountsQuery = useAccounts({ pageSize: 500 });
-  const accounts = accountsQuery.data?.items ?? [];
+  const accountsQuery = useAccounts({ limit: 100 });
+  const accounts = accountsQuery.data?.data ?? [];
 
   function handleSubmit(values: SystemAccountFormValues) {
     upsert.mutate(

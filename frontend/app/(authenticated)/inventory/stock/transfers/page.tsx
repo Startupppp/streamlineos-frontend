@@ -18,7 +18,7 @@ import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { useTransfers, type TransferStatus } from "@/hooks/api/inventory/stock";
 import { useWarehouses } from "@/hooks/api/inventory/warehouses";
 import { NewTransferSheet } from "@/features/inventory/components/stock/new-transfer-sheet";
@@ -127,6 +127,7 @@ function buildTransferColumns(
 }
 
 export default function TransfersPage() {
+  const { staggerContainer, fadeUp } = useMotionVariants();
   const router = useRouter();
   const searchParams = useSearchParams();
 

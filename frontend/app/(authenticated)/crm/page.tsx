@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import Link from "next/link";
-import { motion, useReducedMotion, type Variants } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Users,
   TrendingUp,
@@ -27,7 +27,7 @@ import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState } from "@/components/shared/error-state";
-import { fadeUp, staggerContainer } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { formatINRCompact } from "@/lib/format-utils";
 import { useLeadStats } from "@/hooks/api/leads";
 import { useDeals, useDealStats, useContacts, useWinLossAnalysis } from "@/hooks/api/crm";
@@ -48,16 +48,8 @@ const NAV_CARDS = [
   { title: "Reports", description: "Analytics & insights", href: "/crm/reports", icon: BarChart3 },
 ] as const;
 
-const REDUCED_CONTAINER: Variants = { hidden: {}, visible: {} };
-const REDUCED_ITEM: Variants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.15 } },
-};
-
 export default function CrmHubPage() {
-  const prefersReducedMotion = useReducedMotion();
-  const containerVariants = prefersReducedMotion ? REDUCED_CONTAINER : staggerContainer;
-  const itemVariants = prefersReducedMotion ? REDUCED_ITEM : fadeUp;
+  const { staggerContainer, fadeUp } = useMotionVariants();
 
   const {
     data: leadStats,
@@ -166,11 +158,11 @@ export default function CrmHubPage() {
     <PageWrapper title="CRM" subtitle="Command center" variant="display">
       <motion.div
         className="space-y-4 pb-4"
-        variants={containerVariants}
+        variants={staggerContainer}
         initial="hidden"
         animate="visible"
       >
-        <motion.div variants={itemVariants}>
+        <motion.div variants={fadeUp}>
           <StatCardGrid cols={4}>
             <StatCard
               label="Total Leads"
@@ -232,7 +224,7 @@ export default function CrmHubPage() {
         </motion.div>
 
         {leadStats && (
-          <motion.div variants={itemVariants}>
+          <motion.div variants={fadeUp}>
             <div className="flex items-center gap-4 flex-wrap text-dense px-1">
               <div className="flex items-center gap-1.5">
                 <AlertTriangle className="h-3 w-3 text-status-danger-ink" />
@@ -264,7 +256,7 @@ export default function CrmHubPage() {
         )}
 
         {leadStats && (
-          <motion.div variants={itemVariants} className="grid gap-3 md:grid-cols-2">
+          <motion.div variants={fadeUp} className="grid gap-3 md:grid-cols-2">
             <CrmPipelineMini
               byStatus={leadStats.byStatus}
               total={leadStats.total}
@@ -274,7 +266,7 @@ export default function CrmHubPage() {
         )}
 
         <motion.div
-          variants={itemVariants}
+          variants={fadeUp}
           className="grid gap-2 grid-cols-2 md:grid-cols-4"
         >
           {NAV_CARDS.map((card) => (
