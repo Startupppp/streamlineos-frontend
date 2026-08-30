@@ -35,6 +35,7 @@ import {
 } from "@/hooks/api/hr/engagement";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
+import { ErrorState } from "@/components/shared/error-state";
 
 const pollSchema = z.object({
   question: z.string().trim().min(1, "Question is required").max(300, "Question must be at most 300 characters"),
@@ -197,7 +198,7 @@ function PollCard({
 }
 
 export function PollsTab() {
-  const { data: polls, isLoading } = useEngagementPolls();
+  const { data: polls, isLoading, isError, error, refetch } = useEngagementPolls();
   const canManage = useCan("hr:engagement:manage");
   const createPoll = useCreatePoll();
 
@@ -254,6 +255,10 @@ export function PollsTab() {
         {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-lg" />)}
       </div>
     );
+  }
+
+  if (isError) {
+    return <ErrorState className="flex-1" title="Couldn't load polls" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
   }
 
   return (

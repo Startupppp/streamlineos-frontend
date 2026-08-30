@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { Star } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
@@ -38,7 +40,7 @@ interface ReviewAnswers {
 }
 
 export function MyReviewsTab() {
-  const { data: reviews = [], isLoading } = useMyPendingReviews();
+  const { data: reviews = [], isLoading, isError, error, refetch } = useMyPendingReviews();
   const submitFeedback = useSubmitFeedbackResponse();
   const { data: cycles = [] } = useFeedbackCycles();
 
@@ -101,6 +103,10 @@ export function MyReviewsTab() {
         ))}
       </div>
     );
+  }
+
+  if (isError) {
+    return <ErrorState className="flex-1" title="Couldn't load reviews" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
   }
 
   if (reviews.length === 0) {

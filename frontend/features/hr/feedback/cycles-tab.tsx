@@ -43,6 +43,8 @@ import {
   planningStartPickerProps,
 } from "@/lib/date-constraints";
 import { getTodayString } from "@/lib/date-utils";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const CYCLE_STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground",
@@ -82,7 +84,7 @@ function RemoveQuestionButton({ onClick }: { onClick: () => void }) {
 }
 
 export function CyclesTab() {
-  const { data: cycles = [], isLoading } = useFeedbackCycles();
+  const { data: cycles = [], isLoading, isError, error, refetch } = useFeedbackCycles();
   const createCycle = useCreateFeedbackCycle();
   const updateStatus = useUpdateFeedbackCycleStatus();
 
@@ -207,6 +209,10 @@ export function CyclesTab() {
         ))}
       </div>
     );
+  }
+
+  if (isError) {
+    return <ErrorState className="flex-1" title="Couldn't load feedback cycles" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
   }
 
   return (

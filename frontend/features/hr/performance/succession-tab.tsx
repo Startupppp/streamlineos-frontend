@@ -20,6 +20,7 @@ import {
 } from "@/hooks/api/hr/succession";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyPersonIllustration } from "@/components/illustrations";
+import { ErrorState } from "@/components/shared/error-state";
 import { useOrgMembers } from "@/hooks/api/organization";
 import {
   getUserDisplayName,
@@ -59,6 +60,9 @@ export function SuccessionTab() {
   const {
     data,
     isLoading,
+    isError,
+    error,
+    refetch,
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
@@ -126,6 +130,10 @@ export function SuccessionTab() {
         ))}
       </div>
     );
+  }
+
+  if (isError) {
+    return <ErrorState className="flex-1" title="Couldn't load succession plans" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
   }
 
   return (

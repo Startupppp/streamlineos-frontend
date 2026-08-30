@@ -16,6 +16,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { Form } from "@/components/ui/form";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
@@ -43,7 +44,7 @@ import { buildGoalSchema, type GoalFormValues } from "./goal-schema";
 import { GoalFormFields } from "./goal-form-fields";
 
 export function GoalsTab() {
-  const { data: goals, isLoading } = useHrGoals();
+  const { data: goals, isLoading, isError, error, refetch } = useHrGoals();
   const createGoal = useCreateGoal();
   const updateGoal = useUpdateGoal();
   const deleteGoal = useDeleteGoal();
@@ -217,6 +218,10 @@ export function GoalsTab() {
 
   if (isLoading) {
     return <LoadingState variant="cards" rows={9} />;
+  }
+
+  if (isError) {
+    return <ErrorState className="flex-1" title="Couldn't load goals" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
   }
 
   const goalsList = Array.isArray(goals) ? goals : [];

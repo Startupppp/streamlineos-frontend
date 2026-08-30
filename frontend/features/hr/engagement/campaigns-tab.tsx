@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyCampaignsIllustration } from "@/components/illustrations";
+import { ErrorState } from "@/components/shared/error-state";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import {
@@ -41,7 +42,7 @@ const STATUS_COLORS: Record<HrCampaign["status"], string> = {
 };
 
 export function CampaignsTab() {
-  const { data: campaigns, isLoading } = useEngagementCampaigns();
+  const { data: campaigns, isLoading, isError, error, refetch } = useEngagementCampaigns();
   const canManage = useCan("hr:engagement:manage");
   const create = useCreateCampaign();
   const update = useUpdateCampaign();
@@ -128,6 +129,10 @@ export function CampaignsTab() {
         {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-lg" />)}
       </div>
     );
+  }
+
+  if (isError) {
+    return <ErrorState className="flex-1" title="Couldn't load campaigns" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
   }
 
   return (

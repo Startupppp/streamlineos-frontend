@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
@@ -67,7 +68,7 @@ export function ReviewsTab() {
   const page = cursorHistory.length;
   const statusParam: ReviewStatus | undefined = statusFilter === "all" ? undefined : statusFilter;
 
-  const { data, isLoading, isFetching } = useHrPerformanceReviews({ status: statusParam, cursor });
+  const { data, isLoading, isFetching, isError, error, refetch } = useHrPerformanceReviews({ status: statusParam, cursor });
   const { data: employeesRaw } = useHrEmployees({ limit: 100 });
   const { data: cycles } = useReviewCycles();
   const createReview = useCreatePerformanceReview();
@@ -218,6 +219,8 @@ export function ReviewsTab() {
   }, []);
 
   if (isLoading) return <LoadingState variant="cards" rows={9} />;
+
+  if (isError) return <ErrorState className="flex-1" title="Couldn't load reviews" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
 
   const reviewsList = data?.data ?? [];
 

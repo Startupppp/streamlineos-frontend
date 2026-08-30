@@ -78,9 +78,9 @@ export const ScheduleInterviewSheet = memo(function ScheduleInterviewSheet({
       isPending={isPending}
     >
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">Type</label>
+        <label htmlFor="interview-type" className="text-sm font-medium">Type</label>
         <Select value={interviewType} onValueChange={handleTypeChange}>
-          <SelectTrigger>
+          <SelectTrigger id="interview-type">
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
@@ -91,8 +91,9 @@ export const ScheduleInterviewSheet = memo(function ScheduleInterviewSheet({
         </Select>
       </div>
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">Date &amp; Time</label>
+        <label htmlFor="interview-scheduled-at" className="text-sm font-medium">Date &amp; Time</label>
         <Input
+          id="interview-scheduled-at"
           type="datetime-local"
           value={scheduledAt}
           onChange={handleScheduledAtChange}
@@ -100,12 +101,13 @@ export const ScheduleInterviewSheet = memo(function ScheduleInterviewSheet({
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Duration (min)</label>
-          <Input type="number" value={duration} onChange={handleDurationChange} />
+          <label htmlFor="interview-duration" className="text-sm font-medium">Duration (min)</label>
+          <Input id="interview-duration" type="number" value={duration} onChange={handleDurationChange} />
         </div>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Meeting Link</label>
+          <label htmlFor="interview-meeting-link" className="text-sm font-medium">Meeting Link</label>
           <Input
+            id="interview-meeting-link"
             placeholder="https://..."
             value={meetingLink}
             onChange={handleMeetingLinkChange}
@@ -159,9 +161,9 @@ export const ApplyToJobSheet = memo(function ApplyToJobSheet({
       isPending={isPending}
     >
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">Job Posting</label>
+        <label htmlFor="apply-job-posting" className="text-sm font-medium">Job Posting</label>
         <Select value={selectedJobId} onValueChange={onJobSelect}>
-          <SelectTrigger>
+          <SelectTrigger id="apply-job-posting">
             <SelectValue placeholder="Select a job" />
           </SelectTrigger>
           <SelectContent className="min-w-[var(--radix-select-trigger-width)]">

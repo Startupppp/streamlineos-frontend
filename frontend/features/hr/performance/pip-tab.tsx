@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -40,7 +41,7 @@ import { zodFieldErrors } from "./zod-field-errors";
 import { PipFormFields } from "./pip-form-fields";
 
 export function PIPTab() {
-  const { data: pips, isLoading } = usePIPs();
+  const { data: pips, isLoading, isError, error, refetch } = usePIPs();
   const { data: employeesRaw } = useHrEmployees({ limit: 100 });
   const createPIP = useCreatePIP();
   const updatePIP = useUpdatePIP();
@@ -318,6 +319,10 @@ export function PIPTab() {
 
   if (isLoading) {
     return <LoadingState variant="list" rows={12} />;
+  }
+
+  if (isError) {
+    return <ErrorState className="flex-1" title="Couldn't load PIPs" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
   }
 
   return (

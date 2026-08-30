@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { useCan } from "@/hooks/api/access";
 import { RichPageContent } from "@/components/shared/rich-surface";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { OrgSettingsSectionsSkeleton } from "@/features/settings/organization/org-settings-skeleton";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
 import { useOrgSettings, useUpdateOrgSettings } from "@/hooks/api/organization";
@@ -29,7 +30,7 @@ function isCurrencyCode(value: string): value is CurrencyCode {
 }
 
 export function OrganizationSettingsPage() {
-  const { data: org, isLoading } = useOrgSettings();
+  const { data: org, isLoading, isError, error, refetch } = useOrgSettings();
 
   const [configInitialized, setConfigInitialized] = useState(false);
   const [timezone, setTimezone] = useState<string>("");
@@ -99,6 +100,14 @@ export function OrganizationSettingsPage() {
     return (
       <PageWrapper title="Organization" subtitle="Manage your organization profile, branding, and lifecycle settings">
         <OrgSettingsSectionsSkeleton />
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Organization" subtitle="Manage your organization profile, branding, and lifecycle settings">
+        <ErrorState className="flex-1" title="Couldn't load organization settings" description={getErrorMessage(error)} onRetry={() => void refetch()} />
       </PageWrapper>
     );
   }

@@ -16,7 +16,9 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { AccessDenied } from "@/components/shared/access-denied";
+import { ErrorState } from "@/components/shared/error-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -176,7 +178,7 @@ function HealthRow({
 export function OrganizationStructurePage() {
   const { data: accessData } = useAccess();
   const canView = useCan("settings:view");
-  const { data: overview, isLoading } = useOrgHierarchyOverview({
+  const { data: overview, isLoading, isError, error, refetch } = useOrgHierarchyOverview({
     enabled: canView,
   });
   const { data: org } = useOrgSettings({ enabled: canView });
@@ -200,6 +202,14 @@ export function OrganizationStructurePage() {
         subtitle="Set up reporting units once, then reuse them across people, access, payroll, and reporting."
       >
         <AccessDenied message="You don't have permission to view organization settings." />
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Organization Structure" subtitle="Set up reporting units once, then reuse them across people, access, payroll, and reporting.">
+        <ErrorState className="flex-1" title="Couldn't load organization structure" description={getErrorMessage(error)} onRetry={() => void refetch()} />
       </PageWrapper>
     );
   }

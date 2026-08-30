@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -73,7 +74,7 @@ const CycleHeaderStats = memo(function CycleHeaderStats({
 });
 
 export function CyclesTab() {
-  const { data: cycles, isLoading } = useReviewCycles();
+  const { data: cycles, isLoading, isError, error, refetch } = useReviewCycles();
   const createCycle = useCreateReviewCycle();
   const updateCycle = useUpdateReviewCycle();
   const deleteCycle = useDeleteReviewCycle();
@@ -202,6 +203,10 @@ export function CyclesTab() {
 
   if (isLoading) {
     return <LoadingState variant="list" rows={12} />;
+  }
+
+  if (isError) {
+    return <ErrorState className="flex-1" title="Couldn't load review cycles" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
   }
 
   return (

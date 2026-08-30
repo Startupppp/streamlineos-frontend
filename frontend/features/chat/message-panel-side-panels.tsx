@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { SavedMessagesPanel } from "./saved-messages-panel";
 import { SharedFilesPanel } from "./shared-files-panel";
 import { ForwardMessageDialog } from "./forward-message-dialog";
@@ -52,6 +52,7 @@ export function MessagePanelSidePanels({
       {isChatMobile && (
         <Sheet open={showSavedPanel} onOpenChange={setShowSavedPanel}>
           <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:hidden">
+            <SheetTitle className="sr-only">Saved messages</SheetTitle>
             <SavedMessagesPanel
               onClose={() => setShowSavedPanel(false)}
               onJumpToChannel={() => setShowSavedPanel(false)}
@@ -74,6 +75,7 @@ export function MessagePanelSidePanels({
       {isChatMobile && (
         <Sheet open={showFilesPanel} onOpenChange={setShowFilesPanel}>
           <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:hidden">
+            <SheetTitle className="sr-only">Shared files</SheetTitle>
             <SharedFilesPanel
               channelId={channelId}
               onClose={() => setShowFilesPanel(false)}

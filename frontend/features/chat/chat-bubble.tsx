@@ -223,7 +223,7 @@ export function ChatBubble({
 
         {isEditing ? (
           <div className="mx-1">
-            <div className="rounded-xl border border-primary/40 bg-background overflow-hidden shadow-sm">
+            <div className="rounded-xl border border-primary/40 bg-background overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-ring/50">
               <textarea
                 value={editInput}
                 onChange={handleEditInputChange}

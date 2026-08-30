@@ -15,7 +15,7 @@ import { NewDMDialog } from "@/features/chat/new-dm-dialog";
 import { NewGroupDialog } from "@/features/chat/new-group-dialog";
 import { ChatAblyProvider } from "@/features/chat/ably-provider";
 import { useChatSidebarCollapse } from "@/features/chat/chat-shell";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 
 function ChatNotifications({
   activeChannelId,
@@ -238,6 +238,7 @@ export default function ChatPage() {
         {activeChannelId && (
           <Sheet open={showInfoPanel} onOpenChange={setShowInfoPanel}>
             <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 lg:hidden">
+              <SheetTitle className="sr-only">Channel info</SheetTitle>
               <ChannelInfoPanel
                 channelId={activeChannelId}
                 currentUserId={currentUserId ?? ""}

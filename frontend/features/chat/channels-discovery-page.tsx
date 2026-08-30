@@ -10,6 +10,7 @@ import {
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { ErrorState } from "@/components/shared/error-state";
 import { SearchInput } from "@/components/ui/search-input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -23,7 +24,7 @@ const PAGE_SIZE = 10;
 
 export function ChannelsDiscoveryPage() {
   const router = useRouter();
-  const { data: publicChannels, isLoading } = usePublicChannels(true);
+  const { data: publicChannels, isLoading, isError, error, refetch } = usePublicChannels(true);
   const joinChannel = useJoinChannel();
   const leaveChannel = useLeaveChannel();
   const [search, setSearch] = useState("");
@@ -135,6 +136,8 @@ export function ChannelsDiscoveryPage() {
               </div>
             ))}
           </div>
+        ) : isError ? (
+          <ErrorState className="flex-1" title="Couldn't load channels" description={getErrorMessage(error)} onRetry={() => void refetch()} />
         ) : filtered.length === 0 ? (
           <EmptyState
             illustrationPreset={search ? "search" : "chat"}

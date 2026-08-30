@@ -15,6 +15,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { HrSheet } from "@/features/hr/hr-sheet";
@@ -36,7 +37,7 @@ import { meetingFormSchema } from "./meeting-schema";
 import { zodFieldErrors } from "./zod-field-errors";
 
 export function MeetingsTab() {
-  const { data: meetings, isLoading } = useOneOnOneMeetings();
+  const { data: meetings, isLoading, isError, error, refetch } = useOneOnOneMeetings();
   const createMeeting = useCreateOneOnOne();
   const updateMeeting = useUpdateOneOnOne();
   const deleteMeeting = useDeleteOneOnOne();
@@ -162,6 +163,10 @@ export function MeetingsTab() {
 
   if (isLoading) {
     return <LoadingState variant="list" rows={12} />;
+  }
+
+  if (isError) {
+    return <ErrorState className="flex-1" title="Couldn't load meetings" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
   }
 
   return (
