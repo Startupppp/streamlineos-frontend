@@ -1,11 +1,11 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
-import type { DataScope, MemberGrant, ModuleMember, ModuleMemberCandidate, PaginatedResult } from "./types";
+import type { CursorPaginatedResult, DataScope, MemberGrant, ModuleMember, ModuleMemberCandidate, PaginatedResult } from "./types";
 import { viewKey, manageKey } from "./types";
 
 export function useModuleMembers(
@@ -31,6 +31,30 @@ export function useModuleMembers(
     enabled: canView && (options?.enabled ?? true),
     staleTime: 60_000,
     placeholderData: (prev) => prev,
+  });
+}
+
+export function useModuleMembersInfinite(
+  moduleKey: string,
+  pageSize: number,
+  options?: { enabled?: boolean; userId?: string },
+) {
+  const canView = useCan(viewKey(moduleKey));
+  const userId = options?.userId;
+  return useInfiniteQuery<CursorPaginatedResult<ModuleMember>, Error>({
+    queryKey: queryKeys.moduleAccess.membersInfinite(moduleKey, { pageSize, userId }),
+    queryFn: ({ pageParam }) => {
+      const params = new URLSearchParams({ pageSize: String(pageSize) });
+      if (pageParam !== undefined) params.set("cursor", String(pageParam));
+      if (userId !== undefined) params.set("userId", userId);
+      return apiClient.get<CursorPaginatedResult<ModuleMember>>(
+        `/module-access/${moduleKey}/members?${params.toString()}`,
+      );
+    },
+    initialPageParam: undefined as number | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    enabled: canView && (options?.enabled ?? true),
+    staleTime: 60_000,
   });
 }
 

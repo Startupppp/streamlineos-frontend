@@ -91,6 +91,10 @@ export const directoryAndOwnershipQueryKeys = {
       moduleKey: string,
       params: { page: number; pageSize: number; userId?: string },
     ) => [...base, "moduleAccess", moduleKey, "members", params] as const,
+    membersInfinite: (
+      moduleKey: string,
+      params: { pageSize: number; userId?: string },
+    ) => [...base, "moduleAccess", moduleKey, "members-infinite", params] as const,
     auditLog: (moduleKey: string, params: { page: number; pageSize: number }) =>
       [...base, "moduleAccess", moduleKey, "audit-log", params] as const,
     myPermissions: (moduleKey: string) =>

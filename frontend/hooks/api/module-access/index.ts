@@ -13,6 +13,7 @@ export type {
   MemberGrant,
   Pagination,
   PaginatedResult,
+  CursorPaginatedResult,
   AuditLogEntry,
   ModuleMyPermissions,
 } from "./types";
@@ -36,6 +37,7 @@ export {
 
 export {
   useModuleMembers,
+  useModuleMembersInfinite,
   useAddModuleMember,
   useUpdateModuleMember,
   useRemoveModuleMember,
