@@ -4,6 +4,7 @@ import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tansta
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   SalaryComponent,
   ComponentType,
@@ -57,7 +58,7 @@ export function usePayrollComponents(params?: ComponentListParams) {
 
 export function useCreatePayrollComponent() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payroll:components:manage", {
     mutationKey: ["payroll", "components", "create"],
     mutationFn: (data: CreateComponentInput) =>
       apiClient.post<SalaryComponent>("/payroll/components", data),
@@ -68,7 +69,7 @@ export function useCreatePayrollComponent() {
 
 export function useUpdatePayrollComponent() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payroll:components:manage", {
     mutationKey: ["payroll", "components", "update"],
     mutationFn: ({ id, data }: UpdateComponentInput) =>
       apiClient.patch<SalaryComponent>(`/payroll/components/${id}`, data),
@@ -79,7 +80,7 @@ export function useUpdatePayrollComponent() {
 
 export function useDeletePayrollComponent() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payroll:components:manage", {
     mutationKey: ["payroll", "components", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean; softDeleted: boolean }>(

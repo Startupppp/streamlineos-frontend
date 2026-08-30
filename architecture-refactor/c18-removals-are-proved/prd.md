@@ -20,7 +20,7 @@ Write down the standard of proof, then apply it to the small set that actually q
 
 **The standard.** A file is dead when a module-graph tool says so *and* a real build agrees — not `tsc`, which misses a missing side-effect import. An endpoint is dead when access logs show no calls over a stated window; static analysis can only produce candidates. A table is dead when it has no symbol references, no raw name references, no dependent foreign key, and no spec asserting its arrangement.
 
-**The work.** Six overlapping routes to consolidate, one dead controller, and the confirmed-by-logs set. Plus the two schema items other specs create: `invoices.lineItems` after c16 normalises it, and the dunning JSONB array after c17 moves that state.
+**The work.** ~~Six overlapping routes to consolidate~~ — **corrected 2026-08-27: one, and it is done.** One dead controller, and the confirmed-by-logs set. Plus the two schema items other specs create: `invoices.lineItems` after c16 normalises it, and the dunning JSONB array after c17 moves that state.
 
 The honest headline is that this codebase does not have a dead-code problem. Recording the standard is worth more than the deletions.
 
@@ -81,6 +81,20 @@ The honest headline is that this codebase does not have a dead-code problem. Rec
 - Acting on static route analysis without log confirmation.
 - Removing the permission-catalog subset on the frontend, which is intentional and tested. Do not re-raise it.
 - Consolidating modules or renaming folders.
+
+## Correction — "six overlapping route groups" was one (2026-08-27)
+
+The figure was never sourced, and three independent scans could not reconstruct it:
+
+| Signal | Count | Verdict |
+|---|---|---|
+| Exact method + path collisions | **1** | Real. `DELETE /hr/recruitment/candidates/:candidateId/vault/:documentId` was declared twice; module registration order decided which of two disagreeing permission contracts applied. Fixed, and guarded by `app-route-uniqueness.spec.ts`. |
+| Same verb, different resource | 272 | Not overlap. `/hr/expenses/:id/approve` and `/accounting/journal/:id/approve` approve different things; a shared action verb across 3,520 routes is ordinary REST. |
+| Two routes delegating to one service method | 160 | Not overlap. All are name collisions: `svc` is a generic variable in dozens of controllers, and `PeriodsService` / `history` are **distinct classes that share a name** across modules — `timesheets/core/periods.service.ts` is not `accounting/gl/periods.service.ts`. |
+
+So the honest number is **one**, and this candidate's own rule applies to its own PRD: a scan that produces a number an order of magnitude off, in the permissive direction, is the recurring subject here. The 1,074-dead-routes join was the first instance; "six route groups" is the second, and this time the over-count was in the spec rather than the tooling.
+
+**One finding worth keeping from the third scan:** two different services are both called `PeriodsService`, and two different ones expose `history`. Neither is a defect, but a same-named class in two modules is why the delegation scan needed the injected *type* checked rather than the variable name.
 
 ## Further Notes
 

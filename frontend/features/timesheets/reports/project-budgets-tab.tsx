@@ -27,11 +27,12 @@ import { useBudgets, useDeleteBudget } from "@/hooks/api/timesheets-core/budgets
 import type { TimesheetBudget } from "@/features/timesheets/types";
 import { cn } from "@/lib/utils";
 import { BudgetFormDialog } from "./budget-form-dialog";
+import { formatCurrencyFull } from "@/lib/format-utils";
 
 function formatValue(budget: TimesheetBudget, value: number): string {
   if (budget.budgetType === "HOURS") return `${value.toFixed(1)}h`;
   try {
-    return new Intl.NumberFormat(undefined, { style: "currency", currency: budget.currency }).format(value);
+    return formatCurrencyFull(value, budget.currency);
   } catch {
     return `${budget.currency} ${value.toFixed(2)}`;
   }

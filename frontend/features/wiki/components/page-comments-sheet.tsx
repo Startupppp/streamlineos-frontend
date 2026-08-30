@@ -283,7 +283,12 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
           {replyingTo && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
               <span>Replying to comment…</span>
-              <button onClick={handleClearReply} className="ml-auto hover:text-foreground transition-colors">
+              <button
+                type="button"
+                aria-label="Cancel reply"
+                onClick={handleClearReply}
+                className="ml-auto hover:text-foreground transition-colors"
+              >
                 <KbXIcon className="h-3 w-3" />
               </button>
             </div>

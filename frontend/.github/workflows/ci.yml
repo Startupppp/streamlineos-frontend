@@ -37,9 +37,35 @@ jobs:
         run: pnpm lint
         continue-on-error: false
 
-      - name: Check for circular imports
+      - name: Import cycles
         run: pnpm check:cycles
         continue-on-error: false
+
+      - name: Dead-code report
+        run: pnpm exec knip --no-progress
+        continue-on-error: true
+
+      # Classifies knip's candidates against a module graph so a side-effect import, a dynamic
+      # import, a re-export chain or a Next.js convention file is never mistaken for dead code.
+      # Reported, not enforced, until tickets 30-33 land and the four confirmed dead files are
+      # actually deleted — the count is above baseline today for reasons no single commit can fix.
+      - name: Dead-code classification (reported)
+        run: pnpm check:dead-code:self-test && pnpm check:dead-code
+        continue-on-error: true
+
+      # frontend/contracts/openapi.json is a hand-vendored copy of backend/openapi.json, so the
+      # Timesheets drift check below can silently run against a stale contract. This fails when
+      # the two diverge. It needs both repos checked out; skipped when the backend copy is absent.
+      - name: Contract vendor copy is current
+        run: pnpm check:contract-vendor:self-test && pnpm check:contract-vendor
+        continue-on-error: true
+
+      # Every permission the route-access registry and the navigation model can require must name
+      # an endpoint in the generated contract. A gate on a key no endpoint enforces is false
+      # forever: the route hides from everyone who is not an owner and no backend guard ever runs.
+      # Reads the vendored contract, so it works in a frontend-only checkout.
+      - name: Route-access permissions name a real endpoint
+        run: pnpm check:route-access-contract:self-test && pnpm check:route-access-contract
 
       - name: Build application
         run: pnpm build

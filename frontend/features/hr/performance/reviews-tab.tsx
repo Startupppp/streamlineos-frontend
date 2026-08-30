@@ -25,6 +25,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { AIGenerateReviewButton } from "@/features/hr/performance/ai-generate-review-button";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { toast } from "sonner";
 import { resolveImageUrl, cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -37,23 +38,30 @@ import { Star, CheckCircle2, ChevronsUpDown, Check, Pencil } from "lucide-react"
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { PerformanceReview, ReviewCycle } from "@/types/hr";
+import type { PerformanceReviewListItem, ReviewCycle, ReviewStatus } from "@/types/hr";
 import { EmptyLeaderboardIllustration } from "@/components/illustrations";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { reviewFormSchema } from "./review-schema";
 import { zodFieldErrors } from "./zod-field-errors";
 
+type StatusTab = "all" | ReviewStatus;
+
+function isStatusTab(v: string): v is StatusTab {
+  return (
+    v === "all" ||
+    v === "DRAFT" ||
+    v === "IN_PROGRESS" ||
+    v === "COMPLETED" ||
+    v === "ARCHIVED"
+  );
+}
+
 export function ReviewsTab() {
-  const { data: reviews, isLoading } = useHrPerformanceReviews();
-  const { data: employeesRaw } = useHrEmployees({ limit: 100 });
-  const { data: cycles } = useReviewCycles();
-  const createReview = useCreatePerformanceReview();
-  const updateReview = useUpdatePerformanceReview();
-  const deleteReview = useDeletePerformanceReview();
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [editReview, setEditReview] = useState<PerformanceReview | null>(null);
+  const [editReview, setEditReview] = useState<PerformanceReviewListItem | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<StatusTab>("all");
+  const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
   const [employeeId, setEmployeeId] = useState("");
   const [employeePickerOpen, setEmployeePickerOpen] = useState(false);
   const [cycleId, setCycleId] = useState("none");
@@ -61,10 +69,35 @@ export function ReviewsTab() {
   const [periodEnd, setPeriodEnd] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
+  const cursor = cursorHistory.at(-1);
+  const page = cursorHistory.length;
+  const statusParam: ReviewStatus | undefined = statusFilter === "all" ? undefined : statusFilter;
+
+  const { data, isLoading, isFetching } = useHrPerformanceReviews({ status: statusParam, cursor });
+  const { data: employeesRaw } = useHrEmployees({ limit: 100 });
+  const { data: cycles } = useReviewCycles();
+  const createReview = useCreatePerformanceReview();
+  const updateReview = useUpdatePerformanceReview();
+  const deleteReview = useDeletePerformanceReview();
+
   const employees = useMemo(
     () => unwrapEmployees(employeesRaw).filter((e) => !!e.id),
     [employeesRaw],
   );
+
+  const handleStatusChange = useCallback((value: string) => {
+    setStatusFilter(isStatusTab(value) ? value : "all");
+    setCursorHistory([undefined]);
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    const nextCursor = data?.pagination.nextCursor;
+    if (nextCursor) setCursorHistory((h) => [...h, nextCursor]);
+  }, [data?.pagination.nextCursor]);
+
+  const handlePreviousPage = useCallback(() => {
+    setCursorHistory((h) => (h.length > 1 ? h.slice(0, -1) : h));
+  }, []);
 
   const handleCycleChange = useCallback((value: string) => {
     setCycleId(value);
@@ -162,11 +195,11 @@ export function ReviewsTab() {
     });
   }, [editReview, employeeId, cycleId, periodStart, periodEnd, createReview, updateReview, employees, cycles, resetForm]);
 
-  const handleOpenEdit = useCallback((review: PerformanceReview) => {
+  const handleOpenEdit = useCallback((review: PerformanceReviewListItem) => {
     setEditReview(review);
     setCycleId(review.cycleId ? String(review.cycleId) : "none");
-    setPeriodStart(review.periodStart ?? "");
-    setPeriodEnd(review.periodEnd ?? "");
+    setPeriodStart(review.periodStart);
+    setPeriodEnd(review.periodEnd);
     setFieldErrors({});
     setSheetOpen(true);
   }, []);
@@ -220,17 +253,14 @@ export function ReviewsTab() {
     return <LoadingState variant="cards" rows={9} />;
   }
 
-  const reviewsList = Array.isArray(reviews) ? reviews : [];
-  const filteredReviews = statusFilter === "all"
-    ? reviewsList
-    : reviewsList.filter((r: PerformanceReview) => (r.status ?? "DRAFT") === statusFilter);
+  const reviewsList = data?.data ?? [];
 
   return (
     <div className="flex flex-col flex-1 min-h-0 gap-4">
       <div className="flex items-center justify-between gap-2 flex-wrap shrink-0">
-        <Tabs value={statusFilter} onValueChange={setStatusFilter}>
+        <Tabs value={statusFilter} onValueChange={handleStatusChange}>
           <TabsList className="bg-muted/50">
-            <TabsTrigger value="all" className="text-dense">All ({reviewsList.length})</TabsTrigger>
+            <TabsTrigger value="all" className="text-dense">All</TabsTrigger>
             <TabsTrigger value="DRAFT" className="text-dense">Draft</TabsTrigger>
             <TabsTrigger value="IN_PROGRESS" className="text-dense">In Progress</TabsTrigger>
             <TabsTrigger value="COMPLETED" className="text-dense">Completed</TabsTrigger>
@@ -241,7 +271,7 @@ export function ReviewsTab() {
         </AnimatedIconButton>
       </div>
 
-      {filteredReviews.length === 0 ? (
+      {reviewsList.length === 0 ? (
         <EmptyState
           illustration={<EmptyLeaderboardIllustration className="h-full w-full" />}
           title={statusFilter === "all" ? "No reviews yet" : `No ${statusFilter.toLowerCase().replace("_", " ")} reviews`}
@@ -250,7 +280,7 @@ export function ReviewsTab() {
         />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredReviews.map((review: PerformanceReview) => {
+          {reviewsList.map((review: PerformanceReviewListItem) => {
             const accentClass =
               review.status === "COMPLETED"
                 ? "border-l-emerald-500"
@@ -336,6 +366,14 @@ export function ReviewsTab() {
           })}
         </div>
       )}
+
+      <CursorPageControls
+        page={page}
+        hasNext={data?.pagination.hasMore ?? false}
+        disabled={isFetching}
+        onPrevious={handlePreviousPage}
+        onNext={handleNextPage}
+      />
 
       <HrSheet
         open={sheetOpen}

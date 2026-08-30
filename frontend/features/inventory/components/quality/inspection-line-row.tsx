@@ -56,6 +56,7 @@ export const InspectionLineRow = memo(function InspectionLineRow({
         {canRemove && (
           <button
             type="button"
+            aria-label={`Remove line ${index + 1}`}
             onClick={handleRemove}
             className="text-muted-foreground hover:text-destructive transition-colors"
             {...removeHoverHandlers}

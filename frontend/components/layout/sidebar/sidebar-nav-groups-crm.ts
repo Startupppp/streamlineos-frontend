@@ -104,7 +104,7 @@ export const CRM_NAV_GROUPS: NavGroup[] = [
             label: "Deal Approvals",
             icon: Briefcase,
             href: "/crm/deals/approvals",
-            requiredPermission: "crm:deals:approve",
+            requiredPermission: "crm:deals:read",
           },
           {
             label: "Deal Aging",

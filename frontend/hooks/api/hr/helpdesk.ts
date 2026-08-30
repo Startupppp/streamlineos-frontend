@@ -4,6 +4,15 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
 
+export interface CursorPage<T> {
+  data: T[];
+  pagination: {
+    limit: number;
+    hasMore: boolean;
+    nextCursor: string | null;
+  };
+}
+
 export const HELPDESK_CATEGORIES = [
   "policy_question",
   "payroll_issue",
@@ -64,13 +73,7 @@ export interface HelpdeskTicketDetail extends HelpdeskTicket {
   comments: HelpdeskComment[];
 }
 
-export interface HelpdeskListResult {
-  items: HelpdeskTicket[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-}
+export type HelpdeskListResult = CursorPage<HelpdeskTicket>;
 
 export interface HelpdeskRoutingRule {
   id: number;
@@ -106,19 +109,28 @@ export interface SuggestResult {
   }>;
 }
 
+export interface HelpdeskListParams {
+  limit?: number;
+  cursor?: string;
+  status?: string;
+  category?: string;
+  assigneeId?: string;
+  q?: string;
+}
+
 const keys = {
   all: ["streamlineos", "hr", "helpdesk"] as const,
-  list: (params?: Record<string, unknown>) => ["streamlineos", "hr", "helpdesk", "list", params] as const,
+  list: (params?: HelpdeskListParams) => ["streamlineos", "hr", "helpdesk", "list", params] as const,
   detail: (id: number) => ["streamlineos", "hr", "helpdesk", "detail", id] as const,
   routing: () => ["streamlineos", "hr", "helpdesk", "routing"] as const,
   suggest: (q: string) => ["streamlineos", "hr", "helpdesk", "suggest", q] as const,
 };
 
-export function useHelpdeskTickets(params?: Record<string, unknown>) {
+export function useHelpdeskTickets(params?: HelpdeskListParams) {
   const canHelpdesk = useCan("hr:helpdesk:view");
   return useQuery({
     queryKey: keys.list(params),
-    queryFn: () => apiClient.get<HelpdeskListResult>("/hr/helpdesk", params),
+    queryFn: () => apiClient.get<HelpdeskListResult>("/hr/helpdesk", params as Record<string, unknown>),
     staleTime: 60_000,
     enabled: canHelpdesk,
   });

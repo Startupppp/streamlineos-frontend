@@ -58,34 +58,24 @@ export const collaborationQueryKeys = {
 
   dashboard: {
     all: [...base, "dashboard"] as const,
-    stats: (orgId: string) => [...base, "dashboard", "stats", orgId] as const,
-    recentProjects: (orgId: string) =>
-      [...base, "dashboard", "recentProjects", orgId] as const,
-    teamAttendance: (orgId: string) =>
-      [...base, "dashboard", "teamAttendance", orgId] as const,
-    leavesToday: (orgId: string) =>
-      [...base, "dashboard", "leavesToday", orgId] as const,
-    upcomingHolidays: (orgId: string) =>
-      [...base, "dashboard", "upcomingHolidays", orgId] as const,
-    myLeaveBalance: (orgId: string) =>
-      [...base, "dashboard", "myLeaveBalance", orgId] as const,
-    birthdays: (orgId: string) =>
-      [...base, "dashboard", "birthdays", orgId] as const,
-    pendingApprovals: (orgId: string) =>
-      [...base, "dashboard", "pendingApprovals", orgId] as const,
+    stats: () => [...base, "dashboard", "stats"] as const,
+    recentProjects: () => [...base, "dashboard", "recentProjects"] as const,
+    teamAttendance: () => [...base, "dashboard", "teamAttendance"] as const,
+    leavesToday: () => [...base, "dashboard", "leavesToday"] as const,
+    upcomingHolidays: () => [...base, "dashboard", "upcomingHolidays"] as const,
+    myLeaveBalance: () => [...base, "dashboard", "myLeaveBalance"] as const,
+    birthdays: () => [...base, "dashboard", "birthdays"] as const,
+    pendingApprovals: () => [...base, "dashboard", "pendingApprovals"] as const,
     myIssues: () => [...base, "dashboard", "myIssues"] as const,
-    activeSprintSummary: (orgId: string) =>
-      [...base, "dashboard", "activeSprintSummary", orgId] as const,
-    recentActivity: (orgId: string) =>
-      [...base, "dashboard", "recentActivity", orgId] as const,
-    announcements: (orgId: string) =>
-      [...base, "dashboard", "announcements", orgId] as const,
-    personal: (orgId: string) =>
-      [...base, "dashboard", "personal", orgId] as const,
-    executive: (orgId: string) =>
-      [...base, "dashboard", "executive", orgId] as const,
-    publicDocuments: (orgId: string, limit: number) =>
-      [...base, "dashboard", "publicDocuments", orgId, limit] as const,
+    todayActivities: () => [...base, "dashboard", "todayActivities"] as const,
+    activeSprintSummary: () =>
+      [...base, "dashboard", "activeSprintSummary"] as const,
+    recentActivity: () => [...base, "dashboard", "recentActivity"] as const,
+    announcements: () => [...base, "dashboard", "announcements"] as const,
+    personal: () => [...base, "dashboard", "personal"] as const,
+    executive: () => [...base, "dashboard", "executive"] as const,
+    publicDocuments: (limit: number) =>
+      [...base, "dashboard", "publicDocuments", limit] as const,
   },
 
 } as const;

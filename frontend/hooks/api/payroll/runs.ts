@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { PayrollRun, PayrollRunListItem, PayrollChecklistItem } from "@/types/payroll/runs";
 
 interface PaginatedRuns {
@@ -62,7 +63,7 @@ export interface CreateRunInput {
 
 export function useCreateRun() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payroll:runs:manage", {
     mutationKey: ["payroll", "runs", "create"],
     mutationFn: (input: string | CreateRunInput) => {
       const body: CreateRunInput =
@@ -78,7 +79,7 @@ export function useCreateRun() {
 
 export function useGenerateRun() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payroll:runs:manage", {
     mutationKey: ["payroll", "runs", "generate"],
     mutationFn: (runId: number) =>
       apiClient.post<{ ok: boolean }>(`/payroll/runs/${runId}/generate`),
@@ -92,7 +93,7 @@ export function useGenerateRun() {
 
 export function useRecalculateRun() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payroll:runs:manage", {
     mutationKey: ["payroll", "runs", "recalculate"],
     mutationFn: (runId: number) =>
       apiClient.post<{ ok: boolean }>(`/payroll/runs/${runId}/recalculate`),

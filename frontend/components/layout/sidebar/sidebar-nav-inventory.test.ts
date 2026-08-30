@@ -38,8 +38,14 @@ import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
  * registered in `app.module.ts` with permission-guarded controllers and no route,
  * no hook and no permission key, so neither was reachable by anything.
  */
+/*
+ * Recomputed for the merge with main, which brings its own navigation entries
+ * alongside the two above. The digest is a tripwire for an unnoticed change to
+ * what the sidebar offers, not a claim that the list is final — it moves when
+ * the list is meant to, and this is one of those times.
+ */
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "e33b9041ee5f22477042dc82c5d3fbeca9ce1bb2b49325f00b7364bb63b9f6b8";
+  "d02e39b5f34d04f7a8b3944bde2d64e310dbd9d1b118b6b062520349b8bfaf2a";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {

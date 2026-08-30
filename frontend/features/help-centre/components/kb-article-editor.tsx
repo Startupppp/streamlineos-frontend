@@ -24,6 +24,7 @@ import {
   type KbCategory,
 } from "@/hooks/api/support/kb";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { orgScopedStorageKey, useOrgStorageScope } from "@/lib/org-scoped-storage";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { toast } from "sonner";
 import { KbFeedbackPanel } from "./kb-feedback-panel";
@@ -43,8 +44,8 @@ interface ArticleDraft {
   tagsInput: string;
 }
 
-function draftStorageKey(articleId: number): string {
-  return `kb-draft-${articleId}`;
+function draftStorageKey(articleId: number, scope: string): string {
+  return orgScopedStorageKey(`kb-draft-${articleId}`, scope);
 }
 
 function isArticleStatus(value: unknown): value is KbArticleStatus {
@@ -81,10 +82,10 @@ function parseDraft(value: unknown): ArticleDraft | null {
   return { title, categoryId, excerpt, content, status, visibility, tagsInput };
 }
 
-function readDraft(articleId: number): ArticleDraft | null {
+function readDraft(articleId: number, scope: string): ArticleDraft | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = window.localStorage.getItem(draftStorageKey(articleId));
+    const raw = window.localStorage.getItem(draftStorageKey(articleId, scope));
     if (!raw) return null;
     return parseDraft(JSON.parse(raw));
   } catch {
@@ -111,6 +112,7 @@ export function KbArticleEditor({
   article: KbArticleDetail;
   categories: KbCategory[];
 }) {
+  const scope = useOrgStorageScope();
   const update = useUpdateSupportKbArticle();
 
   const [title, setTitle] = useState(article.title);
@@ -125,7 +127,7 @@ export function KbArticleEditor({
 
   const baseline = useMemo(() => articleToDraft(article), [article]);
   const [pendingDraft, setPendingDraft] = useState<ArticleDraft | null>(() => {
-    const stored = readDraft(article.id);
+    const stored = readDraft(article.id, scope);
     if (!stored) return null;
     return JSON.stringify(stored) === JSON.stringify(articleToDraft(article)) ? null : stored;
   });
@@ -138,13 +140,13 @@ export function KbArticleEditor({
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const key = draftStorageKey(article.id);
+    const key = draftStorageKey(article.id, scope);
     if (JSON.stringify(debouncedDraft) === JSON.stringify(baseline)) {
       window.localStorage.removeItem(key);
       return;
     }
     window.localStorage.setItem(key, JSON.stringify(debouncedDraft));
-  }, [debouncedDraft, baseline, article.id]);
+  }, [debouncedDraft, baseline, article.id, scope]);
 
   const tags = useMemo(
     () =>
@@ -196,7 +198,7 @@ export function KbArticleEditor({
 
   function handleDiscardDraft() {
     if (typeof window !== "undefined") {
-      window.localStorage.removeItem(draftStorageKey(article.id));
+      window.localStorage.removeItem(draftStorageKey(article.id, scope));
     }
     setPendingDraft(null);
   }
@@ -225,7 +227,7 @@ export function KbArticleEditor({
       {
         onSuccess: () => {
           if (typeof window !== "undefined") {
-            window.localStorage.removeItem(draftStorageKey(article.id));
+            window.localStorage.removeItem(draftStorageKey(article.id, scope));
           }
           setPendingDraft(null);
           toast.success("Article saved");

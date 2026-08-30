@@ -41,32 +41,33 @@ describe("query request policies", () => {
     expect(DAILY_DATA_STALE_TIME_MS).toBeGreaterThanOrEqual(6 * 60 * 60_000);
   });
 
-  it("isolates access caches by user and organization", () => {
-    expect(queryKeys.access.me("org-a")).not.toEqual(queryKeys.access.me("org-b"));
-    expect(queryKeys.access.me("org-a", "user-1")).not.toEqual(
-      queryKeys.access.me("org-a", "user-2"),
+  it.each([
+    ["access.me", () => queryKeys.access.me()],
+    ["access.simulate", () => queryKeys.access.simulate("user-1")],
+    [
+      "access.simulationCandidates",
+      () => queryKeys.access.simulationCandidates({ page: 1, limit: 100 }),
+    ],
+    ["hr.attendanceStatus", () => queryKeys.hr.attendanceStatus()],
+    ["notifications.unreadCount", () => queryKeys.notifications.unreadCount()],
+  ])("isolates %s between two organizations", (_name, makeKey) => {
+    const orgA = createAppQueryClient("authenticated:org-a:user-1");
+    const orgB = createAppQueryClient("authenticated:org-b:user-1");
+
+    orgA.setQueryData(makeKey(), "org-a rows");
+
+    expect(orgB.getQueryData(makeKey())).toBeUndefined();
+    expect(orgA.getQueryCache().getAll()[0]?.queryHash).not.toBe(
+      orgB.getQueryCache().getAll()[0]?.queryHash,
     );
-    expect(queryKeys.access.me("org-a", "user-1")).toEqual([
-      ...queryKeys.access.me(),
-      "org-a",
-      "user-1",
-    ]);
   });
 
-  it("isolates attendance and notification caches by organization", () => {
-    expect(queryKeys.access.simulate("org-a", "user-1")).not.toEqual(
-      queryKeys.access.simulate("org-b", "user-1"),
-    );
-    expect(
-      queryKeys.access.simulationCandidates("org-a", { page: 1, limit: 100 }),
-    ).not.toEqual(
-      queryKeys.access.simulationCandidates("org-b", { page: 1, limit: 100 }),
-    );
-    expect(queryKeys.hr.attendanceStatus("org-a")).not.toEqual(
-      queryKeys.hr.attendanceStatus("org-b"),
-    );
-    expect(queryKeys.notifications.unreadCount("org-a")).not.toEqual(
-      queryKeys.notifications.unreadCount("org-b"),
-    );
+  it("isolates access.me between two people in one organization", () => {
+    const first = createAppQueryClient("authenticated:org-a:user-1");
+    const second = createAppQueryClient("authenticated:org-a:user-2");
+
+    first.setQueryData(queryKeys.access.me(), "user-1 permissions");
+
+    expect(second.getQueryData(queryKeys.access.me())).toBeUndefined();
   });
 });

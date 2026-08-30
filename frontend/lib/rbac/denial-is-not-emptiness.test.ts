@@ -60,6 +60,31 @@ const ROOT = path.join(__dirname, "..", "..");
  * off because they genuinely no longer have the problem.
  */
 const NOT_YET_CONVERTED: readonly string[] = [
+  /*
+    Arrived with main, unconverted.
+
+    The ratchet's job is to stop the count growing unnoticed, not to pretend it
+    is zero — these pages tell a denied user their data is empty exactly as the
+    ones below do, and they are listed so they stay countable until each one's
+    states are wrapped in `<Gated>`.
+  */
+  "app/(authenticated)/settings/roles/simulate/page.tsx",
+  "app/(authenticated)/workflows/[workflowId]/page.tsx",
+  "app/(authenticated)/workflows/executions/page.tsx",
+  "app/(authenticated)/workflows/page.tsx",
+  "app/(authenticated)/workflows/scheduler/page.tsx",
+  "app/(authenticated)/workflows/secrets/page.tsx",
+  "app/(authenticated)/workflows/templates/page.tsx",
+  "app/(authenticated)/workflows/variables/page.tsx",
+  "features/chat/channels-discovery-page.tsx",
+  "features/chat/thread-panel.tsx",
+  "features/hr/cases/cases-page-content.tsx",
+  "features/hr/governance/components/data-requests-tab.tsx",
+  "features/hr/governance/components/delegation-sheet.tsx",
+  "features/hr/governance/components/labor-tabs.tsx",
+  "features/hr/helpdesk/queue-tab.tsx",
+  "features/payroll/inputs/inputs-section-tabs.tsx",
+  "features/settings/organization/organization-settings-page.tsx",
   "app/(authenticated)/build/[projectId]/analytics/page.tsx",
   "app/(authenticated)/build/[projectId]/backlog/page.tsx",
   "app/(authenticated)/build/[projectId]/budget/page.tsx",

@@ -1,12 +1,8 @@
-"use client";
-
-import { use, useEffect, useState, useCallback } from "react";
+import { notFound } from "next/navigation";
+import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
-import { apiClient } from "@/lib/api-client";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { publicGetNoStore, type PublicApplicationStatus } from "@/lib/public-fetch";
 
 type Props = { params: Promise<{ token: string }> };
 
@@ -22,61 +18,10 @@ const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secon
   WITHDRAWN: { label: "Withdrawn", variant: "outline", description: "Your application has been withdrawn." },
 };
 
-interface ApplicationStatus {
-  status: string;
-  appliedAt: string;
-  updatedAt: string;
-  job: { title: string; location: string | null; type: string } | null;
-  candidate: { firstName: string; lastName: string; email: string } | null;
-}
-
-export default function ApplicationStatusPage({ params }: Props) {
-  const { token } = use(params);
-  const [data, setData] = useState<ApplicationStatus | null>(null);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true);
-
-  const fetchStatus = useCallback(async () => {
-    try {
-      const data = await apiClient.get<ApplicationStatus>(`/public/application-status/${token}`);
-      setData(data);
-    } catch (e) {
-      setError(getErrorMessage(e) || "Application not found");
-    } finally {
-      setLoading(false);
-    }
-  }, [token]);
-
-  useEffect(() => { void fetchStatus(); }, [fetchStatus]);
-
-  if (loading) {
-    return (
-      <main className="min-h-dvh bg-background flex items-center justify-center">
-        <div className="text-center text-muted-foreground">
-          <svg className="w-8 mx-auto mb-3 animate-spin opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-          </svg>
-          Loading…
-        </div>
-      </main>
-    );
-  }
-
-  if (error || !data) {
-    return (
-      <main className="min-h-dvh bg-background flex items-center justify-center px-4">
-        <Card className="w-full max-w-md text-center">
-          <CardContent className="py-10">
-            <svg className="h-10 w-10 mx-auto mb-4 text-destructive opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
-            <p className="font-medium">{error || "Application not found"}</p>
-            <p className="text-sm text-muted-foreground mt-1">Please check your tracking link and try again.</p>
-          </CardContent>
-        </Card>
-      </main>
-    );
-  }
+export default async function ApplicationStatusPage({ params }: Props) {
+  const { token } = await params;
+  const data = await publicGetNoStore<PublicApplicationStatus>(`/public/application-status/${token}`);
+  if (!data) return notFound();
 
   const config = STATUS_CONFIG[data.status] ?? { label: data.status, variant: "secondary" as const, description: "" };
 
@@ -120,13 +65,6 @@ export default function ApplicationStatusPage({ params }: Props) {
                 <p className="font-medium">{format(new Date(data.updatedAt), "dd MMM yyyy")}</p>
               </div>
             </div>
-
-            <Button variant="outline" className="w-full" onClick={fetchStatus}>
-              <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16" />
-              </svg>
-              Refresh Status
-            </Button>
           </CardContent>
         </Card>
       </div>

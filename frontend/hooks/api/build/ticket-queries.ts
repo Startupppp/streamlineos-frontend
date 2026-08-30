@@ -10,6 +10,7 @@ import type {
   Ticket,
   TicketLabel,
   PaginatedResponse,
+  CursorPaginatedResponse,
   TicketFilters,
 } from "@/types/projects";
 import { useProjectLabels } from "./projects";
@@ -36,18 +37,18 @@ export function useTickets(
 
 export function useProjectBoardTickets(projectId: number) {
   const canView = useCan("build:tickets:view");
-  const query = useInfiniteQuery<PaginatedResponse<Ticket>>({
+  const query = useInfiniteQuery<CursorPaginatedResponse<Ticket>>({
     queryKey: queryKeys.projects.tickets({ projectId, view: "board" }),
     queryFn: ({ pageParam }) =>
-      apiClient.get<PaginatedResponse<Ticket>>(`/build/${projectId}/tickets`, {
+      apiClient.get<CursorPaginatedResponse<Ticket>>(`/build/${projectId}/tickets`, {
         limit: BOARD_PAGE_SIZE,
-        page: pageParam as number,
+        paging: "cursor",
+        ...(pageParam ? { cursor: pageParam as string } : {}),
         orderBy: "rank",
         orderDir: "asc",
       }),
-    initialPageParam: 1,
-    getNextPageParam: (last) =>
-      last.page < last.totalPages ? last.page + 1 : undefined,
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
     enabled: canView && !!projectId,
     staleTime: 30_000,
     placeholderData: (prev) => prev,

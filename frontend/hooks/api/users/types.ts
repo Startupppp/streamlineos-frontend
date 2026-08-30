@@ -57,14 +57,10 @@ export interface User {
   image: string | null;
   role: string;
   isOwner: boolean;
-  designation: string | null;
   phone: string | null;
-  departmentId: string | null;
-  branchId: string | null;
   isActive: boolean;
   userStatus?: string | null;
   archivedAt?: string | null;
-  reportingTo: string | null;
   team: string | null;
   bio: string | null;
   linkedinUrl: string | null;
@@ -77,6 +73,23 @@ export interface User {
   updatedAt: string;
   lastSeenAt?: string | null;
   teams?: string[];
+}
+
+export interface UpdateUserInput {
+  firstName?: string;
+  lastName?: string;
+  designation?: string;
+  phone?: string;
+  departmentId?: string;
+  role?: string;
+  bio?: string;
+  linkedinUrl?: string;
+  twitterUrl?: string;
+  githubUrl?: string;
+  websiteUrl?: string;
+  reportingTo?: string;
+  teamId?: string | null;
+  emergencyContact?: EmergencyContact | null;
 }
 
 export interface UsersResponse {

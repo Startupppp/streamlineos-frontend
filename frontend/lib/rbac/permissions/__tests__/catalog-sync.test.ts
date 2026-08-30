@@ -4,17 +4,21 @@ import { PERMISSIONS } from "../roles";
 import { MODULE_ACCESS_PERMISSIONS } from "../module-access";
 
 /**
- * The backend is a sibling repository, not a subdirectory.
+ * `backend/` and `frontend/` are siblings inside one checkout, so this walks up
+ * five levels — `__tests__` → `permissions` → `rbac` → `lib` → `frontend` — and
+ * then down into the backend.
  *
- * This resolved to `streamlineos-frontend/backend/...` for the whole of Phase 1
- * — a directory that has never existed — so `backendAvailable` was always false
- * and every cross-repo assertion below returned before asserting anything. The
- * "no phantom keys" test that this file exists to provide was answering nothing.
- * The first test below now fails loudly if that regresses.
+ * It has been wrong twice, in both directions: once resolving to
+ * `streamlineos-frontend/backend/...`, and once to a `streamlineos-backend`
+ * sibling repository. Neither has ever existed here. Each time,
+ * `backendAvailable` was false and all five cross-repo assertions returned
+ * before asserting anything — including the ghost-key check this file exists to
+ * provide. The first test below is the guard against a third time: it fails
+ * loudly rather than letting the suite pass while proving nothing.
  */
 const BACKEND_PERMS_DIR = path.resolve(
   __dirname,
-  "../../../../../../streamlineos-backend/src/modules/rbac/permissions",
+  "../../../../../backend/src/modules/rbac/permissions",
 );
 
 const EXCLUDED_BACKEND_FILES = new Set([

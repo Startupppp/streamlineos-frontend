@@ -8,6 +8,7 @@ import {
 import { render, waitFor, act } from "@testing-library/react";
 import { useCan } from "@/hooks/api/access";
 import { queryKeys } from "@/lib/query-keys";
+import { authenticatedScope, scopedQueryKeyHashFn } from "@/lib/query-scope";
 import type { AccessResponse } from "@/types/access";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
@@ -64,9 +65,25 @@ function GatedControl() {
   return <span data-testid="result">{can ? "granted" : "denied"}</span>;
 }
 
-function makeClient() {
+function makeClient(orgId: string, userId: string) {
   return new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    defaultOptions: {
+      queries: {
+        retry: false,
+        queryKeyHashFn: scopedQueryKeyHashFn(authenticatedScope(orgId, userId)),
+      },
+      mutations: { retry: false },
+    },
+  });
+}
+
+function makeServerClient(orgId: string, userId: string) {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        queryKeyHashFn: scopedQueryKeyHashFn(authenticatedScope(orgId, userId)),
+      },
+    },
   });
 }
 
@@ -86,13 +103,11 @@ describe("access prefetch — acceptance criteria", () => {
   it("1. no post-hydration flash — hydrated snapshot renders the granted control on the first client render", () => {
     stubSession(ORG_A, USER_1);
 
-    // Mirror what prefetchAccess() does on the server
-    const serverQC = new QueryClient();
-    serverQC.setQueryData(queryKeys.access.me(ORG_A, USER_1), makeGranting());
+    const serverQC = makeServerClient(ORG_A, USER_1);
+    serverQC.setQueryData(queryKeys.access.me(), makeGranting());
     const snapshot = dehydrate(serverQC);
 
-    // Client receives that snapshot via HydrationBoundary
-    const clientQC = makeClient();
+    const clientQC = makeClient(ORG_A, USER_1);
 
     const { getByTestId } = render(
       <QueryClientProvider client={clientQC}>
@@ -108,15 +123,13 @@ describe("access prefetch — acceptance criteria", () => {
   });
 
   it("2. org switch — org B cannot read org A hydrated snapshot", () => {
-    // Server prefetched for org A — permission granted there
-    const serverQC = new QueryClient();
-    serverQC.setQueryData(queryKeys.access.me(ORG_A, USER_1), makeGranting());
+    const serverQC = makeServerClient(ORG_A, USER_1);
+    serverQC.setQueryData(queryKeys.access.me(), makeGranting());
     const snapshot = dehydrate(serverQC);
 
-    // Active session is now org B — different query key, no hydrated data
     stubSession(ORG_B, USER_1);
 
-    const clientQC = makeClient();
+    const clientQC = makeClient(ORG_B, USER_1);
 
     const { getByTestId } = render(
       <QueryClientProvider client={clientQC}>
@@ -126,8 +139,8 @@ describe("access prefetch — acceptance criteria", () => {
       </QueryClientProvider>,
     );
 
-    // Org B's key has no cache entry; org A's snapshot must not bleed across
     expect(getByTestId("result")).toHaveTextContent("denied");
+    expect(clientQC.getQueryData(queryKeys.access.me())).toBeUndefined();
   });
 
   it("3. post-invalidation — a newly granted permission appears without a hard reload", async () => {
@@ -136,7 +149,7 @@ describe("access prefetch — acceptance criteria", () => {
     // First fetch: no permission granted
     mockedGet.mockResolvedValueOnce(makeDenying());
 
-    const clientQC = makeClient();
+    const clientQC = makeClient(ORG_A, USER_1);
 
     const { getByTestId } = render(
       <QueryClientProvider client={clientQC}>
@@ -155,7 +168,7 @@ describe("access prefetch — acceptance criteria", () => {
     // Invalidate — exactly as a mutation side-effect would
     await act(async () => {
       await clientQC.invalidateQueries({
-        queryKey: queryKeys.access.me(ORG_A, USER_1),
+        queryKey: queryKeys.access.me(),
       });
     });
 

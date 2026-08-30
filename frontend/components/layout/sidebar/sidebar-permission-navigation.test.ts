@@ -9,6 +9,12 @@ import {
   resolveNavRouteAccess,
   type NavRoute,
 } from "./sidebar-nav-items";
+import { collectAppRoutes } from "@/lib/rbac/route-access/app-routes";
+import { resolveRouteAccess } from "@/lib/rbac/route-access/route-access";
+
+const HR_ROUTE_PATHS = collectAppRoutes("(authenticated)")
+  .map((route) => route.path)
+  .filter((path) => path === "/hr" || path.startsWith("/hr/"));
 
 const ACCESS_ONLY_CASES = [
   ["hrms", "hr:access:view", "/hr/access"],
@@ -287,9 +293,20 @@ describe("permission-aware product navigation", () => {
     );
     const source = readFileSync(layoutPath, "utf8");
 
-    expect(source).toContain("resolveNavRouteAccess(pathname)");
-    expect(source).toContain("requireModulePermission(\"hr\"");
-    expect(source).toContain("if (!routeAccess.matched)");
+    expect(source).toContain("enforceRouteAccess");
+    expect(source).not.toContain("getServerAuth");
+    expect(source).not.toContain("session?.user?.role");
+  });
+
+  it("resolves every HR route through the shared registry rather than a bespoke gate", () => {
+    const undecided = HR_ROUTE_PATHS.filter(
+      (pathname) => resolveRouteAccess(pathname).kind === "unknown",
+    );
+    expect(undecided).toEqual([]);
+  });
+
+  it("denies an HR path the registry does not know", () => {
+    expect(resolveRouteAccess("/hr/not-a-real-hr-surface").kind).toBe("unknown");
   });
 
   it("gates the employee onboarding route by module and self-service permission", () => {

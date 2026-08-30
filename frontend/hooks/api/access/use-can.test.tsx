@@ -33,7 +33,7 @@ const GRANTED_SNAPSHOT: AccessResponse = {
 
 function makeHydratedState() {
   const seed = new QueryClient();
-  seed.setQueryData(queryKeys.access.me(ORG_ID, USER_ID), GRANTED_SNAPSHOT);
+  seed.setQueryData(queryKeys.access.me(), GRANTED_SNAPSHOT);
   return dehydrate(seed);
 }
 

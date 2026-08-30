@@ -13,7 +13,7 @@ import type { Channel, MessageMetadata } from "@/types/chat";
 import { getForwardedDisplay } from "./chat-helpers";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
-interface ForwardableMessage {
+export interface ForwardableMessage {
   content: string | null;
   metadata?: MessageMetadata | null;
   attachments?: {

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Lock, Pencil } from "lucide-react";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -19,9 +20,7 @@ interface CustomFieldsDataTableProps {
 }
 
 const emptyState = (
-  <div className="flex flex-col items-center justify-center py-12 text-center">
-    <p className="text-sm text-muted-foreground">No custom fields for this entity type yet.</p>
-  </div>
+  <EmptyState className="border-0 bg-transparent min-h-[40vh]" title="No custom fields for this entity type yet." />
 );
 
 function getRowKey(row: HrCustomFieldDefinition) {

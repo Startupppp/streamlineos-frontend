@@ -1,7 +1,5 @@
-"use client";
-
 import { HrIntegrationsSettings } from "@/features/hr/settings/hr-integrations/hr-integrations-settings";
 
-export default function HrIntegrationsPage() {
+export default async function HrIntegrationsPage() {
   return <HrIntegrationsSettings />;
 }

@@ -37,7 +37,8 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button";
 import { ShieldAlert } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
-import { StateIllustration } from "@/components/illustrations";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { useCan } from "@/hooks/api/access";
 import { isApiError } from "@/lib/api-client";
 import {
@@ -75,7 +76,7 @@ export function DataRequestsTab() {
   const [page, setPage] = useState(1);
   const [processError, setProcessError] = useState<string | null>(null);
 
-  const { data, isLoading, isError } = useDataRequests({ page, limit: 20 });
+  const { data, isLoading, isError, refetch } = useDataRequests({ page, limit: 20 });
   const { data: membersData } = useOrgMembers(1, 200);
   const createRequest = useCreateDataRequest();
   const approveRequest = useApproveDataRequest();
@@ -187,14 +188,8 @@ export function DataRequestsTab() {
     );
   }
 
-  if (isError) {
-    return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 py-16 text-center">
-        <StateIllustration preset="security" className="h-24 w-24" />
-        <p className="text-sm text-muted-foreground">Failed to load data requests.</p>
-      </div>
-    );
-  }
+  if (isError)
+    return <ErrorState title="Failed to load data requests" description="Something went wrong while loading data requests." onRetry={() => void refetch()} className="flex-1" />;
 
   return (
     <>
@@ -222,19 +217,13 @@ export function DataRequestsTab() {
         data={data?.data ?? []}
         getRowKey={(row) => row.id}
         emptyState={
-          <div className="flex flex-col items-center justify-center gap-3 py-12">
-            <StateIllustration preset="documents" className="h-28 w-28" />
-            <div className="text-center space-y-1">
-              <p className="text-sm font-medium text-foreground">No data requests</p>
-              <p className="text-xs text-muted-foreground">Submit GDPR-style export, anonymization, or deletion requests for employees.</p>
-            </div>
-            {canManage && (
-              <Button onClick={handleOpenSheet} size="sm" className="mt-1 bg-primary hover:bg-primary/90 text-primary-foreground">
-                <PlusIcon size={16} className="mr-1.5" />
-                New Request
-              </Button>
-            )}
-          </div>
+          <EmptyState
+            className="border-0 bg-transparent min-h-[40vh]"
+            illustrationPreset="documents"
+            title="No data requests"
+            description="Submit GDPR-style export, anonymization, or deletion requests for employees."
+            action={canManage ? { label: "New Request", onClick: handleOpenSheet } : undefined}
+          />
         }
         pagination={{ mode: "server", page, pageSize: 20, total: data?.total ?? 0, onPageChange: setPage }}
       />

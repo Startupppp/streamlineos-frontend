@@ -45,34 +45,19 @@ import {
   TeamAttendanceWidget,
   PendingApprovalsWidget,
   BirthdaysWidget,
-  LeaveBalanceWidget,
   UpcomingHolidaysWidget,
 } from "@/features/dashboard/hr-widgets";
 import { PublicDocumentsCard } from "@/features/dashboard/public-documents-card";
-import { MyAttendanceWidget } from "@/features/dashboard/my-attendance-widget";
-import { PayrollWidget } from "@/features/dashboard/payroll-widget";
-import { ExpensesWidget } from "@/features/dashboard/expenses-widget";
-import { RecruitmentWidget } from "@/features/dashboard/recruitment-widget";
-import { AlertsWidget } from "@/features/dashboard/alerts-widget";
-import { MyTasksWidget } from "@/components/dashboard/my-tasks-widget";
-import { TimesheetWidget } from "@/components/dashboard/timesheet-widget";
-import { AnnouncementsWidget } from "@/components/dashboard/announcements-widget";
-import { UpcomingEventsWidget } from "@/components/dashboard/upcoming-events-widget";
 import { shouldRenderDashboardLoading } from "./dashboard-hydration";
 import { DeferredDashboardContent } from "./deferred-dashboard-content";
+import { HomeSectionBoundary } from "./home-section-boundary";
+import { HomeWidgetGrid } from "./home-widget-grid";
+import { useHomeCacheSync } from "./use-home-cache-sync";
 
 const ExecutiveKpiWidget = dynamic(
   () =>
     import("@/components/dashboard/executive-kpi-widget").then((m) => ({
       default: m.ExecutiveKpiWidget,
-    })),
-  { loading: () => <WidgetSkeleton rows={2} /> },
-);
-
-const BusinessPulseWidget = dynamic(
-  () =>
-    import("@/components/dashboard/project-health-widget").then((m) => ({
-      default: m.BusinessPulseWidget,
     })),
   { loading: () => <WidgetSkeleton rows={2} /> },
 );
@@ -83,6 +68,7 @@ export function DashboardClient() {
   const currentUserId = session?.user?.id;
   const firstName = getFirstName(session);
   const access = useDashboardAccess();
+  useHomeCacheSync();
   const {
     hrEnabled,
     crmEnabled,
@@ -364,24 +350,12 @@ export function DashboardClient() {
           }
         >
           <>
-            <motion.div
-              variants={fadeUp}
-              initial="hidden"
-              animate="visible"
-              className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
-            >
-              {projectsEnabled && <MyTasksWidget />}
-              {projectsEnabled && <TimesheetWidget />}
-              {hrEnabled && <LeaveBalanceWidget />}
-              <AlertsWidget />
-              <AnnouncementsWidget />
-              <UpcomingEventsWidget />
-              {canViewExecutive && <BusinessPulseWidget />}
-              {hrEnabled && canSelfAttendance && <MyAttendanceWidget />}
-              <PayrollWidget />
-              <ExpensesWidget />
-              <RecruitmentWidget />
-            </motion.div>
+            <HomeWidgetGrid
+              projectsEnabled={projectsEnabled}
+              hrEnabled={hrEnabled}
+              canViewExecutive={canViewExecutive}
+              canSelfAttendance={canSelfAttendance}
+            />
 
         {showHrTeamRow && (
           <motion.div
@@ -390,14 +364,16 @@ export function DashboardClient() {
             animate="visible"
             className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
           >
-            {canViewLeaves && <LeavesTodayWidget />}
+            {canViewLeaves && <HomeSectionBoundary sectionLabel="Who is out today"><LeavesTodayWidget /></HomeSectionBoundary>}
             {canViewAttendance && (
-              <TeamAttendanceWidget
-                data={teamAttendance}
-                isLoading={teamLoading}
-              />
+              <HomeSectionBoundary sectionLabel="Team attendance">
+                <TeamAttendanceWidget
+                  data={teamAttendance}
+                  isLoading={teamLoading}
+                />
+              </HomeSectionBoundary>
             )}
-            {canApproveLeaves && <PendingApprovalsWidget />}
+            {canApproveLeaves && <HomeSectionBoundary sectionLabel="Pending approvals"><PendingApprovalsWidget /></HomeSectionBoundary>}
           </motion.div>
         )}
 
@@ -408,14 +384,14 @@ export function DashboardClient() {
             animate="visible"
             className="grid grid-cols-1 gap-4 md:grid-cols-2"
           >
-            <BirthdaysWidget />
-            <UpcomingHolidaysWidget />
+            <HomeSectionBoundary sectionLabel="Birthdays"><BirthdaysWidget /></HomeSectionBoundary>
+            <HomeSectionBoundary sectionLabel="Upcoming holidays"><UpcomingHolidaysWidget /></HomeSectionBoundary>
           </motion.div>
         )}
 
         {showDocumentsCard && (
           <motion.div variants={fadeUp} initial="hidden" animate="visible">
-            <PublicDocumentsCard />
+            <HomeSectionBoundary sectionLabel="Company documents"><PublicDocumentsCard /></HomeSectionBoundary>
           </motion.div>
         )}
 
@@ -427,20 +403,24 @@ export function DashboardClient() {
             className="grid grid-cols-1 gap-4 md:auto-rows-[22rem] lg:grid-cols-7"
           >
             <div className="min-h-0 lg:col-span-4">
-              <MyIssuesCard
-                tickets={sortedMyTickets}
-                isLoading={ticketsLoading}
-                error={ticketsError}
-                onRetry={handleRetryTickets}
-              />
+              <HomeSectionBoundary sectionLabel="My issues">
+                <MyIssuesCard
+                  tickets={sortedMyTickets}
+                  isLoading={ticketsLoading}
+                  error={ticketsError}
+                  onRetry={handleRetryTickets}
+                />
+              </HomeSectionBoundary>
             </div>
             <div className="min-h-0 lg:col-span-3">
-              <SprintCard
-                summary={sprintSummary ?? undefined}
-                isLoading={sprintLoading}
-                error={sprintError}
-                onRetry={handleRetrySprint}
-              />
+              <HomeSectionBoundary sectionLabel="Active sprint">
+                <SprintCard
+                  summary={sprintSummary ?? undefined}
+                  isLoading={sprintLoading}
+                  error={sprintError}
+                  onRetry={handleRetrySprint}
+                />
+              </HomeSectionBoundary>
             </div>
           </motion.div>
         )}
@@ -454,31 +434,37 @@ export function DashboardClient() {
           >
             {projectsEnabled && canViewTickets && (
               <div className="min-h-0">
+                <HomeSectionBoundary sectionLabel="Recent projects">
                 <RecentProjectsCard
-                  projects={recentProjects?.map((p) => ({
-                    ...p,
-                    key: p.key ?? "",
-                  }))}
-                  isLoading={projectsLoading}
-                  error={projectsError}
-                  onCreateProject={handleGoToProjects}
-                  onRetry={handleRetryProjects}
-                />
+                    projects={recentProjects?.map((p) => ({
+                      ...p,
+                      key: p.key ?? "",
+                    }))}
+                    isLoading={projectsLoading}
+                    error={projectsError}
+                    onCreateProject={handleGoToProjects}
+                    onRetry={handleRetryProjects}
+                  />
+                </HomeSectionBoundary>
               </div>
             )}
             {projectsEnabled && canViewTickets && (
               <div className="min-h-0">
+                <HomeSectionBoundary sectionLabel="Recent activity">
                 <RecentActivityCard
-                  items={recentActivity}
-                  isLoading={activityLoading}
-                  error={activityError}
-                  onRetry={handleRetryActivity}
-                />
+                    items={recentActivity}
+                    isLoading={activityLoading}
+                    error={activityError}
+                    onRetry={handleRetryActivity}
+                  />
+                </HomeSectionBoundary>
               </div>
             )}
             {hrEnabled && canViewAttendance && (
               <div className="min-h-0">
-                <TeamCard members={teamAvailability} isLoading={teamLoading} />
+                <HomeSectionBoundary sectionLabel="Team availability">
+                  <TeamCard members={teamAvailability} isLoading={teamLoading} />
+                </HomeSectionBoundary>
               </div>
             )}
           </motion.div>

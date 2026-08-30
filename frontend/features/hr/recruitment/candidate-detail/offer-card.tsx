@@ -11,6 +11,7 @@ import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { CheckIcon, SendIcon, TrashIcon, XIcon } from "@animateicons/react/lucide";
 import type { CandidateOffer } from "@/hooks/api/hr/recruitment";
 import { format } from "date-fns";
+import { formatINR } from "@/lib/format-utils";
 
 export const STATUS_CONFIG: Record<CandidateOffer["offerStatus"], { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
   DRAFT: { label: "Draft", variant: "secondary" },
@@ -27,11 +28,6 @@ export const STATUS_CONFIG: Record<CandidateOffer["offerStatus"], { label: strin
 export const UPDATABLE_STATUSES: CandidateOffer["offerStatus"][] = [
   "DRAFT", "SENT", "VIEWED", "ACCEPTED", "DECLINED", "COUNTERED", "EXPIRED",
 ];
-
-export function formatINR(val: string | null) {
-  if (!val) return "—";
-  return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Number(val));
-}
 
 interface OfferCardProps {
   offer: CandidateOffer;
@@ -94,7 +90,7 @@ export function OfferCard({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs mb-3">
           <div>
             <p className="text-muted-foreground">Salary</p>
-            <p className="font-medium">{formatINR(offer.offeredSalary)}</p>
+            <p className="font-medium">{offer.offeredSalary ? formatINR(offer.offeredSalary) : "—"}</p>
           </div>
           <div>
             <p className="text-muted-foreground">Joining Date</p>

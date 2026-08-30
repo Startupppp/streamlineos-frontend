@@ -35,7 +35,8 @@ import {
 } from "@/components/ui/select";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { PlusIcon } from "@animateicons/react/lucide";
-import { StateIllustration } from "@/components/illustrations";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { useCan } from "@/hooks/api/access";
 import {
   useRetentionPolicies,
@@ -58,7 +59,7 @@ export function RetentionPoliciesTab() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [page, setPage] = useState(1);
 
-  const { data, isLoading, isError } = useRetentionPolicies({ page, limit: 20 });
+  const { data, isLoading, isError, refetch } = useRetentionPolicies({ page, limit: 20 });
   const createPolicy = useCreateRetentionPolicy();
   const deletePolicy = useDeleteRetentionPolicy();
 
@@ -140,14 +141,8 @@ export function RetentionPoliciesTab() {
     );
   }
 
-  if (isError) {
-    return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 py-16 text-center">
-        <StateIllustration preset="security" className="h-24 w-24" />
-        <p className="text-sm text-muted-foreground">Failed to load retention policies.</p>
-      </div>
-    );
-  }
+  if (isError)
+    return <ErrorState title="Failed to load retention policies" description="Something went wrong while loading retention policies." onRetry={() => void refetch()} className="flex-1" />;
 
   return (
     <>
@@ -166,19 +161,13 @@ export function RetentionPoliciesTab() {
         data={data?.data ?? []}
         getRowKey={(row) => row.id}
         emptyState={
-          <div className="flex flex-col items-center justify-center gap-3 py-12">
-            <StateIllustration preset="security" className="h-28 w-28" />
-            <div className="text-center space-y-1">
-              <p className="text-sm font-medium text-foreground">No retention policies configured</p>
-              <p className="text-xs text-muted-foreground">Define how long each record type is kept and what happens at expiry.</p>
-            </div>
-            {canManage && (
-              <Button onClick={handleOpenSheet} size="sm" className="mt-1 bg-primary hover:bg-primary/90 text-primary-foreground">
-                <PlusIcon size={16} className="mr-1.5" />
-                Add Policy
-              </Button>
-            )}
-          </div>
+          <EmptyState
+            className="border-0 bg-transparent min-h-[40vh]"
+            illustrationPreset="security"
+            title="No retention policies configured"
+            description="Define how long each record type is kept and what happens at expiry."
+            action={canManage ? { label: "Add Policy", onClick: handleOpenSheet } : undefined}
+          />
         }
         pagination={{ mode: "server", page, pageSize: 20, total: data?.total ?? 0, onPageChange: setPage }}
       />

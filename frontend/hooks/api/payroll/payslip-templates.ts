@@ -1,9 +1,10 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { PayslipTemplate, PayslipLayout, PayslipTemplateConfig } from "@/types/payroll";
 
 export function usePayslipTemplates() {
@@ -17,11 +18,11 @@ export function usePayslipTemplates() {
 }
 
 export function usePreviewPayslipTemplate() {
-  return useMutation<
+  return useAuthorizedMutation<
     { html: string },
     Error,
     { layout: PayslipLayout; config: PayslipTemplateConfig }
-  >({
+  >("payroll:payslips:manage", {
     mutationKey: ["payroll", "preview-template"],
     mutationFn: (body) =>
       apiClient.post<{ html: string }>("/payroll/payslip-templates/preview", body),
@@ -30,7 +31,7 @@ export function usePreviewPayslipTemplate() {
 
 export function useCreatePayslipTemplate() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     PayslipTemplate,
     Error,
     {
@@ -39,7 +40,7 @@ export function useCreatePayslipTemplate() {
       config: PayslipTemplateConfig;
       isDefault?: boolean;
     }
-  >({
+  >("payroll:payslips:manage", {
     mutationKey: ["payroll", "create-template"],
     mutationFn: (body) =>
       apiClient.post<PayslipTemplate>("/payroll/payslip-templates", body),
@@ -51,7 +52,7 @@ export function useCreatePayslipTemplate() {
 
 export function useUpdatePayslipTemplate() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     PayslipTemplate,
     Error,
     {
@@ -61,7 +62,7 @@ export function useUpdatePayslipTemplate() {
       config?: Partial<PayslipTemplateConfig>;
       isDefault?: boolean;
     }
-  >({
+  >("payroll:payslips:manage", {
     mutationKey: ["payroll", "update-template"],
     mutationFn: ({ templateId, ...body }) =>
       apiClient.patch<PayslipTemplate>(`/payroll/payslip-templates/${templateId}`, body),
@@ -73,7 +74,7 @@ export function useUpdatePayslipTemplate() {
 
 export function useDeletePayslipTemplate() {
   const qc = useQueryClient();
-  return useMutation<void, Error, { templateId: number }>({
+  return useAuthorizedMutation<void, Error, { templateId: number }>("payroll:payslips:manage", {
     mutationKey: ["payroll", "delete-template"],
     mutationFn: ({ templateId }) =>
       apiClient.delete<void>(`/payroll/payslip-templates/${templateId}`),

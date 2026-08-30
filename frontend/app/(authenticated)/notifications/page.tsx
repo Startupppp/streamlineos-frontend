@@ -46,7 +46,7 @@ import type { Notification } from "@/types/notifications";
 function DeselectAllButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <button type="button" onClick={onClick} className="ml-auto text-muted-foreground hover:text-foreground" {...hoverHandlers}>
+    <button type="button" aria-label="Deselect all" onClick={onClick} className="ml-auto text-muted-foreground hover:text-foreground" {...hoverHandlers}>
       <XIcon ref={iconRef} size={12} />
     </button>
   );

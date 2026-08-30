@@ -66,6 +66,18 @@ jobs:
       - name: Type Check
         run: pnpm typecheck
 
+      - name: Placement Bypass Guard Self-Test
+        run: pnpm check:placement-bypass:self-test
+
+      - name: Placement Bypass Guard
+        run: pnpm check:placement-bypass
+
+      - name: Owner Authority Guard Self-Test
+        run: pnpm check:owner-authority:self-test
+
+      - name: Owner Authority Guard
+        run: pnpm check:owner-authority
+
       - name: Unit Tests
         run: pnpm test -- --runInBand
 

@@ -27,6 +27,10 @@ import { getServerAuth } from "@/lib/get-server-auth";
 import { serverGet } from "@/lib/server-fetch";
 import { prefetchAccess } from "./access";
 import { prefetchRoles } from "./roles";
+import { prefetchWorkers } from "./directory";
+import { prefetchHrDocuments, prefetchHrAssets } from "./hr";
+import { prefetchPayrollRuns } from "./payroll";
+import { workersListKey } from "@/lib/query-keys/directory-workers-list";
 
 const ORG = "org-a";
 const USER = "user-1";
@@ -39,7 +43,7 @@ function serverClient(scope: string) {
 }
 
 describe("server prefetch → client cache", () => {
-  const key = queryKeys.access.me(ORG, USER);
+  const key = queryKeys.access.me();
 
   it("a snapshot dehydrated with the request's scope is readable by the app's client", () => {
     const scope = authenticatedScope(ORG, USER);
@@ -111,7 +115,7 @@ describe("the shipped prefetch factories honour that contract", () => {
     const app = createAppQueryClient(authenticatedScope(ORG, USER));
     hydrate(app, state);
 
-    expect(app.getQueryData(queryKeys.access.me(ORG, USER))).toEqual(PAYLOAD);
+    expect(app.getQueryData(queryKeys.access.me())).toEqual(PAYLOAD);
   });
 
   it("prefetchRoles dehydrates a page the app can actually read", async () => {
@@ -135,8 +139,69 @@ describe("the shipped prefetch factories honour that contract", () => {
     const app = createAppQueryClient(authenticatedScope(ORG, USER));
     hydrate(app, state);
 
-    expect(app.getQueryData(queryKeys.access.me(ORG, USER))).toBeUndefined();
+    expect(app.getQueryData(queryKeys.access.me())).toBeUndefined();
     expect(state.queries).toHaveLength(0);
+  });
+
+  it("prefetchWorkers dehydrates a page the app can actually read", async () => {
+    const page = {
+      data: [{ id: "worker-1", name: "Alice" }],
+      total: 1,
+      page: 1,
+      limit: 20,
+    };
+    (serverGet as jest.Mock).mockResolvedValue(page);
+
+    const state = await prefetchWorkers();
+    const app = createAppQueryClient(authenticatedScope(ORG, USER));
+    hydrate(app, state);
+
+    expect(app.getQueryData(workersListKey())).toEqual(page);
+  });
+
+  it("prefetchHrDocuments dehydrates data the app can actually read", async () => {
+    const response = {
+      data: [{ id: 1, name: "Offer Letter" }],
+      pageInfo: { limit: 20, hasMore: false, nextCursor: null },
+    };
+    (serverGet as jest.Mock).mockResolvedValue(response);
+
+    const state = await prefetchHrDocuments();
+    const app = createAppQueryClient(authenticatedScope(ORG, USER));
+    hydrate(app, state);
+
+    expect(app.getQueryData(queryKeys.hr.documents({ limit: 20 }))).toEqual(response);
+  });
+
+  it("prefetchHrAssets dehydrates data the app can actually read", async () => {
+    const response = {
+      data: [{ id: 1, name: "Laptop" }],
+      counts: { total: 1, available: 0, assigned: 1, maintenance: 0, retired: 0 },
+      pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
+    };
+    (serverGet as jest.Mock).mockResolvedValue(response);
+
+    const state = await prefetchHrAssets();
+    const app = createAppQueryClient(authenticatedScope(ORG, USER));
+    hydrate(app, state);
+
+    expect(app.getQueryData(queryKeys.hr.assets({ page: 1, limit: 20 }))).toEqual(response);
+  });
+
+  it("prefetchPayrollRuns dehydrates data the app can actually read", async () => {
+    const response = {
+      data: [{ id: 1, status: "completed" }],
+      total: 1,
+      page: 1,
+      limit: 20,
+    };
+    (serverGet as jest.Mock).mockResolvedValue(response);
+
+    const state = await prefetchPayrollRuns();
+    const app = createAppQueryClient(authenticatedScope(ORG, USER));
+    hydrate(app, state);
+
+    expect(app.getQueryData(queryKeys.payroll.runs({ page: 1, limit: 20 }))).toEqual(response);
   });
 });
 

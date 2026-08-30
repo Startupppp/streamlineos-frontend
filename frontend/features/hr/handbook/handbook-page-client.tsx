@@ -20,6 +20,7 @@ import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { toast } from "sonner";
 import { Plus, AlertTriangle, RefreshCw } from "lucide-react";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
+import { EmptyState } from "@/components/ui/empty-state";
 import { HandbookVersionCard } from "@/features/hr/handbook/handbook-version-card";
 import { FilterPill, FilterPillGroup } from "@/components/ui/filter-pill";
 import {
@@ -390,27 +391,13 @@ export function HandbookPageClient() {
         </div>
 
         {!filteredVersions.length ? (
-          <div className="flex-1 rounded-2xl border border-border/70 bg-card/90 shadow-sm overflow-hidden">
-            <div className="py-14 flex flex-col items-center justify-center gap-3">
-              <EmptyDocumentsIllustration className="h-36 w-36 opacity-95" />
-              <div className="text-center space-y-1">
-                <p className="text-sm font-medium text-foreground">
-                  {isFiltered ? "No versions match your filters" : "No handbook versions yet"}
-                </p>
-                {!isFiltered && (
-                  <p className="text-xs text-muted-foreground">
-                    Create your first handbook version to get started.
-                  </p>
-                )}
-              </div>
-              {!isFiltered && (
-                <Button variant="outline" size="sm" className="gap-1.5 mt-1" onClick={handleNewVersionClick}>
-                  <Plus className="h-3.5 w-3.5" />
-                  New Version
-                </Button>
-              )}
-            </div>
-          </div>
+          <EmptyState
+            className="flex-1"
+            illustration={<EmptyDocumentsIllustration className="h-36 w-36 opacity-95" />}
+            title={isFiltered ? "No versions match your filters" : "No handbook versions yet"}
+            description={!isFiltered ? "Create your first handbook version to get started." : undefined}
+            action={!isFiltered ? { label: "New Version", onClick: handleNewVersionClick } : undefined}
+          />
         ) : (
           <div className="space-y-2">
             {filteredVersions.map((v) => (

@@ -1,5 +1,3 @@
-"use client";
-
 import { motion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -7,7 +5,7 @@ import { InternalReferralsTab } from "@/features/hr/recruitment/referrals/intern
 import { ExternalReferralsTab } from "@/features/hr/recruitment/referrals/external-referrals-tab";
 import { InviteReferrersSheet } from "@/features/hr/recruitment/referrals/invite-referrers-sheet";
 
-export default function ReferralsHRPage() {
+export default async function ReferralsHRPage() {
   return (
     <PageWrapper
       title="Referrals"

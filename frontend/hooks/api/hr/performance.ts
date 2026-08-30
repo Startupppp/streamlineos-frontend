@@ -60,7 +60,7 @@ export function useCreatePerformanceReview() {
     mutationFn: (data: CreatePerformanceReviewInput) =>
       apiClient.post<PerformanceReview>("/hr/performance/reviews", data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.performanceReviews() });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.performanceReviewsAll });
       qc.invalidateQueries({ queryKey: queryKeys.hr.reviewCycles() });
     },
   });
@@ -72,7 +72,7 @@ export function useUpdatePerformanceReview() {
     mutationKey: ["hr", "performance", "reviews", "update"],
     mutationFn: ({ id, ...data }: UpdatePerformanceReviewInput & { id: number; periodStart?: string; periodEnd?: string; cycleId?: number }) =>
       apiClient.patch<{ success: boolean }>(`/hr/performance/reviews/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.performanceReviews() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.performanceReviewsAll }),
   });
 }
 
@@ -82,7 +82,7 @@ export function useDeletePerformanceReview() {
     mutationKey: ["hr", "performance", "reviews", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/performance/reviews/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.performanceReviews() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.performanceReviewsAll }),
   });
 }
 

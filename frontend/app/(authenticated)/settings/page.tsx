@@ -1,11 +1,11 @@
-"use client";
-
+import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SettingsProfile } from "@/features/settings/settings-profile";
 import { SettingsSecurity } from "@/features/settings/settings-security";
 import { MfaSettings } from "@/components/settings/mfa-settings";
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  await enforceRouteAccess("/settings");
   return (
     <PageWrapper
       title="Account Settings"

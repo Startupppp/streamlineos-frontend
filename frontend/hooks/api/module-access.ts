@@ -375,6 +375,7 @@ export function useTransferModuleOwnership(moduleKey: string) {
       apiClient.post<{ success: true }>(
         `/module-access/${moduleKey}/ownership/transfer`,
         body,
+        { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({
@@ -391,6 +392,8 @@ export function useCancelModuleOwnershipTransfer(moduleKey: string) {
     mutationFn: () =>
       apiClient.delete<{ success: true }>(
         `/module-access/${moduleKey}/ownership/transfer`,
+        undefined,
+        { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({

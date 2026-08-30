@@ -3,5 +3,5 @@ const CHUNK_PATTERN =
 
 export function isChunkLoadError(error: unknown): boolean {
   if (!(error instanceof Error)) return false;
-  return CHUNK_PATTERN.test(error.message);
+  return CHUNK_PATTERN.test(error.message) || CHUNK_PATTERN.test(error.name);
 }

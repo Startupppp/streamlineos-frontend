@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { statusToneClasses } from "@/lib/design-tokens";
-import { DEFAULT_MONEY_DISPLAY, formatMoney, type MoneyDisplay } from "@/lib/format-utils";
+import { DEFAULT_MONEY_DISPLAY, formatMoney, formatPercent, type MoneyDisplay } from "@/lib/format-utils";
 import {
   DEFAULT_BOOLEAN_OPTIONS,
   fieldByName,
@@ -63,7 +63,7 @@ function formatPercentField(value: unknown, display: MoneyDisplay): string {
   if (!text) return "";
   const amount = Number(text);
   if (!Number.isFinite(amount)) return text;
-  return `${new Intl.NumberFormat(display.locale, { maximumFractionDigits: 1 }).format(amount)}%`;
+  return formatPercent(amount, display.locale);
 }
 
 /** A moment, not a day — a task due at 4pm is not a task due on Tuesday. */

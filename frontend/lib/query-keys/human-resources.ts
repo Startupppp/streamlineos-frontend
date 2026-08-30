@@ -3,16 +3,14 @@ import { queryKeyBase as base } from "./base";
 export const humanResourcesQueryKeys = {
   hr: {
     all: [...base, "hr"] as const,
-    hub: (orgId: string, userId: string, today: string) =>
-      [...base, "hr", orgId, userId, "hub", today] as const,
+    hub: (today: string) => [...base, "hr", "hub", today] as const,
     departments: () => [...base, "hr", "departments"] as const,
     legacyDepartments: () => [...base, "hr", "departments", "legacy"] as const,
     employees: (params?: Record<string, unknown>) =>
       [...base, "hr", "employees", params] as const,
     employee: (employeeUserId: string) =>
       [...base, "hr", "employees", employeeUserId] as const,
-    attendanceStatus: (orgId: string | null | undefined = "") =>
-      [...base, "hr", orgId, "attendanceStatus"] as const,
+    attendanceStatus: () => [...base, "hr", "attendanceStatus"] as const,
     attendanceLogs: (params?: Record<string, unknown>) =>
       [...base, "hr", "attendanceLogs", params] as const,
     attendanceHistory: (params: { page: number; limit: number }) =>
@@ -34,8 +32,9 @@ export const humanResourcesQueryKeys = {
     documents: (params?: Record<string, unknown>) =>
       [...base, "hr", "documents", params] as const,
     documentsAll: [...base, "hr", "documents"] as const,
-    performanceReviews: (userId?: string) =>
-      [...base, "hr", "performanceReviews", userId] as const,
+    performanceReviews: (params?: Record<string, unknown>) =>
+      [...base, "hr", "performanceReviews", params] as const,
+    performanceReviewsAll: [...base, "hr", "performanceReviews"] as const,
     goals: (userId?: string) => [...base, "hr", "goals", userId] as const,
     workLogs: (params?: Record<string, unknown>) =>
       [...base, "hr", "workLogs", params] as const,

@@ -13,18 +13,14 @@ import {
   useSupplierDelayBriefing,
   type SupplierDelayVendor,
 } from "@/hooks/api/inv-ai-explain";
+import { formatCurrencyFull } from "@/lib/format-utils";
 
 function formatPercent(value: number): string {
   return `${(value * 100).toFixed(1)}%`;
 }
 
 function formatCurrency(cents: number): string {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(cents / 100);
+  return formatCurrencyFull(cents / 100, "INR", "en-IN", 0);
 }
 
 interface VendorMetricProps {

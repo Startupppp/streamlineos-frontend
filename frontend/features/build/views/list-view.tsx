@@ -34,6 +34,7 @@ import { compareByRank, computeOptimisticRank } from "./kanban-board-utils";
 import { ListViewItem } from "./list-view-item";
 import { InlineGroupCreate } from "./list-view-group-create";
 import { OuterGroupHeader, NestedGroup, DroppableGroup } from "./list-view-group";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export const ListView = memo(function ListView({
   tickets,
@@ -243,7 +244,7 @@ export const ListView = memo(function ListView({
           })}
         </Accordion>
         {tickets.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground text-sm">No work items found</div>
+          <EmptyState title="No work items" compact className="py-12" />
         )}
       </div>
     );
@@ -291,7 +292,7 @@ export const ListView = memo(function ListView({
             ))}
           </Accordion>
           {optimisticTickets.length === 0 && (
-            <div className="text-center py-12 text-muted-foreground text-sm">No work items found</div>
+            <EmptyState title="No work items" compact className="py-12" />
           )}
         </div>
       </DragDropContext>

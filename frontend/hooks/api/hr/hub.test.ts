@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
+import { scopedQueryKeyHashFn, authenticatedScope } from "@/lib/query-scope";
 import { useHrHubSnapshot, type HrHubSnapshot } from "./hub";
 
 jest.mock("@tanstack/react-query", () => ({
@@ -48,11 +49,14 @@ describe("useHrHubSnapshot", () => {
     expect(queryOptions.queryKey).toEqual([
       "streamlineos",
       "hr",
-      "org-1",
-      "user-1",
       "hub",
       "2026-08-18",
     ]);
+    expect(
+      scopedQueryKeyHashFn(authenticatedScope("org-1", "user-1"))(queryOptions.queryKey),
+    ).not.toBe(
+      scopedQueryKeyHashFn(authenticatedScope("org-2", "user-1"))(queryOptions.queryKey),
+    );
     expect(queryOptions.enabled).toBe(true);
 
     await expect(queryOptions.queryFn()).resolves.toBe(response);

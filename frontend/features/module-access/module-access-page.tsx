@@ -59,6 +59,15 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
   );
   const handleOpenCreateGroup = useCallback(() => setCreateGroupOpen(true), []);
   const handleOpenAddMember = useCallback(() => setAddMemberOpen(true), []);
+  /*
+    Ownership is the module owner's, and nobody else's.
+
+    Org owner and org admin were included here, which put the tab in front of two
+    roles that cannot act on it: module ownership is standing, and `CLAUDE.md` §5
+    is explicit that no org-level grant creates it. Showing the surface to
+    somebody whose every action on it will be refused is worse than hiding it —
+    it advertises an authority that does not exist.
+  */
   const canViewOwnership = isModuleOwner;
   const visibleTab = tab === "ownership" && !canViewOwnership ? "roles" : tab;
 
@@ -136,9 +145,9 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
             />
           </TabsContent>
 
-          {isModuleOwner ? (
+          {canViewOwnership ? (
             <TabsContent value="ownership" className={TAB_PANEL_CLASS}>
-              <OwnershipSection moduleKey={moduleKey} canManage />
+              <OwnershipSection moduleKey={moduleKey} canManage={canViewOwnership} />
             </TabsContent>
           ) : null}
         </div>

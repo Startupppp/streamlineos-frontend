@@ -193,38 +193,34 @@ export function InboxList({
         )}
 
         {!isLoading && isError && (
-          <div className="flex min-h-full flex-1 flex-col items-center justify-center p-4">
-            <ErrorState
-              description={getErrorMessage(error)}
-              onRetry={handleRetry}
-              compact
-              className="min-h-full w-full flex-1"
-            />
-          </div>
+          <ErrorState
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+            compact
+            className="min-h-full w-full flex-1 p-4"
+          />
         )}
 
         {!isLoading && !isError && notifications.length === 0 && (
-          <div className="flex min-h-full flex-1 flex-col items-center justify-center p-4">
-            <EmptyState
-              illustrationPreset="mail"
-              title={
-                activeTab === "UNREAD"
-                  ? "All caught up"
-                  : activeTab === "MENTIONS"
-                  ? "No mentions"
-                  : "No notifications"
-              }
-              description={
-                activeTab === "UNREAD"
-                  ? "You have no unread notifications."
-                  : activeTab === "MENTIONS"
-                  ? "You have not been mentioned in any comments yet."
-                  : "Notifications will appear here when you receive them."
-              }
-              compact
-              className="w-full rounded-lg border-dashed"
-            />
-          </div>
+          <EmptyState
+            illustrationPreset="mail"
+            title={
+              activeTab === "UNREAD"
+                ? "All caught up"
+                : activeTab === "MENTIONS"
+                ? "No mentions"
+                : "No notifications"
+            }
+            description={
+              activeTab === "UNREAD"
+                ? "You have no unread notifications."
+                : activeTab === "MENTIONS"
+                ? "You have not been mentioned in any comments yet."
+                : "Notifications will appear here when you receive them."
+            }
+            compact
+            className="min-h-full w-full flex-1 rounded-lg border-dashed p-4"
+          />
         )}
 
         {!isLoading && !isError && notifications.length > 0 && (

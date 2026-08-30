@@ -1,4 +1,20 @@
-# Applying 0473, 0475, 0476 — operator hand-off
+# Migration hand-off — operator
+
+**Reconciled 2026-08-26: 312 `.sql` files on disk, 297 journal entries, 15 un-journalled.** Reproduce with:
+
+```bash
+node backend/scripts/migration-journal-reconcile.mjs backend/migrations
+```
+
+It also checks for journal entries with no file, and for `when` timestamps that go backwards — Drizzle skips by timestamp, not by hash, so an entry older than the one before it never runs. Both were zero at the time of writing.
+
+**Read [§ Un-journalled files](#un-journalled-files-15) before running anything.** Eleven of the fifteen are not the deliberate hand-apply drops and are not mentioned anywhere else in this document; one of them is the only migration that puts a row-level-security policy on a CRM table that has none.
+
+This document grew past its original title. It now covers 0473/0475/0476, the 0483 calendar rewrite, the deliberate un-journalled drops, and the c26 ledger set 0520–0524.
+
+---
+
+## The original three: 0473, 0475, 0476
 
 Three migrations are **written and journalled but not applied**.
 
@@ -175,6 +191,127 @@ keeps assuming the old tuple width.
 - **The fail-closed probe returns rows instead of erroring** → stop. The org filter is not doing what it should, and that is a cross-tenant risk.
 - **Search errors after applying** → the function signature and the call site disagree. Tell me and I will reconcile them.
 
-## Also pending, not mine
+## Un-journalled files (15)
 
-`0472_outbox_inbox_aggregate_fence` is on disk and **not journalled**, so `db:migrate` will skip it entirely. It belongs to concurrent work; whoever owns it needs to add its journal entry or it will never apply.
+Drizzle applies from `meta/_journal.json`, not from the directory. **A `.sql` file with no entry never runs, and `db:migrate` reports success anyway** — there is no warning, no skipped-file line, nothing. That is why these are invisible without the reconcile script.
+
+### Deliberate — leave them un-journalled (4)
+
+| File | Why |
+|---|---|
+| `0478_invoice_line_items_column_drop` | irreversible `DROP COLUMN`; apply by hand only after 0477's backfill reconciles (see above) |
+| `0482_candidate_resume_column_drop` | same, after 0481 |
+| `0488_hr_people_drop_identity_cols` | same; must not run until 0487 passes and the six outside-tree `hr_people` readers migrate |
+| `0472_outbox_inbox_aggregate_fence` | belongs to concurrent work; its owner adds the entry |
+
+### Unaccounted for (11) — decide before your next `db:migrate`
+
+These are substantive migrations from the earlier Party/CRM/record-layout phases. **None is mentioned anywhere in this document or any other**, and nothing records a decision to exclude them, so the likeliest explanation is a merge that carried the `.sql` files without their journal entries — a failure this repo has seen before.
+
+```
+0234_business_parties_name_order        0267_record_layout_adjustments
+0262_party_company_columns              0268_backfill_record_layouts_permission
+0263_crm_org_party_map                  0269_mailbox_push_secret
+0264_crm_org_party_backfill             0271_crm_suppression_hashes_rls
+0265_party_association_columns          0272_quote_document_key
+0266_party_association_backfill
+```
+
+**All eleven were checked for re-runnability and all eleven are safe to re-run**, which is the property that matters: journalling one whose effects are already present is then a no-op rather than a failure. Nine carry `IF NOT EXISTS` / `IF EXISTS` / `OR REPLACE` guards outnumbering their DDL; `0264`, `0268` and `0266` are pure backfills, and `0266` — the only file with no explicit guard — is naturally idempotent via `IS DISTINCT FROM` predicates.
+
+**`0271_crm_suppression_hashes_rls` should be treated as the priority.** `0185` creates `crm_suppression_hashes` and `0271` is the **only** migration that ever puts a policy on it — so as things stand that table has none. A tenant table without a policy is readable org-wide, because grants arrive through `ALTER DEFAULT PRIVILEGES`. What the table holds is a per-channel suppression list: who asked this tenant to stop being contacted. The read is commercially sensitive, and the write is worse — a false suppression row silently stops a legitimate send and looks identical to a send that was never attempted. The file is `ENABLE` / `DROP POLICY IF EXISTS` / `CREATE POLICY` / `REVOKE` / `GRANT`, fully re-runnable.
+
+This is inert while the application connects as an owner role carrying `BYPASSRLS` — which is exactly why a missing policy survives unnoticed. It stops being inert at the move to `streamline_app`.
+
+**This program did not journal them**, deliberately: appending an entry changes what executes against a real database, and no database has been available to confirm whether their objects are already present. Verify against `pg_catalog` first, then journal in file order with `when` values greater than `1787830369441` — Drizzle skips by timestamp, so an entry older than the last one is silently ignored.
+
+---
+
+## c26 commercial billing ledger — 0520 … 0524
+
+Five migrations, all on disk.
+
+> **Correction, 2026-08-26.** This section previously said "none journalled". **That was wrong** — all five are journalled, as `idx` 293–297, ending `0524_billing_invoice_snapshots` at `when=1787830369441`. Verified by `migration-journal-reconcile.mjs`. Acting on the old text would have added duplicate entries. **Do not journal them again**; `pnpm -C backend db:migrate` picks them up as they stand.
+
+Apply together:
+
+```
+0520_commercial_billing_catalog.sql
+0521_billing_seat_ledger.sql
+0522_billing_proration_ledger.sql
+0523_billing_usage_events.sql
+0524_billing_invoice_snapshots.sql
+```
+
+### What each creates
+
+| Migration | Tables |
+|---|---|
+| 0520 | `billing_products`, `billing_plans`, `billing_price_versions`, `billing_plan_entitlements` (global catalog, no RLS); `org_entitlement_overrides`, `subscription_items` (tenant, RLS) |
+| 0521 | `billing_seat_events` (tenant, RLS) |
+| 0522 | `billing_proration_lines` (tenant, RLS) |
+| 0523 | `billing_usage_events`, `billing_usage_rollups`, `billing_usage_reservations` (tenant, RLS) |
+| 0524 | `billing_invoice_number_sequences`, `billing_invoice_snapshots`, `billing_invoice_line_snapshots`, `billing_credit_notes`, `billing_credit_note_lines` (tenant, RLS) |
+
+### Operator notes
+
+**Indexes:** every `CREATE INDEX` in these migrations runs inside the migration transaction — `CONCURRENTLY` is not permitted inside a transaction block. Each migration's comment block carries the exact `CONCURRENTLY` forms to run by hand **before** applying on a live table with existing data. The `IF NOT EXISTS` guards make the in-transaction statements a no-op if the indexes are already present.
+
+**Sequence-dependent FKs:** all FK constraints use `ADD CONSTRAINT … NOT VALID` → `VALIDATE CONSTRAINT` to avoid a long `ACCESS EXCLUSIVE` lock on the referenced table. On a busy database, run the VALIDATE statements during a low-traffic window.
+
+**RLS fail-closed check:** after applying, confirm each tenant table fails closed with no GUC set:
+
+```sql
+-- run as streamline_app, outside a transaction that sets the GUC
+SET app.organization_id TO '';
+SELECT * FROM org_entitlement_overrides LIMIT 1;
+-- must raise 42501, not return zero rows
+```
+
+**Global catalog tables** (`billing_products`, `billing_plans`, `billing_price_versions`, `billing_plan_entitlements`) have no `org_id` and no RLS policy by design — they are platform-wide data. Access is controlled by `REVOKE ALL … FROM PUBLIC` + `GRANT … TO streamline_app`.
+
+**idx_billing_usage_res_expires** does not lead with `org_id` — it exists for the background expiry sweep job that scans across all orgs. That job must set the tenant GUC before processing each reservation row. Tenant-scoped queries use `idx_billing_usage_res_org_meter_active` instead.
+
+**idx_billing_inv_lines_snapshot** and **idx_billing_credit_note_lines_note** index only `snapshot_id` / `credit_note_id` without `org_id`. They serve parent → child FK navigation where the parent row is already RLS-filtered; tenant-scoped list queries use `idx_billing_inv_lines_org` and `idx_billing_credit_note_lines_org`.
+
+### Verify after applying
+
+```sql
+SELECT relname AS table,
+       to_regclass(relname::text) IS NOT NULL AS present
+FROM (VALUES
+  ('billing_products'),
+  ('billing_plans'),
+  ('billing_price_versions'),
+  ('billing_plan_entitlements'),
+  ('org_entitlement_overrides'),
+  ('subscription_items'),
+  ('billing_seat_events'),
+  ('billing_proration_lines'),
+  ('billing_usage_events'),
+  ('billing_usage_rollups'),
+  ('billing_usage_reservations'),
+  ('billing_invoice_number_sequences'),
+  ('billing_invoice_snapshots'),
+  ('billing_invoice_line_snapshots'),
+  ('billing_credit_notes'),
+  ('billing_credit_note_lines')
+) AS t(relname);
+```
+
+Every row must be `true`. Also confirm RLS is enabled on the twelve tenant tables:
+
+```sql
+SELECT relname, relrowsecurity
+FROM pg_class
+WHERE relname IN (
+  'org_entitlement_overrides', 'subscription_items',
+  'billing_seat_events', 'billing_proration_lines',
+  'billing_usage_events', 'billing_usage_rollups', 'billing_usage_reservations',
+  'billing_invoice_number_sequences', 'billing_invoice_snapshots',
+  'billing_invoice_line_snapshots', 'billing_credit_notes', 'billing_credit_note_lines'
+)
+ORDER BY relname;
+```
+
+`relrowsecurity` must be `true` for every row.

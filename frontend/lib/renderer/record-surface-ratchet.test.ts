@@ -24,6 +24,10 @@ import path from "node:path";
  * survivors are the crafted surfaces ticket 19 argued for one by one.
  */
 const REMAINING_BY_MODULE: Readonly<Record<string, number>> = {
+  // Arrived with main. Counted rather than exempted: it is a hand-written record
+  // surface like the rest, and the point of this map is that what remains stays
+  // countable until it is described to the renderer.
+  "careers": 1,
   "hr": 122,
   "inventory": 96,
   "build": 76,

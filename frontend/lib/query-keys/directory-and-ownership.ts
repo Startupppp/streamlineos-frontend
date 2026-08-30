@@ -19,6 +19,8 @@ export const directoryAndOwnershipQueryKeys = {
 
   directory: {
     all: [...base, "directory"] as const,
+    employment: (userIds: readonly string[]) =>
+      [...base, "directory", "employment", [...userIds].sort().join(",")] as const,
     peopleAll: [...base, "directory", "people"] as const,
     people: (params?: Record<string, unknown>) =>
       [...base, "directory", "people", params] as const,

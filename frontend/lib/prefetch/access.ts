@@ -18,7 +18,7 @@ export async function prefetchAccess() {
   const queryClient = await createServerQueryClient();
   try {
     await queryClient.fetchQuery({
-      queryKey: queryKeys.access.me(orgId, userId),
+      queryKey: queryKeys.access.me(),
       queryFn: () => serverGet<AccessResponse>("/me/access"),
       staleTime: ACCESS_STALE_TIME,
     });

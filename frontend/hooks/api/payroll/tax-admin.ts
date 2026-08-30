@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { downloadBlob } from "@/lib/download-blob";
 import type { TaxDeclarationAdmin } from "@/types/payroll/reports";
 
@@ -22,7 +23,7 @@ export function useTaxDeclarationsAdmin(params: {
 
 export function useApproveDeclaration() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payroll:tax:manage", {
     mutationKey: ["payroll", "tax-declarations", "approve"],
     mutationFn: ({ declarationId }: { declarationId: number }) =>
       apiClient.patch<TaxDeclarationAdmin>(
@@ -36,7 +37,7 @@ export function useApproveDeclaration() {
 
 export function useRejectDeclaration() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payroll:tax:manage", {
     mutationKey: ["payroll", "tax-declarations", "reject"],
     mutationFn: ({ declarationId, note }: { declarationId: number; note?: string }) =>
       apiClient.patch<TaxDeclarationAdmin>(
@@ -50,7 +51,7 @@ export function useRejectDeclaration() {
 }
 
 export function useExportTaxReport() {
-  return useMutation({
+  return useAuthorizedMutation("payroll:tax:manage", {
     mutationKey: ["payroll", "tax-declarations", "export"],
     mutationFn: async ({ financialYear }: { financialYear: string }) => {
       const blob = await apiClient.download("/payroll/tax/export", {

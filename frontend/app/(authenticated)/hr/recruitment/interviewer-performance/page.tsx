@@ -4,12 +4,12 @@ import { useState, useCallback } from "react";
 import { useInterviewerPerformance } from "@/hooks/api/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Clock, TrendingUp, UserCheck, AlertCircle } from "lucide-react";
+import { ErrorState } from "@/components/shared/error-state";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
@@ -225,11 +225,7 @@ export default function InterviewerPerformancePage() {
         </StatCardGrid>
 
         {isError ? (
-          <div className="flex flex-col items-center justify-center gap-3 py-12">
-            <AlertCircle className="w-8 text-destructive/60" />
-            <p className="text-sm text-muted-foreground">Failed to load performance data.</p>
-            <Button variant="outline" size="sm" onClick={handleRetry}>Try again</Button>
-          </div>
+          <ErrorState className="flex-1" title="Failed to load performance data" onRetry={handleRetry} />
         ) : (
           <DataTable
             data={stats}

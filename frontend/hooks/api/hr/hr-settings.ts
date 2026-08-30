@@ -1,13 +1,14 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import type {
   Asset,
   Document,
-  PerformanceReview,
+  PerformanceReviewPage,
+  ReviewStatus,
   Goal,
   WfhRequest,
   CreateAssetInput,
@@ -91,17 +92,30 @@ export function useDeleteDocument() {
   });
 }
 
-export function useHrPerformanceReviews(userId?: string) {
+export interface HrPerformanceReviewParams {
+  userId?: string;
+  cycleId?: number;
+  status?: ReviewStatus;
+  cursor?: string;
+  limit?: number;
+}
+
+export function useHrPerformanceReviews(params?: HrPerformanceReviewParams) {
   const canView = useCan("hr:performance:view");
   const hrEnabled = useModuleEnabled("hr");
+  const queryParams: Record<string, unknown> = {
+    limit: params?.limit ?? 24,
+    ...(params?.userId ? { userId: params.userId } : {}),
+    ...(params?.cycleId ? { cycleId: params.cycleId } : {}),
+    ...(params?.status ? { status: params.status } : {}),
+    ...(params?.cursor ? { cursor: params.cursor } : {}),
+  };
   return useQuery({
-    queryKey: queryKeys.hr.performanceReviews(userId),
+    queryKey: queryKeys.hr.performanceReviews(queryParams),
     queryFn: () =>
-      apiClient.get<PerformanceReview[]>(
-        "/hr/performance/reviews",
-        userId ? { userId } : undefined,
-      ),
+      apiClient.get<PerformanceReviewPage>("/hr/performance/reviews", queryParams),
     staleTime: 2 * 60_000,
+    placeholderData: keepPreviousData,
     enabled: hrEnabled && canView,
   });
 }

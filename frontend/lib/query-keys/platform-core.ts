@@ -14,17 +14,11 @@ export const platformCoreQueryKeys = {
 
   notifications: {
     all: [...base, "notifications"] as const,
-    lists: (orgId: string | null | undefined = "") =>
-      [...base, "notifications", orgId, "list"] as const,
-    list: (
-      params?: Record<string, unknown>,
-      orgId: string | null | undefined = "",
-    ) =>
-      [...base, "notifications", orgId, "list", params] as const,
-    unreadList: (orgId: string | null | undefined = "") =>
-      [...base, "notifications", orgId, "list", "unread"] as const,
-    unreadCount: (orgId: string | null | undefined = "") =>
-      [...base, "notifications", orgId, "unreadCount"] as const,
+    lists: () => [...base, "notifications", "list"] as const,
+    list: (params?: Record<string, unknown>) =>
+      [...base, "notifications", "list", params] as const,
+    unreadList: () => [...base, "notifications", "list", "unread"] as const,
+    unreadCount: () => [...base, "notifications", "unreadCount"] as const,
     preferences: () => [...base, "notifications", "preferences"] as const,
     templates: (params?: Record<string, unknown>) =>
       [...base, "notifications", "templates", params] as const,
@@ -116,15 +110,6 @@ export const platformCoreQueryKeys = {
       [...base, "payments", "audit", providerKey ?? "all"] as const,
   },
 
-  /**
-   * A tenant's arrangement of a record type.
-   *
-   * The tenant is part of the key rather than implied by the bearer token, and
-   * that is the whole of the client-side isolation story: one browser signs into
-   * two organisations with one cache, and a key naming only the record type
-   * would serve the second tenant the first one's arrangement out of memory —
-   * quietly, because a rearranged screen still looks like a working screen.
-   */
   recordLayouts: {
     all: [...base, "record-layouts"] as const,
     adjustment: (orgId: string | null | undefined, layoutKey: string) =>
@@ -135,23 +120,14 @@ export const platformCoreQueryKeys = {
 
   access: {
     all: [...base, "access"] as const,
-    me: (orgId?: string | null, userId?: string | null) =>
-      orgId && userId
-        ? ([...base, "access", "me", orgId, userId] as const)
-        : orgId
-          ? ([...base, "access", "me", orgId] as const)
-          : ([...base, "access", "me"] as const),
-    simulate: (orgId: string | null | undefined, userId: string) =>
-      orgId
-        ? ([...base, "access", "simulate", orgId, userId] as const)
-        : ([...base, "access", "simulate", userId] as const),
-    simulationCandidates: (
-      orgId: string | null | undefined,
-      params: { page: number; limit: number; search?: string },
-    ) =>
-      orgId
-        ? ([...base, "access", "simulate", orgId, "candidates", params] as const)
-        : ([...base, "access", "simulate", "candidates", params] as const),
+    me: () => [...base, "access", "me"] as const,
+    simulate: (targetUserId: string) =>
+      [...base, "access", "simulate", targetUserId] as const,
+    simulationCandidates: (params: {
+      page: number;
+      limit: number;
+      search?: string;
+    }) => [...base, "access", "simulate", "candidates", params] as const,
     resourceGrants: (resourceType: string, resourceId: string) =>
       [...base, "access", "resource-grants", resourceType, resourceId] as const,
     orgModules: () => [...base, "access", "org-modules"] as const,

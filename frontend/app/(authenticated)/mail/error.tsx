@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { isChunkLoadError, reportError } from "@/lib/observability";
 
 interface ErrorProps {
   error: Error & { digest?: string };
@@ -9,6 +10,13 @@ interface ErrorProps {
 }
 
 export default function MailError({ error, reset }: ErrorProps) {
+  useEffect(() => {
+    const route = typeof window !== "undefined" ? window.location.pathname : undefined;
+    const extra: Record<string, unknown> = { route, digest: error.digest };
+    if (isChunkLoadError(error)) extra.recoverable = true;
+    reportError(error, extra);
+  }, [error]);
+
   const handleReset = useCallback(() => reset(), [reset]);
 
   return (

@@ -6,12 +6,29 @@ import {
   isDefaultProjectNavHidden,
   isProjectNavPinned,
 } from "./project-nav-config";
+import { orgScopedStorageKey, useOrgStorageScope } from "@/lib/org-scoped-storage";
 
-const STORAGE_KEY = "project-nav-hidden";
+const STORAGE_NAME = "project-nav-hidden";
 
-const listeners = new Set<() => void>();
-let cache: ReadonlySet<string> = new Set(DEFAULT_HIDDEN_PROJECT_NAV_IDS);
-let cacheRaw: string | null | undefined = undefined;
+interface ProjectNavStore {
+  cache: ReadonlySet<string>;
+  cacheRaw: string | null | undefined;
+  listeners: Set<() => void>;
+}
+
+const stores = new Map<string, ProjectNavStore>();
+
+function getStore(key: string): ProjectNavStore {
+  const existing = stores.get(key);
+  if (existing) return existing;
+  const store: ProjectNavStore = {
+    cache: new Set(DEFAULT_HIDDEN_PROJECT_NAV_IDS),
+    cacheRaw: undefined,
+    listeners: new Set(),
+  };
+  stores.set(key, store);
+  return store;
+}
 
 function parseHiddenIds(raw: string | null): Set<string> {
   if (raw === null) return new Set(DEFAULT_HIDDEN_PROJECT_NAV_IDS);
@@ -29,73 +46,86 @@ function parseHiddenIds(raw: string | null): Set<string> {
   }
 }
 
-function readSnapshot(): ReadonlySet<string> {
-  if (typeof window === "undefined") return cache;
-  const raw = window.localStorage.getItem(STORAGE_KEY);
-  if (raw === cacheRaw) return cache;
-  cacheRaw = raw;
-  cache = parseHiddenIds(raw);
-  return cache;
+function readSnapshot(key: string, store: ProjectNavStore): ReadonlySet<string> {
+  if (typeof window === "undefined") return store.cache;
+  const raw = window.localStorage.getItem(key);
+  if (raw === store.cacheRaw) return store.cache;
+  store.cacheRaw = raw;
+  store.cache = parseHiddenIds(raw);
+  return store.cache;
 }
 
-function writeHiddenIds(ids: ReadonlySet<string>): void {
+function writeHiddenIds(
+  key: string,
+  store: ProjectNavStore,
+  ids: ReadonlySet<string>,
+): void {
   if (typeof window === "undefined") return;
   const next = new Set(
     [...ids].filter((id) => id.length > 0 && !isProjectNavPinned(id)),
   );
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify([...next]));
+    window.localStorage.setItem(key, JSON.stringify([...next]));
   } catch {
     return;
   }
-  cacheRaw = null;
-  cache = next;
-  listeners.forEach((listener) => listener());
+  store.cacheRaw = null;
+  store.cache = next;
+  store.listeners.forEach((listener) => listener());
 }
 
-function subscribe(listener: () => void): () => void {
-  listeners.add(listener);
+function subscribe(
+  key: string,
+  store: ProjectNavStore,
+  listener: () => void,
+): () => void {
+  store.listeners.add(listener);
   const onStorage = (event: StorageEvent) => {
-    if (event.key === STORAGE_KEY || event.key === null) {
-      cacheRaw = undefined;
+    if (event.key === key || event.key === null) {
+      store.cacheRaw = undefined;
       listener();
     }
   };
   window.addEventListener("storage", onStorage);
   return () => {
-    listeners.delete(listener);
+    store.listeners.delete(listener);
     window.removeEventListener("storage", onStorage);
   };
 }
 
-function getServerSnapshot(): ReadonlySet<string> {
-  return cache;
-}
-
 export function useProjectNavVisibility() {
-  const hiddenIds = useSyncExternalStore(
-    subscribe,
-    readSnapshot,
-    getServerSnapshot,
+  const scope = useOrgStorageScope();
+  const key = orgScopedStorageKey(STORAGE_NAME, scope);
+  const store = getStore(key);
+
+  const snapshot = useCallback(() => readSnapshot(key, store), [key, store]);
+  const sub = useCallback(
+    (listener: () => void) => subscribe(key, store, listener),
+    [key, store],
   );
+
+  const hiddenIds = useSyncExternalStore(sub, snapshot, () => store.cache);
 
   const isVisible = useCallback(
     (id: string) => isProjectNavPinned(id) || !hiddenIds.has(id),
     [hiddenIds],
   );
 
-  const setVisible = useCallback((id: string, visible: boolean) => {
-    if (isProjectNavPinned(id)) return;
-    const current = readSnapshot();
-    const next = new Set(current);
-    if (visible) next.delete(id);
-    else next.add(id);
-    writeHiddenIds(next);
-  }, []);
+  const setVisible = useCallback(
+    (id: string, visible: boolean) => {
+      if (isProjectNavPinned(id)) return;
+      const current = readSnapshot(key, store);
+      const next = new Set(current);
+      if (visible) next.delete(id);
+      else next.add(id);
+      writeHiddenIds(key, store, next);
+    },
+    [key, store],
+  );
 
   const reset = useCallback(() => {
-    writeHiddenIds(new Set(DEFAULT_HIDDEN_PROJECT_NAV_IDS));
-  }, []);
+    writeHiddenIds(key, store, new Set(DEFAULT_HIDDEN_PROJECT_NAV_IDS));
+  }, [key, store]);
 
   return {
     hiddenIds,

@@ -1,22 +1,15 @@
 "use client";
 
-import { useState, useMemo, useRef, useCallback } from "react";
-import Image from "next/image";
+import { useState, useMemo, useCallback } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Archive,
   ArchiveRestore,
   BellOff,
   BellRing,
   Bookmark,
-  Camera,
-  ImageIcon,
-  Loader2,
   Pencil,
 } from "lucide-react";
 import { XIcon, UserPlusIcon } from "@animateicons/react/lucide";
@@ -28,7 +21,6 @@ import { formatDistanceToNow } from "date-fns";
 import {
   useChatChannel,
   useChatOnlineUsers,
-  useUpdateChannel,
   useChatPins,
   useUnpinMessage,
   useArchiveChannel,
@@ -40,11 +32,10 @@ import {
 } from "@/hooks/api";
 import type { ChannelMember } from "@/types/chat";
 import { resolveImageUrl } from "@/lib/utils";
-import { apiClient } from "@/lib/api-client";
 import { getInitials } from "./chat-helpers";
 import { AddChannelMembersDialog } from "./add-channel-members-dialog";
-import { ChannelAvatar } from "./channel-avatar";
 import { ChannelMemberRow } from "./channel-member-row";
+import { ChannelInfoPanelProfile } from "./channel-info-panel-profile";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 const CloseButton = React.forwardRef<
@@ -100,7 +91,6 @@ export function ChannelInfoPanel({
   const { data: channel } = useChatChannel(channelId);
   const { data: onlineUsers } = useChatOnlineUsers();
   const { data: activeHuddle } = useActiveHuddle(channelId);
-  const updateChannel = useUpdateChannel();
   const { data: pins } = useChatPins(channelId);
   const unpinMessage = useUnpinMessage();
   const archiveChannel = useArchiveChannel();
@@ -193,97 +183,6 @@ export function ChannelInfoPanel({
   );
 
   const [editing, setEditing] = useState(false);
-  const [editName, setEditName] = useState("");
-  const [editDesc, setEditDesc] = useState("");
-  const [editAvatar, setEditAvatar] = useState("");
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const editAvatarRef = useRef<HTMLInputElement>(null);
-  const quickAvatarRef = useRef<HTMLInputElement>(null);
-
-  const handleOpenAvatarInput = useCallback(() => {
-    editAvatarRef.current?.click();
-  }, []);
-  const handleOpenQuickAvatarInput = useCallback(() => {
-    quickAvatarRef.current?.click();
-  }, []);
-  const handleCancelEdit = useCallback(() => setEditing(false), []);
-  const handleEditNameChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setEditName(e.target.value),
-    [],
-  );
-  const handleEditDescChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setEditDesc(e.target.value),
-    [],
-  );
-
-  const startEditing = () => {
-    setEditName(channel?.name ?? "");
-    setEditDesc(channel?.description ?? "");
-    setEditAvatar(channel?.avatarUrl ?? "");
-    setEditing(true);
-  };
-
-  const handleEditAvatarUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-    saveImmediately = false,
-  ) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image must be under 5MB");
-      return;
-    }
-    setUploadingAvatar(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("folder", "chat-avatars");
-      const data = await apiClient.upload<{ url?: string }>(
-        "/storage/upload",
-        formData,
-      );
-      if (!data.url) {
-        toast.error("Upload failed");
-        return;
-      }
-      if (saveImmediately) {
-        await updateChannel.mutateAsync({ channelId, avatarUrl: data.url });
-        toast.success("Channel photo updated");
-      } else {
-        setEditAvatar(data.url);
-      }
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    } finally {
-      setUploadingAvatar(false);
-      if (editAvatarRef.current) editAvatarRef.current.value = "";
-      if (quickAvatarRef.current) quickAvatarRef.current.value = "";
-    }
-  };
-
-  const handleSaveEdit = async () => {
-    try {
-      await updateChannel.mutateAsync({
-        channelId,
-        name: editName.trim() || undefined,
-        description: editDesc.trim(),
-        avatarUrl: editAvatar,
-      });
-      setEditing(false);
-      toast.success("Channel updated");
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    }
-  };
-
-  const otherMember =
-    channel?.type === "DIRECT"
-      ? channel.members?.find((m) => m.user?.id !== currentUserId)?.user
-      : null;
-  const displayName =
-    channel?.type === "DIRECT"
-      ? (otherMember?.name ?? "Unknown")
-      : (channel?.name ?? "Channel");
 
   return (
     <div className="flex h-full w-80 min-w-0 flex-col overflow-hidden">
@@ -292,7 +191,7 @@ export function ChannelInfoPanel({
         <div className="flex items-center gap-1">
           {isAdmin && isMultiMemberChannel && !editing && (
             <button
-              onClick={startEditing}
+              onClick={() => setEditing(true)}
               className="p-1.5 hover:bg-muted rounded-lg"
               title="Edit channel"
               aria-label="Edit channel"
@@ -310,153 +209,14 @@ export function ChannelInfoPanel({
 
       <ScrollArea className="min-w-0 flex-1">
         <div className="min-w-0 w-full max-w-full overflow-x-hidden p-4">
-          {editing ? (
-            <div className="space-y-4 mb-6">
-              <div className="flex justify-center">
-                <input
-                  ref={editAvatarRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleEditAvatarUpload(e, false)}
-                  className="hidden"
-                  aria-label="Upload channel avatar"
-                />
-                <button
-                  type="button"
-                  onClick={handleOpenAvatarInput}
-                  disabled={uploadingAvatar}
-                  className="relative group"
-                >
-                  {editAvatar ? (
-                    <div className="relative h-20 w-20 rounded-2xl overflow-hidden border-2 border-border/40">
-                      <Image
-                        src={resolveImageUrl(editAvatar) ?? ""}
-                        alt="Avatar"
-                        fill
-                        unoptimized
-                        className="object-cover"
-                      />
-                    </div>
-                  ) : (
-                    <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-blue/10 to-blue/5 flex items-center justify-center border border-blue/10">
-                      {uploadingAvatar ? (
-                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                      ) : (
-                        <ImageIcon className="h-6 w-6 text-blue/40" />
-                      )}
-                    </div>
-                  )}
-                  <div className="absolute inset-0 rounded-2xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Camera className="h-5 w-5 text-white" />
-                  </div>
-                </button>
-              </div>
-              <div>
-                <Label className="text-dense font-medium text-muted-foreground mb-1 block">
-                  Name
-                </Label>
-                <Input
-                  value={editName}
-                  onChange={handleEditNameChange}
-                  className="text-label bg-muted/30"
-                />
-              </div>
-              <div>
-                <Label className="text-dense font-medium text-muted-foreground mb-1 block">
-                  Description
-                </Label>
-                <Input
-                  value={editDesc}
-                  onChange={handleEditDescChange}
-                  placeholder="Add a description..."
-                  className="text-label bg-muted/30"
-                />
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCancelEdit}
-                  className="flex-1 h-8 text-xs"
-                >
-                  Cancel
-                </Button>
-                <LoadingButton
-                  size="sm"
-                  onClick={handleSaveEdit}
-                  disabled={!editName.trim()}
-                  isPending={updateChannel.isPending}
-                  className="flex-1 h-8 text-xs"
-                >
-                  Save
-                </LoadingButton>
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center text-center mb-6">
-              <input
-                ref={quickAvatarRef}
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleEditAvatarUpload(e, true)}
-                className="hidden"
-                aria-label="Upload channel photo"
-              />
-              {channel?.type === "DIRECT" ? (
-                <div className="mb-3">
-                  <ChannelAvatar
-                    type={channel.type}
-                    otherMember={otherMember}
-                    className="h-20 w-20"
-                    rounded="2xl"
-                  />
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={isAdmin ? handleOpenQuickAvatarInput : undefined}
-                  disabled={!isAdmin || uploadingAvatar}
-                  className="relative group mb-3 disabled:cursor-default"
-                  title={isAdmin ? "Change channel photo" : undefined}
-                  aria-label={isAdmin ? "Change channel photo" : undefined}
-                >
-                  <ChannelAvatar
-                    type={channel?.type}
-                    name={channel?.name}
-                    avatarUrl={channel?.avatarUrl}
-                    className="h-20 w-20"
-                    rounded="2xl"
-                    iconClassName="h-8 w-8"
-                  />
-                  {isAdmin && (
-                    <div className="absolute inset-0 rounded-2xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      {uploadingAvatar ? (
-                        <Loader2 className="h-5 w-5 text-white animate-spin" />
-                      ) : (
-                        <Camera className="h-5 w-5 text-white" />
-                      )}
-                    </div>
-                  )}
-                </button>
-              )}
-              <TruncatedText text={displayName} className="text-base font-bold max-w-[200px]" />
-              {channel?.type === "DIRECT" ? (
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {otherMember
-                    ? onlineUserIds.has(otherMember.id)
-                      ? "Online"
-                      : "Offline"
-                    : ""}
-                </p>
-              ) : (
-                channel?.description && (
-                  <p className="text-xs text-muted-foreground mt-1 max-w-[240px]">
-                    {channel.description}
-                  </p>
-                )
-              )}
-            </div>
-          )}
+          <ChannelInfoPanelProfile
+            channel={channel}
+            currentUserId={currentUserId}
+            isAdmin={Boolean(isAdmin)}
+            onlineUserIds={onlineUserIds}
+            editing={editing}
+            onEditingChange={setEditing}
+          />
 
           {pins && pins.length > 0 && (
             <div className="mb-6">
