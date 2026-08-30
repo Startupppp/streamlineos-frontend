@@ -46,7 +46,7 @@ const MATRIX: readonly MatrixRow[] = [
   { path: "/chat/moderation", universalMatch: false, decisionKind: "permission", label: "huddle moderation admin — gated on chat:huddles:moderate" },
 
   { path: "/calendar", universalMatch: true, decisionKind: "universal", label: "unified calendar" },
-  { path: "/calendar/settings", universalMatch: false, decisionKind: "permission", label: "calendar admin settings — gated on calendar:admin:manage" },
+  { path: "/calendar/settings", universalMatch: false, decisionKind: "permission", label: "calendar admin settings — gated on calendar:write" },
 
   { path: "/directory", universalMatch: true, decisionKind: "universal", label: "people directory root" },
   { path: "/directory/123", universalMatch: false, decisionKind: "permission", label: "individual person profile — nav-resolved, not prefix-universal" },

@@ -147,7 +147,7 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     product: "administration",
     permission: "calendar:admin:manage",
     reason:
-      "Organisation-wide calendar configuration (source integrations, defaults) is administrative, not the universal personal calendar surface.",
+      "Organisation-wide calendar configuration (source integrations, defaults) is administration, so it takes the admin key. calendar:write cannot gate it: that key sits in EMPLOYEE_SELF_SERVICE, which is merged before any role is read, so every active member holds it unrevokably.",
   },
 ];
 
