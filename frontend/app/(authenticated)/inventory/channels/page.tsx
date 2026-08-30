@@ -27,6 +27,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { ChannelSheet } from "@/features/inventory/components/channels/channel-sheet";
 import { ChannelPublicationsPanel } from "@/features/inventory/components/channels/channel-publications-panel";
+import { ChannelPoolsPanel } from "@/features/inventory/components/channels/channel-pools-panel";
 import { useCan } from "@/hooks/api/access";
 
 const CHANNEL_TYPE_BADGE: Record<ChannelType, string> = {
@@ -81,9 +82,10 @@ interface ChannelCardProps {
   channel: Channel;
   onEdit: (channel: Channel) => void;
   onViewPublications: (channel: Channel) => void;
+  onViewPools: (channel: Channel) => void;
 }
 
-const ChannelCard = memo(function ChannelCard({ channel, onEdit, onViewPublications }: ChannelCardProps) {
+const ChannelCard = memo(function ChannelCard({ channel, onEdit, onViewPublications, onViewPools }: ChannelCardProps) {
   const syncMutation = useSyncChannelStock();
   const isExternal = EXTERNAL_TYPES.has(channel.channelType);
 
@@ -100,6 +102,10 @@ const ChannelCard = memo(function ChannelCard({ channel, onEdit, onViewPublicati
 
   function handleViewPublications(): void {
     onViewPublications(channel);
+  }
+
+  function handleViewPools(): void {
+    onViewPools(channel);
   }
 
   return (
@@ -185,6 +191,14 @@ const ChannelCard = memo(function ChannelCard({ channel, onEdit, onViewPublicati
             >
               View publications
             </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-xs"
+              onClick={handleViewPools}
+            >
+              Reserved stock
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -202,6 +216,8 @@ function ChannelsContent() {
   const [editChannel, setEditChannel] = useState<Channel | undefined>(undefined);
   const [publicationsChannel, setPublicationsChannel] = useState<Channel | null>(null);
   const [publicationsPanelOpen, setPublicationsPanelOpen] = useState(false);
+  const [poolsChannel, setPoolsChannel] = useState<Channel | null>(null);
+  const [poolsPanelOpen, setPoolsPanelOpen] = useState(false);
   const { iconRef: addIconRef, hoverHandlers: addHoverHandlers } = useAnimatedIcon();
 
   const handleNewChannel = useCallback(() => {
@@ -227,6 +243,16 @@ function ChannelsContent() {
   const handlePanelOpenChange = useCallback((open: boolean) => {
     setPublicationsPanelOpen(open);
     if (!open) setPublicationsChannel(null);
+  }, []);
+
+  const handleViewPools = useCallback((channel: Channel) => {
+    setPoolsChannel(channel);
+    setPoolsPanelOpen(true);
+  }, []);
+
+  const handlePoolsPanelOpenChange = useCallback((open: boolean) => {
+    setPoolsPanelOpen(open);
+    if (!open) setPoolsChannel(null);
   }, []);
 
   function handleRetry(): void {
@@ -297,6 +323,7 @@ function ChannelsContent() {
                 channel={ch}
                 onEdit={handleEdit}
                 onViewPublications={handleViewPublications}
+                onViewPools={handleViewPools}
               />
             ))}
           </motion.div>
@@ -319,6 +346,11 @@ function ChannelsContent() {
         open={publicationsPanelOpen}
         onOpenChange={handlePanelOpenChange}
         channel={publicationsChannel}
+      />
+      <ChannelPoolsPanel
+        open={poolsPanelOpen}
+        onOpenChange={handlePoolsPanelOpenChange}
+        channel={poolsChannel}
       />
     </>
   );

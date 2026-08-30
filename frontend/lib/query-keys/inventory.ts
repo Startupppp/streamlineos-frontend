@@ -168,6 +168,31 @@ export const inventoryQueryKeys = {
     load: (loadId: number) => k(...base, "inventory", "load", loadId),
     carriers: () => k(...base, "inventory", "carriers"),
     channels: () => k(...base, "inventory", "channels"),
+
+    /**
+     * NEO-1. `channelPoolsAll` is the params-less prefix every pool key hangs
+     * off, so one invalidation after an allocation reaches the channel list, the
+     * per-variant popover and the availability probe together — the R2 rule at
+     * the top of this file, applied to a family added after it was written.
+     */
+    channelPoolsAll: [...base, "inventory", "channelPools"] as const,
+    channelPools: (channelId: number) => k(...base, "inventory", "channelPools", channelId),
+    channelPoolsByVariant: (productVariantId: number, warehouseId: number | null) =>
+      k(...base, "inventory", "channelPools", "variant", productVariantId, warehouseId ?? "all"),
+    channelPoolAvailability: (
+      productVariantId: number,
+      warehouseId: number | null,
+      forChannelId: number | null,
+    ) =>
+      k(
+        ...base,
+        "inventory",
+        "channelPools",
+        "availability",
+        productVariantId,
+        warehouseId ?? "all",
+        forChannelId ?? "direct",
+      ),
     channel: (channelId: number) => k(...base, "inventory", "channel", channelId),
     channelPublications: (channelId: number) =>
       k(...base, "inventory", "channelPublications", channelId),
