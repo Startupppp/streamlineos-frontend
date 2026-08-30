@@ -69,6 +69,15 @@ import { useChatMentions } from "./use-chat-mentions";
 import { useChatTypingText } from "./use-chat-typing-text";
 import { useMessageComposer } from "./use-message-composer";
 
+/** The three fields the avatar strip reads off a channel member. */
+interface ChannelMemberAvatar {
+  user?: { id?: string; name?: string | null; image?: string | null } | undefined;
+}
+
+// Roughly ninety props, destructured straight through to children. Naming them
+// here would duplicate every child's own props type and go stale against them;
+// the types that matter live on the components this hands them to.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function MessagePanelView(props: any) {
   const { onBack, displayName, activeHuddle, isInHuddle, handleHuddle, startHuddle, joinHuddle, canUseAi, summarizeAction, channelId, handleToggleFiles, handleToggleSaved, onToggleInfo, showInfoPanel, isSidebarCollapsed, onToggleSidebar, channel, otherMember, isOtherOnline, memberCount, showFilesPanel, showSavedPanel, isOnline, groupedMessages, messages, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage, currentUserId, editingMessage, editInput, replyTo, pinnedMessageIds, savedMessageIds, replyCountMap, firstUnreadMessageId, setEditInput, setEditingMessage, setReplyTo, inputRef, deleteMessage, handleEdit, handleOpenThread, handleReact, handlePin, handleUnpin, handleSave, handleUnsaveMsg, handleForward, resolveUserName, showScrollBtn, scrollToBottom, messagesEndRef, scrollContainerRef, handleScroll, messageInput, setMessageInput, pendingAttachments, setPendingAttachments, uploading, fileInputRef, handleFileSelect, showEmojiPicker, setShowEmojiPicker, emojiRef, insertEmoji, showMentions, setShowMentions, mentionQuery, mentionIndex, setMentionIndex, filteredMentions, insertMention, showTicketPicker, ticketQuery, ticketSelectedIndex, insertTicket, typingText, sendMessage, handleSend, handleKeyDown, handleInputChange, handlePastedFiles, threadMessageId, handleCloseThread, isChatMobile, setShowFilesPanel, setShowSavedPanel, forwardMessage, setForwardMessage } = props;
   return (
@@ -184,7 +193,7 @@ export function MessagePanelView(props: any) {
           <div className="flex items-center gap-1">
             {channel?.type === "GROUP" && (
               <div className="hidden sm:flex -space-x-1.5 mr-2">
-                {channel.members?.slice(0, 3).map((m: any) => (
+                {channel.members?.slice(0, 3).map((m: ChannelMemberAvatar) => (
                   <Avatar
                     key={m.user?.id}
                     className="h-6 w-6 border-2 border-background"

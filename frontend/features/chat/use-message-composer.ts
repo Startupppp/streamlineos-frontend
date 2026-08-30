@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import type { SendMessageInput, EditMessageInput } from "@/types/chat";
 import type React from "react";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
@@ -14,8 +15,8 @@ export function useMessageComposer({
   publishTyping, filteredMentions,
 }: {
   channelId: number; draftKey: string; isOnline: boolean;
-  sendMessage: { mutateAsync: (input: any) => Promise<unknown> };
-  editMessage: { mutateAsync: (input: any) => Promise<unknown> };
+  sendMessage: { mutateAsync: (input: SendMessageInput) => Promise<unknown> };
+  editMessage: { mutateAsync: (input: EditMessageInput & { channelId: number }) => Promise<unknown> };
   markRead: { mutate: (input: { channelId: number }) => void };
   scrollToBottom: (behavior?: ScrollBehavior) => void; publishTyping: () => void;
   filteredMentions: Array<{ id: string; name?: string | null }>;

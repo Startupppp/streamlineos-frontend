@@ -31,6 +31,9 @@ function requireCapturedClient(): QueryClient {
 }
 
 function ClientCapture() {
+  // The point of this component is to hand the provider's own client back to the
+  // test; there is nowhere else to put it, and it never renders outside one.
+  // eslint-disable-next-line react-hooks/globals
   capturedClient = useQueryClient();
   return null;
 }
