@@ -1,5 +1,7 @@
 import type { KanbanTicket, KanbanColumn } from "../shared/types";
 
+export const BOARD_COLUMN_VIRTUALIZATION_THRESHOLD = 15;
+
 export type StatusEntry = {
   id: number;
   name: string;

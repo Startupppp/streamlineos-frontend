@@ -1,6 +1,9 @@
 import { createHash } from "node:crypto";
 import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 
+// Moved 2026-08-30: /me/pay removed from PAYROLL_NAV_GROUPS — self-service pay
+// belongs exclusively in HOME_NAV_GROUPS "For Me" group (product: home). The
+// payroll product sidebar no longer lists it; the home sidebar already did.
 // Moved 2026-08-27 (c25-03): 55 finance gates, plus /crm/deals/approvals and
 // /hr/goals, named keys no route enforces — each now names the key its own
 // endpoints check. `pnpm -C backend check:navigation-permissions` proves it.
@@ -10,7 +13,7 @@ import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 // /crm/autonomy, gated on crm:autonomy:view). The digest exists so a route or
 // its permission cannot change without somebody saying why.
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "38b4106d728dca202aed5a8dd918d4a78c9de52ceb16a68b00aa4c5245274ef1";
+  "3b3a6ac1092d8f0bf75a5c4f087dd80b195925f2f4e30e7b32ed0747624b16ff";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {

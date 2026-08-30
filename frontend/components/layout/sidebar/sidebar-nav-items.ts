@@ -268,6 +268,11 @@ export function isKnowledgeWikiPath(pathname: string): boolean {
 function routeOwnsPath(route: NavRoute, pathname: string): boolean {
   if (pathname === route.href) return true;
   if (route.href === "/hr") return false;
+  if (
+    route.inactivePrefixes?.some(
+      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+    )
+  ) return false;
   return pathname.startsWith(`${route.href}/`);
 }
 

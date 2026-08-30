@@ -6,6 +6,7 @@ import {
   Droppable,
   Draggable,
 } from "@hello-pangea/dnd";
+import { cn } from "@/lib/utils";
 import { AddColumn } from "./kanban-add-column";
 import { KanbanBoardColumn } from "./kanban-board-column";
 import {
@@ -28,8 +29,10 @@ import {
   applyColumnOrder,
   groupTicketsByStatus,
   formatStatusName,
+  BOARD_COLUMN_VIRTUALIZATION_THRESHOLD,
 } from "./kanban-board-utils";
 import { useKanbanDrag } from "./use-kanban-drag";
+import { useTicketColumnCounts } from "@/hooks/api/build/ticket-queries";
 
 interface KanbanBoardProps {
   tickets: KanbanTicket[];
@@ -53,6 +56,7 @@ export function KanbanBoard({
   hideCompleted = false,
 }: KanbanBoardProps) {
   const canManage = useCan("build:manage");
+  const { data: columnCountsData } = useTicketColumnCounts(projectId);
   const [optimisticTickets, setOptimisticTickets] = useState(tickets);
   const [optimisticStatuses, setOptimisticStatuses] = useState(statuses);
   const [optimisticColumnOrder, setOptimisticColumnOrder] = useState<KanbanColumn[] | null>(null);
@@ -232,6 +236,7 @@ export function KanbanBoard({
                         canManage={canManage}
                         existingNames={existingNames}
                         wipLimit={wipLimits?.[col.id]}
+                        serverCount={columnCountsData?.[col.id]}
                         displayOptions={displayOptions}
                         minHeightClass="min-h-[60px]"
                         stretch
@@ -262,7 +267,10 @@ export function KanbanBoard({
           <div
             ref={columnsProvided.innerRef}
             {...columnsProvided.droppableProps}
-            className="kanban-scroll-container scrollbar-hide flex h-full min-w-0 items-start gap-3 overflow-x-auto pb-1 px-1"
+            className={cn(
+              "kanban-scroll-container scrollbar-hide flex h-full min-w-0 items-start gap-3 overflow-x-auto pb-1 px-1",
+              visibleColumns.length > BOARD_COLUMN_VIRTUALIZATION_THRESHOLD && "[&>*]:content-visibility-auto",
+            )}
           >
             {visibleColumns.map((col, index) => {
               const columnTickets = ticketsByStatus.get(col.id) ?? [];
@@ -285,6 +293,7 @@ export function KanbanBoard({
                       canManage={canManage}
                       existingNames={existingNames}
                       wipLimit={wipLimits?.[col.id]}
+                      serverCount={columnCountsData?.[col.id]}
                       displayOptions={displayOptions}
                       showQuickAdd
                       showHeaderQuickAdd

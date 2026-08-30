@@ -67,12 +67,12 @@ export function CommandCenterPage() {
   } = useInfiniteAllWork(COMMAND_CENTER_MY_ISSUES_FILTERS, { enabled: canViewTickets });
 
   const { data: openIssuesSummary } = useAllWork(
-    { ...COMMAND_CENTER_MY_ISSUES_FILTERS, limit: 1, page: 1 },
+    { ...COMMAND_CENTER_MY_ISSUES_FILTERS, limit: 1 },
     { enabled: canViewTickets },
   );
 
   const { data: overdueIssuesSummary } = useAllWork(
-    { ...COMMAND_CENTER_MY_ISSUES_FILTERS, limit: 1, page: 1, dueDateTo: overdueDueDateTo },
+    { ...COMMAND_CENTER_MY_ISSUES_FILTERS, limit: 1, dueDateTo: overdueDueDateTo },
     { enabled: canViewTickets },
   );
 
@@ -114,8 +114,8 @@ export function CommandCenterPage() {
     const projectList = projectsData?.data ?? [];
     return {
       activeProjects: projectList.length,
-      openIssues: openIssuesSummary?.total ?? 0,
-      overdueIssues: overdueIssuesSummary?.total ?? 0,
+      openIssues: openIssuesSummary?.total ?? openIssuesSummary?.data.length ?? 0,
+      overdueIssues: overdueIssuesSummary?.total ?? overdueIssuesSummary?.data.length ?? 0,
     };
   }, [projectsData, openIssuesSummary, overdueIssuesSummary]);
 

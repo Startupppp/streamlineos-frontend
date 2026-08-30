@@ -48,6 +48,7 @@ interface KanbanColumnHeaderProps {
   column: KanbanColumn;
   projectId: number;
   ticketCount: number;
+  serverCount?: number;
   canManage: boolean;
   existingNames?: string[];
   onRename?: (oldName: string, newName: string) => void;
@@ -60,6 +61,7 @@ export function KanbanColumnHeader({
   column,
   projectId,
   ticketCount,
+  serverCount,
   canManage,
   existingNames = [],
   onRename,
@@ -67,6 +69,7 @@ export function KanbanColumnHeader({
   quickAdd,
   dragHandleProps,
 }: KanbanColumnHeaderProps) {
+  const displayCount = serverCount ?? ticketCount;
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState(column.name);
   const [renameError, setRenameError] = useState<string | null>(null);
@@ -275,7 +278,7 @@ export function KanbanColumnHeader({
           </h3>
         )}
         <span className="text-xs text-muted-foreground tabular-nums shrink-0">
-          {ticketCount}
+          {displayCount}
         </span>
       </div>
 

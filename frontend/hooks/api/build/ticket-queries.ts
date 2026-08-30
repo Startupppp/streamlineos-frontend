@@ -134,3 +134,14 @@ export function useSubtasks(
     ...options,
   });
 }
+
+export function useTicketColumnCounts(projectId: number) {
+  const canView = useCan("build:tickets:view");
+  return useQuery<Record<string, number>>({
+    queryKey: queryKeys.projects.columnCounts(projectId),
+    queryFn: () =>
+      apiClient.get<Record<string, number>>(`/build/${projectId}/tickets/column-counts`),
+    enabled: canView && projectId > 0,
+    staleTime: 30_000,
+  });
+}
