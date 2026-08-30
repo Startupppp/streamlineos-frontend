@@ -15,8 +15,7 @@ export const PAYROLL_NAV_GROUPS: NavGroup[] = [
       {
         label: "My Payroll",
         icon: Wallet,
-        href: "/payroll/me",
-        requiredPermission: ["self:payroll", "self:payslips"],
+        href: "/me/pay",
       },
       {
         label: "Team Payroll",
