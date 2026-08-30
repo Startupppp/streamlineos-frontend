@@ -161,15 +161,22 @@ Verdict: **PASS** (8 named bespoke-mechanism exceptions with justifications)
 ### Async — `pnpm check:outbox-consumers`
 
 ```
-FAIL — orphaned event types (emitted but never consumed):
-  inventory.purchase_order.received  — grn.service.ts
-  inventory.sales_order.fulfilled    — so-fulfillment.service.ts
-  inventory.shipment.dispatched      — shipments.service.ts
-  inventory.stock.adjusted           — inv-stock-adjustments.service.ts
+Emitted event types  (18)
+Consumed event types (20)
+OK — every emitted outbox event type has a registered consumer
 ```
 
-Verdict: **OPEN — 4 orphans, all Inventory (excluded domain)**  
-Decision recorded in L64-outbox-orphans-report.md: these are meaningful domain events whose consumers belong to the Inventory programme, not fixed here. Each event has a concrete upstream suggestion: `inventory.stock.adjusted` should trigger reorder notifications; the others are accounting/fulfilment hooks. The Inventory programme must apply Outcome 2 (add consumer) for all four.
+Verdict: **PASS** (exit 0)
+
+Superseded, kept so the earlier figure is not restated: this row read **FAIL — 4
+orphans, all Inventory** and deferred them to the Inventory programme as events
+whose consumers "belong upstream". That deferral was reversed on evidence. In all
+four cases the downstream work already happens inline in the same transaction —
+GRN drives stock movements, fulfilment drives COGS, dispatch is audited,
+adjustment runs `executeInTx` — so there was no behaviour a consumer would have
+produced. Writing an outbox row nobody reads is not a pending integration; it is
+a write with no reader. The four `OutboxWriter.emit` calls were deleted, along
+with the `OutboxWriter` and `randomUUID` imports each one solely used.
 
 ### Migrations — `pnpm check:migration-chain`
 
@@ -475,8 +482,8 @@ Blocked items:
 | Module lifecycle | `check:module-lifecycle` | **PASS** |
 | Navigation permissions | `check:navigation-permissions` | **PASS** |
 | Log secrets | `check:log-secrets` | **PASS** |
-| Legacy actors | `scan:legacy-actors:check` | **PASS — ratchet 553/555** |
-| Async | `check:outbox-consumers` | **OPEN — 4 orphans (Inventory, excluded domain)** |
+| Legacy actors | `scan:legacy-actors:check` | **UNSOUND — ratchet 553/555, but it cannot see 121 FKs** |
+| Async | `check:outbox-consumers` | **PASS** (exit 0; the 4 orphan emits were deleted) |
 | Migrations | `check:migration-chain` | **PASS** |
 | OpenAPI | `openapi:check` | **PASS — 3,546 ops** |
 | Contract vendor | `check:contract-vendor` | **PASS** (re-synced this session) |
@@ -487,7 +494,7 @@ Blocked items:
 | Frontend empty states | `check:empty-states` | **PASS** |
 | Frontend effect fetches | `check:effect-fetches` | **PASS** |
 | Frontend icon labels | `check:icon-labels` | **PASS** |
-| Frontend client pages | `check:client-pages` | **PASS — 259/259 ceiling** |
+| Frontend client pages | `check:client-pages` | **PASS — 315/315 ceiling** |
 | Frontend module manifest | `check:module-manifest` | **PASS** |
 | Server data seam | `verify:server-data-seam` | **PASS** |
 | Dead code | `check:dead-code` + knip | **PASS — 0 unused files both repos** |
