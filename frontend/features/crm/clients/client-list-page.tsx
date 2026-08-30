@@ -223,14 +223,14 @@ export function ClientListPage() {
           <EmptyState
             access={access}
             illustration={<EmptyClientsIllustration />}
-            title={isFiltered ? "No clients match these filters" : "No clients yet"}
+            title="No clients yet"
             description={
               isFiltered
-                ? "Nothing matches the current search and status. Clear them to see every client."
+                ? "No results match your filters."
                 : "A client account is created when a lead converts. Win a lead and it will appear here."
             }
-            action={isFiltered ? { label: "Clear filters", onClick: handleClearFilters } : undefined}
-            actionVariant={isFiltered ? "outline" : undefined}
+            filtersActive={isFiltered}
+            onClearFilters={handleClearFilters}
             className={CONTENT_FILL_PANEL}
           />
         ) : (

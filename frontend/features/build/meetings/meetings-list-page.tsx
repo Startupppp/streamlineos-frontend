@@ -307,9 +307,9 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
   ) : (
     <EmptyState
       illustrationPreset="search"
-      title="No meetings match your filters"
-      description={search ? `No meetings found for "${search}".` : "Try adjusting your filters."}
-      action={{ label: "Clear filters", onClick: handleClearFilters }}
+      title="No meetings found"
+      filtersActive={isFiltered}
+      onClearFilters={handleClearFilters}
       className="flex-1 min-h-0"
     />
   );

@@ -154,6 +154,11 @@ export function WorkersPage() {
     setStatus(value as WorkerStatus | "ALL");
   }
 
+  function handleClearFilters() {
+    setSearch("");
+    setStatus("ALL");
+  }
+
   function handleOpenCreate() {
     setCreateOpen(true);
   }
@@ -301,19 +306,11 @@ export function WorkersPage() {
             <EmptyState
               className={CONTENT_FILL_PANEL}
               illustrationPreset="team"
-              title={isFiltered ? "No matching workers" : "No workers yet"}
-              description={
-                isFiltered
-                  ? "Try adjusting your search or filter."
-                  : "Add workers to build your workforce directory."
-              }
-              action={
-                isFiltered
-                  ? undefined
-                  : canManage
-                    ? { label: "Add Worker", onClick: handleOpenCreate }
-                    : undefined
-              }
+              title="No workers yet"
+              description={isFiltered ? "No results match your filters." : "Add workers to build your workforce directory."}
+              filtersActive={isFiltered}
+              onClearFilters={handleClearFilters}
+              action={!isFiltered && canManage ? { label: "Add Worker", onClick: handleOpenCreate } : undefined}
             />
           ) : (
             <>

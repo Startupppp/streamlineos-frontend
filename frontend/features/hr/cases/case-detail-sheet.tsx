@@ -22,7 +22,8 @@ import {
   TABS_CONTENT_PAGE_BODY_CLASS,
 } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import { FileText, StickyNote, Lock, Loader2 } from "lucide-react";
+import { FileText, StickyNote, Lock } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -74,7 +75,11 @@ function NoteThread({ caseId }: { caseId: number }) {
     });
   }
 
-  if (isLoading) return <Loader2 className="h-4 w-4 animate-spin mx-auto mt-4" />;
+  if (isLoading) return (
+    <div className="space-y-2 pt-1">
+      {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}
+    </div>
+  );
 
   return (
     <div className="space-y-3">
@@ -128,7 +133,11 @@ function NoteThread({ caseId }: { caseId: number }) {
 function DocumentsList({ caseId }: { caseId: number }) {
   const { data: docs, isLoading } = useCaseDocuments(caseId);
 
-  if (isLoading) return <Loader2 className="h-4 w-4 animate-spin mx-auto mt-4" />;
+  if (isLoading) return (
+    <div className="space-y-2 pt-1">
+      {Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-10 w-full rounded-lg" />)}
+    </div>
+  );
   if (!docs?.length) return <p className="text-xs text-muted-foreground">No documents attached</p>;
 
   return (

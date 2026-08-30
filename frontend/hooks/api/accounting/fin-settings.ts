@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   AccountingSettings,
   NumberSequence,
@@ -24,10 +25,12 @@ const finSettingsKeys = {
 };
 
 export function useAccountingSettings() {
+  const can = useCan("accounting:settings:read");
   return useQuery<AccountingSettings, Error>({
     queryKey: finSettingsKeys.settings(),
     queryFn: () => apiClient.get<AccountingSettings>("/accounting/settings"),
     staleTime: 120_000,
+    enabled: can,
   });
 }
 
@@ -44,18 +47,22 @@ export function useUpdateAccountingSettings() {
 }
 
 export function useSetupStatus() {
+  const can = useCan("accounting:settings:read");
   return useQuery<SetupStatus, Error>({
     queryKey: finSettingsKeys.setupStatus(),
     queryFn: () => apiClient.get<SetupStatus>("/accounting/settings/setup-status"),
     staleTime: 300_000,
+    enabled: can,
   });
 }
 
 export function useNumberSequences() {
+  const can = useCan("accounting:settings:read");
   return useQuery<{ items: NumberSequence[] }, Error>({
     queryKey: finSettingsKeys.sequences(),
     queryFn: () => apiClient.get<{ items: NumberSequence[] }>("/accounting/settings/sequences"),
     staleTime: 300_000,
+    enabled: can,
   });
 }
 
@@ -75,11 +82,13 @@ export function useUpdateNumberSequence(entityType: string) {
 }
 
 export function useSystemAccounts() {
+  const can = useCan("accounting:settings:manage");
   return useQuery<{ items: SystemAccountMapping[] }, Error>({
     queryKey: finSettingsKeys.systemAccounts(),
     queryFn: () =>
       apiClient.get<{ items: SystemAccountMapping[] }>("/accounting/settings/system-accounts"),
     staleTime: 300_000,
+    enabled: can,
   });
 }
 

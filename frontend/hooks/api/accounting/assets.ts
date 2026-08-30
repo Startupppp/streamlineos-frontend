@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   AssetCategory,
   AssetDetail,
@@ -64,11 +65,13 @@ function toQuery<P extends object>(params: P): Record<string, string> {
 }
 
 export function useAssetCategories(params: ListCategoriesParams = {}) {
+  const can = useCan("accounting:assets:read");
   return useQuery<ListResponse<AssetCategory>, Error>({
     queryKey: assetKeys.categories(params),
     queryFn: () =>
       apiClient.get<ListResponse<AssetCategory>>("/accounting/assets/categories", toQuery(params)),
     staleTime: 120_000,
+    enabled: can,
   });
 }
 
@@ -96,11 +99,13 @@ export function useUpdateAssetCategory(id: number) {
 }
 
 export function useAssets(params: ListAssetsParams = {}) {
+  const can = useCan("accounting:assets:read");
   return useQuery<ListResponse<AssetListItem>, Error>({
     queryKey: assetKeys.assets(params),
     queryFn: () =>
       apiClient.get<ListResponse<AssetListItem>>("/accounting/assets", toQuery(params)),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 
@@ -116,11 +121,12 @@ export function useCreateAsset() {
 }
 
 export function useAsset(assetId: number) {
+  const can = useCan("accounting:assets:read");
   return useQuery<AssetDetail, Error>({
     queryKey: assetKeys.asset(assetId),
     queryFn: () => apiClient.get<AssetDetail>(`/accounting/assets/${assetId}`),
     staleTime: 30_000,
-    enabled: assetId > 0,
+    enabled: can && assetId > 0,
   });
 }
 
@@ -161,11 +167,13 @@ export function useDisposeAsset(assetId: number) {
 }
 
 export function useDepreciationRuns(params: ListRunsParams = {}) {
+  const can = useCan("accounting:assets:read");
   return useQuery<ListResponse<DepreciationRun>, Error>({
     queryKey: assetKeys.runs(params),
     queryFn: () =>
       apiClient.get<ListResponse<DepreciationRun>>("/accounting/assets/depreciation/runs", toQuery(params)),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 

@@ -3,6 +3,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   ArPayment,
   ArPaymentMethod,
@@ -60,6 +61,7 @@ export interface ListCreditNotesParams {
 }
 
 export function useCreditNotes(params: ListCreditNotesParams = {}) {
+  const can = useCan("accounting:credit-notes:read");
   return useQuery<ListResponse<CreditNote>, Error>({
     queryKey: arKeys.creditNotes.list(params),
     queryFn: () =>
@@ -69,6 +71,7 @@ export function useCreditNotes(params: ListCreditNotesParams = {}) {
       ),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
+    enabled: can,
   });
 }
 
@@ -79,6 +82,7 @@ export interface ListRecurringTemplatesParams {
 }
 
 export function useRecurringTemplates(params: ListRecurringTemplatesParams = {}) {
+  const can = useCan("accounting:recurring:read");
   return useQuery<ListResponse<RecurringInvoiceTemplate>, Error>({
     queryKey: arKeys.recurringTemplates.list(params),
     queryFn: () =>
@@ -87,6 +91,7 @@ export function useRecurringTemplates(params: ListRecurringTemplatesParams = {})
         toQuery(params),
       ),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 
@@ -100,6 +105,7 @@ export interface ArPaymentsParams {
 }
 
 export function useArPayments(params: ArPaymentsParams = {}) {
+  const can = useCan("accounting:receivables:read");
   return useQuery<ListResponse<ArPayment>, Error>({
     queryKey: arKeys.arPayments.list(params),
     queryFn: () =>
@@ -108,6 +114,7 @@ export function useArPayments(params: ArPaymentsParams = {}) {
         toQuery(params),
       ),
     staleTime: 30_000,
+    enabled: can,
   });
 }
 

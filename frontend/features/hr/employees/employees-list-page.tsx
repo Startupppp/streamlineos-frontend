@@ -327,19 +327,15 @@ export function EmployeesListPage() {
             ) : employees.length === 0 ? (
               <EmptyState
                 illustrationPreset="team"
-                title="No employees match your filters"
+                title="No employees yet"
                 description={
                   hasFilters
-                    ? "Try adjusting your search or filters."
+                    ? "No results match your filters."
                     : "Your employee directory is empty. Add your first team member to get started."
                 }
-                action={
-                  hasFilters
-                    ? { label: "Clear filters", onClick: clearFilters }
-                    : canOnboard
-                      ? { label: "Add Employee", href: "/hr/onboarding" }
-                      : undefined
-                }
+                filtersActive={hasFilters}
+                onClearFilters={clearFilters}
+                action={!hasFilters && canOnboard ? { label: "Add Employee", href: "/hr/onboarding" } : undefined}
                 className={PAGE_BODY_EMPTY_CLASS}
               />
             ) : view === "grid" ? (

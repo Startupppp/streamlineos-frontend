@@ -77,7 +77,7 @@ export function MergeFeedbackDialog({ post, onOpenChange }: MergeFeedbackDialogP
           <DialogTitle>Merge feedback</DialogTitle>
           <DialogDescription>
             {post
-              ? `“${post.title}” will be marked as a duplicate and its votes moved to the post you pick. Voters who already voted on both are only counted once.`
+              ? `"${post.title}" will be marked as a duplicate and its votes moved to the post you pick. Voters who already voted on both are only counted once.`
               : null}
           </DialogDescription>
         </DialogHeader>

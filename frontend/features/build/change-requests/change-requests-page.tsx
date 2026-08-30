@@ -125,6 +125,13 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
     void refetch();
   }, [refetch]);
 
+  const filtersActive = !!(search || statusFilter !== "all");
+
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    setStatusFilter("all");
+  }, []);
+
   const filtered = useMemo(
     () => (crs ?? []).filter((cr) => !search || cr.title.toLowerCase().includes(search.toLowerCase())),
     [crs, search],
@@ -246,16 +253,14 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
             <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
           ) : filtered.length === 0 ? (
             <EmptyState
-                className={PM_FILL_PANEL}
-                illustrationPreset="ticket"
-                title="No change requests"
-                description={
-                  search || statusFilter !== "all"
-                    ? "No change requests match the active filters."
-                    : "Create a change request to get started."
-                }
-                action={canCreate ? { label: "New Change Request", onClick: handleNew } : undefined}
-              />
+              className={PM_FILL_PANEL}
+              illustrationPreset="ticket"
+              title="No change requests"
+              description={filtersActive ? undefined : "Create a change request to get started."}
+              filtersActive={filtersActive}
+              onClearFilters={handleClearFilters}
+              action={canCreate && !filtersActive ? { label: "New Change Request", onClick: handleNew } : undefined}
+            />
           ) : (
             <DataTable<ChangeRequest>
                 data={filtered}

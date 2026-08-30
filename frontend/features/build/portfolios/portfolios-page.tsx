@@ -321,22 +321,14 @@ export function PortfoliosPage() {
             <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
           ) : displayed.length === 0 ? (
             <EmptyState
-                className={PM_FILL_PANEL}
-                illustrationPreset="projects"
-                title={isFiltered ? "No matching portfolios" : "No portfolios yet"}
-                description={
-                  isFiltered
-                    ? "Try adjusting your filters."
-                    : "Create a portfolio to group and govern your projects."
-                }
-                action={
-                  isFiltered
-                    ? { label: "Clear filters", onClick: handleClearFilters }
-                    : canManage
-                      ? { label: "New Portfolio", onClick: handleOpenCreate }
-                      : undefined
-                }
-              />
+              className={PM_FILL_PANEL}
+              illustrationPreset="projects"
+              title="No portfolios yet"
+              description={isFiltered ? undefined : "Create a portfolio to group and govern your projects."}
+              filtersActive={isFiltered}
+              onClearFilters={handleClearFilters}
+              action={canManage && !isFiltered ? { label: "New Portfolio", onClick: handleOpenCreate } : undefined}
+            />
           ) : (
             <>
               <DataTable

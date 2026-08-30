@@ -47,6 +47,6 @@ export function getWorkerEngagementPeriodLabel(
   engagement: WorkerEngagement,
 ): string {
   const startDate = formatWorkerEngagementDate(engagement.startsOn);
-  if (!engagement.endsOn) return `${startDate} â€“ ongoing`;
-  return `${startDate} â€“ ${formatWorkerEngagementDate(engagement.endsOn)}`;
+  if (!engagement.endsOn) return `${startDate} — ongoing`;
+  return `${startDate} — ${formatWorkerEngagementDate(engagement.endsOn)}`;
 }

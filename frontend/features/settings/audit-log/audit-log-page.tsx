@@ -192,12 +192,9 @@ export function AuditLogPage() {
     <EmptyState
       illustrationPreset="activity"
       title="No audit events found"
-      description={
-        hasActiveFilters
-          ? "Try adjusting your search or filters."
-          : "System actions and changes will appear here."
-      }
-      action={hasActiveFilters ? { label: "Clear filters", onClick: resetFilters } : undefined}
+      description={hasActiveFilters ? "No results match your filters." : "System actions and changes will appear here."}
+      filtersActive={hasActiveFilters}
+      onClearFilters={resetFilters}
     />
   );
 

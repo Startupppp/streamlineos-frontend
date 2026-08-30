@@ -336,19 +336,11 @@ export function ManagedProductsPage() {
             <EmptyState
               className={PM_FILL_PANEL}
               illustrationPreset="projects"
-              title={isFiltered ? "No matching products" : "No managed products yet"}
-              description={
-                isFiltered
-                  ? "Try adjusting your filters."
-                  : "Create a managed product to track delivery across projects."
-              }
-              action={
-                isFiltered
-                  ? { label: "Clear filters", onClick: handleClearFilters }
-                  : canCreate
-                    ? { label: "New Product", onClick: handleOpenCreate }
-                    : undefined
-              }
+              title="No managed products yet"
+              description={isFiltered ? undefined : "Create a managed product to track delivery across projects."}
+              filtersActive={isFiltered}
+              onClearFilters={handleClearFilters}
+              action={canCreate && !isFiltered ? { label: "New Product", onClick: handleOpenCreate } : undefined}
             />
           ) : (
             <>

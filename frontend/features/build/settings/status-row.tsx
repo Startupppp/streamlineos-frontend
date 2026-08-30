@@ -337,7 +337,7 @@ export const StatusRow = memo(function StatusRow({
             </button>
           }
           title="Delete status?"
-          description={`Tickets using “${state.name}” will move to another Unstarted status. At least one Unstarted and one Completed status must remain.`}
+          description={`Tickets using "${state.name}" will move to another Unstarted status. At least one Unstarted and one Completed status must remain.`}
           confirmLabel="Delete"
           destructive
           onConfirm={handleDelete}

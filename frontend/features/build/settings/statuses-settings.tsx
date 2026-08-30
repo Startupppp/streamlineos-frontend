@@ -177,10 +177,11 @@ export function StatusesSettings({ projectId }: { projectId: number }) {
           <AnimatePresence>
             {showForm ? (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="p-3 rounded-lg border border-border bg-muted/30 space-y-3 overflow-hidden"
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.18, ease: "easeOut" }}
+                className="p-3 rounded-lg border border-border bg-muted/30 space-y-3"
               >
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">

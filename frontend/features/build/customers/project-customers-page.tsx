@@ -105,6 +105,14 @@ export function ProjectCustomersPage() {
     void refetch();
   }, [refetch]);
 
+  const customersFiltersActive = !!(debouncedSearch || filters.industry || filters.size);
+
+  const handleClearCustomerFilters = useCallback(() => {
+    setSearch("");
+    setFilters({});
+    updateParams({ q: null, industry: null, size: null, page: null });
+  }, [updateParams]);
+
   const customers = data?.organizations ?? [];
   const filteredCustomers = filters.size
     ? customers.filter((c) => c.size === filters.size)
@@ -206,11 +214,9 @@ export function ProjectCustomersPage() {
                   <EmptyCompaniesIllustration className="h-full w-full" />
                 }
                 title="No customers found"
-                description={
-                  debouncedSearch || filters.industry || filters.size
-                    ? "No customers match your current filters."
-                    : "Companies from your CRM will appear here."
-                }
+                description={customersFiltersActive ? undefined : "Companies from your CRM will appear here."}
+                filtersActive={customersFiltersActive}
+                onClearFilters={handleClearCustomerFilters}
                 className="border-0 bg-transparent min-h-[40dvh]"
               />
             }

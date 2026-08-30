@@ -3,6 +3,7 @@
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export type AutomationTrigger =
   | "lead.created"
@@ -128,6 +129,7 @@ interface AutomationListParams {
 }
 
 export function useAutomations(params?: AutomationListParams) {
+  const canView = useCan("settings:automations:view");
   return useQuery({
     queryKey: [...queryKeys.automations.all, "list", params] as const,
     queryFn: () => {
@@ -139,14 +141,16 @@ export function useAutomations(params?: AutomationListParams) {
     },
     staleTime: 30_000,
     placeholderData: keepPreviousData,
+    enabled: canView,
   });
 }
 
 export function useAutomationRuns(ruleId: number) {
+  const canView = useCan("settings:automations:view");
   return useQuery({
     queryKey: queryKeys.automations.runs(ruleId),
     queryFn: () => apiClient.get<AutomationRun[]>(`/settings/automations/${ruleId}/runs`),
-    enabled: Number.isFinite(ruleId) && ruleId > 0,
+    enabled: canView && Number.isFinite(ruleId) && ruleId > 0,
     staleTime: 35_000,
     refetchInterval: 30_000,
     refetchIntervalInBackground: false,

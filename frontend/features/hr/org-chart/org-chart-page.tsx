@@ -305,7 +305,7 @@ export function OrgChartPage() {
           <SearchInput
             value={searchInput}
             onValueChange={handleSearchChange}
-            placeholder="Search people, roles, departmentsâ€¦"
+            placeholder="Search people, roles, departments…"
             maxLength={100}
           />
         </div>

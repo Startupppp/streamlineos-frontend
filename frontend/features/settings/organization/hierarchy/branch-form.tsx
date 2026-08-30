@@ -94,7 +94,7 @@ export function BranchForm({
                     onValueChange={field.onChange}
                     label="Business unit"
                     placeholder="Select a business unit"
-                    searchPlaceholder="Search business unitsâ€¦"
+                    searchPlaceholder="Search business units…"
                     emptyText="No active business units found."
                     selectedLabel={selectedBusinessUnitName}
                     optionalLabel="No business unit"
@@ -114,7 +114,7 @@ export function BranchForm({
                   <UserCombobox
                     value={field.value ?? ""}
                     onChange={field.onChange}
-                    placeholder="Select managerâ€¦"
+                    placeholder="Select manager…"
                   />
                 </FormControl>
                 <FormMessage />

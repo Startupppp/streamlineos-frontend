@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   ApprovalPolicy,
   ApprovalRecordType,
@@ -49,6 +50,7 @@ interface ListApprovalPoliciesParams {
 }
 
 export function useApprovalPolicies(params: ListApprovalPoliciesParams = {}) {
+  const can = useCan("accounting:approvals:read");
   return useQuery<ListResponse<ApprovalPolicy>, Error>({
     queryKey: settingsKeys.policies(params),
     queryFn: () =>
@@ -57,6 +59,7 @@ export function useApprovalPolicies(params: ListApprovalPoliciesParams = {}) {
         toQuery(params),
       ),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 
@@ -114,6 +117,7 @@ interface ListApprovalsParams {
 }
 
 export function useApprovals(params: ListApprovalsParams = {}) {
+  const can = useCan("accounting:approvals:read");
   return useQuery<ListResponse<ApprovalRequest>, Error>({
     queryKey: approvalsKeys.list(params),
     queryFn: () =>
@@ -122,6 +126,7 @@ export function useApprovals(params: ListApprovalsParams = {}) {
         toQuery(params),
       ),
     staleTime: 30_000,
+    enabled: can,
   });
 }
 
@@ -132,10 +137,12 @@ interface ApprovalCounts {
 }
 
 export function useApprovalCounts() {
+  const can = useCan("accounting:approvals:read");
   return useQuery<ApprovalCounts, Error>({
     queryKey: approvalsKeys.counts,
     queryFn: () => apiClient.get<ApprovalCounts>("/accounting/approvals/counts"),
     staleTime: 30_000,
+    enabled: can,
   });
 }
 
@@ -179,6 +186,7 @@ interface ListExchangeRatesParams {
 }
 
 export function useExchangeRates(params: ListExchangeRatesParams = {}) {
+  const can = useCan("accounting:settings:read");
   return useQuery<ListResponse<ExchangeRate>, Error>({
     queryKey: settingsKeys.rates(params),
     queryFn: () =>
@@ -187,6 +195,7 @@ export function useExchangeRates(params: ListExchangeRatesParams = {}) {
         toQuery(params),
       ),
     staleTime: 120_000,
+    enabled: can,
   });
 }
 

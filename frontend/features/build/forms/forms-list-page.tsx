@@ -221,22 +221,14 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
             <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
           ) : filtered.length === 0 ? (
             <EmptyState
-                className={PM_FILL_PANEL}
-                illustrationPreset="documents"
-                title={isFiltered ? "No matching forms" : "No forms yet"}
-                description={
-                  isFiltered
-                    ? "No forms match your current filters."
-                    : "Create a form to collect structured data from your team or clients."
-                }
-                action={
-                  isFiltered
-                    ? { label: "Clear filters", onClick: handleClearFilters }
-                    : canManage
-                      ? { label: "New Form", onClick: handleNewForm }
-                      : undefined
-                }
-              />
+              className={PM_FILL_PANEL}
+              illustrationPreset="documents"
+              title="No forms yet"
+              description={isFiltered ? undefined : "Create a form to collect structured data from your team or clients."}
+              filtersActive={isFiltered}
+              onClearFilters={handleClearFilters}
+              action={canManage && !isFiltered ? { label: "New Form", onClick: handleNewForm } : undefined}
+            />
           ) : (
             <DataTable
                 data={filtered}

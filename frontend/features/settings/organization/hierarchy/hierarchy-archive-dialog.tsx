@@ -81,12 +81,12 @@ export function HierarchyArchiveDialog({
       }
       description={
         isChecking
-          ? `Checking whether “${unitName}” is still used by other records.`
+          ? `Checking whether "${unitName}" is still used by other records.`
           : isDependencyBlocked
             ? `This ${unitLabel} is still in use. Update its dependent records before you archive it.`
             : isPreflightFailure
-              ? `We could not verify whether “${unitName}” is still in use. Nothing has been changed.`
-              : `“${unitName}” will no longer be available for new assignments. Its history is preserved and you can restore it later.`
+              ? `We could not verify whether "${unitName}" is still in use. Nothing has been changed.`
+              : `"${unitName}" will no longer be available for new assignments. Its history is preserved and you can restore it later.`
       }
       icon={
         <span

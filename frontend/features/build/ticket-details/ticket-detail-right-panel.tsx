@@ -231,15 +231,9 @@ export function TicketDetailRightPanel({
         {open ? (
           <motion.aside
             key="ticket-detail-right-panel"
-            initial={
-              shouldReduceMotion ? false : { width: 0, opacity: 0 }
-            }
-            animate={{ width: "auto", opacity: 1 }}
-            exit={
-              shouldReduceMotion
-                ? { opacity: 0 }
-                : { width: 0, opacity: 0 }
-            }
+            initial={shouldReduceMotion ? false : { opacity: 0, x: 12 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: 12 }}
             transition={panelTransition}
             className="hidden h-full min-h-0 shrink-0 self-stretch overflow-hidden border-border bg-card md:flex md:flex-col md:border-l"
           >

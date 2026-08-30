@@ -19,11 +19,11 @@ type SidePanelsProps = {
 };
 
 const panelMotion = {
-  initial: { width: 0, opacity: 0 },
-  animate: { width: 320, opacity: 1 },
-  exit: { width: 0, opacity: 0 },
+  initial: { opacity: 0, x: 20 },
+  animate: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: 20 },
   transition: { duration: 0.2, ease: "easeInOut" as const },
-  className: "hidden lg:flex flex-col overflow-hidden shrink-0",
+  className: "hidden lg:flex w-80 flex-col overflow-hidden shrink-0",
 };
 
 export function MessagePanelSidePanels({

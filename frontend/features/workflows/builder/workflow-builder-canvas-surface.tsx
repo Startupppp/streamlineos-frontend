@@ -56,11 +56,13 @@ export function WorkflowBuilderCanvasSurface({ initialEdges, initialNodes, onDef
       setNodes((currentNodes) => {
         return [...currentNodes, node];
       });
-    } catch { /* A non-workflow drag payload must not change the canvas. */ }
+    } catch { }
   }
 
   function handleDragOver(event: DragEvent<HTMLDivElement>) { event.preventDefault(); event.dataTransfer.dropEffect = "move"; }
   function handleNodeClick(_: MouseEvent, node: WorkflowNode) { setSelectedNode(node); }
+  function handlePaneClick() { setSelectedNode(null); }
+  function handleCloseConfigPanel() { setSelectedNode(null); }
   function handleNodeDataChange(id: string, data: Partial<WorkflowNodeData>) {
     setNodes((currentNodes) => {
       return currentNodes.map((node) => node.id === id ? { ...node, data: { ...node.data, ...data } } : node);
@@ -71,14 +73,14 @@ export function WorkflowBuilderCanvasSurface({ initialEdges, initialNodes, onDef
   return (
     <div className="flex-1 min-h-0 flex">
       <div className="flex-1" onDrop={handleDrop} onDragOver={handleDragOver}>
-        <ReactFlow nodes={nodes} edges={edges} onNodesChange={handleNodesChange} onEdgesChange={handleEdgesChange} onConnect={handleConnect} onNodeClick={handleNodeClick} onPaneClick={() => setSelectedNode(null)} nodeTypes={workflowNodeTypes} defaultEdgeOptions={DEFAULT_EDGE_OPTIONS} fitView deleteKeyCode="Delete" className="bg-muted/30">
+        <ReactFlow nodes={nodes} edges={edges} onNodesChange={handleNodesChange} onEdgesChange={handleEdgesChange} onConnect={handleConnect} onNodeClick={handleNodeClick} onPaneClick={handlePaneClick} nodeTypes={workflowNodeTypes} defaultEdgeOptions={DEFAULT_EDGE_OPTIONS} fitView deleteKeyCode="Delete" className="bg-muted/30">
           <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="var(--border)" />
           <Controls className="border border-border shadow-sm rounded-lg overflow-hidden" />
           <MiniMap className="border border-border shadow-sm rounded-lg overflow-hidden" />
           <Panel position="bottom-center"><div className="bg-card/90 backdrop-blur-sm border border-border rounded-full px-4 py-1.5 shadow-sm flex items-center gap-3 text-dense text-muted-foreground"><span>{nodes.length} node{nodes.length !== 1 ? "s" : ""}</span><span className="w-px h-3 bg-border" /><span>{edges.length} connection{edges.length !== 1 ? "s" : ""}</span><span className="w-px h-3 bg-border" /><span>Delete key removes selected</span></div></Panel>
         </ReactFlow>
       </div>
-      {selectedNode && <WorkflowNodeConfigPanel node={selectedNode} onChange={handleNodeDataChange} onClose={() => setSelectedNode(null)} />}
+      {selectedNode && <WorkflowNodeConfigPanel node={selectedNode} onChange={handleNodeDataChange} onClose={handleCloseConfigPanel} />}
     </div>
   );
 }

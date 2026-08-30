@@ -94,7 +94,7 @@ export function DepartmentForm({
                     onValueChange={field.onChange}
                     label="Branch"
                     placeholder="Select a branch"
-                    searchPlaceholder="Search branchesâ€¦"
+                    searchPlaceholder="Search branches…"
                     emptyText="No active branches found."
                     selectedLabel={selectedBranchName}
                     optionalLabel="No branch"
@@ -115,7 +115,7 @@ export function DepartmentForm({
                 <UserCombobox
                   value={field.value ?? ""}
                   onChange={field.onChange}
-                  placeholder="Select headâ€¦"
+                  placeholder="Select head…"
                 />
               </FormControl>
               <FormMessage />
@@ -131,7 +131,7 @@ export function DepartmentForm({
               <FormControl>
                 <Textarea
                   rows={3}
-                  placeholder="Optional descriptionâ€¦"
+                  placeholder="Optional description…"
                   {...field}
                 />
               </FormControl>

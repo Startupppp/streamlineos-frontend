@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
 
 export type BankAccountType = "BANK" | "CASH" | "CARD" | "WALLET";
 export type BankTxnStatus = "UNMATCHED" | "SUGGESTED" | "MATCHED" | "RECONCILED" | "IGNORED";
@@ -150,19 +151,23 @@ function toQuery(params: Record<string, unknown>): Record<string, string> {
 }
 
 export function useBankAccounts(params: Record<string, unknown> = {}) {
+  const can = useCan("accounting:banking:read");
   return useQuery<ListResponse<BankAccount>, Error>({
     queryKey: bankingKeys.accounts(params),
     queryFn: () =>
       apiClient.get<ListResponse<BankAccount>>("/finance/bank-accounts", toQuery(params)),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 
 export function useBankAccount(id: number) {
+  const can = useCan("accounting:banking:read");
   return useQuery<BankAccount, Error>({
     queryKey: bankingKeys.account(id),
     queryFn: () => apiClient.get<BankAccount>(`/finance/bank-accounts/${id}`),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 
@@ -176,6 +181,7 @@ type ListTxnParams = {
 };
 
 export function useBankTransactions(bankAccountId: number, params: ListTxnParams = {}) {
+  const can = useCan("accounting:banking:read");
   return useQuery<ListResponse<BankTransaction>, Error>({
     queryKey: bankingKeys.transactions(bankAccountId, params),
     queryFn: () =>
@@ -184,6 +190,7 @@ export function useBankTransactions(bankAccountId: number, params: ListTxnParams
         toQuery(params),
       ),
     staleTime: 30_000,
+    enabled: can,
   });
 }
 
@@ -246,6 +253,7 @@ export function useCreateBankImport() {
 }
 
 export function useReconciliationWorkspace(bankAccountId: number) {
+  const can = useCan("accounting:banking:reconcile");
   return useQuery<ReconciliationWorkspace, Error>({
     queryKey: bankingKeys.reconciliation(bankAccountId),
     queryFn: () =>
@@ -253,6 +261,7 @@ export function useReconciliationWorkspace(bankAccountId: number) {
         `/finance/reconciliation/${bankAccountId}`,
       ),
     staleTime: 0,
+    enabled: can,
   });
 }
 
@@ -385,6 +394,7 @@ export function useIgnoreTransaction(bankAccountId: number) {
 }
 
 export function useReconciliationRules(bankAccountId: number) {
+  const can = useCan("accounting:banking:reconcile");
   return useQuery<ReconciliationRule[], Error>({
     queryKey: bankingKeys.rules(bankAccountId),
     queryFn: () =>
@@ -392,6 +402,7 @@ export function useReconciliationRules(bankAccountId: number) {
         `/finance/reconciliation/${bankAccountId}/rules`,
       ),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 
@@ -441,11 +452,13 @@ export function useDeleteReconciliationRule(bankAccountId: number) {
 }
 
 export function useTransfers(params: Record<string, unknown> = {}) {
+  const can = useCan("accounting:banking:read");
   return useQuery<ListResponse<BankTransfer>, Error>({
     queryKey: bankingKeys.transfers(params),
     queryFn: () =>
       apiClient.get<ListResponse<BankTransfer>>("/finance/transfers", toQuery(params)),
     staleTime: 30_000,
+    enabled: can,
   });
 }
 

@@ -168,18 +168,21 @@ export function LotsClient() {
     setPage(1);
   }
 
+  function handleClearFilters(): void {
+    setSearch("");
+    setStatus("ALL");
+    setExpiringWithinDays("ALL");
+    setPage(1);
+  }
+
   const emptyState = (
     <motion.div variants={fadeUp} initial="hidden" animate="visible">
       <InventoryEmptyState
-        illustration={
-          hasFilters ? <EmptySearchIllustration /> : <EmptyTransferIllustration />
-        }
-        title={hasFilters ? "No lots match your filters" : "No lots found"}
-        description={
-          hasFilters
-            ? "Try adjusting your search or filters."
-            : "Lots will appear here once items are received with lot tracking enabled."
-        }
+        illustration={<EmptyTransferIllustration />}
+        title="No lots found"
+        description={hasFilters ? undefined : "Lots will appear here once items are received with lot tracking enabled."}
+        filtersActive={hasFilters}
+        onClearFilters={handleClearFilters}
         className="flex-1"
       />
     </motion.div>

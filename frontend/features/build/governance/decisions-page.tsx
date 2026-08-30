@@ -254,22 +254,14 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
             <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
           ) : displayed.length === 0 ? (
             <EmptyState
-                className={PM_FILL_PANEL}
-                illustrationPreset="documents"
-                title={isFiltered ? "No matching decisions" : "No decisions recorded"}
-                description={
-                  isFiltered
-                    ? "Try adjusting your filters."
-                    : "Record key project decisions to maintain a clear audit trail."
-                }
-                action={
-                  isFiltered
-                    ? { label: "Clear filters", onClick: handleClearFilters }
-                    : canManage
-                      ? { label: "Log Decision", onClick: handleNewDecision }
-                      : undefined
-                }
-              />
+              className={PM_FILL_PANEL}
+              illustrationPreset="documents"
+              title="No decisions recorded"
+              description={isFiltered ? undefined : "Record key project decisions to maintain a clear audit trail."}
+              filtersActive={isFiltered}
+              onClearFilters={handleClearFilters}
+              action={canManage && !isFiltered ? { label: "Log Decision", onClick: handleNewDecision } : undefined}
+            />
           ) : (
             <DataTable
               data={displayed}

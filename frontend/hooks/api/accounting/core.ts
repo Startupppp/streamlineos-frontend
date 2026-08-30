@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import type { PeriodStatus } from "@/features/accounting/shared";
+import { useCan } from "@/hooks/api/access";
 
 const coreKeys = {
   all: ["streamlineos", "accounting", "core"] as const,
@@ -204,26 +205,32 @@ export interface PostOpeningBalancesInput {
 }
 
 export function useCoaTree() {
+  const can = useCan("accounting:accounts:read");
   return useQuery<{ items: AccountTreeNode[] }, Error>({
     queryKey: coreKeys.coaTree(),
     queryFn: () => apiClient.get<{ items: AccountTreeNode[] }>("/accounting/coa/tree"),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 
 export function useCoaTemplates() {
+  const can = useCan("accounting:accounts:read");
   return useQuery<{ items: CoaTemplate[] }, Error>({
     queryKey: coreKeys.coaTemplates(),
     queryFn: () => apiClient.get<{ items: CoaTemplate[] }>("/accounting/coa/templates"),
     staleTime: 300_000,
+    enabled: can,
   });
 }
 
 export function useSetupStatus() {
+  const can = useCan("accounting:settings:read");
   return useQuery<{ steps: SetupStep[] }, Error>({
     queryKey: coreKeys.setupStatus(),
     queryFn: () => apiClient.get<{ steps: SetupStep[] }>("/accounting/settings/setup-status"),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 
@@ -279,30 +286,34 @@ export function useApplyTemplate() {
 }
 
 export function useGeneralLedger(params: GlParams) {
+  const can = useCan("accounting:general-ledger:read");
   return useQuery<GlResponse, Error>({
     queryKey: coreKeys.gl(params),
     queryFn: () =>
       apiClient.get<GlResponse>("/accounting/general-ledger", toQuery(params)),
-    enabled: !!params.from && !!params.to,
     staleTime: 30_000,
+    enabled: can && !!params.from && !!params.to,
   });
 }
 
 export function useGlAccounts(params: GlAccountsParams) {
+  const can = useCan("accounting:general-ledger:read");
   return useQuery<{ items: GlAccount[] }, Error>({
     queryKey: coreKeys.glAccounts(params),
     queryFn: () =>
       apiClient.get<{ items: GlAccount[] }>("/accounting/general-ledger/accounts", toQuery(params)),
-    enabled: !!params.from && !!params.to,
     staleTime: 60_000,
+    enabled: can && !!params.from && !!params.to,
   });
 }
 
 export function usePeriods() {
+  const can = useCan("accounting:periods:read");
   return useQuery<AccountingPeriod[], Error>({
     queryKey: coreKeys.periods(),
     queryFn: () => apiClient.get<AccountingPeriod[]>("/accounting/periods"),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 
@@ -319,12 +330,13 @@ export function useGeneratePeriods() {
 }
 
 export function usePeriodChecklist(periodId: number, enabled: boolean) {
+  const can = useCan("accounting:periods:manage");
   return useQuery<PeriodChecklist, Error>({
     queryKey: coreKeys.periodChecklist(periodId),
     queryFn: () =>
       apiClient.get<PeriodChecklist>(`/accounting/periods/${periodId}/close-checklist`),
-    enabled: enabled && Number.isInteger(periodId) && periodId > 0,
     staleTime: 30_000,
+    enabled: can && enabled && Number.isInteger(periodId) && periodId > 0,
   });
 }
 
@@ -365,10 +377,12 @@ export function useReopenPeriod(periodId: number) {
 }
 
 export function useOpeningBalance() {
+  const can = useCan("accounting:accounts:read");
   return useQuery<OpeningBalanceResponse, Error>({
     queryKey: coreKeys.openingBalance(),
     queryFn: () => apiClient.get<OpeningBalanceResponse>("/accounting/opening-balances"),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 
@@ -421,6 +435,7 @@ export function useRejectJournal(entryId: number) {
 }
 
 export function useRecurringJournals(params: RecurringJournalParams = {}) {
+  const can = useCan("accounting:recurring:read");
   return useQuery<{ items: RecurringJournal[]; total: number }, Error>({
     queryKey: coreKeys.recurringJournals(params),
     queryFn: () =>
@@ -429,6 +444,7 @@ export function useRecurringJournals(params: RecurringJournalParams = {}) {
         toQuery(params),
       ),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 

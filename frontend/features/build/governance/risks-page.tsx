@@ -303,22 +303,14 @@ export function RisksPage({ projectId }: RisksPageProps) {
             <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
           ) : displayed.length === 0 ? (
             <EmptyState
-                className={PM_FILL_PANEL}
-                illustrationPreset="alert"
-                title={isFiltered ? "No matching risks" : "No risks logged"}
-                description={
-                  isFiltered
-                    ? "Try adjusting your filters or clearing the matrix selection."
-                    : "Log risks to track probability, impact, and mitigation plans."
-                }
-                action={
-                  isFiltered
-                    ? { label: "Clear filters", onClick: handleClearFilters }
-                    : canManage
-                      ? { label: "New Risk", onClick: handleNewRisk }
-                      : undefined
-                }
-              />
+              className={PM_FILL_PANEL}
+              illustrationPreset="alert"
+              title="No risks logged"
+              description={isFiltered ? undefined : "Log risks to track probability, impact, and mitigation plans."}
+              filtersActive={isFiltered}
+              onClearFilters={handleClearFilters}
+              action={canManage && !isFiltered ? { label: "New Risk", onClick: handleNewRisk } : undefined}
+            />
           ) : (
             <DataTable
                 data={displayed}

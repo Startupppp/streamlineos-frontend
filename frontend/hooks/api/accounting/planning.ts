@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   BudgetDetail,
   BudgetSummary,
@@ -73,11 +74,13 @@ function toQuery<P extends object>(params: P): Record<string, string> {
 }
 
 export function useBudgets(params: ListBudgetsParams = {}) {
+  const can = useCan("accounting:budgets:read");
   return useQuery<ListResponse<BudgetSummary>, Error>({
     queryKey: planningKeys.budgets(params),
     queryFn: () =>
       apiClient.get<ListResponse<BudgetSummary>>("/accounting/budgets", toQuery(params)),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 
@@ -93,11 +96,12 @@ export function useCreateBudget() {
 }
 
 export function useBudget(id: number) {
+  const can = useCan("accounting:budgets:read");
   return useQuery<BudgetDetail, Error>({
     queryKey: planningKeys.budget(id),
     queryFn: () => apiClient.get<BudgetDetail>(`/accounting/budgets/${id}`),
     staleTime: 30_000,
-    enabled: id > 0,
+    enabled: can && id > 0,
   });
 }
 
@@ -136,11 +140,12 @@ export function useApproveBudget(id: number) {
 }
 
 export function useBudgetRevisions(id: number) {
+  const can = useCan("accounting:budgets:read");
   return useQuery<{ items: BudgetRevision[] }, Error>({
     queryKey: planningKeys.budgetRevisions(id),
     queryFn: () => apiClient.get<{ items: BudgetRevision[] }>(`/accounting/budgets/${id}/revisions`),
     staleTime: 30_000,
-    enabled: id > 0,
+    enabled: can && id > 0,
   });
 }
 
@@ -156,25 +161,29 @@ export function useDuplicateBudget(id: number) {
 }
 
 export function useBudgetVsActual(id: number, params: BvaParams = {}) {
+  const can = useCan("accounting:budgets:read");
   return useQuery<BvaResponse, Error>({
     queryKey: planningKeys.bva(id, params),
     queryFn: () =>
       apiClient.get<BvaResponse>(`/accounting/budgets/${id}/vs-actual`, toQuery(params)),
     staleTime: 30_000,
-    enabled: id > 0,
+    enabled: can && id > 0,
   });
 }
 
 export function useForecast(params: ForecastParams = {}) {
+  const can = useCan("accounting:forecast:read");
   return useQuery<ForecastResponse, Error>({
     queryKey: planningKeys.forecast(params),
     queryFn: () =>
       apiClient.get<ForecastResponse>("/accounting/forecast", toQuery(params)),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 
 export function useForecastCompare(scenarioIds: number[]) {
+  const can = useCan("accounting:forecast:read");
   return useQuery<ScenarioCompareResponse, Error>({
     queryKey: planningKeys.forecastCompare(scenarioIds),
     queryFn: () =>
@@ -182,15 +191,17 @@ export function useForecastCompare(scenarioIds: number[]) {
         scenarioIds: scenarioIds.join(","),
       }),
     staleTime: 60_000,
-    enabled: scenarioIds.length >= 2,
+    enabled: can && scenarioIds.length >= 2,
   });
 }
 
 export function useScenarios() {
+  const can = useCan("accounting:forecast:read");
   return useQuery<ListResponse<Scenario>, Error>({
     queryKey: planningKeys.scenarios(),
     queryFn: () => apiClient.get<ListResponse<Scenario>>("/accounting/scenarios"),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 

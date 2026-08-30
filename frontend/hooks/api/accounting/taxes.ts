@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   TaxCode,
   TaxDashboard,
@@ -55,11 +56,13 @@ export interface ListTaxCodesParams {
 }
 
 export function useListTaxCodes(params: ListTaxCodesParams = {}) {
+  const can = useCan("accounting:taxes:read");
   return useQuery<ListResponse<TaxCode>, Error>({
     queryKey: taxKeys.codes(params),
     queryFn: () =>
       apiClient.get<ListResponse<TaxCode>>("/accounting/tax-codes", toQuery(params)),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 
@@ -111,11 +114,12 @@ export function useSeedDefaultTaxCodes() {
 }
 
 export function useTaxDashboard(from: string, to: string) {
+  const can = useCan("accounting:taxes:read");
   return useQuery<TaxDashboard, Error>({
     queryKey: taxKeys.dashboard(from, to),
     queryFn: () =>
       apiClient.get<TaxDashboard>("/accounting/taxes/dashboard", { from, to }),
-    enabled: !!from && !!to,
+    enabled: can && !!from && !!to,
     staleTime: 120_000,
   });
 }
@@ -129,6 +133,7 @@ export interface TaxReportParams {
 }
 
 export function useTaxReportOutput(params: TaxReportParams = {}) {
+  const can = useCan("accounting:taxes:read");
   return useQuery<ListResponse<TaxReportLine>, Error>({
     queryKey: taxKeys.reportOutput(params),
     queryFn: () =>
@@ -136,12 +141,13 @@ export function useTaxReportOutput(params: TaxReportParams = {}) {
         "/accounting/taxes/reports/output",
         toQuery(params),
       ),
-    enabled: !!params.from && !!params.to,
+    enabled: can && !!params.from && !!params.to,
     staleTime: 30_000,
   });
 }
 
 export function useTaxReportInput(params: TaxReportParams = {}) {
+  const can = useCan("accounting:taxes:read");
   return useQuery<ListResponse<TaxReportLine>, Error>({
     queryKey: taxKeys.reportInput(params),
     queryFn: () =>
@@ -149,12 +155,13 @@ export function useTaxReportInput(params: TaxReportParams = {}) {
         "/accounting/taxes/reports/input",
         toQuery(params),
       ),
-    enabled: !!params.from && !!params.to,
+    enabled: can && !!params.from && !!params.to,
     staleTime: 30_000,
   });
 }
 
 export function useTaxLiabilitySummary(from: string, to: string) {
+  const can = useCan("accounting:taxes:read");
   return useQuery<LiabilitySummaryResponse, Error>({
     queryKey: taxKeys.liabilitySummary(from, to),
     queryFn: () =>
@@ -162,7 +169,7 @@ export function useTaxLiabilitySummary(from: string, to: string) {
         "/accounting/taxes/reports/liability-summary",
         { from, to },
       ),
-    enabled: !!from && !!to,
+    enabled: can && !!from && !!to,
     staleTime: 30_000,
   });
 }
@@ -178,6 +185,7 @@ export interface ListTaxPaymentsParams {
 }
 
 export function useTaxPayments(params: ListTaxPaymentsParams = {}) {
+  const can = useCan("accounting:taxes:read");
   return useQuery<ListResponse<TaxPayment>, Error>({
     queryKey: taxKeys.payments(params),
     queryFn: () =>
@@ -186,6 +194,7 @@ export function useTaxPayments(params: ListTaxPaymentsParams = {}) {
         toQuery(params),
       ),
     staleTime: 30_000,
+    enabled: can,
   });
 }
 

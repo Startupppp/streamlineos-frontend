@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 
 export type AnomalySeverity = "info" | "warning" | "critical";
 
@@ -53,19 +54,23 @@ function toQuery(params: Record<string, string | undefined>): Record<string, str
 }
 
 export function useAnomalies(params: { from?: string; to?: string } = {}) {
+  const can = useCan("accounting:reports:read");
   const query = toQuery(params);
   return useQuery<Anomaly[], Error>({
     queryKey: insightKeys.anomalies(query),
     queryFn: () => apiClient.get<Anomaly[]>("/accounting/insights/anomalies", query),
     staleTime: 300_000,
+    enabled: can,
   });
 }
 
 export function useInsightsDigest() {
+  const can = useCan("accounting:reports:read");
   return useQuery<InsightsDigest, Error>({
     queryKey: insightKeys.digest(),
     queryFn: () => apiClient.get<InsightsDigest>("/accounting/insights/digest"),
     staleTime: 300_000,
+    enabled: can,
   });
 }
 

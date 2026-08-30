@@ -51,8 +51,8 @@ const ENGAGEMENT_COLUMNS: DataTableColumn<WorkerEngagement>[] = [
       <span className="text-sm text-muted-foreground tabular-nums">
         {formatPersonDate(engagement.startsOn)}
         {engagement.endsOn
-          ? ` â€“ ${formatPersonDate(engagement.endsOn)}`
-          : " â€“ present"}
+          ? ` — ${formatPersonDate(engagement.endsOn)}`
+          : " — present"}
       </span>
     ),
   },
@@ -61,7 +61,7 @@ const ENGAGEMENT_COLUMNS: DataTableColumn<WorkerEngagement>[] = [
     header: "Designation",
     cell: (engagement) => (
       <span className={cn("text-sm text-muted-foreground", TEXT_ONE_LINE)}>
-        {engagement.designation ?? "â€”"}
+        {engagement.designation ?? "—"}
       </span>
     ),
   },

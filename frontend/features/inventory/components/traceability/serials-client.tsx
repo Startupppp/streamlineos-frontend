@@ -157,18 +157,20 @@ export function SerialsClient() {
     setPage(1);
   }
 
+  function handleClearFilters(): void {
+    setSearch("");
+    setStatus("ALL");
+    setPage(1);
+  }
+
   const emptyState = (
     <motion.div variants={fadeUp} initial="hidden" animate="visible">
       <InventoryEmptyState
-        illustration={
-          hasFilters ? <EmptySearchIllustration /> : <EmptyProductsIllustration />
-        }
-        title={hasFilters ? "No serials match your filters" : "No serial numbers found"}
-        description={
-          hasFilters
-            ? "Try adjusting your search or filters."
-            : "Serial numbers will appear here once items with serial tracking are received."
-        }
+        illustration={<EmptyProductsIllustration />}
+        title="No serial numbers found"
+        description={hasFilters ? undefined : "Serial numbers will appear here once items with serial tracking are received."}
+        filtersActive={hasFilters}
+        onClearFilters={handleClearFilters}
         className="flex-1"
       />
     </motion.div>

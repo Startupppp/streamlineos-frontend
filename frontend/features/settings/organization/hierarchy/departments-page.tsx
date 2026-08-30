@@ -156,6 +156,8 @@ export function OrgDepartmentsPage() {
     void refetch();
   }, [refetch]);
 
+  const handleClearSearch = useCallback(() => setSearch(""), [setSearch]);
+
   function makeRestoreHandler(department: OrgDepartment) {
     return () => handleRestore(department);
   }
@@ -200,7 +202,7 @@ export function OrgDepartmentsPage() {
       header: "Branch",
       cell: (department) => (
         <span className="text-muted-foreground">
-          {department.branchName ?? "â€”"}
+          {department.branchName ?? "—"}
         </span>
       ),
     },
@@ -210,8 +212,8 @@ export function OrgDepartmentsPage() {
       cell: (department) => (
         <span className="text-muted-foreground">
           {department.headUserId
-            ? (memberNamesByUserId[department.headUserId] ?? "â€”")
-            : "â€”"}
+            ? (memberNamesByUserId[department.headUserId] ?? "—")
+            : "—"}
         </span>
       ),
     },
@@ -220,7 +222,7 @@ export function OrgDepartmentsPage() {
       header: "Description",
       cell: (department) => (
         <span className="block max-w-[200px] truncate text-muted-foreground">
-          {department.description ?? "â€”"}
+          {department.description ?? "—"}
         </span>
       ),
       className: "max-w-[200px]",
@@ -285,15 +287,7 @@ export function OrgDepartmentsPage() {
     },
   ];
 
-  const emptyState = serverSearch ? (
-    <EmptyState
-      illustrationPreset="team"
-      title={`No departments matching "${serverSearch}"`}
-      description="Try a different search term."
-      compact
-      className="min-h-[200px]"
-    />
-  ) : showArchived ? (
+  const emptyState = showArchived ? (
     <EmptyState
       illustrationPreset="archive"
       title="No archived departments"
@@ -304,12 +298,10 @@ export function OrgDepartmentsPage() {
     <EmptyState
       illustrationPreset="team"
       title="No departments yet"
-      description="Create your first department to get started."
-      action={
-        canManage
-          ? { label: "Add Department", onClick: handleOpenCreate }
-          : undefined
-      }
+      description={serverSearch ? undefined : "Create your first department to get started."}
+      filtersActive={!!serverSearch}
+      onClearFilters={handleClearSearch}
+      action={canManage && !serverSearch ? { label: "Add Department", onClick: handleOpenCreate } : undefined}
     />
   );
 
@@ -345,7 +337,7 @@ export function OrgDepartmentsPage() {
         }
         filters={
           <SearchInput
-            placeholder="Search departmentsâ€¦"
+            placeholder="Search departments…"
             value={search}
             onValueChange={handleSearchInputChange}
           />

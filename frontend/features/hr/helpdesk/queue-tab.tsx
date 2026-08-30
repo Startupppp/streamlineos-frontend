@@ -13,6 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { SearchInput } from "@/components/ui/search-input";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
@@ -91,7 +92,7 @@ export function QueueTab() {
   if (categoryFilter !== "all") params.category = categoryFilter;
   if (debouncedSearch) params.q = debouncedSearch;
 
-  const { data, isLoading } = useHelpdeskTickets(params);
+  const { data, isLoading, isError, refetch } = useHelpdeskTickets(params);
   const { data: routingRules } = useHelpdeskRoutingRules();
   const deleteRouting = useDeleteHelpdeskRouting();
 
@@ -112,6 +113,15 @@ export function QueueTab() {
 
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
+    resetPagination();
+  }, [resetPagination]);
+
+  const filtersActive = !!(debouncedSearch || statusFilter !== "all" || categoryFilter !== "all");
+
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    setStatusFilter("all");
+    setCategoryFilter("all");
     resetPagination();
   }, [resetPagination]);
 
@@ -182,8 +192,17 @@ export function QueueTab() {
             <Skeleton key={i} className="h-16 w-full rounded-lg" />
           ))}
         </div>
+      ) : isError ? (
+        <ErrorState className="py-16" onRetry={() => void refetch()} />
       ) : !data || data.data.length === 0 ? (
-        <EmptyState title="No tickets found" description="No tickets match your current filters. Try adjusting your search or filters." compact className="py-16" />
+        <EmptyState
+          title="No tickets found"
+          description={filtersActive ? undefined : "No helpdesk tickets in this queue."}
+          compact
+          className="py-16"
+          filtersActive={filtersActive}
+          onClearFilters={handleClearFilters}
+        />
       ) : (
         <>
           <div className="divide-y divide-border rounded-lg border border-border overflow-hidden">

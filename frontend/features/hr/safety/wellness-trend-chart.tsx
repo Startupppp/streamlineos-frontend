@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
-import { Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 
 interface Props {
@@ -29,9 +29,7 @@ export function WellnessTrendChart({ fromDate, toDate }: Props) {
         Rolling average (min. 5 respondents per day shown)
       </p>
       {isLoading ? (
-        <div className="flex items-center justify-center h-40">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-        </div>
+        <Skeleton className="h-40 w-full rounded-lg" />
       ) : !data?.length ? (
         <p className="text-xs text-muted-foreground text-center py-10">
           Not enough data yet (need 5+ respondents per day)
@@ -39,7 +37,7 @@ export function WellnessTrendChart({ fromDate, toDate }: Props) {
       ) : (
         <ResponsiveContainer width="100%" height={200}>
           <LineChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 4 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis
               dataKey="date"
               tick={{ fontSize: 10 }}
@@ -53,10 +51,10 @@ export function WellnessTrendChart({ fromDate, toDate }: Props) {
             <Line
               type="monotone"
               dataKey="avgScore"
-              stroke="#1d4ed8"
+              stroke="var(--chart-1)"
               strokeWidth={2}
               dot={false}
-              activeDot={{ r: 4, fill: "#1d4ed8" }}
+              activeDot={{ r: 4, fill: "var(--chart-1)" }}
             />
           </LineChart>
         </ResponsiveContainer>

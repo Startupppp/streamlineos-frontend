@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 const apVendorKeys = {
   vendorCredits: (params?: object) =>
@@ -156,6 +157,7 @@ function toQuery<P extends object>(params: P): Record<string, string> {
 }
 
 export function useVendorCredits(params: ListVendorCreditsParams = {}) {
+  const can = useCan("accounting:vendor-credits:read");
   return useQuery<ListResponse<VendorCreditSummary>, Error>({
     queryKey: apVendorKeys.vendorCredits(params),
     queryFn: () =>
@@ -164,16 +166,18 @@ export function useVendorCredits(params: ListVendorCreditsParams = {}) {
         toQuery(params),
       ),
     staleTime: 30_000,
+    enabled: can,
   });
 }
 
 export function useVendorCredit(creditId: number) {
+  const can = useCan("accounting:vendor-credits:read");
   return useQuery<VendorCreditDetail, Error>({
     queryKey: apVendorKeys.vendorCredit(creditId),
     queryFn: () =>
       apiClient.get<VendorCreditDetail>(`/accounting/vendor-credits/${creditId}`),
-    enabled: Number.isInteger(creditId) && creditId > 0,
     staleTime: 60_000,
+    enabled: can && Number.isInteger(creditId) && creditId > 0,
   });
 }
 
@@ -225,6 +229,7 @@ export function useApplyVendorCredit(creditId: number) {
 }
 
 export function useRecurringBills(params: ListRecurringBillsParams = {}) {
+  const can = useCan("accounting:recurring:read");
   return useQuery<ListResponse<RecurringBillTemplate>, Error>({
     queryKey: apVendorKeys.recurringBills(params),
     queryFn: () =>
@@ -233,6 +238,7 @@ export function useRecurringBills(params: ListRecurringBillsParams = {}) {
         toQuery(params),
       ),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 

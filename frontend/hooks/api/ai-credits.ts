@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export interface AiCreditPack {
   id: number;
@@ -86,10 +87,12 @@ export interface AiCreditsWallet {
 }
 
 export function useAiCreditsWallet() {
+  const canView = useCan("billing:ai-credits:view");
   return useQuery<AiCreditsWallet>({
     queryKey: queryKeys.billing.aiCredits(),
     queryFn: () => apiClient.get<AiCreditsWallet>("/billing/ai-credits"),
     staleTime: 300_000,
+    enabled: canView,
   });
 }
 
@@ -101,6 +104,7 @@ export interface AiCreditTransactionsPage {
 }
 
 export function useAiCreditTransactions(page: number, limit: number) {
+  const canView = useCan("billing:ai-credits:view");
   return useQuery<AiCreditTransactionsPage>({
     queryKey: queryKeys.billing.aiCreditTransactions({ page, limit }),
     queryFn: () =>
@@ -110,6 +114,7 @@ export function useAiCreditTransactions(page: number, limit: number) {
       }),
     staleTime: 30 * 1000,
     placeholderData: keepPreviousData,
+    enabled: canView,
   });
 }
 
@@ -164,6 +169,7 @@ export function usePurchaseAiCredits() {
 export type AiCreditsUsageDays = 7 | 30 | 90;
 
 export function useAiCreditsUsage(days: AiCreditsUsageDays) {
+  const canView = useCan("billing:ai-credits:view");
   return useQuery<AiCreditsUsage>({
     queryKey: queryKeys.billing.aiCreditsUsage(days),
     queryFn: () =>
@@ -172,6 +178,7 @@ export function useAiCreditsUsage(days: AiCreditsUsageDays) {
       }),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
+    enabled: canView,
   });
 }
 

@@ -140,6 +140,10 @@ export function PeopleDirectoryPage({
 
   const canManageRow = canUpdate || canDelete;
 
+  function handleClearSearch() {
+    setSearch("");
+  }
+
   function handleSearchChange(value: string) {
     setSearch(value);
     setCursorHistory([undefined]);
@@ -294,19 +298,11 @@ export function PeopleDirectoryPage({
             <EmptyState
               className={cn(CONTENT_FILL_PANEL, PAGE_BODY_EMPTY_CLASS)}
               illustrationPreset="team"
-              title={isFiltered ? "No matching records" : "No person records yet"}
-              description={
-                isFiltered
-                  ? "Try adjusting your search."
-                  : "Create a person record before linking someone as a worker or payee."
-              }
-              action={
-                isFiltered
-                  ? undefined
-                  : canCreate
-                    ? { label: "Add person record", onClick: handleOpenCreate }
-                    : undefined
-              }
+              title="No person records yet"
+              description={isFiltered ? "No results match your filters." : "Create a person record before linking someone as a worker or payee."}
+              filtersActive={isFiltered}
+              onClearFilters={handleClearSearch}
+              action={!isFiltered && canCreate ? { label: "Add person record", onClick: handleOpenCreate } : undefined}
             />
           ) : (
             <>

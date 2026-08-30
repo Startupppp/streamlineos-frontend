@@ -250,20 +250,15 @@ export function ContactListPage() {
           <EmptyState
             access={access}
             illustration={<EmptyPersonIllustration />}
-            title={isFiltered ? "No contacts match this search" : "No contacts yet"}
+            title="No contacts yet"
             description={
               isFiltered
-                ? `Nothing matches “${apiSearch}”. Clear the search to see every contact.`
+                ? "No results match your filters."
                 : "Contacts are the people you deal with at each company. Add one, or import a CSV to bring your existing list in."
             }
-            action={
-              isFiltered
-                ? { label: "Clear search", onClick: handleClearFilters }
-                : canManageContacts
-                  ? { label: "Add contact", onClick: handleOpenCreate }
-                  : undefined
-            }
-            actionVariant={isFiltered ? "outline" : undefined}
+            filtersActive={isFiltered}
+            onClearFilters={handleClearFilters}
+            action={!isFiltered && canManageContacts ? { label: "Add contact", onClick: handleOpenCreate } : undefined}
             className={CONTENT_FILL_PANEL}
           />
         ) : (

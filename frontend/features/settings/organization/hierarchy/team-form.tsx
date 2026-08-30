@@ -117,7 +117,7 @@ export function TeamForm({
                   onValueChange={field.onChange}
                   label="Department"
                   placeholder="Select a department"
-                  searchPlaceholder="Search departmentsâ€¦"
+                  searchPlaceholder="Search departments…"
                   emptyText="No active departments found."
                   selectedLabel={selectedDepartmentName}
                 />
@@ -136,7 +136,7 @@ export function TeamForm({
                 <UserCombobox
                   value={field.value ?? ""}
                   onChange={field.onChange}
-                  placeholder="Select team leadâ€¦"
+                  placeholder="Select team lead…"
                 />
               </FormControl>
               <FormMessage />
@@ -152,7 +152,7 @@ export function TeamForm({
               <FormControl>
                 <Textarea
                   rows={3}
-                  placeholder="Optional descriptionâ€¦"
+                  placeholder="Optional description…"
                   {...field}
                 />
               </FormControl>

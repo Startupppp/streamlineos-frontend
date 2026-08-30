@@ -6,6 +6,9 @@ import { useRouter } from "next/navigation";
 import { ReactFlowProvider } from "@xyflow/react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { usePublishWorkflow, useUpdateWorkflow, useWorkflow, type Workflow } from "@/hooks/api/workflows";
 import { WorkflowBuilderCanvasSurface } from "./workflow-builder-canvas-surface";
 import { WorkflowBuilderToolbar } from "./workflow-builder-toolbar";
@@ -33,24 +36,25 @@ function BuilderCanvas({ workflow, workflowId }: BuilderCanvasProps) {
     const name = workflowName.trim();
     if (!name) return;
     setIsEditingName(false);
-    updateWorkflow.mutate({ id: workflowId, name }, { onError: () => toast.error("Failed to save name") });
+    updateWorkflow.mutate({ id: workflowId, name }, { onError: (error) => toast.error(getErrorMessage(error)) });
   }
   function handleNameKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key === "Escape") { setIsEditingName(false); setWorkflowName(workflow.name); }
   }
   function handleNameChange(event: ChangeEvent<HTMLInputElement>) { setWorkflowName(event.target.value); }
+  function handleStartNameEditing() { setIsEditingName(true); }
   function handleSave() {
-    updateWorkflow.mutate({ id: workflowId, name: workflowName }, { onSuccess: () => toast.success("Draft saved"), onError: () => toast.error("Failed to save") });
+    updateWorkflow.mutate({ id: workflowId, name: workflowName }, { onSuccess: () => toast.success("Draft saved"), onError: (error) => toast.error(getErrorMessage(error)) });
   }
   function handlePublish() {
-    publishWorkflow.mutate({ id: workflowId, definitionJson: definition }, { onSuccess: () => toast.success("Workflow published"), onError: () => toast.error("Failed to publish") });
+    publishWorkflow.mutate({ id: workflowId, definitionJson: definition }, { onSuccess: () => toast.success("Workflow published"), onError: (error) => toast.error(getErrorMessage(error)) });
   }
   function handleBack() { router.push(`/workflows/${workflowId}`); }
 
   return (
     <div className="flex h-full w-full overflow-hidden bg-background">
       <div className="flex-1 flex flex-col min-w-0">
-        <WorkflowBuilderToolbar isEditingName={isEditingName} isPublishing={publishWorkflow.isPending} isSaving={updateWorkflow.isPending} name={workflowName} status={workflow.status} onBack={handleBack} onNameChange={handleNameChange} onNameKeyDown={handleNameKeyDown} onNameSubmit={handleNameSubmit} onStartNameEditing={() => setIsEditingName(true)} onPublish={handlePublish} onSave={handleSave} />
+        <WorkflowBuilderToolbar isEditingName={isEditingName} isPublishing={publishWorkflow.isPending} isSaving={updateWorkflow.isPending} name={workflowName} status={workflow.status} onBack={handleBack} onNameChange={handleNameChange} onNameKeyDown={handleNameKeyDown} onNameSubmit={handleNameSubmit} onStartNameEditing={handleStartNameEditing} onPublish={handlePublish} onSave={handleSave} />
         <WorkflowBuilderCanvasSurface initialNodes={definition.nodes} initialEdges={definition.edges} onDefinitionChange={handleDefinitionChange} />
       </div>
     </div>
@@ -58,20 +62,62 @@ function BuilderCanvas({ workflow, workflowId }: BuilderCanvasProps) {
 }
 
 export function WorkflowBuilderGate({ workflowId }: { workflowId: string }) {
-  const { data: workflow, isLoading, isError } = useWorkflow(workflowId);
+  const { data: workflow, isLoading, isError, error, refetch } = useWorkflow(workflowId);
   const router = useRouter();
   function handleBackToWorkflows() { router.push("/workflows"); }
   if (isLoading) return <BuilderLoadingState />;
-  if (isError || !workflow) return <BuilderNotFoundState onBack={handleBackToWorkflows} />;
+  if (isError) return <BuilderErrorState error={error} onRetry={refetch} onBack={handleBackToWorkflows} />;
+  if (!workflow) return <BuilderNotFoundState onBack={handleBackToWorkflows} />;
   return <ReactFlowProvider><BuilderCanvas workflow={workflow} workflowId={workflowId} /></ReactFlowProvider>;
 }
 
 function BuilderLoadingState() {
-  return <div className="flex-1 flex items-center justify-center bg-background h-full"><div className="flex flex-col items-center gap-3"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /><p className="text-sm text-muted-foreground">Loading workflow builder…</p></div></div>;
+  return (
+    <div className="flex h-full w-full overflow-hidden bg-background">
+      <div className="flex-1 flex flex-col min-w-0">
+        <div className="h-12 shrink-0 bg-card border-b border-border px-3 flex items-center gap-3">
+          <Skeleton className="h-7 w-7 rounded-lg" />
+          <div className="w-px h-4 bg-border" />
+          <Skeleton className="h-4 w-36" />
+          <Skeleton className="h-5 w-16 rounded-full" />
+          <div className="ml-auto flex items-center gap-2">
+            <Skeleton className="h-7 w-16 rounded-md" />
+            <Skeleton className="h-7 w-20 rounded-md" />
+          </div>
+        </div>
+        <div className="flex-1 flex min-h-0">
+          <div className="w-56 shrink-0 border-r border-border bg-card p-2 space-y-1.5">
+            {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}
+          </div>
+          <div className="flex-1 bg-muted/30 relative">
+            <div className="absolute inset-8 flex items-center justify-center">
+              <Skeleton className="w-48 h-16 rounded-xl" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BuilderErrorState({ error, onRetry, onBack }: { error: unknown; onRetry: () => void; onBack: () => void }) {
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center bg-background h-full gap-3 p-6">
+      <ErrorState title="Couldn't load workflow" description={getErrorMessage(error)} onRetry={onRetry} className="max-w-sm" />
+      <Button variant="outline" size="sm" onClick={onBack}>Back to Workflows</Button>
+    </div>
+  );
 }
 
 function BuilderNotFoundState({ onBack }: { onBack: () => void }) {
-  return <div className="flex-1 flex items-center justify-center bg-background h-full"><div className="text-center space-y-3"><p className="text-sm font-medium text-foreground">Workflow not found</p><Button variant="outline" size="sm" onClick={onBack}>Back to Workflows</Button></div></div>;
+  return (
+    <div className="flex-1 flex items-center justify-center bg-background h-full">
+      <div className="text-center space-y-3">
+        <p className="text-sm font-medium text-foreground">Workflow not found</p>
+        <Button variant="outline" size="sm" onClick={onBack}>Back to Workflows</Button>
+      </div>
+    </div>
+  );
 }
 
 function extractDefinitionNodes(workflow: Workflow): WorkflowNode[] {

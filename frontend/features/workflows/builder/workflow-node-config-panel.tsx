@@ -29,7 +29,6 @@ export function WorkflowNodeConfigPanel({ node, onChange, onClose }: WorkflowNod
           <div className="space-y-1.5"><label htmlFor="workflow-node-label" className="text-xs font-medium text-foreground">Label</label><Input id="workflow-node-label" value={node.data.label} onChange={handleLabelChange} className="text-sm" /></div>
           <div className="space-y-1.5"><label htmlFor="workflow-node-description" className="text-xs font-medium text-foreground">Description</label><Textarea id="workflow-node-description" value={node.data.description ?? ""} onChange={handleDescriptionChange} rows={3} className="text-sm resize-none" placeholder="What does this node do?" /></div>
           <div className="space-y-1.5"><p className="text-xs font-medium text-foreground">Node Type</p><p className="text-sm text-muted-foreground capitalize">{node.data.nodeType.replace(/_/g, " ")}</p></div>
-          <div className="space-y-1.5"><p className="text-xs font-medium text-foreground">Node ID</p><p className="text-xs font-mono text-muted-foreground break-all">{node.id}</p></div>
         </div>
       </ScrollArea>
     </aside>

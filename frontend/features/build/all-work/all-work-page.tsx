@@ -28,6 +28,7 @@ import {
 } from "@/lib/motion-presets";
 import { groupByProject } from "./all-work-ticket-utils";
 import { getTicketDetailHref } from "@/features/build/shared/format-ticket-key";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { AllWorkViewSwitcher, AllWorkSkeleton } from "./all-work-view-switcher";
 import { AllWorkListSection } from "./all-work-list-section";
 import { AllWorkTableSection } from "./all-work-table-section";
@@ -59,7 +60,7 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
   } = useAllWorkFilters();
 
   const workspaceFilters: typeof filters = pmWorkspaceId ? { ...filters, pmWorkspaceId } : filters;
-  const { data: allWorkData, isLoading, isError, refetch } = useAllWork(workspaceFilters);
+  const { data: allWorkData, isLoading, isError, error, refetch } = useAllWork(workspaceFilters);
   const { data: projectsData } = useProjects({ limit: 100, ...(pmWorkspaceId ? { pmWorkspaceId } : {}) });
 
   const tickets = useMemo(() => allWorkData?.data ?? [], [allWorkData]);
@@ -200,27 +201,21 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
             </PmPanel>
           ) : isError ? (
             <ErrorState
-                  className={cn(PM_FILL_PANEL, "mb-0 mt-2")}
-                  title="Failed to load work items"
-                  description="An error occurred while fetching tickets. Please try again."
-                  onRetry={handleRetry}
-                />
+              className={cn(PM_FILL_PANEL, "mb-0 mt-2")}
+              title="Failed to load work items"
+              description={getErrorMessage(error)}
+              onRetry={handleRetry}
+            />
           ) : tickets.length === 0 ? (
             <EmptyState
-                className={cn(PM_FILL_PANEL, "mb-0 mt-2")}
-                illustrationPreset="projects"
-                title={hasActiveFilters ? "No tickets match your filters" : "No tickets yet"}
-                description={
-                  hasActiveFilters
-                    ? "Try adjusting or clearing your filters."
-                    : "Start by creating a ticket in any project."
-                }
-                action={
-                  hasActiveFilters
-                    ? { label: "Clear filters", onClick: handleClearFilters }
-                    : { label: "All Projects", href: "/build/all" }
-                }
-              />
+              className={cn(PM_FILL_PANEL, "mb-0 mt-2")}
+              illustrationPreset="projects"
+              title="No tickets yet"
+              description={hasActiveFilters ? undefined : "Start by creating a ticket in any project."}
+              filtersActive={hasActiveFilters}
+              onClearFilters={handleClearFilters}
+              action={!hasActiveFilters ? { label: "All Projects", href: "/build/all" } : undefined}
+            />
           ) : (
             <>
               {tableSelection.size > 0 ? (

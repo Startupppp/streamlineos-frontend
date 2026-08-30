@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   ArInvoice,
   ReminderPolicy,
@@ -54,6 +55,7 @@ export interface ListReminderPoliciesParams {
 }
 
 export function useReminderPolicies(params: ListReminderPoliciesParams = {}) {
+  const can = useCan("accounting:reminders:read");
   return useQuery<ListResponse<ReminderPolicy>, Error>({
     queryKey: [...arCollectionsKeys.reminders.policies, params] as const,
     queryFn: () =>
@@ -62,6 +64,7 @@ export function useReminderPolicies(params: ListReminderPoliciesParams = {}) {
         toQuery(params),
       ),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 
@@ -74,6 +77,7 @@ export interface ListReminderLogParams {
 }
 
 export function useReminderLog(params: ListReminderLogParams = {}) {
+  const can = useCan("accounting:reminders:read");
   return useQuery<ListResponse<ReminderLogEntry>, Error>({
     queryKey: arCollectionsKeys.reminders.log(params),
     queryFn: () =>
@@ -82,15 +86,18 @@ export function useReminderLog(params: ListReminderLogParams = {}) {
         toQuery(params),
       ),
     staleTime: 30_000,
+    enabled: can,
   });
 }
 
 export function useCollectionsSummary() {
+  const can = useCan("accounting:collections:read");
   return useQuery<CollectionsSummary, Error>({
     queryKey: arCollectionsKeys.collections.summary,
     queryFn: () =>
       apiClient.get<CollectionsSummary>("/accounting/collections/summary"),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 

@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 const apRunKeys = {
   paymentRuns: (params?: object) =>
@@ -97,6 +98,7 @@ function toQuery<P extends object>(params: P): Record<string, string> {
 }
 
 export function usePaymentRuns(params: ListPaymentRunsParams = {}) {
+  const can = useCan("accounting:payment-runs:read");
   return useQuery<ListResponse<PaymentRunSummary>, Error>({
     queryKey: apRunKeys.paymentRuns(params),
     queryFn: () =>
@@ -105,15 +107,17 @@ export function usePaymentRuns(params: ListPaymentRunsParams = {}) {
         toQuery(params),
       ),
     staleTime: 30_000,
+    enabled: can,
   });
 }
 
 export function usePaymentRun(runId: number) {
+  const can = useCan("accounting:payment-runs:read");
   return useQuery<PaymentRunDetail, Error>({
     queryKey: apRunKeys.paymentRun(runId),
     queryFn: () => apiClient.get<PaymentRunDetail>(`/accounting/payment-runs/${runId}`),
-    enabled: Number.isInteger(runId) && runId > 0,
     staleTime: 30_000,
+    enabled: can && Number.isInteger(runId) && runId > 0,
   });
 }
 

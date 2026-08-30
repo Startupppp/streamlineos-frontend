@@ -322,8 +322,8 @@ export function ShiftFormSheet({ open, onOpenChange, shift }: Props) {
         title={isEdit ? "Save shift changes?" : "Create this shift?"}
         description={
           isEdit
-            ? `Update “${pendingValues?.name ?? shift?.name ?? "this shift"}”? Existing assignments keep using this template.`
-            : `Create shift template “${pendingValues?.name ?? "this shift"}” (${pendingValues?.startTime ?? "—"} – ${pendingValues?.endTime ?? "—"})?`
+            ? `Update "${pendingValues?.name ?? shift?.name ?? "this shift"}"? Existing assignments keep using this template.`
+            : `Create shift template "${pendingValues?.name ?? "this shift"}" (${pendingValues?.startTime ?? "—"} – ${pendingValues?.endTime ?? "—"})?`
         }
         confirmLabel={isEdit ? "Save Changes" : "Create Shift"}
         isPending={isPending}

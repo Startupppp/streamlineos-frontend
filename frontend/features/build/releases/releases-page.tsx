@@ -330,7 +330,7 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
           open={!!deleteTarget}
           onOpenChange={handleAlertOpenChange}
           title="Delete release?"
-          description={`“${deleteTarget?.name ?? ""} ${deleteTarget?.version ?? ""}” will be permanently deleted.`}
+          description={`"${deleteTarget?.name ?? ""} ${deleteTarget?.version ?? ""}" will be permanently deleted.`}
           confirmLabel="Delete"
           destructive
           isPending={deleteRelease.isPending}

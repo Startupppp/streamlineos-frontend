@@ -5,7 +5,8 @@ import { useBurnoutFlags } from "@/hooks/api/hr/safety";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useOrgMembersByIds } from "@/hooks/api/organization";
 import { getUserDisplayName, type NamedUser } from "@/lib/person-display";
 
@@ -35,8 +36,10 @@ export function BurnoutFlagsList() {
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center h-20">
-          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+        <div className="space-y-2">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full rounded-lg" />
+          ))}
         </div>
       ) : !data?.length ? (
         <p className="text-xs text-muted-foreground text-center py-6">

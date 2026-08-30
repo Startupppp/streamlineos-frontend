@@ -191,8 +191,8 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
                 <div className="flex items-center justify-end gap-2">
                   <div className="h-1.5 w-16 rounded-full bg-muted overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-status-info-fill"
-                      style={{ width: `${confidencePct}%`, transition: "width 0.4s ease" }}
+                      className="h-full w-full origin-left rounded-full bg-status-info-fill"
+                      style={{ transform: `scaleX(${confidencePct / 100})`, transition: "transform 0.4s ease" }}
                     />
                   </div>
                   <span className="text-micro text-muted-foreground">{confidencePct.toFixed(0)}%</span>

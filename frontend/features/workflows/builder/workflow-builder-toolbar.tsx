@@ -1,6 +1,7 @@
 import type { ChangeEvent, FormEvent, KeyboardEvent } from "react";
 import { ArrowLeft, Save, Settings, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { WorkflowStatus } from "@/hooks/api/workflows";
@@ -43,8 +44,8 @@ export function WorkflowBuilderToolbar({ isEditingName, isPublishing, isSaving, 
       )}
       <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-micro font-medium border", badge.className)}>{badge.label}</span>
       <div className="ml-auto flex items-center gap-2">
-        <Button variant="outline" size="sm" className="text-xs" onClick={onSave} disabled={isSaving}><Save className="h-3.5 w-3.5 mr-1" />{isSaving ? "Saving…" : "Save"}</Button>
-        <Button size="sm" className="text-xs bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200" onClick={onPublish} disabled={isPublishing}><Upload className="h-3.5 w-3.5 mr-1" />{isPublishing ? "Publishing…" : "Publish"}</Button>
+        <LoadingButton variant="outline" size="sm" className="text-xs" onClick={onSave} isPending={isSaving} loadingText="Saving…"><Save className="h-3.5 w-3.5 mr-1" aria-hidden />Save</LoadingButton>
+        <LoadingButton size="sm" className="text-xs bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200" onClick={onPublish} isPending={isPublishing} loadingText="Publishing…"><Upload className="h-3.5 w-3.5 mr-1" aria-hidden />Publish</LoadingButton>
       </div>
     </header>
   );

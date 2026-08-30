@@ -127,6 +127,14 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
     void refetch();
   }, [refetch]);
 
+  const filtersActive = !!(search || statusFilter !== "all" || severityFilter !== "all");
+
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    setStatusFilter("all");
+    setSeverityFilter("all");
+  }, []);
+
   const handleEdit = useCallback((inc: Incident) => { setEditIncident(inc); setSheetOpen(true); }, []);
   const handleNew = useCallback(() => { setEditIncident(null); setSheetOpen(true); }, []);
   const handleAlertOpenChange = useCallback((open: boolean) => { if (!open) setDeleteTarget(null); }, []);
@@ -288,16 +296,14 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
             <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
           ) : filtered.length === 0 ? (
             <EmptyState
-                className={PM_FILL_PANEL}
-                illustrationPreset="ticket"
-                title="No incidents found"
-                description={
-                  search || statusFilter !== "all" || severityFilter !== "all"
-                    ? "No incidents match the active filters."
-                    : "Create an incident to start tracking."
-                }
-                action={canManage ? { label: "New Incident", onClick: handleNew } : undefined}
-              />
+              className={PM_FILL_PANEL}
+              illustrationPreset="ticket"
+              title="No incidents found"
+              description={filtersActive ? undefined : "Create an incident to start tracking."}
+              filtersActive={filtersActive}
+              onClearFilters={handleClearFilters}
+              action={canManage && !filtersActive ? { label: "New Incident", onClick: handleNew } : undefined}
+            />
           ) : (
             <DataTable<Incident>
               data={filtered}

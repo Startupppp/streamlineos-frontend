@@ -222,20 +222,15 @@ export function LeadListView({
       <EmptyState
         className={CONTENT_FILL_PANEL}
         illustration={<EmptyLeadsIllustration />}
-        title={isFiltered ? "No leads match these filters" : "No leads yet"}
+        title="No leads yet"
         description={
           isFiltered
-            ? `Filtering by ${activeFilterLabels.join(", ")}. Clear the filters to see every lead.`
+            ? "No results match your filters."
             : "Leads are the people and companies you are selling to. Add one by hand, or import a CSV to bring your existing list in."
         }
-        action={
-          isFiltered
-            ? { label: "Clear filters", onClick: onClearFilters }
-            : canCreate
-              ? { label: "Add lead", onClick: onCreateLead }
-              : undefined
-        }
-        actionVariant={isFiltered ? "outline" : undefined}
+        filtersActive={isFiltered}
+        onClearFilters={onClearFilters}
+        action={!isFiltered && canCreate ? { label: "Add lead", onClick: onCreateLead } : undefined}
       />
     );
 

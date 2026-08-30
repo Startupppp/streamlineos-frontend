@@ -138,6 +138,8 @@ export function BusinessUnitsPage() {
     void refetch();
   }, [refetch]);
 
+  const handleClearSearch = useCallback(() => setSearch(""), [setSearch]);
+
   function makeRestoreHandler(businessUnit: OrgBusinessUnit) {
     return () => handleRestore(businessUnit);
   }
@@ -196,7 +198,7 @@ export function BusinessUnitsPage() {
       header: "Description",
       cell: (businessUnit) => (
         <span className="block max-w-[200px] truncate text-muted-foreground">
-          {businessUnit.description ?? "â€”"}
+          {businessUnit.description ?? "—"}
         </span>
       ),
       className: "max-w-[200px]",
@@ -242,15 +244,7 @@ export function BusinessUnitsPage() {
     },
   ];
 
-  const emptyState = serverSearch ? (
-    <EmptyState
-      illustrationPreset="companies"
-      title={`No business units matching "${serverSearch}"`}
-      description="Try a different search term."
-      compact
-      className="min-h-[200px]"
-    />
-  ) : showArchived ? (
+  const emptyState = showArchived ? (
     <EmptyState
       illustrationPreset="archive"
       title="No archived business units"
@@ -261,12 +255,10 @@ export function BusinessUnitsPage() {
     <EmptyState
       illustrationPreset="companies"
       title="No business units yet"
-      description="Create your first business unit to get started."
-      action={
-        canManage
-          ? { label: "Add Business Unit", onClick: handleOpenCreate }
-          : undefined
-      }
+      description={serverSearch ? undefined : "Create your first business unit to get started."}
+      filtersActive={!!serverSearch}
+      onClearFilters={handleClearSearch}
+      action={canManage && !serverSearch ? { label: "Add Business Unit", onClick: handleOpenCreate } : undefined}
     />
   );
 
@@ -303,7 +295,7 @@ export function BusinessUnitsPage() {
         filters={
           <SearchInput
             value={search}
-            placeholder="Search business unitsâ€¦"
+            placeholder="Search business units…"
             onValueChange={handleSearchInputChange}
           />
         }

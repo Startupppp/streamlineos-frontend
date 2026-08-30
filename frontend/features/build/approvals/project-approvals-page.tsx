@@ -227,15 +227,10 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
             <EmptyState
               className={PM_FILL_PANEL}
               illustrationPreset="approval"
-              title={isFiltered ? "No matching approvals" : "No approvals yet"}
-              description={
-                isFiltered
-                  ? "No approvals match your filters."
-                  : "Use approvals to get sign-off on tasks, milestones, and releases before they ship."
-              }
-              action={
-                isFiltered ? { label: "Clear filters", onClick: handleClearFilters } : undefined
-              }
+              title="No approvals yet"
+              description={isFiltered ? undefined : "Use approvals to get sign-off on tasks, milestones, and releases before they ship."}
+              filtersActive={isFiltered}
+              onClearFilters={handleClearFilters}
             />
           ) : (
             <DataTable

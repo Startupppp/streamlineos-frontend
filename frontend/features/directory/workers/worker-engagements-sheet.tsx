@@ -124,7 +124,7 @@ export function WorkerEngagementsSheet({
       className: "min-w-[120px]",
       cell: (engagement) => (
         <span className={cn("text-sm text-muted-foreground", TEXT_ONE_LINE)}>
-          {engagement.designation ?? "â€”"}
+          {engagement.designation ?? "—"}
         </span>
       ),
     },
@@ -136,7 +136,7 @@ export function WorkerEngagementsSheet({
         engagement.isPrimary ? (
           <SemanticBadge tone="accent" label="Primary" size="xs" />
         ) : (
-          <span className="text-sm text-muted-foreground">â€”</span>
+          <span className="text-sm text-muted-foreground">—</span>
         ),
     },
     {
@@ -178,7 +178,7 @@ export function WorkerEngagementsSheet({
       >
         <SheetHeader className="shrink-0 border-b border-border/60 px-6 py-4">
           <SheetTitle className="text-base font-semibold">
-            Engagements â€” {workerLabel}
+            Engagements — {workerLabel}
           </SheetTitle>
           <SheetDescription className="text-sm text-muted-foreground">
             {worker.workerNumber ? `#${worker.workerNumber} Â· ` : ""}

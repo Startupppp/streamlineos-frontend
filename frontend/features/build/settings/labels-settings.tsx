@@ -288,11 +288,10 @@ export function LabelsSettings() {
         <AnimatePresence>
           {showForm ? (
             <motion.div
-              initial={reduceMotion ? false : { opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={reduceMotion ? undefined : { opacity: 0, height: 0 }}
+              initial={reduceMotion ? false : { opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduceMotion ? undefined : { opacity: 0, y: -8 }}
               transition={{ duration: 0.18, ease: "easeOut" }}
-              className="overflow-hidden"
             >
               <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
                 <LabelCreateForm

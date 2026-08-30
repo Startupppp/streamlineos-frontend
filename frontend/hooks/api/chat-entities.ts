@@ -181,7 +181,7 @@ export interface EntityOption {
 /**
  * Resolves an input's declared option source to its candidates. The caller
  * passes the reference the declaration named and never has to know which module
- * produced it â€” which is the whole point of the source being declared.
+ * produced it — which is the whole point of the source being declared.
  */
 export function useEntityActionOptions(
   channelId: number,

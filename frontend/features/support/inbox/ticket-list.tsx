@@ -2,7 +2,8 @@
 
 import { useCallback } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Clock, AlertTriangle, CheckCircle2, Pause, Loader2 } from "lucide-react";
+import { Clock, AlertTriangle, CheckCircle2, Pause } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -109,8 +110,17 @@ export function TicketList({
     >
       <ScrollArea className="flex-1">
         {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          <div className="space-y-1 p-2">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="px-3 py-3 space-y-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <Skeleton className="h-3.5 w-32" />
+                  <Skeleton className="h-4 w-16 rounded-full" />
+                </div>
+                <Skeleton className="h-3 w-48" />
+                <Skeleton className="h-3 w-24" />
+              </div>
+            ))}
           </div>
         ) : tickets.length === 0 ? (
           <div className="text-center py-12 px-4">

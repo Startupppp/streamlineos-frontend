@@ -3,6 +3,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   FinReceiptInboxItem,
   FinReimbursementBatch,
@@ -56,12 +57,14 @@ interface TeamExpensesResponse {
 }
 
 export function useTeamExpenses(params: TeamExpensesParams = {}) {
+  const can = useCan("accounting:reimbursements:read");
   return useQuery<TeamExpensesResponse, Error>({
     queryKey: expenseKeys.team(params),
     queryFn: () =>
       apiClient.get<TeamExpensesResponse>("/hr/expenses/page-data", toQuery({ ...params, includeStats: true, includePending: false, includeCategories: true })),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
+    enabled: can,
   });
 }
 
@@ -71,11 +74,13 @@ export interface ReceiptInboxParams {
 }
 
 export function useReceiptInbox(params: ReceiptInboxParams = {}) {
+  const can = useCan("accounting:reimbursements:read");
   return useQuery<ListResponse<FinReceiptInboxItem>, Error>({
     queryKey: expenseKeys.receipts(params),
     queryFn: () =>
       apiClient.get<ListResponse<FinReceiptInboxItem>>("/accounting/expenses/receipts", toQuery(params)),
     staleTime: 30_000,
+    enabled: can,
   });
 }
 
@@ -99,21 +104,24 @@ export interface BatchListParams {
 }
 
 export function useReimbursementBatches(params: BatchListParams = {}) {
+  const can = useCan("accounting:reimbursements:read");
   return useQuery<ListResponse<FinReimbursementBatch>, Error>({
     queryKey: expenseKeys.batches(params),
     queryFn: () =>
       apiClient.get<ListResponse<FinReimbursementBatch>>("/accounting/reimbursements", toQuery(params)),
     staleTime: 30_000,
+    enabled: can,
   });
 }
 
 export function useReimbursementBatch(batchId: number) {
+  const can = useCan("accounting:reimbursements:read");
   return useQuery<FinReimbursementBatchDetail, Error>({
     queryKey: expenseKeys.batch(batchId),
     queryFn: () =>
       apiClient.get<FinReimbursementBatchDetail>(`/accounting/reimbursements/${batchId}`),
-    enabled: Number.isInteger(batchId) && batchId > 0,
     staleTime: 30_000,
+    enabled: can && Number.isInteger(batchId) && batchId > 0,
   });
 }
 
@@ -159,6 +167,7 @@ export function usePayBatch(batchId: number) {
 }
 
 export function usePendingForBatch() {
+  const can = useCan("accounting:reimbursements:manage");
   return useQuery<{ expenses: ExpenseWithRelations[]; pagination: { total: number } }, Error>({
     queryKey: expenseKeys.pendingForBatch(),
     queryFn: () =>
@@ -170,14 +179,17 @@ export function usePendingForBatch() {
         includeCategories: "false",
       }),
     staleTime: 30_000,
+    enabled: can,
   });
 }
 
 export function useExpensePolicies() {
+  const can = useCan("accounting:reimbursements:manage");
   return useQuery<FinExpensePolicy[], Error>({
     queryKey: expenseKeys.policies(),
     queryFn: () => apiClient.get<FinExpensePolicy[]>("/accounting/expenses/policies"),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 
@@ -217,10 +229,12 @@ export function useDeleteExpensePolicy(policyId: number) {
 }
 
 export function useFinBankAccounts() {
+  const can = useCan("accounting:banking:read");
   return useQuery<FinBankAccount[], Error>({
     queryKey: expenseKeys.bankAccounts(),
     queryFn: () => apiClient.get<FinBankAccount[]>("/finance/bank-accounts"),
     staleTime: 120_000,
+    enabled: can,
   });
 }
 

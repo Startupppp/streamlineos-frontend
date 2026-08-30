@@ -133,7 +133,7 @@ export function PreviewDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Preview â€” {template?.name}</DialogTitle>
+          <DialogTitle>Preview — {template?.name}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           {result ? (

@@ -254,10 +254,11 @@ export function MessageInput({
       <AnimatePresence>
         {replyTo && (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="border-t border-border/30 overflow-hidden bg-muted/20"
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className="border-t border-border/30 bg-muted/20"
           >
             <div className="flex items-center gap-3 px-4 py-2 max-w-[900px] mx-auto">
               <div className="w-1 h-9 rounded-full bg-status-info-fill shrink-0" />

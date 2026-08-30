@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyTimeIllustration } from "@/components/illustrations";
 
 const CARD_CLASS =
@@ -13,8 +13,8 @@ export function WorkLogDeptPromptCard() {
     <Card className={CARD_CLASS}>
       <CardContent className="py-12">
         <div className="flex flex-col items-center justify-center text-center gap-2">
-          <div className="w-8 rounded-full bg-muted flex items-center justify-center">
-            <Loader2 className="h-4 w-4 text-muted-foreground" />
+          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+            <Skeleton className="h-4 w-4 rounded-full" />
           </div>
           <p className="text-sm text-muted-foreground">
             Department filter is applied. Select an employee from this department to view their work logs.
@@ -28,16 +28,18 @@ export function WorkLogDeptPromptCard() {
 export function WorkLogLoadingCard() {
   return (
     <Card className={CARD_CLASS}>
-      <CardContent className="py-12">
-        <div
-          className="flex flex-col items-center justify-center gap-3"
-          role="status"
-          aria-label="Loading work logs"
-        >
-          <Loader2 className="w-8 animate-spin text-muted-foreground" aria-hidden="true" />
-          <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wider">
-            Loading work logs
-          </p>
+      <CardContent className="py-8" role="status" aria-label="Loading work logs">
+        <div className="space-y-3 px-2">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3">
+              <Skeleton className="h-8 w-8 rounded-md shrink-0" />
+              <div className="flex-1 space-y-1.5">
+                <Skeleton className="h-3.5 w-32" />
+                <Skeleton className="h-3 w-48" />
+              </div>
+              <Skeleton className="h-6 w-16 rounded-md" />
+            </div>
+          ))}
         </div>
       </CardContent>
     </Card>

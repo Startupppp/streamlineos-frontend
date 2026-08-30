@@ -338,19 +338,11 @@ export function PmWorkspacesPage() {
             <EmptyState
               className={PM_FILL_PANEL}
               illustrationPreset="projects"
-              title={isFiltered ? "No matching workspaces" : "No PM workspaces yet"}
-              description={
-                isFiltered
-                  ? "Try adjusting your filters."
-                  : "Create a workspace to organize products, teams and projects."
-              }
-              action={
-                isFiltered
-                  ? { label: "Clear filters", onClick: handleClearFilters }
-                  : canCreate
-                    ? { label: "New Workspace", onClick: handleOpenCreate }
-                    : undefined
-              }
+              title="No PM workspaces yet"
+              description={isFiltered ? undefined : "Create a workspace to organize products, teams and projects."}
+              filtersActive={isFiltered}
+              onClearFilters={handleClearFilters}
+              action={canCreate && !isFiltered ? { label: "New Workspace", onClick: handleOpenCreate } : undefined}
             />
           ) : (
             <>

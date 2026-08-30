@@ -171,7 +171,7 @@ export default function PricebooksPage() {
             title={query ? "No pricebooks match that search" : "No pricebooks yet"}
             description={
               query
-                ? `Nothing matches “${debouncedSearch.trim()}”. Clear the search to see every book.`
+                ? `Nothing matches "${debouncedSearch.trim()}". Clear the search to see every book.`
                 : "A pricebook holds one set of prices, so a reseller and a direct customer can be quoted different figures for the same product."
             }
             action={
