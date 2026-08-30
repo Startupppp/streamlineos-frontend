@@ -299,6 +299,12 @@ export const INVENTORY_NAV_GROUPS: NavGroup[] = [
         requiredPermission: "inventory:channels:manage",
       },
       {
+        label: "Quick commerce",
+        icon: Globe,
+        href: "/inventory/quick-commerce",
+        requiredPermission: "inventory:channels:manage",
+      },
+      {
         label: "Barcode",
         icon: Scan,
         href: "/inventory/barcode",

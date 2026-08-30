@@ -176,6 +176,22 @@ export const inventoryQueryKeys = {
      * the top of this file, applied to a family added after it was written.
      */
     channelPoolsAll: [...base, "inventory", "channelPools"] as const,
+
+    /**
+     * NEO-2 / NEO-3. Same R2 discipline as the pool keys above: a params-less
+     * prefix per family, so one invalidation after an ingest or an accept reaches
+     * the list, the detail and the fill-rate report together.
+     */
+    platformPurchaseOrdersList: [...base, "inventory", "platformPurchaseOrders"] as const,
+    platformPurchaseOrders: (filters?: Record<string, unknown>) =>
+      k(...base, "inventory", "platformPurchaseOrders", filters),
+    platformPurchaseOrder: (platformPoId: number) =>
+      k(...base, "inventory", "platformPurchaseOrders", "detail", platformPoId),
+    asnsList: [...base, "inventory", "asns"] as const,
+    asns: (filters?: Record<string, unknown>) => k(...base, "inventory", "asns", filters),
+    platformFillRateAll: [...base, "inventory", "platformFillRate"] as const,
+    platformFillRate: (platformPoId: number) =>
+      k(...base, "inventory", "platformFillRate", platformPoId),
     channelPools: (channelId: number) => k(...base, "inventory", "channelPools", channelId),
     channelPoolsByVariant: (productVariantId: number, warehouseId: number | null) =>
       k(...base, "inventory", "channelPools", "variant", productVariantId, warehouseId ?? "all"),
