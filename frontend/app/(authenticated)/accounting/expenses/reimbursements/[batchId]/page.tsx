@@ -13,15 +13,10 @@ import { useCan } from "@/hooks/api/access";
 import { useReimbursementBatch, useApproveBatch } from "@/hooks/api/accounting/expenses";
 import { PayBatchDialog } from "@/features/accounting/expenses/pay-batch-dialog";
 import { getUserDisplayName } from "@/lib/person-display";
+import { formatShortDate } from "@/lib/date-utils";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import type { ReimbursementBatchStatus, ReimbursementBatchItem } from "@/types/accounting/expenses";
 import type { FinanceStatus } from "@/features/accounting/shared";
-
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-}
 
 const STATUS_MAP: Record<ReimbursementBatchStatus, FinanceStatus> = {
   DRAFT: "DRAFT",
@@ -52,7 +47,7 @@ const batchItemColumns: DataTableColumn<ReimbursementBatchItem>[] = [
     header: "Date",
     className: "hidden md:table-cell",
     headerClassName: "hidden md:table-cell",
-    cell: (row) => formatDate(row.expenseDate),
+    cell: (row) => formatShortDate(row.expenseDate) || "—",
   },
   {
     key: "amount",
@@ -126,7 +121,7 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
   return (
     <PageWrapper
       title={batch.name}
-      subtitle={`Created by ${getUserDisplayName(batch.creator)} · ${formatDate(batch.createdAt)}`}
+      subtitle={`Created by ${getUserDisplayName(batch.creator)} · ${formatShortDate(batch.createdAt) || "—"}`}
       backHref="/accounting/expenses/reimbursements"
       badge={<FinanceStatusBadge status={STATUS_MAP[batch.status]} size="chip" />}
       actions={
@@ -162,14 +157,14 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
             <div>
               <p className="text-dense text-muted-foreground mb-0.5">Approved by</p>
               <p className="text-sm">
-                {getUserDisplayName(batch.approver)} · {formatDate(batch.approvedAt)}
+                {getUserDisplayName(batch.approver)} · {formatShortDate(batch.approvedAt) || "—"}
               </p>
             </div>
           )}
           {batch.paidDate && (
             <div>
               <p className="text-dense text-muted-foreground mb-0.5">Paid date</p>
-              <p className="text-sm">{formatDate(batch.paidDate)}</p>
+              <p className="text-sm">{formatShortDate(batch.paidDate) || "—"}</p>
             </div>
           )}
         </div>

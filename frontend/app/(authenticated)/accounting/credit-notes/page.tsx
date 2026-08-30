@@ -35,12 +35,7 @@ import { useCreditNotes, usePostCreditNote } from "@/hooks/api/accounting/ar";
 import { useCan } from "@/hooks/api/access";
 import type { CreditNote, CreditNoteStatus } from "@/types/accounting/ar";
 import { getErrorMessage } from "@/lib/get-error-message";
-
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
-}
+import { formatShortDate } from "@/lib/date-utils";
 
 const STATUS_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "all", label: "All statuses" },
@@ -195,7 +190,7 @@ export default function CreditNotesPage() {
       key: "createdAt",
       header: "Date",
       cell: (row) => (
-        <span className="text-sm text-muted-foreground">{formatDate(row.createdAt)}</span>
+        <span className="text-sm text-muted-foreground">{formatShortDate(row.createdAt) || "—"}</span>
       ),
     },
     {

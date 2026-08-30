@@ -30,16 +30,10 @@ import {
   ApproveDialog,
   RejectDialog,
 } from "@/features/accounting/core/journal-approve-reject-dialogs";
+import { formatShortDate } from "@/lib/date-utils";
 
 interface JournalEntryDetailPageProps {
   params: Promise<{ entryId: string }>;
-}
-
-function formatDate(value: string): string {
-  if (!value) return "";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" });
 }
 
 export default function JournalEntryDetailPage({ params }: JournalEntryDetailPageProps) {
@@ -123,7 +117,7 @@ export default function JournalEntryDetailPage({ params }: JournalEntryDetailPag
   return (
     <PageWrapper
       title={entry ? entry.entryNumber : "Journal entry"}
-      subtitle={entry ? formatDate(entry.entryDate) : "Loading journal entry…"}
+      subtitle={entry ? formatShortDate(entry.entryDate) || "" : "Loading journal entry…"}
       backHref="/accounting/journal"
       actions={
         <div className="flex items-center gap-2">

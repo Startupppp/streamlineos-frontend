@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatShortDate } from "@/lib/date-utils";
 import {
   usePurchaseOrder,
   useSendPurchaseOrder,
@@ -50,12 +51,6 @@ type GrnRow = {
   creator?: { name: string } | null;
   notes?: string | null;
 };
-
-function formatDate(value: string | null): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
-}
 
 function formatAmount(value: string): string {
   return Number(value).toFixed(2);
@@ -145,7 +140,7 @@ function buildGrnColumns(onRowClick: (id: number) => void): DataTableColumn<GrnR
       key: "receivedDate",
       header: "Received date",
       className: "font-mono tabular-nums",
-      cell: (row) => <span>{formatDate(row.receivedDate)}</span>,
+      cell: (row) => <span>{formatShortDate(row.receivedDate) || "—"}</span>,
     },
     {
       key: "creator",
@@ -278,7 +273,7 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
   return (
     <PageWrapper
       title={po.poNumber}
-      subtitle={`${po.vendor?.name ?? "Unknown vendor"} · ${formatDate(po.orderDate)}`}
+      subtitle={`${po.vendor?.name ?? "Unknown vendor"} · ${formatShortDate(po.orderDate) || "—"}`}
       backHref="/inventory/purchase-orders"
       actions={
         canEdit || canApprove || canSend || canReceive || canClose || canCancel || po.vendor ? (
@@ -367,9 +362,9 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
               ) : "—"}
             </dd>
             <dt className="text-muted-foreground">Order date</dt>
-            <dd className="font-mono tabular-nums text-label">{formatDate(po.orderDate)}</dd>
+            <dd className="font-mono tabular-nums text-label">{formatShortDate(po.orderDate) || "—"}</dd>
             <dt className="text-muted-foreground">Expected delivery</dt>
-            <dd className="font-mono tabular-nums text-label">{formatDate(po.expectedDeliveryDate)}</dd>
+            <dd className="font-mono tabular-nums text-label">{formatShortDate(po.expectedDeliveryDate) || "—"}</dd>
             <dt className="text-muted-foreground">Warehouse</dt>
             <dd>{po.warehouse?.name ?? "—"}</dd>
             <dt className="text-muted-foreground">Currency</dt>

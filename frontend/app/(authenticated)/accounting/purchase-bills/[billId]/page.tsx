@@ -29,6 +29,7 @@ import { RecordVendorPaymentDialog } from "@/features/accounting/record-vendor-p
 import { BillDetailView } from "@/features/accounting/purchases/bill-detail-view";
 import { BillAiSection } from "@/features/accounting/purchases/bill-ai-section";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatShortDate } from "@/lib/date-utils";
 
 interface PurchaseBillDetailPageProps {
   params: Promise<{ billId: string }>;
@@ -143,7 +144,7 @@ export default function PurchaseBillDetailPage({
       title={bill?.billNumber ?? "Purchase bill"}
       subtitle={
         bill
-          ? `${bill.vendorName ?? "Unknown vendor"} · ${bill.billDate ? new Date(bill.billDate).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" }) : "—"}`
+          ? `${bill.vendorName ?? "Unknown vendor"} · ${formatShortDate(bill.billDate) || "—"}`
           : "Loading…"
       }
       backHref="/accounting/purchase-bills"

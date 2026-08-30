@@ -13,13 +13,8 @@ import { cn } from "@/lib/utils";
 import { useVendors } from "@/hooks/api/inventory/vendors";
 import { useGoodsReceipts } from "@/hooks/api/inventory/operations";
 import { GrnDetailSheet } from "@/features/inventory/components/procurement/grn-detail-sheet";
+import { formatShortDate } from "@/lib/date-utils";
 import type { GrnSummary } from "@/hooks/api/inventory/operations";
-
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
-}
 
 const columns: DataTableColumn<GrnSummary>[] = [
   {
@@ -42,7 +37,7 @@ const columns: DataTableColumn<GrnSummary>[] = [
   {
     key: "receivedDate",
     header: "Received Date",
-    cell: (g) => <span className="font-mono tabular-nums">{formatDate(g.receivedDate)}</span>,
+    cell: (g) => <span className="font-mono tabular-nums">{formatShortDate(g.receivedDate) || "—"}</span>,
     sortable: true,
     sortValue: (g) => g.receivedDate,
   },

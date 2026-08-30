@@ -27,6 +27,7 @@ import {
 import { VendorReturnSheet } from "@/features/inventory/components/operations/vendor-return-sheet";
 import { CustomerReturnSheet } from "@/features/inventory/components/operations/customer-return-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatShortDate } from "@/lib/date-utils";
 
 type ReturnStatus = "DRAFT" | "POSTED" | "CANCELLED";
 
@@ -35,12 +36,6 @@ const RETURN_STATUS_BADGE: Record<ReturnStatus, string> = {
   POSTED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
   CANCELLED: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };
-
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
-}
 
 function ReturnStatusBadge({ status }: { status: VendorReturnStatus | CustomerReturnStatus }) {
   const cls = RETURN_STATUS_BADGE[status] ?? "bg-muted text-muted-foreground border-border";
@@ -145,7 +140,7 @@ export default function ReturnsPage() {
     {
       key: "createdAt",
       header: "Created",
-      cell: (r) => <span className="font-mono tabular-nums text-dense">{formatDate(r.createdAt)}</span>,
+      cell: (r) => <span className="font-mono tabular-nums text-dense">{formatShortDate(r.createdAt) || "—"}</span>,
     },
     {
       key: "actions",
@@ -219,7 +214,7 @@ export default function ReturnsPage() {
     {
       key: "createdAt",
       header: "Created",
-      cell: (r) => <span className="font-mono tabular-nums text-dense">{formatDate(r.createdAt)}</span>,
+      cell: (r) => <span className="font-mono tabular-nums text-dense">{formatShortDate(r.createdAt) || "—"}</span>,
     },
     {
       key: "actions",

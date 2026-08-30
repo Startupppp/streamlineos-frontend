@@ -22,6 +22,7 @@ import {
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatShortDate } from "@/lib/date-utils";
 import { useCan } from "@/hooks/api/access";
 import { SO_STATUS_BADGE, SO_STATUS_LABEL, type SoStatus } from "@/features/inventory/lib";
 import { PickSheet } from "@/features/inventory/components/sales/pick-sheet";
@@ -108,12 +109,6 @@ function AtpIndicator({ available, requested }: { available: number; requested: 
       Insufficient
     </span>
   );
-}
-
-function formatDate(value: string | null): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
 }
 
 function formatNum(value: string | number | null | undefined): string {
@@ -297,7 +292,7 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
   return (
     <PageWrapper
       title={so.soNumber}
-      subtitle={`${so.customerName ?? "Unknown customer"} · ${formatDate(so.orderDate)}`}
+      subtitle={`${so.customerName ?? "Unknown customer"} · ${formatShortDate(so.orderDate) || "—"}`}
       backHref="/inventory/sales-orders"
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
@@ -409,9 +404,9 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
             <dt className="text-muted-foreground">Customer</dt>
             <dd>{so.customerName ?? "—"}</dd>
             <dt className="text-muted-foreground">Order Date</dt>
-            <dd>{formatDate(so.orderDate)}</dd>
+            <dd>{formatShortDate(so.orderDate) || "—"}</dd>
             <dt className="text-muted-foreground">Required Date</dt>
-            <dd>{formatDate(so.expectedShipDate)}</dd>
+            <dd>{formatShortDate(so.expectedShipDate) || "—"}</dd>
             <dt className="text-muted-foreground">Currency</dt>
             <dd>{so.currency ?? "—"}</dd>
             <dt className="text-muted-foreground">Total</dt>

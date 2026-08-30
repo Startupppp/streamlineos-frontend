@@ -4,7 +4,6 @@ import { useMemo, type ChangeEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -41,6 +40,7 @@ import {
   type CreateJournalEntryInput,
 } from "@/hooks/api/accounting";
 import type { Account } from "@/types/accounting";
+import { journalEntrySchema, type JournalEntryFormValues } from "./journal-entry-schema";
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
@@ -56,21 +56,7 @@ function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
-const lineSchema = z.object({
-  accountCode: z.string(),
-  debit: z.string(),
-  credit: z.string(),
-  description: z.string(),
-});
-
-const formSchema = z.object({
-  entryDate: z.string().min(1, "Entry date is required"),
-  description: z.string().min(1, "Description is required"),
-  status: z.enum(["DRAFT", "POSTED"]),
-  lines: z.array(lineSchema),
-});
-
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = JournalEntryFormValues;
 
 interface LineRowContext {
   index: number;
@@ -208,7 +194,7 @@ export default function NewJournalEntryPage() {
   const createMutation = useCreateJournalEntry();
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(journalEntrySchema),
     defaultValues: {
       entryDate: todayIso(),
       description: "",

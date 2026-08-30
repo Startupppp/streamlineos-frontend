@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useTransition } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import Link from "next/link";
 import { Plus } from "lucide-react";
@@ -39,7 +40,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
-import { FinanceStatusBadge } from "@/features/accounting/shared";
+import { FinanceStatusBadge, Money } from "@/features/accounting/shared";
 import { usePurchaseBills } from "@/hooks/api/accounting";
 import {
   useBillSubmitApproval,
@@ -48,6 +49,7 @@ import {
 } from "@/hooks/api/accounting/ap";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatShortDate } from "@/lib/date-utils";
 import type { PurchaseBillStatus, PurchaseBillSummary } from "@/types/accounting";
 
 type StatusFilter = "ALL" | PurchaseBillStatus;
@@ -62,14 +64,12 @@ const STATUS_OPTIONS: ReadonlyArray<{ value: StatusFilter; label: string }> = [
   { value: "CANCELLED", label: "Cancelled" },
 ];
 
-function isStatusFilter(value: string): value is StatusFilter {
-  return STATUS_OPTIONS.some((opt) => opt.value === value);
-}
+const PAGE_SIZE = 25;
 
-function formatDate(value: string | null): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
+function parseStatusFilter(value: string | null): StatusFilter {
+  if (STATUS_OPTIONS.some((opt) => opt.value === value && value !== "ALL"))
+    return value as PurchaseBillStatus;
+  return "ALL";
 }
 
 interface BillRowActionsProps {
@@ -215,7 +215,7 @@ function buildColumns(canApprove: boolean): DataTableColumn<PurchaseBillSummary>
       key: "billDate",
       header: "Bill date",
       cell: (bill) => (
-        <span className="text-muted-foreground">{formatDate(bill.billDate)}</span>
+        <span className="text-muted-foreground">{formatShortDate(bill.billDate)}</span>
       ),
       sortable: true,
       sortValue: (bill) => bill.billDate ?? "",
@@ -224,7 +224,7 @@ function buildColumns(canApprove: boolean): DataTableColumn<PurchaseBillSummary>
       key: "dueDate",
       header: "Due date",
       cell: (bill) => (
-        <span className="text-muted-foreground">{formatDate(bill.dueDate)}</span>
+        <span className="text-muted-foreground">{formatShortDate(bill.dueDate)}</span>
       ),
       sortable: true,
       sortValue: (bill) => bill.dueDate ?? "",
@@ -234,7 +234,7 @@ function buildColumns(canApprove: boolean): DataTableColumn<PurchaseBillSummary>
       header: "Total",
       headerClassName: "text-right",
       className: "text-right tabular-nums font-medium",
-      cell: (bill) => Number(bill.total).toFixed(2),
+      cell: (bill) => <Money value={Number(bill.total)} />,
       sortable: true,
       sortValue: (bill) => Number(bill.total),
     },
@@ -253,32 +253,87 @@ function buildColumns(canApprove: boolean): DataTableColumn<PurchaseBillSummary>
 }
 
 export default function PurchaseBillsListPage() {
-  const [search, setSearch] = useState<string>("");
-  const [status, setStatus] = useState<StatusFilter>("ALL");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [, startTransition] = useTransition();
+
+  const searchParam = searchParams.get("q") ?? "";
+  const statusParam = parseStatusFilter(searchParams.get("status"));
+
+  const [searchInput, setSearchInput] = useState(searchParam);
+
   const canApprove = useCan("accounting:payables:approve");
   const canManage = useCan("accounting:payables:manage");
 
-  const debouncedSearch = useDebouncedValue(search, 300);
+  const debouncedSearch = useDebouncedValue(searchInput, 300);
+
+  const [cursors, setCursors] = useState<(string | null)[]>([null]);
+  const [cursorIndex, setCursorIndex] = useState(0);
+
+  const filterKey = `${searchParam}|${statusParam}`;
+
+  useEffect(() => {
+    setCursors([null]);
+    setCursorIndex(0);
+  }, [filterKey]);
+
+  const currentCursor = cursors[cursorIndex] ?? null;
 
   const query = usePurchaseBills({
-    limit: 100,
+    limit: PAGE_SIZE,
+    cursor: currentCursor ?? undefined,
     q: debouncedSearch.trim() || undefined,
-    status: status === "ALL" ? undefined : status,
+    status: statusParam === "ALL" ? undefined : statusParam,
   });
 
-  function handleSearchChange(value: string) {
-    setSearch(value);
+  useEffect(() => {
+    if (!query.data) return;
+    const nextCursor = query.data.pagination.nextCursor;
+    setCursors((prev) => {
+      if (prev[cursorIndex + 1] !== undefined) return prev;
+      const next = [...prev];
+      next[cursorIndex + 1] = nextCursor;
+      return next;
+    });
+  }, [query.data, cursorIndex]);
+
+  function setParam(key: string, value: string): void {
+    startTransition(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value) params.set(key, value);
+      else params.delete(key);
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    });
+  }
+
+  function handleSearchChange(value: string): void {
+    setSearchInput(value);
+    setParam("q", value);
   }
 
   function handleStatusChange(value: string): void {
-    if (isStatusFilter(value)) setStatus(value);
+    setParam("status", value === "ALL" ? "" : value);
   }
 
   function handleRetry(): void {
     void query.refetch();
   }
 
+  function handlePageChange(page: number): void {
+    const targetIndex = page - 1;
+    if (targetIndex < 0) return;
+    if (targetIndex < cursors.length && cursors[targetIndex] !== undefined) {
+      setCursorIndex(targetIndex);
+    }
+  }
+
   const items = query.data?.data ?? [];
+  const hasMore = query.data?.pagination?.hasMore ?? false;
+  const currentPage = cursorIndex + 1;
+  const syntheticTotal = hasMore
+    ? currentPage * PAGE_SIZE + 1
+    : (currentPage - 1) * PAGE_SIZE + items.length;
   const columns = buildColumns(canApprove);
 
   return (
@@ -297,8 +352,8 @@ export default function PurchaseBillsListPage() {
       }
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
-          <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search by bill number" />
-          <Select value={status} onValueChange={handleStatusChange}>
+          <SearchInput value={searchInput} onValueChange={handleSearchChange} placeholder="Search by bill number" />
+          <Select value={statusParam} onValueChange={handleStatusChange}>
             <SelectTrigger className={`w-[180px] ${FILTER_SELECT_TRIGGER}`}>
               <SelectValue />
             </SelectTrigger>
@@ -328,6 +383,13 @@ export default function PurchaseBillsListPage() {
             isLoading={query.isLoading}
             minWidth="680px"
             className="flex-1 min-h-0"
+            pagination={{
+              mode: "server",
+              page: currentPage,
+              pageSize: PAGE_SIZE,
+              total: syntheticTotal,
+              onPageChange: handlePageChange,
+            }}
             emptyState={
               <EmptyState
                 illustration={<EmptyExpensesIllustration />}

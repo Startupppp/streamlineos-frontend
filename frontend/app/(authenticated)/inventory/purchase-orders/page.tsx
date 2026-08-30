@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ErrorState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatShortDate } from "@/lib/date-utils";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyOrdersIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -71,12 +72,6 @@ const STATUS_BADGE: Record<PurchaseOrderStatus, string> = {
 const VALID_STATUSES = new Set<string>([
   "DRAFT", "SENT", "PARTIAL", "RECEIVED", "CLOSED", "CANCELLED",
 ]);
-
-function formatDate(value: string | null): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
-}
 
 function StatusBadge({ status }: { status: PurchaseOrderStatus }) {
   return (
@@ -221,7 +216,7 @@ const columns: DataTableColumn<PurchaseOrderSummary>[] = [
     key: "orderDate",
     header: "Order Date",
     cell: (po) => (
-      <span className="font-mono tabular-nums">{formatDate(po.orderDate)}</span>
+      <span className="font-mono tabular-nums">{formatShortDate(po.orderDate) || "—"}</span>
     ),
   },
   {
@@ -230,7 +225,7 @@ const columns: DataTableColumn<PurchaseOrderSummary>[] = [
     headerClassName: "hidden md:table-cell",
     className: "hidden md:table-cell",
     cell: (po) => (
-      <span className="font-mono tabular-nums">{formatDate(po.expectedDeliveryDate)}</span>
+      <span className="font-mono tabular-nums">{formatShortDate(po.expectedDeliveryDate) || "—"}</span>
     ),
   },
   {

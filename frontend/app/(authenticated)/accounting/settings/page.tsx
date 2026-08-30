@@ -2,7 +2,6 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { LoadingState, ErrorState } from "@/components/shared";
@@ -37,25 +36,17 @@ import {
   PaymentTermsSection,
   QuickLinks,
 } from "@/features/accounting/settings/fin-settings-sections";
+import {
+  companySchema,
+  type CompanyFormValues,
+  taxSchema,
+  type TaxFormValues,
+} from "./accounting-settings-schema";
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
 ];
-
-const companySchema = z.object({
-  baseCurrency: z.string().min(1),
-  fiscalYearStartMonth: z.string().min(1),
-  accountingBasis: z.enum(["ACCRUAL", "CASH"]),
-});
-type CompanyFormValues = z.infer<typeof companySchema>;
-
-const taxSchema = z.object({
-  gstin: z.string(),
-  pan: z.string(),
-  stateCode: z.string(),
-});
-type TaxFormValues = z.infer<typeof taxSchema>;
 
 export default function FinanceSettingsPage() {
   const canManage = useCan("accounting:settings:manage");

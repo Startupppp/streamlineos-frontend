@@ -9,6 +9,7 @@ import { FinanceStatusBadge } from "@/features/accounting/shared";
 import type { FinanceStatus } from "@/features/accounting/shared";
 import { useOpeningBalance } from "@/hooks/api/accounting/core";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatShortDate } from "@/lib/date-utils";
 import { OpeningBalancesEditor } from "@/features/accounting/core/opening-balances-editor";
 
 const KNOWN_FINANCE_STATUSES: readonly FinanceStatus[] = [
@@ -24,13 +25,6 @@ function isFinanceStatus(value: string): value is FinanceStatus {
 
 function toFinanceStatus(value: string): FinanceStatus {
   return isFinanceStatus(value) ? value : "DRAFT";
-}
-
-function formatDate(value: string): string {
-  if (!value) return "";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" });
 }
 
 export default function OpeningBalancesPage() {
@@ -93,7 +87,7 @@ export default function OpeningBalancesPage() {
                   </div>
                   <div>
                     <p className="text-dense font-medium text-muted-foreground">As of date</p>
-                    <p className="text-sm text-foreground">{formatDate(entry.entryDate)}</p>
+                    <p className="text-sm text-foreground">{formatShortDate(entry.entryDate) || ""}</p>
                   </div>
                   <div>
                     <p className="text-dense font-medium text-muted-foreground">Status</p>

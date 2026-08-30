@@ -6,6 +6,7 @@ import { Pencil, Package, CheckCircle2, RotateCcw, Clock, FileText, DollarSign }
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatShortDate } from "@/lib/date-utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -43,12 +44,6 @@ type VendorPoRow = {
   status: PurchaseOrderStatus;
 };
 
-function formatDate(value: string | null): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
-}
-
 const VENDOR_PO_COLUMNS: DataTableColumn<VendorPoRow>[] = [
   {
     key: "poNumber",
@@ -68,13 +63,13 @@ const VENDOR_PO_COLUMNS: DataTableColumn<VendorPoRow>[] = [
     key: "orderDate",
     header: "Order date",
     className: "font-mono tabular-nums",
-    cell: (row) => <span>{formatDate(row.orderDate)}</span>,
+    cell: (row) => <span>{formatShortDate(row.orderDate) || "—"}</span>,
   },
   {
     key: "expectedDeliveryDate",
     header: "Expected delivery",
     className: "font-mono tabular-nums",
-    cell: (row) => <span>{formatDate(row.expectedDeliveryDate)}</span>,
+    cell: (row) => <span>{formatShortDate(row.expectedDeliveryDate) || "—"}</span>,
   },
   {
     key: "total",

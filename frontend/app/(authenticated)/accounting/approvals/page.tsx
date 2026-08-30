@@ -26,6 +26,7 @@ import {
 } from "@/hooks/api/accounting/settings";
 import type { ApprovalRequest, ApprovalStatus } from "@/types/accounting/taxes";
 import { cn } from "@/lib/utils";
+import { formatShortDate } from "@/lib/date-utils";
 
 const RECORD_TYPE_OPTIONS = [
   "All",
@@ -47,10 +48,6 @@ const STATUS_TABS: ReadonlyArray<{ value: ApprovalStatus | "ALL"; label: string 
   { value: "REJECTED", label: "Rejected" },
 ];
 
-function formatDate(dateStr: string): string {
-  const d = new Date(dateStr);
-  return Number.isNaN(d.getTime()) ? dateStr : d.toLocaleDateString();
-}
 
 interface DecisionDialogProps {
   request: ApprovalRequest;
@@ -232,7 +229,7 @@ export default function FinanceApprovalsPage() {
       headerClassName: "hidden md:table-cell",
       className: "hidden md:table-cell",
       cell: (req) => (
-        <span className="text-sm text-muted-foreground">{formatDate(req.createdAt)}</span>
+        <span className="text-sm text-muted-foreground">{formatShortDate(req.createdAt) || "—"}</span>
       ),
     },
     {

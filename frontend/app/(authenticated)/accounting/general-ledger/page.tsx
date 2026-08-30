@@ -29,6 +29,7 @@ import { useCan } from "@/hooks/api/access";
 import { cn } from "@/lib/utils";
 import { downloadCsv } from "@/features/accounting/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatShortDate } from "@/lib/date-utils";
 import type { GlRow } from "@/hooks/api/accounting/core";
 
 function getMonthStart(): string {
@@ -39,17 +40,6 @@ function getMonthStart(): string {
 
 function getToday(): string {
   return new Date().toISOString().slice(0, 10);
-}
-
-function formatDate(value: string): string {
-  if (!value) return "";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-  });
 }
 
 function formatMoney(value: string): string {
@@ -81,7 +71,7 @@ const glColumns: DataTableColumn<GlRow>[] = [
     header: "Date",
     cell: (row) => (
       <span className="tabular-nums text-muted-foreground">
-        {formatDate(row.date)}
+        {formatShortDate(row.date) || ""}
       </span>
     ),
     className: "w-[120px]",

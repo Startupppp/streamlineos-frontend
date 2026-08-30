@@ -46,6 +46,7 @@ import {
   type RecurringFrequency,
 } from "@/hooks/api/accounting/ap";
 import { RecurringBillFormSheet } from "@/features/accounting/purchases/recurring-bill-form-sheet";
+import { formatShortDate } from "@/lib/date-utils";
 
 const FREQUENCY_LABELS: Record<RecurringFrequency, string> = {
   DAILY: "Daily",
@@ -54,12 +55,6 @@ const FREQUENCY_LABELS: Record<RecurringFrequency, string> = {
   QUARTERLY: "Quarterly",
   YEARLY: "Yearly",
 };
-
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
-}
 
 interface RowActionsProps {
   template: RecurringBillTemplate;
@@ -205,7 +200,7 @@ export default function RecurringBillsPage() {
       header: "Next run",
       cell: (row) => (
         <span className="text-sm tabular-nums text-muted-foreground">
-          {formatDate(row.nextRunDate)}
+          {formatShortDate(row.nextRunDate) || "—"}
         </span>
       ),
     },
@@ -214,7 +209,7 @@ export default function RecurringBillsPage() {
       header: "Last run",
       cell: (row) => (
         <span className="text-sm tabular-nums text-muted-foreground">
-          {formatDate(row.lastRunDate)}
+          {formatShortDate(row.lastRunDate) || "—"}
         </span>
       ),
     },

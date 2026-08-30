@@ -46,6 +46,7 @@ import {
 } from "@/hooks/api/accounting/ar";
 import type { RecurringInvoiceTemplate, RecurringFrequency } from "@/types/accounting/ar";
 import { RecurringTemplateFormSheet } from "@/features/accounting/sales/recurring-template-form-sheet";
+import { formatShortDate } from "@/lib/date-utils";
 
 const FREQUENCY_LABELS: Record<RecurringFrequency, string> = {
   DAILY: "Daily",
@@ -54,12 +55,6 @@ const FREQUENCY_LABELS: Record<RecurringFrequency, string> = {
   QUARTERLY: "Quarterly",
   YEARLY: "Yearly",
 };
-
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
-}
 
 interface RowActionsProps {
   template: RecurringInvoiceTemplate;
@@ -213,14 +208,14 @@ export default function RecurringInvoicesPage() {
       key: "nextRunDate",
       header: "Next run",
       cell: (row) => (
-        <span className="text-sm tabular-nums text-muted-foreground">{formatDate(row.nextRunDate)}</span>
+        <span className="text-sm tabular-nums text-muted-foreground">{formatShortDate(row.nextRunDate) || "—"}</span>
       ),
     },
     {
       key: "lastRunDate",
       header: "Last run",
       cell: (row) => (
-        <span className="text-sm tabular-nums text-muted-foreground">{formatDate(row.lastRunDate)}</span>
+        <span className="text-sm tabular-nums text-muted-foreground">{formatShortDate(row.lastRunDate) || "—"}</span>
       ),
     },
     {

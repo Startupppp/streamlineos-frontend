@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { Controller } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
@@ -40,6 +39,8 @@ import type {
   BudgetDimensionType,
   BudgetSummary,
 } from "@/types/accounting/planning";
+import { formatShortDate } from "@/lib/date-utils";
+import { createBudgetSchema, type CreateBudgetForm } from "./budget-schema";
 
 type StatusFilter = "ALL" | BudgetStatus;
 
@@ -69,23 +70,8 @@ const DIMENSION_TYPE_OPTIONS: ReadonlyArray<{
   { value: "PROJECT", label: "Project" },
 ];
 
-const createBudgetSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  fiscalYear: z.string().min(1, "Fiscal year is required"),
-  periodType: z.enum(["MONTHLY", "QUARTERLY", "YEARLY"]),
-  dimensionType: z.enum(["NONE", "DEPARTMENT", "PROJECT"]),
-});
-
-type CreateBudgetForm = z.infer<typeof createBudgetSchema>;
-
 function isStatusFilter(value: string): value is StatusFilter {
   return STATUS_OPTIONS.some((opt) => opt.value === value);
-}
-
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
 }
 
 function PeriodTypeBadge({ periodType }: { periodType: BudgetPeriodType }) {
@@ -170,7 +156,7 @@ const budgetColumns: DataTableColumn<BudgetSummary>[] = [
     className: "hidden md:table-cell",
     cell: (row) => (
       <span className="text-sm text-muted-foreground">
-        {formatDate(row.createdAt)}
+        {formatShortDate(row.createdAt)}
       </span>
     ),
   },

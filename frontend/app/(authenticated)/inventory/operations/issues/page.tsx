@@ -12,6 +12,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { useStockTransactions } from "@/hooks/api/inventory/stock";
 import type { StockTransaction } from "@/hooks/api/inventory/stock";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatShortDate } from "@/lib/date-utils";
 
 const TYPE_BADGE: Record<string, string> = {
   SALE: "bg-status-info-surface text-status-info-ink border-status-info-rule",
@@ -19,12 +20,6 @@ const TYPE_BADGE: Record<string, string> = {
   TRANSFER_OUT: "bg-status-info-surface text-status-info-ink border-status-info-rule",
   RETURN_OUT: "bg-muted text-muted-foreground border-border",
 };
-
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
-}
 
 function TypeBadge({ type }: { type: string }) {
   const cls = TYPE_BADGE[type] ?? "bg-muted text-muted-foreground border-border";
@@ -40,7 +35,7 @@ const columns: DataTableColumn<StockTransaction>[] = [
     key: "createdAt",
     header: "Date",
     cell: (tx) => (
-      <span className="font-mono tabular-nums text-dense">{formatDate(tx.createdAt)}</span>
+      <span className="font-mono tabular-nums text-dense">{formatShortDate(tx.createdAt) || "—"}</span>
     ),
     sortable: true,
     sortValue: (tx) => tx.createdAt,

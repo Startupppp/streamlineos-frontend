@@ -27,6 +27,7 @@ import { ErrorState } from "@/components/shared";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { Money } from "@/features/accounting/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatShortDate } from "@/lib/date-utils";
 import { useArPayments } from "@/hooks/api/accounting/ar";
 import type { ArPayment, ArPaymentMethod } from "@/types/accounting/ar";
 
@@ -52,12 +53,6 @@ const ALL_METHODS = "all" as const;
 
 function isArPaymentMethod(value: string): value is ArPaymentMethod {
   return (PAYMENT_METHOD_VALUES as string[]).includes(value);
-}
-
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
 }
 
 interface PaymentDetailSheetProps {
@@ -89,7 +84,7 @@ function PaymentDetailSheet({ payment, onClose }: PaymentDetailSheetProps) {
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Payment Date</p>
-            <p className="font-medium">{formatDate(payment.paymentDate)}</p>
+            <p className="font-medium">{formatShortDate(payment.paymentDate) || "—"}</p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Method</p>
@@ -219,7 +214,7 @@ export default function PaymentsReceivedPage() {
     {
       key: "paymentDate",
       header: "Date",
-      cell: (row) => <span className="text-sm tabular-nums text-muted-foreground">{formatDate(row.paymentDate)}</span>,
+      cell: (row) => <span className="text-sm tabular-nums text-muted-foreground">{formatShortDate(row.paymentDate) || "—"}</span>,
     },
     {
       key: "amount",

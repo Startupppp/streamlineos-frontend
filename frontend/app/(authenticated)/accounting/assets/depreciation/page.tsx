@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { Play, ExternalLink, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -34,24 +33,9 @@ import {
   useReverseDepreciationRun,
 } from "@/hooks/api/accounting/assets";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatShortDate } from "@/lib/date-utils";
 import type { DepreciationRun } from "@/types/accounting/assets";
-
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
-}
-
-const PERIOD_PATTERN = /^\d{4}-\d{2}$/;
-
-const runDepreciationSchema = z.object({
-  periodKey: z
-    .string()
-    .min(1, "Period is required")
-    .regex(PERIOD_PATTERN, "Must be in YYYY-MM format (e.g. 2025-01)"),
-});
-
-type RunFormValues = z.infer<typeof runDepreciationSchema>;
+import { runDepreciationSchema, type RunFormValues } from "./depreciation-schema";
 
 const RUN_STATUS_CLASSES: Record<DepreciationRun["status"], string> = {
   PENDING:
@@ -217,7 +201,7 @@ export default function DepreciationRunsPage() {
       header: "Posted At",
       className: "hidden lg:table-cell text-muted-foreground",
       headerClassName: "hidden lg:table-cell",
-      cell: (run) => formatDate(run.postedAt),
+      cell: (run) => formatShortDate(run.postedAt),
     },
     {
       key: "actions",

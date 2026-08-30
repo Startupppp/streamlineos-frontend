@@ -11,22 +11,12 @@ import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useCustomerLedger } from "@/hooks/api/accounting";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatShortDate } from "@/lib/date-utils";
 import type { CustomerLedgerLine } from "@/types/accounting";
 import { formatCurrency } from "@/features/accounting/lib/format-currency";
 
 interface CustomerLedgerDetailPageProps {
   params: Promise<{ clientId: string }>;
-}
-
-function formatDate(value: string): string {
-  if (!value) return "";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-  });
 }
 
 function formatSource(sourceType: string, sourceEvent: string | null): string {
@@ -41,7 +31,7 @@ const customerLedgerColumns: DataTableColumn<CustomerLedgerLine>[] = [
     headerClassName: "w-[120px]",
     cell: (row) => (
       <span className="text-sm text-muted-foreground tabular-nums">
-        {formatDate(row.date)}
+        {formatShortDate(row.date) || ""}
       </span>
     ),
   },

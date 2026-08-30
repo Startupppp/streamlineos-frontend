@@ -7,6 +7,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatShortDate } from "@/lib/date-utils";
 import { EmptyOrdersIllustration } from "@/components/illustrations";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
@@ -31,11 +32,6 @@ import {
 import { useShipments, type Shipment } from "@/hooks/api/inventory/shipping";
 
 const PAGE_LIMIT = 20;
-
-function formatDate(value: string): string {
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
-}
 
 function ShipmentsPageInner() {
   const router = useRouter();
@@ -151,7 +147,7 @@ function ShipmentsPageInner() {
       key: "createdAt",
       header: "Created",
       cell: (s) => (
-        <span className="tabular-nums text-muted-foreground">{formatDate(s.createdAt)}</span>
+        <span className="tabular-nums text-muted-foreground">{formatShortDate(s.createdAt) || ""}</span>
       ),
     },
   ];

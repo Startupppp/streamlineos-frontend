@@ -39,12 +39,7 @@ import {
 } from "@/hooks/api/accounting/ar";
 import type { ReminderPolicy, ReminderLogEntry } from "@/types/accounting/ar";
 import { ReminderPolicyDialog } from "@/features/accounting/sales/reminder-policy-dialog";
-
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
-}
+import { formatShortDate } from "@/lib/date-utils";
 
 function OffsetChips({ offsets }: { offsets: number[] }) {
   return (
@@ -298,7 +293,7 @@ function LogTab() {
       header: "Sent at",
       cell: (row) => (
         <span className="text-sm tabular-nums text-muted-foreground">
-          {formatDate(row.sentAt)}
+          {formatShortDate(row.sentAt) || "—"}
         </span>
       ),
     },
