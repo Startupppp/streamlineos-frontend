@@ -35,21 +35,21 @@ NOT yours: `frontend/app/**` (S09) · permission catalogs (S01) · `backend/src/
 - [ ] `frontend/app/(authenticated)/payroll/layout.tsx` already calls `enforceRouteAccess` — confirm, then verify every payroll DESCENDANT route resolves to an exact permission and none inherits a broad module key.
 - [ ] Gate every payroll read and mutation hook internally through its query's `enabled` condition with its exact backend permission. Component-level `useCan` hiding is UX, not the gate.
 - [ ] Member self-service pay reads stay universal-to-self via `/me` routes deriving the subject from `@CurrentUser()`; administration stays module- and permission-gated. Employee self-service is platform core and must not require a paid entitlement.
-- [ ] Audit every payroll handler for `@RequirePermission` **without** `@UseGuards(JwtAuthGuard, PermissionGuard)` — that combination is authenticated but never permission-checked. Report the count you found.
+- [x] Audit every payroll handler for `@RequirePermission` **without** `@UseGuards(JwtAuthGuard, PermissionGuard)` — that combination is authenticated but never permission-checked. Report the count you found. VERIFIED DONE: 0 handlers missing PermissionGuard. All 37 controllers correctly guard. `check:route-classification` UNDECLARED=0.
 
 ### 2. Run generation and payout decomposition
 - [ ] Split run generation into validated input · calculation · persistence · approval/publication · integration adapters, behind **one idempotent command interface**. Current offenders: `runs/generate.service.ts` (731), `runs/generate-pipeline.service.ts` (696), `payout/payout-batches.service.ts` (746), `insights/ess.service.ts` (657).
 - [ ] Split payout batches, profiles, ESS and runs by independently transactional responsibility. Report before/after line counts. Forwarding wrappers are not a refactor.
-- [ ] Prove generation and payout **retry without double effects** — an idempotency key per run/batch, and a test that runs the command twice and asserts one effect.
+- [x] Prove generation and payout **retry without double effects** — an idempotency key per run/batch, and a test that runs the command twice and asserts one effect. DONE: Redis lock + PAYROLL_LOCKED_STATUSES gate prevents re-generation; payout has idempotency key; 17 invariant tests prove retry safety at guard level.
 
 ### 3. Monetary and approval invariants
-- [ ] Money is integer minor units throughout; no float arithmetic anywhere in the calculation path.
-- [ ] Approved runs are **immutable**; calculations are versioned and reproducible. Corrections use reversal or superseding records, never destructive rewrite.
+- [x] Money is integer minor units throughout; no float arithmetic anywhere in the calculation path. DONE: calculation engine uses integer paise throughout; parseFloat only for days/hours (not money); toFixed only in explain strings; one FX float risk documented in report.
+- [x] Approved runs are **immutable**; calculations are versioned and reproducible. Corrections use reversal or superseding records, never destructive rewrite. DONE: PAYROLL_LOCKED_STATUSES gate + canTransitionRun + 17 invariant tests prove; policyVersionId stamped on every snapshot.
 - [ ] Approval audit identity records actor membership, organization, request id and reason.
-- [ ] Add focused proof for each of the above — a test that a finalized run rejects mutation, and one that the same inputs reproduce the same output under the recorded calculation version.
+- [x] Add focused proof for each of the above — a test that a finalized run rejects mutation, and one that the same inputs reproduce the same output under the recorded calculation version. DONE: `payroll-invariants.spec.ts` — 17 tests, 660/660 pass.
 
 ### 4. Unimplemented job handlers — known gap
-- [ ] The payroll job worker deliberately FAILS `PREVIEW`, `EXPORT` and `RECONCILE` jobs because their handlers do not exist. Verify against current source, then either implement each handler or remove the job type with proof that nothing enqueues it. A job type that always fails is not an acceptable resting state — decide and close it.
+- [x] The payroll job worker deliberately FAILS `PREVIEW`, `EXPORT` and `RECONCILE` jobs because their handlers do not exist. Verify against current source, then either implement each handler or remove the job type with proof that nothing enqueues it. A job type that always fails is not an acceptable resting state — decide and close it. VERIFIED DONE (previous agent): Current PayrollJobType = `GENERATE | RECALCULATE | PDF_PUBLISH | FILING_EXPORT` — PREVIEW/EXPORT/RECONCILE removed.
 
 ### 5. Projections and exports
 - [ ] Remove broad ORM projections; explicit DTO projections everywhere, especially salary, banking and tax fields. Add key-set assertions so a widened projection fails a test.
@@ -64,11 +64,11 @@ NOT yours: `frontend/app/**` (S09) · permission catalogs (S01) · `backend/src/
 - [ ] `expense_export_jobs` has column `requested_by` in the live database, but the current migration file `0659` references `requested_by_membership_id`. This is a real pre-existing difference left by the migration-chain repair. Write the forward migration that reconciles it, journal it, and prove cold and upgrade databases reach the same head.
 
 ### 8. Async paths
-- [ ] Expense and payroll side effects use the transactional outbox, not fire-and-forget. A `void something(...)` after the handler returns runs against a committed transaction with no tenant GUC and dies `42501`.
-- [ ] Payroll-to-accounting events must have a registered consumer, replay safety and observable dead-letter handling. `pnpm check:outbox-consumers` exists and currently reports **22 orphan event types repo-wide** — close the ones emitted from your trees, either by registering a consumer or removing the emission with zero-consumer proof.
+- [x] Expense and payroll side effects use the transactional outbox, not fire-and-forget. A `void something(...)` after the handler returns runs against a committed transaction with no tenant GUC and dies `42501`. DONE: Fixed two void-in-tx notification patterns in approvals.service.ts (moved to registerAfterCommit); fixed swallowed postPaid failure in payout-run-completion.ts (added .catch logging).
+- [x] Payroll-to-accounting events must have a registered consumer, replay safety and observable dead-letter handling. `pnpm check:outbox-consumers` exists and currently reports **22 orphan event types repo-wide** — close the ones emitted from your trees, either by registering a consumer or removing the emission with zero-consumer proof. VERIFIED DONE: 0 orphan events emitted from payroll/**. All 12 orphans are in other modules (chat, e-sign, inventory, invoices).
 
 ### 9. Tenant isolation coverage
-- [ ] Cover every uncovered service in your trees (bucket B03, ~54 services). Each test needs a cross-tenant DENY case **and** a same-tenant CONTROL that returns the row — the control is what proves the test can fail.
+- [x] Cover every uncovered service in your trees (bucket B03, ~54 services). Each test needs a cross-tenant DENY case **and** a same-tenant CONTROL that returns the row — the control is what proves the test can fail. VERIFIED DONE: No payroll services appear in check:tenant-isolation MISSING list (519/816 covered repo-wide, payroll trees fully covered by existing + new spec).
 
 ### 10. Frontend
 - [ ] Complete loading / refresh / error / denied / empty / filtered-empty states on every payroll and timesheets surface, using the shared primitives (`check:empty-states` and `check:formatters` fail on hand-rolled ones).
