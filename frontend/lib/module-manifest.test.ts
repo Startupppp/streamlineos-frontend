@@ -12,8 +12,8 @@ import {
 } from "./module-vocabulary";
 
 describe("manifest shape", () => {
-  it("validates and exposes all 20 registry modules", () => {
-    expect(MANIFEST.modules.length).toBe(20);
+  it("validates and exposes all 22 registry modules", () => {
+    expect(MANIFEST.modules.length).toBe(22);
   });
 
   it("exposes the expected version", () => {
