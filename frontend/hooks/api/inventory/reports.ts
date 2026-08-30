@@ -4,314 +4,43 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import type {
+  RawDashboardResponse,
+  RawStockSummaryEnvelope,
+  RawReorderEnvelope,
+  RawMovementsEnvelope,
+  RawStockLevelRow,
+  RawTransactionRow,
+  RawReorderRow,
+  InventoryDashboard,
+  InventoryDashboardMovement,
+  StockSummaryRow,
+  ReorderReportRow,
+  MovementReportRow,
+  ReorderUrgency,
+  PaginatedResponse,
+  MovementsParams,
+  SlowMovingRow,
+  ExpiryReportRow,
+  SlowMovingParams,
+  ExpiryReportParams,
+} from "./reports-types";
 
-export type MovementType =
-  | "PURCHASE"
-  | "SALE"
-  | "ADJUSTMENT_IN"
-  | "ADJUSTMENT_OUT"
-  | "TRANSFER_IN"
-  | "TRANSFER_OUT"
-  | "RETURN_IN"
-  | "RETURN_OUT"
-  | "GRN";
-
-type ReorderUrgency = "critical" | "high" | "medium";
-
-export interface PaginatedResponse<T> {
-  items: T[];
-  total: number;
-  page: number;
-  totalPages: number;
-}
-
-interface StockSummaryParams {
-  page?: number;
-  limit?: number;
-}
-
-interface ReorderReportParams {
-  page?: number;
-  limit?: number;
-}
-
-export interface MovementsParams {
-  warehouseId?: number;
-  type?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  page?: number;
-  limit?: number;
-}
-
-export interface SlowMovingRow {
-  productVariantId: number;
-  variantSku: string;
-  variantName: string;
-  productName: string;
-  onHand: number;
-  averageCost: number;
-  value: number;
-  lastMovement: string | null;
-  daysSinceLastMovement: number | null;
-}
-
-export interface ExpiryReportRow {
-  id: number;
-  lotNumber: string;
-  expiryDate: string;
-  status: string;
-  productVariantId: number;
-  variantSku: string;
-  variantName: string;
-  productName: string;
-  totalOnHand: string;
-  daysUntilExpiry: number;
-}
-
-interface SlowMovingParams {
-  days?: number;
-  page?: number;
-  limit?: number;
-}
-
-interface ExpiryReportParams {
-  withinDays?: number;
-  warehouseId?: number;
-  status?: string;
-  page?: number;
-  limit?: number;
-}
-
-interface InventoryDashboardMovement {
-  id: number;
-  transactionType: MovementType;
-  quantityChange: number;
-  createdAt: string;
-  notes: string | null;
-  productName: string;
-  sku: string;
-  locationName: string | null;
-  performedBy: string | null;
-}
-
-export interface AiInsight {
-  id: number;
-  insightType: string;
-  severity: string;
-  title: string;
-  body: string;
-  status: "NEW" | "ACKNOWLEDGED" | "DISMISSED";
-  createdAt: string;
-}
-
-interface InventoryDashboard {
-  totalSkus: number;
-  totalOnHand: number;
-  totalCommitted: number;
-  totalOnOrder: number;
-  lowStockCount: number;
-  draftPoCount: number;
-  openSoCount: number;
-  recentMovements: InventoryDashboardMovement[];
-  stockValue: number;
-  expiringLotsCount: number;
-  qualityHoldQty: number;
-  activeReservationsCount: number;
-  openShipmentsCount: number;
-  failedChannelSyncsCount: number;
-  openInspectionsCount: number;
-  recentInsights: AiInsight[];
-}
-
-export interface StockSummaryRow {
-  productId: number;
-  productName: string;
-  sku: string;
-  categoryName: string | null;
-  uom: string | null;
-  warehouseName: string | null;
-  onHandQty: number;
-  reservedQty: number;
-  availableQty: number;
-  reorderPoint: number | null;
-  costPrice: string | null;
-  totalValue: number;
-}
-
-export interface ReorderReportRow {
-  productId: number;
-  productName: string;
-  sku: string;
-  variantSku: string;
-  categoryName: string | null;
-  warehouseName: string | null;
-  onHand: number;
-  availableQty: number;
-  reorderPoint: number;
-  reorderQty: number | null;
-  deficit: number;
-  costPrice: string | null;
-  vendorName: string | null;
-  urgency: ReorderUrgency;
-}
-
-export interface MovementReportRow {
-  id: number;
-  type: MovementType;
-  productName: string;
-  sku: string;
-  warehouseId: number | null;
-  warehouseName: string | null;
-  locationName: string | null;
-  quantity: number;
-  balanceAfter: number | null;
-  referenceType: string | null;
-  referenceNumber: string | null;
-  notes: string | null;
-  createdAt: string;
-  performedBy: string | null;
-}
-
-interface RawProductRef {
-  id: number;
-  name: string;
-  sku: string;
-  costPrice?: string | null;
-  reorderPoint?: string | null;
-  minStockLevel?: string | null;
-}
-
-interface RawVariantRef {
-  id: number;
-  name: string;
-  sku: string;
-  costPrice: string | null;
-  product: RawProductRef | null;
-}
-
-interface RawWarehouseRef {
-  id: number;
-  name: string;
-}
-
-interface RawLocationRef {
-  id: number;
-  name: string;
-  code: string;
-  warehouse?: RawWarehouseRef | null;
-}
-
-interface RawUserRef {
-  id: string;
-  name: string;
-}
-
-interface RawStockLevelRow {
-  id: number;
-  onHand: string;
-  committed: string;
-  onOrder: string;
-  productVariant: RawVariantRef | null;
-  location: RawLocationRef | null;
-}
-
-interface RawTransactionRow {
-  id: number;
-  transactionType: MovementType;
-  quantityChange: string;
-  quantityAfter: string | null;
-  referenceType: string | null;
-  referenceId: string | null;
-  notes: string | null;
-  createdAt: string;
-  productVariant: RawVariantRef | null;
-  location: RawLocationRef | null;
-  creator: RawUserRef | null;
-}
-
-interface RawDashboardResponse {
-  stockSummary: {
-    totalSkus: number;
-    totalOnHand: number;
-    totalCommitted: number;
-    totalOnOrder: number;
-  } | null;
-  lowStockCount: number;
-  draftPoCount: number;
-  openSoCount: number;
-  recentMovements: RawTransactionRow[];
-  stockValue?: number;
-  expiringLotsCount?: number;
-  qualityHoldQty?: number;
-  activeReservationsCount?: number;
-  openShipmentsCount?: number;
-  failedChannelSyncsCount?: number;
-  openInspectionsCount?: number;
-  recentInsights?: AiInsight[];
-}
-
-interface RawStockSummaryEnvelope {
-  items: RawStockLevelRow[];
-  total: number;
-  page: number;
-  totalPages: number;
-}
-
-interface RawReorderRow {
-  productVariantId: number;
-  variantSku: string;
-  variantName: string;
-  productId: number;
-  productName: string;
-  productSku: string;
-  onHand: number;
-  onOrder: number;
-  committed: number;
-  reorderPoint: number;
-  minStockLevel: number;
-  reorderRuleId: number | null;
-  minQty: number | null;
-  maxQty: number | null;
-  reorderQty: number | null;
-  suggestedQty: number;
-  vendorId: number | null;
-  leadTimeDays: number | null;
-}
-
-interface RawReorderEnvelope {
-  items: RawReorderRow[];
-  total: number;
-  page: number;
-  totalPages: number;
-}
-
-function toReorderRowFromFlat(row: RawReorderRow): ReorderReportRow {
-  const deficit = Math.max(row.reorderPoint - row.onHand, 0);
-  return {
-    productId: row.productId,
-    productName: row.productName,
-    sku: row.productSku,
-    variantSku: row.variantSku,
-    categoryName: null,
-    warehouseName: null,
-    onHand: row.onHand,
-    availableQty: row.onHand - row.committed,
-    reorderPoint: row.reorderPoint,
-    reorderQty: row.suggestedQty > 0 ? row.suggestedQty : (deficit > 0 ? deficit : null),
-    deficit,
-    costPrice: null,
-    vendorName: null,
-    urgency: reorderUrgency(row.onHand, row.reorderPoint),
-  };
-}
-
-interface RawMovementsEnvelope {
-  items: RawTransactionRow[];
-  total: number;
-  page: number;
-  totalPages: number;
-}
+export type {
+  MovementType,
+  PaginatedResponse,
+  MovementsParams,
+  SlowMovingRow,
+  ExpiryReportRow,
+  AiInsight,
+  StockSummaryRow,
+  ReorderReportRow,
+  MovementReportRow,
+  StockSummaryParams,
+  ReorderReportParams,
+  SlowMovingParams,
+  ExpiryReportParams,
+} from "./reports-types";
 
 function toNumber(value: string | null | undefined): number {
   const parsed = Number(value);
@@ -349,6 +78,25 @@ function toStockSummaryRow(row: RawStockLevelRow): StockSummaryRow {
   };
 }
 
+function toReorderRowFromFlat(row: RawReorderRow): ReorderReportRow {
+  const deficit = Math.max(row.reorderPoint - row.onHand, 0);
+  return {
+    productId: row.productId,
+    productName: row.productName,
+    sku: row.productSku,
+    variantSku: row.variantSku,
+    categoryName: null,
+    warehouseName: null,
+    onHand: row.onHand,
+    availableQty: row.onHand - row.committed,
+    reorderPoint: row.reorderPoint,
+    reorderQty: row.suggestedQty > 0 ? row.suggestedQty : (deficit > 0 ? deficit : null),
+    deficit,
+    costPrice: null,
+    vendorName: null,
+    urgency: reorderUrgency(row.onHand, row.reorderPoint),
+  };
+}
 
 function toMovementRow(row: RawTransactionRow): MovementReportRow {
   const variant = row.productVariant;
@@ -418,7 +166,7 @@ export function useInventoryDashboard() {
   });
 }
 
-export function useStockSummary(params?: StockSummaryParams) {
+export function useStockSummary(params?: { page?: number; limit?: number }) {
   const canView = useCan("inventory:reports:read");
   return useQuery<PaginatedResponse<StockSummaryRow>, Error>({
     queryKey: queryKeys.inventory.stockSummary(params),
@@ -435,7 +183,7 @@ export function useStockSummary(params?: StockSummaryParams) {
   });
 }
 
-export function useReorderReport(params?: ReorderReportParams) {
+export function useReorderReport(params?: { page?: number; limit?: number }) {
   const canView = useCan("inventory:reports:read");
   return useQuery<PaginatedResponse<ReorderReportRow>, Error>({
     queryKey: queryKeys.inventory.reorderReport(params),

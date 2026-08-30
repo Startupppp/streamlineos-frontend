@@ -1,0 +1,41 @@
+"use client";
+
+import { useCallback } from "react";
+import { ChannelItem } from "./channel-item";
+import type { Channel } from "./chat-types";
+
+export interface ChannelListEntryProps {
+  channel: Channel;
+  activeChannelId: number | null;
+  currentUserId: string;
+  onlineUserIds: Set<string>;
+  onSelectChannel: (id: number) => void;
+  compact?: boolean;
+  onStartCall?: (channelId: number, type: "huddle") => void;
+  onOpenSettings?: (channelId: number) => void;
+}
+
+export function ChannelListEntry({
+  channel: ch,
+  activeChannelId,
+  currentUserId,
+  onlineUserIds,
+  onSelectChannel,
+  compact = false,
+  onStartCall,
+  onOpenSettings,
+}: ChannelListEntryProps) {
+  const handleClick = useCallback(() => onSelectChannel(ch.id), [ch.id, onSelectChannel]);
+  return (
+    <ChannelItem
+      channel={ch}
+      isActive={activeChannelId === ch.id}
+      onClick={handleClick}
+      currentUserId={currentUserId}
+      onlineUserIds={onlineUserIds}
+      compact={compact}
+      onStartCall={onStartCall}
+      onOpenSettings={onOpenSettings}
+    />
+  );
+}

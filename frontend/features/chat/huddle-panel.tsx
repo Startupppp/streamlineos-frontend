@@ -5,13 +5,10 @@ import { Mic, MicOff, Hand, PhoneOff, Monitor, MonitorOff, Settings, VolumeX, Vo
 import { MicIcon, MicOffIcon, ChevronDownIcon, ChevronUpIcon, UserPlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { cn, resolveImageUrl } from "@/lib/utils";
-import { useLeaveHuddle, useSetHuddleMute, useRaiseHand, useKickParticipant, useSetHuddleScreenShare, useSetHuddleDeafen, useInviteToHuddle, useHuddleHeartbeat } from "@/hooks/api/chat-huddles";
+import { cn } from "@/lib/utils";
+import { useLeaveHuddle, useSetHuddleMute, useRaiseHand, useKickParticipant, useSetHuddleScreenShare, useSetHuddleDeafen, useHuddleHeartbeat } from "@/hooks/api/chat-huddles";
 import { useEntitlements } from "@/hooks/api/entitlements";
 import type { Huddle } from "@/types/chat";
-import { getInitials } from "./chat-helpers";
 import { useWebRTCHuddle } from "./webrtc-huddle";
 import { DeviceSelector, useMediaDevices } from "./device-selector";
 import { useAbly } from "ably/react";
@@ -20,12 +17,13 @@ import { toast } from "sonner";
 import { HuddleChatPanel } from "./huddle-chat-panel";
 import { useAblyConnection } from "./use-ably-connection";
 import { useHuddleEvents } from "./use-huddle-events";
-import { UserCombobox } from "@/components/ui/user-combobox";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { HuddleAudioSink } from "./huddle-audio-sink";
 import { HuddleScreenShareView } from "./huddle-screenshare-view";
 import { HuddleParticipantCard } from "./huddle-participant-card";
 import { useHuddleAudioLevels, useElapsedTime } from "./use-huddle-audio-levels";
+import { HuddleInviteSection } from "./huddle-invite-section";
+import { HuddleMiniBar } from "./huddle-mini-bar";
 
 const HEARTBEAT_INTERVAL_MS = 30_000;
 
@@ -42,7 +40,6 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
   const [isDeafened, setIsDeafened] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
-  const [inviteUserId, setInviteUserId] = useState("");
 
   const leaveHuddle = useLeaveHuddle();
   const setMuteMutation = useSetHuddleMute();
@@ -50,7 +47,6 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
   const kickParticipant = useKickParticipant();
   const setScreenShareMutation = useSetHuddleScreenShare();
   const setDeafenMutation = useSetHuddleDeafen();
-  const inviteToHuddle = useInviteToHuddle();
   const heartbeat = useHuddleHeartbeat();
   const ably = useAbly();
   const { data: session } = useSession();
@@ -72,9 +68,8 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
   const isHost = huddle.startedBy === currentUserId;
 
   const { data: entitlements } = useEntitlements();
-  // Default false until entitlements load so free orgs never briefly enable group invites.
   const groupHuddlesAllowed = entitlements?.features.chatGroupHuddles ?? false;
-  const freeHuddleCap = 2; // mirrors FREE_HUDDLE_MAX_PARTICIPANTS on the backend
+  const freeHuddleCap = 2;
   const inviteBlockedByPlan =
     !groupHuddlesAllowed && huddle.participants.length >= freeHuddleCap;
 
@@ -411,52 +406,13 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
             />
           </div>
 
-          {showInviteDialog && inviteBlockedByPlan && (
-            <div className="mt-3 border border-border/40 rounded-xl p-3 bg-muted/20">
-              <p className="text-dense font-semibold mb-1">Invite to huddle</p>
-              <p className="text-dense text-muted-foreground">
-                Huddles are one-to-one on the Free plan. Upgrade to start group huddles.
-              </p>
-            </div>
-          )}
-
-          {showInviteDialog && !inviteBlockedByPlan && (
-            <div className="mt-3 border border-border/40 rounded-xl p-3 bg-muted/20">
-              <p className="text-dense font-semibold mb-2">Invite to huddle</p>
-              <UserCombobox
-                value={inviteUserId}
-                onChange={setInviteUserId}
-                placeholder="Select member to invite…"
-                excludeUserId={currentUserId}
-                className="text-xs mb-2"
-              />
-              <LoadingButton
-                size="sm"
-                className="text-dense"
-                disabled={!inviteUserId}
-                isPending={inviteToHuddle.isPending}
-                onClick={() => {
-                  if (huddle.participants.some((p) => p.userId === inviteUserId)) {
-                    toast.error("Already in the huddle");
-                    return;
-                  }
-                  inviteToHuddle.mutate(
-                    { huddleId: huddle.id, userIds: [inviteUserId] },
-                    {
-                      onSuccess: () => {
-                        toast.success("Invited to the huddle");
-                        setInviteUserId("");
-                        setShowInviteDialog(false);
-                      },
-                      onError: () => toast.error("Failed to invite"),
-                    },
-                  );
-                }}
-              >
-                Invite
-              </LoadingButton>
-            </div>
-          )}
+          <HuddleInviteSection
+            show={showInviteDialog}
+            inviteBlockedByPlan={inviteBlockedByPlan}
+            currentUserId={currentUserId}
+            huddleId={huddle.id}
+            participants={huddle.participants}
+          />
 
           {showHuddleChat && (
             <div className="mt-3 border-t border-border/40 pt-3">
@@ -471,42 +427,13 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
       )}
 
       {!expanded && (
-        <div className="px-4 pb-2 flex items-center gap-2">
-          <div className="flex -space-x-1.5">
-            {huddle.participants.slice(0, 4).map((p) => (
-              <Avatar key={p.userId} className="h-5 w-5 border border-background">
-                <AvatarImage src={resolveImageUrl(p.user?.image)} />
-                <AvatarFallback className="text-micro">
-                  {getInitials(p.user?.name)}
-                </AvatarFallback>
-              </Avatar>
-            ))}
-          </div>
-          <div className="flex items-center gap-1 ml-auto">
-            <AnimatedIconButton
-              icon={isMuted ? MicOffIcon : MicIcon}
-              iconSize={12}
-              variant="ghost"
-              size="sm"
-              className={cn(
-                "h-6 w-6 rounded-full p-0",
-                isMuted && "text-status-danger-ink",
-              )}
-              onClick={handleToggleMute}
-              aria-label={isMuted ? "Unmute" : "Mute"}
-            />
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 rounded-full p-0 text-destructive"
-              onClick={handleLeave}
-              aria-label="Leave huddle"
-              disabled={leaveHuddle.isPending}
-            >
-              <PhoneOff className="h-3 w-3" />
-            </Button>
-          </div>
-        </div>
+        <HuddleMiniBar
+          participants={huddle.participants}
+          isMuted={isMuted}
+          onToggleMute={handleToggleMute}
+          onLeave={handleLeave}
+          isLeavePending={leaveHuddle.isPending}
+        />
       )}
     </div>
   );
