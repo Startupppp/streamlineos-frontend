@@ -1,8 +1,9 @@
-﻿"use client";
+"use client";
 
 import React, { useMemo } from "react";
 import { Globe, Users, Building2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
@@ -14,10 +15,10 @@ import type { CustomerDisplayPrefs } from "./use-customer-display-prefs";
 interface CustomerTableProps {
   customers: CrmOrganization[];
   prefs: CustomerDisplayPrefs;
-  page: number;
-  pageSize: number;
-  total: number;
-  onPageChange: (page: number) => void;
+  hasPrev: boolean;
+  hasNext: boolean;
+  onPrevPage: () => void;
+  onNextPage: () => void;
   isLoading?: boolean;
   emptyState?: React.ReactNode;
 }
@@ -48,10 +49,10 @@ function healthScoreToStatus(
 export const CustomerTable = React.memo(function CustomerTable({
   customers,
   prefs,
-  page,
-  pageSize,
-  total,
-  onPageChange,
+  hasPrev,
+  hasNext,
+  onPrevPage,
+  onNextPage,
   isLoading,
   emptyState,
 }: CustomerTableProps) {
@@ -248,18 +249,21 @@ export const CustomerTable = React.memo(function CustomerTable({
         columns={columns}
         getRowKey={(c) => c.id}
         isLoading={isLoading}
-        pagination={{
-          mode: "server",
-          page,
-          pageSize,
-          total,
-          onPageChange,
-        }}
         rowClassName={() => "group h-10 hover:bg-primary/[0.035]"}
         className="min-h-0 flex-1 rounded-none border-0 bg-transparent shadow-none"
         emptyState={emptyState}
         minWidth="480px"
       />
+      {(hasPrev || hasNext) ? (
+        <div className="flex shrink-0 items-center justify-end gap-2 border-t px-2 py-2">
+          <Button variant="outline" size="sm" disabled={!hasPrev} onClick={onPrevPage}>
+            Previous
+          </Button>
+          <Button variant="outline" size="sm" disabled={!hasNext} onClick={onNextPage}>
+            Next
+          </Button>
+        </div>
+      ) : null}
     </PmPanel>
   );
 });

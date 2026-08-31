@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
+import type { CursorPage } from "@/hooks/api/accounting";
 import { coreKeys, toQuery } from "./core-keys";
 
 export interface RecurringJournalLine {
@@ -28,8 +29,8 @@ export interface RecurringJournal {
 }
 
 export interface RecurringJournalParams {
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
 }
 
 export interface CreateRecurringJournalInput {
@@ -53,10 +54,10 @@ export interface UpdateRecurringJournalInput {
 
 export function useRecurringJournals(params: RecurringJournalParams = {}) {
   const can = useCan("accounting:recurring:read");
-  return useQuery<{ items: RecurringJournal[]; total: number }, Error>({
+  return useQuery<CursorPage<RecurringJournal>, Error>({
     queryKey: coreKeys.recurringJournals(params),
     queryFn: () =>
-      apiClient.get<{ items: RecurringJournal[]; total: number }>(
+      apiClient.get<CursorPage<RecurringJournal>>(
         "/accounting/recurring-journals",
         toQuery(params),
       ),

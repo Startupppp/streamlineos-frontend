@@ -37,7 +37,7 @@ export default function VendorPaymentsPage() {
   const vendorFilter = searchParams.get("vendor") ?? "all";
   const [allocationDialogOpen, setAllocationDialogOpen] = useState(false);
 
-  const vendorsQuery = useVendorsOutstanding({ pageSize: 100 });
+  const vendorsQuery = useVendorsOutstanding({ limit: 100 });
 
   const [paidCursors, setPaidCursors] = useState<(string | null)[]>([null]);
   const [partialCursors, setPartialCursors] = useState<(string | null)[]>([null]);
@@ -93,7 +93,7 @@ export default function VendorPaymentsPage() {
   const partialItems = partialQuery.data?.data ?? [];
   const allItems: PurchaseBillSummary[] = [...paidItems, ...partialItems];
 
-  const vendors = vendorsQuery.data?.items ?? [];
+  const vendors = vendorsQuery.data?.data ?? [];
   const isLoading = paidQuery.isLoading || partialQuery.isLoading;
   const queryError = paidQuery.error ?? partialQuery.error;
 

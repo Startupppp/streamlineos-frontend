@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import type { CursorPage } from "@/hooks/api/accounting";
 import type {
   AssetCategory,
   AssetDetail,
@@ -18,29 +19,21 @@ import type {
   UpdateCategoryInput,
 } from "@/types/accounting/assets";
 
-interface ListResponse<T> {
-  items: T[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-}
-
 export interface ListCategoriesParams {
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
 }
 
 export interface ListAssetsParams {
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
   status?: AssetStatus;
   categoryId?: number;
 }
 
 export interface ListRunsParams {
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
 }
 
 const assetKeys = {
@@ -66,10 +59,10 @@ function toQuery<P extends object>(params: P): Record<string, string> {
 
 export function useAssetCategories(params: ListCategoriesParams = {}) {
   const can = useCan("accounting:assets:read");
-  return useQuery<ListResponse<AssetCategory>, Error>({
+  return useQuery<CursorPage<AssetCategory>, Error>({
     queryKey: assetKeys.categories(params),
     queryFn: () =>
-      apiClient.get<ListResponse<AssetCategory>>("/accounting/assets/categories", toQuery(params)),
+      apiClient.get<CursorPage<AssetCategory>>("/accounting/assets/categories", toQuery(params)),
     staleTime: 120_000,
     enabled: can,
   });
@@ -100,10 +93,10 @@ export function useUpdateAssetCategory(id: number) {
 
 export function useAssets(params: ListAssetsParams = {}) {
   const can = useCan("accounting:assets:read");
-  return useQuery<ListResponse<AssetListItem>, Error>({
+  return useQuery<CursorPage<AssetListItem>, Error>({
     queryKey: assetKeys.assets(params),
     queryFn: () =>
-      apiClient.get<ListResponse<AssetListItem>>("/accounting/assets", toQuery(params)),
+      apiClient.get<CursorPage<AssetListItem>>("/accounting/assets", toQuery(params)),
     staleTime: 60_000,
     enabled: can,
   });
@@ -168,10 +161,10 @@ export function useDisposeAsset(assetId: number) {
 
 export function useDepreciationRuns(params: ListRunsParams = {}) {
   const can = useCan("accounting:assets:read");
-  return useQuery<ListResponse<DepreciationRun>, Error>({
+  return useQuery<CursorPage<DepreciationRun>, Error>({
     queryKey: assetKeys.runs(params),
     queryFn: () =>
-      apiClient.get<ListResponse<DepreciationRun>>("/accounting/assets/depreciation/runs", toQuery(params)),
+      apiClient.get<CursorPage<DepreciationRun>>("/accounting/assets/depreciation/runs", toQuery(params)),
     staleTime: 60_000,
     enabled: can,
   });

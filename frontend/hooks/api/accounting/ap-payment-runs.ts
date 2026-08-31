@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import type { CursorPage } from "@/hooks/api/accounting";
 
 const apRunKeys = {
   paymentRuns: (params?: object) =>
@@ -47,9 +48,33 @@ export interface PaymentRunDetail extends PaymentRunSummary {
 }
 
 export interface ListPaymentRunsParams {
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
   status?: PaymentRunStatus;
+}
+
+export interface VendorPayment {
+  id: number;
+  orgId: string;
+  billId: number | null;
+  billNumber: string | null;
+  vendorId: number | null;
+  vendorName: string | null;
+  amount: string;
+  paymentDate: string;
+  paymentMethod: string | null;
+  referenceNumber: string | null;
+  notes: string | null;
+  createdBy: string;
+  createdAt: string;
+}
+
+export interface ListVendorPaymentsParams {
+  cursor?: string;
+  limit?: number;
+  vendorId?: number;
+  from?: string;
+  to?: string;
 }
 
 export interface CreatePaymentRunFilters {
@@ -80,14 +105,6 @@ export interface CreateVendorPaymentAllocationInput {
   allocations: AllocationItem[];
 }
 
-interface ListResponse<T> {
-  items: T[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-}
-
 function toQuery<P extends object>(params: P): Record<string, string> {
   const out: Record<string, string> = {};
   for (const [k, v] of Object.entries(params)) {
@@ -99,11 +116,25 @@ function toQuery<P extends object>(params: P): Record<string, string> {
 
 export function usePaymentRuns(params: ListPaymentRunsParams = {}) {
   const can = useCan("accounting:payment-runs:read");
-  return useQuery<ListResponse<PaymentRunSummary>, Error>({
+  return useQuery<CursorPage<PaymentRunSummary>, Error>({
     queryKey: apRunKeys.paymentRuns(params),
     queryFn: () =>
-      apiClient.get<ListResponse<PaymentRunSummary>>(
+      apiClient.get<CursorPage<PaymentRunSummary>>(
         "/accounting/payment-runs",
+        toQuery(params),
+      ),
+    staleTime: 30_000,
+    enabled: can,
+  });
+}
+
+export function useVendorPayments(params: ListVendorPaymentsParams = {}) {
+  const can = useCan("accounting:vendor-payments:read");
+  return useQuery<CursorPage<VendorPayment>, Error>({
+    queryKey: ["streamlineos", "accounting", "ap", "vendor-payments", params],
+    queryFn: () =>
+      apiClient.get<CursorPage<VendorPayment>>(
+        "/accounting/vendor-payments",
         toQuery(params),
       ),
     staleTime: 30_000,

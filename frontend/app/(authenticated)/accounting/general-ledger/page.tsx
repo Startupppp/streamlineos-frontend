@@ -172,8 +172,8 @@ export default function GeneralLedgerPage() {
   const glAccountsQuery = useGlAccounts({ from, to });
   const glAccounts = glAccountsQuery.data?.items ?? [];
 
-  const customersQuery = useCustomersOutstanding({ pageSize: 200 });
-  const vendorsQuery = useVendorsOutstanding({ pageSize: 200 });
+  const customersQuery = useCustomersOutstanding({ limit: 200 });
+  const vendorsQuery = useVendorsOutstanding({ limit: 200 });
 
   const glQuery = useGeneralLedger({
     from,
@@ -332,7 +332,7 @@ export default function GeneralLedgerPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none__">All clients</SelectItem>
-                  {(customersQuery.data?.items ?? []).map((c) => (
+                  {(customersQuery.data?.data ?? []).map((c) => (
                     <SelectItem key={c.clientId} value={String(c.clientId)}>
                       {c.clientName}
                     </SelectItem>
@@ -348,7 +348,7 @@ export default function GeneralLedgerPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none__">All vendors</SelectItem>
-                  {(vendorsQuery.data?.items ?? []).map((v) => (
+                  {(vendorsQuery.data?.data ?? []).map((v) => (
                     <SelectItem key={v.vendorId} value={String(v.vendorId)}>
                       {v.vendorName}
                     </SelectItem>

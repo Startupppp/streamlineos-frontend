@@ -197,16 +197,15 @@ export default function VendorCreditsPage() {
   const [vendorFilter, setVendorFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const vendorsQuery = useVendorsOutstanding({ pageSize: 100 });
+  const vendorsQuery = useVendorsOutstanding({ limit: 100 });
   const query = useVendorCredits({
-    page: 1,
-    pageSize: 50,
+    limit: 50,
     vendorId: vendorFilter !== "all" ? Number(vendorFilter) : undefined,
     status: statusFilter !== "all" && isVendorCreditStatus(statusFilter) ? statusFilter : undefined,
   });
 
-  const vendors = vendorsQuery.data?.items ?? [];
-  const credits = query.data?.items ?? [];
+  const vendors = vendorsQuery.data?.data ?? [];
+  const credits = query.data?.data ?? [];
 
   function handleNewClick(): void {
     setCreateOpen(true);

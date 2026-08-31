@@ -44,7 +44,7 @@ export function ReconciliationClient() {
   const canReconcile = useCan("accounting:banking:reconcile");
   const { iconRef: rulesIconRef, hoverHandlers: rulesHoverHandlers } = useAnimatedIcon();
   const accountsQuery = useBankAccounts();
-  const accounts = accountsQuery.data?.items ?? [];
+  const accounts = accountsQuery.data?.data ?? [];
 
   const workspaceQuery = useReconciliationWorkspace(selectedAccountId);
   const workspace = workspaceQuery.data;

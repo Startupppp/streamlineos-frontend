@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import type { CursorPage } from "@/hooks/api/accounting";
 import type {
   BudgetDetail,
   BudgetSummary,
@@ -30,8 +31,8 @@ interface ListResponse<T> {
 }
 
 export interface ListBudgetsParams {
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
   status?: BudgetStatus;
   fiscalYear?: string;
 }
@@ -75,10 +76,10 @@ function toQuery<P extends object>(params: P): Record<string, string> {
 
 export function useBudgets(params: ListBudgetsParams = {}) {
   const can = useCan("accounting:budgets:read");
-  return useQuery<ListResponse<BudgetSummary>, Error>({
+  return useQuery<CursorPage<BudgetSummary>, Error>({
     queryKey: planningKeys.budgets(params),
     queryFn: () =>
-      apiClient.get<ListResponse<BudgetSummary>>("/accounting/budgets", toQuery(params)),
+      apiClient.get<CursorPage<BudgetSummary>>("/accounting/budgets", toQuery(params)),
     staleTime: 60_000,
     enabled: can,
   });

@@ -122,9 +122,14 @@ export interface OrgTimelineEvent {
 
 export interface PaginatedCrmOrganizations {
   organizations: CrmOrganization[];
-  totalCount: number;
-  page: number;
-  totalPages: number;
+  hasMore: boolean;
+  nextCursor: string | null;
+  totalCount?: number;
+}
+
+export interface BuildCustomersPage {
+  data: CrmOrganization[];
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
 export interface CrmOrganizationFilters {

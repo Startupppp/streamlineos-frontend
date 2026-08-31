@@ -165,14 +165,22 @@ function PaymentRowActions({ row, onView }: RowActionsProps) {
 
 export default function PaymentsReceivedPage() {
   const [methodFilter, setMethodFilter] = useState<ArPaymentMethod | typeof ALL_METHODS>(ALL_METHODS);
-  const [page, setPage] = useState(1);
+  const [cursors, setCursors] = useState<(string | null)[]>([null]);
+  const [cursorIndex, setCursorIndex] = useState(0);
   const [selectedPayment, setSelectedPayment] = useState<ArPayment | null>(null);
 
   const { data, isLoading, error, refetch } = useArPayments({
     method: methodFilter === ALL_METHODS ? undefined : methodFilter,
-    page,
-    pageSize: 50,
+    cursor: cursors[cursorIndex] ?? undefined,
+    limit: 50,
   });
+
+  const hasMore = data?.pagination.hasMore ?? false;
+  const currentPage = cursorIndex + 1;
+  const items = data?.data ?? [];
+  const syntheticTotal = hasMore
+    ? currentPage * 50 + 1
+    : (currentPage - 1) * 50 + items.length;
 
   function handleMethodFilterChange(value: string): void {
     if (value === ALL_METHODS) {
@@ -180,7 +188,22 @@ export default function PaymentsReceivedPage() {
     } else if (isArPaymentMethod(value)) {
       setMethodFilter(value);
     }
-    setPage(1);
+    setCursors([null]);
+    setCursorIndex(0);
+  }
+
+  function handlePageChange(newPage: number): void {
+    if (newPage > currentPage && hasMore) {
+      const next = data?.pagination.nextCursor ?? null;
+      setCursors((prev) => {
+        const copy = prev.slice(0, cursorIndex + 1);
+        copy.push(next);
+        return copy;
+      });
+      setCursorIndex(cursorIndex + 1);
+    } else if (newPage < currentPage) {
+      setCursorIndex(Math.max(0, cursorIndex - 1));
+    }
   }
 
   function handleViewPayment(row: ArPayment): void {
@@ -281,7 +304,7 @@ export default function PaymentsReceivedPage() {
       }
     >
       <div className="flex flex-1 min-h-0 flex-col">
-        {data?.items.length === 0 && !isLoading ? (
+        {items.length === 0 && !isLoading ? (
           <EmptyState
             illustrationPreset="expenses"
             title="No payments received"
@@ -289,17 +312,18 @@ export default function PaymentsReceivedPage() {
           />
         ) : (
           <DataTable
-            data={data?.items ?? []}
+            data={items}
             columns={columns}
             getRowKey={(row) => String(row.id)}
             isLoading={isLoading}
             onRowClick={handleViewPayment}
             className="flex-1 min-h-0"
             pagination={{
+              mode: "server",
               pageSize: 50,
-              page,
-              total: data?.total ?? 0,
-              onPageChange: setPage,
+              page: currentPage,
+              total: syntheticTotal,
+              onPageChange: handlePageChange,
             }}
           />
         )}

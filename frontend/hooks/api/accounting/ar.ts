@@ -1,9 +1,10 @@
 "use client";
 
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import type { CursorPage } from "@/hooks/api/accounting";
 import type {
   ArPayment,
   ArPaymentMethod,
@@ -36,14 +37,6 @@ const arKeys = {
   },
 };
 
-interface ListResponse<T> {
-  items: T[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-}
-
 function toQuery<P extends object>(params: P): Record<string, string> {
   const out: Record<string, string> = {};
   for (const [k, v] of Object.entries(params)) {
@@ -56,37 +49,38 @@ function toQuery<P extends object>(params: P): Record<string, string> {
 export interface ListCreditNotesParams {
   status?: CreditNoteStatus;
   clientId?: number;
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
 }
 
 export function useCreditNotes(params: ListCreditNotesParams = {}) {
   const can = useCan("accounting:credit-notes:read");
-  return useQuery<ListResponse<CreditNote>, Error>({
+  return useQuery<CursorPage<CreditNote>, Error>({
     queryKey: arKeys.creditNotes.list(params),
     queryFn: () =>
-      apiClient.get<ListResponse<CreditNote>>(
+      apiClient.get<CursorPage<CreditNote>>(
         "/accounting/credit-notes",
         toQuery(params),
       ),
     staleTime: 30_000,
-    placeholderData: keepPreviousData,
     enabled: can,
   });
 }
 
 export interface ListRecurringTemplatesParams {
   isActive?: boolean;
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
 }
 
-export function useRecurringTemplates(params: ListRecurringTemplatesParams = {}) {
+export function useRecurringTemplates(
+  params: ListRecurringTemplatesParams = {},
+) {
   const can = useCan("accounting:recurring:read");
-  return useQuery<ListResponse<RecurringInvoiceTemplate>, Error>({
+  return useQuery<CursorPage<RecurringInvoiceTemplate>, Error>({
     queryKey: arKeys.recurringTemplates.list(params),
     queryFn: () =>
-      apiClient.get<ListResponse<RecurringInvoiceTemplate>>(
+      apiClient.get<CursorPage<RecurringInvoiceTemplate>>(
         "/accounting/recurring-invoices",
         toQuery(params),
       ),
@@ -100,16 +94,16 @@ export interface ArPaymentsParams {
   clientId?: number;
   from?: string;
   to?: string;
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
 }
 
 export function useArPayments(params: ArPaymentsParams = {}) {
   const can = useCan("accounting:receivables:read");
-  return useQuery<ListResponse<ArPayment>, Error>({
+  return useQuery<CursorPage<ArPayment>, Error>({
     queryKey: arKeys.arPayments.list(params),
     queryFn: () =>
-      apiClient.get<ListResponse<ArPayment>>(
+      apiClient.get<CursorPage<ArPayment>>(
         "/accounting/ar-payments",
         toQuery(params),
       ),
@@ -120,7 +114,11 @@ export function useArPayments(params: ArPaymentsParams = {}) {
 
 export function useVoidInvoice() {
   const queryClient = useQueryClient();
-  return useMutation<{ id: number; status: string }, Error, { invoiceId: number }>({
+  return useMutation<
+    { id: number; status: string },
+    Error,
+    { invoiceId: number }
+  >({
     mutationKey: ["void-invoice"],
     mutationFn: ({ invoiceId }) =>
       apiClient.post<{ id: number; status: string }>(
@@ -212,10 +210,17 @@ export function useApplyCreditNote() {
 
 export function useCreateRecurringTemplate() {
   const queryClient = useQueryClient();
-  return useMutation<RecurringInvoiceTemplate, Error, CreateRecurringTemplateInput>({
+  return useMutation<
+    RecurringInvoiceTemplate,
+    Error,
+    CreateRecurringTemplateInput
+  >({
     mutationKey: ["create-recurring-template"],
     mutationFn: (body) =>
-      apiClient.post<RecurringInvoiceTemplate>("/accounting/recurring-invoices", body),
+      apiClient.post<RecurringInvoiceTemplate>(
+        "/accounting/recurring-invoices",
+        body,
+      ),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: arKeys.recurringTemplates.all,
@@ -252,7 +257,11 @@ export function useUpdateRecurringTemplate() {
 
 export function useDeleteRecurringTemplate() {
   const queryClient = useQueryClient();
-  return useMutation<{ id: number; deleted: boolean }, Error, { templateId: number }>({
+  return useMutation<
+    { id: number; deleted: boolean },
+    Error,
+    { templateId: number }
+  >({
     mutationKey: ["delete-recurring-template"],
     mutationFn: ({ templateId }) =>
       apiClient.delete<{ id: number; deleted: boolean }>(

@@ -12,7 +12,7 @@ import type {
 } from "@/types/projects";
 
 interface ListManagedProductsParams {
-  page?: number;
+  cursor?: string;
   limit?: number;
   status?: string;
 }
@@ -20,7 +20,7 @@ interface ListManagedProductsParams {
 export function useManagedProducts(params?: ListManagedProductsParams) {
   const canView = useCan("build:managed-products:view");
   const queryParams: Record<string, string> = {};
-  if (params?.page) queryParams["page"] = String(params.page);
+  if (params?.cursor) queryParams["cursor"] = params.cursor;
   if (params?.limit) queryParams["limit"] = String(params.limit);
   if (params?.status) queryParams["status"] = params.status;
 
@@ -30,7 +30,7 @@ export function useManagedProducts(params?: ListManagedProductsParams) {
     ),
     queryFn: () =>
       apiClient.get<ManagedProductsPage>("/build/managed-products", queryParams),
-    enabled: canView && (params?.page === undefined || params.page > 0),
+    enabled: canView,
     staleTime: 60_000,
   });
 }

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useMemo, useState } from "react";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
@@ -20,7 +20,6 @@ import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { DataTableSkeleton } from "@/components/ui/data-table";
-import { TablePagination } from "@/components/ui/table-pagination";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import {
@@ -99,14 +98,15 @@ export function PortfoliosPage() {
 
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
+  const [cursor, setCursor] = useState<string | undefined>(undefined);
+  const [cursorStack, setCursorStack] = useState<string[]>([]);
   const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
     useQueryParamOpen("create");
   const [editTarget, setEditTarget] = useState<Portfolio | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Portfolio | null>(null);
 
   const { data, isLoading, isError, refetch } = usePortfolios({
-    page,
+    cursor,
     limit: 20,
     status: statusFilter !== "all" ? statusFilter : undefined,
   });
@@ -161,24 +161,38 @@ export function PortfoliosPage() {
     });
   }
 
+  function resetCursor() {
+    setCursor(undefined);
+    setCursorStack([]);
+  }
+
   function handleSearchChange(value: string) {
     setSearch(value);
-    setPage(1);
+    resetCursor();
   }
 
   function handleClearFilters() {
     setStatusFilter("all");
     setSearch("");
-    setPage(1);
-  }
-
-  function handlePageChange(next: number) {
-    setPage(next);
+    resetCursor();
   }
 
   function handleStatusChange(value: string) {
     setStatusFilter(value);
-    setPage(1);
+    resetCursor();
+  }
+
+  function handleNextPage() {
+    const nextCursor = data?.pagination.nextCursor;
+    if (!nextCursor) return;
+    setCursorStack((prev) => [...prev, cursor ?? ""]);
+    setCursor(nextCursor);
+  }
+
+  function handlePrevPage() {
+    const prevCursor = cursorStack[cursorStack.length - 1];
+    setCursorStack((prev) => prev.slice(0, -1));
+    setCursor(prevCursor === "" ? undefined : prevCursor);
   }
 
   const handleOpenCreate = useCallback(() => {
@@ -279,6 +293,9 @@ export function PortfoliosPage() {
   ];
 
   const isFiltered = statusFilter !== "all" || !!search.trim();
+  const hasPrev = cursorStack.length > 0;
+  const hasNext = !!data?.pagination.hasMore;
+
   const filtersBar = (
     <div className={FILTER_TOOLBAR_ROW}>
       <Select value={statusFilter} onValueChange={handleStatusChange}>
@@ -338,13 +355,15 @@ export function PortfoliosPage() {
                 minWidth="780px"
                 className={PM_FILL_PANEL}
               />
-              {data && data.pagination.totalPages > 1 ? (
-                <TablePagination
-                  page={data.pagination.page}
-                  pageSize={data.pagination.limit}
-                  total={data.pagination.total}
-                  onPageChange={handlePageChange}
-                />
+              {(hasPrev || hasNext) ? (
+                <div className="flex items-center justify-end gap-2 border-t px-2 py-2">
+                  <Button variant="outline" size="sm" disabled={!hasPrev} onClick={handlePrevPage}>
+                    Previous
+                  </Button>
+                  <Button variant="outline" size="sm" disabled={!hasNext} onClick={handleNextPage}>
+                    Next
+                  </Button>
+                </div>
               ) : null}
             </>
           )}

@@ -127,16 +127,21 @@ export default function CreditNotesPage() {
   const [applyTarget, setApplyTarget] = useState<CreditNote | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [customerSearch, setCustomerSearch] = useState("");
-  const [page, setPage] = useState(1);
+  const [cursors, setCursors] = useState<(string | null)[]>([null]);
+  const [cursorIndex, setCursorIndex] = useState(0);
 
   const query = useCreditNotes({
     status: statusFilter !== "all" && isCreditNoteStatus(statusFilter) ? statusFilter : undefined,
-    page,
-    pageSize: 20,
+    cursor: cursors[cursorIndex] ?? undefined,
+    limit: 20,
   });
 
-  const credits = query.data?.items ?? [];
-  const total = query.data?.total ?? 0;
+  const credits = query.data?.data ?? [];
+  const hasMore = query.data?.pagination.hasMore ?? false;
+  const currentPage = cursorIndex + 1;
+  const syntheticTotal = hasMore
+    ? currentPage * 20 + 1
+    : (currentPage - 1) * 20 + credits.length;
 
   const filteredCredits = customerSearch.trim()
     ? credits.filter((c) =>
@@ -154,15 +159,26 @@ export default function CreditNotesPage() {
 
   function handleStatusFilterChange(value: string): void {
     setStatusFilter(value);
-    setPage(1);
+    setCursors([null]);
+    setCursorIndex(0);
   }
 
   function handleCustomerSearchChange(value: string): void {
     setCustomerSearch(value);
   }
 
-  function handlePageChange(p: number): void {
-    setPage(p);
+  function handlePageChange(newPage: number): void {
+    if (newPage > currentPage && hasMore) {
+      const next = query.data?.pagination.nextCursor ?? null;
+      setCursors((prev) => {
+        const copy = prev.slice(0, cursorIndex + 1);
+        copy.push(next);
+        return copy;
+      });
+      setCursorIndex(cursorIndex + 1);
+    } else if (newPage < currentPage) {
+      setCursorIndex(Math.max(0, cursorIndex - 1));
+    }
   }
 
   function handleOpenApply(credit: CreditNote): void {
@@ -285,9 +301,9 @@ export default function CreditNotesPage() {
           className="flex-1 min-h-0"
           pagination={{
             mode: "server",
-            page,
+            page: currentPage,
             pageSize: 20,
-            total,
+            total: syntheticTotal,
             onPageChange: handlePageChange,
           }}
           emptyState={

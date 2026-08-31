@@ -8,6 +8,7 @@ import type {
   CreateTeamInput,
   ProjectTeamDetail,
   TeamListResponse,
+  TeamMembersPage,
   UpdateTeamInput,
 } from "@/types/projects";
 import { useCan } from "@/hooks/api/access";
@@ -32,18 +33,34 @@ export const teamQueryKeys = {
 };
 
 export function useProjectTeams(params?: {
-  page?: number;
+  cursor?: string;
   pageSize?: number;
   search?: string;
 }) {
-  const query: Record<string, unknown> = {};
-  if (params?.page) query["page"] = params.page;
-  if (params?.pageSize) query["pageSize"] = params.pageSize;
+  const query: Record<string, string> = {};
+  if (params?.cursor) query["cursor"] = params.cursor;
+  if (params?.pageSize) query["pageSize"] = String(params.pageSize);
   if (params?.search) query["search"] = params.search;
   return useQuery<TeamListResponse>({
     queryKey: teamQueryKeys.list(Object.keys(query).length ? query : undefined),
+    queryFn: () => apiClient.get<TeamListResponse>("/build/teams", query),
+    staleTime: 60_000,
+  });
+}
+
+export function useProjectTeamMembers(
+  teamId: number,
+  params?: { cursor?: string; pageSize?: number },
+) {
+  const canView = useCan("build:teams:view");
+  const query: Record<string, string> = {};
+  if (params?.cursor) query["cursor"] = params.cursor;
+  if (params?.pageSize) query["pageSize"] = String(params.pageSize);
+  return useQuery<TeamMembersPage>({
+    queryKey: teamQueryKeys.members(teamId, Object.keys(query).length ? query : undefined),
     queryFn: () =>
-      apiClient.get<TeamListResponse>("/build/teams", query as Record<string, string>),
+      apiClient.get<TeamMembersPage>(`/build/teams/${teamId}/members`, query),
+    enabled: canView && !!teamId,
     staleTime: 60_000,
   });
 }

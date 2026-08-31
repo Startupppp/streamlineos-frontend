@@ -28,18 +28,23 @@ function formatDate(value: string): string {
 }
 
 export function TransfersClient() {
-  const [page, setPage] = useState(1);
+  const [cursors, setCursors] = useState<(string | null)[]>([null]);
+  const [cursorIndex, setCursorIndex] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
   const canManage = useCan("accounting:banking:manage");
   const { iconRef, hoverHandlers } = useAnimatedIcon();
 
   const accountsQuery = useBankAccounts();
-  const accounts = accountsQuery.data?.items ?? [];
+  const accounts = accountsQuery.data?.data ?? [];
   const accountMap = new Map(accounts.map((a) => [a.id, a.name]));
 
-  const transfersQuery = useTransfers({ page, pageSize: PAGE_SIZE });
-  const transfers = transfersQuery.data?.items ?? [];
-  const total = transfersQuery.data?.total ?? 0;
+  const transfersQuery = useTransfers({ cursor: cursors[cursorIndex] ?? undefined, limit: PAGE_SIZE });
+  const transfers = transfersQuery.data?.data ?? [];
+  const hasMore = transfersQuery.data?.pagination.hasMore ?? false;
+  const currentPage = cursorIndex + 1;
+  const syntheticTotal = hasMore
+    ? currentPage * PAGE_SIZE + 1
+    : (currentPage - 1) * PAGE_SIZE + transfers.length;
 
   const columns: DataTableColumn<BankTransfer>[] = [
     {
@@ -94,7 +99,17 @@ export function TransfersClient() {
   ];
 
   function handlePageChange(newPage: number) {
-    setPage(newPage);
+    if (newPage > currentPage && hasMore) {
+      const next = transfersQuery.data?.pagination.nextCursor ?? null;
+      setCursors((prev) => {
+        const copy = prev.slice(0, cursorIndex + 1);
+        copy.push(next);
+        return copy;
+      });
+      setCursorIndex(cursorIndex + 1);
+    } else if (newPage < currentPage) {
+      setCursorIndex(Math.max(0, cursorIndex - 1));
+    }
   }
 
   function handleDialogOpen() {
@@ -124,9 +139,9 @@ export function TransfersClient() {
           isLoading={transfersQuery.isLoading}
           pagination={{
             mode: "server",
-            page,
+            page: currentPage,
             pageSize: PAGE_SIZE,
-            total,
+            total: syntheticTotal,
             onPageChange: handlePageChange,
           }}
           emptyState={

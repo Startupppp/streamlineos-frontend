@@ -120,7 +120,7 @@ export function BankingHubClient() {
   const { iconRef: addIconRef, hoverHandlers: addHoverHandlers } = useAnimatedIcon();
   const display = useOrgDisplay();
 
-  const accounts = data?.items ?? [];
+  const accounts = data?.data ?? [];
 
   const totalBalance = accounts.reduce(
     (sum, a) => sum + parseFloat(a.currentBalance),

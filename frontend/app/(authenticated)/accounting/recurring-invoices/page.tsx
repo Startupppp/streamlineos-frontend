@@ -144,16 +144,21 @@ export default function RecurringInvoicesPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editTemplate, setEditTemplate] = useState<RecurringInvoiceTemplate | undefined>();
   const [activeFilter, setActiveFilter] = useState<"all" | "true" | "false">("all");
-  const [page, setPage] = useState(1);
+  const [cursors, setCursors] = useState<(string | null)[]>([null]);
+  const [cursorIndex, setCursorIndex] = useState(0);
 
   const query = useRecurringTemplates({
     isActive: activeFilter === "all" ? undefined : activeFilter === "true",
-    page,
-    pageSize: 20,
+    cursor: cursors[cursorIndex] ?? undefined,
+    limit: 20,
   });
 
-  const items = query.data?.items ?? [];
-  const total = query.data?.total ?? 0;
+  const items = query.data?.data ?? [];
+  const hasMore = query.data?.pagination.hasMore ?? false;
+  const currentPage = cursorIndex + 1;
+  const syntheticTotal = hasMore
+    ? currentPage * 20 + 1
+    : (currentPage - 1) * 20 + items.length;
 
   function handleNewClick(): void {
     setEditTemplate(undefined);
@@ -172,12 +177,23 @@ export default function RecurringInvoicesPage() {
   function handleActiveFilterChange(value: string): void {
     if (value === "all" || value === "true" || value === "false") {
       setActiveFilter(value);
-      setPage(1);
+      setCursors([null]);
+      setCursorIndex(0);
     }
   }
 
-  function handlePageChange(p: number): void {
-    setPage(p);
+  function handlePageChange(newPage: number): void {
+    if (newPage > currentPage && hasMore) {
+      const next = query.data?.pagination.nextCursor ?? null;
+      setCursors((prev) => {
+        const copy = prev.slice(0, cursorIndex + 1);
+        copy.push(next);
+        return copy;
+      });
+      setCursorIndex(cursorIndex + 1);
+    } else if (newPage < currentPage) {
+      setCursorIndex(Math.max(0, cursorIndex - 1));
+    }
   }
 
   const columns: DataTableColumn<RecurringInvoiceTemplate>[] = [
@@ -278,9 +294,9 @@ export default function RecurringInvoicesPage() {
             isLoading={query.isLoading}
             pagination={{
               mode: "server",
-              page,
+              page: currentPage,
               pageSize: 20,
-              total,
+              total: syntheticTotal,
               onPageChange: handlePageChange,
             }}
             emptyState={

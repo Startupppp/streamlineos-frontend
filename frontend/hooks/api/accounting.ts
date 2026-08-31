@@ -32,7 +32,7 @@ interface ListResponse<T> {
   totalPages: number;
 }
 
-interface CursorResponse<T> {
+export interface CursorPage<T> {
   data: T[];
   pagination: {
     limit: number;
@@ -40,6 +40,8 @@ interface CursorResponse<T> {
     hasMore: boolean;
   };
 }
+
+type CursorResponse<T> = CursorPage<T>;
 
 interface TrialBalanceResponse {
   asOf: string;
@@ -265,17 +267,17 @@ export function useCashFlow({ from, to }: CashFlowParams) {
 }
 
 interface ListCustomersOutstandingParams {
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
   q?: string;
   onlyOutstanding?: boolean;
 }
 
 export function useCustomersOutstanding(params: ListCustomersOutstandingParams = {}) {
-  return useQuery<ListResponse<CustomerOutstanding>, Error>({
+  return useQuery<CursorPage<CustomerOutstanding>, Error>({
     queryKey: queryKeys.accounting.customersOutstanding(params),
     queryFn: () =>
-      apiClient.get<ListResponse<CustomerOutstanding>>("/accounting/customers", toQuery(params)),
+      apiClient.get<CursorPage<CustomerOutstanding>>("/accounting/customers", toQuery(params)),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
   });
@@ -414,17 +416,17 @@ export function useGstr3B(from: string, to: string) {
 }
 
 interface ListVendorsOutstandingParams {
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
   q?: string;
   onlyOutstanding?: boolean;
 }
 
 export function useVendorsOutstanding(params: ListVendorsOutstandingParams = {}) {
-  return useQuery<ListResponse<VendorOutstanding>, Error>({
+  return useQuery<CursorPage<VendorOutstanding>, Error>({
     queryKey: queryKeys.accounting.vendorsOutstanding(params),
     queryFn: () =>
-      apiClient.get<ListResponse<VendorOutstanding>>("/accounting/vendors", toQuery(params)),
+      apiClient.get<CursorPage<VendorOutstanding>>("/accounting/vendors", toQuery(params)),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
   });

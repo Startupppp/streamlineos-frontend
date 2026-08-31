@@ -129,11 +129,17 @@ interface Props {
 
 export function BankAccountDetailClient({ bankAccountId }: Props) {
   const id = Number(bankAccountId);
-  const [page, setPage] = useState(1);
+  const [cursors, setCursors] = useState<(string | null)[]>([null]);
+  const [cursorIndex, setCursorIndex] = useState(0);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [search, setSearch] = useState("");
+
+  function resetCursor() {
+    setCursors([null]);
+    setCursorIndex(0);
+  }
 
   const accountQuery = useBankAccount(id);
   const txnQuery = useBankTransactions(id, {
@@ -141,38 +147,52 @@ export function BankAccountDetailClient({ bankAccountId }: Props) {
     from: from || undefined,
     to: to || undefined,
     q: search || undefined,
-    page,
-    pageSize: PAGE_SIZE,
+    cursor: cursors[cursorIndex] ?? undefined,
+    limit: PAGE_SIZE,
   });
 
   const account = accountQuery.data;
-  const txns = txnQuery.data?.items ?? [];
-  const total = txnQuery.data?.total ?? 0;
+  const txns = txnQuery.data?.data ?? [];
+  const hasMore = txnQuery.data?.pagination.hasMore ?? false;
+  const currentPage = cursorIndex + 1;
+  const syntheticTotal = hasMore
+    ? currentPage * PAGE_SIZE + 1
+    : (currentPage - 1) * PAGE_SIZE + txns.length;
 
   function handleStatusChange(value: string) {
     if (isTxnStatus(value)) {
       setStatusFilter(value);
-      setPage(1);
+      resetCursor();
     }
   }
 
   function handleFromChange(e: ChangeEvent<HTMLInputElement>) {
     setFrom(e.target.value);
-    setPage(1);
+    resetCursor();
   }
 
   function handleToChange(e: ChangeEvent<HTMLInputElement>) {
     setTo(e.target.value);
-    setPage(1);
+    resetCursor();
   }
 
   function handleSearchChange(value: string) {
     setSearch(value);
-    setPage(1);
+    resetCursor();
   }
 
   function handlePageChange(newPage: number) {
-    setPage(newPage);
+    if (newPage > currentPage && hasMore) {
+      const next = txnQuery.data?.pagination.nextCursor ?? null;
+      setCursors((prev) => {
+        const copy = prev.slice(0, cursorIndex + 1);
+        copy.push(next);
+        return copy;
+      });
+      setCursorIndex(cursorIndex + 1);
+    } else if (newPage < currentPage) {
+      setCursorIndex(Math.max(0, cursorIndex - 1));
+    }
   }
 
   return (
@@ -246,9 +266,9 @@ export function BankAccountDetailClient({ bankAccountId }: Props) {
             isLoading={txnQuery.isLoading}
             pagination={{
               mode: "server",
-              page,
+              page: currentPage,
               pageSize: PAGE_SIZE,
-              total,
+              total: syntheticTotal,
               onPageChange: handlePageChange,
             }}
             search={{

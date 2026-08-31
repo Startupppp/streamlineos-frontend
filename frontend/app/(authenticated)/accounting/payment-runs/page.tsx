@@ -104,12 +104,11 @@ export default function PaymentRunsPage() {
   const [createOpen, setCreateOpen] = useState(false);
 
   const query = usePaymentRuns({
-    page: 1,
-    pageSize: 50,
+    limit: 50,
     status: statusFilter === "all" ? undefined : statusFilter,
   });
 
-  const items = query.data?.items ?? [];
+  const items = query.data?.data ?? [];
 
   function handleRetry(): void {
     void query.refetch();

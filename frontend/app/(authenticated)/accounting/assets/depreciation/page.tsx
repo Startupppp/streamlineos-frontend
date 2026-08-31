@@ -139,8 +139,8 @@ export default function DepreciationRunsPage() {
   const canManage = useCan("accounting:assets:manage");
   const [createOpen, setCreateOpen] = useState(false);
 
-  const runsQuery = useDepreciationRuns({ pageSize: 100 });
-  const runs = runsQuery.data?.items ?? [];
+  const runsQuery = useDepreciationRuns({ limit: 100 });
+  const runs = runsQuery.data?.data ?? [];
 
   const createRunMutation = useCreateDepreciationRun();
 

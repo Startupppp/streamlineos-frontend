@@ -27,7 +27,6 @@ export function PmWorkspaceContextChip({ className }: PmWorkspaceContextChipProp
     pathname.startsWith("/build") || pathname.startsWith("/product-management");
 
   const { data } = usePmWorkspaces({
-    page: 1,
     limit: 20,
   });
 

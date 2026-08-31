@@ -117,12 +117,12 @@ export default function TaxCodesPage() {
   const canManage = useCan("accounting:taxes:manage");
   const [editState, setEditState] = useState<EditState>(CLOSED_STATE);
 
-  const listQuery = useListTaxCodes({ pageSize: 100 });
+  const listQuery = useListTaxCodes({ limit: 100 });
   const createMutation = useCreateTaxCode();
   const updateMutation = useUpdateTaxCode(editState.code?.id ?? 0);
   const seedMutation = useSeedDefaultTaxCodes();
 
-  const items = listQuery.data?.items ?? [];
+  const items = listQuery.data?.data ?? [];
 
   const handleSeedDefaults = useCallback(() => {
     seedMutation.mutate(undefined, {

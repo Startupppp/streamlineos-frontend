@@ -136,8 +136,8 @@ export default function FinanceSettingsPage() {
 
   const sequences = sequencesQuery.data?.items ?? [];
   const systemAccounts = systemAccountsQuery.data?.items ?? [];
-  const policies = policiesQuery.data?.items ?? [];
-  const rates = ratesQuery.data?.items ?? [];
+  const policies = policiesQuery.data?.data ?? [];
+  const rates = ratesQuery.data?.data ?? [];
   const paymentTerms = settingsQuery.data?.paymentTerms ?? [];
 
   return (

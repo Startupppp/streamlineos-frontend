@@ -338,3 +338,24 @@ Ranked by security / correctness / compliance severity:
 |---|---|
 | `src/modules/kb/retrieval/kb-ingestion-consumer.spec.ts` (all `contentType()` call sites) | Phantom mock method: real `KbContentAdapter`, `KbPageAdapter`, `KbArticleAdapter`, `KbAttachmentAdapter`, `KbSourceAdapter` expose `contentType` as a readonly property (`readonly contentType = "page"` etc.), not a callable method. Spec mocks call `.contentType()` with parens — `check:mock-surface` flags 4 distinct classes. Fix: change mock setup from method to property form. |
 | `src/modules/billing/core/plan-limits.service.ts` (constructor index 2) | `NotificationsService` injected as constructor parameter but is not declared in `BillingModule` providers or imports. `check:module-di` flags this as a warning (not error). Risk: silent DI resolution failure for billing notifications at runtime — the token may resolve via a global module or throw at boot. |
+
+---
+
+## Verification pass by the orchestrator — 2026-08-31
+
+Five of the headline findings above did not survive checking against current source. Four were drawn
+from `MEMORY.md` notes. **A memory note records a defect as it was when written; it is a lead to
+check, never a finding in itself.** The rows are left in place above so the correction is auditable.
+
+| # | Claim | Verdict |
+|---|---|---|
+| 1 | KB ACL revision gate inert via an `IS NULL` arm (P0) | **FALSE.** The arm is now an `innerJoin`, so a chunk whose `aclRevision` does not match its parent is excluded rather than passed through. `kb-acl-revision-gate.spec.ts` pins both directions and passes: "articleVectorCandidates uses innerJoin (not leftJoin) so mismatched aclRevision rows are excluded", and the same for pages. Row 274 is corrected by this note. |
+| 2 | 4 phantom `contentType()` mocks in the KB ingestion spec (P1) | **FALSE — the gate's own bug.** The mocks declare `contentType: "page"` as a property, exactly as the real adapters do. `extractClassPublicMethods` matched only `name(` and `name<`, so a public `readonly contentType = "page"` was never counted as a class member and every mock declaring it read as a phantom. Gate fixed and a self-test added for public properties; it now reports 0 defects across 3,027 doubles, and the original phantom-detection self-test still passes. |
+| 3 | `NotificationsService` absent from `BillingModule` (P1) | **CONFIRMED AND FIXED.** It is injected `@Optional()`, so it resolved to `null` and `if (!this.notifications) return;` silently swallowed every plan-limit threshold alert — an org owner never learned they had reached 100% of seats. `NotificationsModule` is now imported; `check:module-di` reports 0 violations, madge stays at zero cycles, 483 billing tests pass. |
+| 4 | `gdpr-export-worker.service.ts` has no cross-tenant test (P1) | **CONFIRMED**, routed for a spec. It is the last uncovered service and the most sensitive, since it assembles a subject's full personal-data export. |
+| 5 | Session revocation is DB-flag only (P1) | **FALSE.** `src/common/auth/jwt-auth.guard.ts:128` reads the Redis tombstone `revoked:session:${claims.sessionId}` and line 139 derives `revoked` from it. What is genuinely open is narrower: no automated test drives the org-switch invalidation path end to end. |
+| 9 | Duplicate billing routes still present (P2) | **FALSE.** `app/(authenticated)/settings/subscription` does not exist, and `app/(authenticated)/billing` contains only `invoices`, which CLAUDE.md §8 explicitly keeps as the org's own customer invoicing. `/settings/billing` and `/settings/billing/ai-credits` are present as required. |
+| 10 | `ai_usage_logs` not partitioned (P2) | **MISAPPLIED RULE.** CLAUDE.md §3 says *not* to partition a table that is not demonstrably large, and to record the triggering row count in the migration. Live counts: `ai_usage_logs` 401, `audit_logs` 11, `chat_messages` 4,250. `notifications` *is* partitioned, with 49 partitions. Partitioning the others now would break the rule rather than follow it. |
+
+Rows 6 and 7 (legacy actor columns: payroll 56, billing 18) are confirmed as measured and are tracked
+by the `scan:legacy-actors` ratchet, currently 647/689 with 42 migrated.

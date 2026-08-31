@@ -143,7 +143,7 @@ interface LinkedCreditNotesProps {
 
 export function LinkedCreditNotes({ clientId, invoiceId }: LinkedCreditNotesProps) {
   const creditNotesQuery = useCreditNotes(clientId !== null ? { clientId } : {});
-  const linked = (creditNotesQuery.data?.items ?? []).filter(
+  const linked = (creditNotesQuery.data?.data ?? []).filter(
     (cn) => cn.invoiceId === invoiceId,
   );
 

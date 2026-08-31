@@ -156,10 +156,10 @@ export function RecurringJournalsTab() {
   const [editTemplate, setEditTemplate] = useState<RecurringJournal | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
-  const query = useRecurringJournals({ page: 1, pageSize: 100 });
+  const query = useRecurringJournals({ limit: 100 });
   const deleteMutation = useDeleteRecurringJournal(deleteId ?? 0);
 
-  const items = query.data?.items ?? [];
+  const items = query.data?.data ?? [];
 
   function handleRetry(): void {
     void query.refetch();

@@ -13,7 +13,7 @@ import type {
 } from "@/types/projects";
 
 interface ListFilters {
-  page?: number;
+  cursor?: string;
   limit?: number;
   status?: string;
 }
@@ -21,7 +21,7 @@ interface ListFilters {
 export function usePortfolios(filters?: ListFilters) {
   const canView = useCan("build:portfolios:view");
   const params: Record<string, string> = {};
-  if (filters?.page) params["page"] = String(filters.page);
+  if (filters?.cursor) params["cursor"] = filters.cursor;
   if (filters?.limit) params["limit"] = String(filters.limit);
   if (filters?.status) params["status"] = filters.status;
   return useQuery<PortfoliosPage>({

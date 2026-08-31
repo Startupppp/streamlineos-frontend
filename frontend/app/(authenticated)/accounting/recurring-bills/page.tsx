@@ -141,12 +141,11 @@ export default function RecurringBillsPage() {
   const [isActiveFilter, setIsActiveFilter] = useState<"all" | "true" | "false">("all");
 
   const query = useRecurringBills({
-    page: 1,
-    pageSize: 50,
+    limit: 50,
     isActive: isActiveFilter === "all" ? undefined : isActiveFilter === "true",
   });
 
-  const items = query.data?.items ?? [];
+  const items = query.data?.data ?? [];
 
   function handleNewClick(): void {
     setEditTemplate(undefined);

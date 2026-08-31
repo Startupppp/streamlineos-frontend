@@ -48,8 +48,10 @@ export interface AddTeamMemberInput {
 
 export interface TeamListResponse {
   data: ProjectTeam[];
-  total: number;
-  page: number;
-  pageSize: number;
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
+export interface TeamMembersPage {
+  data: ProjectTeamMember[];
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
+}

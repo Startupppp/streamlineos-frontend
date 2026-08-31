@@ -355,7 +355,7 @@ export default function TaxReportsPage() {
         <div className="flex min-h-0 flex-1 flex-col">
           <TabsContent value="output" className={TABS_CONTENT_PAGE_BODY_CLASS}>
             <ReportTable
-              data={outputQuery.data?.items ?? []}
+              data={outputQuery.data?.data ?? []}
               isLoading={outputQuery.isLoading}
               isError={outputQuery.isError}
               onRetry={handleRetryOutput}
@@ -365,7 +365,7 @@ export default function TaxReportsPage() {
 
           <TabsContent value="input" className={TABS_CONTENT_PAGE_BODY_CLASS}>
             <ReportTable
-              data={inputQuery.data?.items ?? []}
+              data={inputQuery.data?.data ?? []}
               isLoading={inputQuery.isLoading}
               isError={inputQuery.isError}
               onRetry={handleRetryInput}

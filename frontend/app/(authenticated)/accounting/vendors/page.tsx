@@ -81,13 +81,12 @@ export default function VendorsListPage() {
   const debouncedSearch = useDebouncedValue(search, 300);
 
   const query = useVendorsOutstanding({
-    page: 1,
-    pageSize: 100,
+    limit: 100,
     q: debouncedSearch.trim() || undefined,
     onlyOutstanding,
   });
 
-  const items = query.data?.items ?? [];
+  const items = query.data?.data ?? [];
 
   function handleSearchChange(value: string) {
     setSearch(value);

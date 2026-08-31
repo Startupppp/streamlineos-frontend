@@ -80,8 +80,7 @@ export default function CustomerLedgersPage() {
   const debouncedSearch = useDebouncedValue(search, 300);
 
   const query = useCustomersOutstanding({
-    page: 1,
-    pageSize: 100,
+    limit: 100,
     q: debouncedSearch.trim() || undefined,
     onlyOutstanding,
   });
@@ -98,7 +97,7 @@ export default function CustomerLedgersPage() {
     void query.refetch();
   }
 
-  const items = query.data?.items ?? [];
+  const items = query.data?.data ?? [];
 
   const emptyDescription = search
     ? "Try a different search term."

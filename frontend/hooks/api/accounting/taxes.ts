@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import type { CursorPage } from "@/hooks/api/accounting";
 import type {
   TaxCode,
   TaxDashboard,
@@ -49,18 +50,18 @@ function toQuery<P extends object>(params: P): Record<string, string> {
 }
 
 export interface ListTaxCodesParams {
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
   taxType?: string;
   isActive?: boolean;
 }
 
 export function useListTaxCodes(params: ListTaxCodesParams = {}) {
   const can = useCan("accounting:taxes:read");
-  return useQuery<ListResponse<TaxCode>, Error>({
+  return useQuery<CursorPage<TaxCode>, Error>({
     queryKey: taxKeys.codes(params),
     queryFn: () =>
-      apiClient.get<ListResponse<TaxCode>>("/accounting/tax-codes", toQuery(params)),
+      apiClient.get<CursorPage<TaxCode>>("/accounting/tax-codes", toQuery(params)),
     staleTime: 60_000,
     enabled: can,
   });
@@ -128,16 +129,16 @@ export interface TaxReportParams {
   from?: string;
   to?: string;
   rate?: string;
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
 }
 
 export function useTaxReportOutput(params: TaxReportParams = {}) {
   const can = useCan("accounting:taxes:read");
-  return useQuery<ListResponse<TaxReportLine>, Error>({
+  return useQuery<CursorPage<TaxReportLine>, Error>({
     queryKey: taxKeys.reportOutput(params),
     queryFn: () =>
-      apiClient.get<ListResponse<TaxReportLine>>(
+      apiClient.get<CursorPage<TaxReportLine>>(
         "/accounting/taxes/reports/output",
         toQuery(params),
       ),
@@ -148,10 +149,10 @@ export function useTaxReportOutput(params: TaxReportParams = {}) {
 
 export function useTaxReportInput(params: TaxReportParams = {}) {
   const can = useCan("accounting:taxes:read");
-  return useQuery<ListResponse<TaxReportLine>, Error>({
+  return useQuery<CursorPage<TaxReportLine>, Error>({
     queryKey: taxKeys.reportInput(params),
     queryFn: () =>
-      apiClient.get<ListResponse<TaxReportLine>>(
+      apiClient.get<CursorPage<TaxReportLine>>(
         "/accounting/taxes/reports/input",
         toQuery(params),
       ),

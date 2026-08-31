@@ -14,12 +14,7 @@ export interface PmWorkspace {
 
 export interface PmWorkspacesPage {
   data: PmWorkspace[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
 export interface CreatePmWorkspaceInput {
@@ -46,12 +41,7 @@ export interface PmWorkspaceMember {
 
 export interface PmWorkspaceMembersPage {
   data: PmWorkspaceMember[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
 export interface AddPmWorkspaceMemberInput {

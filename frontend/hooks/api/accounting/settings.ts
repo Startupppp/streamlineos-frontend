@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import type { CursorPage } from "@/hooks/api/accounting";
 import type {
   ApprovalPolicy,
   ApprovalRecordType,
@@ -11,14 +12,6 @@ import type {
   ApprovalStatus,
   ExchangeRate,
 } from "@/types/accounting/taxes";
-
-interface ListResponse<T> {
-  items: T[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-}
 
 const settingsKeys = {
   all: [...queryKeys.accounting.all, "settings"] as const,
@@ -45,16 +38,16 @@ function toQuery<P extends object>(params: P): Record<string, string> {
 }
 
 interface ListApprovalPoliciesParams {
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
 }
 
 export function useApprovalPolicies(params: ListApprovalPoliciesParams = {}) {
   const can = useCan("accounting:approvals:read");
-  return useQuery<ListResponse<ApprovalPolicy>, Error>({
+  return useQuery<CursorPage<ApprovalPolicy>, Error>({
     queryKey: settingsKeys.policies(params),
     queryFn: () =>
-      apiClient.get<ListResponse<ApprovalPolicy>>(
+      apiClient.get<CursorPage<ApprovalPolicy>>(
         "/accounting/approval-policies",
         toQuery(params),
       ),
@@ -112,16 +105,16 @@ export function useDeleteApprovalPolicy() {
 interface ListApprovalsParams {
   status?: ApprovalStatus;
   recordType?: string;
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
 }
 
 export function useApprovals(params: ListApprovalsParams = {}) {
   const can = useCan("accounting:approvals:read");
-  return useQuery<ListResponse<ApprovalRequest>, Error>({
+  return useQuery<CursorPage<ApprovalRequest>, Error>({
     queryKey: approvalsKeys.list(params),
     queryFn: () =>
-      apiClient.get<ListResponse<ApprovalRequest>>(
+      apiClient.get<CursorPage<ApprovalRequest>>(
         "/accounting/approvals",
         toQuery(params),
       ),
@@ -181,16 +174,16 @@ export function useRejectRequest(requestId: number) {
 }
 
 interface ListExchangeRatesParams {
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
 }
 
 export function useExchangeRates(params: ListExchangeRatesParams = {}) {
   const can = useCan("accounting:settings:read");
-  return useQuery<ListResponse<ExchangeRate>, Error>({
+  return useQuery<CursorPage<ExchangeRate>, Error>({
     queryKey: settingsKeys.rates(params),
     queryFn: () =>
-      apiClient.get<ListResponse<ExchangeRate>>(
+      apiClient.get<CursorPage<ExchangeRate>>(
         "/accounting/exchange-rates",
         toQuery(params),
       ),

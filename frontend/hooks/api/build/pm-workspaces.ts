@@ -17,7 +17,7 @@ import type {
 const BASE = "/product-management/workspaces";
 
 interface ListPmWorkspacesParams {
-  page?: number;
+  cursor?: string;
   limit?: number;
   status?: string;
 }
@@ -25,7 +25,7 @@ interface ListPmWorkspacesParams {
 export function usePmWorkspaces(params?: ListPmWorkspacesParams) {
   const canView = useCan("build:workspaces:view");
   const queryParams: Record<string, string> = {};
-  if (params?.page) queryParams["page"] = String(params.page);
+  if (params?.cursor) queryParams["cursor"] = params.cursor;
   if (params?.limit) queryParams["limit"] = String(params.limit);
   if (params?.status) queryParams["status"] = params.status;
 
@@ -34,7 +34,7 @@ export function usePmWorkspaces(params?: ListPmWorkspacesParams) {
       Object.keys(queryParams).length > 0 ? queryParams : undefined,
     ),
     queryFn: () => apiClient.get<PmWorkspacesPage>(BASE, queryParams),
-    enabled: canView && (params?.page === undefined || params.page > 0),
+    enabled: canView,
     staleTime: 60_000,
   });
 }
@@ -82,7 +82,7 @@ export function useDeletePmWorkspace() {
 }
 
 interface ListMembersParams {
-  page?: number;
+  cursor?: string;
   limit?: number;
 }
 
@@ -92,7 +92,7 @@ export function usePmWorkspaceMembers(
 ) {
   const canView = useCan("build:workspaces:members:view");
   const queryParams: Record<string, string> = {};
-  if (params?.page) queryParams["page"] = String(params.page);
+  if (params?.cursor) queryParams["cursor"] = params.cursor;
   if (params?.limit) queryParams["limit"] = String(params.limit);
 
   return useQuery<PmWorkspaceMembersPage>({

@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import type { CursorPage } from "@/hooks/api/accounting";
 import type {
   ArInvoice,
   ReminderPolicy,
@@ -93,6 +94,26 @@ export function useCollectionsSummary() {
     queryFn: () =>
       apiClient.get<CollectionsSummary>("/accounting/collections/summary"),
     staleTime: 60_000,
+    enabled: can,
+  });
+}
+
+export interface ListCollectionActivitiesParams {
+  cursor?: string;
+  limit?: number;
+  invoiceId?: number;
+}
+
+export function useCollectionActivities(params: ListCollectionActivitiesParams = {}) {
+  const can = useCan("accounting:collections:read");
+  return useQuery<CursorPage<CollectionActivity>, Error>({
+    queryKey: arCollectionsKeys.collections.activities(params),
+    queryFn: () =>
+      apiClient.get<CursorPage<CollectionActivity>>(
+        "/accounting/collections/activities",
+        toQuery(params),
+      ),
+    staleTime: 30_000,
     enabled: can,
   });
 }

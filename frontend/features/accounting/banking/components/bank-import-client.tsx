@@ -85,7 +85,7 @@ export function BankImportClient() {
   const [importResult, setImportResult] = useState<BankImportResult | null>(null);
 
   const accountsQuery = useBankAccounts();
-  const accounts = accountsQuery.data?.items ?? [];
+  const accounts = accountsQuery.data?.data ?? [];
   const importMutation = useCreateBankImport();
 
   const selectedAccount = accounts.find((a) => String(a.id) === selectedAccountId);

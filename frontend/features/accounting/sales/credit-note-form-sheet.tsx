@@ -161,7 +161,7 @@ export function CreditNoteFormSheet({ open, onOpenChange }: CreditNoteFormSheetP
   const { data: customersData } = useCustomersOutstanding();
   const { data: invoicesData } = useInvoices();
 
-  const customerOptions: ComboboxOption[] = (customersData?.items ?? []).map((c) => ({
+  const customerOptions: ComboboxOption[] = (customersData?.data ?? []).map((c) => ({
     value: String(c.clientId),
     label: c.clientName,
   }));

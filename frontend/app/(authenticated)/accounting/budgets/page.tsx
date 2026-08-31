@@ -168,36 +168,54 @@ export default function BudgetsListPage() {
   const router = useRouter();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [fiscalYear, setFiscalYear] = useState<string>("");
-  const [page, setPage] = useState(1);
+  const [cursors, setCursors] = useState<(string | null)[]>([null]);
+  const [cursorIndex, setCursorIndex] = useState(0);
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const canCreate = useCan("accounting:budgets:create");
 
   const query = useBudgets({
-    page,
-    pageSize: PAGE_SIZE,
+    cursor: cursors[cursorIndex] ?? undefined,
+    limit: PAGE_SIZE,
     status: statusFilter !== "ALL" ? statusFilter : undefined,
     fiscalYear: fiscalYear || undefined,
   });
 
   const createMutation = useCreateBudget();
 
-  const items = query.data?.items ?? [];
+  const items = query.data?.data ?? [];
+  const hasMore = query.data?.pagination.hasMore ?? false;
+  const currentPage = cursorIndex + 1;
+  const syntheticTotal = hasMore
+    ? currentPage * PAGE_SIZE + 1
+    : (currentPage - 1) * PAGE_SIZE + items.length;
 
   function handleStatusFilterChange(value: string): void {
     if (isStatusFilter(value)) {
       setStatusFilter(value);
-      setPage(1);
+      setCursors([null]);
+      setCursorIndex(0);
     }
   }
 
   function handleFiscalYearChange(event: ChangeEvent<HTMLInputElement>): void {
     setFiscalYear(event.target.value);
-    setPage(1);
+    setCursors([null]);
+    setCursorIndex(0);
   }
 
   function handlePageChange(newPage: number): void {
-    setPage(newPage);
+    if (newPage > currentPage && hasMore) {
+      const next = query.data?.pagination.nextCursor ?? null;
+      setCursors((prev) => {
+        const copy = prev.slice(0, cursorIndex + 1);
+        copy.push(next);
+        return copy;
+      });
+      setCursorIndex(cursorIndex + 1);
+    } else if (newPage < currentPage) {
+      setCursorIndex(Math.max(0, cursorIndex - 1));
+    }
   }
 
   function handleRetry(): void {
@@ -293,9 +311,9 @@ export default function BudgetsListPage() {
             minWidth="700px"
             pagination={{
               mode: "server",
-              page,
+              page: currentPage,
               pageSize: PAGE_SIZE,
-              total: query.data?.total ?? 0,
+              total: syntheticTotal,
               onPageChange: handlePageChange,
             }}
           />
