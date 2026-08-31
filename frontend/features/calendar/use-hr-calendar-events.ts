@@ -26,6 +26,7 @@ const HR_TYPE_COLORS: Record<string, string> = {
 export function useHrCalendarEventsMapped(
   rangeStart: Date,
   rangeEnd: Date,
+  hrVisible: boolean,
 ): { hrCalEvents: BigCalEvent[]; hrEnabled: boolean } {
   const [forbidden, setForbidden] = useState(false);
 
@@ -42,7 +43,7 @@ export function useHrCalendarEventsMapped(
       }),
     staleTime: 5 * 60_000,
     retry: false,
-    enabled: !forbidden,
+    enabled: !forbidden && hrVisible,
   });
 
   useEffect(() => {

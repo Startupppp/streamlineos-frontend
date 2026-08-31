@@ -16,6 +16,8 @@
     "check:colors": "node scripts/check-no-arbitrary-colors.mjs",
     "check:effect-fetches": "node scripts/check-no-effect-fetches.mjs",
     "check:routes": "node scripts/check-no-business-routes.mjs",
+    "check:over-300": "node scripts/check-over-300.mjs",
+    "check:over-300:self-test": "node scripts/check-over-300.mjs --self-test",
     "check:formatters": "node scripts/check-no-local-formatters.mjs",
     "check:formatters:self-test": "node scripts/check-no-local-formatters.mjs --self-test",
     "check:empty-states": "node scripts/check-no-handrolled-empty-states.mjs",

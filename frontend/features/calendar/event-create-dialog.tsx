@@ -489,6 +489,14 @@ export function EventCreateDialog({
       onRemoveLinkedTicket={handleRemoveLinkedTicket}
       onTicketPickerChange={setTicketPickerOpen}
       onSave={handleSave}
+      recurrence={form.recurrence}
+      onRecurrenceChange={handleRecurrenceChange}
+    />
+    <EventSeriesScopeDialog
+      open={seriesScopeOpen}
+      onOpenChange={handleSeriesScopeOpenChange}
+      onConfirm={handleSeriesScopeConfirm}
+      isPending={seriesPending}
     />
   );
 }

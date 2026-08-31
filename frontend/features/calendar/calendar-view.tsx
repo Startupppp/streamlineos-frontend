@@ -130,8 +130,8 @@ export function CalendarView() {
     visible: attendanceEventsVisible,
     toggle: toggleAttendanceEvents,
   } = useCalendarSourceVisibility("attendance", true);
-  const { hrCalEvents } = useHrCalendarEventsMapped(rangeStart, rangeEnd);
-  const selfAttendanceEvents = useAttendanceCalendarEvents(rangeStart, rangeEnd);
+  const { hrCalEvents } = useHrCalendarEventsMapped(rangeStart, rangeEnd, hrEventsVisible);
+  const selfAttendanceEvents = useAttendanceCalendarEvents(rangeStart, rangeEnd, attendanceEventsVisible);
   const calendarEvents = useMemo(() => {
     const aggregateAttendanceDates = new Set(
       events

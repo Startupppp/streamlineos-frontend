@@ -16,7 +16,7 @@ import type { IntegrationConnection } from "@/hooks/api/integrations";
 import type { TicketSearchResult } from "@/hooks/api/build";
 import { EventFormFields } from "./event-form-fields";
 import { TicketPickerDialog } from "./ticket-picker-dialog";
-import type { FormState } from "./event-form-state";
+import type { FormState, RecurrenceState } from "./event-form-state";
 
 type EventCreateFormProps = {
   open: boolean;
@@ -54,6 +54,8 @@ type EventCreateFormProps = {
   onRemoveLinkedTicket: () => void;
   onTicketPickerChange: (open: boolean) => void;
   onSave: () => void;
+  recurrence: RecurrenceState;
+  onRecurrenceChange: (next: RecurrenceState) => void;
 };
 
 const DialogCloseButton = React.forwardRef<HTMLButtonElement, React.ButtonHTMLAttributes<HTMLButtonElement>>(
@@ -105,6 +107,8 @@ export function EventCreateForm({
   onRemoveLinkedTicket,
   onTicketPickerChange,
   onSave,
+  recurrence,
+  onRecurrenceChange,
 }: EventCreateFormProps) {
   const displayLinkedKey = linkedTicket ? `${linkedTicket.projectKey}-${linkedTicket.ticketNumber}` : existingEntityId ? `#${existingEntityId}` : null;
   const displayLinkedTitle = linkedTicket?.title ?? null;
@@ -129,6 +133,7 @@ export function EventCreateForm({
                 onEndTimeChange={onEndTimeChange} onCategoryChange={onCategoryChange} onColorChange={onColorChange}
                 onSyncConnectionChange={onSyncConnectionChange} onAddConferenceChange={onAddConferenceChange}
                 onShowEndDate={onShowEndDate} members={members} attendeeIds={form.attendeeIds} onToggleAttendee={onToggleAttendee}
+                recurrence={recurrence} onRecurrenceChange={onRecurrenceChange}
               />
               <div className="flex items-start gap-2.5">
                 <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-2" />
