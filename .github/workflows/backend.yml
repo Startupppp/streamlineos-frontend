@@ -107,6 +107,12 @@ jobs:
       - name: Files over 300 lines do not increase
         run: pnpm check:over-300:self-test && pnpm check:over-300
 
+      - name: Offset, unbounded and unordered reads do not increase
+        run: pnpm check:unbounded-reads:self-test && pnpm check:unbounded-reads
+
+      - name: HR table freeze
+        run: pnpm check:hr-table-freeze:self-test && pnpm check:hr-table-freeze
+
       - name: Unit Tests
         run: pnpm test -- --runInBand
 
