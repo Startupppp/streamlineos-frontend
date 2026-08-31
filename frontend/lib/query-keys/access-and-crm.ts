@@ -101,6 +101,8 @@ export const accessAndCrmQueryKeys = {
   crmSettings: {
     all: [...base, "crmSettings"] as const,
     assignmentRules: () => [...base, "crmSettings", "assignmentRules"] as const,
+    mcpAgentTokens: () => [...base, "crmSettings", "mcpAgentTokens"] as const,
+    mcpTools: () => [...base, "crmSettings", "mcpTools"] as const,
     emailTemplates: (params?: Record<string, unknown>) =>
       [...base, "crmSettings", "emailTemplates", params] as const,
     scoringRules: () => [...base, "crmSettings", "scoringRules"] as const,

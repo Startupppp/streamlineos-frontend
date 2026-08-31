@@ -8,6 +8,12 @@ import type { AgentToken, CreateAgentTokenResponse } from "@/types/projects";
 
 export type { AgentToken, CreateAgentTokenResponse } from "@/types/projects";
 
+interface CreateAgentTokenPayload {
+  name: string;
+  expiresInDays?: number;
+  scopes?: string[];
+}
+
 export function useAgentTokens() {
   const canView = useCan("settings:api-tokens:read");
   return useQuery<AgentToken[]>({
@@ -22,7 +28,7 @@ export function useCreateAgentToken() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["projects", "agent-tokens", "create"],
-    mutationFn: (data: { name: string; expiresInDays?: number }) =>
+    mutationFn: (data: CreateAgentTokenPayload) =>
       apiClient.post<CreateAgentTokenResponse>("/agent-tokens", data),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.projects.agentTokens() });
@@ -34,7 +40,7 @@ export function useRevokeAgentToken() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["projects", "agent-tokens", "revoke"],
-    mutationFn: (tokenId: string) =>
+    mutationFn: (tokenId: string | number) =>
       apiClient.delete<{ success: boolean }>(`/agent-tokens/${tokenId}`),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.projects.agentTokens() });
