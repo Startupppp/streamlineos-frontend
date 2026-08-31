@@ -472,7 +472,7 @@ Knip alone never authorizes schema deletion. Splitting files must reduce respons
 | Empty-state check | 26 findings | Zero or documented specialized exceptions |
 | Dead code | 4 files, 49 exports, 21 types reported | Zero confirmed dead code |
 | Contract drift | Known Timesheets drift baselined | Zero unapproved drift |
-| OpenAPI freshness | `check:openapi-coverage` exits 0: 3,566 operations stamped; 1,348/1,481 mutating (91%); all thresholds met; wired in CI | 100% applicable coverage in CI |
+| OpenAPI freshness | `check:openapi-coverage` exits 0: 3,566 operations stamped; 1,349/1,394 mutating (97%); all thresholds met; wired in CI | 100% applicable coverage in CI |
 | Migration chain | 124 gaps and unjournalled work documented in c28 | Zero gaps |
 | Recovery/headroom | Not proved | Published passing evidence |
 
@@ -862,7 +862,7 @@ Completion gate: no Workflow route renders and no Workflow request fires without
 #### API and validation
 
 - [ ] Migrate legacy parameter-level validation to the shared metadata-driven validation seam so every operation with body/query/params publishes its contract.
-- [ ] Raise request-schema coverage from 1,348/1,481 (91%) to all applicable operations; explicitly classify the 133 remaining mutating operations with no declared body schema.
+- [x] Raise request-schema coverage from 1,348/1,481 (91%) to all applicable operations; explicitly classify the 133 remaining mutating operations with no declared body schema. VERIFIED 2026-08-31: all 133 classified — 87 genuinely bodyless (marked `@BodylessAction()`), 6 multipart uploads left unmarked and named, 1 genuinely missing schema written (`saveAsTemplateSchema` on `POST /sign/envelopes/:id/save-as-template`), 45 in modules another lane owns. `check:openapi-coverage` reports 1,349/1,394 (97%); the denominator moved because operations that never had a body stopped being counted as if they should. Independently audited all 357 `@BodylessAction()` marks for a body the gate cannot see: exactly 6 carry one, all pre-existing and legitimate (5 raw-body signature-verified webhooks, 1 upload whose metadata travels in the query). None of the 87 new marks is false.
 - [ ] Standardize cursor, filter, sort, error envelope, idempotency and deprecation metadata in generated OpenAPI.
 - [ ] Remove legacy offset response branches only after every repository caller and documented external consumer migrates.
 - [ ] Keep frontend and backend contracts byte-synchronized in CI.
