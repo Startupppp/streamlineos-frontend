@@ -1,0 +1,81 @@
+import { useState, useCallback } from "react";
+import {
+  extractEventNumericId,
+  useUpdateCalendarEvent,
+  useUpsertOccurrenceException,
+} from "@/hooks/api/calendar";
+import type { CalendarListItem } from "@/hooks/api/calendar";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
+import type { SeriesScope } from "./event-series-scope-dialog";
+
+interface UseEventSeriesScopeProps {
+  event?: CalendarListItem | null;
+  updateEvent: ReturnType<typeof useUpdateCalendarEvent>;
+  upsertOccurrenceException: ReturnType<typeof useUpsertOccurrenceException>;
+  onClose: () => void;
+}
+
+export function useEventSeriesScope({
+  event,
+  updateEvent,
+  upsertOccurrenceException,
+  onClose,
+}: UseEventSeriesScopeProps) {
+  const [seriesScopeOpen, setSeriesScopeOpen] = useState(false);
+  const [pendingPayload, setPendingPayload] = useState<Record<string, unknown> | null>(null);
+
+  const openWithPayload = useCallback((payload: Record<string, unknown>) => {
+    setPendingPayload(payload);
+    setSeriesScopeOpen(true);
+  }, []);
+
+  const handleSeriesScopeConfirm = useCallback(
+    async (scope: SeriesScope) => {
+      if (!pendingPayload || !event) return;
+      const numericId = extractEventNumericId(event.id);
+      if (numericId === null) {
+        toast.error("Cannot edit this event type");
+        setSeriesScopeOpen(false);
+        return;
+      }
+      try {
+        if (scope === "occurrence") {
+          await upsertOccurrenceException.mutateAsync({
+            eventId: numericId,
+            occurrenceStart: event.start,
+            modifiedTitle: String(pendingPayload.title ?? ""),
+            modifiedStart: String(pendingPayload.startDate ?? ""),
+            modifiedEnd: String(pendingPayload.endDate ?? ""),
+          });
+          toast.success("Occurrence updated");
+        } else {
+          await updateEvent.mutateAsync({
+            id: numericId,
+            ...(pendingPayload as Record<string, unknown>),
+          });
+          toast.success("Event updated");
+        }
+        setSeriesScopeOpen(false);
+        setPendingPayload(null);
+        onClose();
+      } catch (error) {
+        toast.error(getErrorMessage(error));
+      }
+    },
+    [pendingPayload, event, upsertOccurrenceException, updateEvent, onClose],
+  );
+
+  const handleSeriesScopeOpenChange = useCallback((isOpen: boolean) => {
+    if (!isOpen) setPendingPayload(null);
+    setSeriesScopeOpen(isOpen);
+  }, []);
+
+  return {
+    seriesScopeOpen,
+    openWithPayload,
+    seriesPending: upsertOccurrenceException.isPending || updateEvent.isPending,
+    handleSeriesScopeConfirm,
+    handleSeriesScopeOpenChange,
+  };
+}

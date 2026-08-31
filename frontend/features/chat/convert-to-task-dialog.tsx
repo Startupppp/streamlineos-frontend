@@ -3,8 +3,8 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
+import { convertToTaskSchema, type ConvertToTaskFormValues } from "./convert-to-task-dialog-schema";
 import {
   Dialog,
   DialogContent,
@@ -34,14 +34,6 @@ import { useProjects } from "@/hooks/api/build/projects";
 import { useCreateTaskFromMessage } from "@/hooks/api/chat";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-const schema = z.object({
-  title: z.string().min(1, "Title is required").max(500),
-  projectId: z.string().min(1, "Select a project"),
-  type: z.enum(["TASK", "BUG"]),
-});
-
-type FormValues = z.infer<typeof schema>;
-
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -63,8 +55,8 @@ export function ConvertToTaskDialog({
   );
   const createTask = useCreateTaskFromMessage();
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const form = useForm<ConvertToTaskFormValues>({
+    resolver: zodResolver(convertToTaskSchema),
     defaultValues: {
       title: defaultTitle,
       projectId: "",
@@ -78,7 +70,7 @@ export function ConvertToTaskDialog({
     }
   }, [open, defaultTitle, form]);
 
-  async function handleSubmit(values: FormValues) {
+  async function handleSubmit(values: ConvertToTaskFormValues) {
     try {
       await createTask.mutateAsync({
         channelId,

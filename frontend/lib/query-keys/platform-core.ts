@@ -123,6 +123,8 @@ export const platformCoreQueryKeys = {
     list: (params?: Record<string, unknown>) =>
       [...base, "inbox", "list", params] as const,
     count: () => [...base, "inbox", "count"] as const,
+    unified: (params?: Record<string, unknown>) =>
+      [...base, "inbox", "unified", params] as const,
   },
 
   access: {

@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { NotificationCard } from "@/features/notifications/notification-card";
 import { NotificationListSkeleton } from "@/features/notifications/notification-list-skeleton";
 import { NotificationDetailDrawer } from "@/features/notifications/notification-detail-drawer";
 import {
@@ -19,23 +18,34 @@ import {
   useUnpinNotification,
   useSnoozeNotification,
 } from "@/hooks/api/notifications";
-import { useInfiniteInbox, type InboxSection } from "@/hooks/api/inbox";
+import { useUnifiedInbox } from "@/hooks/api/inbox";
+import { InboxItemCard } from "./inbox-item-card";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
 import { Inbox } from "lucide-react";
 import type { Notification } from "@/types/notifications";
+import type { InboxKind, MailInboxItem, BuildApprovalInboxItem } from "@/types/inbox";
 import { cn } from "@/lib/utils";
 
-const SECTIONS: Array<{ key: InboxSection; label: string }> = [
+type InboxView = "ALL" | "NOTIFICATIONS" | "MAIL" | "APPROVALS";
+
+const VIEW_KINDS: Record<InboxView, InboxKind[] | undefined> = {
+  ALL: undefined,
+  NOTIFICATIONS: ["notification", "broadcast"],
+  MAIL: ["mail"],
+  APPROVALS: ["build_approval"],
+};
+
+const VIEWS: Array<{ key: InboxView; label: string }> = [
   { key: "ALL", label: "All" },
-  { key: "MENTIONS", label: "Mentions" },
-  { key: "ASSIGNED_TO_ME", label: "Assigned to me" },
+  { key: "NOTIFICATIONS", label: "Notifications" },
+  { key: "MAIL", label: "Mail" },
   { key: "APPROVALS", label: "Approvals" },
 ];
 
 export function InboxShell() {
   const router = useRouter();
-  const [section, setSection] = useState<InboxSection>("ALL");
+  const [view, setView] = useState<InboxView>("ALL");
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -48,7 +58,7 @@ export function InboxShell() {
     hasNextPage,
     isFetchingNextPage,
     refetch,
-  } = useInfiniteInbox({ section, limit: 25 });
+  } = useUnifiedInbox({ kinds: VIEW_KINDS[view], limit: 25 });
 
   const markRead = useMarkNotificationRead();
   const archive = useArchiveNotification();
@@ -60,22 +70,57 @@ export function InboxShell() {
   const approve = useApproveNotification();
   const reject = useRejectNotification();
 
-  const notifications = data?.pages.flat() ?? [];
+  const items = data?.pages.flatMap((p) => p.items) ?? [];
 
-  const handleClick = useCallback(
+  const handleNotificationClick = useCallback(
     (n: { id: number; isRead: boolean; link: string | null }) => {
       if (!n.isRead) markRead.mutate(n.id);
       if (n.link) {
         router.push(n.link);
         return;
       }
-      const full = notifications.find((x) => x.id === n.id);
-      if (full) {
-        setSelectedNotification(full);
+      const fullNotif = items
+        .filter((i) => i.kind === "notification" || i.kind === "broadcast")
+        .find((i) => i.id === n.id);
+      if (fullNotif && (fullNotif.kind === "notification" || fullNotif.kind === "broadcast")) {
+        const mapped: Notification = {
+          id: fullNotif.id,
+          orgId: "",
+          userId: null,
+          type: fullNotif.notifType as Notification["type"],
+          priority: fullNotif.priority as Notification["priority"],
+          category: fullNotif.category as Notification["category"],
+          sourceModule: fullNotif.sourceModule,
+          eventKey: fullNotif.kind === "notification" ? fullNotif.eventKey : null,
+          title: fullNotif.subject,
+          message: fullNotif.body,
+          link: fullNotif.deepLink,
+          isRead: fullNotif.isRead,
+          pinned: fullNotif.kind === "notification" ? fullNotif.pinned : false,
+          channel: "IN_APP",
+          archivedAt: null,
+          snoozedUntil: null,
+          createdAt: fullNotif.timestamp,
+        };
+        setSelectedNotification(mapped);
         setDrawerOpen(true);
       }
     },
-    [notifications, markRead, router],
+    [items, markRead, router],
+  );
+
+  const handleMailClick = useCallback(
+    (item: MailInboxItem) => {
+      router.push(`/mail?messageId=${item.id}&accountId=${item.accountId}`);
+    },
+    [router],
+  );
+
+  const handleApprovalClick = useCallback(
+    (item: BuildApprovalInboxItem) => {
+      router.push(`/build/approvals?projectId=${item.projectId}`);
+    },
+    [router],
   );
 
   const handleOpenLink = useCallback((link: string) => router.push(link), [router]);
@@ -97,22 +142,22 @@ export function InboxShell() {
   return (
     <PageWrapper
       title="Inbox"
-      subtitle="Mentions, assignments and approvals waiting for your attention"
+      subtitle="Notifications, mail and approvals waiting for your attention"
       filters={
         <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
-          {SECTIONS.map((s) => (
+          {VIEWS.map((v) => (
             <button
-              key={s.key}
+              key={v.key}
               type="button"
-              onClick={() => setSection(s.key)}
+              onClick={() => setView(v.key)}
               className={cn(
                 "shrink-0 rounded-full px-3 py-1 text-[13px] font-medium transition-colors",
-                section === s.key
+                view === v.key
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground",
               )}
             >
-              {s.label}
+              {v.label}
             </button>
           ))}
         </div>
@@ -128,40 +173,30 @@ export function InboxShell() {
             description={getErrorMessage(error)}
             onRetry={() => void refetch()}
           />
-        ) : notifications.length === 0 ? (
+        ) : items.length === 0 ? (
           <EmptyState
             className="flex-1 min-h-0"
             icon={Inbox}
             title="All caught up"
-            description="Mentions, assignments and approvals will appear here when they arrive."
+            description="Notifications, mail and approvals will appear here when they arrive."
           />
         ) : (
           <>
-            {notifications.map((n) => (
-              <NotificationCard
-                key={n.id}
-                id={n.id}
-                title={n.title}
-                message={n.message}
-                type={n.type}
-                priority={n.priority}
-                category={n.category}
-                sourceModule={n.sourceModule}
-                isRead={n.isRead}
-                pinned={n.pinned}
-                archivedAt={n.archivedAt}
-                createdAt={n.createdAt}
-                link={n.link}
-                isApproval={n.category === "WORKFLOW"}
-                isApproving={approve.isPending && approve.variables === n.id}
-                isRejecting={reject.isPending && reject.variables === n.id}
-                isArchiving={archive.isPending && archive.variables === n.id}
-                isDeleting={del.isPending && del.variables === n.id}
-                onClick={handleClick}
+            {items.map((item) => (
+              <InboxItemCard
+                key={`${item.kind}:${item.id}`}
+                item={item}
+                onNotificationClick={handleNotificationClick}
+                onMailClick={handleMailClick}
+                onApprovalClick={handleApprovalClick}
                 onArchive={handleArchive}
                 onDelete={handleDelete}
                 onApprove={handleApprove}
                 onReject={handleReject}
+                isApproving={approve.isPending && approve.variables === item.id}
+                isRejecting={reject.isPending && reject.variables === item.id}
+                isArchiving={archive.isPending && archive.variables === item.id}
+                isDeleting={del.isPending && del.variables === item.id}
               />
             ))}
             {hasNextPage && (
