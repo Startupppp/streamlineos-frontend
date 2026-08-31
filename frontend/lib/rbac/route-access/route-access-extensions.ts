@@ -106,9 +106,10 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   },
   {
     prefix: "/knowledge/wiki/spaces",
+    exact: true,
     product: "administration",
     permission: "kb:spaces:view",
-    reason: "Knowledge space management is administrative.",
+    reason: "Knowledge space management list is administrative. Individual space pages (/knowledge/wiki/spaces/[id]) are universal reading surfaces; only this listing is gated.",
   },
   {
     prefix: "/knowledge/wiki/templates",

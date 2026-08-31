@@ -1,3 +1,5 @@
+import { matchRouteAccessExtension } from "./route-access-extensions";
+
 export interface UniversalDescendant {
   readonly path: string;
   readonly subtree?: boolean;
@@ -151,6 +153,7 @@ function matchesDescendant(pathname: string, desc: UniversalDescendant): boolean
 
 export function matchUniversalRoute(pathname: string): UniversalRoute | null {
   if (isAccessAdministrationPath(pathname)) return null;
+  if (matchRouteAccessExtension(pathname) !== null) return null;
   for (const route of UNIVERSAL_ROUTES) {
     if (pathname === route.path) return route;
     if (route.subtree && pathname.startsWith(`${route.path}/`)) return route;

@@ -1,6 +1,6 @@
 import { collectAppRoutes } from "../app-routes";
 import { resolveRouteAccess, describeRouteAccess } from "../route-access";
-import { ROUTE_ACCESS_EXTENSIONS } from "../route-access-extensions";
+import { ROUTE_ACCESS_EXTENSIONS, matchRouteAccessExtension } from "../route-access-extensions";
 import { UNIVERSAL_ROUTES, isUniversalRoute } from "../universal-routes";
 
 describe("every authenticated route resolves through the registry", () => {
@@ -142,5 +142,25 @@ describe("§8 platform-core surfaces are universally accessible to every active 
   it("KB administration is NOT universal — gated on settings permission", () => {
     expect(isUniversalRoute("/knowledge/wiki/settings")).toBe(false);
     expect(resolveRouteAccess("/knowledge/wiki/settings").kind).toBe("permission");
+  });
+});
+
+describe("a gated route is never also a universal route", () => {
+  const probes = ROUTE_ACCESS_EXTENSIONS.flatMap((entry) =>
+    entry.exact ? [entry.prefix] : [entry.prefix, `${entry.prefix}/child`],
+  );
+
+  it.each(probes)("%s resolves gated, not universal", (path) => {
+    expect(matchRouteAccessExtension(path)).not.toBeNull();
+    expect(isUniversalRoute(path)).toBe(false);
+  });
+
+  it("no universal root's subtree swallows a gated prefix", () => {
+    const swallowed = ROUTE_ACCESS_EXTENSIONS.filter((entry) =>
+      UNIVERSAL_ROUTES.some(
+        (route) => route.subtree === true && entry.prefix.startsWith(`${route.path}/`),
+      ),
+    ).map((entry) => entry.prefix);
+    expect(swallowed).toEqual([]);
   });
 });

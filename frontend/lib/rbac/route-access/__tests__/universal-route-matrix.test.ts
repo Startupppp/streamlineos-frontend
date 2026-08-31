@@ -9,9 +9,13 @@ interface MatrixRow {
 }
 
 const MATRIX: readonly MatrixRow[] = [
+  // ── /notifications ──────────────────────────────────────────────────────────
+  // root read allowed
   { path: "/notifications", universalMatch: true, decisionKind: "universal", label: "notification inbox root" },
+  // approved descendant allowed (personal preferences)
   { path: "/notifications/preferences", universalMatch: true, decisionKind: "universal", label: "personal notification preferences" },
   { path: "/notifications/preferences/channels", universalMatch: true, decisionKind: "universal", label: "notification preferences sub-page" },
+  // administrative descendants DENIED
   { path: "/notifications/providers", universalMatch: false, decisionKind: "permission", label: "notification provider admin" },
   { path: "/notifications/providers/1", universalMatch: false, decisionKind: "permission", label: "notification provider detail" },
   { path: "/notifications/templates", universalMatch: false, decisionKind: "permission", label: "notification template admin" },
@@ -19,7 +23,10 @@ const MATRIX: readonly MatrixRow[] = [
   { path: "/notifications/policy", universalMatch: false, decisionKind: "permission", label: "notification policy admin" },
   { path: "/notifications/broadcasts", universalMatch: false, decisionKind: "permission", label: "broadcast admin" },
 
+  // ── /knowledge ──────────────────────────────────────────────────────────────
+  // root read allowed
   { path: "/knowledge", universalMatch: true, decisionKind: "universal", label: "knowledge root" },
+  // approved descendants allowed (wiki reading surfaces)
   { path: "/knowledge/wiki", universalMatch: true, decisionKind: "universal", label: "wiki reading root" },
   { path: "/knowledge/wiki/favorites", universalMatch: true, decisionKind: "universal", label: "wiki favorites" },
   { path: "/knowledge/wiki/favorites/sub", universalMatch: true, decisionKind: "universal", label: "wiki favorites sub-page" },
@@ -29,8 +36,8 @@ const MATRIX: readonly MatrixRow[] = [
   { path: "/knowledge/wiki/pages/123", universalMatch: true, decisionKind: "universal", label: "individual wiki page reading" },
   { path: "/knowledge/wiki/pages/123/history", universalMatch: true, decisionKind: "universal", label: "wiki page history" },
   { path: "/knowledge/chat", universalMatch: true, decisionKind: "universal", label: "knowledge AI chat" },
-  { path: "/inbox", universalMatch: true, decisionKind: "universal", label: "unified inbox" },
-  { path: "/knowledge/wiki/spaces/1", universalMatch: true, decisionKind: "permission", label: "individual space (nominally universal; extension gates kb:spaces:view)" },
+  { path: "/knowledge/wiki/spaces/1", universalMatch: true, decisionKind: "universal", label: "individual space page reading — extension is exact so only the list is gated" },
+  // administrative descendants DENIED
   { path: "/knowledge/wiki/settings", universalMatch: false, decisionKind: "permission", label: "wiki settings admin" },
   { path: "/knowledge/wiki/import", universalMatch: false, decisionKind: "permission", label: "wiki import admin" },
   { path: "/knowledge/wiki/analytics", universalMatch: false, decisionKind: "permission", label: "wiki analytics admin" },
@@ -39,45 +46,82 @@ const MATRIX: readonly MatrixRow[] = [
   { path: "/knowledge/wiki/templates", universalMatch: false, decisionKind: "permission", label: "wiki template management" },
   { path: "/knowledge/wiki/trash", universalMatch: false, decisionKind: "permission", label: "wiki trash admin" },
 
+  // ── /chat ───────────────────────────────────────────────────────────────────
+  // root read allowed
   { path: "/chat", universalMatch: true, decisionKind: "universal", label: "chat root" },
+  // approved descendants allowed (channels and invite acceptance)
   { path: "/chat/channels", universalMatch: true, decisionKind: "universal", label: "channel list" },
   { path: "/chat/channels/general", universalMatch: true, decisionKind: "universal", label: "channel conversation" },
   { path: "/chat/invite/token123", universalMatch: true, decisionKind: "universal", label: "invite acceptance" },
+  // administrative descendants DENIED
   { path: "/chat/settings", universalMatch: false, decisionKind: "permission", label: "org chat settings admin — gated on chat:org-settings:manage" },
   { path: "/chat/moderation", universalMatch: false, decisionKind: "permission", label: "huddle moderation admin — gated on chat:huddles:moderate" },
 
+  // ── /calendar ───────────────────────────────────────────────────────────────
+  // root read allowed (single unified calendar page)
   { path: "/calendar", universalMatch: true, decisionKind: "universal", label: "unified calendar" },
-  { path: "/calendar/settings", universalMatch: false, decisionKind: "permission", label: "calendar admin settings — gated on calendar:write" },
+  // administrative descendant DENIED
+  { path: "/calendar/settings", universalMatch: false, decisionKind: "permission", label: "calendar admin settings — gated on calendar:admin:manage" },
 
+  // ── /directory ──────────────────────────────────────────────────────────────
+  // root read allowed
   { path: "/directory", universalMatch: true, decisionKind: "universal", label: "people directory root" },
+  // individual profile is nav-resolved (not prefix-universal), not an admin denial
   { path: "/directory/123", universalMatch: false, decisionKind: "permission", label: "individual person profile — nav-resolved, not prefix-universal" },
+  // administrative descendant DENIED
   { path: "/directory/workers", universalMatch: false, decisionKind: "permission", label: "workforce admin — extension-gated on directory:workers:view" },
 
+  // ── /me ─────────────────────────────────────────────────────────────────────
+  // root read allowed — all /me/* is self-service universal (§8)
   { path: "/me", universalMatch: true, decisionKind: "universal", label: "self-service root" },
+  // approved descendants (ALL /me/* is self-service — no admin descendants exist here)
   { path: "/me/attendance", universalMatch: true, decisionKind: "universal", label: "own attendance" },
   { path: "/me/time-off", universalMatch: true, decisionKind: "universal", label: "own time-off" },
   { path: "/me/pay", universalMatch: true, decisionKind: "universal", label: "own pay" },
   { path: "/me/expenses", universalMatch: true, decisionKind: "universal", label: "own expenses" },
   { path: "/me/documents", universalMatch: true, decisionKind: "universal", label: "own documents" },
 
+  // ── /mail ───────────────────────────────────────────────────────────────────
+  // root read allowed — all /mail/* is universal (no admin descendants)
   { path: "/mail", universalMatch: true, decisionKind: "universal", label: "mail root" },
   { path: "/mail/inbox", universalMatch: true, decisionKind: "universal", label: "mail inbox" },
 
+  // ── /inbox ──────────────────────────────────────────────────────────────────
+  // root read allowed
+  { path: "/inbox", universalMatch: true, decisionKind: "universal", label: "unified inbox" },
+
+  // ── /dashboard and /home ────────────────────────────────────────────────────
+  // root read allowed — all /dashboard/* and /home/* are universal
+  { path: "/dashboard", universalMatch: true, decisionKind: "universal", label: "dashboard root" },
+  { path: "/dashboard/sub", universalMatch: true, decisionKind: "universal", label: "dashboard sub-page (subtree)" },
+  { path: "/home", universalMatch: true, decisionKind: "universal", label: "home alias root" },
+
+  // ── /announcements and /hr/announcements ────────────────────────────────────
+  // root read allowed — company announcements are universal reading
   { path: "/announcements", universalMatch: true, decisionKind: "universal", label: "announcements root" },
   { path: "/announcements/1", universalMatch: true, decisionKind: "universal", label: "announcement detail" },
+  { path: "/hr/announcements", universalMatch: true, decisionKind: "universal", label: "announcements under HR prefix — universal reading" },
 
+  // ── /referrals and /jobs ────────────────────────────────────────────────────
+  // root read allowed — member self-service universal
   { path: "/referrals", universalMatch: true, decisionKind: "universal", label: "referrals root" },
   { path: "/jobs", universalMatch: true, decisionKind: "universal", label: "internal job openings" },
 
+  // ── /settings ───────────────────────────────────────────────────────────────
+  // root read allowed (personal account landing)
   { path: "/settings", universalMatch: true, decisionKind: "universal", label: "personal account landing" },
+  // administrative descendants DENIED (organisation admin lives under /settings/*)
+  { path: "/settings/roles", universalMatch: false, decisionKind: "permission", label: "org role management — not personal account" },
+  { path: "/settings/billing", universalMatch: false, decisionKind: "permission", label: "billing admin — not personal account" },
 
+  // ── utility pages ───────────────────────────────────────────────────────────
   { path: "/access-denied", universalMatch: true, decisionKind: "universal", label: "access-denied page" },
   { path: "/access-suspended", universalMatch: true, decisionKind: "universal", label: "access-suspended page" },
 ];
 
 describe("universal route matrix — exact-by-default with explicit allowlist", () => {
   it("covers every declared universal root so a missing row cannot pass silently", () => {
-    expect(MATRIX.length).toBeGreaterThan(40);
+    expect(MATRIX.length).toBeGreaterThan(50);
   });
 
   it("isUniversalRoute matches every row's expectation", () => {
@@ -143,9 +187,11 @@ describe("universal route matrix — exact-by-default with explicit allowlist", 
     expect(resolveRouteAccess("/notifications/preferences").kind).toBe("universal");
   });
 
-  it("individual knowledge spaces are nominally universal while the management list is not", () => {
+  it("individual knowledge spaces are universal reading while the management list is not", () => {
     expect(isUniversalRoute("/knowledge/wiki/spaces/1")).toBe(true);
+    expect(resolveRouteAccess("/knowledge/wiki/spaces/1").kind).toBe("universal");
     expect(isUniversalRoute("/knowledge/wiki/spaces")).toBe(false);
+    expect(resolveRouteAccess("/knowledge/wiki/spaces").kind).toBe("permission");
   });
 
   it("workforce workers are gated even though /directory is a universal subtree", () => {
@@ -161,5 +207,26 @@ describe("universal route matrix — exact-by-default with explicit allowlist", 
     expect(isUniversalRoute("/settings")).toBe(true);
     expect(isUniversalRoute("/settings/roles")).toBe(false);
     expect(isUniversalRoute("/settings/billing")).toBe(false);
+  });
+
+  it("BITE: declaring an admin path as universal in the matrix would be caught — the test bites", () => {
+    const adminPath = "/notifications/providers";
+    const actualUniversal = isUniversalRoute(adminPath);
+    expect(actualUniversal).toBe(false);
+
+    const phantomExpectation = true;
+    expect(actualUniversal).not.toBe(phantomExpectation);
+  });
+
+  it("BITE: the matrix row for each admin descendant has universalMatch=false; flipping it to true would fail the main loop", () => {
+    const adminRows = MATRIX.filter((r) => !r.universalMatch && r.decisionKind === "permission");
+    expect(adminRows.length).toBeGreaterThan(10);
+    for (const row of adminRows) {
+      const actual = isUniversalRoute(row.path);
+      expect({ path: row.path, matchesPhantom: actual === true }).toEqual({
+        path: row.path,
+        matchesPhantom: false,
+      });
+    }
   });
 });
