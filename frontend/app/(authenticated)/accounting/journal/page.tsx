@@ -28,6 +28,7 @@ import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
 import { RecurringJournalsTab } from "@/features/accounting/core/recurring-journals-tab";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { cn } from "@/lib/utils";
 import type { JournalEntry, JournalEntryStatus } from "@/types/accounting";
 
@@ -130,17 +131,6 @@ function EntriesTab() {
     status: statusFilter === "ALL" ? undefined : statusFilter,
   });
 
-  useEffect(() => {
-    if (!query.data) return;
-    const nextCursor = query.data.pagination.nextCursor;
-    setCursors((prev) => {
-      if (prev[cursorIndex + 1] !== undefined) return prev;
-      const next = [...prev];
-      next[cursorIndex + 1] = nextCursor;
-      return next;
-    });
-  }, [query.data, cursorIndex]);
-
   function setParam(key: string, value: string): void {
     startTransition(() => {
       const params = new URLSearchParams(searchParams.toString());
@@ -171,20 +161,8 @@ function EntriesTab() {
     void query.refetch();
   }
 
-  function handlePageChange(page: number): void {
-    const targetIndex = page - 1;
-    if (targetIndex < 0) return;
-    if (targetIndex < cursors.length && cursors[targetIndex] !== undefined) {
-      setCursorIndex(targetIndex);
-    }
-  }
-
   const items = query.data?.data ?? [];
   const hasMore = query.data?.pagination?.hasMore ?? false;
-  const currentPage = cursorIndex + 1;
-  const syntheticTotal = hasMore
-    ? currentPage * PAGE_SIZE + 1
-    : (currentPage - 1) * PAGE_SIZE + items.length;
 
   const columns: DataTableColumn<JournalEntry>[] = [
     {
@@ -316,22 +294,34 @@ function EntriesTab() {
           onRetry={handleRetry}
         />
       ) : (
-        <DataTable<JournalEntry>
-          data={items}
-          columns={columns}
-          getRowKey={(row) => row.id}
-          isLoading={query.isLoading}
-          emptyState={emptyStateNode}
-          minWidth="580px"
-          className="flex-1 min-h-0"
-          pagination={{
-            mode: "server",
-            page: currentPage,
-            pageSize: PAGE_SIZE,
-            total: syntheticTotal,
-            onPageChange: handlePageChange,
-          }}
-        />
+        <>
+          <DataTable<JournalEntry>
+            data={items}
+            columns={columns}
+            getRowKey={(row) => row.id}
+            isLoading={query.isLoading}
+            emptyState={emptyStateNode}
+            minWidth="580px"
+            className="flex-1 min-h-0"
+          />
+          {(cursorIndex > 0 || hasMore) ? (
+            <CursorPageControls
+              page={cursorIndex + 1}
+              hasNext={hasMore}
+              onPrevious={() => setCursorIndex(Math.max(0, cursorIndex - 1))}
+              onNext={() => {
+                const next = query.data?.pagination.nextCursor ?? null;
+                setCursors((prev) => {
+                  const copy = prev.slice(0, cursorIndex + 1);
+                  copy.push(next);
+                  return copy;
+                });
+                setCursorIndex(cursorIndex + 1);
+              }}
+              className="mt-2"
+            />
+          ) : null}
+        </>
       )}
     </div>
   );

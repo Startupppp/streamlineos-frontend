@@ -188,12 +188,11 @@ export default function FinanceApprovalsPage() {
   const approvalsQuery = useApprovals({
     status: statusFilter === "ALL" ? undefined : statusFilter,
     recordType: recordTypeFilter === "All" ? undefined : recordTypeFilter,
-    page: 1,
-    pageSize: 100,
+    limit: 100,
   });
 
   const counts = countsQuery.data;
-  const items = approvalsQuery.data?.items ?? [];
+  const items = approvalsQuery.data?.data ?? [];
 
   const approvalColumns: DataTableColumn<ApprovalRequest>[] = [
     {

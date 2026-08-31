@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTransferIllustration } from "@/components/illustrations";
 import { Money } from "@/features/accounting/shared";
 import { useBankAccounts, useTransfers } from "@/hooks/api/accounting/banking";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import type { BankTransfer } from "@/hooks/api/accounting/banking";
 import { useCan } from "@/hooks/api/access";
 import { NewTransferDialog } from "./new-transfer-dialog";
@@ -41,10 +42,6 @@ export function TransfersClient() {
   const transfersQuery = useTransfers({ cursor: cursors[cursorIndex] ?? undefined, limit: PAGE_SIZE });
   const transfers = transfersQuery.data?.data ?? [];
   const hasMore = transfersQuery.data?.pagination.hasMore ?? false;
-  const currentPage = cursorIndex + 1;
-  const syntheticTotal = hasMore
-    ? currentPage * PAGE_SIZE + 1
-    : (currentPage - 1) * PAGE_SIZE + transfers.length;
 
   const columns: DataTableColumn<BankTransfer>[] = [
     {
@@ -98,20 +95,6 @@ export function TransfersClient() {
     },
   ];
 
-  function handlePageChange(newPage: number) {
-    if (newPage > currentPage && hasMore) {
-      const next = transfersQuery.data?.pagination.nextCursor ?? null;
-      setCursors((prev) => {
-        const copy = prev.slice(0, cursorIndex + 1);
-        copy.push(next);
-        return copy;
-      });
-      setCursorIndex(cursorIndex + 1);
-    } else if (newPage < currentPage) {
-      setCursorIndex(Math.max(0, cursorIndex - 1));
-    }
-  }
-
   function handleDialogOpen() {
     setDialogOpen(true);
   }
@@ -137,13 +120,6 @@ export function TransfersClient() {
           columns={columns}
           getRowKey={(row) => row.id}
           isLoading={transfersQuery.isLoading}
-          pagination={{
-            mode: "server",
-            page: currentPage,
-            pageSize: PAGE_SIZE,
-            total: syntheticTotal,
-            onPageChange: handlePageChange,
-          }}
           emptyState={
             <EmptyState
               illustration={<EmptyTransferIllustration className="w-32 h-32 opacity-80" />}
@@ -153,6 +129,23 @@ export function TransfersClient() {
             />
           }
         />
+        {(cursorIndex > 0 || hasMore) ? (
+          <CursorPageControls
+            page={cursorIndex + 1}
+            hasNext={hasMore}
+            onPrevious={() => setCursorIndex(Math.max(0, cursorIndex - 1))}
+            onNext={() => {
+              const next = transfersQuery.data?.pagination.nextCursor ?? null;
+              setCursors((prev) => {
+                const copy = prev.slice(0, cursorIndex + 1);
+                copy.push(next);
+                return copy;
+              });
+              setCursorIndex(cursorIndex + 1);
+            }}
+            className="mt-2"
+          />
+        ) : null}
       </div>
 
       {canManage && (

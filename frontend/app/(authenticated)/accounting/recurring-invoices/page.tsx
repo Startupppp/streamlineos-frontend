@@ -9,6 +9,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -155,10 +156,6 @@ export default function RecurringInvoicesPage() {
 
   const items = query.data?.data ?? [];
   const hasMore = query.data?.pagination.hasMore ?? false;
-  const currentPage = cursorIndex + 1;
-  const syntheticTotal = hasMore
-    ? currentPage * 20 + 1
-    : (currentPage - 1) * 20 + items.length;
 
   function handleNewClick(): void {
     setEditTemplate(undefined);
@@ -179,20 +176,6 @@ export default function RecurringInvoicesPage() {
       setActiveFilter(value);
       setCursors([null]);
       setCursorIndex(0);
-    }
-  }
-
-  function handlePageChange(newPage: number): void {
-    if (newPage > currentPage && hasMore) {
-      const next = query.data?.pagination.nextCursor ?? null;
-      setCursors((prev) => {
-        const copy = prev.slice(0, cursorIndex + 1);
-        copy.push(next);
-        return copy;
-      });
-      setCursorIndex(cursorIndex + 1);
-    } else if (newPage < currentPage) {
-      setCursorIndex(Math.max(0, cursorIndex - 1));
     }
   }
 
@@ -286,28 +269,40 @@ export default function RecurringInvoicesPage() {
             description={getErrorMessage(query.error)}
           />
         ) : (
-          <DataTable
-            className="flex-1 min-h-0"
-            data={items}
-            columns={columns}
-            getRowKey={(row) => row.id}
-            isLoading={query.isLoading}
-            pagination={{
-              mode: "server",
-              page: currentPage,
-              pageSize: 20,
-              total: syntheticTotal,
-              onPageChange: handlePageChange,
-            }}
-            emptyState={
-              <EmptyState
-                illustrationPreset="automations"
-                title="No recurring invoice templates"
-                description="Create templates to auto-generate invoices on a schedule."
-                action={{ label: "New template", onClick: handleNewClick }}
+          <>
+            <DataTable
+              className="flex-1 min-h-0"
+              data={items}
+              columns={columns}
+              getRowKey={(row) => row.id}
+              isLoading={query.isLoading}
+              emptyState={
+                <EmptyState
+                  illustrationPreset="automations"
+                  title="No recurring invoice templates"
+                  description="Create templates to auto-generate invoices on a schedule."
+                  action={{ label: "New template", onClick: handleNewClick }}
+                />
+              }
+            />
+            {(cursorIndex > 0 || hasMore) ? (
+              <CursorPageControls
+                page={cursorIndex + 1}
+                hasNext={hasMore}
+                onPrevious={() => setCursorIndex(Math.max(0, cursorIndex - 1))}
+                onNext={() => {
+                  const next = query.data?.pagination.nextCursor ?? null;
+                  setCursors((prev) => {
+                    const copy = prev.slice(0, cursorIndex + 1);
+                    copy.push(next);
+                    return copy;
+                  });
+                  setCursorIndex(cursorIndex + 1);
+                }}
+                className="mt-2"
               />
-            }
-          />
+            ) : null}
+          </>
         )}
       </div>
 

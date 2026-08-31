@@ -8,6 +8,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -67,28 +68,6 @@ export default function VendorPaymentsPage() {
     vendorId,
   });
 
-  useEffect(() => {
-    if (!paidQuery.data) return;
-    const nextCursor = paidQuery.data.pagination.nextCursor;
-    setPaidCursors((prev) => {
-      if (prev[cursorIndex + 1] !== undefined) return prev;
-      const next = [...prev];
-      next[cursorIndex + 1] = nextCursor;
-      return next;
-    });
-  }, [paidQuery.data, cursorIndex]);
-
-  useEffect(() => {
-    if (!partialQuery.data) return;
-    const nextCursor = partialQuery.data.pagination.nextCursor;
-    setPartialCursors((prev) => {
-      if (prev[cursorIndex + 1] !== undefined) return prev;
-      const next = [...prev];
-      next[cursorIndex + 1] = nextCursor;
-      return next;
-    });
-  }, [partialQuery.data, cursorIndex]);
-
   const paidItems = paidQuery.data?.data ?? [];
   const partialItems = partialQuery.data?.data ?? [];
   const allItems: PurchaseBillSummary[] = [...paidItems, ...partialItems];
@@ -100,10 +79,6 @@ export default function VendorPaymentsPage() {
   const paidHasMore = paidQuery.data?.pagination?.hasMore ?? false;
   const partialHasMore = partialQuery.data?.pagination?.hasMore ?? false;
   const hasMore = paidHasMore || partialHasMore;
-  const currentPage = cursorIndex + 1;
-  const syntheticTotal = hasMore
-    ? currentPage * PAGE_SIZE * 2 + 1
-    : (currentPage - 1) * PAGE_SIZE * 2 + allItems.length;
 
   function handleRetry(): void {
     void paidQuery.refetch();
@@ -125,16 +100,6 @@ export default function VendorPaymentsPage() {
 
   function handleAllocationDialogChange(open: boolean): void {
     setAllocationDialogOpen(open);
-  }
-
-  function handlePageChange(page: number): void {
-    const targetIndex = page - 1;
-    if (targetIndex < 0) return;
-    const hasPaidCursor = targetIndex < paidCursors.length && paidCursors[targetIndex] !== undefined;
-    const hasPartialCursor = targetIndex < partialCursors.length && partialCursors[targetIndex] !== undefined;
-    if (hasPaidCursor && hasPartialCursor) {
-      setCursorIndex(targetIndex);
-    }
   }
 
   const columns: DataTableColumn<PurchaseBillSummary>[] = [
@@ -233,28 +198,46 @@ export default function VendorPaymentsPage() {
             onRetry={handleRetry}
           />
         ) : (
-          <DataTable
-            data={allItems}
-            columns={columns}
-            getRowKey={(row) => row.id}
-            isLoading={isLoading}
-            className="flex-1 min-h-0"
-            pagination={{
-              mode: "server",
-              page: currentPage,
-              pageSize: PAGE_SIZE * 2,
-              total: syntheticTotal,
-              onPageChange: handlePageChange,
-            }}
-            emptyState={
-              <EmptyState
-                illustrationPreset="tasks"
-                title="No payments found"
-                description="Paid and partially paid bills will appear here."
+          <>
+            <DataTable
+              data={allItems}
+              columns={columns}
+              getRowKey={(row) => row.id}
+              isLoading={isLoading}
+              className="flex-1 min-h-0"
+              emptyState={
+                <EmptyState
+                  illustrationPreset="tasks"
+                  title="No payments found"
+                  description="Paid and partially paid bills will appear here."
+                />
+              }
+              minWidth="640px"
+            />
+            {(cursorIndex > 0 || hasMore) ? (
+              <CursorPageControls
+                page={cursorIndex + 1}
+                hasNext={hasMore}
+                onPrevious={() => setCursorIndex(Math.max(0, cursorIndex - 1))}
+                onNext={() => {
+                  const paidNext = paidQuery.data?.pagination.nextCursor ?? null;
+                  const partialNext = partialQuery.data?.pagination.nextCursor ?? null;
+                  setPaidCursors((prev) => {
+                    const copy = prev.slice(0, cursorIndex + 1);
+                    copy.push(paidNext);
+                    return copy;
+                  });
+                  setPartialCursors((prev) => {
+                    const copy = prev.slice(0, cursorIndex + 1);
+                    copy.push(partialNext);
+                    return copy;
+                  });
+                  setCursorIndex(cursorIndex + 1);
+                }}
+                className="mt-2"
               />
-            }
-            minWidth="640px"
-          />
+            ) : null}
+          </>
         )}
       </div>
 

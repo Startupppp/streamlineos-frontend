@@ -9,6 +9,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -138,10 +139,6 @@ export default function CreditNotesPage() {
 
   const credits = query.data?.data ?? [];
   const hasMore = query.data?.pagination.hasMore ?? false;
-  const currentPage = cursorIndex + 1;
-  const syntheticTotal = hasMore
-    ? currentPage * 20 + 1
-    : (currentPage - 1) * 20 + credits.length;
 
   const filteredCredits = customerSearch.trim()
     ? credits.filter((c) =>
@@ -165,20 +162,6 @@ export default function CreditNotesPage() {
 
   function handleCustomerSearchChange(value: string): void {
     setCustomerSearch(value);
-  }
-
-  function handlePageChange(newPage: number): void {
-    if (newPage > currentPage && hasMore) {
-      const next = query.data?.pagination.nextCursor ?? null;
-      setCursors((prev) => {
-        const copy = prev.slice(0, cursorIndex + 1);
-        copy.push(next);
-        return copy;
-      });
-      setCursorIndex(cursorIndex + 1);
-    } else if (newPage < currentPage) {
-      setCursorIndex(Math.max(0, cursorIndex - 1));
-    }
   }
 
   function handleOpenApply(credit: CreditNote): void {
@@ -299,13 +282,6 @@ export default function CreditNotesPage() {
           getRowKey={(row) => row.id}
           isLoading={query.isLoading}
           className="flex-1 min-h-0"
-          pagination={{
-            mode: "server",
-            page: currentPage,
-            pageSize: 20,
-            total: syntheticTotal,
-            onPageChange: handlePageChange,
-          }}
           emptyState={
             <EmptyState
               illustrationPreset="documents"
@@ -315,6 +291,23 @@ export default function CreditNotesPage() {
             />
           }
         />
+        {(cursorIndex > 0 || hasMore) ? (
+          <CursorPageControls
+            page={cursorIndex + 1}
+            hasNext={hasMore}
+            onPrevious={() => setCursorIndex(Math.max(0, cursorIndex - 1))}
+            onNext={() => {
+              const next = query.data?.pagination.nextCursor ?? null;
+              setCursors((prev) => {
+                const copy = prev.slice(0, cursorIndex + 1);
+                copy.push(next);
+                return copy;
+              });
+              setCursorIndex(cursorIndex + 1);
+            }}
+            className="mt-2"
+          />
+        ) : null}
       </div>
 
       <CreditNoteFormSheet open={createOpen} onOpenChange={handleCreateOpenChange} />

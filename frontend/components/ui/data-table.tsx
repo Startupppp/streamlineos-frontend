@@ -125,15 +125,16 @@ export function DataTable<T>({
     }
 
     for (const col of columns) {
+      const sortValueFn = col.sortValue;
       defs.push({
         id: col.key,
         header: col.header,
         cell: ({ row }) => col.cell(row.original),
         enableSorting: col.sortable ?? false,
-        sortingFn: col.sortValue
+        sortingFn: sortValueFn
           ? (rowA, rowB) => {
-              const a = col.sortValue!(rowA.original);
-              const b = col.sortValue!(rowB.original);
+              const a = sortValueFn(rowA.original);
+              const b = sortValueFn(rowB.original);
               return a < b ? -1 : a > b ? 1 : 0;
             }
           : "auto",
@@ -151,14 +152,14 @@ export function DataTable<T>({
     state: {
       sorting: sortState ? externalSorting : sorting,
       rowSelection,
-      pagination: isServerPagination
-        ? { pageIndex: serverPag!.page - 1, pageSize: serverPag!.pageSize }
+      pagination: serverPag !== null
+        ? { pageIndex: serverPag.page - 1, pageSize: serverPag.pageSize }
         : { pageIndex: internalPage, pageSize: clientPageSize },
     },
     manualSorting: sortState !== undefined,
     manualPagination: isServerPagination,
-    pageCount: isServerPagination
-      ? Math.ceil(serverPag!.total / serverPag!.pageSize)
+    pageCount: serverPag !== null
+      ? Math.ceil(serverPag.total / serverPag.pageSize)
       : undefined,
     enableRowSelection: !selection
       ? false
@@ -185,11 +186,11 @@ export function DataTable<T>({
       }
     },
     onPaginationChange: (updater) => {
-      if (isServerPagination) {
-        const prev = { pageIndex: serverPag!.page - 1, pageSize: serverPag!.pageSize };
+      if (serverPag) {
+        const prev = { pageIndex: serverPag.page - 1, pageSize: serverPag.pageSize };
         const next = typeof updater === "function" ? updater(prev) : updater;
         if (next.pageIndex !== prev.pageIndex) {
-          serverPag!.onPageChange(next.pageIndex + 1);
+          serverPag.onPageChange(next.pageIndex + 1);
         }
       } else {
         const prev = { pageIndex: internalPage, pageSize: clientPageSize };
@@ -204,12 +205,12 @@ export function DataTable<T>({
 
   const rows = table.getRowModel().rows;
 
-  const currentPage = isServerPagination ? serverPag!.page - 1 : internalPage;
-  const totalPages = isServerPagination
-    ? Math.ceil(serverPag!.total / serverPag!.pageSize)
+  const currentPage = serverPag !== null ? serverPag.page - 1 : internalPage;
+  const totalPages = serverPag !== null
+    ? Math.ceil(serverPag.total / serverPag.pageSize)
     : table.getPageCount();
-  const totalItems = isServerPagination ? serverPag!.total : data.length;
-  const pSize = isServerPagination ? serverPag!.pageSize : clientPageSize;
+  const totalItems = serverPag !== null ? serverPag.total : data.length;
+  const pSize = serverPag !== null ? serverPag.pageSize : clientPageSize;
   const hasPageSizeControl = !!(serverPag?.onPageSizeChange ?? clientPag?.onPageSizeChange);
   const showPagination =
     pagination !== undefined &&

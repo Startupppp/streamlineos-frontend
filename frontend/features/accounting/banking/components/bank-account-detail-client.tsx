@@ -23,6 +23,7 @@ import { BankTxnStatusBadge } from "./bank-txn-status-badge";
 import { useBankAccount, useBankTransactions } from "@/hooks/api/accounting/banking";
 import type { BankTransaction, BankTxnStatus } from "@/hooks/api/accounting/banking";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 
 type StatusFilter = "ALL" | BankTxnStatus;
 
@@ -154,10 +155,6 @@ export function BankAccountDetailClient({ bankAccountId }: Props) {
   const account = accountQuery.data;
   const txns = txnQuery.data?.data ?? [];
   const hasMore = txnQuery.data?.pagination.hasMore ?? false;
-  const currentPage = cursorIndex + 1;
-  const syntheticTotal = hasMore
-    ? currentPage * PAGE_SIZE + 1
-    : (currentPage - 1) * PAGE_SIZE + txns.length;
 
   function handleStatusChange(value: string) {
     if (isTxnStatus(value)) {
@@ -179,20 +176,6 @@ export function BankAccountDetailClient({ bankAccountId }: Props) {
   function handleSearchChange(value: string) {
     setSearch(value);
     resetCursor();
-  }
-
-  function handlePageChange(newPage: number) {
-    if (newPage > currentPage && hasMore) {
-      const next = txnQuery.data?.pagination.nextCursor ?? null;
-      setCursors((prev) => {
-        const copy = prev.slice(0, cursorIndex + 1);
-        copy.push(next);
-        return copy;
-      });
-      setCursorIndex(cursorIndex + 1);
-    } else if (newPage < currentPage) {
-      setCursorIndex(Math.max(0, cursorIndex - 1));
-    }
   }
 
   return (
@@ -258,33 +241,45 @@ export function BankAccountDetailClient({ bankAccountId }: Props) {
             <Skeleton className="h-64 w-full rounded-xl" />
           </div>
         ) : (
-          <DataTable
-            className="flex-1 min-h-0"
-            data={txns}
-            columns={TXN_COLUMNS}
-            getRowKey={(row) => row.id}
-            isLoading={txnQuery.isLoading}
-            pagination={{
-              mode: "server",
-              page: currentPage,
-              pageSize: PAGE_SIZE,
-              total: syntheticTotal,
-              onPageChange: handlePageChange,
-            }}
-            search={{
-              value: search,
-              onChange: handleSearchChange,
-              placeholder: "Search transactions…",
-            }}
-            emptyState={
-              <EmptyState
-                title="No transactions"
-                description="Import a bank statement to see transactions here."
-                action={{ label: "Import Statement", href: `/accounting/banking/import?bankAccountId=${id}` }}
-                compact
+          <>
+            <DataTable
+              className="flex-1 min-h-0"
+              data={txns}
+              columns={TXN_COLUMNS}
+              getRowKey={(row) => row.id}
+              isLoading={txnQuery.isLoading}
+              search={{
+                value: search,
+                onChange: handleSearchChange,
+                placeholder: "Search transactions…",
+              }}
+              emptyState={
+                <EmptyState
+                  title="No transactions"
+                  description="Import a bank statement to see transactions here."
+                  action={{ label: "Import Statement", href: `/accounting/banking/import?bankAccountId=${id}` }}
+                  compact
+                />
+              }
+            />
+            {(cursorIndex > 0 || hasMore) ? (
+              <CursorPageControls
+                page={cursorIndex + 1}
+                hasNext={hasMore}
+                onPrevious={() => setCursorIndex(Math.max(0, cursorIndex - 1))}
+                onNext={() => {
+                  const next = txnQuery.data?.pagination.nextCursor ?? null;
+                  setCursors((prev) => {
+                    const copy = prev.slice(0, cursorIndex + 1);
+                    copy.push(next);
+                    return copy;
+                  });
+                  setCursorIndex(cursorIndex + 1);
+                }}
+                className="mt-2"
               />
-            }
-          />
+            ) : null}
+          </>
         )}
       </div>
     </PageWrapper>

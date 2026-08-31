@@ -108,8 +108,8 @@ export default function AssetDetailPage() {
   const canManage = useCan("accounting:assets:manage");
 
   const { data: asset, isLoading, error, refetch } = useAsset(assetId);
-  const categoriesQuery = useAssetCategories({ pageSize: 100 });
-  const categories = categoriesQuery.data?.items ?? [];
+  const categoriesQuery = useAssetCategories({ limit: 100 });
+  const categories = categoriesQuery.data?.data ?? [];
 
   const activateMutation = useActivateAsset(assetId);
   const disposeMutation = useDisposeAsset(assetId);

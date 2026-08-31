@@ -49,7 +49,7 @@ import {
 } from "@/hooks/api/workflows";
 import { WorkflowCardItem } from "@/features/workflows/components/workflow-card";
 import { CreateWorkflowDialog } from "@/features/workflows/components/create-workflow-dialog";
-import { TablePagination } from "@/components/ui/table-pagination";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 
 type StatusFilter = WorkflowStatus | "all";
 
@@ -88,24 +88,9 @@ export default function WorkflowsPage() {
   const remove = useDeleteWorkflow();
   const duplicate = useDuplicateWorkflow();
 
-  useEffect(() => {
-    if (!data) return;
-    const nextCursor = data.pagination.nextCursor;
-    setCursors((prev) => {
-      if (prev[cursorIndex + 1] !== undefined) return prev;
-      const next = [...prev];
-      next[cursorIndex + 1] = nextCursor;
-      return next;
-    });
-  }, [data, cursorIndex]);
-
   const workflows = data?.data ?? [];
   const hasFilters = search.length > 0 || statusFilter !== "all";
   const hasMore = data?.pagination?.hasMore ?? false;
-  const currentPage = cursorIndex + 1;
-  const syntheticTotal = hasMore
-    ? currentPage * WORKFLOW_PAGE_SIZE + 1
-    : (currentPage - 1) * WORKFLOW_PAGE_SIZE + workflows.length;
 
   function handleOpenCreate() {
     setCreateOpen(true);
@@ -154,14 +139,6 @@ export default function WorkflowsPage() {
 
   function handleRetry() {
     void refetch();
-  }
-
-  function handlePageChange(newPage: number) {
-    const targetIndex = newPage - 1;
-    if (targetIndex < 0) return;
-    if (targetIndex < cursors.length && cursors[targetIndex] !== undefined) {
-      setCursorIndex(targetIndex);
-    }
   }
 
   return (
@@ -287,14 +264,22 @@ export default function WorkflowsPage() {
                 ))}
               </div>
             </AnimatePresence>
-            {(syntheticTotal > WORKFLOW_PAGE_SIZE || currentPage > 1) && (
-              <TablePagination
-                page={currentPage}
-                pageSize={WORKFLOW_PAGE_SIZE}
-                total={syntheticTotal}
-                onPageChange={handlePageChange}
+            {(cursorIndex > 0 || hasMore) ? (
+              <CursorPageControls
+                page={cursorIndex + 1}
+                hasNext={hasMore}
+                onPrevious={() => setCursorIndex(Math.max(0, cursorIndex - 1))}
+                onNext={() => {
+                  const next = data?.pagination.nextCursor ?? null;
+                  setCursors((prev) => {
+                    const copy = prev.slice(0, cursorIndex + 1);
+                    copy.push(next);
+                    return copy;
+                  });
+                  setCursorIndex(cursorIndex + 1);
+                }}
               />
-            )}
+            ) : null}
           </>
         )}
       </div>

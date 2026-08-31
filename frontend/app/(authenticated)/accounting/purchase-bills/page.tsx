@@ -37,6 +37,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
@@ -287,17 +288,6 @@ export default function PurchaseBillsListPage() {
     status: statusParam === "ALL" ? undefined : statusParam,
   });
 
-  useEffect(() => {
-    if (!query.data) return;
-    const nextCursor = query.data.pagination.nextCursor;
-    setCursors((prev) => {
-      if (prev[cursorIndex + 1] !== undefined) return prev;
-      const next = [...prev];
-      next[cursorIndex + 1] = nextCursor;
-      return next;
-    });
-  }, [query.data, cursorIndex]);
-
   function setParam(key: string, value: string): void {
     startTransition(() => {
       const params = new URLSearchParams(searchParams.toString());
@@ -320,20 +310,8 @@ export default function PurchaseBillsListPage() {
     void query.refetch();
   }
 
-  function handlePageChange(page: number): void {
-    const targetIndex = page - 1;
-    if (targetIndex < 0) return;
-    if (targetIndex < cursors.length && cursors[targetIndex] !== undefined) {
-      setCursorIndex(targetIndex);
-    }
-  }
-
   const items = query.data?.data ?? [];
   const hasMore = query.data?.pagination?.hasMore ?? false;
-  const currentPage = cursorIndex + 1;
-  const syntheticTotal = hasMore
-    ? currentPage * PAGE_SIZE + 1
-    : (currentPage - 1) * PAGE_SIZE + items.length;
   const columns = buildColumns(canApprove);
 
   return (
@@ -376,29 +354,41 @@ export default function PurchaseBillsListPage() {
             onRetry={handleRetry}
           />
         ) : (
-          <DataTable<PurchaseBillSummary>
-            data={items}
-            columns={columns}
-            getRowKey={(row) => row.id}
-            isLoading={query.isLoading}
-            minWidth="680px"
-            className="flex-1 min-h-0"
-            pagination={{
-              mode: "server",
-              page: currentPage,
-              pageSize: PAGE_SIZE,
-              total: syntheticTotal,
-              onPageChange: handlePageChange,
-            }}
-            emptyState={
-              <EmptyState
-                illustration={<EmptyExpensesIllustration />}
-                title="No purchase bills yet"
-                description="Record a vendor bill to start tracking accounts payable."
-                action={{ label: "New bill", href: "/accounting/purchase-bills/new" }}
+          <>
+            <DataTable<PurchaseBillSummary>
+              data={items}
+              columns={columns}
+              getRowKey={(row) => row.id}
+              isLoading={query.isLoading}
+              minWidth="680px"
+              className="flex-1 min-h-0"
+              emptyState={
+                <EmptyState
+                  illustration={<EmptyExpensesIllustration />}
+                  title="No purchase bills yet"
+                  description="Record a vendor bill to start tracking accounts payable."
+                  action={{ label: "New bill", href: "/accounting/purchase-bills/new" }}
+                />
+              }
+            />
+            {(cursorIndex > 0 || hasMore) ? (
+              <CursorPageControls
+                page={cursorIndex + 1}
+                hasNext={hasMore}
+                onPrevious={() => setCursorIndex(Math.max(0, cursorIndex - 1))}
+                onNext={() => {
+                  const next = query.data?.pagination.nextCursor ?? null;
+                  setCursors((prev) => {
+                    const copy = prev.slice(0, cursorIndex + 1);
+                    copy.push(next);
+                    return copy;
+                  });
+                  setCursorIndex(cursorIndex + 1);
+                }}
+                className="mt-2"
               />
-            }
-          />
+            ) : null}
+          </>
         )}
       </div>
     </PageWrapper>

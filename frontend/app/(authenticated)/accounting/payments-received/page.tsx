@@ -8,6 +8,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -176,11 +177,7 @@ export default function PaymentsReceivedPage() {
   });
 
   const hasMore = data?.pagination.hasMore ?? false;
-  const currentPage = cursorIndex + 1;
   const items = data?.data ?? [];
-  const syntheticTotal = hasMore
-    ? currentPage * 50 + 1
-    : (currentPage - 1) * 50 + items.length;
 
   function handleMethodFilterChange(value: string): void {
     if (value === ALL_METHODS) {
@@ -190,20 +187,6 @@ export default function PaymentsReceivedPage() {
     }
     setCursors([null]);
     setCursorIndex(0);
-  }
-
-  function handlePageChange(newPage: number): void {
-    if (newPage > currentPage && hasMore) {
-      const next = data?.pagination.nextCursor ?? null;
-      setCursors((prev) => {
-        const copy = prev.slice(0, cursorIndex + 1);
-        copy.push(next);
-        return copy;
-      });
-      setCursorIndex(cursorIndex + 1);
-    } else if (newPage < currentPage) {
-      setCursorIndex(Math.max(0, cursorIndex - 1));
-    }
   }
 
   function handleViewPayment(row: ArPayment): void {
@@ -311,21 +294,33 @@ export default function PaymentsReceivedPage() {
             description="Record payments on invoices to see them here"
           />
         ) : (
-          <DataTable
-            data={items}
-            columns={columns}
-            getRowKey={(row) => String(row.id)}
-            isLoading={isLoading}
-            onRowClick={handleViewPayment}
-            className="flex-1 min-h-0"
-            pagination={{
-              mode: "server",
-              pageSize: 50,
-              page: currentPage,
-              total: syntheticTotal,
-              onPageChange: handlePageChange,
-            }}
-          />
+          <>
+            <DataTable
+              data={items}
+              columns={columns}
+              getRowKey={(row) => String(row.id)}
+              isLoading={isLoading}
+              onRowClick={handleViewPayment}
+              className="flex-1 min-h-0"
+            />
+            {(cursorIndex > 0 || hasMore) ? (
+              <CursorPageControls
+                page={cursorIndex + 1}
+                hasNext={hasMore}
+                onPrevious={() => setCursorIndex(Math.max(0, cursorIndex - 1))}
+                onNext={() => {
+                  const next = data?.pagination.nextCursor ?? null;
+                  setCursors((prev) => {
+                    const copy = prev.slice(0, cursorIndex + 1);
+                    copy.push(next);
+                    return copy;
+                  });
+                  setCursorIndex(cursorIndex + 1);
+                }}
+                className="mt-2"
+              />
+            ) : null}
+          </>
         )}
       </div>
 

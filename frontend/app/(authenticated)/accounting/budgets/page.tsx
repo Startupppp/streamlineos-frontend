@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyReportIllustration } from "@/components/illustrations";
@@ -185,10 +186,6 @@ export default function BudgetsListPage() {
 
   const items = query.data?.data ?? [];
   const hasMore = query.data?.pagination.hasMore ?? false;
-  const currentPage = cursorIndex + 1;
-  const syntheticTotal = hasMore
-    ? currentPage * PAGE_SIZE + 1
-    : (currentPage - 1) * PAGE_SIZE + items.length;
 
   function handleStatusFilterChange(value: string): void {
     if (isStatusFilter(value)) {
@@ -202,20 +199,6 @@ export default function BudgetsListPage() {
     setFiscalYear(event.target.value);
     setCursors([null]);
     setCursorIndex(0);
-  }
-
-  function handlePageChange(newPage: number): void {
-    if (newPage > currentPage && hasMore) {
-      const next = query.data?.pagination.nextCursor ?? null;
-      setCursors((prev) => {
-        const copy = prev.slice(0, cursorIndex + 1);
-        copy.push(next);
-        return copy;
-      });
-      setCursorIndex(cursorIndex + 1);
-    } else if (newPage < currentPage) {
-      setCursorIndex(Math.max(0, cursorIndex - 1));
-    }
   }
 
   function handleRetry(): void {
@@ -309,14 +292,24 @@ export default function BudgetsListPage() {
               />
             }
             minWidth="700px"
-            pagination={{
-              mode: "server",
-              page: currentPage,
-              pageSize: PAGE_SIZE,
-              total: syntheticTotal,
-              onPageChange: handlePageChange,
-            }}
           />
+          {(cursorIndex > 0 || hasMore) ? (
+            <CursorPageControls
+              page={cursorIndex + 1}
+              hasNext={hasMore}
+              onPrevious={() => setCursorIndex(Math.max(0, cursorIndex - 1))}
+              onNext={() => {
+                const next = query.data?.pagination.nextCursor ?? null;
+                setCursors((prev) => {
+                  const copy = prev.slice(0, cursorIndex + 1);
+                  copy.push(next);
+                  return copy;
+                });
+                setCursorIndex(cursorIndex + 1);
+              }}
+              className="mt-2"
+            />
+          ) : null}
         )}
       </div>
 

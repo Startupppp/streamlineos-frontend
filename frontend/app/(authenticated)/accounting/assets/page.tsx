@@ -32,10 +32,10 @@ export default function FixedAssetsPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<AssetCategory | null>(null);
-  const categoriesQuery = useAssetCategories({ pageSize: 100 });
-  const categories = categoriesQuery.data?.items ?? [];
+  const categoriesQuery = useAssetCategories({ limit: 100 });
+  const categories = categoriesQuery.data?.data ?? [];
   const assetsQuery = useAssets({
-    pageSize: 100,
+    limit: 100,
     status: statusFilter === "ALL" ? undefined : statusFilter,
     categoryId: categoryFilter === "ALL" ? undefined : Number(categoryFilter),
   });
@@ -82,7 +82,7 @@ export default function FixedAssetsPage() {
         <TabsContent value="assets" className={TABS_CONTENT_PAGE_BODY_CLASS}>
           <AssetFilters status={statusFilter} categoryId={categoryFilter} categories={categories} onStatusChange={handleStatusChange} onCategoryChange={setCategoryFilter} />
           {assetsQuery.error ? <ErrorState title="Failed to load assets" description={getErrorMessage(assetsQuery.error)} onRetry={() => void assetsQuery.refetch()} /> :
-            <AssetTable items={assetsQuery.data?.items ?? []} isLoading={assetsQuery.isLoading} onRowClick={handleAssetRowClick} emptyState={<EmptyState illustration={<EmptyReportIllustration />} title="No assets yet" description="Add your first fixed asset to start tracking depreciation." action={canCreate ? { label: "Add Asset", onClick: () => setCreateOpen(true) } : undefined} />} />}
+            <AssetTable items={assetsQuery.data?.data ?? []} isLoading={assetsQuery.isLoading} onRowClick={handleAssetRowClick} emptyState={<EmptyState illustration={<EmptyReportIllustration />} title="No assets yet" description="Add your first fixed asset to start tracking depreciation." action={canCreate ? { label: "Add Asset", onClick: () => setCreateOpen(true) } : undefined} />} />}
         </TabsContent>
         <TabsContent value="categories" className={TABS_CONTENT_PAGE_BODY_CLASS}>
           <div className="mb-4 flex justify-end">{canCreate && <Button size="sm" onClick={handleOpenCreateCategory}><Plus className="mr-1 size-4" />Add Category</Button>}</div>
