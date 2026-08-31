@@ -355,7 +355,7 @@ interface CreatePurchaseBillLine {
   hsnSacCode?: string;
   quantity: number;
   rate: number;
-  gstRate: number;
+  gstRate: 0 | 5 | 12 | 18 | 28;
 }
 
 export interface CreatePurchaseBillInput {

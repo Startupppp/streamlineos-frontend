@@ -30,6 +30,8 @@ export const useUsers = (
         ...(params?.role ? { role: params.role } : {}),
         ...(params?.departmentId ? { departmentId: String(params.departmentId) } : {}),
         ...(params?.branchId ? { branchId: String(params.branchId) } : {}),
+        ...(params?.teamId ? { teamId: params.teamId } : {}),
+        ...(params?.managerUserId ? { managerUserId: params.managerUserId } : {}),
         ...(params?.sortBy ? { sortBy: params.sortBy } : {}),
         ...(params?.sortOrder ? { sortOrder: params.sortOrder } : {}),
       }),

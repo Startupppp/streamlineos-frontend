@@ -41,7 +41,7 @@ export interface GlParams {
   clientId?: number;
   vendorId?: number;
   projectId?: number;
-  departmentId?: number;
+  departmentId?: string;
   page?: number;
   pageSize?: number;
 }

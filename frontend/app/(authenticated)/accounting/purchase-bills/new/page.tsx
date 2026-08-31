@@ -23,6 +23,7 @@ import {
   todayIso,
   num,
   computeTotals,
+  GST_RATE_MAP,
 } from "@/features/accounting/purchases/bill-form-schemas";
 import type { NewBillFormValues } from "@/features/accounting/purchases/bill-form-schemas";
 import { BillNewFormBody } from "@/features/accounting/purchases/bill-new-form-body";
@@ -177,7 +178,7 @@ export default function NewPurchaseBillPage() {
         hsnSacCode: it.hsnSacCode.trim() || undefined,
         quantity: num(it.quantity),
         rate: num(it.rate),
-        gstRate: num(it.gstRate),
+        gstRate: GST_RATE_MAP[it.gstRate],
       })),
     };
 
