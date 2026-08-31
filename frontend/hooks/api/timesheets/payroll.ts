@@ -97,11 +97,6 @@ export function useTimesheetPayrollExports(limit = 20) {
   });
 }
 
-export function useAllTimesheetPayrollExports(): TimesheetExportDto[] {
-  const { data } = useTimesheetPayrollExports();
-  return data?.pages.flatMap((p) => p.data) ?? [];
-}
-
 export function useAckPayrollExport() {
   const qc = useQueryClient();
   return useMutation({

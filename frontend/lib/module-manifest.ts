@@ -3,7 +3,6 @@ import { moduleManifestSchema } from "./module-manifest-schema";
 import type { ModuleEntry, ModuleManifest } from "./module-manifest-schema";
 
 export type { ModuleEntry, ModuleManifest };
-export type { ModuleLadder } from "./module-manifest-schema";
 
 export const EXPECTED_MANIFEST_VERSION = 1;
 

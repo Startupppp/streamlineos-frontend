@@ -1,11 +1,3 @@
-export const CONTACT_ROLE_DEFAULTS = [
-  "decision_maker",
-  "influencer",
-  "champion",
-  "blocker",
-  "economic_buyer",
-  "user",
-] as const;
 
 export interface ContactRole {
   id: string;

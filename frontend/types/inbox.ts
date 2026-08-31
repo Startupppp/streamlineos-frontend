@@ -72,10 +72,3 @@ export type UnifiedInboxResponse = {
 };
 
 export type InboxKind = UnifiedInboxItem["kind"];
-
-export const INBOX_KINDS = [
-  "notification",
-  "broadcast",
-  "mail",
-  "build_approval",
-] as const satisfies readonly InboxKind[];

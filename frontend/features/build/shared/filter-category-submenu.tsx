@@ -35,7 +35,7 @@ import {
   type ProjectOption,
 } from "@/features/shared/list-view";
 
-export type { FilterCategory, StatusFilterOption } from "@/features/shared/list-view";
+export type { StatusFilterOption } from "@/features/shared/list-view";
 export { StatusFilterDot } from "@/features/shared/list-view";
 
 interface FilterCategorySubmenuProps {

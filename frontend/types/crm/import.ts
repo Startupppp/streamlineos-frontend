@@ -127,5 +127,11 @@ export const IMPORT_FIELD_LABELS: Record<string, string> = {
   status: "Status",
 };
 
-export const EXPORT_ENTITIES = ["parties", "contacts", "subjects", "activities"] as const;
-export type ExportEntity = (typeof EXPORT_ENTITIES)[number];
+export const EXPORT_ENTITIES = [
+  "parties",
+  "contacts",
+  "subjects",
+  "activities",
+  "deals",
+  "pipelines",
+] as const;

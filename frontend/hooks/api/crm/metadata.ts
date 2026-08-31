@@ -28,13 +28,6 @@ export function resolveOption(
   return options.find((o) => o.key === key) ?? { key, label: key, color: "slate" };
 }
 
-export function resolveStage(
-  stages: CrmPipelineStage[],
-  key: string
-): CrmPipelineStage | CrmColorFallback {
-  return stages.find((s) => s.key === key) ?? { key, label: key, color: "slate" };
-}
-
 function normalizeRaw(raw: CrmMetadataRaw): CrmMetadataResponse {
   const pipelineMap = new Map<string, CrmPipelineWithStages>(
     raw.pipelines.map((p) => [p.id, { ...p, stages: [] }])

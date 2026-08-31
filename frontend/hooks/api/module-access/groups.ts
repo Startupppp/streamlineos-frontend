@@ -12,7 +12,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { AuditCursorPage, DataScope, ModuleGroupMember, ModuleRoleGroup } from "./types";
-import { viewKey, manageKey } from "./types";
+import { viewKey } from "./types";
 
 export function useModuleRoleGroups(moduleKey: string) {
   const canView = useCan(viewKey(moduleKey));
@@ -198,4 +198,4 @@ export function useRemoveModuleGroupMember(moduleKey: string) {
   });
 }
 
-export { manageKey, viewKey };
+export { viewKey };
