@@ -57,7 +57,7 @@ export function UserInviteDialog({
     resolver: zodResolver(inviteUserSchema),
     defaultValues: {
       email: defaultEmail ?? "",
-      role: "",
+      role: undefined,
     },
   });
 

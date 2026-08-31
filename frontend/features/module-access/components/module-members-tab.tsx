@@ -153,7 +153,7 @@ export function ModuleMembersTab({
   const groupsQuery = useModuleRoleGroups(moduleKey);
 
   const members = membersQuery.data?.pages.flatMap((p) => p.data) ?? [];
-  const allGroups = (groupsQuery.data ?? []).map((g) => ({ id: g.id, name: g.name }));
+  const allGroups = groupsQuery.data?.pages.flatMap((p) => p.data).map((g) => ({ id: g.id, name: g.name })) ?? [];
 
   const focusLookup = useModuleMembersInfinite(moduleKey, 1, {
     enabled: focusUserId !== undefined && canManage,

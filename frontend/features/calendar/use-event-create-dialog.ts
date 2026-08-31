@@ -220,7 +220,7 @@ export function useEventCreateDialog({
     if (locErr) { toast.error(locErr); return; }
 
     const result = buildEventPayload({ form, showEndDate, linkedTicket, existingEntityId, isEdit });
-    if (result.error) { toast.error(result.error); return; }
+    if (result.error !== null) { toast.error(result.error); return; }
 
     if (isEdit && event?.rrule) {
       seriesScope.openWithPayload(result.payload);
@@ -231,7 +231,8 @@ export function useEventCreateDialog({
       if (isEdit && event) {
         const numericId = extractEventNumericId(event.id);
         if (numericId === null) { toast.error("Cannot edit this event type"); return; }
-        await updateEvent.mutateAsync({ id: numericId, ...result.payload });
+        const { syncConnectionId: _sc, addConference: _ac, ...editPayload } = result.payload;
+        await updateEvent.mutateAsync({ id: numericId, ...editPayload });
         toast.success("Event updated");
       } else {
         const res = await createEvent.mutateAsync(result.payload);

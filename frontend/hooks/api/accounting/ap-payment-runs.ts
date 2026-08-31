@@ -129,7 +129,7 @@ export function usePaymentRuns(params: ListPaymentRunsParams = {}) {
 }
 
 export function useVendorPayments(params: ListVendorPaymentsParams = {}) {
-  const can = useCan("accounting:vendor-payments:read");
+  const can = useCan("accounting:payables:read");
   return useQuery<CursorPage<VendorPayment>, Error>({
     queryKey: ["streamlineos", "accounting", "ap", "vendor-payments", params],
     queryFn: () =>

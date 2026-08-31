@@ -29,6 +29,25 @@ export function validateEventLocation(loc: string | undefined): string | null {
   return null;
 }
 
+export interface CalendarEventPayload {
+  title: string;
+  description?: string;
+  location?: string;
+  startDate: string;
+  endDate: string;
+  timezone?: string;
+  allDay?: boolean;
+  color?: string;
+  category?: string;
+  entityType?: string;
+  entityId?: string;
+  attendeeIds?: string[];
+  rrule?: string;
+  recurrenceEnd?: string;
+  syncConnectionId?: number;
+  addConference?: boolean;
+}
+
 interface BuildEventPayloadArgs {
   form: FormState;
   showEndDate: boolean;
@@ -37,10 +56,9 @@ interface BuildEventPayloadArgs {
   isEdit: boolean;
 }
 
-export interface BuildEventPayloadResult {
-  payload: Record<string, unknown>;
-  error: string | null;
-}
+export type BuildEventPayloadResult =
+  | { payload: CalendarEventPayload; error: null }
+  | { payload: Record<string, never>; error: string };
 
 export function buildEventPayload({
   form,

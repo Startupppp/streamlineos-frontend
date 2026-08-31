@@ -18,9 +18,8 @@ import type {
 
 export function useContacts(filters?: ContactFilters) {
   return useGatedQuery("crm:contacts:view", {
-    queryKey: queryKeys.contacts.list(filters as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<PaginatedContacts>("/contacts", filters as Record<string, unknown>),
+    queryKey: queryKeys.contacts.list(filters),
+    queryFn: () => apiClient.get<PaginatedContacts>("/contacts", filters),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
   });

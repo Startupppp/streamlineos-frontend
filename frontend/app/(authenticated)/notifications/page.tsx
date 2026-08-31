@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import { keepPreviousData } from "@tanstack/react-query";
 import { CheckCheck } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -79,7 +78,6 @@ export default function NotificationsPage() {
     priority: activePriority,
     search: debouncedSearch || undefined,
     limit: 30,
-    placeholderData: keepPreviousData,
   });
 
   const notifications = pages?.pages.flat();

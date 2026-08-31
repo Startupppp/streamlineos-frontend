@@ -86,7 +86,7 @@ export function RecruitmentWidget() {
   const { hrEnabled, canViewInterviews } = useDashboardAccess();
   const enabled = hrEnabled && canViewInterviews;
 
-  const { data, isLoading, error } = useInterviews(
+  const { data, isLoading, error, refetch } = useInterviews(
     { relevant: true, pageSize: WIDGET_PAGE_SIZE },
     { enabled },
   );

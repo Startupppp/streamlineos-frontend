@@ -15,6 +15,7 @@ import type {
   Gstr1Report,
   Gstr3BReport,
   JournalEntry,
+  JournalEntryStatus,
   ProfitLossReport,
   PurchaseBill,
   PurchaseBillStatus,
@@ -118,6 +119,7 @@ interface ListJournalParams {
   from?: string;
   to?: string;
   sourceType?: string;
+  status?: JournalEntryStatus;
 }
 
 export function useJournal(params: ListJournalParams = {}) {

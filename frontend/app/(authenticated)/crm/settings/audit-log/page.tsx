@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useTransition } from "react";
+import { useCallback, useMemo, useState, useTransition } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -30,25 +30,7 @@ import {
 } from "@/lib/renderer/crm/settings/audit-entry-layout";
 import { useAuditLogs } from "@/hooks/api/audit-log";
 import { useCan } from "@/hooks/api/access";
-
-/**
- * The CRM audit log.
- *
- * A record list, which is what it always was. The surface this replaces drew a
- * timeline — avatar bubbles joined by a vertical rule, one card per entry, the
- * action and the entity restated in prose under badges that already said them —
- * and a timeline is read downward about one thing. An audit log is read across
- * about many: who, what, which record, when. Those are columns, and columns are
- * what `AUDIT_ENTRY_LAYOUT` describes.
- *
- * Fifty entries used to fill four screens. They now fill one, which matters
- * because the reason anybody opens this page is to find one entry among
- * thousands.
- *
- * The page also stops pretending a query in flight is an empty log: the loading
- * branch is a skeleton shaped like the table, and the empty branch says whether
- * the filters hid everything or nothing has happened yet.
- */
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 
 const PAGE_SIZE = 50;
 
@@ -88,8 +70,10 @@ export default function CrmAuditLogPage() {
   const action = searchParams.get("action") ?? "all";
   const fromDate = searchParams.get("from") ?? "";
   const toDate = searchParams.get("to") ?? "";
-  const rawPage = parseInt(searchParams.get("page") ?? "1", 10);
-  const page = isNaN(rawPage) || rawPage < 1 ? 1 : rawPage;
+
+  const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>([
+    undefined,
+  ]);
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -98,6 +82,7 @@ export default function CrmAuditLogPage() {
         if (value === null || value === "") params.delete(key);
         else params.set(key, value);
       }
+      setCursorHistory([undefined]);
       startTransition(() => {
         router.replace(`${pathname}?${params.toString()}`, { scroll: false });
       });
@@ -111,23 +96,27 @@ export default function CrmAuditLogPage() {
       action: action !== "all" ? action : undefined,
       dateFrom: fromDate || undefined,
       dateTo: toDate || undefined,
-      page,
-      pageSize: PAGE_SIZE,
+      cursor: cursorHistory.at(-1),
+      limit: PAGE_SIZE,
     }),
-    [entityType, action, fromDate, toDate, page],
+    [entityType, action, fromDate, toDate, cursorHistory],
   );
 
   const { data, isLoading, isError, refetch } = useAuditLogs(filters);
+  const auditPagination = data?.pagination;
 
-  const hasActiveFilters = entityType !== "all" || action !== "all" || !!fromDate || !!toDate;
+  const hasActiveFilters =
+    entityType !== "all" || action !== "all" || !!fromDate || !!toDate;
 
   const handleEntityTypeChange = useCallback(
-    (val: string) => updateParams({ entityType: val !== "all" ? val : null, page: null }),
+    (val: string) =>
+      updateParams({ entityType: val !== "all" ? val : null, page: null }),
     [updateParams],
   );
 
   const handleActionChange = useCallback(
-    (val: string) => updateParams({ action: val !== "all" ? val : null, page: null }),
+    (val: string) =>
+      updateParams({ action: val !== "all" ? val : null, page: null }),
     [updateParams],
   );
 
@@ -142,18 +131,38 @@ export default function CrmAuditLogPage() {
   );
 
   const handleClearFilters = useCallback(
-    () => updateParams({ entityType: null, action: null, from: null, to: null, page: null }),
+    () =>
+      updateParams({
+        entityType: null,
+        action: null,
+        from: null,
+        to: null,
+        page: null,
+      }),
     [updateParams],
   );
 
-  const handlePageChange = useCallback(
-    (next: number) => updateParams({ page: next > 1 ? String(next) : null }),
-    [updateParams],
+  const handleCursorPrevious = useCallback(() => {
+    setCursorHistory((prev) => prev.slice(0, -1));
+  }, []);
+
+  const handleCursorNext = useCallback(() => {
+    if (auditPagination?.nextCursor) {
+      setCursorHistory((prev) => [
+        ...prev,
+        auditPagination.nextCursor ?? undefined,
+      ]);
+    }
+  }, [auditPagination]);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  const rows = useMemo(
+    () => (data?.logs ?? []).map(auditEntryFields),
+    [data?.logs],
   );
-
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-
-  const rows = useMemo(() => (data?.logs ?? []).map(auditEntryFields), [data?.logs]);
 
   return (
     <PageWrapper
@@ -162,7 +171,10 @@ export default function CrmAuditLogPage() {
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
           <Select value={entityType} onValueChange={handleEntityTypeChange}>
-            <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-36`} aria-label="Entity type">
+            <SelectTrigger
+              className={`${FILTER_SELECT_TRIGGER} w-36`}
+              aria-label="Entity type"
+            >
               <SelectValue placeholder="Entity Type" />
             </SelectTrigger>
             <SelectContent>
@@ -175,7 +187,10 @@ export default function CrmAuditLogPage() {
           </Select>
 
           <Select value={action} onValueChange={handleActionChange}>
-            <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-36`} aria-label="Action">
+            <SelectTrigger
+              className={`${FILTER_SELECT_TRIGGER} w-36`}
+              aria-label="Action"
+            >
               <SelectValue placeholder="Action" />
             </SelectTrigger>
             <SelectContent>
@@ -204,7 +219,12 @@ export default function CrmAuditLogPage() {
           </div>
 
           {hasActiveFilters && (
-            <Button variant="ghost" size="sm" className="text-xs" onClick={handleClearFilters}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs"
+              onClick={handleClearFilters}
+            >
               Clear filters
             </Button>
           )}
@@ -219,7 +239,11 @@ export default function CrmAuditLogPage() {
         {!canViewAuditLog ? (
           <NoPermissionState permission="audit-log:read" className="flex-1" />
         ) : isLoading ? (
-          <DataTableSkeleton rows={12} columns={layout.list.columns.length} className="flex-1" />
+          <DataTableSkeleton
+            rows={12}
+            columns={layout.list.columns.length}
+            className="flex-1"
+          />
         ) : isError ? (
           <ErrorState
             title="Couldn't load the audit log"
@@ -230,7 +254,11 @@ export default function CrmAuditLogPage() {
         ) : rows.length === 0 ? (
           <EmptyState
             illustration={<EmptyActivityIllustration />}
-            title={hasActiveFilters ? "No entries match these filters" : "Nothing has been logged yet"}
+            title={
+              hasActiveFilters
+                ? "No entries match these filters"
+                : "Nothing has been logged yet"
+            }
             description={
               hasActiveFilters
                 ? "Nothing was recorded that matches what you have filtered to. Clear the filters to see the whole log."
@@ -245,21 +273,25 @@ export default function CrmAuditLogPage() {
             className={CONTENT_FILL_PANEL}
           />
         ) : (
-          <RecordList
-            layout={layout}
-            rows={rows}
-            getRowKey={(row) => String(row.id)}
-            density={density}
-            minWidth="1000px"
-            className={CONTENT_FILL_PANEL}
-            pagination={{
-              mode: "server",
-              page,
-              pageSize: PAGE_SIZE,
-              total: data?.total ?? 0,
-              onPageChange: handlePageChange,
-            }}
-          />
+          <>
+            <RecordList
+              layout={layout}
+              rows={rows}
+              getRowKey={(row) => String(row.id)}
+              density={density}
+              minWidth="1000px"
+              className={CONTENT_FILL_PANEL}
+              pagination={{ pageSize: PAGE_SIZE }}
+            />
+            {(cursorHistory.length > 1 || auditPagination?.hasMore) && (
+              <CursorPageControls
+                page={cursorHistory.length}
+                hasNext={auditPagination?.hasMore ?? false}
+                onPrevious={handleCursorPrevious}
+                onNext={handleCursorNext}
+              />
+            )}
+          </>
         )}
       </div>
     </PageWrapper>

@@ -58,7 +58,9 @@ export interface ContactFilters {
 
 export interface PaginatedContacts {
   items: Contact[];
-  total: number;
+  total?: number;
+  hasMore: boolean;
+  nextCursor: string | null;
 }
 
 export interface CreateContactInput {

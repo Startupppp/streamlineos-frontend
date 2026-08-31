@@ -277,39 +277,41 @@ export default function BudgetsListPage() {
             onRetry={handleRetry}
           />
         ) : (
-          <DataTable
-            className="flex-1 min-h-0"
-            data={items}
-            columns={budgetColumns}
-            getRowKey={(row) => row.id}
-            isLoading={query.isLoading}
-            onRowClick={handleRowClickRow}
-            emptyState={
-              <EmptyState
-                illustration={<EmptyReportIllustration />}
-                title="No budgets yet"
-                description="Create a budget to start tracking planned vs actual spend."
-              />
-            }
-            minWidth="700px"
-          />
-          {(cursorIndex > 0 || hasMore) ? (
-            <CursorPageControls
-              page={cursorIndex + 1}
-              hasNext={hasMore}
-              onPrevious={() => setCursorIndex(Math.max(0, cursorIndex - 1))}
-              onNext={() => {
-                const next = query.data?.pagination.nextCursor ?? null;
-                setCursors((prev) => {
-                  const copy = prev.slice(0, cursorIndex + 1);
-                  copy.push(next);
-                  return copy;
-                });
-                setCursorIndex(cursorIndex + 1);
-              }}
-              className="mt-2"
+          <>
+            <DataTable
+              className="flex-1 min-h-0"
+              data={items}
+              columns={budgetColumns}
+              getRowKey={(row) => row.id}
+              isLoading={query.isLoading}
+              onRowClick={handleRowClickRow}
+              emptyState={
+                <EmptyState
+                  illustration={<EmptyReportIllustration />}
+                  title="No budgets yet"
+                  description="Create a budget to start tracking planned vs actual spend."
+                />
+              }
+              minWidth="700px"
             />
-          ) : null}
+            {(cursorIndex > 0 || hasMore) ? (
+              <CursorPageControls
+                page={cursorIndex + 1}
+                hasNext={hasMore}
+                onPrevious={() => setCursorIndex(Math.max(0, cursorIndex - 1))}
+                onNext={() => {
+                  const next = query.data?.pagination.nextCursor ?? null;
+                  setCursors((prev) => {
+                    const copy = prev.slice(0, cursorIndex + 1);
+                    copy.push(next);
+                    return copy;
+                  });
+                  setCursorIndex(cursorIndex + 1);
+                }}
+                className="mt-2"
+              />
+            ) : null}
+          </>
         )}
       </div>
 

@@ -46,7 +46,7 @@ export const customerWorkQueryKeys = {
 
   contacts: {
     all: [...base, "contacts"] as const,
-    list: (params?: Record<string, unknown>) =>
+    list: (params?: object) =>
       [...base, "contacts", "list", params] as const,
     detail: (contactId: number) =>
       [...base, "contacts", "detail", contactId] as const,

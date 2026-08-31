@@ -8,6 +8,7 @@ import type { CalendarListItem } from "@/hooks/api/calendar";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { SeriesScope } from "./event-series-scope-dialog";
+import type { CalendarEventPayload } from "./event-create-validators";
 
 interface UseEventSeriesScopeProps {
   event?: CalendarListItem | null;
@@ -23,9 +24,9 @@ export function useEventSeriesScope({
   onClose,
 }: UseEventSeriesScopeProps) {
   const [seriesScopeOpen, setSeriesScopeOpen] = useState(false);
-  const [pendingPayload, setPendingPayload] = useState<Record<string, unknown> | null>(null);
+  const [pendingPayload, setPendingPayload] = useState<CalendarEventPayload | null>(null);
 
-  const openWithPayload = useCallback((payload: Record<string, unknown>) => {
+  const openWithPayload = useCallback((payload: CalendarEventPayload) => {
     setPendingPayload(payload);
     setSeriesScopeOpen(true);
   }, []);
@@ -44,16 +45,14 @@ export function useEventSeriesScope({
           await upsertOccurrenceException.mutateAsync({
             eventId: numericId,
             occurrenceStart: event.start,
-            modifiedTitle: String(pendingPayload.title ?? ""),
-            modifiedStart: String(pendingPayload.startDate ?? ""),
-            modifiedEnd: String(pendingPayload.endDate ?? ""),
+            modifiedTitle: pendingPayload.title,
+            modifiedStart: pendingPayload.startDate,
+            modifiedEnd: pendingPayload.endDate,
           });
           toast.success("Occurrence updated");
         } else {
-          await updateEvent.mutateAsync({
-            id: numericId,
-            ...(pendingPayload as Record<string, unknown>),
-          });
+          const { syncConnectionId: _sc, addConference: _ac, ...editPayload } = pendingPayload;
+          await updateEvent.mutateAsync({ id: numericId, ...editPayload });
           toast.success("Event updated");
         }
         setSeriesScopeOpen(false);

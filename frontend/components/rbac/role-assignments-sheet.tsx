@@ -200,7 +200,7 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
   const handleAddDepartment = useCallback(
     (departmentId: number) => {
       assign.mutate(
-        { roleId, principalType: "department", principalId: departmentId },
+        { roleId, principalType: "department", principalId: String(departmentId) },
         {
           onSuccess: () => toast.success("Department assigned"),
           onError: (error) => toast.error(getErrorMessage(error)),
@@ -213,7 +213,7 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
   const handleRemoveDepartment = useCallback(
     (departmentId: number) => {
       unassign.mutate(
-        { roleId, principalType: "department", principalId: departmentId },
+        { roleId, principalType: "department", principalId: String(departmentId) },
         {
           onSuccess: () => toast.success("Department removed"),
           onError: (error) => toast.error(getErrorMessage(error)),

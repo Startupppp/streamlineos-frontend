@@ -176,7 +176,7 @@ export function InboxShell() {
         ) : items.length === 0 ? (
           <EmptyState
             className="flex-1 min-h-0"
-            icon={Inbox}
+            illustration={<Inbox className="h-8 w-8 text-muted-foreground/40" />}
             title="All caught up"
             description="Notifications, mail and approvals will appear here when they arrive."
           />

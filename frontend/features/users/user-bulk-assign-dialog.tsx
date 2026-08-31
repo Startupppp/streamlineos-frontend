@@ -39,7 +39,7 @@ import { USER_INVITE_ROLES } from "@/features/users/user-invite-roles";
 const KEEP = "all";
 
 const bulkAssignSchema = z.object({
-  role: z.string(),
+  role: z.enum(["all", "OWNER", "ORG_ADMIN", "MEMBER"]),
   branchId: z.string(),
   departmentId: z.string(),
 });
