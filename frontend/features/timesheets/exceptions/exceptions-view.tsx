@@ -96,6 +96,9 @@ export function ExceptionsView() {
     isLoading,
     isError,
     refetch,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
   } = useTimesheetExceptions(
     {
       status: statusParam,
@@ -116,6 +119,10 @@ export function ExceptionsView() {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  const handleLoadMore = useCallback(() => {
+    void fetchNextPage();
+  }, [fetchNextPage]);
 
   const handleRunDetection = useCallback(() => {
     runDetectionMutation.mutate();
@@ -438,7 +445,7 @@ export function ExceptionsView() {
         ) : (
           <DataTable
             className="flex-1 min-h-0"
-            data={exceptions ?? []}
+            data={exceptions?.pages.flatMap((p) => p.data) ?? []}
             columns={columns}
             getRowKey={getExceptionRowKey}
             isLoading={isLoading}
@@ -446,6 +453,18 @@ export function ExceptionsView() {
             minWidth="800px"
             emptyState={emptyState}
           />
+          {hasNextPage && (
+            <div className="flex justify-center pb-2">
+              <LoadingButton
+                variant="outline"
+                size="sm"
+                isPending={isFetchingNextPage}
+                onClick={handleLoadMore}
+              >
+                Load more
+              </LoadingButton>
+            </div>
+          )}
         )}
       </motion.div>
 

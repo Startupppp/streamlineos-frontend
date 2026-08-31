@@ -12,16 +12,24 @@ jest.mock("@/hooks/api/module-access", () => ({
     refetch: jest.fn(),
   }),
   useModuleRoleGroups: () => ({
-    data: [
-      {
-        id: 7,
-        name: "Hiring managers",
-        isSystem: false,
-        version: 1,
-        memberCount: 2,
-        permissions: [],
-      },
-    ],
+    data: {
+      pages: [
+        {
+          data: [
+            {
+              id: 7,
+              name: "Hiring managers",
+              isSystem: false,
+              version: 1,
+              memberCount: 2,
+              permissions: [],
+            },
+          ],
+          pagination: { limit: 100, nextCursor: null, hasMore: false },
+        },
+      ],
+      pageParams: [undefined],
+    },
     isLoading: false,
     isError: false,
     refetch: jest.fn(),

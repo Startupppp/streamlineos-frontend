@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -52,9 +53,15 @@ interface PayrollExportsHistoryProps {
 }
 
 export function PayrollExportsHistory({ fallbackMapping }: PayrollExportsHistoryProps) {
-  const [page, setPage] = useState(1);
-  const pageSize = 20;
-  const { data, isLoading, isError, refetch } = useTimesheetPayrollExports(page, pageSize);
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useTimesheetPayrollExports();
   const qc = useQueryClient();
   const canAck = useCan("timesheets:payroll:export");
   const [ackTarget, setAckTarget] = useState<TimesheetExportDto | null>(null);
@@ -176,6 +183,8 @@ export function PayrollExportsHistory({ fallbackMapping }: PayrollExportsHistory
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
+  const handleLoadMore = useCallback(() => { void fetchNextPage(); }, [fetchNextPage]);
+
   const emptyState = (
     <EmptyState
       illustration={<EmptyReportIllustration className="h-32 w-32" />}
@@ -195,28 +204,32 @@ export function PayrollExportsHistory({ fallbackMapping }: PayrollExportsHistory
     );
   }
 
+  const rows = data?.pages.flatMap((p) => p.data) ?? [];
+
   return (
     <>
       <DataTable
         className="flex-1 min-h-0"
-        data={data?.items ?? []}
+        data={rows}
         columns={columns}
         getRowKey={(r) => r.id}
         isLoading={isLoading}
         emptyState={emptyState}
-        pagination={
-          data && data.total > pageSize
-            ? {
-                mode: "server",
-                page,
-                pageSize,
-                total: data.total,
-                onPageChange: setPage,
-              }
-            : undefined
-        }
+        pagination={{ pageSize: 20 }}
         minWidth="760px"
       />
+      {hasNextPage && (
+        <div className="flex justify-center pt-2 pb-1">
+          <LoadingButton
+            variant="outline"
+            size="sm"
+            isPending={isFetchingNextPage}
+            onClick={handleLoadMore}
+          >
+            Load more
+          </LoadingButton>
+        </div>
+      )}
 
       {ackTarget && (
         <AckExportDialog

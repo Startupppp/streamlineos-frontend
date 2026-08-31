@@ -190,7 +190,7 @@ export function WeekGrid({ entries, isLoading, days, weekStart, weekEnd }: WeekG
     setIsCopying(true);
     try {
       const result = await prevWeekQuery.refetch();
-      const prevEntries = result.data ?? [];
+      const prevEntries = result.data?.data ?? [];
       for (const e of prevEntries) {
         const dayOff = differenceInCalendarDays(parseISO(e.date), parseISO(prevWeekStart));
         const newDate = format(addDays(parseISO(weekStart), dayOff), "yyyy-MM-dd");

@@ -8,6 +8,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import type {
   CreateEntryInput,
+  CursorPage,
   EntriesQuery,
   TimesheetEntry,
   UpdateEntryInput,
@@ -22,7 +23,7 @@ function toParams(query: EntriesQuery): Record<string, unknown> {
     startDate: query.startDate,
     endDate: query.endDate,
     billable: query.billable === undefined ? undefined : String(query.billable),
-    page: query.page,
+    cursor: query.cursor,
     limit: query.limit,
   };
 }
@@ -32,7 +33,7 @@ export function useTimesheetEntries(query: EntriesQuery = {}, enabled = true) {
   const params = toParams(query);
   return useQuery({
     queryKey: queryKeys.timesheets.entries(params),
-    queryFn: () => apiClient.get<TimesheetEntry[]>("/timesheets/entries", params),
+    queryFn: () => apiClient.get<CursorPage<TimesheetEntry>>("/timesheets/entries", params),
     staleTime: 30_000,
     placeholderData: (prev) => prev,
     enabled: enabled && canView,
@@ -62,34 +63,36 @@ export function useUpdateTimesheetEntry() {
       apiClient.patch<TimesheetEntry>(`/timesheets/entries/${entryId}`, data),
     onMutate: async ({ entryId, data }) => {
       await qc.cancelQueries({ queryKey: queryKeys.timesheets.entries() });
-      const snapshots = qc.getQueriesData<TimesheetEntry[]>({
+      const snapshots = qc.getQueriesData<CursorPage<TimesheetEntry>>({
         queryKey: queryKeys.timesheets.entries(),
       });
-      qc.setQueriesData<TimesheetEntry[]>(
+      qc.setQueriesData<CursorPage<TimesheetEntry>>(
         { queryKey: queryKeys.timesheets.entries() },
         (prev) =>
-          prev?.map((e) =>
-            e.id === entryId
-              ? {
-                  ...e,
-                  hours: data.hours !== undefined ? String(data.hours) : e.hours,
-                  description: data.description !== undefined ? data.description : e.description,
-                  isBillable: data.isBillable !== undefined ? data.isBillable : e.isBillable,
-                  billingType: data.billingType !== undefined ? data.billingType : e.billingType,
-                  projectId: data.projectId !== undefined ? data.projectId : e.projectId,
-                  workLink: data.workLink !== undefined ? data.workLink : e.workLink,
-                }
-              : e,
-          ) ?? prev,
+          prev
+            ? {
+                ...prev,
+                data: prev.data.map((e) =>
+                  e.id === entryId
+                    ? {
+                        ...e,
+                        hours: data.hours !== undefined ? String(data.hours) : e.hours,
+                        description: data.description !== undefined ? data.description : e.description,
+                        isBillable: data.isBillable !== undefined ? data.isBillable : e.isBillable,
+                        billingType: data.billingType !== undefined ? data.billingType : e.billingType,
+                        projectId: data.projectId !== undefined ? data.projectId : e.projectId,
+                        workLink: data.workLink !== undefined ? data.workLink : e.workLink,
+                      }
+                    : e,
+                ),
+              }
+            : prev,
       );
       return { snapshots };
     },
     onError: (error, _vars, ctx) => {
-      if (ctx?.snapshots) {
-        for (const [key, data] of ctx.snapshots) {
-          qc.setQueryData(key, data);
-        }
-      }
+      if (ctx?.snapshots)
+        for (const [key, data] of ctx.snapshots) qc.setQueryData(key, data);
       toast.error(getErrorMessage(error));
     },
     onSuccess: () => {
@@ -110,26 +113,28 @@ export function useVoidTimesheetEntry() {
       apiClient.post<{ success: boolean }>(`/timesheets/entries/${entryId}/void`, { reason }),
     onMutate: async ({ entryId }) => {
       await qc.cancelQueries({ queryKey: queryKeys.timesheets.entries() });
-      const snapshots = qc.getQueriesData<TimesheetEntry[]>({
+      const snapshots = qc.getQueriesData<CursorPage<TimesheetEntry>>({
         queryKey: queryKeys.timesheets.entries(),
       });
-      qc.setQueriesData<TimesheetEntry[]>(
+      qc.setQueriesData<CursorPage<TimesheetEntry>>(
         { queryKey: queryKeys.timesheets.entries() },
         (prev) =>
-          prev?.map((e) =>
-            e.id === entryId
-              ? { ...e, voidedAt: new Date().toISOString(), status: "REJECTED" as const }
-              : e,
-          ) ?? prev,
+          prev
+            ? {
+                ...prev,
+                data: prev.data.map((e) =>
+                  e.id === entryId
+                    ? { ...e, voidedAt: new Date().toISOString(), status: "REJECTED" as const }
+                    : e,
+                ),
+              }
+            : prev,
       );
       return { snapshots };
     },
     onError: (error, _vars, ctx) => {
-      if (ctx?.snapshots) {
-        for (const [key, data] of ctx.snapshots) {
-          qc.setQueryData(key, data);
-        }
-      }
+      if (ctx?.snapshots)
+        for (const [key, data] of ctx.snapshots) qc.setQueryData(key, data);
       toast.error(getErrorMessage(error));
     },
     onSuccess: () => {

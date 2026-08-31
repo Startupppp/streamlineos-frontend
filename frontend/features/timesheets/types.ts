@@ -294,9 +294,13 @@ export interface AuditEvent {
   createdAt: string;
 }
 
-export interface AuditResponse {
-  data: AuditEvent[];
-  total: number;
+export interface CursorPage<T> {
+  data: T[];
+  pagination: {
+    limit: number;
+    nextCursor: string | null;
+    hasMore: boolean;
+  };
 }
 
 export interface EntriesQuery {
@@ -307,7 +311,7 @@ export interface EntriesQuery {
   startDate?: string;
   endDate?: string;
   billable?: boolean;
-  page?: number;
+  cursor?: string;
   limit?: number;
 }
 
@@ -450,7 +454,7 @@ export interface ExceptionsQueryInput {
   severity?: ExceptionSeverity;
   rule?: ExceptionRule;
   userId?: string;
-  page?: number;
+  cursor?: string;
   limit?: number;
 }
 

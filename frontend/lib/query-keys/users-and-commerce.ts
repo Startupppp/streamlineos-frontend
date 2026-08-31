@@ -76,8 +76,8 @@ export const usersAndCommerceQueryKeys = {
       all: [...base, "timesheets", "payroll"] as const,
       summary: (params: Record<string, unknown>) =>
         [...base, "timesheets", "payroll", "summary", params] as const,
-      exports: (page: number, pageSize: number) =>
-        [...base, "timesheets", "payroll", "exports", page, pageSize] as const,
+      exports: () =>
+        [...base, "timesheets", "payroll", "exports"] as const,
       exportRows: (exportId: number) =>
         [
           ...base,

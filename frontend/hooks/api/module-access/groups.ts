@@ -1,19 +1,32 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useQuery,
+  useMutation,
+  useQueryClient,
+  type InfiniteData,
+} from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
-import type { DataScope, ModuleGroupMember, ModuleRoleGroup } from "./types";
+import type { AuditCursorPage, DataScope, ModuleGroupMember, ModuleRoleGroup } from "./types";
 import { viewKey, manageKey } from "./types";
 
 export function useModuleRoleGroups(moduleKey: string) {
   const canView = useCan(viewKey(moduleKey));
-  return useQuery<ModuleRoleGroup[], Error>({
+  return useInfiniteQuery<AuditCursorPage<ModuleRoleGroup>, Error>({
     queryKey: queryKeys.moduleAccess.roleGroups(moduleKey),
-    queryFn: () =>
-      apiClient.get<ModuleRoleGroup[]>(`/module-access/${moduleKey}/groups`),
+    queryFn: ({ pageParam }) => {
+      const params = new URLSearchParams({ limit: "100" });
+      if (typeof pageParam === "string") params.set("cursor", pageParam);
+      return apiClient.get<AuditCursorPage<ModuleRoleGroup>>(
+        `/module-access/${moduleKey}/groups?${params.toString()}`,
+      );
+    },
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canView,
     staleTime: 2 * 60_000,
   });
@@ -78,12 +91,20 @@ export function useSetModuleGroupPermissions(moduleKey: string) {
         { version, items },
       ),
     onSuccess: (data, variables) => {
-      queryClient.setQueryData<ModuleRoleGroup[]>(
+      queryClient.setQueryData<InfiniteData<AuditCursorPage<ModuleRoleGroup>>>(
         queryKeys.moduleAccess.roleGroups(moduleKey),
         (old) =>
-          old?.map((g) =>
-            g.id === variables.groupId ? { ...g, version: data.version } : g,
-          ),
+          old
+            ? {
+                ...old,
+                pages: old.pages.map((page) => ({
+                  ...page,
+                  data: page.data.map((g) =>
+                    g.id === variables.groupId ? { ...g, version: data.version } : g,
+                  ),
+                })),
+              }
+            : old,
       );
       void queryClient.invalidateQueries({
         queryKey: queryKeys.moduleAccess.roleGroups(moduleKey),
