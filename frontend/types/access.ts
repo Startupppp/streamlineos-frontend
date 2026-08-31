@@ -58,7 +58,7 @@ export interface RbacDiscoveryMember {
 export interface AssignRoleMemberInput {
   roleId: number;
   principalType: RolePrincipalType;
-  principalId: string | number;
+  principalId: string;
 }
 
 export type UnassignRoleMemberInput = AssignRoleMemberInput;

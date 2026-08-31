@@ -47,8 +47,8 @@ export function AuditLogPage() {
   const [, startTransition] = useTransition();
   const [selectedLog, setSelectedLog] = useState<AuditLogRow | null>(null);
   const [userSearch, setUserSearch] = useState(searchParams.get("user") ?? "");
+  const [cursorStack, setCursorStack] = useState<string[]>([]);
 
-  const page = Number(searchParams.get("page")) || 1;
   const pageSizeParam = Number(searchParams.get("size"));
   const pageSize: PageSize = isValidPageSize(pageSizeParam) ? pageSizeParam : 15;
   const actionFilter = searchParams.get("action") || "all";
@@ -57,6 +57,8 @@ export function AuditLogPage() {
   const dateTo = searchParams.get("to") || "";
 
   const debouncedUserSearch = useDebouncedValue(userSearch, 400);
+
+  const currentCursor = cursorStack[cursorStack.length - 1];
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -72,15 +74,18 @@ export function AuditLogPage() {
     [searchParams, router, pathname],
   );
 
+  const resetCursor = useCallback(() => setCursorStack([]), []);
+
   useEffect(() => {
     const current = searchParams.get("user") ?? "";
     if (debouncedUserSearch === current) return;
-    updateParams({ user: debouncedUserSearch || null, page: null });
-  }, [debouncedUserSearch, searchParams, updateParams]);
+    updateParams({ user: debouncedUserSearch || null });
+    resetCursor();
+  }, [debouncedUserSearch, searchParams, updateParams, resetCursor]);
 
   const { data, isLoading, isError, error, refetch } = useAuditLogs({
-    page,
-    pageSize,
+    cursor: currentCursor,
+    limit: pageSize,
     action: actionFilter !== "all" ? actionFilter : undefined,
     targetType: targetTypeFilter !== "all" ? targetTypeFilter : undefined,
     dateFrom: dateFrom || undefined,
@@ -93,43 +98,52 @@ export function AuditLogPage() {
   const canExport = useCan("audit-log:read");
   const { mutate: runExport, isPending: isExporting } = useExportAuditLog();
 
-  const total = data?.total ?? 0;
   const logs = data?.logs ?? [];
+  const hasMore = data?.pagination.hasMore ?? false;
+  const nextCursor = data?.pagination.nextCursor ?? null;
 
   const resetFilters = useCallback(() => {
-    updateParams({ action: null, target: null, from: null, to: null, page: null, user: null });
+    updateParams({ action: null, target: null, from: null, to: null, user: null });
     setUserSearch("");
-  }, [updateParams]);
+    resetCursor();
+  }, [updateParams, resetCursor]);
 
   const handleActionFilter = useCallback(
-    (v: string) => updateParams({ action: v === "all" ? null : v, page: null }),
-    [updateParams],
+    (v: string) => { updateParams({ action: v === "all" ? null : v }); resetCursor(); },
+    [updateParams, resetCursor],
   );
   const handleTargetTypeFilter = useCallback(
-    (v: string) => updateParams({ target: v === "all" ? null : v, page: null }),
-    [updateParams],
+    (v: string) => { updateParams({ target: v === "all" ? null : v }); resetCursor(); },
+    [updateParams, resetCursor],
   );
   const handleDateFrom = useCallback(
-    (v: string) => updateParams({ from: v || null, page: null }),
-    [updateParams],
+    (v: string) => { updateParams({ from: v || null }); resetCursor(); },
+    [updateParams, resetCursor],
   );
   const handleDateTo = useCallback(
-    (v: string) => updateParams({ to: v || null, page: null }),
-    [updateParams],
+    (v: string) => { updateParams({ to: v || null }); resetCursor(); },
+    [updateParams, resetCursor],
   );
   const handleCloseSheet = useCallback(() => setSelectedLog(null), []);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const handleRowClick = useCallback((log: AuditLogRow) => setSelectedLog(log), []);
+
   const handlePageSizeChange = useCallback(
-    (size: number) =>
-      updateParams({ size: size === 15 ? null : String(size), page: null }),
-    [updateParams],
+    (size: number) => {
+      updateParams({ size: size === 15 ? null : String(size) });
+      resetCursor();
+    },
+    [updateParams, resetCursor],
   );
   const handleUserSearchChange = useCallback((value: string) => setUserSearch(value), []);
-  const handlePageChange = useCallback(
-    (p: number) => updateParams({ page: p <= 1 ? null : String(p) }),
-    [updateParams],
-  );
+
+  const handleNextPage = useCallback(() => {
+    if (nextCursor) setCursorStack((prev) => [...prev, nextCursor]);
+  }, [nextCursor]);
+
+  const handlePrevPage = useCallback(() => {
+    setCursorStack((prev) => prev.slice(0, -1));
+  }, []);
 
   const handleExport = useCallback(() => {
     runExport(
@@ -153,6 +167,8 @@ export function AuditLogPage() {
     !!dateFrom ||
     !!dateTo ||
     !!userSearch;
+
+  const currentPage = cursorStack.length + 1;
 
   function renderFilterSelects() {
     return (
@@ -197,6 +213,8 @@ export function AuditLogPage() {
       onClearFilters={resetFilters}
     />
   );
+
+  const pageSizeOption = PAGE_SIZE_OPTIONS.find((o) => o === pageSize) ?? 15;
 
   return (
     <PageWrapper
@@ -266,17 +284,33 @@ export function AuditLogPage() {
             onRowClick={handleRowClick}
             minWidth="700px"
             pagination={{
-              mode: "server",
-              page,
-              pageSize,
-              total,
-              onPageChange: handlePageChange,
+              pageSize: pageSizeOption,
               onPageSizeChange: handlePageSizeChange,
-              pageSizeOptions: PAGE_SIZE_OPTIONS,
             }}
             emptyState={emptyState}
           />
         )}
+        <div className="flex shrink-0 items-center justify-between gap-2 py-1 text-sm text-muted-foreground">
+          <span>Page {currentPage}</span>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePrevPage}
+              disabled={cursorStack.length === 0 || isLoading}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleNextPage}
+              disabled={!hasMore || isLoading}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
       </div>
 
       {selectedLog && <LogDetailSheet log={selectedLog} onClose={handleCloseSheet} />}

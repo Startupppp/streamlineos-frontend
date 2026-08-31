@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const APP_DIR = join(ROOT, "app");
 
-const CLIENT_PAGE_CEILING = 315;
+const CLIENT_PAGE_CEILING = 304;
 
 function assert(cond, msg) {
   if (!cond) { console.error("SELF-TEST FAIL:", msg); process.exit(1); }

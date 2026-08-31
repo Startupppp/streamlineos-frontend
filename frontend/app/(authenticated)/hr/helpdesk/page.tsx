@@ -1,35 +1,16 @@
-"use client";
-
+import { requirePermission } from "@/lib/rbac/require-permission";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useCan } from "@/hooks/api/access";
-import { MyTicketsTab } from "@/features/hr/helpdesk/my-tickets-tab";
-import { QueueTab } from "@/features/hr/helpdesk/queue-tab";
+import { HelpdeskTabsContent } from "@/features/hr/helpdesk/helpdesk-tabs-content";
 
-export default function HrHelpdeskPage() {
-  const canManage = useCan("hr:helpdesk:manage");
-
+export default async function HrHelpdeskPage() {
+  const { access } = await requirePermission("hr:helpdesk:view");
+  const canManage = access.isOrgOwner || "hr:helpdesk:manage" in access.scopes;
   return (
     <PageWrapper
       title="HR Helpdesk"
       subtitle="Submit and track HR support requests"
     >
-      <Tabs defaultValue="my-tickets" className="flex flex-1 min-h-0 flex-col gap-4">
-        <TabsList>
-          <TabsTrigger value="my-tickets">My Tickets</TabsTrigger>
-          {canManage && (
-            <TabsTrigger value="queue">Queue</TabsTrigger>
-          )}
-        </TabsList>
-        <TabsContent value="my-tickets" className="mt-0 flex flex-1 min-h-0 flex-col">
-          <MyTicketsTab />
-        </TabsContent>
-        {canManage && (
-          <TabsContent value="queue" className="mt-0 flex flex-1 min-h-0 flex-col">
-            <QueueTab />
-          </TabsContent>
-        )}
-      </Tabs>
+      <HelpdeskTabsContent canManage={canManage} />
     </PageWrapper>
   );
 }
