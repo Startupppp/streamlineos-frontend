@@ -42,9 +42,9 @@ Legend: `[x]` verified done · `[~]` lane running · `[ ]` not started · `[!]` 
 | 26 | PITR restore drill | `[x]` | Live drill ran; watermark and 960 RLS policies matched, before-marker present, after-marker absent. Branch deleted |
 | 27 | Production-shaped load / 40% headroom | `[!]` | Guard asserts the floor and its self-test proves a 39% case fails; needs a colocated run |
 | 28 | Per-cell cost measurement | `[x]` AI / `[!]` rest | AI spend per org verified live. DB time, Redis and egress not instrumentable in-app |
-| 29 | Live alert delivery + acknowledgement | `[x]` delivery / `[!]` ack | 10 probes and the dispatcher self-test green; `drill-alert-system.mjs` exits **2** with a named prerequisite. `cell-recovery` probe being written (A37) |
+| 29 | Live alert delivery + acknowledgement | `[x]` delivery / `[!]` ack | 11 probes and the dispatcher self-test green. `cell-recovery` had no probe at all, so it showed green and could never fire; it now exits **2** with a named prerequisite when drill results are absent, and discriminates recent from stale recovery. Acknowledgement still needs `ALERT_WEBHOOK_URL` and a human nonce |
 | 30 | Operator-access approval | `[x]` | 0747 applied. Grants insert as pending; `assertGrant` carries `status = 'active'`. DB CHECK `approver_id != granted_by` convalidated |
-| 31 | Export / erasure / legal-hold drills | `[x]` drills / `[~]` sweep | Erasure enumerates FK tables from `pg_constraint` at runtime and dry-runs in a rolled-back tx. **No retention-sweep worker exists** — A37 building it |
+| 31 | Export / erasure / legal-hold drills | `[x]` | Erasure enumerates FK tables from `pg_constraint` at runtime and dry-runs in a rolled-back tx. The retention sweep now exists: per-org via `forEachOrg` in its own transaction, batched, legal-hold subjects excluded in the SQL predicate rather than per row, bite-proven by removing that guard. Payroll and document classes are skipped with a warning rather than half-purged |
 | 32 | Final independent audit of every PRD row | `[~]` | Two of four slices in; A20 and A22 still running |
 
 ## Operator-blocked right now
@@ -60,13 +60,27 @@ unreproducible — `db:check-build-reads` exits 1 at connect, and
 because the owner has BYPASSRLS.
 
 Runbook: reset the `streamline_app` password in the Neon console (not via `ALTER ROLE`),
-update `APP_DATABASE_URL` in `backend/.env`, then re-run `pnpm db:check-build-reads` and
-`src/degradation/search-index.spec.ts`. Until then the dashboard read-budget numbers below
-stand as previously measured but cannot be re-verified.
+update `APP_DATABASE_URL` in `backend/.env`, then re-run `pnpm db:check-build-reads`,
+`pnpm verify:membership-revocation` and `src/degradation/search-index.spec.ts`. Until then
+the dashboard read-budget numbers below stand as previously measured but cannot be
+re-verified.
+
+`verify:membership-revocation` is blocked by the same failure, so its post-fix INVENTORY
+table has **not** been re-measured. The foreign-key state it would report was instead
+verified directly against `pg_constraint`, which is the stronger evidence; the end-to-end
+removal drill is what remains unrun.
+
+Also recorded, not chased: `drizzle.__drizzle_migrations` holds 484 rows against 455
+journal entries — 21 applied rows whose journal entry was later removed, and 8 duplicate
+timestamps. Every journal entry **is** applied (0 unapplied), and each of this session's
+migrations applied exactly once, so schema state is sound; the residue is historical.
 
 ## Open findings this session (each reproduced here)
 
-- **16 rows where the membership-artifact registry disagrees with the real foreign keys.** Nothing ever compared the two; `verify:membership-revocation` now does and fails on drift. Three are functional blockers, not doc drift — `pm_workspace_memberships`, `managed_products` and `chat_messages` are `blocks-removal` in the database, so removing a member who sits in a PM workspace, owns a product, or ever sent a chat message fails 23503. A35 reconciling.
+- **A cross-tenant GDPR export, made reachable by registering the module.** `exportSubjectData` took no `orgId`: every query keyed on `subjectUserId` alone, so a caller holding `hr:retention:manage` with `all` scope could export a person's memberships, HR records, employments, data requests, legal holds and audit-log presence from **every** organisation. The module had been unregistered, so the endpoints 404'd and hid it. Fixed: org bound into every query, a subject outside the caller's org is 404 not 403, scope resolves `?? "none"`. Bite proven.
+- **Employee onboarding could re-trap a user.** `submit()` invalidated the session cache but never stamped `users.onboardingCompletedAt` — only an async cron did. A user who finished on one device and opened the app on another before the cron ran was sent back into the wizard, violating §8's durability rule. The stamp now happens in the same transaction. Org-setup skip was already correct.
+- **16 registry-vs-foreign-key mismatches reconciled**, plus four more the lane found while working. Twelve were stale docs (the migration had been done, several `reason` strings still said "the FK must change to…"). Four were real blockers: `managed_products`, `chat_messages`, `ticket_activity_log` and `ticket_comment_mentions` were RESTRICT, so removing a member who owned a product or **ever sent a chat message** failed 23503. Migrations 0763–0767 applied. Two stale duplicate FKs dropped.
+  As authored, all four used a bare composite `ON DELETE SET NULL`, which nulls **every** column in the key including `org_id` — NOT NULL on all four tables, so member deletion would have failed 23502. Corrected to `ON DELETE SET NULL (<column>)`; verified in `pg_catalog` as convalidated with the column list present.
 - **Two authenticated pages denied everyone.** `/inbox` and `/knowledge/chat` had page files but no registry entry, so both resolved unknown and failed closed. The registry listed `/knowledge/wiki/chat`, which does not exist on disk. Fixed and pinned in the matrix.
 - **The bodyless gate did not bite — now it does.** `check:openapi-coverage` skips a bodyless-marked handler from both numerator and denominator, so a false mark left it at exit 0. `check:bodyless-conflicts` replaces it; bite proven on an independently chosen handler (exit 1 naming `chat-channels.controller.ts:153 addMember`, exit 0 after revert). 533 controllers, 0 real violations.
 - **Five billing suites could not load at all** — `transformIgnorePatterns` exempted `@composio` but no transformer was registered for `.mjs`, so jest ran its ESM entry as CommonJS. `seat-ledger`, `invoice-snapshot`, `versioned-catalog`, `usage-metering` and `proration-ledger` had been proving nothing. Fixed: billing/core is now 25 suites / 416 tests.
