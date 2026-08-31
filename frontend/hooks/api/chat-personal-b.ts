@@ -81,7 +81,7 @@ export function useSetPresenceStatus() {
 
 export function useMarkChannelUnread() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation("chat:channels:write", {
+  return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "channels", "mark-unread"],
     mutationFn: (channelId: number) =>
       apiClient.post<{ ok: boolean }>(
@@ -98,11 +98,12 @@ export function useEntityChannel(
   entityType: string | null,
   entityId: string | null,
 ) {
+  const canRead = useCan("chat:channels:read");
   return useQuery({
     queryKey: [...queryKeys.chat.all, "entity", entityType, entityId] as const,
     queryFn: () =>
       apiClient.get<Channel>(`/chat/channels/entity/${entityType}/${entityId}`),
-    enabled: Boolean(entityType && entityId),
+    enabled: canRead && Boolean(entityType && entityId),
     staleTime: 5 * 60_000,
   });
 }
@@ -165,13 +166,14 @@ export function useUnfavoriteChannel() {
 }
 
 export function useChannelInviteLink(channelId: number, enabled: boolean) {
+  const canManage = useCan("chat:invite-links:manage");
   return useQuery({
     queryKey: queryKeys.chat.inviteLink(channelId),
     queryFn: () =>
       apiClient.post<{ token: string }>(
         `/chat/channels/${channelId}/invite-link`,
       ),
-    enabled: enabled && channelId > 0,
+    enabled: canManage && enabled && channelId > 0,
     staleTime: 60_000,
   });
 }

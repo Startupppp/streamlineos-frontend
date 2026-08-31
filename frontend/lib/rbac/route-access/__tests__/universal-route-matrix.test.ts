@@ -82,24 +82,21 @@ const MATRIX: readonly MatrixRow[] = [
   { path: "/me/documents", universalMatch: true, decisionKind: "universal", label: "own documents" },
 
   // ── /mail ───────────────────────────────────────────────────────────────────
-  // root read allowed — all /mail/* is universal (no admin descendants)
+  // root read allowed — /mail itself is the only real page; exact-by-default so new sub-routes fail closed
   { path: "/mail", universalMatch: true, decisionKind: "universal", label: "mail root" },
-  { path: "/mail/inbox", universalMatch: true, decisionKind: "universal", label: "mail inbox" },
 
   // ── /inbox ──────────────────────────────────────────────────────────────────
   // root read allowed
   { path: "/inbox", universalMatch: true, decisionKind: "universal", label: "unified inbox" },
 
   // ── /dashboard and /home ────────────────────────────────────────────────────
-  // root read allowed — all /dashboard/* and /home/* are universal
+  // root read allowed — only the root itself is universal; exact-by-default so any new sub-route fails closed
   { path: "/dashboard", universalMatch: true, decisionKind: "universal", label: "dashboard root" },
-  { path: "/dashboard/sub", universalMatch: true, decisionKind: "universal", label: "dashboard sub-page (subtree)" },
   { path: "/home", universalMatch: true, decisionKind: "universal", label: "home alias root" },
 
   // ── /announcements and /hr/announcements ────────────────────────────────────
-  // root read allowed — company announcements are universal reading
+  // root read allowed — only the root itself is universal; exact-by-default so any new sub-route fails closed
   { path: "/announcements", universalMatch: true, decisionKind: "universal", label: "announcements root" },
-  { path: "/announcements/1", universalMatch: true, decisionKind: "universal", label: "announcement detail" },
   { path: "/hr/announcements", universalMatch: true, decisionKind: "universal", label: "announcements under HR prefix — universal reading" },
 
   // ── /referrals and /jobs ────────────────────────────────────────────────────
@@ -226,6 +223,45 @@ describe("universal route matrix — exact-by-default with explicit allowlist", 
       expect({ path: row.path, matchesPhantom: actual === true }).toEqual({
         path: row.path,
         matchesPhantom: false,
+      });
+    }
+  });
+
+  it("BITE (i): exact-by-default — /me/* subtree remains universally accessible after the change", () => {
+    const selfServicePaths = [
+      "/me/attendance",
+      "/me/time-off",
+      "/me/pay",
+      "/me/expenses",
+      "/me/documents",
+      "/me/recruitment",
+      "/me/onboarding",
+    ];
+    for (const path of selfServicePaths) {
+      expect({ path, universal: isUniversalRoute(path) }).toEqual({
+        path,
+        universal: true,
+      });
+    }
+  });
+
+  it("BITE (ii): exact-by-default — a hypothetical new route under a formerly-subtree root fails closed", () => {
+    const hypotheticalNewRoutes = [
+      "/dashboard/admin-panel",
+      "/mail/admin-panel",
+      "/inbox/admin-panel",
+      "/announcements/admin-panel",
+      "/home/admin-panel",
+      "/hr/announcements/admin-panel",
+      "/kb/admin-panel",
+      "/docs/admin-panel",
+      "/referrals/admin-panel",
+      "/jobs/admin-panel",
+    ];
+    for (const path of hypotheticalNewRoutes) {
+      expect({ path, universal: isUniversalRoute(path) }).toEqual({
+        path,
+        universal: false,
       });
     }
   });

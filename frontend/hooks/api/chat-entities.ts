@@ -48,10 +48,11 @@ interface LinkMeta {
 }
 
 export function useLinkPreview(url: string | null) {
+  const canRead = useCan("chat:messages:read");
   return useQuery({
     queryKey: [...queryKeys.chat.all, "linkPreview", url] as const,
     queryFn: () => apiClient.get<LinkMeta>("/chat/link-preview", { url: url! }),
-    enabled: Boolean(url) && url!.startsWith("http"),
+    enabled: canRead && Boolean(url) && url!.startsWith("http"),
     staleTime: 10 * 60_000,
     retry: false,
   });

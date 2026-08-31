@@ -16,28 +16,24 @@ export interface UniversalRoute {
 export const UNIVERSAL_ROUTES: readonly UniversalRoute[] = [
   {
     path: "/dashboard",
-    subtree: true,
     reason: "Home. Every active member keeps the cross-module read projection.",
   },
   {
     path: "/home",
-    subtree: true,
     reason: "Home alias. Same surface as /dashboard.",
   },
   {
     path: "/me",
     subtree: true,
     reason:
-      "Employee self-service. A member always reaches their own attendance, leave, expenses, pay and employment documents.",
+      "Employee self-service. A member always reaches their own attendance, leave, expenses, pay and employment documents. The entire /me/* subtree is self-service by §8 — no administrative descendants exist here.",
   },
   {
     path: "/mail",
-    subtree: true,
     reason: "Platform core communication surface.",
   },
   {
     path: "/inbox",
-    subtree: true,
     reason:
       "The unified inbox merges notifications, broadcasts, mail and approvals the member is already entitled to. Each source is permission-filtered server-side, so the surface itself is platform core.",
   },
@@ -65,12 +61,10 @@ export const UNIVERSAL_ROUTES: readonly UniversalRoute[] = [
   },
   {
     path: "/announcements",
-    subtree: true,
     reason: "Company announcements are readable by every active member.",
   },
   {
     path: "/hr/announcements",
-    subtree: true,
     reason:
       "The announcements surface lives under the HR prefix but is company-wide reading, not HR administration.",
   },
@@ -81,12 +75,10 @@ export const UNIVERSAL_ROUTES: readonly UniversalRoute[] = [
   },
   {
     path: "/kb",
-    subtree: true,
     reason: "Knowledge Base reading is platform core.",
   },
   {
     path: "/docs",
-    subtree: true,
     reason: "Knowledge Base reading is platform core.",
   },
   {
@@ -106,19 +98,16 @@ export const UNIVERSAL_ROUTES: readonly UniversalRoute[] = [
   },
   {
     path: "/support/my",
-    subtree: true,
     reason:
       "A member's own support requests, not the helpdesk queue that serves them.",
   },
   {
     path: "/referrals",
-    subtree: true,
     reason:
       "Referrals and internal job openings are universal; the candidate pipeline behind them is not.",
   },
   {
     path: "/jobs",
-    subtree: true,
     reason:
       "Internal job openings are universal; recruitment administration is not.",
   },
@@ -129,13 +118,11 @@ export const UNIVERSAL_ROUTES: readonly UniversalRoute[] = [
   },
   {
     path: "/access-denied",
-    subtree: true,
     reason:
       "The denial page itself must render, or a denied member sees a redirect loop.",
   },
   {
     path: "/access-suspended",
-    subtree: true,
     reason:
       "The suspension notice must render for a member whose membership is no longer active.",
   },

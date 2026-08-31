@@ -1,6 +1,6 @@
 import { type ReactNode } from "react";
 import { notFound, redirect } from "next/navigation";
-import { requireSession } from "@/lib/rbac/require-permission";
+import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 import { getServerAuth } from "@/lib/get-server-auth";
 import { BACKEND_URL } from "@/lib/backend-url";
 
@@ -13,7 +13,7 @@ export default async function PmWorkspaceLayout({
   children,
   params,
 }: PmWorkspaceLayoutProps) {
-  await requireSession();
+  await enforceRouteAccess("/build/workspaces");
   const { pmWorkspaceId } = await params;
   const session = await getServerAuth();
   const token = session?.backendJwt;

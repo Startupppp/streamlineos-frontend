@@ -1,6 +1,6 @@
 import { type ReactNode } from "react";
 import { notFound } from "next/navigation";
-import { requireSession } from "@/lib/rbac/require-permission";
+import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 import { serverGet } from "@/lib/server-fetch";
 import type { ProjectWithDetails } from "@/types/projects";
 import { RememberLastProject } from "@/features/build/sidebar/remember-last-project";
@@ -14,7 +14,7 @@ export default async function PmWorkspaceProjectLayout({
   children,
   params,
 }: PmWorkspaceProjectLayoutProps) {
-  await requireSession();
+  await enforceRouteAccess("/build/workspaces");
   const { pmWorkspaceId, projectId } = await params;
   const numId = Number(projectId);
   if (Number.isNaN(numId)) notFound();

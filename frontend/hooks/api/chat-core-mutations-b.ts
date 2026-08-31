@@ -190,7 +190,7 @@ export function useUpdateChannel() {
 }
 
 export function useChatHeartbeat() {
-  return useAuthorizedMutation("chat:messages:write", {
+  return useAuthorizedMutation("chat:messages:read", {
     mutationKey: ["chat", "presence", "heartbeat"],
     mutationFn: () =>
       apiClient.post<{ ok: boolean }>("/chat/presence/heartbeat"),

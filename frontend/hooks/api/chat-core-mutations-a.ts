@@ -154,7 +154,7 @@ export function useDeleteMessage() {
 
 export function useMarkChannelRead() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation("chat:channels:write", {
+  return useAuthorizedMutation("chat:messages:read", {
     mutationKey: ["chat", "channels", "mark-read"],
     mutationFn: ({ channelId }: { channelId: number }) =>
       apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/read`),
