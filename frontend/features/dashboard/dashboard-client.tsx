@@ -107,7 +107,12 @@ export function DashboardClient() {
   } = useRecentProjects({
     enabled: deferredVisible && projectsEnabled && canViewTickets,
   });
-  const { data: teamAttendance, isLoading: teamLoading } = useTeamAttendance({
+  const {
+    data: teamAttendance,
+    isLoading: teamLoading,
+    error: teamError,
+    refetch: refetchTeam,
+  } = useTeamAttendance({
     enabled: deferredVisible && hrEnabled && canViewAttendance,
   });
   const teamAvailability = useMemo(
@@ -198,6 +203,7 @@ export function DashboardClient() {
   const handleRetryProjects = useCallback(() => void refetchProjects(), [refetchProjects]);
   const handleRetryActivity = useCallback(() => void refetchActivity(), [refetchActivity]);
   const handleRetrySprint = useCallback(() => void refetchSprint(), [refetchSprint]);
+  const handleRetryTeam = useCallback(() => void refetchTeam(), [refetchTeam]);
 
   const sortedMyTickets = useMemo((): DashboardTicket[] => {
     const raw = myIssuesData ?? [];
@@ -262,46 +268,11 @@ export function DashboardClient() {
     );
   }
 
-  if (error) {
-    return (
-      <PageWrapper title={pageTitle} subtitle="Something went wrong">
-        <div
-          className="rounded-xl border border-destructive/30 bg-destructive/5 p-6"
-          role="alert"
-        >
-          <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-            <div className="flex-1 space-y-3">
-              <p className="text-sm text-foreground">
-                {getErrorMessage(error)}
-              </p>
-              <Button onClick={handleRefresh} size="sm">
-                <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
-                Retry
-              </Button>
-            </div>
-          </div>
-        </div>
-      </PageWrapper>
-    );
-  }
-
-  if (!stats) {
-    return (
-      <PageWrapper title={pageTitle}>
-        <EmptyState
-          illustration={<EmptyActivityIllustration className="h-40 w-40" />}
-          title="No data available"
-          description="Dashboard statistics are not available. Please try refreshing."
-          action={{ label: "Refresh", onClick: handleRefresh }}
-        />
-      </PageWrapper>
-    );
-  }
-
-  const pageSubtitle = headerClock
-    ? `${headerClock.todayFormatted} · ${stats.orgName}`
-    : stats.orgName;
+  const pageSubtitle = stats
+    ? (headerClock
+        ? `${headerClock.todayFormatted} · ${stats.orgName}`
+        : stats.orgName)
+    : (headerClock?.todayFormatted ?? undefined);
 
   return (
     <PageWrapper
@@ -310,7 +281,30 @@ export function DashboardClient() {
       actions={hrEnabled ? <ClockInWidget /> : undefined}
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
-        {statCards.length > 0 && (
+        {error ? (
+          <div
+            className="rounded-xl border border-destructive/30 bg-destructive/5 p-6"
+            role="alert"
+          >
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+              <div className="flex-1 space-y-3">
+                <p className="text-sm text-foreground">{getErrorMessage(error)}</p>
+                <Button onClick={handleRefresh} size="sm">
+                  <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Retry
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : !stats ? (
+          <EmptyState
+            illustration={<EmptyActivityIllustration className="h-40 w-40" />}
+            title="No data available"
+            description="Dashboard statistics are not available. Please try refreshing."
+            action={{ label: "Refresh", onClick: handleRefresh }}
+          />
+        ) : statCards.length > 0 ? (
           <motion.div variants={fadeUp} initial="hidden" animate="visible">
             <StatCardGrid
               cols={statCards.length >= 4 ? 4 : statCards.length >= 3 ? 3 : 2}
@@ -326,7 +320,7 @@ export function DashboardClient() {
               ))}
             </StatCardGrid>
           </motion.div>
-        )}
+        ) : null}
 
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
           <QuickActions />
@@ -371,6 +365,8 @@ export function DashboardClient() {
                 <TeamAttendanceWidget
                   data={teamAttendance}
                   isLoading={teamLoading}
+                  error={teamError}
+                  onRetry={handleRetryTeam}
                 />
               </HomeSectionBoundary>
             )}
@@ -464,7 +460,12 @@ export function DashboardClient() {
             {hrEnabled && canViewAttendance && (
               <div className="min-h-0">
                 <HomeSectionBoundary sectionLabel="Team availability">
-                  <TeamCard members={teamAvailability} isLoading={teamLoading} />
+                  <TeamCard
+                    members={teamAvailability}
+                    isLoading={teamLoading}
+                    error={teamError}
+                    onRetry={handleRetryTeam}
+                  />
                 </HomeSectionBoundary>
               </div>
             )}

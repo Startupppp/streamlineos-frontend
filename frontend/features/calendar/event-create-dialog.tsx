@@ -6,6 +6,7 @@ import { useIsMobile } from "@/hooks/common/use-mobile";
 import {
   useCreateCalendarEvent,
   useUpdateCalendarEvent,
+  useUpsertOccurrenceException,
   useCalendarOrgMembers,
   useEventAttendees,
   extractEventNumericId,
@@ -25,6 +26,9 @@ import {
   type FormState,
 } from "./event-form-state";
 import { EventCreateForm } from "./event-create-form";
+import { EventSeriesScopeDialog } from "./event-series-scope-dialog";
+import type { SeriesScope } from "./event-series-scope-dialog";
+import { buildRrule } from "./event-recurrence-schema";
 
 interface EventCreateDialogProps {
   open: boolean;
@@ -55,8 +59,11 @@ export function EventCreateDialog({
   const [linkedTicket, setLinkedTicket] = useState<TicketSearchResult | null>(null);
   const [existingEntityId, setExistingEntityId] = useState<string | null>(null);
   const [ticketPickerOpen, setTicketPickerOpen] = useState(false);
+  const [seriesScopeOpen, setSeriesScopeOpen] = useState(false);
+  const [pendingPayload, setPendingPayload] = useState<Record<string, unknown> | null>(null);
   const createEvent = useCreateCalendarEvent();
   const updateEvent = useUpdateCalendarEvent();
+  const upsertOccurrenceException = useUpsertOccurrenceException();
   const { data: members = [] } = useCalendarOrgMembers();
   const { data: connections = [] } = useCalendarConnections();
   const { data: existingAttendees } = useEventAttendees(
@@ -335,23 +342,32 @@ export function EventCreateDialog({
     }
 
     const resolvedEntityId = linkedTicket ? String(linkedTicket.id) : (existingEntityId ?? undefined);
+    const rrule = buildRrule(form.recurrence) ?? undefined;
     const payload = {
       title: trimmedTitle,
       description: form.description || undefined,
       location: form.location || undefined,
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       allDay: form.allDay,
       color: form.color,
       category: form.category,
       attendeeIds: form.attendeeIds,
       entityType: resolvedEntityId ? "ticket" : undefined,
       entityId: resolvedEntityId,
+      rrule,
       syncConnectionId:
         !isEdit && form.syncConnectionId !== "none" ? Number(form.syncConnectionId) : undefined,
       addConference:
         !isEdit && form.syncConnectionId !== "none" ? form.addConference : undefined,
     };
+
+    if (isEdit && event?.rrule) {
+      setPendingPayload(payload as Record<string, unknown>);
+      setSeriesScopeOpen(true);
+      return;
+    }
 
     try {
       if (isEdit && event) {
@@ -378,7 +394,43 @@ export function EventCreateDialog({
     }
   }, [form, showEndDate, isEdit, event, createEvent, updateEvent, handleClose, existingEntityId, linkedTicket]);
 
+  const handleSeriesScopeConfirm = useCallback(async (scope: SeriesScope) => {
+    if (!pendingPayload || !event) return;
+    const numericId = extractEventNumericId(event.id);
+    if (numericId === null) {
+      toast.error("Cannot edit this event type");
+      setSeriesScopeOpen(false);
+      return;
+    }
+    try {
+      if (scope === "occurrence") {
+        await upsertOccurrenceException.mutateAsync({
+          eventId: numericId,
+          occurrenceStart: event.start,
+          modifiedTitle: String(pendingPayload.title ?? ""),
+          modifiedStart: String(pendingPayload.startDate ?? ""),
+          modifiedEnd: String(pendingPayload.endDate ?? ""),
+        });
+        toast.success("Occurrence updated");
+      } else {
+        await updateEvent.mutateAsync({ id: numericId, ...(pendingPayload as Record<string, unknown>) });
+        toast.success("Event updated");
+      }
+      setSeriesScopeOpen(false);
+      setPendingPayload(null);
+      handleClose();
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  }, [pendingPayload, event, upsertOccurrenceException, updateEvent, handleClose]);
+
+  const handleSeriesScopeOpenChange = useCallback((open: boolean) => {
+    if (!open) setPendingPayload(null);
+    setSeriesScopeOpen(open);
+  }, []);
+
   const isPending = isEdit ? updateEvent.isPending : createEvent.isPending;
+  const seriesPending = upsertOccurrenceException.isPending || updateEvent.isPending;
   const isMobile = useIsMobile();
 
   const handleOpenTicketPicker = useCallback(() => {
@@ -395,6 +447,11 @@ export function EventCreateDialog({
     setLinkedTicket(null);
     setExistingEntityId(null);
   }, []);
+
+  const handleRecurrenceChange = useCallback(
+    (next: FormState["recurrence"]) => set("recurrence", next),
+    [set],
+  );
 
   return (
     <EventCreateForm

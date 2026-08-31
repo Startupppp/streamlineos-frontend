@@ -16,7 +16,7 @@ import {
   type Announcement,
 } from "@/hooks/api/dashboard";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Megaphone, X, Pin, Plus } from "lucide-react";
+import { Megaphone, X, Pin, Plus, RefreshCw } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -83,7 +83,7 @@ function AnnouncementItem({
 export function AnnouncementsWidget() {
   const isAdmin = useCan("settings:manage");
 
-  const { data, isLoading, error } = useAnnouncements();
+  const { data, isLoading, error, refetch } = useAnnouncements();
   const createMutation = useCreateAnnouncement();
   const deleteMutation = useDeleteAnnouncement();
 
@@ -92,6 +92,7 @@ export function AnnouncementsWidget() {
   const [content, setContent] = useState("");
   const [isPinned, setIsPinned] = useState(false);
 
+  const handleRetry = () => void refetch();
   const handleToggleForm = () => setShowForm((v) => !v);
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setTitle(e.target.value);
@@ -219,7 +220,17 @@ export function AnnouncementsWidget() {
             ))}
           </div>
         ) : error ? (
-          <p className="text-sm text-destructive">{getErrorMessage(error)}</p>
+          <div className="space-y-2">
+            <p className="text-sm text-destructive">{getErrorMessage(error)}</p>
+            <button
+              type="button"
+              onClick={handleRetry}
+              className="flex items-center gap-1 text-xs text-status-warning-ink hover:opacity-80 transition-opacity"
+            >
+              <RefreshCw className="h-3 w-3" aria-hidden="true" />
+              Retry
+            </button>
+          </div>
         ) : !data?.length ? (
           <EmptyState
             illustration={<EmptyMailIllustration className="h-20 w-20" />}

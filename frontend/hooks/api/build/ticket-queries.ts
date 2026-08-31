@@ -35,18 +35,53 @@ export function useTickets(
   });
 }
 
-export function useProjectBoardTickets(projectId: number) {
+export type BoardFilters = {
+  q?: string;
+  status?: string;
+  priority?: string;
+  type?: string;
+  assigneeId?: string;
+  labels?: string;
+  cycle?: string;
+  sprint?: string;
+  module?: string;
+};
+
+export function useProjectBoardTickets(projectId: number, filters?: BoardFilters) {
   const canView = useCan("build:tickets:view");
+  const hasFilters = !!(
+    filters?.q ||
+    filters?.status ||
+    filters?.priority ||
+    filters?.type ||
+    filters?.assigneeId ||
+    filters?.labels ||
+    filters?.cycle ||
+    filters?.sprint ||
+    filters?.module
+  );
+
   const query = useInfiniteQuery<CursorPaginatedResponse<Ticket>>({
-    queryKey: queryKeys.projects.tickets({ projectId, view: "board" }),
-    queryFn: ({ pageParam }) =>
-      apiClient.get<CursorPaginatedResponse<Ticket>>(`/build/${projectId}/tickets`, {
+    queryKey: queryKeys.projects.tickets({ projectId, view: "board", ...filters }),
+    queryFn: ({ pageParam }) => {
+      const params: Record<string, unknown> = {
         limit: BOARD_PAGE_SIZE,
         paging: "cursor",
-        ...(pageParam ? { cursor: pageParam as string } : {}),
         orderBy: "rank",
         orderDir: "asc",
-      }),
+        ...(pageParam ? { cursor: pageParam as string } : {}),
+      };
+      if (filters?.q) params.search = filters.q;
+      if (filters?.status) params.status = filters.status;
+      if (filters?.priority) params.priority = filters.priority;
+      if (filters?.type) params.type = filters.type;
+      if (filters?.assigneeId) params.assigneeId = filters.assigneeId;
+      if (filters?.labels) params.labelIds = filters.labels;
+      if (filters?.cycle) params.cycleId = filters.cycle;
+      if (filters?.sprint) params.sprintIds = filters.sprint;
+      if (filters?.module) params.moduleIds = filters.module;
+      return apiClient.get<CursorPaginatedResponse<Ticket>>(`/build/${projectId}/tickets`, params);
+    },
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last) => last.nextCursor ?? undefined,
     enabled: canView && !!projectId,
@@ -62,10 +97,11 @@ export function useProjectBoardTickets(projectId: number) {
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = query;
 
   useEffect(() => {
+    if (hasFilters) return;
     if (!hasNextPage || isFetchingNextPage) return;
     if (data.length >= BOARD_AUTOLOAD_LIMIT) return;
     void fetchNextPage();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage, data.length]);
+  }, [hasFilters, hasNextPage, isFetchingNextPage, fetchNextPage, data.length]);
 
   return {
     ...query,

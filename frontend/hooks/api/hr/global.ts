@@ -1,10 +1,12 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface WorkAuthorization {
   id: number;
@@ -76,16 +78,19 @@ interface PaginatedResponse<T> {
 }
 
 export function useWorkAuthorizations(params?: Record<string, unknown>) {
+  const canView = useCan("hr:employees:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery<PaginatedResponse<WorkAuthorization>>({
     queryKey: queryKeys.hr.workAuthorizations(params),
     queryFn: () => apiClient.get("/hr/global/work-authorizations", params),
     staleTime: 60_000,
+    enabled: canView && hrEnabled,
   });
 }
 
 export function useCreateWorkAuth() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:compliance:manage", {
     mutationKey: ["hr", "global", "workAuth", "create"],
     mutationFn: (body: Record<string, unknown>) => apiClient.post("/hr/global/work-authorizations", body),
     onSuccess: () => {
@@ -98,7 +103,7 @@ export function useCreateWorkAuth() {
 
 export function useUpdateWorkAuth(id: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:compliance:manage", {
     mutationKey: ["hr", "global", "workAuth", "update", id],
     mutationFn: (body: Record<string, unknown>) => apiClient.patch(`/hr/global/work-authorizations/${id}`, body),
     onSuccess: () => {
@@ -112,7 +117,7 @@ export function useUpdateWorkAuth(id: number) {
 
 export function useDeleteWorkAuth() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:compliance:manage", {
     mutationKey: ["hr", "global", "workAuth", "delete"],
     mutationFn: (id: number) => apiClient.delete(`/hr/global/work-authorizations/${id}`),
     onSuccess: () => {
@@ -124,16 +129,19 @@ export function useDeleteWorkAuth() {
 }
 
 export function useComplianceRequirements(params?: Record<string, unknown>) {
+  const canManage = useCan("hr:compliance:manage");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery<PaginatedResponse<ComplianceRequirement>>({
     queryKey: queryKeys.hr.complianceRequirements(params),
     queryFn: () => apiClient.get("/hr/global/compliance/requirements", params),
     staleTime: 120_000,
+    enabled: canManage && hrEnabled,
   });
 }
 
 export function useCreateComplianceRequirement() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:compliance:manage", {
     mutationKey: ["hr", "global", "compliance", "create"],
     mutationFn: (body: Record<string, unknown>) => apiClient.post("/hr/global/compliance/requirements", body),
     onSuccess: () => {
@@ -146,7 +154,7 @@ export function useCreateComplianceRequirement() {
 
 export function useUpdateComplianceRequirement(id: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:compliance:manage", {
     mutationKey: ["hr", "global", "compliance", "update", id],
     mutationFn: (body: Record<string, unknown>) => apiClient.patch(`/hr/global/compliance/requirements/${id}`, body),
     onSuccess: () => {
@@ -160,7 +168,7 @@ export function useUpdateComplianceRequirement(id: number) {
 
 export function useDeleteComplianceRequirement() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:compliance:manage", {
     mutationKey: ["hr", "global", "compliance", "delete"],
     mutationFn: (id: number) => apiClient.delete(`/hr/global/compliance/requirements/${id}`),
     onSuccess: () => {
@@ -172,16 +180,19 @@ export function useDeleteComplianceRequirement() {
 }
 
 export function useComplianceEvents(params?: Record<string, unknown>) {
+  const canManage = useCan("hr:compliance:manage");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery<PaginatedResponse<ComplianceEvent>>({
     queryKey: queryKeys.hr.complianceEvents(params),
     queryFn: () => apiClient.get("/hr/global/compliance/events", params),
     staleTime: 60_000,
+    enabled: canManage && hrEnabled,
   });
 }
 
 export function useMarkEventDone() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:compliance:manage", {
     mutationKey: ["hr", "global", "compliance", "markDone"],
     mutationFn: ({ eventId, notes }: { eventId: number; notes?: string }) =>
       apiClient.post(`/hr/global/compliance/events/${eventId}/done`, { notes }),
@@ -195,7 +206,7 @@ export function useMarkEventDone() {
 
 export function useGenerateComplianceEvents() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:compliance:manage", {
     mutationKey: ["hr", "global", "compliance", "generateEvents"],
     mutationFn: (requirementId?: number) =>
       apiClient.post<{ generated: number }>(`/hr/global/compliance/generate-events${requirementId ? `?requirementId=${requirementId}` : ""}`, {}),
@@ -209,7 +220,7 @@ export function useGenerateComplianceEvents() {
 
 export function useSeedCountryPack() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:compliance:manage", {
     mutationKey: ["hr", "global", "compliance", "seedPack"],
     mutationFn: (body: { country: string; year?: number }) =>
       apiClient.post<{ holidays: number; requirements: number; country: string }>("/hr/global/compliance/seed-country-pack", body),
@@ -222,16 +233,19 @@ export function useSeedCountryPack() {
 }
 
 export function useContracts(params?: Record<string, unknown>) {
+  const canView = useCan("hr:employees:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery<PaginatedResponse<HrContract>>({
     queryKey: queryKeys.hr.contracts(params),
     queryFn: () => apiClient.get("/hr/global/contracts", params),
     staleTime: 60_000,
+    enabled: canView && hrEnabled,
   });
 }
 
 export function useCreateContract() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:compliance:manage", {
     mutationKey: ["hr", "global", "contracts", "create"],
     mutationFn: (body: Record<string, unknown>) => apiClient.post("/hr/global/contracts", body),
     onSuccess: () => {
@@ -244,7 +258,7 @@ export function useCreateContract() {
 
 export function useUpdateContract(id: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:compliance:manage", {
     mutationKey: ["hr", "global", "contracts", "update", id],
     mutationFn: (body: Record<string, unknown>) => apiClient.patch(`/hr/global/contracts/${id}`, body),
     onSuccess: () => {
@@ -258,7 +272,7 @@ export function useUpdateContract(id: number) {
 
 export function useEndContract() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:compliance:manage", {
     mutationKey: ["hr", "global", "contracts", "end"],
     mutationFn: ({ contractId, notes }: { contractId: number; notes?: string }) =>
       apiClient.post(`/hr/global/contracts/${contractId}/end`, { notes }),
@@ -272,7 +286,7 @@ export function useEndContract() {
 
 export function useConvertToEmployee() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:compliance:manage", {
     mutationKey: ["hr", "global", "contracts", "convert"],
     mutationFn: ({ contractId, ...body }: { contractId: number; effectiveDate?: string; notes?: string }) =>
       apiClient.post(`/hr/global/contracts/${contractId}/convert-to-employee`, body),
@@ -285,10 +299,12 @@ export function useConvertToEmployee() {
 }
 
 export function useInternshipCertificate(contractId: number, enabled = false) {
+  const canView = useCan("hr:employees:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery<{ html: string; templateId: number | null }>({
     queryKey: queryKeys.hr.internshipCertificate(contractId),
     queryFn: () => apiClient.get(`/hr/global/contracts/${contractId}/internship-certificate`),
-    enabled,
+    enabled: canView && hrEnabled && enabled,
     staleTime: 300_000,
   });
 }

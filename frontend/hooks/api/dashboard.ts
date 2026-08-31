@@ -339,8 +339,6 @@ export const useAnnouncements = (
 
 export const useCreateAnnouncement = () => {
   const qc = useQueryClient();
-  const { data: session } = useSession();
-  const orgId = session?.orgId ?? "";
   return useMutation({
     mutationKey: ["dashboard", "announcements", "create"],
     mutationFn: (body: { title: string; content: string; isPinned?: boolean; expiresAt?: string }) =>
@@ -353,8 +351,6 @@ export const useCreateAnnouncement = () => {
 
 export const useDeleteAnnouncement = () => {
   const qc = useQueryClient();
-  const { data: session } = useSession();
-  const orgId = session?.orgId ?? "";
   return useMutation({
     mutationKey: ["dashboard", "announcements", "delete"],
     mutationFn: (id: number) =>

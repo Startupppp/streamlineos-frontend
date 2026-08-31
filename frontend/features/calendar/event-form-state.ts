@@ -7,6 +7,8 @@ import {
   startOfDay,
 } from "date-fns";
 import type { CalendarListItem } from "@/hooks/api/calendar";
+import type { RecurrenceState } from "./event-recurrence-schema";
+import { defaultRecurrenceState, parseRrule } from "./event-recurrence-schema";
 
 export type EventCategory =
   | "general"
@@ -47,13 +49,17 @@ export interface FormState {
   locationError: string;
   syncConnectionId: string;
   addConference: boolean;
+  recurrence: RecurrenceState;
 }
+
+export type { RecurrenceState };
 
 export function toDefaultForm(
   slot?: { start: Date; end: Date } | null,
 ): FormState {
   const start = slot?.start ?? new Date();
   const end = slot?.end ?? addHours(start, 1);
+  const startDate = format(start, "yyyy-MM-dd");
   return {
     title: "",
     description: "",
@@ -61,7 +67,7 @@ export function toDefaultForm(
     allDay: false,
     color: "blue",
     category: "general",
-    startDate: format(start, "yyyy-MM-dd"),
+    startDate,
     startTime: format(start, "HH:mm"),
     endDate: format(end, "yyyy-MM-dd"),
     endTime: format(end, "HH:mm"),
@@ -69,12 +75,17 @@ export function toDefaultForm(
     locationError: "",
     syncConnectionId: "none",
     addConference: true,
+    recurrence: defaultRecurrenceState(startDate),
   };
 }
 
 export function toEditForm(event: CalendarListItem): FormState {
   const start = new Date(event.start);
   const end = new Date(event.end);
+  const startDate = format(start, "yyyy-MM-dd");
+  const recurrence = event.rrule
+    ? parseRrule(event.rrule)
+    : defaultRecurrenceState(startDate);
   return {
     title: event.title,
     description: event.description ?? "",
@@ -82,7 +93,7 @@ export function toEditForm(event: CalendarListItem): FormState {
     allDay: event.allDay ?? false,
     color: event.color ?? "blue",
     category: eventCategory(event.category),
-    startDate: format(start, "yyyy-MM-dd"),
+    startDate,
     startTime: format(start, "HH:mm"),
     endDate: format(end, "yyyy-MM-dd"),
     endTime: format(end, "HH:mm"),
@@ -90,6 +101,7 @@ export function toEditForm(event: CalendarListItem): FormState {
     locationError: "",
     syncConnectionId: "none",
     addConference: false,
+    recurrence,
   };
 }
 

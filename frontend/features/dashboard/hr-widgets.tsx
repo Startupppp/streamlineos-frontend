@@ -62,7 +62,9 @@ function toMyLeaveRequestSummary(raw: unknown): MyLeaveRequestSummary | null {
     startDate: String(row.startDate ?? ""),
     endDate: String(row.endDate ?? ""),
     leaveTypeName:
-      leaveType && typeof leaveType.name === "string" ? leaveType.name : "Leave",
+      leaveType && typeof leaveType.name === "string"
+        ? leaveType.name
+        : "Leave",
   };
 }
 
@@ -73,8 +75,9 @@ function EmptyWidget({ message }: { message: string }) {
 }
 
 export function LeavesTodayWidget() {
-  const { data, isLoading, error } = useLeavesToday();
+  const { data, isLoading, error, refetch } = useLeavesToday();
   const leaves = data ?? [];
+  const handleRetry = () => void refetch();
 
   return (
     <WidgetCard
@@ -84,6 +87,7 @@ export function LeavesTodayWidget() {
       badge={leaves.length || undefined}
       isLoading={isLoading}
       error={error}
+      onRetry={handleRetry}
       isEmpty={!leaves.length}
       empty={<EmptyWidget message="Everyone is in today!" />}
     >
@@ -97,7 +101,10 @@ export function LeavesTodayWidget() {
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <TruncatedText text={l.employeeName ?? ""} className="text-xs font-medium" />
+              <TruncatedText
+                text={l.employeeName ?? ""}
+                className="text-xs font-medium"
+              />
               <p className="text-micro text-muted-foreground">
                 Leave · back {format(new Date(l.endDate), "MMM d")}
               </p>
@@ -110,8 +117,9 @@ export function LeavesTodayWidget() {
 }
 
 export function UpcomingHolidaysWidget() {
-  const { data, isLoading } = useUpcomingHolidays();
+  const { data, isLoading, error, refetch } = useUpcomingHolidays();
   const holidays = data ?? [];
+  const handleRetry = () => void refetch();
 
   return (
     <WidgetCard
@@ -119,6 +127,8 @@ export function UpcomingHolidaysWidget() {
       iconClassName="text-status-success-ink"
       title="Upcoming Holidays"
       isLoading={isLoading}
+      error={error}
+      onRetry={handleRetry}
       loadingRows={2}
       isEmpty={!holidays.length}
       empty={<EmptyWidget message="No upcoming holidays." />}
@@ -143,11 +153,11 @@ export function UpcomingHolidaysWidget() {
 }
 
 export function LeaveBalanceWidget() {
-  const { canViewLeaves } = useDashboardAccess();
-  const { data, isLoading } = useMyLeaveBalance();
+  const { data, isLoading, error, refetch } = useMyLeaveBalance();
   const { data: myRequestsData } = useHrMyLeaveRequests();
   const balances = data ?? [];
 
+  const handleRetry = () => void refetch();
   const requests = useMemo(
     () =>
       (myRequestsData?.requests ?? [])
@@ -159,9 +169,11 @@ export function LeaveBalanceWidget() {
   const latestRequest = requests[0] ?? null;
   const upcomingLeave = useMemo(() => {
     const today = format(new Date(), "yyyy-MM-dd");
-    return requests
-      .filter((r) => r.status === "APPROVED" && r.endDate >= today)
-      .sort((a, b) => a.startDate.localeCompare(b.startDate))[0] ?? null;
+    return (
+      requests
+        .filter((r) => r.status === "APPROVED" && r.endDate >= today)
+        .sort((a, b) => a.startDate.localeCompare(b.startDate))[0] ?? null
+    );
   }, [requests]);
 
   return (
@@ -171,6 +183,8 @@ export function LeaveBalanceWidget() {
       title="My Leave Balance"
       link={{ href: "/hr/leaves", label: "Apply" }}
       isLoading={isLoading}
+      error={error}
+      onRetry={handleRetry}
       loadingRows={2}
       isEmpty={!balances.length}
       empty={<EmptyWidget message="No leave balances found." />}
@@ -185,7 +199,10 @@ export function LeaveBalanceWidget() {
               key={b.id}
               className="rounded-lg border border-border/60 p-2.5"
             >
-              <TruncatedText text={b.leaveTypeName ?? ""} className="text-micro text-muted-foreground" />
+              <TruncatedText
+                text={b.leaveTypeName ?? ""}
+                className="text-micro text-muted-foreground"
+              />
               <div className="flex items-baseline gap-1 mt-0.5">
                 <span className="text-lg font-bold tabular-nums">
                   {parseFloat(b.balance)}
@@ -235,8 +252,9 @@ export function LeaveBalanceWidget() {
 }
 
 export function BirthdaysWidget() {
-  const { data, isLoading } = useBirthdays();
+  const { data, isLoading, error, refetch } = useBirthdays();
   const entries = data ?? [];
+  const handleRetry = () => void refetch();
 
   return (
     <WidgetCard
@@ -244,6 +262,8 @@ export function BirthdaysWidget() {
       iconClassName="text-category-pink-ink"
       title="Birthdays & Anniversaries"
       isLoading={isLoading}
+      error={error}
+      onRetry={handleRetry}
       isEmpty={!entries.length}
       empty={<EmptyWidget message="No celebrations this week." />}
     >
@@ -257,7 +277,10 @@ export function BirthdaysWidget() {
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <TruncatedText text={b.name ?? ""} className="text-xs font-medium" />
+              <TruncatedText
+                text={b.name ?? ""}
+                className="text-xs font-medium"
+              />
               <div className="flex items-center gap-1.5">
                 {b.type === "birthday" && (
                   <span className="text-micro text-category-pink-ink flex items-center gap-0.5">
@@ -282,9 +305,10 @@ export function BirthdaysWidget() {
 
 export function PendingApprovalsWidget() {
   const { canApproveLeaves, hrEnabled } = useDashboardAccess();
-  const { data, isLoading, error } = usePendingApprovals({
+  const { data, isLoading, error, refetch } = usePendingApprovals({
     enabled: canApproveLeaves && hrEnabled,
   });
+  const handleRetry = () => void refetch();
 
   return (
     <WidgetCard
@@ -294,6 +318,7 @@ export function PendingApprovalsWidget() {
       badge={data?.total || undefined}
       isLoading={isLoading}
       error={error}
+      onRetry={handleRetry}
       loadingRows={2}
       isEmpty={!data}
       empty={<EmptyWidget message="No data." />}
@@ -319,9 +344,13 @@ export function PendingApprovalsWidget() {
 export function TeamAttendanceWidget({
   data,
   isLoading,
+  error,
+  onRetry,
 }: {
   data: TeamAttendance | undefined;
   isLoading: boolean;
+  error?: unknown;
+  onRetry?: () => void;
 }) {
   return (
     <WidgetCard
@@ -329,15 +358,32 @@ export function TeamAttendanceWidget({
       iconClassName="text-primary"
       title="Team Attendance"
       isLoading={isLoading}
+      error={error}
+      onRetry={onRetry}
       loadingRows={2}
       isEmpty={!data}
       empty={<EmptyWidget message="No data." />}
     >
       <div>
         <StatCardGrid cols={3} className="mb-3">
-          <StatCard label="Present" value={data?.present ?? 0} icon={UserCheck} tone="emerald" />
-          <StatCard label="Absent" value={data?.absent ?? 0} icon={UserX} tone="red" />
-          <StatCard label="Total" value={data?.total ?? 0} icon={Users} tone="default" />
+          <StatCard
+            label="Present"
+            value={data?.present ?? 0}
+            icon={UserCheck}
+            tone="emerald"
+          />
+          <StatCard
+            label="Absent"
+            value={data?.absent ?? 0}
+            icon={UserX}
+            tone="red"
+          />
+          <StatCard
+            label="Total"
+            value={data?.total ?? 0}
+            icon={Users}
+            tone="default"
+          />
         </StatCardGrid>
         <div className="h-2 rounded-full bg-muted overflow-hidden">
           <div
