@@ -10,7 +10,7 @@ import {
 } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useProject } from "@/hooks/api";
-import { useViews, useCreateView, useProjectBoardTickets } from "@/hooks/api/build";
+import { useViews, useCreateView, useProjectBoardTickets, useProjectMembers } from "@/hooks/api/build";
 import { hydrateDisplayOptions, useDisplayOptions } from "./use-display-options";
 import { parseViewType, type ViewType } from "./view-switcher";
 import { type SaveViewMeta } from "./save-view-dialog";
@@ -74,6 +74,7 @@ export function useBoardUrlState(projectId: number) {
   const { data: boardTickets, isLoading: ticketsLoading } = useProjectBoardTickets(projectId);
   const { data } = useProject(projectId);
   const { data: views } = useViews(projectId);
+  const { data: projectMembersData } = useProjectMembers(projectId);
   const createView = useCreateView();
   const appliedViewIdRef = useRef<string | null>(null);
 
@@ -234,20 +235,15 @@ export function useBoardUrlState(projectId: number) {
   }, [allTickets, hideCompleted, q, filterStatus, filterPriority, filterType, filterAssigneeId, filterLabels, filterCycle, filterSprint, filterModule, data, displayOptions.completedIssues, statuses]);
 
   const members: BoardMember[] = useMemo(() => {
-    if (!data?.members) return [];
-    return data.members.flatMap((m) => {
-      if (!m.user) return [];
-      return [
-        {
-          id: m.user.id,
-          name: m.user.name ?? null,
-          firstName: m.user.firstName ?? null,
-          lastName: m.user.lastName ?? null,
-          image: m.user.image ?? null,
-        },
-      ];
-    });
-  }, [data]);
+    if (!projectMembersData) return [];
+    return projectMembersData.map((m) => ({
+      id: m.id,
+      name: m.name ?? null,
+      firstName: m.firstName ?? null,
+      lastName: m.lastName ?? null,
+      image: m.image ?? null,
+    }));
+  }, [projectMembersData]);
 
   const wipLimits = useMemo<Record<string, number>>(() => {
     if (!statuses) return {};

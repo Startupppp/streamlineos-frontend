@@ -128,6 +128,14 @@ describe("useGlobalVariables — permission gate", () => {
     await waitFor(() => expect(result.current.fetchStatus).toBe("idle"));
     expect(apiClient.get).not.toHaveBeenCalledWith("/workflows/variables");
   });
+
+  it("fires when workflows:variables:manage is granted", async () => {
+    const client = makeClient(["workflows:variables:manage"]);
+    const { useGlobalVariables } = await import("../workflows-variables");
+    renderHook(() => useGlobalVariables(), { wrapper: makeWrapper(client) });
+
+    await waitFor(() => expect(apiClient.get).toHaveBeenCalledWith("/workflows/variables"));
+  });
 });
 
 describe("usePendingApprovals — permission gate", () => {
@@ -139,6 +147,16 @@ describe("usePendingApprovals — permission gate", () => {
     await waitFor(() => expect(result.current.fetchStatus).toBe("idle"));
     expect(apiClient.get).not.toHaveBeenCalledWith("/workflows/approvals/pending");
   });
+
+  it("fires when workflows:approvals:view is granted", async () => {
+    const client = makeClient(["workflows:approvals:view"]);
+    const { usePendingApprovals } = await import("../workflows-approvals");
+    renderHook(() => usePendingApprovals(), { wrapper: makeWrapper(client) });
+
+    await waitFor(() =>
+      expect(apiClient.get).toHaveBeenCalledWith("/workflows/approvals/pending"),
+    );
+  });
 });
 
 describe("useAllSchedules — permission gate", () => {
@@ -149,6 +167,14 @@ describe("useAllSchedules — permission gate", () => {
 
     await waitFor(() => expect(result.current.fetchStatus).toBe("idle"));
     expect(apiClient.get).not.toHaveBeenCalledWith("/workflows/schedules");
+  });
+
+  it("fires when workflows:schedules:manage is granted", async () => {
+    const client = makeClient(["workflows:schedules:manage"]);
+    const { useAllSchedules } = await import("../workflows-schedules");
+    renderHook(() => useAllSchedules(), { wrapper: makeWrapper(client) });
+
+    await waitFor(() => expect(apiClient.get).toHaveBeenCalledWith("/workflows/schedules"));
   });
 });
 
@@ -168,6 +194,25 @@ describe("useWorkflowAnalytics — permission gate", () => {
     renderHook(() => useWorkflowAnalytics(), { wrapper: makeWrapper(client) });
 
     await waitFor(() => expect(apiClient.get).toHaveBeenCalledWith("/workflows/analytics"));
+  });
+});
+
+describe("useWorkflowTemplates — permission gate", () => {
+  it("does not fire when workflows:templates:view is absent", async () => {
+    const client = makeClient([]);
+    const { useWorkflowTemplates } = await import("../workflows-analytics");
+    const { result } = renderHook(() => useWorkflowTemplates(), { wrapper: makeWrapper(client) });
+
+    await waitFor(() => expect(result.current.fetchStatus).toBe("idle"));
+    expect(apiClient.get).not.toHaveBeenCalledWith("/workflows/templates");
+  });
+
+  it("fires when workflows:templates:view is granted", async () => {
+    const client = makeClient(["workflows:templates:view"]);
+    const { useWorkflowTemplates } = await import("../workflows-analytics");
+    renderHook(() => useWorkflowTemplates(), { wrapper: makeWrapper(client) });
+
+    await waitFor(() => expect(apiClient.get).toHaveBeenCalledWith("/workflows/templates"));
   });
 });
 
