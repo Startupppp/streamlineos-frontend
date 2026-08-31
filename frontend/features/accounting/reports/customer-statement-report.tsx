@@ -115,7 +115,7 @@ export function CustomerStatementReport() {
   const [from, setFrom] = useState(params.get("from") ?? defaults.from);
   const [to, setTo] = useState(params.get("to") ?? defaults.to);
 
-  const customersQuery = useCustomersOutstanding({ pageSize: 100 });
+  const customersQuery = useCustomersOutstanding({ limit: 100 });
   const statementQuery = useCustomerStatement(clientId, from, to);
 
   function updateUrl(cid: number | null, f: string, t: string): void {
@@ -205,7 +205,7 @@ export function CustomerStatementReport() {
               <SelectValue placeholder="Select customer…" />
             </SelectTrigger>
             <SelectContent>
-              {(customersQuery.data?.items ?? []).map((c) => (
+              {(customersQuery.data?.data ?? []).map((c) => (
                 <SelectItem key={c.clientId} value={String(c.clientId)}>
                   {c.clientName}
                 </SelectItem>

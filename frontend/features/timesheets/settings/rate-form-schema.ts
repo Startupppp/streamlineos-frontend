@@ -4,7 +4,7 @@ export const rateFormSchema = z
   .object({
     projectId: z.string(),
     userId: z.string(),
-    billingType: z.enum(["BILLABLE", "NON_BILLABLE", "INTERNAL"]),
+    billingType: z.enum(["BILLABLE", "NON_BILLABLE", "FIXED"]),
     billRate: z
       .string()
       .regex(/^\d+(\.\d+)?$/, "Enter a valid non-negative number")

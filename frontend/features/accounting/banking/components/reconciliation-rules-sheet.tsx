@@ -87,7 +87,7 @@ export function ReconciliationRulesSheet({ bankAccountId, open, onOpenChange }: 
   const createRule = useCreateReconciliationRule(bankAccountId);
   const deleteRule = useDeleteReconciliationRule(bankAccountId);
 
-  const rules = rulesQuery.data ?? [];
+  const rules = rulesQuery.data?.data ?? [];
 
   function handleAddCondition() {
     setForm((prev) => ({

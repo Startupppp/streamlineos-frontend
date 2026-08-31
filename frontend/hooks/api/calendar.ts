@@ -109,6 +109,8 @@ export interface CalendarListItem {
     status: string;
   } | null;
   myRsvpStatus?: string | null;
+  rrule?: string | null;
+  isRecurring?: boolean | null;
 }
 
 export function extractEventNumericId(id: string): number | null {
@@ -116,29 +118,49 @@ export function extractEventNumericId(id: string): number | null {
   return match ? parseInt(match[1], 10) : null;
 }
 
-interface CreateCalendarEventPayload {
+export interface CreateCalendarEventPayload {
   title: string;
   description?: string;
   location?: string;
   startDate: string;
   endDate: string;
+  timezone?: string;
   allDay?: boolean;
   color?: string;
   category?: string;
   entityType?: string;
   entityId?: string;
   attendeeIds?: string[];
-  isRecurring?: boolean;
-  recurringRule?: string;
+  rrule?: string;
+  recurrenceEnd?: string;
   syncConnectionId?: number;
   addConference?: boolean;
 }
 
-interface UpdateCalendarEventPayload
-  extends Omit<Partial<CreateCalendarEventPayload>, "entityType" | "entityId"> {
+interface UpdateCalendarEventPayload {
   id: number;
+  title?: string;
+  description?: string | null;
+  location?: string | null;
+  startDate?: string;
+  endDate?: string;
+  timezone?: string;
+  allDay?: boolean;
+  color?: string | null;
+  category?: string;
   entityType?: string | null;
   entityId?: string | null;
+  attendeeIds?: string[];
+  rrule?: string | null;
+  recurrenceEnd?: string | null;
+}
+
+interface UpsertOccurrenceExceptionPayload {
+  eventId: number;
+  occurrenceStart: string;
+  modifiedTitle?: string;
+  modifiedStart?: string;
+  modifiedEnd?: string;
 }
 
 export interface CalendarEventsResponse {
@@ -188,6 +210,33 @@ export function useDeleteCalendarEvent() {
   return useMutation({
     mutationKey: ["calendar", "events", "delete"],
     mutationFn: (id: number) => apiClient.delete<{ deleted: boolean }>(`/calendar/events/${id}`),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.calendar.all, exact: false }),
+  });
+}
+
+export function useUpsertOccurrenceException() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["calendar", "events", "occurrence", "upsert"],
+    mutationFn: ({ eventId, occurrenceStart, ...body }: UpsertOccurrenceExceptionPayload) =>
+      apiClient.patch<{ id: number }>(
+        `/calendar/events/${eventId}/occurrences/${encodeURIComponent(occurrenceStart)}`,
+        body,
+      ),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.calendar.all, exact: false }),
+  });
+}
+
+export function useCancelOccurrence() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["calendar", "events", "occurrence", "cancel"],
+    mutationFn: ({ eventId, occurrenceStart }: { eventId: number; occurrenceStart: string }) =>
+      apiClient.delete<{ id: number }>(
+        `/calendar/events/${eventId}/occurrences/${encodeURIComponent(occurrenceStart)}`,
+      ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: queryKeys.calendar.all, exact: false }),
   });

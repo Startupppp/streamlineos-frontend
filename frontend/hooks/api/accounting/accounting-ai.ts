@@ -1,7 +1,7 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface VarianceExplainBody {
   periodLabel: string;
@@ -77,25 +77,25 @@ export interface ExtractDocumentResult {
 }
 
 export function useExplainVariance() {
-  return useMutation<VarianceExplainResult, Error, VarianceExplainBody>({
-    mutationKey: ["streamlineos", "accounting", "ai", "variance-explain"],
-    mutationFn: (body) =>
+  return useAuthorizedMutation("accounting:ai:use", {
+    mutationKey: ["streamlineos", "accounting", "ai", "variance-explain"] as const,
+    mutationFn: (body: VarianceExplainBody) =>
       apiClient.post<VarianceExplainResult>("/finance/ai/variance-explain", body),
   });
 }
 
 export function useExplainReconciliation() {
-  return useMutation<ReconciliationExplainResult, Error, ReconciliationExplainBody>({
-    mutationKey: ["streamlineos", "accounting", "ai", "reconciliation-explain"],
-    mutationFn: (body) =>
+  return useAuthorizedMutation("accounting:ai:use", {
+    mutationKey: ["streamlineos", "accounting", "ai", "reconciliation-explain"] as const,
+    mutationFn: (body: ReconciliationExplainBody) =>
       apiClient.post<ReconciliationExplainResult>("/finance/ai/reconciliation-explain", body),
   });
 }
 
 export function useExtractDocument() {
-  return useMutation<ExtractDocumentResult, Error, ExtractDocumentBody>({
-    mutationKey: ["streamlineos", "accounting", "ai", "extract-document"],
-    mutationFn: (body) =>
+  return useAuthorizedMutation("accounting:ai:use", {
+    mutationKey: ["streamlineos", "accounting", "ai", "extract-document"] as const,
+    mutationFn: (body: ExtractDocumentBody) =>
       apiClient.post<ExtractDocumentResult>("/finance/ai/extract-document", body),
   });
 }

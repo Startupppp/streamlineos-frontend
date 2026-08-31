@@ -33,7 +33,7 @@ export const useAccess = (
     refetchOnMount: true,
     refetchOnWindowFocus: "always",
     refetchOnReconnect: "always",
-    queryKey: queryKeys.access.me(orgId, userId),
+    queryKey: queryKeys.access.me(),
     queryFn: () => apiClient.get<AccessResponse>("/me/access"),
     ...restOptions,
     enabled: !!orgId && !!userId && (enabledOption ?? true),

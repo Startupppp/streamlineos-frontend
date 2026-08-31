@@ -1,9 +1,10 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   PayrollApprovalRow,
   SubmitApprovalResult,
@@ -22,7 +23,7 @@ export function useRunApprovals(runId: number, options?: { enabled?: boolean }) 
 
 export function useSubmitApproval() {
   const qc = useQueryClient();
-  return useMutation<SubmitApprovalResult, Error, { runId: number }>({
+  return useAuthorizedMutation<SubmitApprovalResult, Error, { runId: number }>("payroll:runs:update", {
     mutationKey: ["payroll", "submit-approval"],
     mutationFn: ({ runId }) =>
       apiClient.post<SubmitApprovalResult>(`/payroll/runs/${runId}/submit-approval`),
@@ -36,11 +37,11 @@ export function useSubmitApproval() {
 
 export function useApproveStage() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     ApproveStageResult,
     Error,
     { runId: number; approvalId: number; comment?: string }
-  >({
+  >("payroll:runs:manage", {
     mutationKey: ["payroll", "approve-stage"],
     mutationFn: ({ runId, approvalId, comment }) =>
       apiClient.post<ApproveStageResult>(
@@ -57,11 +58,11 @@ export function useApproveStage() {
 
 export function useRejectStage() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     ApproveStageResult,
     Error,
     { runId: number; approvalId: number; comment: string }
-  >({
+  >("payroll:runs:manage", {
     mutationKey: ["payroll", "reject-stage"],
     mutationFn: ({ runId, approvalId, comment }) =>
       apiClient.post<ApproveStageResult>(
@@ -78,7 +79,7 @@ export function useRejectStage() {
 
 export function useLockRun() {
   const qc = useQueryClient();
-  return useMutation<{ success: boolean }, Error, { runId: number }>({
+  return useAuthorizedMutation<{ success: boolean }, Error, { runId: number }>("payroll:runs:manage", {
     mutationKey: ["payroll", "lock-run"],
     mutationFn: ({ runId }) =>
       apiClient.post<{ success: boolean }>(`/payroll/runs/${runId}/lock`),
@@ -91,7 +92,7 @@ export function useLockRun() {
 
 export function useReopenRun() {
   const qc = useQueryClient();
-  return useMutation<{ success: boolean }, Error, { runId: number; reason: string }>({
+  return useAuthorizedMutation<{ success: boolean }, Error, { runId: number; reason: string }>("payroll:runs:manage", {
     mutationKey: ["payroll", "reopen-run"],
     mutationFn: ({ runId, reason }) =>
       apiClient.post<{ success: boolean }>(`/payroll/runs/${runId}/reopen`, { reason }),
@@ -104,7 +105,7 @@ export function useReopenRun() {
 
 export function useCloseRun() {
   const qc = useQueryClient();
-  return useMutation<{ success: boolean }, Error, { runId: number }>({
+  return useAuthorizedMutation<{ success: boolean }, Error, { runId: number }>("payroll:runs:manage", {
     mutationKey: ["payroll", "close-run"],
     mutationFn: ({ runId }) =>
       apiClient.post<{ success: boolean }>(`/payroll/runs/${runId}/close`),

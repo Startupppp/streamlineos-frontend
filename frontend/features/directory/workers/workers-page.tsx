@@ -7,9 +7,9 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useWorkers } from "@/hooks/api/directory/workers";
 import { useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
@@ -152,6 +152,11 @@ export function WorkersPage() {
 
   function handleStatusChange(value: string) {
     setStatus(value as WorkerStatus | "ALL");
+  }
+
+  function handleClearFilters() {
+    setSearch("");
+    setStatus("ALL");
   }
 
   function handleOpenCreate() {
@@ -301,19 +306,11 @@ export function WorkersPage() {
             <EmptyState
               className={CONTENT_FILL_PANEL}
               illustrationPreset="team"
-              title={isFiltered ? "No matching workers" : "No workers yet"}
-              description={
-                isFiltered
-                  ? "Try adjusting your search or filter."
-                  : "Add workers to build your workforce directory."
-              }
-              action={
-                isFiltered
-                  ? undefined
-                  : canManage
-                    ? { label: "Add Worker", onClick: handleOpenCreate }
-                    : undefined
-              }
+              title="No workers yet"
+              description={isFiltered ? "No results match your filters." : "Add workers to build your workforce directory."}
+              filtersActive={isFiltered}
+              onClearFilters={handleClearFilters}
+              action={!isFiltered && canManage ? { label: "Add Worker", onClick: handleOpenCreate } : undefined}
             />
           ) : (
             <>

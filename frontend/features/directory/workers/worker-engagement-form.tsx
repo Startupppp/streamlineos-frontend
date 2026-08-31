@@ -329,7 +329,7 @@ export function WorkerEngagementForm({
               form="engagement-form"
               size="sm"
               isPending={isPending}
-              loadingText="Savingâ€¦"
+              loadingText="Saving…"
             >
               {isEditing ? "Save changes" : "Add engagement"}
             </LoadingButton>

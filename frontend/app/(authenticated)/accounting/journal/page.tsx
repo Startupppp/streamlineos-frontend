@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useTransition } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -25,7 +26,9 @@ import { useJournal } from "@/hooks/api/accounting";
 import { useSubmitJournalApproval } from "@/hooks/api/accounting/core";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatShortDate } from "@/lib/date-utils";
 import { RecurringJournalsTab } from "@/features/accounting/core/recurring-journals-tab";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { cn } from "@/lib/utils";
 import type { JournalEntry, JournalEntryStatus } from "@/types/accounting";
 
@@ -48,34 +51,22 @@ const STATUS_OPTIONS: ReadonlyArray<{ value: StatusFilter; label: string }> = [
   { value: "VOID", label: "Void" },
 ];
 
-function isSourceFilter(value: string): value is SourceFilter {
-  return (
-    value === "ALL" ||
-    value === "invoice" ||
-    value === "payment" ||
-    value === "manual"
-  );
+const PAGE_SIZE = 25;
+
+function parseSourceFilter(value: string | null): SourceFilter {
+  if (value === "invoice" || value === "payment" || value === "manual") return value;
+  return "ALL";
 }
 
-function isStatusFilter(value: string): value is StatusFilter {
-  return (
-    value === "ALL" ||
+function parseStatusFilter(value: string | null): StatusFilter {
+  if (
     value === "DRAFT" ||
     value === "PENDING_APPROVAL" ||
     value === "POSTED" ||
     value === "VOID"
-  );
-}
-
-function formatDate(value: string): string {
-  if (!value) return "";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-  });
+  )
+    return value;
+  return "ALL";
 }
 
 interface SubmitApprovalButtonProps {
@@ -107,44 +98,71 @@ function SubmitApprovalButton({ entryId }: SubmitApprovalButtonProps) {
 }
 
 function EntriesTab() {
-  const [from, setFrom] = useState<string>("");
-  const [to, setTo] = useState<string>("");
-  const [sourceType, setSourceType] = useState<SourceFilter>("ALL");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [, startTransition] = useTransition();
+
+  const from = searchParams.get("from") ?? "";
+  const to = searchParams.get("to") ?? "";
+  const sourceType = parseSourceFilter(searchParams.get("sourceType"));
+  const statusFilter = parseStatusFilter(searchParams.get("status"));
+
+  const [cursors, setCursors] = useState<(string | null)[]>([null]);
+  const [cursorIndex, setCursorIndex] = useState(0);
+
+  const filterKey = `${from}|${to}|${sourceType}|${statusFilter}`;
+
+  useEffect(() => {
+    setCursors([null]);
+    setCursorIndex(0);
+  }, [filterKey]);
+
+  const currentCursor = cursors[cursorIndex] ?? null;
 
   const canCreate = useCan("accounting:journal:create");
 
   const query = useJournal({
-    page: 1,
-    pageSize: 100,
+    limit: PAGE_SIZE,
+    cursor: currentCursor ?? undefined,
     from: from || undefined,
     to: to || undefined,
     sourceType: sourceType === "ALL" ? undefined : sourceType,
     status: statusFilter === "ALL" ? undefined : statusFilter,
   });
 
+  function setParam(key: string, value: string): void {
+    startTransition(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value) params.set(key, value);
+      else params.delete(key);
+      params.delete("cursor");
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    });
+  }
+
   function handleFromChange(value: string): void {
-    setFrom(value);
+    setParam("from", value);
   }
 
   function handleToChange(value: string): void {
-    setTo(value);
+    setParam("to", value);
   }
 
   function handleSourceTypeChange(value: string): void {
-    if (isSourceFilter(value)) setSourceType(value);
+    setParam("sourceType", value === "ALL" ? "" : value);
   }
 
   function handleStatusChange(value: string): void {
-    if (isStatusFilter(value)) setStatusFilter(value);
+    setParam("status", value === "ALL" ? "" : value);
   }
 
   function handleRetry(): void {
     void query.refetch();
   }
 
-  const items = query.data?.items ?? [];
-  const total = query.data?.total ?? 0;
+  const items = query.data?.data ?? [];
+  const hasMore = query.data?.pagination?.hasMore ?? false;
 
   const columns: DataTableColumn<JournalEntry>[] = [
     {
@@ -166,7 +184,7 @@ function EntriesTab() {
       header: "Date",
       headerClassName: "w-[140px]",
       className: "text-sm text-muted-foreground tabular-nums",
-      cell: (entry) => formatDate(entry.entryDate),
+      cell: (entry) => formatShortDate(entry.entryDate),
     },
     {
       key: "description",
@@ -267,11 +285,6 @@ function EntriesTab() {
             ))}
           </SelectContent>
         </Select>
-        {total > 0 && (
-          <span className="text-xs text-muted-foreground ml-auto">
-            {total} entries
-          </span>
-        )}
       </div>
 
       {query.error ? (
@@ -281,29 +294,62 @@ function EntriesTab() {
           onRetry={handleRetry}
         />
       ) : (
-        <DataTable<JournalEntry>
-          data={items}
-          columns={columns}
-          getRowKey={(row) => row.id}
-          isLoading={query.isLoading}
-          emptyState={emptyStateNode}
-          minWidth="580px"
-          className="flex-1 min-h-0"
-        />
+        <>
+          <DataTable<JournalEntry>
+            data={items}
+            columns={columns}
+            getRowKey={(row) => row.id}
+            isLoading={query.isLoading}
+            emptyState={emptyStateNode}
+            minWidth="580px"
+            className="flex-1 min-h-0"
+          />
+          {(cursorIndex > 0 || hasMore) ? (
+            <CursorPageControls
+              page={cursorIndex + 1}
+              hasNext={hasMore}
+              onPrevious={() => setCursorIndex(Math.max(0, cursorIndex - 1))}
+              onNext={() => {
+                const next = query.data?.pagination.nextCursor ?? null;
+                setCursors((prev) => {
+                  const copy = prev.slice(0, cursorIndex + 1);
+                  copy.push(next);
+                  return copy;
+                });
+                setCursorIndex(cursorIndex + 1);
+              }}
+              className="mt-2"
+            />
+          ) : null}
+        </>
       )}
     </div>
   );
 }
 
 export default function JournalListPage() {
-  const [tab, setTab] = useState<TabValue>("entries");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [, startTransition] = useTransition();
+
+  const rawTab = searchParams.get("tab");
+  const tab: TabValue = rawTab === "recurring" ? "recurring" : "entries";
 
   function handleEntriesTab(): void {
-    setTab("entries");
+    startTransition(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("tab");
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    });
   }
 
   function handleRecurringTab(): void {
-    setTab("recurring");
+    startTransition(() => {
+      const params = new URLSearchParams();
+      params.set("tab", "recurring");
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    });
   }
 
   return (

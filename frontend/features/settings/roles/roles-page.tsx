@@ -122,6 +122,7 @@ export function RolesPage() {
     [],
   );
   const handleRetryRoles = useCallback(() => { void refetchRoles(); }, [refetchRoles]);
+  const handleClearSearch = useCallback(() => setSearch(""), [setSearch]);
 
   const handleDeleteRole = useCallback(() => {
     if (!deleteTarget) return;
@@ -244,6 +245,7 @@ export function RolesPage() {
               onSelect={handleSelectRole}
               onDelete={handleOpenDelete}
               onRename={setRenameTarget}
+              onClearSearch={handleClearSearch}
               onPageChange={setPage}
               onPageSizeChange={setPageSize}
             />

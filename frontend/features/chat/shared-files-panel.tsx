@@ -3,7 +3,8 @@
 import { useMemo } from "react";
 import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { FileText, Loader2, Paperclip } from "lucide-react";
+import { FileText, Paperclip } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { XIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import React from "react";
@@ -39,8 +40,16 @@ export function SharedFilesPanel({ channelId, onClose }: { channelId: number; on
 
       <ScrollArea className="flex-1">
         {isLoading ? (
-          <div className="flex items-center justify-center py-10">
-            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          <div className="space-y-1 p-2">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex gap-2.5 items-center px-2 py-2">
+                <Skeleton className="h-9 w-9 rounded-lg shrink-0" />
+                <div className="flex-1 space-y-1.5">
+                  <Skeleton className="h-3 w-36" />
+                  <Skeleton className="h-2.5 w-20" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : files.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-4">

@@ -16,7 +16,7 @@ export const generalSettingsSchema = z.object({
     "ROUND_DOWN",
   ]),
   requiredFields: z.array(z.string()),
-  approvalMode: z.enum(["NONE", "MANAGER", "PROJECT", "CLIENT"]),
+  approvalMode: z.enum(["MANAGER", "AUTO", "MULTI_LEVEL"]),
   clientApprovalEnabled: z.boolean(),
   lockAfterApproval: z.boolean(),
   lockAfterInvoice: z.boolean(),

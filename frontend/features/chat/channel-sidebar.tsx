@@ -4,23 +4,15 @@ import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { SearchInput } from "@/components/ui/search-input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import {
   Archive,
-  ArrowLeft,
   MessageSquareText,
   Star,
 } from "lucide-react";
 import {
   CompassIcon,
-  PlusIcon,
   SearchIcon,
-  UsersIcon,
 } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import React from "react";
@@ -30,60 +22,15 @@ import { useChatChannels, useArchivedChannels, useChatOnlineUsers } from "@/hook
 import { cn } from "@/lib/utils";
 import type { Channel } from "./chat-types";
 import { ChannelSidebarSection } from "./channel-sidebar-section";
-import { ChannelItem } from "./channel-item";
+import { ChannelListEntry } from "./channel-list-entry";
 import { NewDMDialog } from "./new-dm-dialog";
 import { NewGroupDialog } from "./new-group-dialog";
 import { ChatSearchDialog } from "./chat-search-dialog";
 import { ChatSidebarNav } from "./chat-sidebar-nav";
+import { ChannelCompactRail } from "./channel-compact-rail";
+import { ChannelArchivedSection } from "./channel-archived-section";
 
 const RAIL_ICON_SIZE = 14;
-
-interface ChannelListEntryProps {
-  channel: Channel;
-  activeChannelId: number | null;
-  currentUserId: string;
-  onlineUserIds: Set<string>;
-  onSelectChannel: (id: number) => void;
-  compact?: boolean;
-  onStartCall?: (channelId: number, type: "huddle") => void;
-  onOpenSettings?: (channelId: number) => void;
-}
-
-function ChannelListEntry({
-  channel: ch,
-  activeChannelId,
-  currentUserId,
-  onlineUserIds,
-  onSelectChannel,
-  compact = false,
-  onStartCall,
-  onOpenSettings,
-}: ChannelListEntryProps) {
-  const handleClick = useCallback(() => onSelectChannel(ch.id), [ch.id, onSelectChannel]);
-  return (
-    <ChannelItem
-      channel={ch}
-      isActive={activeChannelId === ch.id}
-      onClick={handleClick}
-      currentUserId={currentUserId}
-      onlineUserIds={onlineUserIds}
-      compact={compact}
-      onStartCall={onStartCall}
-      onOpenSettings={onOpenSettings}
-    />
-  );
-}
-
-interface ChannelSidebarProps {
-  activeChannelId: number | null;
-  onSelectChannel: (id: number) => void;
-  currentUserId: string;
-  autoFocusSearch?: boolean;
-  onSearchFocused?: () => void;
-  isCollapsed?: boolean;
-  onStartCall?: (channelId: number, type: "huddle") => void;
-  onOpenSettings?: (channelId: number) => void;
-}
 
 const SidebarSearchButton = React.forwardRef<
   HTMLButtonElement,
@@ -96,6 +43,17 @@ const SidebarSearchButton = React.forwardRef<
     </button>
   );
 });
+
+interface ChannelSidebarProps {
+  activeChannelId: number | null;
+  onSelectChannel: (id: number) => void;
+  currentUserId: string;
+  autoFocusSearch?: boolean;
+  onSearchFocused?: () => void;
+  isCollapsed?: boolean;
+  onStartCall?: (channelId: number, type: "huddle") => void;
+  onOpenSettings?: (channelId: number) => void;
+}
 
 export function ChannelSidebar({
   activeChannelId,
@@ -218,30 +176,6 @@ export function ChannelSidebar({
     [favorites, publicChannels, groups, dms]
   );
 
-  function renderCompactActionButton(
-    label: string,
-    icon: React.ReactNode,
-    onClick: () => void,
-  ) {
-    return (
-      <Tooltip delayDuration={0}>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            onClick={onClick}
-            className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
-            aria-label={label}
-          >
-            {icon}
-          </button>
-        </TooltipTrigger>
-        <TooltipContent side="right" sideOffset={10} className="text-xs font-medium">
-          {label}
-        </TooltipContent>
-      </Tooltip>
-    );
-  }
-
   return (
     <TooltipProvider>
       <div className="relative flex flex-col h-full overflow-visible">
@@ -292,84 +226,29 @@ export function ChannelSidebar({
           />
         </div>
 
-        <div
-          className={cn(
-            "relative z-20 hidden flex-col items-center gap-2 px-1.5 pt-2 pb-2 shrink-0",
-            isCollapsed && "md:flex",
-          )}
-        >
-          <div className="flex flex-col items-center gap-0.5">
-            {renderCompactActionButton(
-              "Search",
-              <SearchIcon size={RAIL_ICON_SIZE} />,
-              handleOpenChatSearch,
-            )}
-            {renderCompactActionButton(
-              "Browse Channels",
-              <CompassIcon size={RAIL_ICON_SIZE} />,
-              handleOpenBrowse,
-            )}
-            {renderCompactActionButton(
-              "New Direct Message",
-              <PlusIcon size={RAIL_ICON_SIZE} />,
-              handleOpenNewDM,
-            )}
-            {renderCompactActionButton(
-              "New Channel",
-              <UsersIcon size={RAIL_ICON_SIZE} />,
-              handleOpenNewGroup,
-            )}
-          </div>
-        </div>
+        <ChannelCompactRail
+          isCollapsed={isCollapsed}
+          onSearchOpen={handleOpenChatSearch}
+          onBrowseOpen={handleOpenBrowse}
+          onNewDMOpen={handleOpenNewDM}
+          onNewGroupOpen={handleOpenNewGroup}
+        />
 
         <ScrollArea className={cn("flex-1", isCollapsed ? "md:px-1 px-2" : "px-2")}>
           {showArchived ? (
-            <div className={cn("py-1", isCollapsed && "md:hidden")}>
-              <button
-                type="button"
-                onClick={handleCloseArchived}
-                className="w-full flex items-center gap-2 px-2 py-2 mb-1 rounded-xl text-left hover:bg-muted/40 transition-colors"
-              >
-                <ArrowLeft className="h-4 w-4 text-muted-foreground shrink-0" />
-                <span className="text-label font-semibold text-foreground">Archived</span>
-              </button>
-
-              {isArchivedLoading ? (
-                <div className="p-3 space-y-2">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex items-center gap-2.5 px-2 py-2">
-                      <Skeleton className="h-10 w-10 rounded-full" />
-                      <div className="flex-1 space-y-1.5">
-                        <Skeleton className="h-3.5 w-24" />
-                        <Skeleton className="h-3 w-36" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : filteredArchivedChannels.length > 0 ? (
-                filteredArchivedChannels.map((ch) => (
-                  <ChannelListEntry
-                    key={ch.id}
-                    channel={ch}
-                    activeChannelId={activeChannelId}
-                    currentUserId={currentUserId}
-                    onlineUserIds={onlineUserIds}
-                    onSelectChannel={onSelectChannel}
-                    onStartCall={onStartCall}
-                    onOpenSettings={onOpenSettings}
-                  />
-                ))
-              ) : (
-                <div className="text-center py-10 px-4">
-                  <div className="h-12 w-12 rounded-xl bg-muted/50 flex items-center justify-center mx-auto mb-3">
-                    <Archive className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <p className="text-label text-muted-foreground font-medium">
-                    {search ? "No archived chats found" : "No archived chats"}
-                  </p>
-                </div>
-              )}
-            </div>
+            <ChannelArchivedSection
+              isLoading={isArchivedLoading}
+              channels={filteredArchivedChannels}
+              isCollapsed={isCollapsed}
+              search={search}
+              activeChannelId={activeChannelId}
+              currentUserId={currentUserId}
+              onlineUserIds={onlineUserIds}
+              onSelectChannel={onSelectChannel}
+              onClose={handleCloseArchived}
+              onStartCall={onStartCall}
+              onOpenSettings={onOpenSettings}
+            />
           ) : isLoading ? (
             <div className="p-3 space-y-2">
               {[1, 2, 3, 4, 5].map((i) => (

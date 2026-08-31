@@ -86,7 +86,7 @@ export function RecruitmentWidget() {
   const { hrEnabled, canViewInterviews } = useDashboardAccess();
   const enabled = hrEnabled && canViewInterviews;
 
-  const { data, isLoading, error } = useInterviews(
+  const { data, isLoading, error, refetch } = useInterviews(
     { relevant: true, pageSize: WIDGET_PAGE_SIZE },
     { enabled },
   );
@@ -114,6 +114,7 @@ export function RecruitmentWidget() {
       link={{ href: "/hr/recruitment/interviews", label: "View" }}
       isLoading={isLoading}
       error={error}
+      onRetry={() => void refetch()}
       loadingRows={3}
       isEmpty={!tasks.length}
       empty={

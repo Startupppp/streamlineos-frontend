@@ -1,14 +1,15 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useBillSubmitApproval(billId: number) {
   const queryClient = useQueryClient();
-  return useMutation<{ id: number; status: string }, Error, { note?: string }>({
+  return useAuthorizedMutation("accounting:payables:manage", {
     mutationKey: ["bill-submit-approval", billId],
-    mutationFn: (body) =>
+    mutationFn: (body: { note?: string }) =>
       apiClient.post<{ id: number; status: string }>(
         `/accounting/purchase-bills/${billId}/submit-approval`,
         body,
@@ -22,7 +23,7 @@ export function useBillSubmitApproval(billId: number) {
 
 export function useBillApprove(billId: number) {
   const queryClient = useQueryClient();
-  return useMutation<{ id: number; status: string }, Error, void>({
+  return useAuthorizedMutation("accounting:payables:approve", {
     mutationKey: ["bill-approve", billId],
     mutationFn: () =>
       apiClient.post<{ id: number; status: string }>(
@@ -37,9 +38,9 @@ export function useBillApprove(billId: number) {
 
 export function useBillCancel(billId: number) {
   const queryClient = useQueryClient();
-  return useMutation<{ id: number; status: string }, Error, { reason?: string }>({
+  return useAuthorizedMutation("accounting:payables:manage", {
     mutationKey: ["bill-cancel", billId],
-    mutationFn: (body) =>
+    mutationFn: (body: { reason?: string }) =>
       apiClient.post<{ id: number; status: string }>(
         `/accounting/purchase-bills/${billId}/cancel`,
         body,

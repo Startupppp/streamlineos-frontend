@@ -121,20 +121,15 @@ export function CampaignListPage() {
           <EmptyState
             access={access}
             illustration={<EmptyReportIllustration />}
-            title={isFiltered ? "No campaigns match this filter" : "No campaigns yet"}
+            title="No campaigns yet"
             description={
               isFiltered
-                ? `Showing status ${statusFilterLabel}. Clear the filter to see every campaign.`
+                ? "No results match your filters."
                 : "A campaign groups the leads that came from one push — an ad, an event, an email blast — so you can see what it returned."
             }
-            action={
-              isFiltered
-                ? { label: "Clear filter", onClick: handleClearFilters }
-                : canManageCampaigns
-                  ? { label: "Create campaign", onClick: handleOpenSheet }
-                  : undefined
-            }
-            actionVariant={isFiltered ? "outline" : undefined}
+            filtersActive={isFiltered}
+            onClearFilters={handleClearFilters}
+            action={!isFiltered && canManageCampaigns ? { label: "Create campaign", onClick: handleOpenSheet } : undefined}
             className={CONTENT_FILL_PANEL}
           />
         ) : (

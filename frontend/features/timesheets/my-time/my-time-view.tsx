@@ -44,7 +44,7 @@ export function MyTimeView() {
   const recallPeriod = useRecallPeriod();
 
   const period = periodDetail?.period;
-  const entries = useMemo(() => entriesData ?? [], [entriesData]);
+  const entries = useMemo(() => entriesData?.data ?? [], [entriesData]);
 
   const totalHours = useMemo(
     () => entries.reduce((sum, e) => sum + Number(e.hours), 0),
@@ -230,7 +230,7 @@ export function MyTimeView() {
 
             <TabsContent value="week" className="mt-4">
               <WeekGrid
-                entries={entriesData}
+                entries={entriesData?.data}
                 isLoading={entriesLoading}
                 days={days}
                 weekStart={weekStart}
@@ -239,7 +239,7 @@ export function MyTimeView() {
             </TabsContent>
 
             <TabsContent value="day" className="mt-4">
-              <DayTimeline entries={entriesData} days={days} />
+              <DayTimeline entries={entriesData?.data} days={days} />
             </TabsContent>
           </Tabs>
         )}

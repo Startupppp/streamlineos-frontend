@@ -9,6 +9,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -35,12 +36,7 @@ import { useCreditNotes, usePostCreditNote } from "@/hooks/api/accounting/ar";
 import { useCan } from "@/hooks/api/access";
 import type { CreditNote, CreditNoteStatus } from "@/types/accounting/ar";
 import { getErrorMessage } from "@/lib/get-error-message";
-
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
-}
+import { formatShortDate } from "@/lib/date-utils";
 
 const STATUS_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "all", label: "All statuses" },
@@ -132,16 +128,17 @@ export default function CreditNotesPage() {
   const [applyTarget, setApplyTarget] = useState<CreditNote | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [customerSearch, setCustomerSearch] = useState("");
-  const [page, setPage] = useState(1);
+  const [cursors, setCursors] = useState<(string | null)[]>([null]);
+  const [cursorIndex, setCursorIndex] = useState(0);
 
   const query = useCreditNotes({
     status: statusFilter !== "all" && isCreditNoteStatus(statusFilter) ? statusFilter : undefined,
-    page,
-    pageSize: 20,
+    cursor: cursors[cursorIndex] ?? undefined,
+    limit: 20,
   });
 
-  const credits = query.data?.items ?? [];
-  const total = query.data?.total ?? 0;
+  const credits = query.data?.data ?? [];
+  const hasMore = query.data?.pagination.hasMore ?? false;
 
   const filteredCredits = customerSearch.trim()
     ? credits.filter((c) =>
@@ -159,15 +156,12 @@ export default function CreditNotesPage() {
 
   function handleStatusFilterChange(value: string): void {
     setStatusFilter(value);
-    setPage(1);
+    setCursors([null]);
+    setCursorIndex(0);
   }
 
   function handleCustomerSearchChange(value: string): void {
     setCustomerSearch(value);
-  }
-
-  function handlePageChange(p: number): void {
-    setPage(p);
   }
 
   function handleOpenApply(credit: CreditNote): void {
@@ -195,7 +189,7 @@ export default function CreditNotesPage() {
       key: "createdAt",
       header: "Date",
       cell: (row) => (
-        <span className="text-sm text-muted-foreground">{formatDate(row.createdAt)}</span>
+        <span className="text-sm text-muted-foreground">{formatShortDate(row.createdAt) || "—"}</span>
       ),
     },
     {
@@ -288,13 +282,6 @@ export default function CreditNotesPage() {
           getRowKey={(row) => row.id}
           isLoading={query.isLoading}
           className="flex-1 min-h-0"
-          pagination={{
-            mode: "server",
-            page,
-            pageSize: 20,
-            total,
-            onPageChange: handlePageChange,
-          }}
           emptyState={
             <EmptyState
               illustrationPreset="documents"
@@ -304,6 +291,23 @@ export default function CreditNotesPage() {
             />
           }
         />
+        {(cursorIndex > 0 || hasMore) ? (
+          <CursorPageControls
+            page={cursorIndex + 1}
+            hasNext={hasMore}
+            onPrevious={() => setCursorIndex(Math.max(0, cursorIndex - 1))}
+            onNext={() => {
+              const next = query.data?.pagination.nextCursor ?? null;
+              setCursors((prev) => {
+                const copy = prev.slice(0, cursorIndex + 1);
+                copy.push(next);
+                return copy;
+              });
+              setCursorIndex(cursorIndex + 1);
+            }}
+            className="mt-2"
+          />
+        ) : null}
       </div>
 
       <CreditNoteFormSheet open={createOpen} onOpenChange={handleCreateOpenChange} />

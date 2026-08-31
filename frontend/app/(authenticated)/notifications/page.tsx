@@ -2,33 +2,17 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import { useRouter } from "next/navigation";
 import { keepPreviousData } from "@tanstack/react-query";
 import { CheckCheck } from "lucide-react";
-import { XIcon } from "@animateicons/react/lucide";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   useInfiniteNotifications,
   useUnreadNotificationCount,
-  useMarkNotificationRead,
-  useMarkAllNotificationsRead,
-  useArchiveNotification,
-  usePinNotification,
-  useUnpinNotification,
-  useDeleteNotification,
-  useBulkMarkRead,
-  useBulkArchive,
-  useBulkDelete,
-  useApproveNotification,
-  useRejectNotification,
-  useSnoozeNotification,
-  useUnarchiveNotification,
 } from "@/hooks/api/notifications";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { NotificationCard } from "@/features/notifications/notification-card";
@@ -36,6 +20,9 @@ import { NotificationDetailDrawer } from "@/features/notifications/notification-
 import { NotificationFilterBar } from "@/features/notifications/notification-filter-bar";
 import { NotificationListSkeleton } from "@/features/notifications/notification-list-skeleton";
 import { ErrorState } from "@/components/shared/error-state";
+import { useNotificationInbox } from "@/features/notifications/use-notification-inbox";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { XIcon } from "@animateicons/react/lucide";
 import type {
   NotificationSection,
   NotificationCategory,
@@ -43,18 +30,7 @@ import type {
 } from "@/features/notifications/notification-types";
 import type { Notification } from "@/types/notifications";
 
-function DeselectAllButton({ onClick }: { onClick: () => void }) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <button type="button" aria-label="Deselect all" onClick={onClick} className="ml-auto text-muted-foreground hover:text-foreground" {...hoverHandlers}>
-      <XIcon ref={iconRef} size={12} />
-    </button>
-  );
-}
-
 export default function NotificationsPage() {
-  const router = useRouter();
-  const prefersReducedMotion = useReducedMotion();
   const [activeSection, setActiveSection] = useState<NotificationSection>("ALL");
   const [activeCategory, setActiveCategory] = useState<NotificationCategory | undefined>(undefined);
   const [activePriority, setActivePriority] = useState<NotificationPriority | undefined>(undefined);
@@ -70,81 +46,6 @@ export default function NotificationsPage() {
   const handleClearSearch = useCallback(() => {
     setSearch("");
   }, []);
-
-  // RT-008: keyset pages instead of a flat limit: 50 that silently truncated the feed.
-  const {
-    data: pages,
-    isLoading,
-    isError,
-    refetch,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useInfiniteNotifications({
-    section: activeSection,
-    category: activeCategory,
-    priority: activePriority,
-    search: debouncedSearch || undefined,
-    limit: 30,
-  });
-  const notifications = pages?.pages.flat();
-  const { data: unreadData } = useUnreadNotificationCount();
-  function handleLoadMore() {
-    void fetchNextPage();
-  }
-
-  const markRead = useMarkNotificationRead();
-  const markAllRead = useMarkAllNotificationsRead();
-  const archive = useArchiveNotification();
-  const pin = usePinNotification();
-  const unpin = useUnpinNotification();
-  const deleteMutation = useDeleteNotification();
-  const bulkMarkRead = useBulkMarkRead();
-  const bulkArchive = useBulkArchive();
-  const bulkDelete = useBulkDelete();
-  const approve = useApproveNotification();
-  const reject = useRejectNotification();
-  const snooze = useSnoozeNotification();
-  const unarchive = useUnarchiveNotification();
-
-  const unreadCount = unreadData?.count ?? 0;
-  const items = useMemo(() => notifications ?? [], [notifications]);
-  const detailNotif = useMemo(
-    () => (detailId !== null ? items.find((n) => n.id === detailId) ?? null : null),
-    [detailId, items],
-  );
-
-  const handleNotificationClick = useCallback(
-    (notification: { id: number; isRead: boolean; link: string | null }) => {
-      setDetailId(notification.id);
-      if (!notification.isRead) markRead.mutate(notification.id);
-    },
-    [markRead],
-  );
-
-  const handleDrawerOpenChange = useCallback((open: boolean) => {
-    if (!open) setDetailId(null);
-  }, []);
-
-  const handleOpenLink = useCallback((link: string) => {
-    router.push(link);
-  }, [router]);
-
-  const handleMarkReadOne = useCallback((id: number) => {
-    markRead.mutate(id);
-  }, [markRead]);
-
-  const handleUnarchive = useCallback((id: number) => {
-    unarchive.mutate(id);
-  }, [unarchive]);
-
-  const handleSnooze = useCallback((id: number, snoozedUntil: string) => {
-    snooze.mutate({ id, snoozedUntil });
-  }, [snooze]);
-
-  const handleMarkAllRead = useCallback(() => {
-    markAllRead.mutate(undefined);
-  }, [markAllRead]);
 
   const handleSectionChange = useCallback((section: NotificationSection) => {
     setActiveSection(section);
@@ -164,101 +65,74 @@ export default function NotificationsPage() {
     setActivePriority(undefined);
   }, []);
 
+  const {
+    data: pages,
+    isLoading,
+    isError,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteNotifications({
+    section: activeSection,
+    category: activeCategory,
+    priority: activePriority,
+    search: debouncedSearch || undefined,
+    limit: 30,
+  });
+
+  const notifications = pages?.pages.flat();
+  const { data: unreadData } = useUnreadNotificationCount();
+  const unreadCount = unreadData?.count ?? 0;
+  const items = useMemo(() => notifications ?? [], [notifications]);
+
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
 
-  const handleSelect = useCallback((id: number) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }, []);
+  const handleLoadMore = useCallback(() => {
+    void fetchNextPage();
+  }, [fetchNextPage]);
 
-  const handleSelectAll = useCallback(() => {
-    setSelectedIds(new Set(items.map((n) => n.id)));
-  }, [items]);
+  const detailNotif = useMemo(
+    () => (detailId !== null ? items.find((n) => n.id === detailId) ?? null : null),
+    [detailId, items],
+  );
 
-  const handleDeselectAll = useCallback(() => {
-    setSelectedIds(new Set());
-  }, []);
+  const { handlers, mutations, emptyTitle, emptyDescription, rowVariants } = useNotificationInbox({
+    setSelectedIds,
+    setDetailId,
+    selectedIds,
+    items,
+    activeSection,
+    debouncedSearch,
+  });
 
-  const handleArchive = useCallback((id: number) => {
-    archive.mutate(id);
-  }, [archive]);
+  const {
+    handleNotificationClick,
+    handleDrawerOpenChange,
+    handleOpenLink,
+    handleMarkReadOne,
+    handleUnarchive,
+    handleSnooze,
+    handleMarkAllRead,
+    handleSelect,
+    handleSelectAll,
+    handleDeselectAll,
+    handleArchive,
+    handlePin,
+    handleDelete,
+    handleBulkMarkRead,
+    handleBulkArchive,
+    handleBulkDelete,
+    handleApprove,
+    handleReject,
+  } = handlers;
 
-  const handlePin = useCallback((id: number, isPinned: boolean) => {
-    if (isPinned) unpin.mutate(id);
-    else pin.mutate(id);
-  }, [pin, unpin]);
-
-  const handleDelete = useCallback((id: number) => {
-    deleteMutation.mutate(id);
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
-  }, [deleteMutation]);
-
-  const handleBulkMarkRead = useCallback(() => {
-    bulkMarkRead.mutate(Array.from(selectedIds));
-    setSelectedIds(new Set());
-  }, [bulkMarkRead, selectedIds]);
-
-  const handleBulkArchive = useCallback(() => {
-    bulkArchive.mutate(Array.from(selectedIds));
-    setSelectedIds(new Set());
-  }, [bulkArchive, selectedIds]);
-
-  const handleBulkDelete = useCallback(() => {
-    bulkDelete.mutate(Array.from(selectedIds));
-    setSelectedIds(new Set());
-  }, [bulkDelete, selectedIds]);
-
-  const handleApprove = useCallback((id: number) => {
-    approve.mutate(id);
-  }, [approve]);
-
-  const handleReject = useCallback((id: number) => {
-    reject.mutate(id);
-  }, [reject]);
+  const { markAllRead, archive, pin, unpin, deleteMutation, bulkMarkRead, bulkArchive, bulkDelete, approve, reject } = mutations;
 
   const showMarkAllRead = activeSection === "ALL" || activeSection === "UNREAD";
   const isApprovalSection = activeSection === "APPROVALS";
-
-  const emptyTitle = useMemo(() => {
-    if (debouncedSearch) return "No matching notifications";
-    if (activeSection === "UNREAD") return "You're all caught up";
-    if (activeSection === "ARCHIVED") return "No archived notifications";
-    if (activeSection === "APPROVALS") return "No pending approvals";
-    if (activeSection === "MENTIONS") return "No mentions yet";
-    if (activeSection === "ASSIGNED_TO_ME") return "Nothing assigned to you";
-    if (activeSection === "BROADCASTS") return "No broadcasts";
-    if (activeSection === "SYSTEM") return "No system notifications";
-    return "No notifications yet";
-  }, [activeSection, debouncedSearch]);
-
-  const emptyDescription = useMemo(() => {
-    if (debouncedSearch) return "Try different search terms or clear the search.";
-    if (activeSection === "UNREAD") return "All notifications have been read.";
-    if (activeSection === "ARCHIVED") return "Notifications you archive will appear here.";
-    if (activeSection === "APPROVALS") return "Approval requests will appear here when they need your attention.";
-    if (activeSection === "MENTIONS") return "You'll see notifications when someone mentions you.";
-    if (activeSection === "ASSIGNED_TO_ME") return "Tasks and items assigned to you will appear here.";
-    if (activeSection === "BROADCASTS") return "Organization-wide announcements will appear here.";
-    return "When something important happens, you'll see it here.";
-  }, [activeSection, debouncedSearch]);
-
-  const rowVariants = prefersReducedMotion
-    ? {}
-    : {
-        initial: { opacity: 0, y: 8 },
-        animate: { opacity: 1, y: 0 },
-        exit: { opacity: 0 },
-      };
 
   return (
     <PageWrapper
@@ -339,7 +213,14 @@ export default function NotificationsPage() {
             <Button size="sm" variant="ghost" className="h-6 text-xs px-2" onClick={handleSelectAll}>
               Select all
             </Button>
-            <DeselectAllButton onClick={handleDeselectAll} />
+            <AnimatedIconButton
+              icon={XIcon}
+              variant="ghost"
+              size="icon"
+              className="ml-auto h-6 w-6"
+              aria-label="Deselect all"
+              onClick={handleDeselectAll}
+            />
           </div>
         )}
 
@@ -366,7 +247,7 @@ export default function NotificationsPage() {
                   key={n.id}
                   {...rowVariants}
                   transition={
-                    prefersReducedMotion
+                    Object.keys(rowVariants).length === 0
                       ? undefined
                       : { duration: 0.2, delay: Math.min(idx, 10) * 0.04, ease: "easeOut" }
                   }
@@ -408,7 +289,6 @@ export default function NotificationsPage() {
           </div>
         )}
 
-        {/* RT-008: keyset "load older" instead of a silent truncation at 50. */}
         {hasNextPage ? (
           <div className="flex justify-center pt-2">
             <LoadingButton

@@ -29,6 +29,7 @@ import { useCan } from "@/hooks/api/access";
 import { cn } from "@/lib/utils";
 import { downloadCsv } from "@/features/accounting/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatShortDate } from "@/lib/date-utils";
 import type { GlRow } from "@/hooks/api/accounting/core";
 
 function getMonthStart(): string {
@@ -39,17 +40,6 @@ function getMonthStart(): string {
 
 function getToday(): string {
   return new Date().toISOString().slice(0, 10);
-}
-
-function formatDate(value: string): string {
-  if (!value) return "";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-  });
 }
 
 function formatMoney(value: string): string {
@@ -81,7 +71,7 @@ const glColumns: DataTableColumn<GlRow>[] = [
     header: "Date",
     cell: (row) => (
       <span className="tabular-nums text-muted-foreground">
-        {formatDate(row.date)}
+        {formatShortDate(row.date) || ""}
       </span>
     ),
     className: "w-[120px]",
@@ -182,8 +172,8 @@ export default function GeneralLedgerPage() {
   const glAccountsQuery = useGlAccounts({ from, to });
   const glAccounts = glAccountsQuery.data?.items ?? [];
 
-  const customersQuery = useCustomersOutstanding({ pageSize: 200 });
-  const vendorsQuery = useVendorsOutstanding({ pageSize: 200 });
+  const customersQuery = useCustomersOutstanding({ limit: 200 });
+  const vendorsQuery = useVendorsOutstanding({ limit: 200 });
 
   const glQuery = useGeneralLedger({
     from,
@@ -342,7 +332,7 @@ export default function GeneralLedgerPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none__">All clients</SelectItem>
-                  {(customersQuery.data?.items ?? []).map((c) => (
+                  {(customersQuery.data?.data ?? []).map((c) => (
                     <SelectItem key={c.clientId} value={String(c.clientId)}>
                       {c.clientName}
                     </SelectItem>
@@ -358,7 +348,7 @@ export default function GeneralLedgerPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none__">All vendors</SelectItem>
-                  {(vendorsQuery.data?.items ?? []).map((v) => (
+                  {(vendorsQuery.data?.data ?? []).map((v) => (
                     <SelectItem key={v.vendorId} value={String(v.vendorId)}>
                       {v.vendorName}
                     </SelectItem>

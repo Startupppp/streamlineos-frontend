@@ -4,12 +4,11 @@ import { useState, useMemo, useCallback } from "react";
 import {
   Search,
   Shield,
-  AlertCircle,
-  RefreshCw,
   ChevronDown,
   ChevronRight,
-  User,
 } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { XIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
@@ -241,17 +240,7 @@ function EmployeeCommandItem({ employee, onSelect }: EmployeeCommandItemProps) {
 }
 
 function EmptySelectionState() {
-  return (
-    <div className="flex flex-1 min-h-0 flex-col items-center justify-center text-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-14 px-6">
-      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-        <User className="h-6 w-6 text-muted-foreground" />
-      </div>
-      <p className="text-sm font-medium text-foreground">No employee selected</p>
-      <p className="text-xs text-muted-foreground mt-1 max-w-[240px]">
-        Select an employee above to simulate and inspect their effective permissions
-      </p>
-    </div>
-  );
+  return <EmptyState title="No employee selected" description="Select an employee above to simulate and inspect their effective permissions" className="flex-1 min-h-0" />;
 }
 
 function SimulateLoadingSkeleton() {
@@ -283,21 +272,7 @@ interface SimulateErrorStateProps {
 }
 
 function SimulateErrorState({ onRetry }: SimulateErrorStateProps) {
-  return (
-    <div className="flex flex-1 items-center justify-center min-h-[240px]">
-      <div className="text-center">
-        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
-          <AlertCircle className="h-6 w-6 text-destructive" />
-        </div>
-        <p className="text-sm font-medium text-foreground">Failed to load permissions</p>
-        <p className="text-xs text-muted-foreground mt-1">Something went wrong while fetching this employee&apos;s access</p>
-        <Button variant="outline" size="sm" onClick={onRetry} className="mt-3 gap-1.5">
-          <RefreshCw className="h-3.5 w-3.5" />
-          Retry
-        </Button>
-      </div>
-    </div>
-  );
+  return <ErrorState title="Failed to load permissions" description="Something went wrong while fetching this employee's access" onRetry={onRetry} className="flex-1" />;
 }
 
 interface SimulateResultsProps {
@@ -326,17 +301,7 @@ function SimulateResults({
       </div>
 
       {data.permissions.length === 0 ? (
-        <div className="flex flex-1 items-center justify-center min-h-[240px]">
-          <div className="text-center">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-              <Shield className="h-6 w-6 text-muted-foreground" />
-            </div>
-            <p className="text-sm font-medium text-foreground">No permissions</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              This employee has no active permissions assigned
-            </p>
-          </div>
-        </div>
+        <EmptyState title="No permissions" description="This employee has no active permissions assigned" className="flex-1" />
       ) : (
         <ScrollArea className="flex-1" type="auto">
           <div className="flex flex-col gap-2 pr-2">

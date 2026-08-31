@@ -10,6 +10,7 @@ import { InlineType, InlineLabels, InlineCycle, InlineSprint } from "./card-inli
 import { InlineDueDate } from "./card-inline-date-fields";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { DisplayOptions } from "../shared/types";
 
 interface Ticket {
@@ -290,7 +291,7 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
         pagination={{ pageSize: 50 }}
         minWidth="640px"
         className="w-full min-w-0 overflow-hidden"
-        emptyState={<div className="text-center py-4 text-muted-foreground text-sm">No work items found</div>}
+        emptyState={<EmptyState className="border-0 bg-transparent min-h-[40vh]" title="No work items" />}
       />
     </div>
   );

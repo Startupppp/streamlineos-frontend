@@ -1,9 +1,10 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   ValidationItem,
   PayoutBatch,
@@ -17,18 +18,29 @@ export function usePayoutValidation(runId: number) {
   const canManage = useCan("payroll:bank:manage");
   return useQuery<ValidationItem[]>({
     queryKey: queryKeys.payroll.bankValidation(runId),
-    queryFn: () => apiClient.get<ValidationItem[]>(`/payroll/runs/${runId}/payout/validation`),
+    queryFn: () =>
+      apiClient.get<ValidationItem[]>(
+        `/payroll/runs/${runId}/payout/validation`,
+      ),
     staleTime: 30_000,
     enabled: canManage && runId > 0,
   });
 }
 
+type PayoutBatchesPage = {
+  data: PayoutBatch[];
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
+};
+
 export function usePayoutBatches(runId?: number) {
   const canManage = useCan("payroll:bank:manage");
-  return useQuery<PayoutBatch[]>({
+  return useQuery<PayoutBatchesPage>({
     queryKey: queryKeys.payroll.bankBatches(runId),
     queryFn: () =>
-      apiClient.get<PayoutBatch[]>("/payroll/payout/batches", runId ? { runId } : undefined),
+      apiClient.get<PayoutBatchesPage>(
+        "/payroll/payout/batches",
+        runId ? { runId } : undefined,
+      ),
     staleTime: 30_000,
     enabled: canManage,
   });
@@ -38,7 +50,8 @@ export function usePayoutBatch(batchId: number) {
   const canManage = useCan("payroll:bank:manage");
   return useQuery<GetBatchResult>({
     queryKey: queryKeys.payroll.bankBatch(batchId),
-    queryFn: () => apiClient.get<GetBatchResult>(`/payroll/payout/batches/${batchId}`),
+    queryFn: () =>
+      apiClient.get<GetBatchResult>(`/payroll/payout/batches/${batchId}`),
     staleTime: 30_000,
     enabled: canManage && batchId > 0,
   });
@@ -46,20 +59,24 @@ export function usePayoutBatch(batchId: number) {
 
 export function useCreatePayoutBatch() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     CreateBatchResult,
     Error,
     { runId: number; format?: BatchFormat; idempotencyKey?: string }
-  >({
+  >("payroll:bank:manage", {
     mutationKey: ["payroll", "create-batch"],
     mutationFn: ({ runId, format, idempotencyKey }) =>
       apiClient.post<CreateBatchResult>(
         `/payroll/runs/${runId}/payout/batches`,
         format ? { format } : {},
-        idempotencyKey ? { headers: { "idempotency-key": idempotencyKey } } : undefined,
+        idempotencyKey
+          ? { headers: { "idempotency-key": idempotencyKey } }
+          : undefined,
       ),
     onSuccess: (_, { runId }) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatches(runId) });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.payroll.bankBatches(runId),
+      });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatches() });
     },
   });
@@ -67,24 +84,34 @@ export function useCreatePayoutBatch() {
 
 export function useMarkBatchSent() {
   const qc = useQueryClient();
-  return useMutation<{ success: boolean }, Error, { batchId: number; runId?: number }>({
+  return useAuthorizedMutation<
+    { success: boolean },
+    Error,
+    { batchId: number; runId?: number }
+  >("payroll:bank:manage", {
     mutationKey: ["payroll", "mark-batch-sent"],
     mutationFn: ({ batchId }) =>
-      apiClient.post<{ success: boolean }>(`/payroll/payout/batches/${batchId}/mark-sent`),
+      apiClient.post<{ success: boolean }>(
+        `/payroll/payout/batches/${batchId}/mark-sent`,
+      ),
     onSuccess: (_, { batchId, runId }) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatch(batchId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatches(runId) });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.payroll.bankBatch(batchId),
+      });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.payroll.bankBatches(runId),
+      });
     },
   });
 }
 
 export function useMarkBatchPaid() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     { success: boolean },
     Error,
     { batchId: number; transactionRef: string; runId?: number }
-  >({
+  >("payroll:bank:manage", {
     mutationKey: ["payroll", "mark-batch-paid"],
     mutationFn: ({ batchId, transactionRef }) =>
       apiClient.post<{ success: boolean }>(
@@ -92,20 +119,26 @@ export function useMarkBatchPaid() {
         { transactionRef },
       ),
     onSuccess: (_, { batchId, runId }) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatch(batchId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatches(runId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId ?? 0) });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.payroll.bankBatch(batchId),
+      });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.payroll.bankBatches(runId),
+      });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.payroll.run(runId ?? 0),
+      });
     },
   });
 }
 
 export function useMarkItemPaid() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     { success: boolean },
     Error,
     { batchId: number; itemId: number; transactionRef: string; runId?: number }
-  >({
+  >("payroll:bank:manage", {
     mutationKey: ["payroll", "mark-item-paid"],
     mutationFn: ({ batchId, itemId, transactionRef }) =>
       apiClient.post<{ success: boolean }>(
@@ -113,19 +146,23 @@ export function useMarkItemPaid() {
         { transactionRef },
       ),
     onSuccess: (_, { batchId, runId }) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatch(batchId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatches(runId) });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.payroll.bankBatch(batchId),
+      });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.payroll.bankBatches(runId),
+      });
     },
   });
 }
 
 export function useMarkItemFailed() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     { success: boolean },
     Error,
     { batchId: number; itemId: number; failureReason: string; runId?: number }
-  >({
+  >("payroll:bank:manage", {
     mutationKey: ["payroll", "mark-item-failed"],
     mutationFn: ({ batchId, itemId, failureReason }) =>
       apiClient.post<{ success: boolean }>(
@@ -133,8 +170,12 @@ export function useMarkItemFailed() {
         { failureReason },
       ),
     onSuccess: (_, { batchId, runId }) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatch(batchId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatches(runId) });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.payroll.bankBatch(batchId),
+      });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.payroll.bankBatches(runId),
+      });
     },
   });
 }
@@ -151,11 +192,11 @@ export interface BankReturnImportResult {
 
 export function useImportBankReturn() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     BankReturnImportResult,
     Error,
     { batchId: number; csv: string; runId?: number }
-  >({
+  >("payroll:bank:manage", {
     mutationKey: ["payroll", "import-bank-return"],
     mutationFn: ({ batchId, csv }) =>
       apiClient.post<BankReturnImportResult>(
@@ -163,20 +204,33 @@ export function useImportBankReturn() {
         { csv },
       ),
     onSuccess: (_, { batchId, runId }) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatch(batchId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatches(runId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId ?? 0) });
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.journalBatchesAll });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.payroll.bankBatch(batchId),
+      });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.payroll.bankBatches(runId),
+      });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.payroll.run(runId ?? 0),
+      });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.payroll.journalBatchesAll,
+      });
     },
   });
 }
 
-export function useEmployeeBankDetails(employeeUserId: string, enabled = false) {
+export function useEmployeeBankDetails(
+  employeeUserId: string,
+  enabled = false,
+) {
   const canView = useCan("payroll:bank:view");
   return useQuery<EmployeeBankDetails>({
     queryKey: queryKeys.payroll.employeeBank(employeeUserId),
     queryFn: () =>
-      apiClient.get<EmployeeBankDetails>(`/payroll/employees/${employeeUserId}/bank`),
+      apiClient.get<EmployeeBankDetails>(
+        `/payroll/employees/${employeeUserId}/bank`,
+      ),
     staleTime: 0,
     enabled: enabled && !!employeeUserId && canView,
   });

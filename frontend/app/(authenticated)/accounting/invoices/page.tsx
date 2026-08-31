@@ -50,6 +50,7 @@ import { useCan } from "@/hooks/api/access";
 import type { Invoice, InvoiceStatus } from "@/types/invoice";
 import type { FinanceStatus } from "@/features/accounting/shared";
 import type { PayableInvoice } from "@/features/accounting/sales/record-payment-dialog";
+import { formatShortDate } from "@/lib/date-utils";
 
 const SERVER_FILTERABLE: ReadonlyArray<string> = ["DRAFT", "ISSUED", "PAID", "FAILED", "VOIDED"];
 
@@ -83,12 +84,6 @@ const FINANCE_STATUS_MAP: Record<string, FinanceStatus> = {
 
 function toFinanceStatus(status: string): FinanceStatus {
   return FINANCE_STATUS_MAP[status] ?? "DRAFT";
-}
-
-function formatDate(value: string | Date | null | undefined): string {
-  if (!value) return "—";
-  const d = typeof value === "string" ? new Date(value) : value;
-  return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleDateString();
 }
 
 interface InvoiceRowActionsProps {
@@ -236,7 +231,7 @@ export default function AccountingInvoicesPage() {
       header: "Date",
       cell: (row) => (
         <span className="text-xs tabular-nums text-muted-foreground">
-          {formatDate(row.createdAt)}
+          {formatShortDate(row.createdAt) || "—"}
         </span>
       ),
       sortable: true,
@@ -247,7 +242,7 @@ export default function AccountingInvoicesPage() {
       header: "Due Date",
       cell: (row) => (
         <span className="text-xs tabular-nums text-muted-foreground">
-          {formatDate(row.dueDate)}
+          {formatShortDate(row.dueDate) || "—"}
         </span>
       ),
     },

@@ -117,4 +117,70 @@ export function useUpdateExpense(options?: { selfService?: boolean }) {
   });
 }
 
+export type ExpenseExportJobStatus =
+  | "pending"
+  | "running"
+  | "completed"
+  | "failed"
+  | "expired";
 
+export interface ExpenseExportJob {
+  id: string;
+  status: ExpenseExportJobStatus;
+  processedRows: number;
+  rowCount: number | null;
+  truncated: boolean | null;
+  fileName: string | null;
+  errorCode: string | null;
+  errorMessage: string | null;
+  createdAt: string;
+  completedAt: string | null;
+  expiresAt: string | null;
+}
+
+export interface CreateExpenseExportJobInput {
+  status?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+export function useCreateExpenseExportJob() {
+  return useMutation<
+    ExpenseExportJob,
+    Error,
+    { input: CreateExpenseExportJobInput; idempotencyKey: string }
+  >({
+    mutationKey: ["hr", "expenses", "export", "jobs", "create"],
+    mutationFn: ({ input, idempotencyKey }) =>
+      apiClient.post<ExpenseExportJob>("/hr/expenses/export/jobs", input, {
+        headers: { "Idempotency-Key": idempotencyKey },
+      }),
+  });
+}
+
+export function useExpenseExportJob(jobId: string | null) {
+  const canRead = useCan("hr:expenses:read");
+  return useQuery<ExpenseExportJob, Error>({
+    queryKey: queryKeys.hr.expenseExportJob(jobId ?? ""),
+    queryFn: () =>
+      apiClient.get<ExpenseExportJob>(`/hr/expenses/export/jobs/${jobId}`),
+    enabled: canRead && !!jobId,
+    staleTime: 1_000,
+    refetchInterval: (query) => {
+      const status = query.state.data?.status;
+      return status === "pending" || status === "running" ? 3_000 : false;
+    },
+  });
+}
+
+export function useDownloadExpenseExportJob() {
+  const canRead = useCan("hr:expenses:read");
+  return useMutation<Blob, Error, string>({
+    mutationKey: ["hr", "expenses", "export", "jobs", "download"],
+    mutationFn: (jobId) => {
+      if (!canRead)
+        return Promise.reject(new Error("Expense read access is required"));
+      return apiClient.download(`/hr/expenses/export/jobs/${jobId}/download`);
+    },
+  });
+}

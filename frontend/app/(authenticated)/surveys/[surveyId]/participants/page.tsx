@@ -12,7 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { RequireModule } from "@/components/auth/require-module";
+import { ErrorState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatShortDate } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
 import {
   useParticipants,
@@ -32,7 +34,7 @@ export default function SurveyParticipantsPage() {
   const [selected, setSelected] = useState<Set<string | number>>(new Set());
   const [addOpen, setAddOpen] = useState(false);
 
-  const { data: participants, isLoading } = useParticipants(surveyId, {
+  const { data: participants, isLoading, isError, refetch } = useParticipants(surveyId, {
     status: status === "all" ? undefined : status,
     pageSize: 100,
   });
@@ -44,11 +46,15 @@ export default function SurveyParticipantsPage() {
       { key: "name", header: "Name", cell: (row) => row.name || row.email || "—" },
       { key: "email", header: "Email", cell: (row) => row.email || "—" },
       { key: "status", header: "Status", cell: (row) => <ParticipantStatusBadge status={row.status} /> },
-      { key: "invitedAt", header: "Invited", cell: (row) => (row.invitedAt ? new Date(row.invitedAt).toLocaleDateString() : "—") },
-      { key: "completedAt", header: "Completed", cell: (row) => (row.completedAt ? new Date(row.completedAt).toLocaleDateString() : "—") },
+      { key: "invitedAt", header: "Invited", cell: (row) => formatShortDate(row.invitedAt) || "—" },
+      { key: "completedAt", header: "Completed", cell: (row) => formatShortDate(row.completedAt) || "—" },
     ],
     [],
   );
+
+  function handleRetry() {
+    void refetch();
+  }
 
   async function handleInvite() {
     if (selected.size === 0) return;
@@ -111,7 +117,14 @@ export default function SurveyParticipantsPage() {
             </div>
           }
         >
-          {hasParticipants ? (
+          {isError ? (
+            <ErrorState
+              className="flex-1"
+              title="Couldn't load participants"
+              description="Failed to load survey participants. Please try again."
+              onRetry={handleRetry}
+            />
+          ) : hasParticipants ? (
             <DataTable
               className="flex-1 min-h-0"
               data={participants ?? []}

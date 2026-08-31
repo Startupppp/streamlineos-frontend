@@ -8,11 +8,7 @@ import { getUserDisplayName } from "@/lib/person-display";
 import type { FinReceiptInboxItem } from "@/types/accounting/expenses";
 import { ReceiptEditSheet } from "./receipt-edit-sheet";
 import { TruncatedText } from "@/components/ui/truncated-text";
-
-function formatDate(value: string): string {
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-}
+import { formatShortDate } from "@/lib/date-utils";
 
 const FLAG_LABELS: Record<string, string> = {
   OVER_LIMIT: "Exceeds policy limit",
@@ -34,7 +30,7 @@ export function ReceiptCard({ item }: ReceiptCardProps) {
         <div className="min-w-0">
           <TruncatedText text={item.merchant ?? item.category} className="text-sm font-medium" />
           <p className="text-xs text-muted-foreground">
-            {getUserDisplayName(item.user)} · {formatDate(item.expenseDate)}
+            {getUserDisplayName(item.user)} · {formatShortDate(item.expenseDate)}
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">

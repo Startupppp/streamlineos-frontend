@@ -40,6 +40,10 @@ export function ListView({ holidays, canManage, onEdit, onDelete, onAdd, yearFil
     setSearch(value);
   }
 
+  function handleClearSearch() {
+    setSearch("");
+  }
+
   function handleSortToggle() {
     setSortDir((d) => (d === "asc" ? "desc" : "asc"));
   }
@@ -60,7 +64,10 @@ export function ListView({ holidays, canManage, onEdit, onDelete, onAdd, yearFil
         <EmptyState
           illustrationPreset="calendar"
           illustrationSize="md"
-          title={search ? "No holidays match your search" : "No holidays for this period"}
+          title="No holidays for this period"
+          description={search ? "No results match your filters." : undefined}
+          filtersActive={!!search}
+          onClearFilters={handleClearSearch}
           action={canManage && !search ? { label: "Add Holiday", onClick: onAdd } : undefined}
           compact
           className="rounded-lg border border-border bg-muted/20 py-10"

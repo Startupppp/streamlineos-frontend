@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { Controller } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
@@ -20,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyReportIllustration } from "@/components/illustrations";
@@ -40,6 +40,8 @@ import type {
   BudgetDimensionType,
   BudgetSummary,
 } from "@/types/accounting/planning";
+import { formatShortDate } from "@/lib/date-utils";
+import { createBudgetSchema, type CreateBudgetForm } from "./budget-schema";
 
 type StatusFilter = "ALL" | BudgetStatus;
 
@@ -69,23 +71,8 @@ const DIMENSION_TYPE_OPTIONS: ReadonlyArray<{
   { value: "PROJECT", label: "Project" },
 ];
 
-const createBudgetSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  fiscalYear: z.string().min(1, "Fiscal year is required"),
-  periodType: z.enum(["MONTHLY", "QUARTERLY", "YEARLY"]),
-  dimensionType: z.enum(["NONE", "DEPARTMENT", "PROJECT"]),
-});
-
-type CreateBudgetForm = z.infer<typeof createBudgetSchema>;
-
 function isStatusFilter(value: string): value is StatusFilter {
   return STATUS_OPTIONS.some((opt) => opt.value === value);
-}
-
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
 }
 
 function PeriodTypeBadge({ periodType }: { periodType: BudgetPeriodType }) {
@@ -170,37 +157,48 @@ const budgetColumns: DataTableColumn<BudgetSummary>[] = [
     className: "hidden md:table-cell",
     cell: (row) => (
       <span className="text-sm text-muted-foreground">
-        {formatDate(row.createdAt)}
+        {formatShortDate(row.createdAt)}
       </span>
     ),
   },
 ];
 
+const PAGE_SIZE = 25;
+
 export default function BudgetsListPage() {
   const router = useRouter();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [fiscalYear, setFiscalYear] = useState<string>("");
+  const [cursors, setCursors] = useState<(string | null)[]>([null]);
+  const [cursorIndex, setCursorIndex] = useState(0);
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const canCreate = useCan("accounting:budgets:create");
 
   const query = useBudgets({
-    page: 1,
-    pageSize: 100,
+    cursor: cursors[cursorIndex] ?? undefined,
+    limit: PAGE_SIZE,
     status: statusFilter !== "ALL" ? statusFilter : undefined,
     fiscalYear: fiscalYear || undefined,
   });
 
   const createMutation = useCreateBudget();
 
-  const items = query.data?.items ?? [];
+  const items = query.data?.data ?? [];
+  const hasMore = query.data?.pagination.hasMore ?? false;
 
   function handleStatusFilterChange(value: string): void {
-    if (isStatusFilter(value)) setStatusFilter(value);
+    if (isStatusFilter(value)) {
+      setStatusFilter(value);
+      setCursors([null]);
+      setCursorIndex(0);
+    }
   }
 
   function handleFiscalYearChange(event: ChangeEvent<HTMLInputElement>): void {
     setFiscalYear(event.target.value);
+    setCursors([null]);
+    setCursorIndex(0);
   }
 
   function handleRetry(): void {
@@ -279,22 +277,41 @@ export default function BudgetsListPage() {
             onRetry={handleRetry}
           />
         ) : (
-          <DataTable
-            className="flex-1 min-h-0"
-            data={items}
-            columns={budgetColumns}
-            getRowKey={(row) => row.id}
-            isLoading={query.isLoading}
-            onRowClick={handleRowClickRow}
-            emptyState={
-              <EmptyState
-                illustration={<EmptyReportIllustration />}
-                title="No budgets yet"
-                description="Create a budget to start tracking planned vs actual spend."
+          <>
+  <DataTable
+              className="flex-1 min-h-0"
+              data={items}
+              columns={budgetColumns}
+              getRowKey={(row) => row.id}
+              isLoading={query.isLoading}
+              onRowClick={handleRowClickRow}
+              emptyState={
+                <EmptyState
+                  illustration={<EmptyReportIllustration />}
+                  title="No budgets yet"
+                  description="Create a budget to start tracking planned vs actual spend."
+                />
+              }
+              minWidth="700px"
+            />
+            {(cursorIndex > 0 || hasMore) ? (
+              <CursorPageControls
+                page={cursorIndex + 1}
+                hasNext={hasMore}
+                onPrevious={() => setCursorIndex(Math.max(0, cursorIndex - 1))}
+                onNext={() => {
+                  const next = query.data?.pagination.nextCursor ?? null;
+                  setCursors((prev) => {
+                    const copy = prev.slice(0, cursorIndex + 1);
+                    copy.push(next);
+                    return copy;
+                  });
+                  setCursorIndex(cursorIndex + 1);
+                }}
+                className="mt-2"
               />
-            }
-            minWidth="700px"
-          />
+            ) : null}
+          </>
         )}
       </div>
 

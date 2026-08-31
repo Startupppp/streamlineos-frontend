@@ -117,6 +117,7 @@ export interface RolesListPanelProps {
   onRename: (role: Role) => void;
   onPageChange: (page: number) => void;
   onPageSizeChange: (limit: number) => void;
+  onClearSearch?: () => void;
 }
 
 export function RolesListPanel({
@@ -133,6 +134,7 @@ export function RolesListPanel({
   onRename,
   onPageChange,
   onPageSizeChange,
+  onClearSearch,
 }: RolesListPanelProps) {
   let body: ReactNode;
 
@@ -171,12 +173,10 @@ export function RolesListPanel({
     body = (
       <EmptyState
         illustrationPreset="security"
-        title={search.trim() ? "No matching roles" : "No roles yet"}
-        description={
-          search.trim()
-            ? "Try a different search term."
-            : "Create a role to manage permissions."
-        }
+        title="No roles yet"
+        description={search.trim() ? "No results match your filters." : "Create a role to manage permissions."}
+        filtersActive={!!search.trim()}
+        onClearFilters={onClearSearch}
         compact
         className="h-full min-h-0 flex-1 border-0 bg-transparent"
       />

@@ -1,10 +1,10 @@
 import { type ReactNode } from "react";
-import { requireSession } from "@/lib/rbac/require-permission";
 import { RequireModule } from "@/components/auth/require-module";
+import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 import "@/features/payroll/shared/payroll-os.css";
 
 export default async function PayrollLayout({ children }: { children: ReactNode }) {
-  await requireSession();
+  await enforceRouteAccess("/payroll");
   return (
     <RequireModule module="payroll">
       <div className="payroll-os min-h-0 flex-1 flex flex-col">{children}</div>

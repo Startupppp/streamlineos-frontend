@@ -11,7 +11,7 @@ export function PortalHeader({ showProjectsLink = false }: PortalHeaderProps) {
     <header className="shrink-0 flex items-center justify-between px-5 sm:px-8 py-4 border-b border-border bg-card/80 backdrop-blur-sm">
       <div className="flex items-center gap-3 min-w-0">
         <Link
-          href={showProjectsLink ? "/portal/projects" : "#"}
+          href={showProjectsLink ? "/client-portal" : "#"}
           aria-label={`${BRAND_NAME} Client Portal`}
           className="flex items-center gap-2.5 group"
         >

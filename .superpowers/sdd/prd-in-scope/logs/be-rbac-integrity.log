@@ -1,0 +1,16 @@
+
+> streamlineos-api@0.1.0 verify:rbac-integrity D:\projects\personal\Streamlineos\backend
+> node --env-file-if-exists=.env src/scripts/verify-rbac-referential-integrity.mjs
+
+  PASS  expect=REJECT got=REJECT  cross-tenant assigner on role_assignments [23503]
+  PASS  expect=ACCEPT got=ACCEPT  same-tenant assigner [control]
+  PASS  expect=ACCEPT got=ACCEPT  null assigner [control]
+  PASS  expect=REJECT got=REJECT  uncatalogued module on module_ownerships [23503]
+  PASS  expect=REJECT got=REJECT  uncatalogued module on roles [23503]
+  PASS  expect=REJECT got=REJECT  namespace drift: chat key under crm [23503]
+  PASS  expect=ACCEPT got=ACCEPT  correct: chat key under home [control]
+  PASS  expect=ACCEPT got=ACCEPT  correct: hr key under hr [control]
+  PASS  expect=REJECT got=REJECT  platform namespace settings:manage is not grantable [23503]
+  PASS  expect=REJECT got=REJECT  cross-tenant granter on user_permission_grants [23503]
+
+OK — RBAC actor and module keys are referentially constrained, and the controls prove the constraints are not over-strict.

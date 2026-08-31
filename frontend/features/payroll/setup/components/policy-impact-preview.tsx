@@ -12,7 +12,7 @@ interface PolicyImpactPreviewProps {
 }
 
 /**
- * Live policy impact strip — “who and what this toggle affects”
+ * Live policy impact strip — "who and what this toggle affects"
  * before the owner commits a change.
  */
 export function PolicyImpactPreview({

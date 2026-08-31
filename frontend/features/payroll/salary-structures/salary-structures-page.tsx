@@ -22,6 +22,7 @@ import {
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatINR } from "@/lib/format-utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   useSalaryStructureTemplates,
@@ -33,10 +34,6 @@ import {
 } from "@/hooks/api/hr/salary-structures";
 import { SalaryStructureTemplateSheet } from "@/features/payroll/salary-structures/salary-structure-template-sheet";
 
-function formatInr(value: string | null | undefined) {
-  const n = parseFloat(value ?? "0");
-  return n.toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
-}
 
 function calcGross(template: SalaryStructureTemplate): number {
   const basic = parseFloat(template.basicSalary);
@@ -85,11 +82,11 @@ const TemplateCard = memo(function TemplateCard({ template, index, onEdit, onDel
 
       <div>
         <p className="text-2xl font-bold text-foreground tabular-nums">
-          {formatInr(template.basicSalary)}
+          {formatINR(template.basicSalary)}
           <span className="text-xs font-normal text-muted-foreground ml-1">basic/mo</span>
         </p>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Gross {formatInr(String(calcGross(template)))}/mo · HRA {template.hraPercent}%
+          Gross {formatINR(String(calcGross(template)))}/mo · HRA {template.hraPercent}%
         </p>
       </div>
 
@@ -100,7 +97,7 @@ const TemplateCard = memo(function TemplateCard({ template, index, onEdit, onDel
         </div>
         <div className="rounded-lg bg-muted/50 border border-border/60 px-3 py-2">
           <p className="text-micro text-muted-foreground font-medium uppercase tracking-wider">Prof Tax</p>
-          <p className="text-xs font-semibold text-foreground mt-0.5">{formatInr(template.professionalTax)}</p>
+          <p className="text-xs font-semibold text-foreground mt-0.5">{formatINR(template.professionalTax ?? "0")}</p>
         </div>
       </div>
 
@@ -268,9 +265,10 @@ export function SalaryStructuresPageContent() {
           initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
           animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
           transition={{ duration: 0.22, ease: "easeOut" }}
-          className="flex flex-col items-center justify-center flex-1 h-full"
+          className="flex-1"
         >
           <EmptyState
+            className="h-full"
             illustrationPreset="documents"
             title="No salary structure templates yet"
             description="Create your first template to standardise employee compensation structures."

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useInfiniteQuery,
   useMutation,
   useQuery,
   useQueryClient,
@@ -11,6 +12,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type {
+  CursorPage,
   ExceptionsQueryInput,
   ExceptionsSummary,
   RunDetectionResult,
@@ -33,20 +35,26 @@ export function useTimesheetExceptions(
   query: ExceptionsQueryInput = {},
   enabled = true,
 ) {
-  const params = {
+  const filters = {
     status: query.status,
     severity: query.severity,
     rule: query.rule,
     userId: query.userId,
-    page: query.page,
-    limit: query.limit,
+    limit: query.limit ?? 50,
   };
-  return useQuery({
-    queryKey: queryKeys.timesheets.exceptions(params),
-    queryFn: () =>
-      apiClient.get<TimesheetException[]>("/timesheets/exceptions", params),
+  return useInfiniteQuery<CursorPage<TimesheetException>>({
+    queryKey: queryKeys.timesheets.exceptions(filters),
+    queryFn: ({ pageParam }) => {
+      const params: Record<string, unknown> = { ...filters };
+      if (typeof pageParam === "string") params.cursor = pageParam;
+      return apiClient.get<CursorPage<TimesheetException>>(
+        "/timesheets/exceptions",
+        params,
+      );
+    },
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     staleTime: 60_000,
-    placeholderData: (prev) => prev,
     enabled,
   });
 }

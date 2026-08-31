@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { ErrorState } from "@/components/shared/error-state";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { useSignDashboard } from "@/hooks/api/sign/reports";
 import { CreateEnvelopeDialog } from "../components/create-envelope-dialog";
 
@@ -19,6 +19,7 @@ function formatEventType(eventType: string): string {
 }
 
 export function SignDashboard() {
+  const { staggerContainer, fadeUp } = useMotionVariants();
   const [createOpen, setCreateOpen] = useState(false);
   const { data, isLoading, isError, refetch } = useSignDashboard();
 

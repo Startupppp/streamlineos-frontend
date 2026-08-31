@@ -5,7 +5,7 @@ import { Download } from "lucide-react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 
 async function downloadXLSX<T extends object>(data: T[], filename: string) {
   if (data.length === 0) return;
@@ -41,6 +41,7 @@ interface AnalyticsChartCardProps<T extends object> {
 }
 
 export function AnalyticsChartCard<T extends object>({ title, data, filename, children }: AnalyticsChartCardProps<T>) {
+  const { fadeUp } = useMotionVariants();
   const handleDownload = useCallback(() => { void downloadXLSX(data, filename); }, [data, filename]);
   return (
     <motion.div variants={fadeUp} className="h-full">

@@ -41,7 +41,7 @@ export function PortalProjectCard({ project }: PortalProjectCardProps) {
 
   return (
     <Link
-      href={`/portal/projects/${project.id}`}
+      href={`/client-portal/${project.id}`}
       className={cn(
         "group block rounded-xl border border-border bg-card p-5",
         "hover:border-primary/30 hover:shadow-md transition-all duration-200",

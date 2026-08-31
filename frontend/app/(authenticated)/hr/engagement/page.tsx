@@ -23,8 +23,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { ErrorState } from "@/components/shared/error-state";
 import { useCan } from "@/hooks/api/access";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { useEngagementOverview, useMyMoodHistory, useOrgMoodAggregate } from "@/hooks/api/hr/engagement";
 import { useOrgMembers } from "@/hooks/api/organization";
 import {
@@ -107,7 +108,8 @@ function MoodSparkline({ data }: { data: { date: string; avgMood: number }[] }) 
 }
 
 function OverviewTab() {
-  const { data: overview, isLoading } = useEngagementOverview();
+  const { staggerContainer, fadeUp } = useMotionVariants();
+  const { data: overview, isLoading, isError, error, refetch } = useEngagementOverview();
   const { data: moodData, isLoading: moodLoading } = useOrgMoodAggregate();
   const { data: recognitions, isLoading: recLoading } = useRecognitions();
   const { data: membersData } = useOrgMembers(1, 200);
@@ -126,6 +128,9 @@ function OverviewTab() {
   const eomMember = eom ? memberById.get(eom.userId) : undefined;
   const eomName = eomMember ? getUserDisplayName(eomMember) : eom ? "Unknown" : null;
   const eomInitials = eomMember ? getUserInitials(eomMember) : eom ? "?" : null;
+
+  if (isError)
+    return <ErrorState title="Couldn't load engagement data" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
 
   return (
     <div className="space-y-4">
@@ -288,7 +293,7 @@ function RecognitionTab() {
 }
 
 function MoodTab() {
-  const { data: history, isLoading } = useMyMoodHistory();
+  const { data: history, isLoading, isError, error, refetch } = useMyMoodHistory();
 
   const MOODS = ["", "😞", "😕", "😐", "🙂", "😄"];
 
@@ -304,6 +309,8 @@ function MoodTab() {
               <Skeleton key={i} className="h-9 rounded-lg" />
             ))}
           </div>
+        ) : isError ? (
+          <ErrorState compact title="Couldn't load mood history" description={getErrorMessage(error)} onRetry={() => void refetch()} />
         ) : !history || history.length === 0 ? (
           <p className="text-xs text-muted-foreground text-center py-6">No mood check-ins yet</p>
         ) : (

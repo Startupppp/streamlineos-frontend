@@ -236,20 +236,15 @@ export function CompanyListPage() {
           <EmptyState
             access={access}
             illustration={<EmptyCompaniesIllustration />}
-            title={isFiltered ? "No companies match this search" : "No companies yet"}
+            title="No companies yet"
             description={
               isFiltered
-                ? `Nothing matches "${debouncedSearch.trim()}". Clear the search to see every company.`
+                ? "No results match your filters."
                 : "A company groups the contacts, leads and deals belonging to one account. Add the first one to start linking records to it."
             }
-            action={
-              isFiltered
-                ? { label: "Clear search", onClick: handleClearSearch }
-                : canManage
-                  ? { label: "Add company", onClick: handleOpenCreate }
-                  : undefined
-            }
-            actionVariant={isFiltered ? "outline" : undefined}
+            filtersActive={isFiltered}
+            onClearFilters={handleClearSearch}
+            action={!isFiltered && canManage ? { label: "Add company", onClick: handleOpenCreate } : undefined}
             className={CONTENT_FILL_PANEL}
           />
         ) : (

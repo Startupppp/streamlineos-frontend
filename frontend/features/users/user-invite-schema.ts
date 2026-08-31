@@ -8,7 +8,9 @@ export const inviteUserSchema = z.object({
     .email("Enter a valid email address")
     .max(254, "Email must be at most 254 characters")
     .transform((value) => value.toLowerCase()),
-  role: z.string().min(1, "Please select a role"),
+  role: z.enum(["OWNER", "ORG_ADMIN", "MEMBER"], {
+    message: "Please select a role",
+  }),
 });
 
 export type InviteUserFormValues = z.infer<typeof inviteUserSchema>;

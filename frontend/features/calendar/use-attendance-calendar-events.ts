@@ -19,6 +19,7 @@ function toTimestamp(value: Date | string | null): number {
 export function useAttendanceCalendarEvents(
   rangeStart: Date,
   rangeEnd: Date,
+  attendanceVisible: boolean,
 ): CalendarListItem[] {
   const canViewAttendance = useCan("self:attendance");
   const { data: wfhRequests = [] } = useHrWfhRequests();
@@ -38,7 +39,7 @@ export function useAttendanceCalendarEvents(
         queryFn: () =>
           apiClient.get<AttendanceLog[]>("/me/attendance/monthly", params),
         staleTime: 2 * 60_000,
-        enabled: canViewAttendance,
+        enabled: canViewAttendance && attendanceVisible,
       };
     }),
   });

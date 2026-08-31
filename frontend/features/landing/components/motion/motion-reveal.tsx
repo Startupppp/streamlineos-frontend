@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, type HTMLMotionProps } from "framer-motion";
+import { motion, useReducedMotion, type HTMLMotionProps } from "framer-motion";
 import {
   fadeUp,
   fadeIn,
@@ -12,16 +12,35 @@ import {
   transitionBase,
   VIEWPORT_DEFAULT,
 } from "./variants";
+import type { Variants } from "framer-motion";
 
 type RevealVariant = "fadeUp" | "fadeIn" | "scaleIn" | "slideLeft" | "slideRight";
 
-const VARIANT_MAP = {
+const FULL_VARIANT_MAP: Record<RevealVariant, Variants> = {
   fadeUp,
   fadeIn,
   scaleIn,
   slideLeft,
   slideRight,
-} as const;
+};
+
+const REDUCED_REVEAL: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1 },
+};
+
+const REDUCED_STAGGER: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0 },
+  },
+};
+
+const REDUCED_ITEM: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1 },
+};
 
 type MotionRevealProps = HTMLMotionProps<"div"> & {
   variant?: RevealVariant;
@@ -34,13 +53,15 @@ export function MotionReveal({
   children,
   ...props
 }: MotionRevealProps) {
+  const prefersReduced = useReducedMotion();
+  const variantSet = prefersReduced ? REDUCED_REVEAL : FULL_VARIANT_MAP[variant];
   return (
     <motion.div
       initial="hidden"
       whileInView="visible"
       viewport={VIEWPORT_DEFAULT}
-      variants={VARIANT_MAP[variant]}
-      transition={{ ...transitionBase, delay }}
+      variants={variantSet}
+      transition={{ ...transitionBase, delay: prefersReduced ? 0 : delay }}
       {...props}
     >
       {children}
@@ -51,12 +72,13 @@ export function MotionReveal({
 type MotionStaggerProps = HTMLMotionProps<"div">;
 
 export function MotionStagger({ children, ...props }: MotionStaggerProps) {
+  const prefersReduced = useReducedMotion();
   return (
     <motion.div
       initial="hidden"
       whileInView="visible"
       viewport={VIEWPORT_DEFAULT}
-      variants={staggerContainer}
+      variants={prefersReduced ? REDUCED_STAGGER : staggerContainer}
       {...props}
     >
       {children}
@@ -67,8 +89,9 @@ export function MotionStagger({ children, ...props }: MotionStaggerProps) {
 type MotionItemProps = HTMLMotionProps<"div">;
 
 export function MotionItem({ children, ...props }: MotionItemProps) {
+  const prefersReduced = useReducedMotion();
   return (
-    <motion.div variants={staggerItem} {...props}>
+    <motion.div variants={prefersReduced ? REDUCED_ITEM : staggerItem} {...props}>
       {children}
     </motion.div>
   );

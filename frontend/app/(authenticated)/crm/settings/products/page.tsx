@@ -173,7 +173,7 @@ export default function ProductCatalogPage() {
             title={query ? "No products match that search" : "No products yet"}
             description={
               query
-                ? `Nothing in the catalogue matches “${query}”. Clear the search to see everything.`
+                ? `Nothing in the catalogue matches "${query}". Clear the search to see everything.`
                 : "A product is a line you can put on a quote — its price, its tax and the currency it sells in."
             }
             action={

@@ -5,9 +5,10 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { NotFoundIllustration } from "@/components/illustrations";
 import { LayoutDashboard, HeadphonesIcon } from "lucide-react";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 
 export default function DashboardNotFound() {
+  const { staggerContainer, fadeUp } = useMotionVariants();
   return (
     <motion.div
       className="flex flex-1 flex-col items-center justify-center py-16 px-6 text-center min-h-[60dvh]"

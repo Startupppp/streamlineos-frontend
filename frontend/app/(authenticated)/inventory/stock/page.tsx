@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { useStockLevels } from "@/hooks/api/inventory/stock";
 import { useWarehouses, useLocations } from "@/hooks/api/inventory/warehouses";
 import { useCan } from "@/hooks/api/access";
@@ -38,6 +38,7 @@ import { useDebouncedValue } from "@/hooks/common/use-debounce";
 const PAGE_LIMIT = 50;
 
 export default function StockLevelsPage() {
+  const { staggerContainer, fadeUp } = useMotionVariants();
   const router = useRouter();
   const searchParams = useSearchParams();
 

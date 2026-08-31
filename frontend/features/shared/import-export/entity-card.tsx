@@ -13,7 +13,7 @@ import { UploadIcon, DownloadIcon } from "@animateicons/react/lucide";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
@@ -50,6 +50,7 @@ export function EntityCard({
   onFileChange,
   onExport,
 }: EntityCardProps) {
+  const { fadeUp } = useMotionVariants();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const Icon = entity.icon;
   const { iconRef: uploadIconRef, hoverHandlers: uploadHoverHandlers } = useAnimatedIcon();

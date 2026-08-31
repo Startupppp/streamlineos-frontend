@@ -1,0 +1,9 @@
+
+> streamlineos-api@0.1.0 check:tenant-indexes D:\projects\personal\Streamlineos\backend
+> node src/scripts/check-tenant-indexes.mjs
+
+Schema files            327
+Tenant tables           722
+Leading tenant index    722
+
+OK — every tenant table declares an index leading with its tenant column.

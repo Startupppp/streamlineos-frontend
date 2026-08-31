@@ -54,7 +54,7 @@ export function VendorCreditApplyDialog({
   const billsQuery = usePurchaseBills({
     vendorId: vendorId ?? undefined,
     status: "POSTED",
-    pageSize: 50,
+    limit: 50,
   });
 
   const form = useForm<ApplyFormValues>({
@@ -81,7 +81,7 @@ export function VendorCreditApplyDialog({
     form.reset();
   }
 
-  const bills = billsQuery.data?.items ?? [];
+  const bills = billsQuery.data?.data ?? [];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

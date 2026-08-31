@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState, useCallback } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -6,13 +6,13 @@ import { EmptyMailIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
   useFeedbackPosts,
   useDeleteFeedbackPost,
   useRoadmapItems,
 } from "@/hooks/api/build/roadmap";
-import { TablePagination } from "@/components/ui/table-pagination";
 import type { FeedbackPost } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
@@ -42,9 +42,12 @@ function FeedbackListSkeleton() {
 }
 
 export function FeedbackTab({ search }: FeedbackTabProps) {
-  const [page, setPage] = useState(1);
+  const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>([undefined]);
+  const [cursorIdx, setCursorIdx] = useState(0);
+  const currentCursor = cursorHistory[cursorIdx];
+
   const { data, isLoading, isError, refetch } = useFeedbackPosts(
-    search.trim() ? { search: search.trim(), page } : { page },
+    search.trim() ? { search: search.trim(), cursor: currentCursor } : { cursor: currentCursor },
   );
   const { data: roadmapData } = useRoadmapItems();
   const deletePost = useDeleteFeedbackPost();
@@ -60,7 +63,8 @@ export function FeedbackTab({ search }: FeedbackTabProps) {
   }, []);
 
   useEffect(() => {
-    setPage(1);
+    setCursorHistory([undefined]);
+    setCursorIdx(0);
   }, [search]);
 
   function handleRetry() {
@@ -69,10 +73,6 @@ export function FeedbackTab({ search }: FeedbackTabProps) {
 
   function handleDeleteDialogChange(open: boolean) {
     if (!open) setDeleteTarget(null);
-  }
-
-  function handlePageChange(p: number) {
-    setPage(p);
   }
 
   const handleSetDeleteTarget = useCallback((post: FeedbackPost) => {
@@ -90,6 +90,18 @@ export function FeedbackTab({ search }: FeedbackTabProps) {
     });
   }
 
+  function handleNext() {
+    const nc = data?.pagination.nextCursor;
+    if (!nc) return;
+    setCursorHistory((prev) => [...prev.slice(0, cursorIdx + 1), nc]);
+    setCursorIdx((prev) => prev + 1);
+  }
+
+  function handlePrev() {
+    if (cursorIdx === 0) return;
+    setCursorIdx((prev) => prev - 1);
+  }
+
   if (isLoading) return <FeedbackListSkeleton />;
 
   if (isError) {
@@ -98,7 +110,10 @@ export function FeedbackTab({ search }: FeedbackTabProps) {
     );
   }
 
-  if ((data?.data ?? []).length === 0) {
+  const hasPrev = cursorIdx > 0;
+  const hasNext = data?.pagination.hasMore ?? false;
+
+  if ((data?.data ?? []).length === 0 && cursorIdx === 0) {
     return (
       <EmptyState
         className={PM_FILL_PANEL}
@@ -110,7 +125,7 @@ export function FeedbackTab({ search }: FeedbackTabProps) {
   }
 
   return (
-    <>
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       <PmStaggerList className="space-y-2">
         {(data?.data ?? []).map((post) => (
           <FeedbackRow
@@ -123,13 +138,16 @@ export function FeedbackTab({ search }: FeedbackTabProps) {
         ))}
       </PmStaggerList>
 
-      <TablePagination
-        page={page}
-        pageSize={data?.pagination.limit ?? 50}
-        total={data?.pagination.total ?? 0}
-        onPageChange={handlePageChange}
-        disabled={isLoading}
-      />
+      {(hasPrev || hasNext) ? (
+        <div className="flex items-center justify-center gap-2 border-t pt-2">
+          <Button variant="ghost" size="sm" onClick={handlePrev} disabled={!hasPrev}>
+            Previous
+          </Button>
+          <Button variant="ghost" size="sm" onClick={handleNext} disabled={!hasNext}>
+            Next
+          </Button>
+        </div>
+      ) : null}
 
       <MergeFeedbackDialog post={mergeTarget} onOpenChange={handleMergeDialogChange} />
 
@@ -142,6 +160,6 @@ export function FeedbackTab({ search }: FeedbackTabProps) {
         destructive
         onConfirm={handleDelete}
       />
-    </>
+    </div>
   );
 }

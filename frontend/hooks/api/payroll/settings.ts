@@ -1,8 +1,9 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { PolicyRow } from "@/types/payroll/setup";
 
 type UpdateFxRatesInput = {
@@ -12,7 +13,7 @@ type UpdateFxRatesInput = {
 
 export function useUpdateFxRates() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payroll:settings:manage", {
     mutationKey: ["payroll", "policies", "fx-rates"],
     mutationFn: ({ policyId, fxRates }: UpdateFxRatesInput) =>
       apiClient.patch<PolicyRow>(`/payroll/policies/${policyId}`, { fxRates }),

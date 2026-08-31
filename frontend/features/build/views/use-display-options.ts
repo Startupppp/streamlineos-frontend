@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { orgScopedStorageKey, useOrgStorageScope } from "@/lib/org-scoped-storage";
 import { DEFAULT_DISPLAY_OPTIONS } from "./display-options-panel";
 import type {
   ColumnByOption,
@@ -64,9 +65,11 @@ export function hydrateDisplayOptions(raw: unknown): DisplayOptions {
   };
 }
 
-function loadStored(projectId: number): DisplayOptions | null {
+function loadStored(projectId: number, scope: string): DisplayOptions | null {
   try {
-    const raw = localStorage.getItem(`${STORAGE_PREFIX}${projectId}`);
+    const raw = localStorage.getItem(
+      orgScopedStorageKey(`${STORAGE_PREFIX}${projectId}`, scope),
+    );
     if (!raw) return null;
     return hydrateDisplayOptions(JSON.parse(raw));
   } catch {
@@ -74,31 +77,35 @@ function loadStored(projectId: number): DisplayOptions | null {
   }
 }
 
-function persist(projectId: number, options: DisplayOptions): void {
+function persist(projectId: number, options: DisplayOptions, scope: string): void {
   try {
-    localStorage.setItem(`${STORAGE_PREFIX}${projectId}`, JSON.stringify(options));
+    localStorage.setItem(
+      orgScopedStorageKey(`${STORAGE_PREFIX}${projectId}`, scope),
+      JSON.stringify(options),
+    );
   } catch {}
 }
 
 export function useDisplayOptions(
   projectId: number,
 ): [DisplayOptions, (next: DisplayOptions) => void] {
+  const scope = useOrgStorageScope();
   const [options, setOptions] = useState<DisplayOptions>(DEFAULT_DISPLAY_OPTIONS);
   const loadedRef = useRef(false);
 
   useEffect(() => {
     if (loadedRef.current) return;
     loadedRef.current = true;
-    const stored = loadStored(projectId);
+    const stored = loadStored(projectId, scope);
     if (stored) setOptions(stored);
-  }, [projectId]);
+  }, [projectId, scope]);
 
   const update = useCallback(
     (next: DisplayOptions) => {
       setOptions(next);
-      persist(projectId, next);
+      persist(projectId, next, scope);
     },
-    [projectId],
+    [projectId, scope],
   );
 
   return [options, update];

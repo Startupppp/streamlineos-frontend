@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useCallback } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { useReducedMotion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import { XIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +16,6 @@ import { useIsMobile } from "@/hooks/common/use-mobile";
 import { cn } from "@/lib/utils";
 import { PriorityBadge } from "../shared/priority-badge";
 import { StatusBadge } from "../shared/status-badge";
-import { pmSnappy } from "@/lib/motion-presets";
 import { TicketSidebar } from "./ticket-sidebar";
 import { TicketTimeTracker } from "./ticket-time-tracker";
 import { WatcherList } from "./watcher-list";
@@ -179,10 +178,6 @@ export function TicketDetailRightPanel({
 }: TicketDetailRightPanelProps) {
   const isMobile = useIsMobile();
   const shouldReduceMotion = useReducedMotion();
-  const panelTransition = shouldReduceMotion
-    ? { duration: 0 }
-    : pmSnappy;
-
   const handleClose = useCallback(() => {
     onOpenChange(false);
   }, [onOpenChange]);
@@ -227,35 +222,20 @@ export function TicketDetailRightPanel({
         </DrawerContent>
       </Drawer>
 
-      <AnimatePresence initial={false}>
-        {open ? (
-          <motion.aside
-            key="ticket-detail-right-panel"
-            initial={
-              shouldReduceMotion ? false : { width: 0, opacity: 0 }
-            }
-            animate={{ width: "auto", opacity: 1 }}
-            exit={
-              shouldReduceMotion
-                ? { opacity: 0 }
-                : { width: 0, opacity: 0 }
-            }
-            transition={panelTransition}
-            className="hidden h-full min-h-0 shrink-0 self-stretch overflow-hidden border-border bg-card md:flex md:flex-col md:border-l"
-          >
-            <div
-              className={cn(
-                "flex h-full min-h-0 min-w-0 flex-1 flex-col",
-                asideClassName,
-              )}
-            >
-              {!isMobile ? (
-                <TicketDetailRightPanelBody {...bodyProps} />
-              ) : null}
-            </div>
-          </motion.aside>
-        ) : null}
-      </AnimatePresence>
+      <aside
+        className={cn(
+          "hidden h-full min-h-0 shrink-0 self-stretch overflow-hidden border-border bg-card md:flex md:flex-col md:border-l",
+          "transition-[width] ease-in-out",
+          shouldReduceMotion ? "duration-0" : "duration-300",
+          open ? asideClassName : "w-0 min-w-0",
+        )}
+      >
+        <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
+          {!isMobile ? (
+            <TicketDetailRightPanelBody {...bodyProps} />
+          ) : null}
+        </div>
+      </aside>
     </>
   );
 }

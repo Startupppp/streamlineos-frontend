@@ -195,8 +195,9 @@ export const ModuleCard = memo(function ModuleCard({
               >
                 <motion.div
                   className={cn("h-full rounded-full bg-gradient-to-r", style.progressBar)}
-                  initial={{ width: prefersReducedMotion ? `${progress}%` : "0%" }}
-                  animate={{ width: `${progress}%` }}
+                  initial={{ scaleX: prefersReducedMotion ? progress / 100 : 0 }}
+                  animate={{ scaleX: progress / 100 }}
+                  style={{ width: "100%", transformOrigin: "left" }}
                   transition={{
                     duration: prefersReducedMotion ? 0 : 0.5,
                     ease: "easeOut",

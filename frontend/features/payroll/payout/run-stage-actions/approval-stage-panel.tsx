@@ -16,6 +16,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useCan } from "@/hooks/api/access";
+import { formatShortDate } from "@/lib/date-utils";
 import { useRunApprovals, useApproveStage, useRejectStage } from "@/hooks/api/payroll";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { PayrollApprovalRow } from "@/types/payroll";
@@ -40,10 +41,6 @@ const STATUS_BADGE: Record<string, string> = {
   REJECTED: "bg-status-danger-surface text-status-danger-ink",
 };
 
-function formatDate(iso: string | null): string {
-  if (!iso) return "";
-  return new Date(iso).toLocaleDateString(undefined, { dateStyle: "medium" });
-}
 
 interface StageRowProps {
   row: PayrollApprovalRow;
@@ -107,7 +104,7 @@ function StageRow({ row, canAct, isActive, runId }: StageRowProps) {
 
       {row.actedBy && (
         <p className="text-xs text-muted-foreground pl-9">
-          by {row.actedBy}{row.actedAt ? ` · ${formatDate(row.actedAt)}` : ""}
+          by {row.actedBy}{row.actedAt ? ` · ${formatShortDate(row.actedAt)}` : ""}
         </p>
       )}
       {row.comment && (

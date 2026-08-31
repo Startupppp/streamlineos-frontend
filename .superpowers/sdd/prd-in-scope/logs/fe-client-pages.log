@@ -1,0 +1,8 @@
+
+> streamlineos@0.1.0 check:client-pages D:\projects\personal\Streamlineos\frontend
+> node scripts/check-client-pages.mjs
+
+Client pages: 259 of 598 (43.3%)
+Ceiling:      259
+
+✔  Within ceiling (0 below limit).

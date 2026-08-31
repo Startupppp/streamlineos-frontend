@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useTransition } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Link from "next/link";
+import { useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -17,40 +20,65 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatShortDate } from "@/lib/date-utils";
 import { FinanceStatusBadge, Money } from "@/features/accounting/shared";
 import { usePurchaseBills, useVendorsOutstanding } from "@/hooks/api/accounting";
 import type { PurchaseBillSummary } from "@/types/accounting";
 import { VendorPaymentAllocationDialog } from "@/features/accounting/purchases/vendor-payment-allocation-dialog";
 
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime())
-    ? value
-    : d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" });
-}
+const PAGE_SIZE = 25;
 
 export default function VendorPaymentsPage() {
-  const [vendorFilter, setVendorFilter] = useState<string>("all");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [, startTransition] = useTransition();
+
+  const canManage = useCan("accounting:payables:manage");
+  const vendorFilter = searchParams.get("vendor") ?? "all";
   const [allocationDialogOpen, setAllocationDialogOpen] = useState(false);
 
-  const paidQuery = usePurchaseBills({ status: "PAID", page: 1, pageSize: 50 });
-  const partialQuery = usePurchaseBills({ status: "PARTIALLY_PAID", page: 1, pageSize: 50 });
-  const vendorsQuery = useVendorsOutstanding({ pageSize: 100 });
+  const vendorsQuery = useVendorsOutstanding({ limit: 100 });
 
-  const allItems: PurchaseBillSummary[] = [
-    ...(paidQuery.data?.items ?? []),
-    ...(partialQuery.data?.items ?? []),
-  ];
+  const [paidCursors, setPaidCursors] = useState<(string | null)[]>([null]);
+  const [partialCursors, setPartialCursors] = useState<(string | null)[]>([null]);
+  const [cursorIndex, setCursorIndex] = useState(0);
 
-  const filteredItems =
-    vendorFilter === "all"
-      ? allItems
-      : allItems.filter((b) => String(b.vendorId) === vendorFilter);
+  useEffect(() => {
+    setPaidCursors([null]);
+    setPartialCursors([null]);
+    setCursorIndex(0);
+  }, [vendorFilter]);
 
-  const vendors = vendorsQuery.data?.items ?? [];
+  const currentPaidCursor = paidCursors[cursorIndex] ?? null;
+  const currentPartialCursor = partialCursors[cursorIndex] ?? null;
+
+  const vendorId = vendorFilter === "all" ? undefined : Number(vendorFilter);
+
+  const paidQuery = usePurchaseBills({
+    status: "PAID",
+    limit: PAGE_SIZE,
+    cursor: currentPaidCursor ?? undefined,
+    vendorId,
+  });
+  const partialQuery = usePurchaseBills({
+    status: "PARTIALLY_PAID",
+    limit: PAGE_SIZE,
+    cursor: currentPartialCursor ?? undefined,
+    vendorId,
+  });
+
+  const paidItems = paidQuery.data?.data ?? [];
+  const partialItems = partialQuery.data?.data ?? [];
+  const allItems: PurchaseBillSummary[] = [...paidItems, ...partialItems];
+
+  const vendors = vendorsQuery.data?.data ?? [];
   const isLoading = paidQuery.isLoading || partialQuery.isLoading;
   const queryError = paidQuery.error ?? partialQuery.error;
+
+  const paidHasMore = paidQuery.data?.pagination?.hasMore ?? false;
+  const partialHasMore = partialQuery.data?.pagination?.hasMore ?? false;
+  const hasMore = paidHasMore || partialHasMore;
 
   function handleRetry(): void {
     void paidQuery.refetch();
@@ -62,7 +90,12 @@ export default function VendorPaymentsPage() {
   }
 
   function handleVendorFilterChange(value: string): void {
-    setVendorFilter(value);
+    startTransition(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value === "all") params.delete("vendor");
+      else params.set("vendor", value);
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    });
   }
 
   function handleAllocationDialogChange(open: boolean): void {
@@ -91,7 +124,7 @@ export default function VendorPaymentsPage() {
       key: "billDate",
       header: "Bill date",
       cell: (row) => (
-        <span className="text-sm text-muted-foreground">{formatDate(row.billDate)}</span>
+        <span className="text-sm text-muted-foreground">{formatShortDate(row.billDate)}</span>
       ),
     },
     {
@@ -135,9 +168,11 @@ export default function VendorPaymentsPage() {
       title="Vendor Payments"
       subtitle="Payment history for vendor bills."
       actions={
-        <Button size="sm" variant="outline" onClick={handleOpenAllocationDialog}>
-          Record Allocation
-        </Button>
+        canManage ? (
+          <Button size="sm" variant="outline" onClick={handleOpenAllocationDialog}>
+            Record Allocation
+          </Button>
+        ) : undefined
       }
       filters={
         <Select value={vendorFilter} onValueChange={handleVendorFilterChange}>
@@ -156,28 +191,54 @@ export default function VendorPaymentsPage() {
       }
     >
       <div className="flex flex-1 min-h-0 flex-col">
-        {queryError && (
+        {queryError ? (
           <ErrorState
             title="Failed to load vendor payments"
             description={getErrorMessage(queryError)}
             onRetry={handleRetry}
           />
-        )}
-        <DataTable
-          data={filteredItems}
-          columns={columns}
-          getRowKey={(row) => row.id}
-          isLoading={isLoading}
-          className="flex-1 min-h-0"
-          emptyState={
-            <EmptyState
-              illustrationPreset="tasks"
-              title="No payments found"
-              description="Paid and partially paid bills will appear here."
+        ) : (
+          <>
+            <DataTable
+              data={allItems}
+              columns={columns}
+              getRowKey={(row) => row.id}
+              isLoading={isLoading}
+              className="flex-1 min-h-0"
+              emptyState={
+                <EmptyState
+                  illustrationPreset="tasks"
+                  title="No payments found"
+                  description="Paid and partially paid bills will appear here."
+                />
+              }
+              minWidth="640px"
             />
-          }
-          minWidth="640px"
-        />
+            {(cursorIndex > 0 || hasMore) ? (
+              <CursorPageControls
+                page={cursorIndex + 1}
+                hasNext={hasMore}
+                onPrevious={() => setCursorIndex(Math.max(0, cursorIndex - 1))}
+                onNext={() => {
+                  const paidNext = paidQuery.data?.pagination.nextCursor ?? null;
+                  const partialNext = partialQuery.data?.pagination.nextCursor ?? null;
+                  setPaidCursors((prev) => {
+                    const copy = prev.slice(0, cursorIndex + 1);
+                    copy.push(paidNext);
+                    return copy;
+                  });
+                  setPartialCursors((prev) => {
+                    const copy = prev.slice(0, cursorIndex + 1);
+                    copy.push(partialNext);
+                    return copy;
+                  });
+                  setCursorIndex(cursorIndex + 1);
+                }}
+                className="mt-2"
+              />
+            ) : null}
+          </>
+        )}
       </div>
 
       <VendorPaymentAllocationDialog

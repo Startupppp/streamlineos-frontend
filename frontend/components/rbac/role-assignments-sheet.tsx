@@ -3,7 +3,8 @@
 import { useCallback, useState } from "react";
 import { keepPreviousData } from "@tanstack/react-query";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import { Loader2, AlertTriangle, Building2, UserCircle } from "lucide-react";
+import { Loader2, Building2, UserCircle } from "lucide-react";
+import { ErrorState } from "@/components/shared/error-state";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   Sheet,
@@ -27,13 +28,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import {
-  useRoleMembers,
-  useAssignRoleMember,
-  useUnassignRoleMember,
-} from "@/hooks/api/roles";
+import { useRoleMembers, useAssignRoleMember, useUnassignRoleMember, useAssignableDepartments } from "@/hooks/api/roles";
 import { useOrgMembers } from "@/hooks/api/organization";
-import { useAssignableDepartments } from "@/hooks/api/roles";
+
 import { getInitials } from "@/lib/format-utils";
 import type { Role } from "@/types/organization";
 import {
@@ -199,7 +196,7 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
   const handleAddDepartment = useCallback(
     (departmentId: number) => {
       assign.mutate(
-        { roleId, principalType: "department", principalId: departmentId },
+        { roleId, principalType: "department", principalId: String(departmentId) },
         {
           onSuccess: () => toast.success("Department assigned"),
           onError: (error) => toast.error(getErrorMessage(error)),
@@ -212,7 +209,7 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
   const handleRemoveDepartment = useCallback(
     (departmentId: number) => {
       unassign.mutate(
-        { roleId, principalType: "department", principalId: departmentId },
+        { roleId, principalType: "department", principalId: String(departmentId) },
         {
           onSuccess: () => toast.success("Department removed"),
           onError: (error) => toast.error(getErrorMessage(error)),
@@ -244,20 +241,7 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
       </SheetHeader>
 
       {membersQuery.isError ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
-          <AlertTriangle className="w-8 text-muted-foreground" />
-          <div>
-            <p className="text-sm font-medium text-foreground">
-              Couldn&apos;t load members
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {getErrorMessage(membersQuery.error)}
-            </p>
-          </div>
-          <Button variant="outline" size="sm" onClick={handleRetry}>
-            Try again
-          </Button>
-        </div>
+        <ErrorState title="Couldn't load members" description={getErrorMessage(membersQuery.error)} onRetry={handleRetry} className="flex-1 px-6" />
       ) : isLoading ? (
         <div className="flex-1 px-6 py-5 space-y-3">
           {Array.from({ length: 6 }).map((_, index) => (

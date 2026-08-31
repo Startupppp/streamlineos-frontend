@@ -21,8 +21,8 @@ import {
   GRN_STATUS_LABEL,
   type GrnStatus,
 } from "@/features/inventory/lib/inventory-status";
-import type { GrnSummary } from "@/hooks/api/inventory/operations";
 import { formatShortDate } from "@/lib/date-utils";
+import type { GrnSummary } from "@/hooks/api/inventory/operations";
 
 const RECEIPTS_PERMISSION = "inventory:purchase-orders:read";
 

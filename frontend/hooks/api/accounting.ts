@@ -3,6 +3,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   Account,
   AccountType,
@@ -31,6 +32,17 @@ interface ListResponse<T> {
   totalPages: number;
 }
 
+export interface CursorPage<T> {
+  data: T[];
+  pagination: {
+    limit: number;
+    nextCursor: string | null;
+    hasMore: boolean;
+  };
+}
+
+type CursorResponse<T> = CursorPage<T>;
+
 interface TrialBalanceResponse {
   asOf: string;
   rows: TrialBalanceRow[];
@@ -40,8 +52,8 @@ interface TrialBalanceResponse {
 }
 
 interface ListAccountsParams {
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
   q?: string;
   type?: AccountType;
   activeOnly?: boolean;
@@ -57,10 +69,10 @@ function toQuery<P extends object>(params: P): Record<string, string> {
 }
 
 export function useAccounts(params: ListAccountsParams = {}) {
-  return useQuery<ListResponse<Account>, Error>({
+  return useQuery<CursorResponse<Account>, Error>({
     queryKey: queryKeys.accounting.accounts(params),
     queryFn: () =>
-      apiClient.get<ListResponse<Account>>("/accounting/accounts", toQuery(params)),
+      apiClient.get<CursorResponse<Account>>("/accounting/accounts", toQuery(params)),
     staleTime: 60_000,
   });
 }
@@ -101,20 +113,27 @@ export function useUpdateAccount(accountId: number) {
 }
 
 interface ListJournalParams {
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
   from?: string;
   to?: string;
   sourceType?: string;
+  /**
+   * The journal page filters on this, but `listJournalQuerySchema` does not
+   * declare it, so the server strips it and the filter narrows nothing. Kept so
+   * the call site compiles; the fix belongs in the accounting query schema.
+   */
   status?: import("@/types/accounting").JournalEntryStatus;
 }
 
 export function useJournal(params: ListJournalParams = {}) {
-  return useQuery<ListResponse<JournalEntry>, Error>({
+  const can = useCan("accounting:journal:read");
+  return useQuery<CursorResponse<JournalEntry>, Error>({
     queryKey: queryKeys.accounting.journal(params),
     queryFn: () =>
-      apiClient.get<ListResponse<JournalEntry>>("/accounting/journal", toQuery(params)),
+      apiClient.get<CursorResponse<JournalEntry>>("/accounting/journal", toQuery(params)),
     staleTime: 30_000,
+    enabled: can,
   });
 }
 
@@ -254,17 +273,17 @@ export function useCashFlow({ from, to }: CashFlowParams) {
 }
 
 interface ListCustomersOutstandingParams {
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
   q?: string;
   onlyOutstanding?: boolean;
 }
 
 export function useCustomersOutstanding(params: ListCustomersOutstandingParams = {}) {
-  return useQuery<ListResponse<CustomerOutstanding>, Error>({
+  return useQuery<CursorPage<CustomerOutstanding>, Error>({
     queryKey: queryKeys.accounting.customersOutstanding(params),
     queryFn: () =>
-      apiClient.get<ListResponse<CustomerOutstanding>>("/accounting/customers", toQuery(params)),
+      apiClient.get<CursorPage<CustomerOutstanding>>("/accounting/customers", toQuery(params)),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
   });
@@ -313,18 +332,18 @@ export function useAgedReceivables(asOf: string) {
 }
 
 interface ListPurchaseBillsParams {
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
   q?: string;
   status?: PurchaseBillStatus;
   vendorId?: number;
 }
 
 export function usePurchaseBills(params: ListPurchaseBillsParams = {}) {
-  return useQuery<ListResponse<PurchaseBillSummary>, Error>({
+  return useQuery<CursorResponse<PurchaseBillSummary>, Error>({
     queryKey: queryKeys.accounting.purchaseBills(params),
     queryFn: () =>
-      apiClient.get<ListResponse<PurchaseBillSummary>>("/accounting/purchase-bills", toQuery(params)),
+      apiClient.get<CursorResponse<PurchaseBillSummary>>("/accounting/purchase-bills", toQuery(params)),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
   });
@@ -344,7 +363,7 @@ interface CreatePurchaseBillLine {
   hsnSacCode?: string;
   quantity: number;
   rate: number;
-  gstRate: number;
+  gstRate: 0 | 5 | 12 | 18 | 28;
 }
 
 export interface CreatePurchaseBillInput {
@@ -403,17 +422,17 @@ export function useGstr3B(from: string, to: string) {
 }
 
 interface ListVendorsOutstandingParams {
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
   q?: string;
   onlyOutstanding?: boolean;
 }
 
 export function useVendorsOutstanding(params: ListVendorsOutstandingParams = {}) {
-  return useQuery<ListResponse<VendorOutstanding>, Error>({
+  return useQuery<CursorPage<VendorOutstanding>, Error>({
     queryKey: queryKeys.accounting.vendorsOutstanding(params),
     queryFn: () =>
-      apiClient.get<ListResponse<VendorOutstanding>>("/accounting/vendors", toQuery(params)),
+      apiClient.get<CursorPage<VendorOutstanding>>("/accounting/vendors", toQuery(params)),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
   });

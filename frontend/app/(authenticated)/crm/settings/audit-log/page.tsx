@@ -29,6 +29,7 @@ import {
   auditEntryFields,
 } from "@/lib/renderer/crm/settings/audit-entry-layout";
 import { useAuditLogs } from "@/hooks/api/audit-log";
+import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
 import { useCan } from "@/hooks/api/access";
 
 /**
@@ -88,8 +89,10 @@ export default function CrmAuditLogPage() {
   const action = searchParams.get("action") ?? "all";
   const fromDate = searchParams.get("from") ?? "";
   const toDate = searchParams.get("to") ?? "";
-  const rawPage = parseInt(searchParams.get("page") ?? "1", 10);
-  const page = isNaN(rawPage) || rawPage < 1 ? 1 : rawPage;
+  // The audit log is append-only and written to while it is read, so it walks a
+  // cursor; there is no page number to keep in the URL.
+  const { cursor, pageNumber, hasPrevious, goNext, goPrevious, reset: resetCursor } =
+    useCursorPagination();
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -111,10 +114,10 @@ export default function CrmAuditLogPage() {
       action: action !== "all" ? action : undefined,
       dateFrom: fromDate || undefined,
       dateTo: toDate || undefined,
-      page,
-      pageSize: PAGE_SIZE,
+      ...(cursor !== undefined ? { cursor } : {}),
+      limit: PAGE_SIZE,
     }),
-    [entityType, action, fromDate, toDate, page],
+    [entityType, action, fromDate, toDate, cursor],
   );
 
   const { data, isLoading, isError, refetch } = useAuditLogs(filters);
@@ -122,33 +125,33 @@ export default function CrmAuditLogPage() {
   const hasActiveFilters = entityType !== "all" || action !== "all" || !!fromDate || !!toDate;
 
   const handleEntityTypeChange = useCallback(
-    (val: string) => updateParams({ entityType: val !== "all" ? val : null, page: null }),
+    (val: string) => updateParams({ entityType: val !== "all" ? val : null }),
     [updateParams],
   );
 
   const handleActionChange = useCallback(
-    (val: string) => updateParams({ action: val !== "all" ? val : null, page: null }),
+    (val: string) => updateParams({ action: val !== "all" ? val : null }),
     [updateParams],
   );
 
   const handleFromDateChange = useCallback(
-    (value: string) => updateParams({ from: value || null, page: null }),
+    (value: string) => updateParams({ from: value || null }),
     [updateParams],
   );
 
   const handleToDateChange = useCallback(
-    (value: string) => updateParams({ to: value || null, page: null }),
+    (value: string) => updateParams({ to: value || null }),
     [updateParams],
   );
 
   const handleClearFilters = useCallback(
-    () => updateParams({ entityType: null, action: null, from: null, to: null, page: null }),
+    () => updateParams({ entityType: null, action: null, from: null, to: null }),
     [updateParams],
   );
 
-  const handlePageChange = useCallback(
-    (next: number) => updateParams({ page: next > 1 ? String(next) : null }),
-    [updateParams],
+  const handleNextPage = useCallback(
+    () => goNext(data?.pagination.nextCursor ?? null),
+    [goNext, data?.pagination.nextCursor],
   );
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
@@ -253,11 +256,13 @@ export default function CrmAuditLogPage() {
             minWidth="1000px"
             className={CONTENT_FILL_PANEL}
             pagination={{
-              mode: "server",
-              page,
+              mode: "cursor",
               pageSize: PAGE_SIZE,
-              total: data?.total ?? 0,
-              onPageChange: handlePageChange,
+              pageNumber,
+              hasMore: data?.pagination.hasMore ?? false,
+              hasPrevious,
+              onNext: handleNextPage,
+              onPrevious: goPrevious,
             }}
           />
         )}

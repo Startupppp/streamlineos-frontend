@@ -6,8 +6,8 @@ import { DownloadIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTable, type DataTableColumn, DataTableSkeleton } from "@/components/ui/data-table";
+
 import { ErrorState, NoPermissionState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
@@ -17,6 +17,7 @@ import { downloadCsv } from "@/features/inventory/lib";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
+import { formatShortDate } from "@/lib/date-utils";
 
 const DAYS_OPTIONS = [
   { value: "30", label: "Inactive >30 days" },
@@ -27,12 +28,6 @@ const DAYS_OPTIONS = [
 ] as const;
 
 const LIMIT = 50;
-
-function formatDate(value: string | null): string {
-  if (!value) return "Never";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
-}
 
 function daysInactiveClass(days: number | null): string {
   if (days === null) return "text-muted-foreground";
@@ -80,7 +75,7 @@ function buildColumns(): DataTableColumn<SlowMovingRow>[] {
       header: "Last Movement",
       cell: (row) => (
         <span className="text-muted-foreground text-dense">
-          {formatDate(row.lastMovement)}
+          {formatShortDate(row.lastMovement) || "Never"}
         </span>
       ),
     },
@@ -110,7 +105,7 @@ function exportToCsv(rows: SlowMovingRow[]): void {
       r.onHand,
       r.averageCost.toFixed(2),
       r.value.toFixed(2),
-      formatDate(r.lastMovement),
+      formatShortDate(r.lastMovement) || "Never",
       r.daysSinceLastMovement ?? "Never moved",
     ]),
   );

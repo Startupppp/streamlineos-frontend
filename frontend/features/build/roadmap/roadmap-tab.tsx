@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -6,9 +6,9 @@ import { EmptyProjectsIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useRoadmapItems, useDeleteRoadmapItem } from "@/hooks/api/build/roadmap";
-import { TablePagination } from "@/components/ui/table-pagination";
 import type { RoadmapItem, RoadmapStatus } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
@@ -38,9 +38,14 @@ function RoadmapBoardSkeleton() {
 }
 
 export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTabProps) {
-  const [page, setPage] = useState(1);
+  const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>([undefined]);
+  const [cursorIdx, setCursorIdx] = useState(0);
+  const currentCursor = cursorHistory[cursorIdx];
+
   const { data, isLoading, isError, refetch } = useRoadmapItems(
-    search.trim() ? { search: search.trim(), page } : { page },
+    search.trim()
+      ? { search: search.trim(), cursor: currentCursor }
+      : { cursor: currentCursor },
   );
   const deleteItem = useDeleteRoadmapItem();
   const [internalCreateOpen, setInternalCreateOpen] = useState(false);
@@ -48,7 +53,8 @@ export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTa
   const [deleteTarget, setDeleteTarget] = useState<RoadmapItem | null>(null);
 
   useEffect(() => {
-    setPage(1);
+    setCursorHistory([undefined]);
+    setCursorIdx(0);
   }, [search]);
 
   const isCreateControlled = onCreateOpenChange !== undefined;
@@ -106,8 +112,16 @@ export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTa
     });
   }
 
-  function handlePageChange(p: number) {
-    setPage(p);
+  function handleNext() {
+    const nc = data?.pagination.nextCursor;
+    if (!nc) return;
+    setCursorHistory((prev) => [...prev.slice(0, cursorIdx + 1), nc]);
+    setCursorIdx((prev) => prev + 1);
+  }
+
+  function handlePrev() {
+    if (cursorIdx === 0) return;
+    setCursorIdx((prev) => prev - 1);
   }
 
   if (isLoading) return <RoadmapBoardSkeleton />;
@@ -118,11 +132,13 @@ export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTa
     );
   }
 
-  const total = data?.pagination.total ?? 0;
+  const isEmpty = (data?.data ?? []).length === 0 && cursorIdx === 0;
+  const hasPrev = cursorIdx > 0;
+  const hasNext = data?.pagination.hasMore ?? false;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
-      {total === 0 ? (
+      {isEmpty ? (
         <EmptyState
           className={PM_FILL_PANEL}
           illustration={<EmptyProjectsIllustration />}
@@ -162,13 +178,16 @@ export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTa
               </PmPanel>
             ))}
           </div>
-          <TablePagination
-            page={page}
-            pageSize={data?.pagination.limit ?? 50}
-            total={total}
-            onPageChange={handlePageChange}
-            disabled={isLoading}
-          />
+          {(hasPrev || hasNext) ? (
+            <div className="flex items-center justify-center gap-2 border-t pt-2">
+              <Button variant="ghost" size="sm" onClick={handlePrev} disabled={!hasPrev}>
+                Previous
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleNext} disabled={!hasNext}>
+                Next
+              </Button>
+            </div>
+          ) : null}
         </div>
       )}
 

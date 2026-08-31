@@ -3,7 +3,8 @@
 import { useCallback, useMemo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bookmark, Hash, Loader2 } from "lucide-react";
+import { Bookmark, Hash } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { XIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import React from "react";
@@ -148,8 +149,17 @@ export function SavedMessagesPanel({
 
       <ScrollArea className="flex-1">
         {isLoading ? (
-          <div className="flex items-center justify-center py-10">
-            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          <div className="space-y-2 p-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex gap-2.5 p-2">
+                <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+                <div className="flex-1 space-y-1.5">
+                  <Skeleton className="h-3 w-24" />
+                  <Skeleton className="h-3 w-full" />
+                  <Skeleton className="h-3 w-3/4" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : isError ? (
           <div className="flex flex-col items-center justify-center py-12 px-4">

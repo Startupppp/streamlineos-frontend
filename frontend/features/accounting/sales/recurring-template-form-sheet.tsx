@@ -52,7 +52,7 @@ export function RecurringTemplateFormSheet({
   const createMutation = useCreateRecurringTemplate();
   const updateMutation = useUpdateRecurringTemplate();
   const { data: customersData } = useCustomersOutstanding();
-  const customerOptions: ComboboxOption[] = (customersData?.items ?? []).map((c) => ({
+  const customerOptions: ComboboxOption[] = (customersData?.data ?? []).map((c) => ({
     value: String(c.clientId),
     label: c.clientName,
   }));

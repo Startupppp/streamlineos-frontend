@@ -13,7 +13,6 @@ import {
 } from "@/components/illustrations";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
@@ -36,78 +35,15 @@ import { cn } from "@/lib/utils";
 import { useProducts, useCategories } from "@/hooks/api/inventory";
 import { useCan } from "@/hooks/api/access";
 import { MobileFilterDrawer } from "@/features/payroll/shared/mobile-filter-drawer";
-import type { InventoryProduct, TrackingMethod } from "@/types/inventory";
+import {
+  formatPrice,
+  StatusBadge,
+  StockBadge,
+  TrackingBadge,
+} from "@/features/inventory/components/product-row-actions";
+import type { InventoryProduct } from "@/types/inventory";
 
 const PAGE_LIMIT = 20;
-
-function formatPrice(value: string | number | null | undefined): string {
-  if (value === null || value === undefined || value === "") return "—";
-  const n = Number(value);
-  if (!Number.isFinite(n)) return "—";
-  return n.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
-
-function StockBadge({ qty }: { qty: number }) {
-  if (qty <= 0) {
-    return (
-      <Badge
-        variant="outline"
-        className="h-4 text-micro px-1.5 py-0 tabular-nums border-status-danger-rule text-status-danger-ink bg-status-danger-surface"
-      >
-        Out
-      </Badge>
-    );
-  }
-  if (qty < 10) {
-    return (
-      <Badge
-        variant="outline"
-        className="h-4 text-micro px-1.5 py-0 tabular-nums border-status-warning-rule text-status-warning-ink bg-status-warning-surface"
-      >
-        {qty} low
-      </Badge>
-    );
-  }
-  return (
-    <Badge
-      variant="outline"
-      className="h-4 text-micro px-1.5 py-0 tabular-nums border-status-success-rule text-status-success-ink bg-status-success-surface"
-    >
-      {qty}
-    </Badge>
-  );
-}
-
-function TrackingBadge({
-  method,
-}: {
-  method: TrackingMethod | null | undefined;
-}) {
-  if (!method || method === "NONE") {
-    return <span className="text-muted-foreground text-micro">—</span>;
-  }
-  if (method === "LOT") {
-    return (
-      <Badge
-        variant="outline"
-        className="h-4 text-micro px-1.5 py-0 bg-status-warning-surface text-status-warning-ink border-status-warning-rule"
-      >
-        Lot
-      </Badge>
-    );
-  }
-  return (
-    <Badge
-      variant="outline"
-      className="h-4 text-micro px-1.5 py-0 bg-status-info-surface text-status-info-ink border-status-info-rule"
-    >
-      Serial
-    </Badge>
-  );
-}
 
 function ProductsPageInner() {
   const canView = useCan("inventory:products:read");

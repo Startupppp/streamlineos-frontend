@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { TrendingUp, Clock } from "lucide-react";
 
-import { staggerContainer, fadeIn } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import type { WfhRequest } from "./leaves-shared";
 import { WfhRequestItem } from "./leaves-shared";
 
@@ -55,6 +55,7 @@ export function WfhTabContent({
   statusFilter = "ALL",
   onRequestWfh,
 }: WfhTabContentProps) {
+  const { staggerContainer, fadeIn } = useMotionVariants();
   const { data: myWfhRequests, isLoading: wfhLoading } = useHrWfhRequests();
 
   const filteredWfhRequests = useMemo(() => {

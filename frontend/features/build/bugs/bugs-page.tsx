@@ -9,11 +9,11 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { getUserDisplayName } from "@/lib/person-display";
 import type { Bug, BugSeverity, BugStatus, BugPriority } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "@/components/ui/search-input";
@@ -167,6 +167,15 @@ export function BugsPage({ projectId }: BugsPageProps) {
     void refetch();
   }, [refetch]);
 
+  const filtersActive = !!(debouncedSearch || statusFilter !== "all" || severityFilter !== "all" || assigneeFilter !== "all");
+
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    setStatusFilter("all");
+    setSeverityFilter("all");
+    setAssigneeFilter("all");
+  }, []);
+
   const handleDeleteDialogChange = useCallback((open: boolean) => {
     if (!open) setDeleteTarget(null);
   }, []);
@@ -308,16 +317,14 @@ export function BugsPage({ projectId }: BugsPageProps) {
             <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
           ) : (bugs ?? []).length === 0 ? (
             <EmptyState
-                className={PM_FILL_PANEL}
-                illustrationPreset="ticket"
-                title="No bugs found"
-                description={
-                  search || statusFilter !== "all" || severityFilter !== "all"
-                    ? "No bugs match the active filters."
-                    : "Report a bug to get started."
-                }
-                action={canCreate ? { label: "Report Bug", onClick: handleNewBug } : undefined}
-              />
+              className={PM_FILL_PANEL}
+              illustrationPreset="ticket"
+              title="No bugs found"
+              description={filtersActive ? undefined : "Report a bug to get started."}
+              filtersActive={filtersActive}
+              onClearFilters={handleClearFilters}
+              action={canCreate && !filtersActive ? { label: "Report Bug", onClick: handleNewBug } : undefined}
+            />
           ) : (
             <DataTable<Bug>
               data={bugs ?? []}

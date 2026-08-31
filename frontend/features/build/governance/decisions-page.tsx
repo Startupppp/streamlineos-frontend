@@ -9,11 +9,11 @@ import { useCan } from "@/hooks/api/access";
 import { getUserDisplayName } from "@/lib/person-display";
 import type { Decision, DecisionStatus, CreateDecisionInput, UpdateDecisionInput } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
@@ -254,22 +254,14 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
             <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
           ) : displayed.length === 0 ? (
             <EmptyState
-                className={PM_FILL_PANEL}
-                illustrationPreset="documents"
-                title={isFiltered ? "No matching decisions" : "No decisions recorded"}
-                description={
-                  isFiltered
-                    ? "Try adjusting your filters."
-                    : "Record key project decisions to maintain a clear audit trail."
-                }
-                action={
-                  isFiltered
-                    ? { label: "Clear filters", onClick: handleClearFilters }
-                    : canManage
-                      ? { label: "Log Decision", onClick: handleNewDecision }
-                      : undefined
-                }
-              />
+              className={PM_FILL_PANEL}
+              illustrationPreset="documents"
+              title="No decisions recorded"
+              description={isFiltered ? undefined : "Record key project decisions to maintain a clear audit trail."}
+              filtersActive={isFiltered}
+              onClearFilters={handleClearFilters}
+              action={canManage && !isFiltered ? { label: "Log Decision", onClick: handleNewDecision } : undefined}
+            />
           ) : (
             <DataTable
               data={displayed}

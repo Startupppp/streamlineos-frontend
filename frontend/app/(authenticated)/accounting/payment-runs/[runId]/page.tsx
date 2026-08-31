@@ -39,17 +39,10 @@ import {
   useCancelPaymentRun,
   useUpdatePaymentRunItem,
 } from "@/hooks/api/accounting/ap";
+import { formatShortDate } from "@/lib/date-utils";
 
 interface PaymentRunDetailPageProps {
   params: Promise<{ runId: string }>;
-}
-
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime())
-    ? value
-    : d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" });
 }
 
 function RunStatusBadge({ status }: { status: PaymentRunStatus }) {
@@ -268,7 +261,7 @@ export default function PaymentRunDetailPage({
       header: "Due date",
       cell: (item) => (
         <span className="text-sm text-muted-foreground tabular-nums">
-          {formatDate(item.dueDate)}
+          {formatShortDate(item.dueDate) || "—"}
         </span>
       ),
     },
@@ -296,7 +289,7 @@ export default function PaymentRunDetailPage({
       title={run?.name ?? "Payment Run"}
       subtitle={
         run
-          ? `${run.status} · ${formatDate(run.scheduledDate)}`
+          ? `${run.status} · ${formatShortDate(run.scheduledDate) || "—"}`
           : "Loading…"
       }
       backHref="/accounting/payment-runs"

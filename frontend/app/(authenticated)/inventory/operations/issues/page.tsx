@@ -13,6 +13,7 @@ import { useStockTransactions } from "@/hooks/api/inventory/stock";
 import type { StockTransaction } from "@/hooks/api/inventory/stock";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
+import { formatShortDate } from "@/lib/date-utils";
 
 const TYPE_BADGE: Record<string, string> = {
   SALE: "bg-status-info-surface text-status-info-ink border-status-info-rule",
@@ -44,7 +45,7 @@ const columns: DataTableColumn<StockTransaction>[] = [
     key: "createdAt",
     header: "Date",
     cell: (tx) => (
-      <span className="font-mono tabular-nums text-dense">{formatDate(tx.createdAt)}</span>
+      <span className="font-mono tabular-nums text-dense">{formatShortDate(tx.createdAt) || "—"}</span>
     ),
     sortable: true,
     sortValue: (tx) => tx.createdAt,

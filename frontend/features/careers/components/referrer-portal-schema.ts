@@ -1,0 +1,11 @@
+import { z } from "zod";
+
+export const referrerPortalSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  email: z.string().email("Enter a valid email address"),
+  phone: z.string().optional(),
+  jobPostingId: z.string().optional(),
+});
+
+export type ReferrerPortalFormValues = z.infer<typeof referrerPortalSchema>;

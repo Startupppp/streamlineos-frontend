@@ -37,12 +37,7 @@ import type { VendorCreditSummary } from "@/hooks/api/accounting/ap";
 import type { VendorCreditItem } from "@/hooks/api/accounting/ap-vendors";
 import { useVendorsOutstanding } from "@/hooks/api/accounting";
 import { getErrorMessage } from "@/lib/get-error-message";
-
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
-}
+import { formatShortDate } from "@/lib/date-utils";
 
 const STATUS_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "all", label: "All statuses" },
@@ -202,16 +197,15 @@ export default function VendorCreditsPage() {
   const [vendorFilter, setVendorFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const vendorsQuery = useVendorsOutstanding({ pageSize: 100 });
+  const vendorsQuery = useVendorsOutstanding({ limit: 100 });
   const query = useVendorCredits({
-    page: 1,
-    pageSize: 50,
+    limit: 50,
     vendorId: vendorFilter !== "all" ? Number(vendorFilter) : undefined,
     status: statusFilter !== "all" && isVendorCreditStatus(statusFilter) ? statusFilter : undefined,
   });
 
-  const vendors = vendorsQuery.data?.items ?? [];
-  const credits = query.data?.items ?? [];
+  const vendors = vendorsQuery.data?.data ?? [];
+  const credits = query.data?.data ?? [];
 
   function handleNewClick(): void {
     setCreateOpen(true);
@@ -290,7 +284,7 @@ export default function VendorCreditsPage() {
     {
       key: "createdAt",
       header: "Date",
-      cell: (row) => <span className="text-sm text-muted-foreground">{formatDate(row.createdAt)}</span>,
+      cell: (row) => <span className="text-sm text-muted-foreground">{formatShortDate(row.createdAt) || "—"}</span>,
     },
     {
       key: "actions",

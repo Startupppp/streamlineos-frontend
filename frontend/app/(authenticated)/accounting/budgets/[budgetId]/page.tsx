@@ -1,10 +1,9 @@
-﻿"use client";
+"use client";
 
-import { useState, useMemo, useCallback, type ChangeEvent, type ReactNode } from "react";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Copy, GitBranch, CheckCircle, Send } from "lucide-react";
 import { toast } from "sonner";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -13,31 +12,22 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger, TABS_CONTENT_PAGE_BODY_CLASS } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
-import { AppSheet } from "@/components/shared/app-sheet";
 import { EntityFormSheet } from "@/components/shared/entity-form-sheet";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { FinanceStatusBadge } from "@/features/accounting/shared";
-import { Money } from "@/features/accounting/shared";
 import { BudgetMatrix } from "@/features/accounting/planning/budget-matrix";
-import { BvaExplainCell } from "@/features/accounting/planning/bva-explain-column";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { BvaTab } from "@/features/accounting/planning/bva-tab";
+import { RevisionsSheet } from "@/features/accounting/planning/revisions-sheet";
+import { duplicateBudgetSchema, type DuplicateBudgetForm } from "@/features/accounting/planning/duplicate-budget-schema";
 import {
   useBudget,
   useSubmitBudget,
   useApproveBudget,
-  useBudgetRevisions,
   useDuplicateBudget,
-  useBudgetVsActual,
 } from "@/hooks/api/accounting/planning";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useOrgMembers } from "@/hooks/api/organization";
-import {
-  getUserDisplayName,
-  type NamedUser,
-} from "@/lib/person-display";
-import type { BudgetStatus, BvaAccountPeriodRow } from "@/types/accounting/planning";
+import type { BudgetStatus } from "@/types/accounting/planning";
 
 function toBudgetStatus(value: string): BudgetStatus | undefined {
   if (
@@ -45,258 +35,8 @@ function toBudgetStatus(value: string): BudgetStatus | undefined {
     value === "PENDING_APPROVAL" ||
     value === "APPROVED" ||
     value === "ARCHIVED"
-  ) {
-    return value;
-  }
+  ) return value;
   return undefined;
-}
-
-function formatDate(value: string | Date | null | undefined): string {
-  if (!value) return "—";
-  const d = value instanceof Date ? value : new Date(value);
-  return Number.isNaN(d.getTime())
-    ? String(value)
-    : d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" });
-}
-
-const duplicateSchema = z.object({
-  newFiscalYear: z.string().min(1, "Required"),
-  newName: z.string().min(1, "Required"),
-  upliftPct: z.string(),
-});
-type DuplicateForm = z.infer<typeof duplicateSchema>;
-
-interface BvaFiltersProps {
-  from: string;
-  to: string;
-  onFromChange: (v: string) => void;
-  onToChange: (v: string) => void;
-}
-
-function BvaFilters({ from, to, onFromChange, onToChange }: BvaFiltersProps) {
-  function handleFromChange(e: ChangeEvent<HTMLInputElement>): void {
-    onFromChange(e.target.value);
-  }
-  function handleToChange(e: ChangeEvent<HTMLInputElement>): void {
-    onToChange(e.target.value);
-  }
-  return (
-    <div className="flex items-center gap-3 mb-4">
-      <div className="flex items-center gap-2">
-        <Label className="text-xs text-muted-foreground whitespace-nowrap">From</Label>
-        <Input
-          type="date"
-          value={from}
-          onChange={handleFromChange}
-          className="text-xs w-[140px]"
-        />
-      </div>
-      <div className="flex items-center gap-2">
-        <Label className="text-xs text-muted-foreground whitespace-nowrap">To</Label>
-        <Input
-          type="date"
-          value={to}
-          onChange={handleToChange}
-          className="text-xs w-[140px]"
-        />
-      </div>
-    </div>
-  );
-}
-
-const BVA_COLUMNS: DataTableColumn<BvaAccountPeriodRow>[] = [
-  {
-    key: "code",
-    header: "Code",
-    className: "font-mono text-xs px-3 py-2",
-    cell: (row: BvaAccountPeriodRow): ReactNode => row.accountCode,
-  },
-  {
-    key: "account",
-    header: "Account",
-    className: "text-sm px-3 py-2",
-    cell: (row: BvaAccountPeriodRow): ReactNode => row.accountName,
-  },
-  {
-    key: "period",
-    header: "Period",
-    className: "text-xs text-muted-foreground px-3 py-2",
-    cell: (row: BvaAccountPeriodRow): ReactNode => row.periodKey,
-  },
-  {
-    key: "budgeted",
-    header: "Budgeted",
-    className: "text-right px-3 py-2",
-    headerClassName: "text-right",
-    cell: (row: BvaAccountPeriodRow): ReactNode => (
-      <Money value={parseFloat(row.budgeted)} />
-    ),
-  },
-  {
-    key: "actual",
-    header: "Actual",
-    className: "text-right px-3 py-2",
-    headerClassName: "text-right",
-    cell: (row: BvaAccountPeriodRow): ReactNode => (
-      <Money value={parseFloat(row.actual)} />
-    ),
-  },
-  {
-    key: "variance",
-    header: "Variance",
-    className: "text-right px-3 py-2",
-    headerClassName: "text-right",
-    cell: (row: BvaAccountPeriodRow): ReactNode => {
-      const varianceNum = parseFloat(row.variance);
-      return (
-        <Money value={varianceNum} className={varianceNum > 0 ? "text-status-danger-ink" : undefined} />
-      );
-    },
-  },
-  {
-    key: "status",
-    header: "Status",
-    className: "px-3 py-2 w-20",
-    cell: (row: BvaAccountPeriodRow): ReactNode =>
-      row.exceeded ? (
-        <Badge variant="outline" className="bg-status-danger-surface text-status-danger-ink border-status-danger-rule text-micro px-1.5 py-0 h-4">
-          Over
-        </Badge>
-      ) : null,
-  },
-  {
-    key: "ai",
-    header: "",
-    className: "px-3 py-2",
-    cell: (row: BvaAccountPeriodRow): ReactNode => <BvaExplainCell row={row} />,
-  },
-];
-
-interface BvaTabProps {
-  budgetId: number;
-}
-
-function BvaTab({ budgetId }: BvaTabProps) {
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
-
-  const query = useBudgetVsActual(budgetId, {
-    from: from || undefined,
-    to: to || undefined,
-  });
-
-  const rows = query.data?.rows ?? [];
-  const totals = query.data?.totals;
-
-  function handleRetry(): void {
-    void query.refetch();
-  }
-
-  const tableFooter = totals ? (
-    <div className="flex items-center gap-2 text-sm font-semibold">
-      <span className="flex-1">Total</span>
-      <Money value={parseFloat(totals.budgeted)} />
-      <span className="w-4" />
-      <Money value={parseFloat(totals.actual)} />
-      <span className="w-4" />
-      <Money
-        value={parseFloat(totals.variance)}
-        className={parseFloat(totals.variance) > 0 ? "text-status-danger-ink" : undefined}
-      />
-      <span className="w-20" />
-    </div>
-  ) : undefined;
-
-  return (
-    <div className="flex flex-1 min-h-0 flex-col">
-      <BvaFilters
-        from={from}
-        to={to}
-        onFromChange={setFrom}
-        onToChange={setTo}
-      />
-      {query.error ? (
-        <ErrorState
-          title="Failed to load vs-actual data"
-          description={getErrorMessage(query.error)}
-          onRetry={handleRetry}
-        />
-      ) : rows.length === 0 && !query.isLoading ? (
-        <p className="text-sm text-muted-foreground py-8 text-center">
-          No budget vs actual data for this range.
-        </p>
-      ) : (
-        <DataTable
-          data={rows}
-          columns={BVA_COLUMNS}
-          getRowKey={(row) => `${row.accountId}-${row.periodKey}`}
-          isLoading={query.isLoading}
-          minWidth="700px"
-          footer={tableFooter}
-        />
-      )}
-    </div>
-  );
-}
-
-interface RevisionsSheetProps {
-  budgetId: number;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
-
-function RevisionsSheet({ budgetId, open, onOpenChange }: RevisionsSheetProps) {
-  const query = useBudgetRevisions(budgetId);
-  const revisions = query.data?.items ?? [];
-  const { data: membersData } = useOrgMembers(1, 200);
-
-  const memberById = useMemo(() => {
-    const map = new Map<string, NamedUser>();
-    for (const member of membersData?.data ?? []) {
-      map.set(member.userId, { name: member.name, email: member.email });
-    }
-    return map;
-  }, [membersData]);
-
-  const resolveMemberName = useCallback(
-    (userId: string) => {
-      const member = memberById.get(userId);
-      return member ? getUserDisplayName(member) : userId;
-    },
-    [memberById],
-  );
-
-  return (
-    <AppSheet
-      open={open}
-      onOpenChange={onOpenChange}
-      title="Revision History"
-      description="All saved versions of this budget."
-    >
-      {query.isLoading ? (
-        <LoadingState variant="table" rows={12} />
-      ) : revisions.length === 0 ? (
-        <p className="text-sm text-muted-foreground py-6 text-center">No revisions yet.</p>
-      ) : (
-        <div className="space-y-2">
-          {revisions.map((rev) => (
-            <Card key={rev.id} className="border border-border rounded-lg shadow-none">
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium">Rev #{rev.revisionNumber}</span>
-                  <span className="text-xs text-muted-foreground">{formatDate(rev.createdAt)}</span>
-                </div>
-                <p className="text-xs text-muted-foreground">By {resolveMemberName(rev.createdBy)} · {rev.lineCount} lines</p>
-                {rev.note && (
-                  <p className="text-xs text-foreground mt-1 italic">{rev.note}</p>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-    </AppSheet>
-  );
 }
 
 export default function BudgetDetailPage() {
@@ -350,7 +90,7 @@ export default function BudgetDetailPage() {
     );
   }
 
-  function handleDuplicateSubmit(data: DuplicateForm): void {
+  function handleDuplicateSubmit(data: DuplicateBudgetForm): void {
     duplicateMutation.mutate(
       {
         newFiscalYear: data.newFiscalYear,
@@ -465,12 +205,12 @@ export default function BudgetDetailPage() {
         />
       )}
 
-      <EntityFormSheet<DuplicateForm>
+      <EntityFormSheet<DuplicateBudgetForm>
         open={duplicateOpen}
         onOpenChange={setDuplicateOpen}
         title="Duplicate Budget"
         description="Create a copy of this budget for a new fiscal year."
-        resolver={zodResolver(duplicateSchema)}
+        resolver={zodResolver(duplicateBudgetSchema)}
         defaultValues={{
           newFiscalYear: "",
           newName: budget ? `${budget.name} (copy)` : "",

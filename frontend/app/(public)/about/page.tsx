@@ -7,7 +7,7 @@ import { BRAND_NAME, BRAND_TAGLINE } from "@/lib/branding";
 
 export const metadata: Metadata = {
   title: `About ${BRAND_NAME}`,
-  description: `${BRAND_TAGLINE} â€” the team and the thinking behind ${BRAND_NAME}.`,
+  description: `${BRAND_TAGLINE} — the team and the thinking behind ${BRAND_NAME}.`,
   alternates: { canonical: "/about" },
 };
 
@@ -81,14 +81,14 @@ export default function AboutPage() {
         </div>
         <div className="lg:col-span-8 space-y-5 text-sm lg:text-base text-foreground leading-relaxed">
           <p>
-            Before {BRAND_NAME}, we ran teams the way most teams still do â€” one SaaS for HR, one
+            Before {BRAND_NAME}, we ran teams the way most teams still do — one SaaS for HR, one
             for sprints, one for sales, one for chat, one for the weekly status meeting. Every
             new hire meant five logins. Every weekly report meant CSV exports and pivot tables.
           </p>
           <p>
             We tried the existing &ldquo;all in one&rdquo; platforms. They were either shallow on
             every module or built on top of bolt-on integrations that broke whenever a vendor
-            shipped a new API. We wanted something with one data model â€” the same employee
+            shipped a new API. We wanted something with one data model — the same employee
             record, the same client record, used by everything.
           </p>
           <p>
@@ -98,7 +98,7 @@ export default function AboutPage() {
             every function. No syncs. No drift. No 4 AM Zapier alerts.
           </p>
           <p>
-            We&apos;re still early. The product changes every week. But the thesis hasn&apos;t â€”
+            We&apos;re still early. The product changes every week. But the thesis hasn&apos;t —
             companies deserve software that doesn&apos;t make them sit in front of seven tabs to
             understand what&apos;s happening this Wednesday.
           </p>
@@ -147,7 +147,7 @@ export default function AboutPage() {
               Want to build with us?
             </h2>
             <p className="text-status-info-ink text-base lg:text-lg leading-relaxed max-w-xl mx-auto mb-7">
-              We&apos;re a small founding team. If the way we work resonates, reach out â€” even if
+              We&apos;re a small founding team. If the way we work resonates, reach out — even if
               we don&apos;t have a role open in your discipline yet.
             </p>
             <Link href="/contact">

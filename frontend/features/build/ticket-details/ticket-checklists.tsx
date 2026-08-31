@@ -314,9 +314,9 @@ function ChecklistSection({
       {total > 0 && (
         <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden ml-6">
           <motion.div
-            className="h-full bg-status-success-fill rounded-full"
-            initial={{ width: 0 }}
-            animate={{ width: `${progress}%` }}
+            className="h-full w-full origin-left bg-status-success-fill rounded-full"
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: progress / 100 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
           />
         </div>
@@ -338,9 +338,10 @@ function ChecklistSection({
         <AnimatePresence>
           {addingItem ? (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
               className="flex items-center gap-2 pt-1"
             >
               <div className="h-4 w-4 shrink-0 rounded border-2 border-input" />

@@ -23,3 +23,14 @@ export function formatRoleLabel(slug: string): string {
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
     .join(" ");
 }
+
+export type StructuralRole = (typeof USER_STRUCTURAL_ROLES)[number]["value"];
+
+/**
+ * A member's stored role is a free string — a custom role slug is legitimate —
+ * but the org-membership payload only takes the three structural ones. Anything
+ * else reads as MEMBER rather than being sent somewhere it would be refused.
+ */
+export function toStructuralRole(value: string | null | undefined): StructuralRole {
+  return USER_STRUCTURAL_ROLES.find((r) => r.value === value)?.value ?? "MEMBER";
+}

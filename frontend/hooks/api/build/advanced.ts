@@ -212,21 +212,27 @@ export function useDeleteWorkspaceView(options?: Parameters<typeof useMutation>[
   });
 }
 
+interface IntakePage {
+  data: IntakeRequest[];
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
+}
+
 export function useIntakeRequests(
   projectId: number,
-  status?: string,
-  options?: Omit<
-    UseQueryOptions<{ items: IntakeRequest[]; total: number }>,
-    "queryKey" | "queryFn" | "enabled"
-  >
+  params?: { status?: string; cursor?: string; limit?: number },
+  options?: Omit<UseQueryOptions<IntakePage>, "queryKey" | "queryFn" | "enabled">
 ) {
   const canView = useCan("build:view");
-  return useQuery<{ items: IntakeRequest[]; total: number }>({
+  const query: Record<string, string> = {};
+  if (params?.status) query["status"] = params.status;
+  if (params?.cursor) query["cursor"] = params.cursor;
+  if (params?.limit) query["limit"] = String(params.limit);
+  return useQuery<IntakePage>({
     queryKey: queryKeys.projects.intake(projectId),
     queryFn: () =>
-      apiClient.get<{ items: IntakeRequest[]; total: number }>(
+      apiClient.get<IntakePage>(
         `/build/${projectId}/intake`,
-        status ? { status } : undefined
+        Object.keys(query).length ? query : undefined
       ),
     enabled: canView && !!projectId,
     staleTime: 30_000,

@@ -1,0 +1,5 @@
+
+> streamlineos@0.1.0 verify:server-data-seam D:\projects\personal\Streamlineos\frontend
+> node scripts/verify-server-data-seam.mjs
+
+server-data seam verified: 5 authenticated routes, 6 public routes, build 3b5hJozNiWy3xQiSVbZHq

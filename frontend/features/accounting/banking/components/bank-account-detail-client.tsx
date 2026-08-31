@@ -23,6 +23,7 @@ import { BankTxnStatusBadge } from "./bank-txn-status-badge";
 import { useBankAccount, useBankTransactions } from "@/hooks/api/accounting/banking";
 import type { BankTransaction, BankTxnStatus } from "@/hooks/api/accounting/banking";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 
 type StatusFilter = "ALL" | BankTxnStatus;
 
@@ -129,11 +130,17 @@ interface Props {
 
 export function BankAccountDetailClient({ bankAccountId }: Props) {
   const id = Number(bankAccountId);
-  const [page, setPage] = useState(1);
+  const [cursors, setCursors] = useState<(string | null)[]>([null]);
+  const [cursorIndex, setCursorIndex] = useState(0);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [search, setSearch] = useState("");
+
+  function resetCursor() {
+    setCursors([null]);
+    setCursorIndex(0);
+  }
 
   const accountQuery = useBankAccount(id);
   const txnQuery = useBankTransactions(id, {
@@ -141,38 +148,34 @@ export function BankAccountDetailClient({ bankAccountId }: Props) {
     from: from || undefined,
     to: to || undefined,
     q: search || undefined,
-    page,
-    pageSize: PAGE_SIZE,
+    cursor: cursors[cursorIndex] ?? undefined,
+    limit: PAGE_SIZE,
   });
 
   const account = accountQuery.data;
-  const txns = txnQuery.data?.items ?? [];
-  const total = txnQuery.data?.total ?? 0;
+  const txns = txnQuery.data?.data ?? [];
+  const hasMore = txnQuery.data?.pagination.hasMore ?? false;
 
   function handleStatusChange(value: string) {
     if (isTxnStatus(value)) {
       setStatusFilter(value);
-      setPage(1);
+      resetCursor();
     }
   }
 
   function handleFromChange(e: ChangeEvent<HTMLInputElement>) {
     setFrom(e.target.value);
-    setPage(1);
+    resetCursor();
   }
 
   function handleToChange(e: ChangeEvent<HTMLInputElement>) {
     setTo(e.target.value);
-    setPage(1);
+    resetCursor();
   }
 
   function handleSearchChange(value: string) {
     setSearch(value);
-    setPage(1);
-  }
-
-  function handlePageChange(newPage: number) {
-    setPage(newPage);
+    resetCursor();
   }
 
   return (
@@ -238,33 +241,45 @@ export function BankAccountDetailClient({ bankAccountId }: Props) {
             <Skeleton className="h-64 w-full rounded-xl" />
           </div>
         ) : (
-          <DataTable
-            className="flex-1 min-h-0"
-            data={txns}
-            columns={TXN_COLUMNS}
-            getRowKey={(row) => row.id}
-            isLoading={txnQuery.isLoading}
-            pagination={{
-              mode: "server",
-              page,
-              pageSize: PAGE_SIZE,
-              total,
-              onPageChange: handlePageChange,
-            }}
-            search={{
-              value: search,
-              onChange: handleSearchChange,
-              placeholder: "Search transactions…",
-            }}
-            emptyState={
-              <EmptyState
-                title="No transactions"
-                description="Import a bank statement to see transactions here."
-                action={{ label: "Import Statement", href: `/accounting/banking/import?bankAccountId=${id}` }}
-                compact
+          <>
+            <DataTable
+              className="flex-1 min-h-0"
+              data={txns}
+              columns={TXN_COLUMNS}
+              getRowKey={(row) => row.id}
+              isLoading={txnQuery.isLoading}
+              search={{
+                value: search,
+                onChange: handleSearchChange,
+                placeholder: "Search transactions…",
+              }}
+              emptyState={
+                <EmptyState
+                  title="No transactions"
+                  description="Import a bank statement to see transactions here."
+                  action={{ label: "Import Statement", href: `/accounting/banking/import?bankAccountId=${id}` }}
+                  compact
+                />
+              }
+            />
+            {(cursorIndex > 0 || hasMore) ? (
+              <CursorPageControls
+                page={cursorIndex + 1}
+                hasNext={hasMore}
+                onPrevious={() => setCursorIndex(Math.max(0, cursorIndex - 1))}
+                onNext={() => {
+                  const next = txnQuery.data?.pagination.nextCursor ?? null;
+                  setCursors((prev) => {
+                    const copy = prev.slice(0, cursorIndex + 1);
+                    copy.push(next);
+                    return copy;
+                  });
+                  setCursorIndex(cursorIndex + 1);
+                }}
+                className="mt-2"
               />
-            }
-          />
+            ) : null}
+          </>
         )}
       </div>
     </PageWrapper>

@@ -283,7 +283,7 @@ export default function KnowledgeBasePage() {
       <input ref={fileInputRef} type="file" accept=".pdf,.docx,.txt,.md,.csv" className="hidden" onChange={handleFileChange} />
 
       <div className="flex w-full flex-1 min-h-0 flex-col">
-        <div className="flex w-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+        <div className="flex w-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm">
           {conversationsOpen ? (
             <KbConversationList
               conversations={allConversations}

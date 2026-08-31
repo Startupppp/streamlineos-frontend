@@ -115,7 +115,7 @@ export function VendorStatementReport() {
   const [from, setFrom] = useState(params.get("from") ?? defaults.from);
   const [to, setTo] = useState(params.get("to") ?? defaults.to);
 
-  const vendorsQuery = useVendorsOutstanding({ pageSize: 100 });
+  const vendorsQuery = useVendorsOutstanding({ limit: 100 });
   const statementQuery = useVendorStatement(vendorId, from, to);
 
   function updateUrl(vid: number | null, f: string, t: string): void {
@@ -205,7 +205,7 @@ export function VendorStatementReport() {
               <SelectValue placeholder="Select vendor…" />
             </SelectTrigger>
             <SelectContent>
-              {(vendorsQuery.data?.items ?? []).map((v) => (
+              {(vendorsQuery.data?.data ?? []).map((v) => (
                 <SelectItem key={v.vendorId} value={String(v.vendorId)}>
                   {v.vendorName}
                 </SelectItem>

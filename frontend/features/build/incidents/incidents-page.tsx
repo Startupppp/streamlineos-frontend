@@ -11,11 +11,11 @@ import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
@@ -126,6 +126,14 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  const filtersActive = !!(search || statusFilter !== "all" || severityFilter !== "all");
+
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    setStatusFilter("all");
+    setSeverityFilter("all");
+  }, []);
 
   const handleEdit = useCallback((inc: Incident) => { setEditIncident(inc); setSheetOpen(true); }, []);
   const handleNew = useCallback(() => { setEditIncident(null); setSheetOpen(true); }, []);
@@ -288,16 +296,14 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
             <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
           ) : filtered.length === 0 ? (
             <EmptyState
-                className={PM_FILL_PANEL}
-                illustrationPreset="ticket"
-                title="No incidents found"
-                description={
-                  search || statusFilter !== "all" || severityFilter !== "all"
-                    ? "No incidents match the active filters."
-                    : "Create an incident to start tracking."
-                }
-                action={canManage ? { label: "New Incident", onClick: handleNew } : undefined}
-              />
+              className={PM_FILL_PANEL}
+              illustrationPreset="ticket"
+              title="No incidents found"
+              description={filtersActive ? undefined : "Create an incident to start tracking."}
+              filtersActive={filtersActive}
+              onClearFilters={handleClearFilters}
+              action={canManage && !filtersActive ? { label: "New Incident", onClick: handleNew } : undefined}
+            />
           ) : (
             <DataTable<Incident>
               data={filtered}

@@ -1,8 +1,9 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   ImportProgress,
   ImportPreview,
@@ -17,13 +18,11 @@ import type {
  * two previews rather than reuse one.
  */
 export function usePreviewImport() {
-  return useMutation({
+  return useAuthorizedMutation("crm:imports:manage", {
     mutationKey: ["crm", "imports", "preview"],
     mutationFn: (input: {
       filename?: string;
-      /** Which of the four the file lands on. The server plans and writes per entity. */
       entity: PlannedEntity;
-      /** Required for a subject import and meaningless for the other three. */
       subjectTypeId?: string;
       headers: string[];
       rows: string[][];
@@ -46,7 +45,7 @@ const MAX_POLLS = 400;
 export function useCommitImport() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useAuthorizedMutation("crm:imports:manage", {
     mutationKey: ["crm", "imports", "commit"],
     /**
      * Starts the import, then polls until it says it is done.
@@ -103,7 +102,7 @@ export function useCommitImport() {
 export function useRevertImport() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useAuthorizedMutation("crm:imports:manage", {
     mutationKey: ["crm", "imports", "revert"],
     mutationFn: (crmImportId: string) =>
       apiClient.post<ImportProgress>(`/crm/imports/${crmImportId}/revert`, {}),

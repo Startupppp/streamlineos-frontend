@@ -8,6 +8,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -27,6 +28,7 @@ import { ErrorState } from "@/components/shared";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { Money } from "@/features/accounting/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatShortDate } from "@/lib/date-utils";
 import { useArPayments } from "@/hooks/api/accounting/ar";
 import type { ArPayment, ArPaymentMethod } from "@/types/accounting/ar";
 
@@ -52,12 +54,6 @@ const ALL_METHODS = "all" as const;
 
 function isArPaymentMethod(value: string): value is ArPaymentMethod {
   return (PAYMENT_METHOD_VALUES as string[]).includes(value);
-}
-
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
 }
 
 interface PaymentDetailSheetProps {
@@ -89,7 +85,7 @@ function PaymentDetailSheet({ payment, onClose }: PaymentDetailSheetProps) {
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Payment Date</p>
-            <p className="font-medium">{formatDate(payment.paymentDate)}</p>
+            <p className="font-medium">{formatShortDate(payment.paymentDate) || "—"}</p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Method</p>
@@ -170,14 +166,18 @@ function PaymentRowActions({ row, onView }: RowActionsProps) {
 
 export default function PaymentsReceivedPage() {
   const [methodFilter, setMethodFilter] = useState<ArPaymentMethod | typeof ALL_METHODS>(ALL_METHODS);
-  const [page, setPage] = useState(1);
+  const [cursors, setCursors] = useState<(string | null)[]>([null]);
+  const [cursorIndex, setCursorIndex] = useState(0);
   const [selectedPayment, setSelectedPayment] = useState<ArPayment | null>(null);
 
   const { data, isLoading, error, refetch } = useArPayments({
     method: methodFilter === ALL_METHODS ? undefined : methodFilter,
-    page,
-    pageSize: 50,
+    cursor: cursors[cursorIndex] ?? undefined,
+    limit: 50,
   });
+
+  const hasMore = data?.pagination.hasMore ?? false;
+  const items = data?.data ?? [];
 
   function handleMethodFilterChange(value: string): void {
     if (value === ALL_METHODS) {
@@ -185,7 +185,8 @@ export default function PaymentsReceivedPage() {
     } else if (isArPaymentMethod(value)) {
       setMethodFilter(value);
     }
-    setPage(1);
+    setCursors([null]);
+    setCursorIndex(0);
   }
 
   function handleViewPayment(row: ArPayment): void {
@@ -219,7 +220,7 @@ export default function PaymentsReceivedPage() {
     {
       key: "paymentDate",
       header: "Date",
-      cell: (row) => <span className="text-sm tabular-nums text-muted-foreground">{formatDate(row.paymentDate)}</span>,
+      cell: (row) => <span className="text-sm tabular-nums text-muted-foreground">{formatShortDate(row.paymentDate) || "—"}</span>,
     },
     {
       key: "amount",
@@ -286,27 +287,40 @@ export default function PaymentsReceivedPage() {
       }
     >
       <div className="flex flex-1 min-h-0 flex-col">
-        {data?.items.length === 0 && !isLoading ? (
+        {items.length === 0 && !isLoading ? (
           <EmptyState
             illustrationPreset="expenses"
             title="No payments received"
             description="Record payments on invoices to see them here"
           />
         ) : (
-          <DataTable
-            data={data?.items ?? []}
-            columns={columns}
-            getRowKey={(row) => String(row.id)}
-            isLoading={isLoading}
-            onRowClick={handleViewPayment}
-            className="flex-1 min-h-0"
-            pagination={{
-              pageSize: 50,
-              page,
-              total: data?.total ?? 0,
-              onPageChange: setPage,
-            }}
-          />
+          <>
+            <DataTable
+              data={items}
+              columns={columns}
+              getRowKey={(row) => String(row.id)}
+              isLoading={isLoading}
+              onRowClick={handleViewPayment}
+              className="flex-1 min-h-0"
+            />
+            {(cursorIndex > 0 || hasMore) ? (
+              <CursorPageControls
+                page={cursorIndex + 1}
+                hasNext={hasMore}
+                onPrevious={() => setCursorIndex(Math.max(0, cursorIndex - 1))}
+                onNext={() => {
+                  const next = data?.pagination.nextCursor ?? null;
+                  setCursors((prev) => {
+                    const copy = prev.slice(0, cursorIndex + 1);
+                    copy.push(next);
+                    return copy;
+                  });
+                  setCursorIndex(cursorIndex + 1);
+                }}
+                className="mt-2"
+              />
+            ) : null}
+          </>
         )}
       </div>
 

@@ -1,12 +1,10 @@
-"use client";
-
+import { requirePermission } from "@/lib/rbac/require-permission";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { useCan } from "@/hooks/api/access";
 import { DimensionsTable } from "@/features/accounting/core/dimensions-table";
 
-export default function DimensionsPage() {
-  const canManage = useCan("accounting:dimensions:manage");
-
+export default async function DimensionsPage() {
+  const { access } = await requirePermission("accounting:dimensions:read");
+  const canManage = access.isOrgOwner || "accounting:dimensions:manage" in access.scopes;
   return (
     <PageWrapper
       title="Dimensions"

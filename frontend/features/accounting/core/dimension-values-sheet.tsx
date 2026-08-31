@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Switch } from "@/components/ui/switch";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -118,14 +119,11 @@ export function DimensionValuesSheet({ open, onOpenChange, dimension, canManage 
   }
 
   const emptyState = (
-    <div className="flex flex-col items-center justify-center py-10 text-center">
-      <p className="text-sm text-muted-foreground">No values yet.</p>
-      {canManage && (
-        <Button size="sm" variant="ghost" className="mt-2" onClick={handleAddOpen}>
-          Add the first value
-        </Button>
-      )}
-    </div>
+    <EmptyState
+      className="border-0 bg-transparent min-h-[40vh]"
+      title="No values yet."
+      action={canManage ? { label: "Add the first value", onClick: handleAddOpen } : undefined}
+    />
   );
 
   return (

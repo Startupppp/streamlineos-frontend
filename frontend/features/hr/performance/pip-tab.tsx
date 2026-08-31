@@ -10,37 +10,26 @@ import {
   type PIP,
 } from "@/hooks/api/hr";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
-import { TruncatedText } from "@/components/ui/truncated-text";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { toast } from "sonner";
-import { resolveImageUrl } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   clearEndIfInvalid,
   planningEndPickerProps,
   planningStartPickerProps,
 } from "@/lib/date-constraints";
-import { Plus, Trash2, Pencil, CheckCircle2, Calendar } from "lucide-react";
-import { EllipsisIcon } from "@animateicons/react/lucide";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Plus } from "lucide-react";
 import { buildPipSchema } from "./pip-schema";
 import { zodFieldErrors } from "./zod-field-errors";
 import { PipFormFields } from "./pip-form-fields";
+import { PipCard } from "./pip-card";
 
 export function PIPTab() {
-  const { data: pips, isLoading } = usePIPs();
+  const { data: pips, isLoading, isError, error, refetch } = usePIPs();
   const { data: employeesRaw } = useHrEmployees({ limit: 100 });
   const createPIP = useCreatePIP();
   const updatePIP = useUpdatePIP();
@@ -320,6 +309,10 @@ export function PIPTab() {
     return <LoadingState variant="list" rows={12} />;
   }
 
+  if (isError) {
+    return <ErrorState className="flex-1" title="Couldn't load PIPs" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
+  }
+
   return (
     <div className="flex flex-col flex-1 min-h-0 gap-3">
       <div className="flex items-center justify-between shrink-0">
@@ -342,112 +335,12 @@ export function PIPTab() {
       ) : (
         <div className="space-y-2">
           {pipsList.map((pip) => (
-            <Card key={pip.id}>
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Avatar className="w-7 shrink-0">
-                      <AvatarImage
-                        src={resolveImageUrl(pip.user?.image ?? null)}
-                      />
-                      <AvatarFallback className="text-micro bg-primary/10 text-primary">
-                        {pip.user?.name?.[0] ?? "?"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0">
-                      <TruncatedText
-                        text={pip.user?.name ?? "Employee"}
-                        className="text-sm font-medium"
-                      />
-                      <p className="text-micro text-muted-foreground">
-                        {pip.startDate} → {pip.endDate}
-                      </p>
-                      {pip.hrRep && (
-                        <p className="text-micro text-muted-foreground">
-                          HR Rep: {pip.hrRep.name}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Badge
-                      variant={
-                        pip.status === "COMPLETED"
-                          ? "default"
-                          : pip.status === "TERMINATED"
-                            ? "destructive"
-                            : pip.status === "EXTENDED"
-                              ? "secondary"
-                              : "outline"
-                      }
-                      className="text-micro"
-                    >
-                      {pip.status ?? "ACTIVE"}
-                    </Badge>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <AnimatedIconButton
-                          icon={EllipsisIcon}
-                          variant="ghost"
-                          size="icon"
-                          className="w-7"
-                          aria-label="PIP actions"
-                        />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleOpenEdit(pip)}>
-                          <Pencil className="h-3.5 w-3.5 mr-1.5" />
-                          Edit
-                        </DropdownMenuItem>
-                        {(pip.status === "ACTIVE" ||
-                          pip.status === "EXTENDED") && (
-                          <>
-                            <DropdownMenuItem
-                              onClick={() =>
-                                handleUpdateStatus(pip.id, "COMPLETED")
-                              }
-                            >
-                              <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
-                              Mark Completed
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() =>
-                                handleUpdateStatus(pip.id, "EXTENDED")
-                              }
-                            >
-                              <Calendar className="h-3.5 w-3.5 mr-1.5" />
-                              Extend
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              variant="destructive"
-                              onClick={() =>
-                                handleUpdateStatus(pip.id, "TERMINATED")
-                              }
-                            >
-                              <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                              Terminate
-                            </DropdownMenuItem>
-                          </>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-                {pip.reason && (
-                  <TruncatedText
-                    text={pip.reason}
-                    lines={2}
-                    className="text-xs text-muted-foreground mt-2"
-                  />
-                )}
-                {pip.objectives && pip.objectives.length > 0 && (
-                  <p className="text-micro text-muted-foreground mt-1">
-                    {pip.objectives.length} objective
-                    {pip.objectives.length !== 1 ? "s" : ""}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+            <PipCard
+              key={pip.id}
+              pip={pip}
+              onOpenEdit={handleOpenEdit}
+              onUpdateStatus={handleUpdateStatus}
+            />
           ))}
         </div>
       )}

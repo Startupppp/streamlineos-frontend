@@ -249,7 +249,7 @@ export function EnvelopeList() {
         open={!!deleteEnvelope}
         onOpenChange={handleDeleteOpenChange}
         title="Delete envelope?"
-        description={`This will permanently delete “${deleteEnvelope?.title ?? "this envelope"}”. This can’t be undone.`}
+        description={`This will permanently delete "${deleteEnvelope?.title ?? "this envelope"}". This can’t be undone.`}
         confirmLabel="Delete"
         destructive
         isPending={deleteMutation.isPending}

@@ -1,18 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Inbox } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import {
   useHelpdeskTickets,
   HELPDESK_CATEGORY_LABELS,
   type HelpdeskTicket,
   type TicketStatus,
+  type HelpdeskListParams,
 } from "@/hooks/api/hr/helpdesk";
 import { CreateTicketDialog } from "./create-ticket-dialog";
 import { TicketDetailSheet } from "./ticket-detail-sheet";
@@ -39,17 +41,43 @@ const PRIORITY_COLORS: Record<string, string> = {
   URGENT: "text-status-danger-ink",
 };
 
+const MY_TICKETS_PAGE_SIZE = 20;
+
 export function MyTicketsTab() {
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
-  const { data, isLoading } = useHelpdeskTickets({ pageSize: 50 });
+  const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>([undefined]);
+  const [pageIndex, setPageIndex] = useState(0);
+
+  const currentCursor = cursorHistory[pageIndex];
+  const params: HelpdeskListParams = { limit: MY_TICKETS_PAGE_SIZE, cursor: currentCursor };
+
+  const { data, isLoading } = useHelpdeskTickets(params);
+
+  const handleNextPage = useCallback(() => {
+    if (!data?.pagination.nextCursor) return;
+    setCursorHistory((prev) => {
+      const next = [...prev];
+      next[pageIndex + 1] = data.pagination.nextCursor ?? undefined;
+      return next;
+    });
+    setPageIndex((i) => i + 1);
+  }, [data, pageIndex]);
+
+  const handlePrevPage = useCallback(() => {
+    if (pageIndex <= 0) return;
+    setPageIndex((i) => i - 1);
+  }, [pageIndex]);
+
+  const displayPage = pageIndex + 1;
+
+  function handleCreateOpen() {
+    setCreateOpen(true);
+  }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          {data ? `${data.total} ticket${data.total !== 1 ? "s" : ""}` : ""}
-        </p>
+      <div className="flex items-center justify-end">
         <AnimatedIconButton
           icon={PlusIcon}
           iconSize={14}
@@ -67,31 +95,29 @@ export function MyTicketsTab() {
             <Skeleton key={i} className="h-16 w-full rounded-lg" />
           ))}
         </div>
-      ) : !data || data.items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <Inbox className="h-10 w-10 text-muted-foreground/40 mb-3" />
-          <p className="text-sm font-medium text-foreground">No tickets yet</p>
-          <p className="text-xs text-muted-foreground mt-1 mb-4">Submit a request when you need HR support.</p>
-          <AnimatedIconButton
-            icon={PlusIcon}
-            iconSize={14}
-            iconClassName="mr-1.5"
-            size="sm"
-            onClick={() => setCreateOpen(true)}
-          >
-            New Request
-          </AnimatedIconButton>
-        </div>
+      ) : !data || data.data.length === 0 ? (
+        <EmptyState illustrationPreset="default" title="No tickets yet" description="Submit a request when you need HR support." action={{ label: "New Request", onClick: handleCreateOpen }} className="py-16" />
       ) : (
-        <div className="divide-y divide-border rounded-lg border border-border overflow-hidden">
-          {data.items.map((ticket) => (
-            <TicketRow
-              key={ticket.id}
-              ticket={ticket}
-              onClick={() => setSelectedTicketId(ticket.id)}
+        <>
+          <div className="divide-y divide-border rounded-lg border border-border overflow-hidden">
+            {data.data.map((ticket) => (
+              <TicketRow
+                key={ticket.id}
+                ticket={ticket}
+                onClick={() => setSelectedTicketId(ticket.id)}
+              />
+            ))}
+          </div>
+          {(pageIndex > 0 || data.pagination.hasMore) && (
+            <CursorPageControls
+              page={displayPage}
+              hasNext={data.pagination.hasMore}
+              disabled={isLoading}
+              onPrevious={handlePrevPage}
+              onNext={handleNextPage}
             />
-          ))}
-        </div>
+          )}
+        </>
       )}
 
       <CreateTicketDialog open={createOpen} onClose={() => setCreateOpen(false)} />

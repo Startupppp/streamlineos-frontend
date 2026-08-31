@@ -228,6 +228,8 @@ export function OrgCostCentersPage() {
     void refetch();
   }, [refetch]);
 
+  const handleClearSearch = useCallback(() => setSearch(""), [setSearch]);
+
   function handleSearchInputChange(value: string) { handleSearchChange(value); }
 
   function makeRestoreHandler(cc: OrgCostCenter) { return () => handleRestore(cc); }
@@ -286,15 +288,15 @@ export function OrgCostCentersPage() {
       cell: (c) =>
         canManage ? <div className="flex items-center gap-1">
           {c.status === "ARCHIVED" ? (
-            <Button variant="ghost" size="sm" onClick={makeRestoreHandler(c)} title="Restore">
+            <Button variant="ghost" size="sm" onClick={makeRestoreHandler(c)} title="Restore" aria-label="Restore">
               <RotateCcw className="h-4 w-4 text-primary" />
             </Button>
           ) : (
             <>
-              <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(c)} title="Edit">
+              <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(c)} title="Edit" aria-label="Edit">
                 <Pencil className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={makeArchiveHandler(c)} title="Archive">
+              <Button variant="ghost" size="sm" onClick={makeArchiveHandler(c)} title="Archive" aria-label="Archive">
                 <Archive className="h-4 w-4 text-muted-foreground" />
               </Button>
             </>
@@ -303,15 +305,7 @@ export function OrgCostCentersPage() {
     },
   ];
 
-  const emptyState = serverSearch ? (
-    <EmptyState
-      illustrationPreset="payroll"
-      title={`No cost centers matching "${serverSearch}"`}
-      description="Try a different search term."
-      compact
-      className="min-h-[200px]"
-    />
-  ) : showArchived ? (
+  const emptyState = showArchived ? (
     <EmptyState
       illustrationPreset="archive"
       title="No archived cost centers"
@@ -322,8 +316,10 @@ export function OrgCostCentersPage() {
     <EmptyState
       illustrationPreset="payroll"
       title="No cost centers yet"
-      description="Create cost centers to classify payroll, budgets, and expenses for reporting."
-      action={canManage ? { label: "Add Cost Center", onClick: handleOpenCreate } : undefined}
+      description={serverSearch ? undefined : "Create cost centers to classify payroll, budgets, and expenses for reporting."}
+      filtersActive={!!serverSearch}
+      onClearFilters={handleClearSearch}
+      action={canManage && !serverSearch ? { label: "Add Cost Center", onClick: handleOpenCreate } : undefined}
     />
   );
 

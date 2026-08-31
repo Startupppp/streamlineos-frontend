@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { IllustrationImage } from "@/components/illustrations/illustration-image";
+import { EmptyState } from "@/components/ui/empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useSignTemplates } from "@/hooks/api/sign/templates";
 import { useBulkSendJobs, useCancelBulkSendJob } from "@/hooks/api/sign/bulk-send";
@@ -86,22 +87,13 @@ export function BulkSendList() {
       ) : isError ? (
         <ErrorState title="Failed to load bulk send jobs" onRetry={() => void refetch()} />
       ) : !jobs || jobs.length === 0 ? (
-        <div className="flex flex-1 h-full flex-col items-center justify-center gap-4 text-center">
-          <IllustrationImage name="empty-upload" className="h-40 w-40" />
-          <div>
-            <p className="font-medium text-foreground">{hasPublished ? "No bulk send jobs yet" : "Publish a template first"}</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              {hasPublished
-                ? "Upload a CSV of recipients to send one template to everyone at once."
-                : "Bulk send requires a published single-signer template. Save an envelope as a template, then publish it."}
-            </p>
-          </div>
-          {hasPublished && (
-            <AnimatedIconButton icon={PlusIcon} iconClassName="mr-1.5" onClick={() => setCreateOpen(true)}>
-              New bulk send
-            </AnimatedIconButton>
-          )}
-        </div>
+        <EmptyState
+          illustration={<IllustrationImage name="empty-upload" className="h-40 w-40" />}
+          title={hasPublished ? "No bulk send jobs yet" : "Publish a template first"}
+          description={hasPublished ? "Upload a CSV of recipients to send one template to everyone at once." : "Bulk send requires a published single-signer template. Save an envelope as a template, then publish it."}
+          action={hasPublished ? { label: "New bulk send", onClick: () => setCreateOpen(true) } : undefined}
+          className="flex-1"
+        />
       ) : (
         <div className="space-y-3">
           {jobs.map((job) => (

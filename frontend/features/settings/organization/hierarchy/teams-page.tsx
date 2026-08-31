@@ -157,6 +157,8 @@ export function OrgTeamsPage() {
     void refetch();
   }, [refetch]);
 
+  const handleClearSearch = useCallback(() => setSearch(""), [setSearch]);
+
   function makeRestoreHandler(team: OrgTeam) {
     return () => handleRestore(team);
   }
@@ -199,7 +201,7 @@ export function OrgTeamsPage() {
       header: "Department",
       cell: (team) => (
         <span className="text-muted-foreground">
-          {team.departmentName ?? "â€”"}
+          {team.departmentName ?? "—"}
         </span>
       ),
     },
@@ -209,8 +211,8 @@ export function OrgTeamsPage() {
       cell: (team) => (
         <span className="text-muted-foreground">
           {team.leadUserId
-            ? (memberNamesByUserId[team.leadUserId] ?? "â€”")
-            : "â€”"}
+            ? (memberNamesByUserId[team.leadUserId] ?? "—")
+            : "—"}
         </span>
       ),
     },
@@ -219,7 +221,7 @@ export function OrgTeamsPage() {
       header: "Description",
       cell: (team) => (
         <span className="block max-w-[180px] truncate text-muted-foreground">
-          {team.description ?? "â€”"}
+          {team.description ?? "—"}
         </span>
       ),
       className: "max-w-[180px]",
@@ -229,7 +231,7 @@ export function OrgTeamsPage() {
       header: "Capacity",
       cell: (team) => (
         <span className="text-muted-foreground tabular-nums">
-          {team.capacity ?? "â€”"}
+          {team.capacity ?? "—"}
         </span>
       ),
       className: "tabular-nums",
@@ -266,6 +268,7 @@ export function OrgTeamsPage() {
                 size="sm"
                 onClick={makeRestoreHandler(team)}
                 title="Restore"
+                aria-label="Restore"
               >
                 <RotateCcw className="h-4 w-4 text-primary" />
               </Button>
@@ -276,6 +279,7 @@ export function OrgTeamsPage() {
                   size="sm"
                   onClick={makeEditHandler(team)}
                   title="Edit"
+                  aria-label="Edit"
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
@@ -284,6 +288,7 @@ export function OrgTeamsPage() {
                   size="sm"
                   onClick={makeArchiveHandler(team)}
                   title="Archive"
+                  aria-label="Archive"
                 >
                   <Archive className="h-4 w-4 text-muted-foreground" />
                 </Button>
@@ -294,15 +299,7 @@ export function OrgTeamsPage() {
     },
   ];
 
-  const emptyState = serverSearch ? (
-    <EmptyState
-      illustrationPreset="team"
-      title={`No teams matching "${serverSearch}"`}
-      description="Try a different search term."
-      compact
-      className="min-h-[200px]"
-    />
-  ) : showArchived ? (
+  const emptyState = showArchived ? (
     <EmptyState
       illustrationPreset="archive"
       title="No archived teams"
@@ -313,10 +310,10 @@ export function OrgTeamsPage() {
     <EmptyState
       illustrationPreset="team"
       title="No teams yet"
-      description="Create your first team to get started."
-      action={
-        canManage ? { label: "Add Team", onClick: handleOpenCreate } : undefined
-      }
+      description={serverSearch ? undefined : "Create your first team to get started."}
+      filtersActive={!!serverSearch}
+      onClearFilters={handleClearSearch}
+      action={canManage && !serverSearch ? { label: "Add Team", onClick: handleOpenCreate } : undefined}
     />
   );
 
@@ -352,7 +349,7 @@ export function OrgTeamsPage() {
         }
         filters={
           <SearchInput
-            placeholder="Search teamsâ€¦"
+            placeholder="Search teams…"
             value={search}
             onValueChange={handleSearchInputChange}
           />

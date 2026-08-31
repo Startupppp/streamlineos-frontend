@@ -1,4 +1,4 @@
-import { LayoutDashboard, Briefcase, Clock, CalendarCheck, CalendarDays, Receipt, FileText, Contact2, MessageSquareText, Wallet, Bell, ListChecks, Inbox, Video, Megaphone } from "lucide-react";
+import { LayoutDashboard, Briefcase, Clock, CalendarCheck, CalendarDays, Receipt, FileText, Contact2, MessageSquareText, Wallet, Bell, ListChecks, Inbox, Video, Megaphone, BellDot } from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
 export const HOME_NAV_GROUPS: NavGroup[] = [
@@ -14,6 +14,11 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
     product: "home",
     routes: [
       {
+        label: "Inbox",
+        href: "/inbox",
+        icon: BellDot,
+      },
+      {
         label: "Mail",
         href: "/mail",
         icon: Inbox,
@@ -24,12 +29,14 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
         href: "/calendar",
         icon: CalendarDays,
         requiredPermission: "calendar:read",
+        inactivePrefixes: ["/calendar/settings"],
       },
       {
         label: "Chat",
         href: "/chat",
         icon: MessageSquareText,
         requiredPermission: "chat:channels:read",
+        inactivePrefixes: ["/chat/settings", "/chat/moderation"],
       },
       { label: "Notifications", href: "/notifications", icon: Bell },
     ],
@@ -44,49 +51,42 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
         icon: CalendarCheck,
         badge: "leaves" as const,
         requiredPermission: "self:leaves",
-        module: "hrms",
       },
       {
         label: "Attendance",
         href: "/me/attendance",
         icon: Clock,
         requiredPermission: "self:attendance",
-        module: "hrms",
       },
       {
         label: "Expenses",
         href: "/me/expenses",
         icon: Receipt,
         requiredPermission: "self:expenses",
-        module: "hrms",
       },
       {
         label: "Pay",
         href: "/me/pay",
         icon: Wallet,
         requiredPermission: ["self:payroll", "self:payslips"],
-        module: "payroll",
       },
       {
         label: "My Documents",
         href: "/me/documents",
         icon: FileText,
         requiredPermission: "self:onboarding-docs",
-        module: "hrms",
       },
       {
         label: "Onboarding Tasks",
         href: "/me/onboarding",
         icon: ListChecks,
         requiredPermission: "self:onboarding-tasks",
-        module: "hrms",
       },
       {
         label: "Recruitment",
         href: "/me/recruitment",
         icon: Video,
         requiredPermission: "self:recruitment",
-        module: "hrms",
       },
     ],
   },

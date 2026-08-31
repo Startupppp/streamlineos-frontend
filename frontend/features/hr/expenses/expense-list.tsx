@@ -90,31 +90,14 @@ export function AdminExpenseList({
         </div>
 
         {expenses.length === 0 ? (
-          <div className="flex flex-col items-center justify-center flex-1 min-h-[260px] gap-3">
-            <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-              <EmptyExpensesIllustration className="h-5 w-5 opacity-60" />
-            </div>
-            <div className="text-center">
-              <p className="text-sm font-medium text-foreground">
-                No expenses found
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {statusFilter !== "ALL"
-                  ? "Try adjusting your filters"
-                  : "No expense claims to review"}
-              </p>
-            </div>
-            {statusFilter !== "ALL" && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs gap-1.5 mt-1"
-                onClick={onShowAll}
-              >
-                Show All Claims
-              </Button>
-            )}
-          </div>
+          <EmptyState
+            compact
+            className="flex-1 border-0 bg-transparent"
+            illustration={<EmptyExpensesIllustration className="h-8 w-8 text-muted-foreground/40" />}
+            title="No expenses found"
+            description={statusFilter !== "ALL" ? "Try adjusting your filters" : "No expense claims to review"}
+            action={statusFilter !== "ALL" ? { label: "Show All Claims", onClick: onShowAll } : undefined}
+          />
         ) : (
           <div className="divide-y divide-border">
             {expenses.map((expense) => (

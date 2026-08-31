@@ -1,134 +1,25 @@
 "use client";
 
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useMemo,
-} from "react";
-import ReactDOM from "react-dom";
+import { useState, useEffect, useRef, useMemo, type DragEvent, type ClipboardEvent } from "react";
 import {
   Plate,
   PlateContent,
   usePlateEditor,
-  createPlatePlugin,
-  ParagraphPlugin,
 } from "platejs/react";
-import type { PlateEditor } from "platejs/react";
-import { NodeApi } from "platejs";
-import type { Value, TElement, Path } from "platejs";
-import {
-  H1Plugin,
-  H2Plugin,
-  H3Plugin,
-  BlockquotePlugin,
-  HorizontalRulePlugin,
-  BoldPlugin,
-  ItalicPlugin,
-  UnderlinePlugin,
-  StrikethroughPlugin,
-  CodePlugin,
-} from "@platejs/basic-nodes/react";
-import {
-  HeadingRules,
-  BlockquoteRules,
-  HorizontalRuleRules,
-  BoldRules,
-  ItalicRules,
-  StrikethroughRules,
-  CodeRules,
-} from "@platejs/basic-nodes";
-import {
-  FontColorPlugin,
-  FontBackgroundColorPlugin,
-  FontSizePlugin,
-  TextAlignPlugin,
-} from "@platejs/basic-styles/react";
-import { ListPlugin } from "@platejs/list/react";
-import {
-  BulletedListRules,
-  OrderedListRules,
-  TaskListRules,
-} from "@platejs/list";
-import { IndentPlugin } from "@platejs/indent/react";
-import {
-  CodeBlockPlugin,
-  CodeLinePlugin,
-  CodeSyntaxPlugin,
-} from "@platejs/code-block/react";
-import { CodeBlockRules } from "@platejs/code-block";
-import {
-  ImagePlugin,
-  VideoPlugin,
-  AudioPlugin,
-  FilePlugin,
-  PlaceholderPlugin,
-} from "@platejs/media/react";
-import type { UploadConfig } from "@platejs/media/react";
-import { LinkPlugin } from "@platejs/link/react";
-import {
-  TablePlugin,
-  TableRowPlugin,
-  TableCellPlugin,
-  TableCellHeaderPlugin,
-} from "@platejs/table/react";
-import { CalloutPlugin } from "@platejs/callout/react";
-import { TogglePlugin } from "@platejs/toggle/react";
-import { MentionPlugin, MentionInputPlugin } from "@platejs/mention/react";
-import { SlashPlugin, SlashInputPlugin } from "@platejs/slash-command/react";
-import { CaptionPlugin } from "@platejs/caption/react";
-import { EmojiPlugin, EmojiInputPlugin } from "@platejs/emoji/react";
-import emojiData from "@emoji-mart/data";
-import type { EmojiMartData } from "@emoji-mart/data";
-import { createLowlight } from "lowlight";
-import { common } from "lowlight";
+import type { Value } from "platejs";
 import {
   EditorPageContext,
-  EditorPageContextValue,
+  type EditorPageContextValue,
 } from "./plate-context";
 import { normalizePlateValue, getPlainText } from "./plate-value-convert";
-import {
-  ParagraphElement,
-  HeadingElement,
-  BlockquoteElement,
-  HrElement,
-  CodeBlockElement,
-  CodeLineElement,
-  CodeSyntaxLeaf,
-  TableElement,
-  TableRowElement,
-  TableCellElement,
-  TableCellHeaderElement,
-  LinkElement,
-  CalloutElement,
-  ToggleElement,
-  MentionElement,
-  PageLinkElement,
-} from "./plate-elements";
-import {
-  BoldLeaf,
-  ItalicLeaf,
-  UnderlineLeaf,
-  StrikethroughLeaf,
-  CodeLeaf,
-} from "./plate-leaves";
-import {
-  MentionInputElement,
-  SlashInputElement,
-  EmojiInputElement,
-} from "./plate-combobox-elements";
-import {
-  ImageElementWithCaption,
-  VideoElement,
-  AudioElement,
-  FileElement,
-  PlaceholderElement,
-} from "./plate-media-elements";
 import { FixedToolbar } from "./toolbar/fixed-toolbar";
-import { LinkFloatingToolbar } from "./toolbar/link-floating-toolbar";
 import { uploadEditorMedia } from "./upload-media";
 import type { EditorMediaUploader } from "./upload-media";
+import { buildPlugins, MAX_FILES_PER_DROP } from "./plate-plugins";
+import {
+  usePageLinkPicker,
+  PageLinkPickerDropdown,
+} from "./plate-page-link-picker";
 
 export interface PlateDocumentEditorProps {
   value?: unknown;
@@ -142,289 +33,6 @@ export interface PlateDocumentEditorProps {
   onNavigateToPage?: (pageId: number) => void;
   contentKey?: string | number;
   uploadFile?: EditorMediaUploader;
-}
-
-type PageLinkItem = { id: number; label: string };
-
-type PickerState = {
-  query: string;
-  top: number;
-  left: number;
-  triggerOffset: number;
-  triggerPath: Path;
-};
-
-function usePageLinkPicker(editor: PlateEditor) {
-  const [picker, setPicker] = useState<PickerState | null>(null);
-
-  const checkTrigger = useCallback(() => {
-    const { selection } = editor;
-    if (!selection) {
-      setPicker(null);
-      return;
-    }
-
-    const blockEntry = editor.api.block() as [TElement, Path] | undefined;
-    if (!blockEntry) {
-      setPicker(null);
-      return;
-    }
-
-    const [blockNode] = blockEntry;
-    const cursorOffset = selection.focus.offset;
-    const blockText = NodeApi.string(blockNode);
-    const textBefore = blockText.slice(0, cursorOffset);
-
-    const match = /\[\[([^\[\]]*)$/.exec(textBefore);
-    if (match) {
-      const query = match[1] ?? "";
-      const domSel = window.getSelection();
-      if (!domSel || domSel.rangeCount === 0) return;
-      const range = domSel.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
-      const triggerOffset = cursorOffset - match[0].length;
-      setPicker({
-        query,
-        top: rect.bottom + 4 + window.scrollY,
-        left: rect.left + window.scrollX,
-        triggerOffset,
-        triggerPath: selection.focus.path,
-      });
-    } else {
-      setPicker(null);
-    }
-  }, [editor]);
-
-  const selectPageLink = useCallback(
-    (item: PageLinkItem) => {
-      if (!picker) return;
-      const { triggerOffset, triggerPath } = picker;
-      const anchor = { path: triggerPath, offset: triggerOffset };
-      const focus = editor.selection?.focus ?? anchor;
-      editor.tf.select({ anchor, focus });
-      editor.tf.delete();
-      editor.tf.insertNodes({
-        type: "page_link",
-        pageId: item.id,
-        value: item.label,
-        children: [{ text: "" }],
-      } as TElement);
-      editor.tf.move({ unit: "offset" });
-      setPicker(null);
-    },
-    [editor, picker],
-  );
-
-  const dismissPicker = useCallback(() => setPicker(null), []);
-
-  return { picker, checkTrigger, selectPageLink, dismissPicker };
-}
-
-interface PageLinkPickerDropdownProps {
-  picker: PickerState;
-  fetchPageLinks?: (q: string) => Promise<PageLinkItem[]>;
-  onSelect: (item: PageLinkItem) => void;
-  onDismiss: () => void;
-}
-
-function PageLinkPickerDropdown({
-  picker,
-  fetchPageLinks,
-  onSelect,
-  onDismiss,
-}: PageLinkPickerDropdownProps) {
-  const [items, setItems] = useState<PageLinkItem[]>([]);
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetchPageLinks?.(picker.query)
-      .then((r) => {
-        if (!cancelled) {
-          setItems(r);
-          setActiveIndex(0);
-        }
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [picker.query, fetchPageLinks]);
-
-  useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        setActiveIndex((i) => Math.min(i + 1, items.length - 1));
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault();
-        setActiveIndex((i) => Math.max(i - 1, 0));
-      } else if (e.key === "Enter" && items[activeIndex]) {
-        e.preventDefault();
-        onSelect(items[activeIndex]!);
-      } else if (e.key === "Escape") {
-        e.preventDefault();
-        onDismiss();
-      }
-    }
-    window.addEventListener("keydown", onKeyDown, true);
-    return () => window.removeEventListener("keydown", onKeyDown, true);
-  }, [items, activeIndex, onSelect, onDismiss]);
-
-  return ReactDOM.createPortal(
-    <div
-      style={{
-        position: "fixed",
-        top: picker.top,
-        left: picker.left,
-        zIndex: 9999,
-      }}
-      className="min-w-[200px] max-w-[300px] rounded-md border border-border bg-popover shadow-lg p-1"
-    >
-      {items.length === 0 ? (
-        <div className="px-3 py-2 text-xs text-muted-foreground">
-          {picker.query ? "No pages found" : "Search pages..."}
-        </div>
-      ) : (
-        items.map((item, idx) => (
-          <button
-            key={item.id}
-            type="button"
-            className={`w-full text-left px-3 py-1.5 text-sm rounded-sm ${idx === activeIndex ? "bg-accent text-accent-foreground" : "hover:bg-accent/50"}`}
-            onMouseDown={(e) => {
-              e.preventDefault();
-              onSelect(item);
-            }}
-          >
-            📄 {item.label}
-          </button>
-        ))
-      )}
-    </div>,
-    document.body,
-  );
-}
-
-const lowlight = createLowlight(common);
-
-const UPLOAD_CONFIG: UploadConfig = {
-  image: { mediaType: "img", maxFileCount: 1, maxFileSize: "8MB" },
-  video: { mediaType: "video", maxFileCount: 1, maxFileSize: "64MB" },
-  audio: { mediaType: "audio", maxFileCount: 1, maxFileSize: "16MB" },
-  pdf: { mediaType: "file", maxFileCount: 1, maxFileSize: "16MB" },
-  text: { mediaType: "file", maxFileCount: 1, maxFileSize: "16MB" },
-  blob: { mediaType: "file", maxFileCount: 1, maxFileSize: "16MB" },
-};
-
-const MAX_FILES_PER_DROP = 5;
-
-function buildPlugins() {
-  return [
-    ParagraphPlugin.withComponent(ParagraphElement),
-    H1Plugin.configure({ inputRules: [HeadingRules.markdown()] }).withComponent(
-      HeadingElement,
-    ),
-    H2Plugin.configure({ inputRules: [HeadingRules.markdown()] }).withComponent(
-      HeadingElement,
-    ),
-    H3Plugin.configure({ inputRules: [HeadingRules.markdown()] }).withComponent(
-      HeadingElement,
-    ),
-    BlockquotePlugin.configure({
-      inputRules: [BlockquoteRules.markdown()],
-    }).withComponent(BlockquoteElement),
-    HorizontalRulePlugin.configure({
-      inputRules: [HorizontalRuleRules.markdown({ variant: "-" })],
-    }).withComponent(HrElement),
-    BoldPlugin.configure({
-      inputRules: [BoldRules.markdown({ variant: "*" })],
-    }).withComponent(BoldLeaf),
-    ItalicPlugin.configure({
-      inputRules: [ItalicRules.markdown({ variant: "*" })],
-    }).withComponent(ItalicLeaf),
-    UnderlinePlugin.withComponent(UnderlineLeaf),
-    StrikethroughPlugin.configure({
-      inputRules: [StrikethroughRules.markdown()],
-    }).withComponent(StrikethroughLeaf),
-    CodePlugin.configure({ inputRules: [CodeRules.markdown()] }).withComponent(
-      CodeLeaf,
-    ),
-    FontColorPlugin,
-    FontBackgroundColorPlugin,
-    FontSizePlugin,
-    TextAlignPlugin.configure({
-      inject: {
-        targetPlugins: [
-          ParagraphPlugin.key,
-          H1Plugin.key,
-          H2Plugin.key,
-          H3Plugin.key,
-        ],
-      },
-    }),
-    IndentPlugin.configure({
-      inject: {
-        targetPlugins: [
-          ParagraphPlugin.key,
-          H1Plugin.key,
-          H2Plugin.key,
-          H3Plugin.key,
-        ],
-      },
-    }),
-    ListPlugin.configure({
-      inputRules: [
-        BulletedListRules.markdown({ variant: "-" }),
-        OrderedListRules.markdown({ variant: "." }),
-        TaskListRules.markdown({ checked: false }),
-      ],
-    }),
-    CodeBlockPlugin.configure({
-      options: { lowlight },
-      inputRules: [CodeBlockRules.markdown({ on: "match" })],
-    }).withComponent(CodeBlockElement),
-    CodeLinePlugin.withComponent(CodeLineElement),
-    CodeSyntaxPlugin.withComponent(CodeSyntaxLeaf),
-    CaptionPlugin.configure({
-      options: { query: { allow: ["img", "video"] } },
-    }),
-    ImagePlugin.withComponent(ImageElementWithCaption),
-    VideoPlugin.withComponent(VideoElement),
-    AudioPlugin.withComponent(AudioElement),
-    FilePlugin.withComponent(FileElement),
-    PlaceholderPlugin.configure({
-      options: {
-        uploadConfig: UPLOAD_CONFIG,
-        disableEmptyPlaceholder: true,
-        disableFileDrop: true,
-      },
-    }).withComponent(PlaceholderElement),
-    LinkPlugin.configure({
-      render: { afterEditable: LinkFloatingToolbar },
-    }).withComponent(LinkElement),
-    TablePlugin.withComponent(TableElement),
-    TableRowPlugin.withComponent(TableRowElement),
-    TableCellPlugin.withComponent(TableCellElement),
-    TableCellHeaderPlugin.withComponent(TableCellHeaderElement),
-    CalloutPlugin.withComponent(CalloutElement),
-    TogglePlugin.withComponent(ToggleElement),
-    MentionPlugin.configure({
-      options: { trigger: "@", triggerPreviousCharPattern: /^\s?$/ },
-    }).withComponent(MentionElement),
-    MentionInputPlugin.withComponent(MentionInputElement),
-    EmojiPlugin.configure({
-      options: { data: emojiData as EmojiMartData },
-    }),
-    EmojiInputPlugin.withComponent(EmojiInputElement),
-    createPlatePlugin({
-      key: "page_link",
-      node: { isElement: true, isInline: true, isVoid: true },
-    }).withComponent(PageLinkElement),
-    SlashPlugin.configure({
-      options: { trigger: "/", triggerPreviousCharPattern: /^\s?$/ },
-    }),
-    SlashInputPlugin.withComponent(SlashInputElement),
-  ];
 }
 
 export default function PlateDocumentEditor({
@@ -474,7 +82,7 @@ export default function PlateDocumentEditor({
       });
   }
 
-  function handleContentDrop(e: React.DragEvent<HTMLDivElement>) {
+  function handleContentDrop(e: DragEvent<HTMLDivElement>) {
     if (!editable || !uploadFile) return;
     if (e.dataTransfer.files.length === 0) return;
     e.preventDefault();
@@ -482,7 +90,7 @@ export default function PlateDocumentEditor({
     uploadDroppedFiles(e.dataTransfer.files);
   }
 
-  function handleContentPaste(e: React.ClipboardEvent<HTMLDivElement>) {
+  function handleContentPaste(e: ClipboardEvent<HTMLDivElement>) {
     if (!editable || !uploadFile) return;
     if (e.clipboardData.files.length === 0) return;
     e.preventDefault();

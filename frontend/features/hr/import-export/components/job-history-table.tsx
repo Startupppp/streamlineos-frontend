@@ -14,6 +14,7 @@ import {
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { JobErrorsSheet } from "./job-errors-sheet";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { formatShortDate } from "@/lib/date-utils";
 
 interface JobHistoryTableProps {
   entity?: HrImportEntity;
@@ -38,14 +39,6 @@ const ENTITY_LABELS: Record<HrImportEntity, string> = {
   assets: "Assets",
   document_metadata: "Documents",
 };
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-IN", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
 
 const COLUMNS: DataTableColumn<HrImportJob>[] = [
   {
@@ -98,7 +91,7 @@ const COLUMNS: DataTableColumn<HrImportJob>[] = [
     header: "Date",
     cell: (row) => (
       <span className="text-xs text-muted-foreground whitespace-nowrap">
-        {formatDate(row.createdAt)}
+        {formatShortDate(row.createdAt)}
       </span>
     ),
   },

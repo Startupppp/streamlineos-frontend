@@ -17,7 +17,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
-import { ChevronDown, AlertCircle, Users, BarChart3, MapPin, Globe } from "lucide-react";
+import { ChevronDown, Users, BarChart3, MapPin, Globe } from "lucide-react";
+import { ErrorState } from "@/components/shared/error-state";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { cn } from "@/lib/utils";
 import type { Department } from "@/types/hr";
@@ -219,15 +220,7 @@ export default function DiversityReportPage() {
             ))}
           </div>
         ) : isError ? (
-          <div className="flex flex-col items-center justify-center flex-1 gap-3 py-16">
-            <AlertCircle className="h-10 w-10 text-destructive/50" />
-            <p className="text-sm text-muted-foreground">
-              Failed to load diversity report.
-            </p>
-            <Button variant="outline" size="sm" onClick={handleRetry}>
-              Try again
-            </Button>
-          </div>
+          <ErrorState className="flex-1" title="Failed to load diversity report" onRetry={handleRetry} />
         ) : !data || data.total === 0 ? (
           <RecruitmentEmptyState
             illustrationPreset="chart"

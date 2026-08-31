@@ -57,14 +57,10 @@ export interface User {
   image: string | null;
   role: string;
   isOwner: boolean;
-  designation: string | null;
   phone: string | null;
-  departmentId: string | null;
-  branchId: string | null;
   isActive: boolean;
   userStatus?: string | null;
   archivedAt?: string | null;
-  reportingTo: string | null;
   team: string | null;
   bio: string | null;
   linkedinUrl: string | null;
@@ -77,6 +73,23 @@ export interface User {
   updatedAt: string;
   lastSeenAt?: string | null;
   teams?: string[];
+}
+
+export interface UpdateUserInput {
+  firstName?: string;
+  lastName?: string;
+  designation?: string;
+  phone?: string;
+  departmentId?: string;
+  role?: "OWNER" | "ORG_ADMIN" | "MEMBER";
+  bio?: string;
+  linkedinUrl?: string;
+  twitterUrl?: string;
+  githubUrl?: string;
+  websiteUrl?: string;
+  reportingTo?: string;
+  teamId?: string | null;
+  emergencyContact?: EmergencyContact | null;
 }
 
 export interface UsersResponse {
@@ -100,7 +113,7 @@ export interface UserStats {
 
 export interface InviteUserPayload {
   email: string;
-  role: string;
+  role: "OWNER" | "ORG_ADMIN" | "MEMBER";
 }
 
 export interface Invitation {
@@ -171,7 +184,7 @@ export interface BulkActionResult {
 
 export interface BulkUpdatePayload {
   userIds: string[];
-  role?: string;
+  role?: "OWNER" | "ORG_ADMIN" | "MEMBER";
   departmentId?: string | null;
   branchId?: string | null;
   teamId?: string | null;
@@ -193,5 +206,5 @@ export interface AuditEntry {
 
 export interface AuditResponse {
   data: AuditEntry[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }

@@ -24,7 +24,7 @@ describe("a pathname resolves to a product through the navigation model", () => 
 
   it("prefers the more specific owner when two products share a prefix", () => {
     expect(getProductFromPathname("/directory")).toBe("home");
-    expect(getProductFromPathname("/settings/directory")).toBe("administration");
+    expect(getProductFromPathname("/directory/settings")).toBe("administration");
     expect(getProductFromPathname("/hr/announcements")).toBe("home");
     expect(getProductFromPathname("/hr/employees")).toBe("hrms");
   });

@@ -13,7 +13,7 @@ import type { Channel, MessageMetadata } from "@/types/chat";
 import { getForwardedDisplay } from "./chat-helpers";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
-interface ForwardableMessage {
+export interface ForwardableMessage {
   content: string | null;
   metadata?: MessageMetadata | null;
   attachments?: {
@@ -123,7 +123,7 @@ export function ForwardMessageDialog({ message, open, onOpenChange }: ForwardMes
           </div>
         )}
 
-        <div className="flex items-center gap-2 rounded-lg border border-border/50 px-3 py-1.5">
+        <div className="flex items-center gap-2 rounded-lg border border-border/50 px-3 py-1.5 focus-within:border-primary/50 transition-colors">
           <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
           <input
             value={query}

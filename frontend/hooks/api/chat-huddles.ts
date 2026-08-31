@@ -1,24 +1,27 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useCan } from "@/hooks/api/access";
 import type { Huddle, HuddleSignalInput } from "@/types/chat";
 
 export function useActiveHuddle(channelId: number) {
+  const canRead = useCan("chat:channels:read");
   return useQuery({
     queryKey: queryKeys.chat.huddle(channelId),
     queryFn: () => apiClient.get<Huddle | null>(`/chat/channels/${channelId}/huddle`),
     staleTime: 10_000,
-    enabled: channelId > 0,
+    enabled: canRead && channelId > 0,
   });
 }
 
 export function useStartHuddle() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:huddles:start", {
     mutationKey: ["chat", "huddle", "start"],
     mutationFn: (channelId: number) =>
       apiClient.post<Huddle>(`/chat/channels/${channelId}/huddle/start`),
@@ -34,7 +37,7 @@ export function useStartHuddle() {
 
 export function useJoinHuddle() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "huddle", "join"],
     mutationFn: ({ huddleId }: { huddleId: number; channelId: number }) =>
       apiClient.post<{ ok: boolean }>(`/chat/huddles/${huddleId}/join`),
@@ -49,7 +52,7 @@ export function useJoinHuddle() {
 
 export function useLeaveHuddle() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "huddle", "leave"],
     mutationFn: ({ huddleId }: { huddleId: number; channelId: number }) =>
       apiClient.post<{ ok: boolean }>(`/chat/huddles/${huddleId}/leave`),
@@ -61,7 +64,7 @@ export function useLeaveHuddle() {
 }
 
 export function useHuddleHeartbeat() {
-  return useMutation({
+  return useAuthorizedMutation("chat:channels:read", {
     mutationKey: ["chat", "huddle", "heartbeat"],
     mutationFn: ({ huddleId }: { huddleId: number }) =>
       apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/heartbeat`),
@@ -70,7 +73,7 @@ export function useHuddleHeartbeat() {
 
 export function useSetHuddleMute() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "huddle", "mute"],
     mutationFn: ({ huddleId, muted }: { huddleId: number; channelId: number; muted: boolean }) =>
       apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/mute`, { muted }),
@@ -82,7 +85,7 @@ export function useSetHuddleMute() {
 
 export function useRaiseHand() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "huddle", "hand"],
     mutationFn: ({ huddleId, raised }: { huddleId: number; channelId: number; raised: boolean }) =>
       apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/hand`, { raised }),
@@ -93,7 +96,7 @@ export function useRaiseHand() {
 }
 
 export function useSendHuddleSignal() {
-  return useMutation({
+  return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "huddle", "signal"],
     mutationFn: ({ huddleId, ...signal }: { huddleId: number } & HuddleSignalInput) =>
       apiClient.post<{ ok: boolean }>(`/chat/huddles/${huddleId}/signal`, signal),
@@ -102,7 +105,7 @@ export function useSendHuddleSignal() {
 
 export function useSetHuddleScreenShare() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "huddle", "screenshare"],
     mutationFn: ({ huddleId, isScreenSharing }: { huddleId: number; channelId: number; isScreenSharing: boolean }) =>
       apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/screenshare`, { isScreenSharing }),
@@ -114,7 +117,7 @@ export function useSetHuddleScreenShare() {
 
 export function useKickParticipant() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:huddles:moderate", {
     mutationKey: ["chat", "huddle", "kick"],
     mutationFn: ({ huddleId, targetUserId }: { huddleId: number; channelId: number; targetUserId: string }) =>
       apiClient.post<{ ok: boolean }>(`/chat/huddles/${huddleId}/kick`, { targetUserId }),
@@ -126,7 +129,7 @@ export function useKickParticipant() {
 
 export function useSetHuddleDeafen() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "huddle", "deafen"],
     mutationFn: ({ huddleId, deafened }: { huddleId: number; channelId: number; deafened: boolean }) =>
       apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/deafen`, { deafened }),
@@ -137,7 +140,7 @@ export function useSetHuddleDeafen() {
 }
 
 export function useInviteToHuddle() {
-  return useMutation({
+  return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "huddle", "invite"],
     mutationFn: ({ huddleId, userIds }: { huddleId: number; userIds: string[] }) =>
       apiClient.post<{ ok: boolean }>(`/chat/huddles/${huddleId}/invite`, { userIds }),

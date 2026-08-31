@@ -133,6 +133,12 @@ export function IssuesPage() {
     setCreateOpen(true);
   }
 
+  function handleClearFilters() {
+    setStage("all");
+    setSeverity("all");
+    resetPaging();
+  }
+
   function handleEditRequest(record: IssueRecord) {
     setOpenRecordId(null);
     setEditTarget(record);
@@ -254,17 +260,15 @@ export function IssuesPage() {
           <EmptyState
             access={records.access}
             className={CONTENT_FILL_PANEL}
-            title={isFiltered ? `No matching ${plural}` : `No ${plural} yet`}
+            title={`No ${plural} yet`}
             description={
               isFiltered
-                ? "Try a different stage or severity."
+                ? "No results match your filters."
                 : `${layout.plural} raised by your team, or by the system on their behalf, will appear here.`
             }
-            action={
-              isFiltered || !canManage
-                ? undefined
-                : { label: `New ${layout.singular.toLowerCase()}`, onClick: handleOpenCreate }
-            }
+            filtersActive={isFiltered}
+            onClearFilters={handleClearFilters}
+            action={!isFiltered && canManage ? { label: `New ${layout.singular.toLowerCase()}`, onClick: handleOpenCreate } : undefined}
           />
         ) : (
           <>

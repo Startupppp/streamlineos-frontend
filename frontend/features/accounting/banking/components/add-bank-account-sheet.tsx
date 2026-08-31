@@ -55,8 +55,8 @@ interface AddBankAccountSheetProps {
 
 export function AddBankAccountSheet({ open, onOpenChange }: AddBankAccountSheetProps) {
   const createMutation = useCreateBankAccount();
-  const accountsQuery = useAccounts({ pageSize: 200 });
-  const ledgerAccounts = accountsQuery.data?.items ?? [];
+  const accountsQuery = useAccounts({ limit: 100 });
+  const ledgerAccounts = accountsQuery.data?.data ?? [];
 
   function handleSubmit(values: FormValues) {
     createMutation.mutate(

@@ -6,11 +6,11 @@ import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
 import type { ChangeRequest, ChangeRequestStatus } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
@@ -124,6 +124,13 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  const filtersActive = !!(search || statusFilter !== "all");
+
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    setStatusFilter("all");
+  }, []);
 
   const filtered = useMemo(
     () => (crs ?? []).filter((cr) => !search || cr.title.toLowerCase().includes(search.toLowerCase())),
@@ -246,16 +253,14 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
             <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
           ) : filtered.length === 0 ? (
             <EmptyState
-                className={PM_FILL_PANEL}
-                illustrationPreset="ticket"
-                title="No change requests"
-                description={
-                  search || statusFilter !== "all"
-                    ? "No change requests match the active filters."
-                    : "Create a change request to get started."
-                }
-                action={canCreate ? { label: "New Change Request", onClick: handleNew } : undefined}
-              />
+              className={PM_FILL_PANEL}
+              illustrationPreset="ticket"
+              title="No change requests"
+              description={filtersActive ? undefined : "Create a change request to get started."}
+              filtersActive={filtersActive}
+              onClearFilters={handleClearFilters}
+              action={canCreate && !filtersActive ? { label: "New Change Request", onClick: handleNew } : undefined}
+            />
           ) : (
             <DataTable<ChangeRequest>
                 data={filtered}

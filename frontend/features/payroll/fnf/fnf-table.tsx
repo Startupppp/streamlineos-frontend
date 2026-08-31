@@ -15,6 +15,7 @@ import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { useFnfSettlements } from "@/hooks/api/payroll/fnf";
 import { formatMoney } from "@/features/payroll/shared";
+import { formatShortDate } from "@/lib/date-utils";
 import { FnfStatusBadge } from "./fnf-status-badge";
 import { FnfDetailSheet } from "./fnf-detail-sheet";
 import type { FnfSettlement, FnfStatus } from "@/types/payroll";
@@ -65,11 +66,7 @@ const columns: DataTableColumn<FnfSettlement>[] = [
       if (!dateStr) return <span className="text-dense text-muted-foreground">—</span>;
       return (
         <span className="text-dense text-muted-foreground">
-          {new Date(dateStr).toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          })}
+          {formatShortDate(dateStr)}
         </span>
       );
     },

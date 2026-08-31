@@ -116,6 +116,10 @@ export function ReportsHubClient() {
     void refetch();
   }
 
+  function handleClearSearch(): void {
+    setSearch("");
+  }
+
   const filtered = catalog
     ? catalog.filter(
         (item) =>
@@ -171,8 +175,10 @@ export function ReportsHubClient() {
         ) : filtered.length === 0 ? (
           <EmptyState
             illustration={<EmptyReportIllustration />}
-            title={search ? "No reports match your search" : "No reports available"}
-            description={search ? "Try a different search term." : "Reports will appear here once the accounting module is configured."}
+            title="No reports available"
+            description={search ? undefined : "Reports will appear here once the accounting module is configured."}
+            filtersActive={!!search}
+            onClearFilters={handleClearSearch}
           />
         ) : (
           <div className="space-y-4">

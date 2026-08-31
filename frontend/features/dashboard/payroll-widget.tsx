@@ -17,7 +17,8 @@ function toTitleCase(value: string): string {
 }
 
 function PayrollSelfCard() {
-  const { data, isLoading } = useEssOverview();
+  const { data, isLoading, error, refetch } = useEssOverview();
+  const handleRetry = () => void refetch();
 
   return (
     <WidgetCard
@@ -25,8 +26,10 @@ function PayrollSelfCard() {
       iconClassName="text-primary"
       title="My Payroll"
       badge={data?.latestPayslip ? data.latestPayslip.month : undefined}
-      link={{ href: "/payroll/me", label: "View" }}
+      link={{ href: "/me/pay", label: "View" }}
       isLoading={isLoading}
+      error={error}
+      onRetry={handleRetry}
       loadingRows={2}
       isEmpty={!data}
       empty={<p className="text-xs text-muted-foreground text-center py-6">No data.</p>}
@@ -68,7 +71,8 @@ function PayrollSelfCard() {
 
 function PayrollAdminCard() {
   const month = format(new Date(), "yyyy-MM");
-  const { data, isLoading } = useCommandCenter(month);
+  const { data, isLoading, error, refetch } = useCommandCenter(month);
+  const handleRetry = () => void refetch();
   const nextEvent = data?.upcomingCalendarEvents[0] ?? null;
 
   return (
@@ -79,6 +83,8 @@ function PayrollAdminCard() {
       badge={data?.header.status ? toTitleCase(data.header.status) : undefined}
       link={{ href: "/payroll/runs", label: "View" }}
       isLoading={isLoading}
+      error={error}
+      onRetry={handleRetry}
       loadingRows={2}
       isEmpty={!data}
       empty={<p className="text-xs text-muted-foreground text-center py-6">No data.</p>}

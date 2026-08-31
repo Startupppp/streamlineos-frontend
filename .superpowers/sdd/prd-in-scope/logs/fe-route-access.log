@@ -1,0 +1,9 @@
+
+> streamlineos@0.1.0 check:route-access-contract D:\projects\personal\Streamlineos\frontend
+> node scripts/check-route-access-contract.mjs
+
+Navigation source files   26
+Permission keys checked   197 (17 excluded as access rungs or non-permissions)
+x-permission in contract  620
+
+✔  every route-access permission names an endpoint in the generated contract.

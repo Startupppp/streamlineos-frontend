@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { ErrorState } from "@/components/shared/error-state";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import {
   useEngagementCommunities,
@@ -95,6 +96,9 @@ export function CommunitiesTab({ currentUserId }: { currentUserId: string }) {
   const {
     data,
     isLoading,
+    isError,
+    error,
+    refetch,
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
@@ -152,6 +156,10 @@ export function CommunitiesTab({ currentUserId }: { currentUserId: string }) {
         {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)}
       </div>
     );
+  }
+
+  if (isError) {
+    return <ErrorState className="flex-1" title="Couldn't load communities" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
   }
 
   return (

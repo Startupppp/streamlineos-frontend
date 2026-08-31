@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useState, useCallback, useMemo, Suspense } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { Info, RefreshCw } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
@@ -13,7 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState, NoPermissionState } from "@/components/shared";
 import { EmptyOrdersIllustration } from "@/components/illustrations";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
 import { SYNC_STATUS_BADGE, SYNC_STATUS_LABEL } from "@/features/inventory/lib";
 import {
@@ -86,6 +86,7 @@ interface ChannelCardProps {
 }
 
 const ChannelCard = memo(function ChannelCard({ channel, onEdit, onViewPublications, onViewPools }: ChannelCardProps) {
+  const { fadeUp } = useMotionVariants();
   const syncMutation = useSyncChannelStock();
   const isExternal = EXTERNAL_TYPES.has(channel.channelType);
 
@@ -210,7 +211,7 @@ function ChannelsContent() {
   const canView = useCan("inventory:channels:manage");
   const { data, isLoading, isError, refetch } = useChannels();
   const channels = useMemo(() => (Array.isArray(data) ? data : []), [data]);
-  const shouldReduceMotion = useReducedMotion();
+  const { staggerContainer } = useMotionVariants();
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editChannel, setEditChannel] = useState<Channel | undefined>(undefined);
@@ -313,9 +314,9 @@ function ChannelsContent() {
         {channels.length > 0 ? (
           <motion.div
             className="flex-1 min-h-0 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 content-start"
-            variants={shouldReduceMotion ? undefined : staggerContainer}
-            initial={shouldReduceMotion ? undefined : "hidden"}
-            animate={shouldReduceMotion ? undefined : "visible"}
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
           >
             {channels.map((ch) => (
               <ChannelCard

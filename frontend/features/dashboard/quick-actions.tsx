@@ -3,7 +3,7 @@
 import { memo, useMemo } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import {
   UserPlus,
   BarChart3,
@@ -58,6 +58,7 @@ export function useQuickActions(): QuickAction[] {
 }
 
 export const QuickActions = memo(function QuickActions() {
+  const { fadeUp } = useMotionVariants();
   const actions = useQuickActions();
 
   if (actions.length === 0) return null;

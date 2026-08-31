@@ -1,8 +1,10 @@
 "use client";
 
-import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   HrPolicy,
   PoliciesListResponse,
@@ -20,6 +22,8 @@ export function useHrPolicies(params?: {
   status?: HrPolicyStatus;
   search?: string;
 }) {
+  const canView = useCan("hr:policies:view");
+  const hrEnabled = useModuleEnabled("hr");
   const query = new URLSearchParams();
   if (params?.page) query.set("page", String(params.page));
   if (params?.limit) query.set("limit", String(params.limit));
@@ -34,12 +38,13 @@ export function useHrPolicies(params?: {
       apiClient.get<PoliciesListResponse>(`/hr/policies${qs ? `?${qs}` : ""}`),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
+    enabled: canView && hrEnabled,
   });
 }
 
 export function useCreateHrPolicy() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:policies:manage", {
     mutationKey: ["hr", "policies", "create"],
     mutationFn: (data: CreatePolicyInput) =>
       apiClient.post<HrPolicy>("/hr/policies", data),
@@ -49,7 +54,7 @@ export function useCreateHrPolicy() {
 
 export function useUpdateHrPolicy() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:policies:manage", {
     mutationKey: ["hr", "policies", "update"],
     mutationFn: ({ id, ...data }: UpdatePolicyInput & { id: number }) =>
       apiClient.patch<HrPolicy>(`/hr/policies/${id}`, data),
@@ -62,7 +67,7 @@ export function useUpdateHrPolicy() {
 
 export function useCreatePolicyVersion() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:policies:manage", {
     mutationKey: ["hr", "policies", "create-version"],
     mutationFn: (policyId: number) =>
       apiClient.post<HrPolicy>(`/hr/policies/${policyId}/versions`, {}),
@@ -72,7 +77,7 @@ export function useCreatePolicyVersion() {
 
 export function useActivatePolicy() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:policies:manage", {
     mutationKey: ["hr", "policies", "activate"],
     mutationFn: (input: number | { policyId: number; force?: boolean }) => {
       const policyId = typeof input === "number" ? input : input.policyId;
@@ -97,30 +102,35 @@ export type PolicyConflict = {
 };
 
 export function usePolicyConflicts(policyId: number) {
+  const canView = useCan("hr:policies:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.hrPoliciesAll, "conflicts", policyId] as const,
     queryFn: () =>
       apiClient.get<{ conflicts: PolicyConflict[]; canActivate: boolean }>(
         `/hr/policies/${policyId}/conflicts`,
       ),
-    enabled: policyId > 0,
+    enabled: canView && hrEnabled && policyId > 0,
     staleTime: 30_000,
   });
 }
 
 export function useOrgPolicyConflicts(type?: HrPolicyType) {
+  const canView = useCan("hr:policies:view");
+  const hrEnabled = useModuleEnabled("hr");
   const qs = type ? `?type=${encodeURIComponent(type)}` : "";
   return useQuery({
     queryKey: [...queryKeys.hr.hrPoliciesAll, "org-conflicts", type] as const,
     queryFn: () =>
       apiClient.get<{ conflicts: PolicyConflict[] }>(`/hr/policies/conflicts${qs}`),
     staleTime: 30_000,
+    enabled: canView && hrEnabled,
   });
 }
 
 export function useArchivePolicy() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:policies:manage", {
     mutationKey: ["hr", "policies", "archive"],
     mutationFn: (policyId: number) =>
       apiClient.post<{ success: boolean }>(`/hr/policies/${policyId}/archive`, {}),
@@ -132,6 +142,8 @@ export function usePolicyPreview(
   policyId: number,
   params: { employeeId: string; date: string } | null,
 ) {
+  const canView = useCan("hr:policies:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.hrPoliciesAll, "preview", policyId, params] as const,
     queryFn: () => {
@@ -144,13 +156,13 @@ export function usePolicyPreview(
       );
     },
     staleTime: 30_000,
-    enabled: !!params?.employeeId && !!params?.date && policyId > 0,
+    enabled: canView && hrEnabled && !!params?.employeeId && !!params?.date && policyId > 0,
   });
 }
 
 export function useSeedDefaultPolicies() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:policies:manage", {
     mutationKey: ["hr", "policies", "seed"],
     mutationFn: () =>
       apiClient.post<{ seeded: boolean; count?: number }>("/hr/policies/seed-defaults", {}),

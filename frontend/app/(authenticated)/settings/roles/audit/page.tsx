@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { ClipboardList, ShieldCheck, ShieldX, UserCheck, UserX } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { ErrorState } from "@/components/shared/error-state";
 import { Badge } from "@/components/ui/badge";
@@ -159,17 +160,23 @@ const columns: DataTableColumn<AuditLogEntry>[] = [
 ];
 
 function AuditContent() {
-  const [page, setPage] = useState(1);
+  // The audit log is append-only and is written to while it is read, so it
+  // walks a cursor rather than counting offsets.
+  const { cursor, pageNumber, hasPrevious, goNext, goPrevious } = useCursorPagination();
 
-  const query = useAuditLogs({ page, pageSize: PAGE_SIZE, actions: RBAC_ACTIONS });
+  const query = useAuditLogs({
+    ...(cursor !== undefined ? { cursor } : {}),
+    limit: PAGE_SIZE,
+    actions: RBAC_ACTIONS,
+  });
 
   const handleRetry = useCallback(() => {
     void query.refetch();
   }, [query]);
 
-  const handlePageChange = useCallback((p: number) => {
-    setPage(p);
-  }, []);
+  const handleNextPage = useCallback(() => {
+    goNext(query.data?.pagination.nextCursor ?? null);
+  }, [goNext, query.data?.pagination.nextCursor]);
 
   return (
     <PageWrapper
@@ -196,11 +203,13 @@ function AuditContent() {
             emptyState={<AuditEmptyState />}
             className="flex-1 min-h-0"
             pagination={{
-              mode: "server",
-              page,
+              mode: "cursor",
               pageSize: PAGE_SIZE,
-              total: query.data?.total ?? 0,
-              onPageChange: handlePageChange,
+              pageNumber,
+              hasMore: query.data?.pagination.hasMore ?? false,
+              hasPrevious,
+              onNext: handleNextPage,
+              onPrevious: goPrevious,
             }}
           />
         )}

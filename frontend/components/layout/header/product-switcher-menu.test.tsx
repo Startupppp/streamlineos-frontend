@@ -1,14 +1,19 @@
 import { fireEvent, render as rtlRender, screen } from "@testing-library/react";
-import type { AnchorHTMLAttributes, PropsWithChildren } from "react";
-import type { ReactElement } from "react";
+import type { AnchorHTMLAttributes, PropsWithChildren, ReactElement } from "react";
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { ProductSwitcherMenu } from "./product-switcher-menu";
 
 function render(ui: ReactElement) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
-  return rtlRender(<QueryClientProvider client={client}>{ui}</QueryClientProvider>);
+  return rtlRender(
+    <QueryClientProvider client={client}>
+      <TooltipProvider>{ui}</TooltipProvider>
+    </QueryClientProvider>,
+  );
 }
 
 jest.mock("next/link", () => {

@@ -23,13 +23,9 @@ import {
 } from "@/hooks/api/inventory/shipping";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
+import { formatShortDate } from "@/lib/date-utils";
 
 const PAGE_LIMIT = 20;
-
-function formatDate(value: string): string {
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
-}
 
 function LoadsPageInner() {
   const canView = useCan("inventory:loads:manage");
@@ -81,7 +77,7 @@ function LoadsPageInner() {
     {
       key: "id",
       header: "Load",
-      cell: (l) => l.name ?? formatDate(l.createdAt),
+      cell: (l) => l.name ?? (formatShortDate(l.createdAt) || "—"),
     },
     {
       key: "status",
@@ -106,7 +102,7 @@ function LoadsPageInner() {
       key: "createdAt",
       header: "Created",
       cell: (l) => (
-        <span className="tabular-nums text-muted-foreground">{formatDate(l.createdAt)}</span>
+        <span className="tabular-nums text-muted-foreground">{formatShortDate(l.createdAt) || "—"}</span>
       ),
     },
   ];

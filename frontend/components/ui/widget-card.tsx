@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ExternalLink, type LucideIcon } from "lucide-react";
+import { ExternalLink, RefreshCw, type LucideIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "./card";
 import { Skeleton } from "./skeleton";
 import { Badge } from "./badge";
@@ -21,6 +21,7 @@ interface WidgetCardProps {
   errorMessage?: string;
   isEmpty?: boolean;
   empty?: React.ReactNode;
+  onRetry?: () => void;
   loadingRows?: number;
   className?: string;
   contentClassName?: string;
@@ -39,6 +40,7 @@ export function WidgetCard({
   errorMessage,
   isEmpty,
   empty,
+  onRetry,
   loadingRows = 3,
   className,
   contentClassName,
@@ -82,7 +84,19 @@ export function WidgetCard({
             ))}
           </div>
         ) : error ? (
-          <p className="text-sm text-destructive">{errorMessage ?? getErrorMessage(error)}</p>
+          <div className="space-y-2">
+            <p className="text-sm text-destructive">{errorMessage ?? getErrorMessage(error)}</p>
+            {onRetry && (
+              <button
+                type="button"
+                onClick={onRetry}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <RefreshCw className="h-3 w-3" aria-hidden="true" />
+                Retry
+              </button>
+            )}
+          </div>
         ) : isEmpty ? (
           empty
         ) : (

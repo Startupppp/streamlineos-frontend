@@ -100,28 +100,37 @@ function ExecutionRow({
 
 export default function ExecutionsPage() {
   const [activeStatus, setActiveStatus] = useState<ExecutionStatus | "all">("all");
-  const [page, setPage] = useState(1);
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [previousCursors, setPreviousCursors] = useState<Array<string | null>>([]);
 
   const { data, isLoading, isError, refetch } = useAllExecutions({
-    page,
+    ...(cursor !== null ? { cursor } : {}),
     limit: PAGE_SIZE,
     ...(activeStatus !== "all" ? { status: activeStatus } : {}),
   });
 
   const cancelExecution = useCancelExecution();
-  const totalPages = data ? Math.ceil(data.total / PAGE_SIZE) : 1;
+  const pageNumber = previousCursors.length + 1;
 
   function handleStatusChange(status: ExecutionStatus | "all") {
     setActiveStatus(status);
-    setPage(1);
+    setCursor(null);
+    setPreviousCursors([]);
   }
 
   function handlePrevPage() {
-    setPage((p) => Math.max(1, p - 1));
+    setPreviousCursors((stack) => {
+      if (stack.length === 0) return stack;
+      setCursor(stack[stack.length - 1] ?? null);
+      return stack.slice(0, -1);
+    });
   }
 
   function handleNextPage() {
-    setPage((p) => Math.min(totalPages, p + 1));
+    const next = data?.pagination.nextCursor ?? null;
+    if (next === null) return;
+    setPreviousCursors((stack) => [...stack, cursor]);
+    setCursor(next);
   }
 
   function handleCancel(execution: WorkflowExecution) {
@@ -197,14 +206,14 @@ export default function ExecutionsPage() {
           ))}
           <div className="flex items-center justify-between pt-4 border-t border-border/60">
             <p className="text-sm text-muted-foreground">
-              Page {page} of {totalPages} ({data.total} total)
+              Page {pageNumber}
             </p>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handlePrevPage}
-                disabled={page <= 1}
+                disabled={previousCursors.length === 0}
               >
                 <ChevronLeft className="h-4 w-4" />
                 Previous
@@ -213,7 +222,7 @@ export default function ExecutionsPage() {
                 variant="outline"
                 size="sm"
                 onClick={handleNextPage}
-                disabled={page >= totalPages}
+                disabled={data.pagination.hasMore !== true}
               >
                 Next
                 <ChevronRight className="h-4 w-4" />

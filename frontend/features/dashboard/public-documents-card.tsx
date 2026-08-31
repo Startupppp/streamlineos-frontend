@@ -228,7 +228,7 @@ export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
   const canViewDocStats = useCan("hr:documents:view");
   const canViewSignEnvelopes = useCan("sign:envelope:view");
   const { signEnabled, canViewOnboardingDocsSummary } = useDashboardAccess();
-  const { data: documents, isLoading, error: documentsError } = usePublicDocuments(6, canViewDocStats);
+  const { data: documents, isLoading, error: documentsError, refetch: refetchDocuments } = usePublicDocuments(6, canViewDocStats);
 
   const { data: docStats } = useHrDocumentStats({ enabled: canViewDocStats });
   const { missingCount } = useMissingOnboardingDocsCount({
@@ -299,7 +299,16 @@ export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
               ))}
             </div>
           ) : documentsError ? (
-            <p role="alert" className="text-sm text-destructive py-2">{getErrorMessage(documentsError)}</p>
+            <div className="space-y-2 py-2">
+              <p role="alert" className="text-sm text-destructive">{getErrorMessage(documentsError)}</p>
+              <button
+                type="button"
+                onClick={() => void refetchDocuments()}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Retry
+              </button>
+            </div>
           ) : !documents?.length ? (
             <EmptyState
               illustration={

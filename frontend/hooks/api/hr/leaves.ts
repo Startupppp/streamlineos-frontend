@@ -69,15 +69,15 @@ function useInvalidateLeaveDashboard() {
 
   return function invalidateLeaveDashboard() {
     void qc.invalidateQueries({
-      queryKey: queryKeys.dashboard.leavesToday(orgId),
+      queryKey: queryKeys.dashboard.leavesToday(),
       exact: true,
     });
     void qc.invalidateQueries({
-      queryKey: queryKeys.dashboard.myLeaveBalance(orgId),
+      queryKey: queryKeys.dashboard.myLeaveBalance(),
       exact: true,
     });
     void qc.invalidateQueries({
-      queryKey: queryKeys.dashboard.pendingApprovals(orgId),
+      queryKey: queryKeys.dashboard.pendingApprovals(),
       exact: true,
     });
   };

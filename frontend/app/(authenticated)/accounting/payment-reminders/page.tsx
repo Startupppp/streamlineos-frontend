@@ -39,12 +39,7 @@ import {
 } from "@/hooks/api/accounting/ar";
 import type { ReminderPolicy, ReminderLogEntry } from "@/types/accounting/ar";
 import { ReminderPolicyDialog } from "@/features/accounting/sales/reminder-policy-dialog";
-
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
-}
+import { formatShortDate } from "@/lib/date-utils";
 
 function OffsetChips({ offsets }: { offsets: number[] }) {
   return (
@@ -144,14 +139,8 @@ function PoliciesTab({
   onEdit,
   onNew,
 }: PoliciesTabProps) {
-  const [page, setPage] = useState(1);
-  const query = useReminderPolicies({ page, pageSize: 20 });
+  const query = useReminderPolicies({ limit: 100 });
   const items = query.data?.items ?? [];
-  const total = query.data?.total ?? 0;
-
-  function handlePageChange(p: number): void {
-    setPage(p);
-  }
 
   const columns: DataTableColumn<ReminderPolicy>[] = [
     {
@@ -223,7 +212,7 @@ function PoliciesTab({
         columns={columns}
         getRowKey={(row) => row.id}
         isLoading={query.isLoading}
-        pagination={{ mode: "server", page, pageSize: 20, total, onPageChange: handlePageChange }}
+        pagination={{ pageSize: 20 }}
       />
       <ReminderPolicyDialog
         open={dialogOpen}
@@ -235,14 +224,8 @@ function PoliciesTab({
 }
 
 function LogTab() {
-  const [page, setPage] = useState(1);
-  const query = useReminderLog({ page, pageSize: 30 });
+  const query = useReminderLog({ limit: 100 });
   const items = query.data?.items ?? [];
-  const total = query.data?.total ?? 0;
-
-  function handlePageChange(p: number): void {
-    setPage(p);
-  }
 
   const columns: DataTableColumn<ReminderLogEntry>[] = [
     {
@@ -298,7 +281,7 @@ function LogTab() {
       header: "Sent at",
       cell: (row) => (
         <span className="text-sm tabular-nums text-muted-foreground">
-          {formatDate(row.sentAt)}
+          {formatShortDate(row.sentAt) || "—"}
         </span>
       ),
     },
@@ -323,7 +306,7 @@ function LogTab() {
       columns={columns}
       getRowKey={(row) => row.id}
       isLoading={query.isLoading}
-      pagination={{ mode: "server", page, pageSize: 30, total, onPageChange: handlePageChange }}
+      pagination={{ pageSize: 30 }}
     />
   );
 }

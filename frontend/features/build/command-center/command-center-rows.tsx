@@ -184,9 +184,9 @@ export const ProjectCard = memo(function ProjectCard({
           <div className="hidden shrink-0 items-center gap-1.5 sm:flex">
             <div className="h-1 w-14 overflow-hidden rounded-full bg-muted">
               <motion.div
-                className="h-full rounded-full bg-primary"
-                initial={shouldReduceMotion ? false : { width: 0 }}
-                animate={{ width: `${progress}%` }}
+                className="h-full w-full origin-left rounded-full bg-primary"
+                initial={shouldReduceMotion ? false : { scaleX: 0 }}
+                animate={{ scaleX: progress / 100 }}
                 transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: 0.12 }}
               />
             </div>

@@ -25,6 +25,7 @@ import {
   TABS_CONTENT_PAGE_BODY_CLASS,
 } from "@/components/ui/tabs";
 import { StateIllustration } from "@/components/illustrations";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembersByIds } from "@/hooks/api/organization";
 import { getUserDisplayName, type NamedUser } from "@/lib/person-display";
@@ -274,26 +275,13 @@ export function CasesPageContent() {
             getRowKey={(row) => row.id}
             onRowClick={(row) => setSelectedCaseId(row.id)}
             emptyState={
-              <div className="flex flex-col items-center justify-center gap-3 py-12">
-                <StateIllustration preset="ticket" className="h-28 w-28" />
-                <div className="text-center space-y-1">
-                  <p className="text-sm font-medium text-foreground">No cases found</p>
-                  <p className="text-xs text-muted-foreground">Report a grievance, harassment incident, or policy violation to open a case.</p>
-                </div>
-                {canManage && (
-                  <AnimatedIconButton
-                    icon={PlusIcon}
-                    iconSize={14}
-                    iconClassName="mr-1.5"
-                    size="sm"
-                    variant="outline"
-                    className="mt-1 gap-1.5 text-sm"
-                    onClick={() => setShowNew(true)}
-                  >
-                    New Case
-                  </AnimatedIconButton>
-                )}
-              </div>
+              <EmptyState
+                className="border-0 bg-transparent min-h-[40vh]"
+                illustration={<StateIllustration preset="ticket" className="h-28 w-28" />}
+                title="No cases found"
+                description="Report a grievance, harassment incident, or policy violation to open a case."
+                action={canManage ? { label: "New Case", onClick: () => setShowNew(true) } : undefined}
+              />
             }
           />
         </TabsContent>
@@ -348,26 +336,13 @@ export function CasesPageContent() {
               isLoading={discLoading}
               getRowKey={(row) => row.id}
               emptyState={
-                <div className="flex flex-col items-center justify-center gap-3 py-12">
-                  <StateIllustration preset="security" className="h-28 w-28" />
-                  <div className="text-center space-y-1">
-                    <p className="text-sm font-medium text-foreground">No disciplinary actions</p>
-                    <p className="text-xs text-muted-foreground">Formal disciplinary actions issued to employees will appear here.</p>
-                  </div>
-                  {canManage && (
-                    <AnimatedIconButton
-                      icon={PlusIcon}
-                      iconSize={14}
-                      iconClassName="mr-1.5"
-                      size="sm"
-                      variant="outline"
-                      className="mt-1 gap-1.5 text-sm"
-                      onClick={() => setShowWarning(true)}
-                    >
-                      Issue Action
-                    </AnimatedIconButton>
-                  )}
-                </div>
+                <EmptyState
+                  className="border-0 bg-transparent min-h-[40vh]"
+                  illustration={<StateIllustration preset="security" className="h-28 w-28" />}
+                  title="No disciplinary actions"
+                  description="Formal disciplinary actions issued to employees will appear here."
+                  action={canManage ? { label: "Issue Action", onClick: () => setShowWarning(true) } : undefined}
+                />
               }
             />
           </div>

@@ -233,7 +233,7 @@ export function TeamPayrollPageContent() {
           <EmptyState
             title="No direct reports"
             description="People who report to you (reporting manager) will appear here with payroll signals."
-            action={{ label: "My payroll", href: "/payroll/me" }}
+            action={{ label: "My payroll", href: "/me/pay" }}
           />
         ) : (
           <>

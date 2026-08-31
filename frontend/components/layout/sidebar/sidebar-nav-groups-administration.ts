@@ -46,9 +46,9 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
       {
         label: "Directory",
         icon: Contact2,
-        href: "/settings/directory",
+        href: "/directory/settings",
         exact: true,
-        activePrefixes: ["/settings/directory/"],
+        activePrefixes: ["/directory/settings/"],
         requiredPermission: "directory:people:view",
       },
       {

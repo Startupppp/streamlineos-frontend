@@ -13,7 +13,7 @@ export const businessUnitFormSchema = z.object({
   code: z
     .string()
     .trim()
-    .min(2, "Code must be 2â€“20 characters")
+    .min(2, "Code must be 2—20 characters")
     .max(20)
     .regex(/^[A-Za-z0-9]+$/, "Only alphanumeric characters"),
   description: z.string().trim().max(500).optional(),

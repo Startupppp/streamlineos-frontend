@@ -1,14 +1,13 @@
 "use client";
 
 import { format } from "date-fns";
-import { Sheet, SheetBody, SheetContent, SheetHeader } from "@/components/ui/sheet";
+import { Sheet, SheetBody, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays } from "lucide-react";
 import { HR_CALENDAR_TYPE_LABELS, HR_CALENDAR_TYPE_COLORS } from "@/hooks/api/hr/hr-calendar";
 import type { HrCalendarEventType } from "@/hooks/api/hr/hr-calendar";
 import { cn } from "@/lib/utils";
-import { TruncatedText } from "@/components/ui/truncated-text";
 import type { BigCalEvent } from "./big-calendar-wrapper";
 
 interface HrEventDetailSheetProps {
@@ -23,7 +22,7 @@ export function HrEventDetailSheet({ event, onClose }: HrEventDetailSheetProps) 
     <Sheet open={event !== null} onOpenChange={onClose}>
       <SheetContent side="right" className="w-full sm:max-w-sm p-0 flex flex-col">
         <SheetHeader className="px-5 py-4 border-b shrink-0">
-          <TruncatedText text={event?.title ?? ""} className="text-base font-semibold leading-snug" />
+          <SheetTitle className="text-base font-semibold leading-snug truncate">{event?.title ?? ""}</SheetTitle>
           {type && (
             <Badge
               variant="outline"

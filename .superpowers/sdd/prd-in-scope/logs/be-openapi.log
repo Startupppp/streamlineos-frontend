@@ -1,0 +1,10 @@
+
+> streamlineos-api@0.1.0 openapi:check D:\projects\personal\Streamlineos\backend
+> node --max-old-space-size=8192 --env-file-if-exists=.env -r ts-node/register/transpile-only src/scripts/check-openapi-fresh.ts
+
+openapi.json is STALE. Run: pnpm openapi:generate
+  changed GET /workflows
+  changed GET /workflows/{workflowId}/executions
+  changed GET /workflows/executions
+  changed POST /organization
+ ELIFECYCLE  Command failed with exit code 1.

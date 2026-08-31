@@ -22,7 +22,7 @@ import {
   TabsTrigger,
   TABS_CONTENT_PAGE_BODY_CLASS,
 } from "@/components/ui/tabs";
-import { staggerContainer } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -60,6 +60,7 @@ function AnnouncementsBody({
   onDelete: (id: number) => void;
   onMarkRead: (id: number) => void;
 }) {
+  const { staggerContainer } = useMotionVariants();
   if (isLoading) {
     return (
       <div className={PAGE_BODY_SKELETON_CLASS}>

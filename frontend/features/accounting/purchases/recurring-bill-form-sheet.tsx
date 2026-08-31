@@ -58,8 +58,8 @@ export function RecurringBillFormSheet({
   const isEdit = Boolean(template);
   const createMutation = useCreateRecurringBill();
   const updateMutation = useUpdateRecurringBill(template?.id ?? 0);
-  const vendorsQuery = useVendorsOutstanding({ pageSize: 200 });
-  const vendors = vendorsQuery.data?.items ?? [];
+  const vendorsQuery = useVendorsOutstanding({ limit: 200 });
+  const vendors = vendorsQuery.data?.data ?? [];
 
   const firstItem = template?.payload?.items?.[0];
 

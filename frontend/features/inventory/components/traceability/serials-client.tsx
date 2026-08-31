@@ -23,7 +23,7 @@ import {
   EmptyProductsIllustration,
   EmptySearchIllustration,
 } from "@/components/illustrations";
-import { fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useSerials } from "@/hooks/api/inventory/traceability";
 import {
@@ -129,6 +129,7 @@ const SERIALS_COLUMNS: DataTableColumn<SerialItem>[] = [
 
 export function SerialsClient() {
   const canView = useCan("inventory:stock:read");
+  const { fadeUp } = useMotionVariants();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("ALL");
   const [search, setSearch] = useState("");
@@ -159,18 +160,20 @@ export function SerialsClient() {
     setPage(1);
   }
 
+  function handleClearFilters(): void {
+    setSearch("");
+    setStatus("ALL");
+    setPage(1);
+  }
+
   const emptyState = (
     <motion.div variants={fadeUp} initial="hidden" animate="visible">
       <InventoryEmptyState
-        illustration={
-          hasFilters ? <EmptySearchIllustration /> : <EmptyProductsIllustration />
-        }
-        title={hasFilters ? "No serials match your filters" : "No serial numbers found"}
-        description={
-          hasFilters
-            ? "Try adjusting your search or filters."
-            : "Serial numbers will appear here once items with serial tracking are received."
-        }
+        illustration={<EmptyProductsIllustration />}
+        title="No serial numbers found"
+        description={hasFilters ? undefined : "Serial numbers will appear here once items with serial tracking are received."}
+        filtersActive={hasFilters}
+        onClearFilters={handleClearFilters}
         className="flex-1"
       />
     </motion.div>

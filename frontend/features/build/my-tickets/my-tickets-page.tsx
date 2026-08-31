@@ -224,24 +224,13 @@ export function MyTicketsPage({ params }: PageProps) {
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col overflow-hidden">
           {filteredTickets.length === 0 ? (
             <EmptyState
-                className={cn(PM_FILL_PANEL, "mb-0 mt-2")}
-                illustrationPreset="ticket"
-                title={
-                  myTickets.length === 0
-                    ? "No tickets assigned to you"
-                    : "No tickets match your filters"
-                }
-                description={
-                  myTickets.length === 0
-                    ? "Tickets you create or get assigned to will appear here."
-                    : "Try adjusting or clearing your filters."
-                }
-                action={
-                  hasActiveFilters && myTickets.length > 0
-                    ? { label: "Clear filters", onClick: handleClearFilters }
-                    : undefined
-                }
-              />
+              className={cn(PM_FILL_PANEL, "mb-0 mt-2")}
+              illustrationPreset="ticket"
+              title="No tickets assigned to you"
+              description={hasActiveFilters && myTickets.length > 0 ? undefined : "Tickets you create or get assigned to will appear here."}
+              filtersActive={hasActiveFilters && myTickets.length > 0}
+              onClearFilters={handleClearFilters}
+            />
           ) : (
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
               <MyTicketsViewBody

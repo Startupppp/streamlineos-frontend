@@ -12,6 +12,7 @@ import {
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
+import { formatINR } from "@/lib/format-utils";
 import { useAllOffers, type OfferListItem } from "@/hooks/api/hr/recruitment/offers";
 import { ErrorState } from "@/components/shared/error-state";
 import { DataTablePagination } from "@/components/shared/data-table-pagination";
@@ -30,11 +31,6 @@ const STATUS_CONFIG: Record<OfferListItem["offerStatus"], { label: string; varia
   EXPIRED: { label: "Expired", variant: "destructive" },
 };
 
-function formatINR(val: string | null) {
-  if (!val) return "—";
-  return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Number(val));
-}
-
 function OfferRow({ offer }: { offer: OfferListItem }) {
   const cfg = STATUS_CONFIG[offer.offerStatus] ?? STATUS_CONFIG.DRAFT;
   return (
@@ -50,7 +46,7 @@ function OfferRow({ offer }: { offer: OfferListItem }) {
             <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
               <span>{offer.candidateEmail}</span>
               {offer.offeredDesignation && <span>{offer.offeredDesignation}</span>}
-              <span>{formatINR(offer.offeredSalary)}</span>
+              <span>{offer.offeredSalary ? formatINR(offer.offeredSalary) : "—"}</span>
               <span>Created {format(new Date(offer.createdAt), "MMM d, yyyy")}</span>
             </div>
           </div>

@@ -452,7 +452,7 @@ export function OrgDangerZoneSection({ org }: Props) {
                 none remain, you will be taken to organization setup.
               </div>
               <div className="space-y-2 py-2">
-                <Label className="text-sm">
+                <Label htmlFor="delete-confirmation" className="text-sm">
                   Type{" "}
                   <span className="font-mono font-semibold">
                     {deleteMatchValue}
@@ -460,6 +460,7 @@ export function OrgDangerZoneSection({ org }: Props) {
                   to confirm
                 </Label>
                 <Input
+                  id="delete-confirmation"
                   value={deleteConfirmation}
                   onChange={handleDeleteConfirmationChange}
                   placeholder={deleteMatchValue}

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
+import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -21,19 +22,20 @@ function friendlyAction(action: string): string {
 }
 
 export function UserAuditTab({ userId }: UserAuditTabProps) {
-  const [page, setPage] = useState(1);
-  const { data, isLoading, error, refetch } = useUserAuditLog(userId, { page, limit: 15 });
+  // The audit log is append-only and written to while it is read, so it walks a
+  // cursor: there is no page count because the server is never asked to count it.
+  const { cursor, pageNumber, hasPrevious, goNext, goPrevious } = useCursorPagination();
+  const { data, isLoading, error, refetch } = useUserAuditLog(userId, {
+    ...(cursor !== undefined ? { cursor } : {}),
+    limit: 15,
+  });
 
   const entries = data?.data ?? [];
   const pagination = data?.pagination;
 
-  const handlePagePrev = useCallback(() => {
-    setPage((p) => Math.max(1, p - 1));
-  }, []);
-
-  const handlePageNext = useCallback((totalPages: number) => {
-    setPage((p) => Math.min(totalPages, p + 1));
-  }, []);
+  const handlePageNext = useCallback(() => {
+    goNext(pagination?.nextCursor ?? null);
+  }, [goNext, pagination?.nextCursor]);
 
   const handleRetry = useCallback(() => {
     void refetch();
@@ -97,26 +99,27 @@ export function UserAuditTab({ userId }: UserAuditTabProps) {
         ))}
       </div>
 
-      {pagination && pagination.totalPages > 1 && (
-        <div className="flex shrink-0 items-center justify-between text-xs text-muted-foreground pt-1">
-          <span>{pagination.total} events</span>
+      {pagination && (hasPrevious || pagination.hasMore) && (
+        <div className="flex shrink-0 items-center justify-end text-xs text-muted-foreground pt-1">
           <div className="flex items-center gap-1">
             <Button
               variant="outline"
               size="sm"
               className="h-7 w-7 p-0"
-              onClick={handlePagePrev}
-              disabled={page === 1}
+              onClick={goPrevious}
+              disabled={!hasPrevious}
+              aria-label="Previous page"
             >
               <ChevronLeft className="h-3.5 w-3.5" />
             </Button>
-            <span className="px-1">{page} / {pagination.totalPages}</span>
+            <span className="px-1 tabular-nums">Page {pageNumber}</span>
             <Button
               variant="outline"
               size="sm"
               className="h-7 w-7 p-0"
-              onClick={() => handlePageNext(pagination.totalPages)}
-              disabled={page === pagination.totalPages}
+              onClick={handlePageNext}
+              disabled={!pagination.hasMore}
+              aria-label="Next page"
             >
               <ChevronRight className="h-3.5 w-3.5" />
             </Button>

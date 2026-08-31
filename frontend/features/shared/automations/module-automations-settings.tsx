@@ -37,10 +37,10 @@ import {
 } from "@/hooks/api/automations";
 import {
   TRIGGER_META,
-  ACTION_TYPES,
   NON_CRM_TRIGGER_META,
   getModuleForTrigger,
-} from "@/components/automations/automation-meta";
+} from "@/components/automations/automation-trigger-data";
+import { ACTION_TYPES } from "@/components/automations/automation-meta";
 import { AutomationBuilderSheet } from "@/components/automations/automation-builder-sheet";
 import { AutomationRunsDialog } from "@/components/automations/automation-runs-dialog";
 import { matchesOrgModule } from "@/lib/module-vocabulary";

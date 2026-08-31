@@ -17,7 +17,7 @@ import {
 import { ErrorState, NoPermissionState } from "@/components/shared";
 import { useCan } from "@/hooks/api/access";
 import { EmptyReportIllustration } from "@/components/illustrations";
-import { fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useExpiryItems } from "@/hooks/api/inventory/traceability";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -132,6 +132,7 @@ const EXPIRY_COLUMNS: DataTableColumn<ExpiryItem>[] = [
 
 export function ExpiryClient() {
   const canView = useCan("inventory:stock:read");
+  const { fadeUp } = useMotionVariants();
   const [days, setDays] = useState("30");
 
   const { data, isLoading, isError, refetch } = useExpiryItems({ withinDays: Number(days) });

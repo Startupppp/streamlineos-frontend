@@ -27,3 +27,12 @@ export interface PaginatedResponse<T> {
   limit: number;
   totalPages: number;
 }
+
+// `total` rides the first page only; later pages carry no count because the cursor already knows there is more.
+export interface CursorPaginatedResponse<T> {
+  data: T[];
+  total?: number;
+  limit: number;
+  nextCursor: string | null;
+  hasMore: boolean;
+}

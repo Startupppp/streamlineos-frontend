@@ -54,7 +54,6 @@ export function PmWorkspaceMembersSheet({ workspace, open, onOpenChange }: Props
   const [role, setRole] = useState<PmWorkspaceMemberRole>("member");
 
   const { data, isLoading, isError } = usePmWorkspaceMembers(pmWorkspaceId, {
-    page: 1,
     limit: 100,
   });
   const { data: orgMembersRes } = useOrgMembers(1, 100);

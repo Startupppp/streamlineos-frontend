@@ -1,0 +1,111 @@
+import { renderHook, act, waitFor } from "@testing-library/react";
+import React from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { PropsWithChildren } from "react";
+import { useNotificationEvents } from "./use-notification-events";
+
+const mockConsumeStream = jest.fn();
+
+jest.mock("./notification-event-stream", () => ({
+  consumeNotificationStream: (
+    url: string,
+    token: string,
+    signal: AbortSignal,
+    onNotification: () => void,
+  ) => mockConsumeStream(url, token, signal, onNotification),
+}));
+
+const useSessionMock = jest.fn();
+jest.mock("next-auth/react", () => ({
+  useSession: () => useSessionMock(),
+}));
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ push: jest.fn() }),
+}));
+
+function makeWrapper() {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return function Wrapper({ children }: PropsWithChildren) {
+    return React.createElement(QueryClientProvider, { client: qc }, children);
+  };
+}
+
+/**
+ * Bite-prove: if `orgId` is removed from the useEffect dependency array in
+ * use-notification-events.ts, the cleanup never runs on org switch, the first
+ * signal stays unaborted, and the assertion `firstSignal.aborted === true` fails.
+ */
+describe("useNotificationEvents org-switch stream teardown", () => {
+  let savedFetch: typeof global.fetch;
+
+  beforeEach(() => {
+    savedFetch = global.fetch;
+
+    let tokenSeq = 0;
+    global.fetch = jest.fn().mockImplementation((url: string) => {
+      if (String(url).includes("/api/auth/session")) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ backendJwt: "jwt-test" }),
+        });
+      }
+      tokenSeq += 1;
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ token: `stream-token-${tokenSeq}` }),
+      });
+    }) as typeof global.fetch;
+
+    mockConsumeStream.mockImplementation(
+      (_url: string, _token: string, signal: AbortSignal) =>
+        new Promise<void>((resolve) => {
+          signal.addEventListener("abort", () => resolve());
+        }),
+    );
+
+    useSessionMock.mockReturnValue({
+      data: { orgId: "org-alpha", backendJwt: "jwt-test" },
+      status: "authenticated",
+    });
+  });
+
+  afterEach(() => {
+    global.fetch = savedFetch;
+    mockConsumeStream.mockClear();
+    useSessionMock.mockClear();
+  });
+
+  it("aborts the org-alpha stream when switching to org-beta and opens a new one", async () => {
+    const { rerender } = renderHook(() => useNotificationEvents(), {
+      wrapper: makeWrapper(),
+    });
+
+    await waitFor(() => {
+      expect(mockConsumeStream).toHaveBeenCalledTimes(1);
+    });
+
+    const firstSignal = (mockConsumeStream.mock.calls[0] as [string, string, AbortSignal])[2];
+    expect(firstSignal.aborted).toBe(false);
+
+    act(() => {
+      useSessionMock.mockReturnValue({
+        data: { orgId: "org-beta", backendJwt: "jwt-test" },
+        status: "authenticated",
+      });
+      rerender();
+    });
+
+    await waitFor(() => {
+      expect(firstSignal.aborted).toBe(true);
+    });
+
+    await waitFor(() => {
+      expect(mockConsumeStream).toHaveBeenCalledTimes(2);
+    });
+
+    const secondSignal = (mockConsumeStream.mock.calls[1] as [string, string, AbortSignal])[2];
+    expect(secondSignal).not.toBe(firstSignal);
+    expect(secondSignal.aborted).toBe(false);
+  });
+});

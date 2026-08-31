@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useVaultAccessLogs } from "@/hooks/api/hr/recruitment";
-import { useSession } from "next-auth/react";
+import { useCan } from "@/hooks/api/access";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface VaultAccessLogProps {
@@ -14,9 +14,7 @@ interface VaultAccessLogProps {
 }
 
 export function VaultAccessLog({ candidateId }: VaultAccessLogProps) {
-  const { data: session } = useSession();
-  const role = session?.user?.role as string | undefined;
-  const isHr = role && ["FINAL", "HR", "ADMIN"].includes(role);
+  const isHr = useCan("hr:employees:manage");
 
   const { data: logs, isLoading } = useVaultAccessLogs(isHr ? candidateId : 0);
 

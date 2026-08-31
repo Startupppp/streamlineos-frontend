@@ -168,22 +168,13 @@ export function DealList({
   if (rows.length === 0)
     return (
       <EmptyState
-          access={access}
+        access={access}
         illustration={<EmptyDealsIllustration />}
-        title={isFiltered ? "No deals match these filters" : "No deals yet"}
-        description={
-          isFiltered
-            ? `Filtering by ${activeFilterLabels.join(", ")}. Clear the filters to see every deal.`
-            : "A deal tracks one opportunity through your pipeline — its value, stage and close date. Create one to start forecasting."
-        }
-        action={
-          isFiltered
-            ? { label: "Clear filters", onClick: onClearFilters }
-            : canCreate
-              ? { label: "New deal", onClick: onCreateDeal }
-              : undefined
-        }
-        actionVariant={isFiltered ? "outline" : undefined}
+        title="No deals yet"
+        description={isFiltered ? undefined : "A deal tracks one opportunity through your pipeline — its value, stage and close date. Create one to start forecasting."}
+        filtersActive={isFiltered}
+        onClearFilters={onClearFilters}
+        action={!isFiltered && canCreate ? { label: "New deal", onClick: onCreateDeal } : undefined}
         className={CONTENT_FILL_PANEL}
       />
     );

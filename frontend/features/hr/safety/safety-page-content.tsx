@@ -15,6 +15,7 @@ import {
 import { DataTable } from "@/components/ui/data-table";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
+import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { useCan } from "@/hooks/api/access";
@@ -267,23 +268,13 @@ export function SafetyPageContent() {
             isLoading={isLoading}
             getRowKey={(row) => row.id}
             emptyState={
-              <div className="flex flex-col items-center justify-center gap-3 py-12">
-                <StateIllustration preset="alert" className="h-28 w-28" />
-                <div className="text-center space-y-1">
-                  <p className="text-sm font-medium text-foreground">No safety incidents reported</p>
-                  <p className="text-xs text-muted-foreground">Report workplace incidents, accidents, near-misses, and hazards here.</p>
-                </div>
-                <AnimatedIconButton
-                  icon={PlusIcon}
-                  iconSize={14}
-                  iconClassName="mr-1.5"
-                  size="sm"
-                  className="mt-1 gap-1.5 h-8 text-sm"
-                  onClick={() => setShowReport(true)}
-                >
-                  Report Incident
-                </AnimatedIconButton>
-              </div>
+              <EmptyState
+                className="border-0 bg-transparent min-h-[40vh]"
+                illustration={<StateIllustration preset="alert" className="h-28 w-28" />}
+                title="No safety incidents reported"
+                description="Report workplace incidents, accidents, near-misses, and hazards here."
+                action={{ label: "Report Incident", onClick: () => setShowReport(true) }}
+              />
             }
           />
         )}

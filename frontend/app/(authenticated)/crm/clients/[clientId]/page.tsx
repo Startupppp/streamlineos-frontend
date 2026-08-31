@@ -2,7 +2,7 @@
 
 import { use, useCallback } from "react";
 import Link from "next/link";
-import { useReducedMotion, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   ExternalLink,
   CheckSquare,
@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
 import { useClientAccount } from "@/hooks/api/crm/clients";
 import { useClient360 } from "@/hooks/api/crm";
@@ -59,7 +59,7 @@ export default function ClientDetailPage({
 
   const { data: client360, isLoading: client360Loading } = useClient360(clientId);
 
-  const shouldReduceMotion = useReducedMotion();
+  const { staggerContainer, fadeUp } = useMotionVariants();
   const handleRetry = useCallback(() => void refetch(), [refetch]);
 
   if (isLoading) {
@@ -157,12 +157,12 @@ export default function ClientDetailPage({
     >
       <motion.div
         className="space-y-4"
-        variants={shouldReduceMotion ? { hidden: {}, visible: {} } : staggerContainer}
+        variants={staggerContainer}
         initial="hidden"
         animate="visible"
       >
         <motion.div
-          variants={shouldReduceMotion ? { hidden: { opacity: 0 }, visible: { opacity: 1 } } : fadeUp}
+          variants={fadeUp}
         >
           <Tabs defaultValue="overview">
             <TabsList className="mb-4">

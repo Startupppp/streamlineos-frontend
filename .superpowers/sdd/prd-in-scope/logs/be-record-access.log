@@ -1,0 +1,13 @@
+
+> streamlineos-api@0.1.0 check:record-access D:\projects\personal\Streamlineos\backend
+> node src/scripts/check-record-access.mjs
+
+findFirst calls        1135
+  record reads         555
+  conflict checks      64
+  other                516
+
+PURGE READS — named, not hidden in an allowlist:
+  SKIP  src/modules/kb/wiki/kb-page-tree.service.ts:204  kbPages  — hardDelete reads the page in order to purge it; excluding deleted rows would make a deleted page unpurgeable
+
+OK — every record read excludes soft-deleted rows.

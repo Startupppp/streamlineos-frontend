@@ -1,55 +1,61 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+  type InfiniteData,
+} from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
-import type { PeriodStatus, TimesheetPeriod } from "@/features/timesheets/types";
-
-export interface ApprovalsPage {
-  data: TimesheetPeriod[];
-  pagination: { page: number; limit: number; total: number };
-}
+import type { CursorPage, PeriodStatus, TimesheetPeriod } from "@/features/timesheets/types";
 
 interface ApprovalsQuery {
   status?: PeriodStatus;
   userId?: string;
   startDate?: string;
   endDate?: string;
-  page?: number;
   limit?: number;
 }
 
 export function useApprovals(query: ApprovalsQuery = {}, enabled = true) {
   const canView = useCan("timesheets:approvals:view");
-  const params = {
+  const filters = {
     status: query.status,
     userId: query.userId,
     startDate: query.startDate,
     endDate: query.endDate,
-    page: query.page,
-    limit: query.limit,
+    limit: query.limit ?? 50,
   };
-  return useQuery({
-    queryKey: queryKeys.timesheets.approvals(params),
-    queryFn: () => apiClient.get<ApprovalsPage>("/timesheets/approvals", params),
+  return useInfiniteQuery<CursorPage<TimesheetPeriod>>({
+    queryKey: queryKeys.timesheets.approvals(filters),
+    queryFn: ({ pageParam }) => {
+      const params: Record<string, unknown> = { ...filters };
+      if (typeof pageParam === "string") params.cursor = pageParam;
+      return apiClient.get<CursorPage<TimesheetPeriod>>("/timesheets/approvals", params);
+    },
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     staleTime: 60_000,
-    placeholderData: (prev) => prev,
     enabled: enabled && canView,
   });
 }
 
-function patchPeriodInPages(
-  prev: ApprovalsPage | undefined,
+function patchPeriodAcrossPages(
+  prev: InfiniteData<CursorPage<TimesheetPeriod>> | undefined,
   periodId: number,
   patch: Partial<TimesheetPeriod>,
-): ApprovalsPage | undefined {
+): InfiniteData<CursorPage<TimesheetPeriod>> | undefined {
   if (!prev) return prev;
   return {
     ...prev,
-    data: prev.data.map((p) => (p.id === periodId ? { ...p, ...patch } : p)),
+    pages: prev.pages.map((page) => ({
+      ...page,
+      data: page.data.map((p) => (p.id === periodId ? { ...p, ...patch } : p)),
+    })),
   };
 }
 
@@ -61,13 +67,13 @@ export function useApprovePeriod() {
       apiClient.post<TimesheetPeriod>(`/timesheets/approvals/${periodId}/approve`),
     onMutate: async (periodId) => {
       await qc.cancelQueries({ queryKey: queryKeys.timesheets.approvals() });
-      const snapshots = qc.getQueriesData<ApprovalsPage>({
+      const snapshots = qc.getQueriesData<InfiniteData<CursorPage<TimesheetPeriod>>>({
         queryKey: queryKeys.timesheets.approvals(),
       });
-      qc.setQueriesData<ApprovalsPage>(
+      qc.setQueriesData<InfiniteData<CursorPage<TimesheetPeriod>>>(
         { queryKey: queryKeys.timesheets.approvals() },
         (prev) =>
-          patchPeriodInPages(prev, periodId, {
+          patchPeriodAcrossPages(prev, periodId, {
             status: "APPROVED",
             approvedAt: new Date().toISOString(),
           }),
@@ -75,11 +81,8 @@ export function useApprovePeriod() {
       return { snapshots };
     },
     onError: (error, _vars, ctx) => {
-      if (ctx?.snapshots) {
-        for (const [key, data] of ctx.snapshots) {
-          qc.setQueryData(key, data);
-        }
-      }
+      if (ctx?.snapshots)
+        for (const [key, data] of ctx.snapshots) qc.setQueryData(key, data);
       toast.error(getErrorMessage(error));
     },
     onSuccess: () => {
@@ -100,13 +103,13 @@ export function useRejectPeriod() {
       apiClient.post<TimesheetPeriod>(`/timesheets/approvals/${periodId}/reject`, { reason }),
     onMutate: async ({ periodId, reason }) => {
       await qc.cancelQueries({ queryKey: queryKeys.timesheets.approvals() });
-      const snapshots = qc.getQueriesData<ApprovalsPage>({
+      const snapshots = qc.getQueriesData<InfiniteData<CursorPage<TimesheetPeriod>>>({
         queryKey: queryKeys.timesheets.approvals(),
       });
-      qc.setQueriesData<ApprovalsPage>(
+      qc.setQueriesData<InfiniteData<CursorPage<TimesheetPeriod>>>(
         { queryKey: queryKeys.timesheets.approvals() },
         (prev) =>
-          patchPeriodInPages(prev, periodId, {
+          patchPeriodAcrossPages(prev, periodId, {
             status: "REJECTED",
             rejectedAt: new Date().toISOString(),
             rejectionReason: reason,
@@ -115,11 +118,8 @@ export function useRejectPeriod() {
       return { snapshots };
     },
     onError: (error, _vars, ctx) => {
-      if (ctx?.snapshots) {
-        for (const [key, data] of ctx.snapshots) {
-          qc.setQueryData(key, data);
-        }
-      }
+      if (ctx?.snapshots)
+        for (const [key, data] of ctx.snapshots) qc.setQueryData(key, data);
       toast.error(getErrorMessage(error));
     },
     onSuccess: () => {

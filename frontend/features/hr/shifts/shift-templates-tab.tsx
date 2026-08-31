@@ -131,7 +131,7 @@ export function ShiftTemplatesTab({ canManage, onEdit }: Props) {
         title="Delete shift template?"
         description={
           pendingDelete
-            ? `Delete “${pendingDelete.name}”? This cannot be undone and may affect related assignments.`
+            ? `Delete "${pendingDelete.name}"? This cannot be undone and may affect related assignments.`
             : "Delete this shift template?"
         }
         confirmLabel="Delete"

@@ -1,0 +1,5 @@
+
+> streamlineos-api@0.1.0 check:migration-chain D:\projects\personal\Streamlineos\backend
+> node --env-file-if-exists=.env src/scripts/verify-migration-chain.mjs
+
+PASS  migration chain verified — no issues found

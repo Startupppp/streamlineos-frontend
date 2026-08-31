@@ -1,0 +1,41 @@
+"use client";
+
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useHrForm } from "@/features/hr/forms/hooks/use-hr-forms";
+import { useHrFormSubmissions } from "@/features/hr/forms/hooks/use-hr-form-submissions";
+import { SubmissionsDataTable } from "@/features/hr/forms/components/submissions-data-table";
+
+interface HrFormSubmissionsContentProps {
+  formId: number;
+}
+
+export function HrFormSubmissionsContent({ formId }: HrFormSubmissionsContentProps) {
+  const { data: form, isLoading: formLoading } = useHrForm(formId);
+  const { data: subs, isLoading: subsLoading } = useHrFormSubmissions(formId);
+  const isLoading = formLoading || subsLoading;
+
+  return (
+    <PageWrapper
+      title={form ? `${form.name} — Submissions` : "Submissions"}
+      subtitle={`${subs?.total ?? 0} total submissions`}
+      backHref={`/hr/settings/forms/${formId}`}
+    >
+      {isLoading ? (
+        <div className="flex flex-1 min-h-0 flex-col gap-2 pt-2">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full rounded-lg" />
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-1 min-h-0 flex-col pt-2">
+          <SubmissionsDataTable
+            formId={formId}
+            submissions={subs?.data ?? []}
+            canManage
+          />
+        </div>
+      )}
+    </PageWrapper>
+  );
+}

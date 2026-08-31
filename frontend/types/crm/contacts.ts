@@ -51,15 +51,17 @@ export interface Contact {
 
 export interface ContactFilters {
   search?: string;
-  source?: string;
   organizationId?: number;
   limit?: number;
-  offset?: number;
+  cursor?: string;
 }
 
 export interface PaginatedContacts {
   items: Contact[];
-  total: number;
+  /** Absent on a keyset walk; the endpoint only counts when it cheaply can. */
+  total?: number;
+  hasMore: boolean;
+  nextCursor: string | null;
 }
 
 export interface CreateContactInput {
@@ -73,11 +75,9 @@ export interface CreateContactInput {
   linkedinUrl?: string;
   twitterUrl?: string;
   websiteUrl?: string;
+  notes?: string | null;
   leadId?: number;
   dealId?: number;
-  source?: string;
-  status?: string;
-  notes?: string;
   tags?: string[];
 }
 
@@ -94,10 +94,8 @@ export interface UpdateContactInput {
   twitterUrl?: string | null;
   websiteUrl?: string | null;
   avatarUrl?: string | null;
-  source?: string | null;
-  status?: string | null;
-  notes?: string | null;
   tags?: string[];
+  notes?: string | null;
 }
 
 export interface OrgHierarchyNode {
@@ -127,9 +125,14 @@ export interface OrgTimelineEvent {
 
 export interface PaginatedCrmOrganizations {
   organizations: CrmOrganization[];
-  totalCount: number;
-  page: number;
-  totalPages: number;
+  hasMore: boolean;
+  nextCursor: string | null;
+  totalCount?: number;
+}
+
+export interface BuildCustomersPage {
+  data: CrmOrganization[];
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
 export interface CrmOrganizationFilters {

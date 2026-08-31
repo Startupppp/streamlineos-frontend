@@ -7,8 +7,8 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTable, type DataTableColumn, DataTableSkeleton } from "@/components/ui/data-table";
+
 import { ErrorState, NoPermissionState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
@@ -19,6 +19,7 @@ import { LOT_STATUS_BADGE, LOT_STATUS_LABEL, type LotStatus, downloadCsv } from 
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
+import { formatShortDate } from "@/lib/date-utils";
 
 const LIMIT = 50;
 
@@ -36,11 +37,6 @@ const LOT_STATUS_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
   { value: "BLOCKED", label: "Blocked" },
   { value: "RECALLED", label: "Recalled" },
 ];
-
-function formatDate(value: string): string {
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
-}
 
 function DaysUntilExpiryCell({ days }: { days: number }) {
   if (days <= 0) {
@@ -99,7 +95,7 @@ function buildColumns(): DataTableColumn<ExpiryReportRow>[] {
     {
       key: "expiryDate",
       header: "Expiry Date",
-      cell: (row) => <span className="text-dense">{formatDate(row.expiryDate)}</span>,
+      cell: (row) => <span className="text-dense">{formatShortDate(row.expiryDate) || ""}</span>,
       sortable: true,
       sortValue: (row) => row.expiryDate,
     },
@@ -129,7 +125,7 @@ function exportToCsv(rows: ExpiryReportRow[]): void {
       r.productName,
       r.variantSku,
       parseFloat(r.totalOnHand),
-      formatDate(r.expiryDate),
+      formatShortDate(r.expiryDate) || "",
       r.daysUntilExpiry <= 0 ? "Expired" : r.daysUntilExpiry,
       LOT_STATUS_LABEL[r.status as LotStatus] ?? r.status,
     ]),

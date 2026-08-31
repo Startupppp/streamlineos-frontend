@@ -85,9 +85,10 @@ export function DeviceSelector({
         <div className="mb-3">
           <div className="flex items-center gap-1.5 mb-1.5">
             <Mic className="h-3 w-3 text-muted-foreground" />
-            <label className="text-dense font-medium text-muted-foreground">Microphone</label>
+            <label htmlFor="device-audio-input" className="text-dense font-medium text-muted-foreground">Microphone</label>
           </div>
           <select
+            id="device-audio-input"
             value={selectedAudioInput}
             onChange={handleInputChange}
             className={cn(
@@ -107,9 +108,10 @@ export function DeviceSelector({
         <div className="mb-3">
           <div className="flex items-center gap-1.5 mb-1.5">
             <Speaker className="h-3 w-3 text-muted-foreground" />
-            <label className="text-dense font-medium text-muted-foreground">Speaker</label>
+            <label htmlFor="device-audio-output" className="text-dense font-medium text-muted-foreground">Speaker</label>
           </div>
           <select
+            id="device-audio-output"
             value={selectedAudioOutput}
             onChange={handleOutputChange}
             className={cn(

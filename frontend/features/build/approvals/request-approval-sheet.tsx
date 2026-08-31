@@ -154,7 +154,7 @@ function useEntityItems(projectId: number, entityType: ApprovalEntityType) {
 
   if (entityType === "timesheet") {
     return {
-      items: (timesheetData ?? []).map((entry): EntityItem => ({
+      items: (timesheetData?.data ?? []).map((entry): EntityItem => ({
         value: String(entry.id),
         label: `${entry.date} — ${entry.description ?? entry.ticket?.title ?? "(no description)"}`,
         sublabel: `${entry.hours}h · ${entry.status}`,

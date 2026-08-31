@@ -57,8 +57,8 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
   const confirmMatch = useConfirmMatch(bankAccountId);
   const unmatch = useUnmatch(bankAccountId);
   const ignoreTransaction = useIgnoreTransaction(bankAccountId);
-  const accountsQuery = useAccounts({ pageSize: 200 });
-  const ledgerAccounts = accountsQuery.data?.items ?? [];
+  const accountsQuery = useAccounts({ limit: 100 });
+  const ledgerAccounts = accountsQuery.data?.data ?? [];
 
   const amount = parseFloat(txn.amount);
   const isReconciled = txn.status === "RECONCILED" || txn.status === "MATCHED";
@@ -168,7 +168,8 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
           <p className="text-xs font-medium text-muted-foreground">Suggested matches</p>
           {suggestions.map((s, i) => {
             const Icon = MATCH_TYPE_ICONS[s.matchedType] ?? DollarSign;
-            const confidencePct = parseFloat(s.confidence);
+            const rawConfidence = parseFloat(s.confidence);
+            const confidencePct = Number.isFinite(rawConfidence) ? rawConfidence : null;
             const matchLabel = s.matchedType.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
             return (
               <div
@@ -189,13 +190,19 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
                   <Money value={parseFloat(s.amount)} />
                 </div>
                 <div className="flex items-center justify-end gap-2">
-                  <div className="h-1.5 w-16 rounded-full bg-muted overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-status-info-fill"
-                      style={{ width: `${confidencePct}%`, transition: "width 0.4s ease" }}
-                    />
-                  </div>
-                  <span className="text-micro text-muted-foreground">{confidencePct.toFixed(0)}%</span>
+                  {confidencePct !== null ? (
+                    <>
+                      <div className="h-1.5 w-16 rounded-full bg-muted overflow-hidden">
+                        <div
+                          className="h-full w-full origin-left rounded-full bg-status-info-fill"
+                          style={{ transform: `scaleX(${confidencePct / 100})`, transition: "transform 0.4s ease" }}
+                        />
+                      </div>
+                      <span className="text-micro text-muted-foreground">{confidencePct.toFixed(0)}%</span>
+                    </>
+                  ) : (
+                    <span className="text-micro text-muted-foreground">—</span>
+                  )}
                   <Button
                     size="sm"
                     className="h-6 text-dense px-2"

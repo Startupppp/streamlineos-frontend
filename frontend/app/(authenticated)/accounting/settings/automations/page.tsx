@@ -1,8 +1,8 @@
-"use client";
-
+import { requireSession } from "@/lib/rbac/require-permission";
 import { ModuleAutomationsSettings } from "@/features/shared/automations/module-automations-settings";
 
-export default function FinanceAutomationsPage() {
+export default async function FinanceAutomationsPage() {
+  await requireSession();
   return (
     <ModuleAutomationsSettings
       config={{

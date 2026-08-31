@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { Users, IndianRupee, Percent, Award, Target } from "lucide-react";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import type { LeadAnalyticsSummary } from "@/types/leads";
 import type { SalesDashboardKPIsResult } from "@/hooks/api/crm/analytics";
 
@@ -13,6 +13,7 @@ interface AnalyticsKpiCardsProps {
 }
 
 export function AnalyticsKpiCards({ analyticsSummary, kpis }: AnalyticsKpiCardsProps) {
+  const { fadeUp } = useMotionVariants();
   return (
     <motion.div variants={fadeUp}>
       <StatCardGrid cols={4}>

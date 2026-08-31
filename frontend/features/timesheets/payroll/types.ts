@@ -149,10 +149,12 @@ export interface CreateExportResponse {
 }
 
 export interface ExportHistoryResponse {
-  items: TimesheetExportDto[];
-  total: number;
-  page: number;
-  pageSize: number;
+  data: TimesheetExportDto[];
+  pagination: {
+    limit: number;
+    nextCursor: string | null;
+    hasMore: boolean;
+  };
 }
 
 export interface ExportRowsResponse {

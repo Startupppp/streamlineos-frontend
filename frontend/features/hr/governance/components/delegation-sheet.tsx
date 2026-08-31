@@ -39,6 +39,7 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useCan } from "@/hooks/api/access";
 import { useOrgDelegations, useGrantProxy, useRevokeProxy, type ProxyAccess } from "../hooks/use-delegations";
 import { useOrgMembers } from "@/hooks/api/organization";
@@ -186,19 +187,13 @@ export function DelegationSheet() {
         data={data?.data ?? []}
         getRowKey={(row) => row.id}
         emptyState={
-          <div className="flex flex-col items-center justify-center gap-3 py-12">
-            <StateIllustration preset="team" className="h-28 w-28" />
-            <div className="text-center space-y-1">
-              <p className="text-sm font-medium text-foreground">No proxy delegations configured</p>
-              <p className="text-xs text-muted-foreground">Grant proxy access to let another user act on your behalf during leave or absence.</p>
-            </div>
-            {canManage && (
-              <Button onClick={handleOpenSheet} size="sm" className="mt-1 bg-primary hover:bg-primary/90 text-primary-foreground">
-                <PlusIcon size={16} className="mr-1.5" />
-                Grant Proxy
-              </Button>
-            )}
-          </div>
+          <EmptyState
+            className="border-0 bg-transparent min-h-[40vh]"
+            illustration={<StateIllustration preset="team" className="h-28 w-28" />}
+            title="No proxy delegations configured"
+            description="Grant proxy access to let another user act on your behalf during leave or absence."
+            action={canManage ? { label: "Grant Proxy", onClick: handleOpenSheet } : undefined}
+          />
         }
         pagination={{ mode: "server", page, pageSize: 20, total: data?.total ?? 0, onPageChange: setPage }}
       />

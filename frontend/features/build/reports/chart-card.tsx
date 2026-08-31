@@ -2,6 +2,7 @@
 
 import { Gauge } from "lucide-react";
 import { PmPanel } from "@/features/build/shared/pm-chrome";
+import { formatNumber } from "@/lib/format-utils";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 
@@ -25,7 +26,7 @@ export const CHART_BLUE = {
   600: "#2563eb",
 } as const;
 
-export const numberFormatter = new Intl.NumberFormat("en-IN");
+export const numberFormatter = { format: (value: number) => formatNumber(value, "en-IN") };
 
 export function ChartCard({
   title,

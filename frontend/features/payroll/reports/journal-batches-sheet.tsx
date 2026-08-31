@@ -20,6 +20,7 @@ import { ConfirmWithReasonSheet } from "@/components/ui/confirm-with-reason-shee
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
+import { formatShortDate } from "@/lib/date-utils";
 import {
   useJournalBatches,
   useCreateJournalBatch,
@@ -47,14 +48,6 @@ const STATUS_TONE: Record<JournalBatchStatus, string> = {
     "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };
 
-function formatStamp(value: string | null): string {
-  if (!value) return "—";
-  return new Date(value).toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
 
 export function JournalBatchesSheet({ open, onOpenChange, month }: JournalBatchesSheetProps) {
   const canManage = useCan("payroll:accounting:manage");
@@ -202,8 +195,8 @@ export function JournalBatchesSheet({ open, onOpenChange, month }: JournalBatche
                           )}
                         </div>
                         <p className="mt-1 text-dense text-muted-foreground">
-                          {batch.lineCount} lines · created {formatStamp(batch.createdAt)}
-                          {batch.postedAt ? ` · posted ${formatStamp(batch.postedAt)}` : ""}
+                          {batch.lineCount} lines · created {formatShortDate(batch.createdAt)}
+                          {batch.postedAt ? ` · posted ${formatShortDate(batch.postedAt)}` : ""}
                         </p>
                       </div>
                       <div className="text-right">

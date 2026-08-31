@@ -7,13 +7,11 @@ import { parseView, type AllWorkView } from "./all-work-view-switcher";
 
 interface UseAllWorkFiltersReturn {
   view: AllWorkView;
-  page: number;
   scopeMine: boolean;
   filters: AllWorkFilters;
   hasActiveFilters: boolean;
   handleViewChange: (v: AllWorkView, onClearSelection?: () => void) => void;
   handleScopeToggle: () => void;
-  handlePageChange: (p: number) => void;
   handleClearFilters: () => void;
 }
 
@@ -24,7 +22,6 @@ export function useAllWorkFilters(): UseAllWorkFiltersReturn {
   const [, startTransition] = useTransition();
 
   const view = parseView(searchParams.get("view"));
-  const page = parseInt(searchParams.get("page") ?? "1", 10) || 1;
   const scopeParam = searchParams.get("scope");
   const scopeMine = scopeParam === "mine";
 
@@ -37,7 +34,6 @@ export function useAllWorkFilters(): UseAllWorkFiltersReturn {
         } else {
           params.delete(key);
         }
-        if (key !== "page") params.delete("page");
         router.replace(`${pathname}?${params.toString()}`, { scroll: false });
       });
     },
@@ -56,22 +52,8 @@ export function useAllWorkFilters(): UseAllWorkFiltersReturn {
     setParam("scope", scopeMine ? "" : "mine");
   }, [scopeMine, setParam]);
 
-  const handlePageChange = useCallback(
-    (p: number) => {
-      startTransition(() => {
-        const params = new URLSearchParams(searchParams.toString());
-        params.set("page", String(p));
-        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-      });
-    },
-    [router, pathname, searchParams]
-  );
-
   const filters = useMemo<AllWorkFilters>(() => {
-    const f: AllWorkFilters = {
-      page,
-      limit: 50,
-    };
+    const f: AllWorkFilters = { limit: 50 };
     const q = searchParams.get("q");
     if (q) f.search = q;
     const status = searchParams.get("status");
@@ -92,7 +74,7 @@ export function useAllWorkFilters(): UseAllWorkFiltersReturn {
     if (dueDateTo) f.dueDateTo = dueDateTo;
     if (scopeMine) f.scope = "mine";
     return f;
-  }, [searchParams, page, scopeMine]);
+  }, [searchParams, scopeMine]);
 
   const hasActiveFilters = useMemo(() => {
     const filterKeys = ["q", "status", "priority", "type", "assigneeId", "labels", "projectIds", "dueDateFrom", "dueDateTo"];
@@ -110,13 +92,11 @@ export function useAllWorkFilters(): UseAllWorkFiltersReturn {
 
   return {
     view,
-    page,
     scopeMine,
     filters,
     hasActiveFilters,
     handleViewChange,
     handleScopeToggle,
-    handlePageChange,
     handleClearFilters,
   };
 }

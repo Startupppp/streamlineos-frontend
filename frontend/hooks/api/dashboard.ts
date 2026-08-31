@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { homeSectionModule } from "@/lib/home/home-sections";
 import type {
   DashboardStats,
   RecentProject,
@@ -50,7 +51,7 @@ export const useDashboardStats = (
   const { data: session } = useSession();
   const orgId = session?.orgId ?? "";
   return useQuery<DashboardStats, Error>({
-    queryKey: queryKeys.dashboard.stats(orgId),
+    queryKey: queryKeys.dashboard.stats(),
     queryFn: () => apiClient.get<DashboardStats>("/dashboard/stats"),
     staleTime: 5 * 60 * 1000,
     ...options,
@@ -83,7 +84,7 @@ export const useTodayActivities = (
   const orgId = session?.orgId ?? "";
   const canView = useCan("crm:leads:view");
   return useQuery<ScheduledActivity[], Error>({
-    queryKey: [...queryKeys.dashboard.all, "todayActivities", orgId] as const,
+    queryKey: queryKeys.dashboard.todayActivities(),
     queryFn: () => apiClient.get<ScheduledActivity[]>("/dashboard/today-activities"),
     staleTime: 5 * 60 * 1000,
     ...options,
@@ -101,7 +102,7 @@ export const useRecentProjects = (
   const orgId = session?.orgId ?? "";
   const canView = useCan("build:tickets:view");
   return useQuery<RecentProject[], Error>({
-    queryKey: queryKeys.dashboard.recentProjects(orgId),
+    queryKey: queryKeys.dashboard.recentProjects(),
     queryFn: () => apiClient.get<RecentProject[]>("/dashboard/recent-projects"),
     staleTime: 5 * 60 * 1000,
     ...options,
@@ -119,7 +120,7 @@ export const useActiveSprintSummary = (
   const orgId = session?.orgId ?? "";
   const buildEnabled = useModuleEnabled("build");
   return useQuery<SprintSummary | null, Error>({
-    queryKey: queryKeys.dashboard.activeSprintSummary(orgId),
+    queryKey: queryKeys.dashboard.activeSprintSummary(),
     queryFn: () =>
       apiClient.get<SprintSummary | null>("/dashboard/active-sprint"),
     staleTime: 5 * 60 * 1000,
@@ -138,7 +139,7 @@ export const useRecentActivity = (
   const orgId = session?.orgId ?? "";
   const canView = useCan("build:tickets:view");
   return useQuery<RecentActivity[], Error>({
-    queryKey: queryKeys.dashboard.recentActivity(orgId),
+    queryKey: queryKeys.dashboard.recentActivity(),
     queryFn: () =>
       apiClient.get<RecentActivity[]>("/dashboard/recent-activity"),
     staleTime: 5 * 60 * 1000,
@@ -211,7 +212,7 @@ export const useLeavesToday = (
   const orgId = session?.orgId ?? "";
   const canView = useCan("hr:leaves:view");
   return useQuery<LeaveToday[], Error>({
-    queryKey: queryKeys.dashboard.leavesToday(orgId),
+    queryKey: queryKeys.dashboard.leavesToday(),
     queryFn: () => apiClient.get<LeaveToday[]>("/dashboard/leaves-today"),
     staleTime: 2 * 60_000,
     ...options,
@@ -224,7 +225,7 @@ export const useUpcomingHolidays = () => {
   const orgId = session?.orgId ?? "";
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<UpcomingHoliday[]>({
-    queryKey: queryKeys.dashboard.upcomingHolidays(orgId),
+    queryKey: queryKeys.dashboard.upcomingHolidays(),
     queryFn: () => apiClient.get<UpcomingHoliday[]>("/dashboard/upcoming-holidays"),
     staleTime: DAILY_DATA_STALE_TIME_MS,
     enabled: !!orgId && hrEnabled,
@@ -236,7 +237,7 @@ export const useMyLeaveBalance = () => {
   const orgId = session?.orgId ?? "";
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<LeaveBalance[]>({
-    queryKey: queryKeys.dashboard.myLeaveBalance(orgId),
+    queryKey: queryKeys.dashboard.myLeaveBalance(),
     queryFn: () => apiClient.get<LeaveBalance[]>("/dashboard/my-leave-balance"),
     staleTime: 5 * 60_000,
     enabled: !!orgId && hrEnabled,
@@ -250,7 +251,7 @@ export const useBirthdays = (
   const orgId = session?.orgId ?? "";
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<BirthdayEntry[], Error>({
-    queryKey: queryKeys.dashboard.birthdays(orgId),
+    queryKey: queryKeys.dashboard.birthdays(),
     queryFn: () => apiClient.get<BirthdayEntry[]>("/dashboard/birthdays"),
     staleTime: DAILY_DATA_STALE_TIME_MS,
     ...options,
@@ -266,7 +267,7 @@ export const usePendingApprovals = (
   const canApprove = useCan("hr:leaves:approve");
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<PendingApprovalsCount, Error>({
-    queryKey: queryKeys.dashboard.pendingApprovals(orgId),
+    queryKey: queryKeys.dashboard.pendingApprovals(),
     queryFn: () => apiClient.get<PendingApprovalsCount>("/dashboard/pending-approvals"),
     staleTime: NOTIFICATION_FALLBACK_INTERVAL_MS,
     refetchInterval: NOTIFICATION_FALLBACK_INTERVAL_MS,
@@ -283,7 +284,7 @@ export const useTeamAttendance = (
   const orgId = session?.orgId ?? "";
   const canView = useCan("hr:attendance:view");
   return useQuery<TeamAttendance>({
-    queryKey: queryKeys.dashboard.teamAttendance(orgId),
+    queryKey: queryKeys.dashboard.teamAttendance(),
     queryFn: () => apiClient.get<TeamAttendance>("/dashboard/team-attendance"),
     staleTime: 65_000,
     ...options,
@@ -328,7 +329,7 @@ export const useAnnouncements = (
   const { data: session } = useSession();
   const orgId = session?.orgId ?? "";
   return useQuery<Announcement[], Error>({
-    queryKey: queryKeys.dashboard.announcements(orgId),
+    queryKey: queryKeys.dashboard.announcements(),
     queryFn: () => apiClient.get<Announcement[]>("/dashboard/announcements"),
     staleTime: 60_000,
     ...options,
@@ -338,28 +339,24 @@ export const useAnnouncements = (
 
 export const useCreateAnnouncement = () => {
   const qc = useQueryClient();
-  const { data: session } = useSession();
-  const orgId = session?.orgId ?? "";
   return useMutation({
     mutationKey: ["dashboard", "announcements", "create"],
     mutationFn: (body: { title: string; content: string; isPinned?: boolean; expiresAt?: string }) =>
       apiClient.post<Announcement>("/dashboard/announcements", body),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.dashboard.announcements(orgId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.dashboard.announcements() });
     },
   });
 };
 
 export const useDeleteAnnouncement = () => {
   const qc = useQueryClient();
-  const { data: session } = useSession();
-  const orgId = session?.orgId ?? "";
   return useMutation({
     mutationKey: ["dashboard", "announcements", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/dashboard/announcements?id=${id}`),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.dashboard.announcements(orgId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.dashboard.announcements() });
     },
   });
 };
@@ -370,7 +367,7 @@ export const usePersonalDashboard = (
   const { data: session } = useSession();
   const orgId = session?.orgId ?? "";
   return useQuery<PersonalDashboard, Error>({
-    queryKey: queryKeys.dashboard.personal(orgId),
+    queryKey: queryKeys.dashboard.personal(),
     queryFn: () => apiClient.get<PersonalDashboard>("/dashboard/personal"),
     staleTime: 2 * 60_000,
     ...options,
@@ -385,7 +382,7 @@ export const useExecutiveDashboard = (
   const orgId = session?.orgId ?? "";
   const canView = useCan("hr:analytics:read");
   return useQuery<ExecutiveDashboard, Error>({
-    queryKey: queryKeys.dashboard.executive(orgId),
+    queryKey: queryKeys.dashboard.executive(),
     queryFn: () => apiClient.get<ExecutiveDashboard>("/dashboard/executive"),
     staleTime: 5 * 60_000,
     ...options,
@@ -396,13 +393,15 @@ export const useExecutiveDashboard = (
 export const usePublicDocuments = (limit = 6, enabled = true) => {
   const { data: session } = useSession();
   const orgId = session?.orgId ?? "";
+  const hrEnabled = useModuleEnabled(homeSectionModule("public-documents") ?? "hr");
+  const canView = useCan("hr:documents:view");
   return useQuery<PublicDoc[]>({
-    queryKey: queryKeys.dashboard.publicDocuments(orgId, limit),
+    queryKey: queryKeys.dashboard.publicDocuments(limit),
     queryFn: async () => {
       const res = await apiClient.get<{ data: PublicDoc[] }>("/hr/documents", { limit });
       return res.data;
     },
     staleTime: 5 * 60_000,
-    enabled: !!orgId && enabled,
+    enabled: !!orgId && hrEnabled && canView && enabled,
   });
 };

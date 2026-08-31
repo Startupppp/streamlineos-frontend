@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback, useEffect } from "react";
+import { useMemo, useCallback } from "react";
 import { format, parseISO } from "date-fns";
 import { CheckCircle, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { useApprovals } from "@/hooks/api/timesheets-core/approvals";
 import { PERIOD_STATUS_BADGE, PERIOD_STATUS_LABEL } from "@/features/timesheets/types";
 import type { PeriodStatus, TimesheetPeriod } from "@/features/timesheets/types";
@@ -45,9 +46,9 @@ interface ApprovalsTableProps {
   onBulkReject: () => void;
   tab: ApprovalTab;
   isBulkPending: boolean;
-  page: number;
-  total: number;
-  onPageChange: (page: number) => void;
+  hasMore: boolean;
+  isFetchingMore: boolean;
+  onLoadMore: () => void;
 }
 
 function ApprovalsTable({
@@ -63,9 +64,9 @@ function ApprovalsTable({
   onBulkReject,
   tab,
   isBulkPending,
-  page,
-  total,
-  onPageChange,
+  hasMore,
+  isFetchingMore,
+  onLoadMore,
 }: ApprovalsTableProps) {
   const columns = useMemo<DataTableColumn<TimesheetPeriod>[]>(
     () => [
@@ -186,36 +187,44 @@ function ApprovalsTable({
   }
 
   return (
-    <DataTable
-      className="flex-1 min-h-0"
-      data={periods}
-      columns={columns}
-      getRowKey={(row) => row.id}
-      onRowClick={onRowClick}
-      selection={
-        canManage && tab === "SUBMITTED"
-          ? { selected: selection, onChange: onSelectionChange }
-          : undefined
-      }
-      isLoading={isLoading}
-      toolbar={toolbar}
-      minWidth="700px"
-      pagination={{
-        mode: "server",
-        page,
-        pageSize: PAGE_SIZE,
-        total,
-        onPageChange,
-      }}
-      emptyState={
-        <EmptyState
-          illustrationPreset="approval"
-          title="No timesheets"
-          description={TAB_EMPTY[tab]}
-          compact
-        />
-      }
-    />
+    <div className="flex flex-col gap-3">
+      <DataTable
+        className="flex-1 min-h-0"
+        data={periods}
+        columns={columns}
+        getRowKey={(row) => row.id}
+        onRowClick={onRowClick}
+        selection={
+          canManage && tab === "SUBMITTED"
+            ? { selected: selection, onChange: onSelectionChange }
+            : undefined
+        }
+        isLoading={isLoading}
+        toolbar={toolbar}
+        minWidth="700px"
+        pagination={{ pageSize: PAGE_SIZE }}
+        emptyState={
+          <EmptyState
+            illustrationPreset="approval"
+            title="No timesheets"
+            description={TAB_EMPTY[tab]}
+            compact
+          />
+        }
+      />
+      {hasMore && (
+        <div className="flex justify-center pb-2">
+          <LoadingButton
+            variant="outline"
+            size="sm"
+            isPending={isFetchingMore}
+            onClick={onLoadMore}
+          >
+            Load more
+          </LoadingButton>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -248,39 +257,43 @@ export function ApprovalsTabPanel({
   onBulkReject,
   isBulkPending,
 }: ApprovalsTabPanelProps) {
-  const [page, setPage] = useState(1);
-
-  useEffect(() => {
-    setPage(1);
-  }, [memberFilter, dateFrom, dateTo, status]);
-
   const {
     data,
     isLoading,
     isError,
     refetch,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
   } = useApprovals(
     {
       status,
       userId: memberFilter !== "all" ? memberFilter : undefined,
       startDate: dateFrom || undefined,
       endDate: dateTo || undefined,
-      page,
       limit: PAGE_SIZE,
     },
     canAccess,
   );
 
+  const periods = useMemo(
+    () => data?.pages.flatMap((p) => p.data) ?? [],
+    [data],
+  );
+
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
-  const handlePageChange = useCallback((p: number) => setPage(p), []);
+
+  const handleLoadMore = useCallback(() => {
+    void fetchNextPage();
+  }, [fetchNextPage]);
 
   return (
     <Card>
       <CardContent className="p-0">
         <ApprovalsTable
-          periods={data?.data ?? []}
+          periods={periods}
           isLoading={isLoading}
           isError={isError}
           onRetry={handleRetry}
@@ -292,9 +305,9 @@ export function ApprovalsTabPanel({
           onBulkReject={onBulkReject}
           tab={status}
           isBulkPending={isBulkPending}
-          page={page}
-          total={data?.pagination.total ?? 0}
-          onPageChange={handlePageChange}
+          hasMore={hasNextPage}
+          isFetchingMore={isFetchingNextPage}
+          onLoadMore={handleLoadMore}
         />
       </CardContent>
     </Card>

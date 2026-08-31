@@ -20,6 +20,7 @@ import { listItem, listItemReduced, pmSnappy } from "@/lib/motion-presets";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { formatShortDate } from "@/lib/date-utils";
 
 function ProjectCardSkeleton() {
   return (
@@ -34,15 +35,6 @@ function ProjectCardSkeleton() {
       <Skeleton className="h-5 w-20" />
     </div>
   );
-}
-
-function formatDate(d: string | null) {
-  if (!d) return null;
-  return new Date(d).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
 }
 
 export function PortalListPage() {
@@ -114,8 +106,8 @@ export function PortalListPage() {
                         <span className="flex min-w-0 items-center gap-1 text-micro text-muted-foreground">
                           <CalendarDays className="h-3 w-3 shrink-0" />
                           <span className={TEXT_ONE_LINE}>
-                            {formatDate(project.startDate)} –{" "}
-                            {formatDate(project.targetEndDate) ?? "TBD"}
+                            {formatShortDate(project.startDate)} –{" "}
+                            {formatShortDate(project.targetEndDate) || "TBD"}
                           </span>
                         </span>
                       ) : null}

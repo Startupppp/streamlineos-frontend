@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DatePicker } from "@/components/ui/date-picker";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { CONTENT_FILL_PANEL, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import {
   Select,
@@ -25,10 +25,11 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState, NoPermissionState } from "@/components/shared";
 import { cn } from "@/lib/utils";
-import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useSalesOrders, type SalesOrderStatus, type SalesOrderListItem } from "@/hooks/api/inventory/sales-orders";
 import { useCan } from "@/hooks/api/access";
+import { formatShortDate } from "@/lib/date-utils";
 
 type StatusFilter = "ALL" | SalesOrderStatus;
 
@@ -69,12 +70,6 @@ const STATUS_CLASS: Record<SalesOrderStatus, string> = {
   CANCELLED: "",
 };
 
-function formatDate(value: string | null): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
-}
-
 const PAGE_SIZE = 50;
 
 const columns: DataTableColumn<SalesOrderListItem>[] = [
@@ -100,13 +95,13 @@ const columns: DataTableColumn<SalesOrderListItem>[] = [
   {
     key: "orderDate",
     header: "Order Date",
-    cell: (so) => <span className="font-mono tabular-nums">{formatDate(so.orderDate)}</span>,
+    cell: (so) => <span className="font-mono tabular-nums">{formatShortDate(so.orderDate) || "—"}</span>,
   },
   {
     key: "expectedShipDate",
     header: "Required Date",
     cell: (so) => (
-      <span className="font-mono tabular-nums">{formatDate(so.expectedShipDate)}</span>
+      <span className="font-mono tabular-nums">{formatShortDate(so.expectedShipDate) || "—"}</span>
     ),
     className: "hidden md:table-cell",
     headerClassName: "hidden md:table-cell",

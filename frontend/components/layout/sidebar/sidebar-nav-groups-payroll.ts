@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Clock, FileText, IndianRupee, BarChart3, ShieldCheck, Wallet, Award, FileCheck, Coins, Landmark, RefreshCcw, SlidersHorizontal, LayoutTemplate, Calculator, PlayCircle } from "lucide-react";
+import { LayoutDashboard, Users, Clock, FileText, IndianRupee, BarChart3, ShieldCheck, Award, FileCheck, Coins, Landmark, RefreshCcw, SlidersHorizontal, LayoutTemplate, Calculator, PlayCircle } from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
 export const PAYROLL_NAV_GROUPS: NavGroup[] = [
@@ -12,12 +12,6 @@ export const PAYROLL_NAV_GROUPS: NavGroup[] = [
       "self:payroll",
     ],
     routes: [
-      {
-        label: "My Payroll",
-        icon: Wallet,
-        href: "/payroll/me",
-        requiredPermission: ["self:payroll", "self:payslips"],
-      },
       {
         label: "Team Payroll",
         icon: Users,

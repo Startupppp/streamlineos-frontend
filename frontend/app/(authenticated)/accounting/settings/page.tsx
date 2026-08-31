@@ -2,7 +2,6 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { LoadingState, ErrorState } from "@/components/shared";
@@ -37,25 +36,17 @@ import {
   PaymentTermsSection,
   QuickLinks,
 } from "@/features/accounting/settings/fin-settings-sections";
+import {
+  companySchema,
+  type CompanyFormValues,
+  taxSchema,
+  type TaxFormValues,
+} from "./accounting-settings-schema";
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
 ];
-
-const companySchema = z.object({
-  baseCurrency: z.string().min(1),
-  fiscalYearStartMonth: z.string().min(1),
-  accountingBasis: z.enum(["ACCRUAL", "CASH"]),
-});
-type CompanyFormValues = z.infer<typeof companySchema>;
-
-const taxSchema = z.object({
-  gstin: z.string(),
-  pan: z.string(),
-  stateCode: z.string(),
-});
-type TaxFormValues = z.infer<typeof taxSchema>;
 
 export default function FinanceSettingsPage() {
   const canManage = useCan("accounting:settings:manage");
@@ -125,22 +116,28 @@ export default function FinanceSettingsPage() {
     void settingsQuery.refetch();
   }
 
-  if (settingsQuery.isLoading) return <div className="flex flex-1 min-h-0 flex-col"><LoadingState /></div>;
+  if (settingsQuery.isLoading)
+    return (
+      <PageWrapper title="Finance Settings" subtitle="Company financial configuration">
+        <LoadingState className="flex-1" />
+      </PageWrapper>
+    );
   if (settingsQuery.error)
     return (
-      <div className="flex flex-1 min-h-0 flex-col">
+      <PageWrapper title="Finance Settings" subtitle="Company financial configuration">
         <ErrorState
+          className="flex-1"
           title="Failed to load settings"
           description={getErrorMessage(settingsQuery.error)}
           onRetry={handleRetrySettings}
         />
-      </div>
+      </PageWrapper>
     );
 
   const sequences = sequencesQuery.data?.items ?? [];
   const systemAccounts = systemAccountsQuery.data?.items ?? [];
-  const policies = policiesQuery.data?.items ?? [];
-  const rates = ratesQuery.data?.items ?? [];
+  const policies = policiesQuery.data?.data ?? [];
+  const rates = ratesQuery.data?.data ?? [];
   const paymentTerms = settingsQuery.data?.paymentTerms ?? [];
 
   return (

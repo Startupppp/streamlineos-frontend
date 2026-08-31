@@ -11,6 +11,7 @@ import { keepPreviousData } from "@tanstack/react-query";
 import { SearchInput } from "@/components/ui/search-input";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable } from "@/components/ui/data-table";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -37,7 +38,6 @@ export function MembersPage() {
   const [, startTransition] = useTransition();
 
   const q = searchParams.get("search") ?? "";
-  const page = Number(searchParams.get("page") ?? "1");
 
   const [search, setSearch] = useState(q);
   const debouncedSearch = useDebouncedValue(search, 300);
@@ -45,13 +45,16 @@ export function MembersPage() {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<ProjectWorkspaceMember | null>(null);
 
+  const [cursor, setCursor] = useState<string | undefined>(undefined);
+  const [cursorStack, setCursorStack] = useState<string[]>([]);
+
   const removeConfirmOpen = removeTarget !== null;
 
   const pushParams = useCallback(
     (updates: Record<string, string | null>) => {
       const params = new URLSearchParams(searchParams.toString());
       for (const [k, v] of Object.entries(updates)) {
-        if (v === null || v === "1") params.delete(k);
+        if (v === null || v === "") params.delete(k);
         else params.set(k, v);
       }
       startTransition(() => {
@@ -63,26 +66,36 @@ export function MembersPage() {
 
   useEffect(() => {
     if (debouncedSearch === (q || "")) return;
-    pushParams({ search: debouncedSearch || null, page: null });
+    pushParams({ search: debouncedSearch || null });
+    setCursor(undefined);
+    setCursorStack([]);
   }, [debouncedSearch, q, pushParams]);
 
   const handleSearchChange = useCallback((value: string) => setSearch(value), []);
-
-  const handlePageChange = useCallback(
-    (p: number) => pushParams({ page: p === 1 ? null : String(p) }),
-    [pushParams],
-  );
 
   const handleDisplayChange = useCallback((next: DisplayProps) => {
     setDisplayProps(next);
     saveDisplayProps(next);
   }, []);
 
+  function handleNextPage() {
+    const nextCursor = data?.pagination.nextCursor;
+    if (!nextCursor) return;
+    setCursorStack((prev) => [...prev, cursor ?? ""]);
+    setCursor(nextCursor);
+  }
+
+  function handlePrevPage() {
+    const prevCursor = cursorStack[cursorStack.length - 1];
+    setCursorStack((prev) => prev.slice(0, -1));
+    setCursor(prevCursor === "" ? undefined : prevCursor);
+  }
+
   const canView = useCan("build:members:view");
   const canManage = useCan("build:members:manage");
 
   const { data, isLoading, isError, error, refetch } = useProjectWorkspaceMembers(
-    { page, limit: 25, search: q || undefined },
+    { cursor, limit: 25, search: q || undefined },
     { placeholderData: keepPreviousData },
   );
 
@@ -118,7 +131,8 @@ export function MembersPage() {
   }, [removeTarget, removeMember]);
 
   const members = data?.data ?? [];
-  const total = data?.total ?? 0;
+  const hasPrev = cursorStack.length > 0;
+  const hasNext = !!data?.pagination.hasMore;
 
   const columns = useMembersColumns({ displayProps, canManage, handleRemoveRequest });
 
@@ -172,39 +186,44 @@ export function MembersPage() {
             onRetry={handleRetry}
           />
         ) : (
-          <DataTable
-            className="flex-1 min-h-0"
-            data={members}
-            columns={columns}
-            getRowKey={(member) => member.id}
-            isLoading={isLoading}
-            emptyState={
-              <EmptyState
-                illustrationPreset="team"
-                title={q ? "No members found" : "No members yet"}
-                description={
-                  q
-                    ? "Try adjusting your search."
-                    : canManage
-                      ? "Add the first person who should have access to Build."
-                      : "People with access to Build will appear here."
-                }
-                action={
-                  !q && canManage
-                    ? { label: "Add member", onClick: () => setAddDialogOpen(true) }
-                    : undefined
-                }
-              />
-            }
-            pagination={{
-              mode: "server",
-              page,
-              pageSize: 25,
-              total,
-              onPageChange: handlePageChange,
-            }}
-            minWidth="640px"
-          />
+          <>
+            <DataTable
+              className="flex-1 min-h-0"
+              data={members}
+              columns={columns}
+              getRowKey={(member) => member.id}
+              isLoading={isLoading}
+              emptyState={
+                <EmptyState
+                  illustrationPreset="team"
+                  title={q ? "No members found" : "No members yet"}
+                  description={
+                    q
+                      ? "Try adjusting your search."
+                      : canManage
+                        ? "Add the first person who should have access to Build."
+                        : "People with access to Build will appear here."
+                  }
+                  action={
+                    !q && canManage
+                      ? { label: "Add member", onClick: () => setAddDialogOpen(true) }
+                      : undefined
+                  }
+                />
+              }
+              minWidth="640px"
+            />
+            {(hasPrev || hasNext) ? (
+              <div className="flex shrink-0 items-center justify-end gap-2 border-t px-2 py-2">
+                <Button variant="outline" size="sm" disabled={!hasPrev} onClick={handlePrevPage}>
+                  Previous
+                </Button>
+                <Button variant="outline" size="sm" disabled={!hasNext} onClick={handleNextPage}>
+                  Next
+                </Button>
+              </div>
+            ) : null}
+          </>
         )}
       </PageWrapper>
 

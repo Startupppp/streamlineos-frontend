@@ -20,6 +20,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { useCan } from "@/hooks/api/access";
+import { formatCurrencyFull } from "@/lib/format-utils";
 import { useCostingProducts, type CostingProductRow } from "@/hooks/api/inventory/valuation";
 
 type CostingMethod = CostingProductRow["costingMethod"];
@@ -40,7 +41,7 @@ const METHOD_BADGE_CLASS: Record<CostingMethod, string> = {
 
 function formatCents(cents: number | null): string {
   if (cents === null) return "—";
-  return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(cents / 100);
+  return formatCurrencyFull(cents / 100, "INR");
 }
 
 const METHOD_EXPLANATIONS: { method: CostingMethod; label: string; description: string }[] = [

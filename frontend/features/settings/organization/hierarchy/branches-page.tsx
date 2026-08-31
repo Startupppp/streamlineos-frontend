@@ -209,7 +209,7 @@ export function OrgBranchesPage() {
       header: "Business Unit",
       cell: (branch) => (
         <span className="text-muted-foreground">
-          {branch.businessUnitName ?? "â€”"}
+          {branch.businessUnitName ?? "—"}
         </span>
       ),
     },
@@ -219,8 +219,8 @@ export function OrgBranchesPage() {
       cell: (branch) => (
         <span className="text-muted-foreground">
           {branch.managerUserId
-            ? (memberNamesByUserId[branch.managerUserId] ?? "â€”")
-            : "â€”"}
+            ? (memberNamesByUserId[branch.managerUserId] ?? "—")
+            : "—"}
         </span>
       ),
     },
@@ -231,7 +231,7 @@ export function OrgBranchesPage() {
         <span className="text-muted-foreground">
           {[branch.city, branch.state, branch.country]
             .filter(Boolean)
-            .join(", ") || "â€”"}
+            .join(", ") || "—"}
         </span>
       ),
     },
@@ -239,14 +239,14 @@ export function OrgBranchesPage() {
       key: "phone",
       header: "Phone",
       cell: (branch) => (
-        <span className="text-muted-foreground">{branch.phone ?? "â€”"}</span>
+        <span className="text-muted-foreground">{branch.phone ?? "—"}</span>
       ),
     },
     {
       key: "email",
       header: "Email",
       cell: (branch) => (
-        <span className="text-muted-foreground">{branch.email ?? "â€”"}</span>
+        <span className="text-muted-foreground">{branch.email ?? "—"}</span>
       ),
     },
     {
@@ -281,6 +281,7 @@ export function OrgBranchesPage() {
                 size="sm"
                 onClick={makeRestoreHandler(branch)}
                 title="Restore"
+                aria-label="Restore"
               >
                 <RotateCcw className="h-4 w-4 text-primary" />
               </Button>
@@ -291,6 +292,7 @@ export function OrgBranchesPage() {
                   size="sm"
                   onClick={makeEditHandler(branch)}
                   title="Edit"
+                  aria-label="Edit"
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
@@ -299,6 +301,7 @@ export function OrgBranchesPage() {
                   size="sm"
                   onClick={makeArchiveHandler(branch)}
                   title="Archive"
+                  aria-label="Archive"
                 >
                   <Archive className="h-4 w-4 text-muted-foreground" />
                 </Button>
@@ -309,15 +312,9 @@ export function OrgBranchesPage() {
     },
   ];
 
-  const emptyState = serverSearch ? (
-    <EmptyState
-      illustrationPreset="companies"
-      title={`No branches matching "${serverSearch}"`}
-      description="Try a different search term."
-      compact
-      className="min-h-[200px]"
-    />
-  ) : showArchived ? (
+  const handleClearSearch = useCallback(() => setSearch(""), [setSearch]);
+
+  const emptyState = showArchived ? (
     <EmptyState
       illustrationPreset="archive"
       title="No archived branches"
@@ -328,12 +325,10 @@ export function OrgBranchesPage() {
     <EmptyState
       illustrationPreset="companies"
       title="No branches yet"
-      description="Create your first branch to get started."
-      action={
-        canManage
-          ? { label: "Add Branch", onClick: handleOpenCreate }
-          : undefined
-      }
+      description={serverSearch ? undefined : "Create your first branch to get started."}
+      filtersActive={!!serverSearch}
+      onClearFilters={handleClearSearch}
+      action={canManage && !serverSearch ? { label: "Add Branch", onClick: handleOpenCreate } : undefined}
     />
   );
 
@@ -369,7 +364,7 @@ export function OrgBranchesPage() {
         }
         filters={
           <SearchInput
-            placeholder="Search branchesâ€¦"
+            placeholder="Search branches…"
             value={search}
             onValueChange={handleSearchInputChange}
           />

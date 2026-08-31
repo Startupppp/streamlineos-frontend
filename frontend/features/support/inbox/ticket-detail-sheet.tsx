@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useSupportTicket } from "@/hooks/api/support";
 import { useSupportRealtime } from "@/hooks/api/support/realtime";
 import { TicketDetailHeader } from "./ticket-detail-header";
@@ -32,8 +32,20 @@ export function TicketDetailSheet({ ticketId, onBack }: TicketDetailSheetProps) 
 
   if (isLoading || !ticket) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      <div className="flex-1 flex flex-col gap-4 p-4">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-5 w-20 rounded-full" />
+        </div>
+        <Skeleton className="h-4 w-64" />
+        <div className="flex-1 space-y-3 pt-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex gap-3">
+              <Skeleton className="h-7 w-7 rounded-full shrink-0" />
+              <Skeleton className="h-16 flex-1 rounded-lg" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

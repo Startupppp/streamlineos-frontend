@@ -4,7 +4,6 @@ import { use, useState, useCallback } from "react";
 import Link from "next/link";
 import { ChevronLeft, Pencil, ExternalLink, BookOpen } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -21,8 +20,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { EntityFormDialog } from "@/components/shared";
-import { LoadingState, ErrorState } from "@/components/shared";
+import { EntityFormDialog, LoadingState, ErrorState } from "@/components/shared";
+
 import {
   useAccounts,
   useJournal,
@@ -36,6 +35,8 @@ import type {
   JournalEntry,
   JournalEntryStatus,
 } from "@/types/accounting";
+import { editAccountSchema, type EditAccountValues } from "./account-schema";
+import { formatShortDate } from "@/lib/date-utils";
 
 interface AccountDetailPageProps {
   params: Promise<{ accountId: string }>;
@@ -58,24 +59,6 @@ const STATUS_VARIANT: Record<
   VOID: "destructive",
   PENDING_APPROVAL: "secondary",
 };
-
-const editAccountSchema = z.object({
-  name: z.string().min(1, "Name is required").max(120),
-  description: z.string().max(500).optional(),
-  isActive: z.boolean(),
-});
-
-type EditAccountValues = z.infer<typeof editAccountSchema>;
-
-function formatDate(value: string | Date): string {
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return String(value);
-  return d.toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-  });
-}
 
 interface EditAccountDialogProps {
   account: Account;
@@ -189,15 +172,15 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
 
   const [editOpen, setEditOpen] = useState(false);
 
-  const accountsQuery = useAccounts({ page: 1, pageSize: 500 });
-  const journalQuery = useJournal({ pageSize: 20 });
+  const accountsQuery = useAccounts({ limit: 100 });
+  const journalQuery = useJournal({ limit: 20 });
 
   const account = Number.isInteger(accountId)
-    ? accountsQuery.data?.items.find((item) => item.id === accountId)
+    ? accountsQuery.data?.data.find((item) => item.id === accountId)
     : undefined;
 
   const parentAccount = account?.parentAccountId
-    ? accountsQuery.data?.items.find(
+    ? accountsQuery.data?.data.find(
         (item) => item.id === account.parentAccountId,
       )
     : undefined;
@@ -215,7 +198,7 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
     void journalQuery.refetch();
   }, [accountsQuery, journalQuery]);
 
-  const journalEntries = journalQuery.data?.items ?? [];
+  const journalEntries = journalQuery.data?.data ?? [];
 
   const journalColumns: DataTableColumn<JournalEntry>[] = [
     {
@@ -232,7 +215,7 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
       header: "Date",
       cell: (entry) => (
         <span className="text-sm text-foreground tabular-nums">
-          {formatDate(entry.entryDate)}
+          {formatShortDate(entry.entryDate)}
         </span>
       ),
     },
@@ -374,7 +357,7 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
                       Created
                     </p>
                     <p className="mt-1.5 text-sm text-foreground">
-                      {formatDate(account.createdAt)}
+                      {formatShortDate(account.createdAt)}
                     </p>
                   </div>
                 </div>

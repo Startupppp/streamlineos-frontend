@@ -16,7 +16,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyApprovalIllustration, EmptyCalendarIllustration } from "@/components/illustrations";
 import { Home, CalendarDays } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { staggerContainer, fadeIn } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 
 import type { LeaveRequest, WfhRequest } from "./leaves-shared";
 import { WfhRequestItem } from "./leaves-shared";
@@ -35,6 +35,7 @@ export function LeaveApprovalsContent({
   allIncomingLeaveRequests,
   currentUserId,
 }: LeaveApprovalsContentProps) {
+  const { staggerContainer, fadeIn } = useMotionVariants();
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectingId, setRejectingId] = useState<number | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");

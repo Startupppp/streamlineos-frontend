@@ -8,6 +8,7 @@ import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/query-keys";
 import { safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
+import { reauthorizeAblyClients } from "@/lib/ably";
 import type { Channel } from "@/types/chat";
 
 interface NotificationPayload {
@@ -110,4 +111,29 @@ export function useChatGlobalNotifications(
       }
     };
   }, [orgId, channels, ably, queryClient]);
+
+  useEffect(() => {
+    if (!orgId || !currentUserId) return;
+
+    const notifChannel = ably.channels.get(`notifications:${orgId}:${currentUserId}`);
+    let cancelled = false;
+    let subscribed = false;
+
+    const capabilityHandler = (_msg: InboundMessage) => {
+      void reauthorizeAblyClients();
+    };
+
+    void safeSubscribe(notifChannel, "realtime:capability:refresh", capabilityHandler).then((ok) => {
+      if (cancelled) {
+        if (ok) safeUnsubscribe(notifChannel, "realtime:capability:refresh", capabilityHandler);
+        return;
+      }
+      subscribed = ok;
+    });
+
+    return () => {
+      cancelled = true;
+      if (subscribed) safeUnsubscribe(notifChannel, "realtime:capability:refresh", capabilityHandler);
+    };
+  }, [orgId, currentUserId, ably]);
 }

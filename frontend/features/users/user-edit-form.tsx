@@ -30,7 +30,12 @@ import { useCanManageOrganizationMembership } from "@/hooks/api/access";
 import type { User } from "@/hooks/api/users";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
-import { ORG_OWNER_ROLE, USER_INVITE_ROLES } from "@/features/users/user-invite-roles";
+import {
+  ORG_OWNER_ROLE,
+  USER_INVITE_ROLES,
+  toStructuralRole,
+} from "@/features/users/user-invite-roles";
+import { useEmploymentFacts } from "@/hooks/api/directory/employment";
 
 const USER_EDIT_FORM_ID = "user-edit-form";
 
@@ -39,7 +44,7 @@ const editSchema = z.object({
   lastName: z.string().min(1, "Last name is required"),
   designation: z.string().optional(),
   phone: z.string().optional(),
-  role: z.string().min(1, "Role is required"),
+  role: z.enum(["OWNER", "ORG_ADMIN", "MEMBER"], { message: "Role is required" }),
   bio: z.string().optional(),
   emergencyName: z.string().optional(),
   emergencyRelation: z.string().optional(),
@@ -65,14 +70,17 @@ export function UserEditForm({ user, onSuccess, onCancel }: UserEditFormProps) {
 
   const isOwner = user.role === ORG_OWNER_ROLE;
 
+  const { byUserId: employmentByUserId } = useEmploymentFacts([user.id]);
+  const employment = employmentByUserId.get(user.id);
+
   const form = useForm<EditFormValues>({
     resolver: zodResolver(editSchema),
     defaultValues: {
       firstName: user.firstName ?? "",
       lastName: user.lastName ?? "",
-      designation: user.designation ?? "",
+      designation: employment?.designation ?? "",
       phone: user.phone ?? "",
-      role: user.role,
+      role: toStructuralRole(user.role),
       bio: user.bio ?? "",
       emergencyName: user.emergencyContact?.name ?? "",
       emergencyRelation: user.emergencyContact?.relation ?? "",

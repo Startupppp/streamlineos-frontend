@@ -2,6 +2,14 @@ import { z } from "zod";
 
 export const GST_RATES = ["0", "5", "12", "18", "28"] as const;
 
+export const GST_RATE_MAP: Record<typeof GST_RATES[number], 0 | 5 | 12 | 18 | 28> = {
+  "0": 0,
+  "5": 5,
+  "12": 12,
+  "18": 18,
+  "28": 28,
+};
+
 export const lineItemSchema = z.object({
   description: z.string().min(1, "Description is required"),
   hsnSacCode: z.string(),

@@ -8,9 +8,9 @@ export type PeriodStatus =
   | "LOCKED"
   | "REOPENED";
 export type TimerStatus = "RUNNING" | "PAUSED" | "STOPPED" | "DISCARDED" | "CONVERTED";
-export type BillingType = "BILLABLE" | "NON_BILLABLE" | "INTERNAL";
+export type BillingType = "BILLABLE" | "NON_BILLABLE" | "FIXED";
 export type InvoicingStatus = "UNINVOICED" | "INVOICE_DRAFTED" | "INVOICED";
-export type EntrySource = "MANUAL" | "TIMER" | "GRID" | "IMPORT";
+export type EntrySource = "MANUAL" | "TIMER" | "API" | "IMPORT";
 export type RoundingRule =
   | "NONE"
   | "NEAREST_5"
@@ -19,7 +19,7 @@ export type RoundingRule =
   | "NEAREST_15"
   | "ROUND_UP"
   | "ROUND_DOWN";
-export type ApprovalMode = "NONE" | "MANAGER" | "PROJECT" | "CLIENT";
+export type ApprovalMode = "MANAGER" | "AUTO" | "MULTI_LEVEL";
 
 export interface ProjectRef {
   id: number;
@@ -294,9 +294,13 @@ export interface AuditEvent {
   createdAt: string;
 }
 
-export interface AuditResponse {
-  data: AuditEvent[];
-  total: number;
+export interface CursorPage<T> {
+  data: T[];
+  pagination: {
+    limit: number;
+    nextCursor: string | null;
+    hasMore: boolean;
+  };
 }
 
 export interface EntriesQuery {
@@ -307,7 +311,7 @@ export interface EntriesQuery {
   startDate?: string;
   endDate?: string;
   billable?: boolean;
-  page?: number;
+  cursor?: string;
   limit?: number;
 }
 
@@ -402,7 +406,7 @@ export const ENTRY_STATUS_BADGE: Record<EntryStatus, string> = {
 export const BILLING_TYPE_LABEL: Record<BillingType, string> = {
   BILLABLE: "Billable",
   NON_BILLABLE: "Non-billable",
-  INTERNAL: "Internal",
+  FIXED: "Fixed",
 };
 
 export type ExceptionSeverity = "ERROR" | "WARNING";
@@ -450,7 +454,7 @@ export interface ExceptionsQueryInput {
   severity?: ExceptionSeverity;
   rule?: ExceptionRule;
   userId?: string;
-  page?: number;
+  cursor?: string;
   limit?: number;
 }
 

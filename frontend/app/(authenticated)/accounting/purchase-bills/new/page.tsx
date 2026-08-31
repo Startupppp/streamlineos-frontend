@@ -23,6 +23,7 @@ import {
   todayIso,
   num,
   computeTotals,
+  GST_RATE_MAP,
 } from "@/features/accounting/purchases/bill-form-schemas";
 import type { NewBillFormValues } from "@/features/accounting/purchases/bill-form-schemas";
 import { BillNewFormBody } from "@/features/accounting/purchases/bill-new-form-body";
@@ -31,9 +32,8 @@ export default function NewPurchaseBillPage() {
   const router = useRouter();
   const clientsQuery = useClientAccounts({});
   const accountsQuery = useAccounts({
-    page: 1,
-    pageSize: 500,
     activeOnly: true,
+    limit: 100,
     type: "EXPENSE",
   });
   const createMutation = useCreatePurchaseBill();
@@ -178,7 +178,7 @@ export default function NewPurchaseBillPage() {
         hsnSacCode: it.hsnSacCode.trim() || undefined,
         quantity: num(it.quantity),
         rate: num(it.rate),
-        gstRate: num(it.gstRate),
+        gstRate: GST_RATE_MAP[it.gstRate],
       })),
     };
 
@@ -210,7 +210,7 @@ export default function NewPurchaseBillPage() {
   }
 
   const vendors = clientsQuery.data?.accounts ?? [];
-  const expenseAccounts = accountsQuery.data?.items ?? [];
+  const expenseAccounts = accountsQuery.data?.data ?? [];
 
   return (
     <PageWrapper

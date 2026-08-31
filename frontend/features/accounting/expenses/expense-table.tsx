@@ -14,12 +14,7 @@ import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import type { ExpenseWithRelations } from "@/types/hr/expenses";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { ExpenseStatus } from "@/features/accounting/shared";
-
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-}
+import { formatShortDate } from "@/lib/date-utils";
 
 type ExpenseWithExtras = ExpenseWithRelations & { policyFlag?: string; taxAmount?: string };
 
@@ -62,7 +57,7 @@ const COLUMNS: DataTableColumn<ExpenseWithExtras>[] = [
   {
     key: "date",
     header: "Date",
-    cell: (row) => <span className="text-sm text-muted-foreground">{formatDate(row.expenseDate)}</span>,
+    cell: (row) => <span className="text-sm text-muted-foreground">{formatShortDate(row.expenseDate) || "—"}</span>,
   },
   {
     key: "merchant",

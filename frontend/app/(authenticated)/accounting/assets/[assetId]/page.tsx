@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { ExternalLink } from "lucide-react";
 import { toast } from "sonner";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -36,7 +35,9 @@ import {
   useAssetCategories,
 } from "@/hooks/api/accounting/assets";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { formatShortDate } from "@/lib/date-utils";
 import type { DepreciationScheduleRow } from "@/types/accounting/assets";
+import { disposeAssetSchema, type DisposeFormValues } from "./asset-schema";
 
 const ASSET_STATUS_CLASSES: Record<string, string> = {
   DRAFT: "bg-primary/5 text-foreground border-primary/20",
@@ -51,19 +52,6 @@ const ASSET_STATUS_LABELS: Record<string, string> = {
   FULLY_DEPRECIATED: "Fully Depreciated",
   DISPOSED: "Disposed",
 };
-
-const disposeAssetSchema = z.object({
-  disposalDate: z.string().min(1, "Date is required"),
-  amount: z.string().min(1, "Proceeds amount is required"),
-});
-
-type DisposeFormValues = z.infer<typeof disposeAssetSchema>;
-
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
-}
 
 function ScheduleStatusBadge({ status }: { status: DepreciationScheduleRow["status"] }) {
   const cls = status === "POSTED"
@@ -120,8 +108,8 @@ export default function AssetDetailPage() {
   const canManage = useCan("accounting:assets:manage");
 
   const { data: asset, isLoading, error, refetch } = useAsset(assetId);
-  const categoriesQuery = useAssetCategories({ pageSize: 100 });
-  const categories = categoriesQuery.data?.items ?? [];
+  const categoriesQuery = useAssetCategories({ limit: 100 });
+  const categories = categoriesQuery.data?.data ?? [];
 
   const activateMutation = useActivateAsset(assetId);
   const disposeMutation = useDisposeAsset(assetId);
@@ -251,7 +239,7 @@ export default function AssetDetailPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 rounded-lg border border-border p-4 bg-card">
               <div>
                 <p className="text-dense text-muted-foreground">Acquisition Date</p>
-                <p className="text-sm font-medium mt-0.5">{formatDate(asset.acquisitionDate)}</p>
+                <p className="text-sm font-medium mt-0.5">{formatShortDate(asset.acquisitionDate) || "—"}</p>
               </div>
               <div>
                 <p className="text-dense text-muted-foreground">Salvage Value</p>
@@ -268,13 +256,13 @@ export default function AssetDetailPage() {
               {asset.activatedAt && (
                 <div>
                   <p className="text-dense text-muted-foreground">Activated</p>
-                  <p className="text-sm font-medium mt-0.5">{formatDate(asset.activatedAt)}</p>
+                  <p className="text-sm font-medium mt-0.5">{formatShortDate(asset.activatedAt) || "—"}</p>
                 </div>
               )}
               {asset.disposedAt && (
                 <div>
                   <p className="text-dense text-muted-foreground">Disposed</p>
-                  <p className="text-sm font-medium mt-0.5">{formatDate(asset.disposedAt)}</p>
+                  <p className="text-sm font-medium mt-0.5">{formatShortDate(asset.disposedAt) || "—"}</p>
                 </div>
               )}
               {asset.disposalProceeds && (

@@ -13,10 +13,10 @@ import {
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DecideDialog } from "./decide-dialog";
 import { DelegateDialog } from "./delegate-dialog";
@@ -227,15 +227,10 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
             <EmptyState
               className={PM_FILL_PANEL}
               illustrationPreset="approval"
-              title={isFiltered ? "No matching approvals" : "No approvals yet"}
-              description={
-                isFiltered
-                  ? "No approvals match your filters."
-                  : "Use approvals to get sign-off on tasks, milestones, and releases before they ship."
-              }
-              action={
-                isFiltered ? { label: "Clear filters", onClick: handleClearFilters } : undefined
-              }
+              title="No approvals yet"
+              description={isFiltered ? undefined : "Use approvals to get sign-off on tasks, milestones, and releases before they ship."}
+              filtersActive={isFiltered}
+              onClearFilters={handleClearFilters}
             />
           ) : (
             <DataTable

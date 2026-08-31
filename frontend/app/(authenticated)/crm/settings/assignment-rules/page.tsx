@@ -173,8 +173,9 @@ function PreviewPanel() {
             />
           </div>
           <div>
-            <label className="text-xs font-medium mb-1 block">Lead Score</label>
+            <label htmlFor="preview-lead-score" className="text-xs font-medium mb-1 block">Lead Score</label>
             <Input
+              id="preview-lead-score"
               type="number"
               value={score}
               onChange={handleScoreChange}
@@ -183,8 +184,9 @@ function PreviewPanel() {
             />
           </div>
           <div>
-            <label className="text-xs font-medium mb-1 block">City</label>
+            <label htmlFor="preview-city" className="text-xs font-medium mb-1 block">City</label>
             <Input
+              id="preview-city"
               value={city}
               onChange={handleCityChange}
               placeholder="Mumbai"

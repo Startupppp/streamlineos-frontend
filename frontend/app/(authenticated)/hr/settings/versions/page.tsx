@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useCan } from "@/hooks/api/access";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { ErrorState } from "@/components/shared";
 import { useEntityVersions } from "@/hooks/api/hr/settings-hub";
 import type { VersionEntity } from "@/hooks/api/hr/settings-hub";
 import { useActivatePolicy } from "@/hooks/api/hr/policies";
@@ -43,9 +44,13 @@ export default function VersionHistoryPage() {
   const [idInput, setIdInput] = useState("");
   const [queriedId, setQueriedId] = useState<number | null>(null);
 
-  const { data, isLoading, isError } = useEntityVersions(entity, queriedId);
+  const { data, isLoading, isError, refetch } = useEntityVersions(entity, queriedId);
 
   const activate = useActivatePolicy();
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const handleSearch = useCallback(() => {
     const parsed = Number(idInput);
@@ -122,9 +127,12 @@ export default function VersionHistoryPage() {
             ))}
           </div>
         ) : isError ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <p className="text-sm text-muted-foreground">Failed to load versions.</p>
-          </div>
+          <ErrorState
+            className="flex-1"
+            title="Failed to load versions"
+            description="Could not load version history. Please try again."
+            onRetry={handleRetry}
+          />
         ) : !data || data.items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <p className="text-sm text-muted-foreground">No versions found for this {entity}.</p>

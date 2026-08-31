@@ -36,6 +36,7 @@ import {
   Github,
   Globe,
 } from "lucide-react";
+import { useEmploymentFacts } from "@/hooks/api/directory/employment";
 
 interface UserDetailSheetProps {
   userId: string | null;
@@ -90,6 +91,8 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
   const [isEditing, setIsEditing] = useState(false);
   const canManage = useCan("settings:organization:manage");
   const { data: user, isLoading } = useUser(userId ?? "", { enabled: !!userId && open });
+  const { byUserId: employmentByUserId } = useEmploymentFacts(userId ? [userId] : []);
+  const employment = userId ? employmentByUserId.get(userId) : undefined;
   const visibleTabs = canManage
     ? TAB_ITEMS
     : TAB_ITEMS.filter((tab) => !PRIVILEGED_TABS.has(tab.value));
@@ -163,9 +166,9 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
                             <p className="font-semibold text-sm leading-tight truncate">
                               {user.name ?? user.email}
                             </p>
-                            {user.designation && (
+                            {employment?.designation && (
                               <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                                {user.designation}
+                                {employment?.designation}
                               </p>
                             )}
                           </div>
@@ -206,10 +209,10 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
                           <span className="text-foreground">{user.phone}</span>
                         </div>
                       )}
-                      {user.designation && (
+                      {employment?.designation && (
                         <div className="flex items-center gap-2.5 text-xs">
                           <Briefcase className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                          <span className="text-foreground">{user.designation}</span>
+                          <span className="text-foreground">{employment?.designation}</span>
                         </div>
                       )}
                     </div>

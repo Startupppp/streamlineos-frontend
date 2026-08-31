@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -11,9 +11,10 @@ import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { Button } from "@/components/ui/button";
 import { BulkActionBar } from "@/features/build/backlog/bulk-action-bar";
 import { TicketFilterBar } from "@/features/build/shared/ticket-filter-bar";
-import { useAllWork, useProjects } from "@/hooks/api/build";
+import { useInfiniteAllWork, useProjects } from "@/hooks/api/build";
 import { cn } from "@/lib/utils";
 import {
   PmPageShell,
@@ -28,12 +29,12 @@ import {
 } from "@/lib/motion-presets";
 import { groupByProject } from "./all-work-ticket-utils";
 import { getTicketDetailHref } from "@/features/build/shared/format-ticket-key";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { AllWorkViewSwitcher, AllWorkSkeleton } from "./all-work-view-switcher";
 import { AllWorkListSection } from "./all-work-list-section";
 import { AllWorkTableSection } from "./all-work-table-section";
 import { AllWorkBoardSection } from "./all-work-board-section";
 import { AllWorkViewsMenu } from "./all-work-views-menu";
-import { TablePagination } from "@/components/ui/table-pagination";
 import { useAllWorkFilters } from "./use-all-work-filters";
 import { useAllWorkBulk } from "./use-all-work-bulk";
 
@@ -48,24 +49,32 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
 
   const {
     view,
-    page,
     scopeMine,
     filters,
     hasActiveFilters,
     handleViewChange,
     handleScopeToggle,
-    handlePageChange,
     handleClearFilters,
   } = useAllWorkFilters();
 
-  const workspaceFilters: typeof filters = pmWorkspaceId ? { ...filters, pmWorkspaceId } : filters;
-  const { data: allWorkData, isLoading, isError, refetch } = useAllWork(workspaceFilters);
+  const workspaceFilters = pmWorkspaceId ? { ...filters, pmWorkspaceId } : filters;
+  const {
+    data: infiniteData,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useInfiniteAllWork(workspaceFilters);
   const { data: projectsData } = useProjects({ limit: 100, ...(pmWorkspaceId ? { pmWorkspaceId } : {}) });
 
-  const tickets = useMemo(() => allWorkData?.data ?? [], [allWorkData]);
-  const total = allWorkData?.total ?? 0;
-  const currentPage = allWorkData?.page ?? page;
-  const limit = allWorkData?.limit ?? 50;
+  const tickets = useMemo(
+    () => infiniteData?.pages.flatMap((p) => p.data) ?? [],
+    [infiniteData],
+  );
+  const loadedCount = tickets.length;
 
   const projectGroups = useMemo(() => groupByProject(tickets), [tickets]);
 
@@ -82,9 +91,7 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
         .flatMap((p) => p.members)
         .filter((m, i, arr) => arr.findIndex((x) => x.id === m.id) === i)
         .map(
-          (
-            m,
-          ): {
+          (m): {
             id: string;
             name: string | null;
             firstName: string | null;
@@ -133,9 +140,13 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
     void refetch();
   }, [refetch]);
 
+  const handleLoadMore = useCallback(() => {
+    void fetchNextPage();
+  }, [fetchNextPage]);
+
   const subtitleText = isLoading
     ? "Loading tickets…"
-    : `${total} ticket${total === 1 ? "" : "s"} across projects`;
+    : `${loadedCount} ticket${loadedCount === 1 ? "" : "s"} loaded`;
 
   return (
     <PageWrapper
@@ -200,27 +211,21 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
             </PmPanel>
           ) : isError ? (
             <ErrorState
-                  className={cn(PM_FILL_PANEL, "mb-0 mt-2")}
-                  title="Failed to load work items"
-                  description="An error occurred while fetching tickets. Please try again."
-                  onRetry={handleRetry}
-                />
+              className={cn(PM_FILL_PANEL, "mb-0 mt-2")}
+              title="Failed to load work items"
+              description={getErrorMessage(error)}
+              onRetry={handleRetry}
+            />
           ) : tickets.length === 0 ? (
             <EmptyState
-                className={cn(PM_FILL_PANEL, "mb-0 mt-2")}
-                illustrationPreset="projects"
-                title={hasActiveFilters ? "No tickets match your filters" : "No tickets yet"}
-                description={
-                  hasActiveFilters
-                    ? "Try adjusting or clearing your filters."
-                    : "Start by creating a ticket in any project."
-                }
-                action={
-                  hasActiveFilters
-                    ? { label: "Clear filters", onClick: handleClearFilters }
-                    : { label: "All Projects", href: "/build/all" }
-                }
-              />
+              className={cn(PM_FILL_PANEL, "mb-0 mt-2")}
+              illustrationPreset="projects"
+              title="No tickets yet"
+              description={hasActiveFilters ? undefined : "Start by creating a ticket in any project."}
+              filtersActive={hasActiveFilters}
+              onClearFilters={handleClearFilters}
+              action={!hasActiveFilters ? { label: "All Projects", href: "/build/all" } : undefined}
+            />
           ) : (
             <>
               {tableSelection.size > 0 ? (
@@ -293,12 +298,18 @@ export function AllWorkPage({ pmWorkspaceId }: AllWorkPageProps) {
                   </div>
                 </ScrollArea>
 
-                <TablePagination
-                  page={currentPage}
-                  pageSize={limit}
-                  total={total}
-                  onPageChange={handlePageChange}
-                />
+                {hasNextPage ? (
+                  <div className="flex justify-center border-t py-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleLoadMore}
+                      disabled={isFetchingNextPage}
+                    >
+                      {isFetchingNextPage ? "Loading…" : "Load more"}
+                    </Button>
+                  </div>
+                ) : null}
               </div>
             </>
           )}

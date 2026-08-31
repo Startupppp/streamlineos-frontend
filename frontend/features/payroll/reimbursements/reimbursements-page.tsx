@@ -6,6 +6,8 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   Select,
   SelectContent,
@@ -18,6 +20,7 @@ import { MobileFilterDrawer } from "@/features/payroll/shared/mobile-filter-draw
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { ReimbursementStatusBadge } from "./reimbursement-status-badge";
 import { formatMoney, formatMonth } from "@/features/payroll/shared/payroll-format";
+import { formatShortDate } from "@/lib/date-utils";
 import {
   useReimbursements,
   useProcessReimbursement,
@@ -59,11 +62,6 @@ function toYearMonth(value: Date | string | null): string | null {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
-function formatDate(value: Date | string | null): string {
-  if (!value) return "—";
-  const d = typeof value === "string" ? new Date(value) : value;
-  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-}
 
 export function ReimbursementsPageContent() {
   const router = useRouter();
@@ -73,7 +71,7 @@ export function ReimbursementsPageContent() {
   const status = searchParams.get("status") ?? "all";
   const category = searchParams.get("category") ?? "all";
 
-  const { data, isLoading } = useReimbursements();
+  const { data, isLoading, isError, error, refetch } = useReimbursements();
   const processReimbursement = useProcessReimbursement();
   const canApprove = useCan("hr:payroll:approve");
 
@@ -203,7 +201,7 @@ export function ReimbursementsPageContent() {
       key: "submitted",
       header: "Submitted",
       cell: (row) => (
-        <span className="text-micro text-muted-foreground">{formatDate(row.createdAt)}</span>
+        <span className="text-micro text-muted-foreground">{formatShortDate(row.createdAt)}</span>
       ),
     },
     ...(canApprove ? [actionColumn] : []),
@@ -258,21 +256,30 @@ export function ReimbursementsPageContent() {
           <span className="font-medium">{formatMonth(month)}</span> payroll run automatically.
           Approved reimbursements are included as payroll inputs.
         </div>
-        <DataTable
-          className="flex-1 min-h-0"
-          data={filtered}
-          columns={columns}
-          getRowKey={(row) => row.id}
-          isLoading={isLoading}
-          minWidth="820px"
-          emptyState={
-            <EmptyState
-              illustration={<EmptyExpensesIllustration />}
-              title="No claims found"
-              description="No reimbursement claims match the current filters."
-            />
-          }
-        />
+        {isError ? (
+          <ErrorState
+            className="flex-1"
+            title="Couldn't load reimbursements"
+            description={getErrorMessage(error)}
+            onRetry={() => void refetch()}
+          />
+        ) : (
+          <DataTable
+            className="flex-1 min-h-0"
+            data={filtered}
+            columns={columns}
+            getRowKey={(row) => row.id}
+            isLoading={isLoading}
+            minWidth="820px"
+            emptyState={
+              <EmptyState
+                illustration={<EmptyExpensesIllustration />}
+                title="No claims found"
+                description="No reimbursement claims match the current filters."
+              />
+            }
+          />
+        )}
       </div>
     </PageWrapper>
   );

@@ -92,7 +92,7 @@ export function TimerPanel({ weekStart, weekEnd }: TimerPanelProps) {
   const recentProjects = useMemo(() => {
     const seen = new Set<number>();
     const items: { projectId: number; name: string }[] = [];
-    for (const e of weekEntries ?? []) {
+    for (const e of weekEntries?.data ?? []) {
       if (e.projectId && !seen.has(e.projectId)) {
         seen.add(e.projectId);
         items.push({ projectId: e.projectId, name: e.project?.name ?? "Project" });

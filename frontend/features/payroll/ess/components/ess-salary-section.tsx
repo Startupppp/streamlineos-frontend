@@ -7,12 +7,13 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PAGE_BODY_EMPTY_CLASS, PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
 import { useEssSalaryStructure } from "@/hooks/api/payroll/ess";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
+import { formatShortDate } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+  return formatShortDate(iso);
 }
 
 function SalaryStructureSkeleton() {

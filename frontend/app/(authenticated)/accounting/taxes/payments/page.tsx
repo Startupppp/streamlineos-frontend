@@ -31,19 +31,13 @@ import {
   ADJUSTMENT_DEFAULTS,
 } from "@/features/accounting/taxes/tax-adjustment-form-fields";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { formatShortDate } from "@/lib/date-utils";
 import type { TaxPayment } from "@/types/accounting/taxes";
 import type { AdjustmentFormValues } from "@/features/accounting/taxes/tax-adjustment-form-fields";
 import type { PaymentFormValues } from "@/features/accounting/taxes/tax-payment-form-fields";
 
 function todayStr(): string {
   return new Date().toISOString().slice(0, 10);
-}
-
-function formatDate(value: string): string {
-  const d = new Date(value);
-  return Number.isNaN(d.getTime())
-    ? value
-    : d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" });
 }
 
 interface DeletePaymentButtonProps {
@@ -76,7 +70,7 @@ export default function TaxPaymentsPage() {
   const canPay = useCan("accounting:taxes:pay");
   const canManage = useCan("accounting:taxes:manage");
 
-  const { data, isLoading, isError, error, refetch } = useTaxPayments({ pageSize: 100 });
+  const { data, isLoading, isError, error, refetch } = useTaxPayments({ limit: 100 });
   const createPayment = useCreateTaxPayment();
   const deletePayment = useDeleteTaxPayment();
   const createAdjustment = useCreateTaxAdjustment();
@@ -149,7 +143,7 @@ export default function TaxPaymentsPage() {
       header: "Period",
       cell: (row) => (
         <span className="text-sm tabular-nums">
-          {formatDate(row.periodStart)} – {formatDate(row.periodEnd)}
+          {formatShortDate(row.periodStart) || ""} – {formatShortDate(row.periodEnd) || ""}
         </span>
       ),
     },
@@ -173,7 +167,7 @@ export default function TaxPaymentsPage() {
       key: "paidDate",
       header: "Paid Date",
       cell: (row) => (
-        <span className="text-sm text-muted-foreground">{formatDate(row.paidDate)}</span>
+        <span className="text-sm text-muted-foreground">{formatShortDate(row.paidDate) || ""}</span>
       ),
     },
     {

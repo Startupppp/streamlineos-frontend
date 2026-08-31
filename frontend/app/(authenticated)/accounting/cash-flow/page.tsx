@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, memo } from "react";
+import { useState, useCallback, useMemo, memo } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DatePicker } from "@/components/ui/date-picker";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
@@ -10,18 +10,9 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { useCashFlow, type CashFlowSection } from "@/hooks/api/accounting";
+import { useOrgDisplay } from "@/hooks/api/org-display";
+import { formatMoney, type MoneyDisplay } from "@/lib/format-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
-
-const inrFormatter = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
-
-function formatInr(value: string): string {
-  return inrFormatter.format(parseFloat(value));
-}
 
 function pad2(n: number): string {
   return n < 10 ? `0${n}` : String(n);
@@ -42,48 +33,56 @@ const CashFlowSummaryStrip = memo(function CashFlowSummaryStrip({
   openingCash,
   netChange,
   closingCash,
+  display,
 }: {
   openingCash: string;
   netChange: string;
   closingCash: string;
+  display: MoneyDisplay;
 }) {
   return (
     <StatCardGrid cols={3}>
-      <StatCard label="Opening Cash" value={formatInr(openingCash)} />
-      <StatCard label="Net Change" value={formatInr(netChange)} />
-      <StatCard label="Closing Cash" value={formatInr(closingCash)} featured />
+      <StatCard label="Opening Cash" value={formatMoney(openingCash, display)} />
+      <StatCard label="Net Change" value={formatMoney(netChange, display)} />
+      <StatCard label="Closing Cash" value={formatMoney(closingCash, display)} featured />
     </StatCardGrid>
   );
 });
 
 type CashFlowItem = CashFlowSection["items"][number];
 
-const cashFlowItemColumns: DataTableColumn<CashFlowItem>[] = [
-  {
-    key: "label",
-    header: "Account",
-    cell: (row) => <span className="text-sm text-foreground">{row.label}</span>,
-  },
-  {
-    key: "amount",
-    header: "Net Cash Flow",
-    cell: (row) => (
-      <span className="text-sm text-right tabular-nums font-mono block">
-        {formatInr(row.amount)}
-      </span>
-    ),
-    className: "w-[180px] text-right",
-    headerClassName: "text-right",
-    sortable: true,
-    sortValue: (row) => parseFloat(row.amount),
-  },
-];
+function makeCashFlowItemColumns(
+  formatFn: (value: string) => string,
+): DataTableColumn<CashFlowItem>[] {
+  return [
+    {
+      key: "label",
+      header: "Account",
+      cell: (row) => <span className="text-sm text-foreground">{row.label}</span>,
+    },
+    {
+      key: "amount",
+      header: "Net Cash Flow",
+      cell: (row) => (
+        <span className="text-sm text-right tabular-nums font-mono block">
+          {formatFn(row.amount)}
+        </span>
+      ),
+      className: "w-[180px] text-right",
+      headerClassName: "text-right",
+      sortable: true,
+      sortValue: (row) => parseFloat(row.amount),
+    },
+  ];
+}
 
 interface SectionCardProps {
   section: CashFlowSection;
+  formatFn: (value: string) => string;
 }
 
-function SectionCard({ section }: SectionCardProps) {
+function SectionCard({ section, formatFn }: SectionCardProps) {
+  const columns = useMemo(() => makeCashFlowItemColumns(formatFn), [formatFn]);
   return (
     <div className="rounded-lg border border-border overflow-hidden">
       <div className="px-4 py-2.5 border-b bg-muted/40">
@@ -93,7 +92,7 @@ function SectionCard({ section }: SectionCardProps) {
       </div>
       <DataTable
         data={section.items}
-        columns={cashFlowItemColumns}
+        columns={columns}
         getRowKey={(item) => item.label}
         emptyState={
           <div className="px-6 py-8 text-center text-sm text-muted-foreground">
@@ -103,7 +102,7 @@ function SectionCard({ section }: SectionCardProps) {
         footer={
           <div className="flex items-center justify-between text-sm font-semibold">
             <span>Net {section.label}</span>
-            <span className="tabular-nums font-mono">{formatInr(section.total)}</span>
+            <span className="tabular-nums font-mono">{formatFn(section.total)}</span>
           </div>
         }
         className="border-0 rounded-none"
@@ -115,9 +114,15 @@ function SectionCard({ section }: SectionCardProps) {
 export default function CashFlowPage() {
   const [from, setFrom] = useState<string>(financialYearStart());
   const [to, setTo] = useState<string>(today());
+  const display = useOrgDisplay();
 
   const query = useCashFlow({ from, to });
   const report = query.data;
+
+  const formatFn = useCallback(
+    (value: string) => formatMoney(value, display),
+    [display],
+  );
 
   function handleFromChange(value: string): void {
     setFrom(value);
@@ -196,11 +201,12 @@ export default function CashFlowPage() {
               openingCash={report.openingCash}
               netChange={report.netChange}
               closingCash={report.closingCash}
+              display={display}
             />
 
             <div className="space-y-4">
               {report.sections.map((section) => (
-                <SectionCard key={section.key} section={section} />
+                <SectionCard key={section.key} section={section} formatFn={formatFn} />
               ))}
             </div>
 
@@ -209,7 +215,7 @@ export default function CashFlowPage() {
                 Net change in cash
               </span>
               <span className="font-mono tabular-nums text-base font-semibold text-foreground">
-                {formatInr(report.netChange)}
+                {formatFn(report.netChange)}
               </span>
             </div>
           </div>

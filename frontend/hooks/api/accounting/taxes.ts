@@ -3,6 +3,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
+import type { CursorPage } from "@/hooks/api/accounting";
 import type {
   TaxCode,
   TaxDashboard,
@@ -15,10 +17,11 @@ import type {
 
 interface ListResponse<T> {
   items: T[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
+  total?: number;
+  page?: number;
+  pageSize?: number;
+  totalPages?: number;
+  pagination?: { limit: number; hasMore: boolean; nextCursor: number | null };
 }
 
 const taxKeys = {
@@ -47,18 +50,20 @@ function toQuery<P extends object>(params: P): Record<string, string> {
 }
 
 export interface ListTaxCodesParams {
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
   taxType?: string;
   isActive?: boolean;
 }
 
 export function useListTaxCodes(params: ListTaxCodesParams = {}) {
-  return useQuery<ListResponse<TaxCode>, Error>({
+  const can = useCan("accounting:taxes:read");
+  return useQuery<CursorPage<TaxCode>, Error>({
     queryKey: taxKeys.codes(params),
     queryFn: () =>
-      apiClient.get<ListResponse<TaxCode>>("/accounting/tax-codes", toQuery(params)),
+      apiClient.get<CursorPage<TaxCode>>("/accounting/tax-codes", toQuery(params)),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 
@@ -110,11 +115,12 @@ export function useSeedDefaultTaxCodes() {
 }
 
 export function useTaxDashboard(from: string, to: string) {
+  const can = useCan("accounting:taxes:read");
   return useQuery<TaxDashboard, Error>({
     queryKey: taxKeys.dashboard(from, to),
     queryFn: () =>
       apiClient.get<TaxDashboard>("/accounting/taxes/dashboard", { from, to }),
-    enabled: !!from && !!to,
+    enabled: can && !!from && !!to,
     staleTime: 120_000,
   });
 }
@@ -123,37 +129,40 @@ export interface TaxReportParams {
   from?: string;
   to?: string;
   rate?: string;
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
 }
 
 export function useTaxReportOutput(params: TaxReportParams = {}) {
-  return useQuery<ListResponse<TaxReportLine>, Error>({
+  const can = useCan("accounting:taxes:read");
+  return useQuery<CursorPage<TaxReportLine>, Error>({
     queryKey: taxKeys.reportOutput(params),
     queryFn: () =>
-      apiClient.get<ListResponse<TaxReportLine>>(
+      apiClient.get<CursorPage<TaxReportLine>>(
         "/accounting/taxes/reports/output",
         toQuery(params),
       ),
-    enabled: !!params.from && !!params.to,
+    enabled: can && !!params.from && !!params.to,
     staleTime: 30_000,
   });
 }
 
 export function useTaxReportInput(params: TaxReportParams = {}) {
-  return useQuery<ListResponse<TaxReportLine>, Error>({
+  const can = useCan("accounting:taxes:read");
+  return useQuery<CursorPage<TaxReportLine>, Error>({
     queryKey: taxKeys.reportInput(params),
     queryFn: () =>
-      apiClient.get<ListResponse<TaxReportLine>>(
+      apiClient.get<CursorPage<TaxReportLine>>(
         "/accounting/taxes/reports/input",
         toQuery(params),
       ),
-    enabled: !!params.from && !!params.to,
+    enabled: can && !!params.from && !!params.to,
     staleTime: 30_000,
   });
 }
 
 export function useTaxLiabilitySummary(from: string, to: string) {
+  const can = useCan("accounting:taxes:read");
   return useQuery<LiabilitySummaryResponse, Error>({
     queryKey: taxKeys.liabilitySummary(from, to),
     queryFn: () =>
@@ -161,20 +170,21 @@ export function useTaxLiabilitySummary(from: string, to: string) {
         "/accounting/taxes/reports/liability-summary",
         { from, to },
       ),
-    enabled: !!from && !!to,
+    enabled: can && !!from && !!to,
     staleTime: 30_000,
   });
 }
 
 export interface ListTaxPaymentsParams {
-  page?: number;
-  pageSize?: number;
+  limit?: number;
+  cursor?: number;
   taxType?: string;
   from?: string;
   to?: string;
 }
 
 export function useTaxPayments(params: ListTaxPaymentsParams = {}) {
+  const can = useCan("accounting:taxes:read");
   return useQuery<ListResponse<TaxPayment>, Error>({
     queryKey: taxKeys.payments(params),
     queryFn: () =>
@@ -183,6 +193,7 @@ export function useTaxPayments(params: ListTaxPaymentsParams = {}) {
         toQuery(params),
       ),
     staleTime: 30_000,
+    enabled: can,
   });
 }
 

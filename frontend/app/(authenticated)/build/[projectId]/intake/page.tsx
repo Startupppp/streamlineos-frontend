@@ -172,7 +172,7 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
   const handleCloseAccept = useCallback(() => setAcceptOpen(false), []);
   const handleCloseDecline = useCallback(() => setDeclineOpen(false), []);
 
-  const allItems = intakeData?.items ?? [];
+  const allItems = intakeData?.data ?? [];
   const filteredItems = allItems.filter((item) => activeTab === "all" || item.status === activeTab);
   const pendingCount = allItems.filter((i) => i.status === "pending").length;
 

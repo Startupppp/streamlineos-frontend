@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { FileUp, Undo2, Upload } from "lucide-react";
+import { FileUp, Upload } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -22,7 +22,8 @@ import { statusToneClasses } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 import type { ImportPreview, ImportProgress, PlannedEntity } from "@/types/crm/import";
 import { PLANNED_ENTITIES, needsSubjectType, plannedEntity } from "./planned-entities";
-import { ColumnMappingReview } from "./column-mapping-review";
+import { ImportPreviewCard } from "./import-preview-card";
+import { ImportCommittedCard } from "./import-committed-card";
 import {
   IMPORT_FILE_ACCEPT,
   ImportFileError,
@@ -376,148 +377,31 @@ export function PlannedImportSection() {
       </Card>
 
       {preview && !committed ? (
-        <>
-          <ColumnMappingReview
-            columns={preview.columns}
-            overrides={overrides}
-            onOverride={handleOverride}
-          />
-
-          <Card>
-            <CardHeader>
-              <CardTitle>What this would do</CardTitle>
-              <CardDescription>
-                Exactly this, and nothing else. Committing runs the plan below.
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="flex flex-col gap-gap-toolbar">
-              {/* The plan's own reservations, shown because the tenant is about
-                  to approve it. */}
-              {preview.warnings.length > 0 ? (
-                <ul className="flex flex-col gap-1">
-                  {preview.warnings.map((warning) => (
-                    <li key={warning} role="alert" className="text-label text-status-warning-ink">
-                      {warning}
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-
-              <div className="flex flex-wrap gap-gap-grid">
-                <Summary label="Created" value={preview.summary.create} tone="success" />
-                <Summary label="Updated" value={preview.summary.update} tone="info" />
-                <Summary label="Merged" value={preview.summary.merge} tone="info" />
-                <Summary label="For review" value={preview.summary.review} tone="warning" />
-                <Summary label="Skipped" value={preview.summary.skip} tone="neutral" />
-              </div>
-
-              {/* A sample. Shipping ten thousand rows to a browser is a preview
-                  nobody waits for. */}
-              <ul className="max-h-72 overflow-y-auto rounded-md border border-border">
-                {preview.rows.map((row) => (
-                  <li
-                    key={row.rowNumber}
-                    className="flex flex-wrap items-baseline gap-x-2 border-b border-border px-3 py-2 text-label last:border-b-0"
-                  >
-                    <span className="tabular-nums text-muted-foreground">Row {row.rowNumber}</span>
-                    <span className={cn("font-medium", toneFor(row.action))}>{row.action}</span>
-                    <span className="min-w-0 flex-1 truncate text-muted-foreground">{row.reason}</span>
-                  </li>
-                ))}
-              </ul>
-
-              {choicesChanged ? (
-                <p role="alert" className="text-label text-status-warning-ink">
-                  Your column choices changed. Check again to see what they would do — this plan
-                  was built before them.
-                </p>
-              ) : unanswered.length > 0 ? (
-                <p role="alert" className="text-label text-status-warning-ink">
-                  Answer {unanswered.length} {unanswered.length === 1 ? "column" : "columns"} above,
-                  then check again.
-                </p>
-              ) : null}
-
-              {progress ? (
-                <p aria-live="polite" className="text-label text-muted-foreground">
-                  {progress.done} done, {progress.remaining} to go. This runs on the server and
-                  carries on if you leave — reopen the import to see where it got to.
-                </p>
-              ) : null}
-
-              <LoadingButton
-                type="button"
-                className="self-start"
-                isPending={commitImport.isPending}
-                disabled={unanswered.length > 0 || choicesChanged || preview.summary.total === 0}
-                onClick={handleCommit}
-              >
-                Import {preview.summary.create + preview.summary.update} records
-              </LoadingButton>
-            </CardContent>
-          </Card>
-        </>
+        <ImportPreviewCard
+          preview={preview}
+          overrides={overrides}
+          choicesChanged={choicesChanged}
+          unanswered={unanswered}
+          progress={progress}
+          commitIsPending={commitImport.isPending}
+          onOverride={handleOverride}
+          onCommit={handleCommit}
+        />
       ) : null}
 
       {committed ? (
-        <Card className="border-status-success-rule">
-          <CardHeader>
-            <CardTitle>Imported</CardTitle>
-            <CardDescription>
-              {committed.created} created, {committed.updated} updated. If it is not what you
-              wanted, take the whole thing back — records it created are removed and records it
-              changed go back exactly as they were.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <LoadingButton
-              type="button"
-              variant="outline"
-              isPending={revertImport.isPending}
-              onClick={handleRevert}
-            >
-              <Undo2 className="mr-1.5 size-4" aria-hidden />
-              Undo this import
-            </LoadingButton>
-          </CardContent>
-        </Card>
+        <ImportCommittedCard
+          committed={committed}
+          revertIsPending={revertImport.isPending}
+          onRevert={handleRevert}
+        />
       ) : null}
     </div>
   );
 }
 
-/**
- * Whether two sets of column answers are the same.
- *
- * A shallow compare is exactly right: the values are field names chosen from a
- * fixed list, so there is nothing nested to miss.
- */
 function sameAnswers(a: Record<string, string>, b: Record<string, string>): boolean {
   const keys = Object.keys(a);
   if (keys.length !== Object.keys(b).length) return false;
   return keys.every((key) => a[key] === b[key]);
-}
-
-function toneFor(action: string): string {
-  if (action === "create") return statusToneClasses("success").ink;
-  if (action === "update") return statusToneClasses("info").ink;
-  return statusToneClasses("neutral").ink;
-}
-
-function Summary({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: number;
-  tone: "success" | "info" | "warning" | "neutral";
-}) {
-  return (
-    <div>
-      <p className="text-micro text-muted-foreground">{label}</p>
-      <p className={cn("text-2xl font-medium tabular-nums", statusToneClasses(tone).ink)}>{value}</p>
-    </div>
-  );
 }

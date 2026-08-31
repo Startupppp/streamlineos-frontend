@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 
 interface TaskRepStat {
   assigneeId: string | null;
@@ -29,6 +29,7 @@ interface TaskAnalyticsCardProps {
 }
 
 export function TaskAnalyticsCard({ taskAnalytics }: TaskAnalyticsCardProps) {
+  const { fadeUp } = useMotionVariants();
   return (
     <motion.div variants={fadeUp}>
       <Card className="shadow-sm">

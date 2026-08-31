@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -14,6 +14,7 @@ import type {
   ExportHistoryResponse,
   ExportRowsResponse,
   AckExportResponse,
+  TimesheetExportDto,
 } from "@/features/timesheets/payroll/types";
 import type { AckExportInput } from "@/features/timesheets/payroll/ack-export-schema";
 
@@ -80,15 +81,25 @@ export function useCreateTimesheetPayrollExport() {
   });
 }
 
-export function useTimesheetPayrollExports(page: number, pageSize = 20) {
+export function useTimesheetPayrollExports(limit = 20) {
   const canView = useCan("timesheets:payroll:view");
-  return useQuery({
-    queryKey: queryKeys.timesheets.payroll.exports(page, pageSize),
-    queryFn: () =>
-      apiClient.get<ExportHistoryResponse>("/timesheets/payroll/exports", { page, pageSize }),
+  return useInfiniteQuery<ExportHistoryResponse>({
+    queryKey: queryKeys.timesheets.payroll.exports(),
+    queryFn: ({ pageParam }) => {
+      const params: Record<string, unknown> = { limit };
+      if (typeof pageParam === "string") params.cursor = pageParam;
+      return apiClient.get<ExportHistoryResponse>("/timesheets/payroll/exports", params);
+    },
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     staleTime: 30_000,
     enabled: canView,
   });
+}
+
+export function useAllTimesheetPayrollExports(): TimesheetExportDto[] {
+  const { data } = useTimesheetPayrollExports();
+  return data?.pages.flatMap((p) => p.data) ?? [];
 }
 
 export function useAckPayrollExport() {

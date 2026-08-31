@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { AlertTriangle } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   Select,
   SelectContent,
@@ -15,6 +17,7 @@ import {
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { useAdminLoans, type LoanAdminItem, type LoanStatus } from "@/hooks/api/payroll/loans-admin";
+import { formatMoney } from "@/features/payroll/shared/payroll-format";
 import { usePayrollRuns } from "@/hooks/api/payroll/runs";
 import { useCan } from "@/hooks/api/access";
 import { LoanAdjustmentDialog } from "./loan-adjustment-dialog";
@@ -65,7 +68,7 @@ export function LoansTable() {
   const [approvalState, setApprovalState] = useState<ApprovalDialogState>(null);
 
   const canManage = useCan("payroll:runs:update");
-  const { data: loans, isLoading } = useAdminLoans();
+  const { data: loans, isLoading, isError, error, refetch } = useAdminLoans();
   const { data: runsData } = usePayrollRuns({ limit: 12 });
 
   const activeRunId = useMemo(() => {
@@ -137,40 +140,49 @@ export function LoansTable() {
           </SelectContent>
         </Select>
       </div>
-      <DataTable
-        className="flex-1 min-h-0"
-        data={filtered}
-        columns={columns}
-        getRowKey={(row) => row.id}
-        isLoading={isLoading}
-        minWidth="780px"
-        pagination={{ pageSize: 20 }}
-        mobileCard={(row) => (
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-sm font-medium truncate">{row.user.name ?? row.user.email}</p>
-              <span className="text-micro font-medium uppercase tracking-wide text-muted-foreground shrink-0">
-                {row.status}
-              </span>
+      {isError ? (
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load loans"
+          description={getErrorMessage(error)}
+          onRetry={() => void refetch()}
+        />
+      ) : (
+        <DataTable
+          className="flex-1 min-h-0"
+          data={filtered}
+          columns={columns}
+          getRowKey={(row) => row.id}
+          isLoading={isLoading}
+          minWidth="780px"
+          pagination={{ pageSize: 20 }}
+          mobileCard={(row) => (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm font-medium truncate">{row.user.name ?? row.user.email}</p>
+                <span className="text-micro font-medium uppercase tracking-wide text-muted-foreground shrink-0">
+                  {row.status}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                <span className="font-mono tabular-nums text-foreground">
+                  {formatMoney(row.amount)}
+                </span>
+                <span>
+                  EMI {row.paidEmis ?? 0}/{row.totalEmis ?? "—"}
+                </span>
+              </div>
             </div>
-            <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-              <span className="font-mono tabular-nums text-foreground">
-                ₹{Number(row.amount).toLocaleString("en-IN")}
-              </span>
-              <span>
-                EMI {row.paidEmis ?? 0}/{row.totalEmis ?? "—"}
-              </span>
-            </div>
-          </div>
-        )}
-        emptyState={
-          <EmptyState
-            illustration={<EmptyPersonIllustration />}
-            title="No active loans"
-            description="Employee salary loans and advances will appear here"
-          />
-        }
-      />
+          )}
+          emptyState={
+            <EmptyState
+              illustration={<EmptyPersonIllustration />}
+              title="No active loans"
+              description="Employee salary loans and advances will appear here"
+            />
+          }
+        />
+      )}
       <LoanAdjustmentDialog
         loanId={adjustState?.loanId ?? 0}
         loanEmployeeName={adjustState?.employeeName ?? ""}

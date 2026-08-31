@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
 import { SearchInput } from "@/components/ui/search-input";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -65,7 +66,10 @@ export function ContactListPage() {
   const exportContacts = useExportContacts();
 
   const [search, setSearch] = useState(searchParams.get("q") ?? "");
-  const page = Number(searchParams.get("page")) || 1;
+  // `/contacts` takes a cursor; the `offset` this used to send was stripped by
+  // the query schema, so the list never advanced past its first page.
+  const { cursor, pageNumber, hasPrevious, goNext, goPrevious, reset: resetCursor } =
+    useCursorPagination();
   const debouncedSearch = useDebouncedValue(search, 300);
   const trimmedSearch = debouncedSearch.trim();
   const apiSearch = trimmedSearch.length >= 3 ? trimmedSearch : "";
@@ -87,13 +91,13 @@ export function ContactListPage() {
   useEffect(() => {
     const current = searchParams.get("q") ?? "";
     if (debouncedSearch === current) return;
-    updateParams({ q: debouncedSearch || null, page: null });
+    updateParams({ q: debouncedSearch || null });
   }, [debouncedSearch, searchParams, updateParams]);
 
   const { data, isLoading, isError, error, refetch, access} = useContacts({
     search: apiSearch || undefined,
     limit: PAGE_SIZE,
-    offset: (page - 1) * PAGE_SIZE,
+    ...(cursor !== undefined ? { cursor } : {}),
   });
 
   const contacts = useMemo(() => data?.items ?? [], [data?.items]);
@@ -114,12 +118,12 @@ export function ContactListPage() {
 
   const handleClearFilters = useCallback(() => {
     setSearch("");
-    updateParams({ q: null, page: null });
+    updateParams({ q: null });
   }, [updateParams]);
 
-  const handlePageChange = useCallback(
-    (next: number) => updateParams({ page: next > 1 ? String(next) : null }),
-    [updateParams],
+  const handleNextPage = useCallback(
+    () => goNext(data?.nextCursor ?? null),
+    [goNext, data?.nextCursor],
   );
 
   const handleExport = useCallback(() => {
@@ -250,20 +254,15 @@ export function ContactListPage() {
           <EmptyState
             access={access}
             illustration={<EmptyPersonIllustration />}
-            title={isFiltered ? "No contacts match this search" : "No contacts yet"}
+            title="No contacts yet"
             description={
               isFiltered
-                ? `Nothing matches “${apiSearch}”. Clear the search to see every contact.`
+                ? "No results match your filters."
                 : "Contacts are the people you deal with at each company. Add one, or import a CSV to bring your existing list in."
             }
-            action={
-              isFiltered
-                ? { label: "Clear search", onClick: handleClearFilters }
-                : canManageContacts
-                  ? { label: "Add contact", onClick: handleOpenCreate }
-                  : undefined
-            }
-            actionVariant={isFiltered ? "outline" : undefined}
+            filtersActive={isFiltered}
+            onClearFilters={handleClearFilters}
+            action={!isFiltered && canManageContacts ? { label: "Add contact", onClick: handleOpenCreate } : undefined}
             className={CONTENT_FILL_PANEL}
           />
         ) : (
@@ -276,11 +275,13 @@ export function ContactListPage() {
             density={density}
             minWidth="820px"
             pagination={{
-              mode: "server",
-              page,
+              mode: "cursor",
               pageSize: PAGE_SIZE,
-              total,
-              onPageChange: handlePageChange,
+              pageNumber,
+              hasMore: data?.hasMore ?? false,
+              hasPrevious,
+              onNext: handleNextPage,
+              onPrevious: goPrevious,
             }}
             className={CONTENT_FILL_PANEL}
           />

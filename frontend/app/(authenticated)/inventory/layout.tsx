@@ -1,7 +1,7 @@
 import { type ReactNode } from "react";
-import { requireSession } from "@/lib/rbac/require-permission";
 import { RequireModule } from "@/components/auth/require-module";
 import { InventoryOutboxProvider } from "@/lib/offline/outbox-provider";
+import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 
 /**
  * The outbox provider is mounted here, around every inventory route.
@@ -17,7 +17,7 @@ import { InventoryOutboxProvider } from "@/lib/offline/outbox-provider";
  * exists on some of the screens that write to it is worse than none.
  */
 export default async function InventoryLayout({ children }: { children: ReactNode }) {
-  await requireSession();
+  await enforceRouteAccess("/inventory");
   return (
     <RequireModule module="inventory">
       <InventoryOutboxProvider>{children}</InventoryOutboxProvider>

@@ -25,16 +25,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { RateFormSheet } from "./rate-form-sheet";
-
-function formatCurrency(value: string | null, currency = "INR"): string {
-  if (!value) return "—";
-  const num = parseFloat(value);
-  if (isNaN(num)) return "—";
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency,
-  }).format(num);
-}
+import { formatMoney } from "@/lib/format-utils";
+import { useOrgDisplay } from "@/hooks/api/org-display";
 
 function formatEffectiveMonth(value: string): string {
   try {
@@ -96,6 +88,7 @@ export function RatesTab() {
   const canManage = useCan("timesheets:rates:manage");
   const { data, isLoading, isError, refetch } = useRates();
   const deleteRate = useDeleteRate();
+  const display = useOrgDisplay();
 
   const [addOpen, setAddOpen] = useState(false);
   const [editRate, setEditRate] = useState<TimesheetRate | null>(null);
@@ -145,7 +138,7 @@ export function RatesTab() {
         header: "Bill rate",
         cell: (row) => (
           <span className="text-xs tabular-nums">
-            {formatCurrency(row.billRate, row.currency)}
+            {row.billRate && !isNaN(parseFloat(row.billRate)) ? formatMoney(parseFloat(row.billRate), display) : "—"}
           </span>
         ),
       },
@@ -154,7 +147,7 @@ export function RatesTab() {
         header: "Cost rate",
         cell: (row) => (
           <span className="text-xs tabular-nums text-muted-foreground">
-            {formatCurrency(row.costRate, row.currency)}
+            {row.costRate && !isNaN(parseFloat(row.costRate)) ? formatMoney(parseFloat(row.costRate), display) : "—"}
           </span>
         ),
       },
@@ -212,7 +205,7 @@ export function RatesTab() {
           ]
         : []),
     ],
-    [canManage, handleEdit, handleDeleteRequest],
+    [canManage, display, handleEdit, handleDeleteRequest],
   );
 
   if (isError) {

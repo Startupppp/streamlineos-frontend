@@ -93,6 +93,9 @@ export function useCreateTicket(
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.sprints(variables.projectId),
       });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.columnCounts(variables.projectId),
+      });
       queryClient.invalidateQueries({ queryKey: queryKeys.projectReports.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.myIssues() });
       options?.onSuccess?.(data, variables, context, mutFnCtx);
@@ -204,6 +207,11 @@ export function useUpdateTicket(
         variables.points !== undefined;
       const affectsAssignment =
         variables.assigneeId !== undefined || variables.assigneeIds !== undefined;
+      if (variables.status !== undefined) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.projects.columnCounts(projectId),
+        });
+      }
       if (affectsSprintAggregates) {
         queryClient.invalidateQueries({ queryKey: queryKeys.projects.sprints(projectId) });
         queryClient.invalidateQueries({ queryKey: queryKeys.projectReports.all });
@@ -237,6 +245,9 @@ export function useDeleteTicket(
       });
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.sprints(projectId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.columnCounts(projectId),
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.projectReports.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.myIssues() });
@@ -289,6 +300,7 @@ export function useBulkUpdateTickets(projectId: number) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.tickets({ projectId }) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.columnCounts(projectId) });
     },
   });
 }

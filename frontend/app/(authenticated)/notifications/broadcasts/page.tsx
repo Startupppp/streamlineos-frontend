@@ -53,6 +53,7 @@ import {
   useCancelBroadcast,
   useDeleteBroadcast,
 } from "@/hooks/api/notifications";
+import { useCan } from "@/hooks/api/access";
 import {
   NOTIFICATION_CATEGORIES,
   NOTIFICATION_CATEGORY_CONFIG,
@@ -62,356 +63,9 @@ import {
 import { broadcastSchema, type BroadcastFormValues } from "@/features/notifications/broadcast-schema";
 import type { Broadcast, BroadcastStatus } from "@/types/notifications";
 
-const STATUS_TABS: Array<{ value: string; label: string }> = [
-  { value: "ALL", label: "All" },
-  { value: "DRAFT", label: "Drafts" },
-  { value: "SCHEDULED", label: "Scheduled" },
-  { value: "SENDING", label: "Sending" },
-  { value: "SENT", label: "Sent" },
-  { value: "FAILED", label: "Failed" },
-];
-
-const STATUS_CONFIG: Record<BroadcastStatus, { label: string; className: string }> = {
-  DRAFT: { label: "Draft", className: "border-border text-muted-foreground" },
-  SCHEDULED: { label: "Scheduled", className: "border-status-info-rule text-status-info-ink" },
-  QUEUED: { label: "Queued", className: "border-status-info-rule text-status-info-ink" },
-  SENDING: { label: "Sending", className: "border-status-warning-rule text-status-warning-ink" },
-  SENT: { label: "Sent", className: "border-status-success-rule text-status-success-ink" },
-  CANCELLED: { label: "Cancelled", className: "border-border text-muted-foreground" },
-  FAILED: { label: "Failed", className: "border-status-danger-rule text-status-danger-ink" },
-};
-
-function BroadcastSheet({
-  open,
-  broadcast,
-  onClose,
-}: {
-  open: boolean;
-  broadcast: Broadcast | null;
-  onClose: () => void;
-}) {
-  const isEdit = !!broadcast;
-  const create = useCreateBroadcast();
-  const update = useUpdateBroadcast();
-
-  const form = useForm<BroadcastFormValues>({
-    resolver: zodResolver(broadcastSchema),
-    defaultValues: {
-      title: broadcast?.title ?? "",
-      message: broadcast?.message ?? "",
-      type: broadcast?.type ?? "INFO",
-      priority: broadcast?.priority ?? "NORMAL",
-      category: broadcast?.category ?? "SYSTEM",
-      audienceType: (broadcast?.audience?.type ?? "all") as "all" | "roles" | "departments" | "users",
-      scheduledAt: broadcast?.scheduledAt ? String(broadcast.scheduledAt).slice(0, 16) : "",
-    },
-  });
-
-  function handleSubmit(values: BroadcastFormValues) {
-    const payload = {
-      title: values.title,
-      message: values.message,
-      type: values.type,
-      priority: values.priority,
-      category: values.category,
-      audience: { type: values.audienceType },
-      channels: ["IN_APP"],
-      scheduledAt: values.scheduledAt || null,
-    };
-
-    if (isEdit && broadcast) {
-      update.mutate(
-        { id: broadcast.id, ...payload },
-        {
-          onSuccess: () => { toast.success("Broadcast updated"); onClose(); },
-          onError: () => toast.error("Failed to update broadcast"),
-        },
-      );
-    } else {
-      create.mutate(payload, {
-        onSuccess: () => { toast.success("Broadcast created"); onClose(); },
-        onError: () => toast.error("Failed to create broadcast"),
-      });
-    }
-  }
-
-  const isPending = create.isPending || update.isPending;
-
-  return (
-    <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col gap-0">
-        <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
-          <SheetTitle>{isEdit ? "Edit Broadcast" : "New Broadcast"}</SheetTitle>
-        </SheetHeader>
-        <SheetBody className="px-6 py-4">
-          <Form {...form}>
-            <form id="broadcast-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Title</FormLabel>
-                    <FormControl>
-                      <Input placeholder="System maintenance tonight" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="message"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Message</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="We will be performing maintenance on..."
-                        rows={4}
-                        className="resize-none"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Type</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent>
-                          <SelectItem value="INFO">Info</SelectItem>
-                          <SelectItem value="SUCCESS">Success</SelectItem>
-                          <SelectItem value="WARNING">Warning</SelectItem>
-                          <SelectItem value="ERROR">Error</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="priority"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Priority</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent>
-                          {NOTIFICATION_PRIORITIES.map((p) => (
-                            <SelectItem key={p} value={p}>{NOTIFICATION_PRIORITY_CONFIG[p].label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Category</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent>
-                          {NOTIFICATION_CATEGORIES.map((cat) => (
-                            <SelectItem key={cat} value={cat}>{NOTIFICATION_CATEGORY_CONFIG[cat].label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="audienceType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Audience</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent>
-                          <SelectItem value="all">Everyone</SelectItem>
-                          <SelectItem value="roles">By Role</SelectItem>
-                          <SelectItem value="departments">By Department</SelectItem>
-                          <SelectItem value="users">Specific Users</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <FormField
-                control={form.control}
-                name="scheduledAt"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Schedule (optional)</FormLabel>
-                    <FormControl>
-                      <input
-                        type="datetime-local"
-                        {...field}
-                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                      />
-                    </FormControl>
-                    <p className="text-dense text-muted-foreground">Leave empty to send immediately on publish.</p>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </form>
-          </Form>
-        </SheetBody>
-        <SheetFooter className="px-6 py-4 justify-end">
-          <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>Cancel</Button>
-          <LoadingButton
-            type="submit"
-            form="broadcast-form"
-            isPending={isPending}
-            loadingText="Saving..."
-          >
-            {isEdit ? "Save Changes" : "Create Draft"}
-          </LoadingButton>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
-  );
-}
-
-function formatDate(d: Date | string | null) {
-  if (!d) return null;
-  return new Date(d).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function BroadcastRow({
-  broadcast,
-  idx,
-  onPublish,
-  onCancel,
-  onEdit,
-  onDelete,
-}: {
-  broadcast: Broadcast;
-  idx: number;
-  onPublish: (b: Broadcast) => void;
-  onCancel: (b: Broadcast) => void;
-  onEdit: (b: Broadcast) => void;
-  onDelete: (b: Broadcast) => void;
-}) {
-  const shouldReduceMotion = useReducedMotion();
-  const sendAnim = useAnimatedIcon();
-  const editAnim = useAnimatedIcon();
-  const deleteAnim = useAnimatedIcon();
-
-  const statusCfg = STATUS_CONFIG[broadcast.status] ?? STATUS_CONFIG.DRAFT;
-  const canPublish = broadcast.status === "DRAFT" || broadcast.status === "SCHEDULED";
-  const canCancel = broadcast.status === "QUEUED" || broadcast.status === "SENDING" || broadcast.status === "SCHEDULED";
-  const canEdit = broadcast.status === "DRAFT" || broadcast.status === "SCHEDULED";
-  const canDelete = broadcast.status === "DRAFT" || broadcast.status === "FAILED" || broadcast.status === "CANCELLED" || broadcast.status === "SENT";
-
-  const handlePublishClick = useCallback(() => onPublish(broadcast), [onPublish, broadcast]);
-  const handleCancelClick = useCallback(() => onCancel(broadcast), [onCancel, broadcast]);
-  const handleEditClick = useCallback(() => onEdit(broadcast), [onEdit, broadcast]);
-  const handleDeleteClick = useCallback(() => onDelete(broadcast), [onDelete, broadcast]);
-
-  return (
-    <motion.div
-      initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2, delay: Math.min(idx, 10) * 0.04, ease: "easeOut" }}
-      className="group flex items-start gap-3 px-3 py-2.5 hover:bg-muted/30 transition-colors"
-    >
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-sm font-medium truncate">{broadcast.title}</span>
-          <Badge variant="outline" className={cn("text-micro h-4 px-1.5 shrink-0", statusCfg.className)}>
-            {statusCfg.label}
-          </Badge>
-          <Badge variant="secondary" className="text-micro h-4 px-1.5 shrink-0">
-            {NOTIFICATION_CATEGORY_CONFIG[broadcast.category]?.label ?? broadcast.category}
-          </Badge>
-        </div>
-        <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{broadcast.message}</p>
-        <div className="flex items-center gap-3 mt-0.5 text-dense text-muted-foreground/60">
-          {broadcast.status === "SENT" && (
-            <span>{broadcast.deliveredCount} / {broadcast.recipientCount} delivered</span>
-          )}
-          {broadcast.scheduledAt && <span>Scheduled {formatDate(broadcast.scheduledAt)}</span>}
-          {broadcast.sentAt && <span>Sent {formatDate(broadcast.sentAt)}</span>}
-          <span>Audience: {broadcast.audience?.type ?? "all"}</span>
-        </div>
-      </div>
-      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-        {canPublish && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-6 text-xs gap-1 px-2"
-            onClick={handlePublishClick}
-            {...sendAnim.hoverHandlers}
-          >
-            <SendIcon ref={sendAnim.iconRef} size={12} />
-            Send
-          </Button>
-        )}
-        {canCancel && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6"
-            aria-label="Cancel broadcast"
-            onClick={handleCancelClick}
-          >
-            <X className="h-3 w-3 text-muted-foreground" />
-          </Button>
-        )}
-        {canEdit && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6"
-            aria-label="Edit broadcast"
-            onClick={handleEditClick}
-            {...editAnim.hoverHandlers}
-          >
-            <UserPenIcon ref={editAnim.iconRef} size={12} className="text-muted-foreground" />
-          </Button>
-        )}
-        {canDelete && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 hover:text-destructive"
-            aria-label="Delete broadcast"
-            onClick={handleDeleteClick}
-            {...deleteAnim.hoverHandlers}
-          >
-            <Trash2Icon ref={deleteAnim.iconRef} size={12} className="text-muted-foreground" />
-          </Button>
-        )}
-      </div>
-    </motion.div>
-  );
-}
+import { STATUS_TABS, formatDate } from "@/features/notifications/components/broadcast-config";
+import { BroadcastSheet } from "@/features/notifications/components/broadcast-editor";
+import { BroadcastRow } from "@/features/notifications/components/broadcast-row";
 
 export default function BroadcastsPage() {
   const [activeStatus, setActiveStatus] = useState("ALL");
@@ -420,6 +74,8 @@ export default function BroadcastsPage() {
   const [publishTarget, setPublishTarget] = useState<Broadcast | null>(null);
   const [cancelTarget, setCancelTarget] = useState<Broadcast | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Broadcast | null>(null);
+
+  const canManage = useCan("notifications:broadcasts:manage");
 
   const params = activeStatus !== "ALL" ? { status: activeStatus } : undefined;
   const { data: broadcastData, isLoading, isError, refetch } = useBroadcasts(params);
@@ -475,10 +131,12 @@ export default function BroadcastsPage() {
       title="Broadcast Center"
       subtitle="Send announcements and mass notifications to your team"
       actions={
-        <Button size="sm" onClick={handleCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          New Broadcast
-        </Button>
+        canManage ? (
+          <Button size="sm" onClick={handleCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            New Broadcast
+          </Button>
+        ) : undefined
       }
     >
       <div className="flex min-h-0 flex-1 flex-col gap-4">
@@ -523,6 +181,7 @@ export default function BroadcastsPage() {
                 key={b.id}
                 broadcast={b}
                 idx={idx}
+                canManage={canManage}
                 onPublish={setPublishTarget}
                 onCancel={setCancelTarget}
                 onEdit={handleEdit}

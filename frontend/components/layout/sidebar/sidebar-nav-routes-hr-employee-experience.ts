@@ -69,7 +69,7 @@ export const HR_EMPLOYEE_EXPERIENCE_ROUTES: NavRoute[] = [
             label: "Goals & OKRs",
             icon: Target,
             href: "/hr/goals",
-            requiredPermission: "hr:goals:view",
+            requiredPermission: "hr:performance:view",
           },
           {
             label: "KPIs & Competencies",

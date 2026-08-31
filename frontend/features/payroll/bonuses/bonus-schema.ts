@@ -92,12 +92,3 @@ export function getBonusMonth(bonus: { month?: string | null; createdAt?: string
   if (isNaN(d.getTime())) return null;
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
-
-export function formatDate(value: string | null): string {
-  if (!value) return "—";
-  return new Date(value).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}

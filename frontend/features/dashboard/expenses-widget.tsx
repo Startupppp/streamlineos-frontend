@@ -119,6 +119,7 @@ export function ExpensesWidget() {
         link={{ href: "/hr/expenses", label: "View" }}
         isLoading={isLoading}
         error={error}
+        onRetry={() => void refetch()}
         loadingRows={3}
         isEmpty={!expenses.length}
         empty={

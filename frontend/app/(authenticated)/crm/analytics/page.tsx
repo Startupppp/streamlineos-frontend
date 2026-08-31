@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import { staggerContainer } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { RepPerformanceTable } from "@/features/crm/analytics/rep-performance-table";
 import { PeriodSelector, periodToDateRange } from "@/features/crm/analytics/period-selector";
 import type { Period } from "@/features/crm/analytics/period-selector";
@@ -77,6 +77,7 @@ const WinRateTrendChart = dynamic(
 );
 
 export default function CrmAnalyticsPage() {
+  const { staggerContainer } = useMotionVariants();
   const [period, setPeriod] = useState<Period>("month");
   const [selectedSource, setSelectedSource] = useState<string>("all");
 

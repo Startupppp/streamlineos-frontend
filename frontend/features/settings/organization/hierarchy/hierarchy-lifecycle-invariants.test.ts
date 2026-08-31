@@ -62,7 +62,7 @@ describe("organization hierarchy lifecycle UI", () => {
         /canManage\s*\?\s*\(?\s*<div className="flex items-center gap-1">/,
       );
       expect(source).toMatch(/canManage\s*\?\s*\(?\s*<AnimatedIconButton/);
-      expect(source).toMatch(/action=\{\s*canManage\s*\?/);
+      expect(source).toMatch(/action=\{\s*canManage(\s*&&\s*[^?]*)?\s*\?/);
     },
   );
 

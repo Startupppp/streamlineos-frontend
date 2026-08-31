@@ -25,20 +25,19 @@ export type {
   PublicChangelogEntry,
 } from "@/types/projects";
 
-interface Paginated<T> {
+interface CursorPaginated<T> {
   data: T[];
   pagination: {
-    page: number;
     limit: number;
-    total: number;
-    totalPages: number;
+    nextCursor: string | null;
+    hasMore: boolean;
   };
 }
 
 interface RoadmapItemFilters {
   status?: RoadmapStatus;
   search?: string;
-  page?: number;
+  cursor?: string;
   limit?: number;
 }
 
@@ -69,7 +68,7 @@ interface UpdateRoadmapItemInput {
 interface FeedbackPostFilters {
   status?: FeedbackStatus;
   search?: string;
-  page?: number;
+  cursor?: string;
   limit?: number;
 }
 
@@ -84,7 +83,7 @@ interface UpdateFeedbackPostInput {
 
 interface ChangelogFilters {
   type?: ChangelogType;
-  page?: number;
+  cursor?: string;
   limit?: number;
 }
 
@@ -142,7 +141,7 @@ export function useRoadmapItems(filters: RoadmapItemFilters = {}) {
   const canView = useCan("build:roadmap:view");
   return useQuery({
     queryKey: queryKeys.roadmap.items(params),
-    queryFn: () => apiClient.get<Paginated<RoadmapItem>>("/build/roadmap", params),
+    queryFn: () => apiClient.get<CursorPaginated<RoadmapItem>>("/build/roadmap", params),
     enabled: canView,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
@@ -184,7 +183,7 @@ export function useFeedbackPosts(filters: FeedbackPostFilters = {}) {
   const canView = useCan("build:roadmap:view");
   return useQuery({
     queryKey: queryKeys.roadmap.feedback(params),
-    queryFn: () => apiClient.get<Paginated<FeedbackPost>>("/build/feedback", params),
+    queryFn: () => apiClient.get<CursorPaginated<FeedbackPost>>("/build/feedback", params),
     enabled: canView,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
@@ -226,7 +225,7 @@ export function useChangelog(filters: ChangelogFilters = {}) {
   const canView = useCan("build:roadmap:view");
   return useQuery({
     queryKey: queryKeys.roadmap.changelog(params),
-    queryFn: () => apiClient.get<Paginated<ChangelogEntry>>("/build/changelog", params),
+    queryFn: () => apiClient.get<CursorPaginated<ChangelogEntry>>("/build/changelog", params),
     enabled: canView,
     staleTime: 30_000,
     placeholderData: keepPreviousData,

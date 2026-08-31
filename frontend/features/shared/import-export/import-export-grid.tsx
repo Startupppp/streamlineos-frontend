@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { staggerContainer } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { EntityCard, type ImportEntity, type UploadState } from "./entity-card";
 
 const DEFAULT_UPLOAD_STATE: UploadState = {
@@ -19,6 +19,7 @@ interface ImportExportGridProps {
 }
 
 export function ImportExportGrid({ entities }: ImportExportGridProps) {
+  const { staggerContainer } = useMotionVariants();
   const [uploadStates, setUploadStates] = useState<Record<string, UploadState>>(
     {},
   );

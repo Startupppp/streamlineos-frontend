@@ -112,7 +112,7 @@ export function WeekGrid({ entries, isLoading, days, weekStart, weekEnd }: WeekG
           hours,
           projectId: row.projectId ?? undefined,
           ticketId: row.ticketId ?? undefined,
-          source: "GRID",
+          source: "MANUAL",
         });
       } else if (hours > 0 && existing && hours !== Number(existing.hours)) {
         updateEntry.mutate({ entryId: existing.id, data: { hours } });
@@ -190,7 +190,7 @@ export function WeekGrid({ entries, isLoading, days, weekStart, weekEnd }: WeekG
     setIsCopying(true);
     try {
       const result = await prevWeekQuery.refetch();
-      const prevEntries = result.data ?? [];
+      const prevEntries = result.data?.data ?? [];
       for (const e of prevEntries) {
         const dayOff = differenceInCalendarDays(parseISO(e.date), parseISO(prevWeekStart));
         const newDate = format(addDays(parseISO(weekStart), dayOff), "yyyy-MM-dd");

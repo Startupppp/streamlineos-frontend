@@ -25,7 +25,7 @@ const EMPLOYEE_PERMISSIONS = [
 ];
 
 describe("Home employee navigation", () => {
-  it("keeps HR self-service hidden without its module entitlement and permission", () => {
+  it("keeps HR self-service hidden without permission (module state is irrelevant)", () => {
     const homeRoutes = getNavGroupsForProduct("home", "MEMBER", scopesOf([]), ["build"])
       .flatMap((group) => flattenNavRoutes(group.routes));
     const knowledgeRoutes = getNavGroupsForProduct(
@@ -43,12 +43,12 @@ describe("Home employee navigation", () => {
     );
   });
 
-  it("keeps permissioned self-service in Home when its modules are enabled", () => {
+  it("shows permissioned self-service in Home regardless of module enablement", () => {
     const groups = getNavGroupsForProduct(
       "home",
       "MEMBER",
       scopesOf(EMPLOYEE_PERMISSIONS),
-      ["hr", "payroll", "build"],
+      ["build"],
     );
     const routes = groups.flatMap((group) => flattenNavRoutes(group.routes));
     const hrefs = routes.map((route) => route.href);
@@ -67,7 +67,7 @@ describe("Home employee navigation", () => {
     expect(hrefs).not.toContain("/hr/recruitment/interviews");
     expect(hrefs).not.toContain("/build/my-work");
     expect(hrefs).not.toContain("/build");
-    expect(routes.find((route) => route.href === "/me/documents")?.module).toBe("hrms");
+    expect(routes.find((route) => route.href === "/me/documents")?.module).toBeUndefined();
   });
 
   it("keeps employee self-service routes in the Home product", () => {
@@ -97,7 +97,7 @@ describe("Administration information architecture", () => {
       (route) => route.href === "/settings/organization",
     );
     const directory = routes.find(
-      (route) => route.href === "/settings/directory",
+      (route) => route.href === "/directory/settings",
     );
 
     expect(account && isNavRouteActive(account, "/settings/users")).toBe(false);
@@ -110,15 +110,15 @@ describe("Administration information architecture", () => {
     ).toBe(false);
     expect(
       directory &&
-        isNavRouteActive(directory, "/settings/directory/person-1"),
+        isNavRouteActive(directory, "/directory/settings/person-1"),
     ).toBe(true);
   });
 
-  it("keeps settings-owned directory routes inside Administration", () => {
-    expect(getProductFromPathname("/settings/directory")).toBe(
+  it("keeps directory-settings routes inside Administration", () => {
+    expect(getProductFromPathname("/directory/settings")).toBe(
       "administration",
     );
-    expect(getProductFromPathname("/settings/directory/person-1")).toBe(
+    expect(getProductFromPathname("/directory/settings/person-1")).toBe(
       "administration",
     );
   });
@@ -157,7 +157,7 @@ describe("Administration information architecture", () => {
     expect(groups.some((group) => group.label === "Organization")).toBe(true);
     expect(hrefs).toContain("/settings/organization/cost-centers");
     expect(hrefs).not.toContain("/directory/workers");
-    expect(hrefs).toContain("/settings/directory");
+    expect(hrefs).toContain("/directory/settings");
     expect(hrefs).toContain("/settings/users");
   });
 
@@ -171,7 +171,7 @@ describe("Administration information architecture", () => {
     const hrefs = groups.flatMap((group) => flattenNavRoutes(group.routes)).map((route) => route.href);
 
     expect(hrefs).toContain("/directory/workers");
-    expect(hrefs).not.toContain("/settings/directory/workers");
+    expect(hrefs).not.toContain("/directory/settings/workers");
   });
 
   it("shows AI Credits to its permission without requiring settings management", () => {

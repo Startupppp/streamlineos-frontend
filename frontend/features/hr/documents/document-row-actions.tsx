@@ -190,7 +190,7 @@ export const DocumentRowActions = forwardRef<
       <ConfirmDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
-        title={`Remove “${doc.name}”?`}
+        title={`Remove "${doc.name}"?`}
         description="The document will no longer be available in HRMS. Its audit history is preserved."
         confirmLabel="Remove document"
         destructive

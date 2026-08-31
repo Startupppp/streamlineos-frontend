@@ -226,7 +226,8 @@ export interface TicketFilters {
   orderDir?: "asc" | "desc";
 }
 
-export interface AllWorkFilters extends TicketFilters {
+export interface AllWorkFilters extends Omit<TicketFilters, "page"> {
+  cursor?: string;
   projectIds?: string;
   excludeStatus?: string;
   scope?: "all" | "mine" | "created" | "subscribed";

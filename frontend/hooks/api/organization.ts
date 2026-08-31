@@ -113,7 +113,7 @@ export const useUpdateOrgSettings = () => {
       slug?: string;
       logo?: string | null;
       timezone?: string;
-      currency?: string;
+      currency?: "USD" | "EUR" | "INR" | "GBP" | "AED" | "SGD" | "AUD" | "CAD" | "JPY";
       fiscalYearStart?: number;
       directoryPublic?: boolean;
       primaryColor?: string | null;
@@ -138,7 +138,6 @@ export const useUpdateOrgSettings = () => {
         string,
         { open: string; close: string; enabled: boolean }
       >;
-      enabledModules?: string[];
       companySize?: string | null;
       country?: string | null;
     }

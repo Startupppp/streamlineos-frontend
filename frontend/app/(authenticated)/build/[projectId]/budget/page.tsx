@@ -14,7 +14,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useProjectBudget, useUpdateProjectBudget, useProjectMembers } from "@/hooks/api/build";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { getUserDisplayName, getUserInitials, type NamedUser } from "@/lib/person-display";
-import { resolveImageUrl } from "@/lib/utils";
+import { resolveImageUrl, cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
@@ -23,10 +23,12 @@ import {
   PmSection,
   PM_FILL_PANEL,
 } from "@/features/build/shared/pm-chrome";
-import { cn } from "@/lib/utils";
+
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useOrgDisplay } from "@/hooks/api/org-display";
+import { formatMoneyCompact } from "@/lib/format-utils";
 
 type MemberBreakdownRow = { userId: string; hours: number; cost: number };
 
@@ -59,12 +61,10 @@ const MemberBreakdownCell = memo(function MemberBreakdownCell({
   );
 });
 
-const fmt = (n: number) =>
-  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
-
 export default function BudgetPage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId: projectIdStr } = use(params);
   const projectId = Number(projectIdStr);
+  const display = useOrgDisplay();
   const { data: budget, isLoading } = useProjectBudget(projectId);
   const { data: members } = useProjectMembers(projectId);
   const { data: orgMembersData } = useOrgMembers(1, 200);
@@ -150,10 +150,10 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
       className: "text-right w-[120px]",
       headerClassName: "text-right",
       cell: (row) => (
-        <span className="font-mono text-sm font-medium whitespace-nowrap">{fmt(row.cost)}</span>
+        <span className="font-mono text-sm font-medium whitespace-nowrap">{formatMoneyCompact(row.cost, display)}</span>
       ),
     },
-  ], [resolveMemberUser, resolveMemberImage]);
+  ], [resolveMemberUser, resolveMemberImage, display]);
 
   const budgetActions = editMode ? (
     <div className="flex items-center gap-2">
@@ -213,21 +213,21 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
           <StatCardGrid cols={3}>
             <StatCard
               label="Planned Budget"
-              value={fmt(budget?.plannedBudget ?? 0)}
+              value={formatMoneyCompact(budget?.plannedBudget ?? 0, display)}
               icon={IndianRupee}
               hint={budget?.plannedBudget ? "Project budget" : "Not set"}
               tone="default"
             />
             <StatCard
               label="Actual Cost"
-              value={fmt(budget?.actualCost ?? 0)}
+              value={formatMoneyCompact(budget?.actualCost ?? 0, display)}
               icon={TrendingUp}
               hint={`${(budget?.totalHours ?? 0).toFixed(1)} billable hours`}
               tone={overBudget ? "red" : "default"}
             />
             <StatCard
               label="Remaining"
-              value={fmt(Math.abs(budget?.remaining ?? 0))}
+              value={formatMoneyCompact(Math.abs(budget?.remaining ?? 0), display)}
               icon={IndianRupee}
               hint={overBudget ? "Over budget" : "Available"}
               tone={overBudget ? "red" : "emerald"}
@@ -243,7 +243,7 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
               </h3>
               <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
                 <span>{budget?.utilizationPct ?? 0}% used</span>
-                <span>{fmt(budget?.plannedBudget ?? 0)} planned</span>
+                <span>{formatMoneyCompact(budget?.plannedBudget ?? 0, display)} planned</span>
               </div>
               <Progress
                 value={Math.min(budget?.utilizationPct ?? 0, 100)}

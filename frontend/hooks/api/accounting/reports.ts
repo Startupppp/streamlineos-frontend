@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export interface ReportCatalogItem {
   id: string;
@@ -111,14 +112,17 @@ function toQuery(params: Record<string, string | undefined>): Record<string, str
 }
 
 export function useReportsCatalog() {
+  const can = useCan("accounting:reports:read");
   return useQuery<ReportCatalogItem[], Error>({
     queryKey: [...queryKeys.accounting.all, "reports", "catalog"],
     queryFn: () => apiClient.get<ReportCatalogItem[]>("/accounting/reports/catalog"),
     staleTime: 300_000,
+    enabled: can,
   });
 }
 
 export function useCustomerStatement(clientId: number | null, from?: string, to?: string) {
+  const can = useCan("accounting:reports:read");
   return useQuery<CustomerStatement, Error>({
     queryKey: [...queryKeys.accounting.all, "reports", "customer-statement", clientId, from, to],
     queryFn: () =>
@@ -126,12 +130,13 @@ export function useCustomerStatement(clientId: number | null, from?: string, to?
         `/accounting/reports/customer-statement/${clientId}`,
         toQuery({ from, to }),
       ),
-    enabled: clientId !== null && clientId > 0,
     staleTime: 60_000,
+    enabled: can && clientId !== null && clientId > 0,
   });
 }
 
 export function useVendorStatement(vendorId: number | null, from?: string, to?: string) {
+  const can = useCan("accounting:reports:read");
   return useQuery<VendorStatement, Error>({
     queryKey: [...queryKeys.accounting.all, "reports", "vendor-statement", vendorId, from, to],
     queryFn: () =>
@@ -139,12 +144,13 @@ export function useVendorStatement(vendorId: number | null, from?: string, to?: 
         `/accounting/reports/vendor-statement/${vendorId}`,
         toQuery({ from, to }),
       ),
-    enabled: vendorId !== null && vendorId > 0,
     staleTime: 60_000,
+    enabled: can && vendorId !== null && vendorId > 0,
   });
 }
 
 export function useSalesByCustomer(from?: string, to?: string) {
+  const can = useCan("accounting:reports:read");
   return useQuery<SalesByCustomerRow[], Error>({
     queryKey: [...queryKeys.accounting.all, "reports", "sales-by-customer", from, to],
     queryFn: () =>
@@ -153,10 +159,12 @@ export function useSalesByCustomer(from?: string, to?: string) {
         toQuery({ from, to }),
       ),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 
 export function useSalesByItem(from?: string, to?: string) {
+  const can = useCan("accounting:reports:read");
   return useQuery<SalesByItemRow[], Error>({
     queryKey: [...queryKeys.accounting.all, "reports", "sales-by-item", from, to],
     queryFn: () =>
@@ -165,10 +173,12 @@ export function useSalesByItem(from?: string, to?: string) {
         toQuery({ from, to }),
       ),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 
 export function useExpenseByCategory(from?: string, to?: string) {
+  const can = useCan("accounting:reports:read");
   return useQuery<ExpenseByCategoryRow[], Error>({
     queryKey: [...queryKeys.accounting.all, "reports", "expense-by-category", from, to],
     queryFn: () =>
@@ -177,10 +187,12 @@ export function useExpenseByCategory(from?: string, to?: string) {
         toQuery({ from, to }),
       ),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 
 export function useTaxSummary(from?: string, to?: string) {
+  const can = useCan("accounting:reports:read");
   return useQuery<TaxSummaryRow[], Error>({
     queryKey: [...queryKeys.accounting.all, "reports", "tax-summary", from, to],
     queryFn: () =>
@@ -189,10 +201,12 @@ export function useTaxSummary(from?: string, to?: string) {
         toQuery({ from, to }),
       ),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 
 export function useProjectProfitability(from?: string, to?: string) {
+  const can = useCan("accounting:reports:read");
   return useQuery<ProfitabilityRow[], Error>({
     queryKey: [...queryKeys.accounting.all, "reports", "project-profitability", from, to],
     queryFn: () =>
@@ -201,10 +215,12 @@ export function useProjectProfitability(from?: string, to?: string) {
         toQuery({ from, to }),
       ),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 
 export function useDepartmentProfitability(from?: string, to?: string) {
+  const can = useCan("accounting:reports:read");
   return useQuery<ProfitabilityRow[], Error>({
     queryKey: [...queryKeys.accounting.all, "reports", "department-profitability", from, to],
     queryFn: () =>
@@ -213,10 +229,12 @@ export function useDepartmentProfitability(from?: string, to?: string) {
         toQuery({ from, to }),
       ),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 
 export function useWorkingCapital(asOf?: string) {
+  const can = useCan("accounting:reports:read");
   return useQuery<WorkingCapital, Error>({
     queryKey: [...queryKeys.accounting.all, "reports", "working-capital", asOf],
     queryFn: () =>
@@ -225,21 +243,26 @@ export function useWorkingCapital(asOf?: string) {
         toQuery({ asOf }),
       ),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 
 export function useBurnRate() {
+  const can = useCan("accounting:reports:read");
   return useQuery<BurnRateReport, Error>({
     queryKey: [...queryKeys.accounting.all, "reports", "burn-rate"],
     queryFn: () => apiClient.get<BurnRateReport>("/accounting/reports/burn-rate"),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 
 export function useCashRunway() {
+  const can = useCan("accounting:reports:read");
   return useQuery<CashRunwayReport, Error>({
     queryKey: [...queryKeys.accounting.all, "reports", "cash-runway"],
     queryFn: () => apiClient.get<CashRunwayReport>("/accounting/reports/cash-runway"),
     staleTime: 60_000,
+    enabled: can,
   });
 }

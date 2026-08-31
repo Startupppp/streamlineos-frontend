@@ -7,7 +7,7 @@ import { BRAND_NAME, BRAND_SUPPORT_EMAIL } from "@/lib/branding";
 
 export const metadata: Metadata = {
   title: `Contact ${BRAND_NAME}`,
-  description: `Reach the ${BRAND_NAME} team â€” sales, support, partnerships, and press.`,
+  description: `Reach the ${BRAND_NAME} team — sales, support, partnerships, and press.`,
   alternates: { canonical: "/contact" },
 };
 
@@ -29,7 +29,7 @@ const channels = [
   {
     icon: Shield,
     label: "Security disclosures",
-    description: "Report a vulnerability â€” please don't share details on this form.",
+    description: "Report a vulnerability — please don't share details on this form.",
     value: BRAND_SUPPORT_EMAIL,
     href: `mailto:${BRAND_SUPPORT_EMAIL}`,
   },
@@ -52,7 +52,7 @@ export default function ContactPage() {
           <span className="text-status-info-ink">trying to solve.</span>
         </h1>
         <p className="text-muted-foreground text-lg leading-relaxed max-w-2xl mx-auto">
-          Pricing questions, demos, partnerships, security disclosures â€” every message reaches
+          Pricing questions, demos, partnerships, security disclosures — every message reaches
           a human on our team. We aim to reply within one business day.
         </p>
       </section>

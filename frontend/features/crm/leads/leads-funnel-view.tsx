@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyLeadsIllustration } from "@/components/illustrations";
@@ -56,27 +56,21 @@ export function LeadsFunnelView({
     : 0;
 
   if (!board || totalLeads === 0) {
-    const trimmedSearch = searchQuery.trim();
-    return trimmedSearch ? (
-      <EmptyState
-        illustration={<EmptyLeadsIllustration />}
-        title="No leads match this search"
-        description={`Searching for "${trimmedSearch}". Clear the search to see the whole funnel.`}
-        action={{ label: "Clear search", onClick: onClearSearch }}
-        actionVariant="outline"
-        className="flex-1"
-      />
-    ) : (
+    const filtersActive = !!searchQuery.trim();
+    return (
       <EmptyState
         illustration={<EmptyLeadsIllustration />}
         title="No leads yet"
-        description="The funnel shows how leads convert from one stage to the next. Add a lead and it starts filling in."
-        action={canCreate ? { label: "Add lead", onClick: onCreateLead } : undefined}
+        description={filtersActive ? undefined : "The funnel shows how leads convert from one stage to the next. Add a lead and it starts filling in."}
+        filtersActive={filtersActive}
+        onClearFilters={onClearSearch}
+        action={!filtersActive && canCreate ? { label: "Add lead", onClick: onCreateLead } : undefined}
         className="flex-1"
       />
     );
   }
 
+  const shouldReduceMotion = useReducedMotion();
   const maxCount = Math.max(...STAGE_ORDER.map((s) => board[s]?.length ?? 0), 1);
 
   const stages = STAGE_ORDER.map((stage, idx) => {
@@ -134,10 +128,11 @@ export function LeadsFunnelView({
 
               <div className="flex-1 relative h-10">
                 <motion.div
-                  className={`h-full bg-gradient-to-r ${STAGE_COLORS[stage]} rounded-md flex items-center px-3`}
-                  initial={{ width: "0%" }}
-                  animate={{ width: `${widthPct}%` }}
-                  transition={{ delay: idx * 0.08 + 0.1, duration: 0.5, ease: "easeOut" }}
+                  className={`h-full bg-gradient-to-r ${STAGE_COLORS[stage]} rounded-md flex items-center px-3 overflow-hidden`}
+                  style={{ width: `${widthPct}%`, originX: 0 }}
+                  initial={shouldReduceMotion ? false : { scaleX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={shouldReduceMotion ? { duration: 0 } : { delay: idx * 0.08 + 0.1, duration: 0.4, ease: "easeOut" }}
                 >
                   <span className="text-xs font-semibold text-white whitespace-nowrap">
                     {count} leads

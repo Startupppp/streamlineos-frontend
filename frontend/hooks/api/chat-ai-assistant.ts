@@ -1,9 +1,11 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient, authedFetch, buildUrl } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface AskAIMessage {
   role: "user" | "assistant";
@@ -37,6 +39,7 @@ export interface AiConversationListPage {
 const HISTORY_PAGE_SIZE = 30;
 
 export function useAiConversations(enabled: boolean) {
+  const canAi = useCan("ai:chat:use");
   return useInfiniteQuery({
     queryKey: queryKeys.aiChat.conversations(),
     queryFn: ({ pageParam }) => {
@@ -46,14 +49,14 @@ export function useAiConversations(enabled: boolean) {
     },
     initialPageParam: undefined as number | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    enabled,
+    enabled: canAi && enabled,
     staleTime: 30_000,
   });
 }
 
 export function useCreateAiConversation() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("ai:chat:use", {
     mutationKey: ["aiChat", "conversations", "create"],
     mutationFn: (input: { title?: string }) =>
       apiClient.post<AiConversation>("/chat/conversations", input),
@@ -65,7 +68,7 @@ export function useCreateAiConversation() {
 
 export function useRenameAiConversation() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("ai:chat:use", {
     mutationKey: ["aiChat", "conversations", "rename"],
     mutationFn: ({ id, title }: { id: number; title: string }) =>
       apiClient.patch<AiConversation>(`/chat/conversations/${id}`, { title }),
@@ -77,7 +80,7 @@ export function useRenameAiConversation() {
 
 export function useDeleteAiConversation() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("ai:chat:use", {
     mutationKey: ["aiChat", "conversations", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/chat/conversations/${id}`),
@@ -88,6 +91,7 @@ export function useDeleteAiConversation() {
 }
 
 export function useAiConversationMessages(conversationId: number | null, enabled: boolean) {
+  const canAi = useCan("ai:chat:use");
   return useInfiniteQuery({
     queryKey: queryKeys.aiChat.conversationMessages(conversationId ?? 0),
     queryFn: ({ pageParam }) => {
@@ -100,7 +104,7 @@ export function useAiConversationMessages(conversationId: number | null, enabled
     },
     initialPageParam: undefined as number | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    enabled: enabled && conversationId !== null,
+    enabled: canAi && enabled && conversationId !== null,
     staleTime: 30_000,
   });
 }

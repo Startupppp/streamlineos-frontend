@@ -12,6 +12,7 @@ import { resolveOrgUnitName } from "./resolve-org-unit-name";
 import { UserActionsMenu } from "./user-actions-menu";
 import { formatRoleLabel } from "./user-invite-roles";
 import { UserStatusBadge } from "./user-status-badge";
+import type { EmploymentFacts } from "@/hooks/api/directory/employment";
 
 interface UserActionCellProps {
   user: User;
@@ -33,6 +34,7 @@ function UserActionCell({ user, onView }: UserActionCellProps) {
 export function getUserTableColumns(
   branchNames: ReadonlyMap<string, string>,
   departmentNames: ReadonlyMap<string, string>,
+  employmentByUserId: ReadonlyMap<string, EmploymentFacts>,
   onView: (userId: string) => void,
 ): DataTableColumn<User>[] {
   function renderUser(user: User) {
@@ -50,9 +52,9 @@ export function getUserTableColumns(
             text={displayName}
             className="text-dense font-medium leading-tight"
           />
-          {user.designation && (
+          {employmentByUserId.get(user.id)?.designation && (
             <TruncatedText
-              text={user.designation}
+              text={employmentByUserId.get(user.id)?.designation ?? ""}
               className="text-micro text-muted-foreground"
             />
           )}
@@ -87,7 +89,7 @@ export function getUserTableColumns(
       <span className="text-muted-foreground">
         {resolveOrgUnitName(
           branchNames,
-          user.branchId === null ? null : String(user.branchId),
+          employmentByUserId.get(user.id)?.locationId ?? null,
           "Unknown branch",
         )}
       </span>
@@ -99,7 +101,7 @@ export function getUserTableColumns(
       <span className="text-muted-foreground">
         {resolveOrgUnitName(
           departmentNames,
-          user.departmentId === null ? null : String(user.departmentId),
+          employmentByUserId.get(user.id)?.departmentId ?? null,
           "Unknown department",
         )}
       </span>

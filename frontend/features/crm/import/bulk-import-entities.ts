@@ -158,7 +158,7 @@ function email(
 ): string | undefined {
   if (value === undefined || value === "") return undefined;
   if (LOOKS_LIKE_EMAIL.test(value)) return value;
-  notes.push(`${field} “${value}” is not an address, so it was left off`);
+  notes.push(`${field} "${value}" is not an address, so it was left off`);
   return undefined;
 }
 
@@ -288,7 +288,7 @@ const CONTACTS: BulkEntity = {
     // bad name, so a row that would fail there is caught and reported here
     // instead — five hundred good rows should not be lost to one.
     const name = personNameSchema.safeParse(full);
-    if (!name.success) return { error: `“${full}” is not a name this accepts` };
+    if (!name.success) return { error: `"${full}" is not a name this accepts` };
 
     const notes: string[] = [];
 

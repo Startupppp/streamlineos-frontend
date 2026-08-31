@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import {
   useHrOnboardingTemplates,
@@ -208,7 +209,7 @@ function CreateTemplateSheet({ open, onOpenChange }: { open: boolean; onOpenChan
 }
 
 export function OnboardingTemplatesTab() {
-  const { data: templates, isLoading } = useHrOnboardingTemplates();
+  const { data: templates, isLoading, isError, error, refetch } = useHrOnboardingTemplates();
   const { data: departments } = useOnboardingTemplateDepartments();
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -233,6 +234,8 @@ export function OnboardingTemplatesTab() {
             <Skeleton key={i} className="h-24 rounded-lg" />
           ))}
         </div>
+      ) : isError ? (
+        <ErrorState className="flex-1" title="Couldn't load onboarding plans" description={getErrorMessage(error)} onRetry={() => void refetch()} />
       ) : !templates || templates.length === 0 ? (
         <EmptyState
           illustrationPreset="documents"

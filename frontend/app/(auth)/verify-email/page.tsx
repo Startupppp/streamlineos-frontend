@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
@@ -22,7 +22,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { fadeUp, scaleIn, staggerContainer } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
 
 const attemptedTokens = new Set<string>();
@@ -34,15 +34,7 @@ function AuthStatusShell({
   children: React.ReactNode;
   className?: string;
 }) {
-  const shouldReduceMotion = useReducedMotion();
-
-  if (shouldReduceMotion) {
-    return (
-      <div className={cn("w-full max-w-sm animate-fade-up", className)}>
-        {children}
-      </div>
-    );
-  }
+  const { staggerContainer } = useMotionVariants();
 
   return (
     <motion.div
@@ -63,11 +55,7 @@ function AuthStatusSection({
   children: React.ReactNode;
   className?: string;
 }) {
-  const shouldReduceMotion = useReducedMotion();
-
-  if (shouldReduceMotion) {
-    return <div className={className}>{children}</div>;
-  }
+  const { fadeUp } = useMotionVariants();
 
   return (
     <motion.div variants={fadeUp} className={className}>
@@ -77,7 +65,7 @@ function AuthStatusSection({
 }
 
 function SuccessIcon() {
-  const shouldReduceMotion = useReducedMotion();
+  const { scaleIn } = useMotionVariants();
 
   return (
     <div className="relative mx-auto mb-4 flex h-14 w-14 items-center justify-center">
@@ -85,26 +73,16 @@ function SuccessIcon() {
         className="absolute inset-0 rounded-full bg-status-success-surface"
         aria-hidden="true"
       />
-      {shouldReduceMotion ? (
-        <div className="relative flex h-14 w-14 items-center justify-center rounded-full border border-status-success-rule bg-card shadow-sm">
-          <CheckCircle2
-            className="w-7 text-status-success-ink"
-            strokeWidth={1.75}
-            aria-hidden="true"
-          />
-        </div>
-      ) : (
-        <motion.div
-          variants={scaleIn}
-          className="relative flex h-14 w-14 items-center justify-center rounded-full border border-status-success-rule bg-card shadow-sm"
-        >
-          <CheckCircle2
-            className="w-7 text-status-success-ink"
-            strokeWidth={1.75}
-            aria-hidden="true"
-          />
-        </motion.div>
-      )}
+      <motion.div
+        variants={scaleIn}
+        className="relative flex h-14 w-14 items-center justify-center rounded-full border border-status-success-rule bg-card shadow-sm"
+      >
+        <CheckCircle2
+          className="w-7 text-status-success-ink"
+          strokeWidth={1.75}
+          aria-hidden="true"
+        />
+      </motion.div>
     </div>
   );
 }

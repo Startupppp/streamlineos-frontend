@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 
 export interface BankAccountSummary {
   id: number;
@@ -51,10 +52,12 @@ function toQuery(params: OverviewParams): Record<string, string> {
 }
 
 export function useAccountingOverview(params: OverviewParams = {}) {
+  const can = useCan("accounting:read");
   return useQuery<AccountingOverview, Error>({
     queryKey: [...queryKeys.accounting.all, "overview", params],
     queryFn: () =>
       apiClient.get<AccountingOverview>("/accounting/overview", toQuery(params)),
     staleTime: 60_000,
+    enabled: can,
   });
 }

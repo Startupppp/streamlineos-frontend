@@ -1,7 +1,9 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface CalibrationEntry {
   id: number;
@@ -31,26 +33,30 @@ const keys = {
 };
 
 export function useCalibrationEntries(cycleId: number) {
+  const canManage = useCan("hr:performance:manage");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: keys.entries(cycleId),
     queryFn: () => apiClient.get<CalibrationEntry[]>(`/hr/performance/calibration/cycles/${cycleId}/entries`),
     staleTime: 30_000,
-    enabled: cycleId > 0,
+    enabled: cycleId > 0 && canManage && hrEnabled,
   });
 }
 
 export function useNineBox(cycleId: number) {
+  const canManage = useCan("hr:performance:manage");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: keys.nineBox(cycleId),
     queryFn: () => apiClient.get<NineBoxEntry[]>(`/hr/performance/calibration/nine-box?cycleId=${cycleId}`),
     staleTime: 60_000,
-    enabled: cycleId > 0,
+    enabled: cycleId > 0 && canManage && hrEnabled,
   });
 }
 
 export function useUpsertCalibrationEntry(cycleId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["hr", "calibration", "upsert", cycleId],
     mutationFn: (body: { employeeId: string; preRating?: string; postRating?: string; note?: string }) =>
       apiClient.post<CalibrationEntry>(`/hr/performance/calibration/cycles/${cycleId}/entries`, body),

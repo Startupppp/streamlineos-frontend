@@ -25,6 +25,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { CheckCircle2, XCircle, AlertTriangle, Sparkles } from "lucide-react";
+import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { DuplicateResolutionDialog } from "@/features/hr/recruitment/candidates-list/duplicate-resolution-dialog";
@@ -220,10 +221,7 @@ export default function IntakeInboxPage() {
             {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}
           </div>
         ) : isError ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
-            <p className="text-sm font-semibold text-foreground">Failed to load applicants</p>
-            <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
-          </div>
+          <ErrorState className="flex-1" title="Failed to load applicants" onRetry={handleRetry} />
         ) : isEmpty ? (
           <RecruitmentEmptyState
             illustration={<EmptyPersonIllustration />}

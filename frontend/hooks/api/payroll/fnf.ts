@@ -1,9 +1,10 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { downloadBlob } from "@/lib/download-blob";
 import type { FnfSettlement, FnfStatement } from "@/types/payroll/reports";
 
@@ -38,14 +39,18 @@ export function useFnfStatement(settlementId: number) {
   });
 }
 
-export async function downloadFnfStatement(settlementId: number): Promise<void> {
-  const blob = await apiClient.download(`/payroll/fnf/${settlementId}/statement/download`);
+export async function downloadFnfStatement(
+  settlementId: number,
+): Promise<void> {
+  const blob = await apiClient.download(
+    `/payroll/fnf/${settlementId}/statement/download`,
+  );
   downloadBlob(blob, `FNF_Statement_${settlementId}.pdf`);
 }
 
 export function useApproveFnf() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payroll:fnf:manage", {
     mutationKey: ["payroll", "fnf", "approve"],
     mutationFn: ({
       settlementId,

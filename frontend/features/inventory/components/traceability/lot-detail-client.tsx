@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { StatCardGrid, StatCard } from "@/components/ui/stat-card";
 import { ErrorState, NoPermissionState } from "@/components/shared";
 import { InventoryDetailPageLoading } from "@/features/inventory/components/inventory-detail-page-loading";
-import { fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useCan } from "@/hooks/api/access";
 import { useLot, useUpdateLotStatus, useTraceability } from "@/hooks/api/inventory/traceability";
@@ -34,6 +34,7 @@ interface LotDetailClientProps {
 
 export function LotDetailClient({ lotId }: LotDetailClientProps) {
   const canViewStock = useCan("inventory:stock:read");
+  const { fadeUp } = useMotionVariants();
   const [showTraceability, setShowTraceability] = useState(false);
   const { iconRef: traceChevronRef, hoverHandlers: traceHoverHandlers } = useAnimatedIcon();
   const { iconRef: lockIconRef, hoverHandlers: lockHoverHandlers } = useAnimatedIcon();

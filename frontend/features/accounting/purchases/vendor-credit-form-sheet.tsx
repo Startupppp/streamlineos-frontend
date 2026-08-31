@@ -50,7 +50,7 @@ interface VendorCreditFormSheetProps {
 
 export function VendorCreditFormSheet({ open, onOpenChange }: VendorCreditFormSheetProps) {
   const createMutation = useCreateVendorCredit();
-  const vendorsQuery = useVendorsOutstanding({ pageSize: 100 });
+  const vendorsQuery = useVendorsOutstanding({ limit: 100 });
 
   const form = useForm<VendorCreditFormValues>({
     resolver: zodResolver(vendorCreditFormSchema),
@@ -95,7 +95,7 @@ export function VendorCreditFormSheet({ open, onOpenChange }: VendorCreditFormSh
     onOpenChange(false);
   }
 
-  const vendors = vendorsQuery.data?.items ?? [];
+  const vendors = vendorsQuery.data?.data ?? [];
 
   const lineRows: LineField[] = fields.map((field, index) => ({ ...field, _index: index }));
 

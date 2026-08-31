@@ -28,6 +28,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { RefreshCw, Unplug } from "lucide-react";
@@ -238,12 +239,7 @@ export function MailAccountsSheet({ open, onClose }: MailAccountsSheetProps) {
       <Skeleton className="h-14 w-full" />
     </div>
   ) : isError ? (
-    <div className="flex flex-col items-center justify-center gap-2 py-6 text-center">
-      <p className="text-sm text-muted-foreground">Failed to load accounts</p>
-      <Button variant="outline" size="sm" onClick={handleRetry}>
-        Retry
-      </Button>
-    </div>
+    <ErrorState compact title="Failed to load accounts" onRetry={handleRetry} />
   ) : !connections || connections.length === 0 ? (
     <EmptyState
       compact

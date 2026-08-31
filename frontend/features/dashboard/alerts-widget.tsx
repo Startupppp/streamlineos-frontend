@@ -83,9 +83,10 @@ export function AlertsWidget() {
   const { data: session } = useSession();
   const markRead = useMarkNotificationRead();
 
-  const { data, isLoading, error } = useUnreadNotifications({
+  const { data, isLoading, error, refetch } = useUnreadNotifications({
     enabled: !!session?.orgId,
   });
+  const handleRetry = () => void refetch();
 
   const alerts = useMemo(() => {
     return (data ?? [])
@@ -115,6 +116,7 @@ export function AlertsWidget() {
       link={{ href: "/notifications", label: "All" }}
       isLoading={isLoading}
       error={error}
+      onRetry={handleRetry}
       loadingRows={3}
       isEmpty={!alerts.length}
       empty={

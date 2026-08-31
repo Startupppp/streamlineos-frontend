@@ -55,9 +55,10 @@ export function UserInviteDialog({
 
   const form = useForm<InviteUserFormValues>({
     resolver: zodResolver(inviteUserSchema),
+    // `role` is deliberately unset: the schema's enum has no empty member, and a
+    // partial default is what `DefaultValues` is for.
     defaultValues: {
       email: defaultEmail ?? "",
-      role: "",
     },
   });
 

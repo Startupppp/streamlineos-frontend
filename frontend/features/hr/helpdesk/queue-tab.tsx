@@ -11,9 +11,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Inbox } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { SearchInput } from "@/components/ui/search-input";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import {
@@ -24,11 +28,11 @@ import {
   HELPDESK_CATEGORY_LABELS,
   type HelpdeskTicket,
   type TicketStatus,
+  type HelpdeskListParams,
 } from "@/hooks/api/hr/helpdesk";
 import { TicketDetailSheet } from "./ticket-detail-sheet";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
@@ -76,35 +80,65 @@ export function QueueTab() {
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 300);
 
-  const params: Record<string, unknown> = { page, pageSize: QUEUE_PAGE_SIZE };
+  const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>([undefined]);
+  const [pageIndex, setPageIndex] = useState(0);
+  const currentCursor = cursorHistory[pageIndex];
+
+  const params: HelpdeskListParams = { limit: QUEUE_PAGE_SIZE, cursor: currentCursor };
   if (statusFilter !== "all") params.status = statusFilter;
   if (categoryFilter !== "all") params.category = categoryFilter;
+  if (debouncedSearch) params.q = debouncedSearch;
 
-  const { data, isLoading } = useHelpdeskTickets(params);
+  const { data, isLoading, isError, refetch } = useHelpdeskTickets(params);
   const { data: routingRules } = useHelpdeskRoutingRules();
   const deleteRouting = useDeleteHelpdeskRouting();
 
-  const totalPages = Math.max(1, data?.totalPages ?? 1);
+  const resetPagination = useCallback(() => {
+    setCursorHistory([undefined]);
+    setPageIndex(0);
+  }, []);
 
   const handleStatusFilterChange = useCallback((value: string) => {
     setStatusFilter(value);
-    setPage(1);
-  }, []);
+    resetPagination();
+  }, [resetPagination]);
 
   const handleCategoryFilterChange = useCallback((value: string) => {
     setCategoryFilter(value);
-    setPage(1);
-  }, []);
+    resetPagination();
+  }, [resetPagination]);
 
-  const handlePrevPage = useCallback(() => {
-    setPage((prev) => Math.max(1, prev - 1));
-  }, []);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
+    resetPagination();
+  }, [resetPagination]);
+
+  const filtersActive = !!(debouncedSearch || statusFilter !== "all" || categoryFilter !== "all");
+
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    setStatusFilter("all");
+    setCategoryFilter("all");
+    resetPagination();
+  }, [resetPagination]);
 
   const handleNextPage = useCallback(() => {
-    setPage((prev) => prev + 1);
-  }, []);
+    if (!data?.pagination.nextCursor) return;
+    setCursorHistory((prev) => {
+      const next = [...prev];
+      next[pageIndex + 1] = data.pagination.nextCursor ?? undefined;
+      return next;
+    });
+    setPageIndex((i) => i + 1);
+  }, [data, pageIndex]);
+
+  const handlePrevPage = useCallback(() => {
+    if (pageIndex <= 0) return;
+    setPageIndex((i) => i - 1);
+  }, [pageIndex]);
 
   const handleDeleteRouting = async (ruleId: number) => {
     try {
@@ -115,9 +149,16 @@ export function QueueTab() {
     }
   };
 
+  const displayPage = pageIndex + 1;
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className={FILTER_TOOLBAR_ROW}>
+        <SearchInput
+          placeholder="Search tickets…"
+          value={search}
+          onValueChange={handleSearchChange}
+        />
         <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
           <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
             <SelectValue placeholder="Status" />
@@ -143,9 +184,6 @@ export function QueueTab() {
             ))}
           </SelectContent>
         </Select>
-        <span className="text-xs text-muted-foreground ml-auto">
-          {data ? `${data.total} ticket${data.total !== 1 ? "s" : ""}` : ""}
-        </span>
       </div>
 
       {isLoading ? (
@@ -154,16 +192,21 @@ export function QueueTab() {
             <Skeleton key={i} className="h-16 w-full rounded-lg" />
           ))}
         </div>
-      ) : !data || data.items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <Inbox className="h-10 w-10 text-muted-foreground/40 mb-3" />
-          <p className="text-sm font-medium text-foreground">No tickets found</p>
-          <p className="text-xs text-muted-foreground mt-1">Adjust filters or wait for new submissions.</p>
-        </div>
+      ) : isError ? (
+        <ErrorState className="py-16" onRetry={() => void refetch()} />
+      ) : !data || data.data.length === 0 ? (
+        <EmptyState
+          title="No tickets found"
+          description={filtersActive ? undefined : "No helpdesk tickets in this queue."}
+          compact
+          className="py-16"
+          filtersActive={filtersActive}
+          onClearFilters={handleClearFilters}
+        />
       ) : (
         <>
           <div className="divide-y divide-border rounded-lg border border-border overflow-hidden">
-            {data.items.map((ticket) => (
+            {data.data.map((ticket) => (
               <AdminTicketRow
                 key={ticket.id}
                 ticket={ticket}
@@ -171,32 +214,14 @@ export function QueueTab() {
               />
             ))}
           </div>
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between">
-              <span className="text-dense text-muted-foreground">
-                Page {page} of {totalPages}
-              </span>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs"
-                  disabled={page <= 1}
-                  onClick={handlePrevPage}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs"
-                  disabled={page >= totalPages}
-                  onClick={handleNextPage}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
+          {(pageIndex > 0 || data.pagination.hasMore) && (
+            <CursorPageControls
+              page={displayPage}
+              hasNext={data.pagination.hasMore}
+              disabled={isLoading}
+              onPrevious={handlePrevPage}
+              onNext={handleNextPage}
+            />
           )}
         </>
       )}

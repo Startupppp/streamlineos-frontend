@@ -9,7 +9,7 @@ import type { AuditResponse } from "./types";
 
 export const useUserAuditLog = (
   userId: string,
-  params?: { page?: number; limit?: number; from?: string; to?: string },
+  params?: { cursor?: string; limit?: number; from?: string; to?: string },
   options?: Omit<UseQueryOptions<AuditResponse, Error>, "queryKey" | "queryFn">,
 ) => {
   const canManage = useCan("settings:organization:manage");
@@ -17,7 +17,7 @@ export const useUserAuditLog = (
     queryKey: [...queryKeys.users.detail(userId), "audit", params] as readonly unknown[],
     queryFn: () =>
       apiClient.get<AuditResponse>(`/users/${userId}/audit`, {
-        ...(params?.page ? { page: String(params.page) } : {}),
+        ...(params?.cursor ? { cursor: params.cursor } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
         ...(params?.from ? { from: params.from } : {}),
         ...(params?.to ? { to: params.to } : {}),

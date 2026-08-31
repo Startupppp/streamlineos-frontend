@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Shield, ShieldOff } from "lucide-react";
-import { StateIllustration } from "@/components/illustrations";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { useCan } from "@/hooks/api/access";
 import { useLegalHolds, useReleaseLegalHold, useDeleteLegalHold, type LegalHold } from "../hooks/use-legal-holds";
 import { LegalHoldSheet } from "./legal-hold-sheet";
@@ -20,7 +21,7 @@ export function LegalHoldsTable() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedHold, setSelectedHold] = useState<LegalHold | null>(null);
 
-  const { data, isLoading, isError } = useLegalHolds({ page, limit: 20 });
+  const { data, isLoading, isError, refetch } = useLegalHolds({ page, limit: 20 });
   const release = useReleaseLegalHold();
   const remove = useDeleteLegalHold();
 
@@ -121,14 +122,8 @@ export function LegalHoldsTable() {
     );
   }
 
-  if (isError) {
-    return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 py-16 text-center">
-        <StateIllustration preset="security" className="h-24 w-24" />
-        <p className="text-sm text-muted-foreground">Failed to load legal holds.</p>
-      </div>
-    );
-  }
+  if (isError)
+    return <ErrorState title="Failed to load legal holds" description="Something went wrong while loading legal holds." onRetry={() => void refetch()} className="flex-1" />;
 
   return (
     <div className="flex flex-1 min-h-0 flex-col">
@@ -149,19 +144,13 @@ export function LegalHoldsTable() {
         data={data?.data ?? []}
         getRowKey={(row) => row.id}
         emptyState={
-          <div className="flex flex-col items-center justify-center gap-3 py-12">
-            <StateIllustration preset="security" className="h-28 w-28" />
-            <div className="text-center space-y-1">
-              <p className="text-sm font-medium text-foreground">No legal holds</p>
-              <p className="text-xs text-muted-foreground">Place a legal hold to preserve records during an investigation or legal proceeding.</p>
-            </div>
-            {canManage && (
-              <Button onClick={handleOpenCreate} size="sm" className="mt-1 bg-primary hover:bg-primary/90 text-primary-foreground">
-                <Shield className="h-4 w-4 mr-1.5" />
-                Place Hold
-              </Button>
-            )}
-          </div>
+          <EmptyState
+            className="border-0 bg-transparent min-h-[40vh]"
+            illustrationPreset="security"
+            title="No legal holds"
+            description="Place a legal hold to preserve records during an investigation or legal proceeding."
+            action={canManage ? { label: "Place Hold", onClick: handleOpenCreate } : undefined}
+          />
         }
         pagination={{
           mode: "server",

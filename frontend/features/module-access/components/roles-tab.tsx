@@ -164,7 +164,7 @@ export function RolesTab({
   const createOpen = onCreateOpenChange ? (createOpenProp ?? false) : internalCreateOpen;
   const setCreateOpen = onCreateOpenChange ?? setInternalCreateOpen;
 
-  const groups = groupsQuery.data ?? [];
+  const groups = groupsQuery.data?.pages.flatMap((p) => p.data) ?? [];
   const catalog = catalogQuery.data ?? [];
   const selectedGroup = groups.find((g) => g.id === selectedGroupId) ?? null;
 

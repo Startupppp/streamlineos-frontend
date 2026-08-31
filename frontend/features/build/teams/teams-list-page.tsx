@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useMemo, useState } from "react";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
@@ -84,14 +84,15 @@ export function TeamsListPage() {
   const canManage = useCan("build:teams:manage");
 
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
+  const [cursor, setCursor] = useState<string | undefined>(undefined);
+  const [cursorStack, setCursorStack] = useState<string[]>([]);
   const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
     useQueryParamOpen("create");
   const [editTarget, setEditTarget] = useState<ProjectTeam | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ProjectTeam | null>(null);
 
   const { data, isLoading, isError, refetch } = useProjectTeams({
-    page,
+    cursor,
     pageSize: 50,
     search: search.trim() || undefined,
   });
@@ -133,14 +134,32 @@ export function TeamsListPage() {
     });
   }
 
+  function resetCursor() {
+    setCursor(undefined);
+    setCursorStack([]);
+  }
+
   function handleSearchChange(value: string) {
     setSearch(value);
-    setPage(1);
+    resetCursor();
   }
 
   function handleClearSearch() {
     setSearch("");
-    setPage(1);
+    resetCursor();
+  }
+
+  function handleNextPage() {
+    const nextCursor = data?.pagination.nextCursor;
+    if (!nextCursor) return;
+    setCursorStack((prev) => [...prev, cursor ?? ""]);
+    setCursor(nextCursor);
+  }
+
+  function handlePrevPage() {
+    const prevCursor = cursorStack[cursorStack.length - 1];
+    setCursorStack((prev) => prev.slice(0, -1));
+    setCursor(prevCursor === "" ? undefined : prevCursor);
   }
 
   const handleOpenCreate = useCallback(() => {
@@ -240,6 +259,9 @@ export function TeamsListPage() {
   ];
 
   const isFiltered = !!search.trim();
+  const hasPrev = cursorStack.length > 0;
+  const hasNext = !!data?.pagination.hasMore;
+
   const filtersBar = (
     <div className={FILTER_TOOLBAR_ROW}>
       <SearchInput className="min-w-0"
@@ -294,24 +316,25 @@ export function TeamsListPage() {
               }
             />
           ) : (
-            <DataTable
-              data={teams}
-              columns={columns}
-              getRowKey={(row) => row.id}
-              minWidth="560px"
-              className={PM_FILL_PANEL}
-              pagination={
-                data && data.total > 50
-                  ? {
-                      mode: "server",
-                      page,
-                      pageSize: 50,
-                      total: data.total,
-                      onPageChange: setPage,
-                    }
-                  : undefined
-              }
-            />
+            <>
+              <DataTable
+                data={teams}
+                columns={columns}
+                getRowKey={(row) => row.id}
+                minWidth="560px"
+                className={PM_FILL_PANEL}
+              />
+              {(hasPrev || hasNext) ? (
+                <div className="flex items-center justify-end gap-2 border-t px-2 py-2">
+                  <Button variant="outline" size="sm" disabled={!hasPrev} onClick={handlePrevPage}>
+                    Previous
+                  </Button>
+                  <Button variant="outline" size="sm" disabled={!hasNext} onClick={handleNextPage}>
+                    Next
+                  </Button>
+                </div>
+              ) : null}
+            </>
           )}
         </PmSection>
       </PmPageShell>

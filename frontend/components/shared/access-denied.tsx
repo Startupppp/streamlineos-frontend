@@ -3,18 +3,20 @@
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ShieldAlert } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface AccessDeniedProps {
   currentRole?: string;
   requiredRoles?: string[];
   message?: string;
+  className?: string;
 }
 
-export function AccessDenied({ currentRole, requiredRoles, message }: AccessDeniedProps) {
+export function AccessDenied({ currentRole, requiredRoles, message, className }: AccessDeniedProps) {
   const router = useRouter();
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60dvh] px-6 text-center">
+    <div className={cn("flex flex-col items-center justify-center flex-1 min-h-0 px-6 text-center", className)}>
       <div className="h-16 w-16 rounded-2xl bg-status-danger-surface flex items-center justify-center mb-5">
         <ShieldAlert className="w-8 text-status-danger-ink" />
       </div>

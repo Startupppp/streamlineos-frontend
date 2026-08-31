@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { staggerContainer } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { useMyTravelRequests, useCreateTravelRequest } from "@/hooks/api/hr";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { travelSchema, type TravelFormValues } from "@/features/hr/travel/travel-schema";
@@ -38,6 +38,7 @@ function TravelLoading() {
 }
 
 export default function TravelPage() {
+  const { staggerContainer } = useMotionVariants();
   const { data: requests, isLoading } = useMyTravelRequests();
   const createRequest = useCreateTravelRequest();
   const [sheetOpen, setSheetOpen] = useState(false);

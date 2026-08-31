@@ -22,27 +22,9 @@ import type { IntegrationConnection } from "@/hooks/api/integrations";
 import type { CalendarOrgMember } from "@/hooks/api/calendar";
 import { EventAttendeesPicker } from "./event-attendees-picker";
 import { CalendarConnectInline } from "./calendar-connect-inline";
-
-const EVENT_COLORS: Record<string, string> = {
-  blue: "#3b82f6",
-  green: "#22c55e",
-  red: "#ef4444",
-  yellow: "#f59e0b",
-  purple: "#a855f7",
-  gold: "#3b82f6",
-};
-
-const EVENT_CATEGORIES = [
-  "general",
-  "meeting",
-  "deadline",
-  "reminder",
-  "leave",
-  "project",
-  "other",
-] as const;
-
-type EventCategory = (typeof EVENT_CATEGORIES)[number];
+import { EVENT_COLORS, EVENT_CATEGORIES } from "./calendar-event-constants";
+import type { EventCategory, RecurrenceState } from "./event-form-state";
+import { RecurrenceEditor } from "./event-recurrence-editor";
 
 interface EventFormFieldsProps {
   title: string;
@@ -73,6 +55,8 @@ interface EventFormFieldsProps {
   onSyncConnectionChange: (v: string) => void;
   onAddConferenceChange: (v: boolean) => void;
   onShowEndDate: () => void;
+  recurrence: RecurrenceState;
+  onRecurrenceChange: (next: RecurrenceState) => void;
   members: Pick<
     CalendarOrgMember,
     "id" | "firstName" | "lastName" | "name" | "email" | "image"
@@ -110,6 +94,8 @@ export function EventFormFields({
   onSyncConnectionChange,
   onAddConferenceChange,
   onShowEndDate,
+  recurrence,
+  onRecurrenceChange,
   members,
   attendeeIds,
   onToggleAttendee,
@@ -278,6 +264,14 @@ export function EventFormFields({
           </div>
         </div>
       </div>
+
+      {!isEdit && (
+        <RecurrenceEditor
+          state={recurrence}
+          onChange={onRecurrenceChange}
+          startDate={startDate}
+        />
+      )}
 
       <div className="flex items-start gap-2.5">
         <FileText className="h-4 w-4 text-muted-foreground shrink-0 mt-2" />

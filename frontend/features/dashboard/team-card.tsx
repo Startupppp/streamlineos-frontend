@@ -1,11 +1,13 @@
 "use client";
 
-import { memo } from "react";
-import { Clock, LogOut, Users } from "lucide-react";
+import { memo, useCallback } from "react";
+import { Clock, LogOut, Users, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { EmptyTeamIllustration } from "@/components/illustrations";
@@ -25,9 +27,12 @@ interface TeamMember {
 interface TeamCardProps {
   members: TeamMember[] | undefined;
   isLoading: boolean;
+  error?: unknown;
+  onRetry?: () => void;
 }
 
-export const TeamCard = memo(function TeamCard({ members, isLoading }: TeamCardProps) {
+export const TeamCard = memo(function TeamCard({ members, isLoading, error, onRetry }: TeamCardProps) {
+  const handleRetry = useCallback(() => onRetry?.(), [onRetry]);
   return (
     <Card className="bg-card border-border shadow-noir flex flex-col h-full w-full">
       <CardHeader className="flex-shrink-0 px-4 py-3">
@@ -42,6 +47,16 @@ export const TeamCard = memo(function TeamCard({ members, isLoading }: TeamCardP
             {[1, 2, 3].map((i) => (
               <Skeleton key={i} className="h-12 w-full" />
             ))}
+          </div>
+        ) : error ? (
+          <div className="space-y-2">
+            <p className="text-sm text-destructive">{getErrorMessage(error)}</p>
+            {onRetry && (
+              <Button variant="ghost" size="sm" onClick={handleRetry}>
+                <RefreshCw className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
+                Retry
+              </Button>
+            )}
           </div>
         ) : members && members.length > 0 ? (
           <ScrollArea className="h-full pr-3">

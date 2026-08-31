@@ -1,9 +1,10 @@
 "use client";
 
-import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   TemplateRow,
   TemplatePreviewResult,
@@ -47,7 +48,7 @@ export function usePayrollTemplates(params?: TemplateListParams) {
 }
 
 export function usePreviewTemplate() {
-  return useMutation({
+  return useAuthorizedMutation("payroll:templates:view", {
     mutationKey: ["payroll", "templates", "preview"],
     mutationFn: ({ templateId, annualCtc, toggleOverrides }: PreviewInput) =>
       apiClient.post<TemplatePreviewResult>(
@@ -59,7 +60,7 @@ export function usePreviewTemplate() {
 
 export function useDeleteTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payroll:templates:manage", {
     mutationKey: ["payroll", "templates", "delete"],
     mutationFn: (templateId: number) =>
       apiClient.delete<void>(`/payroll/templates/${templateId}`),
@@ -72,7 +73,7 @@ export function useDeleteTemplate() {
 
 export function useDuplicateTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payroll:templates:manage", {
     mutationKey: ["payroll", "templates", "duplicate"],
     mutationFn: ({ templateId, name, description }: DuplicateInput) =>
       apiClient.post<TemplateRow>(

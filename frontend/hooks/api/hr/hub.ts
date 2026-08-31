@@ -155,7 +155,7 @@ export function useHrHubSnapshot() {
   const today = localDateKey();
 
   return useQuery({
-    queryKey: queryKeys.hr.hub(orgId ?? "", userId ?? "", today),
+    queryKey: queryKeys.hr.hub(today),
     queryFn: () => apiClient.get<HrHubSnapshot>("/hr/hub", { today }),
     enabled: Boolean(orgId && userId),
     staleTime: 30_000,

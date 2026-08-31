@@ -40,7 +40,7 @@ function wrapperFor(access?: AccessResponse) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
-  if (access) client.setQueryData(queryKeys.access.me(ORG_ID, USER_ID), access);
+  if (access) client.setQueryData(queryKeys.access.me(), access);
   return function Wrapper({ children }: { children: ReactNode }) {
     return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
   };

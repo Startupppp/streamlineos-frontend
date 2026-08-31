@@ -27,13 +27,14 @@ import { EmptyTransferIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { usePayrollRuns } from "@/hooks/api/payroll";
-import { useRunPublications, usePublishPayslips, downloadPayslipPdf } from "@/hooks/api/payroll";
+import { usePayrollRuns, useRunPublications, usePublishPayslips, downloadPayslipPdf } from "@/hooks/api/payroll";
+
 import { useOrgMembersByIds } from "@/hooks/api/organization";
 import { getUserDisplayName, type NamedUser } from "@/lib/person-display";
 import type { PayslipPublication, PublicationStatus } from "@/types/payroll";
 import type { PayrollRunStatus } from "@/types/payroll/runs";
 import { formatMonth } from "@/features/payroll/shared";
+import { formatShortDate } from "@/lib/date-utils";
 
 const PUBLISHABLE_STATUSES: PayrollRunStatus[] = ["LOCKED", "PAID", "PAYSLIPS_PUBLISHED", "CLOSED"];
 
@@ -192,9 +193,7 @@ export function PublicationsTab({ canManage }: PublicationsTabProps) {
         header: "Published At",
         cell: (row) => (
           <span className="text-dense text-muted-foreground">
-            {row.publishedAt
-              ? new Date(row.publishedAt).toLocaleDateString()
-              : "—"}
+            {formatShortDate(row.publishedAt)}
           </span>
         ),
       },

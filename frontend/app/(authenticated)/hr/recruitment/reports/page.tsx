@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useSession } from "next-auth/react";
+import { useCan } from "@/hooks/api/access";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -11,16 +11,13 @@ import {
   type ReportEntity,
   type GenerateReportResult,
 } from "@/hooks/api";
-import { HR_ROLES } from "@/features/hr/recruitment/reports/lib/report-constants";
 import { ReportBuilderCard } from "@/features/hr/recruitment/reports/components/report-builder-card";
 import { ReportResultPanel } from "@/features/hr/recruitment/reports/components/report-result-panel";
 import { ScheduledReportsList } from "@/features/hr/recruitment/reports/components/scheduled-reports-list";
 import { ScheduleReportSheet } from "@/features/hr/recruitment/reports/components/schedule-report-sheet";
 
 export default function ReportsPage() {
-  const { data: session } = useSession();
-  const role = (session?.user as { role?: string })?.role ?? "";
-  const isHr = HR_ROLES.includes(role);
+  const isHr = useCan("hr:interviews:manage");
 
   const [entity, setEntity] = useState<ReportEntity>("candidates");
   const [selectedFields, setSelectedFields] = useState<string[]>([]);

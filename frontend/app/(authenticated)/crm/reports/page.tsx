@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import {
   useLeadStats,
   useLeadSlaAlerts,
@@ -32,6 +32,7 @@ import { ReportsSkeleton } from "@/features/crm/reports/components/reports-skele
 import { ReportsError } from "@/features/crm/reports/components/reports-error";
 
 export default function CrmReportsPage() {
+  const { staggerContainer, fadeUp } = useMotionVariants();
   const [period, setPeriod] = useState<Period>("month");
 
   const dateRange = useMemo(() => periodToDateRange(period), [period]);

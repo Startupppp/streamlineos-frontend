@@ -227,10 +227,15 @@ async function get<T>(
   return parseApiResponse<T>(res);
 }
 
+export interface RequestConfig {
+  headers?: Record<string, string>;
+  signal?: AbortSignal;
+}
+
 async function post<T>(
   url: string,
   data?: unknown,
-  config?: { headers?: Record<string, string>; signal?: AbortSignal },
+  config?: RequestConfig,
 ): Promise<T> {
   const res = await authedFetch(
     buildUrl(url),
@@ -248,46 +253,56 @@ async function post<T>(
   return parseApiResponse<T>(res);
 }
 
-async function put<T>(url: string, data?: unknown, signal?: AbortSignal): Promise<T> {
+function toRequestConfig(config?: AbortSignal | RequestConfig): RequestConfig {
+  if (!config) return {};
+  return "aborted" in config ? { signal: config } : config;
+}
+
+async function mutate<T>(
+  method: "PUT" | "PATCH" | "DELETE",
+  url: string,
+  data?: unknown,
+  config?: AbortSignal | RequestConfig,
+): Promise<T> {
+  const resolved = toRequestConfig(config);
   const res = await authedFetch(
     buildUrl(url),
     {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        ...(resolved.headers ?? {}),
+      },
       body: data !== undefined ? JSON.stringify(data) : undefined,
     },
     url,
-    signal,
+    resolved.signal,
   );
   return parseApiResponse<T>(res);
 }
 
-async function patch<T>(url: string, data?: unknown, signal?: AbortSignal): Promise<T> {
-  const res = await authedFetch(
-    buildUrl(url),
-    {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: data !== undefined ? JSON.stringify(data) : undefined,
-    },
-    url,
-    signal,
-  );
-  return parseApiResponse<T>(res);
+async function put<T>(
+  url: string,
+  data?: unknown,
+  config?: AbortSignal | RequestConfig,
+): Promise<T> {
+  return mutate<T>("PUT", url, data, config);
 }
 
-async function del<T>(url: string, data?: unknown, signal?: AbortSignal): Promise<T> {
-  const res = await authedFetch(
-    buildUrl(url),
-    {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: data !== undefined ? JSON.stringify(data) : undefined,
-    },
-    url,
-    signal,
-  );
-  return parseApiResponse<T>(res);
+async function patch<T>(
+  url: string,
+  data?: unknown,
+  config?: AbortSignal | RequestConfig,
+): Promise<T> {
+  return mutate<T>("PATCH", url, data, config);
+}
+
+async function del<T>(
+  url: string,
+  data?: unknown,
+  config?: AbortSignal | RequestConfig,
+): Promise<T> {
+  return mutate<T>("DELETE", url, data, config);
 }
 
 async function upload<T>(url: string, formData: FormData): Promise<T> {

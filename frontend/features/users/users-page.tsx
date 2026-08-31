@@ -44,6 +44,7 @@ import { UserDirectoryFilters } from "./user-directory-filters";
 import { getUserTableColumns } from "./user-table-columns";
 import { UserDirectoryActions } from "./user-directory-actions";
 import { useUserBulkLifecycle } from "./use-user-bulk-lifecycle";
+import { useEmploymentFacts } from "@/hooks/api/directory/employment";
 
 export function UsersPage() {
   const router = useRouter();
@@ -248,9 +249,19 @@ export function UsersPage() {
     setSheetOpen(true);
   }, []);
 
+  const { byUserId: employmentByUserId } = useEmploymentFacts(
+    users.map((user) => user.id),
+  );
+
   const columns = useMemo(
-    () => getUserTableColumns(branchNames, departmentNames, handleViewUser),
-    [branchNames, departmentNames, handleViewUser],
+    () =>
+      getUserTableColumns(
+        branchNames,
+        departmentNames,
+        employmentByUserId,
+        handleViewUser,
+      ),
+    [branchNames, departmentNames, employmentByUserId, handleViewUser],
   );
 
   const emptyStateNode = (

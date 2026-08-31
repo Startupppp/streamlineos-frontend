@@ -1,0 +1,5 @@
+
+> streamlineos@0.1.0 check:effect-fetches D:\projects\personal\Streamlineos\frontend
+> node scripts/check-no-effect-fetches.mjs
+
+✔  No useEffect-driven API fetches found.

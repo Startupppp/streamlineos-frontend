@@ -1,130 +1,92 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/query-keys";
+import { consumeNotificationStream, type IncomingNotification } from "./notification-event-stream";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
-
-interface IncomingNotification {
-  id: number;
-  title: string;
-  message: string;
-  priority: string;
-  category: string;
-  link?: string | null;
-  eventKey?: string | null;
-}
+const MAX_RETRIES = 5;
 
 async function fetchStreamToken(): Promise<string | null> {
   try {
     const sessionRes = await fetch("/api/auth/session", { credentials: "include" });
     if (!sessionRes.ok) return null;
-    const session = (await sessionRes.json()) as { backendJwt?: string };
-    if (!session.backendJwt) return null;
-
-    const res = await fetch(`${BACKEND_URL}/notifications/events/token`, {
+    const sessionData: unknown = await sessionRes.json();
+    if (typeof sessionData !== "object" || sessionData === null || !("backendJwt" in sessionData)) return null;
+    const backendJwt = sessionData.backendJwt;
+    if (typeof backendJwt !== "string" || !backendJwt) return null;
+    const response = await fetch(`${BACKEND_URL}/notifications/events/token`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${session.backendJwt}` },
+      headers: { Authorization: `Bearer ${backendJwt}` },
     });
-    if (!res.ok) return null;
-    const data = (await res.json()) as { token: string };
-    return data.token ?? null;
+    if (!response.ok) return null;
+    const body: unknown = await response.json();
+    if (typeof body !== "object" || body === null || !("token" in body)) return null;
+    return typeof body.token === "string" ? body.token : null;
   } catch {
     return null;
   }
 }
 
-export function useNotificationEvents() {
-  const qc = useQueryClient();
+function showIncoming(notification: IncomingNotification, router: ReturnType<typeof useRouter>): void {
+  if (notification.priority === "LOW") return;
+  const openLink = () => {
+    if (notification.link) router.push(notification.link);
+  };
+  toast(notification.title, {
+    description: notification.message,
+    ...(notification.link ? { action: { label: "View", onClick: openLink } } : {}),
+  });
+}
+
+export function useNotificationEvents(): void {
+  const queryClient = useQueryClient();
   const { data: session, status } = useSession();
-  const orgId = session?.orgId;
   const router = useRouter();
-  const esRef = useRef<EventSource | null>(null);
-  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const activeRef = useRef(true);
+  const orgId = session?.orgId;
 
   useEffect(() => {
     if (status !== "authenticated" || !orgId) return;
-    activeRef.current = true;
+    const controller = new AbortController();
+    let retryCount = 0;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
 
-    function showIncoming(n: IncomingNotification) {
-      if (n.priority === "LOW") return;
-      const openLink = () => {
-        if (n.link) router.push(n.link);
-      };
-      toast(n.title, {
-        description: n.message,
-        ...(n.link ? { action: { label: "View", onClick: openLink } } : {}),
-      });
-      if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted" && document.hidden) {
-        try {
-          const native = new Notification(n.title, { body: n.message, tag: `notif-${n.id}` });
-          native.onclick = () => {
-            window.focus();
-            if (n.link) router.push(n.link);
-            native.close();
-          };
-        } catch {
-          // Some browsers throw if the page isn't in a secure context — ignore.
-        }
-      }
-    }
+    const invalidate = () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount(), exact: true });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unreadList(), exact: true });
+    };
 
-    async function connect() {
-      if (!activeRef.current) return;
+    const scheduleRetry = () => {
+      if (controller.signal.aborted || retryCount >= MAX_RETRIES) return;
+      retryCount += 1;
+      const delay = Math.min(30_000, 1_000 * 2 ** retryCount) + Math.floor(Math.random() * 500);
+      retryTimer = setTimeout(() => void connect(), delay);
+    };
+
+    const connect = async (): Promise<void> => {
+      if (controller.signal.aborted || retryCount > MAX_RETRIES) return;
       const token = await fetchStreamToken();
-      if (!token) {
-        if (activeRef.current) {
-          retryTimeoutRef.current = setTimeout(() => {
-            void connect();
-          }, 10_000);
-        }
-        return;
+      if (!token || controller.signal.aborted) return;
+      try {
+        await consumeNotificationStream(`${BACKEND_URL}/notifications/events`, token, controller.signal, (notification) => {
+          retryCount = 0;
+          invalidate();
+          showIncoming(notification, router);
+        });
+        scheduleRetry();
+      } catch {
+        scheduleRetry();
       }
-      if (!activeRef.current) return;
-
-      const es = new EventSource(`${BACKEND_URL}/notifications/events?token=${encodeURIComponent(token)}`);
-      esRef.current = es;
-
-      es.onmessage = (event) => {
-        void qc.invalidateQueries({
-          queryKey: queryKeys.notifications.unreadCount(orgId),
-          exact: true,
-        });
-        void qc.invalidateQueries({
-          queryKey: queryKeys.notifications.unreadList(orgId),
-          exact: true,
-        });
-        try {
-          const parsed = JSON.parse(event.data) as { type?: string; notification?: IncomingNotification };
-          if (parsed.type === "notification" && parsed.notification) showIncoming(parsed.notification);
-        } catch {
-          // Ignore malformed frames.
-        }
-      };
-
-      es.onerror = () => {
-        es.close();
-        esRef.current = null;
-        if (activeRef.current) {
-          retryTimeoutRef.current = setTimeout(() => {
-            void connect();
-          }, 10_000);
-        }
-      };
-    }
+    };
 
     void connect();
-
     return () => {
-      activeRef.current = false;
-      if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
-      esRef.current?.close();
-      esRef.current = null;
+      controller.abort();
+      if (retryTimer) clearTimeout(retryTimer);
     };
-  }, [status, orgId, qc, router]);
+  }, [orgId, queryClient, router, status]);
 }

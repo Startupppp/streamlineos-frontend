@@ -16,12 +16,7 @@ export interface Portfolio {
 
 export interface PortfoliosPage {
   data: Portfolio[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
 export interface LinkedProject {

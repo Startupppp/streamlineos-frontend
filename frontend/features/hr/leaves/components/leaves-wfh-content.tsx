@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { format } from "date-fns";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
@@ -12,8 +12,6 @@ import {
   useHrLeavesThisWeek,
 } from "@/hooks/api/hr";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   Tabs,
@@ -30,24 +28,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import {
-  StatCard,
-  StatCardGrid,
-  StatCardGridSkeleton,
-} from "@/components/ui/stat-card";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, CalendarCheck, Clock3, BadgeCheck } from "lucide-react";
 import { HouseIcon, PlusIcon, DownloadIcon } from "@animateicons/react/lucide";
-import { resolveImageUrl } from "@/lib/utils";
-import { formatDayCount } from "@/lib/format-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
-
 import { ErrorState } from "@/components/shared";
 import { LeaveRequestSheet } from "@/features/hr/leaves/leave-request-sheet";
 import { WfhRequestSheet } from "@/features/hr/leaves/wfh-request-sheet";
-
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { LeavesTabContent } from "./leaves-tab-content";
+import { WfhTabContent } from "./wfh-tab-content";
+import { LeaveApprovalsContent } from "./leave-approvals";
+import { LeavesSummaryStrip, buildAvailableHint } from "./leaves-summary-strip";
+import { LeavesThisWeekCard } from "./leaves-this-week-card";
 import type {
   LeaveBalance,
   LeaveType,
@@ -55,67 +49,6 @@ import type {
   LeaveRequest,
   ApprovedLeave,
 } from "./leaves-shared";
-
-function buildAvailableHint(
-  balances: LeaveBalance[],
-  joiningDate: string | null,
-): string | undefined {
-  const perType = balances
-    .filter((b) => b.typeName)
-    .map((b) => `${b.typeName} ${formatDayCount(Number(b.balance ?? 0))}`)
-    .join(" · ");
-
-  const joined = joiningDate ? new Date(joiningDate) : null;
-  const prorated =
-    joined && !Number.isNaN(joined.getTime()) &&
-    joined.getFullYear() === new Date().getFullYear()
-      ? `Prorated from your joining date (${format(joined, "d MMM yyyy")}): ${12 - joined.getMonth()} of 12 months`
-      : "";
-
-  return [perType, prorated].filter(Boolean).join(" — ") || undefined;
-}
-
-const LeavesSummaryStrip = React.memo(function LeavesSummaryStrip({
-  totalAvailable,
-  availableHint,
-  pendingCount,
-  approvedCount,
-}: {
-  totalAvailable: number;
-  availableHint?: string;
-  pendingCount: number;
-  approvedCount: number;
-}) {
-  return (
-    <StatCardGrid cols={3}>
-      <StatCard
-        label="Available Days"
-        value={formatDayCount(totalAvailable)}
-        hint={availableHint}
-        icon={CalendarCheck}
-        color="green"
-      />
-      <StatCard
-        label="Pending Requests"
-        value={pendingCount}
-        icon={Clock3}
-        tone="amber"
-      />
-      <StatCard
-        label="Approved (YTD)"
-        value={approvedCount}
-        icon={BadgeCheck}
-        color="blue"
-      />
-    </StatCardGrid>
-  );
-});
-
-import { LeavesTabContent } from "./leaves-tab-content";
-import { WfhTabContent } from "./wfh-tab-content";
-import { LeaveApprovalsContent } from "./leave-approvals";
-import { useCan, useModuleEnabled } from "@/hooks/api/access";
-import { TruncatedText } from "@/components/ui/truncated-text";
 
 const TAB_PANEL_CLASS = `${TABS_CONTENT_PAGE_BODY_CLASS} mt-0 h-full min-h-0 w-full flex-1`;
 
@@ -403,51 +336,8 @@ export function LeavesWfhContent({ selfService = false }: LeavesWfhContentProps)
           }
         >
           <div className="flex min-h-0 w-full flex-1 flex-col gap-3 overflow-hidden">
-            {!selfService && approvedLeavesThisWeek.length > 0 && (
-              <Card className="overflow-hidden border-status-warning-rule bg-status-warning-surface">
-                <CardHeader className="border-b px-4 pb-3 pt-3">
-                  <CardTitle className="flex items-center gap-2 text-sm font-semibold text-status-warning-ink">
-                    <Users className="h-4 w-4" />
-                    Who&apos;s Out This Week
-                    <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-status-warning-surface px-1.5 text-micro font-semibold text-status-warning-ink">
-                      {approvedLeavesThisWeek.length}
-                    </span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="px-4 pb-3 pt-3">
-                  <div className="flex flex-wrap gap-2">
-                    {approvedLeavesThisWeek.map((leave) => (
-                      <div
-                        key={leave.id}
-                        className="flex items-center gap-2 rounded-lg border border-status-warning-rule bg-card px-3 py-2"
-                      >
-                        <Avatar className="w-7">
-                          <AvatarImage src={resolveImageUrl(leave.user?.image)} />
-                          <AvatarFallback className="bg-status-warning-surface text-micro text-status-warning-ink">
-                            {leave.user?.firstName?.[0]}
-                            {leave.user?.lastName?.[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0">
-                          <TruncatedText
-                            text={`${leave.user?.firstName ?? ""} ${leave.user?.lastName ?? ""}`.trim()}
-                            className="text-xs font-medium text-foreground"
-                          />
-                          <p className="text-micro text-muted-foreground">
-                            {format(new Date(leave.startDate), "MMM dd")} –{" "}
-                            {format(new Date(leave.endDate), "MMM dd")}
-                            {leave.leaveType && (
-                              <span className="ml-1 text-status-warning-ink">
-                                · {leave.leaveType.name}
-                              </span>
-                            )}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+            {!selfService && (
+              <LeavesThisWeekCard leaves={approvedLeavesThisWeek} />
             )}
 
             <TabsContent value="my-leaves" className={TAB_PANEL_CLASS}>

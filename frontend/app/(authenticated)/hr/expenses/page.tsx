@@ -21,7 +21,7 @@ import { useSession } from "next-auth/react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import {
   EXPENSE_CATEGORIES,
   PAYMENT_METHODS,
@@ -43,6 +43,7 @@ import type { ExpenseWithRelations } from "@/types/hr/expenses";
 import { useCan } from "@/hooks/api/access";
 
 export default function ExpensesPage() {
+  const { staggerContainer, fadeUp } = useMotionVariants();
   const { data: session } = useSession();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<ExpenseToEdit | null>(
@@ -240,20 +241,7 @@ export default function ExpensesPage() {
     pendingExpenses = [],
     stats = null,
     pagination = { page: 1, pageSize: 5, total: 0, totalPages: 0 },
-    categories: rawCategories = [],
   } = pageData ?? {};
-
-  const expenseCategories =
-    rawCategories.length > 0
-      ? rawCategories
-      : EXPENSE_CATEGORIES.map((name, i) => ({
-          id: i + 1,
-          name,
-          description: null,
-          budgetLimit: null,
-          budgetPeriod: null,
-          isActive: true,
-        }));
 
   const filteredExpenses =
     statusFilter === "ALL"
@@ -294,7 +282,6 @@ export default function ExpensesPage() {
             </Button>
             <ExpenseExportDialog
               filters={filters}
-              categories={expenseCategories}
               trigger={
                 <Button
                   variant="outline"
@@ -397,7 +384,6 @@ export default function ExpensesPage() {
           statusFilter={statusFilter}
           datePreset={datePreset}
           filters={filters}
-          categories={expenseCategories}
           onStatusChange={setStatusFilter}
           onDatePresetChange={setDatePreset}
         />

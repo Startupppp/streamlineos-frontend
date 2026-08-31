@@ -206,7 +206,7 @@ export default function ContactDetailPage({
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
         title="Delete contact"
-        description={`Delete “${contact.name}”? This cannot be undone.`}
+        description={`Delete "${contact.name}"? This cannot be undone.`}
         confirmLabel="Delete"
         destructive
         isPending={deleteMutation.isPending}

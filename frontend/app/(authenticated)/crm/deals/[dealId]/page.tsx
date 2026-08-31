@@ -2,7 +2,7 @@
 
 import { use, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Edit2,
   Trophy,
@@ -17,7 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import {
   useDealDetail,
   useUpdateDeal,
@@ -59,7 +59,7 @@ export default function DealDetailPage({
   const { dealId: dealIdStr } = use(params);
   const dealId = Number(dealIdStr);
   const router = useRouter();
-  const shouldReduceMotion = useReducedMotion();
+  const { staggerContainer, fadeUp } = useMotionVariants();
   const layout = useDealLayout();
   const money = useOrgDisplay();
 
@@ -245,13 +245,6 @@ export default function DealDetailPage({
   const handleOpenMeetingDialog = useCallback(() => setMeetingDialogOpen(true), []);
   const handleOpenCreateProject = useCallback(() => setCreateProjectOpen(true), []);
 
-  const containerVariants = shouldReduceMotion
-    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
-    : staggerContainer;
-  const itemVariants = shouldReduceMotion
-    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
-    : fadeUp;
-
   if (isLoading) {
     return (
       <PageWrapper title={`Deal #${dealIdStr}`} backHref="/crm/deals">
@@ -376,12 +369,12 @@ export default function DealDetailPage({
     >
       <motion.div
         className="space-y-4"
-        variants={containerVariants}
+        variants={staggerContainer}
         initial="hidden"
         animate="visible"
       >
         <motion.div
-          variants={itemVariants}
+          variants={fadeUp}
           className="flex flex-wrap items-center gap-1 p-2 rounded-lg bg-muted/30 border border-border"
         >
           {stages.map((stage, i) => {
@@ -416,7 +409,7 @@ export default function DealDetailPage({
         </motion.div>
 
         <div className="grid gap-4 lg:grid-cols-5">
-          <motion.div variants={itemVariants} className="lg:col-span-3 space-y-4">
+          <motion.div variants={fadeUp} className="lg:col-span-3 space-y-4">
             {isEditing ? (
               <DealEditForm
                 deal={deal}
@@ -446,7 +439,7 @@ export default function DealDetailPage({
             )}
           </motion.div>
 
-          <motion.div variants={itemVariants} className="lg:col-span-2 space-y-4">
+          <motion.div variants={fadeUp} className="lg:col-span-2 space-y-4">
             <DealSidebarCards
               dealId={dealId}
               dealName={deal.name}

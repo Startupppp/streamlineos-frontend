@@ -38,6 +38,8 @@ jobs:
       NODE_ENV: test
       DATABASE_URL: postgres://user:password@localhost:5432/streamlineos
       BACKEND_JWT_SECRET: ci-only-backend-jwt-secret-with-at-least-44-characters
+      PORTAL_JWT_SECRET: ci-only-portal-jwt-secret-with-at-least-44-characters-xx
+      ENCRYPTION_KEY: ci-only-encryption-key-min-32-characters-for-testing
       CORS_ORIGINS: http://localhost:1000
       APP_URL: http://localhost:1000
     steps:
@@ -66,11 +68,59 @@ jobs:
       - name: Type Check
         run: pnpm typecheck
 
+      - name: Placement Bypass Guard Self-Test
+        run: pnpm check:placement-bypass:self-test
+
+      - name: Placement Bypass Guard
+        run: pnpm check:placement-bypass
+
+      - name: Owner Authority Guard Self-Test
+        run: pnpm check:owner-authority:self-test
+
+      - name: Owner Authority Guard
+        run: pnpm check:owner-authority
+
+      - name: OpenAPI Contract Self-Test
+        run: pnpm openapi:check:self-test
+
+      - name: OpenAPI Contract Freshness
+        run: pnpm openapi:check
+
+      - name: Request-Schema Coverage Self-Test
+        run: pnpm check:openapi-coverage:self-test
+
+      - name: Request-Schema Coverage Thresholds
+        run: pnpm check:openapi-coverage
+
+      - name: Bodyless Conflicts Self-Test
+        run: pnpm check:bodyless-conflicts:self-test
+
+      - name: Bodyless Conflicts
+        run: pnpm check:bodyless-conflicts
+
+      - name: Operation IDs are unique
+        run: pnpm check:operation-ids:self-test && pnpm check:operation-ids
+
+      - name: Migration Discipline
+        run: pnpm check:migration-discipline
+
+      - name: Files over 300 lines do not increase
+        run: pnpm check:over-300:self-test && pnpm check:over-300
+
+      - name: Offset, unbounded and unordered reads do not increase
+        run: pnpm check:unbounded-reads:self-test && pnpm check:unbounded-reads
+
+      - name: HR table freeze
+        run: pnpm check:hr-table-freeze:self-test && pnpm check:hr-table-freeze
+
       - name: Unit Tests
         run: pnpm test -- --runInBand
 
       - name: Bootstrap Test Database
         run: pnpm db:bootstrap
+
+      - name: Migration ledger agrees with the journal
+        run: pnpm check:migration-ledger:self-test && pnpm check:migration-ledger
 
       - name: Controller E2E Tests
         run: pnpm test:e2e:ci

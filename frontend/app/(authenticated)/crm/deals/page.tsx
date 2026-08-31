@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useTransition, useEffect } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import { ConfettiOverlay } from "@/components/celebration/confetti-overlay";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -12,7 +12,7 @@ import { DealList } from "@/features/crm/deals/deal-list";
 import { DealsFilterBar } from "@/features/crm/deals/deals-filter-bar";
 import { useDensity } from "@/features/renderer/density-toggle";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { DragDropContext, type DropResult } from "@hello-pangea/dnd";
 import { useDeals, useUpdateDealStage, useDeleteDeal, useCrmPipelines } from "@/hooks/api/crm";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
@@ -42,7 +42,7 @@ export default function DealsPage() {
   const router = useRouter();
   const pathname = usePathname();
   const [, startTransition] = useTransition();
-  const shouldReduceMotion = useReducedMotion();
+  const { staggerContainer, fadeUp } = useMotionVariants();
 
   const rawView = searchParams.get("view");
   const view: "table" | "kanban" = rawView === "kanban" ? "kanban" : "table";
@@ -297,13 +297,6 @@ export default function DealsPage() {
     void refetch();
   }, [refetch]);
 
-  const containerVariants = shouldReduceMotion
-    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
-    : staggerContainer;
-  const itemVariants = shouldReduceMotion
-    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
-    : fadeUp;
-
   if (view === "kanban" && isLoading) return <DealsLoadingSkeleton />;
 
   if (view === "kanban" && isError) {
@@ -368,24 +361,24 @@ export default function DealsPage() {
       >
         <motion.div
           className="flex flex-1 min-h-0 flex-col space-y-4"
-          variants={containerVariants}
+          variants={staggerContainer}
           initial="hidden"
           animate="visible"
         >
           {allDeals ? (
             <>
-              <motion.div variants={itemVariants} className="sticky top-0 z-10 shrink-0 border-b border-border bg-muted/40 pb-2 backdrop-blur-sm">
+              <motion.div variants={fadeUp} className="sticky top-0 z-10 shrink-0 border-b border-border bg-muted/40 pb-2 backdrop-blur-sm">
                 <DealsStatsBar {...stats} />
               </motion.div>
 
-              <motion.div variants={itemVariants} className="shrink-0">
+              <motion.div variants={fadeUp} className="shrink-0">
                 <DealForecastWidget deals={filteredDeals} />
               </motion.div>
             </>
           ) : null}
 
           {view === "table" && (
-            <motion.div variants={itemVariants} className="flex flex-1 min-h-0 flex-col">
+            <motion.div variants={fadeUp} className="flex flex-1 min-h-0 flex-col">
               <DealList
               access={access}
                 deals={filteredDeals}
@@ -404,7 +397,7 @@ export default function DealsPage() {
           )}
 
           {view === "kanban" && (
-            <motion.div variants={itemVariants} className="flex flex-1 min-h-0 flex-col">
+            <motion.div variants={fadeUp} className="flex flex-1 min-h-0 flex-col">
               <DragDropContext onDragEnd={handleDragEnd}>
                 <ScrollArea className="w-full flex-1 min-h-0" type="auto">
                   <div className="inline-flex gap-3 sm:gap-4 pb-4">

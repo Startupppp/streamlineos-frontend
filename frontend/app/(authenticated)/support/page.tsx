@@ -12,17 +12,17 @@ import {
   Shield,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { MiniAreaChart } from "@/components/charts/mini-area-chart";
 import { MiniDonutChart } from "@/components/charts/mini-donut-chart";
 import { ActivityFeed } from "@/components/charts/activity-feed";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { cn } from "@/lib/utils";
 import { useSupportDashboard } from "@/hooks/api";
-import { staggerContainer, fadeUp, slideInLeft } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { safeMax, calcPercent } from "@/lib/format-utils";
 import { getColorSafe, onlineStatusColors, sparkColors } from "@/lib/theme-constants";
-import { StatCardGridSkeleton } from "@/components/ui/stat-card";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ErrorState } from "@/components/shared/error-state";
@@ -78,6 +78,7 @@ function getTeamMemberKey(member: SupportTeamMember) {
 }
 
 export default function SupportDashboardPage() {
+  const { staggerContainer, fadeUp, slideInLeft } = useMotionVariants();
   const { data, isLoading, isError, refetch } = useSupportDashboard();
 
   const ticketStatusBreakdown = useMemo(() => data?.ticketStatusBreakdown ?? [], [data]);

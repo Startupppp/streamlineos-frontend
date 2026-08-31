@@ -4,13 +4,14 @@ import { motion } from "framer-motion";
 import { Plane, MapPin, Calendar, DollarSign, Building } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { getStatusConfig } from "./travel-status-helpers";
 import type { TravelRequest } from "@/hooks/api/hr";
 
 export function TravelCard({ request }: { request: TravelRequest }) {
+  const { fadeUp } = useMotionVariants();
   const cfg = getStatusConfig(request.status);
   return (
     <motion.div variants={fadeUp}>

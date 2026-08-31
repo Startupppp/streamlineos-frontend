@@ -25,7 +25,7 @@ jest.mock("framer-motion", () => {
     return <div {...props}>{children}</div>;
   }
 
-  return { motion: { div: MotionDiv } };
+  return { motion: { div: MotionDiv }, useReducedMotion: () => false };
 });
 
 jest.mock("@/features/dashboard/use-dashboard-access", () => ({

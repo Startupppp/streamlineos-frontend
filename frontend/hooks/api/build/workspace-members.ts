@@ -19,13 +19,11 @@ export interface ProjectWorkspaceMember {
 
 export interface WorkspaceMembersResponse {
   data: ProjectWorkspaceMember[];
-  total: number;
-  page: number;
-  limit: number;
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
 interface ProjectWorkspaceMembersParams {
-  page?: number;
+  cursor?: string;
   limit?: number;
   search?: string;
   status?: string;
@@ -51,7 +49,7 @@ export function useProjectWorkspaceMembers(
     queryKey: projectWorkspaceMembersQueryKeys.list(params as Record<string, unknown> | undefined),
     queryFn: () =>
       apiClient.get<WorkspaceMembersResponse>("/build/members", {
-        ...(params?.page ? { page: String(params.page) } : {}),
+        ...(params?.cursor ? { cursor: params.cursor } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
         ...(params?.search ? { search: params.search } : {}),
         ...(params?.status ? { status: params.status } : {}),

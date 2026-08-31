@@ -24,6 +24,7 @@ import type { FinanceStatus } from "@/features/accounting/shared";
 import { PaymentRunFormSheet } from "@/features/accounting/purchases/payment-run-form-sheet";
 import { usePaymentRuns } from "@/hooks/api/accounting/ap";
 import type { PaymentRunSummary, PaymentRunStatus } from "@/hooks/api/accounting/ap";
+import { formatShortDate } from "@/lib/date-utils";
 
 type RunStatusFilter = "all" | PaymentRunStatus;
 
@@ -39,12 +40,6 @@ const RUN_STATUS_FILTER_VALUES: ReadonlyArray<string> = ["all", "DRAFT", "APPROV
 
 function isRunStatusFilter(v: string): v is RunStatusFilter {
   return RUN_STATUS_FILTER_VALUES.includes(v);
-}
-
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
 }
 
 function RunStatusDisplay({ status }: { status: PaymentRunStatus }) {
@@ -76,7 +71,7 @@ const COLUMNS: DataTableColumn<PaymentRunSummary>[] = [
     header: "Scheduled",
     cell: (run) => (
       <span className="text-sm text-muted-foreground tabular-nums">
-        {formatDate(run.scheduledDate)}
+        {formatShortDate(run.scheduledDate) || "—"}
       </span>
     ),
   },
@@ -97,7 +92,7 @@ const COLUMNS: DataTableColumn<PaymentRunSummary>[] = [
     header: "Created",
     cell: (run) => (
       <span className="text-sm text-muted-foreground tabular-nums">
-        {formatDate(run.createdAt)}
+        {formatShortDate(run.createdAt) || "—"}
       </span>
     ),
   },
@@ -109,12 +104,11 @@ export default function PaymentRunsPage() {
   const [createOpen, setCreateOpen] = useState(false);
 
   const query = usePaymentRuns({
-    page: 1,
-    pageSize: 50,
+    limit: 50,
     status: statusFilter === "all" ? undefined : statusFilter,
   });
 
-  const items = query.data?.items ?? [];
+  const items = query.data?.data ?? [];
 
   function handleRetry(): void {
     void query.refetch();

@@ -2,7 +2,6 @@
 
 import { useMemo, useCallback } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import type { Variants } from "framer-motion";
 import {
   BarChart3,
   TrendingUp,
@@ -20,9 +19,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyLeadsIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
 import { cn } from "@/lib/utils";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { useLeadSourceReport } from "@/hooks/api/crm/leads";
-import { formatCurrency } from "@/features/crm/lib/format-currency";
+import { formatCurrency } from "@/lib/format-utils";
 
 const SOURCE_LABELS: Record<string, string> = {
   referral: "Referral",
@@ -53,6 +52,7 @@ function getSourceColor(index: number) {
 
 export default function LeadSourceReportPage() {
   const shouldReduceMotion = useReducedMotion();
+  const { staggerContainer, fadeUp } = useMotionVariants();
   const { data, isLoading, isError, refetch, access } = useLeadSourceReport();
 
   const maxCount = useMemo(
@@ -76,11 +76,6 @@ export default function LeadSourceReportPage() {
     void refetch();
   }, [refetch]);
 
-  const containerVariants: Variants = shouldReduceMotion ? {} : staggerContainer;
-  const childVariants: Variants = shouldReduceMotion
-    ? { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0.15 } } }
-    : fadeUp;
-
   return (
     <PageWrapper
       title="Lead Source Report"
@@ -96,11 +91,11 @@ export default function LeadSourceReportPage() {
       ) : (
         <motion.div
           className="space-y-4"
-          variants={containerVariants}
+          variants={staggerContainer}
           initial="hidden"
           animate="visible"
         >
-          <motion.div variants={childVariants}>
+          <motion.div variants={fadeUp}>
             <StatCardGrid cols={4}>
               <StatCard
                 label="Total Leads"
@@ -137,7 +132,7 @@ export default function LeadSourceReportPage() {
             </StatCardGrid>
           </motion.div>
 
-          <motion.div variants={childVariants}>
+          <motion.div variants={fadeUp}>
             <Card className="shadow-noir">
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
@@ -177,7 +172,7 @@ export default function LeadSourceReportPage() {
                       return (
                         <motion.div
                           key={s.source}
-                          variants={childVariants}
+                          variants={fadeUp}
                         >
                           <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                             <div className="flex items-center gap-2">
@@ -246,7 +241,7 @@ export default function LeadSourceReportPage() {
           </motion.div>
 
           {data && data.sources.length > 0 && (
-            <motion.div variants={childVariants}>
+            <motion.div variants={fadeUp}>
               <Card className="shadow-noir">
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">

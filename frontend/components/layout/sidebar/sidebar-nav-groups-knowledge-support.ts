@@ -156,7 +156,6 @@ export const KNOWLEDGE_SUPPORT_NAV_GROUPS: NavGroup[] = [
 {
     label: "Knowledge",
     product: "documents",
-    module: "documents",
     routes: [
       {
         label: "Ask KB",

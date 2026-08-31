@@ -84,9 +84,16 @@ const WEEK_START_DAYS = [
   { value: "saturday", label: "Saturday" },
 ] as const;
 
+type CurrencyCode = (typeof CURRENCIES)[number]["value"];
+
+/** The stored value is a free string; anything unrecognised falls back. */
+function toCurrencyCode(value: string | null | undefined): CurrencyCode {
+  return CURRENCIES.find((c) => c.value === value)?.value ?? "INR";
+}
+
 const localizationSchema = z.object({
   timezone: z.string().min(1),
-  currency: z.string().min(1),
+  currency: z.enum(["USD", "EUR", "INR", "GBP", "AED", "SGD", "AUD", "CAD", "JPY"]),
   fiscalYearStart: z.number().int().min(1).max(12),
   language: z.string().min(1),
   dateFormat: z.string().min(1),
@@ -139,7 +146,7 @@ export function OrgLocalizationSection({ org, canEdit }: OrgLocalizationSectionP
     resolver: zodResolver(localizationSchema),
     defaultValues: {
       timezone: org.timezone ?? "Asia/Kolkata",
-      currency: org.currency ?? "INR",
+      currency: toCurrencyCode(org.currency),
       fiscalYearStart: org.fiscalYearStart ?? 4,
       language: extracted.language,
       dateFormat: extracted.dateFormat,
@@ -153,7 +160,7 @@ export function OrgLocalizationSection({ org, canEdit }: OrgLocalizationSectionP
     const ext = extractSettings(org.settings);
     form.reset({
       timezone: org.timezone ?? "Asia/Kolkata",
-      currency: org.currency ?? "INR",
+      currency: toCurrencyCode(org.currency),
       fiscalYearStart: org.fiscalYearStart ?? 4,
       language: ext.language,
       dateFormat: ext.dateFormat,
@@ -193,7 +200,7 @@ export function OrgLocalizationSection({ org, canEdit }: OrgLocalizationSectionP
 
   const displayValues: Record<keyof LocalizationValues, string> = {
     timezone: org.timezone ?? "Asia/Kolkata",
-    currency: org.currency ?? "INR",
+    currency: toCurrencyCode(org.currency),
     fiscalYearStart: MONTHS[(org.fiscalYearStart ?? 4) - 1] ?? "April",
     language: LANGUAGES.find((l) => l.value === extracted.language)?.label ?? extracted.language,
     dateFormat: extracted.dateFormat,
@@ -229,7 +236,7 @@ export function OrgLocalizationSection({ org, canEdit }: OrgLocalizationSectionP
             </div>
             <div className="space-y-1">
               <Label className="text-xs font-medium">Currency</Label>
-              <Select onValueChange={(v) => form.setValue("currency", v)} value={form.watch("currency")}>
+              <Select onValueChange={(v) => form.setValue("currency", toCurrencyCode(v))} value={form.watch("currency")}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                   {CURRENCIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}

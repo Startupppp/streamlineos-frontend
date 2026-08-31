@@ -28,6 +28,7 @@ import { EssStatusBadge } from "./ess-status-badge";
 import { useEssReimbursements, useSubmitReimbursement } from "@/hooks/api/payroll/ess";
 import { useUploadFile } from "@/hooks/api/use-upload-file";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
+import { formatShortDate } from "@/lib/date-utils";
 
 const CLAIM_CATEGORIES = ["Travel", "Food", "Internet", "Medical", "Fuel", "Office Supplies", "Client Expenses", "Other"];
 
@@ -50,7 +51,7 @@ type ReimbursementFormValues = z.infer<typeof reimbursementSchema>;
 
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+  return formatShortDate(iso);
 }
 
 function RowSkeleton() {

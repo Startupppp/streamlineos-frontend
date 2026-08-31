@@ -24,7 +24,8 @@ const STATUS_TONE: Record<string, string> = {
 const MISSING_PUNCH_HOUR_CUTOFF = 11;
 
 export function MyAttendanceWidget() {
-  const { data, isLoading } = useHrAttendanceStatus();
+  const { data, isLoading, error, refetch } = useHrAttendanceStatus();
+  const handleRetry = () => void refetch();
 
   const missingPunchWarning = useMemo(() => {
     if (!data) return null;
@@ -52,6 +53,8 @@ export function MyAttendanceWidget() {
         ) : undefined
       }
       isLoading={isLoading}
+      error={error}
+      onRetry={handleRetry}
       loadingRows={2}
       isEmpty={!data}
       empty={

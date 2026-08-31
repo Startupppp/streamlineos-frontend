@@ -1,33 +1,36 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
-import type { AuditResponse } from "@/features/timesheets/types";
+import type { AuditEvent, CursorPage } from "@/features/timesheets/types";
 
 interface AuditQuery {
   entityType?: string;
   entityId?: string;
   action?: string;
-  page?: number;
   limit?: number;
 }
 
 export function useAuditEvents(query: AuditQuery = {}, enabled = true) {
   const canView = useCan("timesheets:audit:view");
-  const params = {
+  const filters = {
     entityType: query.entityType,
     entityId: query.entityId,
     action: query.action,
-    page: query.page,
-    limit: query.limit,
+    limit: query.limit ?? 20,
   };
-  return useQuery({
-    queryKey: queryKeys.timesheets.audit(params),
-    queryFn: () => apiClient.get<AuditResponse>("/timesheets/audit", params),
+  return useInfiniteQuery<CursorPage<AuditEvent>>({
+    queryKey: queryKeys.timesheets.audit(filters),
+    queryFn: ({ pageParam }) => {
+      const params: Record<string, unknown> = { ...filters };
+      if (typeof pageParam === "string") params.cursor = pageParam;
+      return apiClient.get<CursorPage<AuditEvent>>("/timesheets/audit", params);
+    },
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     staleTime: 30_000,
-    placeholderData: (prev) => prev,
     enabled: enabled && canView,
   });
 }

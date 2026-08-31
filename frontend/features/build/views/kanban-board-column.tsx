@@ -27,6 +27,7 @@ export interface KanbanBoardColumnProps {
   canManage: boolean;
   existingNames: string[];
   wipLimit?: number;
+  serverCount?: number;
   displayOptions?: DisplayOptions;
   dragHandleProps?: DraggableProvidedDragHandleProps | null;
   isColumnDragging?: boolean;
@@ -51,6 +52,7 @@ export const KanbanBoardColumn = memo(function KanbanBoardColumn({
   canManage,
   existingNames,
   wipLimit,
+  serverCount,
   displayOptions,
   dragHandleProps,
   isColumnDragging = false,
@@ -81,6 +83,7 @@ export const KanbanBoardColumn = memo(function KanbanBoardColumn({
         column={column}
         projectId={projectId}
         ticketCount={tickets.length}
+        serverCount={serverCount}
         canManage={canManage}
         existingNames={existingNames}
         onRename={onRename}

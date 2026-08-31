@@ -1,7 +1,7 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface LeadSummaryResult {
   summary: string;
@@ -132,7 +132,7 @@ interface MeetingFollowUpResult {
 
 
 export function useLeadSummary() {
-  return useMutation({
+  return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["ai-crm-lead-summary"],
     mutationFn: (leadId: number) =>
       apiClient.post<LeadSummaryResult>(`/ai/crm/leads/${leadId}/summary`, {}),
@@ -140,7 +140,7 @@ export function useLeadSummary() {
 }
 
 export function useDealSummary() {
-  return useMutation({
+  return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["ai-crm-deal-summary"],
     mutationFn: (dealId: number) =>
       apiClient.post<DealSummaryResult>(`/ai/crm/deals/${dealId}/summary`, {}),
@@ -148,7 +148,7 @@ export function useDealSummary() {
 }
 
 export function useNextBestActionsAcrossPipeline() {
-  return useMutation({
+  return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["ai-crm-next-best-actions"],
     mutationFn: (limit?: number) =>
       apiClient.post<NextBestActionsWithEvidenceResult>("/ai/crm/next-best-actions", { limit }),
@@ -156,7 +156,7 @@ export function useNextBestActionsAcrossPipeline() {
 }
 
 export function useCrmEmailDraft() {
-  return useMutation({
+  return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["ai-crm-email-draft"],
     mutationFn: (input: EmailDraftInput) =>
       apiClient.post<EmailDraftResult>("/ai/crm/email-draft", input),
@@ -164,7 +164,7 @@ export function useCrmEmailDraft() {
 }
 
 export function useSummarizeNotes() {
-  return useMutation({
+  return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["ai-crm-summarize-notes"],
     mutationFn: (text: string) =>
       apiClient.post<SummarizeNotesResult>("/ai/crm/summarize-notes", { text }),
@@ -172,7 +172,7 @@ export function useSummarizeNotes() {
 }
 
 export function useCrmObjectionHelp() {
-  return useMutation({
+  return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["ai-crm-objection-help"],
     mutationFn: (input: { objection: string; context?: string }) =>
       apiClient.post<ObjectionHelpResult>("/ai/crm/objection-help", input),
@@ -180,7 +180,7 @@ export function useCrmObjectionHelp() {
 }
 
 export function useDuplicateSuggestions() {
-  return useMutation({
+  return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["ai-crm-duplicate-suggestions"],
     mutationFn: (leadId: number) =>
       apiClient.post<DuplicateSuggestionsResult>(`/ai/crm/duplicate-suggestions/${leadId}`, {}),
@@ -188,7 +188,7 @@ export function useDuplicateSuggestions() {
 }
 
 export function useLeadSummaryWithCitations() {
-  return useMutation({
+  return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["ai-crm-lead-summary-citations"],
     mutationFn: (leadId: number) =>
       apiClient.post<LeadSummaryWithCitationsResult>(`/ai/crm/leads/${leadId}/summary-with-citations`, {}),
@@ -196,7 +196,7 @@ export function useLeadSummaryWithCitations() {
 }
 
 export function useDealSummaryWithCitations() {
-  return useMutation({
+  return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["ai-crm-deal-summary-citations"],
     mutationFn: (dealId: number) =>
       apiClient.post<DealSummaryWithCitationsResult>(`/ai/crm/deals/${dealId}/summary-with-citations`, {}),
@@ -204,7 +204,7 @@ export function useDealSummaryWithCitations() {
 }
 
 export function useAccountSummaryWithCitations() {
-  return useMutation({
+  return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["ai-crm-account-summary-citations"],
     mutationFn: (clientId: number) =>
       apiClient.post<AccountSummaryWithCitationsResult>("/ai/crm/account-summary-with-citations", { clientId }),
@@ -212,7 +212,7 @@ export function useAccountSummaryWithCitations() {
 }
 
 export function useMeetingFollowUpDraft() {
-  return useMutation({
+  return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["ai-crm-meeting-follow-up"],
     mutationFn: (input: MeetingFollowUpInput) =>
       apiClient.post<MeetingFollowUpResult>("/ai/crm/meeting-follow-up", input),

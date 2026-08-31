@@ -17,6 +17,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { ErrorState } from "@/components/shared/error-state";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { AuditDetailSheet } from "./audit-detail-sheet";
 
@@ -109,7 +110,6 @@ const COLUMNS: DataTableColumn<AuditEvent>[] = [
 
 export function AuditTab() {
   const canView = useCan("timesheets:audit:view");
-  const [page, setPage] = useState(1);
   const [entityType, setEntityType] = useState(SELECT_ALL);
   const [action, setAction] = useState(SELECT_ALL);
   const [selectedEvent, setSelectedEvent] = useState<AuditEvent | null>(null);
@@ -118,30 +118,34 @@ export function AuditTab() {
     () => ({
       entityType: entityType !== SELECT_ALL ? entityType : undefined,
       action: action !== SELECT_ALL ? action : undefined,
-      page,
       limit: PAGE_LIMIT,
     }),
-    [entityType, action, page],
+    [entityType, action],
   );
 
-  const { data, isLoading, isError, refetch } = useAuditEvents(query, canView);
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useAuditEvents(query, canView);
 
-  const events = data?.data ?? [];
-  const total = data?.total ?? 0;
+  const events = useMemo(() => data?.pages.flatMap((p) => p.data) ?? [], [data]);
 
-  const handlePageChange = useCallback((p: number) => setPage(p), []);
   const handleRowClick = useCallback((row: AuditEvent) => setSelectedEvent(row), []);
   const handleDetailClose = useCallback(() => setSelectedEvent(null), []);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleLoadMore = useCallback(() => { void fetchNextPage(); }, [fetchNextPage]);
 
   const handleEntityTypeChange = useCallback((val: string) => {
     setEntityType(val);
-    setPage(1);
   }, []);
 
   const handleActionChange = useCallback((val: string) => {
     setAction(val);
-    setPage(1);
   }, []);
 
   if (!canView) {
@@ -210,13 +214,7 @@ export function AuditTab() {
         onRowClick={handleRowClick}
         isLoading={isLoading}
         toolbar={toolbar}
-        pagination={{
-          mode: "server",
-          page,
-          pageSize: PAGE_LIMIT,
-          total,
-          onPageChange: handlePageChange,
-        }}
+        pagination={{ pageSize: PAGE_LIMIT }}
         rowClassName={() => "cursor-pointer"}
         emptyState={
           <EmptyState
@@ -226,6 +224,18 @@ export function AuditTab() {
           />
         }
       />
+      {hasNextPage && (
+        <div className="flex justify-center pt-2 pb-1">
+          <LoadingButton
+            variant="outline"
+            size="sm"
+            isPending={isFetchingNextPage}
+            onClick={handleLoadMore}
+          >
+            Load more
+          </LoadingButton>
+        </div>
+      )}
 
       <AuditDetailSheet
         event={selectedEvent}

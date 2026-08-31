@@ -23,7 +23,7 @@ import {
   EmptyTransferIllustration,
   EmptySearchIllustration,
 } from "@/components/illustrations";
-import { fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useLots } from "@/hooks/api/inventory/traceability";
 import {
@@ -133,6 +133,7 @@ const LOTS_COLUMNS: DataTableColumn<LotItem>[] = [
 
 export function LotsClient() {
   const canView = useCan("inventory:stock:read");
+  const { fadeUp } = useMotionVariants();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("ALL");
   const [search, setSearch] = useState("");
@@ -170,18 +171,21 @@ export function LotsClient() {
     setPage(1);
   }
 
+  function handleClearFilters(): void {
+    setSearch("");
+    setStatus("ALL");
+    setExpiringWithinDays("ALL");
+    setPage(1);
+  }
+
   const emptyState = (
     <motion.div variants={fadeUp} initial="hidden" animate="visible">
       <InventoryEmptyState
-        illustration={
-          hasFilters ? <EmptySearchIllustration /> : <EmptyTransferIllustration />
-        }
-        title={hasFilters ? "No lots match your filters" : "No lots found"}
-        description={
-          hasFilters
-            ? "Try adjusting your search or filters."
-            : "Lots will appear here once items are received with lot tracking enabled."
-        }
+        illustration={<EmptyTransferIllustration />}
+        title="No lots found"
+        description={hasFilters ? undefined : "Lots will appear here once items are received with lot tracking enabled."}
+        filtersActive={hasFilters}
+        onClearFilters={handleClearFilters}
         className="flex-1"
       />
     </motion.div>

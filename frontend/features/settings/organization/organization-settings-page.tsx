@@ -2,7 +2,9 @@
 
 import { useState, useCallback } from "react";
 import { useCan } from "@/hooks/api/access";
-import { RichPageContent, RichPanel } from "@/components/shared/rich-surface";
+import { RichPageContent } from "@/components/shared/rich-surface";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { OrgSettingsSectionsSkeleton } from "@/features/settings/organization/org-settings-skeleton";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
 import { useOrgSettings, useUpdateOrgSettings } from "@/hooks/api/organization";
@@ -28,7 +30,7 @@ function isCurrencyCode(value: string): value is CurrencyCode {
 }
 
 export function OrganizationSettingsPage() {
-  const { data: org, isLoading } = useOrgSettings();
+  const { data: org, isLoading, isError, error, refetch } = useOrgSettings();
 
   const [configInitialized, setConfigInitialized] = useState(false);
   const [timezone, setTimezone] = useState<string>("");
@@ -102,23 +104,18 @@ export function OrganizationSettingsPage() {
     );
   }
 
+  if (isError) {
+    return (
+      <PageWrapper title="Organization" subtitle="Manage your organization profile, branding, and lifecycle settings">
+        <ErrorState className="flex-1" title="Couldn't load organization settings" description={getErrorMessage(error)} onRetry={() => void refetch()} />
+      </PageWrapper>
+    );
+  }
+
   if (!org) {
     return (
       <PageWrapper title="Organization" subtitle="Manage your organization profile, branding, and lifecycle settings">
-        <div className="flex flex-1 flex-col min-h-0">
-          <RichPanel className="flex flex-1 min-h-0 flex-col items-center justify-center text-center">
-            <EmptyProjectsIllustration />
-            <h2 className="mt-3 text-sm font-semibold text-foreground">
-              No organization found
-            </h2>
-            <p className="mt-1 max-w-prose text-xs leading-relaxed text-muted-foreground">
-              Create your first organization to start managing your team and projects.
-            </p>
-            <p className="mt-3 text-sm text-muted-foreground">
-              Please contact your administrator to set up an organization.
-            </p>
-          </RichPanel>
-        </div>
+        <EmptyState illustration={<EmptyProjectsIllustration />} title="No organization found" description="Create your first organization to start managing your team and projects." className="flex-1" />
       </PageWrapper>
     );
   }

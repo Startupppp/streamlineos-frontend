@@ -1,6 +1,12 @@
 import { createHash } from "node:crypto";
 import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 
+// Changed 2026-08-31 by the origin/main merge: 266 commits of navigation work
+// landed alongside this branch — route-access management (`enforce-route-access`),
+// My Payroll repointed at the canonical /me/pay with its vacuous gate dropped,
+// two authenticated pages that denied everyone repaired, and the module manifest
+// becoming schema-validated JSON. The inventory routes themselves are unchanged;
+// the digest moves because the graph it hashes is the whole sidebar.
 // Moved 2026-08-29 by B10: the throughput/SLA dashboard got its nav entry
 // ("Operations SLA", /inventory/reports/throughput, on inventory:reports:read).
 // Moved 2026-08-29 by C2/C5/C7: the Planning group and its Replenishment child
@@ -24,6 +30,15 @@ import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 // inventory:shipments:manage onto their own manage keys; Valuation and Costing moved off
 // inventory:reports:read onto inventory:valuation:read; Import moved off
 // inventory:products:read onto inventory:import.
+// Changed 2026-08-31: CRM "API Keys" moved from /crm/api-keys to
+// /crm/settings/api-keys (§8 — module-owned surfaces live in /<module>/settings/*),
+// and the Knowledge group lost module: "documents" so KB reading stays universal.
+// Moved 2026-08-30: /me/pay removed from PAYROLL_NAV_GROUPS — self-service pay
+// belongs exclusively in HOME_NAV_GROUPS "For Me" group (product: home). The
+// payroll product sidebar no longer lists it; the home sidebar already did.
+// Moved 2026-08-27 (c25-03): 55 finance gates, plus /crm/deals/approvals and
+// /hr/goals, named keys no route enforces — each now names the key its own
+// endpoints check. `pnpm -C backend check:navigation-permissions` proves it.
 // Moved 2026-08-25 by the CRM import/export route ("Import & export",
 // /crm/import, gated on party:parties:view because export is ungated by design).
 // Moved 2026-08-24 by the CRM autonomy review route ("What the system did",
@@ -64,7 +79,8 @@ import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 // (/inventory/dock) is gated on inventory:dock:manage — booking vehicles in is a
 // receiving clerk's job rather than the person who configures the site.
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "f63c8cc5a8cd76b9ed5fc8b41e71d6ce66d03f068ff5b0e52b9f28271c5c0c23";
+  "d306efa9d442b75f4dfe864a6f96ce9a0d55188f28d6885fdd93b51a2534b1f7";
+  "5bf9eeab85643ea8e3a42147f6ebb0e52750a7cc07d0dc8d6bcc649ebebfb8ed";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {

@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState } from "@/components/shared";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { useLeadDetail, useLeadTimeline, useUpdateLeadStatus } from "@/hooks/api/leads";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -28,6 +28,7 @@ export default function LeadDetailPage({
 }: {
   params: Promise<{ leadId: string }>;
 }) {
+  const { staggerContainer, fadeUp } = useMotionVariants();
   const { leadId: leadIdStr } = use(params);
   const leadId = Number(leadIdStr);
 

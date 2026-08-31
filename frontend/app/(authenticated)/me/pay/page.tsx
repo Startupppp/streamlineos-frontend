@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { MyPayrollPageContent } from "@/features/payroll/me";
-import { requirePermission } from "@/lib/rbac/require-permission";
+import { requireSession } from "@/lib/rbac/require-permission";
 import { Skeleton } from "@/components/ui/skeleton";
 
 function PayLoading() {
@@ -8,7 +8,7 @@ function PayLoading() {
 }
 
 export default async function MyPayPage() {
-  await requirePermission(["self:payroll", "self:payslips"]);
+  await requireSession();
   return (
     <Suspense fallback={<PayLoading />}>
       <MyPayrollPageContent />

@@ -160,7 +160,8 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
   );
 
   const batch = data?.batch;
-  const items = data?.items ?? [];
+  const items = data?.items.data ?? [];
+  const hasMoreItems = data?.items.hasMore ?? false;
   const canImportReturn =
     canManage &&
     batch != null &&
@@ -291,6 +292,12 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
                 minWidth="640px"
               />
             )}
+            {hasMoreItems ? (
+              <p className="pt-3 text-sm text-muted-foreground">
+                Showing the first {items.length} items in this batch. Download the batch file for
+                the complete list.
+              </p>
+            ) : null}
           </SheetBody>
         </SheetContent>
       </Sheet>

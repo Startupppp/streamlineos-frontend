@@ -109,9 +109,15 @@ export type CreateBatchResult = {
   replayed: boolean;
 };
 
+export type PayoutBatchItemPage = {
+  data: PayoutBatchItem[];
+  hasMore: boolean;
+  nextCursor: number | null;
+};
+
 export type GetBatchResult = {
   batch: PayoutBatch;
-  items: PayoutBatchItem[];
+  items: PayoutBatchItemPage;
 };
 
 export type EmployeeBankDetails = {

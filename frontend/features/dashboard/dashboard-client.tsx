@@ -25,7 +25,7 @@ import { EmptyActivityIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
-import { fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { getGreeting, getFirstName } from "@/lib/format-utils";
 import { QuickActions } from "@/features/dashboard/quick-actions";
 import { SprintCard } from "@/features/dashboard/sprint-card";
@@ -45,21 +45,14 @@ import {
   TeamAttendanceWidget,
   PendingApprovalsWidget,
   BirthdaysWidget,
-  LeaveBalanceWidget,
   UpcomingHolidaysWidget,
 } from "@/features/dashboard/hr-widgets";
 import { PublicDocumentsCard } from "@/features/dashboard/public-documents-card";
-import { MyAttendanceWidget } from "@/features/dashboard/my-attendance-widget";
-import { PayrollWidget } from "@/features/dashboard/payroll-widget";
-import { ExpensesWidget } from "@/features/dashboard/expenses-widget";
-import { RecruitmentWidget } from "@/features/dashboard/recruitment-widget";
-import { AlertsWidget } from "@/features/dashboard/alerts-widget";
-import { MyTasksWidget } from "@/components/dashboard/my-tasks-widget";
-import { TimesheetWidget } from "@/components/dashboard/timesheet-widget";
-import { AnnouncementsWidget } from "@/components/dashboard/announcements-widget";
-import { UpcomingEventsWidget } from "@/components/dashboard/upcoming-events-widget";
 import { shouldRenderDashboardLoading } from "./dashboard-hydration";
 import { DeferredDashboardContent } from "./deferred-dashboard-content";
+import { HomeSectionBoundary } from "./home-section-boundary";
+import { HomeWidgetGrid } from "./home-widget-grid";
+import { useHomeCacheSync } from "./use-home-cache-sync";
 
 const ExecutiveKpiWidget = dynamic(
   () =>
@@ -69,20 +62,14 @@ const ExecutiveKpiWidget = dynamic(
   { loading: () => <WidgetSkeleton rows={2} /> },
 );
 
-const BusinessPulseWidget = dynamic(
-  () =>
-    import("@/components/dashboard/project-health-widget").then((m) => ({
-      default: m.BusinessPulseWidget,
-    })),
-  { loading: () => <WidgetSkeleton rows={2} /> },
-);
-
 export function DashboardClient() {
+  const { fadeUp } = useMotionVariants();
   const router = useRouter();
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
   const firstName = getFirstName(session);
   const access = useDashboardAccess();
+  useHomeCacheSync();
   const {
     hrEnabled,
     crmEnabled,
@@ -120,7 +107,12 @@ export function DashboardClient() {
   } = useRecentProjects({
     enabled: deferredVisible && projectsEnabled && canViewTickets,
   });
-  const { data: teamAttendance, isLoading: teamLoading } = useTeamAttendance({
+  const {
+    data: teamAttendance,
+    isLoading: teamLoading,
+    error: teamError,
+    refetch: refetchTeam,
+  } = useTeamAttendance({
     enabled: deferredVisible && hrEnabled && canViewAttendance,
   });
   const teamAvailability = useMemo(
@@ -211,6 +203,7 @@ export function DashboardClient() {
   const handleRetryProjects = useCallback(() => void refetchProjects(), [refetchProjects]);
   const handleRetryActivity = useCallback(() => void refetchActivity(), [refetchActivity]);
   const handleRetrySprint = useCallback(() => void refetchSprint(), [refetchSprint]);
+  const handleRetryTeam = useCallback(() => void refetchTeam(), [refetchTeam]);
 
   const sortedMyTickets = useMemo((): DashboardTicket[] => {
     const raw = myIssuesData ?? [];
@@ -275,46 +268,11 @@ export function DashboardClient() {
     );
   }
 
-  if (error) {
-    return (
-      <PageWrapper title={pageTitle} subtitle="Something went wrong">
-        <div
-          className="rounded-xl border border-destructive/30 bg-destructive/5 p-6"
-          role="alert"
-        >
-          <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-            <div className="flex-1 space-y-3">
-              <p className="text-sm text-foreground">
-                {getErrorMessage(error)}
-              </p>
-              <Button onClick={handleRefresh} size="sm">
-                <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
-                Retry
-              </Button>
-            </div>
-          </div>
-        </div>
-      </PageWrapper>
-    );
-  }
-
-  if (!stats) {
-    return (
-      <PageWrapper title={pageTitle}>
-        <EmptyState
-          illustration={<EmptyActivityIllustration className="h-40 w-40" />}
-          title="No data available"
-          description="Dashboard statistics are not available. Please try refreshing."
-          action={{ label: "Refresh", onClick: handleRefresh }}
-        />
-      </PageWrapper>
-    );
-  }
-
-  const pageSubtitle = headerClock
-    ? `${headerClock.todayFormatted} · ${stats.orgName}`
-    : stats.orgName;
+  const pageSubtitle = stats
+    ? (headerClock
+        ? `${headerClock.todayFormatted} · ${stats.orgName}`
+        : stats.orgName)
+    : (headerClock?.todayFormatted ?? undefined);
 
   return (
     <PageWrapper
@@ -323,7 +281,30 @@ export function DashboardClient() {
       actions={hrEnabled ? <ClockInWidget /> : undefined}
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
-        {statCards.length > 0 && (
+        {error ? (
+          <div
+            className="rounded-xl border border-destructive/30 bg-destructive/5 p-6"
+            role="alert"
+          >
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+              <div className="flex-1 space-y-3">
+                <p className="text-sm text-foreground">{getErrorMessage(error)}</p>
+                <Button onClick={handleRefresh} size="sm">
+                  <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Retry
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : !stats ? (
+          <EmptyState
+            illustration={<EmptyActivityIllustration className="h-40 w-40" />}
+            title="No data available"
+            description="Dashboard statistics are not available. Please try refreshing."
+            action={{ label: "Refresh", onClick: handleRefresh }}
+          />
+        ) : statCards.length > 0 ? (
           <motion.div variants={fadeUp} initial="hidden" animate="visible">
             <StatCardGrid
               cols={statCards.length >= 4 ? 4 : statCards.length >= 3 ? 3 : 2}
@@ -339,7 +320,7 @@ export function DashboardClient() {
               ))}
             </StatCardGrid>
           </motion.div>
-        )}
+        ) : null}
 
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
           <QuickActions />
@@ -364,24 +345,12 @@ export function DashboardClient() {
           }
         >
           <>
-            <motion.div
-              variants={fadeUp}
-              initial="hidden"
-              animate="visible"
-              className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
-            >
-              {projectsEnabled && <MyTasksWidget />}
-              {projectsEnabled && <TimesheetWidget />}
-              {hrEnabled && <LeaveBalanceWidget />}
-              <AlertsWidget />
-              <AnnouncementsWidget />
-              <UpcomingEventsWidget />
-              {canViewExecutive && <BusinessPulseWidget />}
-              {hrEnabled && canSelfAttendance && <MyAttendanceWidget />}
-              <PayrollWidget />
-              <ExpensesWidget />
-              <RecruitmentWidget />
-            </motion.div>
+            <HomeWidgetGrid
+              projectsEnabled={projectsEnabled}
+              hrEnabled={hrEnabled}
+              canViewExecutive={canViewExecutive}
+              canSelfAttendance={canSelfAttendance}
+            />
 
         {showHrTeamRow && (
           <motion.div
@@ -390,14 +359,18 @@ export function DashboardClient() {
             animate="visible"
             className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
           >
-            {canViewLeaves && <LeavesTodayWidget />}
+            {canViewLeaves && <HomeSectionBoundary sectionLabel="Who is out today"><LeavesTodayWidget /></HomeSectionBoundary>}
             {canViewAttendance && (
-              <TeamAttendanceWidget
-                data={teamAttendance}
-                isLoading={teamLoading}
-              />
+              <HomeSectionBoundary sectionLabel="Team attendance">
+                <TeamAttendanceWidget
+                  data={teamAttendance}
+                  isLoading={teamLoading}
+                  error={teamError}
+                  onRetry={handleRetryTeam}
+                />
+              </HomeSectionBoundary>
             )}
-            {canApproveLeaves && <PendingApprovalsWidget />}
+            {canApproveLeaves && <HomeSectionBoundary sectionLabel="Pending approvals"><PendingApprovalsWidget /></HomeSectionBoundary>}
           </motion.div>
         )}
 
@@ -408,14 +381,14 @@ export function DashboardClient() {
             animate="visible"
             className="grid grid-cols-1 gap-4 md:grid-cols-2"
           >
-            <BirthdaysWidget />
-            <UpcomingHolidaysWidget />
+            <HomeSectionBoundary sectionLabel="Birthdays"><BirthdaysWidget /></HomeSectionBoundary>
+            <HomeSectionBoundary sectionLabel="Upcoming holidays"><UpcomingHolidaysWidget /></HomeSectionBoundary>
           </motion.div>
         )}
 
         {showDocumentsCard && (
           <motion.div variants={fadeUp} initial="hidden" animate="visible">
-            <PublicDocumentsCard />
+            <HomeSectionBoundary sectionLabel="Company documents"><PublicDocumentsCard /></HomeSectionBoundary>
           </motion.div>
         )}
 
@@ -427,20 +400,24 @@ export function DashboardClient() {
             className="grid grid-cols-1 gap-4 md:auto-rows-[22rem] lg:grid-cols-7"
           >
             <div className="min-h-0 lg:col-span-4">
-              <MyIssuesCard
-                tickets={sortedMyTickets}
-                isLoading={ticketsLoading}
-                error={ticketsError}
-                onRetry={handleRetryTickets}
-              />
+              <HomeSectionBoundary sectionLabel="My issues">
+                <MyIssuesCard
+                  tickets={sortedMyTickets}
+                  isLoading={ticketsLoading}
+                  error={ticketsError}
+                  onRetry={handleRetryTickets}
+                />
+              </HomeSectionBoundary>
             </div>
             <div className="min-h-0 lg:col-span-3">
-              <SprintCard
-                summary={sprintSummary ?? undefined}
-                isLoading={sprintLoading}
-                error={sprintError}
-                onRetry={handleRetrySprint}
-              />
+              <HomeSectionBoundary sectionLabel="Active sprint">
+                <SprintCard
+                  summary={sprintSummary ?? undefined}
+                  isLoading={sprintLoading}
+                  error={sprintError}
+                  onRetry={handleRetrySprint}
+                />
+              </HomeSectionBoundary>
             </div>
           </motion.div>
         )}
@@ -454,31 +431,42 @@ export function DashboardClient() {
           >
             {projectsEnabled && canViewTickets && (
               <div className="min-h-0">
+                <HomeSectionBoundary sectionLabel="Recent projects">
                 <RecentProjectsCard
-                  projects={recentProjects?.map((p) => ({
-                    ...p,
-                    key: p.key ?? "",
-                  }))}
-                  isLoading={projectsLoading}
-                  error={projectsError}
-                  onCreateProject={handleGoToProjects}
-                  onRetry={handleRetryProjects}
-                />
+                    projects={recentProjects?.map((p) => ({
+                      ...p,
+                      key: p.key ?? "",
+                    }))}
+                    isLoading={projectsLoading}
+                    error={projectsError}
+                    onCreateProject={handleGoToProjects}
+                    onRetry={handleRetryProjects}
+                  />
+                </HomeSectionBoundary>
               </div>
             )}
             {projectsEnabled && canViewTickets && (
               <div className="min-h-0">
+                <HomeSectionBoundary sectionLabel="Recent activity">
                 <RecentActivityCard
-                  items={recentActivity}
-                  isLoading={activityLoading}
-                  error={activityError}
-                  onRetry={handleRetryActivity}
-                />
+                    items={recentActivity}
+                    isLoading={activityLoading}
+                    error={activityError}
+                    onRetry={handleRetryActivity}
+                  />
+                </HomeSectionBoundary>
               </div>
             )}
             {hrEnabled && canViewAttendance && (
               <div className="min-h-0">
-                <TeamCard members={teamAvailability} isLoading={teamLoading} />
+                <HomeSectionBoundary sectionLabel="Team availability">
+                  <TeamCard
+                    members={teamAvailability}
+                    isLoading={teamLoading}
+                    error={teamError}
+                    onRetry={handleRetryTeam}
+                  />
+                </HomeSectionBoundary>
               </div>
             )}
           </motion.div>

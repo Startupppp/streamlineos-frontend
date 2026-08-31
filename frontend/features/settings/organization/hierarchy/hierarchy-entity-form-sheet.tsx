@@ -48,7 +48,7 @@ export function HierarchyEntityFormSheet({
               type="submit"
               form={formId}
               isPending={isPending}
-              loadingText="Savingâ€¦"
+              loadingText="Saving…"
               className="w-full"
             >
               Save

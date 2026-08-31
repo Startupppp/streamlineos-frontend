@@ -113,7 +113,7 @@ export default function AcceptInvitationPage() {
     mutation.mutate(inviteToken, {
       onSuccess: (data) => {
         setPortalToken(data.token);
-        router.replace("/portal/projects");
+        router.replace("/client-portal");
       },
     });
   }, [inviteToken, mutation, router]);

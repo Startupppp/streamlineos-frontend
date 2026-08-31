@@ -12,6 +12,8 @@ import { Label } from "@/components/ui/label";
 import { AlertTriangle } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { useCan } from "@/hooks/api/access";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useHrBudgetVsActual,
   useHrSkillsGap,
@@ -84,7 +86,10 @@ const overviewColumns: DataTableColumn<BudgetVsActualRow>[] = [
 ];
 
 function OverviewTab() {
-  const { data: bva, isLoading } = useHrBudgetVsActual();
+  const { data: bva, isLoading, isError, error, refetch } = useHrBudgetVsActual();
+
+  if (isError)
+    return <ErrorState title="Couldn't load budget data" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
 
   return (
     <DataTable
@@ -189,7 +194,7 @@ function PlanSheet({ open, plan, onClose }: PlanSheetProps) {
 }
 
 function HiringPlansTab() {
-  const { data: plans, isLoading } = useHrWorkforcePlans();
+  const { data: plans, isLoading, isError, error, refetch } = useHrWorkforcePlans();
   const [sheetPlan, setSheetPlan] = useState<HeadcountPlan | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -250,13 +255,17 @@ function HiringPlansTab() {
           Add Plan
         </Button>
       </div>
-      <DataTable
-        data={plans ?? []}
-        columns={hiringColumns}
-        getRowKey={(row) => row.id}
-        isLoading={isLoading}
-        emptyState={<EmptyChart label="No headcount plans yet" />}
-      />
+      {isError ? (
+        <ErrorState title="Couldn't load headcount plans" description={getErrorMessage(error)} onRetry={() => void refetch()} />
+      ) : (
+        <DataTable
+          data={plans ?? []}
+          columns={hiringColumns}
+          getRowKey={(row) => row.id}
+          isLoading={isLoading}
+          emptyState={<EmptyChart label="No headcount plans yet" />}
+        />
+      )}
       <PlanSheet open={sheetOpen} plan={sheetPlan} onClose={handleClose} />
     </>
   );
@@ -301,8 +310,11 @@ const skillsGapColumns: DataTableColumn<SkillsGapRow>[] = [
 ];
 
 function SkillsGapTab() {
-  const { data, isLoading } = useHrSkillsGap();
+  const { data, isLoading, isError, error, refetch } = useHrSkillsGap();
   const gaps = data?.gaps ?? [];
+
+  if (isError)
+    return <ErrorState title="Couldn't load skills gap data" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
 
   return (
     <DataTable
@@ -317,7 +329,7 @@ function SkillsGapTab() {
 
 function SuccessionTab() {
   const canView = useCan("hr:succession:view");
-  const { data, isLoading } = useHrSuccessionRisk();
+  const { data, isLoading, isError, error, refetch } = useHrSuccessionRisk();
   const roles = data?.riskyRoles ?? [];
 
   if (!canView) {
@@ -330,6 +342,7 @@ function SuccessionTab() {
   }
 
   if (isLoading) return <SectionSkeleton rows={8} />;
+  if (isError) return <ErrorState title="Couldn't load succession data" description={getErrorMessage(error)} onRetry={() => void refetch()} />;
   if (!roles.length) return <EmptyChart label="No succession risks identified" />;
 
   return (

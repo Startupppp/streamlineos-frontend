@@ -250,6 +250,8 @@ export function OrgLocationsPage() {
     void refetch();
   }, [refetch]);
 
+  const handleClearSearch = useCallback(() => setSearch(""), [setSearch]);
+
   function handleSearchInputChange(value: string) { handleSearchChange(value); }
 
   function makeRestoreHandler(loc: OrgLocation) { return () => handleRestore(loc); }
@@ -306,15 +308,15 @@ export function OrgLocationsPage() {
       cell: (l) =>
         canManage ? <div className="flex items-center gap-1">
           {l.status === "ARCHIVED" ? (
-            <Button variant="ghost" size="sm" onClick={makeRestoreHandler(l)} title="Restore">
+            <Button variant="ghost" size="sm" onClick={makeRestoreHandler(l)} title="Restore" aria-label="Restore">
               <RotateCcw className="h-4 w-4 text-primary" />
             </Button>
           ) : (
             <>
-              <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(l)} title="Edit">
+              <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(l)} title="Edit" aria-label="Edit">
                 <Pencil className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={makeArchiveHandler(l)} title="Archive">
+              <Button variant="ghost" size="sm" onClick={makeArchiveHandler(l)} title="Archive" aria-label="Archive">
                 <Archive className="h-4 w-4 text-muted-foreground" />
               </Button>
             </>
@@ -323,15 +325,7 @@ export function OrgLocationsPage() {
     },
   ];
 
-  const emptyState = serverSearch ? (
-    <EmptyState
-      illustrationPreset="companies"
-      title={`No locations matching "${serverSearch}"`}
-      description="Try a different search term."
-      compact
-      className="min-h-[200px]"
-    />
-  ) : showArchived ? (
+  const emptyState = showArchived ? (
     <EmptyState
       illustrationPreset="archive"
       title="No archived locations"
@@ -342,8 +336,10 @@ export function OrgLocationsPage() {
     <EmptyState
       illustrationPreset="companies"
       title="No locations yet"
-      description="Create your first location to get started."
-      action={canManage ? { label: "Add Location", onClick: handleOpenCreate } : undefined}
+      description={serverSearch ? undefined : "Create your first location to get started."}
+      filtersActive={!!serverSearch}
+      onClearFilters={handleClearSearch}
+      action={canManage && !serverSearch ? { label: "Add Location", onClick: handleOpenCreate } : undefined}
     />
   );
 

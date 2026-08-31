@@ -1,9 +1,10 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   EssOverview,
   EssPayslip,
@@ -71,7 +72,7 @@ function useInvalidateManagerInbox() {
 
 export function useManagerApproveReimbursement() {
   const invalidate = useInvalidateManagerInbox();
-  return useMutation({
+  return useAuthorizedMutation("self:payroll", {
     mutationKey: ["payroll", "manager", "reimb-approve"],
     mutationFn: (id: number) =>
       apiClient.post<{ success: boolean }>(`/payroll/manager/reimbursements/${id}/approve`),
@@ -81,7 +82,7 @@ export function useManagerApproveReimbursement() {
 
 export function useManagerRejectReimbursement() {
   const invalidate = useInvalidateManagerInbox();
-  return useMutation({
+  return useAuthorizedMutation("self:payroll", {
     mutationKey: ["payroll", "manager", "reimb-reject"],
     mutationFn: ({ id, reason }: { id: number; reason?: string }) =>
       apiClient.post<{ success: boolean }>(`/payroll/manager/reimbursements/${id}/reject`, {
@@ -93,7 +94,7 @@ export function useManagerRejectReimbursement() {
 
 export function useManagerApproveLoan() {
   const invalidate = useInvalidateManagerInbox();
-  return useMutation({
+  return useAuthorizedMutation("self:payroll", {
     mutationKey: ["payroll", "manager", "loan-approve"],
     mutationFn: (id: number) =>
       apiClient.post<{ success: boolean }>(`/payroll/manager/loans/${id}/approve`),
@@ -103,7 +104,7 @@ export function useManagerApproveLoan() {
 
 export function useManagerRejectLoan() {
   const invalidate = useInvalidateManagerInbox();
-  return useMutation({
+  return useAuthorizedMutation("self:payroll", {
     mutationKey: ["payroll", "manager", "loan-reject"],
     mutationFn: (id: number) =>
       apiClient.post<{ success: boolean }>(`/payroll/manager/loans/${id}/reject`),
@@ -201,7 +202,7 @@ interface SubmitReimbursementBody {
 
 export function useSubmitReimbursement() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("self:payroll", {
     mutationKey: ["payroll", "ess", "reimbursements", "submit"],
     mutationFn: (body: SubmitReimbursementBody) =>
       apiClient.post<EssReimbursement>("/payroll/me/reimbursements", body),
@@ -220,7 +221,7 @@ interface CreateLoanBody {
 
 export function useCreateLoan() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("self:payroll", {
     mutationKey: ["payroll", "ess", "loans", "create"],
     mutationFn: (body: CreateLoanBody) =>
       apiClient.post<EssLoan>("/payroll/me/loans", body),
@@ -244,7 +245,7 @@ interface SubmitTaxDeclarationBody {
 
 export function useSubmitTaxDeclaration() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("self:payroll", {
     mutationKey: ["payroll", "ess", "tax-declaration", "submit"],
     mutationFn: (body: SubmitTaxDeclarationBody) =>
       apiClient.post<EssTaxDeclarationResponse>("/payroll/me/tax-declaration", body),
@@ -267,7 +268,7 @@ interface UpdateBankBody {
 
 export function useUpdateBank() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("self:payroll", {
     mutationKey: ["payroll", "ess", "bank", "update"],
     mutationFn: (body: UpdateBankBody) =>
       apiClient.patch<EssBankDetails>("/payroll/me/bank", body),

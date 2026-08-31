@@ -3,6 +3,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
+import type { CursorPage } from "@/hooks/api/accounting";
 
 const apVendorKeys = {
   vendorCredits: (params?: object) =>
@@ -114,15 +116,15 @@ export interface ApplyVendorCreditInput {
 }
 
 export interface ListVendorCreditsParams {
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
   vendorId?: number;
   status?: VendorCreditStatus;
 }
 
 export interface ListRecurringBillsParams {
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
   isActive?: boolean;
 }
 
@@ -138,14 +140,6 @@ export interface CreateRecurringBillInput {
 
 export type UpdateRecurringBillInput = Partial<CreateRecurringBillInput>;
 
-interface ListResponse<T> {
-  items: T[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-}
-
 function toQuery<P extends object>(params: P): Record<string, string> {
   const out: Record<string, string> = {};
   for (const [k, v] of Object.entries(params)) {
@@ -156,24 +150,27 @@ function toQuery<P extends object>(params: P): Record<string, string> {
 }
 
 export function useVendorCredits(params: ListVendorCreditsParams = {}) {
-  return useQuery<ListResponse<VendorCreditSummary>, Error>({
+  const can = useCan("accounting:vendor-credits:read");
+  return useQuery<CursorPage<VendorCreditSummary>, Error>({
     queryKey: apVendorKeys.vendorCredits(params),
     queryFn: () =>
-      apiClient.get<ListResponse<VendorCreditSummary>>(
+      apiClient.get<CursorPage<VendorCreditSummary>>(
         "/accounting/vendor-credits",
         toQuery(params),
       ),
     staleTime: 30_000,
+    enabled: can,
   });
 }
 
 export function useVendorCredit(creditId: number) {
+  const can = useCan("accounting:vendor-credits:read");
   return useQuery<VendorCreditDetail, Error>({
     queryKey: apVendorKeys.vendorCredit(creditId),
     queryFn: () =>
       apiClient.get<VendorCreditDetail>(`/accounting/vendor-credits/${creditId}`),
-    enabled: Number.isInteger(creditId) && creditId > 0,
     staleTime: 60_000,
+    enabled: can && Number.isInteger(creditId) && creditId > 0,
   });
 }
 
@@ -225,14 +222,16 @@ export function useApplyVendorCredit(creditId: number) {
 }
 
 export function useRecurringBills(params: ListRecurringBillsParams = {}) {
-  return useQuery<ListResponse<RecurringBillTemplate>, Error>({
+  const can = useCan("accounting:recurring:read");
+  return useQuery<CursorPage<RecurringBillTemplate>, Error>({
     queryKey: apVendorKeys.recurringBills(params),
     queryFn: () =>
-      apiClient.get<ListResponse<RecurringBillTemplate>>(
+      apiClient.get<CursorPage<RecurringBillTemplate>>(
         "/accounting/recurring-bills",
         toQuery(params),
       ),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 

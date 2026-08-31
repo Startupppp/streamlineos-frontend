@@ -12,14 +12,8 @@ import { GeneratePeriodsDialog } from "@/features/accounting/core/generate-perio
 import { usePeriods, usePeriodChecklist } from "@/hooks/api/accounting/core";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
+import { formatShortDate } from "@/lib/date-utils";
 import type { AccountingPeriod } from "@/hooks/api/accounting/core";
-
-function formatDate(value: string): string {
-  if (!value) return "";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" });
-}
 
 interface PeriodButtonProps {
   period: AccountingPeriod;
@@ -46,7 +40,7 @@ function PeriodButton({ period, isSelected, onSelect }: PeriodButtonProps) {
         <FinanceStatusBadge status={period.status} size="row" />
       </div>
       <p className="text-xs text-muted-foreground mt-0.5">
-        {formatDate(period.startDate)} — {formatDate(period.endDate)}
+        {formatShortDate(period.startDate) || ""} — {formatShortDate(period.endDate) || ""}
       </p>
       {period.closedBy && period.closedAt && (
         <p className="text-xs text-muted-foreground mt-0.5">

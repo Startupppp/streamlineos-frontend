@@ -10,7 +10,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useDeleteApprovalPolicy } from "@/hooks/api/accounting/settings";
-import type { NumberSequence, SystemAccountMapping, SystemAccountPurpose } from "@/types/accounting/fin-settings";
+import type { NumberSequence, SystemAccountMapping } from "@/types/accounting/fin-settings";
 import type { ApprovalPolicy, ExchangeRate } from "@/types/accounting/taxes";
 import {
   SequenceEditDialog,

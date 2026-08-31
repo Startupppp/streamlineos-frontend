@@ -9,6 +9,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -46,6 +47,7 @@ import {
 } from "@/hooks/api/accounting/ar";
 import type { RecurringInvoiceTemplate, RecurringFrequency } from "@/types/accounting/ar";
 import { RecurringTemplateFormSheet } from "@/features/accounting/sales/recurring-template-form-sheet";
+import { formatShortDate } from "@/lib/date-utils";
 
 const FREQUENCY_LABELS: Record<RecurringFrequency, string> = {
   DAILY: "Daily",
@@ -54,12 +56,6 @@ const FREQUENCY_LABELS: Record<RecurringFrequency, string> = {
   QUARTERLY: "Quarterly",
   YEARLY: "Yearly",
 };
-
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
-}
 
 interface RowActionsProps {
   template: RecurringInvoiceTemplate;
@@ -149,16 +145,17 @@ export default function RecurringInvoicesPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editTemplate, setEditTemplate] = useState<RecurringInvoiceTemplate | undefined>();
   const [activeFilter, setActiveFilter] = useState<"all" | "true" | "false">("all");
-  const [page, setPage] = useState(1);
+  const [cursors, setCursors] = useState<(string | null)[]>([null]);
+  const [cursorIndex, setCursorIndex] = useState(0);
 
   const query = useRecurringTemplates({
     isActive: activeFilter === "all" ? undefined : activeFilter === "true",
-    page,
-    pageSize: 20,
+    cursor: cursors[cursorIndex] ?? undefined,
+    limit: 20,
   });
 
-  const items = query.data?.items ?? [];
-  const total = query.data?.total ?? 0;
+  const items = query.data?.data ?? [];
+  const hasMore = query.data?.pagination.hasMore ?? false;
 
   function handleNewClick(): void {
     setEditTemplate(undefined);
@@ -177,12 +174,9 @@ export default function RecurringInvoicesPage() {
   function handleActiveFilterChange(value: string): void {
     if (value === "all" || value === "true" || value === "false") {
       setActiveFilter(value);
-      setPage(1);
+      setCursors([null]);
+      setCursorIndex(0);
     }
-  }
-
-  function handlePageChange(p: number): void {
-    setPage(p);
   }
 
   const columns: DataTableColumn<RecurringInvoiceTemplate>[] = [
@@ -213,14 +207,14 @@ export default function RecurringInvoicesPage() {
       key: "nextRunDate",
       header: "Next run",
       cell: (row) => (
-        <span className="text-sm tabular-nums text-muted-foreground">{formatDate(row.nextRunDate)}</span>
+        <span className="text-sm tabular-nums text-muted-foreground">{formatShortDate(row.nextRunDate) || "—"}</span>
       ),
     },
     {
       key: "lastRunDate",
       header: "Last run",
       cell: (row) => (
-        <span className="text-sm tabular-nums text-muted-foreground">{formatDate(row.lastRunDate)}</span>
+        <span className="text-sm tabular-nums text-muted-foreground">{formatShortDate(row.lastRunDate) || "—"}</span>
       ),
     },
     {
@@ -275,28 +269,40 @@ export default function RecurringInvoicesPage() {
             description={getErrorMessage(query.error)}
           />
         ) : (
-          <DataTable
-            className="flex-1 min-h-0"
-            data={items}
-            columns={columns}
-            getRowKey={(row) => row.id}
-            isLoading={query.isLoading}
-            pagination={{
-              mode: "server",
-              page,
-              pageSize: 20,
-              total,
-              onPageChange: handlePageChange,
-            }}
-            emptyState={
-              <EmptyState
-                illustrationPreset="automations"
-                title="No recurring invoice templates"
-                description="Create templates to auto-generate invoices on a schedule."
-                action={{ label: "New template", onClick: handleNewClick }}
+          <>
+            <DataTable
+              className="flex-1 min-h-0"
+              data={items}
+              columns={columns}
+              getRowKey={(row) => row.id}
+              isLoading={query.isLoading}
+              emptyState={
+                <EmptyState
+                  illustrationPreset="automations"
+                  title="No recurring invoice templates"
+                  description="Create templates to auto-generate invoices on a schedule."
+                  action={{ label: "New template", onClick: handleNewClick }}
+                />
+              }
+            />
+            {(cursorIndex > 0 || hasMore) ? (
+              <CursorPageControls
+                page={cursorIndex + 1}
+                hasNext={hasMore}
+                onPrevious={() => setCursorIndex(Math.max(0, cursorIndex - 1))}
+                onNext={() => {
+                  const next = query.data?.pagination.nextCursor ?? null;
+                  setCursors((prev) => {
+                    const copy = prev.slice(0, cursorIndex + 1);
+                    copy.push(next);
+                    return copy;
+                  });
+                  setCursorIndex(cursorIndex + 1);
+                }}
+                className="mt-2"
               />
-            }
-          />
+            ) : null}
+          </>
         )}
       </div>
 

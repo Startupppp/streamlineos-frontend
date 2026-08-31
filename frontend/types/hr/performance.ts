@@ -51,6 +51,28 @@ export interface PerformanceReview {
   cycle?: ReviewCycle | null;
 }
 
+export interface PerformanceReviewListItem {
+  id: number;
+  orgId: string;
+  userId: string;
+  reviewerId: string | null;
+  cycleId: number | null;
+  periodStart: string;
+  periodEnd: string;
+  status: ReviewStatus | null;
+  overallRating: string | null;
+  createdAt: string;
+  updatedAt: string;
+  user?: { id: string; name: string | null; image: string | null } | null;
+  reviewer?: { id: string; name: string | null } | null;
+  cycle?: { id: number; name: string; status: ReviewCycleStatus | null } | null;
+}
+
+export interface PerformanceReviewPage {
+  data: PerformanceReviewListItem[];
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
+}
+
 export interface OneOnOneMeeting {
   id: number;
   orgId: string;

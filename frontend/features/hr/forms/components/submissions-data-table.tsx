@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -102,9 +103,7 @@ export function SubmissionsDataTable({ formId, submissions, canManage }: Submiss
         columns={columns}
         getRowKey={(row) => row.id}
         emptyState={
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <p className="text-sm text-muted-foreground">No submissions yet.</p>
-          </div>
+          <EmptyState className="border-0 bg-transparent min-h-[40vh]" title="No submissions yet." />
         }
       />
 

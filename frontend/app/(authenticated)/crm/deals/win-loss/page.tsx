@@ -21,9 +21,9 @@ import { EmptyDealsIllustration } from "@/components/illustrations";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { cn } from "@/lib/utils";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { useWinLossAnalysis } from "@/hooks/api/crm";
-import { formatCurrency } from "@/features/crm/lib/format-currency";
+import { formatCurrency } from "@/lib/format-utils";
 
 const REASON_COLORS = [
   "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
@@ -35,6 +35,7 @@ const REASON_COLORS = [
 ];
 
 export default function WinLossAnalysisPage() {
+  const { staggerContainer, fadeUp } = useMotionVariants();
   const shouldReduceMotion = useReducedMotion();
   const { data, isLoading, isError, refetch, access } = useWinLossAnalysis();
 
@@ -46,10 +47,6 @@ export default function WinLossAnalysisPage() {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
-
-  const itemVariants = shouldReduceMotion
-    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
-    : fadeUp;
 
   if (isLoading) {
     return (
@@ -130,7 +127,7 @@ export default function WinLossAnalysisPage() {
         initial="hidden"
         animate="visible"
       >
-        <motion.div variants={itemVariants}>
+        <motion.div variants={fadeUp}>
           <StatCardGrid cols={4}>
             <StatCard label="Won Deals" value={s.won} tone="emerald" icon={Trophy} />
             <StatCard label="Lost Deals" value={s.lost} tone="red" icon={TrendingDown} />
@@ -139,7 +136,7 @@ export default function WinLossAnalysisPage() {
           </StatCardGrid>
         </motion.div>
 
-        <motion.div variants={itemVariants} className="grid gap-4 md:grid-cols-2">
+        <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">

@@ -19,6 +19,8 @@ export const directoryAndOwnershipQueryKeys = {
 
   directory: {
     all: [...base, "directory"] as const,
+    employment: (userIds: readonly string[]) =>
+      [...base, "directory", "employment", [...userIds].sort().join(",")] as const,
     peopleAll: [...base, "directory", "people"] as const,
     people: (params?: Record<string, unknown>) =>
       [...base, "directory", "people", params] as const,
@@ -75,7 +77,6 @@ export const directoryAndOwnershipQueryKeys = {
     memberCandidates: (
       moduleKey: string,
       params: {
-        page: number;
         pageSize: number;
         search: string;
         userId?: string;
@@ -87,9 +88,9 @@ export const directoryAndOwnershipQueryKeys = {
       [...base, "moduleAccess", moduleKey, "ownership"] as const,
     members: (
       moduleKey: string,
-      params: { page: number; pageSize: number; userId?: string },
+      params: { pageSize: number; userId?: string },
     ) => [...base, "moduleAccess", moduleKey, "members", params] as const,
-    auditLog: (moduleKey: string, params: { page: number; pageSize: number }) =>
+    auditLog: (moduleKey: string, params: { limit: number }) =>
       [...base, "moduleAccess", moduleKey, "audit-log", params] as const,
     myPermissions: (moduleKey: string) =>
       [...base, "moduleAccess", moduleKey, "me", "permissions"] as const,

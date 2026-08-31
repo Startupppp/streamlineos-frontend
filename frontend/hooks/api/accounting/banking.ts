@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
+import type { CursorPage } from "@/hooks/api/accounting";
 
 export type BankAccountType = "BANK" | "CASH" | "CARD" | "WALLET";
 export type BankTxnStatus = "UNMATCHED" | "SUGGESTED" | "MATCHED" | "RECONCILED" | "IGNORED";
@@ -106,12 +108,16 @@ export interface BankTransfer {
   createdAt: string;
 }
 
-export interface ListResponse<T> {
-  items: T[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
+export interface BankImport {
+  id: number;
+  orgId: string;
+  bankAccountId: number;
+  fileName: string;
+  importedCount: number;
+  duplicateCount: number;
+  status: string;
+  createdBy: string;
+  createdAt: string;
 }
 
 export interface BankImportResult {
@@ -149,20 +155,29 @@ function toQuery(params: Record<string, unknown>): Record<string, string> {
   return out;
 }
 
-export function useBankAccounts(params: Record<string, unknown> = {}) {
-  return useQuery<ListResponse<BankAccount>, Error>({
+export type ListBankAccountsParams = {
+  cursor?: string;
+  limit?: number;
+};
+
+export function useBankAccounts(params: ListBankAccountsParams = {}) {
+  const can = useCan("accounting:banking:read");
+  return useQuery<CursorPage<BankAccount>, Error>({
     queryKey: bankingKeys.accounts(params),
     queryFn: () =>
-      apiClient.get<ListResponse<BankAccount>>("/finance/bank-accounts", toQuery(params)),
+      apiClient.get<CursorPage<BankAccount>>("/finance/bank-accounts", toQuery(params)),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 
 export function useBankAccount(id: number) {
+  const can = useCan("accounting:banking:read");
   return useQuery<BankAccount, Error>({
     queryKey: bankingKeys.account(id),
     queryFn: () => apiClient.get<BankAccount>(`/finance/bank-accounts/${id}`),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 
@@ -171,19 +186,21 @@ type ListTxnParams = {
   from?: string;
   to?: string;
   q?: string;
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
 };
 
 export function useBankTransactions(bankAccountId: number, params: ListTxnParams = {}) {
-  return useQuery<ListResponse<BankTransaction>, Error>({
+  const can = useCan("accounting:banking:read");
+  return useQuery<CursorPage<BankTransaction>, Error>({
     queryKey: bankingKeys.transactions(bankAccountId, params),
     queryFn: () =>
-      apiClient.get<ListResponse<BankTransaction>>(
+      apiClient.get<CursorPage<BankTransaction>>(
         `/finance/bank-accounts/${bankAccountId}/transactions`,
         toQuery(params),
       ),
     staleTime: 30_000,
+    enabled: can,
   });
 }
 
@@ -246,6 +263,7 @@ export function useCreateBankImport() {
 }
 
 export function useReconciliationWorkspace(bankAccountId: number) {
+  const can = useCan("accounting:banking:reconcile");
   return useQuery<ReconciliationWorkspace, Error>({
     queryKey: bankingKeys.reconciliation(bankAccountId),
     queryFn: () =>
@@ -253,6 +271,7 @@ export function useReconciliationWorkspace(bankAccountId: number) {
         `/finance/reconciliation/${bankAccountId}`,
       ),
     staleTime: 0,
+    enabled: can,
   });
 }
 
@@ -384,14 +403,22 @@ export function useIgnoreTransaction(bankAccountId: number) {
   });
 }
 
-export function useReconciliationRules(bankAccountId: number) {
-  return useQuery<ReconciliationRule[], Error>({
+export type ListRulesParams = {
+  cursor?: string;
+  limit?: number;
+};
+
+export function useReconciliationRules(bankAccountId: number, params: ListRulesParams = {}) {
+  const can = useCan("accounting:banking:reconcile");
+  return useQuery<CursorPage<ReconciliationRule>, Error>({
     queryKey: bankingKeys.rules(bankAccountId),
     queryFn: () =>
-      apiClient.get<ReconciliationRule[]>(
+      apiClient.get<CursorPage<ReconciliationRule>>(
         `/finance/reconciliation/${bankAccountId}/rules`,
+        toQuery(params),
       ),
     staleTime: 60_000,
+    enabled: can,
   });
 }
 
@@ -440,12 +467,38 @@ export function useDeleteReconciliationRule(bankAccountId: number) {
   });
 }
 
-export function useTransfers(params: Record<string, unknown> = {}) {
-  return useQuery<ListResponse<BankTransfer>, Error>({
+export type ListTransfersParams = {
+  cursor?: string;
+  limit?: number;
+  from?: string;
+  to?: string;
+};
+
+export type ListBankImportsParams = {
+  cursor?: string;
+  limit?: number;
+  bankAccountId?: number;
+};
+
+export function useBankImports(params: ListBankImportsParams = {}) {
+  const can = useCan("accounting:banking:read");
+  return useQuery<CursorPage<BankImport>, Error>({
+    queryKey: bankingKeys.imports(params),
+    queryFn: () =>
+      apiClient.get<CursorPage<BankImport>>("/finance/bank-imports", toQuery(params)),
+    staleTime: 30_000,
+    enabled: can,
+  });
+}
+
+export function useTransfers(params: ListTransfersParams = {}) {
+  const can = useCan("accounting:banking:read");
+  return useQuery<CursorPage<BankTransfer>, Error>({
     queryKey: bankingKeys.transfers(params),
     queryFn: () =>
-      apiClient.get<ListResponse<BankTransfer>>("/finance/transfers", toQuery(params)),
+      apiClient.get<CursorPage<BankTransfer>>("/finance/transfers", toQuery(params)),
     staleTime: 30_000,
+    enabled: can,
   });
 }
 

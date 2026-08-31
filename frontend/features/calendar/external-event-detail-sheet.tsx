@@ -1,11 +1,10 @@
 "use client";
 
 import { format } from "date-fns";
-import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader } from "@/components/ui/sheet";
+import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays, ExternalLink, MapPin, Video } from "lucide-react";
-import { TruncatedText } from "@/components/ui/truncated-text";
 import type { BigCalEvent } from "./big-calendar-wrapper";
 
 interface ExternalEventDetailSheetProps {
@@ -18,7 +17,7 @@ export function ExternalEventDetailSheet({ event, onClose }: ExternalEventDetail
     <Sheet open={event !== null} onOpenChange={onClose}>
       <SheetContent side="right" className="w-full sm:max-w-sm p-0 flex flex-col gap-0 overflow-hidden">
         <SheetHeader className="px-5 py-4 border-b shrink-0">
-          <TruncatedText text={event?.title ?? ""} className="text-base font-semibold leading-snug" />
+          <SheetTitle className="text-base font-semibold leading-snug truncate">{event?.title ?? ""}</SheetTitle>
           {event?.resource?.accountEmail && (
             <Badge variant="secondary" className="w-fit text-micro truncate max-w-full">
               {event.resource.accountEmail}

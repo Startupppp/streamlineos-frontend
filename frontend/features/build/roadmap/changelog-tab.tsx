@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useCallback } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -6,13 +6,13 @@ import { EmptyTicketIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
   useChangelog,
   useUpdateChangelogEntry,
   useDeleteChangelogEntry,
 } from "@/hooks/api/build/roadmap";
-import { TablePagination } from "@/components/ui/table-pagination";
 import type { ChangelogEntry } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
@@ -40,8 +40,11 @@ function ChangelogListSkeleton() {
 }
 
 export function ChangelogTab({ createOpen, onCreateOpenChange }: ChangelogTabProps) {
-  const [page, setPage] = useState(1);
-  const { data, isLoading, isError, refetch } = useChangelog({ page });
+  const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>([undefined]);
+  const [cursorIdx, setCursorIdx] = useState(0);
+  const currentCursor = cursorHistory[cursorIdx];
+
+  const { data, isLoading, isError, refetch } = useChangelog({ cursor: currentCursor });
   const update = useUpdateChangelogEntry();
   const deleteEntry = useDeleteChangelogEntry();
   const [internalCreateOpen, setInternalCreateOpen] = useState(false);
@@ -71,10 +74,6 @@ export function ChangelogTab({ createOpen, onCreateOpenChange }: ChangelogTabPro
 
   function handleDeleteDialogChange(open: boolean) {
     if (!open) setDeleteTarget(null);
-  }
-
-  function handlePageChange(p: number) {
-    setPage(p);
   }
 
   const handleEditEntry = useCallback((entry: ChangelogEntry) => {
@@ -110,6 +109,18 @@ export function ChangelogTab({ createOpen, onCreateOpenChange }: ChangelogTabPro
     });
   }
 
+  function handleNext() {
+    const nc = data?.pagination.nextCursor;
+    if (!nc) return;
+    setCursorHistory((prev) => [...prev.slice(0, cursorIdx + 1), nc]);
+    setCursorIdx((prev) => prev + 1);
+  }
+
+  function handlePrev() {
+    if (cursorIdx === 0) return;
+    setCursorIdx((prev) => prev - 1);
+  }
+
   if (isLoading) return <ChangelogListSkeleton />;
 
   if (isError) {
@@ -118,9 +129,12 @@ export function ChangelogTab({ createOpen, onCreateOpenChange }: ChangelogTabPro
     );
   }
 
+  const hasPrev = cursorIdx > 0;
+  const hasNext = data?.pagination.hasMore ?? false;
+
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
-      {(data?.data ?? []).length === 0 ? (
+      {(data?.data ?? []).length === 0 && cursorIdx === 0 ? (
         <EmptyState
           className={PM_FILL_PANEL}
           illustration={<EmptyTicketIllustration />}
@@ -142,13 +156,16 @@ export function ChangelogTab({ createOpen, onCreateOpenChange }: ChangelogTabPro
               />
             ))}
           </PmStaggerList>
-          <TablePagination
-            page={page}
-            pageSize={data?.pagination.limit ?? 50}
-            total={data?.pagination.total ?? 0}
-            onPageChange={handlePageChange}
-            disabled={isLoading}
-          />
+          {(hasPrev || hasNext) ? (
+            <div className="flex items-center justify-center gap-2 border-t pt-2">
+              <Button variant="ghost" size="sm" onClick={handlePrev} disabled={!hasPrev}>
+                Previous
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleNext} disabled={!hasNext}>
+                Next
+              </Button>
+            </div>
+          ) : null}
         </>
       )}
 

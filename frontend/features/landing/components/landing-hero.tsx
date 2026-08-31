@@ -85,9 +85,9 @@ export function LandingHero() {
               className="flex flex-col sm:flex-row items-stretch sm:items-center lg:justify-start justify-center gap-3 w-full sm:w-auto max-w-sm sm:max-w-none mx-auto lg:mx-0"
             >
               <Magnetic strength={reduce ? 0 : 0.32} className="w-full sm:w-auto">
-                <Link href="/waitlist" className="block w-full sm:w-auto">
+                <Link href="/signin" className="block w-full sm:w-auto">
                   <Button size="lg" className="h-12 w-full sm:w-auto px-7 text-sm">
-                    Join the waitlist
+                    Get started
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>

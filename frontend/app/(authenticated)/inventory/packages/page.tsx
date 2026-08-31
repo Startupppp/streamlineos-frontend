@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { format } from "date-fns";
+import { formatShortDate } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { EmptyOrdersIllustration } from "@/components/illustrations";
@@ -32,11 +33,6 @@ import { usePackages, type Package } from "@/hooks/api/inventory/shipping";
 import { useCan } from "@/hooks/api/access";
 
 const PAGE_LIMIT = 20;
-
-function formatDate(value: string): string {
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
-}
 
 function PackagesPageInner() {
   const canView = useCan("inventory:packages:manage");
@@ -142,7 +138,7 @@ function PackagesPageInner() {
       key: "createdAt",
       header: "Created",
       cell: (pkg) => (
-        <span className="tabular-nums text-muted-foreground">{formatDate(pkg.createdAt)}</span>
+        <span className="tabular-nums text-muted-foreground">{formatShortDate(pkg.createdAt) || "—"}</span>
       ),
     },
   ];

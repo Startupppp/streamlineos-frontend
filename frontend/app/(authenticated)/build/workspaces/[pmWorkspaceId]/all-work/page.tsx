@@ -1,3 +1,4 @@
+import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 import { AllWorkPage } from "@/features/build/all-work/all-work-page";
 
 export const metadata = {
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export default async function AllWorkRoute({ params }: Props) {
+  await enforceRouteAccess("/build/workspaces/[pmWorkspaceId]/all-work");
   const { pmWorkspaceId } = await params;
   return <AllWorkPage pmWorkspaceId={pmWorkspaceId} />;
 }

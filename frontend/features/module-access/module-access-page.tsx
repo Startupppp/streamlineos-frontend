@@ -136,9 +136,9 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
             />
           </TabsContent>
 
-          {isModuleOwner ? (
+          {canViewOwnership ? (
             <TabsContent value="ownership" className={TAB_PANEL_CLASS}>
-              <OwnershipSection moduleKey={moduleKey} canManage />
+              <OwnershipSection moduleKey={moduleKey} canManage={canViewOwnership} />
             </TabsContent>
           ) : null}
         </div>

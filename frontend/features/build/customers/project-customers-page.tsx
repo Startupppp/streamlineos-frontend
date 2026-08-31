@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useTransition, useState, useEffect } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
@@ -12,7 +12,7 @@ import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { useProjectCustomers } from "@/hooks/api/build/customers";
 import { useCan } from "@/hooks/api/access";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { EmptyCompaniesIllustration } from "@/components/illustrations";
 import { useCustomerDisplayPrefs } from "./use-customer-display-prefs";
 import { CustomerDisplayPrefsPopover } from "./customer-display-prefs-popover";
@@ -26,13 +26,15 @@ import { CustomerTable } from "./customer-table";
 const PAGE_SIZE = 20;
 
 export function ProjectCustomersPage() {
+  const { staggerContainer, fadeUp } = useMotionVariants();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
   const [, startTransition] = useTransition();
 
   const [search, setSearch] = useState(searchParams.get("q") ?? "");
-  const page = Number(searchParams.get("page")) || 1;
+  const [cursor, setCursor] = useState<string | undefined>(undefined);
+  const [cursorStack, setCursorStack] = useState<string[]>([]);
 
   const [filters, setFilters] = useState<CustomerFilters>({
     industry: searchParams.get("industry") ?? undefined,
@@ -59,7 +61,9 @@ export function ProjectCustomersPage() {
   useEffect(() => {
     const current = searchParams.get("q") ?? "";
     if (debouncedSearch === current) return;
-    updateParams({ q: debouncedSearch || null, page: null });
+    updateParams({ q: debouncedSearch || null });
+    setCursor(undefined);
+    setCursorStack([]);
   }, [debouncedSearch, searchParams, updateParams]);
 
   const canView = useCan("build:customers:view");
@@ -67,7 +71,7 @@ export function ProjectCustomersPage() {
   const { data, isLoading, isError, refetch } = useProjectCustomers({
     search: debouncedSearch.trim() || undefined,
     industry: filters.industry,
-    page,
+    cursor,
     limit: PAGE_SIZE,
   });
 
@@ -81,8 +85,9 @@ export function ProjectCustomersPage() {
       updateParams({
         industry: next.industry ?? null,
         size: next.size ?? null,
-        page: null,
       });
+      setCursor(undefined);
+      setCursorStack([]);
     },
     [updateParams],
   );
@@ -94,23 +99,40 @@ export function ProjectCustomersPage() {
     [filters, handleFiltersChange],
   );
 
-  const handlePageChange = useCallback(
-    (newPage: number) => {
-      updateParams({ page: newPage > 1 ? String(newPage) : null });
-    },
-    [updateParams],
-  );
+  const handleNextPage = useCallback(() => {
+    const nextCursor = data?.pagination.nextCursor;
+    if (!nextCursor) return;
+    setCursorStack((prev) => [...prev, cursor ?? ""]);
+    setCursor(nextCursor);
+  }, [data?.pagination.nextCursor, cursor]);
+
+  const handlePrevPage = useCallback(() => {
+    const prevCursor = cursorStack[cursorStack.length - 1];
+    setCursorStack((prev) => prev.slice(0, -1));
+    setCursor(prevCursor === "" ? undefined : prevCursor);
+  }, [cursorStack]);
 
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
 
-  const customers = data?.organizations ?? [];
+  const customersFiltersActive = !!(debouncedSearch || filters.industry || filters.size);
+
+  const handleClearCustomerFilters = useCallback(() => {
+    setSearch("");
+    setFilters({});
+    updateParams({ q: null, industry: null, size: null });
+    setCursor(undefined);
+    setCursorStack([]);
+  }, [updateParams]);
+
+  const customers = data?.data ?? [];
   const filteredCustomers = filters.size
     ? customers.filter((c) => c.size === filters.size)
     : customers;
 
-  const total = data?.totalCount ?? 0;
+  const hasPrev = cursorStack.length > 0;
+  const hasNext = !!data?.pagination.hasMore;
 
   if (!canView) {
     return (
@@ -196,21 +218,19 @@ export function ProjectCustomersPage() {
           <CustomerTable
             customers={filteredCustomers}
             prefs={prefs}
-            page={page}
-            pageSize={PAGE_SIZE}
-            total={total}
-            onPageChange={handlePageChange}
+            hasPrev={hasPrev}
+            hasNext={hasNext}
+            onPrevPage={handlePrevPage}
+            onNextPage={handleNextPage}
             emptyState={
               <EmptyState
                 illustration={
                   <EmptyCompaniesIllustration className="h-full w-full" />
                 }
                 title="No customers found"
-                description={
-                  debouncedSearch || filters.industry || filters.size
-                    ? "No customers match your current filters."
-                    : "Companies from your CRM will appear here."
-                }
+                description={customersFiltersActive ? undefined : "Companies from your CRM will appear here."}
+                filtersActive={customersFiltersActive}
+                onClearFilters={handleClearCustomerFilters}
                 className="border-0 bg-transparent min-h-[40dvh]"
               />
             }

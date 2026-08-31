@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 
 const dimensionKeys = {
   all: ["streamlineos", "accounting", "core", "dimensions"] as const,
@@ -52,10 +53,12 @@ export interface UpdateDimensionValueInput {
 }
 
 export function useDimensions() {
+  const can = useCan("accounting:dimensions:read");
   return useQuery<{ items: AccountingDimension[] }, Error>({
     queryKey: dimensionKeys.list(),
     queryFn: () => apiClient.get<{ items: AccountingDimension[] }>("/accounting/dimensions"),
     staleTime: 120_000,
+    enabled: can,
   });
 }
 
@@ -84,14 +87,15 @@ export function useUpdateDimension(dimensionId: number) {
 }
 
 export function useDimensionValues(dimensionId: number, enabled = true) {
+  const can = useCan("accounting:dimensions:read");
   return useQuery<{ items: AccountingDimensionValue[] }, Error>({
     queryKey: dimensionKeys.values(dimensionId),
     queryFn: () =>
       apiClient.get<{ items: AccountingDimensionValue[] }>(
         `/accounting/dimensions/${dimensionId}/values`,
       ),
-    enabled: enabled && dimensionId > 0,
     staleTime: 60_000,
+    enabled: can && enabled && dimensionId > 0,
   });
 }
 
