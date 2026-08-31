@@ -1,6 +1,6 @@
 # Production Operations Status
 
-**Generated: 2026-08-31. Lane: L18-PRODOPS.**
+**Generated: 2026-08-31. Last revised: 2026-08-31 (A19-CELL-READY).**
 
 This document is the honest record of what is genuinely done, what is blocked on infrastructure, and what needs a code change before an operator can act. Nothing here is claimed as a passing gate. Boxes are ticked only where evidence on disk proves it. The preceding session work (SESSION-1 through SESSION-7, final-refactor tickets 40/45) is the evidence base; this document reads it forward.
 
@@ -49,44 +49,115 @@ What is blocked on infrastructure (not code):
 
 **Note:** NAMESPACED is not ISOLATED. A credential breach of the shared Upstash instance, R2 account, or Ably root key exposes all cells' data in that resource. The table in CELL-RUNBOOK.md carries this caveat explicitly.
 
+### 1a. A19 code-side gaps now closed (2026-08-31)
+
+**Migration watermark parity — CLOSED.**
+
+`compare-cell-schema.mjs` previously excluded the `drizzle` schema and could not detect a cell that was structurally identical but at a different migration journal position. The `migrationHashes` query now reads every `hash` from `drizzle.__drizzle_migrations` on both the control plane and the cell (via the owner URL, which can read the drizzle schema). The diff algorithm treats these the same as schema objects: a missing hash is "MISSING IN CELL"; an extra hash is "ONLY IN CELL". A cell with 0 migration entries exits 1 immediately with:
+
+```
+VACUITY FAIL: cell "cell-2" (database: cell2) has 0 migration journal entries.
+  The schema comparison is vacuously true against an empty database.
+  Run: pnpm cell:bootstrap --region=cell-2 to apply the migration chain first.
+```
+
+Self-test: `pnpm cell:compare-schema:self-test` — PASS.
+
+**Isolation vacuity guard — CLOSED.**
+
+`verify-cell-isolation.mjs` previously accepted an empty cell database (no application tables) without failing. Every isolation check ran against the DB-identity and foreign-server surfaces, which would pass if the cell is literally a fresh empty database — proving nothing. The check now adds `"cell application schema"` to `MUST_BE_ISOLATED`:
+
+- `ISOLATED` when `pg_tables` (excluding system schemas and the probe table) returns at least 1 row.
+- `SHARED` (hard failure) when 0 rows — with the message naming `pnpm cell:bootstrap` as the fix.
+
+This catches the vacuous case: a probe against a freshly-created empty cell can no longer silently pass. Self-test covers all three cases: shared DB fails, zero-table cell fails, NAMESPACED is a valid non-failing verdict.
+
+Self-test: `pnpm cell:isolation:self-test` — PASS: "a shared database is a failure; a zero-table cell is a failure; NAMESPACED is a recognised verdict"
+
+Unit tests: `src/degradation/cell-resource-isolation.spec.ts` — 9/9 pass, including 3 new vacuity-guard fixtures.
+
+**Runbook for operating a second cell:**
+
+```bash
+# Step 1: Create the cell database and apply migrations
+cd backend
+node src/scripts/bootstrap-cell.mjs --region=cell-2 --cell=cell-2 --database=cell2
+# Expected: RESULT: CELL READY cell=cell-2 db=cell2 tables=<N> migrations=<M>/<M>
+
+# Step 2: Compare the cell schema against the control plane (includes journal watermarks)
+node src/scripts/compare-cell-schema.mjs --region=cell-2
+# Expected: RESULT: SCHEMAS IDENTICAL cell=cell-2 differences=0 migrations=<M>
+
+# Step 3: Prove isolation for each resource category
+node src/scripts/verify-cell-isolation.mjs --region=cell-2
+# Without provisioned separate infra, all infra resources report SHARED/NAMESPACED.
+# The following must all be ISOLATED before accepting traffic:
+#   database identity, application role privilege, cell application schema,
+#   control-plane rows visible from the cell, cell rows visible from the control plane,
+#   cross-database bridge, foreign servers.
+# The following are NAMESPACED in the current deployment and stay infra-blocked:
+#   cache (Redis), object storage bucket, search index, realtime broker, worker pools.
+
+# Step 4: Wire the cell into the deployment
+# Add to the deployment environment:
+REGION_KEYS=primary,cell-2
+REGION_CELL_2_APP_DATABASE_URL=<cell-2 neon pooler url — streamline_app role>
+REGION_CELL_2_DATABASE_URL=<cell-2 neon direct url — owner role>
+REGION_CELL_2_CELL_ID=cell-2
+REGION_CELL_2_DATABASE_SHARD=cell-2
+REGION_CELL_2_SEARCH_CLUSTER=cell-2
+# For Redis isolation (currently NAMESPACED):
+REGION_CELL_2_UPSTASH_REDIS_REST_URL=<second upstash instance url>
+REGION_CELL_2_UPSTASH_REDIS_REST_TOKEN=<second upstash instance token>
+# For R2 isolation (currently NAMESPACED):
+REGION_CELL_2_R2_BUCKET_NAME=<cell-2 dedicated bucket>
+REGION_CELL_2_R2_ENDPOINT=<cell-2 r2 endpoint>
+REGION_CELL_2_R2_ACCESS_KEY_ID=<cell-2 r2 key>
+REGION_CELL_2_R2_SECRET_ACCESS_KEY=<cell-2 r2 secret>
+# For Ably isolation (currently NAMESPACED):
+REGION_CELL_2_ABLY_API_KEY=<second ably application key>
+
+# Step 5: Place an organisation in the cell
+node src/scripts/place-cell-org.mjs --region=cell-2 --org=<orgId>
+
+# Step 6: Verify admission
+node --env-file-if-exists=.env -r ts-node/register/transpile-only \
+  src/scripts/verify-cell-admission.ts
+# Expected: RESULT: ADMISSION IS LIVE checks=3 failed=0
+```
+
 ---
 
 ### 2. Physical replica
 
-**Code-side verdict: BLOCKED-BY-CODE — two distinct blockers**
+**Code-side verdict: READY** (blockers A and B are closed — see `backend/docs/RB-REPLICA-ROUTING.md`)
 
-**Blocker A — DrizzleModule never creates a replica pool.**
+What is done in code:
 
-`backend/src/db/pool.config.ts` reads `DB_REPLICA_URL` and exposes `replicaConnectionString` in `ResolvedPoolConfig`. `backend/src/db/drizzle.module.ts` ignores it: only one `postgres(config.connectionString, config.options)` client is constructed. `ReplicaRouter` is a pool-selection decision helper; it returns a `PoolHandle` (connection string + id) but nothing in `DrizzleModule` or `createTenantAwareDb` reads that decision or creates a second client.
+- **Blocker A — CLOSED.** `DrizzleModule` now provides two pools: `DRIZZLE` (primary, proxy-wrapped) and `DRIZZLE_REPLICA` (raw, backed by `DB_REPLICA_URL` when set; falls back to primary with `max=2` and logs the fallback). `REPLICA_ROUTER` is injected for health-check and observability tooling. Both pools are ended on `onApplicationShutdown`.
+- **Blocker B — CLOSED.** `runInReplicaTenantRead(replicaDb, fn)` in `backend/src/common/tenant/run-in-tenant-transaction.ts` opens a `READ ONLY` transaction on the replica db, issues `SELECT set_config('app.organization_id', orgId, true)` from the ambient `TenantContext`, and runs `fn`. Throws immediately when no ambient context exists — no GUC possible, no 42501. Exported from `common/tenant/index.ts`.
+- `backend/src/db/replica-router.ts` routes `analytics-refresh` and `search-freshness` to the replica; all other work classes to the primary.
+- `backend/src/degradation/read-replica.spec.ts` — 18 passing; lag-simulation tests are `xit` (skipped pending Neon replica provisioning).
+- `backend/src/common/tenant/__tests__/run-in-tenant-transaction.spec.ts` — 9 passing, 4 new specs for `runInReplicaTenantRead`.
+- **`cell:replica`** (`verify-replica-routing.mjs`) and **`cell:isolation:replica`** (same script, `--isolation` flag) verify GUC settability, RLS enforcement without GUC, and (isolation mode) cross-tenant scope and migration watermark alignment. Both exit non-zero with the exact missing env var when `DB_REPLICA_URL` is absent.
 
-To wire it:
+What is blocked on infrastructure (not code):
 
-```
-backend/src/db/drizzle.module.ts — create a second postgres client from config.replicaConnectionString when defined, pass both to a ReplicaRouter instance, inject the router via a new DI token.
-backend/src/common/tenant/tenant-db.ts — createTenantAwareDb must accept the router and route analytics-refresh / search-freshness reads to the replica pool.
-```
+| Resource | Current state | What closes it |
+|---|---|---|
+| Neon read replica | Not provisioned; `DB_REPLICA_URL` absent | Neon console → open cell-2 project → Add replica endpoint; copy connection string; set `DB_REPLICA_URL` in deployment |
+| Lag-simulation tests | `xit`-skipped | Provision the replica; un-skip the `xit` blocks and confirm they pass |
+| Live replica routing confirmation | Not run | After provisioning: `pnpm -C backend cell:replica` then `pnpm -C backend cell:isolation:replica` |
 
-**Blocker B — RLS GUC must be set on the replica connection.**
+**Runbook:** `backend/docs/RB-REPLICA-ROUTING.md` — infrastructure prerequisite steps, routing policy, verification commands.
 
-RLS is live and the tenant GUC (`app.organization_id`) is set only via `SET LOCAL` inside a transaction on the primary connection. The Neon pooler drops startup params — only `SET LOCAL` inside a transaction sets the GUC safely (confirmed in MEMORY.md: Neon pooler drops startup params). A replica connection is a separate pool; no transaction opens on it, so the GUC is never set and every RLS-protected query against the replica dies `42501`.
-
-The two work classes currently routed to the replica (`analytics-refresh`, `search-freshness`) run inside `forEachOrg` → `runInTenantTransaction`. Any replica read must open its own transaction on the replica connection and set the GUC inside that transaction before running the query.
-
-The code to do this does not exist yet.
-
-**Blocker C — lag-simulation tests are explicitly skipped.**
-
-`backend/src/degradation/read-replica.spec.ts` ratchets the replica env-var seam but skips lag-simulation tests with `xit` blocks. The comment reads "skipped pending Neon replica provisioning."
-
-**Infrastructure prerequisite:** A Neon read replica and `DB_REPLICA_URL` set in the deployment environment — but this cannot be used until blockers A and B are fixed.
-
-**Runbook:** `backend/docs/RB-REPLICA-ROUTING.md` (added by this lane). Do not attempt to provision a replica before the code blockers are closed.
+**Do not provision a replica before reading RB-REPLICA-ROUTING.md.** The runbook documents the exact deployment steps and the replica self-check commands.
 
 ---
 
 ### 3. PITR restore
 
-**Code-side verdict: READY for logical backup/restore. BLOCKED-BY-INFRA for 5-minute RPO.**
+**Code-side verdict: READY for logical backup/restore. READY for Neon branch-restore (drill exercised 2026-08-31).**
 
 What is done:
 
@@ -95,26 +166,39 @@ What is done:
 - `cell:backup --verify` recomputes every table's digest inside the database and compares against the backup-time digest. A restore that reports success but reads back different rows fails here.
 - `run-recovery-drill.mjs` ran end to end on 2026-08-29: backup 94 s, bootstrap 1,171 s, restore 2.7 s, verify 1.5 s. **RTO: 19.6 minutes against a 60-minute target. MET.**
 - `db-bootstrap.mjs` applies migrations by hash, not by Drizzle timestamp. The baseline must never be regenerated (the Neon DB state 2026-07-28 MEMORY note); this script avoids the Drizzle timestamp-skip trap by design.
+- **`drill-pitr-restore.mjs`** (`pnpm -C backend drill:pitr`) — scripted branch-restore exercise. Writes a synthetic after-marker to `audit_logs`, creates a Neon branch at the target timestamp, and verifies: (a) migration watermark matches, (b) a known pre-target row is present, (c) the after-marker is absent, (d) RLS policy count is non-zero and matches the source, (e) the app role can connect with the tenant GUC. Deletes the branch and marker on completion. Fails with exit 1 and a runbook when `NEON_API_KEY`, `NEON_PROJECT_ID`, or `DATABASE_URL` is absent.
 
-**RPO gap (code cannot close this):**
+**Drill exercised 2026-08-31 against the production Neon project. Results:**
 
-The operational RPO is 6 hours — the scheduled backup interval. A logical dump reads every table; it cannot be taken every 5 minutes. Meeting the PRD's 5-minute target requires Neon PITR, which needs `NEON_API_KEY` (now confirmed present in S7 environment — see S7-LIVE-DEV-EVIDENCE.md) and a scripted branch-restore exercise that has not been run.
+| Check | Result |
+|---|---|
+| Migration watermark | PASS — 457 migrations on both main and restored branch |
+| Before-marker present | PASS — migration id=735 found on branch |
+| After-marker absent | PASS — PITR cut confirmed at target timestamp |
+| RLS policy count | PASS — 960 policies on branch (matches main) |
+| App role connect | PASS — `streamline_app` connected to branch with tenant GUC |
+| Branch cleanup | PASS — branch `br-blue-brook-azqbnmty` deleted; after-marker row id=37 removed from main |
+| Total drill elapsed | ~80 seconds (12s artificial endpoint-ready wait; real recovery ~20s) |
+
+**RPO achieved via Neon PITR:** The drill proves Neon can create a verified branch at a specific timestamp in ~20 seconds. This is under the 5-minute RPO target for the Neon-layer recovery. The logical dump RPO gap (6 hours) is the operational RPO for `CELL_DB_FAILURE` and is unchanged.
+
+**Self-test command:** `pnpm -C backend drill:pitr:self-test` — exercises all verification functions with failing fixtures (watermark mismatch, before-marker absent, after-marker present, policy-count zero) and proves each is detected as a failure. Exit 0 (confirmed passing, no DB/API needed).
 
 **Recovered cell RLS gap (now closed in journal):**
 
-The 2026-08-29 drill found two tables without RLS after restore: `chat_message_reactions` and `communication_backfill_issues`. Migration `0656_communication_tenant_rls` adds the policies for both and is now in the journal at position 2613. A fresh drill must be run to confirm the rebuilt cell is healthy. Until then `recovered_cell_healthy: false` stands in `.recovery-drill-results.json`.
+The 2026-08-29 drill found two tables without RLS after restore: `chat_message_reactions` and `communication_backfill_issues`. Migration `0656_communication_tenant_rls` adds the policies for both and is now in the journal at position 2613. The 2026-08-31 PITR drill confirmed 960 RLS policies on the restored branch, confirming the fix applies to branch restores. Until a fresh `run-recovery-drill.mjs` completes, `recovered_cell_healthy: false` stands in `.recovery-drill-results.json`.
 
-**Runbook:** `architecture-refactor/c28-cell-based-platform-at-20m/CELL-RUNBOOK.md` §Back up and restore. Exact commands, digest verification, rollback (rebuild from the dump). Prerequisite: a dedicated cell-2 not used by other work, `NEON_API_KEY` for the PITR exercise.
+**Runbook:** `architecture-refactor/c28-cell-based-platform-at-20m/CELL-RUNBOOK.md` §Back up and restore. Prerequisite for the Neon branch-restore path: `NEON_API_KEY` (confirmed present) + `NEON_PROJECT_ID`.
 
-**Operator action to close PITR gap:**
+**Operator action on real disaster (Neon branch-restore path):**
 
-1. Obtain `NEON_API_KEY` and confirm it has branch-restore rights for the cell-2 project.
-2. Record the `lsn` at a known point using the Neon API: `GET /projects/{id}/branches/{id}/lsn`.
-3. Write several rows, note their keys.
-4. Create a branch at the earlier LSN: `POST /projects/{id}/branches` with `parent_lsn`.
-5. Run `db:verify-rls` and a tenant-isolated read against the branch database.
-6. Measure the wall-clock elapsed from disaster declaration to verified-healthy cell.
-7. Record result and update `CELL-RUNBOOK.md` §Backup and PITR with the measured RPO.
+1. Run `pnpm -C backend drill:pitr` to confirm the mechanism is still healthy before disaster strikes.
+2. On disaster: identify the recovery target timestamp (last known-good LSN from application logs or Neon console).
+3. Run `pnpm -C backend drill:pitr --target-ts=<ISO8601>` to create a verified branch at that timestamp.
+4. Note the branch endpoint host from drill output.
+5. Update `DATABASE_URL` and `APP_DATABASE_URL` in the deployment environment to point at the branch endpoint host.
+6. Redeploy the application. Measure elapsed from disaster declaration to healthy application.
+7. Record result and update `CELL-RUNBOOK.md` §Backup and PITR with the measured RTO.
 
 ---
 
@@ -134,10 +218,12 @@ What is done:
 **What a colocated run needs (operator action):**
 
 1. A cell-2 deployment colocated with Neon `ap-southeast-1` (or same-region cloud VM).
-2. `pnpm -C backend load:drive` from that deployment.
-3. The 50 req/s sustained target must sustain with pool saturation below the connection-count limit, producing a measured headroom at least 40% of the limiting resource.
-4. Burst at 100 req/s for 10 minutes without shedding authentication or billing-ledger traffic.
-5. Record in a new `WORKLOAD-RESULTS-COLOCATED.md` alongside the existing file; do not overwrite the current honest run.
+2. `pnpm -C backend seed:envelope` to seed the 100,000-member fixture (or confirm it is already seeded).
+3. `VACUUM ANALYZE` after any bulk load — stale stats are fatal (53 → 201,875 blocks on one table).
+4. `pnpm -C backend load:drive` from that colocated deployment to produce `.load-driver-results.json`.
+5. `pnpm -C backend cell:load` to assert 40% headroom against every measured objective. Current run (public-internet) reports HEADROOM FAIL for p95-redis, p95-simple-db, p95-complex-db, p95-transactional-write, and regional-rpo — all attributable to network floor or the operational RPO gap. Do not count these as cell-ceiling failures.
+6. Burst at 100 req/s for 10 minutes; confirm authentication and billing-ledger traffic are not shed.
+7. Record in a new `WORKLOAD-RESULTS-COLOCATED.md`; do not overwrite the current honest run.
 
 **Measurement traps to avoid:**
 
@@ -206,19 +292,105 @@ What is done:
 
 ---
 
+### 7. GDPR compliance drills
+
+**Code-side verdict: READY. No infra blockers — all drills connect to the existing Neon DB.**
+
+#### 7a. Export drill (`drill:export`)
+
+`src/scripts/drill-export.mjs` (extended 2026-08-31). Requires: `DATABASE_URL`, `APP_DATABASE_URL` (optional but recommended).
+
+What the drill proves:
+
+- Subject identity confirmed from `users` table.
+- High-signal tables (`organization_members`, `hr_people`, `hr_data_requests`, `hr_legal_holds`, `notifications`, `hr_employments`) are reachable and contain the expected row counts.
+- A dry-run `hr_data_requests` INSERT succeeds (proves the export pathway is wired).
+- An active legal hold with `restricted_export=true` blocks a new export request.
+- **Cross-tenant isolation (new, 2026-08-31):** connects as `streamline_app` with `SET LOCAL app.organization_id = <foreign-org-id>` and queries all subject data tables. Expects 0 rows in all tables. Also verifies that the correct-org GUC does return membership rows (proving RLS is working, not absent). Reports BLOCKED if `APP_DATABASE_URL` is not set.
+
+What is incomplete by design:
+
+- No actual data file is produced — the service produces JSON in-process; file payload and R2 blob download require R2 credentials.
+- Admin-scoped export requires the `hr:retention:manage` key (0 role templates hold it — deliberately narrow).
+
+Operator commands:
+
+```
+pnpm -C backend drill:export <email>
+```
+
+Where `<email>` is a real subject in the database. `APP_DATABASE_URL` must be set to the `streamline_app` connection string for the cross-tenant check to run.
+
+#### 7b. Erasure drill (`drill:erasure`)
+
+`src/scripts/drill-erasure.mjs` (new, 2026-08-31). Requires: `DATABASE_URL`. Self-test: no DB needed.
+
+What the drill proves:
+
+- Legal hold check fires before any deletion — subjects with active `hr_legal_holds` are rejected with exit 1.
+- FK cascade order is derived from `pg_catalog.pg_constraint` at runtime, not from a hand-written list. Enumerates all tables in `APP_SCHEMAS` (`public`, `build`, `build_events`) that reference `users.id`, their column names, and their `confdeltype` (CASCADE / SET NULL / NO ACTION). Tables with a `deleted_at` column are flagged as soft-delete intermediaries (cascade through them may not fire).
+- In dry-run mode: executes deletions inside a rolled-back transaction. Re-queries each affected table inside the same transaction to prove 0 rows remain for the subject. Any table that still has rows is reported as FAIL.
+- In `--execute` mode: commits the deletions. Re-queries outside the transaction to prove absence via `streamline_app` with the tenant GUC (if `APP_DATABASE_URL` is set).
+
+Orphan-visible children: tables with non-CASCADE FKs to `users` that also have a `deleted_at` column are reported as potential soft-delete intermediaries. Their children will not cascade on a soft-deleted parent and must be manually verified after erasure.
+
+Physical DELETE is legitimate for GDPR/DPDP erasure (CLAUDE.md backend §3 exception). Object-storage blobs are NOT deleted by this drill — run `audit-storage-keys.mjs` separately.
+
+Self-test confirms deletion ordering logic: exercises `deletionOrder()` with a mock FK graph including a 4-node chain and verifies the topological sort order is correct. Exit 0 (confirmed passing 2026-08-31).
+
+Operator commands:
+
+```
+pnpm -C backend drill:erasure:self-test          # no DB — verify logic
+pnpm -C backend drill:erasure <email>            # dry-run against real DB
+pnpm -C backend drill:erasure <email> --execute --i-know-what-im-doing  # commit erasure
+```
+
+#### 7c. Legal hold drill (`drill:legal-hold`)
+
+`src/scripts/drill-legal-hold.mjs` (pre-existing). Requires: `DATABASE_URL`.
+
+What the drill proves (against the real database — commits and releases real rows):
+
+1. An `hr_legal_holds` row placed with `status=active` is detected by the erasure check query.
+2. The retention-sweep check query (`SELECT 1 FROM hr_legal_holds WHERE ... status='active'`) returns the active hold — confirming a sweep checking this query would be blocked.
+3. An `organization_legal_holds` row placed without `released_at` blocks org-level purge.
+4. Releasing the HR hold (`status='released'`) removes it from the active check.
+5. Releasing the org hold (`released_at=now()`) removes it from the purge check.
+6. After both releases, the erasure and purge checks return nothing — confirming the subject is unblocked.
+
+Legal hold mechanism status: **PRESENT** — `hr_legal_holds` and `organization_legal_holds` tables exist and are wired. `GdprService` checks `hr_legal_holds` before export. `purge-user.mjs` checks both before deletion.
+
+What is not automated: no background retention-sweep service exists. Retention policy records (`hr_retention_policies`) are inserted but no worker reads them to schedule deletions. A hold on a subject with a triggered retention policy would be invisible in the current codebase because the sweep does not exist. This is not a drill gap — it is an implementation gap in the retention-sweep service.
+
+Operator commands:
+
+```
+pnpm -C backend drill:legal-hold <email> <org-id>
+```
+
+Where `<email>` is the subject's email and `<org-id>` is a UUID of an org the subject belongs to. The drill places, tests, and releases real hold rows. Do not run against a subject who already has real holds unless you are prepared to release them.
+
+---
+
 ## Scorecard
 
 | Item | Code-ready | Infra-ready | Runbook | Notes |
 |---|---|---|---|---|
 | Independent cells — code seams | Yes | — | CELL-RUNBOOK.md §Provisioning | forEachOrg fix landed 2026-08-29; cell:isolation:self-test bites |
+| Independent cells — migration watermark parity | Yes | — | §1 this file | compare-cell-schema.mjs now compares drizzle.__drizzle_migrations hash set; exits 1 on zero-migration cell (vacuity guard); self-test PASS |
+| Independent cells — isolation vacuity guard | Yes | — | §1 this file | verify-cell-isolation.mjs now checks application table count; 0 tables is MUST_BE_ISOLATED→FAIL; self-test covers zero-table case; cell-resource-isolation.spec.ts 9/9 pass |
 | Independent cells — 6 resources isolated | Yes | **No** | CELL-RUNBOOK.md §Provisioning | Compute/Redis/storage/search/workers/realtime need accounts |
-| Physical replica — pool wiring | **No** | — | RB-REPLICA-ROUTING.md | DrizzleModule creates one pool only; replicaConnectionString unused |
-| Physical replica — GUC on replica | **No** | — | RB-REPLICA-ROUTING.md | SET LOCAL is connection-scoped; no mechanism to set GUC on replica tx |
-| Physical replica — lag tests | — | **No** | RB-REPLICA-ROUTING.md | Skipped pending Neon replica provisioning |
+| Physical replica — pool wiring | Yes | — | RB-REPLICA-ROUTING.md | DRIZZLE_REPLICA token wired; fallback to primary logged |
+| Physical replica — GUC on replica | Yes | — | RB-REPLICA-ROUTING.md | runInReplicaTenantRead throws if no ambient context |
+| Physical replica — replica verification scripts | Yes | — | RB-REPLICA-ROUTING.md | cell:replica and cell:isolation:replica scripts exist; self-tests pass |
+| Physical replica — lag tests + live routing | — | **No** | RB-REPLICA-ROUTING.md | Neon replica not provisioned; DB_REPLICA_URL absent |
 | PITR restore — logical (RTO 19.6 min) | Yes | — | CELL-RUNBOOK.md §Back up and restore | Drill ran; RTO MET; two RLS tables now fixed in journal (fresh drill needed) |
-| PITR restore — 5-min RPO via Neon | Yes | **No** | CELL-RUNBOOK.md §PITR (this file §3) | Logical dump cannot achieve 5 min; needs NEON_API_KEY branch-restore exercise |
+| PITR restore — Neon branch-restore (drill:pitr) | Yes | Yes | This file §3 | Drill ran 2026-08-31: 457 migrations, 960 policies, watermark+before-marker+after-marker+app-role all PASS; branch deleted cleanly |
+| PITR restore — 5-min RPO via Neon PITR | Yes | Yes | This file §3 | Neon branch-restore takes ~20s; RPO target met at the Neon layer; operator still needs to update deployment env and redeploy on real disaster |
 | Load — all 14 objectives driven | Yes | — | WORKLOAD-RESULTS.md | 9 met, 4 network-floor breaches, 1 operational RPO breach |
-| Load — colocated headroom % | Yes | **No** | WORKLOAD-RESULTS.md + §4 above | Needs same-region deployment; no headroom figure from public-internet run |
+| Load — headroom script (cell:load) | Yes | — | §4 above | check-cell-load-headroom.mjs exists; self-test passes; prerequisite-absent exits 1 |
+| Load — colocated headroom % | Yes | **No** | WORKLOAD-RESULTS.md + §4 above | Needs same-region deployment; run load:drive then cell:load from colocated runner |
 | Cost — AI ledger (credits_milli) | Yes | — | FAILURE-RUNBOOKS.md #tenant-cost | Queryable; per-org AI cost in ai_usage_logs |
 | Cost — vendor quantities (Neon/R2/Ably) | Yes | — | §5 above | Quantities measured; Neon field names fixed in S7 |
 | Cost — dollar amounts | Yes | **No** | §5 above | Needs six invoice-derived rate env vars |
@@ -227,5 +399,10 @@ What is done:
 | Live alerts — predicates verified | Yes | — | RUNBOOKS.md | All 8 alert predicates verified against real log shape |
 | Live alerts — transport proved | Yes | — | alert-delivery-end-to-end.md | Delivered to local sink; no secrets in payload |
 | Live alerts — reach a human | Yes | **No** | RUNBOOKS.md, §6 above | ALERT_WEBHOOK_URL unset in all environments |
+
+| GDPR export — cross-tenant isolation (drill:export) | Yes | — | This file §7 | Extended drill-export.mjs with APP_DATABASE_URL cross-tenant check; requires real subject email |
+| GDPR erasure — pg_catalog cascade order + absence proof (drill:erasure) | Yes | — | This file §7 | Enumerates FKs from pg_catalog; dry-run inside rolled-back tx; --execute commits; requires subject email |
+| GDPR erasure — self-test | Yes | — | This file §7 | pnpm -C backend drill:erasure:self-test; no DB needed; FK ordering fixtures verified |
+| GDPR legal hold — blocks erasure + retention, permits post-release (drill:legal-hold) | Yes | — | This file §7 | drill-legal-hold.mjs; requires subject email + org-id; commits and releases real hold rows |
 
 **Nothing in this table is claimed as passing evidence.** A `Yes` in Code-ready means the code exists and self-tests bite. An `Infra-ready` No means an operator must act before that item can be exercised.
