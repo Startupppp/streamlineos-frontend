@@ -227,4 +227,58 @@ describe("route-access registry keys", () => {
     expect(isUniversalRoute("/settings/roles")).toBe(false);
     expect(isUniversalRoute("/settings/billing")).toBe(false);
   });
+
+  it("BITE: accounting routes resolve to the accounting module — layout must check module enablement via enforceRouteAccess", () => {
+    const accountingRoutes = [
+      "/accounting/settings",
+      "/accounting/budgets",
+      "/accounting/journal",
+      "/accounting/coa",
+      "/accounting/banking",
+      "/accounting/assets",
+      "/accounting/taxes",
+      "/accounting/reports",
+    ];
+    for (const route of accountingRoutes) {
+      const decision = resolveRouteAccess(route);
+      expect(decision.kind).toBe("permission");
+      if (decision.kind === "permission") {
+        expect(decision.orgModuleKey).toBe("accounting");
+        expect(decision.permission).toBeTruthy();
+      }
+    }
+  });
+
+  it("BITE: accounting layout uses enforceRouteAccess, not requirePermission directly", () => {
+    const layoutPath = path.resolve(
+      __dirname,
+      "../../../../app/(authenticated)/accounting/layout.tsx",
+    );
+    const src = fs.readFileSync(layoutPath, "utf8");
+    expect(src).toContain("enforceRouteAccess");
+    expect(src).not.toContain("requirePermission");
+  });
+
+  it("BITE: each accounting descendant carries its own permission, not the blanket accounting:read", () => {
+    const checks: Array<{ path: string; expected: string | string[] }> = [
+      { path: "/accounting/budgets", expected: "accounting:budgets:read" },
+      { path: "/accounting/coa", expected: "accounting:accounts:read" },
+      { path: "/accounting/journal", expected: "accounting:journal:read" },
+      { path: "/accounting/banking", expected: "accounting:banking:read" },
+      { path: "/accounting/assets", expected: "accounting:assets:read" },
+      { path: "/accounting/taxes", expected: "accounting:taxes:read" },
+      { path: "/accounting/reports", expected: "accounting:reports:read" },
+    ];
+    for (const { path, expected } of checks) {
+      const decision = resolveRouteAccess(path);
+      expect(decision.kind).toBe("permission");
+      if (decision.kind === "permission") {
+        const keys = Array.isArray(decision.permission)
+          ? decision.permission
+          : [decision.permission];
+        const expectedKeys = Array.isArray(expected) ? expected : [expected];
+        expect(keys.some((k) => expectedKeys.includes(k as string))).toBe(true);
+      }
+    }
+  });
 });

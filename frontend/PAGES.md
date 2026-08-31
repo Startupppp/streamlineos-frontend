@@ -189,8 +189,7 @@ All prior violations resolved on 2026-08-30:
 - [ ] `/crm/issues` · **CRM** · hooks: `→ feature/crm/issues` · §8: L ? States ?
 - [ ] `/crm/import` · **CRM** · hooks: `→ feature/crm/import` · §8: States ?
 
-### API Keys & Autonomy
-- [ ] `/crm/api-keys` · **CRM** · hooks: `→ feature/crm` · §8: L ? C ? D ? Perm ? States ?
+### Autonomy
 - [ ] `/crm/autonomy` · **CRM** · hooks: `→ feature/crm` · §8: States ?
 
 ### Calendar
@@ -200,6 +199,7 @@ All prior violations resolved on 2026-08-30:
 - [ ] `/crm/access` · **CRM** · hooks: `→ feature/crm` · §8: Perm ? States ?
 
 ### Settings
+- [ ] `/crm/settings/api-keys` · **CRM** · hooks: `→ feature/crm/settings` · §8: L ? C ? D ? Perm ? States ?
 - [ ] `/crm/settings/ai` · **CRM** · hooks: `→ feature/crm/settings` · §8: E ? Perm ? States ?
 - [ ] `/crm/settings/assignment-rules` · **CRM** · hooks: `→ feature/crm/settings` · §8: L ? C ? E ? D ? Perm ? States ?
 - [ ] `/crm/settings/audit-log` · **CRM** · hooks: `→ feature/crm/settings` · §8: L ? F ? P ? Perm ? States ?

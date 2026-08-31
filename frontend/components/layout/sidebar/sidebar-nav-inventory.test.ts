@@ -1,6 +1,9 @@
 import { createHash } from "node:crypto";
 import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 
+// Changed 2026-08-31: CRM "API Keys" moved from /crm/api-keys to
+// /crm/settings/api-keys (§8 — module-owned surfaces live in /<module>/settings/*),
+// and the Knowledge group lost module: "documents" so KB reading stays universal.
 // Moved 2026-08-30: /me/pay removed from PAYROLL_NAV_GROUPS — self-service pay
 // belongs exclusively in HOME_NAV_GROUPS "For Me" group (product: home). The
 // payroll product sidebar no longer lists it; the home sidebar already did.
@@ -13,7 +16,7 @@ import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 // /crm/autonomy, gated on crm:autonomy:view). The digest exists so a route or
 // its permission cannot change without somebody saying why.
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "3b3a6ac1092d8f0bf75a5c4f087dd80b195925f2f4e30e7b32ed0747624b16ff";
+  "5bf9eeab85643ea8e3a42147f6ebb0e52750a7cc07d0dc8d6bcc649ebebfb8ed";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {

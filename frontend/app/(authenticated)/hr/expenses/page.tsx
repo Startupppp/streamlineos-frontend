@@ -241,20 +241,7 @@ export default function ExpensesPage() {
     pendingExpenses = [],
     stats = null,
     pagination = { page: 1, pageSize: 5, total: 0, totalPages: 0 },
-    categories: rawCategories = [],
   } = pageData ?? {};
-
-  const expenseCategories =
-    rawCategories.length > 0
-      ? rawCategories
-      : EXPENSE_CATEGORIES.map((name, i) => ({
-          id: i + 1,
-          name,
-          description: null,
-          budgetLimit: null,
-          budgetPeriod: null,
-          isActive: true,
-        }));
 
   const filteredExpenses =
     statusFilter === "ALL"
@@ -295,7 +282,6 @@ export default function ExpensesPage() {
             </Button>
             <ExpenseExportDialog
               filters={filters}
-              categories={expenseCategories}
               trigger={
                 <Button
                   variant="outline"
@@ -398,7 +384,6 @@ export default function ExpensesPage() {
           statusFilter={statusFilter}
           datePreset={datePreset}
           filters={filters}
-          categories={expenseCategories}
           onStatusChange={setStatusFilter}
           onDatePresetChange={setDatePreset}
         />

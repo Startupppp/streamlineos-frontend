@@ -34,6 +34,12 @@ export const UNIVERSAL_ROUTES: readonly UniversalRoute[] = [
     reason: "Platform core communication surface.",
   },
   {
+    path: "/inbox",
+    subtree: true,
+    reason:
+      "The unified inbox merges notifications, broadcasts, mail and approvals the member is already entitled to. Each source is permission-filtered server-side, so the surface itself is platform core.",
+  },
+  {
     path: "/chat",
     universalDescendants: [
       { path: "/chat/channels", subtree: true },
@@ -91,7 +97,7 @@ export const UNIVERSAL_ROUTES: readonly UniversalRoute[] = [
       { path: "/knowledge/wiki/private", subtree: true },
       { path: "/knowledge/wiki/pages", subtree: true },
       { path: "/knowledge/wiki/spaces", childrenOnly: true },
-      { path: "/knowledge/wiki/chat", subtree: true },
+      { path: "/knowledge/chat", subtree: true },
     ],
     reason:
       "Knowledge Base reading is platform core. Administrative surfaces (settings, import, analytics, reviews, templates, trash, space management) are explicitly gated via the extension registry.",

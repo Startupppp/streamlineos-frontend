@@ -282,6 +282,8 @@ export const humanResourcesQueryKeys = {
         "employee-export",
         exportJobId,
       ] as const,
+    expenseExportJob: (jobId: string) =>
+      [...base, "hr", "expenses", "export", "jobs", jobId] as const,
     hrCalendar: (from: string, to: string, types?: string) =>
       [...base, "hr", "calendar", from, to, types] as const,
     benefitsAll: [...base, "hr", "benefits"] as const,

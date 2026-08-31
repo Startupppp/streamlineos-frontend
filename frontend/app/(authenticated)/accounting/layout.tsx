@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
-import { requirePermission } from "@/lib/rbac/require-permission";
+import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 
 export default async function AccountingLayout({ children }: { children: ReactNode }) {
-  await requirePermission("accounting:read", { redirectTo: "/dashboard" });
+  await enforceRouteAccess("/accounting");
   return <>{children}</>;
 }

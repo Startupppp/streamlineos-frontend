@@ -16,10 +16,7 @@ import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { ExpenseExportDialog } from "@/components/expenses/expense-export-dialog";
 import { STATUS_LABELS, type StatusFilter } from "./expense-constants";
-import type {
-  ExpenseFilters,
-  ExpenseCategoryRecord as ExpenseCategory,
-} from "@/types/hr/expenses";
+import type { ExpenseFilters } from "@/types/hr/expenses";
 import type { DatePreset } from "@/hooks/common/use-expense-filters";
 
 function MemberStatusTab({
@@ -147,7 +144,6 @@ interface MemberExpenseFiltersProps {
   statusFilter: StatusFilter;
   datePreset: string;
   filters: ExpenseFilters;
-  categories: ExpenseCategory[];
   onStatusChange: (status: StatusFilter) => void;
   onDatePresetChange: (preset: DatePreset) => void;
 }
@@ -156,7 +152,6 @@ export function MemberExpenseFilters({
   statusFilter,
   datePreset,
   filters,
-  categories,
   onStatusChange,
   onDatePresetChange,
 }: MemberExpenseFiltersProps) {
@@ -203,7 +198,6 @@ export function MemberExpenseFilters({
         </Select>
         <ExpenseExportDialog
           filters={filters}
-          categories={categories}
           trigger={
             <AnimatedIconButton
               icon={DownloadIcon}

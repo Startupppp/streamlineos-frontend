@@ -186,12 +186,6 @@ export const CRM_NAV_GROUPS: NavGroup[] = [
         requiredPermission: "crm:access:view",
       },
       {
-        label: "API Keys",
-        icon: Key,
-        href: "/crm/api-keys",
-        requiredPermission: "crm:settings:manage",
-      },
-      {
         label: "Settings",
         icon: SlidersHorizontal,
         href: "/crm/settings/assignment-rules",
@@ -249,6 +243,12 @@ export const CRM_NAV_GROUPS: NavGroup[] = [
             label: "Product Catalog",
             icon: Package,
             href: "/crm/settings/products",
+            requiredPermission: "crm:settings:manage",
+          },
+          {
+            label: "API Keys",
+            icon: Key,
+            href: "/crm/settings/api-keys",
             requiredPermission: "crm:settings:manage",
           },
           {

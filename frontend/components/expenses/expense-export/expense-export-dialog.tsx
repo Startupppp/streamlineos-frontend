@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { CheckCircle2, Download, Loader2, Mail } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
+import { AlertTriangle, CheckCircle2, Download, Loader2, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,116 +21,58 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { unwrapEmployees, useHrEmployees } from "@/hooks/api/hr";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { Employee } from "@/types/hr";
 import type { ExpenseFilters } from "@/types/hr/expenses";
 import {
-  ExpenseExportOptions,
-  type ExpenseExportFormat,
-} from "./expense-export-options";
-import { usePdfRenderer, type PdfData } from "./pdf-renderer";
-import { downloadCSV, downloadXLSX, type XlsxData } from "./xlsx-renderer";
-
-type ExportPayload =
-  | { format: "csv"; data: string; filename: string }
-  | { format: "xlsx"; data: XlsxData; filename: string }
-  | { format: "pdf"; data: PdfData; filename: string };
-
-type ExportResult =
-  | { success: false; error: string }
-  | ({ success: true } & ExportPayload);
+  useCreateExpenseExportJob,
+  useExpenseExportJob,
+  useDownloadExpenseExportJob,
+} from "@/hooks/api/hr/expenses";
+import { ExpenseExportOptions } from "./expense-export-options";
 
 type ExpenseReportEmailTarget = "ADMINS" | "APPROVERS" | "BOTH";
 
-async function exportExpenses(params: {
-  format: ExpenseExportFormat;
-  filters: ExpenseFilters;
-  includeHeader: boolean;
-  includeTotals: boolean;
-  title: string;
-}): Promise<ExportResult> {
-  try {
-    const payload = await apiClient.post<ExportPayload>("/hr/expenses/export", params);
-    if (payload.format === "csv")
-      return { success: true, format: "csv", data: payload.data, filename: payload.filename };
-    if (payload.format === "xlsx")
-      return { success: true, format: "xlsx", data: payload.data, filename: payload.filename };
-    return { success: true, format: "pdf", data: payload.data, filename: payload.filename };
-  } catch (error) {
-    return { success: false, error: getErrorMessage(error) };
-  }
+function isExpenseReportEmailTarget(value: string): value is ExpenseReportEmailTarget {
+  return value === "ADMINS" || value === "APPROVERS" || value === "BOTH";
 }
 
 async function emailExpenseReport(
   filters: ExpenseFilters,
-  emailTarget: ExpenseReportEmailTarget,
+  sendTo: ExpenseReportEmailTarget,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await apiClient.post("/hr/expenses/email-report", { filters, emailTarget });
+    await apiClient.post("/hr/expenses/email-report", { filters, sendTo });
     return { success: true };
   } catch (error) {
     return { success: false, error: getErrorMessage(error) };
   }
 }
 
-function isExpenseReportEmailTarget(value: string): value is ExpenseReportEmailTarget {
-  return value === "ADMINS" || value === "APPROVERS" || value === "BOTH";
-}
-
 export interface ExpenseExportDialogProps {
   filters: ExpenseFilters;
   trigger?: React.ReactNode;
-  categories?: Array<{ id: number; name: string }>;
-  paymentMethods?: string[];
 }
-
-const DEFAULT_PAYMENT_METHODS = [
-  "Cash",
-  "Bank Transfer",
-  "UPI",
-  "Credit Card",
-  "Debit Card",
-  "Cheque",
-  "Other",
-];
 
 export function ExpenseExportDialog({
   filters,
   trigger,
-  categories = [],
-  paymentMethods = DEFAULT_PAYMENT_METHODS,
 }: ExpenseExportDialogProps) {
   const [open, setOpen] = useState(false);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [format, setFormat] = useState<ExpenseExportFormat>("xlsx");
-  const [includeHeader, setIncludeHeader] = useState(true);
-  const [includeTotals, setIncludeTotals] = useState(true);
-  const [isExporting, setIsExporting] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
-  const [exportComplete, setExportComplete] = useState(false);
   const [emailTarget, setEmailTarget] = useState<ExpenseReportEmailTarget>("BOTH");
-  const [dateFrom, setDateFrom] = useState(filters.startDate || "");
-  const [dateTo, setDateTo] = useState(filters.endDate || "");
-  const [exportCategory, setExportCategory] = useState("all");
-  const [exportPayment, setExportPayment] = useState("all");
+  const [dateFrom, setDateFrom] = useState(filters.startDate ?? "");
+  const [dateTo, setDateTo] = useState(filters.endDate ?? "");
   const [exportStatus, setExportStatus] = useState(
     filters.status && filters.status !== "all" ? String(filters.status) : "all",
   );
-  const [exportUserId, setExportUserId] = useState(filters.userId || "all");
+  const [jobId, setJobId] = useState<string | null>(null);
+  const [hasTriggeredDownload, setHasTriggeredDownload] = useState(false);
 
-  useEffect(() => {
-    return () => {
-      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-    };
-  }, []);
-
-  const { data: employeesData } = useHrEmployees({ limit: 100 });
-  const employees = useMemo<Employee[]>(
-    () => unwrapEmployees(employeesData),
-    [employeesData],
-  );
+  const createJob = useCreateExpenseExportJob();
+  const { data: job } = useExpenseExportJob(jobId);
+  const downloadJob = useDownloadExpenseExportJob();
 
   const dateFieldErrors = useMemo(() => {
     const today = new Date().toISOString().slice(0, 10);
@@ -151,20 +93,70 @@ export function ExpenseExportDialog({
   }, [dateFrom, dateTo]);
 
   const dateRangeError = dateFieldErrors.from ?? dateFieldErrors.to;
-  const { downloadPDF, pdfPortal } = usePdfRenderer();
-  const exportFilters: ExpenseFilters = {
-    startDate: dateFrom || filters.startDate,
-    endDate: dateTo || filters.endDate,
-    month: filters.month,
-    categoryId: filters.categoryId,
-    category: exportCategory !== "all" ? exportCategory : filters.category,
-    status: exportStatus !== "all" ? exportStatus : filters.status,
-    userId: exportUserId !== "all" ? exportUserId : filters.userId,
-    paymentMethod: exportPayment !== "all" ? exportPayment : filters.paymentMethod,
-    minAmount: filters.minAmount,
-    maxAmount: filters.maxAmount,
-    search: filters.search,
-  };
+
+  const isProcessing =
+    createJob.isPending || job?.status === "pending" || job?.status === "running";
+  const isCompleted = job?.status === "completed" && !hasTriggeredDownload;
+  const isFailed = job?.status === "failed";
+
+  function handleReset() {
+    setJobId(null);
+    setHasTriggeredDownload(false);
+    createJob.reset();
+    downloadJob.reset();
+  }
+
+  function handleExport() {
+    if (dateRangeError) {
+      toast.error(dateRangeError);
+      return;
+    }
+    handleReset();
+    const idempotencyKey = `expense-export-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    createJob.mutate(
+      {
+        input: {
+          ...(exportStatus !== "all" ? { status: exportStatus } : {}),
+          ...(dateFrom ? { startDate: dateFrom } : {}),
+          ...(dateTo ? { endDate: dateTo } : {}),
+        },
+        idempotencyKey,
+      },
+      {
+        onSuccess: (created) => {
+          setJobId(created.id);
+        },
+        onError: (error) => {
+          toast.error(getErrorMessage(error));
+        },
+      },
+    );
+  }
+
+  function handleDownload() {
+    if (!job?.id) return;
+    setHasTriggeredDownload(true);
+    downloadJob.mutate(job.id, {
+      onSuccess: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = job.fileName ?? "expenses.csv";
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.success("Export downloaded successfully!");
+        if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+        closeTimerRef.current = setTimeout(() => {
+          setOpen(false);
+          handleReset();
+        }, 1500);
+      },
+      onError: (error) => {
+        toast.error(getErrorMessage(error));
+        setHasTriggeredDownload(false);
+      },
+    });
+  }
 
   async function handleSendEmail() {
     if (dateRangeError) {
@@ -173,11 +165,17 @@ export function ExpenseExportDialog({
     }
     setIsSendingEmail(true);
     try {
-      const result = await emailExpenseReport(exportFilters, emailTarget);
-      const targetLabel = emailTarget === "BOTH" ? "Admins & Approvers" : emailTarget;
+      const emailFilters: ExpenseFilters = {
+        startDate: dateFrom || filters.startDate,
+        endDate: dateTo || filters.endDate,
+        status: exportStatus !== "all" ? exportStatus : filters.status,
+      };
+      const result = await emailExpenseReport(emailFilters, emailTarget);
+      const targetLabel =
+        emailTarget === "BOTH" ? "Admins & Approvers" : emailTarget;
       if (result.success)
         toast.success(`Expense report emailed to ${targetLabel} successfully!`);
-      else toast.error(result.error || "Failed to send email");
+      else toast.error(result.error ?? "Failed to send email");
     } catch {
       toast.error("Failed to send email");
     } finally {
@@ -185,56 +183,16 @@ export function ExpenseExportDialog({
     }
   }
 
-  async function handleExport() {
-    if (dateRangeError) {
-      toast.error(dateRangeError);
-      return;
-    }
-    setIsExporting(true);
-    setExportComplete(false);
-    try {
-      const result = await exportExpenses({
-        format,
-        filters: exportFilters,
-        includeHeader,
-        includeTotals,
-        title: "Expense Report",
-      });
-      if (!result.success) {
-        toast.error(result.error);
-        return;
-      }
-      if (result.format === "csv") downloadCSV(result.data, result.filename);
-      else if (result.format === "xlsx") await downloadXLSX(result.data, result.filename);
-      else await downloadPDF(result.data, result.filename);
-      setExportComplete(true);
-      toast.success("Export downloaded successfully!");
-      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-      closeTimerRef.current = setTimeout(() => {
-        setOpen(false);
-        setExportComplete(false);
-      }, 1500);
-    } catch {
-      toast.error("Failed to export expenses");
-    } finally {
-      setIsExporting(false);
-    }
-  }
-
   function handleOpenChange(isOpen: boolean) {
     if (!isOpen) {
-      setFormat("xlsx");
-      setIncludeHeader(true);
-      setIncludeTotals(true);
-      setExportComplete(false);
-      setDateFrom(filters.startDate || "");
-      setDateTo(filters.endDate || "");
-      setExportCategory("all");
-      setExportPayment("all");
+      handleReset();
+      setDateFrom(filters.startDate ?? "");
+      setDateTo(filters.endDate ?? "");
       setExportStatus(
-        filters.status && filters.status !== "all" ? String(filters.status) : "all",
+        filters.status && filters.status !== "all"
+          ? String(filters.status)
+          : "all",
       );
-      setExportUserId(filters.userId || "all");
       setEmailTarget("BOTH");
     }
     setOpen(isOpen);
@@ -248,11 +206,16 @@ export function ExpenseExportDialog({
     setOpen(false);
   }
 
+  const exportLabel = isProcessing
+    ? "Processing…"
+    : isCompleted
+      ? "Download Ready"
+      : "Export CSV";
+
   return (
-    <>
-      <Sheet open={open} onOpenChange={handleOpenChange}>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
         <SheetTrigger asChild>
-          {trigger || (
+          {trigger ?? (
             <Button variant="outline" className="gap-2">
               <Download className="h-4 w-4" />
               Export
@@ -266,7 +229,7 @@ export function ExpenseExportDialog({
               Export Expenses
             </SheetTitle>
             <SheetDescription>
-              Export your filtered expenses to your preferred format.
+              Export your filtered expenses to CSV.
             </SheetDescription>
           </SheetHeader>
           <SheetBody className="px-6 py-5">
@@ -276,54 +239,66 @@ export function ExpenseExportDialog({
               dateFromError={dateFieldErrors.from}
               dateToError={dateFieldErrors.to}
               exportStatus={exportStatus}
-              exportCategory={exportCategory}
-              exportPayment={exportPayment}
-              exportUserId={exportUserId}
-              format={format}
-              includeHeader={includeHeader}
-              includeTotals={includeTotals}
-              categories={categories}
-              paymentMethods={paymentMethods}
-              employees={employees}
-              exportFilters={exportFilters}
               onDateFromChange={setDateFrom}
               onDateToChange={setDateTo}
               onStatusChange={setExportStatus}
-              onCategoryChange={setExportCategory}
-              onPaymentChange={setExportPayment}
-              onUserChange={setExportUserId}
-              onFormatChange={setFormat}
-              onIncludeHeaderChange={setIncludeHeader}
-              onIncludeTotalsChange={setIncludeTotals}
             />
+            {isFailed && (
+              <div className="mt-4 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>
+                  {job?.errorMessage ?? "Export failed. Please try again."}
+                </span>
+              </div>
+            )}
+            {job?.truncated && job.status === "completed" && (
+              <div className="mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>
+                  The export was capped at {job.rowCount?.toLocaleString()} rows.
+                  Narrow your date range or status filter to export all records.
+                </span>
+              </div>
+            )}
           </SheetBody>
           <SheetFooter className="shrink-0 flex-col gap-3 border-t px-6 py-4">
             <div className="flex justify-end gap-3">
               <Button variant="outline" onClick={handleCancel}>
                 Cancel
               </Button>
-              <Button
-                onClick={handleExport}
-                disabled={isExporting || exportComplete || isSendingEmail || !!dateRangeError}
-                className="gap-2"
-              >
-                {isExporting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Exporting...
-                  </>
-                ) : exportComplete ? (
-                  <>
-                    <CheckCircle2 className="h-4 w-4" />
-                    Done!
-                  </>
-                ) : (
-                  <>
-                    <Download className="h-4 w-4" />
-                    Export {format.toUpperCase()}
-                  </>
-                )}
-              </Button>
+              {isCompleted ? (
+                <Button onClick={handleDownload} disabled={downloadJob.isPending} className="gap-2">
+                  {downloadJob.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Downloading…
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-4 w-4" />
+                      Download CSV
+                    </>
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleExport}
+                  disabled={isProcessing || !!dateRangeError}
+                  className="gap-2"
+                >
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      {exportLabel}
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-4 w-4" />
+                      {exportLabel}
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <Select value={emailTarget} onValueChange={handleEmailTargetChange}>
@@ -340,13 +315,13 @@ export function ExpenseExportDialog({
               <Button
                 variant="outline"
                 onClick={handleSendEmail}
-                disabled={isSendingEmail || isExporting || !!dateRangeError}
+                disabled={isSendingEmail || isProcessing || !!dateRangeError}
                 className="flex-1 gap-2 border-primary/30 text-primary hover:bg-primary/5"
               >
                 {isSendingEmail ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Sending...
+                    Sending…
                   </>
                 ) : (
                   <>
@@ -358,8 +333,6 @@ export function ExpenseExportDialog({
             </div>
           </SheetFooter>
         </SheetContent>
-      </Sheet>
-      {pdfPortal}
-    </>
+    </Sheet>
   );
 }

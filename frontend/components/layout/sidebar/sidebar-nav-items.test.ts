@@ -25,7 +25,7 @@ const EMPLOYEE_PERMISSIONS = [
 ];
 
 describe("Home employee navigation", () => {
-  it("keeps HR self-service hidden without its module entitlement and permission", () => {
+  it("keeps HR self-service hidden without permission (module state is irrelevant)", () => {
     const homeRoutes = getNavGroupsForProduct("home", "MEMBER", scopesOf([]), ["build"])
       .flatMap((group) => flattenNavRoutes(group.routes));
     const knowledgeRoutes = getNavGroupsForProduct(
@@ -43,12 +43,12 @@ describe("Home employee navigation", () => {
     );
   });
 
-  it("keeps permissioned self-service in Home when its modules are enabled", () => {
+  it("shows permissioned self-service in Home regardless of module enablement", () => {
     const groups = getNavGroupsForProduct(
       "home",
       "MEMBER",
       scopesOf(EMPLOYEE_PERMISSIONS),
-      ["hr", "payroll", "build"],
+      ["build"],
     );
     const routes = groups.flatMap((group) => flattenNavRoutes(group.routes));
     const hrefs = routes.map((route) => route.href);
@@ -67,7 +67,7 @@ describe("Home employee navigation", () => {
     expect(hrefs).not.toContain("/hr/recruitment/interviews");
     expect(hrefs).not.toContain("/build/my-work");
     expect(hrefs).not.toContain("/build");
-    expect(routes.find((route) => route.href === "/me/documents")?.module).toBe("hrms");
+    expect(routes.find((route) => route.href === "/me/documents")?.module).toBeUndefined();
   });
 
   it("keeps employee self-service routes in the Home product", () => {
