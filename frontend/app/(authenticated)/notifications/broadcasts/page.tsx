@@ -53,6 +53,7 @@ import {
   useCancelBroadcast,
   useDeleteBroadcast,
 } from "@/hooks/api/notifications";
+import { useCan } from "@/hooks/api/access";
 import {
   NOTIFICATION_CATEGORIES,
   NOTIFICATION_CATEGORY_CONFIG,
@@ -73,6 +74,8 @@ export default function BroadcastsPage() {
   const [publishTarget, setPublishTarget] = useState<Broadcast | null>(null);
   const [cancelTarget, setCancelTarget] = useState<Broadcast | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Broadcast | null>(null);
+
+  const canManage = useCan("notifications:broadcasts:manage");
 
   const params = activeStatus !== "ALL" ? { status: activeStatus } : undefined;
   const { data: broadcastData, isLoading, isError, refetch } = useBroadcasts(params);
@@ -128,10 +131,12 @@ export default function BroadcastsPage() {
       title="Broadcast Center"
       subtitle="Send announcements and mass notifications to your team"
       actions={
-        <Button size="sm" onClick={handleCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          New Broadcast
-        </Button>
+        canManage ? (
+          <Button size="sm" onClick={handleCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            New Broadcast
+          </Button>
+        ) : undefined
       }
     >
       <div className="flex min-h-0 flex-1 flex-col gap-4">
@@ -176,6 +181,7 @@ export default function BroadcastsPage() {
                 key={b.id}
                 broadcast={b}
                 idx={idx}
+                canManage={canManage}
                 onPublish={setPublishTarget}
                 onCancel={setCancelTarget}
                 onEdit={handleEdit}

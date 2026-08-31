@@ -67,6 +67,7 @@ import {
   useDeleteNotificationTemplate,
   usePreviewTemplate,
 } from "@/hooks/api/notifications";
+import { useCan } from "@/hooks/api/access";
 import {
   NOTIFICATION_CATEGORIES,
   NOTIFICATION_CATEGORY_CONFIG,
@@ -100,6 +101,8 @@ export default function NotificationTemplatesPage() {
   const handleApprovalOpenChange = useCallback((open: boolean) => {
     if (!open) setApprovalTarget(null);
   }, []);
+
+  const canManage = useCan("notifications:templates:manage");
 
   const {
     data: templates,
@@ -149,10 +152,12 @@ export default function NotificationTemplatesPage() {
       title="Notification Templates"
       subtitle="Manage reusable templates for automated notifications"
       actions={
-        <Button size="sm" onClick={handleCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          New Template
-        </Button>
+        canManage ? (
+          <Button size="sm" onClick={handleCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            New Template
+          </Button>
+        ) : undefined
       }
     >
       <div className="flex flex-1 min-h-0 flex-col">
@@ -188,6 +193,7 @@ export default function NotificationTemplatesPage() {
                 key={t.id}
                 template={t}
                 idx={idx}
+                canManage={canManage}
                 onPreview={setPreviewTarget}
                 onEdit={handleEdit}
                 onDelete={handleSetDeleteTarget}

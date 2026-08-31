@@ -1,76 +1,104 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
+import React from "react";
 import { ArrowLeft } from "lucide-react";
-import {
-  EllipsisIcon,
-  MicIcon,
-  UsersIcon,
-} from "@animateicons/react/lucide";
+import { EllipsisIcon, MicIcon, UsersIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { AnimatePresence, motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import {
-  useChatChannel,
-  useChatMessages,
-  useChatPoll,
-  useMarkChannelRead,
-  useSendMessage,
-  useDeleteMessage,
-  useEditMessage,
-  useChatOnlineUsers,
-  useChatOrgUsers,
-  useToggleReaction,
-  useChatPins,
-  usePinMessage,
-  useUnpinMessage,
-  useSavedMessages,
-  useSaveMessage,
-  useUnsaveMessage,
-} from "@/hooks/api/chat";
-import { queryKeys } from "@/lib/query-keys";
-import { apiClient } from "@/lib/api-client";
-import { orgScopedStorageKey, useOrgStorageScope } from "@/lib/org-scoped-storage";
-import { useChatRealtime } from "@/hooks/api/chat-realtime";
-import {
-  useStartHuddle,
-  useJoinHuddle,
-  useActiveHuddle,
-} from "@/hooks/api/chat-huddles";
-import { useHuddleRealtime } from "./huddle-realtime";
-import { getInitials, getDateLabel, buildChatUserMap, resolveChatUserName } from "./chat-helpers";
-import type { Message, TicketEntityRef, MessageMetadata } from "./chat-types";
-import type { TicketSearchResult } from "@/hooks/api/build";
-import { MessagePanelWorkspace } from "./message-panel-workspace";
-import { useChatScroll } from "./use-chat-scroll";
-import { ChannelAvatar } from "./channel-avatar";
-import { ThreadPanel } from "./thread-panel";
-import { ChannelSidebarCollapseButton } from "./channel-sidebar-collapse-button";
-import { TruncatedText } from "@/components/ui/truncated-text";
-import { AiActionsMenu, type AiAction } from "@/components/ai";
-import { useChatSummarize } from "@/hooks/api/chat-summarize";
-import { useCan } from "@/hooks/api/access";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useIsChatMobile } from "./use-chat-mobile";
-import { BookmarkButton, PaperclipButton } from "./message-panel-actions";
+import { TruncatedText } from "@/components/ui/truncated-text";
+import { AiActionsMenu, type AiAction } from "@/components/ai";
+import { ChannelAvatar } from "./channel-avatar";
+import { ChannelSidebarCollapseButton } from "./channel-sidebar-collapse-button";
+import { ThreadPanel } from "./thread-panel";
+import { MessagePanelWorkspace } from "./message-panel-workspace";
 import { MessagePanelSidePanels } from "./message-panel-side-panels";
-import type { ForwardableMessage } from "./forward-message-dialog";
-import { useChatMentions } from "./use-chat-mentions";
-import { useChatTypingText } from "./use-chat-typing-text";
-import { useMessageComposer } from "./use-message-composer";
+import { BookmarkButton, PaperclipButton } from "./message-panel-actions";
+import { getInitials } from "./chat-helpers";
+import type { Channel, ChannelMember, Huddle } from "@/types/chat";
 
-export function MessagePanelView(props: any) {
-  const { onBack, displayName, activeHuddle, isInHuddle, handleHuddle, startHuddle, joinHuddle, canUseAi, summarizeAction, channelId, handleToggleFiles, handleToggleSaved, onToggleInfo, showInfoPanel, isSidebarCollapsed, onToggleSidebar, channel, otherMember, isOtherOnline, memberCount, showFilesPanel, showSavedPanel, isOnline, groupedMessages, messages, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage, currentUserId, editingMessage, editInput, replyTo, pinnedMessageIds, savedMessageIds, replyCountMap, firstUnreadMessageId, setEditInput, setEditingMessage, setReplyTo, inputRef, deleteMessage, handleEdit, handleOpenThread, handleReact, handlePin, handleUnpin, handleSave, handleUnsaveMsg, handleForward, resolveUserName, showScrollBtn, scrollToBottom, messagesEndRef, scrollContainerRef, handleScroll, messageInput, setMessageInput, pendingAttachments, setPendingAttachments, uploading, fileInputRef, handleFileSelect, showEmojiPicker, setShowEmojiPicker, emojiRef, insertEmoji, showMentions, setShowMentions, mentionQuery, mentionIndex, setMentionIndex, filteredMentions, insertMention, showTicketPicker, ticketQuery, ticketSelectedIndex, insertTicket, typingText, sendMessage, handleSend, handleKeyDown, handleInputChange, handlePastedFiles, threadMessageId, handleCloseThread, isChatMobile, setShowFilesPanel, setShowSavedPanel, forwardMessage, setForwardMessage } = props;
+interface PanelHeaderProps {
+  onBack: () => void;
+  displayName: string;
+  channel: Channel | undefined;
+  otherMember:
+    | { id: string; name?: string | null; image?: string | null }
+    | null
+    | undefined;
+  isOtherOnline: boolean;
+  memberCount: number;
+  activeHuddle: Huddle | null | undefined;
+  isInHuddle: boolean;
+  onHuddle: () => void;
+  huddleStartPending: boolean;
+  huddleJoinPending: boolean;
+  canUseAi: boolean;
+  summarizeAction: AiAction;
+  channelId: number;
+  onToggleFiles: () => void;
+  onToggleSaved: () => void;
+  showFilesPanel: boolean;
+  showSavedPanel: boolean;
+  onToggleInfo: () => void;
+  showInfoPanel: boolean;
+  isSidebarCollapsed?: boolean;
+  onToggleSidebar?: () => void;
+}
+
+interface ThreadProps {
+  messageId: number | null;
+  channelId: number;
+  currentUserId: string;
+  onClose: () => void;
+}
+
+interface MessagePanelViewProps {
+  header: PanelHeaderProps;
+  workspace: React.ComponentProps<typeof MessagePanelWorkspace>;
+  thread: ThreadProps;
+  sidePanels: React.ComponentProps<typeof MessagePanelSidePanels>;
+  isOnline: boolean;
+}
+
+export function MessagePanelView({
+  header,
+  workspace,
+  thread,
+  sidePanels,
+  isOnline,
+}: MessagePanelViewProps) {
+  const {
+    onBack,
+    displayName,
+    channel,
+    otherMember,
+    isOtherOnline,
+    memberCount,
+    activeHuddle,
+    isInHuddle,
+    onHuddle,
+    huddleStartPending,
+    huddleJoinPending,
+    canUseAi,
+    summarizeAction,
+    channelId,
+    onToggleFiles,
+    onToggleSaved,
+    showFilesPanel,
+    showSavedPanel,
+    onToggleInfo,
+    showInfoPanel,
+    isSidebarCollapsed,
+    onToggleSidebar,
+  } = header;
+
   return (
     <div className="flex flex-1 min-w-0 overflow-hidden">
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
@@ -84,7 +112,10 @@ export function MessagePanelView(props: any) {
             <ArrowLeft className="size-4" />
           </button>
           <div className="min-w-0 flex-1">
-            <TruncatedText text={displayName} className="text-sm font-semibold" />
+            <TruncatedText
+              text={displayName}
+              className="text-sm font-semibold"
+            />
           </div>
           {!isInHuddle && (
             <AnimatedIconButton
@@ -94,10 +125,11 @@ export function MessagePanelView(props: any) {
               size="icon"
               className={cn(
                 "size-8 shrink-0",
-                activeHuddle && "text-status-success-ink hover:text-status-success-ink",
+                activeHuddle &&
+                  "text-status-success-ink hover:text-status-success-ink",
               )}
-              onClick={handleHuddle}
-              disabled={startHuddle.isPending || joinHuddle.isPending}
+              onClick={onHuddle}
+              disabled={huddleStartPending || huddleJoinPending}
               aria-label={activeHuddle ? "Join huddle" : "Start huddle"}
             />
           )}
@@ -122,10 +154,10 @@ export function MessagePanelView(props: any) {
               />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onSelect={handleToggleFiles}>
+              <DropdownMenuItem onSelect={onToggleFiles}>
                 Shared files
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={handleToggleSaved}>
+              <DropdownMenuItem onSelect={onToggleSaved}>
                 Saved messages
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={onToggleInfo}>
@@ -134,6 +166,7 @@ export function MessagePanelView(props: any) {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+
         <div className="hidden h-[56px] shrink-0 items-center gap-3 border-b border-border/40 bg-card/80 px-4 backdrop-blur-sm sm:flex sticky top-0 z-20">
           {onToggleSidebar && (
             <ChannelSidebarCollapseButton
@@ -166,11 +199,16 @@ export function MessagePanelView(props: any) {
             </div>
 
             <div className="min-w-0">
-              <TruncatedText text={displayName} className="text-sm font-bold leading-tight" />
+              <TruncatedText
+                text={displayName}
+                className="text-sm font-bold leading-tight"
+              />
               <p className="text-dense text-muted-foreground leading-tight">
                 {channel?.type === "DIRECT" ? (
                   isOtherOnline ? (
-                    <span className="text-status-success-ink font-medium">Online</span>
+                    <span className="text-status-success-ink font-medium">
+                      Online
+                    </span>
                   ) : (
                     "Offline"
                   )
@@ -184,7 +222,7 @@ export function MessagePanelView(props: any) {
           <div className="flex items-center gap-1">
             {channel?.type === "GROUP" && (
               <div className="hidden sm:flex -space-x-1.5 mr-2">
-                {channel.members?.slice(0, 3).map((m: any) => (
+                {channel.members?.slice(0, 3).map((m: ChannelMember) => (
                   <Avatar
                     key={m.user?.id}
                     className="h-6 w-6 border-2 border-background"
@@ -215,8 +253,8 @@ export function MessagePanelView(props: any) {
                     ? "text-status-success-ink hover:text-status-success-ink hover:bg-status-success-surface"
                     : "text-muted-foreground hover:text-foreground",
                 )}
-                onClick={handleHuddle}
-                disabled={startHuddle.isPending || joinHuddle.isPending}
+                onClick={onHuddle}
+                disabled={huddleStartPending || huddleJoinPending}
                 aria-label={activeHuddle ? "Join huddle" : "Start huddle"}
               >
                 {activeHuddle ? (
@@ -234,7 +272,7 @@ export function MessagePanelView(props: any) {
               />
             )}
             <PaperclipButton
-              onClick={handleToggleFiles}
+              onClick={onToggleFiles}
               className={cn(
                 "h-8 w-8 rounded-lg flex items-center justify-center hover:bg-muted/60 transition-colors",
                 showFilesPanel
@@ -246,7 +284,7 @@ export function MessagePanelView(props: any) {
             />
             <BookmarkButton
               active={showSavedPanel}
-              onClick={handleToggleSaved}
+              onClick={onToggleSaved}
               className={cn(
                 "h-8 w-8 rounded-lg flex items-center justify-center hover:bg-muted/60 transition-colors",
                 showSavedPanel
@@ -276,35 +314,11 @@ export function MessagePanelView(props: any) {
             You&apos;re offline — messages will be sent when you reconnect
           </div>
         )}
-        <MessagePanelWorkspace
-          messageList={{
-            groupedMessages, messages, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage,
-            currentUserId, channelId, displayName, channelType: channel?.type, editingMessage, editInput,
-            pinnedMessageIds, savedMessageIds, replyCountMap, firstUnreadMessageId,
-            onEditInputChange: setEditInput,
-            onStartEdit: (msg) => { setEditingMessage(msg); setEditInput(msg.content ?? ""); },
-            onCancelEdit: () => { setEditingMessage(null); setEditInput(""); }, onSaveEdit: handleEdit,
-            onReply: (msg) => { setReplyTo(msg); inputRef.current?.focus(); }, onOpenThread: handleOpenThread,
-            onDelete: (messageId) => deleteMessage.mutate({ channelId, messageId }), onReact: handleReact,
-            onPin: handlePin, onUnpin: handleUnpin, onSave: handleSave, onUnsaveMsg: handleUnsaveMsg,
-            onForward: handleForward, resolveUserName, showScrollBtn, scrollToBottom: () => scrollToBottom("smooth"),
-            messagesEndRef, scrollContainerRef, onScroll: handleScroll,
-          }}
-          messageInput={{
-            channelId, displayName, channelType: channel?.type, messageInput, setMessageInput, inputRef,
-            fileInputRef, replyTo, setReplyTo, pendingAttachments, setPendingAttachments, uploading,
-            onFileSelect: handleFileSelect, showEmojiPicker, setShowEmojiPicker, emojiRef, insertEmoji,
-            showMentions, setShowMentions, mentionQuery, mentionIndex, setMentionIndex, filteredMentions,
-            insertMention, showTicketPicker, ticketQuery, ticketSelectedIndex, onTicketSelect: insertTicket,
-            typingText, sendMessage, onSend: handleSend, onKeyDown: handleKeyDown, onInputChange: handleInputChange,
-            onFilesSelected: handlePastedFiles,
-          }}
-          huddle={activeHuddle && isInHuddle ? { huddle: activeHuddle, channelId, currentUserId } : undefined}
-        />
+        <MessagePanelWorkspace {...workspace} />
       </div>
 
       <AnimatePresence>
-        {threadMessageId !== null && (
+        {thread.messageId !== null && (
           <motion.div
             initial={{ width: 0, opacity: 0 }}
             animate={{ width: 320, opacity: 1 }}
@@ -313,25 +327,16 @@ export function MessagePanelView(props: any) {
             className="hidden lg:flex flex-col overflow-hidden shrink-0"
           >
             <ThreadPanel
-              channelId={channelId}
-              parentMessageId={threadMessageId}
-              currentUserId={currentUserId}
-              onClose={handleCloseThread}
+              channelId={thread.channelId}
+              parentMessageId={thread.messageId}
+              currentUserId={thread.currentUserId}
+              onClose={thread.onClose}
             />
           </motion.div>
         )}
       </AnimatePresence>
 
-      <MessagePanelSidePanels
-        channelId={channelId}
-        isChatMobile={isChatMobile}
-        showSavedPanel={showSavedPanel}
-        setShowSavedPanel={setShowSavedPanel}
-        showFilesPanel={showFilesPanel}
-        setShowFilesPanel={setShowFilesPanel}
-        forwardMessage={forwardMessage}
-        setForwardMessage={setForwardMessage}
-      />
+      <MessagePanelSidePanels {...sidePanels} />
     </div>
   );
 }

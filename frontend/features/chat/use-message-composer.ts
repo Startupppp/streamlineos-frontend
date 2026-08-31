@@ -5,8 +5,9 @@ import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { Message, MessageMetadata, TicketEntityRef } from "./chat-types";
 import type { TicketSearchResult } from "@/hooks/api/build";
+import type { AttachmentInput, EditMessageInput, SendMessageInput } from "@/types/chat";
 
-type Attachment = { fileName: string; fileUrl: string; fileKey: string; fileSize: number; mimeType: string };
+type Attachment = AttachmentInput;
 type QueuedMessage = { content: string; replyToId?: number; metadata?: MessageMetadata; attachments?: Attachment[] };
 
 export function useMessageComposer({
@@ -14,8 +15,8 @@ export function useMessageComposer({
   publishTyping, filteredMentions,
 }: {
   channelId: number; draftKey: string; isOnline: boolean;
-  sendMessage: { mutateAsync: (input: any) => Promise<unknown> };
-  editMessage: { mutateAsync: (input: any) => Promise<unknown> };
+  sendMessage: { mutateAsync: (input: SendMessageInput) => Promise<unknown> };
+  editMessage: { mutateAsync: (input: EditMessageInput & { channelId: number }) => Promise<unknown> };
   markRead: { mutate: (input: { channelId: number }) => void };
   scrollToBottom: (behavior?: ScrollBehavior) => void; publishTyping: () => void;
   filteredMentions: Array<{ id: string; name?: string | null }>;

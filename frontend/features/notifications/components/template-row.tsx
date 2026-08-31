@@ -1,96 +1,15 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { Plus } from "lucide-react";
-import { motion, useReducedMotion } from "framer-motion";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
-import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
-import { Badge } from "@/components/ui/badge";
+import { useCallback } from "react";
 import { BadgeCheck } from "lucide-react";
-import { TemplateApprovalDialog } from "@/features/notifications/components/template-approval-dialog";
-import { EmptyState } from "@/components/ui/empty-state";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetBody,
-  SheetFooter,
-} from "@/components/ui/sheet";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState } from "@/components/shared/error-state";
+import { motion, useReducedMotion } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { EyeIcon, UserPenIcon, Trash2Icon } from "@animateicons/react/lucide";
-import {
-  useNotificationTemplates,
-  useCreateNotificationTemplate,
-  useUpdateNotificationTemplate,
-  useDeleteNotificationTemplate,
-  usePreviewTemplate,
-} from "@/hooks/api/notifications";
-import {
-  NOTIFICATION_CATEGORIES,
-  NOTIFICATION_CATEGORY_CONFIG,
-} from "@/features/notifications/notification-types";
-import {
-  templateSchema,
-  type TemplateFormValues,
-} from "@/features/notifications/template-schema";
-import type {
-  NotificationTemplate,
-  NotificationChannel,
-} from "@/types/notifications";
-
-const NO_CATEGORY = "none";
-
-const CHANNELS: Array<{ value: NotificationChannel; label: string }> = [
-  { value: "IN_APP", label: "In-App" },
-  { value: "EMAIL", label: "Email" },
-  { value: "PUSH", label: "Push" },
-  { value: "SMS", label: "SMS" },
-  { value: "WHATSAPP", label: "WhatsApp" },
-  { value: "WEBHOOK", label: "Webhook" },
-];
-
+import { NOTIFICATION_CATEGORY_CONFIG } from "@/features/notifications/notification-types";
+import type { NotificationTemplate } from "@/types/notifications";
 
 function requiresApproval(template: NotificationTemplate): boolean {
   return template.channel === "WHATSAPP" || template.channel === "SMS";
@@ -103,6 +22,7 @@ export function TemplateRow({
   onEdit,
   onDelete,
   onApproval,
+  canManage = false,
 }: {
   template: NotificationTemplate;
   idx: number;
@@ -110,6 +30,7 @@ export function TemplateRow({
   onEdit: (t: NotificationTemplate) => void;
   onDelete: (t: NotificationTemplate) => void;
   onApproval: (t: NotificationTemplate) => void;
+  canManage?: boolean;
 }) {
   const shouldReduceMotion = useReducedMotion();
   const previewAnim = useAnimatedIcon();
@@ -173,8 +94,6 @@ export function TemplateRow({
           >
             {template.isActive ? "Active" : "Inactive"}
           </Badge>
-          {/* COMP-004/005: WhatsApp and SMS refuse an unapproved template, so a template
-              that looks Active can still send nothing. Say so on the card. */}
           {requiresApproval(template) &&
             template.approvalStatus !== "APPROVED" && (
               <Badge
@@ -196,7 +115,7 @@ export function TemplateRow({
           </p>
         )}
         <p className="text-dense text-muted-foreground/50 mt-0.5">
-          v{template.version} Â· {template.locale}
+          v{template.version} · {template.locale}
         </p>
       </div>
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
@@ -214,21 +133,23 @@ export function TemplateRow({
             className="text-muted-foreground"
           />
         </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6"
-          aria-label="Edit template"
-          onClick={handleEditClick}
-          {...editAnim.hoverHandlers}
-        >
-          <UserPenIcon
-            ref={editAnim.iconRef}
-            size={12}
-            className="text-muted-foreground"
-          />
-        </Button>
-        {requiresApproval(template) && (
+        {canManage && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            aria-label="Edit template"
+            onClick={handleEditClick}
+            {...editAnim.hoverHandlers}
+          >
+            <UserPenIcon
+              ref={editAnim.iconRef}
+              size={12}
+              className="text-muted-foreground"
+            />
+          </Button>
+        )}
+        {canManage && requiresApproval(template) && (
           <Button
             variant="ghost"
             size="icon"
@@ -239,20 +160,22 @@ export function TemplateRow({
             <BadgeCheck size={12} className="text-muted-foreground" />
           </Button>
         )}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6 hover:text-destructive"
-          aria-label="Delete template"
-          onClick={handleDeleteClick}
-          {...deleteAnim.hoverHandlers}
-        >
-          <Trash2Icon
-            ref={deleteAnim.iconRef}
-            size={12}
-            className="text-muted-foreground"
-          />
-        </Button>
+        {canManage && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 hover:text-destructive"
+            aria-label="Delete template"
+            onClick={handleDeleteClick}
+            {...deleteAnim.hoverHandlers}
+          >
+            <Trash2Icon
+              ref={deleteAnim.iconRef}
+              size={12}
+              className="text-muted-foreground"
+            />
+          </Button>
+        )}
       </div>
     </motion.div>
   );

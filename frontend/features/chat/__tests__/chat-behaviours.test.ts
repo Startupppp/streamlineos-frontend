@@ -230,3 +230,40 @@ describe("ITEM C — reconnect behavior", () => {
     expect(shouldRefetch).toBe(false);
   });
 });
+
+describe("ITEM C — channel/thread access suppression", () => {
+  function isQueryEnabled(canRead: boolean, channelId: number): boolean {
+    return canRead && channelId > 0;
+  }
+
+  it("query is NOT enabled when canRead is false", () => {
+    expect(isQueryEnabled(false, 42)).toBe(false);
+  });
+
+  it("query is NOT enabled when channelId is 0", () => {
+    expect(isQueryEnabled(true, 0)).toBe(false);
+  });
+
+  it("query is NOT enabled when channelId is negative", () => {
+    expect(isQueryEnabled(true, -1)).toBe(false);
+  });
+
+  it("query IS enabled only when canRead is true AND channelId is positive", () => {
+    expect(isQueryEnabled(true, 1)).toBe(true);
+    expect(isQueryEnabled(true, 42)).toBe(true);
+  });
+
+  it("covers all gate combinations exhaustively", () => {
+    const cases: Array<[boolean, number, boolean]> = [
+      [false, 0, false],
+      [false, 42, false],
+      [true, 0, false],
+      [true, -1, false],
+      [true, 1, true],
+      [true, 99, true],
+    ];
+    for (const [canRead, channelId, expected] of cases) {
+      expect(isQueryEnabled(canRead, channelId)).toBe(expected);
+    }
+  });
+});

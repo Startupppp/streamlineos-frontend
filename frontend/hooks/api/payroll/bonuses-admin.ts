@@ -1,9 +1,10 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type BonusType =
   | "PERFORMANCE"
@@ -67,7 +68,7 @@ interface CreateBonusBody {
 
 export function useCreateBonus() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:bonuses:manage", {
     mutationKey: ["payroll", "bonuses", "create"],
     mutationFn: (body: CreateBonusBody) =>
       apiClient.post<Bonus>("/hr/bonuses", body),
@@ -87,7 +88,7 @@ export function useBonuses() {
 
 export function useUpdateBonus() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:bonuses:manage", {
     mutationKey: ["payroll", "bonuses", "update"],
     mutationFn: ({ id, status }: { id: number; status: "APPROVED" | "REJECTED" | "PAID" }) =>
       apiClient.patch<Bonus>(`/hr/bonuses/${id}`, { status }),
@@ -114,7 +115,7 @@ export function useIncentives(params?: { status?: string; page?: number; limit?:
 
 export function useApproveIncentive() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:payroll:approve", {
     mutationKey: ["payroll", "incentives", "approve"],
     mutationFn: ({ id, approvedAmount, notes }: { id: number; approvedAmount: string; notes?: string }) =>
       apiClient.patch<{ success: boolean }>(`/hr/incentives/${id}/approve`, { approvedAmount, notes }),
@@ -124,7 +125,7 @@ export function useApproveIncentive() {
 
 export function useRejectIncentive() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:payroll:approve", {
     mutationKey: ["payroll", "incentives", "reject"],
     mutationFn: (id: number) =>
       apiClient.patch<{ success: boolean }>(`/hr/incentives/${id}/reject`, {}),

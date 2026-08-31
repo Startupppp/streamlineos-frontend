@@ -1,9 +1,10 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { EmployeeSalaryProfile, EmployeeProfileDetail } from "@/types/payroll/runs";
 
 interface PaginatedProfiles {
@@ -72,7 +73,7 @@ export function useEmployeeProfileHistory(employeeUserId: string) {
 
 export function useCreateWorkerProfile(workerId: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payroll:salaries:update", {
     mutationKey: ["payroll", "workers", workerId, "create-profile"],
     mutationFn: (body: CreateProfileBody) =>
       apiClient.post<{ profileId: number }>(`/payroll/workers/${workerId}/profiles`, body),
@@ -85,7 +86,7 @@ export function useCreateWorkerProfile(workerId: string) {
 
 export function usePatchWorkerProfile(workerId: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payroll:salaries:update", {
     mutationKey: ["payroll", "workers", workerId, "patch-profile"],
     mutationFn: ({ profileId, body }: { profileId: number; body: Partial<CreateProfileBody> }) =>
       apiClient.patch<{ ok: boolean }>(
@@ -123,7 +124,7 @@ export function useWorkerProfileHistory(workerId: string) {
 
 export function useCreateProfile(employeeUserId: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payroll:salaries:update", {
     mutationKey: ["payroll", "employees", employeeUserId, "create-profile"],
     mutationFn: (body: CreateProfileBody) =>
       apiClient.post<{ id: number }>(`/payroll/employees/${employeeUserId}/profiles`, body),
@@ -137,7 +138,7 @@ export function useCreateProfile(employeeUserId: string) {
 
 export function usePatchProfile(employeeUserId: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payroll:salaries:update", {
     mutationKey: ["payroll", "employees", employeeUserId, "patch-profile"],
     mutationFn: ({ profileId, body }: { profileId: number; body: Partial<CreateProfileBody> }) =>
       apiClient.patch<{ ok: boolean }>(
