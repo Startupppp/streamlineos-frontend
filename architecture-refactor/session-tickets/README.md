@@ -4,10 +4,12 @@ Ten independent work packages. Each is one Claude session. Run them in **any ord
 
 ## How to run one
 
+Completed ticket files are intentionally removed after their evidence is retained in `reports/` and the PRD. Only the active ticket files listed below should be launched.
+
 Open a session in `D:/projects/personal/Streamlineos` and say:
 
 > Read `architecture-refactor/session-tickets/COMMON.md`, then execute
-> `architecture-refactor/session-tickets/S03-payroll-time-expenses.md` end to end.
+> `architecture-refactor/session-tickets/S06-communications.md` end to end.
 > Verify every premise against current source before editing, run every validation
 > command, and write the report the ticket asks for.
 
@@ -39,15 +41,15 @@ Shared files that could collide, and the rule for each:
 | # | Ticket | Scope |
 |---|---|---|
 | S01 | `S01-identity-org-rbac.md` | Auth, sessions, MFA, users, organization, access, RBAC, module-access, settings, ownership, delegations. **Owns both permission catalogs.** |
-| S02 | `S02-hrms.md` | `hr/**`, directory, careers, offer-fulfillment, e-sign + HR frontend |
-| S03 | `S03-payroll-time-expenses.md` | Payroll, timesheets, expenses + their frontend |
-| S04 | `S04-build-workflows.md` | Build/PM, issues, tasks, goals, reports, workflows, automation + their frontend |
-| S05 | `S05-billing-accounting-finance.md` | Billing, accounting, finance, invoices, quotes + their frontend |
+| S02 | **Archived — complete** | HR, directory, careers, offer-fulfillment, e-sign + HR frontend; evidence in `reports/S02-final-report.md` |
+| S03 | **Archived — complete** | Payroll, timesheets, expenses + their frontend; evidence retained in reports and PRD |
+| S04 | **Archived — complete** | Build/PM, issues, tasks, goals, reports, workflows, automation + their frontend; evidence retained in reports |
+| S05 | **Archived — complete** | Billing, accounting, finance, invoices, quotes + their frontend; evidence in `reports/S05-report.md` |
 | S06 | `S06-communications.md` | Chat, calendar, notifications, mail, email, push, webhooks, realtime + their frontend |
 | S07 | `S07-knowledge-search-ai.md` | KB, wiki, search, AI, support, blog, surveys, CSAT, feedbucket + their frontend |
 | S08 | `S08-home-platform-ops.md` | Home/dashboard, cron, audit-log, storage, ingress, public, portal, `common/**`, OpenAPI coverage, cache proof, operator runbooks |
-| S09 | `S09-frontend-platform.md` | All `frontend/app/**` routes and layouts, route-access registry, navigation, shared UI, formatters, a11y, responsive |
-| S10 | `S10-excluded-domains-and-final-gates.md` | CRM + Inventory isolation tests (tests only), dead code, final whole-repo verification matrix |
+| S09 | **Archived — complete** | All `frontend/app/**` routes and layouts, route-access registry, navigation, shared UI, formatters, a11y, responsive |
+| S10 | **Archived — complete** | CRM + Inventory isolation tests (tests only), dead code, final whole-repo verification matrix; evidence in `reports/S10-final-report.md` |
 
 ## Progress so far (do not redo)
 

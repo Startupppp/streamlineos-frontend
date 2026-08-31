@@ -92,7 +92,7 @@ export function useUnifiedInbox(
       if (params?.unreadOnly) query["unreadOnly"] = "true";
       return apiClient.get<UnifiedInboxResponse>("/me/inbox/unified", query);
     },
-    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    getNextPageParam: (lastPage) => lastPage.hasMore ? (lastPage.nextCursor ?? undefined) : undefined,
     staleTime: 30_000,
     enabled: !!orgId && (options?.enabled ?? true),
   });
