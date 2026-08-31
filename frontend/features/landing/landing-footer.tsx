@@ -15,7 +15,7 @@ const footerCols = [
       { label: "Features", href: "#features" },
       { label: "Pricing", href: "#pricing" },
       { label: "FAQ", href: "#faq" },
-      { label: "Join the waitlist", href: "/waitlist" },
+      { label: "Sign in", href: "/signin" },
     ],
   },
   {
