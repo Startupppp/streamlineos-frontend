@@ -37,15 +37,15 @@ Legend: `[x]` verified done · `[~]` lane running · `[ ]` not started · `[!]` 
 
 | # | Item | State | Evidence |
 |---|---|---|---|
-| 24 | Independent production cells | `[x]` code / `[!]` infra | Schema-parity compares `drizzle.__drizzle_migrations` and exits 1 on a zero-migration cell. Six resource accounts stay operator |
+| 24 | Independent production cells | `[x]` code / `[!]` infra | Parity script (`compare-cell-schema.mjs`) verified live against `cell2`: exit 1 on SCHEMAS DIFFER (2182 differences, cell 375 behind journal of 457), exit 2 on missing DATABASE_URL, exit 0 on self-test. Migration comparison now uses journal-derived sha256 hashes — 31 control-plane orphans and 10 tag-name entries from drizzle-kit are suppressed; a correctly bootstrapped fresh cell reports 0 false alarms. Same-count hash-drift is detected (hash set comparison, not count). Six resource accounts documented in `runbooks/RB-08-cell-resource-accounts.md` with step-by-step provisioning instructions and per-step verification commands. |
 | 25 | Physical read-replica validation | `[!]` | Scripts self-test green; `DB_REPLICA_URL` unset, no Neon replica provisioned |
 | 26 | PITR restore drill | `[x]` | Live drill ran; watermark and 960 RLS policies matched, before-marker present, after-marker absent. Branch deleted |
 | 27 | Production-shaped load / 40% headroom | `[!]` | Guard asserts the floor and its self-test proves a 39% case fails; needs a colocated run |
-| 28 | Per-cell cost measurement | `[x]` AI / `[!]` rest | AI spend per org verified live. DB time, Redis and egress not instrumentable in-app |
+| 28 | Per-cell cost measurement | `[x]` AI + DB + cache / `[!]` egress | "Not instrumentable in-app" was wrong for two of the three. `db.query.execute` and `cache.roundtrip` spans already carry `org.id`, so `cell-cost/span-log-reader.mjs` aggregates both per org beside AI spend. `pg_stat_statements` genuinely cannot attribute per org (it keys on `queryid`, not the GUC) and `pg_stat_database` is whole-database. Egress is measured at the CDN, not the process — external, with a runbook |
 | 29 | Live alert delivery + acknowledgement | `[x]` delivery / `[!]` ack | 11 probes and the dispatcher self-test green. `cell-recovery` had no probe at all, so it showed green and could never fire; it now exits **2** with a named prerequisite when drill results are absent, and discriminates recent from stale recovery. Acknowledgement still needs `ALERT_WEBHOOK_URL` and a human nonce |
 | 30 | Operator-access approval | `[x]` | 0747 applied. Grants insert as pending; `assertGrant` carries `status = 'active'`. DB CHECK `approver_id != granted_by` convalidated |
 | 31 | Export / erasure / legal-hold drills | `[x]` | Erasure enumerates FK tables from `pg_constraint` at runtime and dry-runs in a rolled-back tx. The retention sweep now exists: per-org via `forEachOrg` in its own transaction, batched, legal-hold subjects excluded in the SQL predicate rather than per row, bite-proven by removing that guard. Payroll and document classes are skipped with a warning rather than half-purged |
-| 32 | Final independent audit of every PRD row | `[~]` | Two of four slices in; A20 and A22 still running |
+| 32 | Final independent audit of every PRD row | `[x]` slices / `[~]` reconciliation | All four slices delivered (§1–9, §10–14, §15–21, §22–end). Their aggregate is NOT trustworthy as written: several "STILL PENDING" rows were inferred from unchecked PRD checkboxes rather than from source, and three headline claims were disproven on inspection — see below |
 
 ## Operator-blocked right now
 
@@ -74,8 +74,39 @@ Also recorded, not chased: `drizzle.__drizzle_migrations` holds 484 rows against
 journal entries — 21 applied rows whose journal entry was later removed, and 8 duplicate
 timestamps. Every journal entry **is** applied (0 unapplied), and each of this session's
 migrations applied exactly once, so schema state is sound; the residue is historical.
+`compare-cell-schema.mjs` now suppresses exactly this residue so a fresh cell does not
+report 27 false differences against it.
 
-## Open findings this session (each reproduced here)
+**Also still yours, and not a code change:** §8's platform-admin clauses. Migration
+`0369_drop_platform_admin.sql` deliberately removed `users.is_platform_admin`, stating the
+platform owner moves to a separate application. No `/owner` route exists. The rule asks
+this app to branch on an identity it cannot observe, toward a route in another application.
+Diff-ready replacement wording is in `final-refactor/issues/platform-admin-gap.md`; the
+org-owner half is implemented and bite-tested and should stay.
+
+## Second round — what verification caught (each reproduced here)
+
+- **Boot was broken, behind five green gates.** Three e-sign controllers had `import { BodylessAction } ...` injected BETWEEN `import {` and its member list — a syntax error, so the app could not compile or boot. At that moment the bodyless gate passed, the full 1,378-suite run passed, madge passed, the frontend suite passed. Only `openapi:generate`, which calls `NestFactory`, caught it. Second time in this program. A fourth file (`sign-envelopes.controller.ts`) had the same corruption. Tree-wide scan now reports zero.
+- **89 composite `ON DELETE SET NULL` foreign keys across 63 tables would fail 23502.** The same defect class caught earlier on 0763–0767 was already true of 89 more — `tickets`, `leave_requests`, `expenses`, `kb_pages`, every CRM `*_party_id`. A bare composite SET NULL nulls every column in the key including `org_id` (NOT NULL). 0770 is catalog-driven: it reads `pg_constraint`, computes each key's nullable subset, and rebuilds with `ON DELETE SET NULL (<cols>)`. Verified 0 remaining, 98 with column lists, all convalidated. Bite-proven with a rolled-back probe — bare form fails 23502, column-list form succeeds with `org_id` intact. The 50 remaining no-column-list FKs are harmless (all key columns nullable); 48 are duplicate copies of one `notification_audit_logs` constraint, which is its own inefficiency.
+- **The drift check that should have caught those never selected `confdelsetcols`,** so all 89 reported PASS. Fixed, and multi-column `keyedBy` entries now match instead of silently skipping.
+- **16 tenant tables had no RLS at all** — including `operator_access_grants` and `operator_access_log`, the two-person operator-access approval tables behind row 30. A tenant table with no policy is readable org-wide. 0768 enables RLS and `tenant_isolation` on all 16 and raises if any target is still uncovered. Now **817/817**, verified in `pg_catalog`.
+- **A schema split left two services importing symbols that had moved.** `apiKeys` and `userApiTokens` moved to `auth-session-security.ts`; the barrel was updated but two services import the file directly, so both resolved to `undefined` and every personal-API-token query would throw at request time. Invisible to madge, to the DI gate, and to boot (transpile-only does not typecheck value imports).
+- **An extracted service silently un-tested the SSRF guard.** `AutomationWebhookService` added a 6th constructor parameter at index 3; the SSRF spec still passed five positional arguments, shifting every dependency. Because `deliverWebhook` moved with the service, the guard had no test at all. The guard itself is intact and still calls the shared `checkWebhookUrl` rather than a second copy — only its coverage had lapsed.
+- **`crm-nl-search` called `eq()` without importing it** — a `ReferenceError` on any `assignedToName` filter. `openapi:generate` is transpile-only, so the boot proof cannot see a missing value import.
+- **Contact notes were non-functional end to end while telling the user they saved.** The editor toasted "Notes saved" and discarded the value: `updateSchema` had no `notes` so Zod stripped it, the service never selected it so reads returned undefined, and `PARTY_FIELD_MIRROR.notes` had no `CONTACT` cell. Storage existed all along on `business_parties.notes`. A lane initially "fixed" this by deleting `notes` from the frontend type, which would have made the loss permanent. Wired through the mirror, projection and both schemas; 0771 adds the mirror column. **CSV import still silently discards `source` for the same reason** — recorded, not fixed.
+- **`check:tenant-isolation` was failing: 28 tenant-owned services had no cross-tenant negative test,** including every payroll payout and payslip service. Now 879/879, and the execution gate `check:tenant-isolation:run` passes 420 suites / 1605 tests — which matters, because the existence gate counts a spec that throws before its first expectation.
+- **Three false `@BodylessAction()` marks**, two on public endpoints. Their bodies are validated in-handler after multipart normalisation, which `@Validate` cannot do; marking them bodyless removed them from both sides of the coverage ratio.
+- **`test:e2e` ran bare `jest` with no heap budget** and OOMed before discovering anything. Both e2e scripts now use the local binary at 8192MB.
+
+### Three PRD-audit claims that did not survive checking
+
+The slices are useful as leads but several rows were inferred from unchecked PRD checkboxes rather than from source. Verified directly:
+
+- "Legacy user-ID actor edges remain in the live database" — **false.** Every named column is absent from `information_schema`; the cutover completed. Slice 1 independently confirmed the same stale-checkbox problem, including two §28.2a P0 items that are implemented.
+- "The e2e suite exits 0 while all 25/25 suites fail to run" — **false.** `--listTests` discovers **143** specs, the exit guard fires correctly, and every run returned exit 1.
+- "`check:outbox-consumers` FAILS with 10 orphan event types" — **false.** The gate exits 0; every emitted event has a registered consumer. The claim confused audit-log action strings and unit-test fixture strings with `OutboxWriter.emit()` call sites.
+
+## Open findings from the first round (each reproduced here)
 
 - **A cross-tenant GDPR export, made reachable by registering the module.** `exportSubjectData` took no `orgId`: every query keyed on `subjectUserId` alone, so a caller holding `hr:retention:manage` with `all` scope could export a person's memberships, HR records, employments, data requests, legal holds and audit-log presence from **every** organisation. The module had been unregistered, so the endpoints 404'd and hid it. Fixed: org bound into every query, a subject outside the caller's org is 404 not 403, scope resolves `?? "none"`. Bite proven.
 - **Employee onboarding could re-trap a user.** `submit()` invalidated the session cache but never stamped `users.onboardingCompletedAt` — only an async cron did. A user who finished on one device and opened the app on another before the cron ran was sent back into the wizard, violating §8's durability rule. The stamp now happens in the same transaction. Org-setup skip was already correct.

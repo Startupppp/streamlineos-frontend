@@ -51,10 +51,9 @@ export interface Contact {
 
 export interface ContactFilters {
   search?: string;
-  source?: string;
   organizationId?: number;
   limit?: number;
-  offset?: number;
+  cursor?: string;
 }
 
 export interface PaginatedContacts {
@@ -73,11 +72,9 @@ export interface CreateContactInput {
   linkedinUrl?: string;
   twitterUrl?: string;
   websiteUrl?: string;
+  notes?: string | null;
   leadId?: number;
   dealId?: number;
-  source?: string;
-  status?: string;
-  notes?: string;
   tags?: string[];
 }
 
@@ -94,10 +91,8 @@ export interface UpdateContactInput {
   twitterUrl?: string | null;
   websiteUrl?: string | null;
   avatarUrl?: string | null;
-  source?: string | null;
-  status?: string | null;
-  notes?: string | null;
   tags?: string[];
+  notes?: string | null;
 }
 
 export interface OrgHierarchyNode {
