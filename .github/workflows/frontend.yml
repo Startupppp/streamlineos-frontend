@@ -49,8 +49,14 @@ jobs:
       - name: Client contract has not drifted from the API (timesheets)
         run: pnpm run check:contract-drift:self-test && pnpm run check:contract-drift
 
+      - name: Vendored contract is byte-identical to the backend artifact
+        run: pnpm run check:contract-vendor:self-test && pnpm run check:contract-vendor
+
       - name: Module manifest agrees with the sidebar and vocabulary
         run: pnpm run check:module-manifest:self-test && pnpm run check:module-manifest
+
+      - name: Files over 300 lines do not increase
+        run: pnpm run check:over-300:self-test && pnpm run check:over-300
 
       - name: Run Tests
         run: pnpm test --runInBand

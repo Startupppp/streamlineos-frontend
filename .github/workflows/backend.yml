@@ -86,11 +86,35 @@ jobs:
       - name: OpenAPI Contract Freshness
         run: pnpm openapi:check
 
+      - name: Request-Schema Coverage Self-Test
+        run: pnpm check:openapi-coverage:self-test
+
+      - name: Request-Schema Coverage Thresholds
+        run: pnpm check:openapi-coverage
+
+      - name: Bodyless Conflicts Self-Test
+        run: pnpm check:bodyless-conflicts:self-test
+
+      - name: Bodyless Conflicts
+        run: pnpm check:bodyless-conflicts
+
+      - name: Operation IDs are unique
+        run: pnpm check:operation-ids:self-test && pnpm check:operation-ids
+
+      - name: Migration Discipline
+        run: pnpm check:migration-discipline
+
+      - name: Files over 300 lines do not increase
+        run: pnpm check:over-300:self-test && pnpm check:over-300
+
       - name: Unit Tests
         run: pnpm test -- --runInBand
 
       - name: Bootstrap Test Database
         run: pnpm db:bootstrap
+
+      - name: Migration ledger agrees with the journal
+        run: pnpm check:migration-ledger:self-test && pnpm check:migration-ledger
 
       - name: Controller E2E Tests
         run: pnpm test:e2e:ci
