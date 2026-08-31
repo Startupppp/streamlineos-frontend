@@ -192,14 +192,12 @@ export async function authedFetch(
   }
 }
 
-export function buildUrl(
-  path: string,
-  params?: Record<string, unknown>,
-): string {
+export function buildUrl(path: string, params?: object): string {
   const url = `${BACKEND_API_URL}${path}`;
   if (!params || Object.keys(params).length === 0) return url;
+  const entries: Array<[string, unknown]> = Object.entries(params);
   const search = new URLSearchParams(
-    Object.entries(params)
+    entries
       .filter(([, v]) => v !== undefined && v !== null)
       .map(([k, v]) => [k, String(v)]),
   ).toString();
@@ -215,7 +213,7 @@ export {
 
 async function get<T>(
   url: string,
-  params?: Record<string, unknown>,
+  params?: object,
   signal?: AbortSignal,
 ): Promise<T> {
   const res = await authedFetch(
@@ -316,7 +314,7 @@ async function upload<T>(url: string, formData: FormData): Promise<T> {
 
 async function download(
   url: string,
-  params?: Record<string, unknown>,
+  params?: object,
 ): Promise<Blob> {
   const res = await authedFetch(buildUrl(url, params), { method: "GET" }, url);
   if (!res.ok) {

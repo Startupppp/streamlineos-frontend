@@ -59,6 +59,7 @@ export function UserInviteDialog({
     // partial default is what `DefaultValues` is for.
     defaultValues: {
       email: defaultEmail ?? "",
+      role: undefined,
     },
   });
 

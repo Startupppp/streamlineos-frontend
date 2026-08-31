@@ -278,7 +278,7 @@ export default function BudgetsListPage() {
           />
         ) : (
           <>
-  <DataTable
+            <DataTable
               className="flex-1 min-h-0"
               data={items}
               columns={budgetColumns}

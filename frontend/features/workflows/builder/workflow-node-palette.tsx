@@ -1,4 +1,4 @@
-import type { DragEvent, ReactNode } from "react";
+import type { ReactNode } from "react";
 import {
   CheckSquare,
   Clock,
@@ -11,9 +11,6 @@ import {
   XCircle,
   Zap,
 } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { TruncatedText } from "@/components/ui/truncated-text";
-import { cn } from "@/lib/utils";
 import type { NodeType } from "@/hooks/api/workflows";
 
 export interface PaletteItemDefinition {
@@ -45,35 +42,4 @@ export function isWorkflowNodeType(value: unknown): value is NodeType {
   return typeof value === "string" && value in NODE_PALETTE_MAP;
 }
 
-function PaletteItem({ item }: { item: PaletteItemDefinition }) {
-  function handleDragStart(event: DragEvent<HTMLDivElement>) {
-    event.dataTransfer.setData("application/reactflow", JSON.stringify({ nodeType: item.nodeType }));
-    event.dataTransfer.effectAllowed = "move";
-  }
 
-  return (
-    <div draggable onDragStart={handleDragStart} className={cn("flex items-center gap-2.5 px-3 py-2 rounded-lg border cursor-grab active:cursor-grabbing hover:shadow-sm transition-all duration-150 select-none", item.bg, item.border)}>
-      <span className={cn("shrink-0", item.color)}>{item.icon}</span>
-      <div className="min-w-0">
-        <p className="text-xs font-semibold text-foreground leading-tight">{item.label}</p>
-        <TruncatedText text={item.description} className="text-micro text-muted-foreground leading-tight" />
-      </div>
-    </div>
-  );
-}
-
-export function WorkflowNodePalette() {
-  return (
-    <aside className="w-56 shrink-0 border-r border-border bg-card flex flex-col shadow-sm" aria-label="Workflow node palette">
-      <div className="px-3 py-3 border-b border-border">
-        <p className="text-micro font-semibold text-muted-foreground uppercase tracking-wider mb-1">Node Palette</p>
-        <p className="text-micro text-muted-foreground">Drag nodes onto canvas</p>
-      </div>
-      <ScrollArea hideScrollbar className="min-h-0 flex-1">
-        <div className="overscroll-contain space-y-1.5 p-2">
-          {NODE_PALETTE.map((item) => <PaletteItem key={item.nodeType} item={item} />)}
-        </div>
-      </ScrollArea>
-    </aside>
-  );
-}

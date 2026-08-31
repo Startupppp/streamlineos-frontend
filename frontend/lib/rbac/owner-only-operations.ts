@@ -50,15 +50,3 @@ export const OWNER_ONLY_OPERATIONS = {
   },
 } as const satisfies Record<string, OwnerOnlyOperationDefinition>;
 
-export type OwnerOnlyOperation = keyof typeof OWNER_ONLY_OPERATIONS;
-
-export const OWNER_ONLY_OPERATION_IDS = Object.keys(
-  OWNER_ONLY_OPERATIONS,
-) as OwnerOnlyOperation[];
-
-export function canPerformOwnerOnly(
-  access: { isOrgOwner: boolean } | undefined,
-  _operation: OwnerOnlyOperation,
-): boolean {
-  return access?.isOrgOwner === true;
-}

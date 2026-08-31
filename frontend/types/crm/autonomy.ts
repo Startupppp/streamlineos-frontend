@@ -19,7 +19,6 @@ export type ReversibilityClass = "instant" | "hold" | "irreversible";
  * feed hides it unless asked. Recorded all the same: the audit trail is meant to
  * be complete rather than interesting.
  */
-export const ROUTINE_KINDS: readonly DecisionKind[] = ["activity.logged"];
 
 export interface AutonomousDecision {
   autonomousDecisionId: string;

@@ -58,7 +58,6 @@ export interface ContactFilters {
 
 export interface PaginatedContacts {
   items: Contact[];
-  /** Absent on a keyset walk; the endpoint only counts when it cheaply can. */
   total?: number;
   hasMore: boolean;
   nextCursor: string | null;

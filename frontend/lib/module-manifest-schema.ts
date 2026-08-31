@@ -28,4 +28,3 @@ export const moduleManifestSchema = z.object({
 
 export type ModuleEntry = z.infer<typeof moduleEntrySchema>;
 export type ModuleManifest = z.infer<typeof moduleManifestSchema>;
-export type ModuleLadder = z.infer<typeof moduleLadderSchema>;

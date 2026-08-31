@@ -1,13 +1,11 @@
 "use client";
 
-import { useCallback } from "react";
-import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
-import { Button } from "@/components/ui/button";
+import { useState, useCallback } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { useUserAuditLog } from "@/hooks/api/users";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 
 interface UserAuditTabProps {
@@ -22,20 +20,26 @@ function friendlyAction(action: string): string {
 }
 
 export function UserAuditTab({ userId }: UserAuditTabProps) {
-  // The audit log is append-only and written to while it is read, so it walks a
-  // cursor: there is no page count because the server is never asked to count it.
-  const { cursor, pageNumber, hasPrevious, goNext, goPrevious } = useCursorPagination();
+  const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>([undefined]);
+  const currentCursor = cursorHistory.at(-1);
+
   const { data, isLoading, error, refetch } = useUserAuditLog(userId, {
-    ...(cursor !== undefined ? { cursor } : {}),
+    cursor: currentCursor,
     limit: 15,
   });
 
   const entries = data?.data ?? [];
   const pagination = data?.pagination;
 
-  const handlePageNext = useCallback(() => {
-    goNext(pagination?.nextCursor ?? null);
-  }, [goNext, pagination?.nextCursor]);
+  const handlePrevious = useCallback(() => {
+    setCursorHistory((prev) => prev.slice(0, -1));
+  }, []);
+
+  const handleNext = useCallback(() => {
+    if (pagination?.nextCursor) {
+      setCursorHistory((prev) => [...prev, pagination.nextCursor ?? undefined]);
+    }
+  }, [pagination]);
 
   const handleRetry = useCallback(() => {
     void refetch();
@@ -99,32 +103,14 @@ export function UserAuditTab({ userId }: UserAuditTabProps) {
         ))}
       </div>
 
-      {pagination && (hasPrevious || pagination.hasMore) && (
-        <div className="flex shrink-0 items-center justify-end text-xs text-muted-foreground pt-1">
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 w-7 p-0"
-              onClick={goPrevious}
-              disabled={!hasPrevious}
-              aria-label="Previous page"
-            >
-              <ChevronLeft className="h-3.5 w-3.5" />
-            </Button>
-            <span className="px-1 tabular-nums">Page {pageNumber}</span>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 w-7 p-0"
-              onClick={handlePageNext}
-              disabled={!pagination.hasMore}
-              aria-label="Next page"
-            >
-              <ChevronRight className="h-3.5 w-3.5" />
-            </Button>
-          </div>
-        </div>
+      {(cursorHistory.length > 1 || pagination?.hasMore) && (
+        <CursorPageControls
+          page={cursorHistory.length}
+          hasNext={pagination?.hasMore ?? false}
+          onPrevious={handlePrevious}
+          onNext={handleNext}
+          className="shrink-0"
+        />
       )}
     </div>
   );

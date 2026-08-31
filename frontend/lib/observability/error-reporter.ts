@@ -43,10 +43,6 @@ export function setSessionContext(context: FrontendContext): void {
   session = { ...context, correlationId: context.correlationId ?? session.correlationId };
 }
 
-export function getSessionContext(): FrontendContext {
-  return session;
-}
-
 /** Called by the API client so the newest request id is the one a report carries. */
 export function noteCorrelationId(correlationId: string): void {
   session = { ...session, correlationId };

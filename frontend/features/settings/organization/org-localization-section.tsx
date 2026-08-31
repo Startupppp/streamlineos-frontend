@@ -34,7 +34,9 @@ const TIMEZONES = [
   { value: "Australia/Sydney", label: "Australia/Sydney (AEST/AEDT)" },
 ] as const;
 
-const CURRENCIES = [
+const CURRENCY_VALUES = ["USD", "EUR", "INR", "GBP", "AED", "SGD", "AUD", "CAD", "JPY"] as const;
+
+const CURRENCIES: ReadonlyArray<{ value: typeof CURRENCY_VALUES[number]; label: string }> = [
   { value: "USD", label: "USD — US Dollar" },
   { value: "EUR", label: "EUR — Euro" },
   { value: "INR", label: "INR — Indian Rupee" },
@@ -44,7 +46,7 @@ const CURRENCIES = [
   { value: "AUD", label: "AUD — Australian Dollar" },
   { value: "CAD", label: "CAD — Canadian Dollar" },
   { value: "JPY", label: "JPY — Japanese Yen" },
-] as const;
+];
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"] as const;
 
@@ -84,16 +86,9 @@ const WEEK_START_DAYS = [
   { value: "saturday", label: "Saturday" },
 ] as const;
 
-type CurrencyCode = (typeof CURRENCIES)[number]["value"];
-
-/** The stored value is a free string; anything unrecognised falls back. */
-function toCurrencyCode(value: string | null | undefined): CurrencyCode {
-  return CURRENCIES.find((c) => c.value === value)?.value ?? "INR";
-}
-
 const localizationSchema = z.object({
   timezone: z.string().min(1),
-  currency: z.enum(["USD", "EUR", "INR", "GBP", "AED", "SGD", "AUD", "CAD", "JPY"]),
+  currency: z.enum(CURRENCY_VALUES),
   fiscalYearStart: z.number().int().min(1).max(12),
   language: z.string().min(1),
   dateFormat: z.string().min(1),
@@ -103,6 +98,10 @@ const localizationSchema = z.object({
 });
 
 type LocalizationValues = z.infer<typeof localizationSchema>;
+
+function toCurrencyCode(value: string | null | undefined): typeof CURRENCY_VALUES[number] {
+  return CURRENCY_VALUES.find((c) => c === value) ?? "INR";
+}
 
 function extractSettings(settings: Record<string, unknown> | null | undefined) {
   const timeFormat = settings?.timeFormat === "12h" || settings?.timeFormat === "24h"
@@ -236,7 +235,7 @@ export function OrgLocalizationSection({ org, canEdit }: OrgLocalizationSectionP
             </div>
             <div className="space-y-1">
               <Label className="text-xs font-medium">Currency</Label>
-              <Select onValueChange={(v) => form.setValue("currency", toCurrencyCode(v))} value={form.watch("currency")}>
+              <Select onValueChange={(v) => { const code = toCurrencyCode(v); form.setValue("currency", code); }} value={form.watch("currency")}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                   {CURRENCIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}

@@ -1,3 +1,5 @@
+export type OrgRole = "OWNER" | "ORG_ADMIN" | "MEMBER";
+
 export interface UserListParams {
   page?: number;
   limit?: number;
@@ -55,7 +57,7 @@ export interface User {
   firstName: string | null;
   lastName: string | null;
   image: string | null;
-  role: string;
+  role: OrgRole;
   isOwner: boolean;
   phone: string | null;
   isActive: boolean;
@@ -81,7 +83,7 @@ export interface UpdateUserInput {
   designation?: string;
   phone?: string;
   departmentId?: string;
-  role?: "OWNER" | "ORG_ADMIN" | "MEMBER";
+  role?: OrgRole;
   bio?: string;
   linkedinUrl?: string;
   twitterUrl?: string;
@@ -113,7 +115,7 @@ export interface UserStats {
 
 export interface InviteUserPayload {
   email: string;
-  role: "OWNER" | "ORG_ADMIN" | "MEMBER";
+  role: OrgRole;
 }
 
 export interface Invitation {
@@ -131,7 +133,12 @@ export interface Invitation {
 
 export interface InvitationsResponse {
   data: Invitation[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
 export interface LoginHistoryItem {
@@ -154,7 +161,12 @@ export interface LoginHistoryItem {
 
 export interface LoginHistoryResponse {
   data: LoginHistoryItem[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
 export interface UserMembership {
@@ -184,7 +196,7 @@ export interface BulkActionResult {
 
 export interface BulkUpdatePayload {
   userIds: string[];
-  role?: "OWNER" | "ORG_ADMIN" | "MEMBER";
+  role?: OrgRole;
   departmentId?: string | null;
   branchId?: string | null;
   teamId?: string | null;

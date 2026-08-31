@@ -20,7 +20,3 @@ export const personNameSchema = z
     (value) => !CONSECUTIVE_SPACES.test(value),
     "Remove the extra spaces from this name",
   );
-
-export const optionalPersonNameSchema = z
-  .union([z.literal(""), personNameSchema])
-  .optional();

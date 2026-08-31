@@ -11,6 +11,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
 import { SearchInput } from "@/components/ui/search-input";
 import { DataTableSkeleton } from "@/components/ui/data-table";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared";
@@ -66,10 +67,7 @@ export function ContactListPage() {
   const exportContacts = useExportContacts();
 
   const [search, setSearch] = useState(searchParams.get("q") ?? "");
-  // `/contacts` takes a cursor; the `offset` this used to send was stripped by
-  // the query schema, so the list never advanced past its first page.
-  const { cursor, pageNumber, hasPrevious, goNext, goPrevious, reset: resetCursor } =
-    useCursorPagination();
+  const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>([undefined]);
   const debouncedSearch = useDebouncedValue(search, 300);
   const trimmedSearch = debouncedSearch.trim();
   const apiSearch = trimmedSearch.length >= 3 ? trimmedSearch : "";
@@ -91,17 +89,20 @@ export function ContactListPage() {
   useEffect(() => {
     const current = searchParams.get("q") ?? "";
     if (debouncedSearch === current) return;
+    setCursorHistory([undefined]);
     updateParams({ q: debouncedSearch || null });
   }, [debouncedSearch, searchParams, updateParams]);
 
-  const { data, isLoading, isError, error, refetch, access} = useContacts({
+  const currentCursor = cursorHistory[cursorHistory.length - 1];
+
+  const { data, isLoading, isError, error, refetch, access, isFetching } = useContacts({
     search: apiSearch || undefined,
     limit: PAGE_SIZE,
-    ...(cursor !== undefined ? { cursor } : {}),
+    cursor: currentCursor,
   });
 
   const contacts = useMemo(() => data?.items ?? [], [data?.items]);
-  const total = data?.total ?? 0;
+  const total = data?.total ?? contacts.length;
   const isFiltered = apiSearch.length > 0;
 
   const contactsById = useMemo(
@@ -118,13 +119,19 @@ export function ContactListPage() {
 
   const handleClearFilters = useCallback(() => {
     setSearch("");
+    setCursorHistory([undefined]);
     updateParams({ q: null });
   }, [updateParams]);
 
-  const handleNextPage = useCallback(
-    () => goNext(data?.nextCursor ?? null),
-    [goNext, data?.nextCursor],
-  );
+  const handlePreviousPage = useCallback(() => {
+    setCursorHistory((history) => (history.length > 1 ? history.slice(0, -1) : history));
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    const next = data?.nextCursor;
+    if (!next) return;
+    setCursorHistory((history) => [...history, next]);
+  }, [data?.nextCursor]);
 
   const handleExport = useCallback(() => {
     exportContacts.mutate(undefined, {
@@ -274,18 +281,19 @@ export function ContactListPage() {
             actions={rowActions}
             density={density}
             minWidth="820px"
-            pagination={{
-              mode: "cursor",
-              pageSize: PAGE_SIZE,
-              pageNumber,
-              hasMore: data?.hasMore ?? false,
-              hasPrevious,
-              onNext: handleNextPage,
-              onPrevious: goPrevious,
-            }}
+            pagination={{ pageSize: PAGE_SIZE }}
             className={CONTENT_FILL_PANEL}
           />
         )}
+        {!isLoading && !isError && (cursorHistory.length > 1 || data?.hasMore) ? (
+          <CursorPageControls
+            page={cursorHistory.length}
+            hasNext={data?.hasMore ?? false}
+            disabled={isFetching}
+            onPrevious={handlePreviousPage}
+            onNext={handleNextPage}
+          />
+        ) : null}
       </div>
 
       {createOpen ? <ContactSheet open onOpenChange={setCreateOpen} /> : null}

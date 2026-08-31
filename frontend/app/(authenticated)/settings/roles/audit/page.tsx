@@ -9,6 +9,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { useAuditLogs } from "@/hooks/api/audit-log";
 import type { AuditLogRow as AuditLogEntry } from "@/hooks/api/audit-log";
 import { getInitials } from "@/lib/format-utils";
@@ -160,23 +161,25 @@ const columns: DataTableColumn<AuditLogEntry>[] = [
 ];
 
 function AuditContent() {
-  // The audit log is append-only and is written to while it is read, so it
-  // walks a cursor rather than counting offsets.
-  const { cursor, pageNumber, hasPrevious, goNext, goPrevious } = useCursorPagination();
+  const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>([undefined]);
+  const currentCursor = cursorHistory.at(-1);
 
-  const query = useAuditLogs({
-    ...(cursor !== undefined ? { cursor } : {}),
-    limit: PAGE_SIZE,
-    actions: RBAC_ACTIONS,
-  });
+  const query = useAuditLogs({ cursor: currentCursor, limit: PAGE_SIZE, actions: RBAC_ACTIONS });
+  const pagination = query.data?.pagination;
 
   const handleRetry = useCallback(() => {
     void query.refetch();
   }, [query]);
 
-  const handleNextPage = useCallback(() => {
-    goNext(query.data?.pagination.nextCursor ?? null);
-  }, [goNext, query.data?.pagination.nextCursor]);
+  const handlePrevious = useCallback(() => {
+    setCursorHistory((prev) => prev.slice(0, -1));
+  }, []);
+
+  const handleNext = useCallback(() => {
+    if (pagination?.nextCursor) {
+      setCursorHistory((prev) => [...prev, pagination.nextCursor ?? undefined]);
+    }
+  }, [pagination]);
 
   return (
     <PageWrapper
@@ -195,23 +198,26 @@ function AuditContent() {
         )}
 
         {!query.isError && (
-          <DataTable
-            data={query.data?.logs ?? []}
-            columns={columns}
-            getRowKey={(log) => log.id}
-            isLoading={query.isLoading}
-            emptyState={<AuditEmptyState />}
-            className="flex-1 min-h-0"
-            pagination={{
-              mode: "cursor",
-              pageSize: PAGE_SIZE,
-              pageNumber,
-              hasMore: query.data?.pagination.hasMore ?? false,
-              hasPrevious,
-              onNext: handleNextPage,
-              onPrevious: goPrevious,
-            }}
-          />
+          <>
+            <DataTable
+              data={query.data?.logs ?? []}
+              columns={columns}
+              getRowKey={(log) => log.id}
+              isLoading={query.isLoading}
+              emptyState={<AuditEmptyState />}
+              className="flex-1 min-h-0"
+              pagination={{ pageSize: PAGE_SIZE }}
+            />
+            {(cursorHistory.length > 1 || pagination?.hasMore) && (
+              <CursorPageControls
+                page={cursorHistory.length}
+                hasNext={pagination?.hasMore ?? false}
+                disabled={query.isFetching}
+                onPrevious={handlePrevious}
+                onNext={handleNext}
+              />
+            )}
+          </>
         )}
       </div>
     </PageWrapper>

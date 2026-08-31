@@ -30,6 +30,25 @@ export function validateEventLocation(loc: string | undefined): string | null {
   return null;
 }
 
+export interface CalendarEventPayload {
+  title: string;
+  description?: string;
+  location?: string;
+  startDate: string;
+  endDate: string;
+  timezone?: string;
+  allDay?: boolean;
+  color?: string;
+  category?: string;
+  entityType?: string;
+  entityId?: string;
+  attendeeIds?: string[];
+  rrule?: string;
+  recurrenceEnd?: string;
+  syncConnectionId?: number;
+  addConference?: boolean;
+}
+
 interface BuildEventPayloadArgs {
   form: FormState;
   showEndDate: boolean;
@@ -38,14 +57,9 @@ interface BuildEventPayloadArgs {
   isEdit: boolean;
 }
 
-/**
- * Either a payload or a reason there is none. `{ payload: {} }` typed as the
- * create shape was a lie on every failure path, and the caller had no way to
- * tell a built payload from an empty one.
- */
 export type BuildEventPayloadResult =
-  | { payload: CreateCalendarEventPayload; error: null }
-  | { payload: null; error: string };
+  | { payload: CalendarEventPayload; error: null }
+  | { payload: Record<string, never>; error: string };
 
 export function buildEventPayload({
   form,
@@ -54,20 +68,20 @@ export function buildEventPayload({
   existingEntityId,
   isEdit,
 }: BuildEventPayloadArgs): BuildEventPayloadResult {
-  if (!form.startDate) return { payload: null, error: "Start date is required" };
-  if (!form.allDay && !form.startTime) return { payload: null, error: "Start time is required" };
-  if (showEndDate && !form.endDate) return { payload: null, error: "End date is required" };
+  if (!form.startDate) return { payload: {}, error: "Start date is required" };
+  if (!form.allDay && !form.startTime) return { payload: {}, error: "Start time is required" };
+  if (showEndDate && !form.endDate) return { payload: {}, error: "End date is required" };
   if (showEndDate && !form.allDay && !form.endTime)
-    return { payload: null, error: "End time is required" };
+    return { payload: {}, error: "End time is required" };
 
   const resolved = resolveEventDateTimes(form, showEndDate);
-  if (!resolved) return { payload: null, error: "Invalid date or time" };
+  if (!resolved) return { payload: {}, error: "Invalid date or time" };
 
   const { start: startDate, end: endDate } = resolved;
   if (showEndDate && endDate < startDate)
-    return { payload: null, error: "End must be on or after start" };
+    return { payload: {}, error: "End must be on or after start" };
   if (!form.allDay && differenceInMinutes(endDate, startDate) < 15)
-    return { payload: null, error: "Event duration must be at least 15 minutes" };
+    return { payload: {}, error: "Event duration must be at least 15 minutes" };
 
   const resolvedEntityId = linkedTicket ? String(linkedTicket.id) : (existingEntityId ?? undefined);
   const rrule = buildRrule(form.recurrence) ?? undefined;

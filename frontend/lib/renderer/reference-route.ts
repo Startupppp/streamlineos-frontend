@@ -36,6 +36,3 @@ export function referenceHref(domain: string | undefined, id: string): string | 
   if (!domain || !id.trim()) return undefined;
   return REFERENCE_ROUTES[domain]?.(encodeURIComponent(id.trim()));
 }
-
-/** The domains a reference can be rendered as a link to, for a test to assert on. */
-export const LINKABLE_REFERENCE_DOMAINS = Object.keys(REFERENCE_ROUTES);

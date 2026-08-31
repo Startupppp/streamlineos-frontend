@@ -44,7 +44,7 @@ const editSchema = z.object({
   lastName: z.string().min(1, "Last name is required"),
   designation: z.string().optional(),
   phone: z.string().optional(),
-  role: z.enum(["OWNER", "ORG_ADMIN", "MEMBER"], { message: "Role is required" }),
+  role: z.enum(["OWNER", "ORG_ADMIN", "MEMBER"]),
   bio: z.string().optional(),
   emergencyName: z.string().optional(),
   emergencyRelation: z.string().optional(),

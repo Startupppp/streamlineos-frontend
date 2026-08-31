@@ -39,9 +39,7 @@ import { USER_INVITE_ROLES } from "@/features/users/user-invite-roles";
 const KEEP = "all";
 
 const bulkAssignSchema = z.object({
-  // `KEEP` means "leave it alone"; the rest are the org-role union the payload
-  // takes, so a value that is neither cannot reach the endpoint.
-  role: z.union([z.literal(KEEP), z.enum(["OWNER", "ORG_ADMIN", "MEMBER"])]),
+  role: z.enum(["all", "OWNER", "ORG_ADMIN", "MEMBER"]),
   branchId: z.string(),
   departmentId: z.string(),
 });

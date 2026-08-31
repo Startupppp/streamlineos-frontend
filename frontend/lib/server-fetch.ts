@@ -7,9 +7,6 @@ import { getServerAuth } from "@/lib/get-server-auth";
 
 const TIMEOUT_MS = 8_000;
 
-type ServerRequestInit = Omit<RequestInit, "headers" | "cache" | "signal">;
-
-/** One authenticated server-to-backend transport used by GET and mutations. */
 async function requestWithToken<T>(
   token: string,
   path: string,
@@ -41,29 +38,6 @@ async function getServerToken(): Promise<string> {
   return token;
 }
 
-export async function serverRequest<T>(
-  method: string,
-  path: string,
-  init: ServerRequestInit = {},
-): Promise<T> {
-  const token = await getServerToken();
-  return requestWithToken<T>(token, path, {
-    ...init,
-    method,
-    body:
-      typeof init.body === "string"
-        ? init.body
-        : init.body === undefined
-          ? undefined
-          : JSON.stringify(init.body),
-  });
-}
-
 export async function serverGet<T>(path: string): Promise<T> {
   return serverFetch<T>(await getServerToken(), path);
 }
-
-export const serverPost = <T>(path: string, body?: unknown) =>
-  serverRequest<T>("POST", path, {
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });

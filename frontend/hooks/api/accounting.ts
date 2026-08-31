@@ -15,6 +15,7 @@ import type {
   Gstr1Report,
   Gstr3BReport,
   JournalEntry,
+  JournalEntryStatus,
   ProfitLossReport,
   PurchaseBill,
   PurchaseBillStatus,
@@ -118,12 +119,7 @@ interface ListJournalParams {
   from?: string;
   to?: string;
   sourceType?: string;
-  /**
-   * The journal page filters on this, but `listJournalQuerySchema` does not
-   * declare it, so the server strips it and the filter narrows nothing. Kept so
-   * the call site compiles; the fix belongs in the accounting query schema.
-   */
-  status?: import("@/types/accounting").JournalEntryStatus;
+  status?: JournalEntryStatus;
 }
 
 export function useJournal(params: ListJournalParams = {}) {

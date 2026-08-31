@@ -163,23 +163,4 @@ export function DeclineInvitationDialog({
   );
 }
 
-export function InvitationLoadingSkeleton() {
-  return (
-    <InvitationCard className="w-full max-w-[480px]">
-      <div className="flex items-start gap-3.5 border-b border-border px-5 py-5 sm:px-6 sm:py-6">
-        <div className="h-11 w-11 shrink-0 rounded-xl bg-muted animate-pulse" />
-        <div className="w-full space-y-2 pt-0.5">
-          <div className="h-3 w-36 rounded bg-muted animate-pulse" />
-          <div className="h-7 w-56 max-w-full rounded bg-muted animate-pulse" />
-          <div className="h-4 w-72 max-w-full rounded bg-muted animate-pulse" />
-        </div>
-      </div>
-      <div className="space-y-4 px-6 py-5">
-        <div className="h-28 w-full rounded-xl bg-muted animate-pulse" />
-        <div className="h-11 w-full rounded-md bg-muted animate-pulse" />
-      </div>
-    </InvitationCard>
-  );
-}
-
 export { CardContent };
