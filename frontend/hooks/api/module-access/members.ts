@@ -5,34 +5,8 @@ import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
-import type { CursorPaginatedResult, DataScope, MemberGrant, ModuleMember, ModuleMemberCandidate, PaginatedResult } from "./types";
+import type { CursorPaginatedResult, DataScope, MemberGrant, ModuleMember, ModuleMemberCandidate } from "./types";
 import { viewKey, manageKey } from "./types";
-
-export function useModuleMembers(
-  moduleKey: string,
-  page: number,
-  pageSize: number,
-  options?: { enabled?: boolean; userId?: string },
-) {
-  const canView = useCan(viewKey(moduleKey));
-  const userId = options?.userId;
-  return useQuery<PaginatedResult<ModuleMember>, Error>({
-    queryKey: queryKeys.moduleAccess.members(moduleKey, { page, pageSize, userId }),
-    queryFn: () => {
-      const params = new URLSearchParams({
-        page: String(page),
-        pageSize: String(pageSize),
-      });
-      if (userId !== undefined) params.set("userId", userId);
-      return apiClient.get<PaginatedResult<ModuleMember>>(
-        `/module-access/${moduleKey}/members?${params.toString()}`,
-      );
-    },
-    enabled: canView && (options?.enabled ?? true),
-    staleTime: 60_000,
-    placeholderData: (prev) => prev,
-  });
-}
 
 export function useModuleMembersInfinite(
   moduleKey: string,
@@ -42,10 +16,10 @@ export function useModuleMembersInfinite(
   const canView = useCan(viewKey(moduleKey));
   const userId = options?.userId;
   return useInfiniteQuery<CursorPaginatedResult<ModuleMember>, Error>({
-    queryKey: queryKeys.moduleAccess.membersInfinite(moduleKey, { pageSize, userId }),
+    queryKey: queryKeys.moduleAccess.members(moduleKey, { pageSize, userId }),
     queryFn: ({ pageParam }) => {
       const params = new URLSearchParams({ pageSize: String(pageSize) });
-      if (pageParam !== undefined) params.set("cursor", String(pageParam));
+      if (typeof pageParam === "number") params.set("cursor", String(pageParam));
       if (userId !== undefined) params.set("userId", userId);
       return apiClient.get<CursorPaginatedResult<ModuleMember>>(
         `/module-access/${moduleKey}/members?${params.toString()}`,
@@ -147,7 +121,6 @@ export function useRemoveModuleMember(moduleKey: string) {
 
 export function useModuleMemberCandidates(
   moduleKey: string,
-  page: number,
   pageSize: number,
   search: string,
   options?: { enabled?: boolean; userId?: string; excludeAssigned?: boolean },
@@ -155,23 +128,19 @@ export function useModuleMemberCandidates(
   const canManage = useCan(manageKey(moduleKey));
   const userId = options?.userId;
   const excludeAssigned = options?.excludeAssigned ?? true;
-  return useQuery<PaginatedResult<ModuleMemberCandidate>, Error>({
+  return useQuery<CursorPaginatedResult<ModuleMemberCandidate>, Error>({
     queryKey: queryKeys.moduleAccess.memberCandidates(moduleKey, {
-      page,
       pageSize,
       search,
       userId,
       excludeAssigned,
     }),
     queryFn: () => {
-      const params = new URLSearchParams({
-        page: String(page),
-        pageSize: String(pageSize),
-      });
+      const params = new URLSearchParams({ pageSize: String(pageSize) });
       if (search) params.set("search", search);
       if (userId) params.set("userId", userId);
       params.set("excludeAssigned", String(excludeAssigned));
-      return apiClient.get<PaginatedResult<ModuleMemberCandidate>>(
+      return apiClient.get<CursorPaginatedResult<ModuleMemberCandidate>>(
         `/module-access/${moduleKey}/member-candidates?${params.toString()}`,
       );
     },

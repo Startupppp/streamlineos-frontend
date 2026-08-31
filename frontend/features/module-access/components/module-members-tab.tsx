@@ -5,12 +5,12 @@ import { UserPlus, X, Pencil, Loader2, KeyRound } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { TablePagination } from "@/components/ui/table-pagination";
 import { toast } from "sonner";
 import {
-  useModuleMembers,
+  useModuleMembersInfinite,
   useModuleMyPermissions,
   useModuleRoleGroups,
   type ModuleMember,
@@ -141,7 +141,6 @@ export function ModuleMembersTab({
   onAddOpenChange,
   hideToolbar = false,
 }: ModuleMembersTabProps) {
-  const [page, setPage] = useState(1);
   const [internalAddOpen, setInternalAddOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<ModuleMember | null>(null);
   const [removeTarget, setRemoveTarget] = useState<ModuleMember | null>(null);
@@ -150,14 +149,13 @@ export function ModuleMembersTab({
   const addOpen = onAddOpenChange ? (addOpenProp ?? false) : internalAddOpen;
   const setAddOpen = onAddOpenChange ?? setInternalAddOpen;
 
-  const membersQuery = useModuleMembers(moduleKey, page, PAGE_SIZE);
+  const membersQuery = useModuleMembersInfinite(moduleKey, PAGE_SIZE);
   const groupsQuery = useModuleRoleGroups(moduleKey);
 
-  const members = membersQuery.data?.data ?? [];
-  const pagination = membersQuery.data?.pagination;
+  const members = membersQuery.data?.pages.flatMap((p) => p.data) ?? [];
   const allGroups = (groupsQuery.data ?? []).map((g) => ({ id: g.id, name: g.name }));
 
-  const focusLookup = useModuleMembers(moduleKey, 1, 1, {
+  const focusLookup = useModuleMembersInfinite(moduleKey, 1, {
     enabled: focusUserId !== undefined && canManage,
     userId: focusUserId,
   });
@@ -180,7 +178,7 @@ export function ModuleMembersTab({
     }
     if (!focusLookup.isSuccess) return;
     triggeredRef.current = true;
-    const found = focusLookup.data.data[0] ?? null;
+    const found = focusLookup.data?.pages[0]?.data[0] ?? null;
     if (found !== null) {
       setEditTarget(found);
     } else {
@@ -222,7 +220,9 @@ export function ModuleMembersTab({
   const handleGrantsClose = useCallback((open: boolean) => {
     if (!open) setGrantsTarget(null);
   }, []);
-  const handlePageChange = useCallback((p: number) => setPage(p), []);
+  const handleLoadMore = useCallback(() => {
+    void membersQuery.fetchNextPage();
+  }, [membersQuery]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
@@ -280,15 +280,18 @@ export function ModuleMembersTab({
                 />
               ))}
             </div>
-            {pagination && pagination.total > PAGE_SIZE && (
-              <TablePagination
-                page={page}
-                pageSize={PAGE_SIZE}
-                total={pagination.total}
-                onPageChange={handlePageChange}
-                disabled={membersQuery.isFetching}
-              />
-            )}
+            {membersQuery.hasNextPage ? (
+              <div className="border-t border-border/60 px-4 py-3 flex justify-center">
+                <LoadingButton
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleLoadMore}
+                  isPending={membersQuery.isFetchingNextPage}
+                >
+                  Load more
+                </LoadingButton>
+              </div>
+            ) : null}
           </>
         )}
       </div>

@@ -14,6 +14,7 @@ export type {
   Pagination,
   PaginatedResult,
   CursorPaginatedResult,
+  AuditCursorPage,
   AuditLogEntry,
   ModuleMyPermissions,
 } from "./types";
@@ -36,7 +37,6 @@ export {
 } from "./groups";
 
 export {
-  useModuleMembers,
   useModuleMembersInfinite,
   useAddModuleMember,
   useUpdateModuleMember,

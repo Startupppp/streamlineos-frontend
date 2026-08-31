@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 import { ClipboardList, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { TablePagination } from "@/components/ui/table-pagination";
 import {
   Sheet,
   SheetContent,
@@ -89,15 +89,13 @@ interface AuditLogBodyProps {
 }
 
 function AuditLogBody({ moduleKey, open }: AuditLogBodyProps) {
-  const [page, setPage] = useState(1);
-  const auditQuery = useModuleAuditLog(moduleKey, page, PAGE_SIZE, {
-    enabled: open,
-  });
+  const auditQuery = useModuleAuditLog(moduleKey, PAGE_SIZE, { enabled: open });
 
-  const entries = auditQuery.data?.data ?? [];
-  const pagination = auditQuery.data?.pagination;
+  const entries = auditQuery.data?.pages.flatMap((p) => p.data) ?? [];
 
-  const handlePageChange = useCallback((p: number) => setPage(p), []);
+  const handleLoadMore = useCallback(() => {
+    void auditQuery.fetchNextPage();
+  }, [auditQuery]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
@@ -137,16 +135,18 @@ function AuditLogBody({ moduleKey, open }: AuditLogBodyProps) {
               />
             ))}
           </div>
-          {pagination && pagination.total > PAGE_SIZE && (
-            <TablePagination
-              page={page}
-              pageSize={PAGE_SIZE}
-              total={pagination.total}
-              onPageChange={handlePageChange}
-              disabled={auditQuery.isFetching}
-              showPageNumbers={false}
-            />
-          )}
+          {auditQuery.hasNextPage ? (
+            <div className="border-t border-border/60 px-4 py-3 flex justify-center shrink-0">
+              <LoadingButton
+                variant="ghost"
+                size="sm"
+                onClick={handleLoadMore}
+                isPending={auditQuery.isFetchingNextPage}
+              >
+                Load more
+              </LoadingButton>
+            </div>
+          ) : null}
         </>
       )}
     </div>

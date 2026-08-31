@@ -123,7 +123,6 @@ function useMemberOptions(
   const { data: projectMembers = [] } = useProjectMembers(projectId ?? 0);
   const { data: moduleData } = useModuleMemberCandidates(
     moduleKey ?? "",
-    1,
     50,
     debouncedSearch,
     { enabled: useModuleDirectory, userId: selectedIds[0], excludeAssigned },

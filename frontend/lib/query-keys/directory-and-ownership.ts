@@ -77,7 +77,6 @@ export const directoryAndOwnershipQueryKeys = {
     memberCandidates: (
       moduleKey: string,
       params: {
-        page: number;
         pageSize: number;
         search: string;
         userId?: string;
@@ -89,13 +88,9 @@ export const directoryAndOwnershipQueryKeys = {
       [...base, "moduleAccess", moduleKey, "ownership"] as const,
     members: (
       moduleKey: string,
-      params: { page: number; pageSize: number; userId?: string },
-    ) => [...base, "moduleAccess", moduleKey, "members", params] as const,
-    membersInfinite: (
-      moduleKey: string,
       params: { pageSize: number; userId?: string },
-    ) => [...base, "moduleAccess", moduleKey, "members-infinite", params] as const,
-    auditLog: (moduleKey: string, params: { page: number; pageSize: number }) =>
+    ) => [...base, "moduleAccess", moduleKey, "members", params] as const,
+    auditLog: (moduleKey: string, params: { limit: number }) =>
       [...base, "moduleAccess", moduleKey, "audit-log", params] as const,
     myPermissions: (moduleKey: string) =>
       [...base, "moduleAccess", moduleKey, "me", "permissions"] as const,

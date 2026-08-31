@@ -89,8 +89,17 @@ export interface PaginatedResult<T> {
 
 export interface CursorPaginatedResult<T> {
   data: T[];
-  pagination: Pagination;
+  hasMore: boolean;
   nextCursor: number | null;
+}
+
+export interface AuditCursorPage<T> {
+  data: T[];
+  pagination: {
+    limit: number;
+    nextCursor: string | null;
+    hasMore: boolean;
+  };
 }
 
 export interface AuditLogEntry {

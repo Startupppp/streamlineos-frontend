@@ -1,10 +1,10 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
-import type { AuditLogEntry, ModuleMyPermissions, ModulePermission, PaginatedResult } from "./types";
+import type { AuditCursorPage, AuditLogEntry, ModuleMyPermissions, ModulePermission } from "./types";
 import { viewKey } from "./types";
 
 export function useModuleAccessCatalog(
@@ -34,19 +34,22 @@ export function useModuleMyPermissions(moduleKey: string) {
 
 export function useModuleAuditLog(
   moduleKey: string,
-  page: number,
-  pageSize: number,
+  limit: number,
   options?: { enabled?: boolean },
 ) {
   const canView = useCan(viewKey(moduleKey));
-  return useQuery<PaginatedResult<AuditLogEntry>, Error>({
-    queryKey: queryKeys.moduleAccess.auditLog(moduleKey, { page, pageSize }),
-    queryFn: () =>
-      apiClient.get<PaginatedResult<AuditLogEntry>>(
-        `/module-access/${moduleKey}/audit-log?page=${page}&pageSize=${pageSize}`,
-      ),
+  return useInfiniteQuery<AuditCursorPage<AuditLogEntry>, Error>({
+    queryKey: queryKeys.moduleAccess.auditLog(moduleKey, { limit }),
+    queryFn: ({ pageParam }) => {
+      const params = new URLSearchParams({ limit: String(limit) });
+      if (typeof pageParam === "string") params.set("cursor", pageParam);
+      return apiClient.get<AuditCursorPage<AuditLogEntry>>(
+        `/module-access/${moduleKey}/audit-log?${params.toString()}`,
+      );
+    },
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canView && (options?.enabled ?? true),
     staleTime: 60_000,
-    placeholderData: (prev) => prev,
   });
 }
