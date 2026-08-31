@@ -38,6 +38,8 @@ jobs:
       NODE_ENV: test
       DATABASE_URL: postgres://user:password@localhost:5432/streamlineos
       BACKEND_JWT_SECRET: ci-only-backend-jwt-secret-with-at-least-44-characters
+      PORTAL_JWT_SECRET: ci-only-portal-jwt-secret-with-at-least-44-characters-xx
+      ENCRYPTION_KEY: ci-only-encryption-key-min-32-characters-for-testing
       CORS_ORIGINS: http://localhost:1000
       APP_URL: http://localhost:1000
     steps:
@@ -77,6 +79,12 @@ jobs:
 
       - name: Owner Authority Guard
         run: pnpm check:owner-authority
+
+      - name: OpenAPI Contract Self-Test
+        run: pnpm openapi:check:self-test
+
+      - name: OpenAPI Contract Freshness
+        run: pnpm openapi:check
 
       - name: Unit Tests
         run: pnpm test -- --runInBand
