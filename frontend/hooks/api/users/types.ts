@@ -81,7 +81,7 @@ export interface UpdateUserInput {
   designation?: string;
   phone?: string;
   departmentId?: string;
-  role?: string;
+  role?: "OWNER" | "ORG_ADMIN" | "MEMBER";
   bio?: string;
   linkedinUrl?: string;
   twitterUrl?: string;
@@ -113,7 +113,7 @@ export interface UserStats {
 
 export interface InviteUserPayload {
   email: string;
-  role: string;
+  role: "OWNER" | "ORG_ADMIN" | "MEMBER";
 }
 
 export interface Invitation {
@@ -184,7 +184,7 @@ export interface BulkActionResult {
 
 export interface BulkUpdatePayload {
   userIds: string[];
-  role?: string;
+  role?: "OWNER" | "ORG_ADMIN" | "MEMBER";
   departmentId?: string | null;
   branchId?: string | null;
   teamId?: string | null;
@@ -206,5 +206,5 @@ export interface AuditEntry {
 
 export interface AuditResponse {
   data: AuditEntry[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }

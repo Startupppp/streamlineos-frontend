@@ -20,16 +20,20 @@ export interface AuditLogRow {
   createdAt: Date;
 }
 
+interface AuditLogPagination {
+  limit: number;
+  nextCursor: string | null;
+  hasMore: boolean;
+}
+
 interface AuditLogListResponse {
   logs: AuditLogRow[];
-  total: number;
-  page: number;
-  totalPages: number;
+  pagination: AuditLogPagination;
 }
 
 interface AuditLogFilters {
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
   action?: string;
   actions?: readonly string[];
   targetType?: string;
@@ -38,7 +42,7 @@ interface AuditLogFilters {
   userSearch?: string;
 }
 
-type AuditLogExportFilters = Omit<AuditLogFilters, "page" | "pageSize">;
+type AuditLogExportFilters = Omit<AuditLogFilters, "cursor" | "limit">;
 
 export const useAuditLogs = (
   filters?: AuditLogFilters,
@@ -52,8 +56,8 @@ export const useAuditLogs = (
     queryKey: queryKeys.auditLog.list(filters as Record<string, unknown>),
     queryFn: () =>
       apiClient.get<AuditLogListResponse>("/audit-log", {
-        ...(filters?.page ? { page: String(filters.page) } : {}),
-        ...(filters?.pageSize ? { pageSize: String(filters.pageSize) } : {}),
+        ...(filters?.cursor ? { cursor: filters.cursor } : {}),
+        ...(filters?.limit ? { limit: String(filters.limit) } : {}),
         ...(filters?.action ? { action: filters.action } : {}),
         ...(filters?.actions?.length ? { actions: filters.actions.join(",") } : {}),
         ...(filters?.targetType ? { targetType: filters.targetType } : {}),

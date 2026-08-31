@@ -116,7 +116,6 @@ interface ListJournalParams {
   from?: string;
   to?: string;
   sourceType?: string;
-  status?: import("@/types/accounting").JournalEntryStatus;
 }
 
 export function useJournal(params: ListJournalParams = {}) {

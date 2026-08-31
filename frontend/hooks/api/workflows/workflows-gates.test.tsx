@@ -161,6 +161,14 @@ describe("useWorkflowAnalytics — permission gate", () => {
     await waitFor(() => expect(result.current.fetchStatus).toBe("idle"));
     expect(apiClient.get).not.toHaveBeenCalledWith("/workflows/analytics");
   });
+
+  it("fires when workflows:analytics:view is granted", async () => {
+    const client = makeClient(["workflows:analytics:view"]);
+    const { useWorkflowAnalytics } = await import("../workflows-analytics");
+    renderHook(() => useWorkflowAnalytics(), { wrapper: makeWrapper(client) });
+
+    await waitFor(() => expect(apiClient.get).toHaveBeenCalledWith("/workflows/analytics"));
+  });
 });
 
 describe("cursor pagination contract", () => {
