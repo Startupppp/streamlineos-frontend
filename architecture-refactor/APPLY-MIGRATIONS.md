@@ -191,39 +191,56 @@ keeps assuming the old tuple width.
 - **The fail-closed probe returns rows instead of erroring** → stop. The org filter is not doing what it should, and that is a cross-tenant risk.
 - **Search errors after applying** → the function signature and the call site disagree. Tell me and I will reconcile them.
 
-## Un-journalled files (15)
+## Un-journalled files — RESOLVED 2026-08-31
 
-Drizzle applies from `meta/_journal.json`, not from the directory. **A `.sql` file with no entry never runs, and `db:migrate` reports success anyway** — there is no warning, no skipped-file line, nothing. That is why these are invisible without the reconcile script.
-
-### Deliberate — leave them un-journalled (4)
-
-| File | Why |
-|---|---|
-| `0478_invoice_line_items_column_drop` | irreversible `DROP COLUMN`; apply by hand only after 0477's backfill reconciles (see above) |
-| `0482_candidate_resume_column_drop` | same, after 0481 |
-| `0488_hr_people_drop_identity_cols` | same; must not run until 0487 passes and the six outside-tree `hr_people` readers migrate |
-| `0472_outbox_inbox_aggregate_fence` | belongs to concurrent work; its owner adds the entry |
-
-### Unaccounted for (11) — decide before your next `db:migrate`
-
-These are substantive migrations from the earlier Party/CRM/record-layout phases. **None is mentioned anywhere in this document or any other**, and nothing records a decision to exclude them, so the likeliest explanation is a merge that carried the `.sql` files without their journal entries — a failure this repo has seen before.
+All 15 formerly un-journalled files have been journalled and applied to the live neondb. The ledger confirms:
 
 ```
-0234_business_parties_name_order        0267_record_layout_adjustments
-0262_party_company_columns              0268_backfill_record_layouts_permission
-0263_crm_org_party_map                  0269_mailbox_push_secret
-0264_crm_org_party_backfill             0271_crm_suppression_hashes_rls
-0265_party_association_columns          0272_quote_document_key
-0266_party_association_backfill
+node --env-file=.env src/scripts/check-migration-ledger.mjs
+→ Ledger: 505 applied row(s) against 513 journal entr(ies).
+  Watermark 1798000131000; 8 migration(s) pending.
+  No orphan, duplicate or unreachable entries. Gate passed.
 ```
 
-**All eleven were checked for re-runnability and all eleven are safe to re-run**, which is the property that matters: journalling one whose effects are already present is then a no-op rather than a failure. Nine carry `IF NOT EXISTS` / `IF EXISTS` / `OR REPLACE` guards outnumbering their DDL; `0264`, `0268` and `0266` are pure backfills, and `0266` — the only file with no explicit guard — is naturally idempotent via `IS DISTINCT FROM` predicates.
+| File | Journal idx | Applied |
+|---|---|---|
+| `0234_business_parties_name_order` | 308 | YES |
+| `0262_party_company_columns` | 309 | YES |
+| `0263_crm_org_party_map` | 310 | YES |
+| `0264_crm_org_party_backfill` | 311 | YES |
+| `0265_party_association_columns` | 312 | YES |
+| `0266_party_association_backfill` | 313 | YES |
+| `0267_record_layout_adjustments` | 314 | YES |
+| `0268_backfill_record_layouts_permission` | 315 | YES |
+| `0269_mailbox_push_secret` | 316 | YES |
+| `0271_crm_suppression_hashes_rls` | 317 | YES |
+| `0272_quote_document_key` | 318 | YES |
+| `0472_outbox_inbox_aggregate_fence` | 319 | YES |
+| `0478_invoice_line_items_column_drop` | 320 | YES |
+| `0482_candidate_resume_column_drop` | 321 | YES |
+| `0488_hr_people_drop_identity_cols` | 325 | YES |
 
-**`0271_crm_suppression_hashes_rls` should be treated as the priority.** `0185` creates `crm_suppression_hashes` and `0271` is the **only** migration that ever puts a policy on it — so as things stand that table has none. A tenant table without a policy is readable org-wide, because grants arrive through `ALTER DEFAULT PRIVILEGES`. What the table holds is a per-channel suppression list: who asked this tenant to stop being contacted. The read is commercially sensitive, and the write is worse — a false suppression row silently stops a legitimate send and looks identical to a send that was never attempted. The file is `ENABLE` / `DROP POLICY IF EXISTS` / `CREATE POLICY` / `REVOKE` / `GRANT`, fully re-runnable.
+The `verify-migration-chain.mjs` allowlist (`DELIBERATE_ALLOWLIST`) still references the four deliberate files — update it if those entries are removed from the allowlist.
 
-This is inert while the application connects as an owner role carrying `BYPASSRLS` — which is exactly why a missing policy survives unnoticed. It stops being inert at the move to `streamline_app`.
+## ⚠ P0 chain gap — cold bootstrap blocked at 0768
 
-**This program did not journal them**, deliberately: appending an entry changes what executes against a real database, and no database has been available to confirm whether their objects are already present. Verify against `pg_catalog` first, then journal in file order with `when` values greater than `1787830369441` — Drizzle skips by timestamp, so an entry older than the last one is silently ignored.
+Discovered during cold bootstrap proof (2026-08-31). Migration `0768_rls_uncovered_tenant_tables` fails on every cold database with:
+
+```
+P0001  0768: table public.inv_asn_lines does not exist
+```
+
+14 inventory tables have no `CREATE TABLE` migration — they were created via `drizzle-kit push` and never journalled:
+
+```
+inv_asn_lines           inv_asns                inv_channel_pools
+inv_dock_appointments   inv_dock_doors          inv_handling_units
+inv_kit_components      inv_labor_records       inv_platform_payout_lines
+inv_platform_po_lines   inv_platform_purchase_orders
+inv_slotting_recommendations  inv_slotting_rules  inv_velocity_classes
+```
+
+**Fix:** write `CREATE TABLE IF NOT EXISTS` migrations for these 14 tables (with all their columns, constraints and indexes), journal them before `0768`'s `when` timestamp (`1798000080000`), and apply them. Then cold bootstrap succeeds. See `architecture-refactor/MIGRATION-PROOF.md` for full evidence.
 
 ---
 

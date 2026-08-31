@@ -85,19 +85,30 @@ belong to c28 Session 2, so the actor is currently resolved from the ambient
 authenticated request) and the delete refuses outright if no actor can be identified. Passing it
 explicitly is a two-line change recorded in `c28-cell-based-platform-at-20m/sessions/CROSS-SESSION.md`.
 
-## 4. `streamline_app`'s password is repaired in `.env`, not in Neon
+## 4. `streamline_app`'s password — FIXED 2026-08-31. Prior diagnosis was wrong.
 
-**OPERATOR ACTION — not attempted, deliberately. Confirmed still outstanding 2026-08-28.**
+**FIXED 2026-08-31. The previous diagnosis in this entry was incorrect and would mislead.**
 
-`APP_DATABASE_URL` was fixed with `ALTER ROLE … WITH PASSWORD`. **Neon's control plane restores the
-previous password when the branch suspends**, so this repair is temporary and no code change can hold it.
+**What actually happened:** `backend/.env` held a stale 16-character password from a since-reverted
+`ALTER ROLE` command. The Neon control plane retained a different 32-character password, which is the
+authoritative credential. Copying the control-plane password into `APP_DATABASE_URL` fixed the
+connection permanently. Verified: `current_user = streamline_app`, `rolbypassrls = false`.
 
-- **Why not attempted:** `ALTER ROLE` does not stick; re-running it would recreate the same illusion.
-- **What would close it:** an operator setting the `streamline_app` password in the Neon console, then
-  updating `APP_DATABASE_URL` in every deployment environment.
-- **How to tell it has regressed:** `APP_DATABASE_URL` connections fail authentication after a branch
-  suspend. As of 2026-08-28 the credential still works — verified by connecting and reading
-  `current_user`, which returned `streamline_app` with `rolbypassrls = false`.
+**Why the old diagnosis was wrong:** It claimed "Neon's control plane restores the previous password when
+the branch suspends" — that is backwards. The control plane IS the authority; a local `ALTER ROLE` sets
+a hash on the compute node only and is overwritten when the compute restarts. The fix is to read the
+control-plane password, not to fight it.
+
+**How to retrieve the authoritative password if it is ever lost:**
+```
+GET https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches/<branch>/roles/streamline_app/reveal_password
+Authorization: Bearer $NEON_API_KEY
+```
+Copy the returned password into `APP_DATABASE_URL` (and `APP_DATABASE_URL` in every deployment env).
+Never use `ALTER ROLE … WITH PASSWORD` — it sets a node-local hash that is overwritten on resume.
+
+**Current state (2026-08-31):** `APP_DATABASE_URL` in `backend/.env` authenticates successfully.
+All probes that require the non-BYPASSRLS role now run cleanly.
 
 ## 5. `db:verify-rls` and the constitution contradict each other
 
