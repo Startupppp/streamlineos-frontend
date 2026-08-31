@@ -47,12 +47,30 @@ Legend: `[x]` verified done · `[~]` lane running · `[ ]` not started · `[!]` 
 | 31 | Export / erasure / legal-hold drills | `[x]` drills / `[~]` sweep | Erasure enumerates FK tables from `pg_constraint` at runtime and dry-runs in a rolled-back tx. **No retention-sweep worker exists** — A37 building it |
 | 32 | Final independent audit of every PRD row | `[~]` | Two of four slices in; A20 and A22 still running |
 
+## Operator-blocked right now
+
+**The `streamline_app` role no longer authenticates** — `28P01 password authentication
+failed`. It worked earlier in this session (the read-cost guard hard-requires
+`APP_DATABASE_URL` and printed real block counts), so it broke mid-session. No script in
+this repo issues `ALTER ROLE`, and on Neon a password set that way does not stick anyway.
+
+Consequence: every proof that must run as the non-BYPASSRLS role is currently
+unreproducible — `db:check-build-reads` exits 1 at connect, and
+`src/degradation/search-index.spec.ts` fails. Benchmarks run as the owner prove nothing,
+because the owner has BYPASSRLS.
+
+Runbook: reset the `streamline_app` password in the Neon console (not via `ALTER ROLE`),
+update `APP_DATABASE_URL` in `backend/.env`, then re-run `pnpm db:check-build-reads` and
+`src/degradation/search-index.spec.ts`. Until then the dashboard read-budget numbers below
+stand as previously measured but cannot be re-verified.
+
 ## Open findings this session (each reproduced here)
 
 - **16 rows where the membership-artifact registry disagrees with the real foreign keys.** Nothing ever compared the two; `verify:membership-revocation` now does and fails on drift. Three are functional blockers, not doc drift — `pm_workspace_memberships`, `managed_products` and `chat_messages` are `blocks-removal` in the database, so removing a member who sits in a PM workspace, owns a product, or ever sent a chat message fails 23503. A35 reconciling.
 - **Two authenticated pages denied everyone.** `/inbox` and `/knowledge/chat` had page files but no registry entry, so both resolved unknown and failed closed. The registry listed `/knowledge/wiki/chat`, which does not exist on disk. Fixed and pinned in the matrix.
-- **The bodyless gate does not bite.** A handler marked `@BodylessAction()` is skipped from both numerator and denominator, so a false mark on a handler that does read a body left `check:openapi-coverage` at exit 0. The earlier "gate bites" claim is disproved. A36 building a real check.
-- **Five billing suites cannot load at all** — `@composio/core` ships `.mjs` and jest's transform does not reach it, so `seat-ledger`, `invoice-snapshot`, `versioned-catalog`, `usage-metering` and `proration-ledger` have been proving nothing. Pre-existing; reproduced with unrelated changes reverted. A36 fixing.
+- **The bodyless gate did not bite — now it does.** `check:openapi-coverage` skips a bodyless-marked handler from both numerator and denominator, so a false mark left it at exit 0. `check:bodyless-conflicts` replaces it; bite proven on an independently chosen handler (exit 1 naming `chat-channels.controller.ts:153 addMember`, exit 0 after revert). 533 controllers, 0 real violations.
+- **Five billing suites could not load at all** — `transformIgnorePatterns` exempted `@composio` but no transformer was registered for `.mjs`, so jest ran its ESM entry as CommonJS. `seat-ledger`, `invoice-snapshot`, `versioned-catalog`, `usage-metering` and `proration-ledger` had been proving nothing. Fixed: billing/core is now 25 suites / 416 tests.
+- **§8's platform-admin rule points at two things that do not exist.** "Platform admin → `/owner`" cannot be implemented: there is no platform-admin signal anywhere in the tenant auth stack (not in `users`, `AccessSnapshot`, `CurrentUserContext` or the NextAuth session), and no `/owner` route exists — platform operators authenticate by `INTERNAL_API_SECRET` and never hold a tenant JWT. The org-owner half of the rule is implemented and bite-tested. The rule describes an unbuilt staff console; the spec should change, not the code.
 - **Six files landed inert.** Decompositions created to satisfy the 500-line limit were never wired — each referenced by zero files, every parent still over the limit (`crm-inbox` 525, `support-ai` 522, `customer360-sections` 501). The `gdpr` module is not registered in `app.module.ts`, so its endpoints 404. A39 resolving.
 - **The read-cost guard exits 1 on 29 of 70 budgets**, none of them Home. They fail `forbid-seq-scan` on dev tables too small for the planner to prefer an index. A guard fixture-size problem, recorded rather than reported as green.
 
