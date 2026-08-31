@@ -118,14 +118,19 @@ function toApiParams(params?: CountsParams): Record<string, unknown> {
   return out;
 }
 
-export function useCycleCounts(params?: CountsParams) {
+export function useCycleCounts(
+  params?: CountsParams,
+  options?: { enabled?: boolean },
+) {
   const canView = useCan(COUNT_READ_KEY);
   return useQuery<CycleCountListResponse, Error>({
     queryKey: queryKeys.inventory.cycleCounts(toApiParams(params)),
     queryFn: () =>
       apiClient.get<CycleCountListResponse>("/inventory/cycle-counts", toApiParams(params)),
     staleTime: 2 * 60_000,
-    enabled: canView,
+    // Reading the list needs COUNT_READ_KEY; a caller may hold that and still
+    // have no business being offered the work, which is what `enabled` is for.
+    enabled: canView && (options?.enabled ?? true),
   });
 }
 
@@ -144,9 +149,7 @@ export function useCreateCycleCount() {
   return useMutation<CycleCount, Error, CreateCycleCountInput>({
     mutationKey: ["inventory", "cycleCounts", "create"],
     mutationFn: (data) =>
-      apiClient.post<CycleCount>("/inventory/cycle-counts", data, {
-        headers: { "Idempotency-Key": crypto.randomUUID() },
-      }),
+      apiClient.post<CycleCount>("/inventory/cycle-counts", data),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.cycleCounts() });
     },
@@ -196,9 +199,7 @@ export function usePostCycleCount() {
   return useMutation<CycleCount, Error, number>({
     mutationKey: ["inventory", "cycleCounts", "post"],
     mutationFn: (countId) =>
-      apiClient.post<CycleCount>(`/inventory/cycle-counts/${countId}/post`, undefined, {
-        headers: { "Idempotency-Key": crypto.randomUUID() },
-      }),
+      apiClient.post<CycleCount>(`/inventory/cycle-counts/${countId}/post`, undefined),
     onSuccess: (_, countId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.cycleCount(countId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.cycleCounts() });
@@ -247,9 +248,7 @@ export function useCreatePhysicalAudit() {
   return useMutation<PhysicalAudit, Error, CreatePhysicalAuditInput>({
     mutationKey: ["inventory", "physicalAudits", "create"],
     mutationFn: (data) =>
-      apiClient.post<PhysicalAudit>("/inventory/physical-audits", data, {
-        headers: { "Idempotency-Key": crypto.randomUUID() },
-      }),
+      apiClient.post<PhysicalAudit>("/inventory/physical-audits", data),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.physicalAudits() });
     },
@@ -299,9 +298,7 @@ export function usePostPhysicalAudit() {
   return useMutation<PhysicalAudit, Error, number>({
     mutationKey: ["inventory", "physicalAudits", "post"],
     mutationFn: (auditId) =>
-      apiClient.post<PhysicalAudit>(`/inventory/physical-audits/${auditId}/post`, undefined, {
-        headers: { "Idempotency-Key": crypto.randomUUID() },
-      }),
+      apiClient.post<PhysicalAudit>(`/inventory/physical-audits/${auditId}/post`, undefined),
     onSuccess: (_, auditId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.physicalAudit(auditId) });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.physicalAudits() });

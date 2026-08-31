@@ -21,6 +21,7 @@ import { useBillingExport } from "@/hooks/api/timesheets-core/billing";
 import { downloadBillingFile } from "./lib/build-billing-file";
 import { formatCurrencyForBilling } from "@/lib/format-utils";
 import type { BillingGroup } from "@/features/timesheets/types";
+import { randomId } from "@/lib/random-id";
 
 const exportSchema = z.object({ format: z.enum(["CSV", "XLSX"]) });
 
@@ -70,7 +71,7 @@ export function BillingExportDialog({
   const billingExport = useBillingExport();
 
   const idempotencyKey = useMemo(
-    () => (open ? crypto.randomUUID() : ""),
+    () => (open ? randomId() : ""),
     [open],
   );
 

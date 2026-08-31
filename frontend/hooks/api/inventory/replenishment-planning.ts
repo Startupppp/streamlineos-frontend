@@ -106,7 +106,6 @@ export function useApproveTransferRecommendation() {
       apiClient.post<ApprovedTransfer>(
         "/inventory/replenishment/transfer-recommendations/approve",
         input,
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: (_result, variables) => {
       qc.invalidateQueries({
@@ -319,9 +318,7 @@ export function useCreatePoBatch() {
   return useMutation<CreatedPoBatch, Error, CreatePoBatchInput>({
     mutationKey: ["inventory", "planning", "po-batch", "create"],
     mutationFn: (input) =>
-      apiClient.post<CreatedPoBatch>("/inventory/replenishment/po-batches", input, {
-        headers: { "Idempotency-Key": crypto.randomUUID() },
-      }),
+      apiClient.post<CreatedPoBatch>("/inventory/replenishment/po-batches", input),
     onSuccess: () => {
       qc.invalidateQueries({
         queryKey: queryKeys.inventoryPlanning.batchableProposalsList,

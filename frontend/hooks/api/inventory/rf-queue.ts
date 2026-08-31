@@ -58,7 +58,11 @@ export function useRfQueue(): RfQueue {
     { assignment: "MINE", limit: 25 },
     { enabled: canPutaway },
   );
-  const counts = useCycleCounts({ status: "IN_PROGRESS" });
+  // `useCycleCounts` gates itself on `inventory:stock:read`, but a COUNT task
+  // links to a screen that needs COUNT_KEY. Ungated, a picker with read but not
+  // reconcile was offered work that lands on Access Denied -- the one thing the
+  // route rules say never to render.
+  const counts = useCycleCounts({ status: "IN_PROGRESS" }, { enabled: canCount });
 
   const tasks = useMemo<RfTask[]>(() => {
     const out: RfTask[] = [];
@@ -109,7 +113,7 @@ export function useRfQueue(): RfQueue {
     isLoading:
       (canPick && waves.isLoading) ||
       (canPutaway && putaways.isLoading) ||
-      (canCount && counts.isLoading),
+      counts.isLoading,
     isError: waves.isError || putaways.isError || counts.isError,
     // Denied is its own answer, not an empty queue. A picker who has lost a
     // permission sees "you may not do this" rather than "there is nothing to do",

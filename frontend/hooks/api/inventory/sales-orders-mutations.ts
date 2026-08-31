@@ -150,7 +150,6 @@ export function useShipSalesOrder() {
           ...(trackingNumber !== undefined ? { trackingNumber } : {}),
           ...(notes !== undefined ? { notes } : {}),
         },
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
@@ -184,7 +183,6 @@ export function useReserveSalesOrder() {
           ...(warehouseId !== undefined ? { warehouseId } : {}),
           ...(allocations !== undefined ? { allocations } : {}),
         },
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
@@ -233,7 +231,6 @@ export function useCancelSalesOrder() {
       apiClient.post<void>(
         `/inventory/sales-orders/${soId}/cancel`,
         { ...(reason !== undefined ? { reason } : {}) },
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });

@@ -163,11 +163,10 @@ export function useCreateAdjustment() {
             },
           ],
         },
-        // The endpoint demands a key and 400s without one, so every create was
-        // failing before it reached the service. A write-off is the case where
-        // a duplicate is not cosmetic: two documents, both approvable, both
-        // postable, against the same missing stock.
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
+        // `apiClient` mints the `Idempotency-Key` for every mutating request,
+        // and the endpoint refuses this command without one. A write-off is the
+        // case where a duplicate is not cosmetic: two documents, both
+        // approvable, both postable, against the same missing stock.
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.adjustments() });
@@ -185,7 +184,6 @@ export function useApproveAdjustment() {
       apiClient.post<AdjustmentDetail>(
         `/inventory/stock/adjustments/${adjustmentId}/approve`,
         {},
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.adjustments() });
@@ -201,7 +199,6 @@ export function usePostAdjustment() {
       apiClient.post<AdjustmentDetail>(
         `/inventory/stock/adjustments/${adjustmentId}/post`,
         {},
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.adjustments() });

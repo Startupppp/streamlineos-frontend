@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -58,8 +59,13 @@ export default function InventoryAuditTrailPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const resourceType = searchParams.get("resource") ?? "";
-  const action = searchParams.get("action") ?? "";
+  // Free text is held locally and debounced. Controlled straight off the URL, a
+  // `router.replace` per keystroke fired a request per character and dropped
+  // typed characters, because the value came back asynchronously.
+  const [resourceDraft, setResourceDraft] = useState(searchParams.get("resource") ?? "");
+  const [actionDraft, setActionDraft] = useState(searchParams.get("action") ?? "");
+  const resourceType = useDebouncedValue(resourceDraft, 300);
+  const action = useDebouncedValue(actionDraft, 300);
   const fromDate = searchParams.get("from") ?? "";
   const toDate = searchParams.get("to") ?? "";
 
@@ -85,7 +91,7 @@ export default function InventoryAuditTrailPage() {
   });
 
   const rows = useMemo(() => query.data?.items ?? [], [query.data]);
-  const hasActiveFilters = Boolean(resourceType || action || fromDate || toDate);
+  const hasActiveFilters = Boolean(resourceDraft || actionDraft || fromDate || toDate);
 
   const setParam = useCallback(
     (key: string, value: string) => {
@@ -99,13 +105,21 @@ export default function InventoryAuditTrailPage() {
   );
 
   const handleResourceChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => setParam("resource", event.target.value),
-    [setParam],
+    (event: React.ChangeEvent<HTMLInputElement>) => setResourceDraft(event.target.value),
+    [],
   );
   const handleActionChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => setParam("action", event.target.value),
-    [setParam],
+    (event: React.ChangeEvent<HTMLInputElement>) => setActionDraft(event.target.value),
+    [],
   );
+
+  useEffect(() => {
+    setParam("resource", resourceType);
+  }, [resourceType, setParam]);
+
+  useEffect(() => {
+    setParam("action", action);
+  }, [action, setParam]);
   const handleFromChange = useCallback((value: string) => setParam("from", value), [setParam]);
   const handleToChange = useCallback((value: string) => setParam("to", value), [setParam]);
 
@@ -114,6 +128,8 @@ export default function InventoryAuditTrailPage() {
   }
 
   function handleClearFilters(): void {
+    setResourceDraft("");
+    setActionDraft("");
     router.replace("?", { scroll: false });
     resetCursor();
   }
@@ -125,14 +141,14 @@ export default function InventoryAuditTrailPage() {
   const filterBar = (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
       <Input
-        value={resourceType}
+        value={resourceDraft}
         onChange={handleResourceChange}
         placeholder="Resource type"
         aria-label="Filter by resource type"
         className="w-full sm:max-w-52"
       />
       <Input
-        value={action}
+        value={actionDraft}
         onChange={handleActionChange}
         placeholder="Action"
         aria-label="Filter by action"

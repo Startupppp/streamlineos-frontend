@@ -7,6 +7,14 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -66,6 +74,11 @@ function DockContent() {
   const [windowEnd, setWindowEnd] = useState("");
   const [carrierName, setCarrierName] = useState("");
 
+  const openDoors = useMemo(
+    () => (doors.data ?? []).filter((door) => door.isActive),
+    [doors.data],
+  );
+
   const rows = useMemo(
     () => (Array.isArray(appointments.data) ? appointments.data : []),
     [appointments.data],
@@ -107,6 +120,16 @@ function DockContent() {
     );
   }, [book, carrierName, day, doorId, windowEnd, windowStart]);
 
+  const handleSetStatus = useCallback(
+    (appointmentId: number, status: "ARRIVED" | "NO_SHOW") => {
+      setStatus.mutate(
+        { appointmentId, status },
+        { onError: (err) => toast.error(getErrorMessage(err)) },
+      );
+    },
+    [setStatus],
+  );
+
   const COLUMNS: DataTableColumn<DockAppointment>[] = [
     {
       key: "door",
@@ -139,7 +162,7 @@ function DockContent() {
               size="sm"
               variant="outline"
               className="text-xs"
-              onClick={() => setStatus.mutate({ appointmentId: row.id, status: "ARRIVED" })}
+              onClick={() => handleSetStatus(row.id, "ARRIVED")}
             >
               Arrived
             </Button>
@@ -147,7 +170,7 @@ function DockContent() {
               size="sm"
               variant="ghost"
               className="text-xs"
-              onClick={() => setStatus.mutate({ appointmentId: row.id, status: "NO_SHOW" })}
+              onClick={() => handleSetStatus(row.id, "NO_SHOW")}
             >
               No show
             </Button>
@@ -209,13 +232,19 @@ function DockContent() {
           </p>
           <div className="grid gap-3 sm:grid-cols-4">
             <div className="space-y-1.5">
-              <Label htmlFor="dock-door">Door id</Label>
-              <Input
-                id="dock-door"
-                inputMode="numeric"
-                value={doorId}
-                onChange={(e) => setDoorId(e.target.value)}
-              />
+              <Label htmlFor="dock-door">Door</Label>
+              <Select value={doorId} onValueChange={setDoorId}>
+                <SelectTrigger id="dock-door" className="w-full">
+                  <SelectValue placeholder="Choose a door" />
+                </SelectTrigger>
+                <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
+                  {openDoors.map((door) => (
+                    <SelectItem key={door.id} value={String(door.id)}>
+                      {door.name ? `${door.code} — ${door.name}` : door.code}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="dock-from">From</Label>
@@ -255,6 +284,7 @@ function DockContent() {
             data={rows}
             columns={COLUMNS}
             getRowKey={(row) => row.id}
+            pagination={{ pageSize: 25 }}
             className="flex-1 min-h-0"
           />
         ) : (

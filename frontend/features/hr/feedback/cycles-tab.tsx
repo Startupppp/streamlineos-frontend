@@ -43,6 +43,7 @@ import {
   planningStartPickerProps,
 } from "@/lib/date-constraints";
 import { getTodayString } from "@/lib/date-utils";
+import { randomId } from "@/lib/random-id";
 
 const CYCLE_STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground",
@@ -93,7 +94,7 @@ export function CyclesTab() {
     startDate: "",
     endDate: "",
     isAnonymous: true,
-    questions: [{ id: crypto.randomUUID(), text: "", type: "rating" }],
+    questions: [{ id: randomId(), text: "", type: "rating" }],
   });
 
   const feedbackStartBounds = planningStartPickerProps();
@@ -117,7 +118,7 @@ export function CyclesTab() {
   function addQuestion() {
     setForm((prev) => ({
       ...prev,
-      questions: [...prev.questions, { id: crypto.randomUUID(), text: "", type: "rating" }],
+      questions: [...prev.questions, { id: randomId(), text: "", type: "rating" }],
     }));
   }
 
@@ -168,7 +169,7 @@ export function CyclesTab() {
         startDate: "",
         endDate: "",
         isAnonymous: true,
-        questions: [{ id: crypto.randomUUID(), text: "", type: "rating" }],
+        questions: [{ id: randomId(), text: "", type: "rating" }],
       });
     } catch {
       toast.error("Failed to create cycle");

@@ -77,7 +77,7 @@ export function resolveScan(result: ScanResult): ResolvedScan {
       variantId == null &&
       lotId == null &&
       serialId == null &&
-      (lookup === undefined || lookup.type === "not_found"),
+      (lookup == null || lookup.type === "not_found"),
     warnings: result.warnings,
   };
 }

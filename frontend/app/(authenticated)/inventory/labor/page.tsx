@@ -166,7 +166,13 @@ function LaborContent() {
           behind it — and it is not pay. Above 100% is faster than standard.
         </p>
         {rows.length > 0 ? (
-          <DataTable data={rows} columns={COLUMNS} getRowKey={(row) => row.userId} className="flex-1 min-h-0" />
+          <DataTable
+            data={rows}
+            columns={COLUMNS}
+            getRowKey={(row) => row.userId}
+            pagination={{ pageSize: 25 }}
+            className="flex-1 min-h-0"
+          />
         ) : (
           <InventoryEmptyState
             illustration={<EmptyWarehouseIllustration />}

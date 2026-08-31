@@ -13,6 +13,7 @@ import { RfShell } from "@/features/inventory/components/rf/rf-shell";
 import { RfStep } from "@/features/inventory/components/rf/rf-step";
 import { usePickWave, useConfirmPick } from "@/hooks/api/inventory/picking";
 import { useCaptureScan } from "@/hooks/api/inventory/scan";
+import { randomId } from "@/lib/random-id";
 
 const PICK_READ = "inventory:sales-orders:read";
 const PICK_WRITE = "inventory:sales-orders:ship";
@@ -60,7 +61,7 @@ function RfPickContent() {
           // second physical read.
           await capture.mutateAsync({
             payload: scannedPayload,
-            idempotencyKey: crypto.randomUUID(),
+            idempotencyKey: randomId(),
           });
         }
         await confirm.mutateAsync({

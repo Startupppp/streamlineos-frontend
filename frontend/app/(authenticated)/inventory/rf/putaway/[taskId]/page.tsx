@@ -13,6 +13,7 @@ import { RfShell } from "@/features/inventory/components/rf/rf-shell";
 import { RfStep } from "@/features/inventory/components/rf/rf-step";
 import { usePutawayTask, useCompletePutaway } from "@/hooks/api/inventory/putaway";
 import { useCaptureScan } from "@/hooks/api/inventory/scan";
+import { randomId } from "@/lib/random-id";
 
 const PUTAWAY_READ = "inventory:stock:read";
 const PUTAWAY_WRITE = "inventory:stock:transfer";
@@ -65,7 +66,7 @@ function RfPutawayContent() {
         if (scannedPayload) {
           await capture.mutateAsync({
             payload: scannedPayload,
-            idempotencyKey: crypto.randomUUID(),
+            idempotencyKey: randomId(),
           });
         }
         await complete.mutateAsync({

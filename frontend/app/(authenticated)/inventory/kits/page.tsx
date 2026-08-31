@@ -151,6 +151,7 @@ function KitsContent() {
                     data={components}
                     columns={COMPONENT_COLUMNS}
                     getRowKey={(row) => row.id}
+                  pagination={{ pageSize: 25 }}
                   />
                   <p className="text-xs text-muted-foreground">
                     {buildable.data

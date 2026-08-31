@@ -235,8 +235,14 @@ export function PickWaveSheet({
 
             <ul className="flex flex-col gap-2">
               {detail.lines.map((line) => (
+                // The key carries what has already been picked, for the reason
+                // `putaway-task-sheet.tsx` gives: the row seeds its quantity
+                // field from the line's remainder, and a seed is an initial
+                // value. After a partial pick the refetched line has a smaller
+                // remainder and a row React kept would still be offering the old
+                // one. Changing the key remounts it with the new remainder.
                 <PickTaskRow
-                  key={line.id}
+                  key={`${line.id}:${line.quantity_picked}`}
                   pickListId={detail.id}
                   line={line}
                   disabled={!canPick || heldBySomeoneElse || finished}

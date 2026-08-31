@@ -295,7 +295,6 @@ export function useConfirmPick() {
           ...(locationId !== undefined ? { locationId } : {}),
           ...(scannedPayload !== undefined ? { scannedPayload } : {}),
         },
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.picking.wave(variables.pickListId) });
@@ -343,7 +342,6 @@ export function useReportPickException() {
               quantityPicked,
               ...(notes ? { notes } : {}),
             },
-            { headers: { "Idempotency-Key": crypto.randomUUID() } },
           )
         : apiClient.post<PickExceptionResult>(
             `/inventory/picking/waves/${pickListId}/exception`,
@@ -355,7 +353,6 @@ export function useReportPickException() {
                 ? { foundLocationId }
                 : {}),
             },
-            { headers: { "Idempotency-Key": crypto.randomUUID() } },
           ),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.picking.wave(variables.pickListId) });

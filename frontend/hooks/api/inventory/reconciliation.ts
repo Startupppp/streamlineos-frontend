@@ -79,10 +79,9 @@ export function useRepairProjection() {
       apiClient.post<RepairResult>(
         "/inventory/stock/reconciliation/repair",
         { apply: true, ...input },
-        // The command is retry-safe on the server; the key is what makes a
-        // retried request replay its first result instead of reporting a second
-        // set of changed rows.
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
+        // The command is retry-safe on the server; the key `apiClient` mints is
+        // what makes a retried request replay its first result instead of
+        // reporting a second set of changed rows.
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all });

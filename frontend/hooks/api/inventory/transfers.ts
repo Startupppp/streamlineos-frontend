@@ -296,7 +296,6 @@ export function useReserveTransfer() {
       apiClient.post<void>(
         `/inventory/stock/transfers/${transferId}/reserve`,
         {},
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: (_, transferId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });

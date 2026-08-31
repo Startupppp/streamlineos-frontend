@@ -27,6 +27,7 @@ import {
 } from "@/hooks/api/inventory/scan";
 import { useCan } from "@/hooks/api/access";
 import { describeScan, resolveScan } from "@/features/inventory/lib/scan-resolution";
+import { randomId } from "@/lib/random-id";
 
 interface RecentScan {
   key: string;
@@ -213,7 +214,7 @@ export function BarcodeClient() {
     if (!trimmed || !active) return;
     setValue("");
     capture.mutate(
-      { payload: trimmed, idempotencyKey: crypto.randomUUID() },
+      { payload: trimmed, idempotencyKey: randomId() },
       {
         onSuccess: (result) => {
           const entry: RecentScan = {

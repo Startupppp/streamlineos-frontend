@@ -159,6 +159,7 @@ function ConsignmentContent() {
             data={rows}
             columns={COLUMNS}
             getRowKey={(row) => `${row.product_variant_id}:${row.location_id}:${row.ownership}`}
+            pagination={{ pageSize: 25 }}
             className="flex-1 min-h-0"
           />
         ) : (

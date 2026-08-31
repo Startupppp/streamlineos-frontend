@@ -166,8 +166,9 @@ export function useDeleteProduct() {
     mutationKey: ["inventory", "product", "delete"],
     mutationFn: (productId) =>
       apiClient.delete<void>(`/inventory/products/${productId}`),
-    onSuccess: () => {
+    onSuccess: (_data, productId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.productsList });
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.product(productId) });
     },
   });
 }
@@ -178,8 +179,11 @@ export function useArchiveProduct() {
     mutationKey: ["inventory", "product", "archive"],
     mutationFn: (productId) =>
       apiClient.post<InventoryProduct>(`/inventory/products/${productId}/archive`, {}),
-    onSuccess: () => {
+    onSuccess: (_data, productId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.productsList });
+      // The detail key is not under the list prefix, so the page this was
+      // triggered from keeps its old status badge until staleTime lapses.
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.product(productId) });
     },
   });
 }
@@ -190,8 +194,11 @@ export function useRestoreProduct() {
     mutationKey: ["inventory", "product", "restore"],
     mutationFn: (productId) =>
       apiClient.post<InventoryProduct>(`/inventory/products/${productId}/restore`, {}),
-    onSuccess: () => {
+    onSuccess: (_data, productId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.productsList });
+      // The detail key is not under the list prefix, so the page this was
+      // triggered from keeps its old status badge until staleTime lapses.
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.product(productId) });
     },
   });
 }

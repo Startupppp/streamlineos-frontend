@@ -5,6 +5,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { toast } from "sonner";
 import { Boxes } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -151,6 +152,7 @@ function HandlingUnitPanel({
               columns={CONTENT_COLUMNS}
               getRowKey={(row) => `${row.handlingUnitId}:${row.productVariantId}:${row.lotId ?? 0}`}
               className="border-0"
+            pagination={{ pageSize: 25 }}
             />
           ) : (
             <InventoryEmptyState
@@ -201,6 +203,12 @@ function HandlingUnitsContent() {
   const canCreate = useCan("inventory:stock:transfer");
   const { data, isLoading, isError, refetch } = useHandlingUnits({ rootsOnly: true });
   const units = useMemo(() => (Array.isArray(data) ? data : []), [data]);
+  const [unitsPage, setUnitsPage] = useState(1);
+  const unitsPageSize = 24;
+  const visibleUnits = useMemo(
+    () => units.slice((unitsPage - 1) * unitsPageSize, unitsPage * unitsPageSize),
+    [units, unitsPage],
+  );
   const shouldReduceMotion = useReducedMotion();
   const create = useCreateHandlingUnit();
 
@@ -284,13 +292,14 @@ function HandlingUnitsContent() {
         actions={actions}
       >
         {units.length > 0 ? (
-          <motion.div
-            className="flex-1 min-h-0 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 content-start"
+          <>
+            <motion.div
+              className="flex-1 min-h-0 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 content-start"
             variants={shouldReduceMotion ? undefined : staggerContainer}
             initial={shouldReduceMotion ? undefined : "hidden"}
             animate={shouldReduceMotion ? undefined : "visible"}
           >
-            {units.map((unit) => (
+            {visibleUnits.map((unit) => (
               <motion.div key={unit.id} variants={fadeUp}>
                 <Card className="h-full">
                   <CardContent className="p-4 space-y-3">
@@ -311,7 +320,15 @@ function HandlingUnitsContent() {
                 </Card>
               </motion.div>
             ))}
-          </motion.div>
+            </motion.div>
+            <TablePagination
+              page={unitsPage}
+              pageSize={unitsPageSize}
+              total={units.length}
+              onPageChange={setUnitsPage}
+              className="shrink-0"
+            />
+          </>
         ) : (
           <InventoryEmptyState
             illustration={<EmptyWarehouseIllustration />}

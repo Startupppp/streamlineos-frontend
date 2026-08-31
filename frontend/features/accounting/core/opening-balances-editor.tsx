@@ -18,6 +18,7 @@ import {
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useAccounts } from "@/hooks/api/accounting";
 import { usePostOpeningBalances } from "@/hooks/api/accounting/core";
+import { randomId } from "@/lib/random-id";
 
 interface EditorLine {
   id: string;
@@ -27,7 +28,7 @@ interface EditorLine {
 }
 
 function makeEmptyLine(): EditorLine {
-  return { id: crypto.randomUUID(), accountId: "", debit: "", credit: "" };
+  return { id: randomId(), accountId: "", debit: "", credit: "" };
 }
 
 function parseMoney(value: string): number {

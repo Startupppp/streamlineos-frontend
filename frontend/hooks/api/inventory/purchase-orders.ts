@@ -144,9 +144,7 @@ export function useReceiveGoods(poId: number) {
   return useMutation<GoodsReceiptNote, Error, ReceiveGoodsInput>({
     mutationKey: ["inventory", "purchase-orders", "receive", poId],
     mutationFn: (data) =>
-      apiClient.post<GoodsReceiptNote>(`/inventory/purchase-orders/${poId}/receive`, data, {
-        headers: { "Idempotency-Key": crypto.randomUUID() },
-      }),
+      apiClient.post<GoodsReceiptNote>(`/inventory/purchase-orders/${poId}/receive`, data),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrder(poId) });
@@ -170,7 +168,6 @@ export function useApprovePurchaseOrder(poId: number) {
       apiClient.post<PurchaseOrderSummary>(
         `/inventory/purchase-orders/${poId}/approve`,
         {},
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
@@ -187,7 +184,6 @@ export function useClosePurchaseOrder(poId: number) {
       apiClient.post<void>(
         `/inventory/purchase-orders/${poId}/close`,
         {},
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
@@ -204,7 +200,6 @@ export function useCancelPurchaseOrder(poId: number) {
       apiClient.post<void>(
         `/inventory/purchase-orders/${poId}/cancel`,
         vars ?? {},
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });

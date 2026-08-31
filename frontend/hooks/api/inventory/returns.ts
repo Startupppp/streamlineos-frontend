@@ -267,7 +267,6 @@ export function usePostVendorReturn() {
       apiClient.post<VendorReturnSummary>(
         `/inventory/vendor-returns/${returnId}/post`,
         { ...(reason !== undefined ? { reason } : {}) },
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: (_, variables) => {
       invalidateVendorReturn(qc, variables.returnId);
@@ -372,7 +371,6 @@ export function usePostCustomerReturn() {
       apiClient.post<CustomerReturnSummary>(
         `/inventory/customer-returns/${returnId}/post`,
         { ...(reason !== undefined ? { reason } : {}) },
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: (_, variables) => {
       invalidateCustomerReturn(qc, variables.returnId);

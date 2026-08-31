@@ -218,7 +218,12 @@ function SlottingContent() {
             Rules
           </h2>
           {ruleRows.length > 0 ? (
-            <DataTable data={ruleRows} columns={RULE_COLUMNS} getRowKey={(row) => row.id} />
+            <DataTable
+              data={ruleRows}
+              columns={RULE_COLUMNS}
+              getRowKey={(row) => row.id}
+              pagination={{ pageSize: 25 }}
+            />
           ) : (
             <InventoryEmptyState
               illustration={<EmptyWarehouseIllustration />}
@@ -238,7 +243,12 @@ function SlottingContent() {
             of yesterday is a liability.
           </p>
           {recRows.length > 0 ? (
-            <DataTable data={recRows} columns={REC_COLUMNS} getRowKey={(row) => row.id} />
+            <DataTable
+              data={recRows}
+              columns={REC_COLUMNS}
+              getRowKey={(row) => row.id}
+              pagination={{ pageSize: 25 }}
+            />
           ) : (
             <InventoryEmptyState
               illustration={<EmptyWarehouseIllustration />}

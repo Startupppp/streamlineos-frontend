@@ -235,7 +235,6 @@ export function useCompletePutaway() {
             },
           ],
         },
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.putaway.task(variables.taskId) });

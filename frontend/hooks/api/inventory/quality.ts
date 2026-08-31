@@ -296,7 +296,6 @@ export function usePassInspection() {
       apiClient.post<Inspection>(
         `/inventory/quality/inspections/${inspectionId}/pass`,
         undefined,
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: (_, inspectionId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.qualityInspection(inspectionId) });
@@ -341,7 +340,6 @@ export function useDisposeInspection() {
       apiClient.post<Inspection>(
         `/inventory/quality/inspections/${inspectionId}/dispose`,
         lineId !== undefined ? { lineId } : {},
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: (_, vars) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.qualityInspection(vars.inspectionId) });
@@ -365,7 +363,6 @@ export function useCancelInspection() {
       apiClient.post<Inspection>(
         `/inventory/quality/inspections/${inspectionId}/cancel`,
         undefined,
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: (_, inspectionId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.qualityInspection(inspectionId) });
@@ -442,7 +439,6 @@ export function useCreateQualityHold() {
       apiClient.post<QualityHold>(
         "/inventory/quality/holds",
         { ...rest, quantity: String(quantity) },
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.qualityHolds() });
@@ -460,7 +456,6 @@ export function useReleaseQualityHold() {
       apiClient.post<QualityHold>(
         `/inventory/quality/holds/${holdId}/release`,
         undefined,
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: (_, holdId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.qualityHold(holdId) });

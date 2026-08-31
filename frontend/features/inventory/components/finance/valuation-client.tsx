@@ -220,7 +220,6 @@ function buildValuationColumns(
 
 export function ValuationClient() {
   const canView = useCan("inventory:valuation:read");
-  const canRead = useCan("inventory:valuation:read");
   const [warehouseFilter, setWarehouseFilter] = useState<number | undefined>(undefined);
   const [selectedVariantId, setSelectedVariantId] = useState<number>(0);
   const [layersOpen, setLayersOpen] = useState(false);
@@ -249,18 +248,6 @@ export function ValuationClient() {
     void refetch();
   }
 
-  if (!canRead) {
-    return (
-      <PageWrapper title="Inventory Valuation">
-        <InventoryEmptyState
-          illustrationPreset="security"
-          title="Access restricted"
-          description="You don't have permission to view inventory valuation."
-          className="flex-1 h-full"
-        />
-      </PageWrapper>
-    );
-  }
 
   function getMethodValue(method: CostingMethod): string {
     const entry = byMethod.find((b) => b.method === method);

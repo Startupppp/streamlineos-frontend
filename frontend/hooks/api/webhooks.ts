@@ -149,7 +149,6 @@ export function useRetryDelivery(endpointId: number) {
       apiClient.post<{ success: boolean }>(
         `/webhooks/${endpointId}/logs/${logId}/retry`,
         {},
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: queryKeys.webhooks.logs(endpointId) }),

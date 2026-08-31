@@ -172,7 +172,6 @@ export function useExpireStaleReservations() {
       apiClient.post<void>(
         "/inventory/settings/maintenance/expire-reservations",
         undefined,
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.reservations() });

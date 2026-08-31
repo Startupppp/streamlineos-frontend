@@ -5,6 +5,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import { SCAN_PERMISSION, useCaptureScan } from "@/hooks/api/inventory/scan";
 import { describeScan, resolveScan, type ResolvedScan } from "@/features/inventory/lib/scan-resolution";
+import { randomId } from "@/lib/random-id";
 
 /**
  * Longest gap between two identical payloads still treated as one physical act.
@@ -172,7 +173,7 @@ export function useScanTarget<T>(options: UseScanTargetOptions<T>): UseScanTarge
     const previous = lastScan.current;
     const isRepeat =
       previous !== null && previous.payload === trimmed && now - previous.at < DUPLICATE_WINDOW_MS;
-    const idempotencyKey = isRepeat ? previous.key : crypto.randomUUID();
+    const idempotencyKey = isRepeat ? previous.key : randomId();
     lastScan.current = { payload: trimmed, key: idempotencyKey, at: now };
 
     setChoice(null);

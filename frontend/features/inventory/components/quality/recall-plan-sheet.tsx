@@ -34,6 +34,7 @@ import {
 } from "@/hooks/api/inventory/quality";
 import { RecallImpactPanel } from "./recall-impact-panel";
 import { RecallLotPicker } from "./recall-lot-picker";
+import { randomId } from "@/lib/random-id";
 import {
   asRecallMode,
   RECALL_MODES,
@@ -86,7 +87,7 @@ export function RecallPlanSheet({ open, onOpenChange }: Props) {
    * attempt is not an idempotency key at all — the retry after a timeout would
    * raise a second recall against the same lots.
    */
-  const [idempotencyKey, setIdempotencyKey] = useState<string>(() => crypto.randomUUID());
+  const [idempotencyKey, setIdempotencyKey] = useState<string>(() => randomId());
 
   const simulateMut = useSimulateRecall();
   const createMut = useCreateRecall();
@@ -124,7 +125,7 @@ export function RecallPlanSheet({ open, onOpenChange }: Props) {
     setTitle("");
     setDescription("");
     setTitleError(false);
-    setIdempotencyKey(crypto.randomUUID());
+    setIdempotencyKey(randomId());
     form.reset();
     simulateMut.reset();
     createMut.reset();

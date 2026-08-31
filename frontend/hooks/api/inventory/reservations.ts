@@ -72,9 +72,7 @@ export function useOpeningStock() {
   return useMutation<unknown, Error, OpeningStockInput>({
     mutationKey: ["inventory", "stock", "opening"],
     mutationFn: (data) =>
-      apiClient.post<unknown>("/inventory/stock/opening", data, {
-        headers: { "Idempotency-Key": crypto.randomUUID() },
-      }),
+      apiClient.post<unknown>("/inventory/stock/opening", data),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.dashboard() });

@@ -122,7 +122,6 @@ export function useScanIntoPackage() {
       apiClient.post<PackingReconciliation>(
         `/inventory/packages/${packageId}/scan`,
         body,
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: (data, variables) => {
       qc.setQueryData(queryKeys.packing.reconciliation(variables.packageId), data);

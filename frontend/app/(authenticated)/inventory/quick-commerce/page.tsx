@@ -4,6 +4,7 @@ import { Suspense, useCallback, useMemo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Upload } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -63,6 +64,12 @@ function QuickCommerceContent() {
   const shouldReduceMotion = useReducedMotion();
 
   const [selected, setSelected] = useState<PlatformPoSummary | null>(null);
+  const [ordersPage, setOrdersPage] = useState(1);
+  const ordersPageSize = 24;
+  const visibleOrders = useMemo(
+    () => orders.slice((ordersPage - 1) * ordersPageSize, ordersPage * ordersPageSize),
+    [orders, ordersPage],
+  );
   const [panelOpen, setPanelOpen] = useState(false);
   const [payoutOpen, setPayoutOpen] = useState(false);
 
@@ -129,13 +136,14 @@ function QuickCommerceContent() {
         actions={actions}
       >
         {orders.length > 0 ? (
-          <motion.div
-            className="flex-1 min-h-0 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 content-start"
+          <>
+            <motion.div
+              className="flex-1 min-h-0 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 content-start"
             variants={shouldReduceMotion ? undefined : staggerContainer}
             initial={shouldReduceMotion ? undefined : "hidden"}
             animate={shouldReduceMotion ? undefined : "visible"}
           >
-            {orders.map((order) => (
+            {visibleOrders.map((order) => (
               <motion.div key={order.id} variants={fadeUp}>
                 <Card className="h-full">
                   <CardContent className="p-4 space-y-3">
@@ -178,7 +186,15 @@ function QuickCommerceContent() {
                 </Card>
               </motion.div>
             ))}
-          </motion.div>
+            </motion.div>
+            <TablePagination
+              page={ordersPage}
+              pageSize={ordersPageSize}
+              total={orders.length}
+              onPageChange={setOrdersPage}
+              className="shrink-0"
+            />
+          </>
         ) : (
           <InventoryEmptyState
             illustration={<EmptyOrdersIllustration />}

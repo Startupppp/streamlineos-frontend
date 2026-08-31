@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useEffect, useMemo, useState } from "react";
+import { useForm, useFieldArray, type DefaultValues } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -76,9 +76,8 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
     trackingMethod: l.productVariant?.product?.trackingMethod ?? "NONE",
   }));
 
-  const form = useForm<GrnFormValues>({
-    resolver: zodResolver(grnSchema),
-    defaultValues: {
+  const defaults = useMemo<DefaultValues<GrnFormValues>>(
+    () => ({
       notes: "",
       lines: pendingLines.map((l) => ({
         poLineId: l.id,
@@ -91,7 +90,13 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
         manufactureDate: "",
         serialNumbers: "",
       })),
-    },
+    }),
+    [pendingLines],
+  );
+
+  const form = useForm<GrnFormValues>({
+    resolver: zodResolver(grnSchema),
+    defaultValues: defaults,
   });
 
   const { fields } = useFieldArray({ control: form.control, name: "lines" });
@@ -106,6 +111,17 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
    * nobody cleared a pre-filled box.
    */
   const [scannedTally, setScannedTally] = useState<Record<number, number>>({});
+
+  useEffect(
+    function reseedOnOpen() {
+      if (!open) return;
+      form.reset(defaults);
+      setScannedTally({});
+      setActiveLineId(null);
+      setSelectedWarehouseId(po.warehouseId ?? 0);
+    },
+    [open, defaults, form, po.warehouseId],
+  );
 
   const scan = useScanTarget<DraftLineMeta>({
     candidates: lineMetas,
@@ -169,7 +185,7 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
 
   function handleOpenChange(nextOpen: boolean): void {
     if (!nextOpen) {
-      form.reset();
+      form.reset(defaults);
       setScannedTally({});
       setActiveLineId(null);
       setSelectedWarehouseId(po.warehouseId ?? 0);

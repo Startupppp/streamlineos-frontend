@@ -14,6 +14,7 @@ import { GeneratePayoutDialog } from "./generate-payout-dialog";
 import { MarkBatchSentDialog, MarkBatchPaidDialog } from "./mark-batch-dialogs";
 import { cn } from "@/lib/utils";
 import type { PayoutBatch, BankBatchStatus, BatchFormat } from "@/types/payroll";
+import { randomId } from "@/lib/random-id";
 
 const BATCH_STATUS_STYLES: Record<BankBatchStatus, string> = {
   DRAFT: "bg-muted text-muted-foreground",
@@ -51,7 +52,7 @@ export function BatchesTable({
   const [txnRef, setTxnRef] = useState("");
 
   function handleOpenGenerateDialog() {
-    setIdempotencyKey(crypto.randomUUID());
+    setIdempotencyKey(randomId());
     setFormat("NEFT_CSV");
     setFileUrl(null);
     setShowGenerateDialog(true);

@@ -282,7 +282,6 @@ export function useBulkOnboardEmployees() {
       apiClient.post<BulkOnboardResult>(
         "/hr/employees/onboard/bulk",
         { employees },
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: () => invalidateHrWorkforceQueries(qc),
   });

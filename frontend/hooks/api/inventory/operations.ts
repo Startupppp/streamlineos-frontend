@@ -173,9 +173,7 @@ export function useCreateGrnDraft() {
   return useMutation<GrnDetail, Error, CreateGrnDraftInput>({
     mutationKey: ["inventory", "goodsReceipts", "createDraft"],
     mutationFn: (body) =>
-      apiClient.post<GrnDetail>("/inventory/goods-receipts", body, {
-        headers: { "Idempotency-Key": crypto.randomUUID() },
-      }),
+      apiClient.post<GrnDetail>("/inventory/goods-receipts", body),
     onSuccess: (data) => invalidate(data.id, false),
   });
 }
@@ -220,7 +218,6 @@ export function usePostGrn() {
       apiClient.post<GrnDetail>(
         `/inventory/goods-receipts/${grnId}/post`,
         {},
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: (data) => invalidate(data.id, true),
   });
@@ -251,7 +248,6 @@ export function useReverseGrn() {
       apiClient.post<void>(
         `/inventory/goods-receipts/${grnId}/reverse`,
         { reason },
-        { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: (_, variables) => invalidate(variables.grnId, true),
   });

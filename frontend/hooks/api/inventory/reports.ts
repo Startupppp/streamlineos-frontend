@@ -327,7 +327,9 @@ function toReorderRowFromFlat(row: RawReorderRow): ReorderReportRow {
     // short — it ignored blocked, quality-held and picked-not-shipped stock.
     availableQty: row.availableQty,
     reorderPoint: row.reorderPoint,
-    reorderQty: row.suggestedQty > 0 ? row.suggestedQty : (deficit > 0 ? deficit : null),
+    // `deficit` is `suggestedQty` (above), so the old inner branch was the
+    // same test twice and could never be reached.
+    reorderQty: row.suggestedQty > 0 ? row.suggestedQty : null,
     deficit,
     costPrice: null,
     vendorName: null,
