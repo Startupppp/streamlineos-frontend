@@ -3,11 +3,24 @@
 **Status: OPEN — operator-blocked**
 A read replica requires provisioning at the managed-database provider level. This runbook covers provisioning, lag measurement, and proving replica-safe versus primary-required workload behaviour.
 
+**Scripts are code-complete.** `verify-replica-routing.mjs` now measures replication lag (`pg_last_xact_replay_timestamp`) and WAL receive distance (`pg_last_wal_receive_lsn` vs `pg_current_wal_lsn`) in addition to the existing connectivity, GUC, and RLS checks. When `DB_REPLICA_URL` is absent the script exits **2** (prerequisite missing) rather than 0 or 1, so a missing replica is never confused with a passed check. The `streamline_app` role is failing `28P01 password authentication failed` on the dev branch — set the correct password in the Neon console (not with `ALTER ROLE`, which Neon's control plane overwrites on suspend) before running live checks.
+
+## Self-test (logic only, no DB required)
+
+```bash
+cd backend
+node src/scripts/verify-replica-routing.mjs --self-test
+# 16 cases pass: prereq detection, endpoint distinction, RLS error classification,
+# watermark alignment, lag classification, LSN distance classification.
+# Exits 0 regardless of DB_REPLICA_URL — self-test proves the LOGIC, not the infrastructure.
+```
+
 ## Preconditions
 
 - Production Neon project with at least one compute endpoint on the primary branch.
 - Neon allows read-only compute endpoints on any branch, including the primary. Each compute endpoint is a separate Postgres server. The read-only endpoint honours Neon's read replica semantics.
 - Operator has console access and a `DATABASE_REPLICA_URL` variable for the read-only endpoint.
+- `streamline_app` password must be set in the **Neon console** — `ALTER ROLE` does not persist past a compute suspend. `APP_DATABASE_URL` uses this role; connections fail `28P01` if it regressed.
 
 ## Step 1 — Provision the read replica
 
@@ -19,7 +32,33 @@ Neon console → Project → Compute → Add compute endpoint
   Save → copy the connection string to DATABASE_REPLICA_URL in .env
 ```
 
-## Step 2 — Measure replication lag
+## Step 2 — Run the script against the provisioned replica
+
+```bash
+cd backend
+# Basic routing + lag + RLS check (exits 2 if DB_REPLICA_URL unset, exits 1 if any check fails):
+DB_REPLICA_URL="<replica-connection-string>" \
+APP_DATABASE_URL="$APP_DATABASE_URL" \
+  node src/scripts/verify-replica-routing.mjs
+
+# With isolation checks (phantom org + migration watermark alignment):
+DB_REPLICA_URL="<replica-connection-string>" \
+APP_DATABASE_URL="$APP_DATABASE_URL" \
+  node src/scripts/verify-replica-routing.mjs --isolation
+```
+
+The script measures and reports:
+- Replica reachable (`SELECT 1`)
+- Replica endpoint host is distinct from primary (prevents routing to self)
+- GUC round-trip inside `BEGIN READ ONLY` transaction
+- RLS table count on replica (must be > 0)
+- RLS fails closed without GUC (`42501`)
+- **Replication lag** (`pg_last_xact_replay_timestamp`) — must be ≤10s and non-NULL (NULL means primary endpoint)
+- **WAL receive distance** (`pg_last_wal_receive_lsn` vs primary `pg_current_wal_lsn`) — must be ≤64MB
+- (--isolation) Phantom org returns 0 rows — no cross-tenant leak
+- (--isolation) Replica migration watermark matches primary
+
+## Step 3 — Measure replication lag manually
 
 ```bash
 # On the replica:

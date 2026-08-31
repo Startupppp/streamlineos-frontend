@@ -5,7 +5,7 @@ Each row is either **PASS (with evidence)** or **OPEN — operator-blocked**.
 
 A self-test passing proves the **guard is correct and can fail**: it is NOT evidence that the production infrastructure exists. These are deliberately separate columns.
 
-Last updated: 2026-08-30
+Last updated: 2026-08-31
 
 ---
 
@@ -15,10 +15,10 @@ Last updated: 2026-08-30
 |---|---|---|---|---|---|
 | 1 | Independent cell isolation — separate compute, cache, object storage, search, realtime, worker and monitoring per cell (namespace-only separation does not pass) | PASS 2026-08-30 | Not provisioned | **OPEN — operator-blocked** | [RB-01](runbooks/RB-01-cell-isolation.md) |
 | 2 | PITR / backup frequency meeting the five-minute operational RPO | PASS 2026-08-30 | Not confirmed | **OPEN — operator-blocked** | [RB-02](runbooks/RB-02-pitr-backup.md) |
-| 3 | Physical read replica — provisioned, lag measured, replica-safe vs primary-required paths proved under real lag | Not runnable (missing HR schema module, see OUT-OF-OWNERSHIP) | Not provisioned | **OPEN — operator-blocked** | [RB-03](runbooks/RB-03-read-replica.md) |
+| 3 | Physical read replica — provisioned, lag measured, replica-safe vs primary-required paths proved under real lag | PASS 2026-08-31 (self-test: 16 cases — prereq detection, endpoint distinction, RLS classification, watermark alignment, lag classification, LSN distance classification) | Not provisioned — `DB_REPLICA_URL` absent; script exits 2 (prerequisite missing) rather than 0 | **OPEN — operator-blocked** | [RB-03](runbooks/RB-03-read-replica.md) |
 | 4 | Recovery drill — measured RPO and RTO | PASS 2026-08-30 (structure + result shape verified) | Not drilled | **OPEN — operator-blocked** | [RB-04](runbooks/RB-04-recovery-drill.md) |
 | 5 | Production-shaped load — all 14 workload objectives with declared geography/device/network/cache, ≥40% headroom, burst survived | PASS 2026-08-30 (guard detects BREACHED and NOT_DRIVEN) | Not run on live infra | **OPEN — operator-blocked** | [RB-05](runbooks/RB-05-production-load.md) |
-| 6 | Live alert delivery — `ALERT_WEBHOOK_URL`, `APP_RELEASE`, production log stream; test event through every on-call destination; acknowledgement recorded | PASS 2026-08-30 (all 10 alert self-tests pass) | `ALERT_WEBHOOK_URL` not configured | **OPEN — operator-blocked** | [RB-06](runbooks/RB-06-live-alert-delivery.md) |
+| 6 | Live alert delivery + acknowledgement — `ALERT_WEBHOOK_URL`, `APP_RELEASE`, production log stream; test event through every on-call destination; human ACK recorded | PASS 2026-08-31 (12 alert self-tests pass: 11 delivery/dispatch probes + `check-alert-ack` which verifies the detection of unacknowledged state) | `ALERT_WEBHOOK_URL` not configured; no operator has run the interactive drill and confirmed a nonce | **OPEN — operator-blocked** | [RB-06](runbooks/RB-06-live-alert-delivery.md) |
 | 7 | Per-cell cost — cost per active org/member/message/job; saturation forecast; trended daily across releases | PASS 2026-08-30 (anomaly detector fires, breach detected) | No trend data; live infra needed | **OPEN — operator-blocked** | [RB-07](runbooks/RB-07-per-cell-cost.md) |
 | 8 | Compliance drill — GDPR export, deletion, retention and legal-hold end to end with disposable data | PARTIAL 2026-08-30 (audit workflow passes dry-run; 3 gaps remain) | Export worker and storage purge not built | **OPEN — code gaps remain** | See [Compliance gaps](#compliance-gaps) |
 
@@ -60,6 +60,8 @@ These self-tests prove the guards are structurally correct. They are NOT product
 | alert:queue-age | `node src/scripts/alert-queue-age.mjs --self-test` | PASS: fresh clear, stale age breaches, high retry fires |
 | alert:pool-saturation | `node src/scripts/alert-pool-saturation.mjs --self-test` | PASS: p95 breach fires, saturation warn fires |
 | alert:tenant-cost | `node src/scripts/alert-tenant-cost.mjs --self-test` | PASS: noisy org detected, normal orgs clear |
+| check:alert-ack | `node src/scripts/check-alert-ack.mjs --self-test` | PASS (2026-08-31): 6 cases — missing file detected, fresh ACK passes, false/null acked fails with UNACKNOWLEDGED, stale ACK fails, state file round-trip. Live check exits 2 (ALERT_WEBHOOK_URL not set) |
+| cell:replica | `node src/scripts/verify-replica-routing.mjs --self-test` | PASS (2026-08-31): 16 cases — prereq detection (both vars), distinct endpoint, same endpoint rejected, RLS 42501/wrong-state/no-error, watermark match/drift, lag classification (not-a-replica/within/exceeds), LSN distance (not-receiving/within/exceeds). Live check exits 2 (DB_REPLICA_URL not set) |
 | check:migration-chain | `node src/scripts/verify-migration-chain.mjs --self-test` | PASS: 10 cases — unjournalled, duplicate prefix, timestamp regression, orphan, watermark, gaps |
 | check:route-classification | `node src/scripts/route-classification-report.mjs --self-test` | PASS: all 14 classification cases correct |
 | check:permission-keys | `node src/scripts/check-permission-keys.mjs --self-test` | PASS: all 18 cases correct including ghost-key detection |

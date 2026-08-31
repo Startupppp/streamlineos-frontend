@@ -1,7 +1,9 @@
-# RB-06 Live Alert Delivery
+# RB-06 Live Alert Delivery + Acknowledgement
 
 **Status: OPEN — operator-blocked**
-All alert guard self-tests pass (see below). Live delivery requires `ALERT_WEBHOOK_URL`, `APP_RELEASE`, and a production log stream to be configured. Alert acknowledgement must come from a real on-call destination.
+All 12 alert guard self-tests pass (11 delivery/dispatch probes + `check-alert-ack` guard). Live delivery requires `ALERT_WEBHOOK_URL`, `APP_RELEASE`, and a production log stream to be configured. Alert acknowledgement must be recorded by a human operator entering the drill nonce.
+
+**Acknowledgement is now code-complete.** `drill-alert-system.mjs` sends a nonce to the webhook, prompts the operator to enter it from the alert channel, and writes `{ delivered, acked, nonce, sentAt, ackedAt }` to a state file. `check-alert-ack.mjs` reads that file and **exits 1** (LOUDLY fails) if no human has confirmed receipt. An unacknowledged critical alert is a silent failure mode — this check makes it visible and blocking.
 
 ## Preconditions
 
@@ -58,15 +60,40 @@ Each alert reads from the live log stream. To confirm the predicate is not a han
 # alert:p95: reads from the metrics endpoint or structured trace log for p95 computation
 ```
 
-## Step 4 — Record acknowledgement
+## Step 4 — Record acknowledgement (interactive drill)
 
-For each alert type:
-1. Send the test event.
-2. Note the timestamp when the webhook was called (check webhook receiver log).
-3. Note the timestamp when the on-call engineer acknowledged in the alerting platform.
-4. Compute delivery latency = ack_time - webhook_call_time.
+```bash
+cd backend
 
-Pass threshold: acknowledgement within 5 minutes of webhook delivery.
+# Run the interactive drill — sends a nonce to the webhook and waits for you to confirm it.
+# Must be run in an interactive terminal (not CI/pipe).
+node --env-file=.env src/scripts/drill-alert-system.mjs
+
+# The script will:
+#   1. Send a JSON payload with a unique nonce to ALERT_WEBHOOK_URL.
+#   2. Prompt: "Enter the nonce from your alert channel to confirm ACK (or 'skip')"
+#   3. Check your Slack/PagerDuty/OpsGenie channel — find the drill message.
+#   4. Type the nonce and press Enter.
+#   5. On match: writes { delivered: true, acked: true, nonce, sentAt, ackedAt } to state file.
+#      Exit 0 = ACK confirmed.
+#   6. On mismatch: writes { acked: false } and exits 1 — a 200 into the wrong channel is found.
+#   7. Exit 2 = ALERT_WEBHOOK_URL not set (prerequisite missing — nothing was delivered).
+#   8. Exit 3 = operator skipped ACK (delivered, not confirmed).
+
+# After the drill, verify the gate passes:
+node --env-file=.env src/scripts/check-alert-ack.mjs
+# Exit 0 = ACK confirmed and within 24-hour TTL.
+# Exit 1 = UNACKNOWLEDGED — the drill ran but no human confirmed the nonce.
+# Exit 2 = prerequisite missing (no state file or ALERT_WEBHOOK_URL not set).
+
+# The full alert system check (including ack gate) runs as:
+node src/scripts/check-alert-system.mjs
+# check-alert-ack.mjs is item 12 in the script list.
+```
+
+Pass threshold: `check-alert-ack.mjs` exits 0, meaning a human entered the correct nonce within the last 24 hours.
+
+**Acknowledgement state file location:** `${OS_TMPDIR}/alert-drill-ack.json` (default). Override with `--state-file=` on both scripts.
 
 ## Expected output (dispatch self-test, already confirmed)
 

@@ -15,6 +15,20 @@ GB-months), the R2 and Resend invoices, and the Ably channel-minutes figure — 
 credentials named in criterion 1, plus per-unit USD rates taken from those invoices rather than
 from a price list.
 
+**Per-org DB time and cache time are now attributable in-app** (2026-08-31). The prior record said
+"DB time, Redis and egress not instrumentable in-app" — this was tested and partially wrong:
+
+| Dimension | Verdict | How |
+|---|---|---|
+| DB query time per org | **Attributable** | `db.query.execute` spans carry `org.id` from `ObservabilityContext`; `LogSpanExporter` writes them as JSON lines. `span-log-reader.mjs` aggregates them. |
+| Cache roundtrip time per org | **Attributable** | `cache.roundtrip` spans carry `org.id` by the same mechanism. Same reader. |
+| `pg_stat_statements` for per-org attribution | **Not useful** | Aggregates by (userid, dbid, queryid) — no `app.organization_id` dimension. Useful for query-type diagnostics, not per-org attribution. |
+| `pg_stat_database` for per-org attribution | **Not useful** | Reports whole-database totals only. |
+| Redis memory per org | **Estimable, not live** | Keys are org-prefixed; `MEMORY USAGE <key>` is supported by the Upstash REST API. Requires a `SCAN` pass per org prefix — expensive on large key sets. Not yet scripted. |
+| Network egress | **External** | Measured at the CDN/load balancer, not in the application process. Source: Cloudflare analytics or host bandwidth billing. Runbook below. |
+
+**Egress runbook.** Set `APP_LOG_FILE=<path>` and run `node src/scripts/run-cell-unit-cost.mjs` to see DB and cache time per org. For egress: open the Cloudflare dashboard → Analytics → Traffic → Bandwidth, or the Neon console → Monitoring → Data Transfer; neither is per-org without WAF rules or request tagging that identifies the org in URL/headers. Practical approach: Cloudflare WAF custom rule adds `X-Org-Id` response header from a cookie; Cloudflare Analytics then groups bandwidth by that header value. Without that tagging, egress is available only at cell level, not per org.
+
 **The units, from the PRD:** cost per active organization · per active user · per 1,000 requests · per 1,000 realtime minutes · per GB stored · per million indexed chunks · per million events · per notification delivered · per AI token.
 
 **Decision taken at the start of this session:** instrument only what this cell can measure and say which are estimates, rather than filling nine units from vendor list prices. The ticket's own first criterion says "derived from real cell spend rather than from a list price", so a list-price fill would close the box dishonestly.
