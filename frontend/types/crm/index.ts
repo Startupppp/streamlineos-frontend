@@ -11,4 +11,5 @@ export * from "./campaigns";
 export * from "./automations";
 export * from "./inbox";
 export * from "./commission";
+export * from "./lifecycle";
 export * from "./call-intelligence";

@@ -113,6 +113,14 @@ export const accessAndCrmQueryKeys = {
     territories: () => [...base, "crmSettings", "territories"] as const,
   },
 
+  crmLifecycle: {
+    all: [...base, "crmLifecycle"] as const,
+    list: (params?: Record<string, unknown>) =>
+      [...base, "crmLifecycle", "list", params] as const,
+    healthRoster: (params?: Record<string, unknown>) =>
+      [...base, "crmLifecycle", "healthRoster", params] as const,
+  },
+
   crmOrganizations: {
     all: [...base, "crmOrganizations"] as const,
     list: (params?: Record<string, unknown>) =>

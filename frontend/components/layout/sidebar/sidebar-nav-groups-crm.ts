@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Briefcase, Clock, FileText, Handshake, Contact2, BarChart3, UserCheck, ShieldCheck, Star, TrendingUp, Package, Share2, MailOpen, Zap, History, BarChart2, Inbox, Building2, SlidersHorizontal, Brain, Copy, Search, Sliders, CheckSquare, Key, Activity, Megaphone, Bot, ArrowLeftRight, AlertTriangle, Rows3, PhoneCall, Coins } from "lucide-react";
+import { LayoutDashboard, Users, Briefcase, Clock, FileText, Handshake, Contact2, BarChart3, UserCheck, ShieldCheck, Star, TrendingUp, Package, Share2, MailOpen, Zap, History, BarChart2, Inbox, Building2, SlidersHorizontal, Brain, Copy, Search, Sliders, CheckSquare, Key, Activity, Megaphone, Bot, ArrowLeftRight, AlertTriangle, Rows3, PhoneCall, Coins, HeartPulse, RefreshCw } from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
 export const CRM_NAV_GROUPS: NavGroup[] = [
@@ -10,6 +10,8 @@ export const CRM_NAV_GROUPS: NavGroup[] = [
       "crm:leads:view",
       "crm:reports:view",
       "crm:settings:manage",
+      "crm:lifecycle:view",
+      "crm:customer-health:view",
       "party:parties:view",
     ],
     routes: [
@@ -187,6 +189,18 @@ export const CRM_NAV_GROUPS: NavGroup[] = [
         icon: Coins,
         href: "/crm/commissions",
         requiredPermission: "crm:commission-earnings:view",
+      },
+      {
+        label: "Renewals",
+        icon: RefreshCw,
+        href: "/crm/renewals",
+        requiredPermission: "crm:lifecycle:view",
+      },
+      {
+        label: "Customer health",
+        icon: HeartPulse,
+        href: "/crm/health",
+        requiredPermission: "crm:customer-health:view",
       },
       {
         // The team digest, so `view-team` and not `:view`. A rep reads their own

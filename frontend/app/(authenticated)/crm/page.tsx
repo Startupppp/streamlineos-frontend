@@ -19,6 +19,8 @@ import {
   CheckSquare,
   CheckCircle2,
   Clock,
+  HeartPulse,
+  RefreshCw,
   UserCheck,
   FileText,
 } from "lucide-react";
@@ -44,6 +46,8 @@ const NAV_CARDS = [
   { title: "Deals", description: "Pipeline to close", href: "/crm/deals", icon: Briefcase },
   { title: "Quotes", description: "Proposals & pricing", href: "/crm/quotes", icon: FileText },
   { title: "Activities", description: "Calls, emails & meetings", href: "/crm/activities", icon: Activity },
+  { title: "Renewals", description: "Upcoming terms & churn risk", href: "/crm/renewals", icon: RefreshCw },
+  { title: "Health", description: "Risk bands & score coverage", href: "/crm/health", icon: HeartPulse },
   { title: "Calendar", description: "Schedule & meetings", href: "/calendar", icon: CalendarDays },
   { title: "Tasks", description: "Follow-ups & to-dos", href: "/crm/tasks", icon: CheckSquare },
   { title: "Reports", description: "Analytics & insights", href: "/crm/reports", icon: BarChart3 },
