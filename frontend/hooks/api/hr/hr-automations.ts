@@ -1,6 +1,8 @@
 "use client";
 
-import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import type {
   HrAutomationRule,
@@ -22,6 +24,8 @@ export const hrAutomationKeys = {
 };
 
 export function useHrAutomations(params?: { search?: string; triggerEvent?: string; isEnabled?: boolean; page?: number; limit?: number }) {
+  const canView = useCan("hr:automations:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: hrAutomationKeys.list(params),
     queryFn: () => {
@@ -36,14 +40,18 @@ export function useHrAutomations(params?: { search?: string; triggerEvent?: stri
     },
     staleTime: 30_000,
     placeholderData: keepPreviousData,
+    enabled: canView && hrEnabled,
   });
 }
 
 export function useHrAutomationEvents() {
+  const canView = useCan("hr:automations:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: hrAutomationKeys.events(),
     queryFn: () => apiClient.get<{ events: HrEventDefinition[] }>("/hr/automations/events"),
     staleTime: 5 * 60_000,
+    enabled: canView && hrEnabled,
   });
 }
 
@@ -53,6 +61,8 @@ export interface PaginatedHrAutomationRuns {
 }
 
 export function useHrAutomationRuns(ruleId?: number, params?: { page?: number; limit?: number }) {
+  const canView = useCan("hr:automations:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...hrAutomationKeys.runs(ruleId), params] as const,
     queryFn: () => {
@@ -65,12 +75,13 @@ export function useHrAutomationRuns(ruleId?: number, params?: { page?: number; l
     },
     staleTime: 15_000,
     placeholderData: keepPreviousData,
+    enabled: canView && hrEnabled,
   });
 }
 
 export function useCreateHrAutomation() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:automations:manage", {
     mutationKey: [...BASE, "create"],
     mutationFn: (input: CreateHrAutomationInput) =>
       apiClient.post<HrAutomationRule>("/hr/automations", input),
@@ -80,7 +91,7 @@ export function useCreateHrAutomation() {
 
 export function useUpdateHrAutomation() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:automations:manage", {
     mutationKey: [...BASE, "update"],
     mutationFn: ({ id, ...input }: UpdateHrAutomationInput & { id: number }) =>
       apiClient.patch<HrAutomationRule>(`/hr/automations/${id}`, input),
@@ -93,7 +104,7 @@ export function useUpdateHrAutomation() {
 
 export function useToggleHrAutomation() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:automations:manage", {
     mutationKey: [...BASE, "toggle"],
     mutationFn: ({ id, isEnabled }: { id: number; isEnabled: boolean }) =>
       apiClient.post<HrAutomationRule>(`/hr/automations/${id}/toggle`, { isEnabled }),
@@ -118,7 +129,7 @@ export function useToggleHrAutomation() {
 
 export function useDeleteHrAutomation() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:automations:manage", {
     mutationKey: [...BASE, "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/automations/${id}`),
@@ -128,7 +139,7 @@ export function useDeleteHrAutomation() {
 
 export function useTestHrAutomation() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:automations:manage", {
     mutationKey: [...BASE, "test"],
     mutationFn: ({ id, payload }: { id: number; payload: Record<string, unknown> }) =>
       apiClient.post<HrTestResult>(`/hr/automations/${id}/test`, { payload }),

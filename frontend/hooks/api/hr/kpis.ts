@@ -1,8 +1,10 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface KpiDefinition {
   id: number;
@@ -40,16 +42,19 @@ export interface Competency {
 }
 
 export function useKpis() {
+  const canView = useCan("hr:performance:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.kpis(),
     queryFn: () => apiClient.get<KpiDefinition[]>("/hr/kpis"),
     staleTime: 2 * 60_000,
+    enabled: canView && hrEnabled,
   });
 }
 
 export function useCreateKpi() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["hr", "kpis", "create"],
     mutationFn: (data: Omit<KpiDefinition, "id" | "orgId" | "isActive" | "createdAt">) =>
       apiClient.post<KpiDefinition>("/hr/kpis", data),
@@ -59,7 +64,7 @@ export function useCreateKpi() {
 
 export function useUpdateKpi() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["hr", "kpis", "update"],
     mutationFn: ({ id, ...data }: Partial<KpiDefinition> & { id: number }) =>
       apiClient.patch<KpiDefinition>(`/hr/kpis/${id}`, data),
@@ -69,7 +74,7 @@ export function useUpdateKpi() {
 
 export function useDeleteKpi() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["hr", "kpis", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/kpis/${id}`),
@@ -78,16 +83,19 @@ export function useDeleteKpi() {
 }
 
 export function useCompetencyFrameworks() {
+  const canView = useCan("hr:performance:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.competencyFrameworks(),
     queryFn: () => apiClient.get<CompetencyFramework[]>("/hr/kpis/frameworks"),
     staleTime: 5 * 60_000,
+    enabled: canView && hrEnabled,
   });
 }
 
 export function useCreateCompetencyFramework() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["hr", "frameworks", "create"],
     mutationFn: (
       data: Omit<
@@ -102,7 +110,7 @@ export function useCreateCompetencyFramework() {
 
 export function useCreateCompetency() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["hr", "competencies", "create"],
     mutationFn: ({
       frameworkId,

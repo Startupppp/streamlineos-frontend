@@ -1,8 +1,10 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface FeedbackCycle {
   id: number;
@@ -43,16 +45,19 @@ export interface FeedbackResult {
 }
 
 export function useFeedbackCycles() {
+  const canView = useCan("hr:performance:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.feedbackCycles(),
     queryFn: () => apiClient.get<FeedbackCycle[]>("/hr/feedback/cycles"),
     staleTime: 2 * 60_000,
+    enabled: canView && hrEnabled,
   });
 }
 
 export function useCreateFeedbackCycle() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["hr", "feedback", "cycles", "create"],
     mutationFn: (
       data: Omit<FeedbackCycle, "id" | "orgId" | "status" | "createdAt">,
@@ -64,7 +69,7 @@ export function useCreateFeedbackCycle() {
 
 export function useUpdateFeedbackCycleStatus() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["hr", "feedback", "cycles", "updateStatus"],
     mutationFn: ({ id, status }: { id: number; status: string }) =>
       apiClient.patch<FeedbackCycle>(`/hr/feedback/cycles/${id}`, { status }),
@@ -78,17 +83,20 @@ export function useUpdateFeedbackCycleStatus() {
 }
 
 export function useMyPendingReviews() {
+  const canView = useCan("hr:performance:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.myPendingReviews(),
     queryFn: () =>
       apiClient.get<FeedbackCycleRequest[]>("/hr/feedback/my-reviews"),
     staleTime: 30_000,
+    enabled: canView && hrEnabled,
   });
 }
 
 export function useSubmitFeedbackResponse() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:performance:view", {
     mutationKey: ["hr", "feedback", "respond"],
     mutationFn: ({
       requestId,
@@ -109,11 +117,13 @@ export function useSubmitFeedbackResponse() {
 }
 
 export function useFeedbackResults(subjectId: string) {
+  const canView = useCan("hr:performance:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.feedbackResults(subjectId),
     queryFn: () =>
       apiClient.get<FeedbackResult>(`/hr/feedback/results/${subjectId}`),
     staleTime: 2 * 60_000,
-    enabled: subjectId.length > 0,
+    enabled: subjectId.length > 0 && canView && hrEnabled,
   });
 }

@@ -1,7 +1,9 @@
 "use client";
 
-import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface MoodCheckin {
   id: number;
@@ -107,32 +109,41 @@ const KEYS = {
 };
 
 export function useEngagementOverview() {
+  const canView = useCan("hr:engagement:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery<EngagementOverview>({
     queryKey: KEYS.overview,
     queryFn: () => apiClient.get<EngagementOverview>("/hr/engagement/overview"),
     staleTime: 5 * 60_000,
+    enabled: canView && hrEnabled,
   });
 }
 
 export function useMyMoodHistory() {
+  const canView = useCan("hr:engagement:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery<MoodCheckin[]>({
     queryKey: KEYS.moodHistory,
     queryFn: () => apiClient.get<MoodCheckin[]>("/hr/engagement/mood/history"),
     staleTime: 60_000,
+    enabled: canView && hrEnabled,
   });
 }
 
 export function useOrgMoodAggregate() {
+  const canManage = useCan("hr:engagement:manage");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery<MoodAggregate[]>({
     queryKey: KEYS.moodAggregate,
     queryFn: () => apiClient.get<MoodAggregate[]>("/hr/engagement/mood/aggregate"),
     staleTime: 5 * 60_000,
+    enabled: canManage && hrEnabled,
   });
 }
 
 export function useMoodCheckin() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:engagement:view", {
     mutationKey: ["hr", "engagement", "mood", "checkin"],
     mutationFn: (data: { mood: number; note?: string; date?: string }) =>
       apiClient.post<MoodCheckin>("/hr/engagement/mood", data),
@@ -141,16 +152,19 @@ export function useMoodCheckin() {
 }
 
 export function useEngagementBadges() {
+  const canView = useCan("hr:engagement:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery<HrBadge[]>({
     queryKey: KEYS.badges,
     queryFn: () => apiClient.get<HrBadge[]>("/hr/engagement/badges"),
     staleTime: 5 * 60_000,
+    enabled: canView && hrEnabled,
   });
 }
 
 export function useAwardBadge() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:engagement:manage", {
     mutationKey: ["hr", "engagement", "badges", "award"],
     mutationFn: ({ badgeId, ...data }: { badgeId: number; userId: string; reason?: string }) =>
       apiClient.post<HrBadgeAward>(`/hr/engagement/badges/${badgeId}/award`, data),
@@ -162,24 +176,30 @@ export function useAwardBadge() {
 }
 
 export function useLeaderboard(top = 20) {
+  const canView = useCan("hr:engagement:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery<LeaderboardEntry[]>({
     queryKey: KEYS.leaderboard(top),
     queryFn: () => apiClient.get<LeaderboardEntry[]>(`/hr/engagement/points/leaderboard?top=${top}`),
     staleTime: 5 * 60_000,
+    enabled: canView && hrEnabled,
   });
 }
 
 export function useEngagementPolls() {
+  const canView = useCan("hr:engagement:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery<HrPoll[]>({
     queryKey: KEYS.polls,
     queryFn: () => apiClient.get<HrPoll[]>("/hr/engagement/polls"),
     staleTime: 60_000,
+    enabled: canView && hrEnabled,
   });
 }
 
 export function useCreatePoll() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:engagement:manage", {
     mutationKey: ["hr", "engagement", "polls", "create"],
     mutationFn: (data: { question: string; options: string[]; anonymous?: boolean; closesAt?: string }) =>
       apiClient.post<HrPoll>("/hr/engagement/polls", data),
@@ -189,7 +209,7 @@ export function useCreatePoll() {
 
 export function useUpdatePoll() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:engagement:manage", {
     mutationKey: ["hr", "engagement", "polls", "update"],
     mutationFn: ({ id, ...data }: { id: number; status?: string; question?: string }) =>
       apiClient.patch<{ success: boolean }>(`/hr/engagement/polls/${id}`, data),
@@ -199,7 +219,7 @@ export function useUpdatePoll() {
 
 export function useVotePoll() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:engagement:view", {
     mutationKey: ["hr", "engagement", "polls", "vote"],
     mutationFn: ({ pollId, optionIndex }: { pollId: number; optionIndex: number }) =>
       apiClient.post<{ id: number }>(`/hr/engagement/polls/${pollId}/vote`, { optionIndex }),
@@ -211,11 +231,13 @@ export function useVotePoll() {
 }
 
 export function usePollResults(pollId: number) {
+  const canView = useCan("hr:engagement:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery<PollResults>({
     queryKey: KEYS.pollResults(pollId),
     queryFn: () => apiClient.get<PollResults>(`/hr/engagement/polls/${pollId}/results`),
     staleTime: 30_000,
-    enabled: pollId > 0,
+    enabled: pollId > 0 && canView && hrEnabled,
   });
 }
 
@@ -225,6 +247,8 @@ interface CommunityPage {
 }
 
 export function useEngagementCommunities() {
+  const canView = useCan("hr:engagement:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useInfiniteQuery({
     queryKey: KEYS.communities,
     initialPageParam: null as string | null,
@@ -235,12 +259,13 @@ export function useEngagementCommunities() {
     },
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     staleTime: 2 * 60_000,
+    enabled: canView && hrEnabled,
   });
 }
 
 export function useCreateCommunity() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:engagement:view", {
     mutationKey: ["hr", "engagement", "communities", "create"],
     mutationFn: (data: { name: string; description?: string }) =>
       apiClient.post<HrCommunity>("/hr/engagement/communities", data),
@@ -250,7 +275,7 @@ export function useCreateCommunity() {
 
 export function useJoinCommunity() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:engagement:view", {
     mutationKey: ["hr", "engagement", "communities", "join"],
     mutationFn: (communityId: number) =>
       apiClient.post<{ success: boolean }>(`/hr/engagement/communities/${communityId}/join`, {}),
@@ -260,7 +285,7 @@ export function useJoinCommunity() {
 
 export function useLeaveCommunity() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:engagement:view", {
     mutationKey: ["hr", "engagement", "communities", "leave"],
     mutationFn: (communityId: number) =>
       apiClient.post<{ success: boolean }>(`/hr/engagement/communities/${communityId}/leave`, {}),
@@ -269,10 +294,13 @@ export function useLeaveCommunity() {
 }
 
 export function useEngagementCampaigns() {
+  const canView = useCan("hr:engagement:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery<HrCampaign[]>({
     queryKey: KEYS.campaigns,
     queryFn: () => apiClient.get<HrCampaign[]>("/hr/engagement/campaigns"),
     staleTime: 2 * 60_000,
+    enabled: canView && hrEnabled,
   });
 }
 
@@ -287,7 +315,7 @@ export interface CreateCampaignData {
 
 export function useCreateCampaign() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:engagement:manage", {
     mutationKey: ["hr", "engagement", "campaigns", "create"],
     mutationFn: (data: CreateCampaignData) =>
       apiClient.post<HrCampaign>("/hr/engagement/campaigns", data),
@@ -297,7 +325,7 @@ export function useCreateCampaign() {
 
 export function useUpdateCampaign() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:engagement:manage", {
     mutationKey: ["hr", "engagement", "campaigns", "update"],
     mutationFn: ({ id, ...data }: Partial<HrCampaign> & { id: number }) =>
       apiClient.patch<HrCampaign>(`/hr/engagement/campaigns/${id}`, data),
@@ -307,7 +335,7 @@ export function useUpdateCampaign() {
 
 export function useDeleteCampaign() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:engagement:manage", {
     mutationKey: ["hr", "engagement", "campaigns", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/engagement/campaigns/${id}`),
