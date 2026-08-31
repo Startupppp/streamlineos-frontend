@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { format } from "date-fns";
 import Link from "next/link";
 import { CalendarIcon, HelpCircle, Tag, Ticket, Video } from "lucide-react";
@@ -13,15 +14,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useEventAttendees, type CalendarListItem } from "@/hooks/api/calendar";
 import { resolveImageUrl } from "@/lib/utils";
-
-const EVENT_COLORS: Record<string, string> = {
-  blue: "#3b82f6",
-  green: "#22c55e",
-  red: "#ef4444",
-  yellow: "#f59e0b",
-  purple: "#a855f7",
-  gold: "#3b82f6",
-};
+import { EVENT_COLORS } from "./calendar-event-constants";
 
 export const RSVP_STATUS_LABELS: Record<string, string> = {
   accepted: "Accepted",
@@ -62,6 +55,10 @@ export function EventDetailContent({
   );
   const { iconRef: acceptIconRef, hoverHandlers: acceptHoverHandlers } = useAnimatedIcon();
   const { iconRef: declineIconRef, hoverHandlers: declineHoverHandlers } = useAnimatedIcon();
+
+  const handleAccept = useCallback(() => onRsvp("accepted"), [onRsvp]);
+  const handleTentative = useCallback(() => onRsvp("tentative"), [onRsvp]);
+  const handleDecline = useCallback(() => onRsvp("declined"), [onRsvp]);
 
   return (
     <ScrollArea className="flex-1 min-h-0">
@@ -124,9 +121,9 @@ export function EventDetailContent({
               <><Separator /><div className="space-y-2">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Your RSVP</p>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" className="flex-1 h-8 text-xs gap-1.5 text-status-success-ink border-status-success-rule hover:bg-status-success-surface hover:text-status-success-ink" disabled={deleteEventIsPending || rsvpMutationIsPending} onClick={() => onRsvp("accepted")} aria-label="Accept event" {...acceptHoverHandlers}><CheckIcon ref={acceptIconRef} size={12} />Accept</Button>
-                  <Button size="sm" variant="outline" className="flex-1 h-8 text-xs gap-1.5 text-status-warning-ink border-status-warning-rule hover:bg-status-warning-surface hover:text-status-warning-ink" disabled={rsvpMutationIsPending} onClick={() => onRsvp("tentative")} aria-label="Mark as tentative"><HelpCircle className="h-3 w-3" />Maybe</Button>
-                  <Button size="sm" variant="outline" className="flex-1 h-8 text-xs gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive" disabled={rsvpMutationIsPending} onClick={() => onRsvp("declined")} aria-label="Decline event" {...declineHoverHandlers}><XIcon ref={declineIconRef} size={12} />Decline</Button>
+                  <Button size="sm" variant="outline" className="flex-1 h-8 text-xs gap-1.5 text-status-success-ink border-status-success-rule hover:bg-status-success-surface hover:text-status-success-ink" disabled={deleteEventIsPending || rsvpMutationIsPending} onClick={handleAccept} aria-label="Accept event" {...acceptHoverHandlers}><CheckIcon ref={acceptIconRef} size={12} />Accept</Button>
+                  <Button size="sm" variant="outline" className="flex-1 h-8 text-xs gap-1.5 text-status-warning-ink border-status-warning-rule hover:bg-status-warning-surface hover:text-status-warning-ink" disabled={rsvpMutationIsPending} onClick={handleTentative} aria-label="Mark as tentative"><HelpCircle className="h-3 w-3" />Maybe</Button>
+                  <Button size="sm" variant="outline" className="flex-1 h-8 text-xs gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive" disabled={rsvpMutationIsPending} onClick={handleDecline} aria-label="Decline event" {...declineHoverHandlers}><XIcon ref={declineIconRef} size={12} />Decline</Button>
                 </div>
               </div></>
             ) : null}

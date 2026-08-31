@@ -3,7 +3,6 @@
 import { useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
@@ -41,15 +40,10 @@ import Link from "next/link";
 import { useProjects, useCreateTicket } from "@/hooks/api/build";
 import { queryKeys } from "@/lib/query-keys";
 import type { CreateTicketInput } from "@/types/projects";
-
-const schema = z.object({
-  projectId: z.string().min(1, "Select a project"),
-  title: z.string().min(1, "Title is required"),
-  dueDate: z.string().min(1, "Due date is required"),
-  priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
-});
-
-type FormValues = z.infer<typeof schema>;
+import {
+  createTicketFromCalendarSchema,
+  type CreateTicketFromCalendarInput,
+} from "./create-ticket-from-calendar-schema";
 
 interface CreateTicketFromCalendarDialogProps {
   open: boolean;
@@ -76,8 +70,8 @@ export function CreateTicketFromCalendarDialog({
 
   const createTicket = useCreateTicket();
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const form = useForm<CreateTicketFromCalendarInput>({
+    resolver: zodResolver(createTicketFromCalendarSchema),
     defaultValues: {
       projectId: "",
       title: "",
@@ -107,7 +101,7 @@ export function CreateTicketFromCalendarDialog({
   );
 
   const handleSubmit = useCallback(
-    async (values: FormValues) => {
+    async (values: CreateTicketFromCalendarInput) => {
       const numericProjectId = Number(values.projectId);
       const ticketInput: CreateTicketInput & { dueDate?: string } = {
         projectId: numericProjectId,

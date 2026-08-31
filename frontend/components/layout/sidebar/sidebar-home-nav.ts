@@ -1,4 +1,4 @@
-import { LayoutDashboard, Briefcase, Clock, CalendarCheck, CalendarDays, Receipt, FileText, Contact2, MessageSquareText, Wallet, Bell, ListChecks, Inbox, Video, Megaphone } from "lucide-react";
+import { LayoutDashboard, Briefcase, Clock, CalendarCheck, CalendarDays, Receipt, FileText, Contact2, MessageSquareText, Wallet, Bell, ListChecks, Inbox, Video, Megaphone, BellDot } from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
 export const HOME_NAV_GROUPS: NavGroup[] = [
@@ -13,6 +13,11 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
     label: "Communication",
     product: "home",
     routes: [
+      {
+        label: "Inbox",
+        href: "/inbox",
+        icon: BellDot,
+      },
       {
         label: "Mail",
         href: "/mail",

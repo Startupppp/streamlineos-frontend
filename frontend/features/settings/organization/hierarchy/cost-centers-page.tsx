@@ -288,15 +288,15 @@ export function OrgCostCentersPage() {
       cell: (c) =>
         canManage ? <div className="flex items-center gap-1">
           {c.status === "ARCHIVED" ? (
-            <Button variant="ghost" size="sm" onClick={makeRestoreHandler(c)} title="Restore">
+            <Button variant="ghost" size="sm" onClick={makeRestoreHandler(c)} title="Restore" aria-label="Restore">
               <RotateCcw className="h-4 w-4 text-primary" />
             </Button>
           ) : (
             <>
-              <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(c)} title="Edit">
+              <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(c)} title="Edit" aria-label="Edit">
                 <Pencil className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={makeArchiveHandler(c)} title="Archive">
+              <Button variant="ghost" size="sm" onClick={makeArchiveHandler(c)} title="Archive" aria-label="Archive">
                 <Archive className="h-4 w-4 text-muted-foreground" />
               </Button>
             </>

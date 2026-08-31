@@ -281,6 +281,7 @@ export function OrgBranchesPage() {
                 size="sm"
                 onClick={makeRestoreHandler(branch)}
                 title="Restore"
+                aria-label="Restore"
               >
                 <RotateCcw className="h-4 w-4 text-primary" />
               </Button>
@@ -291,6 +292,7 @@ export function OrgBranchesPage() {
                   size="sm"
                   onClick={makeEditHandler(branch)}
                   title="Edit"
+                  aria-label="Edit"
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
@@ -299,6 +301,7 @@ export function OrgBranchesPage() {
                   size="sm"
                   onClick={makeArchiveHandler(branch)}
                   title="Archive"
+                  aria-label="Archive"
                 >
                   <Archive className="h-4 w-4 text-muted-foreground" />
                 </Button>

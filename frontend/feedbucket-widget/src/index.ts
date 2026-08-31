@@ -1,6 +1,6 @@
 import { initConsoleCapture } from "./console-capture";
 import { initNetworkCapture } from "./network-capture";
-import { mountWidget } from "./ui";
+import { mountWidget } from "./ui-mount";
 
 declare const __WIDGET_API_BASE__: string;
 

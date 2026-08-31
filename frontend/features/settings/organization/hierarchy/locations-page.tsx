@@ -308,15 +308,15 @@ export function OrgLocationsPage() {
       cell: (l) =>
         canManage ? <div className="flex items-center gap-1">
           {l.status === "ARCHIVED" ? (
-            <Button variant="ghost" size="sm" onClick={makeRestoreHandler(l)} title="Restore">
+            <Button variant="ghost" size="sm" onClick={makeRestoreHandler(l)} title="Restore" aria-label="Restore">
               <RotateCcw className="h-4 w-4 text-primary" />
             </Button>
           ) : (
             <>
-              <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(l)} title="Edit">
+              <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(l)} title="Edit" aria-label="Edit">
                 <Pencil className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={makeArchiveHandler(l)} title="Archive">
+              <Button variant="ghost" size="sm" onClick={makeArchiveHandler(l)} title="Archive" aria-label="Archive">
                 <Archive className="h-4 w-4 text-muted-foreground" />
               </Button>
             </>

@@ -54,6 +54,9 @@ export function useNotificationInboxInvalidation() {
       queryKey: queryKeys.notifications.unreadCount(),
       exact: true,
     });
+    void queryClient.invalidateQueries({
+      queryKey: queryKeys.inbox.all,
+    });
   }
 
   return { invalidateInbox, orgId, queryClient };

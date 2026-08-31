@@ -7,15 +7,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { TruncatedText } from "@/components/ui/truncated-text";
-
-const EVENT_COLORS: Record<string, string> = {
-  blue: "#3b82f6",
-  green: "#22c55e",
-  red: "#ef4444",
-  yellow: "#f59e0b",
-  purple: "#a855f7",
-  gold: "#3b82f6",
-};
+import { EVENT_COLORS } from "./calendar-event-constants";
 
 interface CalendarEventsPanelProps {
   mode: "list" | "history";

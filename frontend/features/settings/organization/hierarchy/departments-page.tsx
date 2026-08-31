@@ -259,6 +259,7 @@ export function OrgDepartmentsPage() {
                 size="sm"
                 onClick={makeRestoreHandler(department)}
                 title="Restore"
+                aria-label="Restore"
               >
                 <RotateCcw className="h-4 w-4 text-primary" />
               </Button>
@@ -269,6 +270,7 @@ export function OrgDepartmentsPage() {
                   size="sm"
                   onClick={makeEditHandler(department)}
                   title="Edit"
+                  aria-label="Edit"
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
@@ -277,6 +279,7 @@ export function OrgDepartmentsPage() {
                   size="sm"
                   onClick={makeArchiveHandler(department)}
                   title="Archive"
+                  aria-label="Archive"
                 >
                   <Archive className="h-4 w-4 text-muted-foreground" />
                 </Button>

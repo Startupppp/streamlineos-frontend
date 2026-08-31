@@ -268,6 +268,7 @@ export function OrgTeamsPage() {
                 size="sm"
                 onClick={makeRestoreHandler(team)}
                 title="Restore"
+                aria-label="Restore"
               >
                 <RotateCcw className="h-4 w-4 text-primary" />
               </Button>
@@ -278,6 +279,7 @@ export function OrgTeamsPage() {
                   size="sm"
                   onClick={makeEditHandler(team)}
                   title="Edit"
+                  aria-label="Edit"
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
@@ -286,6 +288,7 @@ export function OrgTeamsPage() {
                   size="sm"
                   onClick={makeArchiveHandler(team)}
                   title="Archive"
+                  aria-label="Archive"
                 >
                   <Archive className="h-4 w-4 text-muted-foreground" />
                 </Button>

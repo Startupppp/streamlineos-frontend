@@ -1,17 +1,21 @@
-import { captureScreenshot, warmScreenshotCache } from "./screenshot";
+import { captureScreenshot } from "./screenshot";
 import { collectMetadata, getPageUrl } from "./metadata";
 import { getConsoleBuffer } from "./console-capture";
 import { getNetworkLogs } from "./network-capture";
-import { submitFeedback, aiAssistFeedback, unwrapEnvelope } from "./api";
+import { submitFeedback, aiAssistFeedback } from "./api";
 import { getStyles } from "./styles";
 import { Annotator, type AnnotationResult } from "./annotator";
 import { ScreenRecorder } from "./recorder";
 import { type FeedbackType, type ViewState } from "./ui-icon-util";
+
+function isFeedbackType(s: unknown): s is FeedbackType {
+  return s === "bug" || s === "idea" || s === "feature" || s === "question" || s === "other";
+}
 import { DragManager } from "./ui-drag";
 import { buildLauncher } from "./ui-launcher-builder";
 import { buildFeedbackPanel } from "./ui-panel-builder";
 
-class FeedbucketWidget {
+export class FeedbucketWidget {
   private readonly hostEl: HTMLElement;
   private readonly apiBase: string;
   private readonly embedKey: string;
@@ -90,7 +94,6 @@ class FeedbucketWidget {
     }
     this.pendingCapture = null;
   };
-
   private cancelHoverPrefetch(): void {
     if (this.hoverTimer !== null) {
       clearTimeout(this.hoverTimer);
@@ -101,12 +104,10 @@ class FeedbucketWidget {
     void this.runRecordFlow();
   };
   private readonly handleCommentLauncher = (): void => this.openPanel("other");
-
   private readonly handleCloseClick = (): void => {
     this.isOpen = false;
     this.syncPanel();
   };
-
   private readonly handleTypeSelect = (event: Event): void => {
     const btn = event.currentTarget;
     if (!(btn instanceof HTMLButtonElement)) return;
@@ -121,7 +122,6 @@ class FeedbucketWidget {
       this.setSelectedType(type);
     }
   };
-
   private readonly handleCaptureClick = async (): Promise<void> => {
     if (this.capturing) return;
     this.capturing = true;
@@ -133,7 +133,6 @@ class FeedbucketWidget {
     this.captureBtnLabel.textContent = "Capture screenshot";
     if (blob) this.setScreenshot(blob);
   };
-
   private readonly handleRemoveScreenshot = (): void => {
     if (this.screenshotUrl) {
       URL.revokeObjectURL(this.screenshotUrl);
@@ -144,7 +143,6 @@ class FeedbucketWidget {
     this.previewWrap.hidden = true;
     this.captureBtn.style.display = "";
   };
-
   private readonly handleSubmitClick = async (): Promise<void> => {
     const titleVal = this.titleInput.value.trim();
     const descVal = this.messageInput.value.trim();
@@ -184,22 +182,18 @@ class FeedbucketWidget {
     this.isOpen = false;
     this.syncPanel();
   };
-
   private readonly handleKeydown = (event: KeyboardEvent): void => {
     if (event.key === "Escape" && this.isOpen) {
       this.isOpen = false;
       this.syncPanel();
     }
   };
-
   private readonly handleViewportChange = (): void => {
     if (this.isOpen) this.positionPanel();
   };
-
   private readonly handleAiAssistClick = (): void => {
     void this.runAiAssist();
   };
-
   private readonly handleRemoveRecording = (): void => {
     this.recording = null;
     this.recordingBadge.hidden = true;
@@ -330,8 +324,7 @@ class FeedbucketWidget {
     }
 
     const suggested = result.suggestedType;
-    if (["bug", "idea", "feature", "question", "other"].includes(suggested))
-      this.setSelectedType(suggested as FeedbackType);
+    if (isFeedbackType(suggested)) this.setSelectedType(suggested);
     this.titleInput.value = result.title;
     this.messageInput.value = result.description;
     if (this.aiNote) this.aiNote.hidden = true;
@@ -503,37 +496,4 @@ class FeedbucketWidget {
     if (this.aiNote) this.aiNote.hidden = true;
     this.setSelectedType("bug");
   }
-}
-
-export function mountWidget(
-  hostEl: HTMLElement,
-  apiBase: string,
-  embedKey: string,
-): void {
-  void bootstrapWidget(hostEl, apiBase, embedKey);
-  setTimeout(warmScreenshotCache, 2000);
-}
-
-async function bootstrapWidget(
-  hostEl: HTMLElement,
-  apiBase: string,
-  embedKey: string,
-): Promise<void> {
-  let aiAssistEnabled = false;
-  try {
-    const res = await fetch(`${apiBase}/public/feedbucket/${embedKey}/config`);
-    if (res.ok) {
-      const data: unknown = unwrapEnvelope(await res.json());
-      if (
-        typeof data === "object" &&
-        data !== null &&
-        "aiAssistEnabled" in data &&
-        (data as Record<string, unknown>)["aiAssistEnabled"] === true
-      ) {
-        aiAssistEnabled = true;
-      }
-    }
-  } catch {
-  }
-  new FeedbucketWidget(hostEl, apiBase, embedKey, aiAssistEnabled);
 }

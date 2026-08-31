@@ -118,6 +118,13 @@ export const platformCoreQueryKeys = {
       [...base, "record-layouts", orgId ?? "no-tenant", layoutKey, "usage"] as const,
   },
 
+  inbox: {
+    all: [...base, "inbox"] as const,
+    list: (params?: Record<string, unknown>) =>
+      [...base, "inbox", "list", params] as const,
+    count: () => [...base, "inbox", "count"] as const,
+  },
+
   access: {
     all: [...base, "access"] as const,
     me: () => [...base, "access", "me"] as const,

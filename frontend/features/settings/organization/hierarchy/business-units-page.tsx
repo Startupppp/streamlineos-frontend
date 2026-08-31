@@ -216,6 +216,7 @@ export function BusinessUnitsPage() {
                 size="sm"
                 onClick={makeRestoreHandler(businessUnit)}
                 title="Restore"
+                aria-label="Restore"
               >
                 <RotateCcw className="h-4 w-4 text-primary" />
               </Button>
@@ -226,6 +227,7 @@ export function BusinessUnitsPage() {
                   size="sm"
                   onClick={makeEditHandler(businessUnit)}
                   title="Edit"
+                  aria-label="Edit"
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
@@ -234,6 +236,7 @@ export function BusinessUnitsPage() {
                   size="sm"
                   onClick={makeArchiveHandler(businessUnit)}
                   title="Archive"
+                  aria-label="Archive"
                 >
                   <Archive className="h-4 w-4 text-muted-foreground" />
                 </Button>

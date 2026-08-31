@@ -6,6 +6,7 @@ const UNIVERSAL_HREF_PREFIXES = [
   "/home",
   "/dashboard",
   "/me",
+  "/inbox",
   "/mail",
   "/chat",
   "/notifications",

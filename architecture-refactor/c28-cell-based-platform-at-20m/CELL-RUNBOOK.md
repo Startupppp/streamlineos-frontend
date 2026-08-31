@@ -98,6 +98,63 @@ That is the point: the job reporting success is not the evidence.
 Tables are ordered by their foreign-key graph, derived from `pg_constraint`. Tables in a dependency
 cycle are reported as cyclic rather than silently ordered — `cell:backup:self-test` proves both.
 
+**Pass criterion.** The drill must report `recovered_cell_healthy: true`. The 2026-08-29 drill
+reported `false` because `chat_message_reactions` and `communication_backfill_issues` had no RLS
+policy. Migration `0656_communication_tenant_rls` adds both policies and is now in the journal.
+Run a fresh drill before quoting the cell as healthy post-restore.
+
+**RPO: the drill's `rpo_seconds` is the best case, not the operational figure.** The backup
+precedes the disaster by seconds in the drill, so `rpo_seconds` of 0 proves the restore is lossless
+— every committed row came back. What an operator actually loses is the age of the most recent
+backup: `rpo_operational_seconds` (currently ~6 hours, the scheduled backup interval). To meet the
+PRD's 5-minute target, Neon PITR is required.
+
+## PITR restore (Neon branch-restore)
+
+Logical dumps cannot be taken every 5 minutes — they read every table. Neon's continuous WAL
+streaming achieves a restore point of under 1 second. To exercise the 5-minute RPO target:
+
+**Prerequisites:** `NEON_API_KEY` with branch-restore rights for the cell project,
+`NEON_PROJECT_ID` for the cell.
+
+```bash
+# 1. Record the restore target LSN before the simulated disaster
+export RESTORE_LSN=$(curl -s -H "Authorization: Bearer $NEON_API_KEY" \
+  "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches/main" \
+  | jq -r '.branch.current_state.lsn')
+
+# 2. Write a known row (record its id)
+#    (use psql or your migration tooling)
+
+# 3. Declare the disaster — record wall-clock time
+export DISASTER_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+# 4. Create a branch at the restore point via Neon API
+curl -s -X POST "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches" \
+  -H "Authorization: Bearer $NEON_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d "{\"endpoints\":[{\"type\":\"read_write\"}],\"branch\":{\"parent_lsn\":\"$RESTORE_LSN\",\"name\":\"pitr-restore-$(date +%s)\"}}" \
+  | jq '{id: .branch.id, endpoint: .endpoints[0].host}'
+
+# 5. Connect to the branch endpoint and verify the known row is absent
+#    (it was written after the LSN)
+
+# 6. Run db:verify-rls against the branch endpoint to confirm RLS policies apply
+DATABASE_URL="<branch-endpoint-url>" pnpm -C backend db:verify-rls
+
+# 7. Record elapsed time from $DISASTER_AT to verified-healthy cell
+export RESTORE_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+```
+
+**Pass criterion.** The branch endpoint serves tenant queries with RLS enforced, the row written
+after the LSN is absent, and the elapsed time from disaster declaration to verified-healthy cell
+is under 5 minutes. Record in `.recovery-drill-results.json` under `failure_class: REGIONAL_DISASTER`.
+
+**Do not regenerate the Neon baseline migration** during or after a PITR restore. `db-bootstrap.mjs`
+applies by hash, not timestamp; the baseline must never be regenerated (Neon DB state 2026-07-28 note
+in MEMORY.md). A PITR restore returns the database to a previous state; the application schema is
+already there — no migration run is needed unless the restore point predates a schema change.
+
 ## Relocate an organization between cells
 
 ```bash
