@@ -870,7 +870,7 @@ Completion gate: no Workflow route renders and no Workflow request fires without
 #### Query cost and caching
 
 - [ ] Seed or obtain production-shaped data for the blocked read-budget criterion. _Operator-blocked D15: requires a seed script or operator-approved sanitized snapshot; analysis: [P8](session-tickets/reports/P8-production-evidence.md) §D15._
-- [ ] Measure plans as the application role with tenant context, warm/cold cache mix and declared row distributions.
+- [ ] Measure plans as the application role with tenant context, warm/cold cache mix and declared row distributions. _Operator-blocked: `APP_DATABASE_URL` fails `28P01 password authentication failed for user "streamline_app"`, reproduced 2026-08-31. Every plan measured as the owner is worthless here because the owner holds BYPASSRLS and its plans omit the `org_id = app.current_org_id()` qual that decides index usability. Also blocks `pnpm db:check-build-reads`, `pnpm verify:membership-revocation` and `src/degradation/search-index.spec.ts`. Unblock: reset the `streamline_app` password in the Neon console — `ALTER ROLE ... PASSWORD` does not stick on Neon — then re-run those three plus an `EXPLAIN (ANALYZE, BUFFERS)` of the reminder sweep against `idx_invoices_org_due_status` (migration 0777)._
 - [ ] Eliminate unbounded selects, fetch-then-filter, per-row lookups and leading-wildcard scans on target paths.
 - [ ] Keep hard page cap 100 and stable tenant-scoped cursor indexes.
 - [ ] Inventory cache keys and prove organization, membership/permission version, locale/timezone and filter dimensions wherever they affect the result.
