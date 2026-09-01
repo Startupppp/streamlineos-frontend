@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useTransition } from "react";
+import { useState, useCallback, useEffect, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { PlusIcon } from "@animateicons/react/lucide";
@@ -19,14 +19,12 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyDevicesIllustration } from "@/components/illustrations";
-import { DataTablePagination } from "@/components/shared/data-table-pagination";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   DEFAULT_PAGE_SIZE,
-  getLastPage,
-  parsePage,
   parsePageSize,
   STANDARD_PAGE_SIZE_OPTIONS,
 } from "@/lib/list-pagination";
@@ -50,11 +48,18 @@ export function WebhooksPage() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
-  const page = parsePage(searchParams.get("page"));
   const pageSize = parsePageSize(searchParams.get("size"));
+  const cursorResetKey = String(pageSize);
+  const [cursorState, setCursorState] = useState<{
+    key: string;
+    history: Array<string | undefined>;
+  }>({ key: cursorResetKey, history: [undefined] });
+  const cursorHistory =
+    cursorState.key === cursorResetKey ? cursorState.history : [undefined];
+  const cursor = cursorHistory.at(-1);
 
-  const { data, error, isLoading, isError, refetch } =
-    useWebhooks({ page, limit: pageSize });
+  const { data, error, isLoading, isPlaceholderData, isError, refetch } =
+    useWebhooks({ cursor, limit: pageSize });
 
   const toggleWebhook = useToggleWebhook();
   const deleteWebhook = useDeleteWebhook();
@@ -69,8 +74,14 @@ export function WebhooksPage() {
 
   const webhooks = data?.data ?? [];
   const pagination = data?.pagination;
-  const isPageOutOfRange =
-    !!pagination && page > getLastPage(pagination.total, pageSize);
+
+  useEffect(() => {
+    setCursorState((current) =>
+      current.key === cursorResetKey
+        ? current
+        : { key: cursorResetKey, history: [undefined] },
+    );
+  }, [cursorResetKey]);
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -89,19 +100,37 @@ export function WebhooksPage() {
     [pathname, router, searchParams],
   );
 
-  const handlePageChange = useCallback(
-    (nextPage: number) =>
-      updateParams({ page: nextPage <= 1 ? null : String(nextPage) }),
-    [updateParams],
-  );
+  const resetCursorHistory = useCallback(() => {
+    setCursorState({ key: cursorResetKey, history: [undefined] });
+  }, [cursorResetKey]);
+
+  const handlePreviousPage = useCallback(() => {
+    setCursorState((current) => {
+      const history = current.key === cursorResetKey ? current.history : [undefined];
+      return { key: cursorResetKey, history: history.slice(0, -1) };
+    });
+  }, [cursorResetKey]);
+
+  const handleNextPage = useCallback(() => {
+    const nextCursor = pagination?.nextCursor;
+    if (!nextCursor) return;
+    setCursorState((current) => {
+      const history = current.key === cursorResetKey ? current.history : [undefined];
+      return history.at(-1) === nextCursor
+        ? { key: cursorResetKey, history }
+        : { key: cursorResetKey, history: [...history, nextCursor] };
+    });
+  }, [cursorResetKey, pagination?.nextCursor]);
 
   const handlePageSizeChange = useCallback(
-    (size: number) =>
+    (size: number) => {
       updateParams({
         size: size === DEFAULT_PAGE_SIZE ? null : String(size),
         page: null,
-      }),
-    [updateParams],
+      });
+      resetCursorHistory();
+    },
+    [resetCursorHistory, updateParams],
   );
 
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
@@ -109,9 +138,10 @@ export function WebhooksPage() {
   const handleCreated = useCallback(
     (secret: string) => {
       updateParams({ page: null });
+      resetCursorHistory();
       setRevealedSecret(secret);
     },
-    [updateParams],
+    [resetCursorHistory, updateParams],
   );
 
   const handleCloseReveal = useCallback(() => setRevealedSecret(null), []);
@@ -198,7 +228,7 @@ export function WebhooksPage() {
         ) : undefined
       }
     >
-      {isLoading || isPageOutOfRange ? (
+      {isLoading || isPlaceholderData ? (
         <div className="flex flex-1 flex-col min-h-0 space-y-4">
           {Array.from({ length: 5 }).map((_, i) => (
             <WebhookCardSkeleton key={i} />
@@ -244,17 +274,17 @@ export function WebhooksPage() {
               />
             ))}
           </motion.div>
-          <div className="shrink-0 border-t px-3">
-            <DataTablePagination
-              page={page}
-              totalPages={Math.max(1, pagination?.totalPages ?? 1)}
-              total={pagination?.total ?? 0}
-              limit={pageSize}
-              onPageChange={handlePageChange}
-              onLimitChange={handlePageSizeChange}
-              pageSizeOptions={STANDARD_PAGE_SIZE_OPTIONS}
-            />
-          </div>
+          <CursorPageControls
+            page={cursorHistory.length}
+            hasNext={pagination?.hasMore ?? false}
+            disabled={isLoading || isPlaceholderData}
+            onPrevious={handlePreviousPage}
+            onNext={handleNextPage}
+            pageSize={pageSize}
+            onPageSizeChange={handlePageSizeChange}
+            pageSizeOptions={STANDARD_PAGE_SIZE_OPTIONS}
+            className="mt-3 shrink-0"
+          />
         </div>
       )}
 

@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ErrorState } from "@/components/shared/error-state";
 import { DataTable } from "@/components/ui/data-table";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import {
   useUsers,
   useExportUsers,
@@ -31,8 +32,6 @@ import { PeopleSectionTabs } from "./people-section-tabs";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import {
   DEFAULT_PAGE_SIZE,
-  getLastPage,
-  parsePage,
   parsePageSize,
   STANDARD_PAGE_SIZE_OPTIONS,
 } from "@/lib/list-pagination";
@@ -59,8 +58,17 @@ export function UsersPage() {
   const branchId = searchParams.get("branchId") ?? "all";
   const sortBy = (searchParams.get("sortBy") as "name" | "joinedAt" | "status") ?? "joinedAt";
   const sortOrder = (searchParams.get("sortOrder") as "asc" | "desc") ?? "desc";
-  const page = parsePage(searchParams.get("page"));
   const pageSize = parsePageSize(searchParams.get("size"));
+  const cursorResetKey = [
+    searchQuery,
+    status,
+    role,
+    departmentId,
+    branchId,
+    sortBy,
+    sortOrder,
+    pageSize,
+  ].join("\u0000");
 
   const [search, setSearch] = useState(searchQuery);
   const debouncedSearch = useDebouncedValue(search, 300);
@@ -73,6 +81,13 @@ export function UsersPage() {
   const [importOpen, setImportOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
   const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
+  const [cursorState, setCursorState] = useState<{
+    key: string;
+    history: Array<string | undefined>;
+  }>({ key: cursorResetKey, history: [undefined] });
+  const cursorHistory =
+    cursorState.key === cursorResetKey ? cursorState.history : [undefined];
+  const cursor = cursorHistory.at(-1);
 
   const pushParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -99,9 +114,22 @@ export function UsersPage() {
   );
 
   useEffect(() => {
+    setCursorState((current) =>
+      current.key === cursorResetKey
+        ? current
+        : { key: cursorResetKey, history: [undefined] },
+    );
+  }, [cursorResetKey]);
+
+  const resetCursorHistory = useCallback(() => {
+    setCursorState({ key: cursorResetKey, history: [undefined] });
+  }, [cursorResetKey]);
+
+  useEffect(() => {
     if (debouncedSearch === searchQuery) return;
     pushParams({ search: debouncedSearch || null, page: null });
-  }, [debouncedSearch, searchQuery, pushParams]);
+    resetCursorHistory();
+  }, [debouncedSearch, searchQuery, pushParams, resetCursorHistory]);
 
   const handleSearchChange = useCallback(
     (value: string) => setSearch(value),
@@ -109,30 +137,43 @@ export function UsersPage() {
   );
 
   const handleStatusChange = useCallback(
-    (value: string) => pushParams({ status: value, page: null }),
-    [pushParams],
+    (value: string) => {
+      pushParams({ status: value, page: null });
+      resetCursorHistory();
+    },
+    [pushParams, resetCursorHistory],
   );
 
   const handleRoleChange = useCallback(
-    (value: string) => pushParams({ role: value, page: null }),
-    [pushParams],
+    (value: string) => {
+      pushParams({ role: value, page: null });
+      resetCursorHistory();
+    },
+    [pushParams, resetCursorHistory],
   );
 
   const handleDeptChange = useCallback(
-    (value: string) => pushParams({ departmentId: value, page: null }),
-    [pushParams],
+    (value: string) => {
+      pushParams({ departmentId: value, page: null });
+      resetCursorHistory();
+    },
+    [pushParams, resetCursorHistory],
   );
 
   const handleBranchChange = useCallback(
-    (value: string) => pushParams({ branchId: value, page: null }),
-    [pushParams],
+    (value: string) => {
+      pushParams({ branchId: value, page: null });
+      resetCursorHistory();
+    },
+    [pushParams, resetCursorHistory],
   );
 
   const handleSortChange = useCallback(
     (field: string, direction: "asc" | "desc") => {
       pushParams({ sortBy: field, sortOrder: direction, page: null });
+      resetCursorHistory();
     },
-    [pushParams],
+    [pushParams, resetCursorHistory],
   );
 
   const {
@@ -144,7 +185,7 @@ export function UsersPage() {
     refetch,
   } = useUsers(
     {
-      page,
+      cursor,
       limit: pageSize,
       search: searchQuery || undefined,
       status:
@@ -183,8 +224,6 @@ export function UsersPage() {
 
   const users = data?.data ?? [];
   const pagination = data?.pagination;
-  const isPageOutOfRange =
-    !!pagination && page > getLastPage(pagination.total, pageSize);
   const someSelected = selectedUserIds.size > 0;
 
   function handleRowClick(user: User) {
@@ -224,25 +263,34 @@ export function UsersPage() {
   } = useUserBulkLifecycle(selectedUserIds, handleClearSelection);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const handleAssignSuccess = useCallback(() => setSelectedUserIds(new Set()), []);
-  const handlePageChange = useCallback(
-    (nextPage: number) =>
-      pushParams({ page: nextPage === 1 ? null : String(nextPage) }),
-    [pushParams],
-  );
+  const handlePreviousPage = useCallback(() => {
+    setCursorState((current) => {
+      const history = current.key === cursorResetKey ? current.history : [undefined];
+      return { key: cursorResetKey, history: history.slice(0, -1) };
+    });
+  }, [cursorResetKey]);
+
+  const handleNextPage = useCallback(() => {
+    const nextCursor = pagination?.nextCursor;
+    if (!nextCursor) return;
+    setCursorState((current) => {
+      const history = current.key === cursorResetKey ? current.history : [undefined];
+      return history.at(-1) === nextCursor
+        ? { key: cursorResetKey, history }
+        : { key: cursorResetKey, history: [...history, nextCursor] };
+    });
+  }, [cursorResetKey, pagination?.nextCursor]);
+
   const handlePageSizeChange = useCallback(
-    (size: number) =>
+    (size: number) => {
       pushParams({
         size: size === DEFAULT_PAGE_SIZE ? null : String(size),
         page: null,
-      }),
-    [pushParams],
+      });
+      resetCursorHistory();
+    },
+    [pushParams, resetCursorHistory],
   );
-
-  useEffect(() => {
-    if (!pagination || isPlaceholderData) return;
-    const lastPage = getLastPage(pagination.total, pageSize);
-    if (page > lastPage) handlePageChange(lastPage);
-  }, [handlePageChange, isPlaceholderData, page, pageSize, pagination]);
 
   const handleViewUser = useCallback((userId: string) => {
     setSelectedUserId(userId);
@@ -350,34 +398,40 @@ export function UsersPage() {
               onRetry={handleRetry}
             />
           ) : (
-            <DataTable
-              className="flex-1 min-h-0"
-              data={users}
-              columns={columns}
-              getRowKey={(user) => user.id}
-              onRowClick={handleRowClick}
-              isLoading={isLoading || isPageOutOfRange}
-              emptyState={emptyStateNode}
-              selection={{
-                selected: selectedUserIds,
-                onChange: handleSelectionChange,
-                isRowSelectable: (user) => !user.isOwner,
-              }}
-              sortState={{
-                field: sortBy,
-                direction: sortOrder,
-                onChange: handleSortChange,
-              }}
-              pagination={{
-                mode: "server",
-                page,
-                pageSize,
-                total: pagination?.total ?? 0,
-                onPageChange: handlePageChange,
-                onPageSizeChange: handlePageSizeChange,
-                pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
-              }}
-            />
+            <>
+              <DataTable
+                className="flex-1 min-h-0"
+                data={users}
+                columns={columns}
+                getRowKey={(user) => user.id}
+                onRowClick={handleRowClick}
+                isLoading={isLoading || isPlaceholderData}
+                emptyState={emptyStateNode}
+                selection={{
+                  selected: selectedUserIds,
+                  onChange: handleSelectionChange,
+                  isRowSelectable: (user) => !user.isOwner,
+                }}
+                sortState={{
+                  field: sortBy,
+                  direction: sortOrder,
+                  onChange: handleSortChange,
+                }}
+                pagination={{ pageSize }}
+              />
+              {(cursorHistory.length > 1 || pagination?.hasMore) && (
+                <CursorPageControls
+                  page={cursorHistory.length}
+                  hasNext={pagination?.hasMore ?? false}
+                  disabled={isLoading || isPlaceholderData}
+                  onPrevious={handlePreviousPage}
+                  onNext={handleNextPage}
+                  pageSize={pageSize}
+                  onPageSizeChange={handlePageSizeChange}
+                  pageSizeOptions={STANDARD_PAGE_SIZE_OPTIONS}
+                />
+              )}
+            </>
           )}
         </div>
       </PageWrapper>
