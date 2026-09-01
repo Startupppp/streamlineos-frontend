@@ -60,20 +60,20 @@ Verified complete at the audited working tree:
 
 - [x] Legacy actor scanner: 0 actionable, 318 display-only classifications, 116 excluded CRM/Inventory fields.
 - [x] Migration ledger/chain/discipline/rollback: 585/585 applied, zero pending/orphan/duplicate/unreachable entries, and all structural gates pass; disposable current-head bootstrap and live rollback drill remain open.
-- [x] OpenAPI coverage: 3,579/3,579 operations have exposure, response and 4xx schemas; 1,363/1,363 mutating operations have request schemas.
-- [x] Backend hard file-size gate: 3,382 files scanned, all within 500 lines with 7 registered exceptions.
+- [x] OpenAPI coverage: 3,583/3,583 operations have exposure, response and 4xx schemas; 1,363/1,363 mutating operations have request schemas.
+- [x] Backend hard file-size gate: 3,392 files scanned, all within 500 lines with 12 registered exceptions.
 - [x] Frontend type-check, route-access contract, contract drift, module manifest, dead-code classification, cycle, query-scope, SEO metadata, color-token and icon-label gates pass.
 - [x] Backend permission-key, owner-authority, scope-application, record-access, module-gate/DI, route-classification, navigation, tenant-index, cache-invalidation, outbox-consumer, idempotency, feature-flag, mock-surface and drop-column gates pass.
 
 Verified pending or failing at the same working tree:
 
-- [ ] Backend build type-check: 177 errors across 61 production files; spec-inclusive type-check: 260 errors across 98 files.
-- [ ] Backend import graph: one Payroll cycle between `reports.service.ts` and `reports-read.service.ts`.
-- [ ] Tenant-isolation coverage: `recruitment-vendor-sourcing.service.ts` lacks a cross-tenant negative test.
-- [ ] Membership removal policy: 28 new HR `RESTRICT` foreign keys have no ruling in `MEMBERSHIP_ARTIFACTS`.
-- [ ] Frontend size ratchet: 520 files exceed 300 lines versus a baseline of 519; `hr/benefits/page.tsx` is 563 lines and breaches the 500-line hard review limit.
-- [ ] Frontend capability reconciliation: 35 live hooks/types are classified `WIRE` and require a UI consumer or an explicit product-backed retirement.
-- [ ] Web-vitals evidence is absent; `.browser-driver-results.json` has not been produced.
+- [x] Backend build type-check and spec-inclusive type-check pass at the current workspace.
+- [x] Backend import graph has no Payroll cycle.
+- [x] Tenant-isolation coverage passes for 897/897 tenant-owned services; live cross-tenant execution remains an environment item.
+- [x] Membership removal policy restriction gate passes for 343 schema files.
+- [x] Frontend size ratchet is 519 files over 300 lines, equal to baseline; `hr/benefits/page.tsx` is 51 lines.
+- [x] Frontend capability reconciliation has 0 WIRE, 0 DEAD, and 0 UNCLASSIFIED entries; 22 deferred capabilities have named owners and a 2026-10-01 review date.
+- [x] Web-vitals evidence exists in `.browser-driver-results.json`; local development measurements breach the declared budgets and production/reference-device evidence remains pending.
 - [ ] Production cells, replica, recovery, load/headroom, live alerts, invoice-derived cost, privacy drills and named compliance approvals remain unproven.
 
 ## Final 10/10 gate

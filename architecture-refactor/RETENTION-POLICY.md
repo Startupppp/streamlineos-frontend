@@ -57,10 +57,21 @@ Note on low current row counts: this is a dev/staging instance. `timesheets`, `h
 
 ### ai_usage_logs — RETAIN-BOUNDED
 - Measured: 401 rows, 264 KB (seeded/small). Write path: every AI API call. At enterprise scale: 18M rows/year.
+
 - Decision: 730-day retention (2 years). Billing analytics must cover at least one full fiscal year; 2 years covers year-on-year comparisons and typical audit lookback periods.
 - Worker: `CronAiUsageRetentionService` (`cron-ai-usage-retention.service.ts`). **Dry-run is the default** — pass `{ dryRun: false }` to actually delete. Resumable Redis cursor (key: `cursor:ai-usage-retention:{orgId}`, TTL 7 days) — a crash mid-sweep resumes from the last committed batch ID rather than restarting. Batch size 500. `forEachOrg` iteration.
 - Legal hold: `ai_usage_logs` records token usage against `org_id` and optionally `user_id`. They are not personal data under HR retention law (they are billing records). No legal hold check is needed; `ai_credit_transactions` (the financial ledger) carries the immutable billing obligation and is KEEP-FOREVER.
 - Financial proof: `ai_usage_logs` are analytics/telemetry rows. The authoritative billing record is `ai_credit_transactions`. Deleting old `ai_usage_logs` after 2 years does not affect the billing ledger.
+
+### kb_chat_conversations - RETAIN-BOUNDED
+- Decision: retain conversation history for the organization-configured `chat_history_retention_days`, defaulting to 90 days.
+- Worker: `CronKbChatRetentionService` (`cron-kb-chat-retention.service.ts`). It iterates organizations, deletes in batches of 200, and is exposed through the leased `kb-chat-history-purge` route.
+- Legal hold: organization and subject legal-hold handling remains part of the deployed purge drill before this policy is approved for production use.
+
+### webhook_deliveries - RETAIN-BOUNDED
+- Decision: retain completed delivery attempts for 90 days; pending attempts are never removed by this worker.
+- Worker: `CronBuildRetentionService` (`cron-build-retention.service.ts`). It iterates organizations, deletes in batches of 500, and is exposed through the leased `build-retention-prune` route.
+- Provider behavior: endpoint mirrors and downstream provider state require separate deployed evidence.
 
 ### notifications (partitioned parent) — PARTITION+ARCHIVE
 - Measured: `notifications_y2026_m08` has 355 rows. Other monthly partitions are empty (dev/staging).
@@ -84,7 +95,7 @@ Note on low current row counts: this is a dev/staging instance. `timesheets`, `h
 - Measured: 188 rows, 1.4 MB (high dead-row ratio 14.2% — autovacuum is running).
 - Write path: one row per sent email. Rendered HTML/text body may contain sensitive values.
 - Decision: 90-day body purge (set `html = ''`, `text = null`), 13-month record deletion.
-- Worker: `CronNotificationRetentionService`. Sweeps globally (no RLS on `email_outbox`).
+- Worker: `CronNotificationRetentionService`. Sweeps globally (no RLS on `email_outbox`) and reports capped runs as truncated for explicit retry.
 
 ### outbox_events — PARTITION+ARCHIVE
 - Measured: 18 rows live, 54 dead, 288 KB.
@@ -126,9 +137,8 @@ Note on low current row counts: this is a dev/staging instance. `timesheets`, `h
 
 ### Retention workers: shared constraints
 
-The following contracts apply to workers that are actually wired into a cron route. The
-repository also contains callable retention services that are not yet scheduled; their
-presence and unit tests must not be read as proof of operational execution.
+The following contracts apply to workers that are explicitly wired into a cron route. A
+service's presence and unit tests must not be read as proof of operational execution.
 
 1. **Tenant context for row sweeps** — background row-level sweeps have no ambient tenant context; a write without the tenant GUC (`app.current_org_id()`) dies 42501. Those sweeps iterate organizations using `forEachOrg`, which sets the GUC inside each org's transaction. Global partition maintenance and outbox operations follow their own explicitly scoped execution paths.
 
@@ -150,10 +160,14 @@ presence and unit tests must not be read as proof of operational execution.
 | Notification row retention | `GET`/`POST /cron/notifications-retention-sweep` | `CRON_SECRET` plus lease `notifications-retention-sweep` (300 seconds) | Route and lease are present; deployment cadence and successful execution remain unverified |
 | Notification partition detach/drop | `GET`/`POST /cron/notifications-retention-detach` | `CRON_SECRET`; `NotificationRetentionService` takes its own distributed lease | Route and lease are present; partition creation and deployment remain gated |
 | AI usage retention | `GET`/`POST /cron/ai-usage-retention-sweep` | `CRON_SECRET` plus lease `ai-usage-retention-sweep` (1,800 seconds); route invokes `sweep({ dryRun: false })` | Route is present and contract-tested; deployed cadence, alerting, and successful execution remain unverified |
+| KB chat history retention | `GET`/`POST /cron/kb-chat-history-purge` | `CRON_SECRET` plus lease `kb-chat-history-purge` (600 seconds); bounded purge batches | Route is present and contract-tested; deployed cadence and successful execution remain unverified |
+| KB chunk retention | `GET`/`POST /cron/kb-chunk-retention-sweep` | `CRON_SECRET` plus lease `kb-chunk-retention-sweep` (600 seconds); bounded prune batches | Route is present and contract-tested; deployed cadence and successful execution remain unverified |
+| Build webhook retention | `GET`/`POST /cron/build-retention-prune` | `CRON_SECRET` plus lease `build-retention-prune` (120 seconds); bounded prune batches | Route is present and contract-tested; deployed cadence and successful execution remain unverified |
 
 The scheduling contract test is `s05-retention-scheduling-contract.spec.ts`. It verifies route,
 secret, lease, and service wiring for the operations above and deliberately asserts that the
-AI-usage route is authenticated, leased, and explicitly non-dry-run rather than treating the callable service alone as operational evidence.
+AI-usage route is authenticated, leased, and explicitly non-dry-run rather than treating a
+callable service alone as operational evidence.
 
 ### PARTITION+ARCHIVE (NotificationRetentionService)
 

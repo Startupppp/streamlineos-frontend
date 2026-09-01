@@ -282,7 +282,7 @@ disclosure decision.
 
 **Repository status (2026-09-01):** `backend/src/scripts/compliance-drill-e2e.mjs` exists and
 has self-test/live dry-run commands, but no redacted deployed evidence bundle is committed.
-Repository focused S05 tests also pass 19 suites / 184 tests for the current operator, GDPR,
+Repository focused S05 tests also pass 21 suites / 189 tests for the current operator, GDPR,
 retention, purge, and scheduling implementation. Commands:
 
 ```bash

@@ -44,13 +44,15 @@ Implementation subitems verified in this session:
 - [ ] Run access/export, correction, portability, erasure, legal-hold blocking, ownership-transfer, cross-tenant denial, and repeated-request idempotency drills against disposable deployed data.
 - [ ] Make export exhaustive and resumable, or document every excluded source with an accountable approval. A truncated or capped export is a failure.
 
-Existing GDPR workers and legal-hold self-tests are implementation evidence only. The export worker now enumerates the repository's subject-owned sources and is resumable, but blob contents remain metadata-only and the synchronous legacy export path is minimal. The purge path does not prove physical deletion of every eligible record in deployment.
+Existing GDPR workers and legal-hold self-tests are implementation evidence only. The export worker now enumerates the repository's subject-owned sources and is resumable, but blob contents remain metadata-only and the synchronous legacy export paths (`POST /gdpr/export/*` and `GET /users/:userId/data-export`) explicitly exclude module-owned records and cap history. They must not be presented as exhaustive SAR responses. The purge path does not prove physical deletion of every eligible record in deployment.
 
 Implementation subitems verified in this session:
 
 - [x] Subject export pagination is resumable by stable cursor and tenant-isolation tests pass.
+- [x] GDPR export pagination fails closed when a page cursor does not advance, preventing an infinite loop from being reported as a completed export.
 - [x] Multi-organization legal-hold checks are covered by focused tests.
 - [x] Storage purge adapter failure handling and idempotency are covered by focused tests.
+- [x] Storage post-delete verification fails closed on provider, authorization, and configuration errors; only a confirmed not-found response counts as absent.
 - [x] Rectification requests are represented by a tenant-scoped `correction` workflow type, require actionable details, and are covered by schema tests and migration `0929_gdpr_correction_request`; processing now refuses to mark them complete until verified field-level correction exists.
 - [x] The asynchronous export worker includes tenant-scoped, resumable `hr_reporting_lines` history in its declared source coverage and focused coverage tests.
 - [x] The asynchronous export worker enumerates subject file keys through the catalog with active legal-hold protection; object bytes remain explicitly outside the repository-only export claim until provider-backed export behavior is verified.
@@ -60,6 +62,7 @@ Implementation subitems verified in this session:
 - [x] The asynchronous export worker includes tenant/subject/cursor-scoped `hr_attendance_regularizations` coverage while excluding reviewer and approver actor identities from the subject export.
 - [x] The asynchronous export worker adds tenant/subject/cursor coverage for 20 additional unambiguous direct-user HR, payroll, engagement, performance, benefits, operations, announcement, and offboarding tables; ambiguous and actor-only tables remain explicitly excluded.
 - [x] The GDPR generic adapter excludes actor/recipient and credential-bearing sources, redacts credential and reviewer/approver identity columns, and has focused tests for those privacy boundaries.
+- [x] Legacy synchronous export routes explicitly expose their module exclusions and history cap, so they cannot be mistaken for exhaustive subject-access exports.
 
 ### 3. Physical and downstream deletion
 
@@ -89,6 +92,7 @@ The repository contains selected retention workers, but complete coverage and de
 Implementation subitems verified in this session:
 
 - [x] Document policies no longer silently skip configured document tables; eligible records are deleted or redacted with legal-hold protection.
+- [x] Notification retention reports `truncated: true` when its bounded safety cap is reached, with focused regression coverage, so a capped sweep cannot be reported as complete.
 - [x] Payroll policies preserve immutable financial records and emit an auditable protected outcome.
 - [x] HR retention processing remains tenant-scoped, bounded, and covered by focused tests.
 - [x] `CronHrRetentionService` reads active `hr_retention_policies`, applies document/payroll outcomes, and emits retention audit rows; scheduled deployed execution remains open.
@@ -96,7 +100,8 @@ Implementation subitems verified in this session:
 - [x] A read-only run against the configured database at the 1 MB threshold reported 10/10 high-growth tables covered or KEEP-FOREVER with zero uncovered tables; this is inventory evidence only and is not treated as a deployed retention drill.
 - [x] The retention-coverage gate fails closed for invalid thresholds, validates matrix entries in self-test, and scans ordinary plus partitioned table relations; this is repository coverage evidence only.
 - [x] Partition children resolve to their parent retention policy and the verifier emits the policy table used for each measured relation; this remains repository classification evidence only.
-- [x] The retention scheduling contract test verifies authenticated leased HR/notification/AI-usage routes, including explicit non-dry-run AI retention invocation; this does not prove deployed cadence or execution.
+- [x] The retention policy inventory records explicit bounded decisions and worker links for `kb_chat_conversations` and `webhook_deliveries`; provider behavior and deployed execution remain external evidence gates.
+- [x] The retention scheduling contract test verifies all seven authenticated leased HR, notification, AI-usage, KB chat, KB chunk, and build-webhook retention routes, including explicit non-dry-run AI retention invocation; this does not prove deployed cadence or execution.
 
 ### 5. Residency, transfers, subprocessors, and incident obligations
 
@@ -143,7 +148,7 @@ the configured `streamline_app` role and confirmed `UPDATE`/`DELETE` are denied,
 enabled `audit_logs` trigger in that environment; migration `0930` remains unapplied there.
 CRM and Inventory remain intentionally excluded.
 
-Verified in this session: the current focused run passed 19 suites and 184/184 tests across operator access,
+Verified in this session: the current focused run passed 21 suites and 189/189 tests across operator access,
 operator data-plane routes, GDPR export/purge, legal holds, organization purge, audit
 immutability, rectification validation, and HR retention. Migration and compliance self-tests
 also pass. The S05 evidence collector self-test passes and its eleven checks pass; the generated

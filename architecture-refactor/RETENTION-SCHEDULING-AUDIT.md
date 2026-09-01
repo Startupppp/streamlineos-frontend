@@ -20,7 +20,7 @@ The repository test is [s05-retention-scheduling-contract.spec.ts](../backend/sr
 
 ## S05 assessment
 
-Repository coverage is present for the four retention routes above, including authentication, distributed leases, bounded or resumable worker contracts where implemented, and selected audit outcomes. The repository does not contain enough evidence to close the S05 retention item:
+Repository coverage is present for the seven retention routes above, including authentication, distributed leases, bounded or resumable worker contracts where implemented, and selected audit outcomes. The repository does not contain enough evidence to close the S05 retention item:
 
 - deployment cadence and successful execution are not represented by repository tests;
 - notification retention does not expose a durable per-run audit record in the worker result contract;
