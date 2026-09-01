@@ -10,6 +10,14 @@ seam to production breadth and retires the identity split.
 few weeks; moving 132 module file references onto one identity model without an
 outage is the work, and it is what makes every later phase cheaper.
 
+## Preserved visual-token exception
+
+CRM retains 79 deliberate solid-fill values that the shared semantic token set
+cannot currently express. They are CRM-owned follow-up work, not part of the
+platform architecture completion tickets. Any replacement requires a CRM design
+decision; the repository's design-token lint gate remains the permanent
+regression control.
+
 | Track | Tickets | Shape |
 |---|---|---|
 | A — identity convergence | 01-08 | expand → dual-write → 5 migrate batches → contract |

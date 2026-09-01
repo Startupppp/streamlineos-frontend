@@ -14,7 +14,7 @@ The concrete facts:
 - `neondb_owner` has `BYPASSRLS = true`. `BYPASSRLS` overrides `FORCE`, so enabling FORCE on all 907 tables would not change `neondb_owner`'s ability to read across tenants. The protection is already absent for that role.
 - Setting FORCE on 907 tables today changes zero observable behaviour under the current connection topology.
 
-Verified against the live database on 2026-08-28: `APP_DATABASE_URL` connects as `current_user = streamline_app` with `rolbypassrls = false`, and `DATABASE_URL` connects as `neondb_owner`. `OPEN-FINDINGS.md` §5 previously stated that the application connects as `neondb_owner`; that was wrong, and it strengthens rather than weakens this decision — the request path is already policy-bound.
+Verified against the live database on 2026-08-28: `APP_DATABASE_URL` connects as `current_user = streamline_app` with `rolbypassrls = false`, and `DATABASE_URL` connects as `neondb_owner`. An earlier audit incorrectly stated that the application connects as `neondb_owner`; the request path is already policy-bound.
 
 ## Decision
 

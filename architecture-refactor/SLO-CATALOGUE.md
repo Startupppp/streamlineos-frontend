@@ -160,5 +160,4 @@ the spec suite at `src/common/slo/slo-catalogue.spec.ts` covers the attribution 
 **No alert reaches a human in any environment.** `ALERT_WEBHOOK_URL` is unset. Every objective above
 is measured and every alert fires with the correct payload and a working runbook link, but the
 transport terminates at a local sink. This is the single operator action that turns this catalogue
-from a measurement into an on-call contract, and it is tracked in
-`PRODUCTION-OPERATIONS-STATUS.md` §6.
+from a measurement into an on-call contract, and it is tracked by Ticket S04.

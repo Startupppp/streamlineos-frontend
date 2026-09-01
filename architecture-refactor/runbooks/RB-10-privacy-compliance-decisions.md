@@ -271,7 +271,7 @@ disclosure decision.
 
 ## 6. End-to-End GDPR Compliance Drill Workflow
 
-**Context:** The four drills were each exercised individually on 2026-09-01 (see `PRODUCTION-OPERATIONS-STATUS.md` §7). The PRD requires them as one end-to-end workflow.
+**Context:** The four drills were each exercised individually on 2026-09-01. Ticket S05 requires fresh deployed evidence for the complete end-to-end workflow.
 
 **Status (2026-09-01):** `backend/src/scripts/compliance-drill-e2e.mjs` is built and verified.
 It runs all five phases as a single ordered workflow against the live DB. Self-test PASS (8/8
@@ -385,7 +385,7 @@ node src/scripts/audit-storage-keys.mjs --subject "$SUBJECT_EMAIL"
 # 2. For each key returned, manually delete from R2:
 #    wrangler r2 object delete $R2_BUCKET_NAME <key>
 # 3. Confirm no remaining blobs for subject
-# Note: the automated storage purge adapter is not yet implemented (OPERATOR-EVIDENCE.md Gap 2).
+# Note: the automated storage purge adapter is required by Ticket S05.
 ```
 
 ### Pass/fail criteria
@@ -399,7 +399,7 @@ node src/scripts/audit-storage-keys.mjs --subject "$SUBJECT_EMAIL"
 | Immutability | 6 specs pass; privilege list noted for migration handoff |
 | Object storage | DECISION REQUIRED — manual until adapter is implemented |
 
-### Known gaps (from PRODUCTION-OPERATIONS-STATUS.md §7)
+### Known gaps owned by Ticket S05
 
 1. Export worker not implemented — `hr_data_requests` tracks requests; no worker produces an actual data file.
 2. Object storage purge adapter returns FAILED — not yet implemented.

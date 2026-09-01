@@ -1,45 +1,25 @@
-# Luna 10/10 Completion Sessions
+# Independent final completion tickets
 
-These seven PRDs are independent execution contracts for Luna. Start every session from the current `main` branch and re-run its baseline commands before changing anything; numeric counts may fall while another session works.
+These five tickets are the only active architecture-refactor tickets. They may run in parallel and must not assume another session has completed first.
 
-## Shared non-negotiable rules
+## Session protocol
 
-- Read root `CLAUDE.md` and the relevant `backend/CLAUDE.md` and/or `frontend/CLAUDE.md` before editing.
-- Do not touch CRM or Inventory. Do not touch any public landing route, landing component, landing provider, or animation. The landing page must remain byte-for-byte behaviorally unchanged.
-- Do not change a classification, baseline, allowlist, or test simply to make a gate pass. Every reduction must come from a real code/schema/API correction.
-- Do not use `git reset`, `checkout`, `stash`, `rebase`, `push`, or destructive data operations. Commit only a coherent verified batch when the execution environment permits it.
-- Preserve tenant isolation, RBAC, API compatibility, cache invalidation, audit logs, and accessibility. Never silently truncate a list or whole-set workflow.
-- Ask questions only when the answer requires a product, security, deployment, or billing decision that the repository cannot answer. Otherwise inspect and continue.
-- Continue until every in-repository checkbox and required gate in the assigned PRD passes. Do not report success from source inspection alone.
+At the start of every session:
 
-## Global final gates
+1. Read the root and package-level CLAUDE/AGENTS instructions.
+2. Re-read current source and run the ticket's baseline commands.
+3. Ask all material product/security questions at the start. Otherwise proceed with the stated defaults.
+4. Preserve CRM, Inventory, and the public landing page.
+5. Do not overwrite another session's uncommitted work.
+6. Make small coherent commits in the repository that owns each file.
+7. Attach fresh command output and environment identity to the ticket before checking an item.
 
-The seven sessions are complete only when all applicable commands pass from a clean checkout:
+Tickets:
 
-```powershell
-pnpm -C backend typecheck
-pnpm -C backend check:spec-typecheck
-pnpm -C backend scan:legacy-actors
-pnpm -C backend check:unbounded-reads
-pnpm -C backend check:migration-discipline
-pnpm -C backend check:migration-chain
-pnpm -C backend check:migration-ledger
-pnpm -C backend check:openapi-coverage
-pnpm -C frontend type-check
-```
+- [S01 — Authority and tenant integrity](S01-AUTHORITY-TENANT-INTEGRITY.md)
+- [S02 — Query bounds and read cost](S02-QUERY-READ-COST.md)
+- [S03 — Repository quality and release verification](S03-QUALITY-RELEASE.md)
+- [S04 — Migration and production operations](S04-MIGRATION-PRODUCTION-OPS.md)
+- [S05 — Compliance and approvals](S05-COMPLIANCE-APPROVALS.md)
 
-Production infrastructure and human approvals are not code-completable. Session 07 must obtain evidence or explicitly leave an external approval blocker; it must never invent production proof.
-
-## Session ownership
-
-| PRD | Exclusive primary scope |
-|---|---|
-| 01 | HR authority actor migration |
-| 02 | Build, Support, Common authority actor migration |
-| 03 | Payroll, AI, Accounting, Billing authority actor migration |
-| 04 | Offset pagination and authenticated UI contracts |
-| 05 | Unbounded reads, projections, and query-cost proof |
-| 06 | Cross-cutting security, API, reliability, tests, and decomposition |
-| 07 | Production operations, privacy, compliance, and release evidence |
-
-If a session discovers a file owned by another session, record it in that PRD's handoff table and do not edit it.
+Completion of one ticket never authorizes checking an acceptance criterion in another ticket.

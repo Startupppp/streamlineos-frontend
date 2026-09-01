@@ -1,6 +1,6 @@
 # Failure Runbooks — StreamlineOS Platform
 
-Companion to [`c28 RUNBOOKS.md`](../../../c28-cell-based-platform-at-20m/RUNBOOKS.md) (alert runbooks for dead-outbox, dead-delivery, sig-failures, tenant-ctx-errors, p95, seam-latency) and [`CELL-RUNBOOK.md`](../../../c28-cell-based-platform-at-20m/CELL-RUNBOOK.md) (cell bootstrap, isolation, backup/restore, relocation).
+Companion to the durable operator runbooks for [live alert delivery](../../../runbooks/RB-06-live-alert-delivery.md), [cell isolation](../../../runbooks/RB-01-cell-isolation.md), [backup/PITR](../../../runbooks/RB-02-pitr-backup.md), and [recovery](../../../runbooks/RB-04-recovery-drill.md).
 
 This file covers five operational failure scenarios. Each section anchors to an `alert-dispatch.mjs` runbook reference and cross-references the c28 degradation tests from ticket 31, which proved each dependency can be removed without an application stub.
 
@@ -140,7 +140,7 @@ The degradation test in ticket 31 (control plane and DB rows) proved:
 - A throwing `lookupOrgRegion` refuses unknown and stale placement without caching the failure.
 - The placement signed-cache path survives a control-plane outage.
 
-See [`CELL-RUNBOOK.md`](../../../c28-cell-based-platform-at-20m/CELL-RUNBOOK.md) for:
+See the [cell-isolation](../../../runbooks/RB-01-cell-isolation.md) and [recovery](../../../runbooks/RB-04-recovery-drill.md) runbooks for:
 - Cell bootstrap from nothing: `pnpm -C backend cell:bootstrap`
 - Org placement: `pnpm -C backend cell:place-org`
 - Isolation check: `pnpm -C backend cell:isolation`
@@ -168,7 +168,7 @@ pnpm -C backend cell:isolation --region=cell-2
 pnpm -C backend cell:degraded --region=cell-2 --org=<known-placed-org-id>
 ```
 
-**Containment:** If a cell database is unreachable, the signed-placement cache allows the primary cell to keep serving placed organizations without the control plane. Unknown organizations are refused (not guessed). See `CELL-RUNBOOK.md #exercise-the-degraded-control-plane`.
+**Containment:** If a cell database is unreachable, the signed-placement cache allows the primary cell to keep serving placed organizations without the control plane. Unknown organizations are refused (not guessed). Follow the degraded-control-plane and recovery procedures in RB-01 and RB-04.
 
 **Recovery (full cell failure):**
 
@@ -230,7 +230,7 @@ node backend/src/scripts/alert-queue-age.mjs
 
 **Measurable in `ai_usage_logs`:** AI token/credit spend per org (credits_milli, total_tokens, feature, model).
 
-**Not measurable by this alert:** CPU, memory, network, DB query cost, Redis memory, or object storage per tenant. Those metrics have no per-tenant ledger in the current schema. See `CELL-RUNBOOK.md` for what each shared resource currently lacks in per-cell attribution.
+**Not measurable by this alert:** CPU, memory, network, DB query cost, Redis memory, or object storage per tenant. Those metrics have no per-tenant ledger in the current schema. Use RB-07 for the required per-cell cost evidence.
 
 **First five minutes**
 
