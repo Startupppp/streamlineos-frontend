@@ -15,6 +15,7 @@ import { ProductCostingCardFields } from "@/features/inventory/components/produc
 import { ProductPricingFields } from "@/features/inventory/components/product-pricing-fields";
 import { ProductUomCardFields } from "@/features/inventory/components/product-uom-card-fields";
 import { ProductReorderCardFields } from "@/features/inventory/components/product-reorder-card-fields";
+import { ProductMaterialFields } from "@/features/inventory/components/buildmart/product-material-fields";
 import {
   productSchema,
   type ProductFormValues,
@@ -135,6 +136,9 @@ export function NewProductForm({
         />
 
         <ProductClassificationFields control={form.control} />
+
+        {/* B1. Renders itself only while the `materials` pack is on. */}
+        <ProductMaterialFields control={form.control} />
 
         <ProductCostingCardFields
           control={form.control}

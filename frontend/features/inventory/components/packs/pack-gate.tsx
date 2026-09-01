@@ -28,7 +28,7 @@ export function useInventoryPack(pack: InventoryPackName): boolean {
 export function usePackFlags(): InventoryPacks {
   const { data } = useInventoryPacks();
   return (
-    data ?? { warehouse: true, kirana: false, pharmacy: false, gst: false }
+    data ?? { warehouse: true, kirana: false, pharmacy: false, gst: false, materials: false }
   );
 }
 

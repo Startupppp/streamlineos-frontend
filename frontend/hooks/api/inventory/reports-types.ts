@@ -122,7 +122,18 @@ export interface ReorderReportRow {
   sku: string;
   variantSku: string;
   categoryName: string | null;
+  /**
+   * B4. Which store is short. The report is one row per stock level, so a SKU
+   * low at two dark stores is two rows — and until the warehouse was projected
+   * they were identical, which made the list's React key collide and silently
+   * drop one of them.
+   */
+  warehouseId: number;
+  warehouseCode: string | null;
   warehouseName: string | null;
+  /** The bin. A SKU can be low in two bins of the same store, so this is the identity. */
+  locationId: number;
+  locationCode: string | null;
   onHand: number;
   availableQty: number;
   reorderPoint: number;
@@ -293,6 +304,12 @@ export interface RawReorderRow {
   suggestedQty: number;
   vendorId: number | null;
   leadTimeDays: number | null;
+  warehouseId: number;
+  warehouseName: string;
+  warehouseCode: string;
+  locationId: number;
+  locationName: string;
+  locationCode: string;
 }
 
 export interface RawReorderEnvelope {

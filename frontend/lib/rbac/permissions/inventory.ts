@@ -62,4 +62,6 @@ export const INVENTORY_PERMISSIONS: Permission[] = [
   { name: "inventory:kits:assemble", resource: "inventory:kits", action: "assemble", description: "Assemble and disassemble kits: consume components and create the kit SKU, moving valuation with them" },
   { name: "inventory:labor:read", resource: "inventory:labor", action: "read", description: "Read the warehouse labour board: units per hour and performance against standard, by named person" },
   { name: "inventory:import", resource: "inventory:import", action: "import", description: "Import inventory data" },
+  { name: "inventory:projects:read", resource: "inventory:projects", action: "read", description: "View construction projects and the material each site still needs, including what is at risk of missing its date" },
+  { name: "inventory:projects:manage", resource: "inventory:projects", action: "manage", description: "Create and edit construction projects and their material requirements" },
 ];

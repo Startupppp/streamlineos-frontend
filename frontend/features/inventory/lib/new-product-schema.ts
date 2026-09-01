@@ -112,6 +112,67 @@ export const productSchema = z.object({
       (v) => !v || (Number.isFinite(Number(v)) && Number(v) >= 0),
       "Must be a non-negative number",
     ),
+  /**
+   * B1 — the construction and interior-materials fields, behind the `materials`
+   * pack. Every one is optional here because the pack may be off, in which case
+   * the section is not rendered and the server refuses the keys outright.
+   *
+   * They are strings like every other field on this form: the inputs are text
+   * inputs, and coercing at the schema would make an empty box a `0` rather than
+   * "not answered" — which is how a lead time of nothing becomes same-day
+   * delivery in the reorder report.
+   */
+  brand: z.string().max(120, "Brand must be 120 characters or fewer").optional(),
+  materialGrade: z.string().max(60, "Grade must be 60 characters or fewer").optional(),
+  finish: z.string().max(60, "Finish must be 60 characters or fewer").optional(),
+  colour: z.string().max(60, "Colour must be 60 characters or fewer").optional(),
+  dimensionLabel: z.string().max(80, "Dimensions must be 80 characters or fewer").optional(),
+  materialFamily: z.string().optional(),
+  supplierCode: z.string().max(100, "Supplier code must be 100 characters or fewer").optional(),
+  packSize: z
+    .string()
+    .optional()
+    .refine(
+      (v) => !v || (DECIMAL_PATTERN.test(v) && Number(v) > 0),
+      "Pack size must be more than zero — leave it empty if the item is not packed",
+    ),
+  leadTimeDays: z
+    .string()
+    .optional()
+    .refine(
+      (v) => !v || (/^\d+$/.test(v) && Number(v) <= 365),
+      "Lead time is a whole number of days, up to 365",
+    ),
+  reorderQuantity: z
+    .string()
+    .optional()
+    .refine(
+      (v) => !v || (DECIMAL_PATTERN.test(v) && Number(v) > 0),
+      "Reorder quantity must be more than zero — leave it empty to decide each time",
+    ),
 });
+
+/**
+ * B1 — the material families the catalogue splits on, and what a buyer calls
+ * them. Kept beside the schema so the form, the filter and the detail page
+ * cannot drift into three different spellings of the same list.
+ */
+export const MATERIAL_FAMILIES = [
+  { value: "CEMENT_AGGREGATE", label: "Cement & aggregates" },
+  { value: "STEEL_REBAR", label: "Steel & rebar" },
+  { value: "BRICK_BLOCK", label: "Bricks & blocks" },
+  { value: "TILE_STONE", label: "Tiles & stone" },
+  { value: "PAINT_COATING", label: "Paints & coatings" },
+  { value: "PLUMBING", label: "Plumbing" },
+  { value: "ELECTRICAL", label: "Electrical" },
+  { value: "SANITARYWARE", label: "Sanitaryware" },
+  { value: "WOOD_PANEL", label: "Wood & panels" },
+  { value: "GLASS_MIRROR", label: "Glass & mirrors" },
+  { value: "HARDWARE_FASTENER", label: "Hardware & fasteners" },
+  { value: "ADHESIVE_CHEMICAL", label: "Adhesives & chemicals" },
+  { value: "FALSE_CEILING", label: "False ceiling" },
+  { value: "LIGHTING", label: "Lighting" },
+  { value: "OTHER", label: "Other" },
+] as const;
 
 export type ProductFormValues = z.infer<typeof productSchema>;

@@ -10,6 +10,7 @@ import {
   NewProductForm,
   type ProductFormValues,
 } from "@/features/inventory/components/new-product-form";
+import type { MaterialFamily } from "@/types/inventory";
 
 export default function NewProductPage() {
   const canCreate = useCan("inventory:products:create");
@@ -36,6 +37,19 @@ export default function NewProductPage() {
       barcode: values.barcode || undefined,
       reorderEnabled: values.reorderEnabled,
       reorderPoint: values.reorderPoint ? Number(values.reorderPoint) : undefined,
+      // B1. Only sent when filled in: an empty box is "not answered", and the
+      // server refuses every one of these outright while the pack is off, so a
+      // blank string would turn a create into a named 400.
+      ...(values.brand ? { brand: values.brand } : {}),
+      ...(values.materialGrade ? { materialGrade: values.materialGrade } : {}),
+      ...(values.finish ? { finish: values.finish } : {}),
+      ...(values.colour ? { colour: values.colour } : {}),
+      ...(values.dimensionLabel ? { dimensionLabel: values.dimensionLabel } : {}),
+      ...(values.materialFamily ? { materialFamily: values.materialFamily as MaterialFamily } : {}),
+      ...(values.packSize ? { packSize: values.packSize } : {}),
+      ...(values.supplierCode ? { supplierCode: values.supplierCode } : {}),
+      ...(values.leadTimeDays ? { leadTimeDays: Number(values.leadTimeDays) } : {}),
+      ...(values.reorderQuantity ? { reorderQuantity: values.reorderQuantity } : {}),
     });
     toast.success(`Product created (${product.sku})`);
     router.push("/inventory/products");

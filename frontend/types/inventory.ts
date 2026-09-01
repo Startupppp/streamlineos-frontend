@@ -76,6 +76,23 @@ export interface InventoryProduct {
   salesUomId?: number | null;
   defaultVendorId?: number | null;
   reorderEnabled?: boolean;
+  /**
+   * B1 — the materials pack's catalogue attributes.
+   *
+   * Every one is optional because the server **strips them from the response**
+   * when the pack is off — not nulls, absent. A client that treated a missing
+   * `brand` as "no brand" would be reading a pack gate as data.
+   */
+  brand?: string | null;
+  materialGrade?: string | null;
+  finish?: string | null;
+  colour?: string | null;
+  dimensionLabel?: string | null;
+  materialFamily?: MaterialFamily | null;
+  packSize?: string | null;
+  supplierCode?: string | null;
+  leadTimeDays?: number | null;
+  reorderQuantity?: string | null;
 }
 
 export interface CreateProductInput {
@@ -98,7 +115,33 @@ export interface CreateProductInput {
   salesUomId?: number;
   defaultVendorId?: number;
   reorderEnabled?: boolean;
+  /**
+   * B1 — the construction and interior-materials fields, behind the `materials`
+   * pack. The server refuses every one of them while the pack is off, so a
+   * caller that sends them without the pack gets a named 400 rather than a
+   * silent write.
+   *
+   * `null` clears a value; `undefined` leaves it alone. Quantities are strings
+   * for the same reason they are strings everywhere else in this module: a
+   * decimal that goes through a JSON float has already lost precision.
+   */
+  brand?: string | null;
+  materialGrade?: string | null;
+  finish?: string | null;
+  colour?: string | null;
+  dimensionLabel?: string | null;
+  materialFamily?: MaterialFamily | null;
+  packSize?: string | null;
+  supplierCode?: string | null;
+  leadTimeDays?: number | null;
+  reorderQuantity?: string | null;
 }
+
+/** B1 — the closed set of material families the catalogue splits on. */
+export type MaterialFamily =
+  | "CEMENT_AGGREGATE" | "STEEL_REBAR" | "BRICK_BLOCK" | "TILE_STONE" | "PAINT_COATING"
+  | "PLUMBING" | "ELECTRICAL" | "SANITARYWARE" | "WOOD_PANEL" | "GLASS_MIRROR"
+  | "HARDWARE_FASTENER" | "ADHESIVE_CHEMICAL" | "FALSE_CEILING" | "LIGHTING" | "OTHER";
 
 export type UpdateProductInput = Omit<Partial<CreateProductInput>, "categoryId" | "uomId" | "barcode" | "description"> & {
   productId?: number;

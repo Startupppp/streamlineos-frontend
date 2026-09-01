@@ -31,6 +31,8 @@ import {
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useCan } from "@/hooks/api/access";
 import { RecentMovementsTable } from "./inventory-recent-movements";
+import { NeedsAttentionBoard } from "./buildmart/needs-attention-board";
+import { OperationalPositionCard } from "./buildmart/operational-position-card";
 import { DashboardInsightsPanel } from "./dashboard-insights-panel";
 import { InventoryAiBriefCard } from "./inventory-ai-brief-card";
 
@@ -47,6 +49,20 @@ function AddProductLink() {
     </Link>
   );
 }
+
+/**
+ * Stock value comes from the API as `SUM(on_hand × average_cost)` — **rupees**,
+ * the currency every cost on this catalogue is held in. It was rendered as
+ * `$${value / 100}`, which was wrong twice over: a hundredfold understatement of
+ * a figure somebody reconciles against their accounts, in the wrong currency.
+ * There are no minor units anywhere in this number's path, so there is nothing
+ * to divide by.
+ */
+const STOCK_VALUE_FORMAT = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  maximumFractionDigits: 0,
+});
 
 const URGENCY_CONFIG: Record<
   ReorderReportRow["urgency"],
@@ -128,13 +144,20 @@ function LowStockAlertSection({ canReadReports }: { canReadReports: boolean }) {
         const urgency = URGENCY_CONFIG[item.urgency];
         return (
           <div
-            key={`${item.productId}-${item.variantSku}`}
+            // B4. The report is one row per stock level, so the SKU alone is not
+            // an identity — nor is the store: a SKU can be low in two bins of the
+            // same store. React silently dropped the duplicate, hiding a bin that
+            // was genuinely short. The bin is the row.
+            key={`${item.productId}-${item.variantSku}-${item.locationId}`}
             className={`flex items-center gap-3 rounded-lg border p-3 ${urgency.className}`}
           >
             <div className={`h-2 w-2 rounded-full shrink-0 ${urgency.dotClass}`} />
             <div className="flex-1 min-w-0">
               <TruncatedText text={item.productName} className="text-dense font-semibold text-foreground" />
-              <p className="text-dense text-muted-foreground font-mono">{item.variantSku}</p>
+              <p className="text-dense text-muted-foreground">
+                <span className="font-mono">{item.variantSku}</span>
+                {item.warehouseName ? <span> · {item.warehouseName}</span> : null}
+              </p>
             </div>
             <div className="text-right shrink-0">
               <p className="text-dense text-muted-foreground">
@@ -298,6 +321,14 @@ export function InventoryDashboardClient() {
       actions={canCreateProduct ? <AddProductLink /> : undefined}
     >
       <div className="space-y-4">
+        {/*
+          B2 — the two things somebody opens this page for, above everything
+          else: what is on the shelf right now, and what needs a decision today.
+          The KPI grid below them is the weekly read, not the morning one.
+        */}
+        <OperationalPositionCard />
+        <NeedsAttentionBoard />
+
         {!canReadReports ? (
           <NoPermissionState
             compact
@@ -345,7 +376,7 @@ export function InventoryDashboardClient() {
             />
             <StatCard
               label="Stock Value"
-              value={`$${(stockValue / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+              value={STOCK_VALUE_FORMAT.format(stockValue)}
               icon={DollarSign}
               tone="blue"
             />

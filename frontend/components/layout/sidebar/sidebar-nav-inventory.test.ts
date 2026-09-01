@@ -78,9 +78,18 @@ import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 // somebody else; taking title re-gates on inventory:stock:adjust. "Dock"
 // (/inventory/dock) is gated on inventory:dock:manage — booking vehicles in is a
 // receiving clerk's job rather than the person who configures the site.
+// Moved 2026-09-01 by B1/B2 (materials pack): two inventory routes were added.
+// "Dark Stores" (/inventory/dark-stores, on inventory:stock:read) is the zone
+// board — what each Hyderabad facility holds and what it owes; it reads stock
+// levels, so it asks for the key the stock pages ask for. "Projects"
+// (/inventory/projects, on inventory:projects:read) is construction sites and the
+// material each still needs. Projects has a key of its own rather than reusing
+// stock-read, because a site engineer who raises requirements is not necessarily
+// somebody who may see every bin in the network — and reserving stock against a
+// line is a third key again (inventory:stock:reserve), since holding material is
+// a claim on the warehouse.
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "d306efa9d442b75f4dfe864a6f96ce9a0d55188f28d6885fdd93b51a2534b1f7";
-  "5bf9eeab85643ea8e3a42147f6ebb0e52750a7cc07d0dc8d6bcc649ebebfb8ed";
+  "2ca6daa9c7133ee86933bf8b8f885ed7146824a48a547b7eee7b7eda1e2553b5";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {

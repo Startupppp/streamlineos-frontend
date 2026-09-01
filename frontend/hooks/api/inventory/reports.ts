@@ -87,7 +87,11 @@ function toReorderRowFromFlat(row: RawReorderRow): ReorderReportRow {
     sku: row.productSku,
     variantSku: row.variantSku,
     categoryName: null,
-    warehouseName: null,
+    warehouseId: row.warehouseId,
+    warehouseCode: row.warehouseCode,
+    warehouseName: row.warehouseName,
+    locationId: row.locationId,
+    locationCode: row.locationCode,
     onHand: row.onHand,
     // A1. This was an eighth copy of the availability formula, two terms
     // short — it ignored blocked, quality-held and picked-not-shipped stock.

@@ -103,6 +103,9 @@ const eslintConfig = defineConfig([
   },
   globalIgnores([
     ".next/**",
+    // A second dev server on this working tree builds into its own directory
+    // (`NEXT_DIST_DIR`, see next.config.ts). Generated output, same as `.next`.
+    ".next-*/**",
     "out/**",
     "build/**",
     "public/**",

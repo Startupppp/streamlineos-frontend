@@ -28,6 +28,7 @@ export interface InventorySettings {
   packKirana: boolean;
   packPharmacy: boolean;
   packGst: boolean;
+  packMaterials: boolean;
 }
 
 /**
@@ -44,6 +45,8 @@ export interface InventoryPacks {
   kirana: boolean;
   pharmacy: boolean;
   gst: boolean;
+  /** B1 — construction and interior materials: catalogue attributes, dark stores, projects. */
+  materials: boolean;
 }
 
 export interface NumberSequence {

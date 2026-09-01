@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileText, BarChart3, ClipboardList, ShieldCheck, TrendingUp, Package, Globe, ClipboardCheck, RefreshCcw, History, BarChart2, Building2, SlidersHorizontal, Calculator, Tag, Warehouse, ArrowLeftRight, ShoppingCart, Truck, Activity, Layers, TrendingDown, Scan, Boxes, CalendarClock, Container, Upload, RotateCcw, PackageCheck, DollarSign, Scale, Gauge, Sparkles } from "lucide-react";
+import { LayoutDashboard, HardHat, Store, FileText, BarChart3, ClipboardList, ShieldCheck, TrendingUp, Package, Globe, ClipboardCheck, RefreshCcw, History, BarChart2, Building2, SlidersHorizontal, Calculator, Tag, Warehouse, ArrowLeftRight, ShoppingCart, Truck, Activity, Layers, TrendingDown, Scan, Boxes, CalendarClock, Container, Upload, RotateCcw, PackageCheck, DollarSign, Scale, Gauge, Sparkles } from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
 export const INVENTORY_NAV_GROUPS: NavGroup[] = [
@@ -60,6 +60,18 @@ export const INVENTORY_NAV_GROUPS: NavGroup[] = [
             requiredPermission: "inventory:stock:read",
           },
         ],
+      },
+      {
+        label: "Dark Stores",
+        icon: Store,
+        href: "/inventory/dark-stores",
+        requiredPermission: "inventory:stock:read",
+      },
+      {
+        label: "Projects",
+        icon: HardHat,
+        href: "/inventory/projects",
+        requiredPermission: "inventory:projects:read",
       },
       {
         label: "Warehouses",

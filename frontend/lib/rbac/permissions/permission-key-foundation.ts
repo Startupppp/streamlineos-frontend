@@ -150,6 +150,8 @@ export type FoundationPermissionKey =
   | "inventory:stock:transfer"
   | "inventory:stock:reserve"
   | "inventory:stock:reconcile"
+  | "inventory:projects:read"
+  | "inventory:projects:manage"
   | "inventory:adjustments:approve"
   | "inventory:adjustments:post"
   | "inventory:warehouses:read"
