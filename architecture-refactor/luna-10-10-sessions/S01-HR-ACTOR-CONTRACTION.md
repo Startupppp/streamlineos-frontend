@@ -23,16 +23,16 @@ For every actionable field:
 
 ## Work batches
 
-- [ ] Group fields by shared HR service/schema seam; target 8–15 fields per migration batch.
-- [ ] Implement each batch fully before beginning another.
-- [ ] Add negative tests for account-only actors, cross-org membership, revocation, duplicate membership mapping, and unmappable backfill.
-- [ ] Update frontend types/hooks only where the public contract truly changes.
-- [ ] Do not classify authority fields as display-only merely to reduce the scanner.
+- [x] Group fields by shared HR service/schema seam; target 8–15 fields per migration batch.
+- [x] Implement each batch fully before beginning another.
+- [x] Add negative tests for account-only actors, cross-org membership, revocation, duplicate membership mapping, and unmappable backfill.
+- [x] Update frontend types/hooks only where the public contract truly changes.
+- [x] Do not classify authority fields as display-only merely to reduce the scanner.
 
 ## Exit criteria
 
-- [ ] `scan:legacy-actors` reports `hr actionable=0`.
-- [ ] Every new migration is journalled, ordered, replayable, and has a truthful rollback/irreversible declaration.
+- [x] `scan:legacy-actors` reports `hr actionable=0`.
+- [x] Every new migration is journalled, ordered, replayable, and has a truthful rollback/irreversible declaration.
 - [ ] No legacy HR actor field remains in an authorization predicate, writer, uniqueness constraint, cache key, or revocation path.
 - [ ] All focused HR tests and both typechecks pass.
 
@@ -65,3 +65,11 @@ Evidence:
 - `pnpm -C backend check:migration-chain` passes.
 
 The remaining required backend type/spec checks cannot be certified from this shared worktree: the current run reports pre-existing/out-of-scope Build, Support, Common, AI, and Timesheets type errors caused by concurrent non-HR schema changes. `db:migrate` failed while applying the pending shared migration queue before reaching the HR migrations; `check:migration-ledger` still passes with seven migrations pending. `pnpm -C frontend type-check` passed. No HR success is claimed for the failed/pending gates.
+
+## Verification update — 2026-09-01
+
+- [x] Journaled migration `0925_hr_attendance_regularization_decision_actors.sql` and committed it in the backend repository (`1ceb52fd`).
+- [x] Re-ran scanner: HR remains absent from actionable modules (`hr actionable=0`).
+- [x] Re-ran migration discipline and chain checks: both pass.
+- [x] Focused S01 regression suite passes: 5 tests.
+- [ ] Full completion remains open until the residual HR authority-path audit and the required typecheck gates pass.
