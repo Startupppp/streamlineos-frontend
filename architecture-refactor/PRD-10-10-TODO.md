@@ -2,10 +2,24 @@
 
 **Status:** Authoritative remaining-work list
 
-**Verified:** 2026-09-01 (revised — every number below was measured this session)
+**Verified:** 2026-09-01 (final code-wave reconciliation)
 **Purpose:** Completing every applicable checkbox in this file, with the required evidence, is the final gate for a 10/10 rating across architecture, implementation, security, performance, maintainability, UX and operations.
 
 This file supersedes older pending lists in reports, scorecards and session tickets. A completed item must not be reopened merely because an older document still describes it as pending. Reopen it only when current source or a current gate demonstrates a regression.
+
+### Current release-head evidence
+
+- Backend build typecheck: PASS. Spec-inclusive typecheck: PASS.
+- Frontend typecheck: PASS. Landing-page source and animations were not changed.
+- OpenAPI: 3,579/3,579 exposure, error and response contracts; 1,363/1,363 applicable mutating request contracts.
+- Migration ledger: 568/568 applied; zero pending, orphan, duplicate or unreachable entries. Migration discipline and chain gates PASS.
+- Actor scanner: 150 actionable in included domains; Knowledge Base is zero, Support is five. CRM and Inventory remain excluded.
+- Query scanner: 61 actionable offsets, 316 actionable unbounded reads and zero unordered pagination paths.
+- Focused E2E: module access 176/176 and Payroll insights 50/50 PASS. The complete 143-suite E2E matrix has not been rerun.
+- Project webhook delivery now writes mutation, delivery intent and outbox event atomically, retries through the durable outbox, and pins validated DNS answers into the actual socket connection.
+- Operator customer routes are grant-scoped, human-session-only and audited; requester/approver identities come from authentication rather than request bodies.
+
+The remaining non-zero actor/query counts and the production-only infrastructure, alert, recovery, load/cost and approval gates below prevent a truthful 10/10 production-readiness claim.
 
 Excluded product domains are omitted completely. Shared platform work remains in scope only when it affects an included module or the deployability of the platform.
 
@@ -49,12 +63,12 @@ Do not redesign a sound module for style. For every change, record the concrete 
 
 Measured 2026-09-01. Every figure here was produced by running the named command this session.
 
-- Backend typecheck (`tsconfig.build.json`): PASS, zero errors. **Caveat: that config excludes `**/*spec.ts`.** A spec-inclusive `tsc -p tsconfig.json` reports 14 pre-existing errors in 10 spec files, mostly `TS2554` arity drift — tracked in §10.
+- Backend typecheck (`tsconfig.build.json`): PASS, zero errors. Spec-inclusive typecheck: PASS, enforced in CI.
 - Frontend typecheck: PASS, zero errors.
 - Backend unit suite: **1,571 of 1,579 suites passed, 13,171 tests, 8 suites skipped, exit 0.**
 - Frontend suite: **206 suites, 1,996 tests, all passed.**
-- Migration ledger: 530 applied against 562 journal entries; 32 pending (the actor-contraction expand batch, authored and journalled). Zero orphan, duplicate or unreachable entries. **The full chain replays into a blank database with zero failures.**
-- Migration chain: PASS, zero gaps. Migration discipline: 562 files, zero violations. Rollbacks: 562 scanned, all pass.
+- Migration ledger: 568 applied against 568 journal entries. Zero pending, orphan, duplicate or unreachable entries.
+- Migration chain and discipline: PASS at 568 journal entries. The last recorded full cold replay was at 562 and must be rerun at release head.
 - Route classification: ALL ROUTES CLASSIFIED, zero undeclared.
 - OpenAPI: 3,577 operations — exposure 3,577/3,577 (3,197 permissioned, 224 public, 99 universal, 57 in-service); error shapes 3,577/3,577; response bodies **3,577/3,577**; mutating request bodies **1,364/1,364**; zero duplicate operation ids across 2,650 paths. The gate no longer rounds: it prints 100% only when numerator equals denominator.
 - Tenant isolation: **895/895** tenant-owned services declare an isolation spec. (The CI comment claiming 18% was stale; the step is now enforced rather than `continue-on-error`.)
@@ -72,19 +86,19 @@ Measured 2026-09-01. Every figure here was produced by running the named command
 
 The scan previously counted 617 "organizational" relationships and ratcheted on that total, which conflated a column an authorization predicate reads with one that only renders a name on a past event. It now reports:
 
-**617 = 116 excluded (CRM/Inventory) + 314 allowlisted display-only + 166 ACTIONABLE** (was 201; 35 resolved — 14 migrated, 21 reclassified as display-only against their real read sites).
+**601 = 116 excluded (CRM/Inventory) + 335 allowlisted display-only + 150 ACTIONABLE.**
 
 By module, actionable: hr 107 · build 23 · common 21 · payroll 17 · support 12 · kb 10 · ai 4 · surveys 3 · accounting 2 · billing 2.
 
 - [x] Classify every included relationship as authority-bearing, historical-display-only, authentication identity or a genuine person/account bridge. — `architecture-refactor/ACTOR-CLASSIFICATION.md`, traced to real read sites. Corrected seven entries in `ACTOR-CONTRACTION-PLAN.md`: six understated (`journal_entries.created_by`, `kb_spaces.created_by_id`, `okr_goals.created_by`, `support_macros.created_by` all reach `applyScope` or a visibility predicate; `projects.client_id` gates client-portal access; `project_approvals.approver_id` routes live approvals) and one overstated (`enterprise_quotes.approver_id` is a display join only).
-- [ ] Migrate every authority-bearing relationship to `organization_members.id` or the canonical organization-person seam. — **201 remaining.**
+- [ ] Migrate every authority-bearing relationship to `organization_members.id` or the canonical organization-person seam. — **150 remaining.**
 - [ ] Add tenant-composite foreign keys and appropriate delete behavior.
 - [ ] Backfill in bounded, resumable batches with unmappable, duplicate and cross-tenant reports.
 - [ ] Update writers, readers, DTOs, validators, events, cache keys, search documents and membership-revocation cleanup.
 - [x] Preserve historical display without preserving current authority. — this is exactly what the 300 allowlist entries encode, each with the evidence that no predicate reads it.
 - [ ] Drop legacy compatibility columns only after runtime zero-use proof.
 - [x] Add explicit scanner allowlists so the gate measures authority defects rather than demanding destructive cosmetic migrations. — with three self-test fixtures proving it bites, including that a stale entry naming a removed column is a hard failure.
-- [ ] Require zero remaining actionable relationships in included modules. — **201 remaining; the ratchet is now against that number.**
+- [ ] Require zero remaining actionable relationships in included modules. — **150 remaining; the ratchet is now against that number.**
 
 **Blocked, and why.** The remaining work is schema migration plus reader/writer cutover across roughly 200 tables. It cannot land under this session's read-only database policy: the code changes are only safe once the columns exist, so authoring them without applying would leave the tree referencing columns that are not there. This is the largest single item in this file and is a multi-week program, not a task.
 
@@ -116,13 +130,13 @@ Also fixed here: per-key placement. A subject in two organisations in different 
 
 ### 4.1 Eliminate baseline masking for database reads — PARTIAL
 
-The gate no longer matches a frozen total. It reports **offset: 108 actionable** (of 128) and **unbounded: 1,074 actionable** (of 1,180), with the remainder classified as excluded-domain, bounded, aggregate, stream or reviewed false-positive.
+The gate reports **61 actionable offset paths** and **316 actionable unbounded reads**, with zero unordered pagination paths.
 
 - [x] Classify all 128 offset paths in included modules.
-- [ ] Replace active large/high-growth lists with deterministic keyset cursors. — **74 actionable**, down from 108.
+- [ ] Replace active large/high-growth lists with deterministic keyset cursors. — **61 actionable.**
 - [ ] For deliberately retained offset lists, prove a hard maximum page/depth and record a dated compatibility sunset. — partially recorded in `offset-sunset-plan.md`.
 - [x] Classify all 1,180 unbounded-read candidates.
-- [ ] Add an explicit bound, aggregate, stream/batch contract or reviewed exemption for every included candidate. — **355 actionable**, down from 1,074. Three genuinely unbounded scans are named rather than capped, because a cap would silently truncate a result the caller needs whole: the leave-accrual sweep, the SLA report, and the party legacy seam. Each needs cursor batching.
+- [ ] Add an explicit bound, aggregate, stream/batch contract or reviewed exemption for every included candidate. — **316 actionable.** Whole-set workflows must use cursor batching rather than silent truncation.
 - [ ] Prohibit fetch-then-filter and fetch-then-count on tenant collections.
 - [ ] Verify projections contain only fields needed by the caller.
 - [x] Gate fails on any new offset/unbounded path and ratchets **actionable** counts, not a self-matching total.
@@ -187,25 +201,25 @@ Final counts are 1,360/1,360 and 3,569/3,569. The mutating denominator moved fro
 Most of this section was already built and the work was consolidation, not construction. The audit found existing timeout, retry, backoff, dead-letter, suppression, signed-webhook and idempotency machinery in email, AI, notifications, outbox and webhooks.
 
 - [x] One shared outbound-provider seam with timeout, bounded retry, exponential backoff with jitter and circuit-breaker state. — `common/outbound/call-provider.ts`, returning a discriminated result rather than throwing.
-- [~] Apply it where calls can block a request or worker. — Razorpay consolidated onto it (its hand-rolled loop had no jitter, so concurrent failures retried in lockstep). Email, AI and notifications already had equivalent machinery and were deliberately **not** double-wrapped, which would be the banned pass-through. **The webhook dispatcher is still on a raw `fetch` with no retry and no breaker.**
+- [x] Apply it where calls can block a request or worker. — Project webhooks now use durable outbox delivery, bounded retry, a circuit breaker and a DNS-pinned transport; mutation and delivery intent share one transaction.
 - [x] Define which failures are retryable, terminal or dead-lettered per provider. — per-provider table in `PROVIDER-RELIABILITY.md`, classified by error shape rather than `instanceof`, which is false for cross-realm `postgres-js` errors.
 - [x] Prove consumer idempotency beyond status checks using stable event/source keys. — two concurrent claims, exactly one wins, via the `(producerEventId, consumerName)` unique index; the bite proof shows an always-true mock lets both through.
 - [x] Document user-visible at-least-once semantics.
 - [x] Re-check recipient authorization at delivery time. — already present at `notification-delivery-worker.service.ts:227`. **Gap: it only fires when the event declares `visibilityResourceKind`;** events with a bound resource and no declared kind bypass it.
-- [ ] Localized, versioned email templates with deterministic fallback. — design recorded; a 30-file refactor, not started.
+- [x] Localized, versioned email templates with deterministic fallback. — exact locale, base locale, then English fallback with explicit template versions.
 - [x] Retain signed bounce/complaint handling and suppression evidence.
 - [x] Domain-specific DLQ/replay tests and runbooks.
 - [x] Cancellation semantics for every long-running export/import/AI job; non-cancellable jobs explicitly marked.
 
-**Remaining:** webhook dispatcher onto the seam; email retry path re-authorization for employment-sensitive templates; localized templates; `visibilityResourceKind` catalogue review.
+**Remaining:** production provider outage drills and final `visibilityResourceKind` catalogue review.
 
 ## 7. P1 — Security, privacy and compliance — PARTIAL
 
 - [x] Field-level PII redaction tests for logs, traces, error envelopes and provider failure payloads. — 20 tests pushing real-shaped PII (token, card PAN, national id, bank account) through the four **actual** emission paths and asserting absence from the emitted bytes, not from a helper in isolation. **This found that `LogSpanExporter` spread span attributes unredacted**; `redactAttributes()` fixes it.
 - [x] Data catalogue mapping personal-data class to purpose, lawful basis, retention period and owner. — `DATA-CATALOGUE.md`, derived from the real schema. **Awaits DPO signature; 8 sub-decisions are marked DECISION REQUIRED rather than invented.**
 - [ ] Approve residency, transfer and subprocessor decisions. — decision table prepared from the real subprocessor list. **Awaits signature.**
-- [ ] Approve break-glass/operator access, dual approval, maximum duration and post-access review. — **Awaits signature.** Code currently allows a 24h grant; the recommended value is 4h.
-- [~] Operator-session guard consuming approved grants and recording every privileged action. — `OperatorSessionGuard` + `RequireOperatorGrant` implemented and tested (7 tests), **but wired to no route yet.**
+- [ ] Approve break-glass/operator access, dual approval, maximum duration and post-access review. — **Awaits signature.** Code enforces a four-hour maximum and authenticated four-eyes identities.
+- [x] Operator-session guard consuming approved grants and recording every privileged action. — wired to grant-scoped customer and billing routes with target-tenant RLS tests.
 - [x] Export, database erasure, object-storage erasure and legal-hold conflict drills as one end-to-end workflow. — sequence recorded in `RB-10 §6`; the four drills each pass individually.
 - [~] Verify immutable audit evidence cannot be edited or removed by tenant administrators. — a `pg_catalog` probe found `streamline_app` holds `arwd` on `audit_logs`: RLS scopes the rows but the UPDATE and DELETE privileges exist, so immutability rested on code convention. Migration `0840` revokes both and moves the one legitimate write behind a narrow `SECURITY DEFINER` function. **Authored and proved by rolled-back probe; not applied.** Investigating it disproved the premise it was handed — `audit_logs.user_id → users.id` is `ON DELETE NO ACTION`, so erasure never depended on the app role's DELETE.
 - [x] Define secret rotation ownership and evidence. — 14 secrets by name, never value, in `RB-10 §5`.
@@ -233,7 +247,7 @@ Four real defects fixed, each pinned by a test that fails without it: dark-mode 
 - [x] Prove no tenant content reaches a public render or shared cache. — encoded as a gate assertion: a public route file may not import an auth-gated symbol.
 - [x] Establish Core Web Vitals budgets for representative mobile and desktop profiles.
 - [x] Add Lighthouse/Web Vitals CI ratchets for LCP, INP and CLS. — the budget checker is wired and its self-test catches all six injected breaches.
-- [ ] Measure route JavaScript, hydration cost, server response time and image/font behavior. — **blocked: needs a running app plus browser automation. No numbers are claimed.** `WEB-VITALS-EVIDENCE.md` records exactly what is blocked and on what; swap `--self-test` for `--results=<file>` in CI once a Lighthouse step produces one.
+- [~] Measure route JavaScript, hydration cost, server response time and image/font behavior. — production browser evidence exists for desktop and mobile. Desktop passes; mobile landing INP remains above budget under 4× CPU throttling. The landing animation implementation is intentionally unchanged per product direction.
 
 ## 9. P1 — Database growth and retention — DONE
 
@@ -247,20 +261,20 @@ A prior record claimed `hr_retention_policies` was written but never read. That 
 
 ## 10. P1 — Test and release engineering — PARTIAL
 
-- [ ] Run the dedicated backend e2e configuration against disposable infrastructure. — **143 suites discovered, 0 run.** They require a live database; under the read-only policy they were not executed. Recorded as 143 discovered / 0 passed / 0 failed / 143 blocked, not as passing.
+- [ ] Run the complete dedicated backend E2E configuration against disposable infrastructure. — focused module-access 176/176 and Payroll-insights 50/50 pass with background workers isolated; the complete 143-suite matrix remains pending.
 - [x] No e2e suite can exit zero after failing discovery or setup. — the exit guard was already present; verified it defeats both failure modes, including a load-time `ReferenceError` under `--forceExit`, and extended to the seeded config which had none.
 - [x] Remove the deprecated `ts-jest` isolated-modules configuration warning. — moved into the `tsconfig` object where it belongs.
 - [x] Dependency vulnerability, license and supply-chain gates.
 - [x] Generate an SBOM and retain it with each release artifact. — CycloneDX 1.4, 914 components, uploaded per build with the artifact hash manifest.
 - [x] Produce reproducible artifacts with recorded hashes.
 - [x] Environment-schema validation before boot and deployment. — boot validation already existed; a standalone pre-deployment gate now validates a candidate environment without booting.
-- [~] Require feature-flag owner and removal date. — the gate exists and **correctly failed**; migration `0841` adds the columns. Authored, not applied, so the CI step is `continue-on-error` until it lands.
+- [x] Require feature-flag owner and removal date. — migration applied, governance gate passes and CI enforcement is mandatory.
 - [x] Release notes, change owner, canary criteria, rollback criteria and post-release smoke verification. — `RELEASE-ENGINEERING.md`, citing only commands that exist.
 - [x] Wire schema/event compatibility checks into CI. — outbox consumer registry, RBAC integrity, migration rollback, retention coverage, module gate, AI charge, tenant isolation, SEO metadata, dead-code and Web Vitals are now CI steps rather than runbook lines.
 
 **New item.** `pnpm typecheck` runs `tsconfig.build.json`, which excludes `**/*spec.ts`, and ts-jest transpiles without type-checking — so **no gate has ever type-checked a spec file**. A spec-inclusive run reports 14 errors in 10 files, mostly `TS2554` arity drift where a service grew a parameter and the spec still passes the old list. The five in a spec this session added are fixed (one was smuggling a string past a `Date` field with `as never`, making its assertion vacuous). The remaining 14 are pre-existing.
 
-- [ ] Fix the 14 pre-existing spec type errors and add a spec-inclusive typecheck gate.
+- [x] Fix spec type errors and add a mandatory spec-inclusive typecheck gate.
 
 ## 11. P2 — Real production infrastructure and operability — 1 of 10
 
@@ -322,7 +336,7 @@ All 22 modules in `MODULE_REGISTRY` were audited across the ten dimensions. Repo
 - [x] Frontend typecheck, build, tests and accessibility budgets pass. — 198 suites, 1,940 tests. **Web Vitals budgets defined and enforceable but not yet measured.**
 - [x] OpenAPI request, response, error, exposure, path and operation-ID coverage is 100% applicable.
 - [x] Organization/module/record authorization and tenant-isolation gates pass.
-- [ ] Actor, unbounded-read, pagination, dead-code and migration actionable counts are zero. — dead-code is zero. **Actor 201, offset 108, unbounded 1,074, migrations 3 pending.**
+- [ ] Actor, unbounded-read, pagination, dead-code and migration actionable counts are zero. — dead-code and migration pending counts are zero; **actor 150, offset 61, unbounded 316.**
 - [x] Cache, outbox, retry, DLQ, replay and provider-failure drills pass.
 - [ ] Cold bootstrap, upgrade, rollback, PITR and relocation evidence matches the release head. — rollback yes; cold bootstrap and relocation blocked.
 - [ ] Production load, replica, capacity, cost, alert acknowledgement and compliance evidence is attached. — §11.
@@ -337,8 +351,8 @@ In dependency order, because several of these unblock the rest:
 2. **Set `ALERT_WEBHOOK_URL`.** One environment variable turns a fully-built, fully-tested alerting system from a measurement into an on-call contract. Nothing else in §11 is this cheap.
 3. **Build the frontend blog authoring page**, and hand the two CRM module-gate entries to the CRM owner.
 4. **Sign the four privacy decisions.** They are prepared, not open questions; each has a recommended default.
-5. **§4.1**, the largest tractable engineering item: 108 offset paths and 1,074 unbounded reads, now individually classified and ratcheted.
-6. **§3.1**, the largest item overall: 201 authority-bearing relationships, each named with its read site.
+5. **§4.1**, the largest tractable engineering item: 61 offset paths and 316 unbounded reads, individually classified and ratcheted.
+6. **§3.1**, the largest item overall: 150 authority-bearing relationships, each named with its read site.
 7. **The infrastructure items in §11**, which need accounts before they need engineering.
 
 Only after every applicable checkbox above is complete may the platform be rated 10/10 across all aspects.
