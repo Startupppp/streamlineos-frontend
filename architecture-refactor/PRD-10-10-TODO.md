@@ -1,184 +1,239 @@
 # StreamlineOS final 10/10 completion PRD
 
-Status: active — single authoritative backlog  
-Last reconciled: 2026-09-01  
+Status: active — single authoritative backlog
+Last reconciled: 2026-09-01
+Immediate target: code-level release candidate
+Deferred target: deployed production and compliance evidence
 Scope: all platform domains except CRM and Inventory
 
-This file is the only architecture/refactor TODO list. Do not create session tickets, parallel status reports, duplicate PRDs, or a new architecture scorecard. Update checkboxes here from fresh source and reproducible evidence. Git history is the archive.
+This is the only architecture/refactor TODO list. Do not create session tickets, duplicate PRDs or additional architecture scorecards. Update a checkbox only from current source and reproducible evidence at one recorded commit. Git history is the archive.
 
-## Reality and release standard
+## Release model
 
-The core architecture is substantially implemented. The remaining work is concentrated in release verification, production-shaped performance proof, deployed infrastructure, privacy/compliance execution, and accountable approvals.
+The immediate target is **code-level 10/10**: no known code-level P0/P1 defect and every immediate criterion below passes at one commit. It covers schema, migrations, database queries, NestJS, Zod, OpenAPI, RBAC, caching, workers, uploads, Next.js, TanStack Query, UI states, accessibility and cross-layer contracts.
 
-“Bug free” cannot be guaranteed honestly. The release condition is instead: no known P0/P1 defect, required automated and deployed checks pass at one recorded commit, rollback/recovery is proven, SLOs have measured headroom, and residual risks have named owners.
+It does not claim cloud isolation, physical replicas, PITR, regional recovery, live monitoring, real-provider availability, legal compliance or human approval. Those are retained under **Deferred production-readiness evidence** and scored separately.
 
-Local mocks and self-tests prove implementation behavior only. They never prove production cells, replicas, PITR, provider outages, alert delivery, legal compliance, or human approval.
+“Bug free” cannot be guaranteed. The release standard is zero known P0/P1 defects, passing reproducible gates and explicitly owned residual risks.
+
+Current reconciliation count:
+
+- Verified completed invariants: **15**.
+- Immediate code-level criteria still open: **94**.
+- Deferred production/compliance criteria still open: **34**.
+- The 94 immediate criteria are acceptance checks, not 94 confirmed defects; fresh execution may close a criterion without a code change when its implementation already passes.
 
 ## Product constraints
 
 - Do not change public landing-page visuals or animations.
-- CRM and Inventory implementation, migrations and acceptance evidence are excluded.
-- Preserve [PRD-IN-SCOPE.md](PRD-IN-SCOPE.md) unless a concrete scale, correctness, security or operability failure requires a change.
-- Never solve a growing workflow with silent truncation. Use keyset pagination, resumable batches, streams or queues.
-- Tenant-owned relationships, queries, cache keys, events and search ACLs must preserve organization scope.
-- Never mark deletion, dead code or schema removal complete from text search alone.
-- Do not recreate `luna-10-10-sessions` or split this backlog into session files.
+- CRM and Inventory code, migrations and acceptance evidence are excluded.
+- Home is the universal shell and composition module. Chat, Calendar, Inbox and Notifications appear through Home but retain independent schema, authorization, caching, workers and implementation behind small interfaces.
+- Preserve [PRD-IN-SCOPE.md](PRD-IN-SCOPE.md) unless a concrete scale, correctness, security or operability failure requires change.
+- Never solve growing work with silent truncation. Use keyset pagination, resumable batches, streams or queues.
+- Every tenant relationship, query, cache key, event, object key and search ACL preserves organization scope.
+- Never delete code or schema from text search alone. Require dependency evidence plus build/typecheck and migration-integrity proof.
+- Do not recreate `luna-10-10-sessions` or split this backlog.
 
-## Verified complete — preserve these results
+## Verified complete — preserve and re-run at final head
 
-- [x] Organization and module RBAC architecture: owner/admin/member standing, custom permissions, DataScope application, owner protection, module access, tenant isolation and revocation primitives.
-- [x] Legacy actor contraction: 434 organizational fields scanned; 318 historical/display-only; 116 excluded CRM/Inventory; 0 actionable.
+- [x] Organization/module RBAC architecture: owner/admin/member standing, custom permissions, DataScope, owner protection, module access, tenant isolation and revocation primitives.
+- [x] Legacy actor contraction: 434 organizational fields scanned; 318 display-only; 116 CRM/Inventory excluded; 0 actionable.
 - [x] Invitation tenant-composite membership constraints, Calendar attendee normalization and Chat durable token revocation/retry behavior.
 - [x] Membership-FK removal-policy, owner-authority, permission-catalog, record-access, module-gate and tenant-index gates.
-- [x] Cursor migration and bounded-read implementation: 0 actionable offsets, 0 actionable unbounded reads, 0 unordered paging and 0 unclassified paths across 2,107 service files.
-- [x] Migration ledger and structure: 585/585 applied in the configured database; 0 pending/orphan/duplicate/unreachable; chain, discipline, rollback and drop-column gates pass locally.
-- [x] Backend production and spec-inclusive type-checks pass.
-- [x] Frontend type-check passes.
+- [x] Cursor migration and bounded-read implementation: 0 actionable offsets, unbounded reads, unordered paging or unclassified paths across 2,107 service files.
+- [x] Migration ledger baseline: 585/585 applied; zero pending, orphan, duplicate or unreachable entries; structural gates pass locally.
+- [x] Backend production and spec-inclusive typechecks pass at the recorded audit workspace.
+- [x] Frontend typecheck passes at the recorded audit workspace.
 - [x] Backend and frontend import graphs have no circular dependencies.
-- [x] Backend hard file-size gate passes: 3,392 files, 12 documented exceptions.
-- [x] Frontend dead-code/capability gate reports 0 DEAD, 0 WIRE and 0 UNCLASSIFIED; deferred capabilities have owners and a 2026-10-01 review date.
-- [x] OpenAPI structural coverage: 3,583/3,583 operations; 1,363/1,363 mutating request bodies; operation IDs and freshness pass at the recorded audit workspace.
-- [x] Cache invalidation, outbox consumer, idempotency, feature-flag, mock-surface, route classification and navigation-permission gates pass.
-- [x] Billing/payment provider abstraction, webhook idempotency, entitlements, seats/proration ledgers, immutable invoices and transactional outbox exist.
-- [x] Core seams exist for Home, Settings, HRMS, Payroll, Build, Accounting, Chat, Calendar, Notifications, Knowledge/Wiki/Chatbot, Workflows and Inbox/mail.
+- [x] Backend hard file-size gate passes: 3,392 files with 12 documented exceptions.
+- [x] Frontend capability gate reports zero DEAD, WIRE or UNCLASSIFIED entries; deferred capabilities have owners and a review date.
+- [x] OpenAPI structural baseline: 3,583/3,583 operations and 1,363/1,363 mutating bodies covered.
+- [x] Cache invalidation, outbox-consumer, idempotency, feature-flag, mock-surface, route-classification and navigation gates exist and passed at the audit workspace.
+- [x] Billing provider abstraction, webhook idempotency, entitlements, seat/proration ledgers, immutable invoices and transactional outbox exist.
+- [x] Core module seams exist for Home, Settings, HRMS, Payroll, Build, Accounting, Chat, Calendar, Notifications, Knowledge/Wiki/Chatbot, Workflows and Inbox/mail.
 
-## Remaining work — execute in this order
+## Immediate code-level release candidate
 
-### 1. Code and release verification
+### 1. One-commit release verification
 
-- [ ] Fix the remaining seeded E2E environment/harness failures, including organization placement/control-plane state and schema/fixture drift.
-- [ ] Run representative disposable-database E2E for Organization/RBAC, Home, Settings, HRMS, Payroll, Build, Billing, Accounting, Chat, Calendar, Notifications, Knowledge, Workflows and Inbox/mail.
-- [ ] Record every E2E command, environment identity, release SHA, dataset shape, pass/fail/skip counts and failure artifact.
-- [ ] Run live provider/cache outage scenarios: duplicate, delayed, out-of-order and forged payment webhooks; proration/seat placement failure; Redis loss; Ably/email/push outage; retry exhaustion; cancellation; DLQ and recovery.
-- [ ] Run authenticated accessibility and visual checks at 375, 768 and 1280 px in light, dark and system themes.
-- [ ] Produce production/reference-device Web Vitals evidence. Current local results breach mobile LCP/INP/FCP/TTFB and desktop INP/FCP/TTFB budgets.
-- [ ] If the frozen landing animation budget prevents the accepted mobile INP target, obtain dated Product acceptance; do not alter landing visuals or animations.
-- [ ] Implement and verify the complete upload lifecycle: malware scan, fail-closed behavior, quarantine, retention, authorized release, rejection, deletion and audit trail.
-- [ ] Run backend build/type-check, spec type-check, frontend type-check, OpenAPI freshness, import-cycle, file-size, dead-code, tenant-isolation, RLS, permission, cache, outbox, idempotency and migration gates at one recorded commit.
-- [ ] Resolve every remaining code-level P0/P1 finding and record lower-severity residual risks with owner and deadline.
+- [ ] Fix seeded E2E harness failures, including organization placement/control-plane state and schema/fixture drift.
+- [ ] Run disposable-database E2E for Organization/RBAC, Home, Settings, HRMS, Payroll, Build, Billing, Payments, Accounting, Chat, Calendar, Notifications, Knowledge, Workflows and Inbox/mail.
+- [ ] Record each command, release SHA, database identity, dataset shape, pass/fail/skip counts and failure artifacts.
+- [ ] At the same commit run backend build/typecheck, spec typecheck, frontend typecheck, OpenAPI freshness, cycle, file-size, dead-code, tenant-isolation, RLS, permission, cache, outbox, idempotency, migration, vulnerability, license and SBOM gates.
+- [ ] Run deterministic container/fake failure tests for duplicate/delayed/out-of-order/forged payment events, seat/proration failure, Redis loss, realtime/email/push failure, retry exhaustion, cancellation, DLQ and recovery.
+- [ ] Resolve every code-level P0/P1 finding and assign owner/deadline to accepted lower-severity residual risks.
 
-### 1A. Security, API and supply-chain verification
+### 2. Module and folder architecture
 
-- [ ] Run cross-tenant BOLA/IDOR tests against reads, writes, exports, files, search, realtime channels, background jobs and public/share-token routes; client-side hiding never counts as authorization.
-- [ ] Verify authentication and account-recovery abuse cases: session fixation, token replay, revoked membership, organization switching, invitation takeover, password reset, MFA/recovery, brute force and credential stuffing.
-- [ ] Verify CSRF, stored/reflected XSS, SSRF, SQL injection, unsafe redirects, path traversal, CORS, CSP, security headers, request-size limits and rate limits against the deployed edge and application.
-- [ ] Verify TLS, encryption at rest, secret isolation, log/trace redaction, credential rotation and signing/encryption-key rotation without cross-tenant cache or session leakage.
-- [ ] Run dependency vulnerability, license and SBOM gates at the release commit; resolve or explicitly approve every reachable critical/high vulnerability and prohibited license.
-- [ ] Reconcile the OpenAPI contract with frontend callers and any external consumers. Prove operation IDs, REST versioning, pagination/filter/sort/error contracts and backward compatibility for the supported upgrade window.
-- [ ] Prove no dead, duplicated or overlapping endpoint, validator, schema, hook, cache-key factory, worker or UI surface remains in scope; deletion requires dependency-graph and build evidence.
-- [ ] Verify module folder ownership and import direction remain coherent: domain modules expose small interfaces, internal implementation stays local, shared modules do not depend on features, and no new oversized mixed-responsibility file is accepted.
+- [ ] Verify backend/frontend folders follow domain ownership and kebab-case rules; shared modules never import feature modules.
+- [ ] Prove domain modules expose small, stable interfaces and keep implementation local; remove shallow pass-through layers that add no behavior.
+- [ ] Prove Home only composes universal experiences; Chat, Calendar, Inbox and Notifications retain independent business implementation.
+- [ ] Re-run file-size ratchets and split every unjustified mixed-responsibility file over 500 lines without cosmetic fragmentation.
+- [ ] Prove zero circular imports, forbidden new `forwardRef`, barrel self-imports and erased Nest injection tokens.
+- [ ] Prove every active Nest module is registered and every frontend route has one canonical owner; remove obsolete routes rather than preserving hidden duplicates.
+- [ ] Prove no dead or duplicated endpoint, schema, type, validator, hook, query key, worker, page or UI element using dependency graphs plus build/typecheck evidence.
 
-### 2. Production-shaped query and capacity evidence
+### 3. TypeScript, Zod and cross-layer contracts
 
-- [ ] Restore a reproducible in-scope seed dataset for HRMS, Payroll, Build, Home, Chat, Calendar, Notifications, Knowledge and Accounting.
-- [ ] Fix the current evidence failure: 43 read budgets are below minimum seed size and 27 are skipped because fixtures are absent. CRM and Inventory rows do not count toward acceptance.
-- [ ] Run every in-scope read budget as the `streamline_app` role with `EXPLAIN (ANALYZE, BUFFERS)`.
-- [ ] Retain row counts, plans, buffers, duration, indexes used, thresholds and proof that no required indexed path performs a full tenant/table scan.
-- [ ] Exercise expensive reminder, export, fanout, unread, free/busy, recurrence, search/vector and dashboard paths.
-- [ ] Run request-transaction load with realistic concurrency and record connection-pool saturation, queue age, memory, CPU, replica lag/fallback and error rate.
-- [ ] Prove declared SLOs with at least 40% sustained capacity headroom and acceptable burst behavior.
-- [ ] Verify cache keys include tenant, subject and permission dimensions where applicable; prove mutation invalidation, revocation invalidation, TTL correctness, stampede protection and fail-safe Redis degradation without cross-org leakage.
-- [ ] Verify every growing list has a validated hard limit, deterministic order, unique tie-breaker, signed scope-bound cursor, filter/sort contract and no fetch-then-filter/count or per-row query expansion.
+- [ ] Prove strict TypeScript with no new `any`, suppression directives, unsafe double casts, non-null assertion abuse or parallel hand-written types that drift from schemas.
+- [ ] Validate every untrusted body, parameter, query, environment value, upload manifest and external response through established Zod boundaries.
+- [ ] Keep Zod schemas in module DTO/schema files, derive types with `z.infer`, reject protected/client-supplied actor and tenant fields and enforce unknown-key policy.
+- [ ] Reconcile backend Zod/OpenAPI contracts with frontend request/response types, hooks, forms and rendered error states.
+- [ ] Verify operation IDs, REST versioning, status/error envelopes, idempotency headers, cursor/filter/sort contracts and backward compatibility.
+- [ ] Prove controllers remain thin, business rules stay backend-side and no frontend `app/api` or client module contains business/database logic.
 
-### 2A. Domain-specific release matrix
+### 4. Database schema and migration quality
 
-- [ ] Organization/Settings/RBAC: prove owner transfer, last-owner protection, admin/member/custom-role behavior, module owner/admin/member behavior, direct grants, descendant protection, organization switching and immediate revocation across backend and frontend routes.
-- [ ] Home: prove every section is permission-scoped, privacy-safe, independently failure-isolated and bounded; one failing widget must not fail or leak the whole dashboard.
-- [ ] HRMS and Payroll: prove self-service versus administrative scope, sensitive projection controls, approval routing, payroll locking/reconciliation, payslip publication, immutable financial history, export bounds and retry/idempotency.
-- [ ] Build/PM and Workflows: prove project/workspace membership, ticket and board cursor stability, workflow schedules/secrets/versioning, retries, cancellation, approvals, idempotency and event-consumer behavior.
-- [ ] Billing/Payments/Accounting: run real provider-sandbox webhook replay, outage and proration/seat-placement tests; prove entitlement caching, usage metering, tax/currency rules, invoice immutability, journal consistency, asynchronous exports/reminders and DLQ recovery.
-- [ ] Chat/Inbox/Notifications: prove tenant/channel/thread authorization, ordering guarantees, duplicate-safe at-least-once delivery, fanout, reconnect/offline recovery, unread/read-state correctness without scans, revocation of issued realtime tokens and bounded history/export.
-- [ ] Email and alerts: prove templates, localization, bounce/complaint/suppression handling, retry/DLQ, unsubscribe/consent behavior, provider failover policy, deliverability observability and no duplicate user-facing mail on replay.
-- [ ] Calendar: prove RFC-compliant RRULE parsing, exceptions, timezone/DST boundaries, attendee privacy, free/busy and conflict correctness, reminder replacement/deduplication, provider synchronization and export limits.
-- [ ] Knowledge/Wiki/Chatbot: prove revisions/version history, ingestion retry/idempotency, file lifecycle, malware gate, permissioned keyword/vector retrieval with ACL enforcement inside retrieval, citation/source integrity, deletion/purge/reindex and realistic-corpus latency.
-- [ ] Frontend: prove responsive behavior, keyboard/screen-reader use, loading/empty/error/permission states, server-side pagination/filtering, route/action permission parity, bundle budgets, authenticated rendering performance and public-page SEO metadata.
-
-### 3. Migration and database reproducibility
-
-- [ ] Apply all journaled migrations to disposable staging and record zero pending/orphan/duplicate/unreachable entries there.
-- [ ] Cold-bootstrap an empty database through migration head.
-- [ ] Upgrade from the supported previous watermark and exercise interruption/retry.
-- [ ] Exercise rollback or documented forward-fix using [RB-09](runbooks/RB-09-migration-rollback.md).
+- [ ] Audit every in-scope tenant table for non-null `org_id`, tenant-leading index, explicit tenant path and composite tenant-safe relationships where required.
+- [ ] Audit primary-key strategy, tenant-scoped uniqueness, FK indexes, named constraints, referential actions, checks, money units, timestamps and audit columns.
+- [ ] Verify normalized lifecycle and relationship tables; remove actionable JSON arrays/polymorphic authority relationships and avoid EAV unless an approved custom-field seam requires it.
+- [ ] Verify soft-delete/archive policy and every active read’s deleted/archived predicate; use partial indexes where the access pattern requires them.
+- [ ] Verify cross-tenant composite FKs for membership/authority-sensitive relations and prevent orphaned visible children.
+- [ ] Verify high-growth append-only tables have justified retention/partition decisions and indexes matched to real access patterns.
+- [ ] Remove obsolete schema only with symbol, raw table-name, FK, migration, barrel and integrity-spec evidence.
+- [ ] Cold-bootstrap an empty database to migration head and record zero pending, orphan, duplicate or unreachable migrations.
+- [ ] Upgrade from the supported previous watermark, exercise interruption/retry and the documented rollback/forward-fix path using [RB-09](runbooks/RB-09-migration-rollback.md).
 - [ ] Compare cold-bootstrap and upgraded catalogs: tables, columns, constraints, indexes, policies, functions, triggers and extensions must match.
-- [ ] Retain environment identity, release SHA, command output, catalog diff and artifact hashes.
+- [ ] Verify migration `0930` enables the `audit_logs` append-only trigger and rejects application-role mutation in the disposable database.
+- [ ] Retain release SHA, commands, database identity, catalog diff and artifact hashes.
 
-### 4. Production infrastructure and operations
+### 5. Query, pagination and cache correctness
 
-- [ ] Provision independent per-cell database, Redis/cache, queue/workers, realtime/provider, search/vector, object storage and monitoring resources.
-- [ ] Prove credentials, routing, jobs, cache namespaces and data cannot cross cells using [RB-01](runbooks/RB-01-cell-isolation.md) and [RB-08](runbooks/RB-08-cell-resource-accounts.md).
-- [ ] Provision a physical read replica; measure lag and prove safe primary fallback using [RB-03](runbooks/RB-03-read-replica.md).
-- [ ] Configure five-minute-or-better PITR/RPO and run restore, regional recovery and organization-relocation drills using [RB-02](runbooks/RB-02-pitr-backup.md) and [RB-04](runbooks/RB-04-recovery-drill.md).
-- [ ] Run production-shaped load across every in-scope domain using [RB-05](runbooks/RB-05-production-load.md).
-- [ ] Prove no tenant leakage, no dropped durable work, acceptable replica behavior, SLO compliance and at least 40% headroom.
-- [ ] Measure and approve per-cell and per-active-tenant cost using invoice-derived rates and [RB-07](runbooks/RB-07-per-cell-cost.md).
-- [ ] Configure production logs, traces and release metadata.
-- [ ] Test live queue-age, DLQ, provider-failure, tenant-context, latency and recovery alerts; record human acknowledgement using [RB-06](runbooks/RB-06-live-alert-delivery.md).
-- [ ] Capture passing RB-01 through RB-08 manifests under [production evidence](final-refactor/evidence/42-production-ops/README.md). The current evidence gate fails because no deployed manifests exist.
-- [ ] Redact credentials and personal data; retain environment, region, cell, topology hash, release SHA, operator, timestamps, command/exit code and SHA-256 for every artifact.
+- [ ] Restore a reproducible production-shaped in-scope seed dataset for HRMS, Payroll, Build, Home, Chat, Calendar, Notifications, Knowledge and Accounting.
+- [ ] Fix the evidence gap: 43 read budgets are below minimum seed size and 27 are skipped; CRM/Inventory rows do not count.
+- [ ] Run each in-scope budget as `streamline_app` with `EXPLAIN (ANALYZE, BUFFERS)` and retain rows, buffers, duration, indexes and thresholds.
+- [ ] Prove explicit projections, tenant-leading/access-pattern indexes and no required full tenant/table scan or avoidable sort.
+- [ ] Exercise reminder, export, fanout, unread, free/busy, recurrence, search/vector and dashboard queries against seeded data.
+- [ ] Verify every growing list has a hard limit, deterministic order, unique tie-breaker, signed scope-bound cursor and consistent filters/sorts.
+- [ ] Prove no `SELECT *`, fetch-then-filter/count, N+1/per-row expansion or unbounded export/sweep remains.
+- [ ] Verify cache keys include tenant, subject, permission and resource dimensions where applicable.
+- [ ] Prove mutation/revocation invalidation, TTL/negative-cache policy, stampede protection and Redis degradation never leak data or preserve revoked access.
 
-### 4A. Deployment, rollback and incident readiness
+### 6. Organization and module RBAC
 
-- [ ] Prove backward-compatible application/database deployment across the supported rolling window; old and new application versions must coexist safely during migration.
-- [ ] Run canary deployment with automated SLO/error-budget checks, tenant-isolation checks and abort thresholds before broad rollout.
-- [ ] Verify feature flags, provider kill switches, queue pause/resume, degraded-mode behavior and rollback/forward-fix procedures under an induced failure.
-- [ ] Verify health/readiness probes, graceful shutdown, connection draining, worker lease recovery and no duplicate/lost durable work during deploys and autoscaling.
-- [ ] Publish current on-call ownership, escalation paths, incident severity definitions, customer/status communication procedure and post-incident review process.
-- [ ] Prove backup artifacts are encrypted, access-controlled, restorable and periodically tested; document key ownership and rotation responsibilities.
+- [ ] Test organization owner/admin/member, module owner/admin/member, custom roles, direct grants and DataScope on every read and mutation path.
+- [ ] Test owner transfer, last-owner protection, administrative descendant protection, organization switching and cross-organization denial.
+- [ ] Prove authorization at the data/query implementation so a missing controller/frontend check cannot expose a record.
+- [ ] Prove frontend routes, navigation, TanStack queries and action buttons match backend effective permissions without treating hiding as security.
+- [ ] Prove membership/permission revocation invalidates authorization caches, sessions and issued realtime credentials within the declared consistency contract.
+- [ ] Run BOLA/IDOR tests for reads, writes, bulk actions, files, exports, search/vector, realtime, jobs and public/share-token paths; cross-tenant misses return 404.
 
-### 5. Privacy, compliance and operator access
+### 7. NestJS route and worker behavior
 
-#### Operator access
+- [ ] Verify every route is classified public, universal, permissioned or explicitly authorized inside its implementation; no undeclared route exists.
+- [ ] Verify every privileged operation applies module, permission, tenant, record and DataScope checks at the correct seam.
+- [ ] Verify writes are transactional, idempotent and safe under concurrent retry; side effects use after-commit/outbox behavior and never a dead request transaction.
+- [ ] Verify background sweeps iterate tenant context explicitly, use bounded/resumable leases and expose retry/DLQ/cancellation states.
+- [ ] Verify minimal response projections, serialization/redaction, generic errors, resource limits and stable HTTP semantics.
+- [ ] Reconcile OpenAPI exposure, request, response, 4xx schema and operation metadata with active controllers and consumers.
 
-- [ ] Approve eligible operator roles, mandatory reason/ticket, two-person approval, no self-approval, maximum duration, pending-grant expiry, organization/scope binding, tenant notification, immutable per-request audit, revocation, emergency handling and review cadence.
-- [ ] Verify deployed customer-data and billing routes reject expired, revoked, wrong-organization, wrong-scope, unauthorized-role, concurrent-approval and audit-failure cases.
-- [ ] Record named Product and Security decisions using [RB-10](runbooks/RB-10-privacy-compliance-decisions.md).
+### 8. TanStack Query and Next.js data layer
 
-#### Data map and policy decisions
+- [ ] Verify one hierarchical query-key factory per domain includes organization, subject, scope, filters, sort and cursor dimensions as applicable.
+- [ ] Remove duplicated/ad-hoc string query keys and prove invalidation targets the correct prefix without flushing unrelated tenants/modules.
+- [ ] Gate queries with effective access and required identifiers; disabled queries must not send unauthorized or malformed requests.
+- [ ] Verify mutations invalidate or update every affected list/detail/count/dashboard key and roll back optimistic state safely on failure.
+- [ ] Use optimistic updates only where concurrency semantics are defined; otherwise await the backend result and invalidate deterministically.
+- [ ] Verify request cancellation, stale/gc policy, retry policy, refetch behavior and deduplication do not amplify load or replay unsafe writes.
+- [ ] Verify server-prefetch/hydration and client keys match exactly with no cross-user or cross-organization cached payload.
+- [ ] Verify cursor pagination does not duplicate/skip records and changing filter/sort resets pagination correctly.
+- [ ] Verify loading, background-refresh, empty, partial-error, full-error, offline, permission-denied and revoked-access states.
+- [ ] Prove frontend types and runtime parsing cannot silently accept a backend contract change.
 
-- [ ] Obtain named Privacy/DPO approval for identity/authentication, employment/payroll, communication, attendance, documents, recruitment, financial, audit/operator, AI and integration data.
-- [ ] Record purpose, lawful basis, special-category basis, subjects, processors, location, retention, owner and deletion/archive behavior in [DATA-CATALOGUE.md](DATA-CATALOGUE.md).
-- [ ] Decide whether PII is permitted in `audit_logs.metadata`; prefer stable references or irreversible hashes unless explicitly approved.
-- [ ] Approve residency, international transfers, subprocessors/DPAs/SCCs, breach notification, payroll/tax jurisdictions and controller/processor responsibilities.
-- [ ] Approve the AI/integration policy: providers/regions, PII minimization, retention, deletion and customer disclosure.
+### 9. Upload, compression and file lifecycle
 
-#### Subject rights and deletion
+- [ ] Detect file identity from content, not filename alone, and enforce allowlists plus per-file/request/user/organization quotas.
+- [ ] Stream or multipart-upload without buffering entire files in application memory; abort and clean abandoned uploads.
+- [ ] Compute integrity checksums and make upload, scan, transform and finalization retries idempotent.
+- [ ] Fail closed into tenant-scoped quarantine until malware scanning succeeds; implement authorized release, rejection, retention, deletion and audit transitions.
+- [ ] Compress eligible image/text/document derivatives asynchronously; do not blindly recompress video, archives, encrypted or already-compressed formats.
+- [ ] Preserve originals only where product/retention rules require; generate bounded previews/thumbnails asynchronously and strip unsafe metadata where applicable.
+- [ ] Use tenant-scoped object keys and short-lived signed URLs; re-authorize every download instead of treating an identifier as authority.
 
-- [ ] Implement and deploy correction/rectification; do not claim correction when the system only exports, deletes or anonymizes.
-- [ ] Make subject export exhaustive and resumable, or obtain accountable approval for every excluded source. A capped/truncated export fails.
-- [ ] Run access/export, correction, portability, erasure, legal-hold, ownership-transfer, cross-tenant denial and repeat-request idempotency drills against disposable deployed data.
-- [ ] Prove physical deletion or approved immutable retention for organization-owned database rows.
-- [ ] Prove object-storage enumeration, failed-key retry, provider-version behavior and post-delete absence.
-- [ ] Prove deletion or approved non-applicability for search/vector indexes, projections, caches, analytics, email, AI, integrations and downstream providers.
-- [ ] Prove backup/PITR aging and restore-time deletion behavior.
+### 10. Module release matrix
 
-#### Audit and retention
+- [ ] Organization/Settings: verify hierarchy scope, organization switching, owner protection, custom roles, module access administration and authorization-backed navigation/actions.
+- [ ] Home: verify each widget is permission-scoped, privacy-safe, bounded and independently failure-isolated; a failed widget cannot fail or leak the dashboard.
+- [ ] HRMS/Payroll: verify self-service versus administration, sensitive projections, approvals, payroll locking/reconciliation, payslips, immutable history, bounded exports and idempotency.
+- [ ] Build/PM/Workflows: verify membership, ticket/board cursors, schedules, secrets, workflow versions, retries, cancellation, approvals, idempotency and consumers.
+- [ ] Billing/Payments/Accounting: verify webhook replay safety, entitlements, seats/proration, usage, tax/currency, invoice immutability, journal consistency, async exports/reminders and DLQ recovery.
+- [ ] Chat: verify channel/thread authorization, ordering, duplicate-safe delivery, fanout, reconnect/offline recovery, reactions, unread/read state, token revocation and bounded history/export.
+- [ ] Inbox/mail/Notifications: verify unified bounded contracts, duplicate-safe delivery, authorization-safe realtime, unread counters, templates, localization, suppression/unsubscribe, retry/DLQ and replay safety.
+- [ ] Calendar: verify RRULE, exceptions, timezone/DST, attendee privacy, free/busy/conflicts, reminder replacement/deduplication, sync adapters and exports.
+- [ ] Knowledge/Wiki/Chatbot: verify revisions, ingestion retry/idempotency, files, malware gate, ACL inside keyword/vector retrieval, citations, purge/reindex and corpus latency.
+- [ ] Frontend: verify responsive 375/768/1280 layouts, keyboard/screen-reader use, all UI states, route/action parity, bundles, authenticated rendering and SEO without changing landing animations.
 
-- [ ] Deploy migration `0930` in the target environment and verify the `audit_logs` append-only trigger as the application role. `UPDATE`/`DELETE` denial without the enabled trigger does not close the gate.
-- [ ] Resolve retention for the four currently uncovered high-growth tables: `helpdesk_tickets`, `performance_reviews`, `mail_message_metadata` and `announcements`.
-- [ ] Add approved bounded-retention or KEEP-FOREVER decisions and workers where required, then rerun `check:retention-coverage` to zero uncovered tables.
-- [ ] Verify deployed retention workers are scheduled, bounded/resumable, audited, retryable and alerted on failure.
-- [ ] Run retention and legal-hold conflict drills; immutable financial, payroll and audit obligations must be retained or reversed, never silently deleted.
-- [ ] Prove no document/payroll policy or export/purge workflow silently skips or truncates work.
+### 11. Application security and privacy implementation
 
-#### Approval and evidence
+- [ ] Test session fixation/replay, revoked membership, invitations, password reset, MFA/recovery, brute force and credential stuffing behavior.
+- [ ] Test code-level CSRF, XSS, SSRF, SQL injection, unsafe redirect, path traversal, CORS/CSP/headers, payload limits and rate limits.
+- [ ] Verify secret/PII redaction, secure cookies/sessions, generic auth failures and signing/encryption-key rotation behavior.
+- [ ] Implement correction/rectification rather than treating export, deletion or anonymization as correction.
+- [ ] Make subject export exhaustive and resumable with no silent caps or skipped in-scope sources.
+- [ ] Implement idempotent tenant-scoped erasure for database, object storage, search/vector, projections, caches and supported adapters while preserving immutable/legal-hold records.
+- [ ] Resolve retention for `helpdesk_tickets`, `performance_reviews`, `mail_message_metadata` and `announcements` with bounded policy or explicit KEEP-FOREVER configuration.
+- [ ] Prove retention workers are code-scheduled, bounded/resumable, idempotent, audited, retryable and emit failure events.
+- [ ] Prove document, payroll, export, purge and retention workflows never silently skip or truncate growing work.
 
-- [ ] Record Product, Security, Privacy/DPO, Operations, Legal and Finance approver name, role, decision, scope, rationale, date, review/expiry date, evidence and residual-risk disposition using [the decision template](decisions/README.md).
-- [ ] Track every rejected or conditional risk with owner, mitigation and deadline. P0/P1 risk requires release-authority disposition and cannot be waived by the implementer.
-- [ ] Store one redacted, hashed evidence bundle for deployed privacy drills.
-- [ ] Close every P0/P1 privacy, security and compliance finding.
+## Immediate code-level final gate
 
-## Final release gate
+- [ ] Every unchecked item under **Immediate code-level release candidate** is complete with fresh evidence.
+- [ ] CRM/Inventory remain excluded and public landing visuals/animations remain unchanged.
+- [ ] Backend/frontend builds, typechecks, focused tests, disposable E2E and architecture gates pass at one commit.
+- [ ] Empty bootstrap and supported upgrade produce the same expected database catalog.
+- [ ] No unresolved code-level P0/P1 finding remains.
+- [ ] Release authority records commit, evidence, accepted code-level residual risks and date.
 
-All boxes below must be complete at the same release candidate:
+Completing this gate permits the label **code-level 10/10 release candidate** only.
 
-- [ ] Every unchecked item above is complete with fresh evidence.
-- [ ] CRM and Inventory remain explicitly excluded rather than counted as complete.
-- [ ] All code, contract, schema, migration and focused test gates pass at one recorded commit.
-- [ ] Representative E2E and outage/replay matrices pass in identified environments.
-- [ ] Clean bootstrap and supported upgrade produce the same expected database catalog.
-- [ ] Production evidence proves isolated cells, replica/PITR recovery, SLOs, 40% headroom, approved unit cost, live alerts and human acknowledgement.
-- [ ] Privacy drills and required Product/Security/DPO/Operations/Legal/Finance approvals are recorded.
-- [ ] No unresolved P0/P1 finding remains.
-- [ ] Release authority records the commit, environment, evidence locations, accepted residual risks and approval date.
+## Deferred production-readiness evidence
 
-Until this gate is complete, report code implementation, production readiness and compliance readiness separately. Do not average them into a misleading “10/10”.
+These are intentionally postponed until infrastructure, provider access and approvers are available. They are not immediate code-release blockers and cannot be completed from mocks.
+
+### Deployed security, provider and performance
+
+- [ ] Run real payment, realtime, email and push sandbox replay, forgery, outage, suppression, cancellation, retry-exhaustion and recovery scenarios.
+- [ ] Verify deployed TLS, encryption at rest, infrastructure secret isolation and credential/key rotation.
+- [ ] Verify deployed edge WAF/rate limits, CORS, CSP, headers, request limits and malicious traffic behavior.
+- [ ] Produce production-build/reference-device Web Vitals evidence; obtain Product acceptance if frozen landing animation prevents its agreed target.
+- [ ] Run realistic load and capture pools, queues, CPU, memory, errors, replica behavior and sustained/burst capacity.
+- [ ] Prove declared SLOs with at least 40% capacity headroom.
+
+### Cloud, recovery and operations
+
+- [ ] Provision isolated per-cell database, cache, queue/workers, realtime/provider, search/vector, object storage and monitoring.
+- [ ] Prove credentials, routing, jobs, namespaces and data cannot cross cells using [RB-01](runbooks/RB-01-cell-isolation.md) and [RB-08](runbooks/RB-08-cell-resource-accounts.md).
+- [ ] Provision a physical replica and prove lag/fallback using [RB-03](runbooks/RB-03-read-replica.md).
+- [ ] Configure five-minute-or-better PITR/RPO and run recovery/relocation drills using [RB-02](runbooks/RB-02-pitr-backup.md) and [RB-04](runbooks/RB-04-recovery-drill.md).
+- [ ] Measure/approve per-cell and active-tenant cost using [RB-07](runbooks/RB-07-per-cell-cost.md).
+- [ ] Configure production logs, traces and release metadata with redaction.
+- [ ] Test live alerts and human acknowledgement using [RB-06](runbooks/RB-06-live-alert-delivery.md).
+- [ ] Capture passing RB-01–RB-08 manifests under [production evidence](final-refactor/evidence/42-production-ops/README.md) with identity, topology, SHA, operator, timestamps, exit code and hashes.
+- [ ] Prove rolling compatibility, canary aborts, kill switches, degraded modes and rollback/forward-fix under induced failure.
+- [ ] Verify probes, graceful shutdown, draining, worker lease recovery and duplicate/loss safety during deployment/autoscaling.
+- [ ] Publish on-call ownership, escalation, incident severity, customer/status communication and post-incident review procedures.
+- [ ] Prove backups are encrypted, controlled, restorable and periodically tested with documented key ownership.
+
+### Compliance and approvals
+
+- [ ] Approve operator/break-glass roles, reason, two-person/no-self approval, duration, expiry, tenant scope, notification, immutable audit and revocation.
+- [ ] Verify deployed sensitive routes reject expired, revoked, cross-tenant, wrong-scope, concurrent-approval and audit-failure cases.
+- [ ] Obtain named Product, Security, Privacy/DPO, Operations, Legal and Finance decisions using [RB-10](runbooks/RB-10-privacy-compliance-decisions.md) and [the decision template](decisions/README.md).
+- [ ] Complete [DATA-CATALOGUE.md](DATA-CATALOGUE.md) with purpose, lawful basis, subjects, processors, location, retention, owner and deletion behavior.
+- [ ] Decide PII policy for audit metadata, residency/transfers, subprocessors, breach handling, payroll/tax jurisdiction and controller/processor duties.
+- [ ] Approve AI/integration providers, regions, PII minimization, retention, deletion and disclosure.
+- [ ] Run deployed export, correction, portability, erasure, legal-hold, transfer, cross-tenant and repeat-request drills.
+- [ ] Prove deployed object/search/vector/cache/downstream deletion plus backup aging and restore-time deletion.
+- [ ] Run retention/legal-hold drills and store a redacted, hashed evidence bundle.
+- [ ] Close or formally disposition every production/security/privacy/compliance P0/P1 finding.
+
+## Production-ready final gate
+
+- [ ] Immediate code-level gate remains green at the deployed commit.
+- [ ] Every deferred checkbox is complete with current evidence.
+- [ ] Production evidence proves isolation, recovery, SLO/headroom, unit cost, live alerts and acknowledgement.
+- [ ] Required Product, Security, Privacy/DPO, Operations, Legal and Finance approvals are recorded.
+- [ ] No unresolved production/compliance P0/P1 finding remains.
+- [ ] Release authority records commit, environment, evidence, accepted residual risks and date.
+
+Only this final gate permits the label **production-proven 10/10**.
