@@ -241,7 +241,7 @@ export function WebhooksPage() {
           onRetry={handleRetry}
           className="flex-1"
         />
-      ) : webhooks.length === 0 ? (
+      ) : webhooks.length === 0 && cursorHistory.length === 1 ? (
         <EmptyState
           illustration={<EmptyDevicesIllustration />}
           title="No webhooks configured"
