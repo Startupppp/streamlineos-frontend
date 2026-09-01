@@ -1,5 +1,87 @@
 # Migration hand-off — operator
 
+## Lane 17 — 0840/0841 (2026-09-01)
+
+Two new migrations authored by Lane 17 and pending apply. Apply in order.
+
+```bash
+pnpm -C backend db:migrate
+```
+
+After applying, run the verification probes listed in §0840-verify and §0841-verify below.
+
+**Drizzle snapshot reconciliation:** After applying, run `pnpm -C backend db:generate --custom` and confirm no structural diff is proposed. The snapshot will be stale for `feature_flags` until this step.
+
+**Policy default needing owner confirmation:** 0841 backfills `owner = 'unassigned'` and `expires_at = '2027-01-01 00:00:00'` for all existing `feature_flags` rows. Both values are policy decisions. Confirm the correct defaults with the feature-flag owner before applying on production. The `when` timestamp can be changed in the migration SQL before applying.
+
+### §0840 — audit_logs immutability
+
+Migration `0840_audit_logs_immutability.sql` (journal idx=652, when=1798000151000):
+1. Creates `app.nullify_audit_logs_org_id(p_org_id text)` SECURITY DEFINER function
+2. REVOKEs ALL on function from PUBLIC; GRANTs EXECUTE to `streamline_app` only
+3. REVOKEs UPDATE, DELETE on `audit_logs` from `streamline_app`
+
+**§0840-verify** — Run as `neondb_owner` after applying:
+
+```sql
+-- Confirm function exists with correct security properties
+SELECT p.proname,
+       p.prosecdef AS is_security_definer,
+       has_function_privilege('streamline_app', p.oid, 'EXECUTE') AS app_can_execute,
+       has_function_privilege('public',         p.oid, 'EXECUTE') AS public_can_execute
+FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+WHERE n.nspname = 'app' AND p.proname = 'nullify_audit_logs_org_id';
+-- Expected: is_security_definer=true, app_can_execute=true, public_can_execute=false
+
+-- Confirm streamline_app no longer holds UPDATE or DELETE
+SELECT has_table_privilege('streamline_app', 'public.audit_logs', 'UPDATE') AS can_update,
+       has_table_privilege('streamline_app', 'public.audit_logs', 'DELETE') AS can_delete;
+-- Expected: can_update=false, can_delete=false
+
+-- Confirm streamline_app still holds SELECT and INSERT
+SELECT has_table_privilege('streamline_app', 'public.audit_logs', 'SELECT') AS can_select,
+       has_table_privilege('streamline_app', 'public.audit_logs', 'INSERT') AS can_insert;
+-- Expected: can_select=true, can_insert=true
+
+-- Prove the function executes correctly as streamline_app (use a non-existent org)
+-- Run as streamline_app:
+-- SELECT app.nullify_audit_logs_org_id('test-org-does-not-exist');
+-- Expected: returns void, 0 rows affected
+
+-- Prove UPDATE is denied as streamline_app after the revoke:
+-- SET ROLE streamline_app;
+-- UPDATE public.audit_logs SET org_id = org_id WHERE false;
+-- Expected: ERROR 42501 permission denied for table audit_logs
+-- RESET ROLE;
+```
+
+### §0841 — feature_flags governance columns
+
+Migration `0841_feature_flags_governance.sql` (journal idx=653, when=1798000152000):
+1. ADDs nullable `owner text` column
+2. Backfills `owner = 'unassigned'` for all existing rows
+3. Backfills `expires_at = '2027-01-01 00:00:00'` for all rows where expires_at IS NULL
+4. Makes both `owner` and `expires_at` NOT NULL via the two-step CHECK pattern
+5. Drops the helper CHECK constraints (NOT NULL is now structural)
+
+**§0841-verify** — Run after applying:
+
+```sql
+SELECT column_name, is_nullable, column_default
+FROM information_schema.columns
+WHERE table_name = 'feature_flags' AND column_name IN ('owner', 'expires_at')
+ORDER BY column_name;
+-- Expected: both is_nullable=NO
+```
+
+Confirm the governance gate passes:
+```bash
+node --env-file-if-exists=backend/.env backend/src/scripts/check-feature-flag-governance.mjs
+# Expected: [check:feature-flag-governance] OK
+```
+
+---
+
 **Reconciled 2026-08-26: 312 `.sql` files on disk, 297 journal entries, 15 un-journalled.** Reproduce with:
 
 ```bash
