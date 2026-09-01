@@ -19,9 +19,9 @@ It does not claim cloud isolation, physical replicas, PITR, regional recovery, l
 Current reconciliation count:
 
 - Verified completed invariants: **15**.
-- Immediate code-level criteria still open: **238**.
+- Immediate code-level criteria still open: **273**.
 - Deferred production/compliance criteria still open: **34**.
-- The 238 immediate criteria are acceptance checks, not 238 confirmed defects; fresh execution may close a criterion without a code change when its implementation already passes.
+- The 273 immediate criteria are acceptance checks, not 273 confirmed defects; fresh execution may close a criterion without a code change when its implementation already passes.
 
 ## Product constraints
 
@@ -52,11 +52,34 @@ Current reconciliation count:
 - [x] Billing provider abstraction, webhook idempotency, entitlements, seat/proration ledgers, immutable invoices and transactional outbox exist.
 - [x] Core module seams exist for Home, Settings, HRMS, Payroll, Build, Accounting, Chat, Calendar, Notifications, Knowledge/Wiki/Chatbot, Workflows and Inbox/mail.
 
+## Current-source delta audit — 2026-09-01
+
+### VERIFIED DONE
+
+- KEEP the centralized deterministic authorization module, Home section-failure isolation, Billing ledgers/provider adapter, Calendar recurrence/attendee/reminder implementation, notification outbox, tenant-scoped Query cache and unified Inbox/Mail split. Current gates still protect their interfaces; cosmetic replacement would add risk without preventing a concrete failure.
+- Static gates pass for 3,572/3,572 classified routes, 624 used permission keys, 895/895 declared tenant-isolation paths, 742/742 tenant-indexed tables, 3,583/3,583 OpenAPI operations, 1,363/1,363 mutating bodies, zero actionable bounded-read findings and zero unregistered emitted outbox events.
+
+### REGRESSED
+
+- Home section execution proof regressed: `backend/src/modules/dashboard/dashboard-section-isolation.spec.ts` has eight failures because `DashboardPersonalService.getPersonalDashboard` added an organization-membership lookup that its database adapter does not implement. Repair the test adapter and preserve the negative-query/failure-isolation assertions; do not weaken or delete them.
+- Backend spec-inclusive typecheck regressed with seven current errors in `billing/core/revenue-analytics.service.spec.ts`, `organization/core/lifecycle/organization-purge-adapters.spec.ts`, `platform/platform-operator-access-policy.spec.ts` and `platform/platform-operator-access.spec.ts`; production backend and frontend typechecks still pass.
+- The PRD previously named runtime custom roles, contradicting [PRD-IN-SCOPE.md](PRD-IN-SCOPE.md), `backend/CLAUDE.md` and the implemented six-standing authority model. The checklist below now requires fixed templates plus per-person grants instead of a second authority model.
+
+### STILL PENDING
+
+- Production-shaped read-cost evidence, cold bootstrap/catalog parity, runtime cross-tenant execution and the four retention decisions remain open under their existing criteria; they are not duplicated below.
+- Payroll finalization still calls Accounting posting through a nested top-level transaction, so an Accounting journal can commit while the Payroll lock rolls back.
+
+### NEW
+
+- Current source proves additional release blockers in token-signing authority, tenant-composite foreign keys, Home access locality, TanStack cancellation/query-key/cache-shape correctness, frontend command authorization, Chat scale/concurrency, Calendar synchronization durability, Knowledge comment/review ACLs and durable notification fanout. Their exact acceptance criteria are added to the owning sections below.
+
 ## Immediate code-level release candidate
 
 ### 1. One-commit release verification
 
 - [ ] Fix seeded E2E harness failures, including organization placement/control-plane state and schema/fixture drift.
+- [ ] Repair all seven current spec-inclusive type errors without casts or exclusions, then make `pnpm -C backend check:spec-typecheck` pass at the same commit as production typechecks.
 - [ ] Run disposable-database E2E for Organization/RBAC, Home, Settings, HRMS, Payroll, Build, Billing, Payments, Accounting, Chat, Calendar, Notifications, Knowledge, Workflows and Inbox/mail.
 - [ ] Record each command, release SHA, database identity, dataset shape, pass/fail/skip counts and failure artifacts.
 - [ ] At the same commit run backend build/typecheck, spec typecheck, frontend typecheck, OpenAPI freshness, cycle, file-size, dead-code, tenant-isolation, RLS, permission, cache, outbox, idempotency, migration, vulnerability, license and SBOM gates.
@@ -72,6 +95,7 @@ Current reconciliation count:
 - [ ] Prove zero circular imports, forbidden new `forwardRef`, barrel self-imports and erased Nest injection tokens.
 - [ ] Prove every active Nest module is registered and every frontend route has one canonical owner; remove obsolete routes rather than preserving hidden duplicates.
 - [ ] Prove no dead or duplicated endpoint, schema, type, validator, hook, query key, worker, page or UI element using dependency graphs plus build/typecheck evidence.
+- [ ] Keep authenticated `app/**/page.tsx` and `layout.tsx` files as thin route modules for metadata, parameters, server authorization and composition; move state, forms, queries and mutations behind feature-owned interfaces and gate route-file size/import direction without changing landing visuals or animations.
 
 ### 3. TypeScript, Zod and cross-layer contracts
 
@@ -89,6 +113,9 @@ Current reconciliation count:
 - [ ] Verify normalized lifecycle and relationship tables; remove actionable JSON arrays/polymorphic authority relationships and avoid EAV unless an approved custom-field seam requires it.
 - [ ] Verify soft-delete/archive policy and every active readâ€™s deleted/archived predicate; use partial indexes where the access pattern requires them.
 - [ ] Verify cross-tenant composite FKs for membership/authority-sensitive relations and prevent orphaned visible children.
+- [ ] Add a `pg_catalog`-backed tenant-relationship gate that inventories every FK whose parent and child are tenant-owned, explicitly excludes CRM/Inventory and approved global relations, and reports zero actionable single-column tenant relationships.
+- [ ] Repair every actionable in-scope relationship with `(org_id, child_id) -> (org_id, id)`, supporting uniqueness/indexes, `NOT VALID` then `VALIDATE` migration sequencing and cross-tenant insertion tests; explicitly cover Build ticket hierarchy/recurrence/release/feedback/product/work-item/workflow/sprint-event relations and Billing subscription/proration/invoice/credit-note relations.
+- [ ] Reconcile Drizzle declarations, migration snapshots and the live catalog so each tenant relationship has one canonical composite constraint; remove redundant single-column constraints only after dependency proof, cold bootstrap and upgraded-catalog parity.
 - [ ] Verify high-growth append-only tables have justified retention/partition decisions and indexes matched to real access patterns.
 - [ ] Remove obsolete schema only with symbol, raw table-name, FK, migration, barrel and integrity-spec evidence.
 - [ ] Cold-bootstrap an empty database to migration head and record zero pending, orphan, duplicate or unreachable migrations.
@@ -126,7 +153,7 @@ Current reconciliation count:
 
 ### 6. Organization and module RBAC
 
-- [ ] Test organization owner/admin/member, module owner/admin/member, custom roles, direct grants and DataScope on every read and mutation path.
+- [ ] Test the six fixed standings — organization owner/admin/member and module owner/admin/member — plus fixed role templates, per-person grants, delegations and DataScope on every read and mutation path; prove no arbitrary custom-role creation interface exists.
 - [ ] Test owner transfer, last-owner protection, administrative descendant protection, organization switching and cross-organization denial.
 - [ ] Prove authorization at the data/query implementation so a missing controller/frontend check cannot expose a record.
 - [ ] Prove frontend routes, navigation, TanStack queries and action buttons match backend effective permissions without treating hiding as security.
@@ -141,6 +168,7 @@ Current reconciliation count:
 - [ ] Verify background sweeps iterate tenant context explicitly, use bounded/resumable leases and expose retry/DLQ/cancellation states.
 - [ ] Verify minimal response projections, serialization/redaction, generic errors, resource limits and stable HTTP semantics.
 - [ ] Reconcile OpenAPI exposure, request, response, 4xx schema and operation metadata with active controllers and consumers.
+- [ ] Prohibit fire-and-forget `NotificationDispatchService.emit` calls: transactional callers must await durable intent persistence or write the outbox row in their mutation transaction; enforce this with a static gate and crash/retry tests.
 
 #### 7.1 Optimized route and transport contract
 
@@ -171,6 +199,10 @@ Current reconciliation count:
 - [ ] Verify cursor pagination does not duplicate/skip records and changing filter/sort resets pagination correctly.
 - [ ] Verify loading, background-refresh, empty, partial-error, full-error, offline, permission-denied and revoked-access states.
 - [ ] Prove frontend types and runtime parsing cannot silently accept a backend contract change.
+- [ ] Pass TanStack `QueryFunctionContext.signal` through every cancellable read to `apiClient`; enforce zero unclassified reads and test navigation, search, range-change and organization-switch cancellation.
+- [ ] Enforce canonical query-key factories for authenticated data: zero ad-hoc array keys or local key factories, no redundant tenant argument where the scoped Query hash already owns tenant/user identity, and exact invalidation tests for every mutation.
+- [ ] Build a controller-to-hook command catalog: every non-universal mutation uses the exact backend permission through the authorized-mutation module, every universal/self exception is explicit, and zero commands are unclassified; test revocation before and during a mutation.
+- [ ] Provide one typed optimistic patch/rollback implementation per cache shape, including `InfiniteData`; update list/detail/count variants atomically and prove concurrent realtime delivery cannot corrupt or overwrite optimistic state.
 
 ### 9. Upload, compression and file lifecycle
 
@@ -203,6 +235,8 @@ Mandatory folder/file evidence for **every** module below:
 #### 10.1 Authentication, identity, sessions and organization
 
 - [ ] Architecture/schema: verify global identity is separated from tenant membership; organization, invitation, membership, session and organization-switch relationships have correct keys, uniqueness, lifecycle and revocation data.
+- [ ] Token authority: remove `BACKEND_JWT_SECRET` and bearer-token signing from `frontend/lib/auth.ts`; only an isolated backend issuer may mint short-lived issuer/audience-bound access tokens, while frontend/edge runtimes receive no signing authority.
+- [ ] Token verification: use asymmetric verification or an equivalently isolated signing authority with key identifiers, rotation overlap and revocation; test wrong issuer/audience/key, expiry, replay, altered user, altered organization and a compromised frontend runtime that possesses no signing key.
 - [ ] Routes/contracts: verify signup, login, logout, refresh, recovery, MFA, invitation and organization switching use Zod/OpenAPI contracts and never trust client actor/current-org fields.
 - [ ] Authorization/security: test account enumeration, fixation/replay, lockout, invitation takeover, revoked membership, cross-org switching and last-owner/owner-transfer invariants.
 - [ ] Queries/cache: verify bounded membership/session reads, required indexes and immediate invalidation of session, effective-access and organization caches.
@@ -210,19 +244,23 @@ Mandatory folder/file evidence for **every** module below:
 
 #### 10.2 Organization RBAC and module RBAC
 
-- [ ] Architecture/schema: verify permission catalog, org roles, module standing, custom roles, direct grants, scopes and assignments remain normalized and tenant-correlated.
+- [ ] Architecture/schema: verify permission catalog, six fixed standings, fixed role templates, per-person grants, delegations, scopes and assignments remain normalized and tenant-correlated; customization must not create a seventh standing or parallel authority source.
 - [ ] Routes/contracts: verify role/grant/module-access CRUD has strict Zod contracts, stable OpenAPI, idempotent mutations and exhaustive owner/descendant protections.
 - [ ] Authorization/cache: prove data-layer enforcement, deny-by-default classification and revocation invalidation without a database round trip per permission check.
 - [ ] Queries/performance: verify effective-permission resolution is batched/cached, scope expansion is bounded and indexes cover subject, role, permission, module and tenant access paths.
-- [ ] Frontend/TanStack/tests: verify routes, navigation, queries and buttons consume one effective-access contract and test org/module owner, admin, member, custom role, direct grant and revocation cases.
+- [ ] Frontend/TanStack/tests: verify routes, navigation, queries and buttons consume one effective-access contract and test org/module owner, admin, member, fixed template, per-person grant, delegation and revocation cases.
 
 #### 10.3 Home and dashboard composition
 
 - [ ] Architecture/schema: prove Home owns composition/preferences only and does not duplicate Chat, Calendar, Inbox or Notification domain tables or implementation.
+- [ ] Access locality: replace the drifting backend/frontend Home section registries with one generated or contract-checked authoritative section manifest that matches each live controller route, module requirement, permission and cache namespace; deletion of either duplicate must not spread access logic across callers.
 - [ ] Routes/contracts: define a bounded per-section dashboard contract with independent success/error metadata and permission-safe projections.
 - [ ] Authorization/privacy: derive each section from caller identity and effective access; prove calendar, people, payroll and communication data cannot leak through summaries/counts.
 - [ ] Queries/cache: verify parallel bounded aggregation, no N+1/fetch-all behavior, per-section cache ownership and mutation invalidation from source modules.
+- [ ] Query efficiency: resolve the caller's organization membership once in `DashboardPersonalService`, reuse it across enabled sections, preserve calendar visibility predicates and record a maximum database-call count per Home request.
 - [ ] Frontend/TanStack/tests: verify independent Suspense/error/loading/empty states, stable query keys, partial failure isolation, responsive rendering and widget-level allow/deny E2E.
+- [ ] Repair the eight failing Home section-isolation tests at current head and add a regression test proving the membership lookup cannot bypass disabled-section query suppression or turn one section failure into a full Home failure.
+- [ ] Reuse one request-local `/me/access` result for authenticated-layout MFA/route decisions and TanStack hydration; prove exactly one backend access call per navigation instead of `getServerAccess` plus `prefetchAccess` duplication.
 
 #### 10.4 Settings and module-access administration
 
@@ -247,6 +285,7 @@ Mandatory folder/file evidence for **every** module below:
 - [ ] Authorization/privacy: test own/team/department/branch/org DataScope, sensitive projection controls, candidate/employee separation, approvals and cross-tenant record denial.
 - [ ] Queries/cache/workers: verify cursors, filters, exports, leave balances, attendance and review paths; tenant-leading indexes; cache invalidation; bounded reminders/imports/exports.
 - [ ] Frontend/TanStack/tests: verify canonical HR routes, form parity, self/admin separation, all UI states, responsive tables/forms and full CRUD/approval/cross-tenant E2E.
+- [ ] Classify every HR mutation hook as universal/self or permissioned; route non-universal leave, attendance, recruitment, onboarding, performance, benefits and document commands through the exact authorized-mutation interface and prove in-flight revocation behavior.
 
 #### 10.7 Payroll
 
@@ -255,6 +294,7 @@ Mandatory folder/file evidence for **every** module below:
 - [ ] Authorization/privacy: test payroll owner/admin/member, approver, self-payslip, separation-of-duties, sensitive projections and every mutation hook.
 - [ ] Queries/cache/workers: verify bounded run/item reads, indexed employee/period/status paths, no N+1 calculations, asynchronous exports and correct invalidation after lock/publish/reversal.
 - [ ] Frontend/TanStack/tests: verify run-state UI, conflict/retry/partial failure, permission gates, secure downloads and calculation/locking/reconciliation E2E.
+- [ ] Make Payroll finalization and Accounting posting crash-consistent: either pass the active transaction through the posting seam or commit an idempotent posting intent atomically and consume it durably; prove outer rollback cannot leave a journal and retry cannot duplicate one.
 
 #### 10.8 Build/PM
 
@@ -263,6 +303,8 @@ Mandatory folder/file evidence for **every** module below:
 - [ ] Authorization: test workspace/project/product membership, module roles, record scope, private resources, watchers/assignees and cross-tenant identifiers.
 - [ ] Queries/cache/events: verify board/backlog/search plans, ordering tie-breakers, counters, cache invalidation and duplicate-safe activity/notification events.
 - [ ] Frontend/TanStack/tests: verify drag/reorder concurrency, optimistic rollback, filter/cursor reset, route/action parity, responsive boards and CRUD/cross-scope E2E.
+- [ ] Replace `Promise.all` per-row custom-state reorder calls with one bounded bulk command whose backend update is transactional, idempotent and expected-version protected; return stable conflict semantics and roll back the complete optimistic order on failure.
+- [ ] Remove local Build query-key factories such as `stateKeys`; all Build reads/mutations must use the canonical factory and exact invalidation prefixes.
 
 #### 10.9 Workflows and automation
 
@@ -279,6 +321,8 @@ Mandatory folder/file evidence for **every** module below:
 - [ ] Authorization/security: test billing owner/admin/member access, provider signature verification, replay/forgery, tenant ownership, entitlement gates and sensitive redaction.
 - [ ] Queries/cache/workers: verify local entitlement resolution, seat/proration concurrency, usage aggregation, webhook dedupe, retries/DLQ and invalidation without provider calls per request.
 - [ ] Frontend/TanStack/tests: verify the two canonical Settings billing pages, plan/seat/usage/invoice states, mutation invalidation and deterministic outage/replay/proration E2E.
+- [ ] Keep provider-specific identifiers, verification fields, route names and SDK behavior behind the Billing adapter seam; frontend callers consume provider-neutral checkout-session/confirmation contracts and a second adapter contract test requires no caller change.
+- [ ] Route every non-universal subscription/payment mutation through the exact billing/payment permission interface; billing remains non-delegable and tests cover owner/admin/member denial plus revocation during checkout confirmation.
 
 #### 10.11 Accounting and finance
 
@@ -295,6 +339,11 @@ Mandatory folder/file evidence for **every** module below:
 - [ ] Authorization: test channel membership, private/direct conversations, thread inheritance, every mutation hook, attachment access and immediate issued-token revocation.
 - [ ] Queries/cache/realtime: verify stable message ordering, indexed history/thread/reaction/unread paths, no unread scans, duplicate-safe fanout, reconnect/offline recovery and safe cache invalidation.
 - [ ] Frontend/TanStack/tests: verify infinite-query cursor merge, optimistic send/reaction rollback, dedupe, unread state, reconnect, permission removal, responsive/a11y behavior and concurrency E2E.
+- [ ] Replace `ChatChannelsService.listMemberChannels`' unbounded membership read and fixed 100-channel truncation with stable tenant/member-scoped keyset pagination and a continuation cursor; add a scanner regression fixture for a user in more than 100 channels.
+- [ ] Make huddle attendee creation and notification fanout bounded, resumable and queue-backed with recipient checkpoints and tenant concurrency limits; the start request must not retain all members or launch per-member provider calls.
+- [ ] Enforce one active huddle per `(org_id, channel_id)` and serialize participant-cap admission atomically; prove concurrent start/join requests cannot create duplicate huddles or exceed plan/settings caps.
+- [ ] Require active channel-membership assertion before mark-read, mark-unread, mute and unmute read or mutate channel state; inaccessible private channels return 404 and denial tests exercise revoked/non-member callers.
+- [ ] Replace per-visible-tab 15-second presence heartbeats with connection-driven presence or one browser leader/lease plus jitter, backoff, offline/visibility behavior and a bounded fallback; prove multitab/reconnect load budgets.
 
 #### 10.13 Calendar
 
@@ -303,6 +352,8 @@ Mandatory folder/file evidence for **every** module below:
 - [ ] Authorization/privacy: test calendar/source visibility, attendee privacy, own/shared/admin operations, private events, cross-tenant IDs and every mutation hook.
 - [ ] Queries/cache/workers: verify timezone/DST, recurrence expansion limits, free-busy/conflict indexes, reminder replacement/deduplication, sync retries and range/source cache invalidation.
 - [ ] Frontend/TanStack/tests: verify one `/calendar`, source toggles, timezone display, series-versus-instance edits, cursor/range keys and DST/exception/conflict/reminder E2E.
+- [ ] Persist create/update/delete provider-sync intent atomically with local event changes and expose idempotent lease, retry/backoff, cancellation and terminal synchronization state; transient provider or process failure must not leave permanent local/external divergence.
+- [ ] Consolidate Calendar member list/search behind one permission-gated lookup interface; both paths require `directory:people:view` and test missing, granted and revoked access.
 
 #### 10.14 Inbox and mail
 
@@ -319,6 +370,8 @@ Mandatory folder/file evidence for **every** module below:
 - [ ] Authorization/privacy: test recipient-only reads/mutations, administrative template scope, sensitive payload minimization, tenant-safe realtime channels and unsubscribe/consent rules.
 - [ ] Queries/cache/workers: verify indexed unread counts without scans, at-least-once duplicate-safe dispatch, outbox consumers, retry/backoff/DLQ, bounce/complaint/suppression and provider adapter failure.
 - [ ] Frontend/TanStack/tests: verify notification/count key consistency, optimistic read rollback, realtime dedupe, preference forms, accessibility and replay/revocation/cross-tenant E2E.
+- [ ] Repair mark-read, mark-all and bulk-read optimistic updates to patch `InfiniteData<Notification[]>` page-by-page rather than treating the cache as `Notification[]`; atomically preserve rollback snapshots and unread counts under concurrent realtime events.
+- [ ] Replace growing per-recipient transactions and in-memory recipient maps with cursor-resumable bulk persistence, checkpoints, tenant concurrency/backpressure and duplicate-safe provider delivery; no worker invocation may retain or dispatch the complete recipient set.
 
 #### 10.16 Knowledge Base, Wiki and Chatbot
 
@@ -327,6 +380,9 @@ Mandatory folder/file evidence for **every** module below:
 - [ ] Authorization/privacy: test org/user content, space/audience/record ACLs, draft/published visibility, attachment access and ACL enforcement inside keyword/vector retrieval before model context.
 - [ ] Queries/cache/workers: verify revision/search plans, ingestion leases/retries/DLQ, chunk dedupe, permission-aware cache keys, purge/reindex and realistic-corpus latency.
 - [ ] Frontend/TanStack/tests: verify editor/revision conflicts, search cursors, permission changes, citations/source integrity, ingestion states and ACL/purge/reindex E2E.
+- [ ] Apply the direct article visibility predicate to Help Centre comment list/create/update/delete/resolve, carry caller context to the data seam, select explicit fields and keyset-page comment threads.
+- [ ] Re-authorize parent-page visibility and action authority inside every Wiki comment mutation; remove controller-supplied authorization booleans and test access revocation between read and mutation.
+- [ ] Apply reviewer/requester scope plus page ACLs to freshness-review due lists and replace the silent 100-row cap with stable cursor pagination so restricted titles/identities do not leak and due work is not lost.
 
 #### 10.17 Shared storage, search, realtime and integration adapters
 
@@ -335,6 +391,7 @@ Mandatory folder/file evidence for **every** module below:
 - [ ] Authorization/security: prove callers supply an authorization context that shared adapters cannot bypass; test SSRF, malicious files, token replay and cross-tenant resources.
 - [ ] Queries/cache/workers: verify bounded search, tenant/ACL predicates, backpressure, retries/DLQ, idempotent callbacks, cache namespaces and resource cleanup.
 - [ ] Consumers/tests: verify every produced event has a registered consumer or explicit terminal sink and exercise adapter fakes plus cross-module contract tests.
+- [ ] Repair every current `void NotificationDispatchService.emit(...)` caller in Organization, Build and Knowledge so intent persistence is awaited or written in the caller transaction; prove commit/rollback/crash behavior and prohibit future fire-and-forget calls statically.
 
 #### 10.18 Frontend system-wide release
 
