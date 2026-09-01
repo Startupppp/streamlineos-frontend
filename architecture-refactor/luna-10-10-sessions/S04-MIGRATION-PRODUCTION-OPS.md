@@ -53,6 +53,10 @@ Fresh verification (2026-09-01 UTC, root `e58754d24`, backend working tree, envi
 - `pnpm -C backend ops:evidence:self-test` — exit 0; altered artifacts, self-test claims and invalid deployed evidence are rejected. The deployed evidence directory is intentionally empty, so no production gate is claimed.
 - Full-chain disposable proof — not run locally: the configured `backend/.env` targets shared Neon databases, Docker/local PostgreSQL is unavailable, and no disposable staging target is configured. No current-head clean-bootstrap pass is claimed; the configured-database upgrade is now complete.
 - Disposable proof attempt — the named probes were created and safely dropped after the cold replay stopped at 529 entries before reaching the current head. No clean-bootstrap or supported-upgrade pass is claimed from that attempt.
+- `pnpm -C backend cell:isolation` — exit 1; configured cell app-role authentication failed, so cross-cell isolation is not proven.
+- `pnpm -C backend cell:replica` — exit 2; `DB_REPLICA_URL` is not configured, so no physical replica or fallback evidence exists.
+- `pnpm -C backend cell:unit-cost` — exit 0 but reports unmeasured vendor dollar rates, insufficient capacity samples, and no operator approval; it is not a cost acceptance pass.
+- `pnpm -C backend ops:evidence:check` — exit 1; no deployed RB-01–RB-08 evidence manifests exist.
 - Local self-tests remain implementation evidence only; they do not satisfy pending migration, deployed resource, replica, PITR, load, cost, live-alert or approval gates.
 
 ## Session completion status
