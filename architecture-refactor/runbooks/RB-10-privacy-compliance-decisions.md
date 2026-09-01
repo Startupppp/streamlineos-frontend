@@ -203,6 +203,153 @@ disclosure decision.
 
 ---
 
+## 5. Secret Rotation — ownership and evidence
+
+**Derived from `backend/.env.example` (2026-09-01). Secret VALUES are never listed here — only names.**
+
+| Secret name | Category | Owner | Rotation procedure | Evidence requirement |
+|---|---|---|---|---|
+| `DATABASE_URL` / `APP_DATABASE_URL` | Database credential | Platform DBA | Rotate in Neon console → update deployment env var → redeploy → verify health probe | Neon audit log screenshot; deployment redeploy timestamp |
+| `BACKEND_JWT_SECRET` | Signing — user JWT | Platform security | Generate ≥44-char secret (`openssl rand -base64 48`) → update both backend and frontend env → rolling redeploy (existing sessions expire at their TTL) | Old secret must not appear in any log line post-rotation |
+| `PORTAL_JWT_SECRET` | Signing — portal JWT | Platform security | Same as `BACKEND_JWT_SECRET`; must differ from it | Same |
+| `INTERNAL_API_SECRET` | API auth — operator panel | Platform security | Generate ≥32-char secret → update backend and any admin panel env → verify platform operator-access routes reject old secret | Manual rotation test: call `POST /platform/operator-access/grants` with old secret, expect 401 |
+| `ENCRYPTION_KEY` | Encryption at rest (payment, PII) | Platform security | DECISION REQUIRED — key rotation requires re-encrypting all encrypted columns. No rotation procedure exists yet. Minimum: ≥32 chars hex. | Before any rotation: audit all encrypted columns; implement re-encryption job. |
+| `CRON_SECRET` | Cron endpoint auth | Platform ops | Rotate in deployment env → update cron trigger config | Cron trigger config updated in CI |
+| `ZEPTOMAIL_TOKEN` / `RESEND_API_KEY` | Provider — email | Platform ops | Rotate in ZeptoMail/Resend console → update env → send test email | Successful transactional email delivery after rotation |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Cache credential | Platform ops | Rotate in Upstash console → update env → verify `GET /health/ready` | Health probe passes; no `42501` errors in logs |
+| `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | Storage credential | Platform ops | Rotate in Cloudflare console → update env → verify file upload/download | Storage integration test passes |
+| `ABLY_API_KEY` | Realtime credential | Platform ops | Rotate in Ably console → update env → verify realtime connection | Realtime connection test in staging |
+| `PLACEMENT_SIGNING_KEY` | Cell placement JWT | Platform security | Issue new key with new `PLACEMENT_SIGNING_KEY_ID` → set `PLACEMENT_SIGNING_KEY_PREVIOUS` to outgoing key → redeploy → drain existing sessions (at most 24h) → remove PREVIOUS | Verify `cell:replica` passes after rotation |
+| `NEON_API_KEY` | Neon management API | Platform DBA | Rotate in Neon console | `pnpm -C backend drill:pitr:self-test` passes |
+| `AI_CONFIRMATION_SECRET` | AI confirmation signing | Platform security | Same as JWT secrets | AI confirmation endpoint rejects old secret |
+
+**Note on `ENCRYPTION_KEY`:** Rotation is a DECISION REQUIRED item. The application refuses to boot without it, but no key rotation procedure exists. Until a re-encryption job is implemented, the key must be treated as permanent. Operator must decide: (a) accept the current state and document it, or (b) commission the re-encryption job before any rotation.
+
+---
+
+## 6. End-to-End GDPR Compliance Drill Workflow
+
+**Context:** The four drills were each exercised individually on 2026-09-01 (see `PRODUCTION-OPERATIONS-STATUS.md` §7). The PRD requires them as one end-to-end workflow.
+
+**All commands run as dry-run / rolled-back transactions. Nothing is committed unless `--execute --i-know-what-im-doing` is passed.**
+
+### Pre-flight checks
+
+```bash
+# Verify the app role can connect
+cd backend
+node --input-type=module << 'EOF'
+import { config } from 'dotenv';
+config({ path: '.env' });
+import postgres from 'postgres';
+const sql = postgres(process.env.APP_DATABASE_URL, { ssl: 'require', max: 1 });
+const r = await sql`SELECT current_user, app.current_org_id_or_null() AS guc`;
+console.log('app role:', r[0]);
+await sql.end();
+EOF
+
+# Verify legal hold machinery is live
+pnpm -C backend drill:erasure:self-test
+# Expected: exit 0
+```
+
+### Step 1 — Legal hold drill (commits real rows, then releases them)
+
+```bash
+# Use a test subject email and org id from your staging/test data
+SUBJECT_EMAIL="gdpr-drill-$(date +%Y%m%d)@test.invalid"
+ORG_ID="<your-test-org-id>"
+
+pnpm -C backend drill:legal-hold "$SUBJECT_EMAIL" "$ORG_ID"
+# Expected: RESULT: PASS (8 passed, 0 failed)
+# This commits and releases real hold rows. Confirm no orphan holds remain:
+node --input-type=module << 'EOF'
+import { config } from 'dotenv'; config({ path: '.env' });
+import postgres from 'postgres';
+const sql = postgres(process.env.DATABASE_URL, { ssl: 'require', max: 1 });
+const r = await sql`SELECT COUNT(*) FROM hr_legal_holds WHERE released_at IS NULL`;
+console.log('active HR holds:', r[0].count);
+await sql.end();
+EOF
+```
+
+### Step 2 — Export drill (dry-run — no data file produced)
+
+```bash
+pnpm -C backend drill:export "$SUBJECT_EMAIL"
+# Expected: RESULT: PASS — 6 checks including cross-tenant isolation
+```
+
+### Step 3 — Erasure drill (dry-run — rolled back)
+
+```bash
+pnpm -C backend drill:erasure "$SUBJECT_EMAIL"
+# Expected: RESULT: PASS — dry-run complete (rolled back; 0 residual row(s) in simulation)
+# Note: org owner cannot be erased without ownership transfer first.
+```
+
+### Step 4 — Compliance audit trail drill (dry-run — rolled back)
+
+```bash
+pnpm -C backend compliance:drill
+# Expected: All required audit actions present. Dry run complete — transaction rolled back.
+```
+
+### Step 5 — Verify audit trail immutability
+
+```bash
+# Confirm no DELETE/UPDATE on audit_logs via the code-level spec
+node ./node_modules/jest/bin/jest.js src/modules/platform/audit-log-immutability.spec.ts --maxWorkers=1 --no-coverage
+# Expected: 6 passed
+
+# Confirm streamline_app privileges on audit_logs (read-only probe)
+node --input-type=module << 'EOF'
+import { config } from 'dotenv'; config({ path: '.env' });
+import postgres from 'postgres';
+const sql = postgres(process.env.DATABASE_URL, { ssl: 'require', max: 1 });
+const priv = await sql`
+  SELECT privilege_type FROM information_schema.role_table_grants
+  WHERE table_schema='public' AND table_name='audit_logs' AND grantee='streamline_app'
+  ORDER BY privilege_type
+`;
+console.log('streamline_app privileges on audit_logs:', priv.map(r => r.privilege_type));
+await sql.end();
+EOF
+# Current result (2026-09-01): DELETE, INSERT, SELECT, UPDATE
+# FINDING P1: DELETE and UPDATE should be revoked — see §Handoffs
+```
+
+### Step 6 — Object storage erasure (manual — not scripted)
+
+```bash
+# 1. Run the storage key audit to find blobs for the subject
+node src/scripts/audit-storage-keys.mjs --subject "$SUBJECT_EMAIL"
+# 2. For each key returned, manually delete from R2:
+#    wrangler r2 object delete $R2_BUCKET_NAME <key>
+# 3. Confirm no remaining blobs for subject
+# Note: the automated storage purge adapter is not yet implemented (OPERATOR-EVIDENCE.md Gap 2).
+```
+
+### Pass/fail criteria
+
+| Step | Pass criterion |
+|---|---|
+| Legal hold | 8/8 checks pass; no orphan holds after release |
+| Export | RESULT: PASS; 0 cross-tenant rows |
+| Erasure | RESULT: PASS; 0 residual rows in simulation |
+| Compliance audit | All required audit actions present |
+| Immutability | 6 specs pass; privilege list noted for migration handoff |
+| Object storage | DECISION REQUIRED — manual until adapter is implemented |
+
+### Known gaps (from PRODUCTION-OPERATIONS-STATUS.md §7)
+
+1. Export worker not implemented — `hr_data_requests` tracks requests; no worker produces an actual data file.
+2. Object storage purge adapter returns FAILED — not yet implemented.
+3. Database rows adapter marks `statusV2=PURGED` as a soft flag only — physical deletion not implemented.
+4. No background retention-sweep service — `hr_retention_policies` are inserted but no worker reads them.
+
+---
+
 ## Evidence trail
 
 Once each section above is approved, file a signed decision record in
