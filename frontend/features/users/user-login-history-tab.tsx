@@ -5,10 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { useUserLoginHistory } from "@/hooks/api/users";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatClientDeviceLabel } from "@/lib/format-utils";
-import { ChevronLeft, ChevronRight, CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, XCircle } from "lucide-react";
 import { format } from "date-fns";
 
 interface UserLoginHistoryTabProps {
@@ -16,42 +17,44 @@ interface UserLoginHistoryTabProps {
 }
 
 export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
-  const [page, setPage] = useState(1);
+  const [cursors, setCursors] = useState<Array<string | undefined>>([undefined]);
   const [successFilter, setSuccessFilter] = useState<boolean | undefined>(
     undefined,
   );
 
   const { data, isLoading, error, refetch } = useUserLoginHistory(userId, {
-    page,
+    cursor: cursors.at(-1),
     limit: 15,
     success: successFilter,
   });
 
   const entries = data?.data ?? [];
   const pagination = data?.pagination;
+  const page = cursors.length;
 
   const handleFilterAll = useCallback(() => {
     setSuccessFilter(undefined);
-    setPage(1);
+    setCursors([undefined]);
   }, []);
 
   const handleFilterSuccess = useCallback(() => {
     setSuccessFilter(true);
-    setPage(1);
+    setCursors([undefined]);
   }, []);
 
   const handleFilterFailed = useCallback(() => {
     setSuccessFilter(false);
-    setPage(1);
+    setCursors([undefined]);
   }, []);
 
   const handlePagePrev = useCallback(() => {
-    setPage((p) => Math.max(1, p - 1));
+    setCursors((current) => current.slice(0, -1));
   }, []);
 
-  const handlePageNext = useCallback((totalPages: number) => {
-    setPage((p) => Math.min(totalPages, p + 1));
-  }, []);
+  const handlePageNext = useCallback(() => {
+    if (!pagination?.nextCursor) return;
+    setCursors((current) => [...current, pagination.nextCursor ?? undefined]);
+  }, [pagination?.nextCursor]);
 
   const handleRetry = useCallback(() => {
     void refetch();
@@ -171,33 +174,13 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
         </div>
       )}
 
-      {pagination && pagination.totalPages > 1 && (
-        <div className="flex shrink-0 items-center justify-between text-xs text-muted-foreground pt-1">
-          <span>{pagination.total} events</span>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 w-7 p-0"
-              onClick={handlePagePrev}
-              disabled={page === 1}
-            >
-              <ChevronLeft className="h-3.5 w-3.5" />
-            </Button>
-            <span className="px-1">
-              {page} / {pagination.totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 w-7 p-0"
-              onClick={() => handlePageNext(pagination.totalPages)}
-              disabled={page === pagination.totalPages}
-            >
-              <ChevronRight className="h-3.5 w-3.5" />
-            </Button>
-          </div>
-        </div>
+      {pagination && (page > 1 || pagination.hasMore) && (
+        <CursorPageControls
+          page={page}
+          hasNext={pagination.hasMore}
+          onPrevious={handlePagePrev}
+          onNext={handlePageNext}
+        />
       )}
     </div>
   );

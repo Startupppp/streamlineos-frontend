@@ -56,6 +56,12 @@ export function DelegationsPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [revokeTarget, setRevokeTarget] = useState<Delegation | null>(null);
   const [revokeError, setRevokeError] = useState<unknown>(null);
+  const [receivedCursors, setReceivedCursors] = useState<Array<string | undefined>>([
+    undefined,
+  ]);
+  const [grantedCursors, setGrantedCursors] = useState<Array<string | undefined>>([
+    undefined,
+  ]);
 
   const activeTab: DelegationListKind =
     searchParams.get("tab") === "granted" ? "granted" : "received";
@@ -130,6 +136,7 @@ export function DelegationsPage() {
     const normalizedSearch = debouncedReceivedSearch.trim();
     if (normalizedSearch === receivedState.search) return;
     requestedReceivedSearchRef.current = normalizedSearch;
+    setReceivedCursors([undefined]);
     updateParams({
       [DELEGATION_URL_KEYS.received.search]:
         normalizedSearch || null,
@@ -141,6 +148,7 @@ export function DelegationsPage() {
     const normalizedSearch = debouncedGrantedSearch.trim();
     if (normalizedSearch === grantedState.search) return;
     requestedGrantedSearchRef.current = normalizedSearch;
+    setGrantedCursors([undefined]);
     updateParams({
       [DELEGATION_URL_KEYS.granted.search]:
         normalizedSearch || null,
@@ -155,10 +163,17 @@ export function DelegationsPage() {
     error: receivedQueryError,
     refetch: refetchReceived,
   } = useQuery<DelegationPage>({
-    queryKey: queryKeys.delegations.received(receivedState),
+    queryKey: queryKeys.delegations.received({
+      ...receivedState,
+      cursor: receivedCursors.at(-1),
+    }),
     queryFn: () =>
       apiClient.get<DelegationPage>(
-        buildDelegationListUrl("/access/delegations", receivedState),
+        buildDelegationListUrl(
+          "/access/delegations",
+          receivedState,
+          receivedCursors.at(-1),
+        ),
       ),
     staleTime: 60_000,
   });
@@ -170,10 +185,17 @@ export function DelegationsPage() {
     error: givenQueryError,
     refetch: refetchGiven,
   } = useQuery<DelegationPage>({
-    queryKey: queryKeys.delegations.given(grantedState),
+    queryKey: queryKeys.delegations.given({
+      ...grantedState,
+      cursor: grantedCursors.at(-1),
+    }),
     queryFn: () =>
       apiClient.get<DelegationPage>(
-        buildDelegationListUrl("/access/delegations/given", grantedState),
+        buildDelegationListUrl(
+          "/access/delegations/given",
+          grantedState,
+          grantedCursors.at(-1),
+        ),
       ),
     staleTime: 60_000,
   });
@@ -226,16 +248,16 @@ export function DelegationsPage() {
     },
     [activeTab],
   );
-  const handleReceivedPageChange = useCallback(
-    (page: number) => {
-      updateParams({
-        [DELEGATION_URL_KEYS.received.page]: page === 1 ? null : String(page),
-      });
-    },
-    [updateParams],
-  );
+  const handleReceivedPrevious = useCallback(() => {
+    setReceivedCursors((current) => current.slice(0, -1));
+  }, []);
+  const handleReceivedNext = useCallback(() => {
+    const cursor = receivedPage?.pagination.nextCursor;
+    if (cursor) setReceivedCursors((current) => [...current, cursor]);
+  }, [receivedPage?.pagination.nextCursor]);
   const handleReceivedLimitChange = useCallback(
     (limit: number) => {
+      setReceivedCursors([undefined]);
       updateParams({
         [DELEGATION_URL_KEYS.received.size]:
           limit === 20 ? null : String(limit),
@@ -244,16 +266,16 @@ export function DelegationsPage() {
     },
     [updateParams],
   );
-  const handleGrantedPageChange = useCallback(
-    (page: number) => {
-      updateParams({
-        [DELEGATION_URL_KEYS.granted.page]: page === 1 ? null : String(page),
-      });
-    },
-    [updateParams],
-  );
+  const handleGrantedPrevious = useCallback(() => {
+    setGrantedCursors((current) => current.slice(0, -1));
+  }, []);
+  const handleGrantedNext = useCallback(() => {
+    const cursor = grantedPage?.pagination.nextCursor;
+    if (cursor) setGrantedCursors((current) => [...current, cursor]);
+  }, [grantedPage?.pagination.nextCursor]);
   const handleGrantedLimitChange = useCallback(
     (limit: number) => {
+      setGrantedCursors([undefined]);
       updateParams({
         [DELEGATION_URL_KEYS.granted.size]: limit === 20 ? null : String(limit),
         [DELEGATION_URL_KEYS.granted.page]: null,
@@ -276,24 +298,17 @@ export function DelegationsPage() {
     void queryClient.invalidateQueries({ queryKey: queryKeys.delegations.all });
   }, [queryClient]);
 
-  const receivedTotalPages = receivedPage?.pagination.totalPages;
-  const grantedTotalPages = grantedPage?.pagination.totalPages;
-
   const received = receivedPage?.data ?? [];
   const granted = grantedPage?.data ?? [];
-  const receivedCount = receivedPage?.pagination.total ?? 0;
-  const grantedCount = grantedPage?.pagination.total ?? 0;
   const receivedPagination = receivedPage?.pagination ?? {
-    page: receivedState.page,
     limit: receivedState.limit,
-    total: 0,
-    totalPages: 0,
+    nextCursor: null,
+    hasMore: false,
   };
   const grantedPagination = grantedPage?.pagination ?? {
-    page: grantedState.page,
     limit: grantedState.limit,
-    total: 0,
-    totalPages: 0,
+    nextCursor: null,
+    hasMore: false,
   };
   const activeSearch =
     activeTab === "received" ? receivedSearchInput : grantedSearchInput;
@@ -307,26 +322,6 @@ export function DelegationsPage() {
       (revokeTarget.permissions.length === 1 ? "" : "s") +
       ". Existing audit history is preserved."
     : "";
-
-  useEffect(() => {
-    if (receivedTotalPages === undefined) return;
-    const lastPage = Math.max(1, receivedTotalPages);
-    if (receivedState.page <= lastPage) return;
-    updateParams({
-      [DELEGATION_URL_KEYS.received.page]:
-        lastPage === 1 ? null : String(lastPage),
-    });
-  }, [receivedState.page, receivedTotalPages, updateParams]);
-
-  useEffect(() => {
-    if (grantedTotalPages === undefined) return;
-    const lastPage = Math.max(1, grantedTotalPages);
-    if (grantedState.page <= lastPage) return;
-    updateParams({
-      [DELEGATION_URL_KEYS.granted.page]:
-        lastPage === 1 ? null : String(lastPage),
-    });
-  }, [grantedState.page, grantedTotalPages, updateParams]);
 
   return (
     <Tabs
@@ -359,19 +354,9 @@ export function DelegationsPage() {
             <TabsList className="w-full shrink-0 md:w-auto">
               <TabsTrigger value="received" className="gap-1.5 truncate">
                 Received
-                {!loadingReceived && receivedCount > 0 ? (
-                  <span className="tabular-nums text-xs opacity-70">
-                    {receivedCount}
-                  </span>
-                ) : null}
               </TabsTrigger>
               <TabsTrigger value="granted" className="gap-1.5 truncate">
                 Granted
-                {!loadingGiven && grantedCount > 0 ? (
-                  <span className="tabular-nums text-xs opacity-70">
-                    {grantedCount}
-                  </span>
-                ) : null}
               </TabsTrigger>
             </TabsList>
             <SearchInput
@@ -392,10 +377,12 @@ export function DelegationsPage() {
               delegations={received}
               memberMap={memberMap}
               listState={receivedState}
+              page={receivedCursors.length}
               pagination={receivedPagination}
               nameField="delegatorId"
               onRetry={handleRetryReceived}
-              onPageChange={handleReceivedPageChange}
+              onPrevious={handleReceivedPrevious}
+              onNext={handleReceivedNext}
               onLimitChange={handleReceivedLimitChange}
               emptyTitle={
                 receivedState.search
@@ -419,10 +406,12 @@ export function DelegationsPage() {
               delegations={granted}
               memberMap={memberMap}
               listState={grantedState}
+              page={grantedCursors.length}
               pagination={grantedPagination}
               nameField="delegateeId"
               onRetry={handleRetryGiven}
-              onPageChange={handleGrantedPageChange}
+              onPrevious={handleGrantedPrevious}
+              onNext={handleGrantedNext}
               onLimitChange={handleGrantedLimitChange}
               emptyTitle={
                 grantedState.search

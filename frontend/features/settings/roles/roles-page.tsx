@@ -71,7 +71,8 @@ export function RolesPage() {
     search,
     serverSearch,
     setSearch,
-    setPage,
+    nextPage,
+    previousPage,
     setPageSize,
     query,
   } = useRoleListState();
@@ -92,14 +93,10 @@ export function RolesPage() {
   const [renameTarget, setRenameTarget] = useState<Role | null>(null);
   const roles = rolesPage?.data ?? EMPTY_ROLE_ROWS;
   const pagination = rolesPage?.pagination ?? {
-    page,
     limit,
-    total: 0,
-    totalPages: 0,
+    nextCursor: null,
+    hasMore: false,
   };
-  const lastPage = Math.max(1, pagination.totalPages);
-  const isOutOfRange =
-    rolesPage !== undefined && page > lastPage;
   const selectedRole =
     roles.find((role) => role.id === selectedRoleId) ?? null;
 
@@ -138,11 +135,6 @@ export function RolesPage() {
   }, [deleteRole, deleteTarget, selectedRoleId]);
 
   const deleteEnabled = deleteConfirmation === (deleteTarget?.name ?? "");
-
-  useEffect(() => {
-    if (!isOutOfRange) return;
-    setPage(lastPage);
-  }, [isOutOfRange, lastPage, setPage]);
 
   useEffect(() => {
     if (selectedRoleId === null || isLoading || rolesPage === undefined) return;
@@ -234,11 +226,12 @@ export function RolesPage() {
         <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-hidden lg:grid-cols-[320px_minmax(0,1fr)] lg:items-stretch">
           <div className="min-h-0 max-lg:h-[min(420px,50dvh)] lg:h-full">
             <RolesListPanel
-              isLoading={isLoading || isOutOfRange}
+              isLoading={isLoading}
               rolesError={rolesError}
               rolesQueryError={rolesQueryError}
               roles={roles}
               search={serverSearch}
+              page={page}
               pagination={pagination}
               selectedRoleId={selectedRoleId}
               onRetry={handleRetryRoles}
@@ -246,7 +239,8 @@ export function RolesPage() {
               onDelete={handleOpenDelete}
               onRename={setRenameTarget}
               onClearSearch={handleClearSearch}
-              onPageChange={setPage}
+              onPrevious={previousPage}
+              onNext={() => nextPage(pagination.nextCursor)}
               onPageSizeChange={setPageSize}
             />
           </div>

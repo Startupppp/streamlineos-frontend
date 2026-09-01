@@ -25,10 +25,9 @@ export interface SimulationCandidate {
 interface SimulationCandidatesResult {
   data: SimulationCandidate[];
   pagination: {
-    page: number;
     limit: number;
-    total: number;
-    totalPages: number;
+    nextCursor: string | null;
+    hasMore: boolean;
   };
 }
 
@@ -36,7 +35,7 @@ export function useSimulationCandidates(search: string) {
   const { data: session } = useSession();
   const orgId = session?.orgId ?? "";
   const canManageRbac = useCan("settings:rbac:manage");
-  const params = { page: 1, limit: 100, ...(search ? { search } : {}) };
+  const params = { limit: 100, ...(search ? { search } : {}) };
   return useQuery<SimulationCandidatesResult, Error>({
     queryKey: queryKeys.access.simulationCandidates(params),
     queryFn: () =>

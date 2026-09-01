@@ -140,7 +140,7 @@ export interface TeamAttendanceEntry {
 }
 
 export interface TeamAttendanceStatusQuery {
-  page?: number;
+  cursor?: string;
   limit?: number;
   search?: string;
   status?: TeamAttendanceEntry["status"];
@@ -151,9 +151,9 @@ export interface TeamAttendanceStatusResponse {
   data: TeamAttendanceEntry[];
   counts: Record<TeamAttendanceEntry["status"], number>;
   pagination: {
-    page: number;
     limit: number;
+    nextCursor: string | null;
+    hasMore: boolean;
     total: number;
-    totalPages: number;
   };
 }

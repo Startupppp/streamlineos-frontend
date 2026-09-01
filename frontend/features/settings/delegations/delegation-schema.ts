@@ -21,10 +21,9 @@ export interface Delegation {
 export interface DelegationPage {
   data: Delegation[];
   pagination: {
-    page: number;
     limit: number;
-    total: number;
-    totalPages: number;
+    nextCursor: string | null;
+    hasMore: boolean;
   };
 }
 

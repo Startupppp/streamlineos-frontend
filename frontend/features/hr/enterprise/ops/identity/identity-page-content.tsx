@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/ui/empty-state";
 import { RefreshCw } from "lucide-react";
@@ -48,14 +49,21 @@ const TRIGGER_COLORS: Record<ProvisioningTrigger, string> = {
 
 export function IdentityPageContent() {
   const canManage = useCan("hr:identity:manage");
-  const [page, setPage] = useState(1);
+  const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
+  const page = cursorHistory.length;
+  const cursor = cursorHistory.at(-1);
   const [showCreate, setShowCreate] = useState(false);
   const [showTemplate, setShowTemplate] = useState(false);
   const [activeTab, setActiveTab] = useState("provisioning");
 
   const qc = useQueryClient();
 
-  const { data, isLoading, isError: provisioningError } = useAccessProvisioning({ page });
+  const {
+    data,
+    isLoading,
+    isFetching,
+    isError: provisioningError,
+  } = useAccessProvisioning({ cursor });
   const { data: templates, isLoading: templatesLoading, isError: templatesError } = useProvisioningTemplates();
   const deleteTemplate = useDeleteProvisioningTemplate();
   const { data: membersData } = useOrgMembers(1, 200);
@@ -169,6 +177,15 @@ export function IdentityPageContent() {
     },
   ];
 
+  const handlePreviousPage = useCallback(() => {
+    setCursorHistory((history) => history.length > 1 ? history.slice(0, -1) : history);
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    const nextCursor = data?.pagination.nextCursor;
+    if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
+  }, [data?.pagination.nextCursor]);
+
   if (pageError) {
     return (
       <PageWrapper
@@ -227,37 +244,37 @@ export function IdentityPageContent() {
                 ))}
               </div>
             ) : (
-              <DataTable
-                className="flex-1 min-h-0"
-                data={data?.data ?? []}
-                columns={provisioningColumns}
-                getRowKey={(r) => r.id}
-                isLoading={false}
-                emptyState={
-                  <EmptyState
-                    illustrationPreset="permissions"
-                    title="No provisioning records"
-                    description="Create a provisioning record to grant or revoke system access for joiners, movers, and leavers."
-                    action={
-                      canManage
-                        ? { label: "Provision", onClick: () => setShowCreate(true) }
-                        : undefined
-                    }
-                    compact
-                  />
-                }
-                pagination={
-                  data
-                    ? {
-                        mode: "server",
-                        page,
-                        pageSize: data.pagination.limit,
-                        total: data.pagination.total,
-                        onPageChange: setPage,
+              <div className="flex min-h-0 flex-1 flex-col gap-3">
+                <DataTable
+                  className="flex-1 min-h-0"
+                  data={data?.data ?? []}
+                  columns={provisioningColumns}
+                  getRowKey={(r) => r.id}
+                  isLoading={false}
+                  emptyState={
+                    <EmptyState
+                      illustrationPreset="permissions"
+                      title="No provisioning records"
+                      description="Create a provisioning record to grant or revoke system access for joiners, movers, and leavers."
+                      action={
+                        canManage
+                          ? { label: "Provision", onClick: () => setShowCreate(true) }
+                          : undefined
                       }
-                    : undefined
-                }
-              />
+                      compact
+                    />
+                  }
+                />
+                {data && (page > 1 || data.pagination.hasMore) ? (
+                  <CursorPageControls
+                    page={page}
+                    hasNext={data.pagination.hasMore}
+                    disabled={isFetching}
+                    onPrevious={handlePreviousPage}
+                    onNext={handleNextPage}
+                  />
+                ) : null}
+              </div>
             )}
           </TabsContent>
 

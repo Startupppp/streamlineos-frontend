@@ -6,7 +6,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
   Ticket,
-  PaginatedResponse,
+  CursorPageResponse,
   CreateTicketInput,
   UpdateTicketInput,
   RankTicketInput,
@@ -26,7 +26,7 @@ interface UpdateTicketContext {
   previousDetail: ProjectWithDetails | null | undefined;
   previousTicket: Ticket | null | undefined;
   previousBoard: Ticket[] | undefined;
-  listSnapshots: [readonly unknown[], PaginatedResponse<Ticket> | undefined][];
+  listSnapshots: [readonly unknown[], CursorPageResponse<Ticket> | undefined][];
 }
 
 function resolveAssigneeId(input: UpdateTicketInput): string | null | undefined {
@@ -132,7 +132,7 @@ export function useUpdateTicket(
       const previousTicket = queryClient.getQueryData<Ticket | null>(ticketKey);
       const previousBoard = queryClient.getQueryData<Ticket[]>(boardKey);
       const members = previousDetail?.members ?? [];
-      const listSnapshots = queryClient.getQueriesData<PaginatedResponse<Ticket>>({
+      const listSnapshots = queryClient.getQueriesData<CursorPageResponse<Ticket>>({
         queryKey: queryKeys.projects.tickets({ projectId }),
       });
 
@@ -163,7 +163,7 @@ export function useUpdateTicket(
       }
       for (const [key, page] of listSnapshots) {
         if (!page?.data) continue;
-        queryClient.setQueryData<PaginatedResponse<Ticket>>(key, {
+        queryClient.setQueryData<CursorPageResponse<Ticket>>(key, {
           ...page,
           data: page.data.map((t) =>
             t.id === variables.ticketId ? applyTicketPatch(t, variables, members) : t,

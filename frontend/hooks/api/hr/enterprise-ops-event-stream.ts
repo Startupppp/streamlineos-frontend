@@ -74,13 +74,17 @@ export function useExportHrEvents() {
   return useMutation({
     mutationKey: ["hr-event-stream", "export"],
     mutationFn: (body: {
-      page?: number;
+      cursor?: string;
       limit?: number;
       eventType?: string;
       entityType?: string;
       fromDate?: string;
       toDate?: string;
-    }) => apiClient.post<{ exportedAt: string; data: HrEvent[]; pagination: unknown }>(`${BASE}/export`, body),
+    }) => apiClient.post<{
+      exportedAt: string;
+      data: HrEvent[];
+      pagination: PaginatedResult<HrEvent>["pagination"];
+    }>(`${BASE}/export`, body),
     onError: (e) => toast.error(getErrorMessage(e)),
   });
 }

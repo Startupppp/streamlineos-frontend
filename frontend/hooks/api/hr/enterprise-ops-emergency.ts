@@ -34,7 +34,7 @@ export interface EmergencyResponse {
 
 interface PaginatedResult<T> {
   data: T[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
 const BASE = "/hr/enterprise/ops/emergency";
@@ -46,7 +46,7 @@ const emergencyKeys = {
   status: (id: string) => ["streamlineos", "hr-emergency", "status", id] as const,
 };
 
-export function useEmergencyEvents(params: { page?: number; status?: EmergencyEventStatus } = {}) {
+export function useEmergencyEvents(params: { cursor?: string; status?: EmergencyEventStatus } = {}) {
   return useQuery({
     queryKey: emergencyKeys.list(params as Record<string, unknown>),
     queryFn: () => apiClient.get<PaginatedResult<EmergencyEvent>>(`${BASE}/events`, params as Record<string, unknown>),

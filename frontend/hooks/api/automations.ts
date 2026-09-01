@@ -128,11 +128,11 @@ interface UpdateAutomationInput {
 
 export interface PaginatedAutomations {
   data: AutomationRule[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
 interface AutomationListParams {
-  page?: number;
+  cursor?: string;
   limit?: number;
 }
 
@@ -142,7 +142,7 @@ export function useAutomations(params?: AutomationListParams) {
     queryKey: [...queryKeys.automations.all, "list", params] as const,
     queryFn: () => {
       const search = new URLSearchParams();
-      if (params?.page) search.set("page", String(params.page));
+      if (params?.cursor) search.set("cursor", params.cursor);
       if (params?.limit) search.set("limit", String(params.limit));
       const qs = search.toString();
       return apiClient.get<PaginatedAutomations>(`/settings/automations${qs ? `?${qs}` : ""}`);

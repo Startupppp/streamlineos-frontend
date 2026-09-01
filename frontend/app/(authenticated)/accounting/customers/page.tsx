@@ -8,6 +8,7 @@ import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { SearchInput } from "@/components/ui/search-input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTeamIllustration } from "@/components/illustrations";
@@ -76,21 +77,45 @@ const columns: DataTableColumn<CustomerOutstanding>[] = [
 export default function CustomerLedgersPage() {
   const [search, setSearch] = useState<string>("");
   const [onlyOutstanding, setOnlyOutstanding] = useState<boolean>(true);
+  const [cursors, setCursors] = useState<(string | null)[]>([null]);
+  const [cursorIndex, setCursorIndex] = useState(0);
 
   const debouncedSearch = useDebouncedValue(search, 300);
 
   const query = useCustomersOutstanding({
     limit: 100,
+    cursor: cursors[cursorIndex] ?? undefined,
     q: debouncedSearch.trim() || undefined,
     onlyOutstanding,
   });
 
+  const hasMore = query.data?.pagination.hasMore ?? false;
+
+  function resetCursors(): void {
+    setCursors([null]);
+    setCursorIndex(0);
+  }
+
   function handleSearchChange(value: string) {
     setSearch(value);
+    resetCursors();
   }
 
   function handleOnlyOutstandingToggle(checked: boolean | "indeterminate"): void {
     setOnlyOutstanding(checked === true);
+    resetCursors();
+  }
+
+  function handlePreviousPage(): void {
+    setCursorIndex((previous) => Math.max(0, previous - 1));
+  }
+
+  function handleNextPage(): void {
+    const nextCursor = query.data?.pagination.nextCursor;
+    if (!nextCursor) return;
+
+    setCursors((previous) => [...previous.slice(0, cursorIndex + 1), nextCursor]);
+    setCursorIndex((previous) => previous + 1);
   }
 
   function handleRetry(): void {
@@ -127,22 +152,34 @@ export default function CustomerLedgersPage() {
             onRetry={handleRetry}
           />
         ) : (
-          <DataTable<CustomerOutstanding>
-            className="flex-1 min-h-0"
-            data={items}
-            columns={columns}
-            getRowKey={(row) => row.clientId}
-            isLoading={query.isLoading}
-            pagination={{ pageSize: 100 }}
-            emptyState={
-              <EmptyState
-                illustration={<EmptyTeamIllustration />}
-                title="No customers found"
-                description={emptyDescription}
-                compact
+          <>
+            <DataTable<CustomerOutstanding>
+              className="flex-1 min-h-0"
+              data={items}
+              columns={columns}
+              getRowKey={(row) => row.clientId}
+              isLoading={query.isLoading}
+              pagination={{ pageSize: 100 }}
+              emptyState={
+                <EmptyState
+                  illustration={<EmptyTeamIllustration />}
+                  title="No customers found"
+                  description={emptyDescription}
+                  compact
+                />
+              }
+            />
+            {(cursorIndex > 0 || hasMore) ? (
+              <CursorPageControls
+                page={cursorIndex + 1}
+                hasNext={hasMore}
+                disabled={query.isFetching}
+                onPrevious={handlePreviousPage}
+                onNext={handleNextPage}
+                className="mt-2"
               />
-            }
-          />
+            ) : null}
+          </>
         )}
       </div>
     </PageWrapper>

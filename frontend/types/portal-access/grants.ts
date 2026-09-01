@@ -37,10 +37,9 @@ export interface ProjectClientGrant {
 }
 
 export interface PaginationMeta {
-  page: number;
   limit: number;
-  total: number;
-  totalPages: number;
+  nextCursor: string | null;
+  hasMore: boolean;
 }
 
 export interface PortalMembershipsPage {

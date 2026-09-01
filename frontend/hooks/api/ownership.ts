@@ -22,10 +22,9 @@ export interface OrgTransferRecord {
 interface OrgTransfersResponse {
   data: OrgTransferRecord[];
   pagination: {
-    page: number;
     limit: number;
-    total: number;
-    totalPages: number;
+    nextCursor: string | null;
+    hasMore: boolean;
   };
 }
 

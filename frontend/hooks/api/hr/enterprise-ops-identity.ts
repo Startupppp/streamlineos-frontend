@@ -43,7 +43,7 @@ export interface ExitVerificationResult {
 
 interface PaginatedResult<T> {
   data: T[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
 const BASE = "/hr/enterprise/ops/identity";
@@ -56,7 +56,7 @@ const identityKeys = {
 };
 
 export function useAccessProvisioning(params: {
-  page?: number;
+  cursor?: string;
   userId?: string;
   triggeredBy?: ProvisioningTrigger;
   status?: ProvisioningStatus;

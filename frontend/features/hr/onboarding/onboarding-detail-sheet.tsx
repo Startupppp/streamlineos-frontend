@@ -37,7 +37,7 @@ import { UploadSheet, ACCEPTED_EXTENSIONS, validateDocumentFile } from "./onboar
 
 interface OnboardingDocsResponse {
   data: OnboardingDoc[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
 function useMyOnboardingDocs() {

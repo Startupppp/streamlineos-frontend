@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DataTable } from "@/components/ui/data-table";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -105,17 +106,19 @@ export function SafetyPageContent() {
   const [status, setStatus] = useState<IncidentStatus | "">("");
   const [type, setType] = useState<IncidentType | "">("");
   const [severity, setSeverity] = useState<IncidentSeverity | "">("");
-  const [page, setPage] = useState(1);
+  const [cursors, setCursors] = useState<(string | null)[]>([null]);
+  const [cursorIndex, setCursorIndex] = useState(0);
   const [showReport, setShowReport] = useState(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>("incidents");
 
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
-    setPage(1);
+    setCursors([null]);
+    setCursorIndex(0);
   }, []);
 
-  const { data, isLoading } = useSafetyIncidents({
-    page,
+  const { data, isLoading, isFetching } = useSafetyIncidents({
+    cursor: cursors[cursorIndex] ?? undefined,
     search: debouncedSearch.trim() || undefined,
     status: status || undefined,
     type: type || undefined,
@@ -171,7 +174,7 @@ export function SafetyPageContent() {
       />
       <Select
         value={status || SENTINEL}
-        onValueChange={(v) => { setStatus(v === SENTINEL ? "" : (v as IncidentStatus)); setPage(1); }}
+        onValueChange={(v) => { setStatus(v === SENTINEL ? "" : (v as IncidentStatus)); setCursors([null]); setCursorIndex(0); }}
       >
         <SelectTrigger
           aria-label="Filter by status"
@@ -187,7 +190,7 @@ export function SafetyPageContent() {
       </Select>
       <Select
         value={type || SENTINEL}
-        onValueChange={(v) => { setType(v === SENTINEL ? "" : (v as IncidentType)); setPage(1); }}
+        onValueChange={(v) => { setType(v === SENTINEL ? "" : (v as IncidentType)); setCursors([null]); setCursorIndex(0); }}
       >
         <SelectTrigger
           aria-label="Filter by type"
@@ -203,7 +206,7 @@ export function SafetyPageContent() {
       </Select>
       <Select
         value={severity || SENTINEL}
-        onValueChange={(v) => { setSeverity(v === SENTINEL ? "" : (v as IncidentSeverity)); setPage(1); }}
+        onValueChange={(v) => { setSeverity(v === SENTINEL ? "" : (v as IncidentSeverity)); setCursors([null]); setCursorIndex(0); }}
       >
         <SelectTrigger
           aria-label="Filter by severity"
@@ -261,22 +264,41 @@ export function SafetyPageContent() {
         </div>
 
         {activeTab === "incidents" && (
-          <DataTable
-            className="flex-1 min-h-0"
-            columns={columns}
-            data={data?.data ?? []}
-            isLoading={isLoading}
-            getRowKey={(row) => row.id}
-            emptyState={
-              <EmptyState
-                className="border-0 bg-transparent min-h-[40vh]"
-                illustration={<StateIllustration preset="alert" className="h-28 w-28" />}
-                title="No safety incidents reported"
-                description="Report workplace incidents, accidents, near-misses, and hazards here."
-                action={{ label: "Report Incident", onClick: () => setShowReport(true) }}
+          <div className="flex min-h-0 flex-1 flex-col gap-2">
+            <DataTable
+              className="flex-1 min-h-0"
+              columns={columns}
+              data={data?.data ?? []}
+              isLoading={isLoading}
+              getRowKey={(row) => row.id}
+              emptyState={
+                <EmptyState
+                  className="border-0 bg-transparent min-h-[40vh]"
+                  illustration={<StateIllustration preset="alert" className="h-28 w-28" />}
+                  title="No safety incidents reported"
+                  description="Report workplace incidents, accidents, near-misses, and hazards here."
+                  action={{ label: "Report Incident", onClick: () => setShowReport(true) }}
+                />
+              }
+            />
+            {cursorIndex > 0 || data?.pagination.hasMore ? (
+              <CursorPageControls
+                page={cursorIndex + 1}
+                hasNext={data?.pagination.hasMore ?? false}
+                disabled={isFetching}
+                onPrevious={() => setCursorIndex((current) => Math.max(0, current - 1))}
+                onNext={() => {
+                  const nextCursor = data?.pagination.nextCursor;
+                  if (!nextCursor) return;
+                  setCursors((current) => [
+                    ...current.slice(0, cursorIndex + 1),
+                    nextCursor,
+                  ]);
+                  setCursorIndex((current) => current + 1);
+                }}
               />
-            }
-          />
+            ) : null}
+          </div>
         )}
 
         {activeTab === "wellness" && (

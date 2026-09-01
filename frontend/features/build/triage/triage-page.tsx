@@ -150,14 +150,15 @@ export function TriagePage({ projectId }: TriagePageProps) {
     );
   }
 
-  const total = ticketPage?.total ?? 0;
+  const visibleCount = tickets.length;
+  const hasMore = ticketPage?.pagination.hasMore ?? false;
 
   return (
     <PageWrapper
       title="Triage"
       subtitle={
-        total > 0
-          ? `${total} issue${total !== 1 ? "s" : ""} awaiting triage`
+        visibleCount > 0
+          ? `${visibleCount}${hasMore ? "+" : ""} issue${visibleCount !== 1 ? "s" : ""} awaiting triage`
           : "Review and process incoming issues"
       }
     >
@@ -187,9 +188,9 @@ export function TriagePage({ projectId }: TriagePageProps) {
                 />
               ))}
             </PmStaggerList>
-            {total > PAGE_LIMIT ? (
+            {hasMore ? (
               <p className="mt-4 text-center text-xs text-muted-foreground">
-                Showing first {PAGE_LIMIT} of {total} issues
+                Showing the first {PAGE_LIMIT} issues
               </p>
             ) : null}
           </PmSection>

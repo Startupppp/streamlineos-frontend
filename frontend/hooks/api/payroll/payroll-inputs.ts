@@ -66,10 +66,9 @@ export interface PayrollAdjustment {
 }
 
 interface Pagination {
-  page: number;
   limit: number;
-  total: number;
-  totalPages: number;
+  nextCursor: string | null;
+  hasMore: boolean;
 }
 
 interface PaginatedPeriods {
@@ -88,12 +87,12 @@ interface PaginatedAdjustments {
 }
 
 interface SectionParams {
-  page?: number;
+  cursor?: string;
   limit?: number;
   preview?: boolean;
 }
 
-export function usePayrollInputPeriods(params?: { page?: number; limit?: number; status?: HrPayrollInputStatus }) {
+export function usePayrollInputPeriods(params?: { cursor?: string; limit?: number; status?: HrPayrollInputStatus }) {
   const canView = useCan("hr:payroll:view");
   return useQuery({
     queryKey: queryKeys.hrPayrollInputs.periods(params as Record<string, unknown> | undefined),
@@ -167,7 +166,7 @@ function makeSectionHook(section: string) {
   return function useSectionSnapshot(periodId: number, params?: SectionParams, enabled = true) {
     const canView = useCan("hr:payroll:view");
     const queryParams = {
-      ...(params?.page !== undefined && { page: params.page }),
+      ...(params?.cursor !== undefined && { cursor: params.cursor }),
       ...(params?.limit !== undefined && { limit: params.limit }),
       ...(params?.preview && { preview: "true" }),
     };
@@ -186,7 +185,7 @@ export const useLeaveSnapshot = makeSectionHook("leaves");
 export const useOvertimeSnapshot = makeSectionHook("overtime");
 export const useReimbursementSnapshot = makeSectionHook("reimbursements");
 
-export function usePayrollAdjustments(periodId: number, params?: { page?: number; limit?: number }) {
+export function usePayrollAdjustments(periodId: number, params?: { cursor?: string; limit?: number }) {
   const canView = useCan("hr:payroll:view");
   return useQuery({
     queryKey: queryKeys.hrPayrollInputs.adjustments(periodId, params as Record<string, unknown> | undefined),

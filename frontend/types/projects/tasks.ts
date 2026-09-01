@@ -209,7 +209,7 @@ export interface CreateLabelInput {
 }
 
 export interface TicketFilters {
-  page?: number;
+  cursor?: string;
   limit?: number;
   search?: string;
   status?: string;
@@ -226,8 +226,7 @@ export interface TicketFilters {
   orderDir?: "asc" | "desc";
 }
 
-export interface AllWorkFilters extends Omit<TicketFilters, "page"> {
-  cursor?: string;
+export interface AllWorkFilters extends TicketFilters {
   projectIds?: string;
   excludeStatus?: string;
   scope?: "all" | "mine" | "created" | "subscribed";

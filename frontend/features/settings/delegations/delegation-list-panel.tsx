@@ -3,7 +3,7 @@
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
-import { DataTablePagination } from "@/components/shared/data-table-pagination";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { DELEGATION_PAGE_SIZE_OPTIONS } from "./delegation-list-state";
 import { DelegationSkeletons, DelegationRow } from "./delegation-row";
@@ -15,15 +15,17 @@ export interface DelegationListPanelProps {
   queryError: unknown;
   delegations: Delegation[];
   memberMap: Map<string, string>;
-  listState: { search: string; page: number; limit: number };
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  listState: { search: string; limit: number };
+  page: number;
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
   nameField: "delegatorId" | "delegateeId";
   errorTitle: string;
   emptyTitle: string;
   emptyDescription: string;
   emptyAction?: { label: string; onClick: () => void };
   onRetry: () => void;
-  onPageChange: (page: number) => void;
+  onPrevious: () => void;
+  onNext: () => void;
   onLimitChange: (limit: number) => void;
   revokeTarget?: Delegation | null;
   revokePending?: boolean;
@@ -37,6 +39,7 @@ export function DelegationListPanel({
   delegations,
   memberMap,
   listState,
+  page,
   pagination,
   nameField,
   errorTitle,
@@ -44,7 +47,8 @@ export function DelegationListPanel({
   emptyDescription,
   emptyAction,
   onRetry,
-  onPageChange,
+  onPrevious,
+  onNext,
   onLimitChange,
   revokeTarget,
   revokePending,
@@ -101,14 +105,14 @@ export function DelegationListPanel({
         </div>
       </div>
       <div className="mt-auto shrink-0">
-        <DataTablePagination
-          page={pagination.page}
-          totalPages={pagination.totalPages}
-          total={pagination.total}
-          limit={pagination.limit}
-          onPageChange={onPageChange}
-          onLimitChange={onLimitChange}
-          pageSizeOptions={DELEGATION_PAGE_SIZE_OPTIONS}
+        <CursorPageControls
+          page={page}
+          hasNext={pagination.hasMore}
+          onPrevious={onPrevious}
+          onNext={onNext}
+          pageSize={pagination.limit}
+          onPageSizeChange={onLimitChange}
+          pageSizeOptions={[...DELEGATION_PAGE_SIZE_OPTIONS]}
         />
       </div>
     </div>

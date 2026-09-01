@@ -4,7 +4,6 @@ import {
   useQuery,
   useMutation,
   useQueryClient,
-  keepPreviousData,
 } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -34,22 +33,20 @@ export interface CreateUserApiTokenResponse extends UserApiToken {
 export interface UserApiTokenPage {
   data: UserApiToken[];
   pagination: {
-    page: number;
     limit: number;
-    total: number;
-    totalPages: number;
+    nextCursor: string | null;
+    hasMore: boolean;
   };
 }
 
-export function useUserApiTokens(params: { page: number; limit: number }) {
+export function useUserApiTokens(params: { cursor?: string; limit: number }) {
   return useQuery({
     queryKey: queryKeys.userApiTokens.list(params),
     queryFn: () =>
       apiClient.get<UserApiTokenPage>("/me/api-tokens", {
-        page: String(params.page),
+        ...(params.cursor ? { cursor: params.cursor } : {}),
         limit: String(params.limit),
       }),
-    placeholderData: keepPreviousData,
     staleTime: 30_000,
   });
 }

@@ -11,6 +11,7 @@ import { CONTENT_FILL_PANEL, FILTER_SELECT_TRIGGER } from "@/components/ui/conte
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import {
   Select,
   SelectContent,
@@ -49,7 +50,13 @@ const CLAIM_STATUS_META: Record<
 
 function MyBenefitsTab() {
   const { data, isLoading, isError, refetch } = useMyBenefits();
-  const { data: allPlans } = useBenefitPlans({ status: "active" });
+  const [planCursors, setPlanCursors] = useState<(string | null)[]>([null]);
+  const [planCursorIndex, setPlanCursorIndex] = useState(0);
+  const { data: allPlans, isFetching: plansFetching } = useBenefitPlans({
+    status: "active",
+    cursor: planCursors[planCursorIndex] ?? undefined,
+    limit: 20,
+  });
   const enroll = useEnroll();
   const waive = useWaive();
 
@@ -129,6 +136,26 @@ function MyBenefitsTab() {
           ))}
         </div>
       )}
+
+      {planCursorIndex > 0 || allPlans?.pagination.hasMore ? (
+        <CursorPageControls
+          page={planCursorIndex + 1}
+          hasNext={allPlans?.pagination.hasMore ?? false}
+          disabled={plansFetching}
+          onPrevious={() =>
+            setPlanCursorIndex((current) => Math.max(0, current - 1))
+          }
+          onNext={() => {
+            const nextCursor = allPlans?.pagination.nextCursor;
+            if (!nextCursor) return;
+            setPlanCursors((current) => [
+              ...current.slice(0, planCursorIndex + 1),
+              nextCursor,
+            ]);
+            setPlanCursorIndex((current) => current + 1);
+          }}
+        />
+      ) : null}
 
       <DependentsManager />
     </div>
@@ -298,7 +325,11 @@ function buildClaimColumns(
 }
 
 function PlansAdminTab({ canManage }: { canManage: boolean }) {
-  const { data, isLoading, isError, refetch } = useBenefitPlans();
+  const [cursors, setCursors] = useState<(string | null)[]>([null]);
+  const [cursorIndex, setCursorIndex] = useState(0);
+  const { data, isLoading, isFetching, isError, refetch } = useBenefitPlans({
+    cursor: cursors[cursorIndex] ?? undefined,
+  });
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editPlan, setEditPlan] = useState<BenefitPlan | undefined>(undefined);
 
@@ -360,6 +391,24 @@ function PlansAdminTab({ canManage }: { canManage: boolean }) {
         }
       />
 
+      {cursorIndex > 0 || data?.pagination.hasMore ? (
+        <CursorPageControls
+          page={cursorIndex + 1}
+          hasNext={data?.pagination.hasMore ?? false}
+          disabled={isFetching}
+          onPrevious={() => setCursorIndex((current) => Math.max(0, current - 1))}
+          onNext={() => {
+            const nextCursor = data?.pagination.nextCursor;
+            if (!nextCursor) return;
+            setCursors((current) => [
+              ...current.slice(0, cursorIndex + 1),
+              nextCursor,
+            ]);
+            setCursorIndex((current) => current + 1);
+          }}
+        />
+      ) : null}
+
       <PlanUpsertSheet open={sheetOpen} onOpenChange={handleSheetOpenChange} plan={editPlan} />
     </div>
   );
@@ -367,13 +416,22 @@ function PlansAdminTab({ canManage }: { canManage: boolean }) {
 
 function ClaimsDashboardTab({ canManage }: { canManage: boolean }) {
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [cursors, setCursors] = useState<(string | null)[]>([null]);
+  const [cursorIndex, setCursorIndex] = useState(0);
   const [reviewClaim, setReviewClaim] = useState<InsuranceClaim | null>(null);
 
-  const query = statusFilter !== "all" ? { status: statusFilter as InsuranceClaim["status"] } : {};
-  const { data, isLoading, isError, refetch } = useInsuranceClaims(query);
+  const query = {
+    ...(statusFilter !== "all"
+      ? { status: statusFilter as InsuranceClaim["status"] }
+      : {}),
+    cursor: cursors[cursorIndex] ?? undefined,
+  };
+  const { data, isLoading, isFetching, isError, refetch } = useInsuranceClaims(query);
 
   const handleStatusFilterChange = useCallback((v: string) => {
     setStatusFilter(v);
+    setCursors([null]);
+    setCursorIndex(0);
   }, []);
 
   const handleReviewClaim = useCallback((claim: InsuranceClaim) => {
@@ -432,6 +490,24 @@ function ClaimsDashboardTab({ canManage }: { canManage: boolean }) {
           />
         }
       />
+
+      {cursorIndex > 0 || data?.pagination.hasMore ? (
+        <CursorPageControls
+          page={cursorIndex + 1}
+          hasNext={data?.pagination.hasMore ?? false}
+          disabled={isFetching}
+          onPrevious={() => setCursorIndex((current) => Math.max(0, current - 1))}
+          onNext={() => {
+            const nextCursor = data?.pagination.nextCursor;
+            if (!nextCursor) return;
+            setCursors((current) => [
+              ...current.slice(0, cursorIndex + 1),
+              nextCursor,
+            ]);
+            setCursorIndex((current) => current + 1);
+          }}
+        />
+      ) : null}
 
       <ClaimReviewSheet
         open={reviewClaim !== null}

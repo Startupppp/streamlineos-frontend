@@ -13,7 +13,7 @@ import type {
 
 export const useUserLoginHistory = (
   userId: string,
-  params?: { page?: number; limit?: number; success?: boolean },
+  params?: { cursor?: string; limit?: number; success?: boolean },
   options?: Omit<UseQueryOptions<LoginHistoryResponse, Error>, "queryKey" | "queryFn">,
 ) => {
   const canManage = useCan("settings:organization:manage");
@@ -24,7 +24,7 @@ export const useUserLoginHistory = (
     ),
     queryFn: () =>
       apiClient.get<LoginHistoryResponse>(`/users/${userId}/login-history`, {
-        ...(params?.page ? { page: String(params.page) } : {}),
+        ...(params?.cursor ? { cursor: params.cursor } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
         ...(params?.success !== undefined ? { success: String(params.success) } : {}),
       }),

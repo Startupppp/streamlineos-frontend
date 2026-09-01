@@ -15,7 +15,7 @@ import type {
 } from "@/types/access";
 
 export interface PaginatedRolesParams {
-  page: number;
+  cursor?: string;
   limit: number;
   search?: string;
 }
@@ -28,14 +28,13 @@ export interface RoleListRow extends Role {
 export interface PaginatedRolesResponse {
   data: RoleListRow[];
   pagination: {
-    page: number;
     limit: number;
-    total: number;
-    totalPages: number;
+    nextCursor: string | null;
+    hasMore: boolean;
   };
 }
 
-const ROLE_SELECTOR_PARAMS = { page: 1, limit: 100 } as const;
+const ROLE_SELECTOR_PARAMS = { limit: 100 } as const;
 
 export const useRoles = (
   options?: Omit<UseQueryOptions<Role[], Error>, "queryKey" | "queryFn">
@@ -68,7 +67,7 @@ export const usePaginatedRoles = (
     queryKey: queryKeys.roles.list(params),
     queryFn: () =>
       apiClient.get<PaginatedRolesResponse>("/roles", {
-        page: params.page,
+        cursor: params.cursor,
         limit: params.limit,
         search: params.search,
       }),

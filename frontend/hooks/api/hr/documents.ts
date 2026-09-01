@@ -111,14 +111,14 @@ export interface MyOnboardingDoc {
 
 interface MyOnboardingDocsResponse {
   data: MyOnboardingDoc[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
 const MY_DOCS_LIMIT = 100;
 
 export function useMyOnboardingDocs(options?: { enabled?: boolean }) {
   const canView = useCan("self:onboarding-docs");
-  const params = { page: 1, limit: MY_DOCS_LIMIT };
+  const params = { limit: MY_DOCS_LIMIT };
   return useQuery({
     queryKey: queryKeys.hr.onboardingDocs(params),
     queryFn: () =>

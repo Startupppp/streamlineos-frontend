@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { AlertTriangle } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
@@ -27,11 +28,22 @@ const STATUS_COLORS: Record<EmergencyEventStatus, string> = {
 
 export function EmergencyPageContent() {
   const canManage = useCan("hr:emergency:manage");
-  const [page, setPage] = useState(1);
+  const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
+  const page = cursorHistory.length;
+  const cursor = cursorHistory.at(-1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
 
-  const { data, isLoading } = useEmergencyEvents({ page });
+  const { data, isLoading, isFetching } = useEmergencyEvents({ cursor });
+
+  const handlePreviousPage = useCallback(() => {
+    setCursorHistory((history) => history.length > 1 ? history.slice(0, -1) : history);
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    const nextCursor = data?.pagination.nextCursor;
+    if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
+  }, [data?.pagination.nextCursor]);
 
   const columns: DataTableColumn<EmergencyEvent>[] = [
     {
@@ -91,34 +103,34 @@ export function EmergencyPageContent() {
           ) : null
         }
       >
-        <DataTable
-          className="flex-1 min-h-0"
-          data={data?.data ?? []}
-          columns={columns}
-          getRowKey={(r) => r.id}
-          onRowClick={(r) => setSelectedId(r.id)}
-          isLoading={isLoading}
-          emptyState={
-            <EmptyState
-              className="border-0 bg-transparent min-h-[40vh]"
-              illustration={<StateIllustration preset="alert" className="h-28 w-28" />}
-              title="No emergency events"
-              description="Declare emergency events to coordinate employee safety responses."
-              action={canManage ? { label: "Declare Event", onClick: () => setShowCreate(true) } : undefined}
+        <div className="flex min-h-0 flex-1 flex-col gap-3">
+          <DataTable
+            className="flex-1 min-h-0"
+            data={data?.data ?? []}
+            columns={columns}
+            getRowKey={(r) => r.id}
+            onRowClick={(r) => setSelectedId(r.id)}
+            isLoading={isLoading}
+            emptyState={
+              <EmptyState
+                className="border-0 bg-transparent min-h-[40vh]"
+                illustration={<StateIllustration preset="alert" className="h-28 w-28" />}
+                title="No emergency events"
+                description="Declare emergency events to coordinate employee safety responses."
+                action={canManage ? { label: "Declare Event", onClick: () => setShowCreate(true) } : undefined}
+              />
+            }
+          />
+          {data && (page > 1 || data.pagination.hasMore) ? (
+            <CursorPageControls
+              page={page}
+              hasNext={data.pagination.hasMore}
+              disabled={isFetching}
+              onPrevious={handlePreviousPage}
+              onNext={handleNextPage}
             />
-          }
-          pagination={
-            data
-              ? {
-                  mode: "server",
-                  page,
-                  pageSize: data.pagination.limit,
-                  total: data.pagination.total,
-                  onPageChange: setPage,
-                }
-              : undefined
-          }
-        />
+          ) : null}
+        </div>
       </PageWrapper>
 
       <EmergencyEventSheet open={showCreate} onOpenChange={setShowCreate} />

@@ -34,11 +34,11 @@ export interface GroupRole {
 
 export interface PaginatedGroupsResponse {
   data: PrincipalGroup[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
 export interface ListGroupsParams {
-  page: number;
+  cursor?: string;
   limit: number;
 }
 
@@ -51,7 +51,7 @@ export function usePrincipalGroups(
     queryKey: queryKeys.principalGroups.list(params),
     queryFn: () =>
       apiClient.get<PaginatedGroupsResponse>("/principal-groups", {
-        page: params.page,
+        cursor: params.cursor,
         limit: params.limit,
       }),
     staleTime: 60_000,

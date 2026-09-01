@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { useState, type ReactNode } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import { getUserDisplayName } from "@/lib/person-display";
 import { formatCurrencyFull } from "@/lib/format-utils";
 import { SourceRefsPopover } from "./source-refs-popover";
@@ -21,6 +21,28 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
+
+function useCursorPager() {
+  const [history, setHistory] = useState<Array<string | undefined>>([undefined]);
+
+  const previous = useCallback(() => {
+    setHistory((current) =>
+      current.length > 1 ? current.slice(0, -1) : current,
+    );
+  }, []);
+
+  const next = useCallback((nextCursor: string | null) => {
+    if (nextCursor) setHistory((current) => [...current, nextCursor]);
+  }, []);
+
+  return {
+    cursor: history.at(-1),
+    page: history.length,
+    previous,
+    next,
+  };
+}
 
 function resolveDisplayName(row: PayrollInputSnapshot | PayrollAdjustment): string {
   return getUserDisplayName({
@@ -297,100 +319,131 @@ const EMPTY_NO_ADJ: ReactNode = (
 );
 
 function AttendanceTab({ periodId }: { periodId: number }) {
-  const [page, setPage] = useState(1);
-  const { data, isLoading } = useAttendanceSnapshot(periodId, { page, limit: 25 });
+  const pager = useCursorPager();
+  const { data, isLoading, isFetching } = useAttendanceSnapshot(periodId, {
+    cursor: pager.cursor,
+    limit: 25,
+  });
   const rows = data?.data ?? [];
   return (
-    <DataTable
-      className="flex-1 min-h-0"
-      data={rows}
-      columns={attendanceColumns}
-      getRowKey={(row) => row.id}
-      isLoading={isLoading}
-      emptyState={EMPTY_NO_DATA}
-      pagination={{
-        mode: "server",
-        page,
-        pageSize: 25,
-        total: data?.pagination.total ?? 0,
-        onPageChange: setPage,
-      }}
-    />
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <DataTable
+        className="flex-1 min-h-0"
+        data={rows}
+        columns={attendanceColumns}
+        getRowKey={(row) => row.id}
+        isLoading={isLoading}
+        emptyState={EMPTY_NO_DATA}
+      />
+      {data && (pager.page > 1 || data.pagination.hasMore) ? (
+        <CursorPageControls
+          page={pager.page}
+          hasNext={data.pagination.hasMore}
+          disabled={isFetching}
+          onPrevious={pager.previous}
+          onNext={() => pager.next(data.pagination.nextCursor)}
+        />
+      ) : null}
+    </div>
   );
 }
 
 function LeaveTab({ periodId }: { periodId: number }) {
-  const [page, setPage] = useState(1);
-  const { data, isLoading } = useLeaveSnapshot(periodId, { page, limit: 25 });
+  const pager = useCursorPager();
+  const { data, isLoading, isFetching } = useLeaveSnapshot(periodId, {
+    cursor: pager.cursor,
+    limit: 25,
+  });
   const rows = data?.data ?? [];
   return (
-    <DataTable
-      className="flex-1 min-h-0"
-      data={rows}
-      columns={leaveColumns}
-      getRowKey={(row) => row.id}
-      isLoading={isLoading}
-      emptyState={EMPTY_NO_DATA}
-      pagination={{
-        mode: "server",
-        page,
-        pageSize: 25,
-        total: data?.pagination.total ?? 0,
-        onPageChange: setPage,
-      }}
-    />
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <DataTable
+        className="flex-1 min-h-0"
+        data={rows}
+        columns={leaveColumns}
+        getRowKey={(row) => row.id}
+        isLoading={isLoading}
+        emptyState={EMPTY_NO_DATA}
+      />
+      {data && (pager.page > 1 || data.pagination.hasMore) ? (
+        <CursorPageControls
+          page={pager.page}
+          hasNext={data.pagination.hasMore}
+          disabled={isFetching}
+          onPrevious={pager.previous}
+          onNext={() => pager.next(data.pagination.nextCursor)}
+        />
+      ) : null}
+    </div>
   );
 }
 
 function OvertimeTab({ periodId }: { periodId: number }) {
-  const [page, setPage] = useState(1);
-  const { data, isLoading } = useOvertimeSnapshot(periodId, { page, limit: 25 });
+  const pager = useCursorPager();
+  const { data, isLoading, isFetching } = useOvertimeSnapshot(periodId, {
+    cursor: pager.cursor,
+    limit: 25,
+  });
   const rows = data?.data ?? [];
   return (
-    <DataTable
-      className="flex-1 min-h-0"
-      data={rows}
-      columns={overtimeColumns}
-      getRowKey={(row) => row.id}
-      isLoading={isLoading}
-      emptyState={EMPTY_NO_OT}
-      pagination={{
-        mode: "server",
-        page,
-        pageSize: 25,
-        total: data?.pagination.total ?? 0,
-        onPageChange: setPage,
-      }}
-    />
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <DataTable
+        className="flex-1 min-h-0"
+        data={rows}
+        columns={overtimeColumns}
+        getRowKey={(row) => row.id}
+        isLoading={isLoading}
+        emptyState={EMPTY_NO_OT}
+      />
+      {data && (pager.page > 1 || data.pagination.hasMore) ? (
+        <CursorPageControls
+          page={pager.page}
+          hasNext={data.pagination.hasMore}
+          disabled={isFetching}
+          onPrevious={pager.previous}
+          onNext={() => pager.next(data.pagination.nextCursor)}
+        />
+      ) : null}
+    </div>
   );
 }
 
 function ReimbursementsTab({ periodId }: { periodId: number }) {
-  const [page, setPage] = useState(1);
-  const { data, isLoading } = useReimbursementSnapshot(periodId, { page, limit: 25 });
+  const pager = useCursorPager();
+  const { data, isLoading, isFetching } = useReimbursementSnapshot(periodId, {
+    cursor: pager.cursor,
+    limit: 25,
+  });
   const rows = data?.data ?? [];
   return (
-    <DataTable
-      className="flex-1 min-h-0"
-      data={rows}
-      columns={reimbursementColumns}
-      getRowKey={(row) => row.id}
-      isLoading={isLoading}
-      emptyState={EMPTY_NO_REIMB}
-      pagination={{
-        mode: "server",
-        page,
-        pageSize: 25,
-        total: data?.pagination.total ?? 0,
-        onPageChange: setPage,
-      }}
-    />
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <DataTable
+        className="flex-1 min-h-0"
+        data={rows}
+        columns={reimbursementColumns}
+        getRowKey={(row) => row.id}
+        isLoading={isLoading}
+        emptyState={EMPTY_NO_REIMB}
+      />
+      {data && (pager.page > 1 || data.pagination.hasMore) ? (
+        <CursorPageControls
+          page={pager.page}
+          hasNext={data.pagination.hasMore}
+          disabled={isFetching}
+          onPrevious={pager.previous}
+          onNext={() => pager.next(data.pagination.nextCursor)}
+        />
+      ) : null}
+    </div>
   );
 }
 
 function AdjustmentsTab({ periodId, isLocked }: { periodId: number; isLocked: boolean }) {
-  const [page, setPage] = useState(1);
-  const { data, isLoading } = usePayrollAdjustments(periodId, { page, limit: 25 });
+  const pager = useCursorPager();
+  const { data, isLoading, isFetching } = usePayrollAdjustments(periodId, {
+    cursor: pager.cursor,
+    limit: 25,
+  });
   const approve = useApprovePayrollAdjustment();
   const rows = data?.data ?? [];
   const columns = buildAdjustmentColumns(isLocked, {
@@ -398,21 +451,25 @@ function AdjustmentsTab({ periodId, isLocked }: { periodId: number; isLocked: bo
     mutate: (id) => approve.mutate(id),
   });
   return (
-    <DataTable
-      className="flex-1 min-h-0"
-      data={rows}
-      columns={columns}
-      getRowKey={(row) => row.id}
-      isLoading={isLoading}
-      emptyState={EMPTY_NO_ADJ}
-      pagination={{
-        mode: "server",
-        page,
-        pageSize: 25,
-        total: data?.pagination.total ?? 0,
-        onPageChange: setPage,
-      }}
-    />
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <DataTable
+        className="flex-1 min-h-0"
+        data={rows}
+        columns={columns}
+        getRowKey={(row) => row.id}
+        isLoading={isLoading}
+        emptyState={EMPTY_NO_ADJ}
+      />
+      {data && (pager.page > 1 || data.pagination.hasMore) ? (
+        <CursorPageControls
+          page={pager.page}
+          hasNext={data.pagination.hasMore}
+          disabled={isFetching}
+          onPrevious={pager.previous}
+          onNext={() => pager.next(data.pagination.nextCursor)}
+        />
+      ) : null}
+    </div>
   );
 }
 

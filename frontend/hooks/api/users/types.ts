@@ -162,10 +162,9 @@ export interface LoginHistoryItem {
 export interface LoginHistoryResponse {
   data: LoginHistoryItem[];
   pagination: {
-    page: number;
     limit: number;
-    total: number;
-    totalPages: number;
+    nextCursor: string | null;
+    hasMore: boolean;
   };
 }
 

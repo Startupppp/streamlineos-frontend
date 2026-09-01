@@ -22,6 +22,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -33,16 +34,19 @@ const DOCS_PAGE_SIZE = 20;
 
 interface OnboardingDocsResponse {
   data: OnboardingDoc[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
-function useEmployeeOnboardingDocs(userId: string | null, page: number) {
+function useEmployeeOnboardingDocs(
+  userId: string | null,
+  cursor: string | undefined,
+) {
   return useQuery<OnboardingDocsResponse>({
-    queryKey: queryKeys.hr.onboardingDocs({ userId: userId ?? undefined, page, limit: DOCS_PAGE_SIZE }),
+    queryKey: queryKeys.hr.onboardingDocs({ userId: userId ?? undefined, cursor, limit: DOCS_PAGE_SIZE }),
     queryFn: () =>
       apiClient.get<OnboardingDocsResponse>("/hr/onboarding-docs", {
         userId,
-        page,
+        cursor,
         limit: DOCS_PAGE_SIZE,
       }),
     enabled: !!userId,
@@ -78,11 +82,18 @@ interface ReviewSheetProps {
 
 export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewSheetProps) {
   const reviewMutation = useReviewDocument();
-  const [docsPage, setDocsPage] = useState(1);
-  const { data: docsData, isLoading: docsLoading } = useEmployeeOnboardingDocs(userId, docsPage);
+  const [docsCursorHistory, setDocsCursorHistory] = useState<
+    Array<string | undefined>
+  >([undefined]);
+  const docsPage = docsCursorHistory.length;
+  const docsCursor = docsCursorHistory.at(-1);
+  const {
+    data: docsData,
+    isLoading: docsLoading,
+    isFetching: docsFetching,
+  } = useEmployeeOnboardingDocs(userId, docsCursor);
 
   const employeeDocs = docsData?.data;
-  const docsTotalPages = docsData?.pagination.totalPages ?? 1;
 
   const [reuploadDoc, setReuploadDoc] = useState<OnboardingDoc | null>(null);
   const [reuploadRemarks, setReuploadRemarks] = useState("");
@@ -92,7 +103,7 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
   const handleSheetOpenChange = useCallback(
     (open: boolean) => {
       if (!open) {
-        setDocsPage(1);
+        setDocsCursorHistory([undefined]);
         onClose();
       }
     },
@@ -100,12 +111,17 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
   );
 
   const handlePrevDocsPage = useCallback(() => {
-    setDocsPage((prev) => Math.max(1, prev - 1));
+    setDocsCursorHistory((history) =>
+      history.length > 1 ? history.slice(0, -1) : history,
+    );
   }, []);
 
   const handleNextDocsPage = useCallback(() => {
-    setDocsPage((prev) => prev + 1);
-  }, []);
+    const nextCursor = docsData?.pagination.nextCursor;
+    if (nextCursor) {
+      setDocsCursorHistory((history) => [...history, nextCursor]);
+    }
+  }, [docsData?.pagination.nextCursor]);
 
   const handleSetApproveDoc = useCallback((doc: OnboardingDoc) => setApproveDoc(doc), []);
 
@@ -234,33 +250,17 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
                       onRequestReupload={handleOpenReupload}
                     />
                   ))}
-                  {docsTotalPages > 1 && (
-                    <div className="flex items-center justify-between pt-1">
-                      <span className="text-dense text-muted-foreground">
-                        Page {docsPage} of {docsTotalPages}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-xs"
-                          disabled={docsPage <= 1}
-                          onClick={handlePrevDocsPage}
-                        >
-                          Previous
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-xs"
-                          disabled={docsPage >= docsTotalPages}
-                          onClick={handleNextDocsPage}
-                        >
-                          Next
-                        </Button>
-                      </div>
-                    </div>
-                  )}
+                  {docsData &&
+                  (docsPage > 1 || docsData.pagination.hasMore) ? (
+                    <CursorPageControls
+                      page={docsPage}
+                      hasNext={docsData.pagination.hasMore}
+                      disabled={docsFetching}
+                      onPrevious={handlePrevDocsPage}
+                      onNext={handleNextDocsPage}
+                      className="pt-1"
+                    />
+                  ) : null}
                 </>
               )}
             </div>

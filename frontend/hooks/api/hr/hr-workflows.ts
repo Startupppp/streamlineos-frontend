@@ -10,6 +10,7 @@ import type {
   HrWorkflowStatus,
   HrWorkflowApproverType,
   HrWorkflowStepMode,
+  CursorPaginatedResult,
   PaginatedResult,
 } from "@/types/hr/workflows";
 
@@ -153,10 +154,17 @@ export function useWorkflowInbox(page = 1, limit = 50) {
   });
 }
 
-export function useWorkflowActed(page = 1, limit = 50, options?: { enabled?: boolean }) {
+export function useWorkflowActed(
+  params: { cursor?: string; limit?: number } = {},
+  options?: { enabled?: boolean },
+) {
   return useQuery({
-    queryKey: [...INSTANCES_KEY, "acted", page, limit],
-    queryFn: () => apiClient.get<PaginatedResult<HrWorkflowInstance>>("/hr/workflows/instances/acted", { page, limit }),
+    queryKey: [...INSTANCES_KEY, "acted", params],
+    queryFn: () =>
+      apiClient.get<CursorPaginatedResult<HrWorkflowInstance>>(
+        "/hr/workflows/instances/acted",
+        params,
+      ),
     staleTime: 60_000,
     enabled: options?.enabled ?? true,
   });

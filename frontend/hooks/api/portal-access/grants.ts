@@ -12,7 +12,7 @@ import type {
   UpdateGrantInput,
 } from "@/types/portal-access/grants";
 
-export function usePortalMemberships(params?: { page?: number; limit?: number; status?: string }) {
+export function usePortalMemberships(params?: { cursor?: string; limit?: number; status?: string }) {
   const canView = useCan("build:portal:view");
   return useQuery<PortalMembershipsPage>({
     queryKey: queryKeys.portalAccess.memberships(params),
@@ -22,7 +22,7 @@ export function usePortalMemberships(params?: { page?: number; limit?: number; s
   });
 }
 
-export function useProjectClientGrants(params?: { page?: number; limit?: number; projectId?: number }) {
+export function useProjectClientGrants(params?: { cursor?: string; limit?: number; projectId?: number }) {
   const canView = useCan("build:portal:view");
   return useQuery<ProjectClientGrantsPage>({
     queryKey: queryKeys.portalAccess.grants(params),

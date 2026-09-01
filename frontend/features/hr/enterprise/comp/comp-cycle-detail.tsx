@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { DataTable } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import {
   useCompCycle,
   useCompRecommendations,
@@ -55,8 +56,15 @@ function BudgetBar({ allocated, used }: { allocated: number; used: number }) {
 }
 
 export function CompCycleDetail({ cycleId, canManage }: Props) {
+  const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
+  const page = cursorHistory.length;
+  const cursor = cursorHistory.at(-1);
   const { data: cycle, isLoading: cycleLoading } = useCompCycle(cycleId);
-  const { data: recsData, isLoading: recsLoading } = useCompRecommendations(cycleId);
+  const {
+    data: recsData,
+    isLoading: recsLoading,
+    isFetching: recsFetching,
+  } = useCompRecommendations(cycleId, { cursor });
   const { data: pools, isLoading: poolsLoading } = useBudgetPools(cycleId);
   const calibrateMut = useCalibrateRecommendation();
   const { data: membersData } = useOrgMembers(1, 200);
@@ -79,6 +87,15 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
 
   const [calibratingId, setCalibratingId] = useState<number | null>(null);
   const [calibrateValue, setCalibrateValue] = useState<Record<number, string>>({});
+
+  const handlePreviousPage = useCallback(() => {
+    setCursorHistory((history) => history.length > 1 ? history.slice(0, -1) : history);
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    const nextCursor = recsData?.pagination.nextCursor;
+    if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
+  }, [recsData?.pagination.nextCursor]);
 
   if (cycleLoading) return <div className="space-y-3">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-xl" />)}</div>;
 
@@ -132,9 +149,10 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
         ) : !recs.length ? (
           <EmptyState illustrationPreset="default" title="No recommendations yet" compact className="h-40 border-0 shadow-none" />
         ) : (
-          <DataTable
-            getRowKey={(r) => r.id}
-            columns={[
+          <div className="flex min-h-0 flex-col gap-3">
+            <DataTable
+              getRowKey={(r) => r.id}
+              columns={[
               { key: "user", header: "Employee", cell: (r) => <span className="font-medium text-sm">{resolveMemberName(r.userId)}</span> },
               { key: "current", header: "Current Salary", cell: (r) => formatCents(r.currentSalaryCents) },
               { key: "increase", header: "Increase", cell: (r) => <span className="text-primary font-medium">{formatCents(r.recommendedIncreaseCents)}</span> },
@@ -168,9 +186,19 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
                   </div>
                 ) : null,
               },
-            ]}
-            data={recs}
-          />
+              ]}
+              data={recs}
+            />
+            {recsData && (page > 1 || recsData.pagination.hasMore) ? (
+              <CursorPageControls
+                page={page}
+                hasNext={recsData.pagination.hasMore}
+                disabled={recsFetching}
+                onPrevious={handlePreviousPage}
+                onNext={handleNextPage}
+              />
+            ) : null}
+          </div>
         )}
       </div>
     </div>

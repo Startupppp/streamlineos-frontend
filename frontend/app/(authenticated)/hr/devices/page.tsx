@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { Plus } from "lucide-react";
@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { useCan } from "@/hooks/api/access";
 import { DevicesTable } from "@/features/hr/enterprise/comp/devices-table";
@@ -145,18 +146,41 @@ function FailedSyncsTab() {
 }
 
 function AllSyncLogsTab() {
-  const { data, isLoading } = useDeviceSyncLogs();
+  const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
+  const page = cursorHistory.length;
+  const cursor = cursorHistory.at(-1);
+  const { data, isLoading, isFetching } = useDeviceSyncLogs({ cursor });
   const logs = data?.data ?? [];
+
+  const handlePreviousPage = useCallback(() => {
+    setCursorHistory((history) => history.length > 1 ? history.slice(0, -1) : history);
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    const nextCursor = data?.pagination.nextCursor;
+    if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
+  }, [data?.pagination.nextCursor]);
 
   if (isLoading) return <SyncLogsSkeleton />;
 
   return (
-    <SyncLogsTable
-      logs={logs}
-      emptyTitle="No sync logs yet"
-      emptyDescription="Sync activity will appear here after devices sync"
-      illustrationPreset="activity"
-    />
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <SyncLogsTable
+        logs={logs}
+        emptyTitle="No sync logs yet"
+        emptyDescription="Sync activity will appear here after devices sync"
+        illustrationPreset="activity"
+      />
+      {data && (page > 1 || data.pagination.hasMore) ? (
+        <CursorPageControls
+          page={page}
+          hasNext={data.pagination.hasMore}
+          disabled={isFetching}
+          onPrevious={handlePreviousPage}
+          onNext={handleNextPage}
+        />
+      ) : null}
+    </div>
   );
 }
 

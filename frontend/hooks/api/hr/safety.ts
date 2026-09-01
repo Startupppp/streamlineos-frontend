@@ -47,13 +47,13 @@ export interface BurnoutFlag {
   checkCount: number;
 }
 
-interface PaginatedResult<T> {
+interface CursorPage<T> {
   data: T[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 }
 
 export type ListIncidentsParams = {
-  page?: number;
+  cursor?: string;
   limit?: number;
   status?: IncidentStatus;
   type?: IncidentType;
@@ -66,7 +66,7 @@ export type ListIncidentsParams = {
 export function useSafetyIncidents(params: ListIncidentsParams = {}) {
   return useQuery({
     queryKey: queryKeys.hrSafety.incidents(params),
-    queryFn: () => apiClient.get<PaginatedResult<SafetyIncident>>("/hr/safety/incidents", params),
+    queryFn: () => apiClient.get<CursorPage<SafetyIncident>>("/hr/safety/incidents", params),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
   });

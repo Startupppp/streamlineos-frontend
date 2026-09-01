@@ -62,13 +62,25 @@ export interface InsuranceClaim {
   plan?: BenefitPlan | null;
 }
 
-export function useBenefitPlans(query?: { status?: string; category?: string; page?: number; limit?: number }) {
+export interface BenefitsCursorPage<T> {
+  data: T[];
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
+}
+
+export type BenefitPlansQuery = {
+  status?: BenefitPlan["status"];
+  category?: BenefitPlan["category"];
+  cursor?: string;
+  limit?: number;
+};
+
+export function useBenefitPlans(query: BenefitPlansQuery = {}) {
   const canView = useCan("hr:benefits:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.benefitPlans(query),
     queryFn: () =>
-      apiClient.get<{ data: BenefitPlan[]; total: number; page: number; limit: number }>(
+      apiClient.get<BenefitsCursorPage<BenefitPlan>>(
         "/hr/benefits/plans",
         query as Record<string, unknown>,
       ),
@@ -162,13 +174,20 @@ export function useDeleteDependent() {
   });
 }
 
-export function useInsuranceClaims(query?: { status?: string; userId?: string; page?: number; limit?: number }) {
+export type InsuranceClaimsQuery = {
+  status?: InsuranceClaim["status"];
+  userId?: string;
+  cursor?: string;
+  limit?: number;
+};
+
+export function useInsuranceClaims(query: InsuranceClaimsQuery = {}) {
   const canView = useCan("hr:benefits:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.benefitClaims(query),
     queryFn: () =>
-      apiClient.get<{ data: InsuranceClaim[]; total: number; page: number; limit: number }>(
+      apiClient.get<BenefitsCursorPage<InsuranceClaim>>(
         "/hr/benefits/claims",
         query as Record<string, unknown>,
       ),

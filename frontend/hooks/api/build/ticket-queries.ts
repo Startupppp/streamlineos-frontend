@@ -9,8 +9,7 @@ import { queryKeys } from "@/lib/query-keys";
 import type {
   Ticket,
   TicketLabel,
-  PaginatedResponse,
-  CursorPaginatedResponse,
+  CursorPageResponse,
   TicketFilters,
 } from "@/types/projects";
 import { useProjectLabels } from "./projects";
@@ -21,13 +20,13 @@ const BOARD_AUTOLOAD_LIMIT = 500;
 export function useTickets(
   projectId: number,
   filters?: TicketFilters,
-  options?: Omit<UseQueryOptions<PaginatedResponse<Ticket>>, "queryKey" | "queryFn" | "enabled">
+  options?: Omit<UseQueryOptions<CursorPageResponse<Ticket>>, "queryKey" | "queryFn" | "enabled">
 ) {
   const canView = useCan("build:tickets:view");
-  return useQuery<PaginatedResponse<Ticket>>({
+  return useQuery<CursorPageResponse<Ticket>>({
     queryKey: queryKeys.projects.tickets({ projectId, ...filters }),
     queryFn: () =>
-      apiClient.get<PaginatedResponse<Ticket>>(`/build/${projectId}/tickets`, filters ? { ...filters } : undefined),
+      apiClient.get<CursorPageResponse<Ticket>>(`/build/${projectId}/tickets`, filters ? { ...filters } : undefined),
     enabled: canView && !!projectId,
     staleTime: 30_000,
     placeholderData: (prev) => prev,
@@ -61,12 +60,11 @@ export function useProjectBoardTickets(projectId: number, filters?: BoardFilters
     filters?.module
   );
 
-  const query = useInfiniteQuery<CursorPaginatedResponse<Ticket>>({
+  const query = useInfiniteQuery<CursorPageResponse<Ticket>>({
     queryKey: queryKeys.projects.tickets({ projectId, view: "board", ...filters }),
     queryFn: ({ pageParam }) => {
       const params: Record<string, unknown> = {
         limit: BOARD_PAGE_SIZE,
-        paging: "cursor",
         orderBy: "rank",
         orderDir: "asc",
         ...(pageParam ? { cursor: pageParam as string } : {}),
@@ -80,10 +78,10 @@ export function useProjectBoardTickets(projectId: number, filters?: BoardFilters
       if (filters?.cycle) params.cycleId = filters.cycle;
       if (filters?.sprint) params.sprintIds = filters.sprint;
       if (filters?.module) params.moduleIds = filters.module;
-      return apiClient.get<CursorPaginatedResponse<Ticket>>(`/build/${projectId}/tickets`, params);
+      return apiClient.get<CursorPageResponse<Ticket>>(`/build/${projectId}/tickets`, params);
     },
     initialPageParam: undefined as string | undefined,
-    getNextPageParam: (last) => last.nextCursor ?? undefined,
+    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
     enabled: canView && !!projectId,
     staleTime: 30_000,
     placeholderData: (prev) => prev,
@@ -93,7 +91,6 @@ export function useProjectBoardTickets(projectId: number, filters?: BoardFilters
     () => query.data?.pages.flatMap((p) => p.data ?? []) ?? [],
     [query.data],
   );
-  const total = query.data?.pages[0]?.total ?? 0;
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = query;
 
   useEffect(() => {
@@ -106,9 +103,9 @@ export function useProjectBoardTickets(projectId: number, filters?: BoardFilters
   return {
     ...query,
     data,
-    total,
+    total: data.length,
     loadedCount: data.length,
-    isTruncated: total > data.length,
+    isTruncated: hasNextPage,
   };
 }
 

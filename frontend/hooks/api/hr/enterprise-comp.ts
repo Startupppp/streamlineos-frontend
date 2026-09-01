@@ -95,14 +95,8 @@ export interface EquityExercise {
   createdAt: string;
 }
 
-export interface PaginatedResponse<T> {
-  data: T[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
-}
-
 export interface CursorPaginatedResponse<T> {
   data: T[];
-  total: number;
   pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
@@ -114,7 +108,7 @@ export function useTimeDevices(params?: Record<string, unknown>) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...DEVICES_KEY, params],
-    queryFn: () => apiClient.get<PaginatedResponse<TimeDevice>>("/hr/enterprise/comp/devices", { params }),
+    queryFn: () => apiClient.get<CursorPaginatedResponse<TimeDevice>>("/hr/enterprise/comp/devices", { params }),
     staleTime: 2 * 60_000,
     enabled: canManage && hrEnabled,
   });
@@ -154,7 +148,7 @@ export function useDeviceSyncLogs(params?: Record<string, unknown>) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...SYNC_LOGS_KEY, params],
-    queryFn: () => apiClient.get<PaginatedResponse<DeviceSyncLog>>("/hr/enterprise/comp/devices/sync-logs", { params }),
+    queryFn: () => apiClient.get<CursorPaginatedResponse<DeviceSyncLog>>("/hr/enterprise/comp/devices/sync-logs", { params }),
     staleTime: 30_000,
     enabled: canManage && hrEnabled,
   });
@@ -180,7 +174,7 @@ export function useCompCycles(params?: Record<string, unknown>) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...COMP_CYCLES_KEY, params],
-    queryFn: () => apiClient.get<PaginatedResponse<CompCycle>>("/hr/enterprise/comp/planning/cycles", { params }),
+    queryFn: () => apiClient.get<CursorPaginatedResponse<CompCycle>>("/hr/enterprise/comp/planning/cycles", { params }),
     staleTime: 2 * 60_000,
     enabled: canManage && hrEnabled,
   });
@@ -212,7 +206,7 @@ export function useCompRecommendations(cycleId?: number, params?: Record<string,
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...COMP_RECS_KEY, cycleId, params],
-    queryFn: () => apiClient.get<PaginatedResponse<CompRecommendation>>("/hr/enterprise/comp/planning/recommendations", { params: { ...params, ...(cycleId ? { cycleId } : {}) } }),
+    queryFn: () => apiClient.get<CursorPaginatedResponse<CompRecommendation>>("/hr/enterprise/comp/planning/recommendations", { params: { ...params, ...(cycleId ? { cycleId } : {}) } }),
     staleTime: 60_000,
     enabled: !!cycleId && canManage && hrEnabled,
   });

@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import {
   CONTENT_FILL_PANEL,
   ContentFillPanel,
@@ -213,11 +214,23 @@ export default function ApprovalsPage() {
   );
   const [delegationOpen, setDelegationOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("pending");
+  const [actedCursorHistory, setActedCursorHistory] = useState<
+    Array<string | undefined>
+  >([undefined]);
+  const actedPage = actedCursorHistory.length;
+  const actedCursor = actedCursorHistory.at(-1);
 
   const { data: inboxData, isLoading: inboxLoading, isError: inboxError, refetch: refetchInbox } = useWorkflowInbox();
-  const { data: actedData, isLoading: actedLoading, isError: actedError, refetch: refetchActed } = useWorkflowActed(1, 50, {
-    enabled: activeTab === "acted",
-  });
+  const {
+    data: actedData,
+    isLoading: actedLoading,
+    isFetching: actedFetching,
+    isError: actedError,
+    refetch: refetchActed,
+  } = useWorkflowActed(
+    { cursor: actedCursor, limit: 50 },
+    { enabled: activeTab === "acted" },
+  );
 
   const inbox = inboxData?.data ?? [];
   const acted = actedData?.data ?? [];
@@ -232,6 +245,19 @@ export default function ApprovalsPage() {
 
   function handleRetryActed() {
     void refetchActed();
+  }
+
+  function handlePreviousActedPage() {
+    setActedCursorHistory((history) =>
+      history.length > 1 ? history.slice(0, -1) : history,
+    );
+  }
+
+  function handleNextActedPage() {
+    const nextCursor = actedData?.pagination.nextCursor;
+    if (nextCursor) {
+      setActedCursorHistory((history) => [...history, nextCursor]);
+    }
   }
 
   return (
@@ -310,14 +336,26 @@ export default function ApprovalsPage() {
                 onRetry={handleRetryActed}
               />
             ) : (
-              <InstanceList
-                instances={acted}
-                isLoading={actedLoading}
-                onOpen={setSelectedInstanceId}
-                showActions={false}
-                emptyTitle="No actions yet"
-                emptyDescription="Requests you have approved or rejected will appear here."
-              />
+              <div className="flex min-h-0 flex-1 flex-col gap-3">
+                <InstanceList
+                  instances={acted}
+                  isLoading={actedLoading}
+                  onOpen={setSelectedInstanceId}
+                  showActions={false}
+                  emptyTitle="No actions yet"
+                  emptyDescription="Requests you have approved or rejected will appear here."
+                />
+                {actedData &&
+                (actedPage > 1 || actedData.pagination.hasMore) ? (
+                  <CursorPageControls
+                    page={actedPage}
+                    hasNext={actedData.pagination.hasMore}
+                    disabled={actedFetching}
+                    onPrevious={handlePreviousActedPage}
+                    onNext={handleNextActedPage}
+                  />
+                ) : null}
+              </div>
             )}
           </TabsContent>
         </Tabs>

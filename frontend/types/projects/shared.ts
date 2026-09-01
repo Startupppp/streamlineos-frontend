@@ -36,3 +36,12 @@ export interface CursorPaginatedResponse<T> {
   nextCursor: string | null;
   hasMore: boolean;
 }
+
+export interface CursorPageResponse<T> {
+  data: T[];
+  pagination: {
+    limit: number;
+    nextCursor: string | null;
+    hasMore: boolean;
+  };
+}

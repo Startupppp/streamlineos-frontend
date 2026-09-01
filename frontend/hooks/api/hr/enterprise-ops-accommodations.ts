@@ -38,11 +38,11 @@ export interface AccommodationTask {
 
 interface PaginatedResult<T> {
   data: T[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
 export interface ListAccommodationsParams {
-  page?: number;
+  cursor?: string;
   limit?: number;
   userId?: string;
   status?: AccommodationStatus;

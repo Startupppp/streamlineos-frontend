@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { TablePagination } from "@/components/ui/table-pagination";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   RichPanel,
@@ -193,15 +193,23 @@ function GroupRow({ group, onRename, onManage }: GroupRowProps) {
 }
 
 export function GroupsPanel() {
-  const [page, setPage] = useState(1);
+  const [cursors, setCursors] = useState<Array<string | undefined>>([undefined]);
   const [createOpen, setCreateOpen] = useState(false);
   const [renameTarget, setRenameTarget] = useState<PrincipalGroup | null>(null);
   const [detailTarget, setDetailTarget] = useState<PrincipalGroup | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
 
-  const { data, isLoading, isError, error } = usePrincipalGroups({ page, limit: PAGE_SIZE });
+  const { data, isLoading, isError, error } = usePrincipalGroups({
+    cursor: cursors.at(-1),
+    limit: PAGE_SIZE,
+  });
   const groups = data?.data ?? [];
-  const pagination = data?.pagination ?? { page, limit: PAGE_SIZE, total: 0, totalPages: 0 };
+  const pagination = data?.pagination ?? {
+    limit: PAGE_SIZE,
+    nextCursor: null,
+    hasMore: false,
+  };
+  const page = cursors.length;
 
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
   const handleRename = useCallback((group: PrincipalGroup) => setRenameTarget(group), []);
@@ -261,13 +269,16 @@ export function GroupsPanel() {
           )}
         </div>
 
-        {pagination.total > PAGE_SIZE && (
-          <TablePagination
-            page={pagination.page}
-            pageSize={pagination.limit}
-            total={pagination.total}
-            onPageChange={setPage}
-            showPageNumbers={false}
+        {(page > 1 || pagination.hasMore) && (
+          <CursorPageControls
+            page={page}
+            hasNext={pagination.hasMore}
+            onPrevious={() => setCursors((current) => current.slice(0, -1))}
+            onNext={() => {
+              if (pagination.nextCursor) {
+                setCursors((current) => [...current, pagination.nextCursor ?? undefined]);
+              }
+            }}
           />
         )}
       </RichPanel>

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { Lock } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -42,11 +43,13 @@ function StatusBadge({ status }: { status: AccommodationStatus }) {
 
 export function AccommodationsPageContent() {
   const canManage = useCan("hr:accommodations:manage");
-  const [page, setPage] = useState(1);
+  const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
+  const page = cursorHistory.length;
+  const cursor = cursorHistory.at(-1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
 
-  const { data, isLoading } = useAccommodations({ page });
+  const { data, isLoading, isFetching } = useAccommodations({ cursor });
   const { data: membersData } = useOrgMembers(1, 200);
 
   const memberById = useMemo(() => {
@@ -102,6 +105,15 @@ export function AccommodationsPageContent() {
     },
   ], [resolveMemberName]);
 
+  const handlePreviousPage = useCallback(() => {
+    setCursorHistory((history) => history.length > 1 ? history.slice(0, -1) : history);
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    const nextCursor = data?.pagination.nextCursor;
+    if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
+  }, [data?.pagination.nextCursor]);
+
   return (
     <>
       <PageWrapper
@@ -116,38 +128,38 @@ export function AccommodationsPageContent() {
           ) : null
         }
       >
-        <DataTable
-          className="flex-1 min-h-0"
-          data={data?.data ?? []}
-          columns={columns}
-          getRowKey={(r) => r.id}
-          onRowClick={(r) => setSelectedId(r.id)}
-          isLoading={isLoading}
-          emptyState={
-            <EmptyState
-              illustrationPreset="team"
-              title="No accommodation requests"
-              description="Create a request to track workplace accommodations from intake through decision."
-              action={
-                canManage
-                  ? { label: "New Request", onClick: () => setShowCreate(true) }
-                  : undefined
-              }
-              compact
-            />
-          }
-          pagination={
-            data
-              ? {
-                  mode: "server",
-                  page,
-                  pageSize: data.pagination.limit,
-                  total: data.pagination.total,
-                  onPageChange: setPage,
+        <div className="flex min-h-0 flex-1 flex-col gap-3">
+          <DataTable
+            className="flex-1 min-h-0"
+            data={data?.data ?? []}
+            columns={columns}
+            getRowKey={(r) => r.id}
+            onRowClick={(r) => setSelectedId(r.id)}
+            isLoading={isLoading}
+            emptyState={
+              <EmptyState
+                illustrationPreset="team"
+                title="No accommodation requests"
+                description="Create a request to track workplace accommodations from intake through decision."
+                action={
+                  canManage
+                    ? { label: "New Request", onClick: () => setShowCreate(true) }
+                    : undefined
                 }
-              : undefined
-          }
-        />
+                compact
+              />
+            }
+          />
+          {data && (page > 1 || data.pagination.hasMore) ? (
+            <CursorPageControls
+              page={page}
+              hasNext={data.pagination.hasMore}
+              disabled={isFetching}
+              onPrevious={handlePreviousPage}
+              onNext={handleNextPage}
+            />
+          ) : null}
+        </div>
       </PageWrapper>
 
       <AccommodationSheet open={showCreate} onOpenChange={setShowCreate} />

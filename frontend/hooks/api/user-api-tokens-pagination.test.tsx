@@ -33,22 +33,22 @@ describe("useUserApiTokens pagination", () => {
     jest.clearAllMocks();
   });
 
-  it("requests the selected server page and preserves its metadata", async () => {
+  it("requests the selected cursor and preserves its metadata", async () => {
     const response = {
       data: [],
-      pagination: { page: 3, limit: 50, total: 120, totalPages: 3 },
+      pagination: { limit: 50, hasMore: true, nextCursor: "next-cursor" },
     };
     mockedGet.mockResolvedValue(response);
 
     const { result } = renderHook(
-      () => useUserApiTokens({ page: 3, limit: 50 }),
+      () => useUserApiTokens({ cursor: "current-cursor", limit: 50 }),
       { wrapper: createWrapper() },
     );
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(mockedGet).toHaveBeenCalledWith("/me/api-tokens", {
-      page: "3",
+      cursor: "current-cursor",
       limit: "50",
     });
     expect(result.current.data).toEqual(response);

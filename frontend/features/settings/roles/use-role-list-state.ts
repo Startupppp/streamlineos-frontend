@@ -11,7 +11,6 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import {
   DEFAULT_PAGE_SIZE,
-  parsePage,
   parsePageSize,
 } from "@/lib/list-pagination";
 
@@ -41,12 +40,13 @@ export function useRoleListState() {
   const paramsSnapshot = searchParams.toString();
   const latestParamsRef = useRef(paramsSnapshot);
 
-  const page = parsePage(searchParams.get("page"));
   const limit = parsePageSize(searchParams.get("size"));
   const serverSearch = (searchParams.get("search") ?? "").trim();
   const [search, setSearch] = useState(serverSearch);
   const debouncedSearch = useDebouncedValue(search, 300);
   const requestedSearchRef = useRef<string | null>(null);
+  const [cursors, setCursors] = useState<Array<string | undefined>>([undefined]);
+  const page = cursors.length;
 
   const updateParams = useCallback(
     (updates: RoleListParamUpdates) => {
@@ -79,22 +79,25 @@ export function useRoleListState() {
     const normalizedSearch = debouncedSearch.trim();
     if (normalizedSearch === serverSearch) return;
     requestedSearchRef.current = normalizedSearch;
+    setCursors([undefined]);
     updateParams({
       search: normalizedSearch || null,
       page: null,
     });
   }, [debouncedSearch, serverSearch, updateParams]);
 
-  const setPage = useCallback(
-    (nextPage: number) => {
-      updateParams({ page: nextPage <= 1 ? null : String(nextPage) });
-    },
-    [updateParams],
-  );
+  const nextPage = useCallback((cursor: string | null) => {
+    if (cursor) setCursors((current) => [...current, cursor]);
+  }, []);
+
+  const previousPage = useCallback(() => {
+    setCursors((current) => current.slice(0, -1));
+  }, []);
 
   const setPageSize = useCallback(
     (nextPageSize: number) => {
       const validPageSize = parsePageSize(String(nextPageSize));
+      setCursors([undefined]);
       updateParams({
         size:
           validPageSize === DEFAULT_PAGE_SIZE
@@ -107,7 +110,7 @@ export function useRoleListState() {
   );
 
   const query = {
-    page,
+    cursor: cursors.at(-1),
     limit,
     search: serverSearch || undefined,
   };
@@ -118,7 +121,8 @@ export function useRoleListState() {
     search,
     serverSearch,
     setSearch,
-    setPage,
+    nextPage,
+    previousPage,
     setPageSize,
     query,
   };

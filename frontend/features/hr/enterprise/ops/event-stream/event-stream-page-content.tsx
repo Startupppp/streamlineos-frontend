@@ -142,7 +142,7 @@ export function EventStreamPageContent() {
       actions={
         canExport ? (
           <LoadingButton
-            onClick={() => exportMutation.mutate({ page: 1, limit: 100 })}
+            onClick={() => exportMutation.mutate({ limit: 100 })}
             isPending={exportMutation.isPending}
             loadingText="Exporting…"
             variant="outline"

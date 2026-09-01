@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { Edit2, AlertCircle, CheckCircle2, WifiOff } from "lucide-react";
@@ -8,6 +8,7 @@ import { Trash2Icon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
@@ -35,9 +36,21 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive"> = 
 };
 
 export function DevicesTable({ canManage, onAdd, onEdit }: Props) {
-  const { data, isLoading } = useTimeDevices();
+  const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
+  const page = cursorHistory.length;
+  const cursor = cursorHistory.at(-1);
+  const { data, isLoading, isFetching } = useTimeDevices({ cursor });
   const deleteMut = useDeleteTimeDevice();
   const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  const handlePreviousPage = useCallback(() => {
+    setCursorHistory((history) => history.length > 1 ? history.slice(0, -1) : history);
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    const nextCursor = data?.pagination.nextCursor;
+    if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
+  }, [data?.pagination.nextCursor]);
 
   function handleDelete(device: TimeDevice) {
     setDeletingId(device.id);
@@ -71,7 +84,7 @@ export function DevicesTable({ canManage, onAdd, onEdit }: Props) {
   }
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} className="flex flex-1 min-h-0 flex-col">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} className="flex flex-1 min-h-0 flex-col gap-3">
       <DataTable
         className="flex-1 min-h-0"
         getRowKey={(r) => r.id}
@@ -114,6 +127,15 @@ export function DevicesTable({ canManage, onAdd, onEdit }: Props) {
         ]}
         data={devices}
       />
+      {data && (page > 1 || data.pagination.hasMore) ? (
+        <CursorPageControls
+          page={page}
+          hasNext={data.pagination.hasMore}
+          disabled={isFetching}
+          onPrevious={handlePreviousPage}
+          onNext={handleNextPage}
+        />
+      ) : null}
     </motion.div>
   );
 }
