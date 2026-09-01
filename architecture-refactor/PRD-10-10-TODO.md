@@ -1,94 +1,149 @@
 # StreamlineOS final 10/10 completion PRD
 
-Status: active
-Last reconciled: 2026-09-01
+Status: active — single authoritative backlog  
+Last reconciled: 2026-09-01  
 Scope: all platform domains except CRM and Inventory
 
-This is the only authoritative remaining-work checklist. Completing every unchecked acceptance criterion in the four linked tickets, with current reproducible evidence, is the condition for a truthful 10/10 result. Old reports, scores, and completed tickets are not evidence.
+This file is the only architecture/refactor TODO list. Do not create session tickets, parallel status reports, duplicate PRDs, or a new architecture scorecard. Update checkboxes here from fresh source and reproducible evidence. Git history is the archive.
+
+## Reality and release standard
+
+The core architecture is substantially implemented. The remaining work is concentrated in release verification, production-shaped performance proof, deployed infrastructure, privacy/compliance execution, and accountable approvals.
+
+“Bug free” cannot be guaranteed honestly. The release condition is instead: no known P0/P1 defect, required automated and deployed checks pass at one recorded commit, rollback/recovery is proven, SLOs have measured headroom, and residual risks have named owners.
+
+Local mocks and self-tests prove implementation behavior only. They never prove production cells, replicas, PITR, provider outages, alert delivery, legal compliance, or human approval.
 
 ## Product constraints
 
-- Preserve the architecture in [PRD-IN-SCOPE.md](PRD-IN-SCOPE.md) unless a concrete scale, correctness, security, or operability failure requires change.
 - Do not change public landing-page visuals or animations.
-- CRM and Inventory code, migrations, tickets, and product decisions are excluded.
-- Never mark an environment or approval gate complete from local mocks.
-- Never mark a deletion complete from text search alone; require dependency evidence plus build/typecheck.
-- Never solve an unbounded workflow with a silent truncation cap. Use a cursor, resumable batch, stream, or queue.
-- All tenant-owned relationships and cache keys must preserve organization scope.
-- No ticket depends on another ticket. Each session must rebase/re-read current source and own its verification.
+- CRM and Inventory implementation, migrations and acceptance evidence are excluded.
+- Preserve [PRD-IN-SCOPE.md](PRD-IN-SCOPE.md) unless a concrete scale, correctness, security or operability failure requires a change.
+- Never solve a growing workflow with silent truncation. Use keyset pagination, resumable batches, streams or queues.
+- Tenant-owned relationships, queries, cache keys, events and search ACLs must preserve organization scope.
+- Never mark deletion, dead code or schema removal complete from text search alone.
+- Do not recreate `luna-10-10-sessions` or split this backlog into session files.
 
-## Current measured baseline
+## Verified complete — preserve these results
 
-These values describe the working tree at reconciliation time and must be re-measured before sign-off:
+- [x] Organization and module RBAC architecture: owner/admin/member standing, custom permissions, DataScope application, owner protection, module access, tenant isolation and revocation primitives.
+- [x] Legacy actor contraction: 434 organizational fields scanned; 318 historical/display-only; 116 excluded CRM/Inventory; 0 actionable.
+- [x] Invitation tenant-composite membership constraints, Calendar attendee normalization and Chat durable token revocation/retry behavior.
+- [x] Membership-FK removal-policy, owner-authority, permission-catalog, record-access, module-gate and tenant-index gates.
+- [x] Cursor migration and bounded-read implementation: 0 actionable offsets, 0 actionable unbounded reads, 0 unordered paging and 0 unclassified paths across 2,107 service files.
+- [x] Migration ledger and structure: 585/585 applied in the configured database; 0 pending/orphan/duplicate/unreachable; chain, discipline, rollback and drop-column gates pass locally.
+- [x] Backend production and spec-inclusive type-checks pass.
+- [x] Frontend type-check passes.
+- [x] Backend and frontend import graphs have no circular dependencies.
+- [x] Backend hard file-size gate passes: 3,392 files, 12 documented exceptions.
+- [x] Frontend dead-code/capability gate reports 0 DEAD, 0 WIRE and 0 UNCLASSIFIED; deferred capabilities have owners and a 2026-10-01 review date.
+- [x] OpenAPI structural coverage: 3,583/3,583 operations; 1,363/1,363 mutating request bodies; operation IDs and freshness pass at the recorded audit workspace.
+- [x] Cache invalidation, outbox consumer, idempotency, feature-flag, mock-surface, route classification and navigation-permission gates pass.
+- [x] Billing/payment provider abstraction, webhook idempotency, entitlements, seats/proration ledgers, immutable invoices and transactional outbox exist.
+- [x] Core seams exist for Home, Settings, HRMS, Payroll, Build, Accounting, Chat, Calendar, Notifications, Knowledge/Wiki/Chatbot, Workflows and Inbox/mail.
 
-- Legacy organization actors: 434 total; 116 CRM/Inventory excluded; 318 classified historical/display-only; 0 actionable according to the scanner.
-- Offset pagination: 0 actionable; unordered offset paging: 0.
-- Unbounded reads: 0 actionable, 0 unclassified, 0 actionable offsets, and 0 unordered paging across 2,107 scanned service files. The current configured database is not production-shaped: 43 read budgets fail minimum seed requirements and 27 are skipped for absent fixture data.
-- Migration ledger: 585 applied rows against 585 journal entries; 0 pending and no orphan, duplicate, or unreachable entries. Migration chain, discipline, rollback, and drop-column gates pass locally; clean-bootstrap and deployed-environment proof remain open.
-- OpenAPI: the last verified release gate covered 3,579/3,579 operations for exposure, responses, 4xx errors, and mutating request bodies. Re-run at final head.
-- Tenant-isolation, route classification, permission-catalog, module-gate, cache-invalidation, outbox-consumer, and feature-flag gates previously passed. Re-run at final head.
-- Production cells, physical replica/PITR drills, production-shaped load/cost proof, live alert acknowledgement, and compliance approvals are not proven by repository code.
+## Remaining work — execute in this order
 
-The completed S01 authority ticket was removed after fresh actor, membership-FK, tenant-isolation, owner-authority and permission-catalog gates passed. Its durable invariants remain in [PRD-IN-SCOPE.md](PRD-IN-SCOPE.md) and executable gates.
+### 1. Code and release verification
 
-## Remaining independent tickets
+- [ ] Fix the remaining seeded E2E environment/harness failures, including organization placement/control-plane state and schema/fixture drift.
+- [ ] Run representative disposable-database E2E for Organization/RBAC, Home, Settings, HRMS, Payroll, Build, Billing, Accounting, Chat, Calendar, Notifications, Knowledge, Workflows and Inbox/mail.
+- [ ] Record every E2E command, environment identity, release SHA, dataset shape, pass/fail/skip counts and failure artifact.
+- [ ] Run live provider/cache outage scenarios: duplicate, delayed, out-of-order and forged payment webhooks; proration/seat placement failure; Redis loss; Ably/email/push outage; retry exhaustion; cancellation; DLQ and recovery.
+- [ ] Run authenticated accessibility and visual checks at 375, 768 and 1280 px in light, dark and system themes.
+- [ ] Produce production/reference-device Web Vitals evidence. Current local results breach mobile LCP/INP/FCP/TTFB and desktop INP/FCP/TTFB budgets.
+- [ ] If the frozen landing animation budget prevents the accepted mobile INP target, obtain dated Product acceptance; do not alter landing visuals or animations.
+- [ ] Implement and verify the complete upload lifecycle: malware scan, fail-closed behavior, quarantine, retention, authorized release, rejection, deletion and audit trail.
+- [ ] Run backend build/type-check, spec type-check, frontend type-check, OpenAPI freshness, import-cycle, file-size, dead-code, tenant-isolation, RLS, permission, cache, outbox, idempotency and migration gates at one recorded commit.
+- [ ] Resolve every remaining code-level P0/P1 finding and record lower-severity residual risks with owner and deadline.
 
-| Ticket | Concrete failure prevented | Completion result |
-|---|---|---|
-| [S02 — Query bounds and read cost](luna-10-10-sessions/S02-QUERY-READ-COST.md) | Memory/DB saturation, skipped rows, N+1 cost and tenant-wide scans | Every growing read has a bounded, stable contract |
-| [S03 — Repository quality and release verification](luna-10-10-sessions/S03-QUALITY-RELEASE.md) | Dead surface, contract drift, oversized mixed services and untested release behavior | Code and API gates are reproducibly green |
-| [S04 — Migration and production operations](luna-10-10-sessions/S04-MIGRATION-PRODUCTION-OPS.md) | Non-rebuildable databases, shared-cell blast radius and unrecoverable incidents | The deployed platform is resilient and measured |
-| [S05 — Compliance and approvals](luna-10-10-sessions/S05-COMPLIANCE-APPROVALS.md) | Uncontrolled operator access and unexercised privacy obligations | Human decisions and privacy drills are auditable |
+### 2. Production-shaped query and capacity evidence
 
-## Verified architecture areas to preserve
+- [ ] Restore a reproducible in-scope seed dataset for HRMS, Payroll, Build, Home, Chat, Calendar, Notifications, Knowledge and Accounting.
+- [ ] Fix the current evidence failure: 43 read budgets are below minimum seed size and 27 are skipped because fixtures are absent. CRM and Inventory rows do not count toward acceptance.
+- [ ] Run every in-scope read budget as the `streamline_app` role with `EXPLAIN (ANALYZE, BUFFERS)`.
+- [ ] Retain row counts, plans, buffers, duration, indexes used, thresholds and proof that no required indexed path performs a full tenant/table scan.
+- [ ] Exercise expensive reminder, export, fanout, unread, free/busy, recurrence, search/vector and dashboard paths.
+- [ ] Run request-transaction load with realistic concurrency and record connection-pool saturation, queue age, memory, CPU, replica lag/fallback and error rate.
+- [ ] Prove declared SLOs with at least 40% sustained capacity headroom and acceptable burst behavior.
 
-The following are KEEP verdicts, not invitations for cosmetic rewrites. Their executable gates must still be rerun by Ticket 03:
+### 3. Migration and database reproducibility
 
-- Organization and module RBAC: owner/admin/member hierarchy, module standing, permission catalog, tenant isolation, revocation cache invalidation, and owner-protection primitives exist.
-- Settings and module access: access contracts and authorization-backed navigation exist.
-- Billing/payments: provider abstraction, event ledger, webhook idempotency, entitlements, seat/proration ledgers, immutable invoice behavior, and transactional outbox exist.
-- Home, HRMS, Payroll, Build/PM, Chat, Calendar, Notifications, Knowledge/Wiki/Chatbot, Accounting, Workflows, Inbox/mail: core module seams exist. Remaining defects are named only in the five tickets.
-- Cursor pagination conversion is complete for in-scope active callers; the live gate reports zero actionable offsets.
-- Legacy actor scanner reports zero actionable in-scope fields.
-- Calendar attendee normalization, durable reminders, chat reaction normalization, knowledge composite tenant relations, and prior frontend decomposition tickets are implemented.
-- OpenAPI generation/coverage, RLS/tenant-isolation checks, cache invalidation governance, outbox consumer registry, and route/module permission checks exist as CI gates.
+- [ ] Apply all journaled migrations to disposable staging and record zero pending/orphan/duplicate/unreachable entries there.
+- [ ] Cold-bootstrap an empty database through migration head.
+- [ ] Upgrade from the supported previous watermark and exercise interruption/retry.
+- [ ] Exercise rollback or documented forward-fix using [RB-09](runbooks/RB-09-migration-rollback.md).
+- [ ] Compare cold-bootstrap and upgraded catalogs: tables, columns, constraints, indexes, policies, functions, triggers and extensions must match.
+- [ ] Retain environment identity, release SHA, command output, catalog diff and artifact hashes.
 
-## Current verification snapshot — 2026-09-01
+### 4. Production infrastructure and operations
 
-Verified complete at the audited working tree:
+- [ ] Provision independent per-cell database, Redis/cache, queue/workers, realtime/provider, search/vector, object storage and monitoring resources.
+- [ ] Prove credentials, routing, jobs, cache namespaces and data cannot cross cells using [RB-01](runbooks/RB-01-cell-isolation.md) and [RB-08](runbooks/RB-08-cell-resource-accounts.md).
+- [ ] Provision a physical read replica; measure lag and prove safe primary fallback using [RB-03](runbooks/RB-03-read-replica.md).
+- [ ] Configure five-minute-or-better PITR/RPO and run restore, regional recovery and organization-relocation drills using [RB-02](runbooks/RB-02-pitr-backup.md) and [RB-04](runbooks/RB-04-recovery-drill.md).
+- [ ] Run production-shaped load across every in-scope domain using [RB-05](runbooks/RB-05-production-load.md).
+- [ ] Prove no tenant leakage, no dropped durable work, acceptable replica behavior, SLO compliance and at least 40% headroom.
+- [ ] Measure and approve per-cell and per-active-tenant cost using invoice-derived rates and [RB-07](runbooks/RB-07-per-cell-cost.md).
+- [ ] Configure production logs, traces and release metadata.
+- [ ] Test live queue-age, DLQ, provider-failure, tenant-context, latency and recovery alerts; record human acknowledgement using [RB-06](runbooks/RB-06-live-alert-delivery.md).
+- [ ] Capture passing RB-01 through RB-08 manifests under [production evidence](final-refactor/evidence/42-production-ops/README.md). The current evidence gate fails because no deployed manifests exist.
+- [ ] Redact credentials and personal data; retain environment, region, cell, topology hash, release SHA, operator, timestamps, command/exit code and SHA-256 for every artifact.
 
-- [x] Legacy actor scanner: 0 actionable, 318 display-only classifications, 116 excluded CRM/Inventory fields.
-- [x] Migration ledger/chain/discipline/rollback: 585/585 applied, zero pending/orphan/duplicate/unreachable entries, and all structural gates pass; disposable current-head bootstrap and live rollback drill remain open.
-- [x] OpenAPI coverage: 3,583/3,583 operations have exposure, response and 4xx schemas; 1,363/1,363 mutating operations have request schemas.
-- [x] Backend hard file-size gate: 3,392 files scanned, all within 500 lines with 12 registered exceptions.
-- [x] Frontend type-check, route-access contract, contract drift, module manifest, dead-code classification, cycle, query-scope, SEO metadata, color-token and icon-label gates pass.
-- [x] Backend permission-key, owner-authority, scope-application, record-access, module-gate/DI, route-classification, navigation, tenant-index, cache-invalidation, outbox-consumer, idempotency, feature-flag, mock-surface and drop-column gates pass.
-- [x] Authority completion recheck: actor scan has 0 actionable fields; membership-FK restriction, owner-authority and permission-catalog gates pass; tenant-isolation has 895/895 declared coverage.
+### 5. Privacy, compliance and operator access
 
-Verified pending or failing at the same working tree:
+#### Operator access
 
-- [x] Backend build type-check and spec-inclusive type-check pass at the current workspace.
-- [x] Backend import graph has no Payroll cycle.
-- [x] Tenant-isolation coverage passes for 897/897 tenant-owned services; live cross-tenant execution remains an environment item.
-- [x] Membership removal policy restriction gate passes for 343 schema files.
-- [x] Frontend size ratchet is 519 files over 300 lines, equal to baseline; `hr/benefits/page.tsx` is 51 lines.
-- [x] Frontend capability reconciliation has 0 WIRE, 0 DEAD, and 0 UNCLASSIFIED entries; 22 deferred capabilities have named owners and a 2026-10-01 review date.
-- [x] Web-vitals evidence exists in `.browser-driver-results.json`; local development measurements breach the declared budgets and production/reference-device evidence remains pending.
-- [ ] Production cells, replica, recovery, load/headroom, live alerts, invoice-derived cost, privacy drills and named compliance approvals remain unproven.
-- [ ] Read-cost evidence is not reproducible in the current configured database: 43 budgets fail minimum seed requirements and 27 are skipped because required fixtures are absent.
-- [ ] Retention coverage currently reports 4 uncovered high-growth tables: `helpdesk_tickets`, `performance_reviews`, `mail_message_metadata`, and `announcements`.
+- [ ] Approve eligible operator roles, mandatory reason/ticket, two-person approval, no self-approval, maximum duration, pending-grant expiry, organization/scope binding, tenant notification, immutable per-request audit, revocation, emergency handling and review cadence.
+- [ ] Verify deployed customer-data and billing routes reject expired, revoked, wrong-organization, wrong-scope, unauthorized-role, concurrent-approval and audit-failure cases.
+- [ ] Record named Product and Security decisions using [RB-10](runbooks/RB-10-privacy-compliance-decisions.md).
 
-## Final 10/10 gate
+#### Data map and policy decisions
 
-All of the following are mandatory:
+- [ ] Obtain named Privacy/DPO approval for identity/authentication, employment/payroll, communication, attendance, documents, recruitment, financial, audit/operator, AI and integration data.
+- [ ] Record purpose, lawful basis, special-category basis, subjects, processors, location, retention, owner and deletion/archive behavior in [DATA-CATALOGUE.md](DATA-CATALOGUE.md).
+- [ ] Decide whether PII is permitted in `audit_logs.metadata`; prefer stable references or irreversible hashes unless explicitly approved.
+- [ ] Approve residency, international transfers, subprocessors/DPAs/SCCs, breach notification, payroll/tax jurisdictions and controller/processor responsibilities.
+- [ ] Approve the AI/integration policy: providers/regions, PII minimization, retention, deletion and customer disclosure.
 
-- [ ] Every checkbox in Tickets S02–S05 is complete with current evidence.
-- [ ] CRM and Inventory remain excluded rather than silently counted as complete.
-- [ ] Backend build typecheck, spec typecheck, frontend typecheck, focused tests, representative E2E, and all architecture gates pass at one recorded commit.
-- [ ] A clean database bootstraps to the current migration head and its catalog matches the expected schema.
-- [ ] Production evidence proves isolated cells, replica/PITR recovery, workload SLOs with at least 40% headroom, approved unit cost, live alert delivery, and human acknowledgement.
-- [ ] Security, privacy/DPO, operations, product, and finance approvals required by Ticket 05 are recorded.
+#### Subject rights and deletion
+
+- [ ] Implement and deploy correction/rectification; do not claim correction when the system only exports, deletes or anonymizes.
+- [ ] Make subject export exhaustive and resumable, or obtain accountable approval for every excluded source. A capped/truncated export fails.
+- [ ] Run access/export, correction, portability, erasure, legal-hold, ownership-transfer, cross-tenant denial and repeat-request idempotency drills against disposable deployed data.
+- [ ] Prove physical deletion or approved immutable retention for organization-owned database rows.
+- [ ] Prove object-storage enumeration, failed-key retry, provider-version behavior and post-delete absence.
+- [ ] Prove deletion or approved non-applicability for search/vector indexes, projections, caches, analytics, email, AI, integrations and downstream providers.
+- [ ] Prove backup/PITR aging and restore-time deletion behavior.
+
+#### Audit and retention
+
+- [ ] Deploy migration `0930` in the target environment and verify the `audit_logs` append-only trigger as the application role. `UPDATE`/`DELETE` denial without the enabled trigger does not close the gate.
+- [ ] Resolve retention for the four currently uncovered high-growth tables: `helpdesk_tickets`, `performance_reviews`, `mail_message_metadata` and `announcements`.
+- [ ] Add approved bounded-retention or KEEP-FOREVER decisions and workers where required, then rerun `check:retention-coverage` to zero uncovered tables.
+- [ ] Verify deployed retention workers are scheduled, bounded/resumable, audited, retryable and alerted on failure.
+- [ ] Run retention and legal-hold conflict drills; immutable financial, payroll and audit obligations must be retained or reversed, never silently deleted.
+- [ ] Prove no document/payroll policy or export/purge workflow silently skips or truncates work.
+
+#### Approval and evidence
+
+- [ ] Record Product, Security, Privacy/DPO, Operations, Legal and Finance approver name, role, decision, scope, rationale, date, review/expiry date, evidence and residual-risk disposition using [the decision template](decisions/README.md).
+- [ ] Track every rejected or conditional risk with owner, mitigation and deadline. P0/P1 risk requires release-authority disposition and cannot be waived by the implementer.
+- [ ] Store one redacted, hashed evidence bundle for deployed privacy drills.
+- [ ] Close every P0/P1 privacy, security and compliance finding.
+
+## Final release gate
+
+All boxes below must be complete at the same release candidate:
+
+- [ ] Every unchecked item above is complete with fresh evidence.
+- [ ] CRM and Inventory remain explicitly excluded rather than counted as complete.
+- [ ] All code, contract, schema, migration and focused test gates pass at one recorded commit.
+- [ ] Representative E2E and outage/replay matrices pass in identified environments.
+- [ ] Clean bootstrap and supported upgrade produce the same expected database catalog.
+- [ ] Production evidence proves isolated cells, replica/PITR recovery, SLOs, 40% headroom, approved unit cost, live alerts and human acknowledgement.
+- [ ] Privacy drills and required Product/Security/DPO/Operations/Legal/Finance approvals are recorded.
 - [ ] No unresolved P0/P1 finding remains.
-- [ ] The release authority records the final commit, environment, evidence locations, residual accepted risks, and approval date.
+- [ ] Release authority records the commit, environment, evidence locations, accepted residual risks and approval date.
 
-Until every box above is complete, report architecture, implementation, and production readiness separately; do not average them into a misleading 10/10.
+Until this gate is complete, report code implementation, production readiness and compliance readiness separately. Do not average them into a misleading “10/10”.

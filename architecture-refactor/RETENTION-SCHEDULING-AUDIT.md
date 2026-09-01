@@ -2,7 +2,7 @@
 
 Audited: 2026-09-01.
 
-This repository audit compares [S05](luna-10-10-sessions/S05-COMPLIANCE-APPROVALS.md), [RETENTION-POLICY.md](RETENTION-POLICY.md), the cron controllers, and the retention services. It records implementation evidence only. It does not establish deployment cadence, successful execution, alert delivery, provider behavior, or policy approval.
+This repository audit supports the [single completion PRD](PRD-10-10-TODO.md), [RETENTION-POLICY.md](RETENTION-POLICY.md), the cron controllers, and the retention modules. It records implementation evidence only. It does not establish deployment cadence, successful execution, alert delivery, provider behavior, or policy approval.
 
 ## Scheduled repository routes
 

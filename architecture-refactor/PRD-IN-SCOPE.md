@@ -577,6 +577,6 @@ The final report must contain separate sections for VERIFIED DONE, REGRESSED, ST
 
 ## 28. Current completion execution
 
-The architecture contract above is stable. The only authoritative execution backlog is [PRD-10-10-TODO.md](PRD-10-10-TODO.md), with four independent remaining-work tickets under [luna-10-10-sessions](luna-10-10-sessions/README.md). Completed ticket files are removed after their durable invariants are captured here and in executable gates.
+The architecture contract above is stable. The only authoritative execution backlog is [PRD-10-10-TODO.md](PRD-10-10-TODO.md). Separate session tickets and status files are prohibited; completed implementation facts live here, in the single TODO PRD, and in executable gates.
 
 Historical session reports and completed ticket trees were removed because their point-in-time counts contradicted executable gates. Git history remains the archive. CRM and Inventory remain excluded, and public landing-page visuals and animations must not change.
