@@ -9,6 +9,16 @@ This file supersedes older pending lists in reports, scorecards and session tick
 
 ### Current release-head evidence
 
+#### Session 06 reconciliation — 2026-09-01
+
+- Session 06 contract/security checks: frontend typecheck and spec-inclusive backend typecheck PASS; the latest full backend typecheck is BLOCKED by broad Build/Support schema-to-service drift (`assigneeId`, `managerId`, `clientId`, and legacy `userId` references).
+- OpenAPI: 3,579/3,579 exposure, error, response and applicable mutating request contracts; path-parameter self-test PASS.
+- Route classification: 3,568 handlers, 0 undeclared. Permission catalog: 3,105 usages resolved, 624 unique keys.
+- Tenant isolation: 896/896 tenant-owned services have a declared isolation test. Cache invalidation: 1,027 service files, 0 gaps. Outbox registry: 22 emitted event types, all consumed.
+- Authenticated accessibility: 9 suites / 102 tests PASS. SEO metadata PASS. Mock-surface: 3,206 doubles, 0 genuine defects.
+- Current blockers: the complete backend `test:e2e:ci` matrix remains unverified after the Build relation bootstrap defect was fixed and the calendar suite passed 9/9; hard file-size gate reports HR recruitment sourcing at 508 lines and Support macros at 524 lines; full frontend Knip must be rerun under quiescent host conditions.
+- Query gate is not complete: serial output reports 60 actionable offsets, 280 actionable unbounded reads, 2 unclassified paths and 3 regressions; this remains Session 05 ownership.
+
 - Backend build typecheck: PASS. Spec-inclusive typecheck: PASS.
 - Frontend typecheck: PASS. Landing-page source and animations were not changed.
 - OpenAPI: 3,579/3,579 exposure, error and response contracts; 1,363/1,363 applicable mutating request contracts.
@@ -77,7 +87,7 @@ Measured 2026-09-01. Every figure here was produced by running the named command
 - Read-cost budgets: 56 pass, 14 skip for absent seed data, 0 fail — down from 30 failures.
 - Dependency vulnerabilities and licences: pass. SBOM generated, 914 components.
 - Alert system: 13 scripts, all self-tests pass; every registered alert resolves to a real runbook heading.
-- Outbox consumer registry, RBAC referential integrity, cache invalidation, dropped-column safety, restrictive membership-FK, file-size and circular-dependency gates: PASS.
+- Outbox consumer registry, RBAC referential integrity, cache invalidation, dropped-column safety and restrictive membership-FK gates: PASS. File-size currently FAILS on `hr/recruitment/recruitment-sourcing.service.ts` (508 lines) and `support/core/support-macros.service.ts` (524 lines); circular-dependency status must be rerun after the current working-tree changes.
 - Billing, chat, calendar, notification, knowledge-retrieval evidence: complete, as previously recorded.
 
 ## 3. P0 — Code, authority and data correctness
@@ -261,7 +271,7 @@ A prior record claimed `hr_retention_policies` was written but never read. That 
 
 ## 10. P1 — Test and release engineering — PARTIAL
 
-- [ ] Run the complete dedicated backend E2E configuration against disposable infrastructure. — focused module-access 176/176 and Payroll-insights 50/50 pass with background workers isolated; the complete 143-suite matrix remains pending.
+- [ ] Run the complete dedicated backend E2E configuration against disposable infrastructure. — calendar controller E2E now passes 9/9 after fixing stale Build relation columns; the complete 143-suite matrix remains pending.
 - [x] No e2e suite can exit zero after failing discovery or setup. — the exit guard was already present; verified it defeats both failure modes, including a load-time `ReferenceError` under `--forceExit`, and extended to the seeded config which had none.
 - [x] Remove the deprecated `ts-jest` isolated-modules configuration warning. — moved into the `tsconfig` object where it belongs.
 - [x] Dependency vulnerability, license and supply-chain gates.
@@ -332,11 +342,11 @@ All 22 modules in `MODULE_REGISTRY` were audited across the ten dimensions. Repo
 
 ## 13. Final 10/10 release gate
 
-- [x] Backend typecheck, build, unit and integration suites pass. — 1,540/1,548 suites, 12,958 tests. **e2e not run: 143 suites discovered, blocked on disposable infrastructure.**
+- [ ] Backend typecheck, build, unit and integration suites pass. — the latest full backend typecheck reports broad Build/Support schema-to-service drift; calendar E2E passes 9/9, but the complete E2E matrix remains pending.
 - [x] Frontend typecheck, build, tests and accessibility budgets pass. — 198 suites, 1,940 tests. **Web Vitals budgets defined and enforceable but not yet measured.**
 - [x] OpenAPI request, response, error, exposure, path and operation-ID coverage is 100% applicable.
 - [x] Organization/module/record authorization and tenant-isolation gates pass.
-- [ ] Actor, unbounded-read, pagination, dead-code and migration actionable counts are zero. — dead-code and migration pending counts are zero; **actor 150, offset 61, unbounded 316.**
+- [ ] Actor, unbounded-read, pagination, dead-code and migration actionable counts are zero. — current unbounded gate reports **60 actionable offsets, 280 actionable unbounded reads, 2 unclassified paths and 3 regressions**; actor work and full dead-code proof also remain pending.
 - [x] Cache, outbox, retry, DLQ, replay and provider-failure drills pass.
 - [ ] Cold bootstrap, upgrade, rollback, PITR and relocation evidence matches the release head. — rollback yes; cold bootstrap and relocation blocked.
 - [ ] Production load, replica, capacity, cost, alert acknowledgement and compliance evidence is attached. — §11.
