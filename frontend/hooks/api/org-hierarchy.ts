@@ -69,15 +69,16 @@ export function useHierarchyParentOptions(
 
   return useInfiniteQuery({
     queryKey: queryKeys.hierarchy.parentOptions(parentKind, normalizedSearch),
-    queryFn: ({ pageParam: cursor }) =>
+    queryFn: ({ pageParam, signal }) =>
       apiClient.get<CursorResponse<HierarchyParentRecord>>(
         HIERARCHY_PARENT_ENDPOINTS[parentKind],
         {
-          ...(cursor ? { cursor } : {}),
+          ...(pageParam ? { cursor: pageParam } : {}),
           limit: String(HIERARCHY_PARENT_PAGE_SIZE),
           ...(normalizedSearch ? { search: normalizedSearch } : {}),
           status: "ACTIVE",
         },
+        signal,
       ),
     initialPageParam: "",
     getNextPageParam: (lastPage) =>
@@ -105,7 +106,7 @@ export function useOrgTree() {
   const canView = useCan("settings:view");
   return useQuery({
     queryKey: queryKeys.hierarchy.tree(),
-    queryFn: () => apiClient.get<OrgTreeNode[]>("/org-hierarchy/tree"),
+    queryFn: ({ signal }) => apiClient.get<OrgTreeNode[]>("/org-hierarchy/tree", undefined, signal),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -116,7 +117,7 @@ export function useOrgHierarchyOverview(
 ) {
   return useQuery({
     queryKey: queryKeys.hierarchy.all,
-    queryFn: () => apiClient.get<OrgHierarchyOverview>("/org-hierarchy/overview"),
+    queryFn: ({ signal }) => apiClient.get<OrgHierarchyOverview>("/org-hierarchy/overview", undefined, signal),
     staleTime: 60_000,
     ...options,
   });
@@ -127,7 +128,7 @@ export function useOrgHierarchyOverview(
 export function useBusinessUnits(query?: ListQuery) {
   return useQuery({
     queryKey: queryKeys.hierarchy.businessUnits(query),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorResponse<OrgBusinessUnit>>("/org-hierarchy/business-units", {
         ...(query?.cursor ? { cursor: query.cursor } : {}),
         limit: String(query?.limit ?? 100),
@@ -167,7 +168,7 @@ export function useOrgBranches(
   const canView = useCan("settings:view");
   return useQuery({
     queryKey: queryKeys.hierarchy.orgBranches(query),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorResponse<OrgBranch>>("/org-hierarchy/branches", {
         ...(query?.cursor ? { cursor: query.cursor } : {}),
         limit: String(query?.limit ?? 100),
@@ -209,7 +210,7 @@ export function useOrgDepartments(
   const canView = useCan("settings:view");
   return useQuery({
     queryKey: queryKeys.hierarchy.departments(query),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorResponse<OrgDepartment>>("/org-hierarchy/departments", {
         ...(query?.cursor ? { cursor: query.cursor } : {}),
         limit: String(query?.limit ?? 100),
@@ -248,7 +249,7 @@ export function useOrgTeams(query?: ListQuery) {
   const canView = useCan("settings:view");
   return useQuery({
     queryKey: queryKeys.hierarchy.teams(query),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorResponse<OrgTeam>>("/org-hierarchy/teams", {
         ...(query?.cursor ? { cursor: query.cursor } : {}),
         limit: String(query?.limit ?? 100),
@@ -287,7 +288,7 @@ export function useUpdateOrgTeam() {
 export function useOrgLocations(query?: ListQuery) {
   return useQuery({
     queryKey: queryKeys.hierarchy.locations(query),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorResponse<OrgLocation>>("/org-hierarchy/locations", {
         ...(query?.cursor ? { cursor: query.cursor } : {}),
         limit: String(query?.limit ?? 100),
@@ -323,7 +324,7 @@ export function useUpdateOrgLocation() {
 export function useOrgCostCenters(query?: ListQuery) {
   return useQuery({
     queryKey: queryKeys.hierarchy.costCenters(query),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorResponse<OrgCostCenter>>(
         "/org-hierarchy/cost-centers",
         {

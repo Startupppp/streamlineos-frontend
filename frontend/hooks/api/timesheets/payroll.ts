@@ -36,8 +36,8 @@ export function useTimesheetPayrollSummary(params: SummaryParams, enabled: boole
 
   return useQuery({
     queryKey: queryKeys.timesheets.payroll.summary(queryParams),
-    queryFn: () =>
-      apiClient.get<PayrollSummaryResponse>("/timesheets/payroll/period-summary", queryParams),
+    queryFn: ({ signal }) =>
+      apiClient.get<PayrollSummaryResponse>("/timesheets/payroll/period-summary", queryParams, signal),
     staleTime: 30_000,
     placeholderData: (prev) => prev,
     enabled: enabled && canView,
@@ -48,7 +48,7 @@ export function useTimesheetPayrollSettings() {
   const canView = useCan("timesheets:payroll:view");
   return useQuery({
     queryKey: queryKeys.timesheets.payroll.settings(),
-    queryFn: () => apiClient.get<PayrollSettings>("/timesheets/payroll/settings"),
+    queryFn: ({ signal }) => apiClient.get<PayrollSettings>("/timesheets/payroll/settings", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canView,
   });
@@ -114,8 +114,8 @@ export function useAckPayrollExport() {
 export function payrollExportRowsQueryOptions(exportId: number) {
   return {
     queryKey: queryKeys.timesheets.payroll.exportRows(exportId),
-    queryFn: () =>
-      apiClient.get<ExportRowsResponse>(`/timesheets/payroll/exports/${exportId}/rows`),
+    queryFn: ({ signal }: { signal?: AbortSignal }) =>
+      apiClient.get<ExportRowsResponse>(`/timesheets/payroll/exports/${exportId}/rows`, undefined, signal),
     staleTime: 5 * 60_000,
   };
 }

@@ -57,7 +57,7 @@ export function useRecruitmentStats() {
   const canInterviews = useCan("hr:interviews:view");
   return useQuery({
     queryKey: queryKeys.hr.recruitmentStats(),
-    queryFn: () => apiClient.get<RecruitmentStats>("/hr/recruitment/stats"),
+    queryFn: ({ signal }) => apiClient.get<RecruitmentStats>("/hr/recruitment/stats", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canInterviews,
   });
@@ -83,10 +83,11 @@ export function useJobPostings(params?: JobPostingsParams) {
   };
   return useQuery({
     queryKey: queryKeys.hr.jobPostings(queryParams as Record<string, unknown>),
-    queryFn: async (): Promise<JobPosting[]> => {
+    queryFn: async ({ signal }): Promise<JobPosting[]> => {
       const res = await apiClient.get<JobPosting[] | { items: JobPosting[] }>(
         "/hr/recruitment/jobs",
         queryParams,
+        signal,
       );
       return Array.isArray(res) ? res : res.items;
     },
@@ -105,7 +106,7 @@ export function useJobPostingsPage(params?: JobPostingsParams) {
   };
   return useQuery({
     queryKey: [...queryKeys.hr.jobPostings(queryParams as Record<string, unknown>), "page"] as const,
-    queryFn: (): Promise<{
+    queryFn: ({ signal }): Promise<{
       items: JobPosting[];
       total: number;
       pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
@@ -113,6 +114,7 @@ export function useJobPostingsPage(params?: JobPostingsParams) {
       return apiClient.get(
         "/hr/recruitment/jobs",
         queryParams,
+        signal,
       );
     },
     staleTime: 2 * 60_000,
@@ -123,7 +125,7 @@ export function useJobPosting(id: number) {
   const enabled = Number.isFinite(id) && id > 0;
   return useQuery({
     queryKey: queryKeys.hr.jobPosting(id),
-    queryFn: () => apiClient.get<JobPosting>(`/hr/recruitment/jobs/${id}`),
+    queryFn: ({ signal }) => apiClient.get<JobPosting>(`/hr/recruitment/jobs/${id}`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled,
   });
@@ -200,7 +202,7 @@ export function usePublishJobToBoards() {
 export function useSourcePortals() {
   return useQuery({
     queryKey: [...queryKeys.hr.all, "sourcePortals"] as const,
-    queryFn: () => apiClient.get<SourcePortal[]>("/hr/recruitment/portals"),
+    queryFn: ({ signal }) => apiClient.get<SourcePortal[]>("/hr/recruitment/portals", undefined, signal),
     staleTime: 2 * 60_000,
   });
 }
@@ -219,8 +221,8 @@ export function useUpsertSourcePortal() {
 export function useJobShareLinks(jobId: number) {
   return useQuery({
     queryKey: [...queryKeys.hr.all, "jobShare", jobId] as const,
-    queryFn: () =>
-      apiClient.get<JobShareLinks>(`/hr/recruitment/jobs/${jobId}/share`),
+    queryFn: ({ signal }) =>
+      apiClient.get<JobShareLinks>(`/hr/recruitment/jobs/${jobId}/share`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: jobId > 0,
   });

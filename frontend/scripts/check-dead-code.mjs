@@ -32,6 +32,10 @@ const SCRIPTS_RE = /^scripts\//;
 
 const TEST_INFRA_RE = /^test-utils\//;
 
+const PRE_IMPLEMENTATION_CONTRACTS = new Set([
+  "lib/backend-token-contract.ts",
+]);
+
 const SKIP_DIRS = new Set(["node_modules", ".next", "feedbucket-widget", ".git"]);
 
 const BASELINE = { deadFiles: 0, deadExports: 0 };
@@ -101,6 +105,11 @@ const EXPORT_VERDICTS = new Map([
   ["hooks/api/module-access/index.ts:ModuleMyPermissions", { verdict: "KEEP", reason: "return type of useModuleMyPermissions; inferred structurally by feature consumers" }],
 
   ["hooks/api/module-access/types.ts:PaginatedResult", { verdict: "KEEP", reason: "source definition re-exported through barrel; used structurally inside module-access hooks" }],
+
+  ["lib/command-catalog.ts:NotificationCommandName", { verdict: "KEEP", reason: "keyof typeof NOTIFICATION_COMMANDS — available for consumers that need a typed command-name union without importing the full catalog" }],
+  ["lib/command-catalog.ts:ChatCommandName", { verdict: "KEEP", reason: "keyof typeof CHAT_COMMANDS — available for consumers that need a typed command-name union without importing the full catalog" }],
+  ["lib/command-catalog.ts:CommandDomain", { verdict: "KEEP", reason: "keyof typeof ALL_COMMANDS — available for consumers that iterate over command domains" }],
+  ["features/hr/expenses/expense-constants.ts:ReceiptFileKind", { verdict: "KEEP", reason: "re-exported type from lib/expense-receipts; provides stable import path for consumers that need the kind union without importing the full receipts module" }],
 ]);
 
 function checkStaleVerdicts(verdicts, processedKeys) {
@@ -204,6 +213,9 @@ function classifyFile(relPath, knipDeadSet, importerMap, root) {
   }
   if (TEST_INFRA_RE.test(relPath)) {
     return { cls: "RETAINED-BY-CONVENTION", reason: "test-infrastructure utility; no current consumer — the path exists for future tests" };
+  }
+  if (PRE_IMPLEMENTATION_CONTRACTS.has(relPath)) {
+    return { cls: "RETAINED-BY-CONVENTION", reason: "AR-01 pre-implementation contract — consumers are being written in the token-authority lane; no importers yet is the expected state" };
   }
 
   const absPath = join(root, ...relPath.split("/"));

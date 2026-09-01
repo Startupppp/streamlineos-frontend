@@ -72,7 +72,7 @@ export function useInterviewStats(options?: { enabled?: boolean }) {
   return useQuery({
     enabled: options?.enabled ?? true,
     queryKey: INTERVIEW_STATS_KEY,
-    queryFn: () => apiClient.get<InterviewStats>("/hr/recruitment/interviews/stats"),
+    queryFn: ({ signal }) => apiClient.get<InterviewStats>("/hr/recruitment/interviews/stats", undefined, signal),
     staleTime: 2 * 60_000,
   });
 }
@@ -93,10 +93,11 @@ export function useInterviews(
   return useQuery({
     enabled: options?.enabled ?? true,
     queryKey: queryKeys.hr.interviews(queryParams),
-    queryFn: async (): Promise<Interview[]> => {
+    queryFn: async ({ signal }): Promise<Interview[]> => {
       const res = await apiClient.get<Interview[] | RecruitmentListResponse<Interview>>(
         "/hr/recruitment/interviews",
         queryParams,
+        signal,
       );
       return unwrapRecruitmentItems(res);
     },
@@ -134,7 +135,7 @@ export function useUpdateInterview() {
 export function useScorecardTemplates() {
   return useQuery({
     queryKey: queryKeys.hr.scorecardTemplates(),
-    queryFn: () => apiClient.get<ScorecardTemplate[]>("/hr/recruitment/scorecard-templates"),
+    queryFn: ({ signal }) => apiClient.get<ScorecardTemplate[]>("/hr/recruitment/scorecard-templates", undefined, signal),
     staleTime: 2 * 60_000,
   });
 }
@@ -208,7 +209,7 @@ export function useScheduleInterview() {
 export function useInterviewSlas() {
   return useQuery({
     queryKey: INTERVIEW_SLAS_KEY,
-    queryFn: () => apiClient.get<InterviewSla[]>("/hr/recruitment/interviews/slas"),
+    queryFn: ({ signal }) => apiClient.get<InterviewSla[]>("/hr/recruitment/interviews/slas", undefined, signal),
     staleTime: 2 * 60_000,
   });
 }
@@ -227,7 +228,7 @@ export function useHrSlaReport() {
   const canInterviews = useCan("hr:interviews:view");
   return useQuery({
     queryKey: SLA_REPORT_KEY,
-    queryFn: () => apiClient.get<HrSlaReport>("/hr/recruitment/interviews/sla-report"),
+    queryFn: ({ signal }) => apiClient.get<HrSlaReport>("/hr/recruitment/interviews/sla-report", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canInterviews,
   });
@@ -264,8 +265,8 @@ export function useInterviewQuestions(filters?: {
 
   return useQuery({
     queryKey: [...queryKeys.hr.all, "interviewQuestions", filters] as const,
-    queryFn: () =>
-      apiClient.get<InterviewQuestion[]>(`/hr/interview-questions${qs ? `?${qs}` : ""}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<InterviewQuestion[]>(`/hr/interview-questions${qs ? `?${qs}` : ""}`, undefined, signal),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
   });
@@ -308,10 +309,10 @@ export function useInterviewerPerformance(days = 90) {
   const canInterviews = useCan("hr:interviews:view");
   return useQuery<InterviewerPerformanceResponse>({
     queryKey: queryKeys.hr.interviewerPerformance(days),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<InterviewerPerformanceResponse>(
         `/hr/recruitment/interviewer-performance?days=${days}`
-      ),
+      , undefined, signal),
     staleTime: 5 * 60 * 1000,
     enabled: canInterviews,
   });
@@ -320,7 +321,7 @@ export function useInterviewerPerformance(days = 90) {
 export function useHrBookingLinks() {
   return useQuery({
     queryKey: queryKeys.hr.bookingLinks(),
-    queryFn: () => apiClient.get<HrBookingLink[]>("/hr/recruitment/booking-links"),
+    queryFn: ({ signal }) => apiClient.get<HrBookingLink[]>("/hr/recruitment/booking-links", undefined, signal),
     staleTime: 2 * 60_000,
   });
 }
@@ -342,10 +343,10 @@ export function useInterviewerAvailability(
   const enabled = interviewerIds.length > 0 && !!date;
   return useQuery<InterviewerAvailabilityResponse>({
     queryKey: [...queryKeys.hr.all, "interviewerAvailability", date, interviewerIds],
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<InterviewerAvailabilityResponse>(
         `/hr/recruitment/interviewers/availability?interviewerIds=${interviewerIds.join(",")}&date=${date}`
-      ),
+      , undefined, signal),
     enabled,
     staleTime: 60 * 1000,
   });

@@ -25,6 +25,8 @@
     "check:icon-labels": "node scripts/check-no-unlabeled-icon-buttons.mjs",
     "check:query-scope": "node scripts/check-query-scope.mjs",
     "check:query-scope:self-test": "node scripts/check-query-scope.mjs --self-test",
+    "check:query-signal": "node scripts/check-query-signal.mjs",
+    "check:query-signal:self-test": "node scripts/check-query-signal.mjs --self-test",
     "check:dead-code": "node scripts/check-dead-code.mjs",
     "check:dead-code:self-test": "node scripts/check-dead-code.mjs --self-test",
     "check:seo-metadata": "node scripts/check-seo-metadata.mjs",
@@ -39,6 +41,9 @@
     "check:contract-drift:self-test": "node scripts/check-contract-drift.mjs --self-test",
     "check:module-manifest": "node scripts/check-module-manifest.mjs",
     "check:module-manifest:self-test": "node scripts/check-module-manifest.mjs --self-test",
+    "check:home-manifest": "node scripts/check-home-manifest.mjs",
+    "check:home-manifest:self-test": "node scripts/check-home-manifest.mjs --self-test",
+    "generate:home-manifest": "node scripts/generate-home-manifest.mjs",
     "check:client-pages": "node scripts/check-client-pages.mjs",
     "check:client-pages:self-test": "node scripts/check-client-pages.mjs --self-test",
     "check:properties": "node scripts/check-no-business-routes.mjs && node scripts/check-no-arbitrary-colors.mjs && node scripts/check-no-effect-fetches.mjs && node scripts/check-no-unlabeled-icon-buttons.mjs && npx --yes madge@8 --circular --ts-config tsconfig.json --extensions ts,tsx --exclude \"node_modules|\\.next|feedbucket-widget\" ."

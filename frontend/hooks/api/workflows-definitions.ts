@@ -24,6 +24,7 @@ interface UpdateWorkflowInput {
 
 interface PublishWorkflowInput {
   definitionJson: Record<string, unknown>;
+  expectedVersion?: number;
 }
 
 function assertPermission(allowed: boolean): void {
@@ -34,8 +35,8 @@ export function useWorkflows(params?: WorkflowListParams) {
   const canView = useCan("workflows:workflows:view");
   return useQuery({
     queryKey: queryKeys.workflows.list(params as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<WorkflowCursorPage<Workflow>>("/workflows", params as Record<string, unknown>),
+    queryFn: ({ signal }) =>
+      apiClient.get<WorkflowCursorPage<Workflow>>("/workflows", params as Record<string, unknown>, signal),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
     enabled: canView,
@@ -46,7 +47,7 @@ export function useWorkflow(workflowId: string) {
   const canView = useCan("workflows:workflows:view");
   return useQuery({
     queryKey: queryKeys.workflows.detail(workflowId),
-    queryFn: () => apiClient.get<Workflow>(`/workflows/${workflowId}`),
+    queryFn: ({ signal }) => apiClient.get<Workflow>(`/workflows/${workflowId}`, undefined, signal),
     enabled: canView && workflowId.length > 0,
     staleTime: 30_000,
   });

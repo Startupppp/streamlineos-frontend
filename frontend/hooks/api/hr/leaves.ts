@@ -6,6 +6,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -140,7 +141,7 @@ export function useApproveLeaveDedicated() {
   const qc = useQueryClient();
   const identity = useLeaveQueryIdentity();
   const invalidateLeaveDashboard = useInvalidateLeaveDashboard();
-  return useMutation({
+  return useAuthorizedMutation("hr:leaves:approve", {
     mutationKey: ["hr", "leaves", "approve"],
     mutationFn: ({ leaveId, comment }: { leaveId: number; comment?: string }) =>
       apiClient.put<{ success: boolean }>(`/hr/leaves/${leaveId}/approve`, {
@@ -160,7 +161,7 @@ export function useRejectLeaveDedicated() {
   const qc = useQueryClient();
   const identity = useLeaveQueryIdentity();
   const invalidateLeaveDashboard = useInvalidateLeaveDashboard();
-  return useMutation({
+  return useAuthorizedMutation("hr:leaves:approve", {
     mutationKey: ["hr", "leaves", "reject"],
     mutationFn: ({
       leaveId,
@@ -204,7 +205,7 @@ export function useRevertLeave() {
   const qc = useQueryClient();
   const identity = useLeaveQueryIdentity();
   const invalidateLeaveDashboard = useInvalidateLeaveDashboard();
-  return useMutation({
+  return useAuthorizedMutation("hr:leaves:manage", {
     mutationKey: ["hr", "leaves", "revert"],
     mutationFn: (leaveId: number) =>
       apiClient.patch<{ success: boolean }>(`/hr/leaves/${leaveId}`, {
@@ -233,7 +234,7 @@ export function useLeaveTypesAdmin(options?: { enabled?: boolean }) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: LEAVE_TYPES_KEY,
-    queryFn: () => apiClient.get<HrLeaveType[]>("/hr/leaves/types"),
+    queryFn: ({ signal }) => apiClient.get<HrLeaveType[]>("/hr/leaves/types", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canView && (options?.enabled ?? true),
   });
@@ -242,7 +243,7 @@ export function useLeaveTypesAdmin(options?: { enabled?: boolean }) {
 export function useSeedLeaveTypes() {
   const qc = useQueryClient();
   const identity = useLeaveQueryIdentity();
-  return useMutation({
+  return useAuthorizedMutation("hr:leaves:manage", {
     mutationKey: ["hr", "leaves", "seed-types"],
     mutationFn: () =>
       apiClient.post<{ seeded: number; skipped: number }>("/hr/leaves/types/seed-defaults"),
@@ -256,7 +257,7 @@ export function useSeedLeaveTypes() {
 export function useUpdateLeaveType() {
   const qc = useQueryClient();
   const identity = useLeaveQueryIdentity();
-  return useMutation({
+  return useAuthorizedMutation("hr:leaves:manage", {
     mutationKey: ["hr", "leaves", "update-type"],
     mutationFn: ({ id, ...patch }: { id: number; name?: string; daysPerYear?: number; carryForward?: boolean }) =>
       apiClient.patch<HrLeaveType>(`/hr/leaves/types/${id}`, patch),
@@ -270,7 +271,7 @@ export function useUpdateLeaveType() {
 export function useDeleteLeaveType() {
   const qc = useQueryClient();
   const identity = useLeaveQueryIdentity();
-  return useMutation({
+  return useAuthorizedMutation("hr:leaves:manage", {
     mutationKey: ["hr", "leaves", "delete-type"],
     mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/hr/leaves/types/${id}`),
     onSuccess: () => {
@@ -283,7 +284,7 @@ export function useDeleteLeaveType() {
 export function useCreateLeaveType() {
   const qc = useQueryClient();
   const identity = useLeaveQueryIdentity();
-  return useMutation({
+  return useAuthorizedMutation("hr:leaves:manage", {
     mutationKey: ["hr", "leaves", "create-type"],
     mutationFn: (data: { name: string; daysPerYear: number; carryForward?: boolean }) =>
       apiClient.post<{ id: number; name: string; daysPerYear: number }>(
@@ -302,7 +303,7 @@ export function useHrLeaveContext() {
   const identity = useLeaveQueryIdentity();
   return useQuery({
     queryKey: leaveContextKey(identity),
-    queryFn: () => apiClient.get<LeaveContextResult>("/me/time-off"),
+    queryFn: ({ signal }) => apiClient.get<LeaveContextResult>("/me/time-off", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: Boolean(identity.orgId && identity.userId) && canSelf,
   });
@@ -314,7 +315,7 @@ export function useHrLeaveApprovals(options?: { enabled?: boolean }) {
   const identity = useLeaveQueryIdentity();
   return useQuery({
     queryKey: leaveTeamKey(identity),
-    queryFn: () => apiClient.get<LeaveApprovalsResult>("/hr/leaves/team"),
+    queryFn: ({ signal }) => apiClient.get<LeaveApprovalsResult>("/hr/leaves/team", undefined, signal),
     staleTime: 2 * 60_000,
     enabled:
       Boolean(identity.orgId && identity.userId) &&
@@ -329,7 +330,7 @@ export function useHrLeavesThisWeek(options?: { enabled?: boolean }) {
   const identity = useLeaveQueryIdentity();
   return useQuery({
     queryKey: leaveThisWeekKey(identity),
-    queryFn: () => apiClient.get<unknown[]>("/me/time-off/team-calendar"),
+    queryFn: ({ signal }) => apiClient.get<unknown[]>("/me/time-off/team-calendar", undefined, signal),
     staleTime: 2 * 60_000,
     enabled:
       Boolean(identity.orgId && identity.userId) &&
@@ -343,10 +344,10 @@ export function useHrMyLeaveRequests(enabled = true) {
   const identity = useLeaveQueryIdentity();
   return useQuery({
     queryKey: leaveMyRequestsKey(identity),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<LeaveRequestsPage>(
         "/me/time-off/requests",
-        { limit: 100 },
+        { limit: 100 }, signal,
       ),
     select: (response) => ({ requests: response.data }),
     staleTime: 2 * 60_000,
@@ -360,11 +361,11 @@ export function useHrMyLeaveRequestsInfinite(enabled = true) {
   const key = leaveMyRequestsKey(identity);
   return useInfiniteQuery({
     queryKey: [...key, "pages"] as const,
-    queryFn: ({ pageParam }) =>
+    queryFn: ({ pageParam, signal }) =>
       apiClient.get<LeaveRequestsPage>("/me/time-off/requests", {
         limit: 50,
         ...(pageParam ? { cursor: pageParam } : {}),
-      }),
+      }, signal),
     initialPageParam: null as number | null,
     getNextPageParam: (lastPage) => lastPage.pageInfo.nextCursor ?? undefined,
     staleTime: 2 * 60_000,
@@ -377,11 +378,11 @@ export function useHrHolidaysForYear(year: number) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.holidaysYear(year),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<Holiday[]>("/hr/holidays", { year } as Record<
         string,
         unknown
-      >),
+      >, signal),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canAttendance,
   });
@@ -395,10 +396,10 @@ export function useHrHolidaysForCalendar(params: {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.holidaysCalendar(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<Holiday[]>(
         "/hr/holidays/calendar",
-        params as Record<string, unknown>,
+        params as Record<string, unknown>, signal,
       ),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canAttendance,
@@ -407,7 +408,7 @@ export function useHrHolidaysForCalendar(params: {
 
 export function useAddLegacyHoliday() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "holidays", "create"],
     mutationFn: (data: AddHolidayInput) =>
       apiClient.post<{ success: boolean }>("/hr/holidays", data),
@@ -422,7 +423,7 @@ export function useAddLegacyHoliday() {
 
 export function useDeleteLegacyHoliday() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "holidays", "delete"],
     mutationFn: ({ holidayId }: DeleteHolidayInput) =>
       apiClient.delete<{ success: boolean }>(`/hr/holidays/${holidayId}`),
@@ -456,10 +457,10 @@ export function useHrLeaveAnalytics(year?: number) {
   const y = year ?? new Date().getFullYear();
   return useQuery({
     queryKey: [...queryKeys.hr.all, "leaveAnalytics", y] as const,
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<HrLeaveAnalytics>("/hr/leaves/analytics", {
         year: String(y),
-      }),
+      }, signal),
     staleTime: 120_000,
     enabled: hrEnabled && canView,
   });
@@ -481,7 +482,7 @@ export function useLeavePolicy() {
   const canView = useCan("hr:leaves:view");
   return useQuery({
     queryKey: queryKeys.hr.leavePolicy(),
-    queryFn: () => apiClient.get<LeavePolicyResponse>("/hr/leave-policy"),
+    queryFn: ({ signal }) => apiClient.get<LeavePolicyResponse>("/hr/leave-policy", undefined, signal),
     staleTime: 10 * 60 * 1000,
     enabled: canView,
   });

@@ -7,6 +7,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import type { UseMutationOptions } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -75,8 +76,8 @@ export function useHrAttendanceStatus(
   const { enabled: optEnabled, ...restOptions } = options ?? {};
   return useQuery({
     queryKey: queryKeys.hr.attendanceStatus(),
-    queryFn: () =>
-      apiClient.get<AttendanceStatusResult>("/me/attendance/status"),
+    queryFn: ({ signal }) =>
+      apiClient.get<AttendanceStatusResult>("/me/attendance/status", undefined, signal),
     staleTime: 2 * 60_000,
     refetchInterval: (query) => activeAttendancePollInterval(query.state.data),
     refetchIntervalInBackground: false,
@@ -92,11 +93,11 @@ export function useHrAttendanceHistory(page: number, limit: number) {
   const params = { page, limit };
   return useQuery({
     queryKey: queryKeys.hr.attendanceHistory(params),
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       try {
         return await apiClient.get<AttendanceHistoryResponse>(
           "/me/attendance/history",
-          params,
+          params, signal,
         );
       } catch (error) {
         if ((error as { status?: number }).status !== 404) throw error;
@@ -298,14 +299,14 @@ export function useHrMonthlyAttendance(params: GetMonthlyAttendanceInput) {
   const isOtherUser = params.userId !== undefined;
   return useQuery({
     queryKey: queryKeys.hr.monthlyAttendance(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<AttendanceLog[]>(
         isOtherUser ? "/hr/attendance/monthly" : "/me/attendance/monthly",
         {
           year: params.year,
           month: params.month,
           ...(params.userId ? { userId: params.userId } : {}),
-        },
+        }, signal,
       ),
     staleTime: 2 * 60_000,
     enabled: isOtherUser ? hrEnabled && canManage : canSelf,
@@ -316,7 +317,7 @@ export function useAttendanceHeatmap(params: { year: number }) {
   const canAttendance = useCan("self:attendance");
   return useQuery({
     queryKey: queryKeys.hr.attendanceHeatmap(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<{
         year: number;
         userId: string;
@@ -352,7 +353,7 @@ export function useGetWorkLogs(input: GetWorkLogsInput) {
 
   return useQuery({
     queryKey: queryKeys.hr.workLogs(params),
-    queryFn: () => apiClient.get<WorkLog[]>("/hr/work-logs", params),
+    queryFn: ({ signal }) => apiClient.get<WorkLog[]>("/hr/work-logs", params, signal),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canAttendance,
   });
@@ -365,7 +366,7 @@ export function useUpsertWorkLog(
   >,
 ) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "work-logs", "upsert"],
     mutationFn: (data: UpsertWorkLogInput) =>
       apiClient.post<WorkLog>("/hr/work-logs", data),
@@ -390,10 +391,10 @@ export function useHrTeamAttendanceStatus(params?: TeamAttendanceStatusQuery) {
       "team-attendance-status",
       params ?? {},
     ] as const,
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<TeamAttendanceStatusResponse>(
         "/hr/attendance/team-status",
-        params as Record<string, unknown> | undefined,
+        params as Record<string, unknown> | undefined, signal,
       ),
     staleTime: 65_000,
     refetchInterval: 60_000,

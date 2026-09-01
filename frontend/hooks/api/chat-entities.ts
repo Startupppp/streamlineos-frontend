@@ -51,7 +51,7 @@ export function useLinkPreview(url: string | null) {
   const canRead = useCan("chat:messages:read");
   return useQuery({
     queryKey: [...queryKeys.chat.all, "linkPreview", url] as const,
-    queryFn: () => apiClient.get<LinkMeta>("/chat/link-preview", { url: url! }),
+    queryFn: ({ signal }) => apiClient.get<LinkMeta>("/chat/link-preview", { url: url! }, signal),
     enabled: canRead && Boolean(url) && url!.startsWith("http"),
     staleTime: 10 * 60_000,
     retry: false,
@@ -111,11 +111,11 @@ export function useEntityActions(
   const referenceKeys = references.map(entityReferenceKey).sort().join(",");
   return useQuery({
     queryKey: queryKeys.chat.entityActions(channelId, referenceKeys),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.post<EntityActionsResponse>("/chat/entity-actions/available", {
         channelId,
         references,
-      }),
+      }, { signal }),
     enabled: channelId > 0 && references.length > 0,
     staleTime: 30_000,
     select: (data) => {
@@ -193,10 +193,11 @@ export function useEntityActionOptions(
       channelId,
       source ? entityReferenceKey(source) : "",
     ),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.post<{ options: EntityOption[] }>(
         "/chat/entity-actions/options",
         { channelId, reference: source },
+        { signal },
       ),
     enabled: channelId > 0 && Boolean(source),
     staleTime: 60_000,
