@@ -31,7 +31,7 @@
         "ttfb_p95_ms": 400
       }
     },
-    "notes": "Measured with Lighthouse 12 in CI using the Chrome DevTools Protocol. Field data (CrUX) is the source of truth for production; lab data here is the gating proxy. The 100ms responsiveness rule (CLAUDE.md §12.2) is enforced by INP ≤ 200ms. Bundle byte measurements require pnpm build (production webpack output); the current .next is a Turbopack dev build which cannot be compared to these ceilings."
+    "notes": "Measured with Lighthouse 12 in CI using the Chrome DevTools Protocol. Field data (CrUX) is the source of truth for production; lab data here is the gating proxy. The 100ms responsiveness rule (CLAUDE.md §12.2) is enforced by INP ≤ 200ms. Bundle bytes are gzip-compressed sizes (level 9) summed over all unique chunks referenced in each route's page_client-reference-manifest.js from a production pnpm build. measuredPageChunkBytes is the route-specific additive (chunks not shared with /dashboard baseline)."
   },
   "defaults": {
     "maxFirstLoadJsBytes": 524288,
@@ -47,10 +47,10 @@
       "maxCssBytes": 65536,
       "maxImageBytes": 0,
       "maxThirdPartyBytes": 102400,
-      "measuredFirstLoadJsBytes": null,
-      "measuredPageChunkBytes": null,
+      "measuredFirstLoadJsBytes": 591215,
+      "measuredPageChunkBytes": 46747,
       "lazyLoadedModules": ["mail-compose-sheet", "mail-ai-compose-toolbar", "mail-inbox-summary-sheet"],
-      "note": "Mail shell — first-load budget is higher because DOMPurify (isomorphic-dompurify) is a non-trivial dependency; compose sheet, AI toolbar and inbox summary sheet are lazy-loaded via next/dynamic"
+      "note": "Mail shell — first-load budget is higher because DOMPurify (isomorphic-dompurify) is a non-trivial dependency; compose sheet, AI toolbar and inbox summary sheet are lazy-loaded via next/dynamic. PASSES: 591kB < 614kB ceiling"
     },
     "/inbox": {
       "maxFirstLoadJsBytes": 524288,
@@ -58,21 +58,22 @@
       "maxCssBytes": 65536,
       "maxImageBytes": 0,
       "maxThirdPartyBytes": 102400,
-      "measuredFirstLoadJsBytes": null,
-      "measuredPageChunkBytes": null,
+      "measuredFirstLoadJsBytes": 559642,
+      "measuredPageChunkBytes": 15174,
       "lazyLoadedModules": [],
-      "note": "Home inbox — lightweight notification-style inbox; no external mail provider calls"
+      "note": "Home inbox — lightweight notification-style inbox; no external mail provider calls. BREACH: 547kB > 512kB ceiling by 35kB — the /inbox surface is owned by a separate lane; flagged for that lane to trim the shared chunk set or raise the ceiling to 614kB"
     },
-    "/build/[projectId]/inbox": {
+    "/build/inbox": {
       "maxFirstLoadJsBytes": 614400,
       "maxPageChunkBytes": 204800,
       "maxCssBytes": 65536,
       "maxImageBytes": 0,
       "maxThirdPartyBytes": 102400,
-      "measuredFirstLoadJsBytes": null,
-      "measuredPageChunkBytes": null,
+      "measuredFirstLoadJsBytes": 657252,
+      "measuredPageChunkBytes": 112784,
       "lazyLoadedModules": [],
-      "note": "Build module approval inbox"
+      "_routeNote": "Route is /build/inbox not /build/[projectId]/inbox — corrected from original declaration",
+      "note": "Build module approval inbox. BREACH: 641kB > 614kB ceiling by 43kB — build lane owns this route; flagged for that lane to reduce the approval inbox chunk"
     },
     "/crm/inbox": {
       "maxFirstLoadJsBytes": 614400,
@@ -80,10 +81,10 @@
       "maxCssBytes": 65536,
       "maxImageBytes": 0,
       "maxThirdPartyBytes": 102400,
-      "measuredFirstLoadJsBytes": null,
-      "measuredPageChunkBytes": null,
+      "measuredFirstLoadJsBytes": 576567,
+      "measuredPageChunkBytes": 28224,
       "lazyLoadedModules": [],
-      "note": "CRM inbox — deals and contact conversations"
+      "note": "CRM inbox — deals and contact conversations. PASSES: 563kB < 614kB ceiling"
     },
     "/support/inbox": {
       "maxFirstLoadJsBytes": 614400,
@@ -91,10 +92,10 @@
       "maxCssBytes": 65536,
       "maxImageBytes": 0,
       "maxThirdPartyBytes": 102400,
-      "measuredFirstLoadJsBytes": null,
-      "measuredPageChunkBytes": null,
+      "measuredFirstLoadJsBytes": 605291,
+      "measuredPageChunkBytes": 56948,
       "lazyLoadedModules": [],
-      "note": "Support ticket inbox"
+      "note": "Support ticket inbox. PASSES: 591kB < 614kB ceiling"
     }
   }
 }

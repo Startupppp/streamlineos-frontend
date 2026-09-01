@@ -5,6 +5,7 @@ import { randomBytes } from "node:crypto";
 
 const argv = process.argv.slice(2);
 const SELF_TEST = argv.includes("--self-test");
+const ALLOW_UNMEASURED = argv.includes("--allow-unmeasured");
 const flag = (name, fallback) => {
   const hit = argv.find((a) => a.startsWith(`--${name}=`));
   return hit ? hit.slice(name.length + 3) : fallback;
@@ -137,14 +138,47 @@ async function selfTest() {
   if (notMeasured.length > 0) console.log(`  Not measured: ${notMeasured.join(", ")}`);
   console.log("---");
 
+  const unmeasuredFixture = {
+    mobile: {
+      lcp: { p75_ms: 900 },
+      inp: { p75_ms: null },
+      cls: { p75: 0 },
+      fcp: { p75_ms: 900 },
+      ttfb: { p95_ms: 60 },
+    },
+    desktop: {
+      lcp: { p75_ms: 900 },
+      inp: { p75_ms: 90 },
+      cls: { p75: 0 },
+      fcp: { p75_ms: 900 },
+      ttfb: { p95_ms: 60 },
+    },
+  };
+  const unmeasured = checkBudgets(unmeasuredFixture);
+
   const expectedBreaches = 6;
-  if (failures.length === expectedBreaches && notMeasured.length === 0) {
-    console.log("SELF-TEST PASS: breach detection fires on all injected violations");
+  const breachesOk = failures.length === expectedBreaches && notMeasured.length === 0;
+  const unmeasuredOk =
+    unmeasured.failures.length === 0 && unmeasured.notMeasured.length === 1;
+
+  console.log(
+    `Unmeasured fixture (mobile INP null): ${unmeasured.notMeasured.length} not-measured ` +
+      `(expected 1 — this is a FAIL without --allow-unmeasured)`,
+  );
+
+  if (breachesOk && unmeasuredOk) {
+    console.log("SELF-TEST PASS: breach detection fires, and an unmeasured budget is not reported as met");
     process.exitCode = 0;
   } else {
-    console.error(
-      `SELF-TEST FAIL: expected ${expectedBreaches} failures, got ${failures.length}; not-measured: ${notMeasured.length}`,
-    );
+    if (!breachesOk)
+      console.error(
+        `SELF-TEST FAIL: expected ${expectedBreaches} failures, got ${failures.length}; not-measured: ${notMeasured.length}`,
+      );
+    if (!unmeasuredOk)
+      console.error(
+        `SELF-TEST FAIL: unmeasured fixture expected 0 failures / 1 not-measured, got ` +
+          `${unmeasured.failures.length} / ${unmeasured.notMeasured.length}`,
+      );
     process.exitCode = 1;
   }
 }
@@ -172,21 +206,45 @@ function main() {
 
   printBudgets();
 
+  const measuredRoutes = Array.isArray(results.authenticatedRoutes) ? results.authenticatedRoutes : [];
+  if (measuredRoutes.length === 0) {
+    console.error(
+      `\ncheck-web-vitals-budget: FAIL — no authenticated route was measured.` +
+        `\n  targetUrl was ${String(results.targetUrl ?? "unknown")}.` +
+        `\n  These budgets govern authenticated in-scope routes; landing-page figures` +
+        `\n  do not satisfy them. Run browser-driver-auth.mjs and record the routes it covered.`,
+    );
+    process.exitCode = 1;
+    return;
+  }
+  console.log(`\nMeasured authenticated routes: ${measuredRoutes.join(", ")}`);
+
   const { failures, notMeasured } = checkBudgets(results);
 
   if (notMeasured.length > 0) {
-    console.log(`\nNot measured (blocked — see WEB-VITALS-EVIDENCE.md):`);
+    console.log(`\nNot measured:`);
     for (const m of notMeasured) console.log(`  ${m}`);
   }
 
-  if (failures.length === 0) {
-    console.log("\ncheck-web-vitals-budget: OK (all measured budgets met)");
+  for (const f of failures) console.error(f);
+
+  if (failures.length > 0) {
+    console.error(`\ncheck-web-vitals-budget: ${failures.length} budget violation(s)`);
+    process.exitCode = 1;
     return;
   }
 
-  for (const f of failures) console.error(f);
-  console.error(`\ncheck-web-vitals-budget: ${failures.length} budget violation(s)`);
-  process.exitCode = 1;
+  if (notMeasured.length > 0 && !ALLOW_UNMEASURED) {
+    console.error(
+      `\ncheck-web-vitals-budget: FAIL — ${notMeasured.length} budget(s) have no measurement.` +
+        `\n  An unmeasured budget is not a met budget. Measure it, or pass --allow-unmeasured` +
+        `\n  to record an explicitly incomplete run.`,
+    );
+    process.exitCode = 1;
+    return;
+  }
+
+  console.log("\ncheck-web-vitals-budget: OK (all budgets measured and met)");
 }
 
 if (SELF_TEST) {
