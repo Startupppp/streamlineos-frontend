@@ -133,7 +133,7 @@ export const platformCoreQueryKeys = {
     simulate: (targetUserId: string) =>
       [...base, "access", "simulate", targetUserId] as const,
     simulationCandidates: (params: {
-      page: number;
+      cursor?: string;
       limit: number;
       search?: string;
     }) => [...base, "access", "simulate", "candidates", params] as const,

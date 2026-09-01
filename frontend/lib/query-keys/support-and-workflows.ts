@@ -173,9 +173,9 @@ export const supportAndWorkflowsQueryKeys = {
 
   delegations: {
     all: [...base, "delegations"] as const,
-    received: (params: { page: number; limit: number; search: string }) =>
+    received: (params: { cursor?: string; limit: number; search: string }) =>
       [...base, "delegations", "received", params] as const,
-    given: (params: { page: number; limit: number; search: string }) =>
+    given: (params: { cursor?: string; limit: number; search: string }) =>
       [...base, "delegations", "given", params] as const,
   },
 

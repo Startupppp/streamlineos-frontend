@@ -14,18 +14,17 @@ interface RoleListRow extends Role {
 interface PaginatedRolesResponse {
   data: RoleListRow[];
   pagination: {
-    page: number;
     limit: number;
-    total: number;
-    totalPages: number;
+    nextCursor: string | null;
+    hasMore: boolean;
   };
 }
 
 export async function prefetchRoles() {
   const queryClient = await createServerQueryClient();
   await queryClient.prefetchQuery({
-    queryKey: queryKeys.roles.list({ page: 1, limit: 20 }),
-    queryFn: () => serverGet<PaginatedRolesResponse>("/roles?page=1&limit=20"),
+    queryKey: queryKeys.roles.list({ limit: 20 }),
+    queryFn: () => serverGet<PaginatedRolesResponse>("/roles?limit=20"),
     staleTime: 60_000,
   });
   return dehydrate(queryClient);

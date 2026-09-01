@@ -4,7 +4,7 @@ export const accessAndCrmQueryKeys = {
   roles: {
     all: [...base, "roles"] as const,
     list: (params?: {
-      page: number;
+      cursor?: string;
       limit: number;
       search?: string;
     }) =>
@@ -27,7 +27,7 @@ export const accessAndCrmQueryKeys = {
 
   principalGroups: {
     all: [...base, "principalGroups"] as const,
-    list: (params?: { page: number; limit: number }) =>
+    list: (params?: { cursor?: string; limit: number }) =>
       params
         ? ([...base, "principalGroups", "list", params] as const)
         : ([...base, "principalGroups", "list"] as const),
