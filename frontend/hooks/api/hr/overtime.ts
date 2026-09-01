@@ -24,13 +24,10 @@ export interface CompOffBalance {
 
 export interface OvertimeRequestsResponse {
   items: OvertimeRequest[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
-export function useOvertimeRequests(params?: { page?: number; pageSize?: number }) {
+export function useOvertimeRequests(params?: { cursor?: string; pageSize?: number }) {
   const canView = useCan("hr:attendance:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({

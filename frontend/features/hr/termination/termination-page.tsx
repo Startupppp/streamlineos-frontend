@@ -36,15 +36,18 @@ export function TerminationPage() {
   const employeeUserIdParam = searchParams.get("employeeId");
   const canManageExit = useCan("hr:exit:manage");
 
-  const [page, setPage] = useState(1);
+  const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
+  const cursor = cursorHistory.at(-1);
+  const page = cursorHistory.length;
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const {
     data: terminationsData,
     isLoading,
+    isFetching,
     isError,
     refetch,
   } = useTerminations({
-    page,
+    cursor,
     status: statusFilter === "ALL" ? undefined : statusFilter,
   });
   const terminations = useMemo(() => terminationsData?.data ?? [], [terminationsData]);
@@ -99,8 +102,20 @@ export function TerminationPage() {
 
   const handleStatusFilterChange = useCallback((value: StatusFilter) => {
     setStatusFilter(value);
-    setPage(1);
+    setCursorHistory([undefined]);
   }, []);
+
+  const handlePreviousPage = useCallback(() => {
+    setCursorHistory((history) =>
+      history.length > 1 ? history.slice(0, -1) : history,
+    );
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    const nextCursor = terminationsData?.pagination.nextCursor;
+    if (nextCursor)
+      setCursorHistory((history) => [...history, nextCursor]);
+  }, [terminationsData?.pagination.nextCursor]);
 
   const isOtherReason = selectedReason === TERMINATION_REASON_OTHER;
 
@@ -406,7 +421,10 @@ export function TerminationPage() {
         terminations={terminations}
         statusCounts={terminationsData?.statusCounts}
         pagination={terminationsData?.pagination}
-        onPageChange={setPage}
+        page={page}
+        isFetching={isFetching}
+        onPreviousPage={handlePreviousPage}
+        onNextPage={handleNextPage}
         canManageExit={canManageExit}
         canApproveExit={canApproveExit}
         statusFilter={statusFilter}

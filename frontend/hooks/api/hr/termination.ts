@@ -67,10 +67,9 @@ interface CreateTerminationInput {
 }
 
 export interface TerminationPagination {
-  page: number;
   limit: number;
-  total: number;
-  totalPages: number;
+  nextCursor: string | null;
+  hasMore: boolean;
 }
 
 export interface TerminationListResponse {
@@ -80,7 +79,7 @@ export interface TerminationListResponse {
 }
 
 export interface UseTerminationsParams {
-  page?: number;
+  cursor?: string;
   limit?: number;
   status?: TerminationStatus;
 }
@@ -99,16 +98,14 @@ const terminationKeys = {
 export function useTerminations(params: UseTerminationsParams = {}) {
   const canView = useCan("hr:exit:manage");
   const hrEnabled = useModuleEnabled("hr");
-  const page = params.page ?? 1;
   const limit = params.limit ?? 20;
-  const search = new URLSearchParams({
-    page: String(page),
-    limit: String(limit),
-  });
+  const cursor = params.cursor ?? "";
+  const search = new URLSearchParams({ limit: String(limit) });
+  if (cursor) search.set("cursor", cursor);
   if (params.status) search.set("status", params.status);
   return useQuery({
     queryKey: terminationKeys.list({
-      page,
+      cursor,
       limit,
       status: params.status ?? "ALL",
     }),
