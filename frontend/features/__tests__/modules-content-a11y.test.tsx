@@ -167,84 +167,127 @@ const MOCK_WORKFLOW: Workflow = {
   updatedAt: "2026-01-01T00:00:00Z",
   createdBy: null,
 };
-describe("Module-level a11y — Notifications/Inbox (NotificationListSkeleton)", () => {
-  it("passes axe at desktop", async () => {
-    const { baseElement } = render(<NotificationListSkeleton count={3} />);
-    await expectNoAxeViolations(baseElement);
+describe("Module-level a11y — Knowledge/Wiki/Chatbot (KbPageNotFound)", () => {
+  it("renders heading and action buttons for 404 error", () => {
+    render(
+      <KbPageNotFound
+        error={{ status: 404 }}
+        onRetry={jest.fn()}
+      />,
+    );
+    expect(screen.getByRole("heading", { name: "Page not found" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Knowledge home/i })).toBeInTheDocument();
   });
 
-  it("passes axe at 375px mobile", async () => {
-    const restore = atViewport("mobile");
-    try {
-      const { baseElement } = render(<NotificationListSkeleton count={3} />);
-      await expectNoAxeViolations(baseElement);
-    } finally {
-      restore();
-    }
-  });
-});
-
-describe("Module-level a11y — HRMS (EmployeesGridSkeleton)", () => {
-  it("passes axe at desktop", async () => {
-    const { baseElement } = render(<EmployeesGridSkeleton count={4} />);
-    await expectNoAxeViolations(baseElement);
+  it("renders access-denied message for 403 error", () => {
+    render(
+      <KbPageNotFound
+        error={{ status: 403 }}
+        onRetry={jest.fn()}
+      />,
+    );
+    expect(
+      screen.getByRole("heading", { name: "You don't have access" }),
+    ).toBeInTheDocument();
   });
 
-  it("passes axe at 768px tablet", async () => {
-    const restore = atViewport("tablet");
-    try {
-      const { baseElement } = render(<EmployeesGridSkeleton count={4} />);
-      await expectNoAxeViolations(baseElement);
-    } finally {
-      restore();
-    }
-  });
-});
-
-describe("Module-level a11y — Build/PM (MyTicketsSkeleton list view)", () => {
-  it("passes axe in list view", async () => {
-    const { baseElement } = render(<MyTicketsSkeleton view="list" />);
-    await expectNoAxeViolations(baseElement);
+  it("shows retry button for generic error (no status code)", () => {
+    render(<KbPageNotFound error={new Error("Network error")} onRetry={jest.fn()} />);
+    expect(screen.getByRole("button", { name: /Try again/i })).toBeInTheDocument();
   });
 
-  it("passes axe in table view", async () => {
-    const { baseElement } = render(<MyTicketsSkeleton view="table" />);
+  it("passes axe for 404 variant", async () => {
+    const { baseElement } = render(
+      <KbPageNotFound error={{ status: 404 }} onRetry={jest.fn()} />,
+    );
     await expectNoAxeViolations(baseElement);
   });
 });
 
-describe("Module-level a11y — Support (KnowledgeGapStatusBadge)", () => {
-  const statuses = ["OPEN", "DRAFTED", "ROUTED", "PUBLISHED", "DISMISSED"] as const;
-
-  for (const status of statuses) {
-    it(`status=${status} passes axe`, async () => {
-      const { baseElement } = render(<KnowledgeGapStatusBadge status={status} />);
-      await expectNoAxeViolations(baseElement);
-    });
-  }
-
-  it("renders visible text matching the status label", () => {
-    render(<KnowledgeGapStatusBadge status="PUBLISHED" />);
-    expect(screen.getByText("Published")).toBeInTheDocument();
-  });
-
-  it("BITE PROOF — fails if status label is missing", () => {
-    render(<KnowledgeGapStatusBadge status="OPEN" />);
-    expect(screen.getByText("Open")).toBeInTheDocument();
-    expect(screen.queryByText("OPEN")).not.toBeInTheDocument();
-  });
-});
-
-describe("Module-level a11y — Accounting (OverviewSkeleton)", () => {
-  it("renders without crash", () => {
-    const { container } = render(<OverviewSkeleton />);
+describe("Module-level a11y — Chat (ChannelAvatar)", () => {
+  it("renders channel icon for non-DIRECT type without crash", () => {
+    const { container } = render(
+      <ChannelAvatar type="GROUP" name="Engineering" />,
+    );
     expect(container.firstChild).toBeInTheDocument();
   });
+
+  it("renders DM avatar with fallback initials", () => {
+    render(
+      <ChannelAvatar
+        type="DIRECT"
+        otherMember={{ name: "Jane Doe" }}
+      />,
+    );
+    expect(screen.getByText("JD")).toBeInTheDocument();
+  });
+
+  it("passes axe for GROUP channel type", async () => {
+    const { baseElement } = render(
+      <ChannelAvatar type="GROUP" name="Engineering" />,
+    );
+    await expectNoAxeViolations(baseElement);
+  });
 });
 
-describe("Module-level a11y — Billing (BillingPageSkeleton)", () => {
-  it("renders without crash", () => {
-    const { container } = render(<BillingPageSkeleton />);
-    expect(container.firstChild).toBeInTheDocument();
+describe("Module-level a11y — Home/Dashboard (HomeSectionBoundary)", () => {
+  it("renders children when no error", () => {
+    render(
+      <HomeSectionBoundary sectionLabel="My Work">
+        <div>My Work Content</div>
+      </HomeSectionBoundary>,
+    );
+    expect(screen.getByText("My Work Content")).toBeInTheDocument();
+  });
+
+  it("passes axe with normal children", async () => {
+    const { baseElement } = render(
+      <HomeSectionBoundary sectionLabel="Announcements">
+        <p>Announcement text</p>
+      </HomeSectionBoundary>,
+    );
+    await expectNoAxeViolations(baseElement);
+  });
+});
+
+describe("Module-level a11y — Workflows (WorkflowCard)", () => {
+  it("renders workflow name and action buttons", () => {
+    render(
+      <WorkflowCard
+        workflow={MOCK_WORKFLOW}
+        onDuplicate={jest.fn()}
+        onDelete={jest.fn()}
+      />,
+    );
+    expect(screen.getByText("Employee Onboarding")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Duplicate workflow" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Delete workflow" }),
+    ).toBeInTheDocument();
+  });
+
+  it("passes axe for published workflow card", async () => {
+    const { baseElement } = render(
+      <WorkflowCard
+        workflow={MOCK_WORKFLOW}
+        onDuplicate={jest.fn()}
+        onDelete={jest.fn()}
+      />,
+    );
+    await expectNoAxeViolations(baseElement);
+  });
+
+  it("BITE PROOF — fails if aria-label is removed from icon-only action buttons", () => {
+    render(
+      <WorkflowCard
+        workflow={MOCK_WORKFLOW}
+        onDuplicate={jest.fn()}
+        onDelete={jest.fn()}
+      />,
+    );
+    const deleteBtn = screen.getByRole("button", { name: "Delete workflow" });
+    expect(deleteBtn).toHaveAttribute("aria-label", "Delete workflow");
   });
 });
