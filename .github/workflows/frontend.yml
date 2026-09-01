@@ -74,6 +74,14 @@ jobs:
       - name: Web Vitals budgets are enforceable
         run: pnpm run check:web-vitals-budget:self-test
 
+      # The sibling check:route-budgets lives in the backend and reads a different
+      # manifest, so measured route bundle bytes previously had no gate at all.
+      - name: Route bundle bytes stay within their declared ceiling
+        run: pnpm run check:route-bundle-budget:self-test && pnpm run check:route-bundle-budget
+
+      - name: Every mutation is classified as permissioned or self
+        run: pnpm run check:command-catalog:self-test && pnpm run check:command-catalog
+
       - name: Run Tests
         run: pnpm test --runInBand
 

@@ -122,6 +122,11 @@ jobs:
       - name: HR table freeze
         run: pnpm check:hr-table-freeze:self-test && pnpm check:hr-table-freeze
 
+      # An unbounded ids array lets one request force an arbitrarily large
+      # IN (...) or write transaction.
+      - name: Bulk id arrays declare an upper bound
+        run: pnpm check:bulk-id-limits:self-test && pnpm check:bulk-id-limits
+
       - name: Unit Tests
         run: pnpm test -- --runInBand
 
