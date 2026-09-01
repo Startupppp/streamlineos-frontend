@@ -69,8 +69,8 @@ pnpm -C frontend type-check
 - [x] Authenticated a11y suites — 9 suites / 102 tests passed serially (`frontend/features/__tests__/*-a11y.test.*`).
 - [ ] Hard file-size gate — the bounded scan reports five files over 500 lines: `projects-tickets-read.service.ts` (502), `attendance.service.ts` (543), `filings.service.ts` (516), `reports.service.ts` (596), and `support-macros.service.ts` (524). These are cross-session-owned files; remediation belongs in the owning sessions with mixed-responsibility decomposition proof.
 - [x] Tenant-isolation coverage scan — 896/896 tenant-owned services have a declared isolation test; the checker reports 590 isolation test files.
-- [ ] Full dead-code and unbounded-read scans — dead-code scan hit a host-level `Array buffer allocation failed` in Knip; the serial unbounded-read gate failed with the handoff counts below. Rerun dead-code from a quiescent checkout and resolve the Session 05 findings.
-- [ ] Unbounded-read handoff — the serial gate reports 60 actionable offsets, 280 actionable unbounded reads, 2 unclassified paths, and 3 regressions. Ownership is Session 05; do not alter its classifications or query paths from Session 06.
+- [ ] Full dead-code and unbounded-read scans — dead-code scan hit a host-level `Array buffer allocation failed` in Knip; the latest serial unbounded-read gate still fails with 5 unclassified paths and 3 regressions. Rerun dead-code from a quiescent checkout and resolve the Session 05 findings.
+- [ ] Unbounded-read handoff — the latest serial gate reports 0 actionable offsets, 282 actionable unbounded reads, 5 unclassified paths, and 3 regressions. Ownership is Session 05; do not alter its classifications or query paths from Session 06.
 
 ### Reliability and security evidence
 
