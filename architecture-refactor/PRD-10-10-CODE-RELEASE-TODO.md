@@ -629,11 +629,19 @@ The defaults below are code-release budgets on a production build with the docum
 Recorded explicitly so no unchecked box above is mistaken for an oversight.
 
 - **Tenant relationship repair is partial and the count is honest.** The rebuilt
-  `pg_catalog` gate inventories 853 single-column FKs: 233 excluded as
-  CRM/Inventory, 17 repaired by migrations `0938`–`0941` (the PRD's named Build
-  and Billing priority sets), **603 actionable**. Repair of the 122 Build-schema
-  relations is in progress; roughly 481 will remain and the gate will keep
-  failing with a true count rather than a suppressed one. RLS is live on 977/984
+  `pg_catalog` gate now inventories **736** single-column FKs (was 853): 233
+  excluded as CRM/Inventory, 17 covered by `0938`–`0941`, **486 actionable**
+  (was 603). The Build tranche is applied — migrations `0943`–`0947` add 116
+  composite `(org_id, child_id) → (org_id, id)` constraints and `0948` drops the
+  117 superseded singles, 232 statements with zero failures against
+  `scratch_boot_a`. Composites are added `NOT VALID` then validated separately
+  under `lock_timeout = '5s'`, and every `ON DELETE SET NULL` names its column
+  list so the `NOT NULL org_id` is never the column nulled. The HR/payroll/
+  timesheets tranche is in progress; workflows, accounting, support and KB
+  remain. The gate keeps failing with a true count rather than a suppressed one.
+  Counts here were re-derived from `pg_catalog` directly, not from the migration
+  files. The live database is untouched: zero of these constraints and zero
+  journal rows at or after the `0943` stamp exist there. RLS is live on 977/984
   tenant tables, so these constraints are defence-in-depth, not the only tenant
   control — that is why a partial tranche is acceptable and a false zero was not.
 - **Backend over-300 ratchet is at 409 against a 394 baseline.** The baseline
