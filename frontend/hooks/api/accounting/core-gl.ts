@@ -16,8 +16,6 @@ export interface GlRow {
 }
 
 export interface GlResponse {
-  openingBalance: string;
-  closingBalance: string;
   rows: GlRow[];
   total: number;
   page: number;
@@ -68,7 +66,10 @@ export function useGlAccounts(params: GlAccountsParams) {
   return useQuery<{ items: GlAccount[] }, Error>({
     queryKey: coreKeys.glAccounts(params),
     queryFn: () =>
-      apiClient.get<{ items: GlAccount[] }>("/accounting/general-ledger/accounts", toQuery(params)),
+      apiClient.get<{ items: GlAccount[] }>(
+        "/accounting/general-ledger/accounts",
+        toQuery(params),
+      ),
     staleTime: 60_000,
     enabled: can && !!params.from && !!params.to,
   });

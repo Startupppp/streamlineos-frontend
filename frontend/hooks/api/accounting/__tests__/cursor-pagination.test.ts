@@ -3,6 +3,7 @@ import { useCan } from "@/hooks/api/access";
 import { useVendorCredits } from "../ap-vendors";
 import { useBudgets } from "../planning";
 import { useBankAccounts } from "../banking";
+import { useGeneralLedger } from "../core-gl";
 
 jest.mock("@tanstack/react-query", () => ({
   ...jest.requireActual("@tanstack/react-query"),
@@ -49,6 +50,12 @@ function captureBudgetsOptions(params?: Parameters<typeof useBudgets>[0]) {
 function captureBankAccountsOptions(params?: Parameters<typeof useBankAccounts>[0]) {
   mockQuery.mockImplementation((opts: unknown) => opts);
   useBankAccounts(params);
+  return mockQuery.mock.calls.at(-1)?.[0] as { queryFn: () => unknown };
+}
+
+function captureGeneralLedgerOptions(params: Parameters<typeof useGeneralLedger>[0]) {
+  mockQuery.mockImplementation((opts: unknown) => opts);
+  useGeneralLedger(params);
   return mockQuery.mock.calls.at(-1)?.[0] as { queryFn: () => unknown };
 }
 
@@ -229,6 +236,70 @@ describe("useBankAccounts — cursor pagination contract", () => {
     expect(apiClient.get).toHaveBeenCalledWith(
       "/finance/bank-accounts",
       expect.not.objectContaining({ page: expect.anything() }),
+    );
+  });
+});
+
+describe("useGeneralLedger — page/pageSize contract (NOT cursor-migrated)", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockCan.mockReturnValue(true);
+  });
+
+  it("sends page and pageSize on first load", () => {
+    const { apiClient } = jest.requireMock("@/lib/api-client");
+    (apiClient.get as jest.Mock).mockResolvedValue({
+      rows: [],
+      total: 0,
+      page: 1,
+      pageSize: 50,
+      totalPages: 0,
+    });
+
+    const opts = captureGeneralLedgerOptions({ from: "2026-01-01", to: "2026-01-31", page: 1, pageSize: 50 });
+    void opts.queryFn();
+
+    expect(apiClient.get).toHaveBeenCalledWith(
+      "/accounting/general-ledger",
+      expect.objectContaining({ page: "1", pageSize: "50" }),
+    );
+  });
+
+  it("never sends cursor", () => {
+    const { apiClient } = jest.requireMock("@/lib/api-client");
+    (apiClient.get as jest.Mock).mockResolvedValue({
+      rows: [],
+      total: 0,
+      page: 1,
+      pageSize: 50,
+      totalPages: 0,
+    });
+
+    const opts = captureGeneralLedgerOptions({ from: "2026-01-01", to: "2026-01-31" });
+    void opts.queryFn();
+
+    expect(apiClient.get).toHaveBeenCalledWith(
+      "/accounting/general-ledger",
+      expect.not.objectContaining({ cursor: expect.anything() }),
+    );
+  });
+
+  it("BITES: fails when cursor is expected", () => {
+    const { apiClient } = jest.requireMock("@/lib/api-client");
+    (apiClient.get as jest.Mock).mockResolvedValue({
+      rows: [],
+      total: 0,
+      page: 1,
+      pageSize: 50,
+      totalPages: 0,
+    });
+
+    const opts = captureGeneralLedgerOptions({ from: "2026-01-01", to: "2026-01-31" });
+    void opts.queryFn();
+
+    expect(apiClient.get).not.toHaveBeenCalledWith(
+      "/accounting/general-ledger",
+      expect.objectContaining({ cursor: expect.anything() }),
     );
   });
 });

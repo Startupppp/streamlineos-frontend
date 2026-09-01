@@ -18,6 +18,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { ErrorState } from "@/components/shared";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useGeneralLedger, useGlAccounts } from "@/hooks/api/accounting/core";
@@ -31,6 +32,8 @@ import { downloadCsv } from "@/features/accounting/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
 import type { GlRow } from "@/hooks/api/accounting/core";
+
+const GL_PAGE_SIZE = 50;
 
 function getMonthStart(): string {
   const d = new Date();
@@ -58,12 +61,6 @@ function sumDebit(rows: GlRow[]): number {
 function sumCredit(rows: GlRow[]): number {
   return rows.reduce((sum, r) => sum + (parseFloat(r.credit) || 0), 0);
 }
-
-function isNegative(value: string): boolean {
-  return parseFloat(value) < 0;
-}
-
-const PAGE_SIZE = 50;
 
 const glColumns: DataTableColumn<GlRow>[] = [
   {
@@ -142,7 +139,7 @@ const glColumns: DataTableColumn<GlRow>[] = [
       <span
         className={cn(
           "text-right font-mono text-sm tabular-nums block",
-          isNegative(row.runningBalance)
+          parseFloat(row.runningBalance) < 0
             ? "text-destructive"
             : "text-foreground",
         )}
@@ -162,8 +159,8 @@ export default function GeneralLedgerPage() {
   const [accountId, setAccountId] = useState<string>("");
   const [clientId, setClientId] = useState<string>("");
   const [vendorId, setVendorId] = useState<string>("");
-  const [page, setPage] = useState<number>(1);
   const [showMoreFilters, setShowMoreFilters] = useState<boolean>(false);
+  const [page, setPage] = useState(1);
 
   const canExport = useCan("accounting:reports:export");
   const { iconRef: exportIconRef, hoverHandlers: exportHoverHandlers } =
@@ -182,42 +179,47 @@ export default function GeneralLedgerPage() {
     clientId: clientId ? parseInt(clientId, 10) : undefined,
     vendorId: vendorId ? parseInt(vendorId, 10) : undefined,
     page,
-    pageSize: PAGE_SIZE,
+    pageSize: GL_PAGE_SIZE,
   });
 
   const glData = glQuery.data;
   const rows = glData?.rows ?? [];
+  const total = glData?.total ?? 0;
 
   const periodDebit = sumDebit(rows);
   const periodCredit = sumCredit(rows);
 
+  function resetPage(): void {
+    setPage(1);
+  }
+
   function handleFromChange(value: string): void {
     setFrom(value);
-    setPage(1);
+    resetPage();
   }
 
   function handleToChange(value: string): void {
     setTo(value);
-    setPage(1);
+    resetPage();
   }
 
   function handleAccountChange(value: string): void {
     setAccountId(value === "__none__" ? "" : value);
-    setPage(1);
+    resetPage();
   }
 
   function handleClientChange(value: string): void {
     setClientId(value === "__none__" ? "" : value);
-    setPage(1);
+    resetPage();
   }
 
   function handleVendorChange(value: string): void {
     setVendorId(value === "__none__" ? "" : value);
-    setPage(1);
+    resetPage();
   }
 
-  function handlePageChange(newPage: number): void {
-    setPage(newPage);
+  function handlePageChange(p: number): void {
+    setPage(p);
   }
 
   function handleToggleMoreFilters(): void {
@@ -361,13 +363,8 @@ export default function GeneralLedgerPage() {
       }
     >
       <div className="flex flex-1 min-h-0 flex-col space-y-4">
-        {glData && (
-          <StatCardGrid cols={4}>
-            <StatCard
-              label="Opening Balance"
-              value={formatMoney(glData.openingBalance)}
-              tone="default"
-            />
+        {rows.length > 0 && (
+          <StatCardGrid cols={2}>
             <StatCard
               label="Period Debits"
               value={periodDebit.toLocaleString(undefined, {
@@ -383,11 +380,6 @@ export default function GeneralLedgerPage() {
                 maximumFractionDigits: 2,
               })}
               tone="emerald"
-            />
-            <StatCard
-              label="Closing Balance"
-              value={formatMoney(glData.closingBalance)}
-              tone={isNegative(glData.closingBalance) ? "red" : "default"}
             />
           </StatCardGrid>
         )}
@@ -411,28 +403,32 @@ export default function GeneralLedgerPage() {
             onRetry={handleRetry}
           />
         ) : (
-          <DataTable
-            className="flex-1 min-h-0"
-            data={rows}
-            columns={glColumns}
-            getRowKey={(row) => row.entryId ?? row.entryNumber}
-            isLoading={glQuery.isLoading}
-            pagination={{
-              mode: "server",
-              page,
-              pageSize: PAGE_SIZE,
-              total: glData?.total ?? 0,
-              onPageChange: handlePageChange,
-            }}
-            emptyState={
-              <EmptyState
-                compact
-                title="No transactions found"
-                description="No activity for the selected account and date range."
+          <>
+            <DataTable
+              className="flex-1 min-h-0"
+              data={rows}
+              columns={glColumns}
+              getRowKey={(row) => row.entryId ?? row.entryNumber}
+              isLoading={glQuery.isLoading}
+              emptyState={
+                <EmptyState
+                  compact
+                  title="No transactions found"
+                  description="No activity for the selected account and date range."
+                />
+              }
+              minWidth="700px"
+            />
+            {total > GL_PAGE_SIZE ? (
+              <TablePagination
+                page={page}
+                pageSize={GL_PAGE_SIZE}
+                total={total}
+                onPageChange={handlePageChange}
+                disabled={glQuery.isFetching}
               />
-            }
-            minWidth="700px"
-          />
+            ) : null}
+          </>
         )}
       </div>
     </PageWrapper>
