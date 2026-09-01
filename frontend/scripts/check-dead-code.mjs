@@ -30,16 +30,93 @@ const CRM_INVENTORY_RE =
 
 const SCRIPTS_RE = /^scripts\//;
 
+const TEST_INFRA_RE = /^test-utils\//;
+
 const SKIP_DIRS = new Set(["node_modules", ".next", "feedbucket-widget", ".git"]);
 
 const BASELINE = { deadFiles: 0, deadExports: 0 };
 
-// Floors that detect a broken scan (knip returning nothing, or the graph walk
-// resolving almost no files). Current real values: ~6 knip files, ~70 exports+types,
-// hundreds of graph files, thousands of import edges. These are deliberately
-// conservative — they fire only when the tool is clearly broken, not when the
-// codebase legitimately improves.
 const SCAN_FLOOR = { knipTotal: 5, graphFiles: 100, graphEdges: 300 };
+
+const EXPORT_VERDICTS = new Map([
+  ["hooks/api/workflows.ts:useWorkflowSchedules", { verdict: "WIRE", reason: "per-workflow schedule CRUD; page: app/(authenticated)/workflows/[workflowId]/schedules/page.tsx (not yet built)" }],
+  ["hooks/api/workflows.ts:useCreateSchedule", { verdict: "WIRE", reason: "create-schedule action missing from per-workflow scheduler page" }],
+  ["hooks/api/workflows.ts:useWorkflowSecrets", { verdict: "WIRE", reason: "per-workflow secrets panel; page: app/(authenticated)/workflows/[workflowId]/secrets/page.tsx (not yet built)" }],
+  ["hooks/api/workflows.ts:useCreateWorkflowSecret", { verdict: "WIRE", reason: "create-workflow-secret action missing from per-workflow secrets page" }],
+  ["hooks/api/workflows.ts:useDeleteWorkflowSecret", { verdict: "WIRE", reason: "delete-workflow-secret action missing from per-workflow secrets page" }],
+  ["hooks/api/workflows.ts:TriggerType", { verdict: "WIRE", reason: "workflow builder trigger-type filter/display UI not yet consuming this type" }],
+  ["hooks/api/workflows.ts:ApprovalStatus", { verdict: "WIRE", reason: "workflow approval filter UI not yet consuming this type" }],
+  ["hooks/api/workflows.ts:WorkflowSortField", { verdict: "WIRE", reason: "workflow list sort UI not built; no sort controls on app/(authenticated)/workflows/page.tsx" }],
+  ["hooks/api/workflows.ts:SortDirection", { verdict: "WIRE", reason: "workflow list sort direction UI not built" }],
+  ["hooks/api/workflows.ts:WorkflowVersion", { verdict: "WIRE", reason: "workflow version history panel not yet consuming this type" }],
+  ["hooks/api/workflows.ts:WorkflowAnalytics", { verdict: "WIRE", reason: "workflow analytics page exists but does not import this type explicitly" }],
+  ["hooks/api/workflows.ts:WorkflowCursorPage", { verdict: "WIRE", reason: "workflow cursor-pagination type not yet used by list consumers" }],
+  ["hooks/api/workflows.ts:WorkflowListParams", { verdict: "WIRE", reason: "workflow list filter params type not yet used by list page" }],
+  ["hooks/api/workflows.ts:ExecutionListParams", { verdict: "WIRE", reason: "execution list filter params type not yet used by executions page" }],
+
+  ["hooks/api/workflows-secrets.ts:useWorkflowSecrets", { verdict: "WIRE", reason: "per-workflow secrets panel not yet built (app/(authenticated)/workflows/[workflowId]/secrets/)" }],
+  ["hooks/api/workflows-secrets.ts:useCreateWorkflowSecret", { verdict: "WIRE", reason: "create per-workflow-secret action not yet wired" }],
+  ["hooks/api/workflows-secrets.ts:useDeleteWorkflowSecret", { verdict: "WIRE", reason: "delete per-workflow-secret action not yet wired" }],
+
+  ["hooks/api/workflows-schedules.ts:useWorkflowSchedules", { verdict: "WIRE", reason: "per-workflow schedules panel not yet built (app/(authenticated)/workflows/[workflowId]/schedules/)" }],
+  ["hooks/api/workflows-schedules.ts:useCreateSchedule", { verdict: "WIRE", reason: "create per-workflow-schedule action not yet wired" }],
+
+  ["hooks/api/calendar.ts:useCancelOccurrence", { verdict: "WIRE", reason: "cancel-single-occurrence action missing from features/calendar/event-detail-sheet.tsx; backend DELETE /calendar/events/{eventId}/occurrences/{occurrenceStart} exists" }],
+
+  ["features/hr/expenses/expense-stats.tsx:MemberExpenseStats", { verdict: "WIRE", reason: "member self-service expense stats component exists but not imported by the HR expenses page; add to features/employee-self-service or features/hr/expenses page" }],
+
+  ["hooks/api/accounting/banking.ts:useBankImports", { verdict: "WIRE", reason: "bank-imports list not wired; features/accounting/banking/components/bank-import-client.tsx uses create but not list; add useBankImports to that component" }],
+
+  ["hooks/api/onboarding-flow.ts:useModuleChecklist", { verdict: "WIRE", reason: "per-module checklist detail view not wired; backend GET /onboarding/module-checklists/{moduleKey} exists; add to features/dashboard/module-setup-banners.tsx or a new module-checklist page" }],
+  ["hooks/api/onboarding-flow.ts:useSkipChecklistItem", { verdict: "WIRE", reason: "skip-checklist-item action not wired to any UI; backend POST /onboarding/module-checklists/{moduleKey}/items/{itemKey}/skip exists" }],
+  ["hooks/api/onboarding-flow.ts:useRestartModuleChecklist", { verdict: "WIRE", reason: "restart-module-checklist action not wired; backend POST /onboarding/module-checklists/{moduleKey}/restart exists" }],
+  ["hooks/api/onboarding-flow.ts:useGuidedTours", { verdict: "WIRE", reason: "guided-tour UI not built; backend GET /onboarding/tours exists" }],
+  ["hooks/api/onboarding-flow.ts:useSaveTourProgress", { verdict: "WIRE", reason: "tour progress save action not wired; backend POST /onboarding/tours/{tourKey}/progress exists" }],
+  ["hooks/api/onboarding-flow.ts:useDismissTour", { verdict: "WIRE", reason: "tour dismiss action not wired; backend POST /onboarding/tours/{tourKey}/dismiss exists" }],
+
+  ["hooks/api/party/subjects.ts:useDeleteSubject", { verdict: "WIRE", reason: "subject delete action not wired; features/party/subjects/subjects-page.tsx has list + create/edit but no delete row-action" }],
+
+  ["hooks/api/hr/dashboard.ts:useHrDashboardMetrics", { verdict: "WIRE", reason: "no HR dashboard page exists; backend GET /hr/dashboard/metrics exists; add dashboard page under app/(authenticated)/hr/dashboard/" }],
+  ["hooks/api/hr/dashboard.ts:useHrLeaveCalendar", { verdict: "WIRE", reason: "HR leave calendar widget not wired; backend GET /hr/leave-calendar exists; belongs on HR dashboard page" }],
+  ["hooks/api/hr/dashboard.ts:useHrOnboardingStatus", { verdict: "WIRE", reason: "HR onboarding status widget not wired; backend GET /hr/dashboard/onboarding-status exists; belongs on HR dashboard page" }],
+
+  ["hooks/api/accounting/ar-collections.ts:useCollectionActivities", { verdict: "WIRE", reason: "collections activities list not wired to any accounting feature page; add to features/accounting/sales/ar-collections view" }],
+  ["hooks/api/accounting/ap-payment-runs.ts:useVendorPayments", { verdict: "WIRE", reason: "vendor payments list not wired; add to features/accounting/purchases/ap-payment-runs view" }],
+
+  ["hooks/api/build/teams.ts:useProjectTeamMembers", { verdict: "WIRE", reason: "team members list not wired; features/build/teams/team-home-page.tsx exists but members sub-section not built; backend GET /build/teams/{teamId}/members exists" }],
+
+  ["hooks/api/inbox.ts:useInfiniteInbox", { verdict: "WIRE", reason: "notifications-only inbox view (/me/inbox) not wired to any page; unified inbox (useUnifiedInbox → /me/inbox/unified) covers the feature/inbox shell; if /me/inbox endpoint is deprecated, delete this hook and the backend route" }],
+  ["hooks/api/inbox.ts:useInboxCount", { verdict: "WIRE", reason: "notification-inbox count (/me/inbox/count) not wired; unified inbox covers the UI; if /me/inbox/count is deprecated, delete this hook and the backend route" }],
+
+  ["hooks/api/hr/attendance.ts:useAttendanceHeatmap", { verdict: "WIRE", reason: "attendance heatmap chart not wired to any feature page; backend GET /me/attendance/heatmap exists; add to features/hr/attendance or employee self-service attendance view" }],
+
+  ["hooks/api/hr/recruitment/interviews.ts:SlaReportStage", { verdict: "WIRE", reason: "SLA report stage breakdown type not consumed by any report UI; SLA reporting page not yet built" }],
+  ["hooks/api/hr/recruitment/interviews.ts:SlaReportMonth", { verdict: "WIRE", reason: "SLA report monthly breakdown type not consumed; SLA reporting page not yet built" }],
+  ["hooks/api/hr/recruitment/interviews.ts:SlaReportStageSummary", { verdict: "WIRE", reason: "SLA report stage summary type not consumed; SLA reporting page not yet built" }],
+  ["hooks/api/hr/recruitment/interviews.ts:BusyBlock", { verdict: "WIRE", reason: "interviewer busy-blocks type for availability scheduling not yet consumed by availability UI" }],
+
+  ["hooks/api/roles.ts:RoleTemplate", { verdict: "KEEP", reason: "return type of useRoleTemplates hook; feature consumers infer the type from hook return; no explicit import required" }],
+
+  ["hooks/api/module-access/index.ts:ModuleRolePermission", { verdict: "KEEP", reason: "part of ModuleRoleGroup.permissions; consumers infer via hook return type, no explicit import needed" }],
+  ["hooks/api/module-access/index.ts:ModuleMemberCandidate", { verdict: "KEEP", reason: "return type of useModuleMemberCandidates; inferred structurally, no explicit import needed" }],
+  ["hooks/api/module-access/index.ts:ModuleOwnership", { verdict: "KEEP", reason: "return type of useModuleOwnership; inferred structurally" }],
+  ["hooks/api/module-access/index.ts:MemberGrant", { verdict: "KEEP", reason: "return element type of useModuleMemberGrants; inferred structurally" }],
+  ["hooks/api/module-access/index.ts:Pagination", { verdict: "KEEP", reason: "internal pagination shape within PaginatedResult; used in hook return types inferred by consumers" }],
+  ["hooks/api/module-access/index.ts:PaginatedResult", { verdict: "KEEP", reason: "wrapper type for paginated hook responses; inferred by consumers through hook return types" }],
+  ["hooks/api/module-access/index.ts:CursorPaginatedResult", { verdict: "KEEP", reason: "cursor-pagination wrapper type; inferred by consumers through hook return types" }],
+  ["hooks/api/module-access/index.ts:AuditCursorPage", { verdict: "KEEP", reason: "audit log cursor page type; inferred by consumers through useModuleAuditLog return type" }],
+  ["hooks/api/module-access/index.ts:ModuleMyPermissions", { verdict: "KEEP", reason: "return type of useModuleMyPermissions; inferred structurally by feature consumers" }],
+
+  ["hooks/api/module-access/types.ts:PaginatedResult", { verdict: "KEEP", reason: "source definition re-exported through barrel; used structurally inside module-access hooks" }],
+]);
+
+function checkStaleVerdicts(verdicts, processedKeys) {
+  const stale = [];
+  for (const key of verdicts.keys()) {
+    if (!processedKeys.has(key)) stale.push(key);
+  }
+  return stale;
+}
 
 function toFwd(p) {
   return p.replace(/\\/g, "/");
@@ -132,6 +209,9 @@ function classifyFile(relPath, knipDeadSet, importerMap, root) {
   if (SCRIPTS_RE.test(relPath)) {
     return { cls: "RETAINED-BY-CONVENTION", reason: "standalone executable script, not a module" };
   }
+  if (TEST_INFRA_RE.test(relPath)) {
+    return { cls: "RETAINED-BY-CONVENTION", reason: "test-infrastructure utility; no current consumer — the path exists for future tests" };
+  }
 
   const absPath = join(root, ...relPath.split("/"));
   const entry = importerMap.get(absPath);
@@ -155,7 +235,7 @@ function classifyFile(relPath, knipDeadSet, importerMap, root) {
   return { cls: "DEAD", reason: "no live importers found in module graph" };
 }
 
-function classifyExport(filePath) {
+function classifyExport(filePath, name) {
   if (CONTRACT_BARRELS.has(filePath)) {
     return { cls: "RETAINED-BY-CONTRACT", reason: "named intentional barrel" };
   }
@@ -163,9 +243,14 @@ function classifyExport(filePath) {
     return { cls: "RETAINED-BY-CONTRACT", reason: "feature barrel extension point" };
   }
   if (CRM_INVENTORY_RE.test(filePath)) {
-    return { cls: "UNPROVEN", reason: "CRM/Inventory excluded from PRD scope; runtime telemetry required" };
+    return { cls: "EXCLUDED", reason: "CRM/Inventory excluded from PRD scope; not counted in dead-code baseline" };
   }
-  return { cls: "UNPROVEN", reason: "no consumer found statically; runtime telemetry required" };
+  const key = `${filePath}:${name}`;
+  if (EXPORT_VERDICTS.has(key)) {
+    const { verdict, reason } = EXPORT_VERDICTS.get(key);
+    return { cls: verdict, reason };
+  }
+  return { cls: "UNCLASSIFIED", reason: "no verdict recorded in EXPORT_VERDICTS; add a WIRE/KEEP entry to resolve" };
 }
 
 function assert(cond, msg) {
@@ -205,16 +290,35 @@ function runSelfTest() {
   assert(r3.cls === "RETAINED-BY-CONTRACT",
     `(c) reexport-source.ts → expected RETAINED-BY-CONTRACT, got ${r3.cls}`);
 
-  const r4 = classifyExport("features/some-feature/index.ts");
+  const r4 = classifyExport("features/some-feature/index.ts", "SomeThing");
   assert(r4.cls === "RETAINED-BY-CONTRACT",
     `(d) feature barrel export → expected RETAINED-BY-CONTRACT, got ${r4.cls}`);
 
-  const r5 = classifyExport("hooks/api/crm/metadata.ts");
-  assert(r5.cls === "UNPROVEN",
-    `(e) CRM export → expected UNPROVEN, got ${r5.cls}`);
+  const r5 = classifyExport("hooks/api/crm/metadata.ts", "SomeExport");
+  assert(r5.cls === "EXCLUDED",
+    `(e) CRM export → expected EXCLUDED, got ${r5.cls}`);
 
-  // Test buildImporterMap itself against a real temp fixture so the file-walk
-  // and import-parsing logic (not just classifyFile) is covered.
+  const r6 = classifyExport("hooks/api/some-new-hook.ts", "useNewHook");
+  assert(r6.cls === "UNCLASSIFIED",
+    `(i) unclassified export → expected UNCLASSIFIED (gate would fail), got ${r6.cls}`);
+
+  const r7 = classifyExport("hooks/api/calendar.ts", "useCancelOccurrence");
+  assert(r7.cls === "WIRE",
+    `(j) WIRE verdict → expected WIRE, got ${r7.cls}`);
+
+  const r8 = classifyExport("hooks/api/roles.ts", "RoleTemplate");
+  assert(r8.cls === "KEEP",
+    `(k) KEEP verdict → expected KEEP, got ${r8.cls}`);
+
+  const fakeVerdicts = new Map([["hooks/api/ghost.ts:useGhost", { verdict: "WIRE", reason: "test" }]]);
+  const stale = checkStaleVerdicts(fakeVerdicts, new Set());
+  assert(stale.length === 1 && stale[0] === "hooks/api/ghost.ts:useGhost",
+    `(l) stale verdict detection → expected [hooks/api/ghost.ts:useGhost], got [${stale.join(",")}]`);
+
+  const r9 = classifyFile("test-utils/render.tsx", new Set(), new Map(), synthRoot);
+  assert(r9.cls === "RETAINED-BY-CONVENTION",
+    `(m) test-infra file → expected RETAINED-BY-CONVENTION, got ${r9.cls}`);
+
   const fixtureDir = join(tmpdir(), `dead-code-self-test-${Date.now()}`);
   try {
     mkdirSync(fixtureDir, { recursive: true });
@@ -240,15 +344,20 @@ function runSelfTest() {
     rmSync(fixtureDir, { recursive: true, force: true });
   }
 
-  console.log("PASS: self-test (8 assertions)\n");
-  console.log("  (a) file with no live importers                    → DEAD");
-  console.log("  (b) file reachable via side-effect import          → RETAINED-BY-CONTRACT");
-  console.log("  (c) file reachable via re-export from live barrel  → RETAINED-BY-CONTRACT");
-  console.log("  (d) export from feature barrel                     → RETAINED-BY-CONTRACT");
-  console.log("  (e) export from CRM domain                        → UNPROVEN");
+  console.log("PASS: self-test (13 assertions)\n");
+  console.log("  (a) file with no live importers                       → DEAD");
+  console.log("  (b) file reachable via side-effect import             → RETAINED-BY-CONTRACT");
+  console.log("  (c) file reachable via re-export from live barrel     → RETAINED-BY-CONTRACT");
+  console.log("  (d) export from feature barrel                        → RETAINED-BY-CONTRACT");
+  console.log("  (e) export from CRM domain                            → EXCLUDED");
   console.log("  (f) buildImporterMap: named import edge recorded");
   console.log("  (g) buildImporterMap: side-effect import edge recorded");
   console.log("  (h) buildImporterMap: re-export edge recorded");
+  console.log("  (i) export with no EXPORT_VERDICTS entry              → UNCLASSIFIED (gate bites)");
+  console.log("  (j) export with WIRE verdict in EXPORT_VERDICTS       → WIRE");
+  console.log("  (k) export with KEEP verdict in EXPORT_VERDICTS       → KEEP");
+  console.log("  (l) EXPORT_VERDICTS entry not in knip output          → stale (gate bites)");
+  console.log("  (m) test-utils file                                   → RETAINED-BY-CONVENTION");
 }
 
 async function runMain() {
@@ -311,7 +420,10 @@ async function runMain() {
     "DEAD": [],
     "RETAINED-BY-CONTRACT": [],
     "RETAINED-BY-CONVENTION": [],
-    "UNPROVEN": [],
+    "WIRE": [],
+    "KEEP": [],
+    "EXCLUDED": [],
+    "UNCLASSIFIED": [],
   };
 
   for (const rel of deadFileRels) {
@@ -319,10 +431,17 @@ async function runMain() {
     buckets[r.cls].push({ type: "file", path: rel, reason: r.reason });
   }
 
+  const processedVerdictKeys = new Set();
+
   for (const ex of deadExportItems) {
-    const r = classifyExport(ex.file);
+    const r = classifyExport(ex.file, ex.name);
+    if (r.cls === "WIRE" || r.cls === "KEEP") {
+      processedVerdictKeys.add(`${ex.file}:${ex.name}`);
+    }
     buckets[r.cls].push({ type: ex.kind, path: ex.file, name: ex.name, reason: r.reason });
   }
+
+  const staleVerdicts = checkStaleVerdicts(EXPORT_VERDICTS, processedVerdictKeys);
 
   console.log("\n=== Dead Code Classification ===\n");
   console.log(
@@ -345,6 +464,25 @@ async function runMain() {
 
   console.log(`\n=== Baseline: files=${BASELINE.deadFiles} exports=${BASELINE.deadExports} ===`);
   console.log(`=== Current:  files=${deadFiles} exports=${deadExports} ===`);
+
+  if (staleVerdicts.length > 0) {
+    console.error(
+      `\nFAIL: ${staleVerdicts.length} stale EXPORT_VERDICTS entr${staleVerdicts.length === 1 ? "y" : "ies"} ` +
+      `(export no longer dead — remove from EXPORT_VERDICTS or confirm it regressed):`
+    );
+    for (const key of staleVerdicts) console.error(`  ${key}`);
+    process.exit(1);
+  }
+
+  if (buckets["UNCLASSIFIED"].length > 0) {
+    console.error(
+      `\nFAIL: ${buckets["UNCLASSIFIED"].length} unclassified export(s) — add a WIRE or KEEP entry to EXPORT_VERDICTS for each:`
+    );
+    for (const it of buckets["UNCLASSIFIED"]) {
+      console.error(`  ${it.path}:${it.name}`);
+    }
+    process.exit(1);
+  }
 
   if (deadFiles > BASELINE.deadFiles || deadExports > BASELINE.deadExports) {
     console.error("\nFAIL: dead code count exceeds baseline. New dead code introduced.");

@@ -128,6 +128,28 @@ jobs:
       - name: Build
         run: pnpm build
 
+      # Release artifacts. The SBOM and the artifact hash manifest are retained with the
+      # build so a shipped binary can be traced back to the dependency set it was built from.
+      - name: Generate SBOM
+        run: pnpm sbom:generate:self-test && pnpm sbom:generate
+
+      - name: Record artifact hashes
+        run: pnpm artifact:record-hashes
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ github.sha }}
+          path: backend/sbom.json
+          retention-days: 90
+
+      - name: Upload artifact hash manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifact-hashes-${{ github.sha }}
+          path: backend/artifact-hashes.json
+          retention-days: 90
+
       - name: Build Container
         working-directory: .
         run: docker build -f backend/Dockerfile backend
