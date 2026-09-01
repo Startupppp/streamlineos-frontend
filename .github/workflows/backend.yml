@@ -68,6 +68,9 @@ jobs:
       - name: Type Check
         run: pnpm typecheck
 
+      - name: Spec-inclusive Type Check
+        run: pnpm check:spec-typecheck:self-test && pnpm check:spec-typecheck
+
       - name: Placement Bypass Guard Self-Test
         run: pnpm check:placement-bypass:self-test
 
@@ -103,6 +106,9 @@ jobs:
 
       - name: Migration Discipline
         run: pnpm check:migration-discipline
+
+      - name: Feature Flag Governance
+        run: pnpm check:feature-flag-governance:self-test && pnpm check:feature-flag-governance
 
       - name: Files over 300 lines do not increase
         run: pnpm check:over-300:self-test && pnpm check:over-300
