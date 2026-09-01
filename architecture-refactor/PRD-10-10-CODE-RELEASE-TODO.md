@@ -19,9 +19,9 @@ It does not claim cloud isolation, physical replicas, PITR, regional recovery, l
 Current reconciliation count:
 
 - Verified completed invariants: **15**.
-- Immediate code-level criteria still open: **94**.
+- Immediate code-level criteria still open: **180**.
 - Deferred production/compliance criteria still open: **34**.
-- The 94 immediate criteria are acceptance checks, not 94 confirmed defects; fresh execution may close a criterion without a code change when its implementation already passes.
+- The 180 immediate criteria are acceptance checks, not 180 confirmed defects; fresh execution may close a criterion without a code change when its implementation already passes.
 
 ## Product constraints
 
@@ -152,16 +152,165 @@ Current reconciliation count:
 
 ### 10. Module release matrix
 
-- [ ] Organization/Settings: verify hierarchy scope, organization switching, owner protection, custom roles, module access administration and authorization-backed navigation/actions.
-- [ ] Home: verify each widget is permission-scoped, privacy-safe, bounded and independently failure-isolated; a failed widget cannot fail or leak the dashboard.
-- [ ] HRMS/Payroll: verify self-service versus administration, sensitive projections, approvals, payroll locking/reconciliation, payslips, immutable history, bounded exports and idempotency.
-- [ ] Build/PM/Workflows: verify membership, ticket/board cursors, schedules, secrets, workflow versions, retries, cancellation, approvals, idempotency and consumers.
-- [ ] Billing/Payments/Accounting: verify webhook replay safety, entitlements, seats/proration, usage, tax/currency, invoice immutability, journal consistency, async exports/reminders and DLQ recovery.
-- [ ] Chat: verify channel/thread authorization, ordering, duplicate-safe delivery, fanout, reconnect/offline recovery, reactions, unread/read state, token revocation and bounded history/export.
-- [ ] Inbox/mail/Notifications: verify unified bounded contracts, duplicate-safe delivery, authorization-safe realtime, unread counters, templates, localization, suppression/unsubscribe, retry/DLQ and replay safety.
-- [ ] Calendar: verify RRULE, exceptions, timezone/DST, attendee privacy, free/busy/conflicts, reminder replacement/deduplication, sync adapters and exports.
-- [ ] Knowledge/Wiki/Chatbot: verify revisions, ingestion retry/idempotency, files, malware gate, ACL inside keyword/vector retrieval, citations, purge/reindex and corpus latency.
-- [ ] Frontend: verify responsive 375/768/1280 layouts, keyboard/screen-reader use, all UI states, route/action parity, bundles, authenticated rendering and SEO without changing landing animations.
+Architecture verdict before execution:
+
+- **KEEP** the current top-level ownership of Organization/RBAC, Home/Dashboard, Settings, HR, Payroll, Build, Billing, Accounting, Chat, Calendar, Mail/Inbox, Notifications and Knowledge.
+- **KEEP** Home as a composition module for universal surfaces. It may call other modules through small interfaces but must not own their tables, authorization policies, cache namespaces, workers or business implementation.
+- **REFACTOR** a module only when the audit identifies a concrete correctness, security, scale, testability or operability failure. Do not split or rename modules for style.
+- Every module verdict must be recorded as KEEP, REFACTOR or REMOVE with source paths, failure prevented and verification. An unchecked module has not yet earned 10/10.
+
+Mandatory folder/file evidence for **every** module below:
+
+- [ ] Inventory its backend module folders, controllers, implementations, DTO/Zod schemas, database schema files, migrations, workers, cache keys, event consumers, frontend routes, components, hooks, TanStack keys, tests, fixtures and operational scripts.
+- [ ] Verify every folder/file has one canonical domain owner, kebab-case naming, correct import direction and no parallel legacy/duplicate location.
+- [ ] Classify every inventoried file as KEEP, REFACTOR or REMOVE; name the concrete failure prevented for each REFACTOR/REMOVE verdict.
+- [ ] Verify each file has one cohesive responsibility, stays within size policy or a documented exception, exposes the smallest useful interface and contains no pass-through/dead/commented/debug implementation.
+- [ ] Prove removals and moves with dependency-graph, dynamic/side-effect import, route registration, raw table-name/FK, build/typecheck and relevant migration-integrity evidence.
+- [ ] Record the final module folder tree and public interfaces so future work cannot recreate retired paths, duplicated schemas, hooks, query keys or endpoints.
+
+#### 10.1 Authentication, identity, sessions and organization
+
+- [ ] Architecture/schema: verify global identity is separated from tenant membership; organization, invitation, membership, session and organization-switch relationships have correct keys, uniqueness, lifecycle and revocation data.
+- [ ] Routes/contracts: verify signup, login, logout, refresh, recovery, MFA, invitation and organization switching use Zod/OpenAPI contracts and never trust client actor/current-org fields.
+- [ ] Authorization/security: test account enumeration, fixation/replay, lockout, invitation takeover, revoked membership, cross-org switching and last-owner/owner-transfer invariants.
+- [ ] Queries/cache: verify bounded membership/session reads, required indexes and immediate invalidation of session, effective-access and organization caches.
+- [ ] Frontend/TanStack/tests: verify workspace/onboarding gates, organization switch state, query-key tenant isolation, auth error states and allow/deny/cross-tenant E2E.
+
+#### 10.2 Organization RBAC and module RBAC
+
+- [ ] Architecture/schema: verify permission catalog, org roles, module standing, custom roles, direct grants, scopes and assignments remain normalized and tenant-correlated.
+- [ ] Routes/contracts: verify role/grant/module-access CRUD has strict Zod contracts, stable OpenAPI, idempotent mutations and exhaustive owner/descendant protections.
+- [ ] Authorization/cache: prove data-layer enforcement, deny-by-default classification and revocation invalidation without a database round trip per permission check.
+- [ ] Queries/performance: verify effective-permission resolution is batched/cached, scope expansion is bounded and indexes cover subject, role, permission, module and tenant access paths.
+- [ ] Frontend/TanStack/tests: verify routes, navigation, queries and buttons consume one effective-access contract and test org/module owner, admin, member, custom role, direct grant and revocation cases.
+
+#### 10.3 Home and dashboard composition
+
+- [ ] Architecture/schema: prove Home owns composition/preferences only and does not duplicate Chat, Calendar, Inbox or Notification domain tables or implementation.
+- [ ] Routes/contracts: define a bounded per-section dashboard contract with independent success/error metadata and permission-safe projections.
+- [ ] Authorization/privacy: derive each section from caller identity and effective access; prove calendar, people, payroll and communication data cannot leak through summaries/counts.
+- [ ] Queries/cache: verify parallel bounded aggregation, no N+1/fetch-all behavior, per-section cache ownership and mutation invalidation from source modules.
+- [ ] Frontend/TanStack/tests: verify independent Suspense/error/loading/empty states, stable query keys, partial failure isolation, responsive rendering and widget-level allow/deny E2E.
+
+#### 10.4 Settings and module-access administration
+
+- [ ] Architecture/schema: prove global settings contain organization configuration/access governance only while operational and module-owned settings remain with their modules.
+- [ ] Routes/contracts: verify organization profile, hierarchy, security, members, roles, module access and billing settings expose canonical non-duplicated routes and strict contracts.
+- [ ] Authorization: test owner/admin/member visibility and mutations, last-owner protection, hierarchy scope, module owner administration and record-level denial.
+- [ ] Queries/cache: verify bounded settings reads, tenant-leading indexes and invalidation of organization, hierarchy, access, navigation and entitlement caches.
+- [ ] Frontend/TanStack/tests: verify canonical routes, form-schema parity, dirty/error/conflict states, permission-backed navigation and mutation invalidation.
+
+#### 10.5 Directory, Me and universal self-service
+
+- [ ] Architecture/schema: preserve one organization-person identity with membership, worker and employment facets; resolve subjects through the person seam without cross-tenant inference.
+- [ ] Routes/contracts: use `/me/*` for self operations, derive subject from authentication and separate directory projections from sensitive HR/payroll projections.
+- [ ] Authorization/privacy: prove universal member access only to allowed self-service/directory records and separate HR/payroll administrative widening through DataScope.
+- [ ] Queries/cache: verify minimal projections, bounded directory search, tenant-safe person resolution and invalidation across membership/worker/employment changes.
+- [ ] Frontend/TanStack/tests: verify self and administration keys never collide, universal navigation survives disabled paid modules and cross-person/cross-org denial tests pass.
+
+#### 10.6 HRMS
+
+- [ ] Architecture/schema: audit people/employment, leave, attendance, recruitment, onboarding, performance, benefits, documents and approval lifecycles for normalized tenant-safe relations and justified table ownership.
+- [ ] Routes/contracts: verify resource-specific controllers, strict Zod/OpenAPI contracts, self versus administration routes, bounded bulk operations and no client actor/current-org fields.
+- [ ] Authorization/privacy: test own/team/department/branch/org DataScope, sensitive projection controls, candidate/employee separation, approvals and cross-tenant record denial.
+- [ ] Queries/cache/workers: verify cursors, filters, exports, leave balances, attendance and review paths; tenant-leading indexes; cache invalidation; bounded reminders/imports/exports.
+- [ ] Frontend/TanStack/tests: verify canonical HR routes, form parity, self/admin separation, all UI states, responsive tables/forms and full CRUD/approval/cross-tenant E2E.
+
+#### 10.7 Payroll
+
+- [ ] Architecture/schema: verify payroll runs, components, assignments, calculations, payslips, taxes, deductions and payment/reconciliation history are normalized, tenant-safe and immutable where financial.
+- [ ] Routes/contracts: verify calculation, lock, approve, publish, reverse and export operations use strict schemas, idempotency and explicit state transitions.
+- [ ] Authorization/privacy: test payroll owner/admin/member, approver, self-payslip, separation-of-duties, sensitive projections and every mutation hook.
+- [ ] Queries/cache/workers: verify bounded run/item reads, indexed employee/period/status paths, no N+1 calculations, asynchronous exports and correct invalidation after lock/publish/reversal.
+- [ ] Frontend/TanStack/tests: verify run-state UI, conflict/retry/partial failure, permission gates, secure downloads and calculation/locking/reconciliation E2E.
+
+#### 10.8 Build/PM
+
+- [ ] Architecture/schema: keep project and product entities distinct inside Build; verify workspaces, projects, products, tickets, boards, sprints, roadmaps, OKRs, feedback and QA relations.
+- [ ] Routes/contracts: verify canonical `/build` resources, strict schemas, stable cursors/filter/sort contracts, idempotent mutations and bounded bulk operations.
+- [ ] Authorization: test workspace/project/product membership, module roles, record scope, private resources, watchers/assignees and cross-tenant identifiers.
+- [ ] Queries/cache/events: verify board/backlog/search plans, ordering tie-breakers, counters, cache invalidation and duplicate-safe activity/notification events.
+- [ ] Frontend/TanStack/tests: verify drag/reorder concurrency, optimistic rollback, filter/cursor reset, route/action parity, responsive boards and CRUD/cross-scope E2E.
+
+#### 10.9 Workflows and automation
+
+- [ ] Architecture/schema: verify definitions, immutable versions, triggers, schedules, secrets references, runs, steps, approvals and execution attempts are normalized and tenant-safe.
+- [ ] Routes/contracts: verify create/version/publish/pause/run/cancel/retry/approve operations have strict schemas, idempotency and explicit state transitions.
+- [ ] Authorization/security: test authoring versus execution/approval permissions, secret non-disclosure, module/record scope and cross-tenant trigger targets.
+- [ ] Queries/cache/workers: verify leases, concurrency limits, retries/backoff, cancellation, DLQ, schedule deduplication, bounded histories and consumer registration.
+- [ ] Frontend/TanStack/tests: verify editor/run-history state, version conflicts, permission gates, polling/subscription cleanup and deterministic execution/recovery tests.
+
+#### 10.10 Billing, subscriptions and payments
+
+- [ ] Architecture/schema: verify plans, subscriptions, entitlements, placements/seats, usage, payment events, invoices, adjustments, tax/currency and outbox ledgers with immutable financial history.
+- [ ] Routes/contracts: verify checkout/change/cancel, billing profile, invoices, usage and AI-credit routes are canonical, strictly validated, idempotent and provider-neutral.
+- [ ] Authorization/security: test billing owner/admin/member access, provider signature verification, replay/forgery, tenant ownership, entitlement gates and sensitive redaction.
+- [ ] Queries/cache/workers: verify local entitlement resolution, seat/proration concurrency, usage aggregation, webhook dedupe, retries/DLQ and invalidation without provider calls per request.
+- [ ] Frontend/TanStack/tests: verify the two canonical Settings billing pages, plan/seat/usage/invoice states, mutation invalidation and deterministic outage/replay/proration E2E.
+
+#### 10.11 Accounting and finance
+
+- [ ] Architecture/schema: verify accounts, journals/entries, expenses, reimbursements, invoices, payments, reconciliation and immutable reversal relationships balance and preserve tenant scope.
+- [ ] Routes/contracts: verify posting, approval, reimbursement, reconciliation, reversal, export and reminder operations use strict schemas, idempotency and valid financial state transitions.
+- [ ] Authorization: test finance roles, approver separation, record/DataScope, employee self-expense access, immutable posted records and cross-tenant denial.
+- [ ] Queries/cache/workers: verify ledger/report/export plans, bounded reminder sweeps, asynchronous resumable exports, retries/cancellation/DLQ and derived-balance invalidation.
+- [ ] Frontend/TanStack/tests: verify monetary precision, approval/reversal conflicts, report cursors, export job state and balanced-journal/cross-tenant E2E.
+
+#### 10.12 Chat
+
+- [ ] Architecture/schema: verify channels, memberships, messages, threads, reactions, attachments, receipts/read cursors and durable events are normalized with tenant/channel composite integrity.
+- [ ] Routes/contracts: verify channel/message/thread/reaction/read/history/export routes use strict schemas, bounded cursors, server-derived actors and idempotent client message keys.
+- [ ] Authorization: test channel membership, private/direct conversations, thread inheritance, every mutation hook, attachment access and immediate issued-token revocation.
+- [ ] Queries/cache/realtime: verify stable message ordering, indexed history/thread/reaction/unread paths, no unread scans, duplicate-safe fanout, reconnect/offline recovery and safe cache invalidation.
+- [ ] Frontend/TanStack/tests: verify infinite-query cursor merge, optimistic send/reaction rollback, dedupe, unread state, reconnect, permission removal, responsive/a11y behavior and concurrency E2E.
+
+#### 10.13 Calendar
+
+- [ ] Architecture/schema: verify calendars/sources, events, attendees, recurrence rules, exceptions, reminders and synchronization state are normalized with tenant-safe attendee relations.
+- [ ] Routes/contracts: verify event/series/occurrence, RSVP, free-busy, conflict, reminder and export routes use strict schemas, bounded ranges/cursors and a standard RRULE library.
+- [ ] Authorization/privacy: test calendar/source visibility, attendee privacy, own/shared/admin operations, private events, cross-tenant IDs and every mutation hook.
+- [ ] Queries/cache/workers: verify timezone/DST, recurrence expansion limits, free-busy/conflict indexes, reminder replacement/deduplication, sync retries and range/source cache invalidation.
+- [ ] Frontend/TanStack/tests: verify one `/calendar`, source toggles, timezone display, series-versus-instance edits, cursor/range keys and DST/exception/conflict/reminder E2E.
+
+#### 10.14 Inbox and mail
+
+- [ ] Architecture/schema: verify accounts/conversations/messages/participants/labels, metadata, delivery/sync cursors and attachments have normalized tenant/account ownership.
+- [ ] Routes/contracts: define one bounded Inbox contract for list/thread/search/read/label/archive/send/reply/attachment operations with strict schemas and provider-neutral adapters.
+- [ ] Authorization/security: test account ownership/delegation, recipient/attachment access, HTML sanitization, unsafe links/content and cross-tenant conversation/message IDs.
+- [ ] Queries/cache/workers: verify indexed conversation ordering/search/unread, incremental sync, idempotent send/receive, bounce/retry/DLQ and invalidation of list/thread/count keys.
+- [ ] Frontend/TanStack/tests: verify infinite lists, thread hydration, optimistic read/label rollback, compose/send states, offline/reconnect, sanitization and account-revocation E2E.
+
+#### 10.15 Notifications, email and push
+
+- [ ] Architecture/schema: verify notifications, recipients, preferences, templates, delivery attempts, provider events, read state and dedupe keys are normalized and tenant-safe.
+- [ ] Routes/contracts: verify list/read/read-all/preferences and administrative template/test routes are strictly validated, bounded and idempotent.
+- [ ] Authorization/privacy: test recipient-only reads/mutations, administrative template scope, sensitive payload minimization, tenant-safe realtime channels and unsubscribe/consent rules.
+- [ ] Queries/cache/workers: verify indexed unread counts without scans, at-least-once duplicate-safe dispatch, outbox consumers, retry/backoff/DLQ, bounce/complaint/suppression and provider adapter failure.
+- [ ] Frontend/TanStack/tests: verify notification/count key consistency, optimistic read rollback, realtime dedupe, preference forms, accessibility and replay/revocation/cross-tenant E2E.
+
+#### 10.16 Knowledge Base, Wiki and Chatbot
+
+- [ ] Architecture/schema: verify spaces, memberships, documents/pages, immutable revisions, attachments, ingestion jobs, chunks/embeddings and deletion/reindex state have tenant-composite integrity.
+- [ ] Routes/contracts: verify CRUD, revision, publish/archive, search, ingestion, reindex, export and chatbot routes use strict schemas, bounded work and idempotency.
+- [ ] Authorization/privacy: test org/user content, space/audience/record ACLs, draft/published visibility, attachment access and ACL enforcement inside keyword/vector retrieval before model context.
+- [ ] Queries/cache/workers: verify revision/search plans, ingestion leases/retries/DLQ, chunk dedupe, permission-aware cache keys, purge/reindex and realistic-corpus latency.
+- [ ] Frontend/TanStack/tests: verify editor/revision conflicts, search cursors, permission changes, citations/source integrity, ingestion states and ACL/purge/reindex E2E.
+
+#### 10.17 Shared storage, search, realtime and integration adapters
+
+- [ ] Architecture/schema: verify shared modules expose narrow interfaces and do not absorb feature authorization or business rules; integration credentials remain server-side and tenant-bound.
+- [ ] Routes/contracts: verify upload/download/search/token/integration callbacks validate input, authenticate provider callbacks and never expose provider secrets or internal object keys.
+- [ ] Authorization/security: prove callers supply an authorization context that shared adapters cannot bypass; test SSRF, malicious files, token replay and cross-tenant resources.
+- [ ] Queries/cache/workers: verify bounded search, tenant/ACL predicates, backpressure, retries/DLQ, idempotent callbacks, cache namespaces and resource cleanup.
+- [ ] Consumers/tests: verify every produced event has a registered consumer or explicit terminal sink and exercise adapter fakes plus cross-module contract tests.
+
+#### 10.18 Frontend system-wide release
+
+- [ ] Architecture: verify route groups and feature folders mirror ownership, shared UI stays domain-neutral and no business/database implementation exists in the frontend.
+- [ ] TanStack/contracts: verify query-key factories, parsing, invalidation, hydration, cancellation, retry, optimistic concurrency and pagination rules across every module above.
+- [ ] RBAC/UI: verify authenticated layout, route/action parity, module navigation, permission changes and organization switching without flashes of unauthorized content.
+- [ ] UX/accessibility: verify loading/empty/error/offline/permission states, keyboard/screen reader, focus, contrast and responsive 375/768/1280 behavior.
+- [ ] Performance/SEO/tests: verify bundle boundaries, lazy loading, rendering/Web Vitals budgets and public metadata without changing landing visuals/animations; run representative browser E2E.
 
 ### 11. Application security and privacy implementation
 
@@ -237,4 +386,3 @@ These are intentionally postponed until infrastructure, provider access and appr
 - [ ] Release authority records commit, environment, evidence, accepted residual risks and date.
 
 Only this final gate permits the label **production-proven 10/10**.
-
