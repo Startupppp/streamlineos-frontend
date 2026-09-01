@@ -58,10 +58,10 @@
       "maxCssBytes": 65536,
       "maxImageBytes": 0,
       "maxThirdPartyBytes": 102400,
-      "measuredFirstLoadJsBytes": 559642,
-      "measuredPageChunkBytes": 15174,
-      "lazyLoadedModules": [],
-      "note": "Home inbox — lightweight notification-style inbox; no external mail provider calls. BREACH: 547kB > 512kB ceiling by 35kB — the /inbox surface is owned by a separate lane; flagged for that lane to trim the shared chunk set or raise the ceiling to 614kB"
+      "measuredFirstLoadJsBytes": 558680,
+      "measuredPageChunkBytes": 13519,
+      "lazyLoadedModules": ["notification-detail-drawer"],
+      "note": "Home inbox — lightweight notification-style inbox; no external mail provider calls. BREACH: 546kB > 512kB ceiling by 34392 bytes — NotificationDetailDrawer is now lazy (next/dynamic ssr:false). Remaining breach is entirely in shared layout chunks (dashboard baseline is 583kB, already above this ceiling); no inbox-specific optimization can close the gap without reducing the global DashboardShell bundle."
     },
     "/build/inbox": {
       "maxFirstLoadJsBytes": 614400,
@@ -69,11 +69,11 @@
       "maxCssBytes": 65536,
       "maxImageBytes": 0,
       "maxThirdPartyBytes": 102400,
-      "measuredFirstLoadJsBytes": 657252,
-      "measuredPageChunkBytes": 112784,
-      "lazyLoadedModules": [],
+      "measuredFirstLoadJsBytes": 559188,
+      "measuredPageChunkBytes": 14027,
+      "lazyLoadedModules": ["inbox-ticket-preview"],
       "_routeNote": "Route is /build/inbox not /build/[projectId]/inbox — corrected from original declaration",
-      "note": "Build module approval inbox. BREACH: 641kB > 614kB ceiling by 43kB — build lane owns this route; flagged for that lane to reduce the approval inbox chunk"
+      "note": "Build module approval inbox. PASSES: 546kB < 614kB ceiling. InboxTicketPreview (ticket detail components) is now lazy (next/dynamic ssr:false); saved 98064 bytes vs prior measure."
     },
     "/crm/inbox": {
       "maxFirstLoadJsBytes": 614400,
