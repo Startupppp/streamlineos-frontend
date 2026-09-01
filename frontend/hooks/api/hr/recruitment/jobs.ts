@@ -10,11 +10,6 @@ import type {
   CreateJobPostingInput,
   UpdateJobPostingInput,
 } from "@/types/hr";
-import {
-  normalizeRecruitmentList,
-  unwrapRecruitmentItems,
-  type RecruitmentListResponse,
-} from "./list-response";
 
 export type JobBoardPlatform = "LINKEDIN" | "NAUKRI" | "INDEED";
 
@@ -70,31 +65,30 @@ export function useRecruitmentStats() {
 
 export type JobPostingsParams = {
   status?: string;
-  page?: number;
+  cursor?: string;
   pageSize?: number;
 };
 
 /**
- * Backend returns `{ items, total, page, pageSize, totalPages }`.
+ * Backend returns `{ items, total, pagination }`.
  * Hooks normalize to a flat JobPosting[] so list UIs keep working.
  */
 export function useJobPostings(params?: JobPostingsParams) {
   const canEmployees = useCan("hr:employees:view");
-  const page = params?.page ?? 1;
   const pageSize = params?.pageSize ?? 100;
   const queryParams = {
     ...(params?.status ? { status: params.status } : {}),
-    page,
+    ...(params?.cursor ? { cursor: params.cursor } : {}),
     pageSize,
   };
   return useQuery({
     queryKey: queryKeys.hr.jobPostings(queryParams as Record<string, unknown>),
     queryFn: async (): Promise<JobPosting[]> => {
-      const res = await apiClient.get<JobPosting[] | RecruitmentListResponse<JobPosting>>(
+      const res = await apiClient.get<JobPosting[] | { items: JobPosting[] }>(
         "/hr/recruitment/jobs",
         queryParams,
       );
-      return unwrapRecruitmentItems(res);
+      return Array.isArray(res) ? res : res.items;
     },
     staleTime: 2 * 60_000,
     enabled: canEmployees,
@@ -103,21 +97,23 @@ export function useJobPostings(params?: JobPostingsParams) {
 
 /** Full paginated jobs payload when totals/pagination UI is needed. */
 export function useJobPostingsPage(params?: JobPostingsParams) {
-  const page = params?.page ?? 1;
   const pageSize = params?.pageSize ?? 20;
   const queryParams = {
     ...(params?.status ? { status: params.status } : {}),
-    page,
+    ...(params?.cursor ? { cursor: params.cursor } : {}),
     pageSize,
   };
   return useQuery({
     queryKey: [...queryKeys.hr.jobPostings(queryParams as Record<string, unknown>), "page"] as const,
-    queryFn: async (): Promise<RecruitmentListResponse<JobPosting>> => {
-      const res = await apiClient.get<JobPosting[] | RecruitmentListResponse<JobPosting>>(
+    queryFn: (): Promise<{
+      items: JobPosting[];
+      total: number;
+      pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
+    }> => {
+      return apiClient.get(
         "/hr/recruitment/jobs",
         queryParams,
       );
-      return normalizeRecruitmentList(res, pageSize);
     },
     staleTime: 2 * 60_000,
   });

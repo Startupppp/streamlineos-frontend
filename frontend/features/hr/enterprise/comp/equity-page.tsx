@@ -22,6 +22,7 @@ import {
   getUserDisplayName,
   type NamedUser,
 } from "@/lib/person-display";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 
 const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   active: "default",
@@ -35,8 +36,11 @@ export function EquityPage() {
   const [grantSheetOpen, setGrantSheetOpen] = useState(false);
   const [selectedGrant, setSelectedGrant] = useState<EquityGrant | null>(null);
   const [exerciseOpen, setExerciseOpen] = useState(false);
+  const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
+  const page = cursorHistory.length;
+  const cursor = cursorHistory.at(-1);
 
-  const { data, isLoading, isError, error, refetch } = useEquityGrants();
+  const { data, isLoading, isFetching, isError, error, refetch } = useEquityGrants({ cursor, limit: 20 });
   const { data: membersData } = useOrgMembers(1, 200);
   const grants = data?.data ?? [];
 
@@ -78,6 +82,15 @@ export function EquityPage() {
       ),
     },
   ], [resolveMemberName]);
+
+  const handlePreviousPage = useCallback(() => {
+    setCursorHistory((history) => history.length > 1 ? history.slice(0, -1) : history);
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    const nextCursor = data?.pagination.nextCursor;
+    if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
+  }, [data?.pagination.nextCursor]);
 
   return (
     <PageWrapper
@@ -125,6 +138,16 @@ export function EquityPage() {
                 columns={grantColumns}
               />
             )}
+            {data && (page > 1 || data.pagination.hasMore) ? (
+              <CursorPageControls
+                page={page}
+                hasNext={data.pagination.hasMore}
+                disabled={isFetching}
+                onPrevious={handlePreviousPage}
+                onNext={handleNextPage}
+                className="mt-3"
+              />
+            ) : null}
           </div>
 
           {selectedGrant && (

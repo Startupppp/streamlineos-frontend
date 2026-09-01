@@ -100,6 +100,12 @@ export interface PaginatedResponse<T> {
   pagination: { page: number; limit: number; total: number; totalPages: number };
 }
 
+export interface CursorPaginatedResponse<T> {
+  data: T[];
+  total: number;
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
+}
+
 const DEVICES_KEY = ["streamlineos", "hr", "enterprise", "comp", "devices"] as const;
 const SYNC_LOGS_KEY = ["streamlineos", "hr", "enterprise", "comp", "syncLogs"] as const;
 
@@ -240,7 +246,7 @@ export function useEquityGrants(params?: Record<string, unknown>) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...EQUITY_GRANTS_KEY, params],
-    queryFn: () => apiClient.get<PaginatedResponse<EquityGrant>>("/hr/enterprise/comp/equity/grants", { params }),
+    queryFn: () => apiClient.get<CursorPaginatedResponse<EquityGrant>>("/hr/enterprise/comp/equity/grants", { params }),
     staleTime: 5 * 60_000,
     enabled: canView && hrEnabled,
   });

@@ -15,6 +15,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { JobErrorsSheet } from "./job-errors-sheet";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { formatShortDate } from "@/lib/date-utils";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 
 interface JobHistoryTableProps {
   entity?: HrImportEntity;
@@ -99,7 +100,10 @@ const COLUMNS: DataTableColumn<HrImportJob>[] = [
 
 export function JobHistoryTable({ entity }: JobHistoryTableProps) {
   const [errorJobId, setErrorJobId] = useState<string | null>(null);
-  const { data, isLoading } = useHrImportJobs(entity);
+  const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
+  const page = cursorHistory.length;
+  const cursor = cursorHistory.at(-1);
+  const { data, isLoading, isFetching } = useHrImportJobs(entity, { cursor, limit: 20 });
 
   const handleViewErrors = useCallback((jobId: string) => {
     setErrorJobId(jobId);
@@ -110,6 +114,15 @@ export function JobHistoryTable({ entity }: JobHistoryTableProps) {
   }, []);
 
   const jobs = data?.data ?? [];
+
+  const handlePreviousPage = useCallback(() => {
+    setCursorHistory((history) => history.length > 1 ? history.slice(0, -1) : history);
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    const nextCursor = data?.pagination.nextCursor;
+    if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
+  }, [data?.pagination.nextCursor]);
 
   const columns: DataTableColumn<HrImportJob>[] = [
     ...COLUMNS,
@@ -147,6 +160,16 @@ export function JobHistoryTable({ entity }: JobHistoryTableProps) {
           />
         }
       />
+      {data && (page > 1 || data.pagination.hasMore) ? (
+        <CursorPageControls
+          page={page}
+          hasNext={data.pagination.hasMore}
+          disabled={isFetching}
+          onPrevious={handlePreviousPage}
+          onNext={handleNextPage}
+          className="mt-3"
+        />
+      ) : null}
 
       <JobErrorsSheet
         jobId={errorJobId ?? ""}

@@ -13,7 +13,7 @@ import {
 } from "@/hooks/api/hr/recruitment";
 import type { JobBoardPlatform } from "@/hooks/api/hr/recruitment";
 import type { JobPostingStatus } from "@/types/hr";
-import { TablePagination } from "@/components/ui/table-pagination";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,15 +36,17 @@ export default function JobPostingsPage() {
   const searchParams = useSearchParams();
   const statusFilter = searchParams.get("status") as JobPostingStatus | null;
   const visibilityFilter = searchParams.get("visibility");
-  const pageFromUrl = Math.max(1, Number(searchParams.get("page") ?? "1") || 1);
   const pageSizeFromUrl = Math.min(
     100,
     Math.max(6, Number(searchParams.get("pageSize") ?? "12") || 12),
   );
 
+  const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
+  const page = cursorHistory.length;
+  const cursor = cursorHistory.at(-1);
   const { data: jobsPage, isLoading, isError, refetch } = useJobPostingsPage({
     ...(statusFilter ? { status: statusFilter } : {}),
-    page: pageFromUrl,
+    cursor,
     pageSize: pageSizeFromUrl,
   });
 
@@ -69,24 +71,30 @@ export default function JobPostingsPage() {
       const params = new URLSearchParams(searchParams.toString());
       if (value && value !== "ALL") params.set(key, value);
       else params.delete(key);
-      if (key !== "page" && key !== "pageSize") params.delete("page");
+      if (key !== "pageSize") setCursorHistory([undefined]);
       router.replace(`?${params.toString()}`, { scroll: false });
     },
     [searchParams, router],
   );
 
-  const setPagination = useCallback(
-    (next: { page?: number; pageSize?: number }) => {
+  const setPageSize = useCallback(
+    (pageSize: number) => {
       const params = new URLSearchParams(searchParams.toString());
-      if (next.pageSize != null) params.set("pageSize", String(next.pageSize));
-      if (next.page != null) {
-        if (next.page <= 1) params.delete("page");
-        else params.set("page", String(next.page));
-      }
+      params.set("pageSize", String(pageSize));
       router.replace(`?${params.toString()}`, { scroll: false });
+      setCursorHistory([undefined]);
     },
     [searchParams, router],
   );
+
+  const handlePreviousPage = useCallback(() => {
+    setCursorHistory((history) => history.length > 1 ? history.slice(0, -1) : history);
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    const nextCursor = jobsPage?.pagination.nextCursor;
+    if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
+  }, [jobsPage?.pagination.nextCursor]);
 
   const handleStatusChange = useCallback(
     (id: number, status: JobPostingStatus) => {
@@ -228,12 +236,16 @@ export default function JobPostingsPage() {
                   );
                 })}
               </div>
-              <TablePagination
-                page={jobsPage?.page ?? 1}
-                pageSize={jobsPage?.pageSize ?? pageSizeFromUrl}
-                total={jobsPage?.total ?? 0}
-                onPageChange={(p) => setPagination({ page: p })}
-              />
+              {(page > 1 || jobsPage?.pagination.hasMore) ? (
+                <CursorPageControls
+                  page={page}
+                  hasNext={jobsPage?.pagination.hasMore ?? false}
+                  onPrevious={handlePreviousPage}
+                  onNext={handleNextPage}
+                  pageSize={pageSizeFromUrl}
+                  onPageSizeChange={setPageSize}
+                />
+              ) : null}
             </>
           )}
         </div>

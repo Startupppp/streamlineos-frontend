@@ -80,12 +80,8 @@ export interface CreateImportJobResult {
 
 export interface PaginatedJobs {
   data: HrImportJob[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
+  total: number;
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
 export type HrExportJobStatus =
@@ -124,17 +120,17 @@ export interface CreateHrEmployeeExportJobInput {
 
 export function useHrImportJobs(
   entity?: HrImportEntity,
-  pagination?: { page?: number; limit?: number },
+  pagination?: { cursor?: string; limit?: number },
 ) {
   const canImport = useCan("hr:import:manage");
   const hrEnabled = useModuleEnabled("hr");
-  const page = pagination?.page ?? 1;
+  const cursor = pagination?.cursor;
   const limit = pagination?.limit ?? 20;
   return useQuery<PaginatedJobs>({
-    queryKey: [...queryKeys.hr.importJobs(entity), page, limit] as const,
+    queryKey: [...queryKeys.hr.importJobs(entity), cursor, limit] as const,
     queryFn: () =>
       apiClient.get<PaginatedJobs>("/hr/import/jobs", {
-        page: String(page),
+        ...(cursor ? { cursor } : {}),
         limit: String(limit),
         ...(entity ? { entity } : {}),
       }),
