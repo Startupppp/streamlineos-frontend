@@ -34,12 +34,20 @@ Stop before cutover/contract if any cross-tenant, orphan, duplicate, or authorit
 
 ## Exit criteria
 
-- [ ] `pnpm -C backend scan:legacy-actors:check` reports zero S03 actionable fields.
+- [x] `pnpm -C backend scan:legacy-actors:check` reports zero actionable fields (0/20; 20 migrated).
 - [ ] Catalog has no untracked in-scope raw-SQL S03 actors, or every remainder has an explicit exception/handoff.
 - [ ] No legacy actor field remains in authority logic; history remains immutable and renderable.
 - [ ] Composite FKs, RLS, nullability, and tenant-leading indexes are verified.
 - [ ] Migration chain, ledger, discipline, rollback, OpenAPI, outbox/replay, backend/frontend typecheck, tenant-isolation, and focused financial tests pass.
 - [ ] Evidence records command output, migration IDs, backfill totals, final scanner/catalog output, and deployment approval.
+
+## Current evidence (2026-09-01)
+
+- [x] Migration ledger: 579 applied, 579 journal entries, zero pending; chain and ledger gates pass.
+- [x] Rollback gate passes for all 579 migrations; S03 contract migration 0926 is explicitly irreversible.
+- [x] Outbox consumer coverage passes.
+- [x] Focused AI, Accounting, and Billing tenant-isolation tests pass (16 tests).
+- [ ] The session is not complete: full backend/spec/frontend typechecks, tenant-isolation coverage, OpenAPI coverage, catalog exception review, and the remaining payroll focused suite still require resolution.
 
 ## Required commands
 
