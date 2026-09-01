@@ -91,6 +91,8 @@ export type ExtendedPermissionKey =
   | "crm:ai:use"
   | "accounting:ai:use"
   | "blog:ai:use"
+  | "blog:posts:manage"
+  | "blog:categories:manage"
   | "surveys:ai:use"
   | "sign:documents:upload"
   | "sign:documents:view"

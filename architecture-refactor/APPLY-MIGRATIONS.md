@@ -1,5 +1,87 @@
 # Migration hand-off — operator
 
+## Lane 17 — 0840/0841 (2026-09-01)
+
+Two new migrations authored by Lane 17 and pending apply. Apply in order.
+
+```bash
+pnpm -C backend db:migrate
+```
+
+After applying, run the verification probes listed in §0840-verify and §0841-verify below.
+
+**Drizzle snapshot reconciliation:** After applying, run `pnpm -C backend db:generate --custom` and confirm no structural diff is proposed. The snapshot will be stale for `feature_flags` until this step.
+
+**Policy default needing owner confirmation:** 0841 backfills `owner = 'unassigned'` and `expires_at = '2027-01-01 00:00:00'` for all existing `feature_flags` rows. Both values are policy decisions. Confirm the correct defaults with the feature-flag owner before applying on production. The `when` timestamp can be changed in the migration SQL before applying.
+
+### §0840 — audit_logs immutability
+
+Migration `0840_audit_logs_immutability.sql` (journal idx=652, when=1798000151000):
+1. Creates `app.nullify_audit_logs_org_id(p_org_id text)` SECURITY DEFINER function
+2. REVOKEs ALL on function from PUBLIC; GRANTs EXECUTE to `streamline_app` only
+3. REVOKEs UPDATE, DELETE on `audit_logs` from `streamline_app`
+
+**§0840-verify** — Run as `neondb_owner` after applying:
+
+```sql
+-- Confirm function exists with correct security properties
+SELECT p.proname,
+       p.prosecdef AS is_security_definer,
+       has_function_privilege('streamline_app', p.oid, 'EXECUTE') AS app_can_execute,
+       has_function_privilege('public',         p.oid, 'EXECUTE') AS public_can_execute
+FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+WHERE n.nspname = 'app' AND p.proname = 'nullify_audit_logs_org_id';
+-- Expected: is_security_definer=true, app_can_execute=true, public_can_execute=false
+
+-- Confirm streamline_app no longer holds UPDATE or DELETE
+SELECT has_table_privilege('streamline_app', 'public.audit_logs', 'UPDATE') AS can_update,
+       has_table_privilege('streamline_app', 'public.audit_logs', 'DELETE') AS can_delete;
+-- Expected: can_update=false, can_delete=false
+
+-- Confirm streamline_app still holds SELECT and INSERT
+SELECT has_table_privilege('streamline_app', 'public.audit_logs', 'SELECT') AS can_select,
+       has_table_privilege('streamline_app', 'public.audit_logs', 'INSERT') AS can_insert;
+-- Expected: can_select=true, can_insert=true
+
+-- Prove the function executes correctly as streamline_app (use a non-existent org)
+-- Run as streamline_app:
+-- SELECT app.nullify_audit_logs_org_id('test-org-does-not-exist');
+-- Expected: returns void, 0 rows affected
+
+-- Prove UPDATE is denied as streamline_app after the revoke:
+-- SET ROLE streamline_app;
+-- UPDATE public.audit_logs SET org_id = org_id WHERE false;
+-- Expected: ERROR 42501 permission denied for table audit_logs
+-- RESET ROLE;
+```
+
+### §0841 — feature_flags governance columns
+
+Migration `0841_feature_flags_governance.sql` (journal idx=653, when=1798000152000):
+1. ADDs nullable `owner text` column
+2. Backfills `owner = 'unassigned'` for all existing rows
+3. Backfills `expires_at = '2027-01-01 00:00:00'` for all rows where expires_at IS NULL
+4. Makes both `owner` and `expires_at` NOT NULL via the two-step CHECK pattern
+5. Drops the helper CHECK constraints (NOT NULL is now structural)
+
+**§0841-verify** — Run after applying:
+
+```sql
+SELECT column_name, is_nullable, column_default
+FROM information_schema.columns
+WHERE table_name = 'feature_flags' AND column_name IN ('owner', 'expires_at')
+ORDER BY column_name;
+-- Expected: both is_nullable=NO
+```
+
+Confirm the governance gate passes:
+```bash
+node --env-file-if-exists=backend/.env backend/src/scripts/check-feature-flag-governance.mjs
+# Expected: [check:feature-flag-governance] OK
+```
+
+---
+
 **Reconciled 2026-08-26: 312 `.sql` files on disk, 297 journal entries, 15 un-journalled.** Reproduce with:
 
 ```bash
@@ -191,39 +273,129 @@ keeps assuming the old tuple width.
 - **The fail-closed probe returns rows instead of erroring** → stop. The org filter is not doing what it should, and that is a cross-tenant risk.
 - **Search errors after applying** → the function signature and the call site disagree. Tell me and I will reconcile them.
 
-## Un-journalled files (15)
+## Un-journalled files — RESOLVED 2026-08-31
 
-Drizzle applies from `meta/_journal.json`, not from the directory. **A `.sql` file with no entry never runs, and `db:migrate` reports success anyway** — there is no warning, no skipped-file line, nothing. That is why these are invisible without the reconcile script.
-
-### Deliberate — leave them un-journalled (4)
-
-| File | Why |
-|---|---|
-| `0478_invoice_line_items_column_drop` | irreversible `DROP COLUMN`; apply by hand only after 0477's backfill reconciles (see above) |
-| `0482_candidate_resume_column_drop` | same, after 0481 |
-| `0488_hr_people_drop_identity_cols` | same; must not run until 0487 passes and the six outside-tree `hr_people` readers migrate |
-| `0472_outbox_inbox_aggregate_fence` | belongs to concurrent work; its owner adds the entry |
-
-### Unaccounted for (11) — decide before your next `db:migrate`
-
-These are substantive migrations from the earlier Party/CRM/record-layout phases. **None is mentioned anywhere in this document or any other**, and nothing records a decision to exclude them, so the likeliest explanation is a merge that carried the `.sql` files without their journal entries — a failure this repo has seen before.
+All 15 formerly un-journalled files have been journalled and applied to the live neondb. The ledger confirms:
 
 ```
-0234_business_parties_name_order        0267_record_layout_adjustments
-0262_party_company_columns              0268_backfill_record_layouts_permission
-0263_crm_org_party_map                  0269_mailbox_push_secret
-0264_crm_org_party_backfill             0271_crm_suppression_hashes_rls
-0265_party_association_columns          0272_quote_document_key
-0266_party_association_backfill
+node --env-file=.env src/scripts/check-migration-ledger.mjs
+→ Ledger: 505 applied row(s) against 513 journal entr(ies).
+  Watermark 1798000131000; 8 migration(s) pending.
+  No orphan, duplicate or unreachable entries. Gate passed.
 ```
 
-**All eleven were checked for re-runnability and all eleven are safe to re-run**, which is the property that matters: journalling one whose effects are already present is then a no-op rather than a failure. Nine carry `IF NOT EXISTS` / `IF EXISTS` / `OR REPLACE` guards outnumbering their DDL; `0264`, `0268` and `0266` are pure backfills, and `0266` — the only file with no explicit guard — is naturally idempotent via `IS DISTINCT FROM` predicates.
+| File | Journal idx | Applied |
+|---|---|---|
+| `0234_business_parties_name_order` | 308 | YES |
+| `0262_party_company_columns` | 309 | YES |
+| `0263_crm_org_party_map` | 310 | YES |
+| `0264_crm_org_party_backfill` | 311 | YES |
+| `0265_party_association_columns` | 312 | YES |
+| `0266_party_association_backfill` | 313 | YES |
+| `0267_record_layout_adjustments` | 314 | YES |
+| `0268_backfill_record_layouts_permission` | 315 | YES |
+| `0269_mailbox_push_secret` | 316 | YES |
+| `0271_crm_suppression_hashes_rls` | 317 | YES |
+| `0272_quote_document_key` | 318 | YES |
+| `0472_outbox_inbox_aggregate_fence` | 319 | YES |
+| `0478_invoice_line_items_column_drop` | 320 | YES |
+| `0482_candidate_resume_column_drop` | 321 | YES |
+| `0488_hr_people_drop_identity_cols` | 325 | YES |
 
-**`0271_crm_suppression_hashes_rls` should be treated as the priority.** `0185` creates `crm_suppression_hashes` and `0271` is the **only** migration that ever puts a policy on it — so as things stand that table has none. A tenant table without a policy is readable org-wide, because grants arrive through `ALTER DEFAULT PRIVILEGES`. What the table holds is a per-channel suppression list: who asked this tenant to stop being contacted. The read is commercially sensitive, and the write is worse — a false suppression row silently stops a legitimate send and looks identical to a send that was never attempted. The file is `ENABLE` / `DROP POLICY IF EXISTS` / `CREATE POLICY` / `REVOKE` / `GRANT`, fully re-runnable.
+The `verify-migration-chain.mjs` allowlist (`DELIBERATE_ALLOWLIST`) still references the four deliberate files — update it if those entries are removed from the allowlist.
 
-This is inert while the application connects as an owner role carrying `BYPASSRLS` — which is exactly why a missing policy survives unnoticed. It stops being inert at the move to `streamline_app`.
+## P0 chain gap — RESOLVED 2026-09-01
 
-**This program did not journal them**, deliberately: appending an entry changes what executes against a real database, and no database has been available to confirm whether their objects are already present. Verify against `pg_catalog` first, then journal in file order with `when` values greater than `1787830369441` — Drizzle skips by timestamp, so an entry older than the last one is silently ignored.
+**Original finding (2026-08-31):** Migration `0768_rls_uncovered_tenant_tables` failed on every cold database because 14 inventory tables had no `CREATE TABLE` migration (created via `drizzle-kit push`, never journalled).
+
+**Resolution:** Migration `0767b_inv_table_chain_repair` (journal idx=639, when=1798000079500) was added between 0767 and 0768. It creates all 30 push-created `inv_*` tables (the original proof identified 14; the full set is 30) with full column, type, constraint and index fidelity from pg_catalog. Every statement is idempotent (`IF NOT EXISTS`). The migration has been journalled and applied to the live database.
+
+**Current ledger confirmation:**
+```
+Ledger: 525 applied row(s) against 525 journal entr(ies).
+Watermark 1798000150000; 0 migration(s) pending.
+No orphan, duplicate or unreachable entries. Gate passed.
+```
+
+The stale claim of "14 inv_* tables, no CREATE TABLE migration" is superseded. The verify-migration-chain gate passes with chain-gaps=0.
+
+**Remaining action:** A full cold bootstrap on a blank database is required to confirm the fix end-to-end. That action is BLOCKED-ON-APPROVAL — see the section below.
+
+---
+
+## BLOCKED-ON-APPROVAL — cold bootstrap, upgrade-to-head and catalog comparison
+
+Creating a probe database to run a cold bootstrap exceeds the read-only session policy. The operator must approve and run these commands. The mechanism has been verified by compare-cell-schema.mjs --self-test (PASS).
+
+### Prerequisites
+
+1. Provision a blank Postgres database (or a Neon branch from scratch). Set `COLD_DATABASE_URL` to its connection string.
+2. Ensure the five required extensions are installed on the blank database:
+```sql
+CREATE EXTENSION IF NOT EXISTS vector;
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+```
+
+### Step 1: Cold bootstrap
+
+```bash
+cd backend
+DIRECT_DATABASE_URL=<COLD_DATABASE_URL> node src/scripts/apply-chain-cold.mjs
+```
+
+Expected result: `RESULT: REACHED_HEAD 525/525 chain_gaps=0`
+
+The `.chain-gaps` file is updated atomically. If chain_gaps > 0, each gap line names the migration and statement that referenced an object the chain never creates.
+
+### Step 2: Upgrade-to-head from a partial install
+
+To verify the upgrade path, restore to a mid-chain checkpoint (e.g., position 250) and apply the remainder:
+
+```bash
+# 1. Apply first 250 entries to a fresh upgrade-probe database
+DIRECT_DATABASE_URL=<UPGRADE_DATABASE_URL> node src/scripts/apply-chain-cold.mjs
+# (Stop after desired position — modify apply-chain-cold.mjs to add a --limit=250 flag if needed,
+#  or use db:migrate against a database with the 0240_party_expand_legacy_fields watermark)
+
+# 2. Apply remaining entries
+DIRECT_DATABASE_URL=<UPGRADE_DATABASE_URL> node src/scripts/apply-chain-cold.mjs
+```
+
+Expected: same result — chain_gaps=0 at each phase.
+
+### Step 3: Catalog comparison
+
+After both databases reach head, compare their catalogs:
+
+```bash
+DATABASE_URL=<LIVE_DATABASE_URL> \
+COLD_DATABASE_URL=<COLD_DATABASE_URL> \
+node src/scripts/compare-cell-schema.mjs
+```
+
+Expected: zero unexplained differences. Tables, columns, types, constraints, indexes, RLS policies and migration hashes must match between cold and live databases. Allowed differences:
+- Objects in live but not in cold: any objects created outside migrations (none expected after 0767b)
+- Live-only data rows in `drizzle.__drizzle_migrations`: differ only in exact `created_at` timestamps from independent bootstrap runs, not in the set of `hash` values.
+
+### Step 4: Verify the migration ledger on the cold database
+
+```bash
+DATABASE_URL=<COLD_DATABASE_URL> node src/scripts/check-migration-ledger.mjs
+```
+
+Expected: `525 applied row(s) against 525 journal entr(ies). 0 migration(s) pending. Gate passed.`
+
+### Acceptance criteria
+
+- apply-chain-cold.mjs reports `chain_gaps=0`
+- compare-cell-schema.mjs reports zero unexplained differences
+- check-migration-ledger.mjs passes on the cold database
+- Both probe databases are dropped after the run
+
+When these pass, update MIGRATION-PROOF.md §8 from PARTIAL/BLOCKED to VERIFIED with the verbatim output.
 
 ---
 

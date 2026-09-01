@@ -18,11 +18,8 @@ export interface GlRow {
 export interface GlResponse {
   openingBalance: string;
   closingBalance: string;
-  rows: GlRow[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
+  items: GlRow[];
+  nextCursor: string | null;
 }
 
 export interface GlAccount {
@@ -42,8 +39,8 @@ export interface GlParams {
   vendorId?: number;
   projectId?: number;
   departmentId?: string;
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
 }
 
 export interface GlAccountsParams {
@@ -68,7 +65,10 @@ export function useGlAccounts(params: GlAccountsParams) {
   return useQuery<{ items: GlAccount[] }, Error>({
     queryKey: coreKeys.glAccounts(params),
     queryFn: () =>
-      apiClient.get<{ items: GlAccount[] }>("/accounting/general-ledger/accounts", toQuery(params)),
+      apiClient.get<{ items: GlAccount[] }>(
+        "/accounting/general-ledger/accounts",
+        toQuery(params),
+      ),
     staleTime: 60_000,
     enabled: can && !!params.from && !!params.to,
   });

@@ -11,6 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   extractEventNumericId,
+  useCancelOccurrence,
   useDeleteCalendarEvent,
   useRsvpCalendarEvent,
   useUpdateCalendarEvent,
@@ -35,11 +36,13 @@ interface EventDetailSheetProps {
 
 export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [cancelOccurrenceOpen, setCancelOccurrenceOpen] = useState(false);
   const [unlinkConfirmOpen, setUnlinkConfirmOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [aiPrepOpen, setAiPrepOpen] = useState(false);
   const [aiFollowUpOpen, setAiFollowUpOpen] = useState(false);
   const { mutateAsync: deleteEvent, isPending: deleteEventIsPending } = useDeleteCalendarEvent();
+  const { mutateAsync: cancelOccurrence, isPending: cancelOccurrenceIsPending } = useCancelOccurrence();
   const { mutateAsync: rsvpMutation, isPending: rsvpMutationIsPending } = useRsvpCalendarEvent();
   const { mutateAsync: updateEvent } = useUpdateCalendarEvent();
   const numericEventId = event ? extractEventNumericId(event.id) : null;
@@ -70,6 +73,18 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
       toast.error("Failed to delete event");
     }
   }, [deleteEvent, event, numericEventId, onClose]);
+
+  const handleCancelOccurrence = useCallback(async () => {
+    if (!event || numericEventId === null) return;
+    try {
+      await cancelOccurrence({ eventId: numericEventId, occurrenceStart: event.start });
+      toast.success("Occurrence cancelled");
+      setCancelOccurrenceOpen(false);
+      onClose();
+    } catch {
+      toast.error("Failed to cancel occurrence");
+    }
+  }, [cancelOccurrence, event, numericEventId, onClose]);
 
   const handleRsvp = useCallback(async (status: "accepted" | "declined" | "tentative") => {
     if (!event || numericEventId === null) return;
@@ -110,7 +125,14 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
         <EventDetailContent event={event} numericEventId={numericEventId} isCalendarEvent={isCalendarEvent} canUpdate={canUpdate} deleteEventIsPending={deleteEventIsPending} rsvpMutationIsPending={rsvpMutationIsPending} onClose={onClose} onRequestUnlink={() => setUnlinkConfirmOpen(true)} onRsvp={handleRsvp} />
         {event?.category === "huddle" && event.entityId ? <div className="px-5 pt-3 pb-1 shrink-0"><Link href={`/chat?channel=${event.entityId}`} onClick={onClose}><Button size="sm" className="w-full h-8 text-xs gap-1.5 bg-status-warning-fill hover:bg-status-warning-fill-hover text-white" {...huddleHoverHandlers}><MicIcon ref={huddleIconRef} size={14} />Join Huddle</Button></Link></div> : null}
         <div className="px-5 py-3 border-t shrink-0 flex items-center justify-between gap-2">
-          {isCalendarEvent && event?.category !== "huddle" ? <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setConfirmOpen(true)} {...deleteHoverHandlers}><Trash2Icon ref={deleteIconRef} size={14} className="mr-1.5" />Delete</Button> : <div />}
+          {isCalendarEvent && event?.category !== "huddle" ? (
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setConfirmOpen(true)} {...deleteHoverHandlers}><Trash2Icon ref={deleteIconRef} size={14} className="mr-1.5" />Delete</Button>
+              {event?.isRecurring ? (
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground" onClick={() => setCancelOccurrenceOpen(true)}>Cancel occurrence</Button>
+              ) : null}
+            </div>
+          ) : <div />}
           <div className="flex items-center gap-2">
             {isCalendarEvent && event?.category !== "huddle" ? <Button variant="outline" size="sm" onClick={() => setAiPrepOpen(true)} className="gap-1.5"><Sparkles className="h-3.5 w-3.5" />AI Prep</Button> : null}
             <Button variant="outline" size="sm" onClick={handleExportIcs} aria-label="Export as .ics" {...downloadHoverHandlers}><DownloadIcon ref={downloadIconRef} size={14} className="mr-1.5" />.ics</Button>
@@ -121,6 +143,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
       </SheetContent>
     </Sheet>
     <ConfirmDialog open={confirmOpen} onOpenChange={setConfirmOpen} title="Delete Event" description="This will permanently delete the event. This action cannot be undone." confirmLabel="Delete" destructive onConfirm={handleDelete} />
+    <ConfirmDialog open={cancelOccurrenceOpen} onOpenChange={setCancelOccurrenceOpen} title="Cancel this occurrence?" description="Only this occurrence will be cancelled. The rest of the series will continue." confirmLabel="Cancel occurrence" destructive isPending={cancelOccurrenceIsPending} onConfirm={handleCancelOccurrence} />
     <ConfirmDialog open={unlinkConfirmOpen} onOpenChange={setUnlinkConfirmOpen} title="Unlink ticket?" description="The ticket will no longer be associated with this event." confirmLabel="Unlink" onConfirm={handleUnlink} />
     <EventCreateDialog open={editOpen} onOpenChange={setEditOpen} event={event} />
     <AiMeetingSheets event={event} aiPrepOpen={aiPrepOpen} aiFollowUpOpen={aiFollowUpOpen} onAiPrepOpenChange={setAiPrepOpen} onAiFollowUpOpenChange={setAiFollowUpOpen} onSwitchToFollowUp={handleSwitchToFollowUp} />

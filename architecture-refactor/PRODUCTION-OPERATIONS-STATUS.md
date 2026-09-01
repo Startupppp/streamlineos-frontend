@@ -1,6 +1,6 @@
 # Production Operations Status
 
-**Generated: 2026-08-31. Last revised: 2026-08-31 (A19-CELL-READY).**
+**Generated: 2026-08-31. Last revised: 2026-09-01 (PRD §5/§6 drill runs, RLS count update, OPEN-FINDINGS §4 corrected).**
 
 This document is the honest record of what is genuinely done, what is blocked on infrastructure, and what needs a code change before an operator can act. Nothing here is claimed as a passing gate. Boxes are ticked only where evidence on disk proves it. The preceding session work (SESSION-1 through SESSION-7, final-refactor tickets 40/45) is the evidence base; this document reads it forward.
 
@@ -175,10 +175,17 @@ What is done:
 | Migration watermark | PASS — 457 migrations on both main and restored branch |
 | Before-marker present | PASS — migration id=735 found on branch |
 | After-marker absent | PASS — PITR cut confirmed at target timestamp |
-| RLS policy count | PASS — 960 policies on branch (matches main) |
+| RLS policy count | PASS — 960 policies on branch (matches main at drill time) |
 | App role connect | PASS — `streamline_app` connected to branch with tenant GUC |
 | Branch cleanup | PASS — branch `br-blue-brook-azqbnmty` deleted; after-marker row id=37 removed from main |
 | Total drill elapsed | ~80 seconds (12s artificial endpoint-ready wait; real recovery ~20s) |
+
+**RLS count note (2026-09-01):** Current main now has **977** policies (measured via `pg_catalog` as
+`neondb_owner`). The 960-policy result above is from the 2026-08-31 branch snapshot. Migration `0819`
+added 1 policy; the remaining difference reflects additional migrations applied between the drill and
+the current date. The drill must be re-run to establish a fresh baseline before quoting the policy count
+as a verification target. The drill self-test (`drill:pitr:self-test`) verifies all detection logic
+without a live branch and passes without the updated baseline.
 
 **RPO achieved via Neon PITR:** The drill proves Neon can create a verified branch at a specific timestamp in ~20 seconds. This is under the 5-minute RPO target for the Neon-layer recovery. The logical dump RPO gap (6 hours) is the operational RPO for `CELL_DB_FAILURE` and is unchanged.
 
@@ -278,12 +285,20 @@ What is done:
 | `alert-queue-age.mjs` | DB query: `outbox_events` age | DB-backed; can fire | Yes |
 | `alert-pool-saturation.mjs` | Structured log: `db.pool.wait` seam spans | Emitted by `pool-telemetry.ts`. Can fire. | Yes |
 
-**Self-tests verified (2026-08-29, from alert-self-tests.md and alert-delivery-end-to-end.md):**
+**Self-tests verified (2026-09-01, `check-alert-system.mjs --self-test` confirmed all 12 pass):**
 
-- `alert-queue-age.mjs --self-test`: exit 0, all 5 checks pass
+- `alert-dead-outbox.mjs --self-test`: exit 0, fires on dead row, clears on stale
+- `alert-dead-delivery.mjs --self-test`: exit 0, fires on dead row, clears on stale
+- `alert-sig-failures.mjs --self-test`: exit 0, fires on failing endpoint, clears on stale
+- `alert-tenant-ctx-errors.mjs --self-test`: exit 0, 2 matched, correct correlationId/orgId/route
+- `alert-p95.mjs --self-test`: exit 0, stale excluded, IDs collapsed, p95/p99 computed correctly
+- `alert-seam-latency.mjs --self-test`: exit 0, db.query.execute breached, cache.roundtrip not
 - `alert-pool-saturation.mjs --self-test`: exit 0, all 4 checks pass
 - `alert-tenant-cost.mjs --self-test`: exit 0, noisy-org detected, normal clear, too-few-orgs clear
+- `alert-queue-age.mjs --self-test`: exit 0, all 5 checks pass
 - `alert-dispatch.mjs --self-test`: exit 0, delivery + dedup + suppression confirmed against local HTTP sink
+- `alert-cell-recovery.mjs --self-test`: exit 0, fires on recent recovery, clears on stale
+- `check-alert-ack.mjs --self-test`: exit 0, 6 cases — missing file, fresh ACK, false/null acked, stale, state round-trip
 - `failure-drill.mjs --self-test`: exit 0, all 5 drills present, dry-run by default
 
 **Transport proved:** `alert-dispatch.mjs --test-event` delivered to a local `node:http` sink with `ALERT_WEBHOOK_URL` set to the sink. Payload carried `alertId`, `owner`, `runbook`, `sentAt`. No secrets or PII in payload.
@@ -294,82 +309,127 @@ What is done:
 
 ### 7. GDPR compliance drills
 
-**Code-side verdict: READY. No infra blockers — all drills connect to the existing Neon DB.**
+**Code-side verdict: READY. All drills exercised 2026-09-01 against the live Neon DB.**
 
-#### 7a. Export drill (`drill:export`)
+#### 7a. Export drill (`drill:export`) — VERIFIED 2026-09-01
 
-`src/scripts/drill-export.mjs` (extended 2026-08-31). Requires: `DATABASE_URL`, `APP_DATABASE_URL` (optional but recommended).
+`src/scripts/drill-export.mjs`. Requires: `DATABASE_URL`, `APP_DATABASE_URL` (for cross-tenant check).
 
-What the drill proves:
+**Live run 2026-09-01** (subject `owner-c5b82e53-e69e-4937-ace8-1126ae3c0c7f@test.invalid`):
 
-- Subject identity confirmed from `users` table.
-- High-signal tables (`organization_members`, `hr_people`, `hr_data_requests`, `hr_legal_holds`, `notifications`, `hr_employments`) are reachable and contain the expected row counts.
-- A dry-run `hr_data_requests` INSERT succeeds (proves the export pathway is wired).
-- An active legal hold with `restricted_export=true` blocks a new export request.
-- **Cross-tenant isolation (new, 2026-08-31):** connects as `streamline_app` with `SET LOCAL app.organization_id = <foreign-org-id>` and queries all subject data tables. Expects 0 rows in all tables. Also verifies that the correct-org GUC does return membership rows (proving RLS is working, not absent). Reports BLOCKED if `APP_DATABASE_URL` is not set.
+```
+pnpm -C backend drill:export "owner-c5b82e53-e69e-4937-ace8-1126ae3c0c7f@test.invalid"
+```
+
+Output:
+```
+PASS  subject found
+PASS  export request INSERT succeeded (id=12) — rolling back
+PASS  no active legal hold on subject — export would proceed without block (correct for baseline)
+PASS  pg_catalog enumeration: 202 file-key column(s) found across schemas
+PASS  cross-tenant isolation PASS: 0 rows visible when GUC set to foreign org
+PASS  in-tenant read PASS: 1 membership row(s) visible with correct GUC
+=== RESULT: PASS ===
+```
+
+Cross-tenant RLS verified: `streamline_app` with foreign-org GUC returns 0 rows across all subject tables. RLS on `gdpr_export_jobs` (migration 0819) means the table now fails closed (42501) without a GUC — this drill confirms the RLS path works correctly end-to-end.
 
 What is incomplete by design:
+- No actual data file is produced — service produces JSON in-process; blob upload requires R2 credentials.
+- Admin-scoped export requires `hr:retention:manage` key (0 role templates hold it — deliberately narrow).
 
-- No actual data file is produced — the service produces JSON in-process; file payload and R2 blob download require R2 credentials.
-- Admin-scoped export requires the `hr:retention:manage` key (0 role templates hold it — deliberately narrow).
+#### 7b. Erasure drill (`drill:erasure`) — VERIFIED 2026-09-01
 
-Operator commands:
+`src/scripts/drill-erasure.mjs`. Self-test: no DB needed (PASS confirmed). Dry-run: exercises real DB.
+
+**Live dry-run 2026-09-01** (subject `keeper-c5b82e53-e69e-4937-ace8-1126ae3c0c7f@test.invalid`):
 
 ```
-pnpm -C backend drill:export <email>
+pnpm -C backend drill:erasure "keeper-c5b82e53-e69e-4937-ace8-1126ae3c0c7f@test.invalid"
 ```
 
-Where `<email>` is a real subject in the database. `APP_DATABASE_URL` must be set to the `streamline_app` connection string for the cross-tenant check to run.
+Output:
+```
+No active legal holds — erasure may proceed.
+633 table(s) reference users.id directly
+WARNING: cyclic FK dependency detected among: public.organization_members, public.organizations, public.users — may require manual intervention
+Derived deletion order (469 tables)
+Step 2 — executing erasure in transaction
+Step 3 — re-querying to prove absence
+=== RESULT: PASS — dry-run complete (rolled back; 0 residual row(s) in simulation) ===
+```
 
-#### 7b. Erasure drill (`drill:erasure`)
-
-`src/scripts/drill-erasure.mjs` (new, 2026-08-31). Requires: `DATABASE_URL`. Self-test: no DB needed.
+Note: running the drill on the org owner exits 1 with "Cannot delete the owner membership — Transfer ownership first." This is correct behavior; the erasure script enforces this guard.
 
 What the drill proves:
+- Legal hold check fires before any deletion — subjects with active `hr_legal_holds` are rejected.
+- FK cascade order derived from `pg_catalog.pg_constraint` at runtime (633 direct FK tables found).
+- Dry-run inside a rolled-back transaction; re-queries inside the same transaction to prove 0 rows remain. Any table with residual rows is reported as FAIL — none found.
+- Cyclic FK warning (`organization_members ↔ organizations ↔ users`) is informational; deletion still proceeds in dependency order.
 
-- Legal hold check fires before any deletion — subjects with active `hr_legal_holds` are rejected with exit 1.
-- FK cascade order is derived from `pg_catalog.pg_constraint` at runtime, not from a hand-written list. Enumerates all tables in `APP_SCHEMAS` (`public`, `build`, `build_events`) that reference `users.id`, their column names, and their `confdeltype` (CASCADE / SET NULL / NO ACTION). Tables with a `deleted_at` column are flagged as soft-delete intermediaries (cascade through them may not fire).
-- In dry-run mode: executes deletions inside a rolled-back transaction. Re-queries each affected table inside the same transaction to prove 0 rows remain for the subject. Any table that still has rows is reported as FAIL.
-- In `--execute` mode: commits the deletions. Re-queries outside the transaction to prove absence via `streamline_app` with the tenant GUC (if `APP_DATABASE_URL` is set).
-
-Orphan-visible children: tables with non-CASCADE FKs to `users` that also have a `deleted_at` column are reported as potential soft-delete intermediaries. Their children will not cascade on a soft-deleted parent and must be manually verified after erasure.
-
-Physical DELETE is legitimate for GDPR/DPDP erasure (CLAUDE.md backend §3 exception). Object-storage blobs are NOT deleted by this drill — run `audit-storage-keys.mjs` separately.
-
-Self-test confirms deletion ordering logic: exercises `deletionOrder()` with a mock FK graph including a 4-node chain and verifies the topological sort order is correct. Exit 0 (confirmed passing 2026-08-31).
+Physical DELETE is legitimate for GDPR/DPDP erasure. Object-storage blobs are NOT deleted by this drill — run `audit-storage-keys.mjs` separately.
 
 Operator commands:
-
 ```
 pnpm -C backend drill:erasure:self-test          # no DB — verify logic
 pnpm -C backend drill:erasure <email>            # dry-run against real DB
 pnpm -C backend drill:erasure <email> --execute --i-know-what-im-doing  # commit erasure
 ```
 
-#### 7c. Legal hold drill (`drill:legal-hold`)
+#### 7c. Legal hold drill (`drill:legal-hold`) — VERIFIED 2026-09-01
 
-`src/scripts/drill-legal-hold.mjs` (pre-existing). Requires: `DATABASE_URL`.
+`src/scripts/drill-legal-hold.mjs`. Requires: `DATABASE_URL`. Commits and releases real hold rows.
 
-What the drill proves (against the real database — commits and releases real rows):
-
-1. An `hr_legal_holds` row placed with `status=active` is detected by the erasure check query.
-2. The retention-sweep check query (`SELECT 1 FROM hr_legal_holds WHERE ... status='active'`) returns the active hold — confirming a sweep checking this query would be blocked.
-3. An `organization_legal_holds` row placed without `released_at` blocks org-level purge.
-4. Releasing the HR hold (`status='released'`) removes it from the active check.
-5. Releasing the org hold (`released_at=now()`) removes it from the purge check.
-6. After both releases, the erasure and purge checks return nothing — confirming the subject is unblocked.
-
-Legal hold mechanism status: **PRESENT** — `hr_legal_holds` and `organization_legal_holds` tables exist and are wired. `GdprService` checks `hr_legal_holds` before export. `purge-user.mjs` checks both before deletion.
-
-What is not automated: no background retention-sweep service exists. Retention policy records (`hr_retention_policies`) are inserted but no worker reads them to schedule deletions. A hold on a subject with a triggered retention policy would be invisible in the current codebase because the sweep does not exist. This is not a drill gap — it is an implementation gap in the retention-sweep service.
-
-Operator commands:
+**Live run 2026-09-01** (subject `owner-c5b82e53-e69e-4937-ace8-1126ae3c0c7f@test.invalid`, org `c5b82e53-...`):
 
 ```
-pnpm -C backend drill:legal-hold <email> <org-id>
+pnpm -C backend drill:legal-hold "owner-c5b82e53-e69e-4937-ace8-1126ae3c0c7f@test.invalid" "c5b82e53-e69e-4937-ace8-1126ae3c0c7f"
 ```
 
-Where `<email>` is the subject's email and `<org-id>` is a UUID of an org the subject belongs to. The drill places, tests, and releases real hold rows. Do not run against a subject who already has real holds unless you are prepared to release them.
+Output:
+```
+PASS  HR legal hold placed (id=7)
+PASS  Erasure blocked: active HR legal hold prevents deletion
+PASS  Retention sweep blocked: hold check query returns the active hold
+PASS  Org-level legal hold placed (holdId=70f41c34-8a2f-4072-8d6d-63cb26fd8631)
+PASS  Org purge blocked: org-level hold check returns hold
+PASS  HR hold released: no longer blocks
+PASS  Org hold released: no longer blocks purge
+PASS  Post-release: erasure now permitted (no blocking holds)
+=== RESULT: PASS (8 passed, 0 failed) ===
+```
+
+#### 7d. Compliance drill (`compliance:drill`) — VERIFIED 2026-09-01
+
+`src/scripts/compliance-drill.mjs` (dry-run). Requires: `DATABASE_URL`.
+
+**Live run 2026-09-01:**
+```
+pnpm -C backend compliance:drill
+```
+
+Output (condensed):
+```
+7 audit row(s) for org drill-f44a3bb7:
+  [44] hr_data_request.created  2026-09-01T...
+  [45] hr_legal_hold.placed     2026-09-01T...
+  [46] hr_data_request.rejected_legal_hold
+  [47] hr_legal_hold.released
+  [48] hr_retention_policy.created
+  [49] hr_data_request.created
+  [50] org.purge_scheduled
+All required audit actions present.
+Dry run complete — transaction rolled back. No data was committed.
+```
+
+**Audit PII verification:** All compliance audit rows reference subjects by `user_id` and `org_id` UUID only. Metadata fields contain action-context keys (`subject`, `quoteNumber`, `key`, `name`) — no raw PII in compliance-specific events. The `user.registered` action does store `email` in metadata (by design, for traceability). Operator should review whether this is consistent with their data inventory/lawful purpose policy (see `RB-10-privacy-compliance-decisions.md`).
+
+**Confirmed gaps (unchanged from prior audit):**
+1. Export worker not implemented — `hr_data_requests` tracks requests; no worker produces an actual data file.
+2. Object storage purge adapter returns FAILED (not yet implemented).
+3. Database rows adapter marks `statusV2=PURGED` as a soft flag only — physical deletion not implemented.
+
+What is not automated: no background retention-sweep service exists. `hr_retention_policies` are inserted but no worker reads them to schedule deletions.
 
 ---
 

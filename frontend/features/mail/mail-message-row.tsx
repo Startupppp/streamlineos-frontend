@@ -187,91 +187,94 @@ export function MailMessageRow({
   const priority = showPriority && scoreNeedsYou(message) >= 5;
 
   return (
-    <button
-      type="button"
+    <div
       className={cn(
-        "w-full text-left px-3 py-2 border-b border-border/25 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring",
+        "relative border-b border-border/25 transition-colors border-l-2",
         isSelected
-          ? "bg-primary/10 border-l-2 border-l-primary"
-          : "hover:bg-muted/40 border-l-2 border-l-transparent",
+          ? "bg-primary/10 border-l-primary"
+          : "hover:bg-muted/40 border-l-transparent",
         !message.isRead && !isSelected && "bg-primary/5",
       )}
-      onClick={handleSelect}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      aria-label={`Message from ${senderLabel}: ${message.subject}`}
-      aria-current={isSelected ? "true" : undefined}
     >
-      <div className="flex items-start justify-between gap-1.5 min-w-0">
-        <div className="flex items-center gap-1.5 min-w-0 flex-1">
-          {!message.isRead ? (
-            <span
-              className="h-1.5 w-1.5 rounded-full bg-primary shrink-0"
-              aria-hidden
+      <button
+        type="button"
+        className="w-full text-left px-3 pt-2 pb-1.5 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring"
+        onClick={handleSelect}
+        aria-label={`Message from ${senderLabel}: ${message.subject}`}
+        aria-current={isSelected ? "true" : undefined}
+      >
+        <div className="flex items-start justify-between gap-1.5 min-w-0">
+          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+            {!message.isRead ? (
+              <span
+                className="h-1.5 w-1.5 rounded-full bg-primary shrink-0"
+                aria-hidden
+              />
+            ) : (
+              <span className="h-1.5 w-1.5 shrink-0" aria-hidden />
+            )}
+            <TruncatedText
+              text={senderLabel}
+              className={cn(
+                "text-label min-w-0",
+                !message.isRead
+                  ? "font-semibold text-foreground"
+                  : "font-medium text-foreground/80",
+              )}
             />
-          ) : (
-            <span className="h-1.5 w-1.5 shrink-0" aria-hidden />
-          )}
-          <TruncatedText
-            text={senderLabel}
+            {priority && (
+              <span className="shrink-0 rounded px-1 py-px text-micro font-semibold uppercase tracking-wide bg-status-warning-surface text-status-warning-ink border border-status-warning-rule">
+                Act
+              </span>
+            )}
+          </div>
+          <span
             className={cn(
-              "text-label min-w-0",
+              "text-dense text-muted-foreground tabular-nums shrink-0",
+              !message.isRead && "font-medium text-foreground/70",
+            )}
+          >
+            {formatMessageDate(message.date)}
+          </span>
+        </div>
+        <div className="flex items-baseline gap-1 mt-0.5 min-w-0 pl-3">
+          <TruncatedText
+            text={message.subject || "(no subject)"}
+            className={cn(
+              "text-xs flex-1 min-w-0",
               !message.isRead
                 ? "font-semibold text-foreground"
-                : "font-medium text-foreground/80",
+                : "text-foreground/70",
             )}
           />
-          {priority && (
-            <span className="shrink-0 rounded px-1 py-px text-micro font-semibold uppercase tracking-wide bg-status-warning-surface text-status-warning-ink border border-status-warning-rule">
-              Act
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-1 shrink-0">
-          {isHovered ? (
-            <QuickActions
-              messageId={message.id}
-              accountId={message.accountId}
-              threadId={message.threadId}
-              folder={folder}
-              canAi={canAi}
-              onAction={onAction}
-              onAiBrief={onAiBrief}
+          {message.hasAttachments && (
+            <Paperclip
+              className="h-3 w-3 text-muted-foreground shrink-0"
+              aria-hidden
             />
-          ) : (
-            <span
-              className={cn(
-                "text-dense text-muted-foreground tabular-nums",
-                !message.isRead && "font-medium text-foreground/70",
-              )}
-            >
-              {formatMessageDate(message.date)}
-            </span>
           )}
         </div>
-      </div>
-      <div className="flex items-baseline gap-1 mt-0.5 min-w-0 pl-3">
-        <TruncatedText
-          text={message.subject || "(no subject)"}
-          className={cn(
-            "text-xs flex-1 min-w-0",
-            !message.isRead
-              ? "font-semibold text-foreground"
-              : "text-foreground/70",
-          )}
-        />
-        {message.hasAttachments && (
-          <Paperclip
-            className="h-3 w-3 text-muted-foreground shrink-0"
-            aria-hidden
+        <div className="mt-0.5 pl-3 pr-8 min-w-0">
+          <TruncatedText
+            text={message.snippet}
+            className="text-dense text-muted-foreground"
+          />
+        </div>
+      </button>
+      <div className="absolute right-2 bottom-1.5 flex items-center gap-1">
+        {isHovered && (
+          <QuickActions
+            messageId={message.id}
+            accountId={message.accountId}
+            threadId={message.threadId}
+            folder={folder}
+            canAi={canAi}
+            onAction={onAction}
+            onAiBrief={onAiBrief}
           />
         )}
-      </div>
-      <div className="flex items-center justify-between gap-1 mt-0.5 pl-3">
-        <TruncatedText
-          text={message.snippet}
-          className="text-dense text-muted-foreground flex-1 min-w-0"
-        />
         <StarButton
           messageId={message.id}
           accountId={message.accountId}
@@ -280,6 +283,6 @@ export function MailMessageRow({
           onAction={onAction}
         />
       </div>
-    </button>
+    </div>
   );
 }

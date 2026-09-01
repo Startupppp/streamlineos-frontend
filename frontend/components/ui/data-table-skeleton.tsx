@@ -25,7 +25,8 @@ export function DataTableSkeleton({
           <TableRow className="hover:bg-transparent">
             {Array.from({ length: columns }).map((_, colIdx) => (
               <TableHead key={colIdx} className="px-2 py-2">
-                <Skeleton className="h-3.5 w-16" />
+                <span className="sr-only">Loading</span>
+                <Skeleton className="h-3.5 w-16" aria-hidden="true" />
               </TableHead>
             ))}
           </TableRow>

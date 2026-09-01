@@ -46,6 +46,7 @@ function TicketListItem({ ticket, isSelected, onSelect }: TicketListItemProps) {
 
   return (
     <button
+      type="button"
       onClick={handleClick}
       className={cn(
         "w-full text-left px-4 py-3 hover:bg-muted/30 transition-colors",

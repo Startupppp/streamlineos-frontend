@@ -39,6 +39,9 @@ import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 // Moved 2026-08-27 (c25-03): 55 finance gates, plus /crm/deals/approvals and
 // /hr/goals, named keys no route enforces — each now names the key its own
 // endpoints check. `pnpm -C backend check:navigation-permissions` proves it.
+// Moved 2026-09-01 by the HR dashboard route ("Dashboard", /hr/dashboard,
+// gated on hr:analytics:read to match the page's own requirePermission call —
+// not hr:employees:view, which would show it to people the page then denies).
 // Moved 2026-08-25 by the CRM import/export route ("Import & export",
 // /crm/import, gated on party:parties:view because export is ungated by design).
 // Moved 2026-08-24 by the CRM autonomy review route ("What the system did",
@@ -88,8 +91,13 @@ import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 // somebody who may see every bin in the network — and reserving stock against a
 // line is a third key again (inventory:stock:reserve), since holding material is
 // a claim on the warehouse.
+// Changed 2026-09-01 by the origin/main merge: main added the HR "Dashboard"
+// route (/hr/dashboard, on hr:analytics:read) to HR_FOUNDATION_ROUTES while this
+// branch was adding the inventory entries below. Both sides are in the graph, so
+// neither side's digest describes it and the merge cannot inherit one of them --
+// this is the hash of the merged graph, recomputed and re-read, not copied across.
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "2ca6daa9c7133ee86933bf8b8f885ed7146824a48a547b7eee7b7eda1e2553b5";
+  "9cdd400d74f8b8b18a2f71d734bd2f6f0c7f4c43097bf9e3d8879dfa5d2e2b7a";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {

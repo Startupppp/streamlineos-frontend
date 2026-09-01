@@ -21,6 +21,24 @@ Outbox events have reached `DEAD` state within the lookback window — the relay
 
 ---
 
+## job-queue-age
+
+**Owner:** platform-reliability | **Severity:** high
+
+A durable job queue outside the outbox has rows still queued or running past the age threshold (default 900s). `alert-queue-age` watches `outbox_events` only and `alert-dead-delivery` watches `notification_deliveries` only, so before this alert existed a stopped AI, payroll, GDPR-export or report-export worker left rows queued indefinitely and paged nobody. The breach payload names the queue and its owning team.
+
+Registered queues: `ai_jobs`, `payroll_jobs`, `payroll_run_export_jobs`, `expense_export_jobs`, `finance_report_export_jobs`, `hr_export_jobs`, `gdpr_export_jobs`, `kb_export_jobs`.
+
+**First three checks**
+
+1. Run `node src/scripts/alert-job-queue-age.mjs` from `backend/` and read `breached[]` — it names the queue, the owning team, the unfinished row count and the age of the oldest row.
+2. Confirm the worker that drains that queue is running. The mapping is one worker per queue: `ai-jobs-worker.service.ts`, `payroll-jobs-worker.service.ts`, `payroll-export-worker.service.ts`, `expense-export-worker.service.ts`, `finance-report-export-worker.service.ts`, `hr-export-worker.service.ts`, `gdpr-export-worker.service.ts`, and `kb/wiki/kb-import-export.service.ts` for `kb_export_jobs`. A worker is driven by its cron controller — a missing or failing `CRON_SECRET`-guarded call stops the queue silently.
+3. Check the application logs for that worker for provider errors, credit exhaustion (AI jobs reserve credits before the paid call) or an unhandled row that is being re-picked and re-failed.
+
+**Confirm resolution:** `node src/scripts/alert-job-queue-age.mjs` exits 0. Exit code 2 means the registry names a table that no longer exists — fix `JOB_QUEUES` in the script rather than ignoring it, because a stale registry silently stops watching a live queue.
+
+---
+
 ## dead-delivery
 
 **Owner:** notifications-team | **Severity:** high

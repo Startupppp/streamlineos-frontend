@@ -18,6 +18,7 @@ import { SUPPORT_PERMISSIONS } from "./support";
 import { KB_PERMISSIONS } from "./kb";
 import { INVENTORY_PERMISSIONS } from "./inventory";
 import { SURVEYS_PERMISSIONS } from "./surveys";
+import { BLOG_PERMISSIONS } from "./blog";
 import { FEEDBUCKET_PERMISSIONS } from "./feedbucket";
 import { NOTIFICATIONS_PERMISSIONS } from "./notifications";
 import { ACCOUNTING_PERMISSIONS } from "./accounting";
@@ -34,6 +35,7 @@ const permissionEntries = [
   ...KB_PERMISSIONS,
   ...INVENTORY_PERMISSIONS,
   ...SURVEYS_PERMISSIONS,
+  ...BLOG_PERMISSIONS,
   ...FEEDBUCKET_PERMISSIONS,
   ...NOTIFICATIONS_PERMISSIONS,
   ...ACCOUNTING_PERMISSIONS,

@@ -14,6 +14,12 @@ export const HR_FOUNDATION_ROUTES: NavRoute[] = [
         ],
       },
 {
+        label: "Dashboard",
+        icon: BarChart3,
+        href: "/hr/dashboard",
+        requiredPermission: "hr:analytics:read",
+      },
+{
         label: "Approvals Inbox",
         icon: ClipboardCheck,
         href: "/hr/approvals",

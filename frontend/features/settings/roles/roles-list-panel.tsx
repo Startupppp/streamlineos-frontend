@@ -52,15 +52,6 @@ interface RoleListItemProps {
 
 function RoleListItem({ role, isSelected, onSelect, onDelete, onRename }: RoleListItemProps) {
   const handleSelect = useCallback(() => onSelect(role.id), [role.id, onSelect]);
-  const handleKeyDown = useCallback(
-    (event: React.KeyboardEvent) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        onSelect(role.id);
-      }
-    },
-    [role.id, onSelect],
-  );
   const handleDelete = useCallback(
     (event: React.MouseEvent) => { event.stopPropagation(); onDelete(role); },
     [role, onDelete],
@@ -72,23 +63,25 @@ function RoleListItem({ role, isSelected, onSelect, onDelete, onRename }: RoleLi
 
   return (
     <div
-      role="button"
-      tabIndex={0}
-      onClick={handleSelect}
-      onKeyDown={handleKeyDown}
       className={cn(
-        "w-full text-left border-l-2 border-transparent px-4 py-3 hover:bg-muted/30 transition-colors flex items-center justify-between cursor-pointer",
+        "w-full border-l-2 border-transparent hover:bg-muted/30 transition-colors flex items-center justify-between",
         isSelected && "bg-primary/5 border-primary",
       )}
     >
-      <div className="min-w-0">
+      <button
+        type="button"
+        onClick={handleSelect}
+        className="flex-1 min-w-0 text-left px-4 py-3 cursor-pointer"
+        aria-pressed={isSelected}
+        aria-label={`Select ${role.name} role`}
+      >
         <p className="text-sm font-medium truncate">{role.name}</p>
         <p className="text-dense text-muted-foreground">
           {role.permissionCount} permission
           {role.permissionCount === 1 ? "" : "s"}
         </p>
-      </div>
-      <div className="flex items-center gap-1 shrink-0">
+      </button>
+      <div className="flex items-center gap-1 shrink-0 px-2">
         {role.isSystem && (
           <Badge variant="outline" className="text-micro px-1.5">System</Badge>
         )}

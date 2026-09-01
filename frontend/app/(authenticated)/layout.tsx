@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { cookies, headers } from "next/headers";
 import { HydrationBoundary } from "@tanstack/react-query";
@@ -10,6 +11,10 @@ import { DashboardShell } from "../../components/layout/dashboard-shell";
 import { AppThemeScript } from "../../components/theme/app-theme-script";
 import { AppThemeProvider } from "../../components/theme/app-theme-provider";
 import { FeedbucketEmbed } from "../../components/feedbucket/feedbucket-embed";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default async function DashboardLayout({
   children,
@@ -31,7 +36,8 @@ export default async function DashboardLayout({
     pathname === "/settings" || pathname.startsWith("/settings/");
 
   const { mfa } = await getServerAccess();
-  if (!isSettingsRoute && mfa?.enforced && !mfa.satisfied) redirect("/settings");
+  if (!isSettingsRoute && mfa?.enforced && !mfa.satisfied)
+    redirect("/settings");
 
   const state = await prefetchAccess();
 

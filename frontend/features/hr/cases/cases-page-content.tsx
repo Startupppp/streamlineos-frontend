@@ -24,6 +24,7 @@ import {
   TabsContent,
   TABS_CONTENT_PAGE_BODY_CLASS,
 } from "@/components/ui/tabs";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { StateIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useCan } from "@/hooks/api/access";
@@ -83,7 +84,10 @@ export function CasesPageContent() {
   const [status, setStatus] = useState<CaseStatus | "">("");
   const [category, setCategory] = useState<CaseCategory | "">("");
   const [severity, setSeverity] = useState<CaseSeverity | "">("");
-  const [page, setPage] = useState(1);
+  const [caseCursors, setCaseCursors] = useState<(string | null)[]>([null]);
+  const [caseCursorIndex, setCaseCursorIndex] = useState(0);
+  const [discCursors, setDiscCursors] = useState<(string | null)[]>([null]);
+  const [discCursorIndex, setDiscCursorIndex] = useState(0);
   const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null);
   const [showNew, setShowNew] = useState(false);
   const [showAnonymous, setShowAnonymous] = useState(false);
@@ -91,14 +95,19 @@ export function CasesPageContent() {
   const [activeTab, setActiveTab] = useState<ActiveTab>("cases");
 
   const { data: casesData, isLoading: casesLoading } = useHrCases({
-    page,
+    cursor: caseCursors[caseCursorIndex] ?? undefined,
     search: debouncedSearch.trim() || undefined,
     status: status || undefined,
     category: category || undefined,
     severity: severity || undefined,
   });
 
-  const { data: disciplinaryData, isLoading: discLoading } = useDisciplinaryActions({ page });
+  const { data: disciplinaryData, isLoading: discLoading } = useDisciplinaryActions({
+    cursor: discCursors[discCursorIndex] ?? undefined,
+  });
+
+  const casesHasMore = casesData?.pagination.hasMore ?? false;
+  const discHasMore = disciplinaryData?.pagination.hasMore ?? false;
 
   const employeeIds = useMemo(
     () => [...new Set((disciplinaryData?.data ?? []).map((r) => r.employeeId))],
@@ -116,7 +125,8 @@ export function CasesPageContent() {
 
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
-    setPage(1);
+    setCaseCursors([null]);
+    setCaseCursorIndex(0);
   }, []);
 
   const caseColumns: DataTableColumn<HrCase>[] = [
@@ -176,7 +186,7 @@ export function CasesPageContent() {
       />
       <Select
         value={status || SENTINEL}
-        onValueChange={(v) => { setStatus(v === SENTINEL ? "" : (v as CaseStatus)); setPage(1); }}
+        onValueChange={(v) => { setStatus(v === SENTINEL ? "" : (v as CaseStatus)); setCaseCursors([null]); setCaseCursorIndex(0); }}
       >
         <SelectTrigger
           aria-label="Filter by status"
@@ -192,7 +202,7 @@ export function CasesPageContent() {
       </Select>
       <Select
         value={category || SENTINEL}
-        onValueChange={(v) => { setCategory(v === SENTINEL ? "" : (v as CaseCategory)); setPage(1); }}
+        onValueChange={(v) => { setCategory(v === SENTINEL ? "" : (v as CaseCategory)); setCaseCursors([null]); setCaseCursorIndex(0); }}
       >
         <SelectTrigger
           aria-label="Filter by category"
@@ -208,7 +218,7 @@ export function CasesPageContent() {
       </Select>
       <Select
         value={severity || SENTINEL}
-        onValueChange={(v) => { setSeverity(v === SENTINEL ? "" : (v as CaseSeverity)); setPage(1); }}
+        onValueChange={(v) => { setSeverity(v === SENTINEL ? "" : (v as CaseSeverity)); setCaseCursors([null]); setCaseCursorIndex(0); }}
       >
         <SelectTrigger
           aria-label="Filter by severity"
@@ -258,7 +268,7 @@ export function CasesPageContent() {
     >
       <Tabs
         value={activeTab}
-        onValueChange={(v) => { setActiveTab(v as ActiveTab); setPage(1); }}
+        onValueChange={(v) => { setActiveTab(v as ActiveTab); setCaseCursors([null]); setCaseCursorIndex(0); }}
         className="flex min-h-0 flex-1 flex-col pb-6"
       >
         <TabsList className="mb-4 shrink-0">
@@ -267,23 +277,41 @@ export function CasesPageContent() {
         </TabsList>
 
         <TabsContent value="cases" className={TABS_CONTENT_PAGE_BODY_CLASS}>
-          <DataTable
-            className="flex-1 min-h-0"
-            columns={caseColumns}
-            data={casesData?.data ?? []}
-            isLoading={casesLoading}
-            getRowKey={(row) => row.id}
-            onRowClick={(row) => setSelectedCaseId(row.id)}
-            emptyState={
-              <EmptyState
-                className="border-0 bg-transparent min-h-[40vh]"
-                illustration={<StateIllustration preset="ticket" className="h-28 w-28" />}
-                title="No cases found"
-                description="Report a grievance, harassment incident, or policy violation to open a case."
-                action={canManage ? { label: "New Case", onClick: () => setShowNew(true) } : undefined}
+          <div className="flex flex-1 min-h-0 flex-col gap-2">
+            <DataTable
+              className="flex-1 min-h-0"
+              columns={caseColumns}
+              data={casesData?.data ?? []}
+              isLoading={casesLoading}
+              getRowKey={(row) => row.id}
+              onRowClick={(row) => setSelectedCaseId(row.id)}
+              emptyState={
+                <EmptyState
+                  className="border-0 bg-transparent min-h-[40vh]"
+                  illustration={<StateIllustration preset="ticket" className="h-28 w-28" />}
+                  title="No cases found"
+                  description="Report a grievance, harassment incident, or policy violation to open a case."
+                  action={canManage ? { label: "New Case", onClick: () => setShowNew(true) } : undefined}
+                />
+              }
+            />
+            {(caseCursorIndex > 0 || casesHasMore) ? (
+              <CursorPageControls
+                page={caseCursorIndex + 1}
+                hasNext={casesHasMore}
+                onPrevious={() => setCaseCursorIndex((prev) => Math.max(0, prev - 1))}
+                onNext={() => {
+                  const next = casesData?.pagination.nextCursor ?? null;
+                  setCaseCursors((prev) => {
+                    const copy = prev.slice(0, caseCursorIndex + 1);
+                    copy.push(next);
+                    return copy;
+                  });
+                  setCaseCursorIndex((prev) => prev + 1);
+                }}
               />
-            }
-          />
+            ) : null}
+          </div>
         </TabsContent>
 
         <TabsContent value="disciplinary" className={TABS_CONTENT_PAGE_BODY_CLASS}>
@@ -345,6 +373,22 @@ export function CasesPageContent() {
                 />
               }
             />
+            {(discCursorIndex > 0 || discHasMore) ? (
+              <CursorPageControls
+                page={discCursorIndex + 1}
+                hasNext={discHasMore}
+                onPrevious={() => setDiscCursorIndex((prev) => Math.max(0, prev - 1))}
+                onNext={() => {
+                  const next = disciplinaryData?.pagination.nextCursor ?? null;
+                  setDiscCursors((prev) => {
+                    const copy = prev.slice(0, discCursorIndex + 1);
+                    copy.push(next);
+                    return copy;
+                  });
+                  setDiscCursorIndex((prev) => prev + 1);
+                }}
+              />
+            ) : null}
           </div>
         </TabsContent>
       </Tabs>

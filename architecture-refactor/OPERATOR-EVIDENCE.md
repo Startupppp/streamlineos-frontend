@@ -5,7 +5,7 @@ Each row is either **PASS (with evidence)** or **OPEN — operator-blocked**.
 
 A self-test passing proves the **guard is correct and can fail**: it is NOT evidence that the production infrastructure exists. These are deliberately separate columns.
 
-Last updated: 2026-08-31
+Last updated: 2026-09-01
 
 ---
 
@@ -20,9 +20,13 @@ Last updated: 2026-08-31
 | 5 | Production-shaped load — all 14 workload objectives with declared geography/device/network/cache, ≥40% headroom, burst survived | PASS 2026-08-30 (guard detects BREACHED and NOT_DRIVEN) | Not run on live infra | **OPEN — operator-blocked** | [RB-05](runbooks/RB-05-production-load.md) |
 | 6 | Live alert delivery + acknowledgement — `ALERT_WEBHOOK_URL`, `APP_RELEASE`, production log stream; test event through every on-call destination; human ACK recorded | PASS 2026-08-31 (12 alert self-tests pass: 11 delivery/dispatch probes + `check-alert-ack` which verifies the detection of unacknowledged state) | `ALERT_WEBHOOK_URL` not configured; no operator has run the interactive drill and confirmed a nonce | **OPEN — operator-blocked** | [RB-06](runbooks/RB-06-live-alert-delivery.md) |
 | 7 | Per-cell cost — cost per active org/member/message/job; saturation forecast; trended daily across releases | PASS 2026-08-30 (anomaly detector fires, breach detected) | No trend data; live infra needed | **OPEN — operator-blocked** | [RB-07](runbooks/RB-07-per-cell-cost.md) |
-| 8 | Compliance drill — GDPR export, deletion, retention and legal-hold end to end with disposable data | PARTIAL 2026-08-30 (audit workflow passes dry-run; 3 gaps remain) | Export worker and storage purge not built | **OPEN — code gaps remain** | See [Compliance gaps](#compliance-gaps) |
+| 8 | Compliance drill — GDPR export, deletion, retention and legal-hold end to end with disposable data | VERIFIED 2026-09-01 (all 4 drills executed against live DB: export PASS, erasure PASS, legal-hold 8/8 PASS, compliance audit 7 rows present) | Export worker and storage purge not built — code gaps remain | **OPEN — code gaps remain** | See [Compliance gaps](#compliance-gaps) |
 
-**7 of 8 rows are OPEN — operator-blocked. 0 rows are PASS. 1 row (compliance) is OPEN with code gaps in addition to infrastructure gaps.**
+| 9 | Break-glass / operator-access policy — time-bound, dual-approved, reasoned, audited | Code gaps: `OperatorSessionGuard` + `OperatorAuditInterceptor` not built | DB schema only (migration 0747) | **OPEN — code gaps + AWAITING APPROVAL** | [RB-10 §1](runbooks/RB-10-privacy-compliance-decisions.md) |
+| 10 | Data inventory, lawful purpose, retention owner and residency policy | No automated enforcement | No retention-sweep worker | **AWAITING OPERATOR APPROVAL** | [RB-10 §2–3](runbooks/RB-10-privacy-compliance-decisions.md) |
+| 11 | Regional transfer and subprocessor decisions | No SCCs or subprocessor list in-product | Subprocessors active: Neon/Upstash/R2/Resend/Ably/OpenAI/Composio | **AWAITING OPERATOR APPROVAL** | [RB-10 §4](runbooks/RB-10-privacy-compliance-decisions.md) |
+
+**7 of 11 rows are OPEN — operator-blocked. 0 rows are PASS. 1 row (compliance, #8) is OPEN with code gaps. 3 rows (#9–11) require operator policy decisions before code can close them.**
 
 Production readiness is below 10/10 until all rows are executed and evidence is filed.
 
@@ -79,7 +83,10 @@ These self-tests prove the guards are structurally correct. They are NOT product
 | verify:rbac-integrity | `node src/scripts/verify-rbac-referential-integrity.mjs --self-test` | PASS: namespace folding and verdict classification correct |
 | scan:legacy-actors | `node src/scripts/scan-legacy-org-actors.mjs --self-test` | PASS: 563 FKs found, all known examples verified |
 | check:navigation-permissions | `node src/scripts/check-navigation-permissions.mjs --self-test` | PASS: all 19 cases correct |
-| compliance:drill (dry-run) | `node --env-file-if-exists=.env src/scripts/compliance-drill.mjs` | PARTIAL PASS: 7 audit rows created, all required actions present; 3 gaps reported honestly |
+| compliance:drill (dry-run) | `node --env-file-if-exists=.env src/scripts/compliance-drill.mjs` | PASS 2026-09-01: 7 audit rows created, all required actions present; 3 code gaps reported honestly |
+| drill:export | `node --env-file-if-exists=.env src/scripts/drill-export.mjs <email>` | PASS 2026-09-01: subject found, export INSERT dry-run succeeded, 202 storage-key columns found, cross-tenant 0 rows, in-tenant 1 row |
+| drill:erasure (dry-run) | `node --env-file-if-exists=.env src/scripts/drill-erasure.mjs <non-owner-email>` | PASS 2026-09-01: 633 FK tables enumerated from pg_catalog, 469 deletion-ordered, 0 residual rows in rolled-back tx |
+| drill:legal-hold | `node --env-file-if-exists=.env src/scripts/drill-legal-hold.mjs <email> <org-id>` | PASS 2026-09-01: 8/8 — hold placed, erasure blocked, retention blocked, org-hold placed, both released, erasure unblocked |
 
 ### FAIL (cannot run self-test)
 
@@ -170,18 +177,16 @@ The deletion must be batched (1000 rows per transaction) and logged. It must not
 
 **PRD §20 requirement:** "Operator/support access is time-bound, approved, reasoned and audited."
 
-**Current state:** Not implemented in application code. This is a gap.
+**AWAITING OPERATOR APPROVAL — see [RB-10](runbooks/RB-10-privacy-compliance-decisions.md) §1 for
+the decision-ready document with concrete options and a recommended default.**
 
-**Required design:**
+**Current state (2026-09-01):**
+- Migration `0747` applied: `platform_operator_access_grants` table exists with `approver_id != granted_by` DB CHECK (convalidated).
+- `assertGrant` in `backend/src/modules/platform/` checks `status = 'active'`.
+- No HTTP-layer enforcement: `OperatorSessionGuard`, `OperatorAuditInterceptor` and `OperatorAccessService` are not built.
+- No content-blind default: a platform operator JWT can read any route their role permits.
 
-An operator session must be:
-1. **Time-bound:** Maximum 4 hours per session. The session token includes an absolute `exp` that cannot be extended.
-2. **Approved:** An approval record in `platform_operator_access_requests` must exist with `status=approved` and `approved_by` set to a second operator (no self-approval).
-3. **Reasoned:** The approval request must include a `reason` (minimum 20 characters) and a `ticket_reference`.
-4. **Audited:** Every API call made under an operator session writes to `audit_logs` with `is_platform_event=true` and includes `operator_session_id`, `reason`, and `ticket_reference`. The operator cannot modify or delete audit log rows.
-5. **Content-blind by default:** The platform operator role has no `@RequirePermission` grant to read tenant content. Reading tenant content requires an explicit elevated-access grant for the specific org, approved by that org's owner, time-limited to 1 hour, and audited at the row level.
-
-**Implementation files (for another lane):**
+**Implementation files needed (for another lane, after policy decision):**
 - `backend/src/modules/platform/operator-access.service.ts` — session creation, approval, expiry
 - `backend/src/db/schema/common/platform-operator.ts` — `platform_operator_access_requests` table
 - `backend/src/common/auth/operator-session.guard.ts` — enforces time-bound + content-blind

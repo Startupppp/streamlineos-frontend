@@ -1,4 +1,7 @@
 import "@testing-library/jest-dom";
+import { toHaveNoViolations } from "jest-axe";
+
+expect.extend(toHaveNoViolations);
 
 // jsdom has no ResizeObserver — components like TruncatedText (used inside PageWrapper,
 // ubiquitous across authenticated pages) need at least a no-op stub to mount under Jest.

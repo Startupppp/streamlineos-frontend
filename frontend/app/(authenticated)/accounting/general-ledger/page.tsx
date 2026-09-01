@@ -18,6 +18,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { ErrorState } from "@/components/shared";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useGeneralLedger, useGlAccounts } from "@/hooks/api/accounting/core";
@@ -31,6 +32,8 @@ import { downloadCsv } from "@/features/accounting/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
 import type { GlRow } from "@/hooks/api/accounting/core";
+
+const GL_LIMIT = 50;
 
 function getMonthStart(): string {
   const d = new Date();
@@ -51,19 +54,6 @@ function formatMoney(value: string): string {
   });
 }
 
-function sumDebit(rows: GlRow[]): number {
-  return rows.reduce((sum, r) => sum + (parseFloat(r.debit) || 0), 0);
-}
-
-function sumCredit(rows: GlRow[]): number {
-  return rows.reduce((sum, r) => sum + (parseFloat(r.credit) || 0), 0);
-}
-
-function isNegative(value: string): boolean {
-  return parseFloat(value) < 0;
-}
-
-const PAGE_SIZE = 50;
 
 const glColumns: DataTableColumn<GlRow>[] = [
   {
@@ -142,7 +132,7 @@ const glColumns: DataTableColumn<GlRow>[] = [
       <span
         className={cn(
           "text-right font-mono text-sm tabular-nums block",
-          isNegative(row.runningBalance)
+          parseFloat(row.runningBalance) < 0
             ? "text-destructive"
             : "text-foreground",
         )}
@@ -162,8 +152,9 @@ export default function GeneralLedgerPage() {
   const [accountId, setAccountId] = useState<string>("");
   const [clientId, setClientId] = useState<string>("");
   const [vendorId, setVendorId] = useState<string>("");
-  const [page, setPage] = useState<number>(1);
   const [showMoreFilters, setShowMoreFilters] = useState<boolean>(false);
+  const [cursors, setCursors] = useState<(string | null)[]>([null]);
+  const [cursorIndex, setCursorIndex] = useState(0);
 
   const canExport = useCan("accounting:reports:export");
   const { iconRef: exportIconRef, hoverHandlers: exportHoverHandlers } =
@@ -181,43 +172,56 @@ export default function GeneralLedgerPage() {
     accountId: accountId ? parseInt(accountId, 10) : undefined,
     clientId: clientId ? parseInt(clientId, 10) : undefined,
     vendorId: vendorId ? parseInt(vendorId, 10) : undefined,
-    page,
-    pageSize: PAGE_SIZE,
+    cursor: cursors[cursorIndex] ?? undefined,
+    limit: GL_LIMIT,
   });
 
   const glData = glQuery.data;
-  const rows = glData?.rows ?? [];
+  const rows = glData?.items ?? [];
+  const hasMore = glData?.nextCursor !== null && glData?.nextCursor !== undefined;
 
-  const periodDebit = sumDebit(rows);
-  const periodCredit = sumCredit(rows);
+  function resetCursors(): void {
+    setCursors([null]);
+    setCursorIndex(0);
+  }
 
   function handleFromChange(value: string): void {
     setFrom(value);
-    setPage(1);
+    resetCursors();
   }
 
   function handleToChange(value: string): void {
     setTo(value);
-    setPage(1);
+    resetCursors();
   }
 
   function handleAccountChange(value: string): void {
     setAccountId(value === "__none__" ? "" : value);
-    setPage(1);
+    resetCursors();
   }
 
   function handleClientChange(value: string): void {
     setClientId(value === "__none__" ? "" : value);
-    setPage(1);
+    resetCursors();
   }
 
   function handleVendorChange(value: string): void {
     setVendorId(value === "__none__" ? "" : value);
-    setPage(1);
+    resetCursors();
   }
 
-  function handlePageChange(newPage: number): void {
-    setPage(newPage);
+  function handlePreviousPage(): void {
+    setCursorIndex((prev) => Math.max(0, prev - 1));
+  }
+
+  function handleNextPage(): void {
+    const next = glData?.nextCursor ?? null;
+    setCursors((prev) => {
+      const copy = prev.slice(0, cursorIndex + 1);
+      copy.push(next);
+      return copy;
+    });
+    setCursorIndex((prev) => prev + 1);
   }
 
   function handleToggleMoreFilters(): void {
@@ -362,32 +366,16 @@ export default function GeneralLedgerPage() {
     >
       <div className="flex flex-1 min-h-0 flex-col space-y-4">
         {glData && (
-          <StatCardGrid cols={4}>
+          <StatCardGrid cols={2}>
             <StatCard
               label="Opening Balance"
               value={formatMoney(glData.openingBalance)}
               tone="default"
             />
             <StatCard
-              label="Period Debits"
-              value={periodDebit.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-              tone="red"
-            />
-            <StatCard
-              label="Period Credits"
-              value={periodCredit.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-              tone="emerald"
-            />
-            <StatCard
               label="Closing Balance"
               value={formatMoney(glData.closingBalance)}
-              tone={isNegative(glData.closingBalance) ? "red" : "default"}
+              tone="emerald"
             />
           </StatCardGrid>
         )}
@@ -411,28 +399,33 @@ export default function GeneralLedgerPage() {
             onRetry={handleRetry}
           />
         ) : (
-          <DataTable
-            className="flex-1 min-h-0"
-            data={rows}
-            columns={glColumns}
-            getRowKey={(row) => row.entryId ?? row.entryNumber}
-            isLoading={glQuery.isLoading}
-            pagination={{
-              mode: "server",
-              page,
-              pageSize: PAGE_SIZE,
-              total: glData?.total ?? 0,
-              onPageChange: handlePageChange,
-            }}
-            emptyState={
-              <EmptyState
-                compact
-                title="No transactions found"
-                description="No activity for the selected account and date range."
+          <>
+            <DataTable
+              className="flex-1 min-h-0"
+              data={rows}
+              columns={glColumns}
+              getRowKey={(row) => row.entryId ?? row.entryNumber}
+              isLoading={glQuery.isLoading}
+              emptyState={
+                <EmptyState
+                  compact
+                  title="No transactions found"
+                  description="No activity for the selected account and date range."
+                />
+              }
+              minWidth="700px"
+            />
+            {(cursorIndex > 0 || hasMore) ? (
+              <CursorPageControls
+                page={cursorIndex + 1}
+                hasNext={hasMore}
+                disabled={glQuery.isFetching}
+                onPrevious={handlePreviousPage}
+                onNext={handleNextPage}
+                className="mt-2"
               />
-            }
-            minWidth="700px"
-          />
+            ) : null}
+          </>
         )}
       </div>
     </PageWrapper>

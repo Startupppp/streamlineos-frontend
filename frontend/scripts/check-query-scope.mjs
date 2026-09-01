@@ -23,7 +23,13 @@ function normRel(relPath) {
 }
 
 function isTestFile(relPath) {
-  return relPath.endsWith(".test.ts") || relPath.endsWith(".test.tsx");
+  const p = normRel(relPath);
+  return (
+    p.endsWith(".test.ts") ||
+    p.endsWith(".test.tsx") ||
+    p.startsWith("test-utils/") ||
+    p.includes("/__tests__/")
+  );
 }
 
 const EMPTY_DEHYDRATE_RE = /dehydrate\s*\(\s*new\s+QueryClient\s*\(\s*\)\s*\)/g;
@@ -96,6 +102,37 @@ function runSelfTest() {
       ].join("\n"),
       detect: checkPrefetchDehydrate,
     },
+    {
+      description:
+        "rule 1 — a lookalike app path is NOT exempt (test-utils must be a directory, not a substring)",
+      relPath: "lib/test-utils-helper.ts",
+      content: [
+        'import { QueryClient } from "@tanstack/react-query";',
+        "export const rogue = new QueryClient();",
+      ].join("\n"),
+      detect: checkNewQueryClient,
+    },
+  ];
+
+  const exemptFixtures = [
+    {
+      description: "test harness under test-utils/ may construct a QueryClient",
+      relPath: "test-utils/render.tsx",
+      content: [
+        'import { QueryClient } from "@tanstack/react-query";',
+        "export const client = new QueryClient();",
+      ].join("\n"),
+      detect: checkNewQueryClient,
+    },
+    {
+      description: "a __tests__ directory may construct a QueryClient",
+      relPath: "features/foo/__tests__/foo.helper.tsx",
+      content: [
+        'import { QueryClient } from "@tanstack/react-query";',
+        "export const client = new QueryClient();",
+      ].join("\n"),
+      detect: checkNewQueryClient,
+    },
   ];
 
   const selfFailures = [];
@@ -106,6 +143,15 @@ function runSelfTest() {
       selfFailures.push(`self-test MISSED: ${description}`);
     } else {
       console.log(`✔ self-test detected ${description}`);
+    }
+  }
+
+  for (const { description, relPath, content, detect } of exemptFixtures) {
+    const result = detect(content, relPath);
+    if (result !== null) {
+      selfFailures.push(`self-test WRONGLY FLAGGED: ${description}`);
+    } else {
+      console.log(`✔ self-test exempted ${description}`);
     }
   }
 

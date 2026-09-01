@@ -45,6 +45,12 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
       "Module access administration for Blog, which has no product navigation entry.",
   },
   {
+    prefix: "/blog/admin",
+    permission: "blog:posts:manage",
+    reason:
+      "Matches the backend gate on the /blog/admin/* endpoints. Authoring is administration, so it is gated on manage rather than on the public read key.",
+  },
+  {
     prefix: "/subjects",
     permission: "party:subjects:view",
     reason:

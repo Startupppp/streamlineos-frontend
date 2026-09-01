@@ -3,6 +3,7 @@ import { useCan } from "@/hooks/api/access";
 import { useVendorCredits } from "../ap-vendors";
 import { useBudgets } from "../planning";
 import { useBankAccounts } from "../banking";
+import { useGeneralLedger } from "../core-gl";
 
 jest.mock("@tanstack/react-query", () => ({
   ...jest.requireActual("@tanstack/react-query"),
@@ -49,6 +50,12 @@ function captureBudgetsOptions(params?: Parameters<typeof useBudgets>[0]) {
 function captureBankAccountsOptions(params?: Parameters<typeof useBankAccounts>[0]) {
   mockQuery.mockImplementation((opts: unknown) => opts);
   useBankAccounts(params);
+  return mockQuery.mock.calls.at(-1)?.[0] as { queryFn: () => unknown };
+}
+
+function captureGeneralLedgerOptions(params: Parameters<typeof useGeneralLedger>[0]) {
+  mockQuery.mockImplementation((opts: unknown) => opts);
+  useGeneralLedger(params);
   return mockQuery.mock.calls.at(-1)?.[0] as { queryFn: () => unknown };
 }
 
@@ -232,3 +239,4 @@ describe("useBankAccounts — cursor pagination contract", () => {
     );
   });
 });
+

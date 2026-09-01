@@ -29,6 +29,58 @@ function withCookie(name: string) {
 }
 
 describe("resolveWizardGate", () => {
+  describe("platform admin gap — /owner route not built", () => {
+    it("an account with no orgId lands at /org-setup (platform admin cannot be distinguished in the current Session type)", () => {
+      expect(
+        resolveWizardGate(
+          session({ orgId: null, organizationAccess: "none" }),
+          noCookies,
+        ),
+      ).toBe("/org-setup");
+    });
+  });
+
+  describe("org-owner employee-onboarding exclusion", () => {
+    it("org owner with no userOnboardingCompletedAt and no cookie is NOT routed to /employee-onboarding", () => {
+      expect(
+        resolveWizardGate(
+          session({
+            orgId: "org-1",
+            organizationAccess: "active",
+            orgOnboardingCompletedAt: "2026-08-01T00:00:00.000Z",
+            user: {
+              id: "owner-1",
+              email: "owner@example.com",
+              name: "Owner",
+              role: "OWNER",
+              isOrgOwner: true,
+            },
+          }),
+          noCookies,
+        ),
+      ).toBeNull();
+    });
+
+    it("non-owner with no userOnboardingCompletedAt and no cookie IS routed to /employee-onboarding", () => {
+      expect(
+        resolveWizardGate(
+          session({
+            orgId: "org-1",
+            organizationAccess: "active",
+            user: {
+              id: "member-1",
+              email: "member@example.com",
+              name: "Member",
+              role: "MEMBER",
+              isOrgOwner: false,
+            },
+          }),
+          noCookies,
+        ),
+      ).toBe("/employee-onboarding");
+    });
+  });
+
   it("routes a suspended membership to recovery instead of organization setup", () => {
     expect(
       resolveWizardGate(

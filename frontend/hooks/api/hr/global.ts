@@ -72,17 +72,50 @@ export interface HrContract {
   updatedAt: string;
 }
 
-interface PaginatedResponse<T> {
+interface CursorResult<T> {
   data: T[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 }
 
-export function useWorkAuthorizations(params?: Record<string, unknown>) {
+export interface WorkAuthorizationsParams {
+  cursor?: string;
+  limit?: number;
+  employmentId?: number;
+  status?: WorkAuthorization["status"];
+  days?: number;
+}
+
+export interface ComplianceRequirementsParams {
+  cursor?: string;
+  limit?: number;
+  countryCode?: string;
+  category?: ComplianceRequirement["category"];
+  active?: boolean;
+}
+
+export interface ComplianceEventsParams {
+  cursor?: string;
+  limit?: number;
+  requirementId?: number;
+  status?: ComplianceEvent["status"];
+  from?: string;
+  to?: string;
+}
+
+export interface ContractsParams {
+  cursor?: string;
+  limit?: number;
+  contractType?: HrContract["contractType"];
+  status?: HrContract["status"];
+  days?: number;
+}
+
+export function useWorkAuthorizations(params?: WorkAuthorizationsParams) {
   const canView = useCan("hr:employees:view");
   const hrEnabled = useModuleEnabled("hr");
-  return useQuery<PaginatedResponse<WorkAuthorization>>({
-    queryKey: queryKeys.hr.workAuthorizations(params),
-    queryFn: () => apiClient.get("/hr/global/work-authorizations", params),
+  return useQuery<CursorResult<WorkAuthorization>>({
+    queryKey: queryKeys.hr.workAuthorizations(params as Record<string, unknown>),
+    queryFn: () => apiClient.get("/hr/global/work-authorizations", params as Record<string, unknown>),
     staleTime: 60_000,
     enabled: canView && hrEnabled,
   });
@@ -128,12 +161,12 @@ export function useDeleteWorkAuth() {
   });
 }
 
-export function useComplianceRequirements(params?: Record<string, unknown>) {
+export function useComplianceRequirements(params?: ComplianceRequirementsParams) {
   const canManage = useCan("hr:compliance:manage");
   const hrEnabled = useModuleEnabled("hr");
-  return useQuery<PaginatedResponse<ComplianceRequirement>>({
-    queryKey: queryKeys.hr.complianceRequirements(params),
-    queryFn: () => apiClient.get("/hr/global/compliance/requirements", params),
+  return useQuery<CursorResult<ComplianceRequirement>>({
+    queryKey: queryKeys.hr.complianceRequirements(params as Record<string, unknown>),
+    queryFn: () => apiClient.get("/hr/global/compliance/requirements", params as Record<string, unknown>),
     staleTime: 120_000,
     enabled: canManage && hrEnabled,
   });
@@ -179,12 +212,12 @@ export function useDeleteComplianceRequirement() {
   });
 }
 
-export function useComplianceEvents(params?: Record<string, unknown>) {
+export function useComplianceEvents(params?: ComplianceEventsParams) {
   const canManage = useCan("hr:compliance:manage");
   const hrEnabled = useModuleEnabled("hr");
-  return useQuery<PaginatedResponse<ComplianceEvent>>({
-    queryKey: queryKeys.hr.complianceEvents(params),
-    queryFn: () => apiClient.get("/hr/global/compliance/events", params),
+  return useQuery<CursorResult<ComplianceEvent>>({
+    queryKey: queryKeys.hr.complianceEvents(params as Record<string, unknown>),
+    queryFn: () => apiClient.get("/hr/global/compliance/events", params as Record<string, unknown>),
     staleTime: 60_000,
     enabled: canManage && hrEnabled,
   });
@@ -232,12 +265,12 @@ export function useSeedCountryPack() {
   });
 }
 
-export function useContracts(params?: Record<string, unknown>) {
+export function useContracts(params?: ContractsParams) {
   const canView = useCan("hr:employees:view");
   const hrEnabled = useModuleEnabled("hr");
-  return useQuery<PaginatedResponse<HrContract>>({
-    queryKey: queryKeys.hr.contracts(params),
-    queryFn: () => apiClient.get("/hr/global/contracts", params),
+  return useQuery<CursorResult<HrContract>>({
+    queryKey: queryKeys.hr.contracts(params as Record<string, unknown>),
+    queryFn: () => apiClient.get("/hr/global/contracts", params as Record<string, unknown>),
     staleTime: 60_000,
     enabled: canView && hrEnabled,
   });

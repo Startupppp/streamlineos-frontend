@@ -58,6 +58,22 @@ jobs:
       - name: Files over 300 lines do not increase
         run: pnpm run check:over-300:self-test && pnpm run check:over-300
 
+      # Every export carries a verdict. UNPROVEN is no longer an accepted resting state, and
+      # a verdict naming an export that no longer exists fails too — a stale allowlist that
+      # silently passes is what makes allowlists worthless.
+      - name: Every export is classified and no classification is stale
+        run: pnpm run check:dead-code:self-test && pnpm run check:dead-code
+
+      # An authenticated layout without robots noindex inherits index:true from the root
+      # layout, which is how three session-gated shells became crawlable.
+      - name: Authenticated shells are noindex and public pages carry canonical metadata
+        run: pnpm run check:seo-metadata:self-test && pnpm run check:seo-metadata
+
+      # Budgets only; no measurement runs in CI yet. Swap --self-test for --results=<file>
+      # once a Lighthouse step produces one. See architecture-refactor/WEB-VITALS-EVIDENCE.md.
+      - name: Web Vitals budgets are enforceable
+        run: pnpm run check:web-vitals-budget:self-test
+
       - name: Run Tests
         run: pnpm test --runInBand
 

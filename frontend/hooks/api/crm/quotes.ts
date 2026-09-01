@@ -7,7 +7,6 @@ import { useGatedQuery } from "@/hooks/api/gated-query";
 import type {
   Quote,
   QuoteListItem,
-  QuoteFilters,
   QuoteStatus,
   CreateQuoteInput,
   UpdateQuoteInput,
@@ -15,20 +14,29 @@ import type {
 
 export interface QuoteListResponse {
   quotes: QuoteListItem[];
-  total: number;
+  hasMore: boolean;
+  nextCursor: string | null;
 }
 
-export function useQuotes(filters?: QuoteFilters) {
+export interface QuotesParams {
+  status?: QuoteStatus;
+  dealId?: number;
+  search?: string;
+  cursor?: string;
+  pageSize?: number;
+}
+
+export function useQuotes(params?: QuotesParams) {
   return useGatedQuery("crm:quotes:read", {
-    queryKey: queryKeys.crmQuotes.list(filters as Record<string, unknown>),
+    queryKey: queryKeys.crmQuotes.list(params as Record<string, unknown>),
     queryFn: () => {
-      const params: Record<string, string | number> = {};
-      if (filters?.status !== undefined) params.status = filters.status;
-      if (filters?.dealId !== undefined) params.dealId = filters.dealId;
-      if (filters?.search !== undefined) params.search = filters.search;
-      if (filters?.page !== undefined) params.page = filters.page;
-      if (filters?.pageSize !== undefined) params.pageSize = filters.pageSize;
-      return apiClient.get<QuoteListResponse>("/quotes", params);
+      const p: Record<string, string | number> = {};
+      if (params?.status !== undefined) p.status = params.status;
+      if (params?.dealId !== undefined) p.dealId = params.dealId;
+      if (params?.search !== undefined) p.search = params.search;
+      if (params?.cursor !== undefined) p.cursor = params.cursor;
+      if (params?.pageSize !== undefined) p.pageSize = params.pageSize;
+      return apiClient.get<QuoteListResponse>("/quotes", p);
     },
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,

@@ -17,6 +17,7 @@ import { DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -57,6 +58,7 @@ export default function QuotesPage() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [density, setDensity] = useDensity();
+  const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>([undefined]);
 
   const layout = useTenantLayout(QUOTE_LAYOUT);
   const money = useOrgDisplay();
@@ -65,7 +67,6 @@ export default function QuotesPage() {
 
   const [search, setSearch] = useState(searchParams.get("q") ?? "");
   const statusFilter = searchParams.get("status") ?? "all";
-  const page = Number(searchParams.get("page")) || 1;
 
   const debouncedSearch = useDebouncedValue(search, 300);
   const trimmedDebounced = debouncedSearch.trim();
@@ -89,17 +90,18 @@ export default function QuotesPage() {
   useEffect(() => {
     const current = searchParams.get("q") ?? "";
     if (debouncedSearch === current) return;
-    updateParams({ q: debouncedSearch || null, page: null });
+    updateParams({ q: debouncedSearch || null });
   }, [debouncedSearch, searchParams, updateParams]);
 
-  const { data, isLoading, error, refetch, access} = useQuotes({
+  const currentCursor = cursorHistory[cursorHistory.length - 1];
+
+  const { data, isLoading, error, refetch, access } = useQuotes({
     search: apiSearch || undefined,
     status: isQuoteStatus(statusFilter) ? statusFilter : undefined,
-    page,
+    cursor: currentCursor,
     pageSize: PAGE_SIZE,
   });
 
-  const total = data?.total ?? 0;
   const quotes = useMemo(() => (data?.quotes ?? []).map(quoteListRecordFields), [data?.quotes]);
   const byId = useMemo(
     () => new Map((data?.quotes ?? []).map((quote) => [quote.id, quote])),
@@ -107,10 +109,17 @@ export default function QuotesPage() {
   );
   const hasActiveFilters = !!apiSearch || statusFilter !== "all";
 
+  function resetCursors(): void {
+    setCursorHistory([undefined]);
+  }
+
   const handleSearchChange = useCallback((value: string) => setSearch(value), []);
 
   const handleStatusChange = useCallback(
-    (value: string) => updateParams({ status: value === "all" ? null : value, page: null }),
+    (value: string) => {
+      updateParams({ status: value === "all" ? null : value });
+      resetCursors();
+    },
     [updateParams],
   );
 
@@ -174,15 +183,19 @@ export default function QuotesPage() {
     [updateQuoteStatus],
   );
 
-  const handlePageChange = useCallback(
-    (p: number) => updateParams({ page: p <= 1 ? null : String(p) }),
-    [updateParams],
-  );
+  const handlePrevious = useCallback(() => {
+    setCursorHistory((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev));
+  }, []);
 
-  const handleClearFilters = useCallback(
-    () => updateParams({ q: null, status: null, page: null }),
-    [updateParams],
-  );
+  const handleNext = useCallback(() => {
+    const next = data?.nextCursor;
+    if (next) setCursorHistory((prev) => [...prev, next]);
+  }, [data?.nextCursor]);
+
+  const handleClearFilters = useCallback(() => {
+    updateParams({ q: null, status: null });
+    resetCursors();
+  }, [updateParams]);
 
   const rowActions = useCallback(
     (row: RecordValue) => {
@@ -203,7 +216,7 @@ export default function QuotesPage() {
     <>
       <PageWrapper
         title="Quotes"
-        subtitle={isLoading ? undefined : `${total} quote${total === 1 ? "" : "s"}`}
+        subtitle="Proposals and pricing sent to clients."
         noInternalScroll
         contentClassName="flex flex-col"
         filters={
@@ -232,7 +245,7 @@ export default function QuotesPage() {
               size="sm"
               className="ml-auto text-xs"
               onClick={handleExport}
-              disabled={isExporting || total === 0}
+              disabled={isExporting || quotes.length === 0}
             >
               <Download className="mr-1.5 h-3.5 w-3.5" />
               {isExporting ? "Exporting..." : "Export"}
@@ -252,7 +265,7 @@ export default function QuotesPage() {
             />
           ) : quotes.length === 0 ? (
             <EmptyState
-            access={access}
+              access={access}
               illustration={<EmptyDocumentsIllustration />}
               title={hasActiveFilters ? "No quotes match this search" : "No quotes yet"}
               description={
@@ -269,24 +282,29 @@ export default function QuotesPage() {
               className={CONTENT_FILL_PANEL}
             />
           ) : (
-            <RecordList
-              layout={layout}
-              rows={quotes}
-              getRowKey={(row) => String(row.id)}
-              onRowClick={(row) => router.push(`/crm/quotes/${String(row.id)}`)}
-              actions={rowActions}
-              density={density}
-              money={money}
-              minWidth="950px"
-              className={CONTENT_FILL_PANEL}
-              pagination={{
-                mode: "server",
-                page,
-                pageSize: PAGE_SIZE,
-                total,
-                onPageChange: handlePageChange,
-              }}
-            />
+            <>
+              <RecordList
+                layout={layout}
+                rows={quotes}
+                getRowKey={(row) => String(row.id)}
+                onRowClick={(row) => router.push(`/crm/quotes/${String(row.id)}`)}
+                actions={rowActions}
+                density={density}
+                money={money}
+                minWidth="950px"
+                className={CONTENT_FILL_PANEL}
+                pagination={{ pageSize: PAGE_SIZE }}
+              />
+              {(cursorHistory.length > 1 || data?.hasMore) ? (
+                <CursorPageControls
+                  page={cursorHistory.length}
+                  hasNext={data?.hasMore ?? false}
+                  disabled={isLoading}
+                  onPrevious={handlePrevious}
+                  onNext={handleNext}
+                />
+              ) : null}
+            </>
           )}
         </div>
       </PageWrapper>

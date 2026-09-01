@@ -27,7 +27,7 @@ Legend: `[x]` verified done · `[~]` lane running · `[ ]` not started · `[!]` 
 | 16 | Calendar | Export bounds | `[x]` | Export reads `req.rbacScope`; `none` returns `[]` before the DB |
 | 17 | KB | Ingestion evidence | `[x]` | Hash over source text, short-circuit before the provider call, credit reserve before the paid call |
 | 18 | KB | Revisions | `[x]` | `restoreVersion` bumps `content_revision` + emits `kb.content.index` in-tx |
-| 19 | KB | Performance evidence | `[x]` | Fence 263 buffers both orgs; plain ANN on the majority org returns **0 rows** — RLS post-filters all 20 neighbours away |
+| 19 | KB | Performance evidence | `[x]` | **Remeasured 2026-09-01 on a realistic corpus (30,000 rows, 15,000 distinct vectors, centroid-plus-noise structure, per-org centroids).** Prior numbers (263 buffers, "majority org 0 rows") were taken on a degenerate corpus with only 12 distinct embeddings and are invalidated. Realistic results: minority org plain ANN → HNSW, ~600 buffers, Recall@20 = 20/20. Starvation (0 rows) IS real when a query vector is semantically from a different org's space (confirmed: minority-C vector against majority-org filter → 0 rows, 535 buffers). `hnsw.iterative_scan = relaxed_order` fixes starvation at ~2,300 buffers. Fence (MATERIALIZED CTE) = 22,687 buffers — correct fallback but heavy; correct fix is relaxed_order in the service's initial ANN call, not in the fence. Migration 0827 (authored but unapplied) should be withdrawn — adding relaxed_order to the fence conflicts with its purpose as a guaranteed full-scan fallback. `random_page_cost` is not the deciding factor: HNSW is already chosen at rpc=4 on realistic data; rpc=1 does not fix starvation. Script: `backend/scripts/kb-seed-realistic.mjs` |
 | 20 | KB | Lifecycle evidence | `[x]` | Chunk purge inside the `softDelete` tx. The "ACL reindex" half of the old claim does not exist and is not needed — purge, not stale-update |
 | 21 | Inbox | Unified cross-domain contract | `[x]` | 4 sources live; `build:approvals:view` exists verbatim; `@Universal()`, subject from `@CurrentUser()`, no client `userId`; cap 100; cursor encodes all 4 positions with explicit `null` |
 | 22 | OpenAPI | Final operation coverage | `[x]` | **3567** operations, 0 undeclared (224 public · 99 universal · 3187 permissioned · 57 in-service). Prior "1,916/3,540" was wrong. Request-schema coverage 1359/1359 (100%) |
@@ -39,36 +39,21 @@ Legend: `[x]` verified done · `[~]` lane running · `[ ]` not started · `[!]` 
 |---|---|---|---|
 | 24 | Independent production cells | `[x]` code / `[!]` infra | Parity script (`compare-cell-schema.mjs`) verified live against `cell2`: exit 1 on SCHEMAS DIFFER (2182 differences, cell 375 behind journal of 457), exit 2 on missing DATABASE_URL, exit 0 on self-test. Migration comparison now uses journal-derived sha256 hashes — 31 control-plane orphans and 10 tag-name entries from drizzle-kit are suppressed; a correctly bootstrapped fresh cell reports 0 false alarms. Same-count hash-drift is detected (hash set comparison, not count). Six resource accounts documented in `runbooks/RB-08-cell-resource-accounts.md` with step-by-step provisioning instructions and per-step verification commands. |
 | 25 | Physical read-replica validation | `[!]` | Scripts self-test green; `DB_REPLICA_URL` unset, no Neon replica provisioned |
-| 26 | PITR restore drill | `[x]` | Live drill ran; watermark and 960 RLS policies matched, before-marker present, after-marker absent. Branch deleted |
+| 26 | PITR restore drill | `[x]` | Live drill ran 2026-08-31; watermark (457 migrations) and 960 RLS policies matched at that snapshot, before-marker present, after-marker absent. Branch deleted. Current main has 977 RLS policies (measured 2026-09-01); re-run drill:pitr to establish fresh baseline before next disaster exercise |
 | 27 | Production-shaped load / 40% headroom | `[!]` | Guard asserts the floor and its self-test proves a 39% case fails; needs a colocated run |
 | 28 | Per-cell cost measurement | `[x]` AI + DB + cache / `[!]` egress | "Not instrumentable in-app" was wrong for two of the three. `db.query.execute` and `cache.roundtrip` spans already carry `org.id`, so `cell-cost/span-log-reader.mjs` aggregates both per org beside AI spend. `pg_stat_statements` genuinely cannot attribute per org (it keys on `queryid`, not the GUC) and `pg_stat_database` is whole-database. Egress is measured at the CDN, not the process — external, with a runbook |
 | 29 | Live alert delivery + acknowledgement | `[x]` delivery / `[!]` ack | 11 probes and the dispatcher self-test green. `cell-recovery` had no probe at all, so it showed green and could never fire; it now exits **2** with a named prerequisite when drill results are absent, and discriminates recent from stale recovery. Acknowledgement still needs `ALERT_WEBHOOK_URL` and a human nonce |
 | 30 | Operator-access approval | `[x]` | 0747 applied. Grants insert as pending; `assertGrant` carries `status = 'active'`. DB CHECK `approver_id != granted_by` convalidated |
-| 31 | Export / erasure / legal-hold drills | `[x]` | Erasure enumerates FK tables from `pg_constraint` at runtime and dry-runs in a rolled-back tx. The retention sweep now exists: per-org via `forEachOrg` in its own transaction, batched, legal-hold subjects excluded in the SQL predicate rather than per row, bite-proven by removing that guard. Payroll and document classes are skipped with a warning rather than half-purged |
+| 31 | Export / erasure / legal-hold drills | `[x]` | All 4 drills exercised live 2026-09-01. Export PASS (cross-tenant 0 rows, in-tenant 1 row, 202 storage-key columns found). Erasure dry-run PASS (633 FK tables from pg_catalog, 469 in deletion order, 0 residual rows in rolled-back tx). Legal-hold 8/8 PASS (placed, erasure blocked, retention blocked, org-hold placed, both released, erasure unblocked). Compliance audit 7 rows all present. 3 code gaps remain: no export worker, no storage purge, no physical DB erasure in org-purge path |
 | 32 | Final independent audit of every PRD row | `[x]` slices / `[~]` reconciliation | All four slices delivered (§1–9, §10–14, §15–21, §22–end). Their aggregate is NOT trustworthy as written: several "STILL PENDING" rows were inferred from unchecked PRD checkboxes rather than from source, and three headline claims were disproven on inspection — see below |
 
 ## Operator-blocked right now
 
-**The `streamline_app` role no longer authenticates** — `28P01 password authentication
-failed`. It worked earlier in this session (the read-cost guard hard-requires
-`APP_DATABASE_URL` and printed real block counts), so it broke mid-session. No script in
-this repo issues `ALTER ROLE`, and on Neon a password set that way does not stick anyway.
-
-Consequence: every proof that must run as the non-BYPASSRLS role is currently
-unreproducible — `db:check-build-reads` exits 1 at connect, and
-`src/degradation/search-index.spec.ts` fails. Benchmarks run as the owner prove nothing,
-because the owner has BYPASSRLS.
-
-Runbook: reset the `streamline_app` password in the Neon console (not via `ALTER ROLE`),
-update `APP_DATABASE_URL` in `backend/.env`, then re-run `pnpm db:check-build-reads`,
-`pnpm verify:membership-revocation` and `src/degradation/search-index.spec.ts`. Until then
-the dashboard read-budget numbers below stand as previously measured but cannot be
-re-verified.
-
-`verify:membership-revocation` is blocked by the same failure, so its post-fix INVENTORY
-table has **not** been re-measured. The foreign-key state it would report was instead
-verified directly against `pg_constraint`, which is the stronger evidence; the end-to-end
-removal drill is what remains unrun.
+**`streamline_app` password — RESOLVED 2026-08-31.** The blocker recorded here is cleared.
+Root cause: `backend/.env` held a stale 16-char password from a since-reverted `ALTER ROLE`. The
+Neon control plane held the authoritative 32-char password. Copying it into `APP_DATABASE_URL` fixed
+the connection. See `OPEN-FINDINGS.md §4` for the corrected diagnosis and the API command to retrieve
+the password in future. All probes requiring the non-BYPASSRLS role now execute cleanly.
 
 Also recorded, not chased: `drizzle.__drizzle_migrations` holds 484 rows against 455
 journal entries — 21 applied rows whose journal entry was later removed, and 8 duplicate
