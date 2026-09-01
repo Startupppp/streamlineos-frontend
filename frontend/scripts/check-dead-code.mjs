@@ -61,7 +61,6 @@ const EXPORT_VERDICTS = new Map([
   ["hooks/api/workflows-schedules.ts:useWorkflowSchedules", { verdict: "WIRE", reason: "per-workflow schedules panel not yet built (app/(authenticated)/workflows/[workflowId]/schedules/)" }],
   ["hooks/api/workflows-schedules.ts:useCreateSchedule", { verdict: "WIRE", reason: "create per-workflow-schedule action not yet wired" }],
 
-  ["hooks/api/calendar.ts:useCancelOccurrence", { verdict: "WIRE", reason: "cancel-single-occurrence action missing from features/calendar/event-detail-sheet.tsx; backend DELETE /calendar/events/{eventId}/occurrences/{occurrenceStart} exists" }],
 
   ["features/hr/expenses/expense-stats.tsx:MemberExpenseStats", { verdict: "WIRE", reason: "member self-service expense stats component exists but not imported by the HR expenses page; add to features/employee-self-service or features/hr/expenses page" }],
 
@@ -70,15 +69,9 @@ const EXPORT_VERDICTS = new Map([
   ["hooks/api/onboarding-flow.ts:useModuleChecklist", { verdict: "WIRE", reason: "per-module checklist detail view not wired; backend GET /onboarding/module-checklists/{moduleKey} exists; add to features/dashboard/module-setup-banners.tsx or a new module-checklist page" }],
   ["hooks/api/onboarding-flow.ts:useSkipChecklistItem", { verdict: "WIRE", reason: "skip-checklist-item action not wired to any UI; backend POST /onboarding/module-checklists/{moduleKey}/items/{itemKey}/skip exists" }],
   ["hooks/api/onboarding-flow.ts:useRestartModuleChecklist", { verdict: "WIRE", reason: "restart-module-checklist action not wired; backend POST /onboarding/module-checklists/{moduleKey}/restart exists" }],
-  ["hooks/api/onboarding-flow.ts:useGuidedTours", { verdict: "WIRE", reason: "guided-tour UI not built; backend GET /onboarding/tours exists" }],
-  ["hooks/api/onboarding-flow.ts:useSaveTourProgress", { verdict: "WIRE", reason: "tour progress save action not wired; backend POST /onboarding/tours/{tourKey}/progress exists" }],
-  ["hooks/api/onboarding-flow.ts:useDismissTour", { verdict: "WIRE", reason: "tour dismiss action not wired; backend POST /onboarding/tours/{tourKey}/dismiss exists" }],
 
   ["hooks/api/party/subjects.ts:useDeleteSubject", { verdict: "WIRE", reason: "subject delete action not wired; features/party/subjects/subjects-page.tsx has list + create/edit but no delete row-action" }],
 
-  ["hooks/api/hr/dashboard.ts:useHrDashboardMetrics", { verdict: "WIRE", reason: "no HR dashboard page exists; backend GET /hr/dashboard/metrics exists; add dashboard page under app/(authenticated)/hr/dashboard/" }],
-  ["hooks/api/hr/dashboard.ts:useHrLeaveCalendar", { verdict: "WIRE", reason: "HR leave calendar widget not wired; backend GET /hr/leave-calendar exists; belongs on HR dashboard page" }],
-  ["hooks/api/hr/dashboard.ts:useHrOnboardingStatus", { verdict: "WIRE", reason: "HR onboarding status widget not wired; backend GET /hr/dashboard/onboarding-status exists; belongs on HR dashboard page" }],
 
   ["hooks/api/accounting/ar-collections.ts:useCollectionActivities", { verdict: "WIRE", reason: "collections activities list not wired to any accounting feature page; add to features/accounting/sales/ar-collections view" }],
   ["hooks/api/accounting/ap-payment-runs.ts:useVendorPayments", { verdict: "WIRE", reason: "vendor payments list not wired; add to features/accounting/purchases/ap-payment-runs view" }],
@@ -242,6 +235,9 @@ function classifyExport(filePath, name) {
   if (FEATURE_BARREL_RE.test(filePath)) {
     return { cls: "RETAINED-BY-CONTRACT", reason: "feature barrel extension point" };
   }
+  if (TEST_INFRA_RE.test(filePath)) {
+    return { cls: "RETAINED-BY-CONVENTION", reason: "test-infrastructure utility; exports are available for all test suites" };
+  }
   if (CRM_INVENTORY_RE.test(filePath)) {
     return { cls: "EXCLUDED", reason: "CRM/Inventory excluded from PRD scope; not counted in dead-code baseline" };
   }
@@ -302,7 +298,7 @@ function runSelfTest() {
   assert(r6.cls === "UNCLASSIFIED",
     `(i) unclassified export → expected UNCLASSIFIED (gate would fail), got ${r6.cls}`);
 
-  const r7 = classifyExport("hooks/api/calendar.ts", "useCancelOccurrence");
+  const r7 = classifyExport("hooks/api/workflows.ts", "useWorkflowSchedules");
   assert(r7.cls === "WIRE",
     `(j) WIRE verdict → expected WIRE, got ${r7.cls}`);
 
@@ -318,6 +314,10 @@ function runSelfTest() {
   const r9 = classifyFile("test-utils/render.tsx", new Set(), new Map(), synthRoot);
   assert(r9.cls === "RETAINED-BY-CONVENTION",
     `(m) test-infra file → expected RETAINED-BY-CONVENTION, got ${r9.cls}`);
+
+  const r10 = classifyExport("test-utils/index.ts", "makeQueryClient");
+  assert(r10.cls === "RETAINED-BY-CONVENTION",
+    `(n) test-infra export → expected RETAINED-BY-CONVENTION, got ${r10.cls}`);
 
   const fixtureDir = join(tmpdir(), `dead-code-self-test-${Date.now()}`);
   try {
@@ -344,7 +344,7 @@ function runSelfTest() {
     rmSync(fixtureDir, { recursive: true, force: true });
   }
 
-  console.log("PASS: self-test (13 assertions)\n");
+  console.log("PASS: self-test (14 assertions)\n");
   console.log("  (a) file with no live importers                       → DEAD");
   console.log("  (b) file reachable via side-effect import             → RETAINED-BY-CONTRACT");
   console.log("  (c) file reachable via re-export from live barrel     → RETAINED-BY-CONTRACT");
@@ -358,6 +358,7 @@ function runSelfTest() {
   console.log("  (k) export with KEEP verdict in EXPORT_VERDICTS       → KEEP");
   console.log("  (l) EXPORT_VERDICTS entry not in knip output          → stale (gate bites)");
   console.log("  (m) test-utils file                                   → RETAINED-BY-CONVENTION");
+  console.log("  (n) test-utils export                                 → RETAINED-BY-CONVENTION");
 }
 
 async function runMain() {

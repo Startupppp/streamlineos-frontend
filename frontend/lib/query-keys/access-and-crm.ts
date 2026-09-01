@@ -203,6 +203,15 @@ export const accessAndCrmQueryKeys = {
       [...base, "blog", "feed", params] as const,
   },
 
+  blogAdmin: {
+    all: [...base, "blogAdmin"] as const,
+    posts: (params?: Record<string, unknown>) =>
+      [...base, "blogAdmin", "posts", params] as const,
+    post: (postId: string) =>
+      [...base, "blogAdmin", "post", postId] as const,
+    categories: () => [...base, "blogAdmin", "categories"] as const,
+  },
+
   publicBooking: {
     all: [...base, "publicBooking"] as const,
     detail: (token: string) =>

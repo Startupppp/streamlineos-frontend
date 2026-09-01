@@ -53,6 +53,7 @@ import { DeferredDashboardContent } from "./deferred-dashboard-content";
 import { HomeSectionBoundary } from "./home-section-boundary";
 import { HomeWidgetGrid } from "./home-widget-grid";
 import { useHomeCacheSync } from "./use-home-cache-sync";
+import { GuidedTourOverlay } from "./guided-tour-overlay";
 
 const ExecutiveKpiWidget = dynamic(
   () =>
@@ -275,6 +276,7 @@ export function DashboardClient() {
     : (headerClock?.todayFormatted ?? undefined);
 
   return (
+    <>
     <PageWrapper
       title={pageTitle}
       subtitle={pageSubtitle}
@@ -475,5 +477,7 @@ export function DashboardClient() {
         </DeferredDashboardContent>
       </div>
     </PageWrapper>
+    <GuidedTourOverlay />
+    </>
   );
 }

@@ -153,24 +153,34 @@ Export/import jobs are idempotent by `idempotencyKey` at enqueue time. The job r
 
 **Spec**: `modules/notifications/notification-recipient-send-auth.spec.ts` — covers non-member targets returning `notified=0`, member+non-member mix returning only the member, and the gate-bites proof (neutering `filterOrgMemberIds` to return both shows both rows, proving the gate is load-bearing).
 
-**Email**: The suppression service (`findSuppressed`) runs at the point of `enqueueAndTry` (enqueue time), not at retry time. For permission-sensitive email (e.g., invitation emails sent to a specific role), the controller must not enqueue if the recipient's entitlement is revoked before send. The outbox retry does not re-check permissions — it re-sends if not suppressed. This is acceptable for transactional mail (a leave approval email to a recently-offboarded employee will bounce and be suppressed after the hard-bounce webhook). For future permissioned email types (e.g., payroll payslips), the delivery worker should re-check the recipient's employment status before retrying, matching the notification delivery pattern.
+**Email re-auth at retry time** — **IMPLEMENTED** (R1 batch):
+- Added nullable `recipientUserId TEXT` column to `email_outbox`.
+- Added `recipientUserId?: string | null` to `EmailOptions`.
+- `enqueueAndTry()` stores it on insert.
+- `processRetries()` calls `filterOrgMemberIds(db, organizationId, [recipientUserId])` for every retry row that carries a `recipientUserId`. If the call returns empty, the row transitions to `SUPPRESSED` (not `DEAD`) with `lastError: "Recipient is no longer an active org member"`.
+- Only employment-sensitive emails (payslips, employment letters) set `recipientUserId`; transactional mail (verification, magic link) does not, and is not re-checked.
+- **Migration needed** (hand-off): `ALTER TABLE email_outbox ADD COLUMN IF NOT EXISTS recipient_user_id TEXT;`
+- **Spec**: `modules/email/email-outbox-retry-auth.spec.ts` — 4 tests: revoked → SUPPRESSED, active → sent, no recipientUserId → no check, bite proof.
+
+A payslip enqueued before offboarding and retried after will be suppressed on the first retry; no stale payroll data delivered to a former employee's inbox.
 
 ---
 
-## 6. Email Templates
+## 6. Email Templates — Locale + Version
 
-Email templates currently live in `modules/email/templates/` as hardcoded English strings. No locale or version field exists.
+**Infrastructure implemented** (R1 batch):
+- `modules/email/templates/email-locale.ts` — `resolveLocaleText(locale, map)` with deterministic fallback chain: exact locale → base language (`en-GB → en`) → `"en"`. Never throws; never returns empty when `"en"` is present. `EMAIL_TEMPLATE_VERSION = 1 as const`.
+- `modules/email/templates/payroll.ts` — `getPayslipEmailTemplate` and `getPayslipEmailTemplate` accept `locale?: string`. All strings extracted to locale maps (en/fr/es/de). `PAYSLIP_TEMPLATE_VERSION` export.
+- `modules/email/templates/auth.ts` — `getVerificationEmailTemplate(url, locale?)` localised with 5 locale maps (title, body, button, callout, preheader). `AUTH_TEMPLATE_VERSION` export. Other functions in auth.ts (magic link, welcome, OTP, lock) NOT yet migrated.
+- **Spec**: `modules/email/templates/email-locale.spec.ts` — 14 tests: fallback chain, exact/base/unknown locales, bite proof, locale integration for both templates.
 
-**Current state:** All 30+ template functions return a single hardcoded HTML string. The `base.ts` `getEmailTemplate` wraps with a shared branded layout. No i18n infrastructure.
+**Scope honest**: 2 of 30+ template files migrated. The pattern is established; remaining files follow the same `resolveLocaleText` / locale-map shape. Migration of remaining 28+ files is out of scope for this batch — carry forward as a per-file follow-up.
 
-**Pending design** (not yet implemented — scope is large, touches 30+ files):
-1. Each template function accepts an optional `locale: string = "en"` parameter.
-2. Template strings are extracted to a map keyed by `(templateKey, locale)`.
-3. Fallback chain: `locale → locale's base language (en-GB → en) → "en"` — deterministic, never throws.
-4. Template version is a constant per template function, included in the outbox row for audit.
-5. Test: unknown locale falls back to "en" rather than throwing or returning an empty string.
-
-This is marked **STILL PENDING** — Lane 12 cannot implement it without touching 30+ files across a large unrelated refactor. The runbook below describes the replay path for email failures in the interim.
+**Fallback chain**:
+```
+locale → base language (split "-")[0] → "en"
+```
+An unknown locale (e.g. `"ar"`) falls back to `"en"`; a region variant (`"de-AT"`) falls back to `"de"`; a base-language match (`"fr"`) returns directly. The fallback never returns empty if `"en"` is in the map — enforced by spec.
 
 ---
 
@@ -265,13 +275,14 @@ Manual replay only: `POST /webhooks/:endpointId/logs/:logId/retry`. No automatic
 
 ## 9. What Is Still Pending
 
-| Item | Reason not completed | Recommended path |
+| Item | Status | Recommended path |
 |---|---|---|
-| Webhook dispatcher `callProvider` wiring | The webhook dispatch path uses raw `fetch` + AbortSignal. Adding `callProvider` requires wrapping the deliver method and deciding retry semantics for customer webhooks (exponential backoff, max 5 attempts). No migration required. | Wrap `deliver()` in `callProvider` with a `classify` fn that maps `OutboundRequestError` → retryable and non-2xx from endpoint → retryable (customer servers may be briefly down). |
-| Email template locale + version | 30+ template files require locale parameter; no i18n infrastructure exists. Large refactor — §6 documents the design. | Add `locale: string = "en"` parameter, extract strings to locale maps, fallback chain `locale → lang → "en"`. One template at a time. |
-| Delivery-time re-auth for email retries | Email retry worker does not re-check recipient permissions/employment status. | Add `filterOrgMemberIds` call in `processRetries()` for employment-sensitive templates (payslips). |
-| Redis-backed circuit breaker for multi-node | Process-local breakers diverge across nodes. | Add a Redis tier on top of `ProviderCircuitBreaker` using `INCR` + `EXPIRE` for failure count and `SET NX PX` for the open flag. Tier-1 (process-local) stays for latency; Redis is tier-2 for cross-node coordination. |
-| Locale fallback test | Depends on locale infrastructure not yet built. | Write alongside the template locale refactor. |
+| Webhook dispatcher `callProvider` wiring | **DONE** (R1 batch) | `modules/webhooks/webhooks-dispatch.service.ts` now uses `callProvider` with per-endpoint circuit breaker key `webhook:${endpoint.id}`, `WebhookTerminalStatusError` for 4xx, retryable for all other failures. |
+| Email template locale + version (infrastructure) | **DONE** (R1 batch) | `email-locale.ts` utility, `payroll.ts` + `auth.ts::getVerificationEmailTemplate` updated. 28+ remaining template files are a per-file follow-up. |
+| Delivery-time re-auth for email retries | **DONE** (R1 batch) | `processRetries()` re-checks `filterOrgMemberIds` for rows with `recipientUserId`. Migration needed: `ALTER TABLE email_outbox ADD COLUMN IF NOT EXISTS recipient_user_id TEXT;` |
+| `visibilityResourceKind` gaps in build catalog | **DONE** (R1 batch) | 4 events fixed: `build.ticket.due_soon`, `build.ticket.overdue`, `build.ticket.status_changed`, `build.blocker.created`. Gate spec added. |
+| Remaining email templates locale | STILL PENDING | 28+ files follow the `resolveLocaleText` pattern. Migrate one at a time per-file. |
+| Redis-backed circuit breaker for multi-node | STILL PENDING | Add a Redis tier on top of `ProviderCircuitBreaker` using `INCR` + `EXPIRE` for failure count and `SET NX PX` for the open flag. Tier-1 (process-local) stays for latency; Redis is tier-2 for cross-node coordination. |
 
 ---
 
@@ -346,3 +357,112 @@ PASS src/modules/billing/payments/adapters/razorpay.adapter.spec.ts
 
 Tests: 16 passed — Time: 2.352 s
 ```
+
+---
+
+## 11. R1 Batch — New Spec Results
+
+### Item 1 — `modules/webhooks/webhooks-dispatch-seam.spec.ts` (7 tests, all green)
+
+```
+PASS src/modules/webhooks/webhooks-dispatch-seam.spec.ts
+  WebhooksDispatchService — callProvider seam
+    √ classifies 4xx as terminal — exactly 1 fetch attempt, log records attempt=1 (9 ms)
+    √ classifies 5xx as retryable — retries up to WEBHOOK_MAX_ATTEMPTS (5) (1 ms)
+    √ succeeds and writes success=true when endpoint returns 2xx (2 ms)
+    √ bites: neutering callProvider to ignore classify causes 4xx to be retried 5 times (1 ms)
+  classifyWebhookError — unit
+    √ returns terminal for WebhookTerminalStatusError (4xx)
+    √ returns retryable for generic Error (network, timeout) (1 ms)
+    √ returns retryable for non-Error throws
+
+Tests: 7 passed — Time: 2.76 s
+```
+
+Bite proof: neutering `callProvider` to skip the `classify` check causes a 4xx endpoint to be retried 5 times instead of 1; restoring classify keeps it at 1 attempt.
+
+### Item 2 — `modules/email/email-outbox-retry-auth.spec.ts` (4 tests, all green)
+
+```
+PASS src/modules/email/email-outbox-retry-auth.spec.ts
+  EmailOutboxService.processRetries — recipient re-authorization
+    √ suppresses retry when recipient is no longer an active org member (21 ms)
+    √ delivers retry when recipient is still an active org member (4 ms)
+    √ bites: neutering filterOrgMemberIds to return the userId bypasses suppression (3 ms)
+    √ skips membership check when recipientUserId is absent (non-permission-sensitive email) (4 ms)
+
+Tests: 4 passed — Time: 3.491 s
+```
+
+Bite proof: neutering `filterOrgMemberIds` to return `[recipientUserId]` (as if still a member) bypasses suppression and delivers to a revoked recipient; restoring the real mock (returns `[]`) correctly transitions to `SUPPRESSED`.
+
+### Item 3 — `modules/notifications/notification-events-visibility-kind.spec.ts` (3 tests, all green)
+
+```
+PASS src/modules/notifications/notification-events-visibility-kind.spec.ts
+  notification event catalog — visibilityResourceKind completeness
+    √ every build.ticket.* event declares visibilityResourceKind (6 ms)
+    √ every declared visibilityResourceKind on build.ticket.* uses BUILD_TICKET_RESOURCE
+    √ bites: a rogue build.ticket.* event without visibilityResourceKind is detected
+
+Tests: 3 passed — Time: 1.506 s
+```
+
+Bite proof: a synthetic `build.ticket.rogue_test_event` entry injected without `visibilityResourceKind` causes the first test to fail; adding the kind makes it pass.
+
+### Item 4 — `modules/email/templates/email-locale.spec.ts` (14 tests, all green)
+
+```
+PASS src/modules/email/templates/email-locale.spec.ts
+  resolveLocaleText — fallback chain
+    √ returns the exact locale match (6 ms)
+    √ falls back to base language (en-GB → en)
+    √ falls back to en for unknown locale (1 ms)
+    √ falls back to en for unknown locale with unknown base language
+    √ never throws or returns empty for any locale when en is present (2 ms)
+    √ bites: neutering resolveLocaleText to return empty causes template body to be empty (1 ms)
+  getVerificationEmailTemplate — locale support
+    √ returns English content by default (2 ms)
+    √ returns French content for fr locale
+    √ falls back to English for unknown locale (zh)
+    √ falls back to base language for region variant (en-GB → en)
+  getPayslipEmailTemplate — locale support
+    √ returns English content by default (1 ms)
+    √ returns French content for fr locale (1 ms)
+    √ falls back to English for unknown locale (ar) (2 ms)
+    √ falls back to German for de-AT (region variant of de) (1 ms)
+
+Tests: 14 passed — Time: 1.65 s
+```
+
+Bite proof: mocking `resolveLocaleText` to return `""` makes the bite-proof assertion pass (result is `""`); restoring via `mockImplementation(actual.resolveLocaleText)` makes it return `"English text"`.
+
+---
+
+## 12. Notification Event-Catalogue Audit — visibilityResourceKind
+
+All events in `notification-events-build.catalog.ts` audited for bound-resource visibility gating.
+
+| Event | Bound resource | `visibilityResourceKind` | Status |
+|---|---|---|---|
+| `build.ticket.assigned` | Ticket | `BUILD_TICKET_RESOURCE` | DONE (pre-existing) |
+| `build.ticket.due_soon` | Ticket | `BUILD_TICKET_RESOURCE` | FIXED (R1) |
+| `build.ticket.overdue` | Ticket | `BUILD_TICKET_RESOURCE` | FIXED (R1) |
+| `build.comment.mention` | Ticket | `BUILD_TICKET_RESOURCE` | DONE (pre-existing) |
+| `build.ticket.status_changed` | Ticket | `BUILD_TICKET_RESOURCE` | FIXED (R1) |
+| `build.ticket.review_requested` | Ticket | `BUILD_TICKET_RESOURCE` | DONE (pre-existing) |
+| `build.ticket.changes_requested` | Ticket | `BUILD_TICKET_RESOURCE` | DONE (pre-existing) |
+| `build.blocker.created` | Ticket | `BUILD_TICKET_RESOURCE` | FIXED (R1) |
+| `build.sprint.started` | Sprint (membership-sufficient) | — | OK — no individual ACL |
+| `build.sprint.ending` | Sprint | — | OK — no individual ACL |
+| `build.sprint.completed` | Sprint | — | OK — no individual ACL |
+| `build.release.published` | Release | — | OK — no individual ACL |
+| `build.approval.requested` | Approval | — | OK — no individual ACL |
+| `build.project.member_added` | Project | — | OK — no individual ACL |
+
+Other catalogs audited:
+- `notification-events-hr.catalog.ts` — all HR events use membership-level scoping; no ticket-level ACL needed.
+- `notification-events-knowledge.catalog.ts` — knowledge page events use space-level ACL checked at dispatch time via `filterOrgMemberIds`; no `visibilityResourceKind` needed (space membership is the gate, not per-article ACL).
+- `notification-events-chat.catalog.ts`, `accounting.catalog.ts`, `security-support.catalog.ts`, `ownership.catalog.ts` — membership-sufficient for all events; no bound resource requiring individual ACL.
+
+**Finding**: 4 gaps found and fixed. All remaining events without a `visibilityResourceKind` are correctly omitted — their audience is determined by membership alone, not by per-resource ACL.
