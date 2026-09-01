@@ -19,9 +19,9 @@ It does not claim cloud isolation, physical replicas, PITR, regional recovery, l
 Current reconciliation count:
 
 - Verified completed invariants: **15**.
-- Immediate code-level criteria still open: **212**.
+- Immediate code-level criteria still open: **238**.
 - Deferred production/compliance criteria still open: **34**.
-- The 212 immediate criteria are acceptance checks, not 212 confirmed defects; fresh execution may close a criterion without a code change when its implementation already passes.
+- The 238 immediate criteria are acceptance checks, not 238 confirmed defects; fresh execution may close a criterion without a code change when its implementation already passes.
 
 ## Product constraints
 
@@ -109,6 +109,21 @@ Current reconciliation count:
 - [ ] Verify cache keys include tenant, subject, permission and resource dimensions where applicable.
 - [ ] Prove mutation/revocation invalidation, TTL/negative-cache policy, stampede protection and Redis degradation never leak data or preserve revoked access.
 
+#### 5.1 Efficient database-call contract
+
+- [ ] Record a maximum database-call count for every critical route and worker batch; fail regression tests when an implementation adds unexpected calls.
+- [ ] Execute tenant-owned request work inside the minimum correct tenant transaction and reuse its handle; never open nested/per-row transactions or borrow a committed request transaction.
+- [ ] Select named columns only and return minimal DTO projections; never hydrate full ORM rows, global users or large JSON/blob/vector fields for list/count/existence paths.
+- [ ] Batch relationship, permission, unread, attachment, assignee and metadata lookups with joins, CTEs or bounded multi-key queries; forbid database/cache calls inside growing loops.
+- [ ] Implement existence/authorization probes with tenant-correlated indexed predicates and `LIMIT 1`; do not fetch records or counts when only existence is required.
+- [ ] Make exact totals opt-in and independently budgeted; cursor pages must not run an expensive `COUNT(*)` automatically on every request.
+- [ ] Use bounded bulk insert/update/upsert operations and conflict-safe unique keys instead of one write per row; keep transactional batches below documented lock/payload limits.
+- [ ] Verify concurrent counters, unread state, seats, balances, ordering and idempotency use atomic SQL/upsert/locking semantics without read-then-write races.
+- [ ] Apply statement/query timeouts and cancellation propagation to interactive work; move reports, exports, reindexing and wide aggregates to resumable jobs.
+- [ ] Measure connection acquisition, transaction duration and idle-in-transaction behavior; release connections before external provider calls or long CPU work.
+- [ ] Benchmark under the application role with tenant context and RLS, never only as the database owner; plans must include real authorization predicates.
+- [ ] Capture slow-query fingerprints, call counts, rows read/returned, buffers and lock waits in test evidence without logging sensitive bind values.
+
 ### 6. Organization and module RBAC
 
 - [ ] Test organization owner/admin/member, module owner/admin/member, custom roles, direct grants and DataScope on every read and mutation path.
@@ -126,6 +141,23 @@ Current reconciliation count:
 - [ ] Verify background sweeps iterate tenant context explicitly, use bounded/resumable leases and expose retry/DLQ/cancellation states.
 - [ ] Verify minimal response projections, serialization/redaction, generic errors, resource limits and stable HTTP semantics.
 - [ ] Reconcile OpenAPI exposure, request, response, 4xx schema and operation metadata with active controllers and consumers.
+
+#### 7.1 Optimized route and transport contract
+
+- [ ] Keep one canonical route per product operation; remove dead, versionless, duplicated and overlapping routes after caller/dependency proof.
+- [ ] Define route budgets for database calls, downstream calls, application latency, response bytes and memory; record p50/p95/p99 at the release commit.
+- [ ] Design routes around one user intent rather than forcing avoidable request waterfalls, while keeping unrelated domain implementation out of oversized mega-responses.
+- [ ] Keep Home aggregation bounded and parallel with independent section results; one slow source must not delay or fail every section.
+- [ ] Return explicit DTO projections and omit unused nested relations, internal columns, secrets and repeated denormalized payloads.
+- [ ] Require bounded cursor/filter/sort contracts on collections and bounded `ids`/item counts on bulk routes; reject oversized requests before database work.
+- [ ] Support conditional responses with version/ETag or `Last-Modified` where correctness permits; include tenant, permission and representation changes in the validator.
+- [ ] Enable Brotli/gzip for eligible JSON/text/OpenAPI/static responses with minimum-size and already-compressed-content exclusions; never compress secrets in a cross-origin reflection context.
+- [ ] Stream AI responses, downloads and large exports or return durable asynchronous jobs; do not buffer growing payloads in NestJS or Next.js memory.
+- [ ] Propagate cancellation and deadlines through NestJS, database, cache and provider adapters; enforce upstream timeouts, concurrency limits and backpressure.
+- [ ] Require idempotency and optimistic concurrency/version checks for replayable or conflict-prone mutations; return stable 409/412 semantics.
+- [ ] Avoid serial downstream/provider calls when independent, cap parallel fanout and use batch adapters where providers support them.
+- [ ] Verify frontend route loaders and TanStack consumers reuse/prefetch the canonical request instead of issuing duplicate server/client fetches.
+- [ ] Keep response/error envelopes, pagination metadata and cache headers consistent across modules and prove frontend/OpenAPI contract compatibility.
 
 ### 8. TanStack Query and Next.js data layer
 
