@@ -629,25 +629,34 @@ The defaults below are code-release budgets on a production build with the docum
 Recorded explicitly so no unchecked box above is mistaken for an oversight.
 
 - **Tenant relationship repair is partial and the count is honest.** The rebuilt
-  `pg_catalog` gate now inventories **736** single-column FKs (was 853): 233
-  excluded as CRM/Inventory, 17 covered by `0938`–`0941`, **486 actionable**
-  (was 603). The Build tranche is applied — migrations `0943`–`0947` add 116
-  composite `(org_id, child_id) → (org_id, id)` constraints and `0948` drops the
-  117 superseded singles, 232 statements with zero failures against
-  `scratch_boot_a`. Composites are added `NOT VALID` then validated separately
-  under `lock_timeout = '5s'`, and every `ON DELETE SET NULL` names its column
-  list so the `NOT NULL org_id` is never the column nulled. The HR/payroll/
-  timesheets tranche is in progress; workflows, accounting, support and KB
-  remain. The gate keeps failing with a true count rather than a suppressed one.
-  Counts here were re-derived from `pg_catalog` directly, not from the migration
-  files. The live database is untouched: zero of these constraints and zero
-  journal rows at or after the `0943` stamp exist there. RLS is live on 977/984
-  tenant tables, so these constraints are defence-in-depth, not the only tenant
-  control — that is why a partial tranche is acceptable and a false zero was not.
-- **Backend over-300 ratchet is at 409 against a 394 baseline.** The baseline
-  must not be raised. The GDPR export worker split reduced it by 2 (1,984 → 403
-  lines across 11 cohesive files); the remaining excess sits in accounting,
-  payroll and rbac.
+  `pg_catalog` gate inventories **613** single-column FKs (was 853): 233 excluded
+  as CRM/Inventory, 17 covered by `0938`-`0941`, **363 actionable** (was 603).
+  Two tranches are applied against `scratch_boot_a`: Build (`0943`-`0948`, 116
+  composites, 117 singles dropped) and HR/payroll/timesheets (`0949`-`0955`).
+  Workflows, accounting, support and KB remain. All **238** intended constraints
+  across `0943`-`0954` were diffed against `pg_catalog`: 0 missing. Counts come
+  from the catalog, never from the migration files. The live database is
+  untouched. RLS is live on 977/984 tenant tables, so these constraints are
+  defence-in-depth rather than the only tenant control.
+  Three defects in the HR tranche were caught only by that catalog diff and are
+  worth recording as a pattern. `0954` was journaled as APPLIED while an error
+  earlier in the file left later statements unrun -- a partially executed
+  migration is invisible to the journal. Four of its statements targeted objects
+  that exist nowhere (`payroll_journal_entries`, `payroll_run_items`,
+  `payroll_runs.legal_entity_id`, `timesheet_exceptions.timesheet_id`), which
+  would fail 42P01 against any runner that does not swallow missing-object
+  errors. And the drop migration named a constraint that does not exist, which
+  under `IF EXISTS` is a silent no-op leaving the superseded FK in place.
+
+- **Backend over-300 ratchet MET at 394**, reached by splitting rather than by
+  raising the baseline. Splits are by responsibility: feedback CRUD out of the
+  roadmap service, cash-flow / journal-entry / aged-receivables / vendor-query /
+  prompts out of accounting, a report service out of outbox, a reverse service
+  out of finance-assets. Splitting changes constructor arity and typecheck is the
+  only gate that sees it, so 38 test doubles broke; every one was fixed by
+  teaching the double the new dependency, never by removing it from the service.
+  Backend typecheck sits at its **10-error baseline, all pre-existing test
+  doubles, zero production code**.
 - **22 bulk-`ids` request bodies still lack an upper bound**, not 32 — the
   earlier figure was carried forward without measurement. A parse of every
   `src/**/*.schemas.ts`, excluding CRM/Inventory, finds 31 id-arrays already
@@ -676,6 +685,47 @@ Recorded explicitly so no unchecked box above is mistaken for an oversight.
   `check:route-bundle-budget` closes that and is **RED on two real breaches**:
   `/inbox` +35,354 bytes and `/build/inbox` +42,852 bytes over their First Load
   JS ceilings. Both new gates ship a self-test with a known-bad fixture.
+- **Authenticated Web Vitals are now measured, on a production server, and the
+  gate is RED with 6 real breaches.** `/mail`, `/inbox`, `/dashboard`, 5 repeats,
+  both profiles, `next build && next start`, one magic-link exchange with the
+  session cookie reused, every route confirmed to render real content. Moving
+  from `next dev` to a production build took mobile LCP 3331ms -> 2272ms (inside
+  budget) and desktop INP 552ms -> 48ms, so two earlier "failures" were artifacts
+  of on-demand compilation. CLS is 0 everywhere.
+  Remaining breaches: desktop LCP, FCP both profiles, TTFB both profiles, mobile
+  INP. **TTFB cannot be judged from this environment** and the reason is recorded
+  as a measurement, not an assertion: the database round-trip from the measuring
+  machine to the Neon pooler in `ap-southeast-1` is 88.4ms median, so a page
+  issuing 6 sequential queries spends ~530ms in DB latency alone; in production
+  the app server is co-located with the database at ~1-5ms. Mobile INP is a real
+  application finding -- it is entirely `/inbox` (416ms) and `/dashboard` (352ms),
+  where ~1s long tasks block the main thread after FCP under 4x CPU throttle.
+  The gate carries three guards, each added after a real shortcut was attempted:
+  an unmeasured budget is not a met budget; landing-page figures cannot stand in
+  for authenticated routes; a `next dev` run is not production evidence.
+- **Route bundle bytes are gated and one route legitimately cannot pass.**
+  `/build/inbox` came down 657,252 -> 559,188 bytes, 55KB under its ceiling, by
+  making `InboxTicketPreview` dynamic. `/inbox` stays over at 558,680 against
+  524,288. Only 4 of its 42 chunks (13,519 bytes) are inbox-specific; the shared
+  authenticated shell accounts for 545,161 bytes and **exceeds the ceiling on its
+  own**, so deleting the entire page would not bring it under. The ceiling was
+  never raised. Closing this means trimming the shared shell or re-deriving that
+  ceiling from measured shell cost as a deliberate decision.
+- **The backend jest suite is RED and the pre-existing share is UNVERIFIED.**
+  A full unfiltered run reports roughly 51 failing suites of 1,627. Six were
+  confirmed lane-introduced and fixed, including a genuine production race in the
+  KB ingestion consumer where the concurrency counter was incremented after the
+  first `await`, so all 20 concurrent calls read `current = 0`. The remaining
+  failures are *classified* as pre-existing, but that classification is not
+  established: many of the stated reasons are "mock arity mismatch after service
+  split", and this programme performed the splits. Confirming it requires running
+  the suite at the pre-programme commit `d054dab9`, which needs a checkout this
+  session was not authorised to perform. **Do not read the current suite as
+  green, and do not assume the 51 are harmless.**
+  Two traps to carry forward: piping a jest run into `tail` and reading `$?`
+  returns tail's status and hides the failure, and a path-filtered run that looks
+  green proves nothing about the other 1,500 suites.
+
 - **Read budgets need a reproducible seed.** An earlier run measured against a
   shared development database; that is not reproducible evidence and was
   rejected. A deterministic, idempotent seed including a minority-size org (ANN
