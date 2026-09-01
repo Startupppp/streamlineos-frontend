@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -30,7 +31,7 @@ const DELEGATIONS_KEY = ["hr", "governance", "delegations"] as const;
 
 export function useOrgDelegations(params?: { scope?: string; active?: boolean; page?: number; limit?: number }) {
   return useQuery<DelegationsListResponse>({
-    queryKey: [...DELEGATIONS_KEY, "org", params],
+    queryKey: [...queryKeys.hr.hrDelegationsAll, "org", params],
     queryFn: () => {
       const p: Record<string, unknown> = {};
       if (params?.scope) p["scope"] = params.scope;

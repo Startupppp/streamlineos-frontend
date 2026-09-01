@@ -2,6 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -107,7 +108,7 @@ export function useTimeDevices(params?: Record<string, unknown>) {
   const canManage = useCan("hr:biometric:manage");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [...DEVICES_KEY, params],
+    queryKey: [...queryKeys.hr.hrDevicesAll, params],
     queryFn: ({ signal }) => apiClient.get<CursorPaginatedResponse<TimeDevice>>("/hr/enterprise/comp/devices", { params }),
     staleTime: 2 * 60_000,
     enabled: canManage && hrEnabled,
@@ -147,7 +148,7 @@ export function useDeviceSyncLogs(params?: Record<string, unknown>) {
   const canManage = useCan("hr:biometric:manage");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [...SYNC_LOGS_KEY, params],
+    queryKey: [...queryKeys.hr.hrEnterpriseSyncLogsAll, params],
     queryFn: ({ signal }) => apiClient.get<CursorPaginatedResponse<DeviceSyncLog>>("/hr/enterprise/comp/devices/sync-logs", { params }),
     staleTime: 30_000,
     enabled: canManage && hrEnabled,
@@ -158,7 +159,7 @@ export function useFailedSyncs() {
   const canManage = useCan("hr:biometric:manage");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [...SYNC_LOGS_KEY, "failed"],
+    queryKey: [...queryKeys.hr.hrEnterpriseSyncLogsAll, "failed"],
     queryFn: ({ signal }) => apiClient.get<DeviceSyncLog[]>("/hr/enterprise/comp/devices/failed-syncs", undefined, signal),
     staleTime: 30_000,
     enabled: canManage && hrEnabled,
@@ -173,7 +174,7 @@ export function useCompCycles(params?: Record<string, unknown>) {
   const canManage = useCan("hr:compensation:manage");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [...COMP_CYCLES_KEY, params],
+    queryKey: [...queryKeys.hr.hrEnterpriseCompCyclesAll, params],
     queryFn: ({ signal }) => apiClient.get<CursorPaginatedResponse<CompCycle>>("/hr/enterprise/comp/planning/cycles", { params }),
     staleTime: 2 * 60_000,
     enabled: canManage && hrEnabled,
@@ -184,7 +185,7 @@ export function useCompCycle(cycleId: number) {
   const canManage = useCan("hr:compensation:manage");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [...COMP_CYCLES_KEY, cycleId],
+    queryKey: [...queryKeys.hr.hrEnterpriseCompCyclesAll, cycleId],
     queryFn: ({ signal }) => apiClient.get<CompCycle>(`/hr/enterprise/comp/planning/cycles/${cycleId}`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: !!cycleId && canManage && hrEnabled,
@@ -205,7 +206,7 @@ export function useCompRecommendations(cycleId?: number, params?: Record<string,
   const canManage = useCan("hr:compensation:manage");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [...COMP_RECS_KEY, cycleId, params],
+    queryKey: [...queryKeys.hr.hrEnterpriseCompRecsAll, cycleId, params],
     queryFn: ({ signal }) => apiClient.get<CursorPaginatedResponse<CompRecommendation>>("/hr/enterprise/comp/planning/recommendations", { params: { ...params, ...(cycleId ? { cycleId } : {}) } }),
     staleTime: 60_000,
     enabled: !!cycleId && canManage && hrEnabled,
@@ -226,7 +227,7 @@ export function useBudgetPools(cycleId: number) {
   const canManage = useCan("hr:compensation:manage");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [...COMP_BUDGET_KEY, cycleId],
+    queryKey: [...queryKeys.hr.hrEnterpriseCompBudgetAll, cycleId],
     queryFn: ({ signal }) => apiClient.get<CompBudgetPool[]>(`/hr/enterprise/comp/planning/cycles/${cycleId}/budget-pools`, undefined, signal),
     staleTime: 60_000,
     enabled: !!cycleId && canManage && hrEnabled,
@@ -239,7 +240,7 @@ export function useEquityGrants(params?: Record<string, unknown>) {
   const canView = useCan("hr:equity:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [...EQUITY_GRANTS_KEY, params],
+    queryKey: [...queryKeys.hr.hrEnterpriseEquityGrantsAll, params],
     queryFn: ({ signal }) => apiClient.get<CursorPaginatedResponse<EquityGrant>>("/hr/enterprise/comp/equity/grants", { params }),
     staleTime: 5 * 60_000,
     enabled: canView && hrEnabled,
@@ -260,7 +261,7 @@ export function useVestingSchedule(grantId: number) {
   const canView = useCan("hr:equity:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [...EQUITY_GRANTS_KEY, grantId, "vesting"],
+    queryKey: [...queryKeys.hr.hrEnterpriseEquityGrantsAll, grantId, "vesting"],
     queryFn: ({ signal }) => apiClient.get<VestingEvent[]>(`/hr/enterprise/comp/equity/grants/${grantId}/vesting-schedule`, undefined, signal),
     staleTime: 10 * 60_000,
     enabled: !!grantId && canView && hrEnabled,
@@ -283,7 +284,7 @@ export function useWorkforceCostSummary() {
   const canRead = useCan("hr:analytics:read");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [...COSTING_KEY, "summary"],
+    queryKey: [...queryKeys.hr.hrEnterpriseCostingAll, "summary"],
     queryFn: ({ signal }) => apiClient.get<Record<string, unknown>>("/hr/enterprise/comp/costing/summary"),
     staleTime: 5 * 60_000,
     enabled: canRead && hrEnabled,
@@ -294,7 +295,7 @@ export function useCostByDepartment(periodKey: string) {
   const canRead = useCan("hr:analytics:read");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [...COSTING_KEY, "byDepartment", periodKey],
+    queryKey: [...queryKeys.hr.hrEnterpriseCostingAll, "byDepartment", periodKey],
     queryFn: ({ signal }) => apiClient.get<Record<string, unknown>[]>("/hr/enterprise/comp/costing/by-department", { params: { periodKey } }),
     staleTime: 5 * 60_000,
     enabled: !!periodKey && canRead && hrEnabled,
@@ -305,7 +306,7 @@ export function useCostByLocation() {
   const canRead = useCan("hr:analytics:read");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [...COSTING_KEY, "byLocation"],
+    queryKey: [...queryKeys.hr.hrEnterpriseCostingAll, "byLocation"],
     queryFn: ({ signal }) => apiClient.get<Record<string, unknown>[]>("/hr/enterprise/comp/costing/by-location"),
     staleTime: 5 * 60_000,
     enabled: canRead && hrEnabled,

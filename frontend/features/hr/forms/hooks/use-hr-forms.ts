@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import type {
   CreateHrFormPayload,
   HrForm,
@@ -32,7 +33,7 @@ export function useHrForms(params?: { status?: string; audience?: string; cursor
 
 export function useHrForm(formId: number | undefined) {
   return useQuery<HrForm>({
-    queryKey: [...FORMS_KEY, formId],
+    queryKey: [...queryKeys.hr.hrFormsAll, formId],
     queryFn: ({ signal }) => apiClient.get<HrForm>(`/hr/forms/${formId}`, undefined, signal),
     enabled: formId !== undefined,
     staleTime: 30_000,
@@ -56,7 +57,7 @@ export function useUpdateHrForm(formId: number) {
       apiClient.patch<HrForm>(`/hr/forms/${formId}`, payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: FORMS_KEY });
-      qc.invalidateQueries({ queryKey: [...FORMS_KEY, formId] });
+      qc.invalidateQueries({ queryKey: [...queryKeys.hr.hrFormsAll, formId] });
     },
   });
 }

@@ -69,13 +69,13 @@ export interface VendorPayment {
   createdAt: string;
 }
 
-export interface ListVendorPaymentsParams {
+export type ListVendorPaymentsParams = {
   cursor?: string;
   limit?: number;
   vendorId?: number;
   from?: string;
   to?: string;
-}
+};
 
 export interface CreatePaymentRunFilters {
   vendorIds?: number[];
@@ -131,7 +131,7 @@ export function usePaymentRuns(params: ListPaymentRunsParams = {}) {
 export function useVendorPayments(params: ListVendorPaymentsParams = {}) {
   const can = useCan("accounting:payables:read");
   return useQuery<CursorPage<VendorPayment>, Error>({
-    queryKey: ["streamlineos", "accounting", "ap", "vendor-payments", params],
+    queryKey: queryKeys.accounting.apVendorPayments(params),
     queryFn: ({ signal }) =>
       apiClient.get<CursorPage<VendorPayment>>(
         "/accounting/vendor-payments",

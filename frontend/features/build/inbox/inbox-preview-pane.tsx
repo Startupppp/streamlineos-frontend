@@ -25,8 +25,36 @@ import type {
   NotificationType,
   NotificationCategory,
 } from "@/types/notifications";
+import dynamic from "next/dynamic";
+import { Skeleton } from "@/components/ui/skeleton";
 import { parseInboxTicketLink } from "./parse-inbox-ticket-link";
-import { InboxTicketPreview } from "./inbox-ticket-preview";
+
+const InboxTicketPreview = dynamic(
+  () => import("./inbox-ticket-preview").then((m) => ({ default: m.InboxTicketPreview })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
+        <div className="min-h-0 min-w-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4 pt-3 scrollbar-hide lg:px-5">
+          <Skeleton className="h-6 w-2/3" />
+          <Skeleton className="h-4 w-1/3" />
+          <Skeleton className="h-32 w-full rounded-lg" />
+          <Skeleton className="h-24 w-full rounded-lg" />
+          <Skeleton className="h-40 w-full rounded-lg" />
+        </div>
+        <div className="hidden shrink-0 space-y-3 border-t border-border px-4 py-3 lg:block lg:w-72 lg:min-w-72 lg:overflow-y-auto lg:border-l lg:border-t-0 lg:scrollbar-hide xl:w-80 xl:min-w-80">
+          <div className="flex gap-2">
+            <Skeleton className="h-5 w-16 rounded-md" />
+            <Skeleton className="h-5 w-20 rounded-md" />
+          </div>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-9 w-full rounded-md" />
+          ))}
+        </div>
+      </div>
+    ),
+  },
+);
 
 function getCategoryLabel(category: NotificationCategory): string {
   const labels: Record<NotificationCategory, string> = {

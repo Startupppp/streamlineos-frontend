@@ -50,7 +50,7 @@ export function useLetters(employmentId?: number) {
   const canView = useCan("hr:documents:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<LetterRender[]>({
-    queryKey: [...LETTERS_KEY, { employmentId }],
+    queryKey: [...queryKeys.hr.all, "letters", { employmentId }],
     queryFn: ({ signal }) =>
       apiClient.get<LetterRender[]>(
         "/hr/documents/letters",

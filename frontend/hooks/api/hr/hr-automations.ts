@@ -19,7 +19,7 @@ export const hrAutomationKeys = {
   all: BASE,
   list: (params?: Record<string, unknown>) => [...BASE, "list", params] as const,
   detail: (id: number) => [...BASE, "detail", id] as const,
-  runs: (ruleId?: number) => [...BASE, "runs", ruleId] as const,
+  runs: (ruleId?: number, params?: Record<string, unknown>) => [...BASE, "runs", ruleId, params] as const,
   events: () => [...BASE, "events"] as const,
 };
 
@@ -64,7 +64,7 @@ export function useHrAutomationRuns(ruleId?: number, params?: { page?: number; l
   const canView = useCan("hr:automations:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [...hrAutomationKeys.runs(ruleId), params] as const,
+    queryKey: hrAutomationKeys.runs(ruleId, params),
     queryFn: () => {
       const path = ruleId ? `/hr/automations/${ruleId}/runs` : "/hr/automations/runs";
       const search = new URLSearchParams();

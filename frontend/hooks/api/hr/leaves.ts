@@ -360,7 +360,7 @@ export function useHrMyLeaveRequestsInfinite(enabled = true) {
   const identity = useLeaveQueryIdentity();
   const key = leaveMyRequestsKey(identity);
   return useInfiniteQuery({
-    queryKey: [...key, "pages"] as const,
+    queryKey: [...queryKeys.hr.leavesMyRequests(identity.orgId, identity.userId, identity.accessVersion), "pages"] as const,
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<LeaveRequestsPage>("/me/time-off/requests", {
         limit: 50,

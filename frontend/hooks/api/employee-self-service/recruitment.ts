@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 
 export interface AssignedInterview {
   id: number;
@@ -29,7 +30,7 @@ const recruitmentKey = ["employee-self-service", "recruitment"] as const;
 
 export function useAssignedInterviews(page: number) {
   return useQuery({
-    queryKey: [...recruitmentKey, page],
+    queryKey: queryKeys.hr.hrAssignedInterviews(page),
     queryFn: ({ signal }) =>
       apiClient.get<AssignedInterviewsResponse>("/me/recruitment", {
         page,

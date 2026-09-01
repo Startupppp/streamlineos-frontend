@@ -307,5 +307,73 @@ export const humanResourcesQueryKeys = {
       [...base, "hr", "policies", "list", params] as const,
     hrPolicyDetail: (hrPolicyId: number) =>
       [...base, "hr", "policies", "detail", hrPolicyId] as const,
+    hrFormsAll: [...base, "hr", "forms"] as const,
+    hrForms: (params?: Record<string, unknown>) =>
+      params ? ([...base, "hr", "forms", params] as const) : ([...base, "hr", "forms"] as const),
+    hrForm: (formId: number) => [...base, "hr", "forms", formId] as const,
+    hrCasesAll: [...base, "hr", "cases"] as const,
+    hrCases: (params?: Record<string, unknown>) =>
+      [...base, "hr", "cases", params] as const,
+    hrCase: (caseId: number) => [...base, "hr", "cases", caseId] as const,
+    hrDisciplinary: () => [...base, "hr", "cases", "disciplinary"] as const,
+    hrDisciplinaryMine: () => [...base, "hr", "cases", "disciplinary", "mine"] as const,
+    hrAccessRequests: (params?: Record<string, unknown>) =>
+      [...base, "hr", "access-requests", params] as const,
+    hrDelegations: (params?: Record<string, unknown>) =>
+      [...base, "hr", "governance", "delegations", params] as const,
+    hrLaborMemberships: (params?: Record<string, unknown>) =>
+      [...base, "hr", "governance", "labor", "memberships", params] as const,
+    hrLaborAgreements: (params?: Record<string, unknown>) =>
+      [...base, "hr", "governance", "labor", "agreements", params] as const,
+    hrLaborAgreementsExpiring: (days: number) =>
+      [...base, "hr", "governance", "labor", "agreements", "expiring", days] as const,
+    hrLaborCases: (params?: Record<string, unknown>) =>
+      [...base, "hr", "governance", "labor", "cases", params] as const,
+    hrLegalHoldsAll: (params?: Record<string, unknown>) =>
+      [...base, "hr", "governance", "legal-holds", params] as const,
+    hrLegalHoldItems: (holdId: number) =>
+      [...base, "hr", "governance", "legal-holds", holdId, "items"] as const,
+    hrPositions: (params?: Record<string, unknown>) =>
+      [...base, "hr", "governance", "positions", params] as const,
+    hrScenarios: (params?: Record<string, unknown>) =>
+      [...base, "hr", "governance", "scenarios", params] as const,
+    hrScenarioSimulate: (scenarioId: number) =>
+      [...base, "hr", "governance", "scenarios", scenarioId, "simulate"] as const,
+    hrRetentionPolicies: (params?: Record<string, unknown>) =>
+      [...base, "hr", "governance", "retention", "policies", params] as const,
+    hrRetentionRequests: (params?: Record<string, unknown>) =>
+      [...base, "hr", "governance", "retention", "requests", params] as const,
+    hrEngagement: (params?: Record<string, unknown>) =>
+      [...base, "hr", "engagement", params] as const,
+    hrIdentity: (params?: Record<string, unknown>) =>
+      [...base, "hr", "identity", params] as const,
+    hrDelegationsAll: [...base, "hr", "governance", "delegations"] as const,
+    hrLaborMembershipsAll: [...base, "hr", "governance", "labor", "memberships"] as const,
+    hrLaborAgreementsAll: [...base, "hr", "governance", "labor", "agreements"] as const,
+    hrLaborCasesAll: [...base, "hr", "governance", "labor", "cases"] as const,
+    hrLegalHoldsBase: [...base, "hr", "governance", "legal-holds"] as const,
+    hrPositionsAll: [...base, "hr", "governance", "positions"] as const,
+    hrScenariosAll: [...base, "hr", "governance", "scenarios"] as const,
+    hrRetentionPoliciesAll: [...base, "hr", "governance", "retention", "policies"] as const,
+    hrRetentionRequestsAll: [...base, "hr", "governance", "retention", "requests"] as const,
+    hrWorkflowsAll: [...base, "hr", "workflows"] as const,
+    hrWorkflowInstancesAll: [...base, "hr", "workflow-instances"] as const,
+    hrWorkflowDelegationsAll: [...base, "hr", "workflow-delegations"] as const,
+    hrRecognition: [...base, "hr", "recognition"] as const,
+    hrLettersAll: [...base, "hr", "letters"] as const,
+    hrTalentPoolMembersAll: (poolId: number) =>
+      [...base, "hr", "talentPools", poolId, "members"] as const,
+    hrInternalJobs: [...base, "hr", "recruitment", "internal-jobs"] as const,
+    hrAssignedInterviews: (page: number) =>
+      [...base, "hr", "me", "assigned-interviews", page] as const,
+    hrDevicesAll: [...base, "hr", "enterprise", "comp", "devices"] as const,
+    hrEnterpriseSyncLogsAll: [...base, "hr", "enterprise", "comp", "syncLogs"] as const,
+    hrEnterpriseCompCyclesAll: [...base, "hr", "enterprise", "comp", "cycles"] as const,
+    hrEnterpriseCompRecsAll: [...base, "hr", "enterprise", "comp", "recommendations"] as const,
+    hrEnterpriseCompBudgetAll: [...base, "hr", "enterprise", "comp", "budgetPools"] as const,
+    hrEnterpriseEquityGrantsAll: [...base, "hr", "enterprise", "comp", "equityGrants"] as const,
+    hrEnterpriseCostingAll: [...base, "hr", "enterprise", "comp", "costing"] as const,
+    hrIdentityAll: [...base, "hr-identity"] as const,
+    hrPublicForm: (token: string) => [...base, "hr", "public-form", token] as const,
   },
 } as const;

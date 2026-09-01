@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -61,7 +62,7 @@ const SCENARIOS_KEY = ["hr", "governance", "scenarios"] as const;
 
 export function usePositions(params?: { status?: string; departmentId?: number; page?: number; limit?: number }) {
   return useQuery<PositionsListResponse>({
-    queryKey: [...POSITIONS_KEY, params],
+    queryKey: [...queryKeys.hr.hrPositionsAll, params],
     queryFn: () => {
       const p: Record<string, unknown> = {};
       if (params?.status) p["status"] = params.status;
@@ -76,7 +77,7 @@ export function usePositions(params?: { status?: string; departmentId?: number; 
 
 export function useReorgScenarios(params?: { status?: string; page?: number; limit?: number }) {
   return useQuery<ScenariosListResponse>({
-    queryKey: [...SCENARIOS_KEY, params],
+    queryKey: [...queryKeys.hr.hrScenariosAll, params],
     queryFn: () => {
       const p: Record<string, unknown> = {};
       if (params?.status) p["status"] = params.status;
@@ -90,7 +91,7 @@ export function useReorgScenarios(params?: { status?: string; page?: number; lim
 
 export function useSimulateScenario(scenarioId: number | undefined) {
   return useQuery<SimulationResult>({
-    queryKey: [...SCENARIOS_KEY, scenarioId, "simulate"],
+    queryKey: [...queryKeys.hr.hrScenariosAll, scenarioId, "simulate"],
     queryFn: ({ signal }) => apiClient.get<SimulationResult>(`/hr/governance/scenarios/${scenarioId}/simulate`, undefined, signal),
     enabled: scenarioId !== undefined,
     staleTime: 0,

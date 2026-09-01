@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -42,7 +43,7 @@ const REQUESTS_KEY = [...RETENTION_KEY, "requests"] as const;
 
 export function useRetentionPolicies(params?: { recordType?: string; active?: boolean; page?: number; limit?: number }) {
   return useQuery<RetentionListResponse<RetentionPolicy>>({
-    queryKey: [...POLICIES_KEY, params],
+    queryKey: [...queryKeys.hr.hrRetentionPoliciesAll, params],
     queryFn: () => {
       const p: Record<string, unknown> = {};
       if (params?.recordType) p["recordType"] = params.recordType;
@@ -57,7 +58,7 @@ export function useRetentionPolicies(params?: { recordType?: string; active?: bo
 
 export function useDataRequests(params?: { status?: string; type?: string; page?: number; limit?: number }) {
   return useQuery<RetentionListResponse<DataRequest>>({
-    queryKey: [...REQUESTS_KEY, params],
+    queryKey: [...queryKeys.hr.hrRetentionRequestsAll, params],
     queryFn: () => {
       const p: Record<string, unknown> = {};
       if (params?.status) p["status"] = params.status;

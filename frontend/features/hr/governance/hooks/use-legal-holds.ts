@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -41,7 +42,7 @@ const HOLDS_KEY = ["hr", "governance", "legal-holds"] as const;
 
 export function useLegalHolds(params?: { status?: string; subjectUserId?: string; page?: number; limit?: number }) {
   return useQuery<LegalHoldsListResponse>({
-    queryKey: [...HOLDS_KEY, params],
+    queryKey: [...queryKeys.hr.hrLegalHoldsBase, params],
     queryFn: () => {
       const p: Record<string, unknown> = {};
       if (params?.status) p["status"] = params.status;
@@ -56,7 +57,7 @@ export function useLegalHolds(params?: { status?: string; subjectUserId?: string
 
 export function useHoldItems(holdId: number | undefined) {
   return useQuery<HoldItem[]>({
-    queryKey: [...HOLDS_KEY, holdId, "items"],
+    queryKey: [...queryKeys.hr.hrLegalHoldsBase, holdId, "items"],
     queryFn: ({ signal }) => apiClient.get<HoldItem[]>(`/hr/governance/legal-holds/${holdId}/items`, undefined, signal),
     enabled: holdId !== undefined,
     staleTime: 30_000,
@@ -109,7 +110,7 @@ export function useAttachHoldItem() {
     mutationFn: ({ holdId, ...payload }) =>
       apiClient.post<HoldItem>(`/hr/governance/legal-holds/${holdId}/items`, payload),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: [...HOLDS_KEY, vars.holdId, "items"] });
+      qc.invalidateQueries({ queryKey: [...queryKeys.hr.hrLegalHoldsBase, vars.holdId, "items"] });
       toast.success("Item attached to hold");
     },
     onError: (err) => toast.error(getErrorMessage(err)),
@@ -123,7 +124,7 @@ export function useDetachHoldItem() {
     mutationFn: ({ holdId, itemId }) =>
       apiClient.delete<void>(`/hr/governance/legal-holds/${holdId}/items/${itemId}`),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: [...HOLDS_KEY, vars.holdId, "items"] });
+      qc.invalidateQueries({ queryKey: [...queryKeys.hr.hrLegalHoldsBase, vars.holdId, "items"] });
       toast.success("Item removed from hold");
     },
     onError: (err) => toast.error(getErrorMessage(err)),

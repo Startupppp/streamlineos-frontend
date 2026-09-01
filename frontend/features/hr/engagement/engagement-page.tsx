@@ -22,6 +22,7 @@ import { FilterPill, FilterPillGroup } from "@/components/ui/filter-pill";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState } from "@/components/shared/error-state";
 import { useCan } from "@/hooks/api/access";
@@ -69,7 +70,7 @@ interface Recognition {
 
 function useRecognitions() {
   return useQuery<Recognition[]>({
-    queryKey: ["hr", "recognition"],
+    queryKey: queryKeys.hr.hrRecognition,
     queryFn: ({ signal }) => apiClient.get<Recognition[]>("/hr/recognition", undefined, signal),
     staleTime: 60_000,
   });
@@ -81,7 +82,7 @@ function useCreateRecognition() {
     mutationKey: ["hr", "recognition", "create"],
     mutationFn: (data: { toUserId: string; message: string; category: string }) =>
       apiClient.post<Recognition>("/hr/recognition", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["hr", "recognition"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.hrRecognition }),
   });
 }
 

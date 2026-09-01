@@ -48,15 +48,15 @@ function toQuery<P extends object>(params: P): Record<string, string> {
   return out;
 }
 
-export interface ListReminderPoliciesParams {
+export type ListReminderPoliciesParams = {
   limit?: number;
   cursor?: number;
-}
+};
 
 export function useReminderPolicies(params: ListReminderPoliciesParams = {}) {
   const can = useCan("accounting:reminders:read");
   return useQuery<ListResponse<ReminderPolicy>, Error>({
-    queryKey: [...arCollectionsKeys.reminders.policies, params] as const,
+    queryKey: queryKeys.accounting.arReminderPolicies(params),
     queryFn: ({ signal }) =>
       apiClient.get<ListResponse<ReminderPolicy>>(
         "/accounting/reminders/policies",

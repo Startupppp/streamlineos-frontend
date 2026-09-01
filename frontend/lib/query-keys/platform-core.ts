@@ -59,6 +59,7 @@ export const platformCoreQueryKeys = {
     members: () => [...base, "organization", "members"] as const,
     settings: () => [...base, "organization", "settings"] as const,
     display: () => [...base, "organization", "display"] as const,
+    holidays: [...base, "organization", "holidays"] as const,
   },
 
   orgSetup: {
@@ -141,5 +142,14 @@ export const platformCoreQueryKeys = {
       [...base, "access", "resource-grants", resourceType, resourceId] as const,
     orgModules: () => [...base, "access", "org-modules"] as const,
   },
+
+  invitation: {
+    token: (token: string) => [...base, "invitation", token] as const,
+  },
+
+  attachmentSignedUrl: (fileUrl: string) =>
+    [...base, "attachments", "signed-url", fileUrl] as const,
+
+  executiveBrief: [...base, "ai", "executive-brief"] as const,
 
 } as const;

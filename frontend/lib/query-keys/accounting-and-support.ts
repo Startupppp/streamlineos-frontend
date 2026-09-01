@@ -40,6 +40,10 @@ export const accountingAndSupportQueryKeys = {
     coaTemplates: () => [...base, "accounting", "coaTemplates"] as const,
     setupProgress: () => [...base, "accounting", "setupProgress"] as const,
     apAll: [...base, "accounting", "ap"] as const,
+    apVendorPayments: (params?: Record<string, unknown>) =>
+      [...base, "accounting", "ap", "vendor-payments", params] as const,
+    arReminderPolicies: (params?: Record<string, unknown>) =>
+      [...base, "accounting", "reminder-policies", params] as const,
   },
 
   recurringInvoices: {

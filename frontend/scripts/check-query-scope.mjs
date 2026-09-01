@@ -50,6 +50,38 @@ function checkQueryKeyHashFn(content, relPath) {
   return `${relPath}  (queryKeyHashFn set outside sanctioned files)`;
 }
 
+// ── Rule 4: inline queryKey array literals ────────────────────────────────────
+// `queryKey: ["module", "entity"]` by-passes the factory and loses the tenant hash.
+// Legitimate patterns:
+//   queryKey: queryKeys.foo.bar(params)   ← factory call
+//   queryKey: queryKeys.foo.all           ← factory constant
+//   queryKey: [...queryKeys.foo.bar(), "variant"] as const  ← factory + variant suffix
+//
+// Bad patterns (detected):
+//   queryKey: ["module", "entity"]        ← pure string array
+//   queryKey: [orgId, "employees"]        ← variable-first array (no factory)
+//
+// ALLOWLIST: files that intentionally define query-key shapes (factories, tests, scope lib).
+const INLINE_KEY_ALLOWLIST = new Set([
+  "lib/query-keys.ts",         // the factory definitions themselves
+  "lib/query-scope.ts",        // scope isolation testing
+  "lib/query-scope-isolation.test.tsx",
+]);
+// Matches `queryKey:` followed (after optional whitespace/newline) by `[` whose
+// first non-whitespace element is NOT `...queryKeys` (spread of a factory).
+const INLINE_KEY_RE = /\bqueryKey\s*:\s*\[(?!\s*\.\.\.queryKeys)/g;
+
+function checkInlineQueryKey(content, relPath) {
+  if (isTestFile(relPath)) return null;
+  if (INLINE_KEY_ALLOWLIST.has(normRel(relPath))) return null;
+  if (!INLINE_KEY_RE.test(content)) {
+    INLINE_KEY_RE.lastIndex = 0;
+    return null;
+  }
+  INLINE_KEY_RE.lastIndex = 0;
+  return `${relPath}  (inline queryKey array — use queryKeys factory instead)`;
+}
+
 function checkPrefetchDehydrate(content, relPath) {
   const norm = normRel(relPath);
   if (!norm.startsWith("lib/prefetch/")) return null;
@@ -160,7 +192,48 @@ function runSelfTest() {
     process.exit(1);
   }
 
-  console.log("\n✔ All 3 rules self-tested successfully — check-query-scope is live.");
+  // Rule 4 fixtures
+  const inlineKeyBad = {
+    description: "rule 4 — inline queryKey array without factory",
+    relPath: "hooks/api/widgets.ts",
+    content: 'const q = useQuery({ queryKey: ["module", "entity"], queryFn: () => fetch() });',
+    detect: checkInlineQueryKey,
+  };
+  const inlineKeyGoodFactory = {
+    description: "rule 4 — queryKey from factory (should NOT be flagged)",
+    relPath: "hooks/api/widgets.ts",
+    content: 'const q = useQuery({ queryKey: queryKeys.widgets.list(params), queryFn: () => fetch() });',
+    detect: checkInlineQueryKey,
+  };
+  const inlineKeyGoodSpread = {
+    description: "rule 4 — queryKey spreading factory key (should NOT be flagged)",
+    relPath: "hooks/api/widgets.ts",
+    content: 'const q = useQuery({ queryKey: [...queryKeys.widgets.list(), "page"], queryFn: () => fetch() });',
+    detect: checkInlineQueryKey,
+  };
+  const inlineKeyGoodTestFile = {
+    description: "rule 4 — inline queryKey in a test file (should NOT be flagged)",
+    relPath: "hooks/api/widgets.test.ts",
+    content: 'const q = useQuery({ queryKey: ["test", "key"], queryFn: () => fetch() });',
+    detect: checkInlineQueryKey,
+  };
+
+  const r4bad = inlineKeyBad.detect(inlineKeyBad.content, inlineKeyBad.relPath);
+  if (r4bad === null) {
+    selfFailures.push(`self-test MISSED: ${inlineKeyBad.description}`);
+  } else {
+    console.log(`✔ self-test detected ${inlineKeyBad.description}`);
+  }
+  for (const f of [inlineKeyGoodFactory, inlineKeyGoodSpread, inlineKeyGoodTestFile]) {
+    const result = f.detect(f.content, f.relPath);
+    if (result !== null) {
+      selfFailures.push(`self-test WRONGLY FLAGGED: ${f.description}`);
+    } else {
+      console.log(`✔ self-test exempted ${f.description}`);
+    }
+  }
+
+  console.log("\n✔ All 4 rules self-tested successfully — check-query-scope is live.");
   process.exit(0);
 }
 
@@ -171,6 +244,7 @@ if (process.argv.includes("--self-test")) {
 const violations1 = [];
 const violations2 = [];
 const violations3 = [];
+const violations4 = [];
 
 for (const file of walkFiles(ROOT)) {
   const content = readFileSync(file, "utf8");
@@ -184,9 +258,12 @@ for (const file of walkFiles(ROOT)) {
 
   const v3 = checkPrefetchDehydrate(content, rel);
   if (v3) violations3.push(`  ${v3}`);
+
+  const v4 = checkInlineQueryKey(content, rel);
+  if (v4) violations4.push(`  ${v4}`);
 }
 
-const allViolations = [...violations1, ...violations2, ...violations3];
+const allViolations = [...violations1, ...violations2, ...violations3, ...violations4];
 
 if (allViolations.length === 0) {
   console.log("✔  No query-scope violations found.");
@@ -203,6 +280,10 @@ if (allViolations.length === 0) {
   if (violations3.length > 0) {
     console.error(`✖  ${violations3.length} prefetch file(s) calling dehydrate() without createServerQueryClient:`);
     for (const v of violations3) console.error(v);
+  }
+  if (violations4.length > 0) {
+    console.error(`✖  ${violations4.length} inline queryKey array(s) — use queryKeys factory:`);
+    for (const v of violations4) console.error(v);
   }
   process.exit(1);
 }

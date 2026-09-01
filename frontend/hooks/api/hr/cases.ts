@@ -89,6 +89,7 @@ const caseKeys = {
   documents: (id: number) => ["streamlineos", "hr", "cases", "documents", id] as const,
   stats: ["streamlineos", "hr", "cases", "stats"] as const,
   disciplinary: ["streamlineos", "hr", "disciplinary"] as const,
+  disciplinaryMine: ["streamlineos", "hr", "disciplinary", "mine"] as const,
   disciplinaryList: (params: Record<string, unknown>) => ["streamlineos", "hr", "disciplinary", "list", params] as const,
 };
 
@@ -248,7 +249,7 @@ export function useCreateDisciplinaryAction() {
 
 export function useMyDisciplinaryActions() {
   return useQuery({
-    queryKey: [...caseKeys.disciplinary, "mine"] as const,
+    queryKey: caseKeys.disciplinaryMine,
     queryFn: ({ signal }) =>
       apiClient.get<
         Array<{

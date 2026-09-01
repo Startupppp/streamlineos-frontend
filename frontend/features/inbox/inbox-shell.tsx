@@ -6,7 +6,15 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { NotificationListSkeleton } from "@/features/notifications/notification-list-skeleton";
-import { NotificationDetailDrawer } from "@/features/notifications/notification-detail-drawer";
+import dynamic from "next/dynamic";
+
+const NotificationDetailDrawer = dynamic(
+  () =>
+    import("@/features/notifications/notification-detail-drawer").then((m) => ({
+      default: m.NotificationDetailDrawer,
+    })),
+  { ssr: false },
+);
 import {
   useMarkNotificationRead,
   useArchiveNotification,

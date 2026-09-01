@@ -64,7 +64,7 @@ interface ResignationListParams {
 
 const exitKeys = {
   all: [...queryKeys.hr.all, "exit"] as const,
-  list: () => [...exitKeys.all, "list"] as const,
+  list: (params?: ResignationListParams) => [...exitKeys.all, "list", params] as const,
   progress: (resignationId: number) =>
     [...exitKeys.all, "progress", resignationId] as const,
 };
@@ -73,7 +73,7 @@ export function useResignations(params?: ResignationListParams) {
   const canExit = useCan("hr:exit:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [...exitKeys.list(), params] as const,
+    queryKey: exitKeys.list(params),
     queryFn: () => {
       const search = new URLSearchParams();
       if (params?.page) search.set("page", String(params.page));

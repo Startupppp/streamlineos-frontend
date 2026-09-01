@@ -71,7 +71,7 @@ export function useDeleteTalentPool() {
 
 export function usePoolMembers(poolId: number, params?: PoolMembersParams) {
   return useQuery({
-    queryKey: [...poolMembersKey(poolId), params] as const,
+    queryKey: [...queryKeys.hr.hrTalentPoolMembersAll(poolId), params] as const,
     queryFn: () => {
       const search = new URLSearchParams();
       if (params?.cursor) search.set("cursor", params.cursor);

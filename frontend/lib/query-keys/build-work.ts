@@ -205,6 +205,7 @@ export const buildWorkQueryKeys = {
       transitions: (projectId: number) =>
         [...base, "projects", projectId, "workflow", "transitions"] as const,
     },
+    allWorkAll: [...base, "projects", "all-work"] as const,
     allWork: (filters?: Record<string, unknown>) =>
       [...base, "projects", "all-work", filters] as const,
     allWorkInfinite: (filters: Record<string, unknown>) =>

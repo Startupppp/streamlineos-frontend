@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Loader2, CheckCircle2, Send } from "lucide-react";
 import { buildUrl } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import {
   type FormField,
   buildFieldSchema,
@@ -184,7 +185,7 @@ export default function PublicFormPage() {
   const token = params.token;
 
   const formQuery = useQuery({
-    queryKey: ["public-form", token],
+    queryKey: queryKeys.hr.hrPublicForm(token),
     queryFn: () => fetchPublicForm(token),
     retry: false,
     staleTime: 60_000,

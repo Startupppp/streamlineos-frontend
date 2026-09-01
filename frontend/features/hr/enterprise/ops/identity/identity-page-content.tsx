@@ -26,6 +26,7 @@ import { TemplateSheet } from "./template-sheet";
 import { ExitVerificationView } from "./exit-verification-view";
 import { format } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import { useOrgMembers } from "@/hooks/api/organization";
 import {
   getUserDisplayName,
@@ -71,7 +72,7 @@ export function IdentityPageContent() {
   const pageError = provisioningError || templatesError;
 
   function handleRetry() {
-    void qc.invalidateQueries({ queryKey: ["hr-identity"] });
+    void qc.invalidateQueries({ queryKey: queryKeys.hr.hrIdentityAll });
   }
 
   const memberById = useMemo(() => {

@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 
 export interface AccessRequest {
   id: string;
@@ -31,7 +32,7 @@ const AR_KEY = ["streamlineos", "hr", "access-requests"] as const;
 
 export function useAccessRequests(employeeId?: string) {
   return useQuery<AccessRequest[]>({
-    queryKey: [...AR_KEY, { employeeId }],
+    queryKey: queryKeys.hr.hrAccessRequests({ employeeId }),
     queryFn: ({ signal }) =>
       apiClient.get<AccessRequest[]>("/hr/access-requests", employeeId ? { employeeId } : undefined, signal),
     staleTime: 60_000,

@@ -19,6 +19,7 @@ import { EmptySearchIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { queryKeys } from "@/lib/query-keys";
 import { format, isAfter } from "date-fns";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { ErrorState } from "@/components/shared/error-state";
@@ -155,7 +156,7 @@ function JobCardItem({ job, onApply }: JobCardItemProps) {
 export default function InternalJobsPage() {
   const qc = useQueryClient();
   const { data: jobs = [], isLoading, isError, refetch } = useQuery({
-    queryKey: ["internalJobs"],
+    queryKey: queryKeys.hr.hrInternalJobs,
     queryFn: ({ signal }) => apiClient.get<InternalJob[]>("/hr/recruitment/internal-jobs", undefined, signal),
     staleTime: 2 * 60_000,
   });
@@ -163,7 +164,7 @@ export default function InternalJobsPage() {
   const [applyingJob, setApplyingJob] = useState<InternalJob | null>(null);
 
   const handleApplySuccess = useCallback(() => {
-    void qc.invalidateQueries({ queryKey: ["internalJobs"] });
+    void qc.invalidateQueries({ queryKey: queryKeys.hr.hrInternalJobs });
   }, [qc]);
 
   const handleCloseApplySheet = useCallback(() => { setApplyingJob(null); }, []);
