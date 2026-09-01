@@ -95,7 +95,7 @@ Note on low current row counts: this is a dev/staging instance. `timesheets`, `h
 ### audit_logs — KEEP-FOREVER
 - Measured: 11 rows, 208 KB.
 - Write path: every privileged action logged. Grows with admin operations.
-- Decision: KEEP-FOREVER. `audit_logs` carries no `deleted_at` column (verified by `financial-retention.spec.ts`). DB-level trigger (migration 0793) prevents mutation. No retention worker may select from or delete this table.
+- Decision: KEEP-FOREVER. `audit_logs` carries no `deleted_at` column (verified by `financial-retention.spec.ts`). Migration `0930_audit_logs_append_only_trigger` adds the database-level mutation trigger; the deployed environment must apply and verify it before this control is considered active. No retention worker may select from or delete this table.
 - Proof that no worker touches `audit_logs`: `CronAiUsageRetentionService` spec test (E) asserts the source file does not contain `"auditLogs"` or `"audit_logs"`. `CronHrRetentionService` writes TO `hr_audit_logs` (audit trail of what was purged) but never reads from or deletes `audit_logs`.
 
 ### hr_audit_logs — KEEP-FOREVER
@@ -112,6 +112,10 @@ Note on low current row counts: this is a dev/staging instance. `timesheets`, `h
 - `hr_people`: 5,000 rows, 2.3 MB. RETAIN-BOUNDED via `hr_retention_policies` (policy-driven, per-org). Soft-delete only. Legal-hold exclusion enforced via subquery before any deletion. Worker: `CronHrRetentionService`.
 - `hr_employments`: 5,000 rows, 3.2 MB. KEEP-FOREVER (payroll statutory obligation).
 
+### hr_reporting_lines — KEEP-FOREVER
+- Effective-dated reporting history supports employment and payroll auditability. It has no independent deletion worker and must not be removed by a generic HR sweep without an approved statutory-retention rule.
+- The coverage verifier classifies `hr_reporting_lines` as KEEP-FOREVER so this high-growth source cannot remain unclassified.
+
 ### permissions, role_permission_grants — KEEP-FOREVER (configuration)
 - `permissions`: 731 rows, 3 MB. RBAC catalog. Grows as features ship, shrinks when keys are retired. Configuration state. No sweep.
 - `role_permission_grants`: 5,635 rows, 2.5 MB. Per-org role grants. Rows are deleted when grants are revoked or roles removed (FK cascade or explicit revocation). Not append-only. Size is bounded by org count × role count. No sweep.
@@ -124,7 +128,7 @@ Note on low current row counts: this is a dev/staging instance. `timesheets`, `h
 
 All retention workers enforce these invariants:
 
-1. **`forEachOrg` iteration** — background sweeps have no ambient tenant context; a write without the tenant GUC (`app.current_org_id()`) dies 42501. Every sweep iterates organizations using `forEachOrg`, which sets the GUC inside each org's transaction.
+1. **Tenant context for row sweeps** — background row-level sweeps have no ambient tenant context; a write without the tenant GUC (`app.current_org_id()`) dies 42501. Those sweeps iterate organizations using `forEachOrg`, which sets the GUC inside each org's transaction. Global partition maintenance and outbox operations follow their own explicitly scoped execution paths.
 
 2. **Bounded batch size** — no single transaction deletes more than 200–1,000 rows. This keeps lock duration short, avoids autovacuum blocking, and makes progress observable.
 
@@ -171,7 +175,7 @@ The following tables must never be selected for deletion by any automated retent
 
 | Table | Obligation | Enforcement |
 |---|---|---|
-| `audit_logs` | Platform audit trail | No `deleted_at` column; DB trigger blocks UPDATE; not referenced by any retention worker |
+| `audit_logs` | Platform audit trail | No `deleted_at` column; migration `0930` defines the append-only trigger; not referenced by any retention worker |
 | `hr_audit_logs` | HR retention sweep audit trail | Only ever written to, never deleted by sweep |
 | `journal_entries` | Accounting immutability | DB trigger (migration 0793) blocks UPDATE after POSTED; no `deleted_at` column |
 | `journal_lines` | Accounting immutability | DB trigger blocks UPDATE on debit/credit/account_id |

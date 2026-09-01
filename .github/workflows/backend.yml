@@ -107,6 +107,9 @@ jobs:
       - name: Migration Discipline
         run: pnpm check:migration-discipline
 
+      - name: Production operations evidence gate self-test
+        run: pnpm ops:evidence:self-test
+
       - name: Feature Flag Governance
         run: pnpm check:feature-flag-governance:self-test && pnpm check:feature-flag-governance
 
@@ -202,6 +205,9 @@ jobs:
 
       - name: Install
         run: pnpm install --frozen-lockfile
+
+      - name: Migration proof guard self-test
+        run: pnpm migration:proof --self-test
 
       # Run the complete migration chain twice from disposable databases: once from
       # zero and once split at the supported upgrade watermark. The proof compares the

@@ -40,6 +40,7 @@ These run automatically on every push to `main` via `.github/workflows/backend.y
 | Migration authoring discipline | `pnpm check:migration-discipline` | `backend.yml` |
 | Migration ledger vs journal | `pnpm check:migration-ledger` | `backend.yml` |
 | Migration chain integrity | `pnpm check:migration-chain` | `backend/ci.yml` |
+| Cold bootstrap and catalog parity | `pnpm migration:proof` | `.github/workflows/backend.yml` (`migration-proof`) |
 
 ### 1.4 Security and access
 

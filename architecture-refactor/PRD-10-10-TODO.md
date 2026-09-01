@@ -24,7 +24,7 @@ These values describe the working tree at reconciliation time and must be re-mea
 - Legacy organization actors: 434 total; 116 CRM/Inventory excluded; 318 classified historical/display-only; 0 actionable according to the scanner.
 - Offset pagination: 0 actionable; unordered offset paging: 0.
 - Unbounded reads: 223 actionable instances across 105 files, 0 unclassified paths, 0 actionable offsets, and 0 unordered paging in the latest run. The gate is structurally green, but the zero-actionable target is not complete.
-- Migration ledger: 579 applied rows against 579 journal entries; 0 pending and no orphan, duplicate, or unreachable entries. Migration chain, discipline, rollback, and drop-column gates pass locally; clean-bootstrap and deployed-environment proof remain open.
+- Migration ledger: 585 applied rows against 585 journal entries; 0 pending and no orphan, duplicate, or unreachable entries. Migration chain, discipline, rollback, and drop-column gates pass locally; clean-bootstrap and deployed-environment proof remain open.
 - OpenAPI: the last verified release gate covered 3,579/3,579 operations for exposure, responses, 4xx errors, and mutating request bodies. Re-run at final head.
 - Tenant-isolation, route classification, permission-catalog, module-gate, cache-invalidation, outbox-consumer, and feature-flag gates previously passed. Re-run at final head.
 - Production cells, physical replica/PITR drills, production-shaped load/cost proof, live alert acknowledgement, and compliance approvals are not proven by repository code.
@@ -59,7 +59,7 @@ The following are KEEP verdicts, not invitations for cosmetic rewrites. Their ex
 Verified complete at the audited working tree:
 
 - [x] Legacy actor scanner: 0 actionable, 318 display-only classifications, 116 excluded CRM/Inventory fields.
-- [x] Migration ledger/chain/discipline/rollback: 579/579 applied and all four gates pass.
+- [x] Migration ledger/chain/discipline/rollback: 585/585 applied, zero pending/orphan/duplicate/unreachable entries, and all structural gates pass; disposable current-head bootstrap and live rollback drill remain open.
 - [x] OpenAPI coverage: 3,579/3,579 operations have exposure, response and 4xx schemas; 1,363/1,363 mutating operations have request schemas.
 - [x] Backend hard file-size gate: 3,382 files scanned, all within 500 lines with 7 registered exceptions.
 - [x] Frontend type-check, route-access contract, contract drift, module manifest, dead-code classification, cycle, query-scope, SEO metadata, color-token and icon-label gates pass.

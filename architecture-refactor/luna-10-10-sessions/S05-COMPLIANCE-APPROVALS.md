@@ -30,6 +30,10 @@ Implementation subitems verified in this session:
 - [x] Approval, rejection, and revocation use conditional transitions that prevent concurrent state races.
 - [x] Eligible operator roles and authenticated customer/billing data-plane guard paths are covered by focused tests.
 - [x] Repository routes apply `OperatorSessionGuard` and separate `read_customer_data` / `read_payments` grants to customer and billing reads.
+- [x] Operator-management routes read `INTERNAL_API_SECRET` through validated `APP_CONFIG`; the controller test supplies configuration explicitly and passes without ambient environment mutation.
+- [x] Expired pending grants are conditionally transitioned out of the approval queue by the protected `operator-grant-expiry` cron sweep; concurrent approval/sweep races use a conditional update.
+- [x] Grant creation and its immutable `grant.requested` audit event commit in one tenant transaction; an audit insertion failure cannot leave a visible unaudited grant.
+- [x] The pending-grant expiry endpoint is protected by the cron secret and a distributed lease, with both HTTP verbs included in the cron authentication contract tests.
 
 ### 2. Data inventory, subject rights, and lawful purpose
 
@@ -40,14 +44,18 @@ Implementation subitems verified in this session:
 - [ ] Run access/export, correction, portability, erasure, legal-hold blocking, ownership-transfer, cross-tenant denial, and repeated-request idempotency drills against disposable deployed data.
 - [ ] Make export exhaustive and resumable, or document every excluded source with an accountable approval. A truncated or capped export is a failure.
 
-Existing GDPR workers and legal-hold self-tests are implementation evidence only. The current export is bounded/truncatable and the current purge path does not prove physical deletion of every eligible record.
+Existing GDPR workers and legal-hold self-tests are implementation evidence only. The export worker now enumerates the repository's subject-owned sources and is resumable, but blob contents remain metadata-only and the synchronous legacy export path is minimal. The purge path does not prove physical deletion of every eligible record in deployment.
 
 Implementation subitems verified in this session:
 
 - [x] Subject export pagination is resumable by stable cursor and tenant-isolation tests pass.
 - [x] Multi-organization legal-hold checks are covered by focused tests.
 - [x] Storage purge adapter failure handling and idempotency are covered by focused tests.
-- [x] Rectification requests are represented by a tenant-scoped `correction` workflow type, require actionable details, and are covered by schema tests and migration `0929_gdpr_correction_request`.
+- [x] Rectification requests are represented by a tenant-scoped `correction` workflow type, require actionable details, and are covered by schema tests and migration `0929_gdpr_correction_request`; processing now refuses to mark them complete until verified field-level correction exists.
+- [x] The asynchronous export worker includes tenant-scoped, resumable `hr_reporting_lines` history in its declared source coverage and focused coverage tests.
+- [x] The asynchronous export worker enumerates subject file keys through the catalog with active legal-hold protection; object bytes remain explicitly outside the repository-only export claim until provider-backed export behavior is verified.
+- [x] The asynchronous export worker includes tenant-scoped, resumable `ai_chat_conversations` and `ai_chat_messages` sections with row-count and cursor/isolation coverage tests.
+- [x] The asynchronous export worker includes tenant-scoped, resumable `ai_feedback`, `ai_action_proposals`, `ai_jobs`, and `ai_usage_logs` sections with cursor/isolation coverage tests.
 
 ### 3. Physical and downstream deletion
 
@@ -62,6 +70,8 @@ Implementation subitems verified in this session:
 
 - [x] Organization purge physically deletes the organization row only after all configured adapters confirm, while retaining detached platform audit evidence.
 - [x] Migration `0928_organization_purge_audit_hardening` restricts the application role and protects the audit detachment function with tenant context.
+- [x] An executable application-role verifier checks that `UPDATE` and `DELETE` on `audit_logs` are revoked and an enabled immutability trigger exists; its contract self-test passes, while deployed query output remains required.
+- [x] Migration `0930_audit_logs_append_only_trigger` adds the database trigger and safely replaces the detachment function in a new migration, without modifying the already-journaled `0928` migration.
 
 ### 4. Retention and legal holds
 
@@ -78,6 +88,10 @@ Implementation subitems verified in this session:
 - [x] Payroll policies preserve immutable financial records and emit an auditable protected outcome.
 - [x] HR retention processing remains tenant-scoped, bounded, and covered by focused tests.
 - [x] `CronHrRetentionService` reads active `hr_retention_policies`, applies document/payroll outcomes, and emits retention audit rows; scheduled deployed execution remains open.
+- [x] The retention coverage verifier classifies `hr_reporting_lines` as KEEP-FOREVER, with the decision documented in [RETENTION-POLICY.md](../RETENTION-POLICY.md), so the measured high-growth inventory has no unclassified source.
+- [x] A read-only run against the configured database at the 1 MB threshold reported 10/10 high-growth tables covered or KEEP-FOREVER with zero uncovered tables; this is inventory evidence only and is not treated as a deployed retention drill.
+- [x] The retention-coverage gate fails closed for invalid thresholds, validates matrix entries in self-test, and scans ordinary plus partitioned table relations; this is repository coverage evidence only.
+- [x] Partition children resolve to their parent retention policy and the verifier emits the policy table used for each measured relation; this remains repository classification evidence only.
 
 ### 5. Residency, transfers, subprocessors, and incident obligations
 
@@ -95,6 +109,11 @@ Implementation subitems verified in this session:
 - [ ] Store signed policy decisions using the [approval/evidence record template](../decisions/README.md); do not mark a policy done without that record.
 - [ ] Store one redacted evidence bundle for the deployed drills containing commit, environment identity, dataset shape, command/result output, timestamps, and artifact hashes.
 
+Implementation subitems verified in this session:
+
+- [x] The repository evidence collector runs the ten reproducible compliance/migration checks, records commit/environment metadata and artifact hashes, redacts tested secret formats, and never upgrades repository self-tests into deployed evidence; `--deployed` only records an operator-declared environment for future real drills.
+- [x] S05 migration changes pass the migration-discipline and migration-rollback gates; intentionally irreversible changes are explicitly declared and `0930` has a documented rollback artifact.
+
 ## Exit criteria
 
 - [ ] Every required subject-rights, retention, and legal-hold drill passes in a deployed disposable environment with safely redacted reproducible evidence.
@@ -106,19 +125,36 @@ Implementation subitems verified in this session:
 
 ## Current status - 2026-09-01
 
-Implementation evidence is present for operator grant primitives, customer/billing data-plane
-guards, GDPR request jobs, legal-hold checks, storage-key purge, and selected retention workers.
+Implementation evidence is present for operator grant primitives (including stale pending-grant
+expiry), customer/billing data-plane
+guards, GDPR request jobs (including AI chat export sections), legal-hold checks, storage-key purge, and selected retention workers.
 
 S05 is **INCOMPLETE**. The remaining blockers are deployed drill evidence, exhaustive export,
-physical and downstream purge proof, complete document/payroll retention coverage, the
-audit-log privilege finding, and named Product/Security/
-Privacy-DPO/Operations/Legal/Finance approvals. CRM and Inventory remain intentionally excluded.
+physical and downstream purge proof, complete deployed document/payroll retention execution, and named
+Product/Security/Privacy-DPO/Operations/Legal/Finance approvals. The read-only verifier reached
+the configured `streamline_app` role and confirmed `UPDATE`/`DELETE` are denied, but reported no
+enabled `audit_logs` trigger in that environment; migration `0930` remains unapplied there.
+CRM and Inventory remain intentionally excluded.
 
-Verified in this session: 19 focused suites and 173/173 tests passed across operator access,
+Verified in this session: the current focused run passed 18 suites and 169/169 tests across operator access,
 operator data-plane routes, GDPR export/purge, legal holds, organization purge, audit
 immutability, rectification validation, and HR retention. Migration and compliance self-tests
-also pass. These results are repository evidence only and do not satisfy the deployed-environment
-or approval gates above.
+also pass. The S05 evidence collector self-test passes and its ten checks pass; the generated
+bundle is repository-only and explicitly refuses an unmarked deployed claim. These results are
+repository evidence only and do not satisfy the deployed-environment or approval gates above.
 
 The authoritative cross-program checklist remains [PRD-10-10-TODO.md](../PRD-10-10-TODO.md);
 its S05 and final release gates must remain unchecked until the evidence above exists.
+
+## External evidence handoff
+
+These commands require authorized disposable/deployed infrastructure and must be run by the
+responsible operator; local self-tests do not satisfy them:
+
+| Gate | Command / evidence | Accountable owner |
+|---|---|---|
+| Application-role audit immutability | `APP_DATABASE_URL=... pnpm check:audit-log-privileges`; retain redacted JSON output showing the actual role, denied `UPDATE`/`DELETE`, and enabled trigger. The current configured role reported denied mutations but no enabled trigger, so this gate remains open until `0930` is deployed and rechecked. | Operations + Security |
+| Subject-rights and legal-hold drills | `pnpm compliance:drill`, `pnpm drill:export`, `pnpm drill:erasure`, and the correction/ownership-transfer cases; retain disposable-environment output | Privacy/DPO + Operations |
+| Storage and downstream purge | Run the configured storage/provider adapters and retain object-list-before/after, retry, absence, mirror, analytics, and cache evidence | Operations |
+| Retention scheduling and PITR | `pnpm check:retention-coverage`, deployed retention sweep logs, and `pnpm drill:pitr`; retain scheduler identity, timestamps, and restore/delete results | Operations + Finance |
+| Policy approval | Copy `../decisions/README.md` to a dated signed record and complete all accountable approver rows and residual-risk dispositions | Product, Security, Privacy/DPO, Legal, Finance |

@@ -34,6 +34,14 @@ Migration `0747` applied. Tables: `operator_access_grants` — schema at
 **What is NOT built:**
 - No `OperatorAuditInterceptor` — individual API calls are logged by the guard, but a
   dedicated interceptor (diffing data accessed) is not implemented.
+- No tenant notification dispatch is wired to the operator-grant lifecycle. The recipient
+  population, mandatory channel, and customer-facing disclosure still require an approved policy;
+  the existing notification catalog cannot be treated as that decision.
+- No emergency exception/bypass path exists. Requests without a normal, two-person grant are
+  denied by the existing guard; adding an emergency path requires an approved authority, scope,
+  duration, and post-incident review procedure.
+- No periodic review worker or selected review cadence exists. The expiry sweep only closes stale
+  pending requests and does not replace the unresolved monthly-versus-quarterly governance choice.
 
 **Current repository data-plane routes:**
 
@@ -77,7 +85,8 @@ The operator must choose:
 | Auto-expiry of pending grants | Never | 24 hours | 48 hours |
 
 Current max grant duration: 4 hours (`MAX_GRANT_DURATION_MS` in `platform-operator-access.service.ts`).
-The four-hour limit is implemented; named Product/Security approval and review evidence remain required.
+The four-hour limit and pending-grant expiry sweep are implemented; named Product/Security approval
+and the operator-selected pending-grant/review cadence remain required.
 
 **Recommended defaults:** Option B throughout. Dual control prevents insider threat from a single
 compromised operator account. 4-hour sessions cover a typical incident response window. 20-char
@@ -102,7 +111,7 @@ Tables with retention-related data:
 - `hr_retention_policies` — exists; schema at `backend/src/db/schema/hr/governance.ts`. The
   `CronHrRetentionService` reads active policies and applies supported outcomes in bounded batches.
 - `hr_legal_holds` + `organization_legal_holds` — exist and are enforced by `GdprService` and
-  `purge-user.mjs`. Verified working: legal-hold drill PASS 2026-09-01.
+  `purge-user.mjs`. Repository/dry-run legal-hold checks PASS 2026-09-01; deployed drill evidence remains open.
 - `audit_logs.metadata` — stores contextual metadata per action. The `user.registered` action stores
   `{ email, companyName }` — this is PII. Operator must decide whether this is within the approved
   inventory and lawful basis.
@@ -357,9 +366,13 @@ pnpm -C backend compliance:drill
 ```bash
 # Confirm no DELETE/UPDATE on audit_logs via the code-level spec
 node ./node_modules/jest/bin/jest.js src/modules/platform/audit-log-immutability.spec.ts --maxWorkers=1 --no-coverage
-# Expected: 6 passed
+# Expected: the focused audit immutability suite passes
 
 # Confirm streamline_app privileges on audit_logs (read-only probe)
+# Preferred verifier (uses APP_DATABASE_URL and also checks the enabled trigger):
+node --env-file-if-exists=.env src/scripts/verify-audit-log-privileges.mjs
+# The inline DATABASE_URL probe below is retained only as historical context;
+# do not use the owner connection as evidence for application-role privileges.
 node --input-type=module << 'EOF'
 import { config } from 'dotenv'; config({ path: '.env' });
 import postgres from 'postgres';
@@ -372,8 +385,10 @@ const priv = await sql`
 console.log('streamline_app privileges on audit_logs:', priv.map(r => r.privilege_type));
 await sql.end();
 EOF
-# Recorded result in the prior runbook snapshot (2026-09-01): DELETE, INSERT, SELECT, UPDATE
-# FINDING P1: DELETE and UPDATE should be revoked — see §Handoffs
+# Recorded result from the configured environment (2026-09-01): role=streamline_app, UPDATE=false, DELETE=false, trigger_present=false.
+# The result above supersedes any earlier privilege snapshot in this runbook; the remaining P1 is the absent enabled trigger, not app-role UPDATE/DELETE grants.
+# FINDING P1: the enabled append-only trigger is absent — see §Handoffs; the configured
+# application role already reports UPDATE=false and DELETE=false.
 ```
 
 ### Step 6 — Object storage erasure (manual — not scripted)
@@ -395,16 +410,16 @@ node src/scripts/audit-storage-keys.mjs --subject "$SUBJECT_EMAIL"
 | Export | RESULT: PASS; 0 cross-tenant rows |
 | Erasure | RESULT: PASS; 0 residual rows in simulation |
 | Compliance audit | All required audit actions present |
-| Immutability | 6 specs pass; privilege list noted for migration handoff |
+| Immutability | Focused specs pass; application-role verifier confirms denied UPDATE/DELETE; trigger deployment remains open |
 | Object storage | Adapter enumerates/deletes/retries/verifies keys in code; deployed provider evidence and failed-key evidence are still required |
 
 ### Known gaps owned by Ticket S05
 
-1. Export worker is resumable by stable per-section cursor, but it only exports the currently implemented sections (memberships, employment, data requests, legal holds, and audit entries); complete subject-data inventory and deployed evidence are still required.
+1. Export worker is resumable by stable per-section cursor and covers the declared repository sources, including reporting-line history; object bytes, sources outside the repository catalog, and deployed evidence are still required.
 2. Object storage purge enumerates all pages, retries failed deletes, and verifies absence when the adapter exposes `fileExists`; live configuration and immutable evidence are missing, and failed keys remain release-blocking.
 3. Database rows adapter physically deletes the organization row after adapter confirmation and
    retains detached platform audit evidence; deployed database and dependent-row evidence remain required.
-4. `CronHrRetentionService` reads `hr_retention_policies`, but the repository covers only selected record types and deployed scheduling/execution are not evidenced.
+4. `CronHrRetentionService` reads `hr_retention_policies` and the coverage matrix has no unclassified measured high-growth table, but deployed scheduling/execution and policy-owner approval are not evidenced.
 
 ---
 
