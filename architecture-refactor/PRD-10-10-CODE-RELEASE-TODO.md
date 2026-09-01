@@ -74,6 +74,104 @@ Current reconciliation count:
 
 - Current source proves additional release blockers in token-signing authority, tenant-composite foreign keys, Home access locality, TanStack cancellation/query-key/cache-shape correctness, frontend command authorization, Chat scale/concurrency, Calendar synchronization durability, Knowledge comment/review ACLs and durable notification fanout. Their exact acceptance criteria are added to the owning sections below.
 
+## Architecture-review candidate coverage — 2026-09-01
+
+This section durably incorporates every candidate from the temporary visual architecture review. The HTML report is presentation evidence only and is not required for execution. The checkboxes in the owning sections below remain the single completion controls, so these findings are not counted twice.
+
+### AR-01 — Isolate token authority behind the Auth seam
+
+- **Evidence:** `frontend/lib/auth.ts:413-430` reads `BACKEND_JWT_SECRET` and signs HS256 bearer tokens; `backend/src/common/auth/jwt-auth.guard.ts:74-114` verifies identities and organization claims with the same secret.
+- **Verdict / strength:** REPLACE · P0 · Strong · ports and adapters.
+- **Current shallow shape:** frontend token issuance and backend verification share signing authority across the seam.
+- **Target deep shape:** one Auth module owns issuance, rotation, revocation and verification; frontend callers receive tokens through a narrow interface and never possess signing authority.
+- **Concrete failure prevented:** compromise or environment leakage in the frontend runtime cannot forge arbitrary user or organization identities across tenants.
+- **Smallest safe change:** introduce isolated backend issuance and asymmetric or equivalently isolated verification, migrate frontend sessions to exchange/receive short-lived tokens, then remove the shared signing secret from every frontend runtime.
+- **Compatibility/migration:** support a bounded dual-verification rotation window, identify keys, expire old tokens naturally, revoke compromised sessions and remove HS256 only after old-token telemetry reaches zero.
+- **Completion controls:** Authentication token-authority/token-verification criteria in section 10.1 plus session/revocation/security tests in sections 6 and 11.
+- **Depth wins:** locality concentrates authority in one module; leverage protects every backend caller; the Auth interface becomes the test surface.
+
+### AR-02 — Make tenant relationship integrity canonical
+
+- **Evidence:** tenant-owned single-column relationships remain in `db/schema/build/ticket-core.ts:96`, `db/schema/billing/invoice-snapshot.ts:40`, `db/schema/billing/commercial-catalog.ts:120` and `db/schema/billing/proration-ledger.ts:22`; redundant single/composite declarations remain in `db/schema/kb/pages.ts:71-89` and `db/schema/chat/chat-message-tables.ts:45-57`.
+- **Verdict / strength:** REPAIR and CONSOLIDATE · P0/P1 · Strong · in-process.
+- **Current shallow shape:** application queries carry tenant predicates while some database relationships validate only an identifier; duplicate constraints split the integrity truth.
+- **Target deep shape:** the schema module enforces one canonical `(org_id, child_id) -> (org_id, id)` relationship at the tenant seam, backed by a catalog gate.
+- **Concrete failure prevented:** a valid identifier from one organization cannot be attached to a row owned by another organization, and later schema generation cannot reintroduce weaker constraints.
+- **Smallest safe change:** inventory/classify every tenant-to-tenant FK, add parent composite uniqueness, install `NOT VALID` composite constraints, validate them, then dependency-prove and remove redundant single-column constraints.
+- **Compatibility/migration:** clean existing violations before validation; use lock timeouts and staged migrations; require cold-bootstrap and upgraded-catalog parity before deleting any constraint.
+- **Completion controls:** the three tenant-relationship criteria in section 4 and the owning Build, Billing, Chat and Knowledge schema criteria in section 10.
+- **Depth wins:** locality moves tenant integrity into constraints; leverage protects every write; the deletion test removes redundant constraint implementations.
+
+### AR-03 — Deepen Home composition without absorbing domain implementation
+
+- **Evidence:** `backend/src/modules/dashboard/dashboard-section-registry.ts` and `frontend/lib/home/home-sections.ts` maintain separate section facts; `frontend/app/(authenticated)/layout.tsx:38-42` performs two access reads; eight assertions in `backend/src/modules/dashboard/dashboard-section-isolation.spec.ts` fail after the membership lookup added at `dashboard-personal.service.ts:53`.
+- **Verdict / strength:** CONSOLIDATE and REPAIR · P1 · Worth exploring · in-process.
+- **Current shallow shape:** duplicated section registries, repeated access acquisition and stale test adapters force callers to understand composition rules.
+- **Target deep shape:** one authoritative, contract-checked Home composition module owns section metadata and reuses one request-local access result while Chat, Calendar, Inbox and Notifications remain independent deep modules.
+- **Concrete failure prevented:** frontend/backend access drift, duplicate `/me/access` load, unauthorized or missing widgets and full-Home failure when one source degrades.
+- **Smallest safe change:** generate or contract-check section metadata from one source, seed hydration from the SSR authority result, reuse one membership resolution and repair—not weaken—the isolation tests.
+- **Compatibility/migration:** preserve existing route URLs and response shapes while moving metadata; no domain schema migration is required.
+- **Completion controls:** Home access-locality/query-efficiency/test/access-reuse criteria in section 10.3, route/data criteria in sections 7.1 and 8, and Home performance budgets in section 12.
+- **Depth wins:** locality concentrates section facts; leverage aligns every widget; tests exercise the live Home interface.
+
+### AR-04 — Deepen the TanStack data module
+
+- **Evidence:** `frontend/hooks/api/notifications-inbox.ts:107-196,254-300` patches an infinite-query cache as `Notification[]`; no audited query function forwards the supported abort signal from `frontend/lib/api-client.ts:222-233`; local/ad-hoc query keys include `hooks/api/build/custom-states.ts:31` and authenticated Chat keys redundantly carry organization identity.
+- **Verdict / strength:** REPAIR and CONSOLIDATE · P1 · Strong · local-substitutable.
+- **Current shallow shape:** callers separately learn cache shape, query identity, cancellation, permission and invalidation rules.
+- **Target deep shape:** the Query module absorbs canonical keys, abort propagation, authorized commands and typed cache-shape patch/rollback behavior behind a smaller interface.
+- **Concrete failure prevented:** notification mutations cannot crash on `old.map`, abandoned navigation cannot waste backend work, organization/query identities cannot collide and permission changes cannot leave callable commands.
+- **Smallest safe change:** repair infinite-page patching first, then enforce signal propagation, migrate local keys to the canonical factory and classify every non-universal command through the authorized-mutation seam.
+- **Compatibility/migration:** preserve public hook return shapes during migration; invalidate or clear old key namespaces at rollout; no database migration is required.
+- **Completion controls:** the four added criteria in section 8, module-specific HR/Build/Billing/Calendar/Notifications criteria and frontend release criteria in section 10.18.
+- **Depth wins:** locality keeps Query correctness together; leverage fixes all callers once; the Query interface becomes the shared test surface.
+
+### AR-05 — Move growing fanout behind a durable delivery seam
+
+- **Evidence:** `backend/src/modules/chat/chat-huddles.service.ts:151-254` retains all channel members and launches per-member realtime/push work; notification delivery performs growing per-recipient persistence; `backend/src/modules/calendar/calendar.service.ts:139-165,266-281,393-403` records no durable provider-sync intent; Organization, Build and Knowledge contain fire-and-forget `NotificationDispatchService.emit` callers.
+- **Verdict / strength:** REPLACE internal implementation while KEEPING the existing outbox/delivery direction · P1 · Strong · ports and adapters.
+- **Current shallow shape:** request and worker callers own recipient accumulation, provider loops and best-effort failure behavior.
+- **Target deep shape:** one durable delivery module owns intent, recipient cursors, bounded batches, checkpoints, retries, backpressure, cancellation and terminal state; provider adapters sit behind its seam.
+- **Concrete failure prevented:** broadcasts and huddles cannot exhaust memory/pools, process crashes cannot lose intent, retries cannot duplicate delivery and Calendar cannot remain permanently divergent after transient provider failure.
+- **Smallest safe change:** persist intent atomically, consume by tenant/recipient cursor with bounded bulk writes, replace per-recipient request loops and expose synchronization/delivery state.
+- **Compatibility/migration:** add job/intent/checkpoint state additively, dual-write during cutover where necessary, drain old work and remove best-effort paths only after replay evidence.
+- **Completion controls:** fire-and-forget prohibition in section 7, Chat huddle/fanout criteria in section 10.12, Calendar sync criterion in section 10.13, Notification fanout criterion in section 10.15 and shared-consumer criterion in section 10.17.
+- **Depth wins:** locality centralizes delivery semantics; leverage covers every provider; multiple provider adapters justify the seam.
+
+### AR-06 — Concentrate Knowledge visibility at the data seam
+
+- **Evidence:** `backend/src/modules/kb/help-centre/kb-comments.service.ts:14-80` lists/mutates comments without the article visibility predicate and without pagination; `kb/wiki/kb-page-comments.service.ts:97-139` trusts a caller-supplied administrative boolean and does not re-authorize the page; `kb/wiki/kb-page-reviews.service.ts:149-203` returns org-wide due reviews behind a silent 100-row cap.
+- **Verdict / strength:** REPAIR · P0/P1 · Strong · in-process.
+- **Current shallow shape:** page reads, comment mutations, reviews and retrieval cross different authorization implementations.
+- **Target deep shape:** one Knowledge access module applies the same page/article visibility implementation to pages, comments, reviews, attachments and retrieval before data crosses the seam.
+- **Concrete failure prevented:** callers cannot disclose or mutate restricted content after access revocation, and due work cannot disappear after row 100.
+- **Smallest safe change:** require caller context in comment/review implementations, reuse direct-read visibility predicates, remove authorization booleans and keyset-page comments/due reviews.
+- **Compatibility/migration:** introduce cursor response contracts with a bounded compatibility window; no destructive schema migration is required unless missing tenant-composite relationships are found under AR-02.
+- **Completion controls:** the three Knowledge criteria in section 10.16 plus ACL/search and pagination criteria in sections 5, 6 and 12.3.
+- **Depth wins:** locality keeps ACL knowledge together; leverage protects every child path; revocation tests cross the same interface as production callers.
+
+### AR-07 — Make Payroll-to-Accounting crash-consistent
+
+- **Evidence:** `backend/src/modules/payroll/payout/locking.service.ts:64-103` calls `PayrollPostingService.postFinalized` inside the Payroll lock transaction; `backend/src/modules/accounting/posting/finance-posting.service.ts:139` opens a separate top-level transaction.
+- **Verdict / strength:** REPAIR · P0 financial correctness · Strong · ports and adapters.
+- **Current shallow shape:** two transaction owners sit across one posting seam, allowing the Accounting implementation to commit before the Payroll implementation finishes.
+- **Target deep shape:** one posting module owns the financial invariant through a shared transaction or an atomically committed durable intent with an idempotent consumer.
+- **Concrete failure prevented:** Accounting cannot retain a journal for a Payroll run whose lock rolled back, and retries cannot duplicate a journal.
+- **Smallest safe change:** choose shared-transaction posting or transactional outbox intent, then add induced outer-rollback, crash and replay tests before removing the nested path.
+- **Compatibility/migration:** preserve the existing journal idempotency key; if an outbox is used, add event state and backfill/reconcile any pre-existing dangling journal before cutover.
+- **Completion controls:** Payroll crash-consistency criterion in section 10.7, Accounting immutable-posting criteria in section 10.11 and transaction/idempotency criteria in sections 5.1 and 7.
+- **Depth wins:** locality keeps the financial invariant together; leverage makes every retry safe; the posting interface becomes the failure-injection test surface.
+
+### Architecture priority
+
+1. AR-01 token authority — widest cross-tenant blast radius.
+2. AR-02 tenant relationship integrity — database-enforced isolation.
+3. AR-04 notification cache-shape repair — confirmed user-facing runtime failure.
+4. AR-07 Payroll/Accounting atomicity — financial correctness.
+5. AR-06 Knowledge ACL locality — restricted-content exposure risk.
+6. AR-05 durable fanout — scale and delivery correctness.
+7. AR-03 Home locality — access drift, duplicate load and broken proof.
+
 ## Immediate code-level release candidate
 
 ### 1. One-commit release verification
