@@ -83,8 +83,8 @@ The operator must choose:
 | Review cadence | Never | Monthly | Quarterly |
 | Auto-expiry of pending grants | Never | 24 hours | 48 hours |
 
-Current max grant duration: 24 hours (`MAX_GRANT_DURATION_MS` in `platform-operator-access.service.ts`).
-The recommended value is 4 hours. This is an engineering change requiring the operator's sign-off.
+Current max grant duration: 4 hours (`MAX_GRANT_DURATION_MS` in `platform-operator-access.service.ts`).
+The four-hour limit is implemented; named Product/Security approval and review evidence remain required.
 
 **Recommended defaults:** Option B throughout. Dual control prevents insider threat from a single
 compromised operator account. 4-hour sessions cover a typical incident response window. 20-char
@@ -401,8 +401,8 @@ node src/scripts/audit-storage-keys.mjs --subject "$SUBJECT_EMAIL"
 
 ### Known gaps owned by Ticket S05
 
-1. Export worker not implemented — `hr_data_requests` tracks requests; no worker produces an actual data file.
-2. Object storage purge adapter returns FAILED — not yet implemented.
+1. Export worker is implemented but not exhaustive — it produces a file for a bounded set of sections and marks capped output as truncated; a complete subject-data inventory and resumable export are still required.
+2. Object storage purge is implemented for enumerated keys, but live configuration and immutable evidence are missing; failed keys remain release-blocking.
 3. Database rows adapter marks `statusV2=PURGED` as a soft flag only — physical deletion not implemented.
 4. No background retention-sweep service — `hr_retention_policies` are inserted but no worker reads them.
 
