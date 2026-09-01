@@ -19,9 +19,9 @@ It does not claim cloud isolation, physical replicas, PITR, regional recovery, l
 Current reconciliation count:
 
 - Verified completed invariants: **15**.
-- Immediate code-level criteria still open: **180**.
+- Immediate code-level criteria still open: **212**.
 - Deferred production/compliance criteria still open: **34**.
-- The 180 immediate criteria are acceptance checks, not 180 confirmed defects; fresh execution may close a criterion without a code change when its implementation already passes.
+- The 212 immediate criteria are acceptance checks, not 212 confirmed defects; fresh execution may close a criterion without a code change when its implementation already passes.
 
 ## Product constraints
 
@@ -323,6 +323,51 @@ Mandatory folder/file evidence for **every** module below:
 - [ ] Resolve retention for `helpdesk_tickets`, `performance_reviews`, `mail_message_metadata` and `announcements` with bounded policy or explicit KEEP-FOREVER configuration.
 - [ ] Prove retention workers are code-scheduled, bounded/resumable, idempotent, audited, retryable and emit failure events.
 - [ ] Prove document, payroll, export, purge and retention workflows never silently skip or truncate growing work.
+
+### 12. Light-speed performance and AI
+
+The defaults below are code-release budgets on a production build with the documented seeded dataset. A module may use a stricter budget. A looser exception requires measured evidence, a concrete reason, an owner and an expiry date; budgets may never be silently increased to make a gate pass.
+
+#### 12.1 Backend, database and cache budgets
+
+- [ ] Publish a benchmark manifest for every module: dataset size, concurrency, warm/cold state, machine/container limits, command, repetitions, p50/p95/p99, error rate and release SHA.
+- [ ] Keep application-controlled overhead for ordinary authenticated reads/mutations at p95 ≤ 300 ms and approved complex aggregate/search operations at p95 ≤ 800 ms, excluding internet/provider time.
+- [ ] Keep ordinary database statements at p95 ≤ 50 ms and explicitly approved complex statements at p95 ≤ 200 ms on the production-shaped seed; retain plans for every exception.
+- [ ] Keep cache-hit application paths at p95 ≤ 100 ms while preserving authorization correctness; a cache miss or Redis outage must degrade safely without a request storm.
+- [ ] Prove Home loads sections concurrently and independently, renders available sections without waiting for the slowest one and never starts an unbounded fanout.
+- [ ] Prove Chat, Calendar, Inbox and Notifications list, unread/count, range/history and realtime-token paths meet their budgets without table scans, N+1 or per-item cache/database calls.
+- [ ] Move compression, previews, malware scanning, exports, ingestion, reminders and other CPU/IO-heavy work off request threads; return a durable job/status contract promptly.
+- [ ] Verify connection-pool, worker-concurrency, queue, provider and per-tenant limits apply backpressure instead of exhausting memory, sockets or database connections.
+- [ ] Add automated performance-regression gates for declared critical paths; fail on statistically meaningful latency, query-count, buffer, payload or memory regression.
+
+#### 12.2 Next.js, TanStack Query and perceived speed
+
+- [ ] Meet Core Web Vitals targets on production builds for in-scope authenticated routes: LCP ≤ 2.5 s, INP ≤ 200 ms and CLS ≤ 0.1 at the defined reference viewport/device profile.
+- [ ] Show navigation, skeleton, optimistic or queued feedback within 100 ms of user intent; never leave an action apparently unresponsive while work runs.
+- [ ] Record route-level JavaScript, CSS, server payload, image/font and third-party budgets; lazy-load module editors, charts, calendars, chat media and AI interfaces not required for first render.
+- [ ] Eliminate request waterfalls where dependencies are known, prefetch only likely/authorized routes and prevent speculative prefetch from leaking or overloading tenant data.
+- [ ] Prove TanStack Query deduplicates concurrent callers, cancels abandoned reads, avoids retry storms, retains useful previous pages and invalidates only affected tenant/module keys.
+- [ ] Virtualize or incrementally render large chat, calendar, inbox, notification, directory, HR and Build collections while preserving accessibility and cursor correctness.
+- [ ] Optimize images, fonts and eligible static assets, use HTTP compression for text responses and keep upload/media transformations asynchronous.
+- [ ] Measure memory, render count, long tasks and hydration mismatches on representative Home/module journeys; eliminate avoidable rerenders and main-thread blocking.
+
+#### 12.3 AI gateway, retrieval and streaming
+
+- [ ] Route every AI feature through one backend AI gateway with small model/provider interfaces, centralized timeouts, usage accounting, policy, redaction and observable error modes; no frontend direct-provider calls.
+- [ ] Keep AI out of authentication and authorization decisions; deterministic RBAC and tenant/record ACL checks must finish before retrieval or provider invocation.
+- [ ] Reserve token-metered credits atomically before paid calls, settle actual input/output usage in milli-credits and refund only according to the documented failure contract.
+- [ ] Bound prompts, history, retrieved chunks, tool iterations, output tokens, concurrency and per-tenant/user rate; reject or summarize oversized context rather than consuming unbounded memory/cost.
+- [ ] Enforce tenant, subject, permission, document lifecycle and record ACL predicates inside keyword/vector retrieval before any chunk reaches the model.
+- [ ] Batch and deduplicate parsing, chunking and embeddings; make ingestion resumable/idempotent with leases, retries, cancellation, DLQ, progress and deletion/reindex propagation.
+- [ ] Stream text/tool progress to the client rather than buffering a complete answer; target application overhead before provider dispatch at p95 ≤ 250 ms and first visible streamed state within 100 ms.
+- [ ] Record provider time-to-first-token separately and target end-to-end p95 ≤ 2 s where the selected model/provider supports it; provider-bound exceptions belong in deferred evidence, not hidden in application latency.
+- [ ] Propagate client aborts, enforce deadlines and circuit breakers, and retry only replay-safe pre-stream operations; never duplicate a paid request or continue spending after cancellation.
+- [ ] Cache only explicitly cacheable AI artifacts using tenant, subject/ACL version, model, prompt/version, source revision and policy dimensions; invalidate on permission, content, model or prompt change.
+- [ ] Defend against prompt injection, unsafe tool arguments, SSRF and data exfiltration with allowlisted tools, validated arguments, output schemas, content controls and least-privilege execution.
+- [ ] Validate structured outputs, preserve citation/source integrity and show a safe partial/error state when the model, retrieval, tool or stream fails.
+- [ ] Verify AI frontend states for credit exhaustion, queueing, streaming, cancellation, retry, partial output, citation loading, provider failure and permission revocation without duplicate requests.
+- [ ] Emit tenant-safe metrics for queue time, application overhead, provider latency, time-to-first-token, tokens, credits/cost, cache hit, cancellation, retry and failure without logging prompts or sensitive content.
+- [ ] Run deterministic AI gateway/retrieval/stream tests plus representative provider-sandbox tests when credentials are available; prove identical authorization for direct document reads and AI-assisted retrieval.
 
 ## Immediate code-level final gate
 
