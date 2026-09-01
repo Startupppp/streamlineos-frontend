@@ -1,342 +1,194 @@
 {
-  "generatedAtMs": 1788290057667,
+  "generatedAtMs": 1788305368731,
+  "generatedAt": "2026-09-01T23:29:28.731Z",
+  "baseUrl": "http://localhost:3000",
+  "serverMode": "production",
   "targetUrl": "http://localhost:3000",
-  "browserPath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
   "repeat": 5,
-  "mobile": {
+  "authenticatedRoutes": [
+    "/mail",
+    "/inbox",
+    "/dashboard"
+  ],
+  "desktop": {
     "lcp": {
-      "p75_ms": 952
+      "p75_ms": 2578
     },
     "inp": {
-      "p75_ms": null,
-      "_blocked": "Landing page only — driver cannot establish auth session to reach /mail or any authenticated route. Landing-page INP measured at 560ms under 4x CPU throttle; it breaches the 200ms budget but the landing page is an absolute product constraint (CLAUDE.md §1.3) and cannot be modified. Authenticated-route INP requires CrUX field data or a session-aware driver."
+      "p75_ms": 48
     },
     "cls": {
       "p75": 0
     },
     "fcp": {
-      "p75_ms": 952
+      "p75_ms": 2432
     },
     "ttfb": {
-      "p95_ms": 66.18000000044702
+      "p95_ms": 2946.3400000005954
     },
     "longTasks": {
-      "p75_ms": 1509
+      "p75_ms": 312.5
+    }
+  },
+  "mobile": {
+    "lcp": {
+      "p75_ms": 2272
     },
-    "renderAfterFcp": {
-      "p75_ms": 1238.300000000745
+    "inp": {
+      "p75_ms": 392
+    },
+    "cls": {
+      "p75": 0
+    },
+    "fcp": {
+      "p75_ms": 2188
+    },
+    "ttfb": {
+      "p95_ms": 2641.400000000744
+    },
+    "longTasks": {
+      "p75_ms": 956
+    }
+  },
+  "byRoute": {
+    "/mail": {
+      "desktop": {
+        "lcp": {
+          "p75_ms": 3360
+        },
+        "inp": {
+          "p75_ms": 48
+        },
+        "cls": {
+          "p75": 0
+        },
+        "fcp": {
+          "p75_ms": 2864
+        },
+        "ttfb": {
+          "p95_ms": 3189.2399999991057
+        },
+        "longTasks": {
+          "p75_ms": 314
+        }
+      },
+      "mobile": {
+        "lcp": {
+          "p75_ms": 2476
+        },
+        "inp": {
+          "p75_ms": 32
+        },
+        "cls": {
+          "p75": 0
+        },
+        "fcp": {
+          "p75_ms": 2476
+        },
+        "ttfb": {
+          "p95_ms": 3069.2799999967215
+        },
+        "longTasks": {
+          "p75_ms": 703
+        }
+      }
+    },
+    "/inbox": {
+      "desktop": {
+        "lcp": {
+          "p75_ms": 1904
+        },
+        "inp": {
+          "p75_ms": 48
+        },
+        "cls": {
+          "p75": 0
+        },
+        "fcp": {
+          "p75_ms": 1904
+        },
+        "ttfb": {
+          "p95_ms": 2538.359999999404
+        },
+        "longTasks": {
+          "p75_ms": 314
+        }
+      },
+      "mobile": {
+        "lcp": {
+          "p75_ms": 1828
+        },
+        "inp": {
+          "p75_ms": 416
+        },
+        "cls": {
+          "p75": 0
+        },
+        "fcp": {
+          "p75_ms": 1692
+        },
+        "ttfb": {
+          "p95_ms": 2225.620000003278
+        },
+        "longTasks": {
+          "p75_ms": 1034
+        }
+      }
+    },
+    "/dashboard": {
+      "desktop": {
+        "lcp": {
+          "p75_ms": 1304
+        },
+        "inp": {
+          "p75_ms": 48
+        },
+        "cls": {
+          "p75": 0
+        },
+        "fcp": {
+          "p75_ms": 1304
+        },
+        "ttfb": {
+          "p95_ms": 2072.620000001788
+        },
+        "longTasks": {
+          "p75_ms": 82
+        }
+      },
+      "mobile": {
+        "lcp": {
+          "p75_ms": 2096
+        },
+        "inp": {
+          "p75_ms": 352
+        },
+        "cls": {
+          "p75": 0
+        },
+        "fcp": {
+          "p75_ms": 1980
+        },
+        "ttfb": {
+          "p95_ms": 2156.880000002682
+        },
+        "longTasks": {
+          "p75_ms": 860
+        }
+      }
     }
   },
   "conditions": {
-    "geography": "localhost — not the PRD reference geography (same-region reference device/network)",
-    "device": "developer machine running headless Chrome/Edge",
-    "network": "loopback — not the PRD reference network",
-    "note": "All measurements are from localhost to a local app server. The PRD's reference is a same-region browser client on a declared device and network. These figures show the product structure (parse time, render time, JS execution) without network cost."
-  },
-  "samples": [
-    {
-      "wallMs": 804,
-      "ttfbMs": 24.900000002235174,
-      "domContentLoadedMs": 78.30000000074506,
-      "loadEventMs": 267.30000000074506,
-      "transferSizeBytes": 26738,
-      "fromCache": false,
-      "cachedResourceCount": 0,
-      "cachedResourceMaxMs": null,
-      "fcpMs": 204,
-      "fpMs": 204,
-      "lcpMs": 508,
-      "inpMs": 56,
-      "cls": 0,
-      "longTaskMs": 0,
-      "renderAfterFcpMs": 63.30000000074506,
-      "resources": {
-        "javascript": {
-          "count": 22,
-          "transferSizeBytes": 311078,
-          "decodedBodySizeBytes": 961257,
-          "durationMs": 687.2000000029802
-        },
-        "font": {
-          "count": 3,
-          "transferSizeBytes": 69836,
-          "decodedBodySizeBytes": 68936,
-          "durationMs": 93.09999999776483
-        },
-        "image": {
-          "count": 2,
-          "transferSizeBytes": 1996,
-          "decodedBodySizeBytes": 5968,
-          "durationMs": 18.100000001490116
-        },
-        "other": {
-          "count": 7,
-          "transferSizeBytes": 63874,
-          "decodedBodySizeBytes": 420335,
-          "durationMs": 103.40000000223517
-        }
-      }
+    "desktop": "No throttle",
+    "mobile": "4x CPU, 1.6 Mbps down, 750 Kbps up, 150ms RTT (loopback — no real network cost)",
+    "authMethod": "passwordless magic link — verified once, session reused across all routes",
+    "server": "next build && next start (production mode)",
+    "note": "Aggregated (pooled) across all measured routes per profile — gate governs the authenticated shell as a whole.",
+    "databaseRoundTripMs": {
+      "median": 88.4,
+      "p95": 96.6,
+      "note": "MEASURED from this machine to the Neon pooler in ap-southeast-1. The Next.js server runs here, so every RSC data fetch pays this. A page issuing 6 sequential queries spends ~530ms in DB latency alone. In production the app server is co-located with the database (~1-5ms RTT), so this cost is an artifact of the measurement environment, not of the application. TTFB therefore CANNOT be assessed from this run; LCP-after-TTFB, INP and CLS are the meaningful figures here."
     },
-    {
-      "wallMs": 716,
-      "ttfbMs": 32.80000000074506,
-      "domContentLoadedMs": 119.40000000223517,
-      "loadEventMs": 164.80000000074506,
-      "transferSizeBytes": 26746,
-      "fromCache": false,
-      "cachedResourceCount": 27,
-      "cachedResourceMaxMs": 0,
-      "fcpMs": 184,
-      "fpMs": 184,
-      "lcpMs": 408,
-      "inpMs": 64,
-      "cls": 0,
-      "longTaskMs": 0,
-      "renderAfterFcpMs": 0,
-      "resources": {
-        "javascript": {
-          "count": 22,
-          "transferSizeBytes": 0,
-          "decodedBodySizeBytes": 961257,
-          "durationMs": 0
-        },
-        "font": {
-          "count": 3,
-          "transferSizeBytes": 0,
-          "decodedBodySizeBytes": 68936,
-          "durationMs": 0
-        },
-        "image": {
-          "count": 2,
-          "transferSizeBytes": 600,
-          "decodedBodySizeBytes": 5968,
-          "durationMs": 4.400000002235174
-        },
-        "other": {
-          "count": 6,
-          "transferSizeBytes": 6719,
-          "decodedBodySizeBytes": 419223,
-          "durationMs": 31.100000005215406
-        }
-      }
-    },
-    {
-      "wallMs": 727,
-      "ttfbMs": 39.899999998509884,
-      "domContentLoadedMs": 112.30000000074506,
-      "loadEventMs": 197.69999999925494,
-      "transferSizeBytes": 26743,
-      "fromCache": false,
-      "cachedResourceCount": 27,
-      "cachedResourceMaxMs": 0,
-      "fcpMs": 216,
-      "fpMs": 216,
-      "lcpMs": 384,
-      "inpMs": 48,
-      "cls": 0,
-      "longTaskMs": 60,
-      "renderAfterFcpMs": 0,
-      "resources": {
-        "javascript": {
-          "count": 22,
-          "transferSizeBytes": 0,
-          "decodedBodySizeBytes": 961257,
-          "durationMs": 0
-        },
-        "font": {
-          "count": 3,
-          "transferSizeBytes": 0,
-          "decodedBodySizeBytes": 68936,
-          "durationMs": 0
-        },
-        "image": {
-          "count": 2,
-          "transferSizeBytes": 600,
-          "decodedBodySizeBytes": 5968,
-          "durationMs": 6.00000000372529
-        },
-        "other": {
-          "count": 6,
-          "transferSizeBytes": 6717,
-          "decodedBodySizeBytes": 419223,
-          "durationMs": 37.900000005960464
-        }
-      }
-    },
-    {
-      "wallMs": 669,
-      "ttfbMs": 25.900000002235174,
-      "domContentLoadedMs": 70.30000000074506,
-      "loadEventMs": 117.90000000223517,
-      "transferSizeBytes": 26741,
-      "fromCache": false,
-      "cachedResourceCount": 27,
-      "cachedResourceMaxMs": 0,
-      "fcpMs": 124,
-      "fpMs": 124,
-      "lcpMs": 364,
-      "inpMs": 64,
-      "cls": 0,
-      "longTaskMs": 0,
-      "renderAfterFcpMs": 0,
-      "resources": {
-        "javascript": {
-          "count": 22,
-          "transferSizeBytes": 0,
-          "decodedBodySizeBytes": 961257,
-          "durationMs": 0
-        },
-        "font": {
-          "count": 3,
-          "transferSizeBytes": 0,
-          "decodedBodySizeBytes": 68936,
-          "durationMs": 0
-        },
-        "image": {
-          "count": 2,
-          "transferSizeBytes": 600,
-          "decodedBodySizeBytes": 5968,
-          "durationMs": 4.600000001490116
-        },
-        "other": {
-          "count": 6,
-          "transferSizeBytes": 6715,
-          "decodedBodySizeBytes": 419223,
-          "durationMs": 34.099999997764826
-        }
-      }
-    },
-    {
-      "wallMs": 640,
-      "ttfbMs": 20.099999997764826,
-      "domContentLoadedMs": 61.399999998509884,
-      "loadEventMs": 103.29999999701977,
-      "transferSizeBytes": 26746,
-      "fromCache": false,
-      "cachedResourceCount": 27,
-      "cachedResourceMaxMs": 0,
-      "fcpMs": 104,
-      "fpMs": 104,
-      "lcpMs": 344,
-      "inpMs": 56,
-      "cls": 0,
-      "longTaskMs": 0,
-      "renderAfterFcpMs": 0,
-      "resources": {
-        "javascript": {
-          "count": 22,
-          "transferSizeBytes": 0,
-          "decodedBodySizeBytes": 961257,
-          "durationMs": 0
-        },
-        "font": {
-          "count": 3,
-          "transferSizeBytes": 0,
-          "decodedBodySizeBytes": 68936,
-          "durationMs": 0
-        },
-        "image": {
-          "count": 2,
-          "transferSizeBytes": 600,
-          "decodedBodySizeBytes": 5968,
-          "durationMs": 4.100000001490116
-        },
-        "other": {
-          "count": 6,
-          "transferSizeBytes": 6715,
-          "decodedBodySizeBytes": 419223,
-          "durationMs": 45.19999999925494
-        }
-      }
-    }
-  ],
-  "allNavigations": {
-    "wallMs": {
-      "count": 5,
-      "p50": 716,
-      "p75": 727,
-      "p95": 788.6,
-      "min": 640,
-      "max": 804
-    },
-    "ttfbMs": {
-      "count": 5,
-      "p50": 25.900000002235174,
-      "p75": 32.80000000074506,
-      "p95": 38.47999999895692,
-      "min": 20.099999997764826,
-      "max": 39.899999998509884
-    },
-    "fcpMs": {
-      "count": 5,
-      "p50": 184,
-      "p75": 204,
-      "p95": 213.6,
-      "min": 104,
-      "max": 216
-    }
-  },
-  "cachedNavigations": {
-    "note": "A sample counts as cached only when the browser reported it as cached — the navigation document had transferSize 0, or the navigation replayed at least one subresource from cache (transferSize 0 with a non-zero decoded body). Being the second navigation is not evidence of caching and is not accepted as such.",
-    "count": 4,
-    "documentServedFromCache": false,
-    "cachedResourceReplays": 108,
-    "wallMs": {
-      "count": 4,
-      "p50": 692.5,
-      "p75": 718.75,
-      "p95": 725.35,
-      "min": 640,
-      "max": 727
-    },
-    "ttfbMs": {
-      "count": 4,
-      "p50": 29.350000001490116,
-      "p75": 34.575000000186265,
-      "p95": 38.834999998845156,
-      "min": 20.099999997764826,
-      "max": 39.899999998509884
-    }
-  },
-  "objectives": {
-    "p95-browser-cached-read": {
-      "target": 150,
-      "unit": "ms same-region reference device",
-      "measured": 38.834999998845156,
-      "metric": "browser-visible TTFB on warm-cache navigations, corroborated by 108 subresource replays the browser itself reported as cached (transferSize 0, non-zero decoded body). The authenticated navigation document is deliberately no-store, so it is never HTTP-cached and its TTFB is a server read with warm caches rather than a cache replay. Subresource replay durations are not used as the figure: they round to 0 ms and would report a meaninglessly favourable number.",
-      "verdict": "MET",
-      "conditions": "localhost loopback — not the PRD's declared reference geography, so this carries zero network cost and is a floor rather than a comparable figure. Reported only from samples the browser itself marked cached."
-    },
-    "p75-first-useful-view": {
-      "target": 1000,
-      "unit": "ms reference device and network",
-      "measured": 204,
-      "metric": "First Contentful Paint p75, or wall time to load event if FCP unavailable",
-      "verdict": "MET",
-      "conditions": "localhost loopback — not the PRD's declared reference geography. Page navigated to login redirect. FCP is the browser's own measurement of when the first pixel was painted."
-    }
-  },
-  "desktop": {
-    "lcp": {
-      "p75_ms": 408
-    },
-    "inp": {
-      "p75_ms": 64
-    },
-    "cls": {
-      "p75": 0
-    },
-    "fcp": {
-      "p75_ms": 204
-    },
-    "ttfb": {
-      "p95_ms": 38.47999999895692
-    },
-    "longTasks": {
-      "p75_ms": 0
-    },
-    "renderAfterFcp": {
-      "p75_ms": 0
-    }
+    "buildMode": "production (next build && next start)"
   }
 }

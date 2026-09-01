@@ -206,6 +206,18 @@ function main() {
 
   printBudgets();
 
+  if (results.serverMode !== "production") {
+    console.error(
+      `\ncheck-web-vitals-budget: FAIL — serverMode is ${JSON.stringify(results.serverMode ?? null)}, expected "production".` +
+        `\n  A next dev server compiles on demand and skips production optimisation, so its` +
+        `\n  LCP, FCP and TTFB are not the app's. frontend/CLAUDE.md section 1 requires` +
+        `\n  next build && next start for this. Re-measure against a production server and` +
+        `\n  record serverMode: "production".`,
+    );
+    process.exitCode = 1;
+    return;
+  }
+
   const measuredRoutes = Array.isArray(results.authenticatedRoutes) ? results.authenticatedRoutes : [];
   if (measuredRoutes.length === 0) {
     console.error(
