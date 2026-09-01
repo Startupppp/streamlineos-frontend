@@ -16,20 +16,57 @@ their decision (name, date, rationale), and file the result as evidence.
 
 **PRD requirement (§20):** "Operator/support access is time-bound, approved, reasoned and audited."
 
-### Current implementation state
+### Current implementation state (updated 2026-09-01)
 
 Migration `0747` applied. Tables: `platform_operator_access_grants` — schema at
 `backend/src/db/schema/common/platform-operator-grants.ts`. `assertGrant` requires
 `status = 'active'`. DB CHECK `approver_id != granted_by` is convalidated (no self-approval).
 
-**What is NOT built:**
-- No `OperatorAccessService` — grants must be inserted directly into `platform_operator_access_grants`.
-- No `OperatorSessionGuard` — time-bound expiry is not enforced at the HTTP layer.
-- No `OperatorAuditInterceptor` — individual API calls under an operator session are not audited.
-- No content-blind default — a platform operator with a valid JWT can read any route their role permits.
+**What IS built (2026-09-01):**
+- `PlatformOperatorAccessService` — full grant lifecycle: create, approve (dual-control), reject,
+  revoke, assertGrant (checks status + expiry + revokedAt in one query), assertAndLog (asserts +
+  writes `operator_access_log`). 34 tests pass, all four guard behaviors proven with bite proofs.
+- `OperatorSessionGuard` — reads `req.user.userId` (JWT sub) + `:orgId` route param, calls
+  `assertAndLog`, writes a log row on every privileged call. 7 tests, all bite proofs labeled.
+- `@RequireOperatorGrant(scope)` — decorator, attached to the guard via `Reflector`.
 
-Current enforcement level: DB schema enforces dual-approval and self-approval prevention.
-Application layer enforcement: NONE yet.
+**What is NOT built:**
+- No `OperatorAuditInterceptor` — individual API calls are logged by the guard, but a
+  dedicated interceptor (diffing data accessed) is not implemented.
+
+**Why the guard is attached to no route — a route-by-route decision:**
+
+All routes in `PlatformOperatorAccessController` use `INTERNAL_API_SECRET` header auth (no JWT).
+The `OperatorSessionGuard` reads `req.user?.userId` (set by `JwtAuthGuard`), so the two auth
+models are incompatible. Bolting the guard onto an `INTERNAL_API_SECRET` route would cause it to
+throw `UnauthorizedException` on every request since `req.user` is always undefined there.
+
+| Route | Auth model | Reads tenant data? | Can take OperatorSessionGuard? |
+|---|---|---|---|
+| `POST /platform/operator-access/grants` | INTERNAL_API_SECRET | No — creates a pending grant | No: no JWT user |
+| `POST /platform/operator-access/grants/:grantId/approve` | INTERNAL_API_SECRET | No — updates grant status | No: no JWT user |
+| `POST /platform/operator-access/grants/:grantId/reject` | INTERNAL_API_SECRET | No — updates grant status | No: no JWT user |
+| `GET /platform/operator-access/grants` | INTERNAL_API_SECRET | No — lists grant metadata | No: no JWT user |
+| `DELETE /platform/operator-access/grants/:grantId` | INTERNAL_API_SECRET | No — revokes grant | No: no JWT user |
+| `GET /platform/operator-access/logs` | INTERNAL_API_SECRET | No — lists audit log metadata | No: no JWT user |
+| `GET /health/workflows` | INTERNAL_API_SECRET | No — infrastructure read | No: no JWT user |
+| `GET /health/db` | INTERNAL_API_SECRET | No — infrastructure read | No: no JWT user |
+| `POST /internal/audit` | INTERNAL_API_SECRET | No — writes audit log | No: no JWT user |
+
+`PlatformAdminService` has methods that read per-org business data (`listCustomers`,
+`getCustomerBySlug` with `users.email`/`users.name`, `listMessages`, `listLeads`, `listPayments`),
+but these are not exposed via any HTTP controller. When those routes are wired (under JWT auth +
+`:orgId` param), `OperatorSessionGuard` + `@RequireOperatorGrant(scope)` can be applied directly.
+
+**Guard is architecturally correct and fully tested.** The absence of compatible routes to attach it
+to is not a guard defect — it reflects the current state of the admin surface. The INTERNAL_API_SECRET
+pattern is appropriate for the management plane (grant lifecycle); the guard is appropriate for the
+data plane (operator reading customer data under an active grant). They are different surfaces and
+require different auth models.
+
+Current enforcement level: DB schema + `PlatformOperatorAccessService` layer. Guard enforces
+per-request expiry and writes audit rows wherever it is applied.
+Application layer enforcement: guard is tested and ready; awaiting compatible routes.
 
 ### Decision required: policy parameters
 
@@ -42,9 +79,12 @@ The operator must choose:
 | Minimum reason length | 10 chars | 20 chars | free-text required |
 | Ticket reference | optional | required | required + validated against issue tracker |
 | Content-blind default | No (current) | Yes — explicit elevation per org | Yes — always |
-| Audit granularity | Session-level | Per-request | Per-request + diff of data accessed |
+| Audit granularity | Session-level | Per-request (current) | Per-request + diff of data accessed |
 | Review cadence | Never | Monthly | Quarterly |
 | Auto-expiry of pending grants | Never | 24 hours | 48 hours |
+
+Current max grant duration: 24 hours (`MAX_GRANT_DURATION_MS` in `platform-operator-access.service.ts`).
+The recommended value is 4 hours. This is an engineering change requiring the operator's sign-off.
 
 **Recommended defaults:** Option B throughout. Dual control prevents insider threat from a single
 compromised operator account. 4-hour sessions cover a typical incident response window. 20-char
@@ -52,8 +92,10 @@ reason + ticket ref forces documentation. Monthly review catches grants left ope
 
 ### AWAITING OPERATOR APPROVAL
 
-Record here: chosen parameters, approver name, date, rationale. Then assign to a lane to build
-`OperatorAccessService`, `OperatorSessionGuard` and `OperatorAuditInterceptor`.
+Record here: chosen parameters, approver name, date, rationale. Then update `MAX_GRANT_DURATION_MS`
+in `platform-operator-access.service.ts` to match the chosen duration. Wire
+`@UseGuards(JwtAuthGuard, OperatorSessionGuard)` + `@RequireOperatorGrant(scope)` to any new
+JWT-authenticated routes reading per-org tenant data in the platform module.
 
 ---
 
@@ -231,7 +273,23 @@ disclosure decision.
 
 **Context:** The four drills were each exercised individually on 2026-09-01 (see `PRODUCTION-OPERATIONS-STATUS.md` §7). The PRD requires them as one end-to-end workflow.
 
-**All commands run as dry-run / rolled-back transactions. Nothing is committed unless `--execute --i-know-what-im-doing` is passed.**
+**Status (2026-09-01):** `backend/src/scripts/compliance-drill-e2e.mjs` is built and verified.
+It runs all five phases as a single ordered workflow against the live DB. Self-test PASS (8/8
+assertion bite proofs). Live dry-run PASS (13/13 checks). Commands:
+
+```bash
+# Verify each assertion bites (no DB required)
+node backend/src/scripts/compliance-drill-e2e.mjs --self-test
+
+# Full dry-run against live DB (auto-discovers a test subject)
+node --env-file-if-exists=backend/.env backend/src/scripts/compliance-drill-e2e.mjs
+
+# With explicit subject and org
+node --env-file-if-exists=backend/.env backend/src/scripts/compliance-drill-e2e.mjs \
+  --subject keeper-c5b82e53@test.invalid --org c5b82e53-e69e-4937-ace8-1126ae3c0c7f
+```
+
+**All commands run as dry-run / rolled-back transactions. Nothing is committed unless `--execute --i-know-what-im-doing` is passed to the individual drills.**
 
 ### Pre-flight checks
 

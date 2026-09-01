@@ -11,6 +11,7 @@ import {
   useComplianceEvents,
   useMarkEventDone,
   type ComplianceEvent,
+  type ComplianceEventsParams,
 } from "@/hooks/api/hr/global";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
@@ -27,7 +28,7 @@ function EventStatusIcon({ status }: { status: ComplianceEvent["status"] }) {
 }
 
 export function ComplianceEventsTab() {
-  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+  const [statusFilter, setStatusFilter] = useState<ComplianceEventsParams["status"]>(undefined);
   const { data, isLoading } = useComplianceEvents(statusFilter ? { status: statusFilter } : undefined);
   const markDone = useMarkEventDone();
 
