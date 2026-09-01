@@ -34,6 +34,23 @@ Current reconciliation count:
 - Never delete code or schema from text search alone. Require dependency evidence plus build/typecheck and migration-integrity proof.
 - Do not recreate `luna-10-10-sessions` or split this backlog.
 
+## Approved implementation decisions — 2026-09-01
+
+These decisions are final for this release and remove implementation alternatives from the checklist:
+
+1. **RBAC:** exactly six fixed standings — organization owner/admin/member and module owner/admin/member. Capability customization uses fixed templates, per-person permission grants, delegations and DataScope. No runtime custom-role creation.
+2. **Token authority:** the backend exposes an authenticated session-exchange interface and alone signs short-lived asymmetric JWTs. Frontend and edge runtimes contain no backend signing key.
+3. **Payroll posting:** Payroll commits an idempotent Accounting-posting intent through the transactional outbox; Accounting consumes it asynchronously and idempotently. Brief `pending` state is accepted; lost or dangling journals are not.
+4. **Calendar synchronization:** local Calendar state commits first with durable `pending` synchronization state. Provider synchronization runs asynchronously with `synced`/`failed` state, retry/backoff and user-visible recovery.
+5. **Chat presence:** Ably connection presence is authoritative. One leader-elected browser heartbeat with jitter/backoff is permitted only as a bounded fallback.
+6. **Knowledge comments:** authors may edit/delete their comments while they retain page visibility; page editors may resolve; KB administrators may moderate. Every action rechecks current page/article visibility at the data seam.
+7. **Home contract:** the backend owns the authoritative Home section/access manifest. The frontend consumes a generated contract; hand-maintained parallel registries are prohibited.
+8. **Billing providers:** frontend checkout is provider-neutral. Razorpay is the first adapter; a Stripe-ready contract test proves another adapter requires no Billing caller change.
+9. **Migration policy:** staging and production contain no valuable data. Destructive migration rebasing, squashing and database recreation are authorized; no legacy watermark upgrade compatibility is required for this release. The new clean baseline must remain reproducible and interruption-safe.
+10. **Deferred capabilities:** hooks, routes and UI that are outside the confirmed release scope are removed after dependency proof, not retained behind speculative flags.
+11. **Release scope:** Home, Settings, Authentication/RBAC, HRMS, Payroll, Build, Billing/Payments/Accounting, Chat, Calendar, Inbox/Mail, Notifications, Knowledge/Wiki/Chatbot and Workflows. CRM and Inventory remain excluded.
+12. **Compatibility:** internal frontend/backend routes, types and schemas may break during this coordinated refactor. Only published customer/integration contracts require backward compatibility or explicit versioned deprecation.
+
 ## Verified complete â€” preserve and re-run at final head
 
 - [x] Organization/module RBAC architecture: owner/admin/member standing, custom permissions, DataScope, owner protection, module access, tenant isolation and revocation primitives.
@@ -85,7 +102,7 @@ This section durably incorporates every candidate from the temporary visual arch
 - **Current shallow shape:** frontend token issuance and backend verification share signing authority across the seam.
 - **Target deep shape:** one Auth module owns issuance, rotation, revocation and verification; frontend callers receive tokens through a narrow interface and never possess signing authority.
 - **Concrete failure prevented:** compromise or environment leakage in the frontend runtime cannot forge arbitrary user or organization identities across tenants.
-- **Smallest safe change:** introduce isolated backend issuance and asymmetric or equivalently isolated verification, migrate frontend sessions to exchange/receive short-lived tokens, then remove the shared signing secret from every frontend runtime.
+- **Smallest safe change:** add a backend-authenticated session exchange that issues short-lived asymmetric JWTs, migrate frontend sessions to receive them, then remove the shared signing secret from every frontend runtime.
 - **Compatibility/migration:** support a bounded dual-verification rotation window, identify keys, expire old tokens naturally, revoke compromised sessions and remove HS256 only after old-token telemetry reaches zero.
 - **Completion controls:** Authentication token-authority/token-verification criteria in section 10.1 plus session/revocation/security tests in sections 6 and 11.
 - **Depth wins:** locality concentrates authority in one module; leverage protects every backend caller; the Auth interface becomes the test surface.
@@ -98,7 +115,7 @@ This section durably incorporates every candidate from the temporary visual arch
 - **Target deep shape:** the schema module enforces one canonical `(org_id, child_id) -> (org_id, id)` relationship at the tenant seam, backed by a catalog gate.
 - **Concrete failure prevented:** a valid identifier from one organization cannot be attached to a row owned by another organization, and later schema generation cannot reintroduce weaker constraints.
 - **Smallest safe change:** inventory/classify every tenant-to-tenant FK, add parent composite uniqueness, install `NOT VALID` composite constraints, validate them, then dependency-prove and remove redundant single-column constraints.
-- **Compatibility/migration:** clean existing violations before validation; use lock timeouts and staged migrations; require cold-bootstrap and upgraded-catalog parity before deleting any constraint.
+- **Compatibility/migration:** deployed data preservation is not required. Rebuild or squash the migration baseline as needed, then require clean-bootstrap catalog parity and cross-tenant constraint tests before release.
 - **Completion controls:** the three tenant-relationship criteria in section 4 and the owning Build, Billing, Chat and Knowledge schema criteria in section 10.
 - **Depth wins:** locality moves tenant integrity into constraints; leverage protects every write; the deletion test removes redundant constraint implementations.
 
@@ -107,10 +124,10 @@ This section durably incorporates every candidate from the temporary visual arch
 - **Evidence:** `backend/src/modules/dashboard/dashboard-section-registry.ts` and `frontend/lib/home/home-sections.ts` maintain separate section facts; `frontend/app/(authenticated)/layout.tsx:38-42` performs two access reads; eight assertions in `backend/src/modules/dashboard/dashboard-section-isolation.spec.ts` fail after the membership lookup added at `dashboard-personal.service.ts:53`.
 - **Verdict / strength:** CONSOLIDATE and REPAIR · P1 · Worth exploring · in-process.
 - **Current shallow shape:** duplicated section registries, repeated access acquisition and stale test adapters force callers to understand composition rules.
-- **Target deep shape:** one authoritative, contract-checked Home composition module owns section metadata and reuses one request-local access result while Chat, Calendar, Inbox and Notifications remain independent deep modules.
+- **Target deep shape:** the backend owns one authoritative Home composition manifest, the frontend consumes its generated contract and one request-local access result is reused while Chat, Calendar, Inbox and Notifications remain independent deep modules.
 - **Concrete failure prevented:** frontend/backend access drift, duplicate `/me/access` load, unauthorized or missing widgets and full-Home failure when one source degrades.
-- **Smallest safe change:** generate or contract-check section metadata from one source, seed hydration from the SSR authority result, reuse one membership resolution and repair—not weaken—the isolation tests.
-- **Compatibility/migration:** preserve existing route URLs and response shapes while moving metadata; no domain schema migration is required.
+- **Smallest safe change:** generate frontend section metadata from the backend manifest, seed hydration from the SSR authority result, reuse one membership resolution and repair—not weaken—the isolation tests.
+- **Compatibility/migration:** internal route/response changes may cut over with all callers in one commit; published external contracts still require versioning. No domain schema migration is required.
 - **Completion controls:** Home access-locality/query-efficiency/test/access-reuse criteria in section 10.3, route/data criteria in sections 7.1 and 8, and Home performance budgets in section 12.
 - **Depth wins:** locality concentrates section facts; leverage aligns every widget; tests exercise the live Home interface.
 
@@ -122,7 +139,7 @@ This section durably incorporates every candidate from the temporary visual arch
 - **Target deep shape:** the Query module absorbs canonical keys, abort propagation, authorized commands and typed cache-shape patch/rollback behavior behind a smaller interface.
 - **Concrete failure prevented:** notification mutations cannot crash on `old.map`, abandoned navigation cannot waste backend work, organization/query identities cannot collide and permission changes cannot leave callable commands.
 - **Smallest safe change:** repair infinite-page patching first, then enforce signal propagation, migrate local keys to the canonical factory and classify every non-universal command through the authorized-mutation seam.
-- **Compatibility/migration:** preserve public hook return shapes during migration; invalidate or clear old key namespaces at rollout; no database migration is required.
+- **Compatibility/migration:** internal hook/key shapes may change with all callers in one commit; invalidate or clear old key namespaces at rollout. Published integration contracts are unaffected.
 - **Completion controls:** the four added criteria in section 8, module-specific HR/Build/Billing/Calendar/Notifications criteria and frontend release criteria in section 10.18.
 - **Depth wins:** locality keeps Query correctness together; leverage fixes all callers once; the Query interface becomes the shared test surface.
 
@@ -134,7 +151,7 @@ This section durably incorporates every candidate from the temporary visual arch
 - **Target deep shape:** one durable delivery module owns intent, recipient cursors, bounded batches, checkpoints, retries, backpressure, cancellation and terminal state; provider adapters sit behind its seam.
 - **Concrete failure prevented:** broadcasts and huddles cannot exhaust memory/pools, process crashes cannot lose intent, retries cannot duplicate delivery and Calendar cannot remain permanently divergent after transient provider failure.
 - **Smallest safe change:** persist intent atomically, consume by tenant/recipient cursor with bounded bulk writes, replace per-recipient request loops and expose synchronization/delivery state.
-- **Compatibility/migration:** add job/intent/checkpoint state additively, dual-write during cutover where necessary, drain old work and remove best-effort paths only after replay evidence.
+- **Compatibility/migration:** deployed data preservation is not required; rebuild queue/intent state if simpler. The cutover must still prove replay, retry, crash recovery and zero best-effort delivery paths.
 - **Completion controls:** fire-and-forget prohibition in section 7, Chat huddle/fanout criteria in section 10.12, Calendar sync criterion in section 10.13, Notification fanout criterion in section 10.15 and shared-consumer criterion in section 10.17.
 - **Depth wins:** locality centralizes delivery semantics; leverage covers every provider; multiple provider adapters justify the seam.
 
@@ -146,7 +163,7 @@ This section durably incorporates every candidate from the temporary visual arch
 - **Target deep shape:** one Knowledge access module applies the same page/article visibility implementation to pages, comments, reviews, attachments and retrieval before data crosses the seam.
 - **Concrete failure prevented:** callers cannot disclose or mutate restricted content after access revocation, and due work cannot disappear after row 100.
 - **Smallest safe change:** require caller context in comment/review implementations, reuse direct-read visibility predicates, remove authorization booleans and keyset-page comments/due reviews.
-- **Compatibility/migration:** introduce cursor response contracts with a bounded compatibility window; no destructive schema migration is required unless missing tenant-composite relationships are found under AR-02.
+- **Compatibility/migration:** internal comment/review callers migrate atomically to cursor contracts; only published external contracts require versioning. Destructive schema repair is permitted under AR-02.
 - **Completion controls:** the three Knowledge criteria in section 10.16 plus ACL/search and pagination criteria in sections 5, 6 and 12.3.
 - **Depth wins:** locality keeps ACL knowledge together; leverage protects every child path; revocation tests cross the same interface as production callers.
 
@@ -155,10 +172,10 @@ This section durably incorporates every candidate from the temporary visual arch
 - **Evidence:** `backend/src/modules/payroll/payout/locking.service.ts:64-103` calls `PayrollPostingService.postFinalized` inside the Payroll lock transaction; `backend/src/modules/accounting/posting/finance-posting.service.ts:139` opens a separate top-level transaction.
 - **Verdict / strength:** REPAIR · P0 financial correctness · Strong · ports and adapters.
 - **Current shallow shape:** two transaction owners sit across one posting seam, allowing the Accounting implementation to commit before the Payroll implementation finishes.
-- **Target deep shape:** one posting module owns the financial invariant through a shared transaction or an atomically committed durable intent with an idempotent consumer.
+- **Target deep shape:** one posting module owns the financial invariant through an atomically committed transactional-outbox intent and an idempotent Accounting consumer.
 - **Concrete failure prevented:** Accounting cannot retain a journal for a Payroll run whose lock rolled back, and retries cannot duplicate a journal.
-- **Smallest safe change:** choose shared-transaction posting or transactional outbox intent, then add induced outer-rollback, crash and replay tests before removing the nested path.
-- **Compatibility/migration:** preserve the existing journal idempotency key; if an outbox is used, add event state and backfill/reconcile any pre-existing dangling journal before cutover.
+- **Smallest safe change:** emit the posting intent inside the Payroll lock transaction, consume it through Accounting and add induced outer-rollback, crash and replay tests before removing the nested transaction path.
+- **Compatibility/migration:** preserve the existing journal idempotency key. Deployed data reconciliation is unnecessary; the clean baseline must include outbox state and consumer registration.
 - **Completion controls:** Payroll crash-consistency criterion in section 10.7, Accounting immutable-posting criteria in section 10.11 and transaction/idempotency criteria in sections 5.1 and 7.
 - **Depth wins:** locality keeps the financial invariant together; leverage makes every retry safe; the posting interface becomes the failure-injection test surface.
 
@@ -192,7 +209,7 @@ This section durably incorporates every candidate from the temporary visual arch
 - [ ] Re-run file-size ratchets and split every unjustified mixed-responsibility file over 500 lines without cosmetic fragmentation.
 - [ ] Prove zero circular imports, forbidden new `forwardRef`, barrel self-imports and erased Nest injection tokens.
 - [ ] Prove every active Nest module is registered and every frontend route has one canonical owner; remove obsolete routes rather than preserving hidden duplicates.
-- [ ] Prove no dead or duplicated endpoint, schema, type, validator, hook, query key, worker, page or UI element using dependency graphs plus build/typecheck evidence.
+- [ ] Prove no dead or duplicated endpoint, schema, type, validator, hook, query key, worker, page or UI element using dependency graphs plus build/typecheck evidence; remove every deferred capability outside the approved release scope instead of retaining speculative flags.
 - [ ] Keep authenticated `app/**/page.tsx` and `layout.tsx` files as thin route modules for metadata, parameters, server authorization and composition; move state, forms, queries and mutations behind feature-owned interfaces and gate route-file size/import direction without changing landing visuals or animations.
 
 ### 3. TypeScript, Zod and cross-layer contracts
@@ -201,7 +218,7 @@ This section durably incorporates every candidate from the temporary visual arch
 - [ ] Validate every untrusted body, parameter, query, environment value, upload manifest and external response through established Zod boundaries.
 - [ ] Keep Zod schemas in module DTO/schema files, derive types with `z.infer`, reject protected/client-supplied actor and tenant fields and enforce unknown-key policy.
 - [ ] Reconcile backend Zod/OpenAPI contracts with frontend request/response types, hooks, forms and rendered error states.
-- [ ] Verify operation IDs, REST versioning, status/error envelopes, idempotency headers, cursor/filter/sort contracts and backward compatibility.
+- [ ] Verify operation IDs, REST versioning, status/error envelopes, idempotency headers and cursor/filter/sort contracts; migrate internal callers atomically and preserve backward compatibility only for published customer/integration contracts through versioned deprecation.
 - [ ] Prove controllers remain thin, business rules stay backend-side and no frontend `app/api` or client module contains business/database logic.
 
 ### 4. Database schema and migration quality
@@ -217,8 +234,8 @@ This section durably incorporates every candidate from the temporary visual arch
 - [ ] Verify high-growth append-only tables have justified retention/partition decisions and indexes matched to real access patterns.
 - [ ] Remove obsolete schema only with symbol, raw table-name, FK, migration, barrel and integrity-spec evidence.
 - [ ] Cold-bootstrap an empty database to migration head and record zero pending, orphan, duplicate or unreachable migrations.
-- [ ] Upgrade from the supported previous watermark, exercise interruption/retry and the documented rollback/forward-fix path using [RB-09](runbooks/RB-09-migration-rollback.md).
-- [ ] Compare cold-bootstrap and upgraded catalogs: tables, columns, constraints, indexes, policies, functions, triggers and extensions must match.
+- [ ] Establish a new clean migration baseline after authorized destructive rebase/squash, recreate disposable staging from zero and exercise interruption/retry plus rollback/forward-fix using [RB-09](runbooks/RB-09-migration-rollback.md); no legacy watermark upgrade is required.
+- [ ] Compare two independent clean bootstraps and an interrupted-then-resumed bootstrap: tables, columns, constraints, indexes, policies, functions, triggers and extensions must match exactly.
 - [ ] Verify migration `0930` enables the `audit_logs` append-only trigger and rejects application-role mutation in the disposable database.
 - [ ] Retain release SHA, commands, database identity, catalog diff and artifact hashes.
 
@@ -333,8 +350,8 @@ Mandatory folder/file evidence for **every** module below:
 #### 10.1 Authentication, identity, sessions and organization
 
 - [ ] Architecture/schema: verify global identity is separated from tenant membership; organization, invitation, membership, session and organization-switch relationships have correct keys, uniqueness, lifecycle and revocation data.
-- [ ] Token authority: remove `BACKEND_JWT_SECRET` and bearer-token signing from `frontend/lib/auth.ts`; only an isolated backend issuer may mint short-lived issuer/audience-bound access tokens, while frontend/edge runtimes receive no signing authority.
-- [ ] Token verification: use asymmetric verification or an equivalently isolated signing authority with key identifiers, rotation overlap and revocation; test wrong issuer/audience/key, expiry, replay, altered user, altered organization and a compromised frontend runtime that possesses no signing key.
+- [ ] Token authority: implement an authenticated backend session-exchange interface that alone mints short-lived asymmetric issuer/audience-bound JWTs; remove `BACKEND_JWT_SECRET` and all bearer-token signing from frontend/edge runtimes.
+- [ ] Token verification: verify asymmetric JWTs by key identifier with rotation overlap and revocation; test wrong issuer/audience/key, expiry, replay, altered user, altered organization and a compromised frontend runtime that possesses no private key.
 - [ ] Routes/contracts: verify signup, login, logout, refresh, recovery, MFA, invitation and organization switching use Zod/OpenAPI contracts and never trust client actor/current-org fields.
 - [ ] Authorization/security: test account enumeration, fixation/replay, lockout, invitation takeover, revoked membership, cross-org switching and last-owner/owner-transfer invariants.
 - [ ] Queries/cache: verify bounded membership/session reads, required indexes and immediate invalidation of session, effective-access and organization caches.
@@ -351,7 +368,7 @@ Mandatory folder/file evidence for **every** module below:
 #### 10.3 Home and dashboard composition
 
 - [ ] Architecture/schema: prove Home owns composition/preferences only and does not duplicate Chat, Calendar, Inbox or Notification domain tables or implementation.
-- [ ] Access locality: replace the drifting backend/frontend Home section registries with one generated or contract-checked authoritative section manifest that matches each live controller route, module requirement, permission and cache namespace; deletion of either duplicate must not spread access logic across callers.
+- [ ] Access locality: make the backend Home section manifest authoritative and generate the frontend contract from it; it must match every live controller route, module requirement, permission and cache namespace, and no hand-maintained parallel registry may remain.
 - [ ] Routes/contracts: define a bounded per-section dashboard contract with independent success/error metadata and permission-safe projections.
 - [ ] Authorization/privacy: derive each section from caller identity and effective access; prove calendar, people, payroll and communication data cannot leak through summaries/counts.
 - [ ] Queries/cache: verify parallel bounded aggregation, no N+1/fetch-all behavior, per-section cache ownership and mutation invalidation from source modules.
@@ -392,7 +409,7 @@ Mandatory folder/file evidence for **every** module below:
 - [ ] Authorization/privacy: test payroll owner/admin/member, approver, self-payslip, separation-of-duties, sensitive projections and every mutation hook.
 - [ ] Queries/cache/workers: verify bounded run/item reads, indexed employee/period/status paths, no N+1 calculations, asynchronous exports and correct invalidation after lock/publish/reversal.
 - [ ] Frontend/TanStack/tests: verify run-state UI, conflict/retry/partial failure, permission gates, secure downloads and calculation/locking/reconciliation E2E.
-- [ ] Make Payroll finalization and Accounting posting crash-consistent: either pass the active transaction through the posting seam or commit an idempotent posting intent atomically and consume it durably; prove outer rollback cannot leave a journal and retry cannot duplicate one.
+- [ ] Make Payroll finalization and Accounting posting crash-consistent through a transactional outbox: emit an idempotent posting intent inside the Payroll lock transaction, consume it durably in Accounting, expose `pending/posted/failed` state and prove rollback cannot leave a journal while retries cannot duplicate one.
 
 #### 10.8 Build/PM
 
@@ -419,7 +436,7 @@ Mandatory folder/file evidence for **every** module below:
 - [ ] Authorization/security: test billing owner/admin/member access, provider signature verification, replay/forgery, tenant ownership, entitlement gates and sensitive redaction.
 - [ ] Queries/cache/workers: verify local entitlement resolution, seat/proration concurrency, usage aggregation, webhook dedupe, retries/DLQ and invalidation without provider calls per request.
 - [ ] Frontend/TanStack/tests: verify the two canonical Settings billing pages, plan/seat/usage/invoice states, mutation invalidation and deterministic outage/replay/proration E2E.
-- [ ] Keep provider-specific identifiers, verification fields, route names and SDK behavior behind the Billing adapter seam; frontend callers consume provider-neutral checkout-session/confirmation contracts and a second adapter contract test requires no caller change.
+- [ ] Keep provider-specific identifiers, verification fields, route names and SDK behavior behind the Billing adapter seam; frontend callers consume provider-neutral checkout-session/confirmation contracts, Razorpay is the first adapter and a Stripe-ready contract test requires no Billing caller change.
 - [ ] Route every non-universal subscription/payment mutation through the exact billing/payment permission interface; billing remains non-delegable and tests cover owner/admin/member denial plus revocation during checkout confirmation.
 
 #### 10.11 Accounting and finance
@@ -441,7 +458,7 @@ Mandatory folder/file evidence for **every** module below:
 - [ ] Make huddle attendee creation and notification fanout bounded, resumable and queue-backed with recipient checkpoints and tenant concurrency limits; the start request must not retain all members or launch per-member provider calls.
 - [ ] Enforce one active huddle per `(org_id, channel_id)` and serialize participant-cap admission atomically; prove concurrent start/join requests cannot create duplicate huddles or exceed plan/settings caps.
 - [ ] Require active channel-membership assertion before mark-read, mark-unread, mute and unmute read or mutate channel state; inaccessible private channels return 404 and denial tests exercise revoked/non-member callers.
-- [ ] Replace per-visible-tab 15-second presence heartbeats with connection-driven presence or one browser leader/lease plus jitter, backoff, offline/visibility behavior and a bounded fallback; prove multitab/reconnect load budgets.
+- [ ] Replace per-visible-tab 15-second presence heartbeats with authoritative Ably connection presence; permit only one leader-elected browser heartbeat fallback with jitter, backoff and offline/visibility handling, and prove multitab/reconnect load budgets.
 
 #### 10.13 Calendar
 
@@ -450,7 +467,7 @@ Mandatory folder/file evidence for **every** module below:
 - [ ] Authorization/privacy: test calendar/source visibility, attendee privacy, own/shared/admin operations, private events, cross-tenant IDs and every mutation hook.
 - [ ] Queries/cache/workers: verify timezone/DST, recurrence expansion limits, free-busy/conflict indexes, reminder replacement/deduplication, sync retries and range/source cache invalidation.
 - [ ] Frontend/TanStack/tests: verify one `/calendar`, source toggles, timezone display, series-versus-instance edits, cursor/range keys and DST/exception/conflict/reminder E2E.
-- [ ] Persist create/update/delete provider-sync intent atomically with local event changes and expose idempotent lease, retry/backoff, cancellation and terminal synchronization state; transient provider or process failure must not leave permanent local/external divergence.
+- [ ] Commit Calendar changes locally first with an atomic provider-sync intent and `pending` state; process create/update/delete asynchronously with idempotent lease, retry/backoff and cancellation, expose `synced/failed` plus user retry, and prevent permanent local/external divergence.
 - [ ] Consolidate Calendar member list/search behind one permission-gated lookup interface; both paths require `directory:people:view` and test missing, granted and revoked access.
 
 #### 10.14 Inbox and mail
@@ -478,8 +495,8 @@ Mandatory folder/file evidence for **every** module below:
 - [ ] Authorization/privacy: test org/user content, space/audience/record ACLs, draft/published visibility, attachment access and ACL enforcement inside keyword/vector retrieval before model context.
 - [ ] Queries/cache/workers: verify revision/search plans, ingestion leases/retries/DLQ, chunk dedupe, permission-aware cache keys, purge/reindex and realistic-corpus latency.
 - [ ] Frontend/TanStack/tests: verify editor/revision conflicts, search cursors, permission changes, citations/source integrity, ingestion states and ACL/purge/reindex E2E.
-- [ ] Apply the direct article visibility predicate to Help Centre comment list/create/update/delete/resolve, carry caller context to the data seam, select explicit fields and keyset-page comment threads.
-- [ ] Re-authorize parent-page visibility and action authority inside every Wiki comment mutation; remove controller-supplied authorization booleans and test access revocation between read and mutation.
+- [ ] Apply the direct article visibility predicate to Help Centre comment list/create/update/delete/resolve, carry caller context to the data seam, select explicit fields and keyset-page comment threads; authors edit/delete their own comments, page editors resolve and KB administrators moderate.
+- [ ] Re-authorize current parent-page visibility inside every Wiki comment mutation and enforce author/page-editor/KB-admin authority at the data seam; remove controller-supplied authorization booleans and test access revocation between read and mutation.
 - [ ] Apply reviewer/requester scope plus page ACLs to freshness-review due lists and replace the silent 100-row cap with stable cursor pagination so restricted titles/identities do not leak and due work is not lost.
 
 #### 10.17 Shared storage, search, realtime and integration adapters
@@ -561,7 +578,7 @@ The defaults below are code-release budgets on a production build with the docum
 - [ ] Every unchecked item under **Immediate code-level release candidate** is complete with fresh evidence.
 - [ ] CRM/Inventory remain excluded and public landing visuals/animations remain unchanged.
 - [ ] Backend/frontend builds, typechecks, focused tests, disposable E2E and architecture gates pass at one commit.
-- [ ] Empty bootstrap and supported upgrade produce the same expected database catalog.
+- [ ] Two empty bootstraps and an interrupted-then-resumed bootstrap produce the same expected database catalog from the new authorized baseline; no legacy watermark upgrade claim is required.
 - [ ] No unresolved code-level P0/P1 finding remains.
 - [ ] Release authority records commit, evidence, accepted code-level residual risks and date.
 
