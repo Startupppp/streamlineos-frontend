@@ -1,7 +1,7 @@
 export type OrgRole = "OWNER" | "ORG_ADMIN" | "MEMBER";
 
 export interface UserListParams {
-  page?: number;
+  cursor?: string;
   limit?: number;
   search?: string;
   status?: "active" | "suspended" | "archived";
@@ -97,10 +97,9 @@ export interface UpdateUserInput {
 export interface UsersResponse {
   data: User[];
   pagination: {
-    page: number;
     limit: number;
-    total: number;
-    totalPages: number;
+    nextCursor: string | null;
+    hasMore: boolean;
   };
 }
 

@@ -43,20 +43,18 @@ export interface WebhookLog {
 export interface WebhooksPageResponse {
   data: WebhookEndpoint[];
   pagination: {
-    page: number;
     limit: number;
-    total: number;
-    totalPages: number;
+    nextCursor: string | null;
+    hasMore: boolean;
   };
 }
 
 export interface WebhookLogsResponse {
   data: WebhookLog[];
   pagination: {
-    page: number;
     limit: number;
-    total: number;
-    totalPages: number;
+    nextCursor: string | null;
+    hasMore: boolean;
   };
 }
 
@@ -66,13 +64,13 @@ export interface CreateWebhookInput {
   events: string[];
 }
 
-export function useWebhooks(params: { page: number; limit: number }) {
+export function useWebhooks(params: { cursor?: string; limit: number }) {
   const canManage = useCan("settings:webhooks:manage");
   return useQuery({
     queryKey: queryKeys.webhooks.list(params),
     queryFn: () =>
       apiClient.get<WebhooksPageResponse>("/webhooks", {
-        page: String(params.page),
+        ...(params.cursor ? { cursor: params.cursor } : {}),
         limit: String(params.limit),
       }),
     placeholderData: keepPreviousData,
@@ -83,14 +81,14 @@ export function useWebhooks(params: { page: number; limit: number }) {
 
 export function useWebhookLogs(
   endpointId: number | null,
-  params: { page: number; limit: number },
+  params: { cursor?: string; limit: number },
 ) {
   const canManage = useCan("settings:webhooks:manage");
   return useQuery({
     queryKey: queryKeys.webhooks.logs(endpointId ?? 0, params),
     queryFn: () =>
       apiClient.get<WebhookLogsResponse>(`/webhooks/${endpointId}/logs`, {
-        page: String(params.page),
+        ...(params.cursor ? { cursor: params.cursor } : {}),
         limit: String(params.limit),
       }),
     placeholderData: keepPreviousData,

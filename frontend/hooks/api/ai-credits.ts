@@ -97,20 +97,22 @@ export function useAiCreditsWallet() {
 }
 
 export interface AiCreditTransactionsPage {
-  items: AiCreditTransaction[];
-  total: number;
-  page: number;
-  totalPages: number;
+  data: AiCreditTransaction[];
+  pagination: {
+    limit: number;
+    nextCursor: string | null;
+    hasMore: boolean;
+  };
 }
 
-export function useAiCreditTransactions(page: number, limit: number) {
+export function useAiCreditTransactions(params: { cursor?: string; limit: number }) {
   const canView = useCan("billing:ai-credits:view");
   return useQuery<AiCreditTransactionsPage>({
-    queryKey: queryKeys.billing.aiCreditTransactions({ page, limit }),
+    queryKey: queryKeys.billing.aiCreditTransactions(params),
     queryFn: () =>
       apiClient.get<AiCreditTransactionsPage>("/billing/ai-credits/transactions", {
-        page: String(page),
-        limit: String(limit),
+        ...(params.cursor ? { cursor: params.cursor } : {}),
+        limit: String(params.limit),
       }),
     staleTime: 30 * 1000,
     placeholderData: keepPreviousData,

@@ -23,7 +23,7 @@ export const useUsers = (
     queryKey: queryKeys.users.list(params as Record<string, unknown> | undefined),
     queryFn: () =>
       apiClient.get<UsersResponse>("/v2/users", {
-        ...(params?.page ? { page: String(params.page) } : {}),
+        ...(params?.cursor ? { cursor: params.cursor } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
         ...(params?.search ? { search: params.search } : {}),
         ...(params?.status ? { status: params.status } : {}),
