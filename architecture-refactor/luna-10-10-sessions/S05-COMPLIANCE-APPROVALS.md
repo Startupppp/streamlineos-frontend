@@ -47,6 +47,7 @@ Implementation subitems verified in this session:
 - [x] Subject export pagination is resumable by stable cursor and tenant-isolation tests pass.
 - [x] Multi-organization legal-hold checks are covered by focused tests.
 - [x] Storage purge adapter failure handling and idempotency are covered by focused tests.
+- [x] Rectification requests are represented by a tenant-scoped `correction` workflow type, require actionable details, and are covered by schema tests and migration `0929_gdpr_correction_request`.
 
 ### 3. Physical and downstream deletion
 
@@ -54,8 +55,13 @@ Implementation subitems verified in this session:
 - [ ] Prove object-storage enumeration, deletion, retry of failed keys, provider-version behavior, and post-delete absence.
 - [ ] Prove deletion or documented non-applicability for search/vector indexes, derived projections, caches, analytics, email, AI, integration, and other downstream providers.
 - [ ] Prove backup/PITR aging and restore-time deletion behavior under the approved retention policy.
-- [ ] Fix and verify legal-hold checks for every organization in a multi-organization purge request.
+- [x] Fix and verify legal-hold checks for every organization in a multi-organization purge request in repository tests; deployed verification remains part of the drill gate.
 - [ ] Revoke `DELETE` and `UPDATE` on `audit_logs` from the application role, verify deployed privileges, rerun immutability tests, and attach query output. The finding recorded in RB-10 is P1 and release-blocking until resolved or formally accepted by the release authority.
+
+Implementation subitems verified in this session:
+
+- [x] Organization purge physically deletes the organization row only after all configured adapters confirm, while retaining detached platform audit evidence.
+- [x] Migration `0928_organization_purge_audit_hardening` restricts the application role and protects the audit detachment function with tenant context.
 
 ### 4. Retention and legal holds
 
@@ -104,15 +110,15 @@ Implementation evidence is present for operator grant primitives, customer/billi
 guards, GDPR request jobs, legal-hold checks, storage-key purge, and selected retention workers.
 
 S05 is **INCOMPLETE**. The remaining blockers are deployed drill evidence, exhaustive export,
-physical and downstream purge proof, complete document/payroll retention coverage, multi-org
-legal-hold verification, the audit-log privilege finding, and named Product/Security/
+physical and downstream purge proof, complete document/payroll retention coverage, the
+audit-log privilege finding, and named Product/Security/
 Privacy-DPO/Operations/Legal/Finance approvals. CRM and Inventory remain intentionally excluded.
 
-Verified in this session: 11 focused suites and 105/105 tests passed across operator access,
-operator data-plane routes, GDPR export/purge, legal holds, and HR retention. The command and
-file set are recorded in [RB-10](../runbooks/RB-10-privacy-compliance-decisions.md). These
-results are repository evidence only and do not satisfy the deployed-environment or approval
-gates above.
+Verified in this session: 19 focused suites and 173/173 tests passed across operator access,
+operator data-plane routes, GDPR export/purge, legal holds, organization purge, audit
+immutability, rectification validation, and HR retention. Migration and compliance self-tests
+also pass. These results are repository evidence only and do not satisfy the deployed-environment
+or approval gates above.
 
 The authoritative cross-program checklist remains [PRD-10-10-TODO.md](../PRD-10-10-TODO.md);
 its S05 and final release gates must remain unchecked until the evidence above exists.

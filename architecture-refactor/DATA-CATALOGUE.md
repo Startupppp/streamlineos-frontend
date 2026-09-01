@@ -120,9 +120,9 @@ Derived from `backend/.env.example` and service imports (2026-09-01):
 | **Resend** | Email content + recipient addresses | US | Email delivery | SCCs required for EU data |
 | **ZeptoMail** | Email content + recipient addresses | India / US (Zoho infra) | Transactional email | DECISION REQUIRED |
 | **Ably** | Realtime event payloads (channel names + message bodies) | Global edge | Realtime messaging | SCCs required for EU data |
-| **OpenAI** (`AI_PROVIDER=openai`) | AI prompt content (may include HR data) | US | AI inference | SCCs required; PII-stripping layer recommended |
-| **Anthropic** (`AI_PROVIDER=anthropic`) | AI prompt content | US | AI inference | SCCs required; PII-stripping layer recommended |
-| **OpenRouter** (`AI_PROVIDER=openrouter`) | AI prompt content | US | AI inference | SCCs required; DECISION REQUIRED — which underlying models |
+| **OpenAI** (`AI_LLM_PROVIDER=openai` or `AI_CHAT_PROVIDER=openai`) | AI prompt content (may include HR data) | US | AI inference | SCCs required; PII-stripping layer recommended |
+| **Anthropic** (`AI_LLM_PROVIDER=anthropic` or `AI_CHAT_PROVIDER=anthropic`) | AI prompt content | US | AI inference | SCCs required; PII-stripping layer recommended |
+| **OpenRouter** (`AI_LLM_PROVIDER=openrouter` or `AI_CHAT_PROVIDER=openrouter`) | AI prompt content | US | AI inference | SCCs required; DECISION REQUIRED — which underlying models |
 | **Composio** | OAuth tokens for third-party integrations | US | Integration credential storage | SCCs required; user disclosure required |
 | **Razorpay** | Payment data (amount, customer email) | India | Payment processing | Adequacy for India data |
 

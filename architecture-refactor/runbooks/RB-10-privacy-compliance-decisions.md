@@ -18,7 +18,7 @@ their decision (name, date, rationale), and file the result as evidence.
 
 ### Current implementation state (updated 2026-09-01)
 
-Migration `0747` applied. Tables: `platform_operator_access_grants` — schema at
+Migration `0747` applied. Tables: `operator_access_grants` — schema at
 `backend/src/db/schema/common/platform-operator-grants.ts`. `assertGrant` requires
 `status = 'active'`. DB CHECK `approver_id != granted_by` is convalidated (no self-approval).
 
@@ -99,8 +99,8 @@ JWT-authenticated routes reading per-org tenant data in the platform module.
 ### Current implementation state
 
 Tables with retention-related data:
-- `hr_retention_policies` — exists; schema at `backend/src/db/schema/hr/data-requests.ts`. No worker
-  reads them to trigger scheduled deletions.
+- `hr_retention_policies` — exists; schema at `backend/src/db/schema/hr/governance.ts`. The
+  `CronHrRetentionService` reads active policies and applies supported outcomes in bounded batches.
 - `hr_legal_holds` + `organization_legal_holds` — exist and are enforced by `GdprService` and
   `purge-user.mjs`. Verified working: legal-hold drill PASS 2026-09-01.
 - `audit_logs.metadata` — stores contextual metadata per action. The `user.registered` action stores
@@ -122,7 +122,8 @@ Tables with retention-related data:
 **2a. Data inventory sign-off:**
 The operator (DPO or equivalent) must review the categories above, confirm each is in scope of
 processing, and sign the inventory. A template data map is in
-`architecture-refactor/runbooks/data-map-template.md` (to be created by the operator).
+`architecture-refactor/runbooks/data-map-template.md`; copy it to a dated controlled record
+after the DPO review.
 
 **2b. Lawful purpose per category:**
 Each category needs a lawful basis under GDPR Art. 6 (contract, legal obligation, legitimate
@@ -203,7 +204,7 @@ Record here: chosen option, ToS statement language, any commitments made to cust
 | Cloudflare R2 | File uploads, exports, attachments | Configurable (env) | S3-compatible API |
 | Resend | Email content + recipient addresses | US (Resend infrastructure) | SMTP/API |
 | Ably | Realtime event payloads (channel names + message bodies) | Global (Ably edge) | WebSocket |
-| OpenAI / Anthropic | AI prompt content (if `AI_PROVIDER=openai` or `anthropic`) | US | HTTPS API |
+| OpenAI / Anthropic | AI prompt content (if `AI_LLM_PROVIDER` or `AI_CHAT_PROVIDER` selects the provider) | US | HTTPS API |
 | Composio | Third-party integration credentials (OAuth tokens) | US | REST API |
 
 Sources: `backend/src/modules/mail/resend.service.ts`, `backend/src/common/ably/ably.service.ts`,
@@ -399,9 +400,10 @@ node src/scripts/audit-storage-keys.mjs --subject "$SUBJECT_EMAIL"
 
 ### Known gaps owned by Ticket S05
 
-1. Export worker is resumable by stable per-section cursor, but it only exports the currently implemented sections (memberships, employment, data requests, legal holds, and audit-entry presence); complete subject-data inventory and deployed evidence are still required.
+1. Export worker is resumable by stable per-section cursor, but it only exports the currently implemented sections (memberships, employment, data requests, legal holds, and audit entries); complete subject-data inventory and deployed evidence are still required.
 2. Object storage purge enumerates all pages, retries failed deletes, and verifies absence when the adapter exposes `fileExists`; live configuration and immutable evidence are missing, and failed keys remain release-blocking.
-3. Database rows adapter marks `statusV2=PURGED` as a soft flag only — physical deletion not implemented.
+3. Database rows adapter physically deletes the organization row after adapter confirmation and
+   retains detached platform audit evidence; deployed database and dependent-row evidence remain required.
 4. `CronHrRetentionService` reads `hr_retention_policies`, but the repository covers only selected record types and deployed scheduling/execution are not evidenced.
 
 ---

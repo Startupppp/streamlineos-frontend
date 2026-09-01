@@ -33,19 +33,19 @@ Prove the current schema can be created, upgraded, recovered and operated under 
 
 Repository evidence complete:
 
-- [ ] Local migration ledger is 579/580: one journaled migration is pending; orphan, duplicate and unreachable counts are zero. The pending migration must be applied and re-verified in disposable staging before this item can be checked.
-- [x] Migration chain, discipline, rollback and drop-column-safety gates pass across all 579 journaled migrations.
+- [ ] Local migration ledger is 579/582: three journaled migrations are pending; orphan, duplicate and unreachable counts are zero. Pending migrations must be applied and re-verified in disposable staging before this item can be checked.
+- [x] Migration chain, discipline, rollback and drop-column-safety gates pass for the checked migration set; current-head disposable proof remains open.
 - [x] Fail-closed self-tests exist and pass for cell isolation, replica predicates, PITR assertions, load/headroom guard, unit-cost anomaly guard, alert dispatch, retention classification and erasure FK ordering.
 
 Environment evidence still required:
 
-- [ ] Do not infer disposable-staging, clean-bootstrap or upgraded-catalog completion from the local 579/579 ledger; run and retain those three environment-specific proofs.
+- [ ] Do not infer disposable-staging, clean-bootstrap or upgraded-catalog completion from the local 579/582 ledger; run and retain those three environment-specific proofs.
 - [ ] Provision and verify independent cell resources, a physical replica, regional recovery/relocation, production-shaped load with at least 40% headroom, invoice-derived cost and live alert acknowledgement.
 - [ ] Record environment, region, release SHA, topology hash, dataset shape, operator, UTC timestamp, command/exit code and artifact SHA-256 for every operational claim.
 
-Fresh local verification (2026-09-01 UTC, working tree `f2b48edb8`, environment `backend/.env`):
+Fresh verification (2026-09-01 UTC, working tree `f2b48edb8`, environment `backend/.env`):
 
-- `pnpm -C backend check:migration-ledger` — exit 0; `579 applied row(s) against 580 journal entr(ies)`, `1 migration(s) pending`, zero orphan/duplicate/unreachable entries.
+- `pnpm -C backend check:migration-ledger` — exit 0; `579 applied row(s) against 582 journal entr(ies)`, `3 migration(s) pending`, zero orphan/duplicate/unreachable entries.
 - `pnpm -C backend check:migration-chain` — exit 0; migration chain has no structural issues.
-- Full-chain disposable proof — started with `pnpm -C backend migration:proof`; probes were created, but the cold phase had not completed at evidence capture and therefore is not a pass. No checkbox is inferred from this run.
+- Full-chain disposable proof — `pnpm -C backend migration:proof` reached the then-current `580/580` cold entries in `632.5s`, but reported 8 chain gaps: migrations `0921`, `0924`, and `0927` reference missing relations. The repository has since advanced to 582 journal entries with 3 pending locally, so this is not a current-head clean-bootstrap pass. Both disposable probes were explicitly dropped.
 - Local self-tests remain implementation evidence only; they do not satisfy deployed resource, replica, PITR, load, cost, live-alert or approval gates.
