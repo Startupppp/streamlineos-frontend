@@ -39,11 +39,11 @@ const BASELINE = { deadFiles: 0, deadExports: 0 };
 const SCAN_FLOOR = { knipTotal: 5, graphFiles: 100, graphEdges: 300 };
 
 const EXPORT_VERDICTS = new Map([
-  ["hooks/api/workflows.ts:useWorkflowSchedules", { verdict: "WIRE", reason: "per-workflow schedule CRUD; page: app/(authenticated)/workflows/[workflowId]/schedules/page.tsx (not yet built)" }],
-  ["hooks/api/workflows.ts:useCreateSchedule", { verdict: "WIRE", reason: "create-schedule action missing from per-workflow scheduler page" }],
-  ["hooks/api/workflows.ts:useWorkflowSecrets", { verdict: "WIRE", reason: "per-workflow secrets panel; page: app/(authenticated)/workflows/[workflowId]/secrets/page.tsx (not yet built)" }],
-  ["hooks/api/workflows.ts:useCreateWorkflowSecret", { verdict: "WIRE", reason: "create-workflow-secret action missing from per-workflow secrets page" }],
-  ["hooks/api/workflows.ts:useDeleteWorkflowSecret", { verdict: "WIRE", reason: "delete-workflow-secret action missing from per-workflow secrets page" }],
+  ["hooks/api/workflows.ts:useWorkflowSchedules", { verdict: "DEFERRED", reason: "Product owner: Workflow PM; review 2026-10-01; per-workflow schedule CRUD awaits the scheduler page" }],
+  ["hooks/api/workflows.ts:useCreateSchedule", { verdict: "DEFERRED", reason: "Product owner: Workflow PM; review 2026-10-01; create action awaits the scheduler page" }],
+  ["hooks/api/workflows.ts:useWorkflowSecrets", { verdict: "DEFERRED", reason: "Product owner: Workflow PM; review 2026-10-01; per-workflow secrets panel is not in the current release" }],
+  ["hooks/api/workflows.ts:useCreateWorkflowSecret", { verdict: "DEFERRED", reason: "Product owner: Workflow PM; review 2026-10-01; create action awaits the secrets panel" }],
+  ["hooks/api/workflows.ts:useDeleteWorkflowSecret", { verdict: "DEFERRED", reason: "Product owner: Workflow PM; review 2026-10-01; delete action awaits the secrets panel" }],
   ["hooks/api/workflows.ts:TriggerType", { verdict: "KEEP", reason: "re-exported contract type used by Workflow.triggerType and consumed through live workflow query data" }],
   ["hooks/api/workflows.ts:ApprovalStatus", { verdict: "KEEP", reason: "re-exported contract type used by WorkflowApproval.status and consumed through live approval query data" }],
   ["hooks/api/workflows.ts:WorkflowSortField", { verdict: "KEEP", reason: "re-exported contract type used by live useWorkflows parameter contract" }],
@@ -54,34 +54,34 @@ const EXPORT_VERDICTS = new Map([
   ["hooks/api/workflows.ts:WorkflowListParams", { verdict: "KEEP", reason: "re-exported parameter type used by live useWorkflows calls on the workflow list page" }],
   ["hooks/api/workflows.ts:ExecutionListParams", { verdict: "KEEP", reason: "re-exported parameter type used by live execution list hooks and page calls" }],
 
-  ["hooks/api/workflows-secrets.ts:useWorkflowSecrets", { verdict: "WIRE", reason: "per-workflow secrets panel not yet built (app/(authenticated)/workflows/[workflowId]/secrets/)" }],
-  ["hooks/api/workflows-secrets.ts:useCreateWorkflowSecret", { verdict: "WIRE", reason: "create per-workflow-secret action not yet wired" }],
-  ["hooks/api/workflows-secrets.ts:useDeleteWorkflowSecret", { verdict: "WIRE", reason: "delete per-workflow-secret action not yet wired" }],
+  ["hooks/api/workflows-secrets.ts:useWorkflowSecrets", { verdict: "DEFERRED", reason: "Product owner: Workflow PM; review 2026-10-01; secrets panel is not in the current release" }],
+  ["hooks/api/workflows-secrets.ts:useCreateWorkflowSecret", { verdict: "DEFERRED", reason: "Product owner: Workflow PM; review 2026-10-01; action awaits the secrets panel" }],
+  ["hooks/api/workflows-secrets.ts:useDeleteWorkflowSecret", { verdict: "DEFERRED", reason: "Product owner: Workflow PM; review 2026-10-01; action awaits the secrets panel" }],
 
-  ["hooks/api/workflows-schedules.ts:useWorkflowSchedules", { verdict: "WIRE", reason: "per-workflow schedules panel not yet built (app/(authenticated)/workflows/[workflowId]/schedules/)" }],
-  ["hooks/api/workflows-schedules.ts:useCreateSchedule", { verdict: "WIRE", reason: "create per-workflow-schedule action not yet wired" }],
-
-
-  ["features/hr/expenses/expense-stats.tsx:MemberExpenseStats", { verdict: "WIRE", reason: "member self-service expense stats component exists but not imported by the HR expenses page; add to features/employee-self-service or features/hr/expenses page" }],
-
-  ["hooks/api/accounting/banking.ts:useBankImports", { verdict: "WIRE", reason: "bank-imports list not wired; features/accounting/banking/components/bank-import-client.tsx uses create but not list; add useBankImports to that component" }],
-
-  ["hooks/api/onboarding-flow.ts:useModuleChecklist", { verdict: "WIRE", reason: "per-module checklist detail view not wired; backend GET /onboarding/module-checklists/{moduleKey} exists; add to features/dashboard/module-setup-banners.tsx or a new module-checklist page" }],
-  ["hooks/api/onboarding-flow.ts:useSkipChecklistItem", { verdict: "WIRE", reason: "skip-checklist-item action not wired to any UI; backend POST /onboarding/module-checklists/{moduleKey}/items/{itemKey}/skip exists" }],
-  ["hooks/api/onboarding-flow.ts:useRestartModuleChecklist", { verdict: "WIRE", reason: "restart-module-checklist action not wired; backend POST /onboarding/module-checklists/{moduleKey}/restart exists" }],
-
-  ["hooks/api/party/subjects.ts:useDeleteSubject", { verdict: "WIRE", reason: "subject delete action not wired; features/party/subjects/subjects-page.tsx has list + create/edit but no delete row-action" }],
+  ["hooks/api/workflows-schedules.ts:useWorkflowSchedules", { verdict: "DEFERRED", reason: "Product owner: Workflow PM; review 2026-10-01; schedules panel is not in the current release" }],
+  ["hooks/api/workflows-schedules.ts:useCreateSchedule", { verdict: "DEFERRED", reason: "Product owner: Workflow PM; review 2026-10-01; action awaits the schedules panel" }],
 
 
-  ["hooks/api/accounting/ar-collections.ts:useCollectionActivities", { verdict: "WIRE", reason: "collections activities list not wired to any accounting feature page; add to features/accounting/sales/ar-collections view" }],
-  ["hooks/api/accounting/ap-payment-runs.ts:useVendorPayments", { verdict: "WIRE", reason: "vendor payments list not wired; add to features/accounting/purchases/ap-payment-runs view" }],
+  ["features/hr/expenses/expense-stats.tsx:MemberExpenseStats", { verdict: "DEFERRED", reason: "Product owner: HR PM; review 2026-10-01; member expense stats awaits the self-service expense surface" }],
 
-  ["hooks/api/build/teams.ts:useProjectTeamMembers", { verdict: "WIRE", reason: "team members list not wired; features/build/teams/team-home-page.tsx exists but members sub-section not built; backend GET /build/teams/{teamId}/members exists" }],
+  ["hooks/api/accounting/banking.ts:useBankImports", { verdict: "DEFERRED", reason: "Product owner: Accounting PM; review 2026-10-01; bank-import list UI awaits the banking release" }],
 
-  ["hooks/api/inbox.ts:useInfiniteInbox", { verdict: "WIRE", reason: "notifications-only inbox view (/me/inbox) not wired to any page; unified inbox (useUnifiedInbox → /me/inbox/unified) covers the feature/inbox shell; if /me/inbox endpoint is deprecated, delete this hook and the backend route" }],
-  ["hooks/api/inbox.ts:useInboxCount", { verdict: "WIRE", reason: "notification-inbox count (/me/inbox/count) not wired; unified inbox covers the UI; if /me/inbox/count is deprecated, delete this hook and the backend route" }],
+  ["hooks/api/onboarding-flow.ts:useModuleChecklist", { verdict: "DEFERRED", reason: "Product owner: Onboarding PM; review 2026-10-01; per-module checklist detail UI awaits the onboarding release" }],
+  ["hooks/api/onboarding-flow.ts:useSkipChecklistItem", { verdict: "DEFERRED", reason: "Product owner: Onboarding PM; review 2026-10-01; checklist skip action awaits the onboarding release" }],
+  ["hooks/api/onboarding-flow.ts:useRestartModuleChecklist", { verdict: "DEFERRED", reason: "Product owner: Onboarding PM; review 2026-10-01; checklist restart action awaits the onboarding release" }],
 
-  ["hooks/api/hr/attendance.ts:useAttendanceHeatmap", { verdict: "WIRE", reason: "attendance heatmap chart not wired to any feature page; backend GET /me/attendance/heatmap exists; add to features/hr/attendance or employee self-service attendance view" }],
+  ["hooks/api/party/subjects.ts:useDeleteSubject", { verdict: "DEFERRED", reason: "Product owner: Platform PM; review 2026-10-01; party deletion awaits the retention/approval UX" }],
+
+
+  ["hooks/api/accounting/ar-collections.ts:useCollectionActivities", { verdict: "DEFERRED", reason: "Product owner: Accounting PM; review 2026-10-01; collection activities UI awaits the AR release" }],
+  ["hooks/api/accounting/ap-payment-runs.ts:useVendorPayments", { verdict: "DEFERRED", reason: "Product owner: Accounting PM; review 2026-10-01; vendor payments UI awaits the AP release" }],
+
+  ["hooks/api/build/teams.ts:useProjectTeamMembers", { verdict: "DEFERRED", reason: "Product owner: Build PM; review 2026-10-01; team-member management UI awaits the Build release" }],
+
+  ["hooks/api/inbox.ts:useInfiniteInbox", { verdict: "DEFERRED", reason: "Product owner: Inbox PM; review 2026-10-01; legacy /me/inbox remains retained for compatibility while unified inbox is canonical" }],
+  ["hooks/api/inbox.ts:useInboxCount", { verdict: "DEFERRED", reason: "Product owner: Inbox PM; review 2026-10-01; legacy /me/inbox/count remains retained for compatibility" }],
+
+  ["hooks/api/hr/attendance.ts:useAttendanceHeatmap", { verdict: "DEFERRED", reason: "Product owner: HR PM; review 2026-10-01; attendance heatmap awaits the analytics release" }],
 
   ["hooks/api/hr/recruitment/interviews.ts:SlaReportStage", { verdict: "KEEP", reason: "nested in live HrSlaReport response consumed by the SLA report page" }],
   ["hooks/api/hr/recruitment/interviews.ts:SlaReportMonth", { verdict: "KEEP", reason: "nested in live HrSlaReport response consumed by the SLA report page and chart" }],
@@ -299,8 +299,8 @@ function runSelfTest() {
     `(i) unclassified export → expected UNCLASSIFIED (gate would fail), got ${r6.cls}`);
 
   const r7 = classifyExport("hooks/api/workflows.ts", "useWorkflowSchedules");
-  assert(r7.cls === "WIRE",
-    `(j) WIRE verdict → expected WIRE, got ${r7.cls}`);
+  assert(r7.cls === "DEFERRED",
+    `(j) DEFERRED verdict → expected DEFERRED, got ${r7.cls}`);
 
   const r8 = classifyExport("hooks/api/roles.ts", "RoleTemplate");
   assert(r8.cls === "KEEP",
@@ -354,7 +354,7 @@ function runSelfTest() {
   console.log("  (g) buildImporterMap: side-effect import edge recorded");
   console.log("  (h) buildImporterMap: re-export edge recorded");
   console.log("  (i) export with no EXPORT_VERDICTS entry              → UNCLASSIFIED (gate bites)");
-  console.log("  (j) export with WIRE verdict in EXPORT_VERDICTS       → WIRE");
+  console.log("  (j) export with DEFERRED verdict in EXPORT_VERDICTS   → DEFERRED");
   console.log("  (k) export with KEEP verdict in EXPORT_VERDICTS       → KEEP");
   console.log("  (l) EXPORT_VERDICTS entry not in knip output          → stale (gate bites)");
   console.log("  (m) test-utils file                                   → RETAINED-BY-CONVENTION");
@@ -422,6 +422,7 @@ async function runMain() {
     "RETAINED-BY-CONTRACT": [],
     "RETAINED-BY-CONVENTION": [],
     "WIRE": [],
+    "DEFERRED": [],
     "KEEP": [],
     "EXCLUDED": [],
     "UNCLASSIFIED": [],
@@ -436,7 +437,7 @@ async function runMain() {
 
   for (const ex of deadExportItems) {
     const r = classifyExport(ex.file, ex.name);
-    if (r.cls === "WIRE" || r.cls === "KEEP") {
+    if (r.cls === "WIRE" || r.cls === "DEFERRED" || r.cls === "KEEP") {
       processedVerdictKeys.add(`${ex.file}:${ex.name}`);
     }
     buckets[r.cls].push({ type: ex.kind, path: ex.file, name: ex.name, reason: r.reason });

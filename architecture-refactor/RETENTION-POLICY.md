@@ -126,7 +126,9 @@ Note on low current row counts: this is a dev/staging instance. `timesheets`, `h
 
 ### Retention workers: shared constraints
 
-All retention workers enforce these invariants:
+The following contracts apply to workers that are actually wired into a cron route. The
+repository also contains callable retention services that are not yet scheduled; their
+presence and unit tests must not be read as proof of operational execution.
 
 1. **Tenant context for row sweeps** — background row-level sweeps have no ambient tenant context; a write without the tenant GUC (`app.current_org_id()`) dies 42501. Those sweeps iterate organizations using `forEachOrg`, which sets the GUC inside each org's transaction. Global partition maintenance and outbox operations follow their own explicitly scoped execution paths.
 
@@ -139,6 +141,19 @@ All retention workers enforce these invariants:
 5. **Resumable cursor** — `CronAiUsageRetentionService` stores the last processed `id` per org in Redis (`cursor:ai-usage-retention:{orgId}`, TTL 7 days). A crash between batches resumes from the stored position on the next run. When a sweep completes (empty final batch), the cursor is deleted so the next run starts fresh.
 
 6. **Immutable obligation exclusion** — financial tables (`journal_entries`, `journal_lines`, `payroll_runs`), audit tables (`audit_logs`, `hr_audit_logs`), and employment records (`hr_employments`, `timesheets`) are explicitly absent from every worker's SELECT statement. The spec test (E) in `cron-ai-usage-retention.spec.ts` asserts at the source level that these table names do not appear in the AI usage retention worker.
+
+### Scheduling contract inventory
+
+| Worker / operation | Repository route | Authentication and concurrency contract | Current repository status |
+|---|---|---|---|
+| HR policy retention | `GET`/`POST /cron/hr-policy-retention-sweep` | `CRON_SECRET` plus `CronLeaseService` lease `hr-policy-retention-sweep` (1,800 seconds) | Route and lease are covered by source-contract tests; deployment cadence and successful execution remain unverified |
+| Notification row retention | `GET`/`POST /cron/notifications-retention-sweep` | `CRON_SECRET` plus lease `notifications-retention-sweep` (300 seconds) | Route and lease are present; deployment cadence and successful execution remain unverified |
+| Notification partition detach/drop | `GET`/`POST /cron/notifications-retention-detach` | `CRON_SECRET`; `NotificationRetentionService` takes its own distributed lease | Route and lease are present; partition creation and deployment remain gated |
+| AI usage retention | `GET`/`POST /cron/ai-usage-retention-sweep` | `CRON_SECRET` plus lease `ai-usage-retention-sweep` (1,800 seconds); route invokes `sweep({ dryRun: false })` | Route is present and contract-tested; deployed cadence, alerting, and successful execution remain unverified |
+
+The scheduling contract test is `s05-retention-scheduling-contract.spec.ts`. It verifies route,
+secret, lease, and service wiring for the operations above and deliberately asserts that the
+AI-usage route is authenticated, leased, and explicitly non-dry-run rather than treating the callable service alone as operational evidence.
 
 ### PARTITION+ARCHIVE (NotificationRetentionService)
 

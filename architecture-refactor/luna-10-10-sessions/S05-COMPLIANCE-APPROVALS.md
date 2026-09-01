@@ -56,6 +56,10 @@ Implementation subitems verified in this session:
 - [x] The asynchronous export worker enumerates subject file keys through the catalog with active legal-hold protection; object bytes remain explicitly outside the repository-only export claim until provider-backed export behavior is verified.
 - [x] The asynchronous export worker includes tenant-scoped, resumable `ai_chat_conversations` and `ai_chat_messages` sections with row-count and cursor/isolation coverage tests.
 - [x] The asynchronous export worker includes tenant-scoped, resumable `ai_feedback`, `ai_action_proposals`, `ai_jobs`, and `ai_usage_logs` sections with cursor/isolation coverage tests.
+- [x] The asynchronous export worker registers the additional first-party subject-owned schema tables through a tenant/subject/cursor adapter, excludes credential columns, and covers the registration and redaction contract with focused tests.
+- [x] The asynchronous export worker includes tenant/subject/cursor-scoped `hr_attendance_regularizations` coverage while excluding reviewer and approver actor identities from the subject export.
+- [x] The asynchronous export worker adds tenant/subject/cursor coverage for 20 additional unambiguous direct-user HR, payroll, engagement, performance, benefits, operations, announcement, and offboarding tables; ambiguous and actor-only tables remain explicitly excluded.
+- [x] The GDPR generic adapter excludes actor/recipient and credential-bearing sources, redacts credential and reviewer/approver identity columns, and has focused tests for those privacy boundaries.
 
 ### 3. Physical and downstream deletion
 
@@ -64,7 +68,7 @@ Implementation subitems verified in this session:
 - [ ] Prove deletion or documented non-applicability for search/vector indexes, derived projections, caches, analytics, email, AI, integration, and other downstream providers.
 - [ ] Prove backup/PITR aging and restore-time deletion behavior under the approved retention policy.
 - [x] Fix and verify legal-hold checks for every organization in a multi-organization purge request in repository tests; deployed verification remains part of the drill gate.
-- [ ] Revoke `DELETE` and `UPDATE` on `audit_logs` from the application role, verify deployed privileges, rerun immutability tests, and attach query output. The finding recorded in RB-10 is P1 and release-blocking until resolved or formally accepted by the release authority.
+- [ ] Verify the deployed `audit_logs` control after migration `0930`: the configured application role already reports `DELETE`/`UPDATE` denied, but the enabled append-only trigger is absent; attach redacted query output, rerun immutability tests, and resolve or formally accept the P1 with release-authority evidence.
 
 Implementation subitems verified in this session:
 
@@ -92,6 +96,7 @@ Implementation subitems verified in this session:
 - [x] A read-only run against the configured database at the 1 MB threshold reported 10/10 high-growth tables covered or KEEP-FOREVER with zero uncovered tables; this is inventory evidence only and is not treated as a deployed retention drill.
 - [x] The retention-coverage gate fails closed for invalid thresholds, validates matrix entries in self-test, and scans ordinary plus partitioned table relations; this is repository coverage evidence only.
 - [x] Partition children resolve to their parent retention policy and the verifier emits the policy table used for each measured relation; this remains repository classification evidence only.
+- [x] The retention scheduling contract test verifies authenticated leased HR/notification/AI-usage routes, including explicit non-dry-run AI retention invocation; this does not prove deployed cadence or execution.
 
 ### 5. Residency, transfers, subprocessors, and incident obligations
 
@@ -111,8 +116,9 @@ Implementation subitems verified in this session:
 
 Implementation subitems verified in this session:
 
-- [x] The repository evidence collector runs the ten reproducible compliance/migration checks, records commit/environment metadata and artifact hashes, redacts tested secret formats, and never upgrades repository self-tests into deployed evidence; `--deployed` only records an operator-declared environment for future real drills.
+- [x] The repository evidence collector runs the eleven reproducible compliance/migration checks, records commit/environment metadata and artifact hashes, redacts tested secret formats, and never upgrades repository self-tests into deployed evidence; `--deployed` only records an operator-declared environment for future real drills.
 - [x] S05 migration changes pass the migration-discipline and migration-rollback gates; intentionally irreversible changes are explicitly declared and `0930` has a documented rollback artifact.
+- [x] The approval/evidence template and generated-bundle shape have a self-testable contract for accountable roles, evidence timestamps/hashes, residual-risk disposition, and refusal to claim deployed evidence; no approval or deployed artifact is created by this check.
 
 ## Exit criteria
 
@@ -129,17 +135,18 @@ Implementation evidence is present for operator grant primitives (including stal
 expiry), customer/billing data-plane
 guards, GDPR request jobs (including AI chat export sections), legal-hold checks, storage-key purge, and selected retention workers.
 
-S05 is **INCOMPLETE**. The remaining blockers are deployed drill evidence, exhaustive export,
+S05 is **INCOMPLETE**. The remaining blockers are deployed drill evidence, exhaustive export
+(including remaining tables whose subject ownership is not established by a stable contract),
 physical and downstream purge proof, complete deployed document/payroll retention execution, and named
 Product/Security/Privacy-DPO/Operations/Legal/Finance approvals. The read-only verifier reached
 the configured `streamline_app` role and confirmed `UPDATE`/`DELETE` are denied, but reported no
 enabled `audit_logs` trigger in that environment; migration `0930` remains unapplied there.
 CRM and Inventory remain intentionally excluded.
 
-Verified in this session: the current focused run passed 18 suites and 169/169 tests across operator access,
+Verified in this session: the current focused run passed 19 suites and 184/184 tests across operator access,
 operator data-plane routes, GDPR export/purge, legal holds, organization purge, audit
 immutability, rectification validation, and HR retention. Migration and compliance self-tests
-also pass. The S05 evidence collector self-test passes and its ten checks pass; the generated
+also pass. The S05 evidence collector self-test passes and its eleven checks pass; the generated
 bundle is repository-only and explicitly refuses an unmarked deployed claim. These results are
 repository evidence only and do not satisfy the deployed-environment or approval gates above.
 

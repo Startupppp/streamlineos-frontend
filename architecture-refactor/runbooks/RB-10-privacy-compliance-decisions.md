@@ -282,8 +282,8 @@ disclosure decision.
 
 **Repository status (2026-09-01):** `backend/src/scripts/compliance-drill-e2e.mjs` exists and
 has self-test/live dry-run commands, but no redacted deployed evidence bundle is committed.
-Repository focused tests also pass 11 suites / 105 tests for the current operator, GDPR, and HR
-retention implementation. Commands:
+Repository focused S05 tests also pass 19 suites / 184 tests for the current operator, GDPR,
+retention, purge, and scheduling implementation. Commands:
 
 ```bash
 # Verify each assertion bites (no DB required)
@@ -327,7 +327,7 @@ SUBJECT_EMAIL="gdpr-drill-$(date +%Y%m%d)@test.invalid"
 ORG_ID="<your-test-org-id>"
 
 pnpm -C backend drill:legal-hold "$SUBJECT_EMAIL" "$ORG_ID"
-# Expected: RESULT: PASS (8 passed, 0 failed)
+# Expected: RESULT: PASS (the drill's reported checks pass; do not hard-code a count here)
 # This commits and releases real hold rows. Confirm no orphan holds remain:
 node --input-type=module << 'EOF'
 import { config } from 'dotenv'; config({ path: '.env' });
@@ -343,7 +343,7 @@ EOF
 
 ```bash
 pnpm -C backend drill:export "$SUBJECT_EMAIL"
-# Expected: RESULT: PASS — 6 checks including cross-tenant isolation
+# Expected: RESULT: PASS with all declared source sections and cross-tenant isolation
 ```
 
 ### Step 3 — Erasure drill (dry-run — rolled back)
@@ -420,6 +420,20 @@ node src/scripts/audit-storage-keys.mjs --subject "$SUBJECT_EMAIL"
 3. Database rows adapter physically deletes the organization row after adapter confirmation and
    retains detached platform audit evidence; deployed database and dependent-row evidence remain required.
 4. `CronHrRetentionService` reads `hr_retention_policies` and the coverage matrix has no unclassified measured high-growth table, but deployed scheduling/execution and policy-owner approval are not evidenced.
+
+5. Retention scheduling is only partially wired in the repository: HR policy retention,
+   notification retention, and AI-usage retention have authenticated, leased cron routes;
+   AI usage explicitly invokes the non-dry-run sweep. The source-level contract is covered by
+   `backend/src/modules/cron/__tests__/s05-retention-scheduling-contract.spec.ts`. A deployed
+   scheduler identity, cadence, successful run, failure alert, and retry evidence are still
+   required for the S05 gate.
+
+6. Downstream purge status is explicit rather than inferred. The organization purge registry
+   reports cache and Postgres-side search as `NOT_APPLICABLE`, deletes and verifies the
+   repository's `kb_article_chunks` vector source, and returns `FAILED` for analytics copies,
+   provider mirrors, and backups until configured adapters and verification evidence exist.
+   These outcomes are covered by `organization-purge-adapters.spec.ts`; they do not prove that
+   external caches, warehouses, provider accounts, or backup/PITR copies are absent.
 
 ---
 

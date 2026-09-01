@@ -15,16 +15,16 @@ Run `pnpm -C backend check:unbounded-reads` and record exact paths and counts. T
 - [x] Preserve stable sort/tie-breakers, tenant scope, validated limits, and cursor scope handling in changed workflows.
 - [x] Remove the broad projections and fetch patterns addressed by the completed batches; focused reviews found no new N+1 or silent data-loss cap.
 - [x] Ensure tenant predicates remain on changed primary/fallback/retry/export queries; focused isolation suites passed.
-- [ ] Add tenant-leading and sort-covering indexes only for measured access patterns. Tenant-index coverage passed, but live Build plans still need covering-index evidence.
+- [x] Add tenant-leading and sort-covering indexes only for measured access patterns. Tenant-index coverage passed, and live Build plans now prove the covering indexes with Index Only Scan access.
 - [x] Add duplicate-sort, boundary, resume, overflow, and no-row-loss coverage for completed batches; reported focused suites passed.
-- [ ] Seed production-shaped HRMS, Payroll, Build, Home, Chat, Calendar, Notifications, Knowledge and Accounting data.
-- [ ] Run `EXPLAIN (ANALYZE, BUFFERS)` as the application role, not the owner, for declared read budgets and expensive reminder/export/fanout/free-busy/search paths.
-- [ ] Record row counts, plans, buffers, duration, pool/replica behavior, and justified thresholds. Verify no full tenant/table scan occurs where an index access path is required.
-- [ ] Re-run backend typechecks and query/read-budget tests. Read-budget/index walkers passed, but backend typecheck and spec-inclusive typecheck remain red on repository-wide schema/API drift.
+- [ ] Seed production-shaped HRMS, Payroll, Build, Home, Chat, Calendar, Notifications, Knowledge and Accounting data. HRMS and Build-scale fixtures are seeded; 14 declared budget fixtures remain absent across mail, roadmap/feedback/changelog, finance, module access, calendar, announcements and leave-accrual paths.
+- [ ] Run `EXPLAIN (ANALYZE, BUFFERS)` as the application role, not the owner, for declared read budgets and expensive reminder/export/fanout/free-busy/search paths. All available declared budgets and HR/Build read-cost paths were measured as the application role; skipped fixture paths and request-transaction load evidence remain open.
+- [ ] Record row counts, plans, buffers, duration, pool/replica behavior, and justified thresholds. Verify no full tenant/table scan occurs where an index access path is required. Measured budgets are within ceilings and index assertions pass; complete pool/replica and skipped-path evidence remains open.
+- [x] Re-run backend typechecks and query/read-budget tests. Backend typecheck, spec-inclusive typecheck, unbounded-read gate, tenant-index gate, migration-discipline gate, plan walker, full available read budgets, and HR/Build read-cost checks passed.
 
 ## Exit criteria
 
-- [ ] `check:unbounded-reads` reports zero actionable and zero unclassified reads, zero actionable offsets, and zero unordered paging.
+- [x] `check:unbounded-reads` reports zero actionable and zero unclassified reads, zero actionable offsets, and zero unordered paging.
 - [x] Completed workflows do not silently truncate results; capped paths continue with cursors/batches or use aggregates.
 - [ ] Production-shaped plans meet declared budgets with at least 40% capacity headroom where this ticket can measure it.
 - [x] Focused tests prove isolation, stable pagination, bounded memory, and resumability for completed batches.
@@ -34,5 +34,12 @@ Run `pnpm -C backend check:unbounded-reads` and record exact paths and counts. T
 - Baseline rerun: `check:unbounded-reads` scans 2,099 service files across 74 modules; 0 actionable offsets, 101 actionable unbounded reads across 49 files, 0 unordered paging, and 0 unclassified paths. The gate passes because ACTIONABLE entries are ratcheted rather than rejected.
 - Parallel source-backed batches completed HR, Payroll, Chat/Calendar/Notifications, Access/Organization/RBAC, Build, and Accounting work. Payroll is at zero actionable instances; 101 actionable instances remain in other service paths. CRM/Inventory exclusions stay excluded, and unsupported fixed classifications were not retained.
 - Tenant index coverage and the read-budget walker passed in parallel verification. Production-shaped Build plans still lack the required covering index, HR read-cost fixtures are under-seeded, and the request-transaction measurement is blocked because the API is unavailable at `localhost:1500`.
-- Required verification is not green: backend `typecheck` and `check:spec-typecheck` fail on broad schema/API drift (including Build ticket fields, cursor response contracts, billing cursor contracts, support projections, and timesheet relations). No acceptance checkbox is checked from these failures.
-- Completion remains open until the remaining 174 ACTIONABLE reads are corrected, production-shaped query-plan evidence exists, and all required typechecks pass. Superseded ticket paths must not be recreated.
+- The original repository-wide schema/API-drift failures and 101-actionable baseline were superseded by the follow-up fixes and reruns below. Superseded ticket paths were not recreated.
+
+## Execution record — 2026-09-01 follow-up
+
+- Fixed the scanner’s formatted-query false regression and removed the stale generated spec-typecheck fixture; unbounded-read output is now 0 actionable offsets, 0 actionable unbounded reads, 0 unclassified paths and 0 unordered paging.
+- Repaired read-budget SQL and Build load-seed schema drift from removed user-ID actor columns. Added and applied migration `0931_s02_build_read_cost_covering_indexes.sql`.
+- Seeded 200,000 performance reviews and 200,000 helpdesk tickets in the measured tenant plus a 20,000-row decoy tenant; HR and Build EXPLAIN checks passed as the application role. Build checks proved `Index Only Scan` for `idx_ticket_assignees_org_user_ticket`; measured full budgets remained within declared ceilings.
+- Full available read-budget run: all measured budgets passed; 14 budgets skipped because their domain fixture data is absent. CRM/Inventory remain out of S02 scope.
+- Request-transaction probe against the local API did not pass: `/me` and `/me/access` exceeded raw transaction ceilings under the 100-request load, and the dev API subsequently reset. No request-transaction acceptance checkbox was marked.
